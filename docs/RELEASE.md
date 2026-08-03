@@ -30,10 +30,12 @@ Maintainers: checklist before creating a new tag.
    git push origin vX.Y.Z
    ```
 
-5. Create the GitHub Release from the tag (notes from CHANGELOG), e.g.:
+5. Create the GitHub Release from the tag (notes from the version section in CHANGELOG), e.g.:
 
    ```bash
-   gh release create vX.Y.Z --title "vX.Y.Z" --notes-file docs/CHANGELOG.md
+   gh -R nowo-tech/UiKitBundle release create vX.Y.Z --title "vX.Y.Z" --notes "$(sed -n '/^## \[X.Y.Z\]/,/^## \[/p' docs/CHANGELOG.md | head -n -1)"
    ```
+
+   Prefer `gh -R nowo-tech/UiKitBundle …` if the local remote hostname is not recognized by `gh`.
 
 6. Packagist: first publish submit `https://github.com/nowo-tech/UiKitBundle`; later tags update automatically (or use “Update” on Packagist).

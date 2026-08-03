@@ -22,7 +22,7 @@ Goal: one place to restyle chrome so Beacon and feature bundles stop shipping pa
 
 ## Already in UiKit
 
-Shipped through **v1.1.x**:
+Shipped through **v1.2.x**:
 
 | Area | Surface |
 |------|---------|

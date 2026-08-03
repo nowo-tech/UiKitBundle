@@ -2,9 +2,18 @@
 
 ## Table of contents
 
+- [From 1.2.0 to 1.2.1](#from-120-to-121)
 - [From 1.1.x to 1.2.0](#from-11x-to-120)
 - [From 1.0.x to 1.1.0](#from-10x-to-110)
 - [From nothing to 1.0.0](#from-nothing-to-100)
+
+## From 1.2.0 to 1.2.1
+
+No consumer-facing changes. CI-only fix for `pnpm/action-setup` vs `packageManager`.
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 ## From 1.1.x to 1.2.0
 

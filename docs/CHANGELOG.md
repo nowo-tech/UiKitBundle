@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [1.2.1 - 2026-08-03](#121---2026-08-03)
+  - [Fixed](#fixed)
 - [1.2.0 - 2026-08-03](#120---2026-08-03)
   - [Changed](#changed)
   - [Added](#added-2)
@@ -17,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   - [Added](#added)
 
 ## [Unreleased]
+
+## [1.2.1] - 2026-08-03
+
+### Fixed
+
+- CI: `pnpm/action-setup@v4` no longer sets `version: 9` alongside `package.json` `packageManager` (`pnpm@9.15.0`), which caused `ERR_PNPM_BAD_PM_VERSION` / multiple-version install failures on GitHub Actions.
 
 ## [1.2.0] - 2026-08-03
 
@@ -52,7 +60,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/nowo-tech/UiKitBundle/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/nowo-tech/UiKitBundle/releases/tag/v1.0.0
