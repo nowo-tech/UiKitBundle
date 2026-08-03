@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [1.2.0 - 2026-08-03](#120---2026-08-03)
+  - [Changed](#changed)
+  - [Added](#added-2)
 - [1.1.0 - 2026-08-03](#110---2026-08-03)
   - [Added](#added-1)
 - [1.0.0 - 2026-08-03](#100---2026-08-03)
@@ -15,8 +18,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-08-03
+
+### Changed
+
+- Frontend assets: **TypeScript + Vite (pnpm)** — sources under `src/Resources/assets/src/`; built IIFEs in `src/Resources/public/js/` (`nowo-ui-modal.js`, `nowo-ui-shell.js`). Twig `asset(..., 'nowo_ui_kit')` paths unchanged.
+
 ### Added
 
+- Vitest coverage for modal/shell helpers; CI job for `pnpm` typecheck / test / build.
 - [docs/ROADMAP.md](ROADMAP.md): gap analysis vs Nowo Twig bundles and symfony-beacon admin; phased plan (toasts, confirm, cards, filters, nested nav, theme/locale helpers, consolidation).
 
 ## [1.1.0] - 2026-08-03
@@ -42,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/nowo-tech/UiKitBundle/releases/tag/v1.0.0

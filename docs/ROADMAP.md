@@ -28,7 +28,7 @@ Shipped through **v1.1.x**:
 |------|---------|
 | Class macros | `btn`, `toolbar`, `page_header`, `search_*`, `list*`, `table*`, `row_actions`, `badge`, `flash`, `empty`, `tabs`, modal attrs, shell/header/aside/avatar/user_menu/burger/footer |
 | Partials | pagination, empty, flashes, row actions, page header, tabs, modal shell, icon, burger, avatar, aside, user menu, footer, composed `_shell` |
-| Assets | `nowo-ui.css`, `nowo-ui-modal.js`, `nowo-ui-shell.js` |
+| Assets | `nowo-ui.css`; **Vite/pnpm** builds `nowo-ui-modal.js` + `nowo-ui-shell.js` from TypeScript sources |
 | Config | `css_framework`, `icon_set` |
 
 ## Gap analysis

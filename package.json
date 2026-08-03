@@ -1,0 +1,23 @@
+{
+  "name": "nowo-tech/ui-kit-bundle-assets",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "build": "VITE_ENTRY=modal vite build && VITE_ENTRY=shell vite build",
+    "build:modal": "VITE_ENTRY=modal vite build",
+    "build:shell": "VITE_ENTRY=shell vite build",
+    "watch": "VITE_ENTRY=modal vite build --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^3.2.4",
+    "happy-dom": "^17.4.4",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.5",
+    "vitest": "^3.2.4"
+  }
+}

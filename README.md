@@ -61,7 +61,7 @@ php -S 127.0.0.1:8080 -t public
 ```bash
 composer install
 composer test
-composer test-coverage
+pnpm install && pnpm run test && pnpm run build
 ```
 
 ## License
