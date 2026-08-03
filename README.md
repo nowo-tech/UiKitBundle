@@ -33,6 +33,7 @@ See [docs/USAGE.md](docs/USAGE.md) and [docs/CONFIGURATION.md](docs/CONFIGURATIO
 - [Installation / quick start](#quick-start) (this README)
 - [Configuration](docs/CONFIGURATION.md)
 - [Usage](docs/USAGE.md)
+- [Roadmap](docs/ROADMAP.md)
 - [Upgrading](docs/UPGRADING.md)
 - [Changelog](docs/CHANGELOG.md)
 - [Release](docs/RELEASE.md)
