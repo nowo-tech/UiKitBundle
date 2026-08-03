@@ -1,0 +1,8 @@
+# Nowo Ui Kit Bundle — https://github.com/nowo-tech/UiKitBundle
+# Packagist: https://packagist.org/packages/nowo-tech/ui-kit-bundle
+#
+# css_framework: bootstrap5 | bootstrap4 | bootstrap | tabler | tailwind | foundation | custom | none
+# icon_set: bootstrap-icons | tabler-icons | ux_icon | svg_inline | none
+nowo_ui_kit:
+    css_framework: bootstrap5
+    icon_set: bootstrap-icons

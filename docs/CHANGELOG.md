@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [1.3.0 - 2026-08-03](#130---2026-08-03)
+  - [Added](#added-3)
+  - [Changed](#changed-1)
 - [1.2.1 - 2026-08-03](#121---2026-08-03)
   - [Fixed](#fixed)
 - [1.2.0 - 2026-08-03](#120---2026-08-03)
@@ -19,6 +22,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   - [Added](#added)
 
 ## [Unreleased]
+
+## [1.3.0] - 2026-08-03
+
+### Added
+
+- **FrankenPHP demos**: `demo/symfony8` (port **8092**, Bootstrap) and `demo/symfony8-tailwind` (port **8093**) with `FRANKENPHP_MODE` (default `worker`), DNS, path repo sync, WebProfiler / Debug / Twig Inspector.
+- Root Docker (`Dockerfile`, `docker-compose.yml`) and full Makefile (`ensure-up`, `release-check`, `coverage-check`, `setup-hooks`, `validate-translations`, …).
+- Flex recipe `.symfony/recipe/nowo-tech/ui-kit-bundle/1.0/`.
+- GitHub automation: `release.yml`, `sync-releases.yml`, Dependabot, PR lint, stale, CodeRabbit, demo-smoke, Scrutinizer, Copilot instructions, CODEOWNERS.
+- Spec Kit baseline (`specs/001-baseline/`) + `.specify/` + Cursor rules/skills (REQ-SPECKIT / REQ-IDE).
+- Docs: INSTALLATION, CONTRIBUTING, SECURITY, COVERAGE, DEMO-FRANKENPHP, GITHUB_CI, RECIPE, SPEC-KIT, SPEC-DRIVEN-DEVELOPMENT, ENGRAM.
+- GIT-001 hooks (`.githooks/commit-msg`) and coverage scripts (PHP ≥99%, TS summary).
+
+### Changed
+
+- README follows canonical section order (REQ-DOCS-019) with FrankenPHP banner.
+- CI: PHP × Symfony matrix (7.4 / 8.0 / 8.1), git-hygiene, coverage gate, assets/Vitest coverage job.
 
 ## [1.2.1] - 2026-08-03
 
@@ -60,7 +80,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v1.2.1...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/nowo-tech/UiKitBundle/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.0.0...v1.1.0

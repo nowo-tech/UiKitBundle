@@ -78,7 +78,13 @@ function onDocumentKeydown(event: KeyboardEvent): void {
   }
 }
 
+let shellBound = false;
+
 export function bindNowoUiShell(): void {
+  if (shellBound) {
+    return;
+  }
+  shellBound = true;
   document.addEventListener('click', onDocumentClick);
   document.addEventListener('keydown', onDocumentKeydown);
   window.nowoUiToggleAside = toggleAside;

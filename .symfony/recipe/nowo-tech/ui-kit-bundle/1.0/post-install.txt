@@ -1,0 +1,11 @@
+  * Ui Kit Bundle has been installed.
+
+    Config: config/packages/nowo_ui_kit.yaml
+    Twig:   {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
+    Assets: asset('css/nowo-ui.css', 'nowo_ui_kit')
+            asset('js/nowo-ui-modal.js', 'nowo_ui_kit')
+            asset('js/nowo-ui-shell.js', 'nowo_ui_kit')
+
+    Run: php bin/console assets:install
+
+    Docs: https://github.com/nowo-tech/UiKitBundle/tree/main/docs

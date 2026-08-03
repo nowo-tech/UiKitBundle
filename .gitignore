@@ -3,6 +3,9 @@
 /node_modules
 /.pnpm-store
 
+# Docker local state (Buildx cache, tokens; DOCKER_CONFIG in Makefile for WSL)
+/.docker/
+
 # Environment and secrets
 .env
 .env.local
@@ -11,14 +14,20 @@
 # Test coverage
 /coverage
 /coverage.xml
+/coverage-ts
 /coverage-php.txt
-/coverage-frontend
+/coverage-ts.txt
+/coverage-output.txt
 
 # PHP tool caches
 /.php-cs-fixer.cache
 /.phpunit.cache
 /.phpunit.result.cache
-/.twig-cs-fixer.cache
+
+# Python (demo scripts, translation tooling)
+__pycache__/
+*.py[cod]
+*$py.class
 
 # Archives / compressed
 *.zip
@@ -31,7 +40,7 @@
 # Cursor local sandbox (machine-specific; REQ-IDE-005)
 .cursor/sandbox.json
 
-# Demo vendor
+# Demo vendor / caches
 /demo/**/vendor
 /demo/**/var
 /demo/**/public/bundles

@@ -86,7 +86,13 @@ function onDocumentKeydown(event: KeyboardEvent): void {
   }
 }
 
+let modalBound = false;
+
 export function bindNowoUiModal(): void {
+  if (modalBound) {
+    return;
+  }
+  modalBound = true;
   document.addEventListener('click', onDocumentClick);
   document.addEventListener('keydown', onDocumentKeydown);
   window.nowoOpenModal = openModal;

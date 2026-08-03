@@ -2,10 +2,25 @@
 
 ## Table of contents
 
+- [From 1.2.x to 1.3.0](#from-12x-to-130)
 - [From 1.2.0 to 1.2.1](#from-120-to-121)
 - [From 1.1.x to 1.2.0](#from-11x-to-120)
 - [From 1.0.x to 1.1.0](#from-10x-to-110)
 - [From nothing to 1.0.0](#from-nothing-to-100)
+
+## From 1.2.x to 1.3.0
+
+**No breaking Twig/CSS/JS API changes** for application consumers.
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+php bin/console assets:install
+```
+
+Optional:
+
+- Adopt Flex recipe defaults in `config/packages/nowo_ui_kit.yaml` if you previously copied config by hand ([RECIPE.md](RECIPE.md)).
+- Contributors: use `make setup-hooks`, Docker `make test` / `make coverage-check`, and FrankenPHP demos (`make -C demo up-symfony8`).
 
 ## From 1.2.0 to 1.2.1
 

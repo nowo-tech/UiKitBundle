@@ -78,4 +78,19 @@ final class TwigPathsPassTest extends TestCase
 
         self::assertNotEmpty($definition->getMethodCalls());
     }
+
+    public function testResolvesNestedTwigLoaderAliases(): void
+    {
+        $container = new ContainerBuilder();
+        $container->setParameter('kernel.project_dir', sys_get_temp_dir());
+
+        $definition = new Definition(FilesystemLoader::class);
+        $container->setDefinition('twig.loader.native_filesystem', $definition);
+        $container->setAlias('twig.loader.native.inner', 'twig.loader.native_filesystem');
+        $container->setAlias('twig.loader.native', 'twig.loader.native.inner');
+
+        (new TwigPathsPass())->process($container);
+
+        self::assertNotEmpty($definition->getMethodCalls());
+    }
 }

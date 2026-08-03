@@ -1,26 +1,149 @@
-.PHONY: test cs-check cs-fix phpstan qa assets assets-test
+# Prefer Compose V2 plugin (GitHub Actions / modern Docker Desktop); fall back to docker-compose V1 (REQ-MAKE-010).
+# Invoke simple recipes via shell when needed — Make's direct execve of the WSL Docker Desktop CLI symlink can return EACCES.
+COMPOSE_BIN := $(shell docker compose version >/dev/null 2>&1 && echo "docker compose" || echo "docker-compose")
+COMPOSE     := $(COMPOSE_BIN)
+dc = $(SHELL) -c '$(COMPOSE_BIN) $(1)'
+SERVICE_PHP = php
 
-test:
-	composer test
+# WSL: avoid broken docker-credential-desktop.exe when pulling public base images.
+BUNDLE_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+export DOCKER_CONFIG := $(BUNDLE_ROOT)/.docker
 
-cs-check:
-	composer cs-check
+.PHONY: help ensure-up up down down-dev build shell install assets assets-test test-ts test test-coverage test-with-db \
+	test-coverage-with-db coverage-check cs-check cs-fix rector rector-dry phpstan validate-phpdoc qa release-check \
+	release-check-demos demo-smoke composer-sync clean update validate validate-translations \
+	setup-hooks check-no-cursor-coauthor check-open-prs strip-cursor-coauthor-from-history
 
-cs-fix:
-	composer cs-fix
+help:
+	@echo "Ui Kit Bundle - Development Commands"
+	@echo ""
+	@echo "Usage: make <target>"
+	@echo ""
+	@echo "Container: up down down-dev build shell"
+	@echo "Dependencies: install assets"
+	@echo "Tests: test test-coverage test-with-db test-coverage-with-db test-ts"
+	@echo "Quality: cs-check cs-fix rector rector-dry phpstan qa validate-translations"
+	@echo "Release: release-check demo-smoke composer-sync"
+	@echo "Cleanup: clean"
+	@echo "Composer: update update-deps validate"
 
-phpstan:
-	composer phpstan
+ensure-up:
+	@mkdir -p "$(BUNDLE_ROOT)/.docker"
+	@test -f "$(BUNDLE_ROOT)/.docker/config.json" || printf '%s\n' '{}' > "$(BUNDLE_ROOT)/.docker/config.json"
+	@$(COMPOSE) ps -q $(SERVICE_PHP) >/dev/null 2>&1 || true
+	@$(COMPOSE) up -d --build
+	@sleep 2
+	@$(COMPOSE) exec -T $(SERVICE_PHP) sh -lc 'test -d vendor || composer install --no-interaction'
+	@$(COMPOSE) exec -T -e CI=true $(SERVICE_PHP) sh -lc 'test -d node_modules || pnpm install'
 
-assets:
-	pnpm install --frozen-lockfile || pnpm install
-	pnpm run build
+up:
+	@$(MAKE) ensure-up
 
-assets-test:
-	pnpm run test
+down:
+	@$(COMPOSE) down
 
-qa:
-	composer qa
-	pnpm run typecheck
-	pnpm run test
-	pnpm run build
+down-dev: down
+
+build:
+	@$(COMPOSE) build --no-cache
+
+shell:
+	@$(COMPOSE) exec $(SERVICE_PHP) sh
+
+install: ensure-up
+	@$(COMPOSE) exec -T $(SERVICE_PHP) composer install --no-interaction
+	@$(COMPOSE) exec -T -e CI=true $(SERVICE_PHP) pnpm install
+
+assets: ensure-up
+	@$(COMPOSE) exec -T -e CI=true $(SERVICE_PHP) pnpm install
+	@$(COMPOSE) exec -T $(SERVICE_PHP) pnpm run build
+	@echo "Assets: src/Resources/public/js/nowo-ui-modal.js + js/nowo-ui-shell.js"
+
+test-ts: ensure-up
+	@$(COMPOSE) exec -T $(SERVICE_PHP) pnpm run test:coverage | tee coverage-ts.txt
+	@./.scripts/ts-coverage-percent.sh coverage-ts.txt
+
+assets-test: test-ts
+
+test: ensure-up
+	@$(COMPOSE) exec -T $(SERVICE_PHP) composer test
+
+test-with-db: test
+
+test-coverage: ensure-up
+	@$(COMPOSE) exec -T $(SERVICE_PHP) composer test-coverage
+	@./.scripts/php-coverage-percent.sh coverage-output.txt
+
+coverage-check: ensure-up
+	@$(COMPOSE) exec -T $(SERVICE_PHP) sh -lc 'composer test-coverage'
+	@./.scripts/coverage-fail-under.sh coverage-output.txt 99
+
+test-coverage-with-db: test-coverage
+
+cs-check: ensure-up
+	@$(COMPOSE) exec -T $(SERVICE_PHP) composer cs-check
+
+cs-fix: ensure-up
+	@$(COMPOSE) exec -T $(SERVICE_PHP) composer cs-fix
+
+rector-dry: ensure-up
+	@$(COMPOSE) exec -T $(SERVICE_PHP) composer rector-dry
+
+rector: ensure-up
+	@$(COMPOSE) exec -T $(SERVICE_PHP) composer rector
+
+validate-phpdoc: ensure-up
+	@$(COMPOSE) exec -T $(SERVICE_PHP) php .scripts/complete-public-phpdoc.php
+
+phpstan: ensure-up
+	@$(COMPOSE) exec -T $(SERVICE_PHP) composer phpstan
+
+validate-translations: ensure-up
+	@echo "Translation files validated (YAML syntax only)."
+	@$(COMPOSE) exec -T $(SERVICE_PHP) php -r "foreach (glob('src/Resources/translations/*.yaml') as $$f) { Symfony\\Component\\Yaml\\Yaml::parseFile($$f); } echo \"OK\\n\";"
+
+qa: cs-check test test-ts
+
+release-check: check-no-cursor-coauthor check-open-prs ensure-up assets composer-sync cs-fix cs-check rector-dry phpstan validate-phpdoc coverage-check test-ts release-check-demos
+
+release-check-demos:
+	@if [ -f demo/Makefile ]; then $(MAKE) -C demo release-check; else true; fi
+
+# REQ-TEST-011: boot demos and assert HTTP 200
+demo-smoke:
+	@if [ -f demo/Makefile ]; then $(MAKE) -C demo release-verify; else echo "No demo/Makefile"; exit 1; fi
+
+composer-sync: ensure-up
+	@$(COMPOSE) exec -T $(SERVICE_PHP) composer validate --strict
+	@$(COMPOSE) exec -T $(SERVICE_PHP) composer update --lock --no-install
+
+clean:
+	rm -rf vendor node_modules .pnpm-store coverage coverage-ts .phpunit.cache coverage.xml .php-cs-fixer.cache coverage-php.txt coverage-ts.txt coverage-output.txt
+
+update: ensure-up
+	@$(COMPOSE) exec -T $(SERVICE_PHP) composer update
+
+validate: ensure-up
+	@$(COMPOSE) exec -T $(SERVICE_PHP) composer validate --strict
+
+
+setup-hooks:
+	@chmod +x .githooks/pre-commit 2>/dev/null || true
+	@chmod +x .githooks/commit-msg 2>/dev/null || true
+	@git config core.hooksPath .githooks
+	@echo "✅ Git hooks installed (.githooks — includes commit-msg for REQ-GIT-001)."
+
+# REQ-MAKE-008: update-deps (REQ-MAKE-008)
+# Optional: monorepo helper absent on standalone GitHub Actions checkout (REQ-MAKE-009).
+-include $(BUNDLE_ROOT)/../.scripts/Makefile.update-deps.mk
+check-no-cursor-coauthor:
+	@chmod +x .scripts/check-no-cursor-coauthor.sh
+	@./.scripts/check-no-cursor-coauthor.sh HEAD
+
+check-open-prs:
+	@chmod +x .scripts/check-open-prs.sh
+	@./.scripts/check-open-prs.sh
+
+strip-cursor-coauthor-from-history:
+	@chmod +x .scripts/strip-cursor-coauthor-from-history.sh
+	@./.scripts/strip-cursor-coauthor-from-history.sh master

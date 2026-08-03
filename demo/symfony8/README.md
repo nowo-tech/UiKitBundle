@@ -1,11 +1,11 @@
-# UiKit Bundle — Symfony 8 demo
+# Ui Kit Bundle — Symfony 8 demo (Bootstrap)
 
-Minimal host app that renders the kitchen sink.
+Runs with **FrankenPHP** (Caddy + PHP). Default mode: `FRANKENPHP_MODE=worker` (see [DEMO-FRANKENPHP.md](../../docs/DEMO-FRANKENPHP.md)).
 
 ```bash
-composer install
-php bin/console assets:install public
-php -S 127.0.0.1:8080 -t public
+cp .env.example .env   # PORT=8092
+make up
+# open http://localhost:8092/
 ```
 
-Open http://127.0.0.1:8080/
+Kitchen sink: macros, shell chrome, modal, pagination, tabs.
