@@ -1,0 +1,38 @@
+{#
+  Generic modal shell.
+
+  Required:
+    - id: HTML id
+    - title: string
+
+  Optional:
+    - body: HTML string
+    - footer: HTML string
+    - framework: affects dismiss attrs
+#}
+{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
+{% set framework = framework|default(null) %}
+{% set f = ui.resolve_fw(framework)|trim %}
+<div
+    id="{{ id }}"
+    class="nowo-ui-modal{% if f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %} modal fade{% endif %}"
+    tabindex="-1"
+    aria-labelledby="{{ id }}-title"
+    aria-hidden="true"
+    {% if f in ['bootstrap', 'bootstrap5', 'tabler'] %}data-bs-backdrop="true"{% elseif f == 'bootstrap4' %}data-backdrop="true"{% endif %}
+>
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="{{ id }}-title">{{ title }}</h2>
+                <button type="button" class="btn-close" {{ ui.modal_dismiss_attrs(framework) }} aria-label="{{ 'action.close'|trans({}, 'NowoUiKitBundle') }}"></button>
+            </div>
+            <div class="modal-body">
+                {% if body is defined %}{{ body|raw }}{% endif %}
+            </div>
+            {% if footer is defined and footer %}
+                <div class="modal-footer">{{ footer|raw }}</div>
+            {% endif %}
+        </div>
+    </div>
+</div>

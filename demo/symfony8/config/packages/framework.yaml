@@ -1,0 +1,17 @@
+parameters:
+    kernel.secret: 'change-me-demo-only'
+
+framework:
+    secret: '%kernel.secret%'
+    http_method_override: false
+    handle_all_throwables: true
+    php_errors:
+        log: true
+    assets: ~
+    router:
+        utf8: true
+
+twig:
+    default_path: '%kernel.project_dir%/templates'
+    globals:
+        layout_template: 'base.html.twig'

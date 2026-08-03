@@ -1,0 +1,52 @@
+{#
+  Icon by nowo_ui_kit_icon_set.
+
+  Required:
+    - name: edit|delete|view|copy|prev|next|close (or free string for ux_icon)
+
+  Optional:
+    - label: accessible text (aria-hidden decorative when parent has aria-label)
+#}
+{% set icon_set = nowo_ui_kit_icon_set|default('bootstrap-icons') %}
+{% set label = label|default(name) %}
+{% if icon_set == 'none' %}
+    <span class="nowo-ui-icon nowo-ui-icon--text">{{ label }}</span>
+{% elseif icon_set == 'ux_icon' and ux_icon is defined %}
+    {{ ux_icon(name starts with 'bi:' or name starts with 'tabler:' ? name : ('bi:' ~ name)) }}
+{% elseif icon_set == 'tabler-icons' %}
+    {% set map = {
+        edit: 'ti ti-pencil',
+        delete: 'ti ti-trash',
+        view: 'ti ti-eye',
+        copy: 'ti ti-copy',
+        prev: 'ti ti-chevron-left',
+        next: 'ti ti-chevron-right',
+        close: 'ti ti-x'
+    } %}
+    <i class="{{ map[name]|default('ti ti-' ~ name) }}" aria-hidden="true"></i>
+{% elseif icon_set == 'svg_inline' %}
+    {% set paths = {
+        edit: 'M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z',
+        delete: 'M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z',
+        view: 'M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10z',
+        copy: 'M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z',
+        prev: 'M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z',
+        next: 'M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z',
+        close: 'M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'
+    } %}
+    <svg class="nowo-ui-icon" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path fill="currentColor" d="{{ paths[name]|default(paths.view) }}"/>
+    </svg>
+{% else %}
+    {# bootstrap-icons default #}
+    {% set map = {
+        edit: 'bi bi-pencil',
+        delete: 'bi bi-trash',
+        view: 'bi bi-eye',
+        copy: 'bi bi-clipboard',
+        prev: 'bi bi-chevron-left',
+        next: 'bi bi-chevron-right',
+        close: 'bi bi-x-lg'
+    } %}
+    <i class="{{ map[name]|default('bi bi-' ~ name) }}" aria-hidden="true"></i>
+{% endif %}

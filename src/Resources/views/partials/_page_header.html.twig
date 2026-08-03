@@ -1,0 +1,24 @@
+{#
+  Page header: title + optional intro + toolbar slot.
+
+  Required:
+    - title: string
+
+  Optional:
+    - intro: string
+    - toolbar: HTML string (pre-rendered) OR use block via embed
+    - framework
+#}
+{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
+{% set framework = framework|default(null) %}
+<div class="{{ ui.page_header(framework) }}">
+    <div class="nowo-ui-page-header__text">
+        <h1 class="nowo-ui-page-header__title">{{ title }}</h1>
+        {% if intro is defined and intro %}
+            <p class="nowo-ui-page-header__intro">{{ intro }}</p>
+        {% endif %}
+    </div>
+    {% if toolbar is defined and toolbar %}
+        <div class="{{ ui.toolbar(framework) }}">{{ toolbar|raw }}</div>
+    {% endif %}
+</div>

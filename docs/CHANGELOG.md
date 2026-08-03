@@ -1,0 +1,30 @@
+# Changelog
+
+All notable changes to this project are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/).
+
+## Table of contents
+
+- [Unreleased](#unreleased)
+- [1.0.0 - 2026-08-03](#100---2026-08-03)
+  - [Added](#added)
+
+## [Unreleased]
+
+## [1.0.0] - 2026-08-03
+
+### Added
+
+- Initial public release of **UiKit Bundle** (`nowo-tech/ui-kit-bundle`).
+- **Twig macros** (`@NowoUiKitBundle/macros/ui.html.twig`): buttons, toolbar, page header, search/input, list, table wrap/table, row actions, badge, muted/empty, flash, modal data attributes, pagination wrap, tabs — multi-framework class helpers (`bootstrap5`, `bootstrap4`, `tabler`, `tailwind`, `foundation`, `custom`, `none`) with optional per-call `framework` override.
+- **Partials**: pagination, empty state, flashes, row actions, page header, tabs, modal shell; **icon** component by `icon_set`.
+- **Assets** (named package `nowo_ui_kit`): `css/nowo-ui.css` (semantic `nowo-ui-*` + CSS variables) and `js/nowo-ui-modal.js` (custom/none/tailwind stacks).
+- **Configuration** (`nowo_ui_kit`): `css_framework`, `icon_set`; Twig globals `nowo_ui_kit_css_framework` / `nowo_ui_kit_icon_set`.
+- **i18n** domain `NowoUiKitBundle` with key parity for `en`, `es`, `it`, `fr`, `pt`, `de`, `nl`.
+- **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
+- Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
+
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/nowo-tech/UiKitBundle/releases/tag/v1.0.0

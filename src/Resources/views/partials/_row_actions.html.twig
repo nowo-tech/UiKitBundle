@@ -1,0 +1,34 @@
+{#
+  Row actions cluster (edit / delete / view / copy).
+
+  Required:
+    - actions: list of {
+        kind: edit|delete|view|copy,
+        href?: string (for GET links),
+        label?: string (defaults to action.* translation),
+        attr?: {}
+      }
+
+  Optional:
+    - framework
+#}
+{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
+{% set framework = framework|default(null) %}
+<div class="{{ ui.row_actions(framework) }}">
+    {% for action in actions %}
+        {% set kind = action.kind|default('edit') %}
+        {% set label = action.label|default(('action.' ~ kind)|trans({}, 'NowoUiKitBundle')) %}
+        <a
+            class="{{ ui.action(kind, framework) }}"
+            href="{{ action.href|default('#') }}"
+            title="{{ label }}"
+            aria-label="{{ label }}"
+            {% if action.attr is defined %}
+                {% for name, value in action.attr %}{{ name }}="{{ value }}" {% endfor %}
+            {% endif %}
+        >
+            {% include '@NowoUiKitBundle/components/_icon.html.twig' with { name: kind, label: label } only %}
+            <span class="visually-hidden">{{ label }}</span>
+        </a>
+    {% endfor %}
+</div>

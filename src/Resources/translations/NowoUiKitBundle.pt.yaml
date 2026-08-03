@@ -1,0 +1,13 @@
+pagination.nav: Paginação
+pagination.showing: A mostrar %from%–%to% de %total%
+pagination.previous: Anterior
+pagination.next: Seguinte
+action.edit: Editar
+action.delete: Eliminar
+action.view: Ver
+action.copy: Copiar
+action.close: Fechar
+empty.default: Nenhum item encontrado.
+tabs.nav: Secções
+demo.kitchen_sink.title: Kitchen sink UiKit
+demo.kitchen_sink.intro: Componentes UI Nowo canónicos (macros, tabelas, paginação, modais).

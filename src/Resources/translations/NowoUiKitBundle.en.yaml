@@ -1,0 +1,13 @@
+pagination.nav: Pagination
+pagination.showing: Showing %from%–%to% of %total%
+pagination.previous: Previous
+pagination.next: Next
+action.edit: Edit
+action.delete: Delete
+action.view: View
+action.copy: Copy
+action.close: Close
+empty.default: No items found.
+tabs.nav: Sections
+demo.kitchen_sink.title: UiKit kitchen sink
+demo.kitchen_sink.intro: Canonical Nowo UI components (macros, tables, pagination, modals).

@@ -1,0 +1,13 @@
+pagination.nav: Paginering
+pagination.showing: Toont %from%–%to% van %total%
+pagination.previous: Vorige
+pagination.next: Volgende
+action.edit: Bewerken
+action.delete: Verwijderen
+action.view: Bekijken
+action.copy: Kopiëren
+action.close: Sluiten
+empty.default: Geen items gevonden.
+tabs.nav: Secties
+demo.kitchen_sink.title: UiKit kitchen sink
+demo.kitchen_sink.intro: Canonieke Nowo UI-componenten (macro's, tabellen, paginering, modals).
