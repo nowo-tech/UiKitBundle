@@ -200,3 +200,35 @@ nowo-ui-tabs__item{% if active %} nowo-ui-tabs__item--active{% endif %}
 {%- elseif f == 'foundation' %} tabs-title{% if active %} is-active{% endif %}
 {%- endif -%}
 {%- endmacro %}
+
+{% macro shell(framework=null) -%}
+nowo-ui-shell
+{%- endmacro %}
+
+{% macro header(framework=null) -%}
+nowo-ui-header
+{%- set f = _self.resolve_fw(framework) -%}
+{%- if f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %} d-flex align-items-center justify-content-between gap-2
+{%- elseif f == 'tailwind' %} flex items-center justify-between gap-2
+{%- endif -%}
+{%- endmacro %}
+
+{% macro aside(framework=null) -%}
+nowo-ui-aside
+{%- endmacro %}
+
+{% macro avatar(size=null, framework=null) -%}
+nowo-ui-avatar{% if size %} nowo-ui-avatar--{{ size }}{% endif %}
+{%- endmacro %}
+
+{% macro user_menu(framework=null) -%}
+nowo-ui-user-menu
+{%- endmacro %}
+
+{% macro burger(framework=null) -%}
+nowo-ui-burger {{ _self.btn('secondary', 'sm', framework) }}
+{%- endmacro %}
+
+{% macro footer(framework=null) -%}
+nowo-ui-footer
+{%- endmacro %}

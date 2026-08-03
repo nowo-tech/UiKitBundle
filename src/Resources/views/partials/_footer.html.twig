@@ -1,0 +1,37 @@
+{#
+  Site footer.
+
+  Optional:
+    - links: [{ label, href, attr?: {} }]
+    - copyright / meta: string
+    - brand: string shown before links
+    - nav_label: aria-label
+    - framework
+#}
+{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
+{% set framework = framework|default(null) %}
+{% set nav_label = nav_label|default('footer.nav'|trans({}, 'NowoUiKitBundle')) %}
+<footer class="{{ ui.footer(framework) }}" role="contentinfo">
+    <div class="nowo-ui-footer__inner">
+        {% if brand is defined and brand %}
+            <p class="nowo-ui-footer__meta">{{ brand }}</p>
+        {% endif %}
+        {% if links is defined and links %}
+            <nav class="nowo-ui-footer__nav" aria-label="{{ nav_label }}">
+                {% for item in links %}
+                    <a
+                        href="{{ item.href }}"
+                        {% if item.attr is defined %}
+                            {% for name, value in item.attr %}{{ name }}="{{ value }}" {% endfor %}
+                        {% endif %}
+                    >{{ item.label }}</a>
+                {% endfor %}
+            </nav>
+        {% endif %}
+        {% if copyright is defined and copyright %}
+            <p class="nowo-ui-footer__meta">{{ copyright }}</p>
+        {% elseif meta is defined and meta %}
+            <p class="nowo-ui-footer__meta">{{ meta }}</p>
+        {% endif %}
+    </div>
+</footer>

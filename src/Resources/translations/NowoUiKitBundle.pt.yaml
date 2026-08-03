@@ -9,5 +9,10 @@ action.copy: Copiar
 action.close: Fechar
 empty.default: Nenhum item encontrado.
 tabs.nav: Secções
+nav.aside: Navegação
+nav.toggle_aside: Mostrar ou ocultar navegação
+nav.account: Menu da conta
+nav.logout: Terminar sessão
+footer.nav: Rodapé
 demo.kitchen_sink.title: Kitchen sink UiKit
-demo.kitchen_sink.intro: Componentes UI Nowo canónicos (macros, tabelas, paginação, modais).
+demo.kitchen_sink.intro: Componentes UI Nowo canónicos (macros, tabelas, paginação, modais, chrome).

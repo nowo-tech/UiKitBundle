@@ -9,105 +9,131 @@
 
 {% block body %}
     {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
-    {% include '@NowoUiKitBundle/partials/_flashes.html.twig' %}
 
-    {% set modal_open_btn %}
-        <button type="button" class="{{ ui.btn('primary') }}" {{ ui.modal_toggle_attrs() }} {{ ui.modal_target_attr('nowo-ui-kit-demo-modal') }}>Modal</button>
+    {% set sink_main %}
+        {% include '@NowoUiKitBundle/partials/_flashes.html.twig' %}
+
+        {% include '@NowoUiKitBundle/partials/_page_header.html.twig' with {
+            title: 'demo.kitchen_sink.title'|trans({}, 'NowoUiKitBundle'),
+            intro: 'demo.kitchen_sink.intro'|trans({}, 'NowoUiKitBundle')
+        } %}
+
+        {% include '@NowoUiKitBundle/partials/_tabs.html.twig' with {
+            items: [
+                { label: 'Buttons', href: '#buttons', current: true },
+                { label: 'Table', href: '#table', current: false },
+                { label: 'List', href: '#list', current: false }
+            ]
+        } %}
+
+        <section id="buttons" class="nowo-ui-body">
+            <div class="{{ ui.toolbar() }}">
+                <button type="button" class="{{ ui.btn('primary') }}">Primary</button>
+                <button type="button" class="{{ ui.btn('secondary') }}">Secondary</button>
+                <button type="button" class="{{ ui.btn('danger', 'sm') }}">Danger sm</button>
+                <button type="button" class="{{ ui.btn('link') }}">Link</button>
+                <span class="{{ ui.badge() }}">Badge</span>
+                <button type="button" class="{{ ui.btn('primary') }}" {{ ui.modal_toggle_attrs() }} {{ ui.modal_target_attr('nowo-ui-kit-demo-modal') }}>Modal</button>
+            </div>
+        </section>
+
+        <section id="table" class="nowo-ui-body">
+            <div class="{{ ui.table_wrap() }}">
+                <table class="{{ ui.table() }}">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>Alpha <span class="{{ ui.muted() }}">muted</span></td>
+                            <td>
+                                {% include '@NowoUiKitBundle/partials/_row_actions.html.twig' with {
+                                    actions: [
+                                        { kind: 'view', href: '#' },
+                                        { kind: 'edit', href: '#' },
+                                        { kind: 'delete', href: '#' }
+                                    ]
+                                } %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>Beta</td>
+                            <td>
+                                {% include '@NowoUiKitBundle/partials/_row_actions.html.twig' with {
+                                    actions: [
+                                        { kind: 'copy', href: '#' }
+                                    ]
+                                } %}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            {% if pagination is defined %}
+                {% include '@NowoUiKitBundle/partials/_pagination.html.twig' with {
+                    pagination: pagination,
+                    item_count: item_count|default(2),
+                    route: route|default('nowo_ui_kit_kitchen_sink'),
+                    route_params: route_params|default({}),
+                    query: query|default({})
+                } %}
+            {% endif %}
+        </section>
+
+        <section id="list" class="nowo-ui-body">
+            <ul class="{{ ui.list() }}">
+                <li class="{{ ui.list_item() }}"><span>Item A</span><span class="{{ ui.badge() }}">3</span></li>
+                <li class="{{ ui.list_item() }}"><span>Item B</span><span class="{{ ui.badge() }}">1</span></li>
+            </ul>
+            {% include '@NowoUiKitBundle/partials/_empty.html.twig' %}
+        </section>
+
+        {% set modal_footer %}
+            <button type="button" class="{{ ui.btn('secondary') }}" {{ ui.modal_dismiss_attrs() }}>Close</button>
+        {% endset %}
+        {% include '@NowoUiKitBundle/partials/_modal_shell.html.twig' with {
+            id: 'nowo-ui-kit-demo-modal',
+            title: 'Demo modal',
+            body: '<p>Modal body content.</p>',
+            footer: modal_footer
+        } %}
     {% endset %}
-    {% include '@NowoUiKitBundle/partials/_page_header.html.twig' with {
-        title: 'demo.kitchen_sink.title'|trans({}, 'NowoUiKitBundle'),
-        intro: 'demo.kitchen_sink.intro'|trans({}, 'NowoUiKitBundle'),
-        toolbar: modal_open_btn
-    } %}
 
-    {% include '@NowoUiKitBundle/partials/_tabs.html.twig' with {
-        items: [
-            { label: 'Buttons', href: '#buttons', current: true },
-            { label: 'Table', href: '#table', current: false },
-            { label: 'List', href: '#list', current: false }
-        ]
-    } %}
-
-    <section id="buttons" class="nowo-ui-body">
-        <div class="{{ ui.toolbar() }}">
-            <button type="button" class="{{ ui.btn('primary') }}">Primary</button>
-            <button type="button" class="{{ ui.btn('secondary') }}">Secondary</button>
-            <button type="button" class="{{ ui.btn('danger', 'sm') }}">Danger sm</button>
-            <button type="button" class="{{ ui.btn('link') }}">Link</button>
-            <span class="{{ ui.badge() }}">Badge</span>
-        </div>
-    </section>
-
-    <section id="table" class="nowo-ui-body">
-        <div class="{{ ui.table_wrap() }}">
-            <table class="{{ ui.table() }}">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>1</td>
-                        <td>Alpha <span class="{{ ui.muted() }}">muted</span></td>
-                        <td>
-                            {% include '@NowoUiKitBundle/partials/_row_actions.html.twig' with {
-                                actions: [
-                                    { kind: 'view', href: '#' },
-                                    { kind: 'edit', href: '#' },
-                                    { kind: 'delete', href: '#' }
-                                ]
-                            } %}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>2</td>
-                        <td>Beta</td>
-                        <td>
-                            {% include '@NowoUiKitBundle/partials/_row_actions.html.twig' with {
-                                actions: [
-                                    { kind: 'copy', href: '#' }
-                                ]
-                            } %}
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        {% if pagination is defined %}
-            {% include '@NowoUiKitBundle/partials/_pagination.html.twig' with {
-                pagination: pagination,
-                item_count: item_count|default(2),
-                route: route|default('nowo_ui_kit_kitchen_sink'),
-                route_params: route_params|default({}),
-                query: query|default({})
-            } %}
-        {% endif %}
-    </section>
-
-    <section id="list" class="nowo-ui-body">
-        <ul class="{{ ui.list() }}">
-            <li class="{{ ui.list_item() }}"><span>Item A</span><span class="{{ ui.badge() }}">3</span></li>
-            <li class="{{ ui.list_item() }}"><span>Item B</span><span class="{{ ui.badge() }}">1</span></li>
-        </ul>
-        {% include '@NowoUiKitBundle/partials/_empty.html.twig' %}
-    </section>
-
-    {% set modal_footer %}
-        <button type="button" class="{{ ui.btn('secondary') }}" {{ ui.modal_dismiss_attrs() }}>Close</button>
-    {% endset %}
-    {% include '@NowoUiKitBundle/partials/_modal_shell.html.twig' with {
-        id: 'nowo-ui-kit-demo-modal',
-        title: 'Demo modal',
-        body: '<p>Modal body content.</p>',
-        footer: modal_footer
+    {% include '@NowoUiKitBundle/partials/_shell.html.twig' with {
+        brand: 'Nowo UiKit',
+        aside_label: 'nav.aside'|trans({}, 'NowoUiKitBundle'),
+        aside_items: [
+            { label: 'Kitchen sink', href: '#buttons', current: true },
+            { label: 'Table', href: '#table' },
+            { label: 'List', href: '#list' }
+        ],
+        name: 'Demo User',
+        email: 'demo@example.com',
+        initials: 'DU',
+        user_links: [
+            { label: 'Preferences', href: '#', current: false },
+            { label: 'Dashboard', href: '#' }
+        ],
+        logout_href: '#logout',
+        footer_brand: 'Nowo UiKit',
+        footer_links: [
+            { label: 'Privacy', href: '#' },
+            { label: 'Terms', href: '#' }
+        ],
+        footer_copyright: '© 2026 Nowo.tech',
+        main: sink_main
     } %}
 {% endblock %}
 
 {% block javascripts %}
     {{ parent() }}
     <script src="{{ asset('js/nowo-ui-modal.js', 'nowo_ui_kit') }}" defer></script>
+    <script src="{{ asset('js/nowo-ui-shell.js', 'nowo_ui_kit') }}" defer></script>
 {% endblock %}

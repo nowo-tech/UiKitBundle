@@ -9,5 +9,10 @@ action.copy: Kopiëren
 action.close: Sluiten
 empty.default: Geen items gevonden.
 tabs.nav: Secties
+nav.aside: Navigatie
+nav.toggle_aside: Navigatie tonen of verbergen
+nav.account: Accountmenu
+nav.logout: Uitloggen
+footer.nav: Voettekst
 demo.kitchen_sink.title: UiKit kitchen sink
-demo.kitchen_sink.intro: Canonieke Nowo UI-componenten (macro's, tabellen, paginering, modals).
+demo.kitchen_sink.intro: Canonieke Nowo UI-componenten (macro's, tabellen, paginering, modals, shell).

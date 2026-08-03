@@ -1,0 +1,26 @@
+{#
+  Burger / sidebar toggle button.
+
+  Optional:
+    - controls: id of aside (default nowo-ui-aside)
+    - expanded: bool (default true on desktop intent)
+    - label: aria-label (default nav.toggle_aside)
+    - framework
+#}
+{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
+{% set framework = framework|default(null) %}
+{% set controls = controls|default('nowo-ui-aside') %}
+{% set expanded = expanded|default(true) %}
+{% set label = label|default('nav.toggle_aside'|trans({}, 'NowoUiKitBundle')) %}
+<button
+    type="button"
+    class="{{ ui.burger(framework) }}"
+    data-nowo-ui-burger
+    aria-controls="{{ controls }}"
+    aria-expanded="{{ expanded ? 'true' : 'false' }}"
+    aria-label="{{ label }}"
+>
+    <svg class="nowo-ui-burger__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+    </svg>
+</button>

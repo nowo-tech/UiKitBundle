@@ -1,0 +1,21 @@
+{#
+  Avatar (initials or image).
+
+  Optional:
+    - initials: string (e.g. JD)
+    - src: image URL
+    - alt: alt text for image
+    - size: sm|lg|null
+    - framework
+#}
+{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
+{% set framework = framework|default(null) %}
+{% set size = size|default(null) %}
+{% set initials = initials|default('?') %}
+<span class="{{ ui.avatar(size, framework) }}" {% if src is not defined or not src %}aria-hidden="true"{% endif %}>
+    {% if src is defined and src %}
+        <img src="{{ src }}" alt="{{ alt|default('') }}">
+    {% else %}
+        {{ initials|slice(0, 2)|upper }}
+    {% endif %}
+</span>

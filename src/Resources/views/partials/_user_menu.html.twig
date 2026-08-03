@@ -1,0 +1,78 @@
+{#
+  User avatar dropdown (+ logout).
+
+  Required-ish:
+    - name: display name
+    - email: secondary line (optional)
+    - initials OR avatar_src
+
+  Optional:
+    - links: [{ label, href, current?: bool }]
+    - logout_href: GET logout URL
+    - logout_path + logout_csrf: POST form logout (preferred when both set)
+    - logout_label
+    - account_label: summary aria-label
+    - framework
+#}
+{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
+{% set framework = framework|default(null) %}
+{% set account_label = account_label|default('nav.account'|trans({}, 'NowoUiKitBundle')) %}
+{% set logout_label = logout_label|default('nav.logout'|trans({}, 'NowoUiKitBundle')) %}
+<div class="{{ ui.user_menu(framework) }}" data-nowo-ui-user-menu>
+    <details class="nowo-ui-user-menu__details">
+        <summary class="nowo-ui-user-menu__summary" aria-label="{{ account_label }}">
+            {% include '@NowoUiKitBundle/partials/_avatar.html.twig' with {
+                initials: initials|default((name|default('?')|slice(0, 1))),
+                src: avatar_src|default(null),
+                alt: name|default(''),
+                framework: framework
+            } only %}
+        </summary>
+        <div class="nowo-ui-user-menu__panel" role="menu">
+            <div class="nowo-ui-user-menu__identity">
+                {% include '@NowoUiKitBundle/partials/_avatar.html.twig' with {
+                    initials: initials|default((name|default('?')|slice(0, 1))),
+                    src: avatar_src|default(null),
+                    size: 'sm',
+                    alt: name|default(''),
+                    framework: framework
+                } only %}
+                <div class="nowo-ui-user-menu__meta">
+                    {% if name is defined and name %}
+                        <p class="nowo-ui-user-menu__name">{{ name }}</p>
+                    {% endif %}
+                    {% if email is defined and email %}
+                        <p class="nowo-ui-user-menu__email">{{ email }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% for item in links|default([]) %}
+                {% set is_current = item.current|default(false) %}
+                <a
+                    class="nowo-ui-user-menu__link{{ is_current ? ' is-current' : '' }}"
+                    role="menuitem"
+                    href="{{ item.href }}"
+                    {% if is_current %}aria-current="page"{% endif %}
+                >{{ item.label }}</a>
+            {% endfor %}
+
+            {% if logout_path is defined and logout_path %}
+                <div class="nowo-ui-user-menu__footer">
+                    <form method="post" action="{{ logout_path }}" class="nowo-ui-user-menu__logout-form">
+                        {% if logout_csrf is defined and logout_csrf %}
+                            <input type="hidden" name="_csrf_token" value="{{ logout_csrf }}">
+                        {% endif %}
+                        <button type="submit" class="nowo-ui-user-menu__link nowo-ui-user-menu__link--danger" role="menuitem" style="width:100%;text-align:left;border:0;background:transparent;cursor:pointer;font:inherit;">
+                            {{ logout_label }}
+                        </button>
+                    </form>
+                </div>
+            {% elseif logout_href is defined and logout_href %}
+                <div class="nowo-ui-user-menu__footer">
+                    <a class="nowo-ui-user-menu__link nowo-ui-user-menu__link--danger" role="menuitem" href="{{ logout_href }}">{{ logout_label }}</a>
+                </div>
+            {% endif %}
+        </div>
+    </details>
+</div>

@@ -8,10 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [1.1.0 - 2026-08-03](#110---2026-08-03)
+  - [Added](#added-1)
 - [1.0.0 - 2026-08-03](#100---2026-08-03)
   - [Added](#added)
 
 ## [Unreleased]
+
+## [1.1.0] - 2026-08-03
+
+### Added
+
+- **App chrome**: left aside, burger toggle, avatar, user dropdown (with logout), and footer.
+- Partials: `_aside`, `_burger`, `_avatar`, `_user_menu`, `_footer`, composed `_shell`.
+- Macros: `shell`, `header`, `aside`, `avatar`, `user_menu`, `burger`, `footer`.
+- Asset `js/nowo-ui-shell.js` (desktop collapse + mobile drawer).
+- Kitchen sink demo renders inside the shell chrome.
 
 ## [1.0.0] - 2026-08-03
 
@@ -26,5 +38,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/nowo-tech/UiKitBundle/releases/tag/v1.0.0

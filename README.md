@@ -42,7 +42,7 @@ See [docs/USAGE.md](docs/USAGE.md) and [docs/CONFIGURATION.md](docs/CONFIGURATIO
 
 | Is | Is not |
 |----|--------|
-| Buttons, toolbars, tables, lists, pagination, tabs, flashes, empty states, modal shell, icons | DashboardMenu / BreadcrumbKit navigation chrome |
+| Buttons, toolbars, tables, lists, pagination, tabs, flashes, empty states, modal shell, icons, **aside / burger / avatar / user menu / footer** | DashboardMenu / BreadcrumbKit navigation chrome |
 | Shared `nowo-ui-*` look-and-feel | Domain CRUD pages |
 | Multi-framework class macros | Form widget themes (use FormKit) |
 

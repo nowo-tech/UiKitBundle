@@ -60,8 +60,19 @@ final class UiMacrosTwigTest extends TestCase
         $base = dirname(__DIR__, 2) . '/src/Resources/public';
         self::assertFileExists($base . '/css/nowo-ui.css');
         self::assertFileExists($base . '/js/nowo-ui-modal.js');
+        self::assertFileExists($base . '/js/nowo-ui-shell.js');
         self::assertStringContainsString('--nowo-ui-primary', (string) file_get_contents($base . '/css/nowo-ui.css'));
+        self::assertStringContainsString('nowo-ui-aside', (string) file_get_contents($base . '/css/nowo-ui.css'));
         self::assertStringContainsString('nowoOpenModal', (string) file_get_contents($base . '/js/nowo-ui-modal.js'));
+        self::assertStringContainsString('nowoUiToggleAside', (string) file_get_contents($base . '/js/nowo-ui-shell.js'));
+    }
+
+    public function testShellChromePartialsExist(): void
+    {
+        $views = dirname(__DIR__, 2) . '/src/Resources/views/partials';
+        foreach (['_aside.html.twig', '_burger.html.twig', '_avatar.html.twig', '_user_menu.html.twig', '_footer.html.twig', '_shell.html.twig'] as $file) {
+            self::assertFileExists($views . '/' . $file);
+        }
     }
 
     private function renderMacro(string $expression, string $framework): string

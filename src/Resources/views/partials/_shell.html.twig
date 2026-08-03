@@ -1,0 +1,73 @@
+{#
+  Optional app chrome composition helper (header + aside + main slot + footer).
+
+  Variables:
+    - brand_html / brand: header brand
+    - aside_items, aside_label, aside_id
+    - user_* for user menu (name, email, initials, links, logout_*)
+    - footer_links, footer_copyright, footer_brand
+    - main: HTML string for main content (or use embed / set main)
+    - show_user_menu: bool (default true when name/initials present)
+#}
+{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
+{% set framework = framework|default(null) %}
+{% set aside_id = aside_id|default('nowo-ui-aside') %}
+{% set collapsed = collapsed|default(false) %}
+
+<div
+    class="{{ ui.shell(framework) }}{{ collapsed ? ' is-aside-collapsed' : '' }}"
+    data-nowo-ui-shell
+>
+    <header class="{{ ui.header(framework) }}">
+        <div class="nowo-ui-header__start">
+            {% include '@NowoUiKitBundle/partials/_burger.html.twig' with {
+                controls: aside_id,
+                expanded: not collapsed,
+                framework: framework
+            } %}
+            {% if brand_html is defined and brand_html %}
+                {{ brand_html|raw }}
+            {% elseif brand is defined %}
+                <strong class="nowo-ui-header__brand">{{ brand }}</strong>
+            {% endif %}
+        </div>
+        <div class="nowo-ui-header__end">
+            {% if header_end is defined and header_end %}
+                {{ header_end|raw }}
+            {% endif %}
+            {% if show_user_menu|default(name is defined or initials is defined) %}
+                {% include '@NowoUiKitBundle/partials/_user_menu.html.twig' with {
+                    name: name|default(null),
+                    email: email|default(null),
+                    initials: initials|default(null),
+                    avatar_src: avatar_src|default(null),
+                    links: user_links|default([]),
+                    logout_href: logout_href|default(null),
+                    logout_path: logout_path|default(null),
+                    logout_csrf: logout_csrf|default(null),
+                    framework: framework
+                } only %}
+            {% endif %}
+        </div>
+    </header>
+
+    {% include '@NowoUiKitBundle/partials/_aside.html.twig' with {
+        id: aside_id,
+        label: aside_label|default(null),
+        items: aside_items|default([]),
+        framework: framework
+    } %}
+
+    <div class="nowo-ui-main">
+        {% if main is defined %}{{ main|raw }}{% endif %}
+    </div>
+
+    {% include '@NowoUiKitBundle/partials/_footer.html.twig' with {
+        brand: footer_brand|default(null),
+        links: footer_links|default([]),
+        copyright: footer_copyright|default(null),
+        framework: framework
+    } %}
+
+    <div class="nowo-ui-aside-backdrop" data-nowo-ui-aside-backdrop></div>
+</div>

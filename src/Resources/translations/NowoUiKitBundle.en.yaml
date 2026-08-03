@@ -9,5 +9,10 @@ action.copy: Copy
 action.close: Close
 empty.default: No items found.
 tabs.nav: Sections
+nav.aside: Navigation
+nav.toggle_aside: Toggle navigation
+nav.account: Account menu
+nav.logout: Log out
+footer.nav: Footer
 demo.kitchen_sink.title: UiKit kitchen sink
-demo.kitchen_sink.intro: Canonical Nowo UI components (macros, tables, pagination, modals).
+demo.kitchen_sink.intro: Canonical Nowo UI components (macros, tables, pagination, modals, shell chrome).

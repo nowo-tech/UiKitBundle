@@ -2,7 +2,21 @@
 
 ## Table of contents
 
+- [From 1.0.x to 1.1.0](#from-10x-to-110)
 - [From nothing to 1.0.0](#from-nothing-to-100)
+
+## From 1.0.x to 1.1.0
+
+Additive release — no breaking Twig/CSS API changes.
+
+1. `composer update nowo-tech/ui-kit-bundle`
+2. `php bin/console assets:install` (new `js/nowo-ui-shell.js`)
+3. Optionally adopt chrome partials:
+
+```twig
+<script src="{{ asset('js/nowo-ui-shell.js', 'nowo_ui_kit') }}" defer></script>
+{% include '@NowoUiKitBundle/partials/_shell.html.twig' with { … } %}
+```
 
 ## From nothing to 1.0.0
 
