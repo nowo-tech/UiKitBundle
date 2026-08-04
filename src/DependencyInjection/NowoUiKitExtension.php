@@ -60,6 +60,8 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
 
     /**
      * @param array<int, array<string, mixed>> $configs
+     *
+     * @return void
      */
     public function load(array $configs, ContainerBuilder $container): void
     {
