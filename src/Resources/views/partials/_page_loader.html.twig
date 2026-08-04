@@ -1,0 +1,37 @@
+{#
+  Full-page loader overlay.
+
+  Optional:
+    - label
+    - active (bool): start visible
+    - spinner_size: sm|md|lg (when visual=spinner)
+    - visual: spinner|orb (default spinner — BC)
+    - orb_state / orb_size / orb_theme: passed to _thinking_orb when visual=orb
+#}
+{% set label = label|default('loader.loading'|trans({}, 'NowoUiKitBundle')) %}
+{% set active = active|default(false) %}
+{% set spinner_size = spinner_size|default('lg') %}
+{% set visual = visual|default('spinner') %}
+{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
+<div
+    class="nowo-ui-page-loader{{ active ? ' is-active' : '' }}"
+    data-nowo-ui-page-loader
+    role="status"
+    aria-live="polite"
+    aria-busy="{{ active ? 'true' : 'false' }}"
+    {% if not active %}hidden{% endif %}
+>
+    <div class="nowo-ui-page-loader__inner">
+        {% if visual == 'orb' %}
+            {% include '@NowoUiKitBundle/partials/_thinking_orb.html.twig' with {
+                state: orb_state|default('breathing'),
+                size: orb_size|default(64),
+                theme: orb_theme|default('auto'),
+                label: label
+            } %}
+        {% else %}
+            <span class="{{ ui.spinner(spinner_size) }}" aria-hidden="true"></span>
+        {% endif %}
+        <p class="nowo-ui-page-loader__label">{{ label }}</p>
+    </div>
+</div>

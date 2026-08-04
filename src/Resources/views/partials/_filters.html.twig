@@ -1,0 +1,47 @@
+{#
+  Filter / search actions bar.
+
+  Optional:
+    - action: form action URL
+    - method: get|post (default get)
+    - q: current search value
+    - q_name: input name (default q)
+    - placeholder
+    - actions: HTML string (extra buttons)
+    - clear_href: clear filters link
+    - framework
+#}
+{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
+{% set framework = framework|default(null) %}
+{% set method = method|default('get') %}
+{% set q_name = q_name|default('q') %}
+{% set placeholder = placeholder|default('filters.search_placeholder'|trans({}, 'NowoUiKitBundle')) %}
+<form
+    class="{{ ui.filters(framework) }}"
+    method="{{ method }}"
+    {% if action is defined and action %}action="{{ action }}"{% endif %}
+    data-nowo-ui-filters
+    role="search"
+>
+    <label class="visually-hidden" for="nowo-ui-filter-q">{{ placeholder }}</label>
+    <input
+        id="nowo-ui-filter-q"
+        class="{{ ui.search_input(framework) }}"
+        type="search"
+        name="{{ q_name }}"
+        value="{{ q|default('') }}"
+        placeholder="{{ placeholder }}"
+        autocomplete="off"
+    >
+    <button type="submit" class="{{ ui.btn('primary', 'sm', framework) }}">
+        {{ 'filters.apply'|trans({}, 'NowoUiKitBundle') }}
+    </button>
+    {% if clear_href is defined and clear_href %}
+        <a class="{{ ui.btn('secondary', 'sm', framework) }}" href="{{ clear_href }}">
+            {{ 'filters.clear'|trans({}, 'NowoUiKitBundle') }}
+        </a>
+    {% endif %}
+    {% if actions is defined and actions %}
+        <div class="nowo-ui-filters__actions">{{ actions|raw }}</div>
+    {% endif %}
+</form>

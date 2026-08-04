@@ -7,6 +7,8 @@ action.delete: Delete
 action.view: View
 action.copy: Copy
 action.close: Close
+action.cancel: Cancel
+action.more: More actions
 empty.default: No items found.
 tabs.nav: Sections
 nav.aside: Navigation
@@ -14,5 +16,28 @@ nav.toggle_aside: Toggle navigation
 nav.account: Account menu
 nav.logout: Log out
 footer.nav: Footer
+toast.dismiss: Dismiss notification
+loader.loading: Loading…
+orb.working: Working…
+orb.searching: Searching…
+orb.solving: Solving…
+orb.listening: Listening…
+orb.connecting: Connecting…
+orb.weaving: Weaving…
+orb.composing: Composing…
+orb.breathing: Thinking…
+orb.shaping: Shaping…
+filters.search_placeholder: Search…
+filters.apply: Apply
+filters.clear: Clear
+theme.light: Light
+theme.dark: Dark
+theme.switch_to_light: Switch to light theme
+theme.switch_to_dark: Switch to dark theme
+layout.full: Full width
+layout.content: Content
+layout.switch_to_full: Switch to full width
+layout.switch_to_content: Switch to content width
+locale.nav: Language
 demo.kitchen_sink.title: UiKit kitchen sink
-demo.kitchen_sink.intro: Canonical Nowo UI components (macros, tables, pagination, modals, shell chrome).
+demo.kitchen_sink.intro: Canonical Nowo UI components (macros, tables, pagination, modals, toasts, confirm, shell chrome).

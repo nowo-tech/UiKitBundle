@@ -4,7 +4,7 @@
 
 > ⭐ **Found this useful?** [Install from Packagist](https://packagist.org/packages/nowo-tech/ui-kit-bundle) · Give it a **star** on [GitHub](https://github.com/nowo-tech/UiKitBundle) so more developers can find it.
 
-Canonical **admin UI kit** for Nowo Symfony bundles and host apps: Twig macros, semantic `nowo-ui-*` CSS, pagination/tabs/modals, shell chrome (aside / burger / avatar / user menu / footer), and multi-framework class helpers (`bootstrap5`, `tailwind`, `foundation`, `custom`, …) per **REQ-UI-001**.
+Canonical **admin UI kit** for Nowo Symfony bundles and host apps: Twig macros, semantic `nowo-ui-*` CSS, pagination/tabs/modals/toasts/confirm/loader, cards/filters, shell chrome (aside / nested nav / burger / avatar / user menu / footer), theme/locale/kebab helpers, and multi-framework class helpers (`bootstrap5`, `tailwind`, `foundation`, `custom`, …) per **REQ-UI-001**.
 
 **Compatible with Symfony 6.x, 7.4+, and 8.x** (PHP 8.1+; Symfony 8 requires PHP 8.4+).
 
@@ -28,17 +28,18 @@ This bundle is **FrankenPHP worker mode friendly**.
 
 | Is | Is not |
 |----|--------|
-| Buttons, toolbars, tables, lists, pagination, tabs, flashes, empty states, modal shell, icons, **aside / burger / avatar / user menu / footer** | DashboardMenu / BreadcrumbKit navigation chrome |
+| Buttons, toolbars, tables, lists, pagination, tabs, flashes/toasts, empty states, modal/confirm, cards/filters, icons, **aside (nested) / burger / avatar / user menu / footer**, theme/locale/kebab | DashboardMenu / BreadcrumbKit navigation chrome |
 | Shared `nowo-ui-*` look-and-feel | Domain CRUD pages / manage routes |
 | Multi-framework class macros | Form widget themes (use FormKit) |
 
 ## Features
 
 - Twig macros (`@NowoUiKitBundle/macros/ui.html.twig`) with optional per-call `framework` override
-- Semantic stylesheet `css/nowo-ui.css` (asset package `nowo_ui_kit`)
-- Modal + shell TypeScript → built IIFEs (`js/nowo-ui-modal.js`, `js/nowo-ui-shell.js`)
+- Semantic stylesheet `css/nowo-ui.css` (asset package `nowo_ui_kit`), including dark `[data-theme="dark"]` tokens
+- TypeScript → IIFEs: modal, shell, toast, confirm, page-loader, theme, orb
 - Config: `css_framework`, `icon_set`; i18n domain `NowoUiKitBundle` (`en`, `es`, `it`, `fr`, `pt`, `de`, `nl`)
 - Twig namespace overrides under `templates/bundles/NowoUiKitBundle/`
+- Adoption + Stimulus contracts: [docs/ADOPTION.md](docs/ADOPTION.md), [docs/STIMULUS.md](docs/STIMULUS.md)
 
 ## Installation
 
@@ -89,6 +90,10 @@ Developer-facing docs are **English only** ([Contributing — Language policy](d
 - [Installation](docs/INSTALLATION.md)
 - [Configuration](docs/CONFIGURATION.md)
 - [Usage](docs/USAGE.md)
+- [Adoption (Beacon + bundles)](docs/ADOPTION.md)
+- [Stimulus / data contracts](docs/STIMULUS.md)
+- [Third-party notices](docs/THIRD_PARTY.md)
+- [Roadmap](docs/ROADMAP.md)
 - [Flex recipe](docs/RECIPE.md)
 - [FrankenPHP demos](docs/DEMO-FRANKENPHP.md)
 - [Contributing](docs/CONTRIBUTING.md)
@@ -101,14 +106,13 @@ Developer-facing docs are **English only** ([Contributing — Language policy](d
 - [GitHub Actions CI](docs/GITHUB_CI.md)
 - [Spec-driven development](docs/SPEC-DRIVEN-DEVELOPMENT.md)
 - [Spec Kit](docs/SPEC-KIT.md)
-- [Roadmap](docs/ROADMAP.md)
 
 ## Tests and coverage
 
 | Suite | Coverage |
 |-------|----------|
 | PHP (PHPUnit) | 100% lines (fail under 99% in CI) |
-| TypeScript (Vitest) | ~96.7% lines (threshold ≥90%) |
+| TypeScript (Vitest) | ≥90% lines (Vitest thresholds) |
 | Python | N/A |
 
 ```bash

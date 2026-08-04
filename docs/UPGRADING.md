@@ -2,11 +2,33 @@
 
 ## Table of contents
 
+- [From 1.3.x to 1.4.0](#from-13x-to-140)
 - [From 1.2.x to 1.3.0](#from-12x-to-130)
 - [From 1.2.0 to 1.2.1](#from-120-to-121)
 - [From 1.1.x to 1.2.0](#from-11x-to-120)
 - [From 1.0.x to 1.1.0](#from-10x-to-110)
 - [From nothing to 1.0.0](#from-nothing-to-100)
+
+## From 1.3.x to 1.4.0
+
+**Additive** Twig/CSS/JS API — no breaking changes for existing macros/partials.
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+php bin/console assets:install
+```
+
+Optional:
+
+- Include new scripts (`nowo-ui-toast.js`, `nowo-ui-confirm.js`, `nowo-ui-page-loader.js`, `nowo-ui-theme.js`, `nowo-ui-orb.js`) where you adopt those partials.
+- Page loader: pass `visual: 'orb'` to use Thinking Orbs instead of the CSS spinner (default remains `spinner`).
+- Shell: include `_width_toggle.html.twig` for full ↔ content main width (persisted in `localStorage`).
+- Migrate host/feature UI toward kit partials ([ADOPTION.md](ADOPTION.md), [STIMULUS.md](STIMULUS.md)).
+- Contributors: `pnpm run build` now emits **seven** IIFEs (adds `orb`). See [THIRD_PARTY.md](THIRD_PARTY.md) for the Thinking Orbs MIT notice.
+
+`ui.badge('success')` sets a variant; `ui.badge('tailwind')` remains a framework override (unchanged BC).
+
+If `icon_set: ux_icon`, install `symfony/ux-icons` — the Twig call lives in `_icon_ux.html.twig` so other icon sets compile without that package.
 
 ## From 1.2.x to 1.3.0
 

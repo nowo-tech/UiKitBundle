@@ -11,8 +11,9 @@
 {% set label = label|default(name) %}
 {% if icon_set == 'none' %}
     <span class="nowo-ui-icon nowo-ui-icon--text">{{ label }}</span>
-{% elseif icon_set == 'ux_icon' and ux_icon is defined %}
-    {{ ux_icon(name starts with 'bi:' or name starts with 'tabler:' ? name : ('bi:' ~ name)) }}
+{% elseif icon_set == 'ux_icon' %}
+    {# Deferred to a separate template: Twig resolves ux_icon() at compile time. #}
+    {% include '@NowoUiKitBundle/components/_icon_ux.html.twig' with { name: name } only %}
 {% elseif icon_set == 'tabler-icons' %}
     {% set map = {
         edit: 'ti ti-pencil',

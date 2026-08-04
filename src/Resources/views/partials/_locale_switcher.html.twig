@@ -1,0 +1,79 @@
+{#
+  Generic locale switcher. Host supplies locale entries (no Beacon-specific routes).
+
+  Required:
+    - locales: list of {
+        code: string,
+        label: string,
+        href?: string,          # link mode
+        form_action?: string,   # form mode
+        csrf_token?: string,
+        csrf_field?: string,    # default _token
+        current?: bool
+      }
+
+  Optional:
+    - current: current locale code
+    - compact: bool
+#}
+{% set compact = compact|default(false) %}
+{% set current_locale = current|default(null) %}
+{% if current_locale is null %}
+    {% for locale in locales|default([]) %}
+        {% if locale.current|default(false) %}
+            {% set current_locale = locale.code %}
+        {% endif %}
+    {% endfor %}
+{% endif %}
+{% set current_locale = current_locale|default(locales[0].code|default('')) %}
+<div class="nowo-ui-locale-switcher{{ compact ? ' nowo-ui-locale-switcher--compact' : '' }}" data-nowo-ui-locale-switcher>
+    <details class="nowo-ui-locale-switcher__details">
+        <summary class="nowo-ui-locale-switcher__summary" aria-label="{{ 'locale.nav'|trans({}, 'NowoUiKitBundle') }}">
+            <span class="nowo-ui-locale-switcher__code" lang="{{ current_locale }}">{{ current_locale|upper }}</span>
+            {% if not compact %}
+                <span class="nowo-ui-locale-switcher__label">
+                    {% for locale in locales|default([]) %}
+                        {% if locale.code == current_locale %}{{ locale.label }}{% endif %}
+                    {% endfor %}
+                </span>
+            {% endif %}
+            <span class="nowo-ui-locale-switcher__chevron" aria-hidden="true"></span>
+        </summary>
+        <ul class="nowo-ui-locale-switcher__menu" role="listbox" aria-label="{{ 'locale.nav'|trans({}, 'NowoUiKitBundle') }}">
+            {% for locale in locales|default([]) %}
+                {% set is_current = locale.current|default(locale.code == current_locale) %}
+                <li role="option" aria-selected="{{ is_current ? 'true' : 'false' }}">
+                    {% if locale.form_action is defined and locale.form_action %}
+                        <form method="post" action="{{ locale.form_action }}" class="nowo-ui-locale-switcher__form">
+                            {% if locale.csrf_token is defined and locale.csrf_token %}
+                                <input type="hidden" name="{{ locale.csrf_field|default('_token') }}" value="{{ locale.csrf_token }}">
+                            {% endif %}
+                            {% if locale.redirect is defined and locale.redirect %}
+                                <input type="hidden" name="redirect" value="{{ locale.redirect }}">
+                            {% endif %}
+                            <button
+                                type="submit"
+                                class="nowo-ui-locale-switcher__option{{ is_current ? ' is-active' : '' }}"
+                                hreflang="{{ locale.code }}"
+                                lang="{{ locale.code }}"
+                            >
+                                <span class="nowo-ui-locale-switcher__code">{{ locale.code|upper }}</span>
+                                <span>{{ locale.label }}</span>
+                            </button>
+                        </form>
+                    {% else %}
+                        <a
+                            href="{{ locale.href|default('#') }}"
+                            class="nowo-ui-locale-switcher__option{{ is_current ? ' is-active' : '' }}"
+                            hreflang="{{ locale.code }}"
+                            lang="{{ locale.code }}"
+                        >
+                            <span class="nowo-ui-locale-switcher__code">{{ locale.code|upper }}</span>
+                            <span>{{ locale.label }}</span>
+                        </a>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    </details>
+</div>

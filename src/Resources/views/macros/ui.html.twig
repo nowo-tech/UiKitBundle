@@ -146,13 +146,23 @@ nowo-ui-flash nowo-ui-flash--{{ type == 'danger' or type == 'error' ? 'error' : 
 {%- endif -%}
 {%- endmacro %}
 
-{% macro badge(framework=null) -%}
-nowo-ui-badge
-{%- set f = _self.resolve_fw(framework) -%}
-{%- if f in ['bootstrap', 'bootstrap5', 'tabler'] %} badge bg-light text-dark border ms-2
-{%- elseif f == 'bootstrap4' %} badge badge-light border ml-2
-{%- elseif f == 'tailwind' %} ml-2 inline-flex rounded-full border border-slate-300 px-2 py-0.5 text-xs text-slate-700
-{%- elseif f == 'foundation' %} badge secondary
+{% macro badge(variantOrFramework=null, framework=null) -%}
+{%- set frameworks = ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler', 'tailwind', 'foundation', 'custom', 'none'] -%}
+{%- set variant = null -%}
+{%- if framework -%}
+  {%- set variant = variantOrFramework -%}
+  {%- set f = _self.resolve_fw(framework) -%}
+{%- elseif variantOrFramework in frameworks -%}
+  {%- set f = _self.resolve_fw(variantOrFramework) -%}
+{%- else -%}
+  {%- set variant = variantOrFramework -%}
+  {%- set f = _self.resolve_fw(null) -%}
+{%- endif -%}
+nowo-ui-badge{% if variant %} nowo-ui-badge--{{ variant }}{% endif %}
+{%- if f in ['bootstrap', 'bootstrap5', 'tabler'] %} badge{% if variant == 'success' %} bg-success{% elseif variant == 'warning' %} bg-warning text-dark{% elseif variant == 'danger' or variant == 'error' %} bg-danger{% elseif variant == 'info' %} bg-info text-dark{% else %} bg-light text-dark border{% endif %} ms-2
+{%- elseif f == 'bootstrap4' %} badge{% if variant == 'success' %} badge-success{% elseif variant == 'warning' %} badge-warning{% elseif variant == 'danger' or variant == 'error' %} badge-danger{% elseif variant == 'info' %} badge-info{% else %} badge-light border{% endif %} ml-2
+{%- elseif f == 'tailwind' %} ml-2 inline-flex rounded-full border px-2 py-0.5 text-xs{% if variant == 'success' %} border-emerald-300 text-emerald-800 bg-emerald-50{% elseif variant == 'warning' %} border-amber-300 text-amber-800 bg-amber-50{% elseif variant == 'danger' or variant == 'error' %} border-red-300 text-red-800 bg-red-50{% elseif variant == 'info' %} border-sky-300 text-sky-800 bg-sky-50{% else %} border-slate-300 text-slate-700{% endif %}
+{%- elseif f == 'foundation' %} badge{% if variant == 'success' %} success{% elseif variant == 'warning' %} warning{% elseif variant == 'danger' or variant == 'error' %} alert{% else %} secondary{% endif %}
 {%- endif -%}
 {%- endmacro %}
 
@@ -231,4 +241,77 @@ nowo-ui-burger {{ _self.btn('secondary', 'sm', framework) }}
 
 {% macro footer(framework=null) -%}
 nowo-ui-footer
+{%- endmacro %}
+
+{% macro card(framework=null) -%}
+nowo-ui-card
+{%- set f = _self.resolve_fw(framework) -%}
+{%- if f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %} card
+{%- elseif f == 'tailwind' %} rounded-md border border-slate-200 bg-white
+{%- elseif f == 'foundation' %} callout
+{%- endif -%}
+{%- endmacro %}
+
+{% macro card_header(framework=null) -%}
+nowo-ui-card__header
+{%- set f = _self.resolve_fw(framework) -%}
+{%- if f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %} card-header d-flex flex-wrap align-items-start justify-content-between gap-2
+{%- elseif f == 'tailwind' %} flex flex-wrap items-start justify-between gap-2 border-b border-slate-200 px-4 py-3
+{%- endif -%}
+{%- endmacro %}
+
+{% macro card_body(framework=null) -%}
+nowo-ui-card__body
+{%- set f = _self.resolve_fw(framework) -%}
+{%- if f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %} card-body
+{%- elseif f == 'tailwind' %} px-4 py-3
+{%- endif -%}
+{%- endmacro %}
+
+{% macro card_footer(framework=null) -%}
+nowo-ui-card__footer
+{%- set f = _self.resolve_fw(framework) -%}
+{%- if f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %} card-footer
+{%- elseif f == 'tailwind' %} border-t border-slate-200 px-4 py-3
+{%- endif -%}
+{%- endmacro %}
+
+{% macro filters(framework=null) -%}
+nowo-ui-filters {{ _self.search_form(framework) }}
+{%- endmacro %}
+
+{% macro progress(framework=null) -%}
+nowo-ui-progress
+{%- set f = _self.resolve_fw(framework) -%}
+{%- if f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %} progress
+{%- elseif f == 'tailwind' %} h-2 w-full overflow-hidden rounded-full bg-slate-200
+{%- endif -%}
+{%- endmacro %}
+
+{% macro progress_bar(value=0, framework=null) -%}
+nowo-ui-progress__bar
+{%- set f = _self.resolve_fw(framework) -%}
+{%- if f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %} progress-bar
+{%- elseif f == 'tailwind' %} h-full bg-blue-600
+{%- endif -%}
+{%- endmacro %}
+
+{% macro spinner(size=null, framework=null) -%}
+nowo-ui-spinner{% if size %} nowo-ui-spinner--{{ size }}{% endif %}
+{%- set f = _self.resolve_fw(framework) -%}
+{%- if f in ['bootstrap', 'bootstrap5', 'tabler'] %} spinner-border{% if size == 'sm' %} spinner-border-sm{% endif %}
+{%- elseif f == 'tailwind' %} inline-block animate-spin rounded-full border-2 border-slate-300 border-t-blue-600
+{%- endif -%}
+{%- endmacro %}
+
+{% macro confirm_toggle_attrs() -%}
+data-nowo-confirm-open
+{%- endmacro %}
+
+{% macro confirm_target_attr(id) -%}
+data-nowo-confirm-target="{{ id }}"
+{%- endmacro %}
+
+{% macro confirm_dismiss_attrs() -%}
+data-nowo-confirm-close
 {%- endmacro %}

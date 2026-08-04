@@ -1,10 +1,10 @@
 {#
-  Left aside / sidebar navigation.
+  Left aside / sidebar navigation (flat or nested groups).
 
   Optional:
     - id: HTML id (default nowo-ui-aside)
     - label: section label
-    - items: list of { label, href, current?: bool, attr?: {} }
+    - items: list of { label, href?, current?, open?, children?: [...], attr?: {} }
     - framework
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
@@ -17,17 +17,10 @@
             <p class="nowo-ui-aside__label">{{ label }}</p>
         {% endif %}
         <nav class="nowo-ui-aside__nav">
-            {% for item in items|default([]) %}
-                {% set is_current = item.current|default(false) %}
-                <a
-                    class="nowo-ui-aside__link{{ is_current ? ' is-current' : '' }}"
-                    href="{{ item.href }}"
-                    {% if is_current %}aria-current="page"{% endif %}
-                    {% if item.attr is defined %}
-                        {% for name, value in item.attr %}{{ name }}="{{ value }}" {% endfor %}
-                    {% endif %}
-                >{{ item.label }}</a>
-            {% endfor %}
+            {% include '@NowoUiKitBundle/partials/_aside_nav_items.html.twig' with {
+                items: items|default([]),
+                prefix: id
+            } only %}
         </nav>
         {% if aside_extra is defined and aside_extra %}
             <div class="nowo-ui-aside__extra">{{ aside_extra|raw }}</div>

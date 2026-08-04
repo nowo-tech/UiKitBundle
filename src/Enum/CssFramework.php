@@ -28,6 +28,8 @@ enum CssFramework: string
 
     /**
      * Normalize config aliases ({@see Bootstrap} → {@see Bootstrap5}).
+     *
+     * @return self Fluent interface
      */
     public function normalized(): self
     {

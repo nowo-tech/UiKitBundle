@@ -1,0 +1,35 @@
+{#
+  Main area width toggle: full ↔ content (max-width column).
+  Pair with js/nowo-ui-shell.js (data-nowo-ui-width-toggle).
+
+  Optional:
+    - compact: hide text label
+    - storage_key: localStorage key (default nowo-ui-main-width)
+#}
+{% set compact = compact|default(false) %}
+<button
+    type="button"
+    class="nowo-ui-width-toggle{{ compact ? ' nowo-ui-width-toggle--compact' : '' }}"
+    data-nowo-ui-width-toggle
+    data-nowo-ui-width-storage="{{ storage_key|default('nowo-ui-main-width') }}"
+    data-label-full="{{ 'layout.full'|trans({}, 'NowoUiKitBundle') }}"
+    data-label-content="{{ 'layout.content'|trans({}, 'NowoUiKitBundle') }}"
+    data-aria-to-full="{{ 'layout.switch_to_full'|trans({}, 'NowoUiKitBundle') }}"
+    data-aria-to-content="{{ 'layout.switch_to_content'|trans({}, 'NowoUiKitBundle') }}"
+    aria-pressed="false"
+    aria-label="{{ 'layout.switch_to_content'|trans({}, 'NowoUiKitBundle') }}"
+>
+    {# Full-width: outer frame #}
+    <svg class="nowo-ui-width-toggle__icon nowo-ui-width-toggle__icon--full" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <rect x="3.5" y="5.5" width="17" height="13" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.75"/>
+        <path d="M8 9.5h8M8 14.5h8" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+    </svg>
+    {# Content width: inset column #}
+    <svg class="nowo-ui-width-toggle__icon nowo-ui-width-toggle__icon--content" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <rect x="3.5" y="5.5" width="17" height="13" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.75" opacity="0.45"/>
+        <rect x="7.5" y="7.5" width="9" height="9" rx="1" fill="none" stroke="currentColor" stroke-width="1.75"/>
+    </svg>
+    {% if not compact %}
+        <span class="nowo-ui-width-toggle__label" data-nowo-ui-width-label>{{ 'layout.full'|trans({}, 'NowoUiKitBundle') }}</span>
+    {% endif %}
+</button>

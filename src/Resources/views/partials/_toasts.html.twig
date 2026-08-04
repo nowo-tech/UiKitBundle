@@ -1,0 +1,54 @@
+{#
+  Symfony flashes → fixed toast stack (nowo-ui-toast*).
+
+  Supports string messages and structured arrays: { title, message }.
+  Optional:
+    - framework
+    - flashes: override app.flashes (for tests / embedding)
+#}
+{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
+{% set framework = framework|default(null) %}
+{% set toast_messages = flashes|default(app.flashes) %}
+{% if toast_messages is not empty %}
+    <div
+        class="nowo-ui-toast-stack"
+        data-nowo-ui-toast-stack
+        aria-live="polite"
+        aria-atomic="false"
+        aria-relevant="additions"
+    >
+        {% for label, messages in toast_messages %}
+            {% for message in messages %}
+                {% set isError = label in ['error', 'danger'] %}
+                {% set isWarning = label == 'warning' %}
+                {% set flashType = isError ? 'error' : (label == 'notice' ? 'info' : label) %}
+                {% set structured = message is iterable and message.title is defined %}
+                <div
+                    class="nowo-ui-toast {{ ui.flash(flashType, framework) }}"
+                    role="{{ isError or isWarning ? 'alert' : 'status' }}"
+                    data-nowo-ui-toast
+                    data-timeout="{{ isError or isWarning ? 8000 : 5000 }}"
+                >
+                    <div class="nowo-ui-toast__content">
+                        {% if structured %}
+                            <p class="nowo-ui-toast__title">{{ message.title }}</p>
+                            {% if message.message is defined and message.message is not empty %}
+                                <p class="nowo-ui-toast__message">{{ message.message }}</p>
+                            {% endif %}
+                        {% else %}
+                            <p class="nowo-ui-toast__message">{{ message }}</p>
+                        {% endif %}
+                    </div>
+                    <button
+                        type="button"
+                        class="nowo-ui-toast__dismiss"
+                        data-nowo-ui-toast-dismiss
+                        aria-label="{{ 'toast.dismiss'|trans({}, 'NowoUiKitBundle') }}"
+                    >
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            {% endfor %}
+        {% endfor %}
+    </div>
+{% endif %}

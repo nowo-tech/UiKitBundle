@@ -1,5 +1,5 @@
 pagination.nav: Paginering
-pagination.showing: Toont %from%–%to% van %total%
+pagination.showing: '%from%–%to% van %total% weergegeven'
 pagination.previous: Vorige
 pagination.next: Volgende
 action.edit: Bewerken
@@ -7,6 +7,8 @@ action.delete: Verwijderen
 action.view: Bekijken
 action.copy: Kopiëren
 action.close: Sluiten
+action.cancel: Annuleren
+action.more: Meer acties
 empty.default: Geen items gevonden.
 tabs.nav: Secties
 nav.aside: Navigatie
@@ -14,5 +16,28 @@ nav.toggle_aside: Navigatie tonen of verbergen
 nav.account: Accountmenu
 nav.logout: Uitloggen
 footer.nav: Voettekst
+toast.dismiss: Melding sluiten
+loader.loading: Laden…
+orb.working: Bezig…
+orb.searching: Zoeken…
+orb.solving: Oplossen…
+orb.listening: Luisteren…
+orb.connecting: Verbinden…
+orb.weaving: Weven…
+orb.composing: Componeren…
+orb.breathing: Nadenken…
+orb.shaping: Vormgeven…
+filters.search_placeholder: Zoeken…
+filters.apply: Toepassen
+filters.clear: Wissen
+theme.light: Licht
+theme.dark: Donker
+theme.switch_to_light: Overschakelen naar licht thema
+theme.switch_to_dark: Overschakelen naar donker thema
+layout.full: Volledige breedte
+layout.content: Inhoud
+layout.switch_to_full: Overschakelen naar volledige breedte
+layout.switch_to_content: Overschakelen naar inhoudsbreedte
+locale.nav: Taal
 demo.kitchen_sink.title: UiKit kitchen sink
-demo.kitchen_sink.intro: Canonieke Nowo UI-componenten (macro's, tabellen, paginering, modals, shell).
+demo.kitchen_sink.intro: Canonieke Nowo UI-componenten (macro’s, tabellen, paginering, modals, toasts, bevestiging, shell).

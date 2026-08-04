@@ -1,0 +1,40 @@
+{#
+  Accessible confirm <dialog> (destructive actions). Host supplies POST+CSRF in footer/body.
+
+  Required:
+    - id
+    - title
+
+  Optional:
+    - body (HTML string)
+    - footer (HTML string; default Cancel button)
+    - cancel_label
+    - framework
+#}
+{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
+{% set framework = framework|default(null) %}
+{% set cancel_label = cancel_label|default('action.cancel'|trans({}, 'NowoUiKitBundle')) %}
+<dialog
+    id="{{ id }}"
+    class="nowo-ui-confirm"
+    data-nowo-ui-confirm
+    aria-labelledby="{{ id }}-title"
+>
+    <div class="nowo-ui-confirm__panel">
+        <header class="nowo-ui-confirm__header">
+            <h2 class="nowo-ui-confirm__title" id="{{ id }}-title">{{ title }}</h2>
+        </header>
+        {% if body is defined and body %}
+            <div class="nowo-ui-confirm__body">{{ body|raw }}</div>
+        {% endif %}
+        <div class="nowo-ui-confirm__footer">
+            {% if footer is defined and footer %}
+                {{ footer|raw }}
+            {% else %}
+                <button type="button" class="{{ ui.btn('secondary', null, framework) }}" data-nowo-confirm-close>
+                    {{ cancel_label }}
+                </button>
+            {% endif %}
+        </div>
+    </div>
+</dialog>

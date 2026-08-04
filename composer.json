@@ -1,6 +1,6 @@
 {
     "name": "nowo-tech/ui-kit-bundle",
-    "description": "Canonical Nowo admin UI kit for Symfony: Twig macros, semantic nowo-ui-* CSS, pagination/tabs/modals, multi-framework class helpers (REQ-UI-001).",
+    "description": "Canonical Nowo admin UI kit for Symfony: Twig macros, semantic nowo-ui-* CSS, pagination/tabs/modals/toasts/confirm, shell chrome, multi-framework class helpers (REQ-UI-001).",
     "type": "symfony-bundle",
     "license": "MIT",
     "keywords": [

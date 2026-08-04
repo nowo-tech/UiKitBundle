@@ -10,9 +10,19 @@
 {% block body %}
     {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 
-    {% set sink_main %}
-        {% include '@NowoUiKitBundle/partials/_flashes.html.twig' %}
+    {% include '@NowoUiKitBundle/partials/_page_loader.html.twig' with {
+        visual: 'orb',
+        orb_state: 'breathing'
+    } %}
 
+    {% include '@NowoUiKitBundle/partials/_toasts.html.twig' with {
+        flashes: {
+            success: ['Saved successfully.'],
+            warning: [{ title: 'Attention', message: 'Structured toast example.' }]
+        }
+    } %}
+
+    {% set sink_main %}
         {% include '@NowoUiKitBundle/partials/_page_header.html.twig' with {
             title: 'demo.kitchen_sink.title'|trans({}, 'NowoUiKitBundle'),
             intro: 'demo.kitchen_sink.intro'|trans({}, 'NowoUiKitBundle')
@@ -22,8 +32,15 @@
             items: [
                 { label: 'Buttons', href: '#buttons', current: true },
                 { label: 'Table', href: '#table', current: false },
-                { label: 'List', href: '#list', current: false }
+                { label: 'Feedback', href: '#feedback', current: false },
+                { label: 'Orbs', href: '#orbs', current: false }
             ]
+        } %}
+
+        {% include '@NowoUiKitBundle/partials/_filters.html.twig' with {
+            q: '',
+            clear_href: '#',
+            actions: '<button type="button" class="' ~ ui.btn('secondary', 'sm') ~ '" data-nowo-ui-page-loader-show>Show loader</button>'
         } %}
 
         <section id="buttons" class="nowo-ui-body">
@@ -33,9 +50,35 @@
                 <button type="button" class="{{ ui.btn('danger', 'sm') }}">Danger sm</button>
                 <button type="button" class="{{ ui.btn('link') }}">Link</button>
                 <span class="{{ ui.badge() }}">Badge</span>
+                <span class="{{ ui.badge('success') }}">Success</span>
+                <span class="{{ ui.badge('danger') }}">Danger</span>
                 <button type="button" class="{{ ui.btn('primary') }}" {{ ui.modal_toggle_attrs() }} {{ ui.modal_target_attr('nowo-ui-kit-demo-modal') }}>Modal</button>
+                <button type="button" class="{{ ui.btn('danger', 'sm') }}" {{ ui.confirm_toggle_attrs() }} {{ ui.confirm_target_attr('nowo-ui-kit-demo-confirm') }}>Confirm</button>
+                {% include '@NowoUiKitBundle/partials/_kebab.html.twig' with {
+                    items: [
+                        { label: 'Open', href: '#' },
+                        { label: 'Delete', href: '#', danger: true }
+                    ]
+                } %}
             </div>
+            <div class="{{ ui.progress() }}" style="max-width: 16rem; margin-top: 1rem;">
+                <div class="{{ ui.progress_bar() }}" style="width: 45%;" role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            <p class="nowo-ui-body" style="margin-top: 0.75rem;">
+                <span class="{{ ui.spinner('sm') }}" aria-hidden="true"></span>
+                <span class="{{ ui.muted() }}"> Spinner</span>
+            </p>
         </section>
+
+        {% set card_body %}
+            <p class="{{ ui.muted() }}">Card / panel building block for admin surfaces.</p>
+        {% endset %}
+        {% include '@NowoUiKitBundle/partials/_card.html.twig' with {
+            title: 'Example card',
+            intro: 'Header + body + footer slots',
+            body: card_body,
+            footer: '<button type="button" class="' ~ ui.btn('secondary', 'sm') ~ '" data-nowo-ui-page-loader-hide>Hide loader</button>'
+        } %}
 
         <section id="table" class="nowo-ui-body">
             <div class="{{ ui.table_wrap() }}">
@@ -87,12 +130,32 @@
             {% endif %}
         </section>
 
-        <section id="list" class="nowo-ui-body">
+        <section id="feedback" class="nowo-ui-body">
             <ul class="{{ ui.list() }}">
-                <li class="{{ ui.list_item() }}"><span>Item A</span><span class="{{ ui.badge() }}">3</span></li>
-                <li class="{{ ui.list_item() }}"><span>Item B</span><span class="{{ ui.badge() }}">1</span></li>
+                <li class="{{ ui.list_item() }}"><span>Item A</span><span class="{{ ui.badge('info') }}">3</span></li>
+                <li class="{{ ui.list_item() }}"><span>Item B</span><span class="{{ ui.badge('warning') }}">1</span></li>
             </ul>
             {% include '@NowoUiKitBundle/partials/_empty.html.twig' %}
+        </section>
+
+        <section id="orbs" class="nowo-ui-body">
+            {% include '@NowoUiKitBundle/partials/_page_header.html.twig' with {
+                title: 'Thinking orbs',
+                intro: 'Local canvas orbs (MIT thinking-orbs engine). Size 64 / inline 20.'
+            } %}
+            <div class="nowo-ui-orb-row">
+                {% for state in ['working', 'searching', 'solving', 'listening', 'connecting', 'weaving', 'composing', 'breathing', 'shaping'] %}
+                    <div class="nowo-ui-orb-row__item">
+                        {% include '@NowoUiKitBundle/partials/_thinking_orb.html.twig' with { state: state, size: 64 } %}
+                        <p class="nowo-ui-orb-row__caption">{{ state }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+            <p class="{{ ui.muted() }}" style="margin-top: 1rem;">
+                Inline
+                {% include '@NowoUiKitBundle/partials/_thinking_orb.html.twig' with { state: 'searching', size: 20 } %}
+                searching…
+            </p>
         </section>
 
         {% set modal_footer %}
@@ -104,15 +167,51 @@
             body: '<p>Modal body content.</p>',
             footer: modal_footer
         } %}
+
+        {% set confirm_footer %}
+            <button type="button" class="{{ ui.btn('secondary') }}" {{ ui.confirm_dismiss_attrs() }}>{{ 'action.cancel'|trans({}, 'NowoUiKitBundle') }}</button>
+            <button type="button" class="{{ ui.btn('danger') }}" {{ ui.confirm_dismiss_attrs() }}>{{ 'action.delete'|trans({}, 'NowoUiKitBundle') }}</button>
+        {% endset %}
+        {% include '@NowoUiKitBundle/partials/_confirm.html.twig' with {
+            id: 'nowo-ui-kit-demo-confirm',
+            title: 'Delete item?',
+            body: '<p>This action cannot be undone. Host forms should POST with CSRF.</p>',
+            footer: confirm_footer
+        } %}
+    {% endset %}
+
+    {% set header_end %}
+        {% include '@NowoUiKitBundle/partials/_width_toggle.html.twig' with { compact: true } %}
+        {% include '@NowoUiKitBundle/partials/_theme_toggle.html.twig' with { compact: true } %}
+        {% include '@NowoUiKitBundle/partials/_locale_switcher.html.twig' with {
+            compact: true,
+            current: 'en',
+            locales: [
+                { code: 'en', label: 'English', href: '#', current: true },
+                { code: 'es', label: 'Español', href: '#' },
+                { code: 'de', label: 'Deutsch', href: '#' }
+            ]
+        } %}
+    {% endset %}
+
+    {% set brand_html %}
+        {% include '@NowoUiKitBundle/partials/_brand.html.twig' with { name: 'Nowo UiKit', href: '#' } %}
     {% endset %}
 
     {% include '@NowoUiKitBundle/partials/_shell.html.twig' with {
-        brand: 'Nowo UiKit',
+        brand_html: brand_html,
+        header_end: header_end,
         aside_label: 'nav.aside'|trans({}, 'NowoUiKitBundle'),
         aside_items: [
             { label: 'Kitchen sink', href: '#buttons', current: true },
-            { label: 'Table', href: '#table' },
-            { label: 'List', href: '#list' }
+            {
+                label: 'Sections',
+                open: true,
+                children: [
+                    { label: 'Table', href: '#table' },
+                    { label: 'Feedback', href: '#feedback' }
+                ]
+            }
         ],
         name: 'Demo User',
         email: 'demo@example.com',
@@ -136,4 +235,9 @@
     {{ parent() }}
     <script src="{{ asset('js/nowo-ui-modal.js', 'nowo_ui_kit') }}" defer></script>
     <script src="{{ asset('js/nowo-ui-shell.js', 'nowo_ui_kit') }}" defer></script>
+    <script src="{{ asset('js/nowo-ui-toast.js', 'nowo_ui_kit') }}" defer></script>
+    <script src="{{ asset('js/nowo-ui-confirm.js', 'nowo_ui_kit') }}" defer></script>
+    <script src="{{ asset('js/nowo-ui-page-loader.js', 'nowo_ui_kit') }}" defer></script>
+    <script src="{{ asset('js/nowo-ui-theme.js', 'nowo_ui_kit') }}" defer></script>
+    <script src="{{ asset('js/nowo-ui-orb.js', 'nowo_ui_kit') }}" defer></script>
 {% endblock %}

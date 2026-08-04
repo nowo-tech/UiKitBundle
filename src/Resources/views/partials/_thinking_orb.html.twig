@@ -1,0 +1,30 @@
+{#
+  Thinking Orb canvas (local nowo-ui-orb.js — MIT thinking-orbs engine).
+
+  Optional:
+    - state: working|searching|solving|listening|connecting|weaving|composing|breathing|shaping
+    - size: 64|20
+    - theme: auto|dark|light
+    - speed: number (default 1)
+    - paused: bool
+    - label: aria-label override
+#}
+{% set state = state|default('working') %}
+{% set size = size|default(64) %}
+{% set theme = theme|default('auto') %}
+{% set speed = speed|default(1) %}
+{% set paused = paused|default(false) %}
+{% set label = label|default(('orb.' ~ state)|trans({}, 'NowoUiKitBundle')) %}
+<canvas
+    class="nowo-ui-orb nowo-ui-orb--{{ size }}"
+    data-nowo-ui-orb
+    data-state="{{ state }}"
+    data-size="{{ size }}"
+    data-theme="{{ theme }}"
+    data-speed="{{ speed }}"
+    {% if paused %}data-paused{% endif %}
+    width="{{ size }}"
+    height="{{ size }}"
+    role="img"
+    aria-label="{{ label }}"
+></canvas>

@@ -8,20 +8,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [1.4.0 - 2026-08-04](#140---2026-08-04)
+  - [Added](#added)
+  - [Changed](#changed)
+  - [Fixed](#fixed)
 - [1.3.0 - 2026-08-03](#130---2026-08-03)
-  - [Added](#added-3)
+  - [Added](#added-1)
   - [Changed](#changed-1)
 - [1.2.1 - 2026-08-03](#121---2026-08-03)
-  - [Fixed](#fixed)
+  - [Fixed](#fixed-1)
 - [1.2.0 - 2026-08-03](#120---2026-08-03)
-  - [Changed](#changed)
+  - [Changed](#changed-2)
   - [Added](#added-2)
 - [1.1.0 - 2026-08-03](#110---2026-08-03)
-  - [Added](#added-1)
+  - [Added](#added-3)
 - [1.0.0 - 2026-08-03](#100---2026-08-03)
-  - [Added](#added)
+  - [Added](#added-4)
 
 ## [Unreleased]
+
+## [1.4.0] - 2026-08-04
+
+### Added
+
+- **Phase A — feedback:** `_toasts`, `_confirm`, `_page_loader` partials; CSS; TypeScript IIFEs `nowo-ui-toast.js`, `nowo-ui-confirm.js`, `nowo-ui-page-loader.js`.
+- **Phase B — layout:** `_card`, `_filters`, `_brand`; nested aside `children` + shell nav-group toggle; card/filters macros.
+- **Phase C — host chrome:** `_theme_toggle`, `_locale_switcher`, `_kebab`; `progress` / `progress_bar` / `spinner` macros; `nowo-ui-theme.js`; dark `[data-theme="dark"]` token defaults.
+- **Thinking Orbs:** `_thinking_orb.html.twig`, `nowo-ui-orb.js` (local MIT canvas engine from [thinking-orbs](https://orbs.jakubantalik.com)); page loader `visual: orb|spinner` (default `spinner`); [THIRD_PARTY.md](THIRD_PARTY.md).
+- **Shell UX:** smoother aside transitions; `_width_toggle.html.twig` (full ↔ content main width) + `nowoUiSetMainWidth` / `nowoUiToggleMainWidth`.
+- Badge variants (`success`, `warning`, `danger`, `info`, `neutral`) with BC for `ui.badge('tailwind')`.
+- Confirm Twig helpers: `confirm_toggle_attrs`, `confirm_target_attr`, `confirm_dismiss_attrs`.
+- Docs: [ADOPTION.md](ADOPTION.md), [STIMULUS.md](STIMULUS.md); kitchen sink covers new surfaces (orbs section).
+- i18n keys for toast/loader/filters/theme/locale/layout/orb/cancel/more (`en`, `es`, `it`, `fr`, `pt`, `de`, `nl`).
+
+### Changed
+
+- [ROADMAP.md](ROADMAP.md): phases A–D marked complete on the kit side (consumer migration tracked in ADOPTION).
+- Vite/`pnpm run build` emits seven IIFE entrypoints (adds `orb`).
+- `_icon.html.twig`: `ux_icon` call deferred to `_icon_ux.html.twig` so hosts without `symfony/ux-icons` can compile templates.
+
+### Fixed
+
+- Demo `config/routes.yaml`: controller path `../src/Controller/` (was `../../…`).
+- Demo `web_profiler.yaml`: removed deprecated `framework.profiler.collect_serializer_data` (Symfony 8.1).
+- TypeScript coverage gate: Vitest include limited to top-level IIFE sources; `ts-coverage-percent.sh` enforces branches ≥85% (aligned with Vitest / COVERAGE.md).
 
 ## [1.3.0] - 2026-08-03
 
@@ -80,7 +110,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/nowo-tech/UiKitBundle/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.1.0...v1.2.0

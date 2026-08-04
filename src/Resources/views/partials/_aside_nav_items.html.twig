@@ -1,0 +1,45 @@
+{#
+  Recursive aside nav items (flat or nested groups).
+
+  items: list of {
+    label, href?, current?, open?, children?: [...], attr?: {}
+  }
+#}
+{% for item in items|default([]) %}
+    {% set children = item.children|default([]) %}
+    {% if children is not empty %}
+        {% set is_open = item.open|default(item.current|default(false)) %}
+        {% set group_id = 'nowo-ui-nav-group-' ~ loop.index ~ '-' ~ (prefix|default('root')) %}
+        <div
+            class="nowo-ui-aside__group{{ is_open ? ' is-open' : '' }}"
+            data-nowo-ui-nav-group
+        >
+            <button
+                type="button"
+                class="nowo-ui-aside__group-toggle"
+                data-nowo-ui-nav-group-toggle
+                aria-expanded="{{ is_open ? 'true' : 'false' }}"
+                aria-controls="{{ group_id }}"
+            >
+                <span>{{ item.label }}</span>
+                <span class="nowo-ui-aside__chevron" aria-hidden="true"></span>
+            </button>
+            <div id="{{ group_id }}" class="nowo-ui-aside__group-panel" role="group">
+                {% include '@NowoUiKitBundle/partials/_aside_nav_items.html.twig' with {
+                    items: children,
+                    prefix: group_id
+                } only %}
+            </div>
+        </div>
+    {% else %}
+        {% set is_current = item.current|default(false) %}
+        <a
+            class="nowo-ui-aside__link{{ is_current ? ' is-current' : '' }}"
+            href="{{ item.href|default('#') }}"
+            {% if is_current %}aria-current="page"{% endif %}
+            {% if item.attr is defined %}
+                {% for name, value in item.attr %}{{ name }}="{{ value }}" {% endfor %}
+            {% endif %}
+        >{{ item.label }}</a>
+    {% endif %}
+{% endfor %}

@@ -103,4 +103,72 @@ describe('nowo-ui-shell', () => {
     mod.bindNowoUiShell();
     expect(window.nowoUiToggleAside).toBe(mod.toggleAside);
   });
+
+  it('toggles nested nav groups', () => {
+    document.body.innerHTML = `
+      <div data-nowo-ui-shell>
+        <div data-nowo-ui-nav-group>
+          <button type="button" data-nowo-ui-nav-group-toggle aria-expanded="false">Group</button>
+        </div>
+      </div>
+    `;
+    const group = document.querySelector('[data-nowo-ui-nav-group]')!;
+    const btn = document.querySelector('[data-nowo-ui-nav-group-toggle]')!;
+    btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    expect(group.classList.contains('is-open')).toBe(true);
+    expect(btn.getAttribute('aria-expanded')).toBe('true');
+    btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    expect(group.classList.contains('is-open')).toBe(false);
+  });
+
+  it('resolves shell from document when toggle has no closest shell', () => {
+    document.body.innerHTML = `
+      <div data-nowo-ui-shell class="nowo-ui-shell"></div>
+      <button type="button" data-nowo-ui-burger>Orphan</button>
+    `;
+    document.querySelector('[data-nowo-ui-burger]')!
+      .dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    expect(document.querySelector('[data-nowo-ui-shell]')?.classList.contains('is-aside-collapsed')).toBe(true);
+  });
+
+  it('toggles main width full ↔ content', () => {
+    document.body.innerHTML = `
+      <div data-nowo-ui-shell class="nowo-ui-shell">
+        <button
+          type="button"
+          data-nowo-ui-width-toggle
+          data-label-full="Full"
+          data-label-content="Content"
+          data-aria-to-full="To full"
+          data-aria-to-content="To content"
+        >
+          <span data-nowo-ui-width-label>Full</span>
+        </button>
+      </div>
+    `;
+    const shell = document.querySelector('[data-nowo-ui-shell]') as HTMLElement;
+    const btn = shell.querySelector('[data-nowo-ui-width-toggle]') as HTMLElement;
+    btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    expect(shell.classList.contains('is-main-content')).toBe(true);
+    expect(btn.getAttribute('aria-pressed')).toBe('true');
+    expect(btn.querySelector('[data-nowo-ui-width-label]')?.textContent).toBe('Content');
+    mod.toggleMainWidth(shell);
+    expect(shell.classList.contains('is-main-content')).toBe(false);
+    mod.setMainWidth('content', shell);
+    expect(shell.classList.contains('is-main-content')).toBe(true);
+    expect(window.nowoUiSetMainWidth).toBeTypeOf('function');
+    expect(window.nowoUiToggleMainWidth).toBeTypeOf('function');
+  });
+
+  it('restores main width from localStorage on bind', () => {
+    window.localStorage.setItem('nowo-ui-main-width', 'content');
+    document.body.innerHTML = `
+      <div data-nowo-ui-shell class="nowo-ui-shell">
+        <button type="button" data-nowo-ui-width-toggle></button>
+      </div>
+    `;
+    mod.bindNowoUiShell();
+    expect(document.querySelector('[data-nowo-ui-shell]')?.classList.contains('is-main-content')).toBe(true);
+    window.localStorage.removeItem('nowo-ui-main-width');
+  });
 });

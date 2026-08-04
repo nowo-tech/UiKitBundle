@@ -1,0 +1,32 @@
+{#
+  Kebab / overflow menu (details-based, no JS required).
+
+  Required:
+    - items: list of { label, href?, attr?: {}, danger?: bool, current?: bool }
+
+  Optional:
+    - label: aria-label
+    - framework
+#}
+{% set label = label|default('action.more'|trans({}, 'NowoUiKitBundle')) %}
+<div class="nowo-ui-kebab" data-nowo-ui-kebab>
+    <details class="nowo-ui-kebab__details">
+        <summary class="nowo-ui-kebab__summary" aria-label="{{ label }}">
+            <span class="nowo-ui-kebab__dots" aria-hidden="true">⋮</span>
+        </summary>
+        <div class="nowo-ui-kebab__menu" role="menu">
+            {% for item in items|default([]) %}
+                {% set is_current = item.current|default(false) %}
+                <a
+                    class="nowo-ui-kebab__item{{ item.danger|default(false) ? ' nowo-ui-kebab__item--danger' : '' }}{{ is_current ? ' is-current' : '' }}"
+                    href="{{ item.href|default('#') }}"
+                    role="menuitem"
+                    {% if is_current %}aria-current="page"{% endif %}
+                    {% if item.attr is defined %}
+                        {% for name, value in item.attr %}{{ name }}="{{ value }}" {% endfor %}
+                    {% endif %}
+                >{{ item.label }}</a>
+            {% endfor %}
+        </div>
+    </details>
+</div>

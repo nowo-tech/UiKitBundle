@@ -16,7 +16,7 @@ If you discover a security-related issue, please report it privately (e.g. by em
 | --- | --- |
 | **Twig macros / partials** | Labels, hrefs, and optional HTML fragments passed by the host app |
 | **Configuration** | `nowo_ui_kit.css_framework` / `icon_set` (compile-time enums) |
-| **Frontend JS** | `nowo-ui-modal.js` / `nowo-ui-shell.js` (DOM open/close, no network I/O) |
+| **Frontend JS** | IIFEs: `nowo-ui-modal.js`, `nowo-ui-shell.js`, `nowo-ui-toast.js`, `nowo-ui-confirm.js`, `nowo-ui-page-loader.js`, `nowo-ui-theme.js`, `nowo-ui-orb.js` (DOM / canvas only; no network I/O) |
 | **Translations** | Domain `NowoUiKitBundle` strings rendered in Twig |
 
 The bundle does **not** expose CLI commands that mutate production data, outbound HTTP integrations, file uploads, or cookie writers.
@@ -25,17 +25,27 @@ The bundle does **not** expose CLI commands that mutate production data, outboun
 
 | Category | Risk | Applicability |
 | --- | --- | --- |
-| **XSS** | Unescaped HTML passed into macros/partials | Host must treat user-controlled strings as unsafe; prefer plain text / Twig auto-escape |
+| **XSS** | Host-supplied HTML slots rendered with `\|raw` (toolbar, modal body/footer, card body, confirm body, brand SVG, filters actions, shell regions) | **Host-trusted markup only** — never pass UGC / unsanitized user HTML into those slots |
 | **Injection** | N/A (no SQL / no form POST handlers) | Not applicable |
-| **CSRF** | N/A (no state-changing routes) | Not applicable |
+| **CSRF** | N/A (no state-changing routes); confirm dialogs expect host forms with CSRF | Host owns POST+CSRF |
 | **Authz** | N/A (no admin routes) | Host protects its own admin area |
-| **Supply chain** | Compromised dependency | `composer audit` / Dependabot |
+| **Supply chain** | Compromised dependency / orb third-party origin | `composer audit` / Dependabot; see [THIRD_PARTY.md](THIRD_PARTY.md) |
 
 ## Mitigations
 
-- Twig auto-escaping remains enabled; do not pipe untrusted input through `|raw` in host overrides.
-- Modal/shell JS only toggles DOM attributes and focus; it does not call `eval` or load remote scripts.
+- Twig auto-escaping remains enabled for normal variables; documented composition slots use `|raw` for **developer-controlled** HTML only.
+- Kit JS toggles DOM attributes / theme / loader / canvas; it does not call `eval`, `document.write`, or load remote scripts.
 - Recipe defaults contain no secrets.
+
+## AI security audit (REQ-SEC-004)
+
+| Field | Value |
+| ----- | ----- |
+| **Date** | 2026-08-04 |
+| **Method** | Cursor static security pass (`src/`, Twig, TS/JS, Flex recipe, demos, SECURITY docs) |
+| **Overall risk** | **Low** |
+| **Grade** | **Pass (good)** |
+| **Open residuals** | Host must not feed UGC into `|raw` slots; embedders must apply their own `access_control` around admin chrome |
 
 ## Secrets and cryptography
 

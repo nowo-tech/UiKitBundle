@@ -1,18 +1,43 @@
-pagination.nav: Pagination
+pagination.nav: Paginierung
 pagination.showing: Zeige %from%–%to% von %total%
 pagination.previous: Zurück
 pagination.next: Weiter
 action.edit: Bearbeiten
 action.delete: Löschen
-action.view: Anzeigen
+action.view: Ansehen
 action.copy: Kopieren
 action.close: Schließen
-empty.default: Keine Einträge.
-tabs.nav: Bereiche
+action.cancel: Abbrechen
+action.more: Weitere Aktionen
+empty.default: Keine Einträge gefunden.
+tabs.nav: Abschnitte
 nav.aside: Navigation
-nav.toggle_aside: Navigation ein- oder ausblenden
+nav.toggle_aside: Navigation umschalten
 nav.account: Kontomenü
 nav.logout: Abmelden
 footer.nav: Fußzeile
+toast.dismiss: Benachrichtigung schließen
+loader.loading: Wird geladen…
+orb.working: Arbeitet…
+orb.searching: Sucht…
+orb.solving: Löst…
+orb.listening: Hört zu…
+orb.connecting: Verbindet…
+orb.weaving: Verwebt…
+orb.composing: Komponiert…
+orb.breathing: Denkt…
+orb.shaping: Formt…
+filters.search_placeholder: Suchen…
+filters.apply: Anwenden
+filters.clear: Zurücksetzen
+theme.light: Hell
+theme.dark: Dunkel
+theme.switch_to_light: Zum hellen Design wechseln
+theme.switch_to_dark: Zum dunklen Design wechseln
+layout.full: Volle Breite
+layout.content: Inhalt
+layout.switch_to_full: Zur vollen Breite wechseln
+layout.switch_to_content: Zur Inhaltsbreite wechseln
+locale.nav: Sprache
 demo.kitchen_sink.title: UiKit Kitchen Sink
-demo.kitchen_sink.intro: Kanonische Nowo-UI-Komponenten (Makros, Tabellen, Pagination, Modals, Shell).
+demo.kitchen_sink.intro: Kanonische Nowo-UI-Komponenten (Makros, Tabellen, Paginierung, Modals, Toasts, Bestätigung, Shell).

@@ -57,7 +57,7 @@ install: ensure-up
 assets: ensure-up
 	@$(COMPOSE) exec -T -e CI=true $(SERVICE_PHP) pnpm install
 	@$(COMPOSE) exec -T $(SERVICE_PHP) pnpm run build
-	@echo "Assets: src/Resources/public/js/nowo-ui-modal.js + js/nowo-ui-shell.js"
+	@echo "Assets: src/Resources/public/js/nowo-ui-{modal,shell,toast,confirm,page-loader,theme,orb}.js"
 
 test-ts: ensure-up
 	@$(COMPOSE) exec -T $(SERVICE_PHP) pnpm run test:coverage | tee coverage-ts.txt
@@ -100,7 +100,7 @@ phpstan: ensure-up
 
 validate-translations: ensure-up
 	@echo "Translation files validated (YAML syntax only)."
-	@$(COMPOSE) exec -T $(SERVICE_PHP) php -r "foreach (glob('src/Resources/translations/*.yaml') as $$f) { Symfony\\Component\\Yaml\\Yaml::parseFile($$f); } echo \"OK\\n\";"
+	@$(COMPOSE) exec -T $(SERVICE_PHP) php -r 'require "vendor/autoload.php"; foreach (glob("src/Resources/translations/*.yaml") as $$f) { Symfony\Component\Yaml\Yaml::parseFile($$f); } echo "OK\n";'
 
 qa: cs-check test test-ts
 

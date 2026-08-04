@@ -1,0 +1,6 @@
+{#
+  UX Icons backend for _icon.html.twig.
+  Requires host package symfony/ux-icons (Twig function ux_icon).
+  Kept in a separate template so _icon.html.twig can compile without that package.
+#}
+{{ ux_icon(name starts with 'bi:' or name starts with 'tabler:' ? name : ('bi:' ~ name)) }}

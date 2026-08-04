@@ -1,0 +1,29 @@
+{#
+  Brand mark (text + optional image/SVG).
+
+  Optional:
+    - name / brand: text
+    - href
+    - src: image URL
+    - svg: raw SVG markup
+    - size: sm|md|lg
+    - mark_only: bool (hide text)
+#}
+{% set name = name|default(brand|default('')) %}
+{% set size = size|default('md') %}
+{% set href = href|default(null) %}
+{% set tag = href ? 'a' : 'span' %}
+<{{ tag }}
+    class="nowo-ui-brand nowo-ui-brand--{{ size }}"
+    {% if href %}href="{{ href }}"{% endif %}
+    {% if href %}aria-label="{{ name }}"{% endif %}
+>
+    {% if svg is defined and svg %}
+        <span class="nowo-ui-brand__mark" aria-hidden="true">{{ svg|raw }}</span>
+    {% elseif src is defined and src %}
+        <img class="nowo-ui-brand__mark" src="{{ src }}" alt="" width="28" height="28" decoding="async">
+    {% endif %}
+    {% if name and not mark_only|default(false) %}
+        <span class="nowo-ui-brand__text">{{ name }}</span>
+    {% endif %}
+</{{ tag }}>

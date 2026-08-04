@@ -7,12 +7,37 @@ action.delete: Elimina
 action.view: Visualizza
 action.copy: Copia
 action.close: Chiudi
-empty.default: Nessun elemento.
+action.cancel: Annulla
+action.more: Altre azioni
+empty.default: Nessun elemento trovato.
 tabs.nav: Sezioni
 nav.aside: Navigazione
 nav.toggle_aside: Mostra o nascondi navigazione
 nav.account: Menu account
 nav.logout: Esci
 footer.nav: Piè di pagina
+toast.dismiss: Chiudi notifica
+loader.loading: Caricamento…
+orb.working: Lavoro…
+orb.searching: Ricerca…
+orb.solving: Risoluzione…
+orb.listening: Ascolto…
+orb.connecting: Connessione…
+orb.weaving: Intreccio…
+orb.composing: Composizione…
+orb.breathing: Pensiero…
+orb.shaping: Modellazione…
+filters.search_placeholder: Cerca…
+filters.apply: Applica
+filters.clear: Cancella
+theme.light: Chiaro
+theme.dark: Scuro
+theme.switch_to_light: Passa al tema chiaro
+theme.switch_to_dark: Passa al tema scuro
+layout.full: Larghezza piena
+layout.content: Contenuto
+layout.switch_to_full: Passa a larghezza piena
+layout.switch_to_content: Passa a larghezza contenuto
+locale.nav: Lingua
 demo.kitchen_sink.title: Kitchen sink UiKit
-demo.kitchen_sink.intro: Componenti UI Nowo canonici (macro, tabelle, paginazione, modal, chrome).
+demo.kitchen_sink.intro: Componenti UI Nowo canonici (macro, tabelle, paginazione, modal, toast, conferma, chrome).

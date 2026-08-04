@@ -5,11 +5,13 @@
 - [Import macros](#import-macros)
 - [Partials](#partials)
 - [Assets](#assets)
+- [App chrome](#app-chrome-aside-avatar-user-menu-footer)
 - [Overriding templates (REQ-TWIG-001)](#overriding-templates-req-twig-001)
 - [Override vs upgrade](#override-vs-upgrade)
 - [Remap CSS tokens](#remap-css-tokens)
 - [Feature bundles](#feature-bundles)
 - [Kitchen sink](#kitchen-sink)
+- [Related docs](#related-docs)
 
 ## Import macros
 
@@ -23,9 +25,15 @@
 
 <div class="{{ ui.toolbar() }}">…</div>
 <div class="{{ ui.table_wrap() }}"><table class="{{ ui.table() }}">…</table></div>
+<span class="{{ ui.badge('success') }}">OK</span>
+<div class="{{ ui.card() }}">…</div>
+<div class="{{ ui.progress() }}"><div class="{{ ui.progress_bar() }}" style="width:40%"></div></div>
+<span class="{{ ui.spinner('sm') }}"></span>
 ```
 
 Macros always emit semantic `nowo-ui-*` classes. Named stacks also emit Bootstrap / Tailwind / Foundation classes. With `custom` or `none`, only `nowo-ui-*` remain.
+
+`ui.badge()` keeps BC: `ui.badge('tailwind')` is still a framework override; `ui.badge('success')` / `ui.badge('danger', 'bootstrap5')` set variants.
 
 Twig globals (from config):
 
@@ -36,19 +44,31 @@ Twig globals (from config):
 
 | Subpath | Purpose |
 |---------|---------|
-| `partials/_pagination.html.twig` | Server-side pagination (`pagination`, `item_count`, `route`, `route_params`) |
+| `partials/_pagination.html.twig` | Server-side pagination |
 | `partials/_empty.html.twig` | Empty state |
-| `partials/_flashes.html.twig` | Symfony flashes → `nowo-ui-flash` |
+| `partials/_flashes.html.twig` | Inline Symfony flashes |
+| `partials/_toasts.html.twig` | Fixed toast stack from flashes (string or `{title, message}`) |
 | `partials/_row_actions.html.twig` | Edit / delete / view / copy cluster |
 | `partials/_page_header.html.twig` | Title + intro + toolbar HTML |
-| `partials/_tabs.html.twig` | Tab nav (`items`: label, href, current) |
-| `partials/_modal_shell.html.twig` | Modal shell (`id`, `title`, `body`, `footer`) |
-| `partials/_burger.html.twig` | Burger / aside toggle (`data-nowo-ui-burger`) |
+| `partials/_tabs.html.twig` | Tab nav |
+| `partials/_filters.html.twig` | Search + apply/clear + actions slot |
+| `partials/_card.html.twig` | Card / panel (header/body/footer) |
+| `partials/_modal_shell.html.twig` | Modal shell |
+| `partials/_confirm.html.twig` | Confirm `<dialog>` (host owns POST+CSRF) |
+| `partials/_page_loader.html.twig` | Full-page loader overlay (`visual: spinner\|orb`) |
+| `partials/_thinking_orb.html.twig` | Thinking orb canvas (`data-nowo-ui-orb`) |
+| `partials/_brand.html.twig` | Brand mark (text / img / SVG) |
+| `partials/_theme_toggle.html.twig` | Light/dark toggle |
+| `partials/_width_toggle.html.twig` | Main full width ↔ content toggle |
+| `partials/_locale_switcher.html.twig` | Locale menu (host supplies URLs/forms) |
+| `partials/_kebab.html.twig` | Overflow / kebab menu |
+| `partials/_burger.html.twig` | Burger / aside toggle |
 | `partials/_avatar.html.twig` | Avatar initials or image |
-| `partials/_aside.html.twig` | Left sidebar nav (`items`) |
+| `partials/_aside.html.twig` | Left sidebar (flat or nested `children`) |
+| `partials/_aside_nav_items.html.twig` | Recursive nav items (internal) |
 | `partials/_user_menu.html.twig` | Avatar dropdown + links + logout |
-| `partials/_footer.html.twig` | Site footer (`links`, `copyright`) |
-| `partials/_shell.html.twig` | Composed chrome: header + burger + aside + main + footer + user menu |
+| `partials/_footer.html.twig` | Site footer |
+| `partials/_shell.html.twig` | Composed chrome |
 | `components/_icon.html.twig` | Icon by `icon_set` |
 | `macros/ui.html.twig` | Class macros |
 | `demo/kitchen_sink.html.twig` | Full component showcase |
@@ -62,6 +82,21 @@ Example:
     route: 'app_items',
     route_params: {},
     query: { q: app.request.query.get('q') }
+} %}
+```
+
+Confirm trigger:
+
+```twig
+<button type="button" class="{{ ui.btn('danger') }}"
+    {{ ui.confirm_toggle_attrs() }} {{ ui.confirm_target_attr('delete-item') }}>
+    Delete
+</button>
+{% include '@NowoUiKitBundle/partials/_confirm.html.twig' with {
+    id: 'delete-item',
+    title: 'Delete?',
+    body: '<p>Irreversible.</p>',
+    footer: confirm_footer_html
 } %}
 ```
 
@@ -80,13 +115,20 @@ pnpm run build
 <link rel="stylesheet" href="{{ asset('css/nowo-ui.css', 'nowo_ui_kit') }}">
 <script src="{{ asset('js/nowo-ui-modal.js', 'nowo_ui_kit') }}" defer></script>
 <script src="{{ asset('js/nowo-ui-shell.js', 'nowo_ui_kit') }}" defer></script>
+<script src="{{ asset('js/nowo-ui-toast.js', 'nowo_ui_kit') }}" defer></script>
+<script src="{{ asset('js/nowo-ui-confirm.js', 'nowo_ui_kit') }}" defer></script>
+<script src="{{ asset('js/nowo-ui-page-loader.js', 'nowo_ui_kit') }}" defer></script>
+<script src="{{ asset('js/nowo-ui-theme.js', 'nowo_ui_kit') }}" defer></script>
+<script src="{{ asset('js/nowo-ui-orb.js', 'nowo_ui_kit') }}" defer></script>
 ```
 
 Run `php bin/console assets:install` after install/update.
 
 `nowo-ui-modal.js` handles `data-nowo-modal-open` / `data-nowo-modal-close` for `custom` / `none` / `tailwind`. Bootstrap stacks use `data-bs-*` and do not require this script for open/close.
 
-`nowo-ui-shell.js` toggles the left aside via `data-nowo-ui-burger` / `data-nowo-ui-aside-backdrop` on a `[data-nowo-ui-shell]` root (desktop collapse + mobile drawer).
+`nowo-ui-shell.js` toggles the left aside via `data-nowo-ui-burger`, nested groups via `data-nowo-ui-nav-group-toggle`, and main width via `data-nowo-ui-width-toggle`.
+
+`nowo-ui-orb.js` mounts Thinking Orbs on `canvas[data-nowo-ui-orb]` (local MIT canvas engine; no CDN). Use `_thinking_orb.html.twig` or `_page_loader.html.twig` with `visual: 'orb'`.
 
 ## App chrome (aside, avatar, user menu, footer)
 
@@ -95,7 +137,13 @@ Run `php bin/console assets:install` after install/update.
     brand: 'My App',
     aside_items: [
         { label: 'Dashboard', href: path('app_home'), current: true },
-        { label: 'Settings', href: path('app_settings') }
+        {
+            label: 'Settings',
+            open: true,
+            children: [
+                { label: 'General', href: path('app_settings') }
+            ]
+        }
     ],
     name: app.user.userIdentifier,
     initials: 'AB',
@@ -111,7 +159,7 @@ Run `php bin/console assets:install` after install/update.
 } %}
 ```
 
-Or include `_burger`, `_aside`, `_avatar`, `_user_menu`, and `_footer` individually.
+Or include `_burger`, `_aside`, `_avatar`, `_user_menu`, and `_footer` individually. Pass `header_end` for theme/locale toggles.
 
 ## Overriding templates (REQ-TWIG-001)
 
@@ -139,6 +187,8 @@ Application overrides **always win**. Twig namespace: **`NowoUiKitBundle`**.
   --nowo-ui-text: #0c1210;
   /* …see nowo-ui.css for full token list */
 }
+
+/* Dark: kit ships defaults under [data-theme="dark"]; remap as needed */
 ```
 
 ## Feature bundles
@@ -147,6 +197,14 @@ Other Nowo admin UIs should import `@NowoUiKitBundle/macros/ui.html.twig` and in
 
 Align `nowo_ui_kit.css_framework` with the feature’s `css_framework`, **or** pass the feature framework as the macros’ trailing `framework` argument.
 
+See [ADOPTION.md](ADOPTION.md).
+
 ## Kitchen sink
 
 Render `@NowoUiKitBundle/demo/kitchen_sink.html.twig` from a host controller (see `demo/symfony8`). Optional context: `pagination`, `layout_template`.
+
+## Related docs
+
+- [STIMULUS.md](STIMULUS.md) — data-attribute contracts / Stimulus peers
+- [ADOPTION.md](ADOPTION.md) — consolidating Beacon + feature bundles
+- [ROADMAP.md](ROADMAP.md) — phase status

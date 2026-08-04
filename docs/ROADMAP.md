@@ -22,87 +22,74 @@ Goal: one place to restyle chrome so Beacon and feature bundles stop shipping pa
 
 ## Already in UiKit
 
-Shipped through **v1.2.x**:
+Shipped through **v1.4.x** (phases A–D implemented in the kit):
 
 | Area | Surface |
 |------|---------|
-| Class macros | `btn`, `toolbar`, `page_header`, `search_*`, `list*`, `table*`, `row_actions`, `badge`, `flash`, `empty`, `tabs`, modal attrs, shell/header/aside/avatar/user_menu/burger/footer |
-| Partials | pagination, empty, flashes, row actions, page header, tabs, modal shell, icon, burger, avatar, aside, user menu, footer, composed `_shell` |
-| Assets | `nowo-ui.css`; **Vite/pnpm** builds `nowo-ui-modal.js` + `nowo-ui-shell.js` from TypeScript sources |
+| Class macros | `btn`, `toolbar`, `page_header`, `search_*`, `list*`, `table*`, `row_actions`, `badge` (+ variants), `flash`, `empty`, `tabs`, modal/confirm attrs, shell/header/aside/avatar/user_menu/burger/footer, `card*`, `filters`, `progress*`, `spinner` |
+| Partials | pagination, empty, flashes, **toasts**, row actions, page header, tabs, **filters**, **card**, modal shell, **confirm**, **page loader** (`spinner`/`orb`), **thinking orb**, **brand**, **theme toggle**, **width toggle**, **locale switcher**, **kebab**, icon, burger, avatar, aside (**nested groups**), user menu, footer, composed `_shell` |
+| Assets | `nowo-ui.css` (+ dark tokens); Vite/pnpm IIFEs: modal, shell, **toast**, **confirm**, **page-loader**, **theme**, **orb** |
 | Config | `css_framework`, `icon_set` |
+| Docs | [ADOPTION.md](ADOPTION.md), [STIMULUS.md](STIMULUS.md), [THIRD_PARTY.md](THIRD_PARTY.md) |
 
 ## Gap analysis
 
-### High frequency in bundles (duplicate today)
+### High frequency in bundles
 
-| Element | Seen in | Kit status |
-|---------|---------|------------|
-| Modal shells / confirm UX | TaskBoard, ApiStudio, Wiki, FormKit, HttpLog, SiteBackup, … | Modal shell ✅ · **confirm dialog** ❌ |
-| Badges | CookieConsent, HttpLog, Uptime, Vault, Wiki, Workflow, … | Macro ✅ · richer variants ⏳ |
-| Flash / alert | Vault, TaskBoard, SiteBackup, MarketingKit, HttpLog, … | Inline flashes ✅ · **toasts** ❌ |
-| Cards / panels | MaintenanceMode, SiteBackup, Yopass, Performance, Vault, Beacon `.panel` | ❌ |
-| Toolbar / page header | DashboardMenu, BreadcrumbKit, HttpLog, Workflow, … | ✅ |
-| Pagination | ContactForm, CookieConsent, Workflow, Performance, Beacon shared | ✅ |
-| Filters bar | HttpLog `_filter`, Performance, TranslationYamlTools, Beacon issue-filters | ❌ |
-| Tabs | CookieConsent, ContactForm, ApiStudio, AuthKit, Beacon `_tabs` | ✅ |
-| `_ui_macros` copies | DashboardMenu, BreadcrumbKit, Uptime, Workflow, Yopass | Migrate → UiKit ⏳ |
+| Element | Kit status |
+|---------|------------|
+| Modal shells / confirm UX | Modal shell ✅ · Confirm dialog ✅ |
+| Badges | Macro + variants ✅ |
+| Flash / alert / toasts | Inline flashes ✅ · Toasts ✅ |
+| Cards / panels | ✅ |
+| Toolbar / page header | ✅ |
+| Pagination | ✅ |
+| Filters bar | ✅ |
+| Tabs | ✅ |
+| `_ui_macros` copies in other repos | Migrate per [ADOPTION.md](ADOPTION.md) ⏳ (consumer work) |
 
-### Prominent in Beacon admin (not yet in kit)
+### Prominent in Beacon admin
 
-| Element | Beacon reference | Kit status |
-|---------|------------------|------------|
-| Toast stack (flash → fixed toasts) | `_toasts.html.twig` + `toast-stack` | ❌ |
-| Page loader overlay | `_page_loader.html.twig` + `page-loader` | ❌ |
-| Confirm `<dialog>` | `confirm-dialog` Stimulus | ❌ |
-| Theme toggle | `_theme_toggle.html.twig` | ❌ |
-| Locale switcher | `_locale_switcher.html.twig` | ❌ |
-| Content-width / density prefs chrome | `_content_width_toggle.html.twig`, `data-user-*` | ❌ |
-| Brand mark | `_brand_mark.html.twig` | ❌ |
-| Nested sidebar nav / collapse | `_section_nav.html.twig`, `menu-nested-collapse` | Aside flat ✅ · nested ❌ |
-| Breadcrumbs presentation | `breadcrumb_render()` / BreadcrumbKit host | ❌ (lives in BreadcrumbKit) |
-| Combobox / Tom Select chrome | `combobox` Stimulus | ❌ (FormKit / host) |
-| Audit meta / timeline snippets | `shared/_audit_meta`, `admin/_audit_timeline` | ❌ |
-| Collapse panels | `issue/_collapse_section` | ❌ |
-| Empty states (panel-style) | dashboards | Basic `_empty` ✅ |
-
-### Niche but reusable (1–2 bundles)
-
-| Element | Where | Priority |
-|---------|-------|----------|
-| Sidebar tree | ApiStudio, UptimeMonitor | Medium |
-| Kebab / overflow menu | ApiStudio | Medium |
-| Progress bar | SiteBackup, TaskBoard | Medium |
-| Spinner / loading | IconSelector, SiteBackup, Uptime | Medium |
-| Chips / tags display | TaskBoard | Low (TagInput owns input) |
-| Timeline | TaskBoard, Audit | Low–medium |
+| Element | Kit status |
+|---------|------------|
+| Toast stack | ✅ |
+| Page loader overlay | ✅ (host may inject brand orb into slot) |
+| Confirm `<dialog>` | ✅ |
+| Theme toggle | ✅ |
+| Locale switcher | ✅ (generic; host supplies URLs) |
+| Nested sidebar nav | ✅ |
+| Brand mark | ✅ |
+| Kebab / overflow | ✅ |
+| Progress + spinner | ✅ |
+| Breadcrumbs / combobox / charts | ❌ (BreadcrumbKit / FormKit / product) |
 
 ## Planned phases
 
-### Phase A — Feedback parity with Beacon (next)
+### Phase A — Feedback parity with Beacon ✅
 
-1. **Toasts** — `_toasts.html.twig` + `nowo-ui-toast*` CSS + small JS/Stimulus-friendly hooks (map Symfony flashes → stack; dismiss / auto-hide). Align with Beacon `_toasts` contract where practical.
-2. **Confirm dialog** — accessible `<dialog>` / `nowo-ui-confirm` for delete/destructive actions (POST + CSRF stays in the host form).
-3. **Page loader** — optional overlay partial + data attributes (Beacon `page-loader` behaviour, kit-owned markup/classes).
+1. **Toasts** — `_toasts.html.twig` + CSS + `nowo-ui-toast.js`
+2. **Confirm dialog** — `_confirm.html.twig` + `nowo-ui-confirm.js`
+3. **Page loader** — `_page_loader.html.twig` + `nowo-ui-page-loader.js`
 
-### Phase B — Layout building blocks
+### Phase B — Layout building blocks ✅
 
-1. **Cards / panels** — `nowo-ui-card` (+ header/body/footer slots); replace ad-hoc `.panel` / Bootstrap cards in demos and migrate HttpLog/SiteBackup/Vault surfaces gradually.
-2. **Filter bar** — `_filters.html.twig` (search + actions row) extracted from HttpLog / Performance patterns.
-3. **Nested aside nav** — optional tree / collapsible groups (Beacon section nav + ApiStudio/Uptime trees), without owning DashboardMenu data.
-4. **Brand mark** — small `_brand.html.twig` (text + optional SVG/img).
+1. **Cards / panels** — macros + `_card.html.twig`
+2. **Filter bar** — `_filters.html.twig`
+3. **Nested aside nav** — `children` + shell JS toggle
+4. **Brand mark** — `_brand.html.twig`
 
-### Phase C — Host chrome helpers (Beacon-first)
+### Phase C — Host chrome helpers ✅
 
-1. **Theme toggle** + **locale switcher** partials (host supplies routes/URLs).
-2. **Kebab / overflow menu** partial.
-3. **Progress** + **spinner** primitives.
-4. Document Stimulus optional peers (`data-controller` contracts) without hard-requiring Symfony UX in the kit.
+1. **Theme toggle** + **locale switcher**
+2. **Kebab / overflow menu**
+3. **Progress** + **spinner** macros
+4. Stimulus peer contracts — [STIMULUS.md](STIMULUS.md)
 
-### Phase D — Consolidation
+### Phase D — Consolidation ✅ (kit-side)
 
-1. Replace per-bundle `_ui_macros.html.twig` / divergent `nowo-ui.css` with `suggest`/`require` on UiKit (DashboardMenu, BreadcrumbKit, CookieConsent, RoutingKit, …).
-2. Beacon: point kit admin layouts at UiKit partials; thin local CSS tokens only (`--nowo-ui-*` remap).
-3. Spec checklist: keep UiKit as the **canonical** REQ-UI-001 class/macro provider.
+1. Adoption guide for replacing per-bundle `_ui_macros` — [ADOPTION.md](ADOPTION.md)
+2. Beacon / feature-bundle migration remains **consumer work** (depend on UiKit, remap tokens, swap partials)
+3. Spec checklist: UiKit remains the canonical REQ-UI-001 provider
 
 ## Out of scope
 
@@ -116,8 +103,8 @@ Shipped through **v1.2.x**:
 
 ## Adoption notes
 
-- Prefer **`_shell` + tokens** over forking page Twig in feature bundles ([REQ-TWIG-001 override vs upgrade](../README.md)).
+- Prefer **`_shell` + tokens** over forking page Twig in feature bundles ([REQ-TWIG-001 override vs upgrade](USAGE.md#override-vs-upgrade)).
 - Feature bundles may pass their own `css_framework` into macros until configs are unified on `nowo_ui_kit.*`.
-- New kit surfaces should always emit **`nowo-ui-*`** semantic classes; framework extras stay optional via `css_framework`.
+- New kit surfaces always emit **`nowo-ui-*`** semantic classes; framework extras stay optional via `css_framework`.
 
-Status legend in tables: ✅ done · ⏳ partial / migrate · ❌ not in kit yet.
+Status legend: ✅ done in kit · ⏳ consumer migration · ❌ out of scope / other package.

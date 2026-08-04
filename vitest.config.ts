@@ -8,7 +8,8 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'text-summary', 'html'],
       reportsDirectory: './coverage-ts',
-      include: ['src/Resources/assets/src/**/*.ts'],
+      // Gate first-party IIFE sources only; vendored Thinking Orbs engine lives under orb/
+      include: ['src/Resources/assets/src/*.ts'],
       exclude: ['**/*.test.ts', '**/node_modules/**'],
       thresholds: {
         lines: 90,
