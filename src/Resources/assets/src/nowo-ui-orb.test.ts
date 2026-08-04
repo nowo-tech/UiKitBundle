@@ -92,7 +92,7 @@ describe('nowo-ui-orb', () => {
   it('remounts when mountOrb is called twice on the same canvas', () => {
     mod.bindNowoUiOrb();
     const canvas = document.querySelector('canvas') as HTMLCanvasElement;
-    const first = mod.mountOrb(canvas, { state: 'idle' });
+    const first = mod.mountOrb(canvas, { state: 'listening' });
     const second = mod.mountOrb(canvas, { state: 'working', speed: 1.2 });
     expect(second).not.toBe(first);
     expect(second.getOptions().state).toBe('working');

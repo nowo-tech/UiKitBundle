@@ -8,24 +8,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [Unreleased](#unreleased)
-- [1.4.0 - 2026-08-04](#140---2026-08-04)
-  - [Added](#added)
-  - [Changed](#changed)
+- [1.5.1 - 2026-08-04](#151---2026-08-04)
   - [Fixed](#fixed)
-- [1.3.0 - 2026-08-03](#130---2026-08-03)
+- [1.5.0 - 2026-08-04](#150---2026-08-04)
+  - [Added](#added)
+- [1.4.0 - 2026-08-04](#140---2026-08-04)
   - [Added](#added-1)
+  - [Changed](#changed)
+  - [Fixed](#fixed-1)
+- [1.3.0 - 2026-08-03](#130---2026-08-03)
+  - [Added](#added-2)
   - [Changed](#changed-1)
 - [1.2.1 - 2026-08-03](#121---2026-08-03)
-  - [Fixed](#fixed-1)
+  - [Fixed](#fixed-2)
 - [1.2.0 - 2026-08-03](#120---2026-08-03)
   - [Changed](#changed-2)
-  - [Added](#added-2)
-- [1.1.0 - 2026-08-03](#110---2026-08-03)
   - [Added](#added-3)
-- [1.0.0 - 2026-08-03](#100---2026-08-03)
+- [1.1.0 - 2026-08-03](#110---2026-08-03)
   - [Added](#added-4)
+- [1.0.0 - 2026-08-03](#100---2026-08-03)
+  - [Added](#added-5)
 
 ## [Unreleased]
+
+## [1.5.1] - 2026-08-04
+
+### Fixed
+- **Vite / TypeScript CI:** orb remount test used removed state `"idle"`; use a valid `OrbState` (`listening`).
+
+[1.5.1]: https://github.com/nowo-tech/UiKitBundle/releases/tag/v1.5.1
 
 ## [1.5.0] - 2026-08-04
 

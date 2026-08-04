@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.5.1](#to-151)
 - [To 1.5.0](#to-150)
 - [From 1.3.x to 1.4.0](#from-13x-to-140)
 - [From 1.2.x to 1.3.0](#from-12x-to-130)
@@ -13,6 +14,14 @@
 
 
 ## Unreleased
+
+## To 1.5.1
+
+From **1.5.0** — CI/test-only fix for Thinking Orb TypeScript types. No host migration.
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 ## To 1.5.0
 
