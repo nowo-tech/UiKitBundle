@@ -4,7 +4,7 @@
 
 > ⭐ **Found this useful?** [Install from Packagist](https://packagist.org/packages/nowo-tech/ui-kit-bundle) · Give it a **star** on [GitHub](https://github.com/nowo-tech/UiKitBundle) so more developers can find it.
 
-Canonical **admin UI kit** for Nowo Symfony bundles and host apps: Twig macros, semantic `nowo-ui-*` CSS, pagination/tabs/modals/toasts/confirm/loader, cards/filters, shell chrome (aside / nested nav / burger / avatar / user menu / footer), theme/locale/kebab helpers, and multi-framework class helpers (`bootstrap5`, `tailwind`, `foundation`, `custom`, …) per **REQ-UI-001**.
+Canonical **admin UI kit** for Nowo Symfony bundles and host apps: Twig macros, semantic `nowo-ui-*` CSS, pagination/tabs/modals/toasts/confirm/loader, cards/filters, shell chrome (aside / nested nav / burger / avatar / user menu / footer / width toggle), theme/locale/kebab helpers, **Thinking Orbs** (local canvas, no CDN), and multi-framework class helpers (`bootstrap5`, `tailwind`, `foundation`, `custom`, …) per **REQ-UI-001**.
 
 **Compatible with Symfony 6.x, 7.4+, and 8.x** (PHP 8.1+; Symfony 8 requires PHP 8.4+).
 
@@ -28,7 +28,7 @@ This bundle is **FrankenPHP worker mode friendly**.
 
 | Is | Is not |
 |----|--------|
-| Buttons, toolbars, tables, lists, pagination, tabs, flashes/toasts, empty states, modal/confirm, cards/filters, icons, **aside (nested) / burger / avatar / user menu / footer**, theme/locale/kebab | DashboardMenu / BreadcrumbKit navigation chrome |
+| Buttons, toolbars, tables, lists, pagination, tabs, flashes/toasts, empty states, modal/confirm, cards/filters, icons, **aside (nested) / burger / avatar / user menu / footer**, theme/locale/kebab/width, Thinking Orbs | DashboardMenu / BreadcrumbKit navigation chrome |
 | Shared `nowo-ui-*` look-and-feel | Domain CRUD pages / manage routes |
 | Multi-framework class macros | Form widget themes (use FormKit) |
 
@@ -37,6 +37,7 @@ This bundle is **FrankenPHP worker mode friendly**.
 - Twig macros (`@NowoUiKitBundle/macros/ui.html.twig`) with optional per-call `framework` override
 - Semantic stylesheet `css/nowo-ui.css` (asset package `nowo_ui_kit`), including dark `[data-theme="dark"]` tokens
 - TypeScript → IIFEs: modal, shell, toast, confirm, page-loader, theme, orb
+- Thinking Orbs: `_thinking_orb` + `nowo-ui-orb.js`; page loader `visual: orb|spinner` ([THIRD_PARTY.md](docs/THIRD_PARTY.md))
 - Config: `css_framework`, `icon_set`; i18n domain `NowoUiKitBundle` (`en`, `es`, `it`, `fr`, `pt`, `de`, `nl`)
 - Twig namespace overrides under `templates/bundles/NowoUiKitBundle/`
 - Adoption + Stimulus contracts: [docs/ADOPTION.md](docs/ADOPTION.md), [docs/STIMULUS.md](docs/STIMULUS.md)
