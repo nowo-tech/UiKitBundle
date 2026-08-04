@@ -4,48 +4,75 @@
   Required:
     - pagination: {page, per_page, total, total_pages}
     - item_count: number of rows on the current page
-    - route: route name for page links
-    - route_params: path params (e.g. {id: project.uuid})
+
+  Route resolution:
+    - route (+ route_params), OR omit route to use the current request route
 
   Optional:
     - query: extra query params preserved across pages (filters)
     - nav_label: aria-label translation key (default pagination.nav)
+    - trans_domain (default NowoUiKitBundle) for showing/previous/next
+    - nav_trans_domain (default = trans_domain) for aria-label
     - framework: css_framework override for macros
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 {% set query = query|default({}) %}
 {% set nav_label = nav_label|default('pagination.nav') %}
 {% set framework = framework|default(null) %}
-{% if pagination.total > 0 %}
-    {% set from = (pagination.page - 1) * pagination.per_page + 1 %}
-    {% set to = (pagination.page - 1) * pagination.per_page + item_count %}
+{% set trans_domain = trans_domain|default('NowoUiKitBundle') %}
+{% set nav_trans_domain = nav_trans_domain|default(trans_domain) %}
+{% set route = route|default(app.request.attributes.get('_route')) %}
+{% set route_params = route_params|default(app.request.attributes.get('_route_params')|default({})) %}
+{% set page = pagination.page|default(1) %}
+{% set per_page = pagination.per_page|default(25) %}
+{% set total = pagination.total|default(0) %}
+{% set total_pages = pagination.total_pages|default(1) %}
+{% if total_pages < 1 %}
+    {% set total_pages = 1 %}
+{% endif %}
+{% if total > 0 %}
+    {% set from = (page - 1) * per_page + 1 %}
+    {% set to = (page - 1) * per_page + item_count %}
+    {% set base_params = route_params|merge(query)|merge({per_page: per_page}) %}
     <div class="{{ ui.pagination_wrap(framework) }}">
         <p class="nowo-ui-pagination__info">
-            {{ 'pagination.showing'|trans({'%from%': from, '%to%': to, '%total%': pagination.total}, 'NowoUiKitBundle') }}
+            {{ 'pagination.showing'|trans({'%from%': from, '%to%': to, '%total%': total}, trans_domain) }}
         </p>
-        {% if pagination.total_pages > 1 %}
-            <nav class="nowo-ui-pagination__nav" aria-label="{{ nav_label|trans({}, 'NowoUiKitBundle') }}">
-                {% if pagination.page > 1 %}
-                    <a class="nowo-ui-pagination__link" href="{{ path(route, route_params|merge(query)|merge({page: pagination.page - 1, per_page: pagination.per_page})) }}">{{ 'pagination.previous'|trans({}, 'NowoUiKitBundle') }}</a>
-                {% else %}
-                    <span class="nowo-ui-pagination__link is-disabled">{{ 'pagination.previous'|trans({}, 'NowoUiKitBundle') }}</span>
-                {% endif %}
+        {% if total_pages > 1 %}
+            <nav class="nowo-ui-pagination__nav" aria-label="{{ nav_label|trans({}, nav_trans_domain) }}">
+                <ul class="pagination">
+                    <li class="page-item{% if page <= 1 %} disabled{% endif %}">
+                        {% if page > 1 %}
+                            <a class="page-link nowo-ui-pagination__link" href="{{ path(route, base_params|merge({page: page - 1})) }}" aria-label="{{ 'pagination.previous'|trans({}, trans_domain) }}">«</a>
+                        {% else %}
+                            <span class="page-link nowo-ui-pagination__link is-disabled" aria-disabled="true" aria-label="{{ 'pagination.previous'|trans({}, trans_domain) }}">«</span>
+                        {% endif %}
+                    </li>
 
-                {% for p in 1..pagination.total_pages %}
-                    {% if p == pagination.page %}
-                        <span class="nowo-ui-pagination__link is-active" aria-current="page">{{ p }}</span>
-                    {% elseif p == 1 or p == pagination.total_pages or (p >= pagination.page - 2 and p <= pagination.page + 2) %}
-                        <a class="nowo-ui-pagination__link" href="{{ path(route, route_params|merge(query)|merge({page: p, per_page: pagination.per_page})) }}">{{ p }}</a>
-                    {% elseif p == pagination.page - 3 or p == pagination.page + 3 %}
-                        <span class="nowo-ui-pagination__ellipsis">…</span>
-                    {% endif %}
-                {% endfor %}
+                    {% for p in 1..total_pages %}
+                        {% if p == page %}
+                            <li class="page-item active" aria-current="page">
+                                <span class="page-link nowo-ui-pagination__link is-active">{{ p }}</span>
+                            </li>
+                        {% elseif p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
+                            <li class="page-item">
+                                <a class="page-link nowo-ui-pagination__link" href="{{ path(route, base_params|merge({page: p})) }}">{{ p }}</a>
+                            </li>
+                        {% elseif p == page - 3 or p == page + 3 %}
+                            <li class="page-item disabled" aria-hidden="true">
+                                <span class="page-link nowo-ui-pagination__ellipsis">…</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
 
-                {% if pagination.page < pagination.total_pages %}
-                    <a class="nowo-ui-pagination__link" href="{{ path(route, route_params|merge(query)|merge({page: pagination.page + 1, per_page: pagination.per_page})) }}">{{ 'pagination.next'|trans({}, 'NowoUiKitBundle') }}</a>
-                {% else %}
-                    <span class="nowo-ui-pagination__link is-disabled">{{ 'pagination.next'|trans({}, 'NowoUiKitBundle') }}</span>
-                {% endif %}
+                    <li class="page-item{% if page >= total_pages %} disabled{% endif %}">
+                        {% if page < total_pages %}
+                            <a class="page-link nowo-ui-pagination__link" href="{{ path(route, base_params|merge({page: page + 1})) }}" aria-label="{{ 'pagination.next'|trans({}, trans_domain) }}">»</a>
+                        {% else %}
+                            <span class="page-link nowo-ui-pagination__link is-disabled" aria-disabled="true" aria-label="{{ 'pagination.next'|trans({}, trans_domain) }}">»</span>
+                        {% endif %}
+                    </li>
+                </ul>
             </nav>
         {% endif %}
     </div>

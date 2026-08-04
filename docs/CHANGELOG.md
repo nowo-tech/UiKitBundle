@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [1.7.0 - 2026-08-05](#170---2026-08-05)
 - [1.6.0 - 2026-08-04](#160---2026-08-04)
   - [Added](#added)
   - [Changed](#changed)
@@ -33,6 +34,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   - [Added](#added-6)
 
 ## [Unreleased]
+
+## [1.7.0] - 2026-08-05
+
+### Changed
+
+- **`_pagination`:** previous/next use `«` / `»` with translated `aria-label`s; wrap links in `ul.pagination` / `li.page-item` / `a.page-link` for Bootstrap-friendly markup. Optional `trans_domain` / `nav_trans_domain`; `route` defaults to the current request route when omitted.
+
+[1.7.0]: https://github.com/nowo-tech/UiKitBundle/releases/tag/v1.7.0
 
 ## [1.6.0] - 2026-08-04
 
