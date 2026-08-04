@@ -9,14 +9,14 @@ namespace Nowo\UiKitBundle\Enum;
  */
 enum CssFramework: string
 {
-    case Bootstrap  = 'bootstrap';
+    case Bootstrap = 'bootstrap';
     case Bootstrap5 = 'bootstrap5';
     case Bootstrap4 = 'bootstrap4';
-    case Tailwind   = 'tailwind';
+    case Tailwind = 'tailwind';
     case Foundation = 'foundation';
-    case Custom     = 'custom';
-    case Tabler     = 'tabler';
-    case None       = 'none';
+    case Custom = 'custom';
+    case Tabler = 'tabler';
+    case None = 'none';
 
     /**
      * @return list<string>
@@ -31,6 +31,6 @@ enum CssFramework: string
      */
     public function normalized(): self
     {
-        return $this === self::Bootstrap ? self::Bootstrap5 : $this;
+        return self::Bootstrap === $this ? self::Bootstrap5 : $this;
     }
 }

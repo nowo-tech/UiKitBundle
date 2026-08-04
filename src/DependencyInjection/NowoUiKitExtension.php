@@ -33,11 +33,11 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
             ]);
         }
 
-        $translationsPath = \dirname(__DIR__) . '/Resources/translations';
+        $translationsPath = \dirname(__DIR__).'/Resources/translations';
         if (is_dir($translationsPath) && $container->hasExtension('framework')) {
             $container->prependExtensionConfig('framework', [
                 'translator' => [
-                    'paths'     => [$translationsPath],
+                    'paths' => [$translationsPath],
                     'fallbacks' => ['en'],
                 ],
             ]);
@@ -48,12 +48,12 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
         }
 
         $config = $this->processConfiguration(new Configuration(), $container->getExtensionConfig($this->getAlias()));
-        $fw     = CssFramework::from($config['css_framework'])->normalized()->value;
+        $fw = CssFramework::from($config['css_framework'])->normalized()->value;
 
         $container->prependExtensionConfig('twig', [
             'globals' => [
                 'nowo_ui_kit_css_framework' => $fw,
-                'nowo_ui_kit_icon_set'      => $config['icon_set'],
+                'nowo_ui_kit_icon_set' => $config['icon_set'],
             ],
         ]);
     }
@@ -64,12 +64,12 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
     public function load(array $configs, ContainerBuilder $container): void
     {
         $config = $this->processConfiguration(new Configuration(), $configs);
-        $fw     = CssFramework::from($config['css_framework'])->normalized()->value;
+        $fw = CssFramework::from($config['css_framework'])->normalized()->value;
 
         $container->setParameter('nowo_ui_kit.css_framework', $fw);
         $container->setParameter('nowo_ui_kit.icon_set', $config['icon_set']);
 
-        $loader = new YamlFileLoader($container, new FileLocator(__DIR__ . '/../Resources/config'));
+        $loader = new YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.yaml');
     }
 }

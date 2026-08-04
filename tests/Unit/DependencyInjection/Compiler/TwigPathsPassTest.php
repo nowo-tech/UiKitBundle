@@ -10,8 +10,6 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Definition;
 use Twig\Loader\FilesystemLoader;
 
-use function dirname;
-
 final class TwigPathsPassTest extends TestCase
 {
     public function testSkipsWhenTwigLoaderMissing(): void
@@ -41,8 +39,8 @@ final class TwigPathsPassTest extends TestCase
 
     public function testPrependsOverridePathWhenDirectoryExists(): void
     {
-        $projectDir = sys_get_temp_dir() . '/ui_kit_twig_' . uniqid('', true);
-        $override   = $projectDir . '/templates/bundles/' . TwigPathsPass::TWIG_NAMESPACE;
+        $projectDir = sys_get_temp_dir().'/ui_kit_twig_'.uniqid('', true);
+        $override = $projectDir.'/templates/bundles/'.TwigPathsPass::TWIG_NAMESPACE;
         mkdir($override, 0777, true);
 
         try {
@@ -59,8 +57,8 @@ final class TwigPathsPassTest extends TestCase
             self::assertSame($override, $calls[0][1][0]);
         } finally {
             @rmdir($override);
-            @rmdir(dirname($override));
-            @rmdir(dirname($override, 2));
+            @rmdir(\dirname($override));
+            @rmdir(\dirname($override, 2));
             @rmdir($projectDir);
         }
     }

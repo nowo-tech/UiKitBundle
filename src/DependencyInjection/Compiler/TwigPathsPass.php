@@ -7,11 +7,6 @@ namespace Nowo\UiKitBundle\DependencyInjection\Compiler;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
-use function dirname;
-use function is_dir;
-use function is_string;
-use function rtrim;
-
 /**
  * REQ-TWIG-001 / REQ-TWIG-002: register @NowoUiKitBundle; app overrides win.
  */
@@ -22,19 +17,19 @@ final class TwigPathsPass implements CompilerPassInterface
     public function process(ContainerBuilder $container): void
     {
         $loaderId = $this->getNativeLoaderServiceId($container);
-        if ($loaderId === null) {
+        if (null === $loaderId) {
             return;
         }
 
-        $viewsPath  = dirname(__DIR__, 2) . '/Resources/views';
+        $viewsPath = \dirname(__DIR__, 2).'/Resources/views';
         $definition = $container->getDefinition($loaderId);
 
         if ($container->hasParameter('kernel.project_dir')) {
             $projectDirParam = $container->getParameter('kernel.project_dir');
-            if (is_string($projectDirParam)) {
-                $projectDir   = rtrim($projectDirParam, '/\\');
-                $overridePath = $projectDir . '/templates/bundles/' . self::TWIG_NAMESPACE;
-                if (is_dir($overridePath)) {
+            if (\is_string($projectDirParam)) {
+                $projectDir = \rtrim($projectDirParam, '/\\');
+                $overridePath = $projectDir.'/templates/bundles/'.self::TWIG_NAMESPACE;
+                if (\is_dir($overridePath)) {
                     $definition->addMethodCall('prependPath', [$overridePath, self::TWIG_NAMESPACE]);
                 }
             }
@@ -47,7 +42,7 @@ final class TwigPathsPass implements CompilerPassInterface
     {
         if ($container->hasAlias('twig.loader.native')) {
             $resolved = $this->resolveDefinitionId($container, (string) $container->getAlias('twig.loader.native'));
-            if ($resolved !== null) {
+            if (null !== $resolved) {
                 return $resolved;
             }
         }

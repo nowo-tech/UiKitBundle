@@ -10,10 +10,10 @@ namespace Nowo\UiKitBundle\Enum;
 enum IconSet: string
 {
     case BootstrapIcons = 'bootstrap-icons';
-    case TablerIcons    = 'tabler-icons';
-    case UxIcon         = 'ux_icon';
-    case SvgInline      = 'svg_inline';
-    case None           = 'none';
+    case TablerIcons = 'tabler-icons';
+    case UxIcon = 'ux_icon';
+    case SvgInline = 'svg_inline';
+    case None = 'none';
 
     /**
      * @return list<string>
