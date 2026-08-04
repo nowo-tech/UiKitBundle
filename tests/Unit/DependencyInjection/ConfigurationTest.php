@@ -25,7 +25,7 @@ final class ConfigurationTest extends TestCase
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[
             'css_framework' => 'custom',
-            'icon_set'      => 'svg_inline',
+            'icon_set' => 'svg_inline',
         ]]);
 
         self::assertSame('custom', $config['css_framework']);

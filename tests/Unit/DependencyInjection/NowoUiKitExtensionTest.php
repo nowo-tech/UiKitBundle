@@ -41,7 +41,7 @@ final class NowoUiKitExtensionTest extends TestCase
         $extension->prepend($container);
 
         $frameworkConfigs = $container->getExtensionConfig('framework');
-        $found            = false;
+        $found = false;
         foreach ($frameworkConfigs as $config) {
             if (isset($config['assets']['packages'][Configuration::ALIAS]['base_path'])) {
                 self::assertSame('/bundles/nowouikit', $config['assets']['packages'][Configuration::ALIAS]['base_path']);
@@ -78,12 +78,12 @@ final class NowoUiKitExtensionTest extends TestCase
         $extension = new NowoUiKitExtension();
         $container->prependExtensionConfig(Configuration::ALIAS, [
             'css_framework' => 'tailwind',
-            'icon_set'      => 'svg_inline',
+            'icon_set' => 'svg_inline',
         ]);
         $extension->prepend($container);
 
         $twigConfigs = $container->getExtensionConfig('twig');
-        $globals     = null;
+        $globals = null;
         foreach ($twigConfigs as $config) {
             if (isset($config['globals']['nowo_ui_kit_css_framework'])) {
                 $globals = $config['globals'];
