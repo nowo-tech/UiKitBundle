@@ -6,7 +6,9 @@ namespace Nowo\UiKitBundle\Tests\Unit;
 
 use Nowo\UiKitBundle\NowoUiKitBundle;
 use PHPUnit\Framework\TestCase;
+use Symfony\Bridge\Twig\Extension\TranslationExtension;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\Translation\IdentityTranslator;
 use Twig\Environment;
 use Twig\Loader\ArrayLoader;
 use Twig\Loader\FilesystemLoader;
@@ -119,6 +121,67 @@ final class UiMacrosTwigTest extends TestCase
         self::assertStringContainsString('nowo-ui-icon--text', $html);
     }
 
+    public function testRowActionsDisplayModes(): void
+    {
+        $icon = $this->renderRowActions('icon', [['kind' => 'edit', 'href' => '#edit']]);
+        self::assertStringContainsString('nowo-ui-row-actions--icon', $icon);
+        self::assertStringContainsString('bi bi-pencil', $icon);
+        self::assertStringContainsString('visually-hidden', $icon);
+        self::assertStringNotContainsString('nowo-ui-action__label', $icon);
+        self::assertStringContainsString('nowo-ui-action--edit', $icon);
+
+        $text = $this->renderRowActions('text', [['kind' => 'delete', 'href' => '#del']]);
+        self::assertStringContainsString('nowo-ui-row-actions--text', $text);
+        self::assertStringContainsString('nowo-ui-action__label', $text);
+        self::assertStringNotContainsString('bi bi-', $text);
+        self::assertStringNotContainsString('visually-hidden', $text);
+
+        $both = $this->renderRowActions('icon_text', [['kind' => 'view', 'href' => '#show']]);
+        self::assertStringContainsString('nowo-ui-row-actions--icon-text', $both);
+        self::assertStringContainsString('bi bi-eye', $both);
+        self::assertStringContainsString('nowo-ui-action__label', $both);
+    }
+
+    public function testRowActionsPostFormAndConfirmButton(): void
+    {
+        $form = $this->renderRowActions('text', [[
+            'kind' => 'delete',
+            'method' => 'POST',
+            'href' => '/delete/1',
+            'csrf_token' => 'tok',
+            'csrf_field' => '_csrf_token',
+            'confirm_message' => 'Sure?',
+        ]]);
+        self::assertStringContainsString('<form', $form);
+        self::assertStringContainsString('method="post"', $form);
+        self::assertStringContainsString('action="/delete/1"', $form);
+        self::assertStringContainsString('name="_csrf_token"', $form);
+        self::assertStringContainsString('value="tok"', $form);
+        self::assertStringContainsString('nowo-ui-action--delete', $form);
+
+        $btn = $this->renderRowActions('icon', [[
+            'kind' => 'delete',
+            'tag' => 'button',
+            'confirm_id' => 'del-1',
+        ]]);
+        self::assertStringContainsString('data-nowo-confirm-open', $btn);
+        self::assertStringContainsString('data-nowo-confirm-target="del-1"', $btn);
+        self::assertStringContainsString('<button', $btn);
+    }
+
+    public function testActionMacroDefaultsAreSecondaryExceptDeleteAndCreate(): void
+    {
+        $edit = $this->renderMacro("{{ ui.action('edit') }}", 'bootstrap5');
+        self::assertStringContainsString('nowo-ui-action--edit', $edit);
+        self::assertStringContainsString('btn-outline-secondary', $edit);
+
+        $delete = $this->renderMacro("{{ ui.action('delete') }}", 'bootstrap5');
+        self::assertStringContainsString('btn-outline-danger', $delete);
+
+        $create = $this->renderMacro("{{ ui.action('create') }}", 'bootstrap5');
+        self::assertStringContainsString('btn-primary', $create);
+    }
+
     private function renderMacro(string $expression, string $framework): string
     {
         $views = \dirname(__DIR__, 2).'/src/Resources/views';
@@ -133,6 +196,7 @@ final class UiMacrosTwigTest extends TestCase
         $twig = new Environment($chain);
         $twig->addGlobal('nowo_ui_kit_css_framework', $framework);
         $twig->addGlobal('nowo_ui_kit_icon_set', 'bootstrap-icons');
+        $twig->addGlobal('nowo_ui_kit_row_actions_display', 'icon');
 
         return trim($twig->render('t.twig'));
     }
@@ -152,5 +216,31 @@ final class UiMacrosTwigTest extends TestCase
         $twig->addGlobal('nowo_ui_kit_icon_set', $iconSet);
 
         return trim($twig->render('t.twig', ['name' => $name]));
+    }
+
+    /**
+     * @param list<array{kind: string, href?: string}> $actions
+     */
+    private function renderRowActions(string $display, array $actions): string
+    {
+        $views = \dirname(__DIR__, 2).'/src/Resources/views';
+        $fs = new FilesystemLoader();
+        $fs->addPath($views, 'NowoUiKitBundle');
+
+        $loader = new ArrayLoader([
+            't.twig' => "{% include '@NowoUiKitBundle/partials/_row_actions.html.twig' with { display: display, actions: actions } only %}",
+        ]);
+
+        $chain = new \Twig\Loader\ChainLoader([$loader, $fs]);
+        $twig = new Environment($chain);
+        $twig->addExtension(new TranslationExtension(new IdentityTranslator()));
+        $twig->addGlobal('nowo_ui_kit_css_framework', 'bootstrap5');
+        $twig->addGlobal('nowo_ui_kit_icon_set', 'bootstrap-icons');
+        $twig->addGlobal('nowo_ui_kit_row_actions_display', 'icon');
+
+        return trim($twig->render('t.twig', [
+            'display' => $display,
+            'actions' => $actions,
+        ]));
     }
 }

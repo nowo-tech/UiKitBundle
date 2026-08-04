@@ -146,6 +146,29 @@
 .nowo-ui-row-actions {
   display: flex;
   gap: 0.25rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.nowo-ui-row-actions__form {
+  display: inline;
+  margin: 0;
+}
+
+.nowo-ui-row-actions--text .nowo-ui-action,
+.nowo-ui-row-actions--icon-text .nowo-ui-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.nowo-ui-action__label {
+  white-space: nowrap;
+}
+
+.nowo-ui-action.is-disabled {
+  pointer-events: none;
+  opacity: 0.5;
 }
 
 .nowo-ui-flash {

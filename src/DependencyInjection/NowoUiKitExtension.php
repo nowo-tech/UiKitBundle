@@ -54,6 +54,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
             'globals' => [
                 'nowo_ui_kit_css_framework' => $fw,
                 'nowo_ui_kit_icon_set' => $config['icon_set'],
+                'nowo_ui_kit_row_actions_display' => $config['row_actions_display'],
             ],
         ]);
     }
@@ -68,6 +69,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
 
         $container->setParameter('nowo_ui_kit.css_framework', $fw);
         $container->setParameter('nowo_ui_kit.icon_set', $config['icon_set']);
+        $container->setParameter('nowo_ui_kit.row_actions_display', $config['row_actions_display']);
 
         $loader = new YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.yaml');

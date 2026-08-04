@@ -8,6 +8,13 @@ action.view: Bekijken
 action.copy: Kopiëren
 action.close: Sluiten
 action.cancel: Annuleren
+action.create: Aanmaken
+action.save: Opslaan
+action.restore: Herstellen
+action.share: Delen
+action.config: Instellingen
+action.export: Exporteren
+action.filter: Filteren
 action.more: Meer acties
 empty.default: Geen items gevonden.
 tabs.nav: Secties

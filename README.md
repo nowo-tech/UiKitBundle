@@ -38,7 +38,7 @@ This bundle is **FrankenPHP worker mode friendly**.
 - Semantic stylesheet `css/nowo-ui.css` (asset package `nowo_ui_kit`), including dark `[data-theme="dark"]` tokens
 - TypeScript → IIFEs: modal, shell, toast, confirm, page-loader, theme, orb
 - Thinking Orbs: `_thinking_orb` + `nowo-ui-orb.js`; page loader `visual: orb|spinner` ([THIRD_PARTY.md](docs/THIRD_PARTY.md))
-- Config: `css_framework`, `icon_set`; i18n domain `NowoUiKitBundle` (`en`, `es`, `it`, `fr`, `pt`, `de`, `nl`)
+- Config: `css_framework`, `icon_set`, `row_actions_display`; i18n domain `NowoUiKitBundle` (`en`, `es`, `it`, `fr`, `pt`, `de`, `nl`)
 - Twig namespace overrides under `templates/bundles/NowoUiKitBundle/`
 - Adoption + Stimulus contracts: [docs/ADOPTION.md](docs/ADOPTION.md), [docs/STIMULUS.md](docs/STIMULUS.md)
 
@@ -58,6 +58,7 @@ With Flex, the recipe creates `config/packages/nowo_ui_kit.yaml`. See [docs/INST
 nowo_ui_kit:
     css_framework: bootstrap5   # or: tailwind | foundation | custom
     icon_set: bootstrap-icons
+    row_actions_display: icon   # or: text | icon_text
 ```
 
 ```twig
@@ -91,6 +92,7 @@ Developer-facing docs are **English only** ([Contributing — Language policy](d
 - [Installation](docs/INSTALLATION.md)
 - [Configuration](docs/CONFIGURATION.md)
 - [Usage](docs/USAGE.md)
+- [Row actions (canonical kinds)](docs/ROW_ACTIONS.md)
 - [Adoption (Beacon + bundles)](docs/ADOPTION.md)
 - [Stimulus / data contracts](docs/STIMULUS.md)
 - [Third-party notices](docs/THIRD_PARTY.md)

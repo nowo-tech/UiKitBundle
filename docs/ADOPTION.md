@@ -18,7 +18,7 @@ Phase D of the [roadmap](ROADMAP.md): feature bundles and host apps (especially 
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 ```
 
-3. Include kit partials (`_pagination`, `_tabs`, `_empty`, `_row_actions`, `_filters`, `_card`, `_modal_shell`, `_confirm`, `_toasts`) instead of copying markup.
+3. Include kit partials (`_pagination`, `_tabs`, `_empty`, `_row_actions`, `_filters`, `_card`, `_modal_shell`, `_confirm`, `_toasts`) instead of copying markup. Row CRUD clusters **MUST** use `_row_actions` ([ROW_ACTIONS.md](ROW_ACTIONS.md)).
 4. Load assets once in the admin layout (or document that the host must):
 
 ```twig
@@ -44,7 +44,8 @@ Recommended migration order:
 
 ## Config alignment
 
-- Prefer a single host setting: `nowo_ui_kit.css_framework` / `icon_set`.
+- Prefer a single host setting: `nowo_ui_kit.css_framework` / `icon_set` / `row_actions_display`.
+- Use `_row_actions` so hosts switch icon vs text labels without forking list templates.
 - Until feature configs are unified, pass the feature’s framework into macros: `ui.btn('primary', null, feature_fw)`.
 
 Beacon-style design system:

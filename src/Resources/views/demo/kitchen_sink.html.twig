@@ -99,18 +99,34 @@
                                     actions: [
                                         { kind: 'view', href: '#' },
                                         { kind: 'edit', href: '#' },
-                                        { kind: 'delete', href: '#' }
+                                        { kind: 'delete', tag: 'button', confirm_id: 'nowo-ui-kit-demo-confirm' }
                                     ]
                                 } %}
                             </td>
                         </tr>
                         <tr>
                             <td>2</td>
-                            <td>Beta</td>
+                            <td>Beta (text actions)</td>
                             <td>
                                 {% include '@NowoUiKitBundle/partials/_row_actions.html.twig' with {
+                                    display: 'text',
                                     actions: [
-                                        { kind: 'copy', href: '#' }
+                                        { kind: 'edit', href: '#' },
+                                        { kind: 'delete', method: 'POST', href: '#', confirm_message: 'Delete Beta?' }
+                                    ]
+                                } %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>Gamma (icon + text)</td>
+                            <td>
+                                {% include '@NowoUiKitBundle/partials/_row_actions.html.twig' with {
+                                    display: 'icon_text',
+                                    actions: [
+                                        { kind: 'copy', href: '#' },
+                                        { kind: 'view', href: '#' },
+                                        { kind: 'config', href: '#' }
                                     ]
                                 } %}
                             </td>

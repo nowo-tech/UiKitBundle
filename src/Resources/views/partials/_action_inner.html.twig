@@ -1,0 +1,12 @@
+{#
+  Inner markup for one row/toolbar action (icon + label by display mode).
+  Used by _row_actions.html.twig — not meant as a public include.
+#}
+{% if display != 'text' %}
+    {% include '@NowoUiKitBundle/components/_icon.html.twig' with { name: icon_name, label: label } only %}
+{% endif %}
+{% if display == 'icon' %}
+    <span class="visually-hidden">{{ label }}</span>
+{% else %}
+    <span class="nowo-ui-action__label">{{ label }}</span>
+{% endif %}

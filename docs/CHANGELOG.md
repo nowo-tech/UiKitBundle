@@ -8,28 +8,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [1.6.0 - 2026-08-04](#160---2026-08-04)
+  - [Added](#added)
+  - [Changed](#changed)
 - [1.5.1 - 2026-08-04](#151---2026-08-04)
   - [Fixed](#fixed)
 - [1.5.0 - 2026-08-04](#150---2026-08-04)
-  - [Added](#added)
-- [1.4.0 - 2026-08-04](#140---2026-08-04)
   - [Added](#added-1)
-  - [Changed](#changed)
-  - [Fixed](#fixed-1)
-- [1.3.0 - 2026-08-03](#130---2026-08-03)
+- [1.4.0 - 2026-08-04](#140---2026-08-04)
   - [Added](#added-2)
   - [Changed](#changed-1)
+  - [Fixed](#fixed-1)
+- [1.3.0 - 2026-08-03](#130---2026-08-03)
+  - [Added](#added-3)
+  - [Changed](#changed-2)
 - [1.2.1 - 2026-08-03](#121---2026-08-03)
   - [Fixed](#fixed-2)
 - [1.2.0 - 2026-08-03](#120---2026-08-03)
-  - [Changed](#changed-2)
-  - [Added](#added-3)
-- [1.1.0 - 2026-08-03](#110---2026-08-03)
+  - [Changed](#changed-3)
   - [Added](#added-4)
-- [1.0.0 - 2026-08-03](#100---2026-08-03)
+- [1.1.0 - 2026-08-03](#110---2026-08-03)
   - [Added](#added-5)
+- [1.0.0 - 2026-08-03](#100---2026-08-03)
+  - [Added](#added-6)
 
 ## [Unreleased]
+
+## [1.6.0] - 2026-08-04
+
+### Added
+- **`row_actions_display`** (`icon` \| `text` \| `icon_text`): kit config + Twig global `nowo_ui_kit_row_actions_display`; `_row_actions` emits glyph-only, label-only, or both (REQ-UI-001). Per-include `display` override. CSS modifiers `--icon` / `--text` / `--icon-text` + `nowo-ui-action__label`. Kitchen sink shows all three modes.
+- **Canonical row-action API:** `_row_actions` supports `tag` (`a`/`button`/`form`/`auto`), `method` POST + CSRF, `confirm_id` / `modal_id`, `confirm_message` (transitional), `variant` / `icon` / `label` overrides. Expanded kinds: `create`, `save`, `cancel`, `restore`, `share`, `config`, `export`, `filter`. Docs: [ROW_ACTIONS.md](ROW_ACTIONS.md).
+
+### Changed
+- `ui.action(kind)` default variant: `edit` / most kinds → **secondary**; `delete` → danger; `create`/`save` → primary (was: edit primary). Third macro arg `variant` overrides.
+
+[1.6.0]: https://github.com/nowo-tech/UiKitBundle/releases/tag/v1.6.0
 
 ## [1.5.1] - 2026-08-04
 

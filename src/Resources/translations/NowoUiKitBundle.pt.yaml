@@ -8,6 +8,13 @@ action.view: Ver
 action.copy: Copiar
 action.close: Fechar
 action.cancel: Cancelar
+action.create: Criar
+action.save: Guardar
+action.restore: Restaurar
+action.share: Partilhar
+action.config: Definições
+action.export: Exportar
+action.filter: Filtrar
 action.more: Mais ações
 empty.default: Nenhum item encontrado.
 tabs.nav: Secções

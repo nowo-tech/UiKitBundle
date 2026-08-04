@@ -3,6 +3,8 @@
 #
 # css_framework: bootstrap5 | bootstrap4 | bootstrap | tabler | tailwind | foundation | custom | none
 # icon_set: bootstrap-icons | tabler-icons | ux_icon | svg_inline | none
+# row_actions_display: icon | text | icon_text
 nowo_ui_kit:
     css_framework: bootstrap5
     icon_set: bootstrap-icons
+    row_actions_display: icon

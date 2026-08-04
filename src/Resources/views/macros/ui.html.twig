@@ -166,8 +166,19 @@ nowo-ui-badge{% if variant %} nowo-ui-badge--{{ variant }}{% endif %}
 {%- endif -%}
 {%- endmacro %}
 
-{% macro action(kind='edit', framework=null) -%}
-nowo-ui-action nowo-ui-action--{{ kind }} {{ _self.btn(kind == 'delete' ? 'danger' : (kind == 'view' ? 'secondary' : 'primary'), 'sm', framework) }}
+{% macro action(kind='edit', framework=null, variant=null) -%}
+{%- set k = kind|default('edit') -%}
+{%- set v = variant -%}
+{%- if v is null or v is same as(false) or v == '' -%}
+  {%- if k == 'delete' -%}
+    {%- set v = 'danger' -%}
+  {%- elseif k in ['create', 'save'] -%}
+    {%- set v = 'primary' -%}
+  {%- else -%}
+    {%- set v = 'secondary' -%}
+  {%- endif -%}
+{%- endif -%}
+nowo-ui-action nowo-ui-action--{{ k }} {{ _self.btn(v, 'sm', framework) }}
 {%- endmacro %}
 
 {% macro modal_toggle_attrs(framework=null) -%}

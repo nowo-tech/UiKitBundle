@@ -64,15 +64,16 @@ As an integrator on `custom` / `tailwind` / `none` stacks, I use `_modal_shell` 
 
 ---
 
-### User Story 4 — Configure css_framework / icon_set (Priority: P2)
+### User Story 4 — Configure css_framework / icon_set / row_actions_display (Priority: P2)
 
-As an integrator, I set `nowo_ui_kit.css_framework` and `icon_set` in YAML; Twig globals expose the values.
+As an integrator, I set `nowo_ui_kit.css_framework`, `icon_set`, and `row_actions_display` in YAML; Twig globals expose the values.
 
 **Acceptance Scenarios**:
 
-1. **Given** valid enum values, **When** container compiles, **Then** globals `nowo_ui_kit_css_framework` / `nowo_ui_kit_icon_set` are set.
+1. **Given** valid enum values, **When** container compiles, **Then** globals `nowo_ui_kit_css_framework` / `nowo_ui_kit_icon_set` / `nowo_ui_kit_row_actions_display` are set.
 2. **Given** invalid framework string, **When** config is loaded, **Then** configuration validation fails at compile time.
 3. **Given** `icon_set` other than `ux_icon`, **When** `_icon.html.twig` compiles without `symfony/ux-icons`, **Then** templates compile (ux call lives only in `_icon_ux.html.twig`).
+4. **Given** `row_actions_display: text` (or per-include `display: text`), **When** `_row_actions` renders, **Then** actions show visible labels without icon glyphs.
 
 ---
 
@@ -130,15 +131,15 @@ As an AI/agent UI host, I render dotted thought-orbs via `_thinking_orb.html.twi
 ### Bundle & DI
 
 - **FR-BUNDLE-001**: `NowoUiKitBundle` registers the extension and compiler pass.
-- **FR-CFG-001**: `Configuration` defines `css_framework` and `icon_set` enums.
+- **FR-CFG-001**: `Configuration` defines `css_framework`, `icon_set`, and `row_actions_display` enums.
 - **FR-CFG-002**: `NowoUiKitExtension` loads services, sets Twig globals, registers asset package.
 - **FR-TWIG-001**: `TwigPathsPass` ensures namespace `NowoUiKitBundle`.
-- **FR-ENUM-001**: `CssFramework` / `IconSet` backed enums used by configuration.
+- **FR-ENUM-001**: `CssFramework` / `IconSet` / `RowActionsDisplay` backed enums used by configuration.
 
 ### Twig & assets
 
 - **FR-MACRO-001**: `macros/ui.html.twig` exposes btn, toolbar, table, pagination, tabs, shell, card, filters, progress, spinner, badge variants, modal/confirm attrs, etc.
-- **FR-PARTIAL-001**: Partials for pagination, empty, flashes, toasts, confirm, page loader, card, filters, brand, theme/width/locale/kebab toggles, modal, shell chrome, thinking orb.
+- **FR-PARTIAL-001**: Partials for pagination, empty, flashes, toasts, confirm, page loader, card, filters, brand, theme/width/locale/kebab toggles, modal, shell chrome, thinking orb; `_row_actions` supports `display` `icon`|`text`|`icon_text`.
 - **FR-ICON-001**: `_icon.html.twig` branches on `icon_set`; `_icon_ux.html.twig` isolates optional `ux_icon()` compile dependency.
 - **FR-CSS-001**: `css/nowo-ui.css` semantic styles + CSS variables (incl. shell transitions, orb, width, dark tokens).
 - **FR-JS-001**: Built IIFEs `nowo-ui-modal.js`, `nowo-ui-shell.js`, `nowo-ui-toast.js`, `nowo-ui-confirm.js`, `nowo-ui-page-loader.js`, `nowo-ui-theme.js`, `nowo-ui-orb.js` from Vite TS entries.

@@ -21,6 +21,17 @@ final class NowoUiKitExtensionTest extends TestCase
 
         self::assertSame('bootstrap5', $container->getParameter('nowo_ui_kit.css_framework'));
         self::assertSame('none', $container->getParameter('nowo_ui_kit.icon_set'));
+        self::assertSame('icon', $container->getParameter('nowo_ui_kit.row_actions_display'));
+    }
+
+    public function testLoadSetsRowActionsDisplay(): void
+    {
+        $container = new ContainerBuilder();
+        $extension = new NowoUiKitExtension();
+
+        $extension->load([['row_actions_display' => 'icon_text']], $container);
+
+        self::assertSame('icon_text', $container->getParameter('nowo_ui_kit.row_actions_display'));
     }
 
     public function testPrependRegistersAssetPackage(): void
@@ -79,6 +90,7 @@ final class NowoUiKitExtensionTest extends TestCase
         $container->prependExtensionConfig(Configuration::ALIAS, [
             'css_framework' => 'tailwind',
             'icon_set' => 'svg_inline',
+            'row_actions_display' => 'text',
         ]);
         $extension->prepend($container);
 
@@ -92,6 +104,7 @@ final class NowoUiKitExtensionTest extends TestCase
         self::assertNotNull($globals);
         self::assertSame('tailwind', $globals['nowo_ui_kit_css_framework']);
         self::assertSame('svg_inline', $globals['nowo_ui_kit_icon_set']);
+        self::assertSame('text', $globals['nowo_ui_kit_row_actions_display']);
     }
 
     public function testAlias(): void

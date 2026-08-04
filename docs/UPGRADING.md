@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.6.0](#to-160)
 - [To 1.5.1](#to-151)
 - [To 1.5.0](#to-150)
 - [From 1.3.x to 1.4.0](#from-13x-to-140)
@@ -14,6 +15,31 @@
 
 
 ## Unreleased
+
+## To 1.6.0
+
+From **1.5.x** — **Row action display** (`icon` / `text` / `icon_text`) and the expanded canonical `_row_actions` API. Default display remains **icon-only** (same as 1.4/1.5).
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+php bin/console cache:clear
+php bin/console assets:install
+```
+
+### Row actions display (REQ-UI-001)
+
+Optional additive config:
+
+```yaml
+nowo_ui_kit:
+    row_actions_display: text   # or icon | icon_text
+```
+
+`_row_actions.html.twig` also accepts a per-include `display` argument and the full action hash (`tag`, `method`, `confirm_id`, …). See [ROW_ACTIONS.md](ROW_ACTIONS.md) and [USAGE.md](USAGE.md).
+
+### Default `ui.action` variants
+
+`ui.action(kind)` defaults: `edit` / most kinds → **secondary**; `delete` → danger; `create`/`save` → primary. Pass a third macro arg `variant` to override.
 
 ## To 1.5.1
 

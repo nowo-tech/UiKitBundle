@@ -62,6 +62,7 @@ return [
 nowo_ui_kit:
     css_framework: bootstrap5
     icon_set: bootstrap-icons
+    row_actions_display: icon
 ```
 
 See [Configuration](CONFIGURATION.md) for all enum values.

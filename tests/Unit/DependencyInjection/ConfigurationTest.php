@@ -7,6 +7,7 @@ namespace Nowo\UiKitBundle\Tests\Unit\DependencyInjection;
 use Nowo\UiKitBundle\DependencyInjection\Configuration;
 use Nowo\UiKitBundle\Enum\CssFramework;
 use Nowo\UiKitBundle\Enum\IconSet;
+use Nowo\UiKitBundle\Enum\RowActionsDisplay;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Definition\Processor;
@@ -19,6 +20,7 @@ final class ConfigurationTest extends TestCase
 
         self::assertSame(CssFramework::Bootstrap5->value, $config['css_framework']);
         self::assertSame(IconSet::BootstrapIcons->value, $config['icon_set']);
+        self::assertSame(RowActionsDisplay::Icon->value, $config['row_actions_display']);
     }
 
     public function testCustomAndSvgInline(): void
@@ -26,10 +28,31 @@ final class ConfigurationTest extends TestCase
         $config = (new Processor())->processConfiguration(new Configuration(), [[
             'css_framework' => 'custom',
             'icon_set' => 'svg_inline',
+            'row_actions_display' => 'text',
         ]]);
 
         self::assertSame('custom', $config['css_framework']);
         self::assertSame('svg_inline', $config['icon_set']);
+        self::assertSame('text', $config['row_actions_display']);
+    }
+
+    public function testRejectsUnknownRowActionsDisplay(): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        (new Processor())->processConfiguration(new Configuration(), [[
+            'row_actions_display' => 'labels_only',
+        ]]);
+    }
+
+    public function testAcceptsAllRowActionsDisplayValues(): void
+    {
+        foreach (RowActionsDisplay::values() as $value) {
+            $config = (new Processor())->processConfiguration(new Configuration(), [[
+                'row_actions_display' => $value,
+            ]]);
+            self::assertSame($value, $config['row_actions_display']);
+        }
     }
 
     public function testRejectsUnknownFramework(): void

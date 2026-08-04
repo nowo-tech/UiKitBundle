@@ -2,7 +2,7 @@
 
 **Baseline spec**: [`spec.md`](spec.md)  
 **Package**: `nowo-tech/ui-kit-bundle`  
-**Last audited**: 2026-08-04 (1.4.0 surfaces)
+**Last audited**: 2026-08-04 (1.5.0 — row_actions_display)
 
 This file proves that **every production source artifact** under `src/` is referenced by the baseline specification. Test-only files (`*.test.ts`) are listed under Tests. Demo *apps* under `demo/` are out of Packagist scope; the kitchen sink Twig template inside the bundle is included.
 
@@ -16,6 +16,7 @@ This file proves that **every production source artifact** under `src/` is refer
 | `DependencyInjection/Compiler/TwigPathsPass.php` | Twig namespace | FR-TWIG-001 |
 | `Enum/CssFramework.php` | Framework enum | FR-ENUM-001 |
 | `Enum/IconSet.php` | Icon set enum | FR-ENUM-001 |
+| `Enum/RowActionsDisplay.php` | Row actions display enum | FR-ENUM-001 |
 
 ## Twig / translations / CSS / JS (`src/Resources/`)
 
@@ -44,6 +45,7 @@ This file proves that **every production source artifact** under `src/` is refer
 | `Resources/views/partials/_page_loader.html.twig` | Page loader | FR-PARTIAL-001 / FR-ORB-002 |
 | `Resources/views/partials/_pagination.html.twig` | Pagination | FR-PARTIAL-001 |
 | `Resources/views/partials/_row_actions.html.twig` | Row actions | FR-PARTIAL-001 |
+| `Resources/views/partials/_action_inner.html.twig` | Row action inner (icon/label) | FR-PARTIAL-001 |
 | `Resources/views/partials/_shell.html.twig` | Composed shell | FR-PARTIAL-001 |
 | `Resources/views/partials/_tabs.html.twig` | Tabs | FR-PARTIAL-001 |
 | `Resources/views/partials/_theme_toggle.html.twig` | Theme toggle | FR-PARTIAL-001 |

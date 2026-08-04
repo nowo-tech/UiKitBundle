@@ -2,7 +2,11 @@
   Icon by nowo_ui_kit_icon_set.
 
   Required:
-    - name: edit|delete|view|copy|prev|next|close (or free string for ux_icon)
+    - name: canonical action kind or free string (ux_icon / fallback class)
+
+  Canonical kinds (REQ-UI-001):
+    edit, delete, view, copy, create, save, cancel, restore, share, config,
+    export, filter, prev, next, close
 
   Optional:
     - label: accessible text (aria-hidden decorative when parent has aria-label)
@@ -13,13 +17,38 @@
     <span class="nowo-ui-icon nowo-ui-icon--text">{{ label }}</span>
 {% elseif icon_set == 'ux_icon' %}
     {# Deferred to a separate template: Twig resolves ux_icon() at compile time. #}
-    {% include '@NowoUiKitBundle/components/_icon_ux.html.twig' with { name: name } only %}
+    {% set ux_map = {
+        edit: 'bi:pencil',
+        delete: 'bi:trash',
+        view: 'bi:eye',
+        copy: 'bi:clipboard',
+        create: 'bi:plus-lg',
+        save: 'bi:check-lg',
+        cancel: 'bi:x-lg',
+        restore: 'bi:arrow-counterclockwise',
+        share: 'bi:share',
+        config: 'bi:gear',
+        export: 'bi:download',
+        filter: 'bi:funnel',
+        prev: 'bi:chevron-left',
+        next: 'bi:chevron-right',
+        close: 'bi:x-lg'
+    } %}
+    {% include '@NowoUiKitBundle/components/_icon_ux.html.twig' with { name: ux_map[name]|default(name) } only %}
 {% elseif icon_set == 'tabler-icons' %}
     {% set map = {
         edit: 'ti ti-pencil',
         delete: 'ti ti-trash',
         view: 'ti ti-eye',
         copy: 'ti ti-copy',
+        create: 'ti ti-plus',
+        save: 'ti ti-check',
+        cancel: 'ti ti-x',
+        restore: 'ti ti-restore',
+        share: 'ti ti-share',
+        config: 'ti ti-settings',
+        export: 'ti ti-download',
+        filter: 'ti ti-filter',
         prev: 'ti ti-chevron-left',
         next: 'ti ti-chevron-right',
         close: 'ti ti-x'
@@ -31,6 +60,14 @@
         delete: 'M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z',
         view: 'M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10z',
         copy: 'M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z',
+        create: 'M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z',
+        save: 'M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z',
+        cancel: 'M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z',
+        restore: 'M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z',
+        share: 'M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z',
+        config: 'M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96a7.2 7.2 0 0 0-1.62-.94l-.36-2.54A.48.48 0 0 0 14 2h-4a.48.48 0 0 0-.48.42l-.36 2.54c-.57.23-1.11.54-1.62.94l-2.39-.96a.49.49 0 0 0-.59.22L2.65 8.87a.49.49 0 0 0 .12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94L2.77 14.5a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.3.59.22l2.39-.96c.5.4 1.05.72 1.62.94l.36 2.54c.05.24.24.42.48.42h4c.24 0 .44-.18.48-.42l.36-2.54c.57-.22 1.12-.54 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.49.49 0 0 0-.12-.61l-2.03-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z',
+        export: 'M5 20h14v-2H5v2zM11 4v10.17l3.59-3.58L16 12l-5 5-5-5 1.41-1.41L10 14.17V4h1z',
+        filter: 'M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z',
         prev: 'M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z',
         next: 'M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z',
         close: 'M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'
@@ -45,6 +82,14 @@
         delete: 'bi bi-trash',
         view: 'bi bi-eye',
         copy: 'bi bi-clipboard',
+        create: 'bi bi-plus-lg',
+        save: 'bi bi-check-lg',
+        cancel: 'bi bi-x-lg',
+        restore: 'bi bi-arrow-counterclockwise',
+        share: 'bi bi-share',
+        config: 'bi bi-gear',
+        export: 'bi bi-download',
+        filter: 'bi bi-funnel',
         prev: 'bi bi-chevron-left',
         next: 'bi bi-chevron-right',
         close: 'bi bi-x-lg'

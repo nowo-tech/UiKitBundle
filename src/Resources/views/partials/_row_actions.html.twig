@@ -1,34 +1,137 @@
 {#
-  Row actions cluster (edit / delete / view / copy).
+  Canonical row-action cluster (REQ-UI-001).
 
   Required:
-    - actions: list of {
-        kind: edit|delete|view|copy,
-        href?: string (for GET links),
-        label?: string (defaults to action.* translation),
-        attr?: {}
-      }
+    - actions: list of action hashes (see below)
 
   Optional:
-    - framework
+    - framework: css_framework override
+    - display: icon | text | icon_text (defaults to nowo_ui_kit_row_actions_display)
+
+  Each action:
+    kind          edit|delete|view|copy|create|save|cancel|restore|share|config|export|filter|prev|next|close
+                  (drives nowo-ui-action--{kind}, default btn variant, default icon + i18n key action.{kind})
+    href          GET link or POST form action URL
+    label         visible / aria label (default: action.{kind}|trans NowoUiKitBundle)
+    icon          override icon name for _icon (default: kind)
+    variant       override btn variant (primary|secondary|danger|…)
+    method        GET (default) | POST
+    tag           auto (default) | a | button | form
+                  auto → form if method=POST; button if confirm_id/modal_id and no href; else a
+    csrf_token    when method=POST
+    csrf_field    CSRF field name (default _token)
+    confirm_id    UiKit _confirm target (data-nowo-confirm-*)
+    modal_id      framework modal target
+    confirm_message  transitional window.confirm on form submit (prefer confirm_id)
+    attr          extra HTML attributes (hash)
+    disabled      bool
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 {% set framework = framework|default(null) %}
-<div class="{{ ui.row_actions(framework) }}">
+{% set display = display|default(nowo_ui_kit_row_actions_display|default('icon')) %}
+{% if display not in ['icon', 'text', 'icon_text'] %}
+    {% set display = 'icon' %}
+{% endif %}
+<div class="{{ ui.row_actions(framework) }} nowo-ui-row-actions--{{ display|replace({'_': '-'}) }}">
     {% for action in actions %}
-        {% set kind = action.kind|default('edit') %}
-        {% set label = action.label|default(('action.' ~ kind)|trans({}, 'NowoUiKitBundle')) %}
-        <a
-            class="{{ ui.action(kind, framework) }}"
-            href="{{ action.href|default('#') }}"
-            title="{{ label }}"
-            aria-label="{{ label }}"
-            {% if action.attr is defined %}
-                {% for name, value in action.attr %}{{ name }}="{{ value }}" {% endfor %}
+        {% if action.visible is not defined or action.visible %}
+            {% set kind = action.kind|default('edit') %}
+            {% set label = action.label|default(('action.' ~ kind)|trans({}, 'NowoUiKitBundle')) %}
+            {% set icon_name = action.icon|default(kind) %}
+            {% set method = (action.method|default('GET'))|upper %}
+            {% set tag = action.tag|default('auto') %}
+            {% if tag == 'auto' %}
+                {% if method == 'POST' %}
+                    {% set tag = 'form' %}
+                {% elseif (action.confirm_id is defined and action.confirm_id) or (action.modal_id is defined and action.modal_id) %}
+                    {% set tag = action.href is defined and action.href ? 'a' : 'button' %}
+                {% else %}
+                    {% set tag = 'a' %}
+                {% endif %}
             {% endif %}
-        >
-            {% include '@NowoUiKitBundle/components/_icon.html.twig' with { name: kind, label: label } only %}
-            <span class="visually-hidden">{{ label }}</span>
-        </a>
+            {% set class = ui.action(kind, framework, action.variant|default(null)) %}
+            {% set disabled = action.disabled|default(false) %}
+
+            {% if tag == 'form' %}
+                <form
+                    method="post"
+                    action="{{ action.href|default('#') }}"
+                    class="nowo-ui-row-actions__form"
+                    {% if action.confirm_message is defined and action.confirm_message %}
+                        onsubmit="return confirm({{ action.confirm_message|json_encode|raw }});"
+                    {% endif %}
+                    {% if action.attr is defined %}
+                        {% for name, value in action.attr %}{{ name }}="{{ value }}" {% endfor %}
+                    {% endif %}
+                >
+                    {% if action.csrf_token is defined and action.csrf_token %}
+                        <input type="hidden" name="{{ action.csrf_field|default('_token') }}" value="{{ action.csrf_token }}">
+                    {% endif %}
+                    <button
+                        type="submit"
+                        class="{{ class }}"
+                        title="{{ label }}"
+                        aria-label="{{ label }}"
+                        {% if disabled %}disabled{% endif %}
+                    >
+                        {% include '@NowoUiKitBundle/partials/_action_inner.html.twig' with {
+                            display: display,
+                            icon_name: icon_name,
+                            label: label
+                        } only %}
+                    </button>
+                </form>
+            {% elseif tag == 'button' %}
+                <button
+                    type="button"
+                    class="{{ class }}"
+                    title="{{ label }}"
+                    aria-label="{{ label }}"
+                    {% if disabled %}disabled{% endif %}
+                    {% if action.confirm_id is defined and action.confirm_id %}
+                        {{ ui.confirm_toggle_attrs() }}
+                        {{ ui.confirm_target_attr(action.confirm_id) }}
+                    {% endif %}
+                    {% if action.modal_id is defined and action.modal_id %}
+                        {{ ui.modal_toggle_attrs(framework) }}
+                        {{ ui.modal_target_attr(action.modal_id, framework) }}
+                    {% endif %}
+                    {% if action.attr is defined %}
+                        {% for name, value in action.attr %}{{ name }}="{{ value }}" {% endfor %}
+                    {% endif %}
+                >
+                    {% include '@NowoUiKitBundle/partials/_action_inner.html.twig' with {
+                        display: display,
+                        icon_name: icon_name,
+                        label: label
+                    } only %}
+                </button>
+            {% else %}
+                <a
+                    class="{{ class }}{% if disabled %} is-disabled{% endif %}"
+                    href="{{ action.href|default('#') }}"
+                    title="{{ label }}"
+                    aria-label="{{ label }}"
+                    {% if disabled %}aria-disabled="true" tabindex="-1"{% endif %}
+                    {% if action.confirm_id is defined and action.confirm_id %}
+                        {{ ui.confirm_toggle_attrs() }}
+                        {{ ui.confirm_target_attr(action.confirm_id) }}
+                    {% endif %}
+                    {% if action.modal_id is defined and action.modal_id %}
+                        {{ ui.modal_toggle_attrs(framework) }}
+                        {{ ui.modal_target_attr(action.modal_id, framework) }}
+                    {% endif %}
+                    {% if action.attr is defined %}
+                        {% for name, value in action.attr %}{{ name }}="{{ value }}" {% endfor %}
+                    {% endif %}
+                >
+                    {% include '@NowoUiKitBundle/partials/_action_inner.html.twig' with {
+                        display: display,
+                        icon_name: icon_name,
+                        label: label
+                    } only %}
+                </a>
+            {% endif %}
+        {% endif %}
     {% endfor %}
 </div>

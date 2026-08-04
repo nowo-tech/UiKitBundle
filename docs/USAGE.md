@@ -39,6 +39,7 @@ Twig globals (from config):
 
 - `nowo_ui_kit_css_framework`
 - `nowo_ui_kit_icon_set`
+- `nowo_ui_kit_row_actions_display`
 
 ## Partials
 
@@ -48,7 +49,7 @@ Twig globals (from config):
 | `partials/_empty.html.twig` | Empty state |
 | `partials/_flashes.html.twig` | Inline Symfony flashes |
 | `partials/_toasts.html.twig` | Fixed toast stack from flashes (string or `{title, message}`) |
-| `partials/_row_actions.html.twig` | Edit / delete / view / copy cluster |
+| `partials/_row_actions.html.twig` | Edit / delete / view / copy cluster (`display`: `icon` \| `text` \| `icon_text`) |
 | `partials/_page_header.html.twig` | Title + intro + toolbar HTML |
 | `partials/_tabs.html.twig` | Tab nav |
 | `partials/_filters.html.twig` | Search + apply/clear + actions slot |
@@ -82,6 +83,32 @@ Example:
     route: 'app_items',
     route_params: {},
     query: { q: app.request.query.get('q') }
+} %}
+```
+
+Row actions (inherits `nowo_ui_kit_row_actions_display`; override with `display`). Full contract: [ROW_ACTIONS.md](ROW_ACTIONS.md).
+
+```twig
+{% include '@NowoUiKitBundle/partials/_row_actions.html.twig' with {
+    actions: [
+        { kind: 'view', href: path('app_item_show', { id: item.id }) },
+        { kind: 'edit', href: path('app_item_edit', { id: item.id }) },
+        { kind: 'delete', tag: 'button', confirm_id: 'delete-' ~ item.id }
+    ]
+} %}
+
+{# Visible labels instead of icon-only #}
+{% include '@NowoUiKitBundle/partials/_row_actions.html.twig' with {
+    display: 'text',
+    actions: [
+        { kind: 'edit', href: path('app_item_edit', { id: item.id }) },
+        {
+            kind: 'delete',
+            method: 'POST',
+            href: path('app_item_delete', { id: item.id }),
+            csrf_token: csrf_token('delete' ~ item.id)
+        }
+    ]
 } %}
 ```
 
