@@ -9,7 +9,7 @@ SERVICE_PHP = php
 BUNDLE_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 export DOCKER_CONFIG := $(BUNDLE_ROOT)/.docker
 
-.PHONY: help ensure-up up down down-dev build shell install assets assets-test test-ts test test-coverage test-with-db \
+.PHONY: help ensure-up up down down-dev build shell install assets assets-test test-ts test test-coverage test-with-db \ check-twig-extra
 	test-coverage-with-db coverage-check cs-check cs-fix rector rector-dry phpstan validate-phpdoc qa release-check \
 	release-check-demos demo-smoke composer-sync clean update validate validate-translations \
 	setup-hooks check-no-cursor-coauthor check-open-prs strip-cursor-coauthor-from-history
@@ -102,9 +102,13 @@ validate-translations: ensure-up
 	@echo "Translation files validated (YAML syntax only)."
 	@$(COMPOSE) exec -T $(SERVICE_PHP) php -r 'require "vendor/autoload.php"; foreach (glob("src/Resources/translations/*.yaml") as $$f) { Symfony\Component\Yaml\Yaml::parseFile($$f); } echo "OK\n";'
 
-qa: cs-check test test-ts
+qa: cs-check twig-lint test test-ts
 
-release-check: check-no-cursor-coauthor check-open-prs ensure-up assets composer-sync cs-fix cs-check rector-dry phpstan validate-phpdoc coverage-check test-ts release-check-demos
+
+check-twig-extra:
+	@chmod +x .scripts/check-twig-extra.sh
+	@./.scripts/check-twig-extra.sh
+release-check: check-no-cursor-coauthor check-open-prs check-twig-extra ensure-up assets composer-sync cs-fix cs-check rector-dry phpstan validate-phpdoc coverage-check test-ts release-check-demos
 
 release-check-demos:
 	@if [ -f demo/Makefile ]; then $(MAKE) -C demo release-check; else true; fi
@@ -147,3 +151,6 @@ check-open-prs:
 strip-cursor-coauthor-from-history:
 	@chmod +x .scripts/strip-cursor-coauthor-from-history.sh
 	@./.scripts/strip-cursor-coauthor-from-history.sh master
+
+twig-lint: ensure-up
+	@$(COMPOSE) exec -T $(SERVICE_PHP) composer twig:lint || $(COMPOSE) exec -T $(SERVICE_PHP) ./vendor/bin/twig-cs-fixer lint --config=.twig-cs-fixer.php
