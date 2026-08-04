@@ -58,10 +58,10 @@ final class UiMacrosTwigTest extends TestCase
         self::assertFileExists($base.'/css/nowo-ui.css');
         self::assertFileExists($base.'/js/nowo-ui-modal.js');
         self::assertFileExists($base.'/js/nowo-ui-shell.js');
-        self::assertStringContainsString('--nowo-ui-primary', (string) \file_get_contents($base.'/css/nowo-ui.css'));
-        self::assertStringContainsString('nowo-ui-aside', (string) \file_get_contents($base.'/css/nowo-ui.css'));
-        self::assertStringContainsString('nowoOpenModal', (string) \file_get_contents($base.'/js/nowo-ui-modal.js'));
-        self::assertStringContainsString('nowoUiToggleAside', (string) \file_get_contents($base.'/js/nowo-ui-shell.js'));
+        self::assertStringContainsString('--nowo-ui-primary', (string) file_get_contents($base.'/css/nowo-ui.css'));
+        self::assertStringContainsString('nowo-ui-aside', (string) file_get_contents($base.'/css/nowo-ui.css'));
+        self::assertStringContainsString('nowoOpenModal', (string) file_get_contents($base.'/js/nowo-ui-modal.js'));
+        self::assertStringContainsString('nowoUiToggleAside', (string) file_get_contents($base.'/js/nowo-ui-shell.js'));
     }
 
     public function testShellChromePartialsExist(): void
