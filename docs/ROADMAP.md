@@ -28,7 +28,7 @@ Shipped through **v1.4.x** (phases A–D implemented in the kit):
 |------|---------|
 | Class macros | `btn`, `toolbar`, `page_header`, `search_*`, `list*`, `table*`, `row_actions`, `badge` (+ variants), `flash`, `empty`, `tabs`, modal/confirm attrs, shell/header/aside/avatar/user_menu/burger/footer, `card*`, `filters`, `progress*`, `spinner` |
 | Partials | pagination, empty, flashes, **toasts**, row actions, page header, tabs, **filters**, **card**, modal shell, **confirm**, **page loader** (`spinner`/`orb`), **thinking orb**, **brand**, **theme toggle**, **width toggle**, **locale switcher**, **kebab**, icon, burger, avatar, aside (**nested groups**), user menu, footer, composed `_shell` |
-| Assets | `nowo-ui.css` (+ dark tokens); Vite/pnpm IIFEs: modal, shell, **toast**, **confirm**, **page-loader**, **theme**, **orb** |
+| Assets | `nowo-ui.css` (+ dark tokens); Vite/pnpm IIFEs: modal, shell, **toast**, **confirm**, **page-loader**, **theme**, **orb**, **clipboard**, **tabs**; optional Stimulus peers |
 | Config | `css_framework`, `icon_set` |
 | Docs | [ADOPTION.md](ADOPTION.md), [STIMULUS.md](STIMULUS.md), [THIRD_PARTY.md](THIRD_PARTY.md) |
 

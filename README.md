@@ -36,7 +36,8 @@ This bundle is **FrankenPHP worker mode friendly**.
 
 - Twig macros (`@NowoUiKitBundle/macros/ui.html.twig`) with optional per-call `framework` override
 - Semantic stylesheet `css/nowo-ui.css` (asset package `nowo_ui_kit`), including dark `[data-theme="dark"]` tokens
-- TypeScript → IIFEs: modal, shell, toast, confirm, page-loader, theme, orb
+- TypeScript → IIFEs: modal, shell, toast, confirm, page-loader, theme, orb, clipboard, tabs
+- Optional Stimulus peers under `src/Resources/assets/stimulus-peers/` (see [docs/STIMULUS.md](docs/STIMULUS.md))
 - Thinking Orbs: `_thinking_orb` + `nowo-ui-orb.js`; page loader `visual: orb|spinner` ([THIRD_PARTY.md](docs/THIRD_PARTY.md))
 - Config: `css_framework`, `icon_set`, `row_actions_display`; i18n domain `NowoUiKitBundle` (`en`, `es`, `it`, `fr`, `pt`, `de`, `nl`)
 - Twig namespace overrides under `templates/bundles/NowoUiKitBundle/`

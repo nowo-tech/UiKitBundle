@@ -51,7 +51,7 @@ Twig globals (from config):
 | `partials/_toasts.html.twig` | Fixed toast stack from flashes (string or `{title, message}`) |
 | `partials/_row_actions.html.twig` | Edit / delete / view / copy cluster (`display`: `icon` \| `text` \| `icon_text`) |
 | `partials/_page_header.html.twig` | Title + intro + toolbar HTML |
-| `partials/_tabs.html.twig` | Tab nav |
+| `partials/_tabs.html.twig` | Tab **link** nav (no JS). In-page panels: `nowo-ui-tabs.js` / Stimulus `tabs` peer |
 | `partials/_filters.html.twig` | Search + apply/clear + actions slot |
 | `partials/_card.html.twig` | Card / panel (header/body/footer) |
 | `partials/_modal_shell.html.twig` | Modal shell |
@@ -145,6 +145,8 @@ pnpm run build
 <script src="{{ asset('js/nowo-ui-toast.js', 'nowo_ui_kit') }}" defer></script>
 <script src="{{ asset('js/nowo-ui-confirm.js', 'nowo_ui_kit') }}" defer></script>
 <script src="{{ asset('js/nowo-ui-page-loader.js', 'nowo_ui_kit') }}" defer></script>
+<script src="{{ asset('js/nowo-ui-clipboard.js', 'nowo_ui_kit') }}" defer></script>
+<script src="{{ asset('js/nowo-ui-tabs.js', 'nowo_ui_kit') }}" defer></script>
 <script src="{{ asset('js/nowo-ui-theme.js', 'nowo_ui_kit') }}" defer></script>
 <script src="{{ asset('js/nowo-ui-orb.js', 'nowo_ui_kit') }}" defer></script>
 ```
@@ -154,6 +156,10 @@ Run `php bin/console assets:install` after install/update.
 `nowo-ui-modal.js` handles `data-nowo-modal-open` / `data-nowo-modal-close` for `custom` / `none` / `tailwind`. Bootstrap stacks use `data-bs-*` and do not require this script for open/close.
 
 `nowo-ui-shell.js` toggles the left aside via `data-nowo-ui-burger`, nested groups via `data-nowo-ui-nav-group-toggle`, and main width via `data-nowo-ui-width-toggle`.
+
+`nowo-ui-clipboard.js` copies via `data-nowo-ui-clipboard*` (text or same-origin URL). `nowo-ui-tabs.js` switches in-page panels via `data-nowo-ui-tabs*` (Twig `_tabs` remains link navigation).
+
+Optional Stimulus peers: `src/Resources/assets/stimulus-peers/` — see [STIMULUS.md](STIMULUS.md).
 
 `nowo-ui-orb.js` mounts Thinking Orbs on `canvas[data-nowo-ui-orb]` (local MIT canvas engine; no CDN). Use `_thinking_orb.html.twig` or `_page_loader.html.twig` with `visual: 'orb'`.
 

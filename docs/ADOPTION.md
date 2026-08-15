@@ -39,8 +39,9 @@ Recommended migration order:
 1. Depend on UiKit; keep Beacon `app-shell` as the product chrome initially.
 2. Point kit admin layouts at UiKit macros/partials; remap `--nowo-ui-*` under `.kit-admin` (already started).
 3. Swap Beacon `_toasts` / confirm / page-loader markup for kit partials when contracts match ([STIMULUS.md](STIMULUS.md)).
-4. Optionally thin `_tabs`, filters, cards toward kit equivalents.
-5. Leave product-only pieces in Beacon (Mercure, charts, product tour). Thinking Orb is available in the kit via `_thinking_orb` / page loader `visual: orb` + `nowo-ui-orb.js` ([THIRD_PARTY.md](THIRD_PARTY.md)).
+4. Prefer kit IIFEs **or** re-export Stimulus peers from `vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/` and delete duplicated host controllers (`clipboard_copy`, `confirm_*`, `page_loader`, `toast_stack`, `tabs`).
+5. Optionally thin `_tabs`, filters, cards toward kit equivalents.
+6. Leave product-only pieces in Beacon (Mercure, charts, product tour, `password-confirm-mirror`). Thinking Orb is available in the kit via `_thinking_orb` / page loader `visual: orb` + `nowo-ui-orb.js` ([THIRD_PARTY.md](THIRD_PARTY.md)).
 
 ## Config alignment
 

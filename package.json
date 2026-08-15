@@ -4,7 +4,7 @@
   "type": "module",
   "packageManager": "pnpm@9.15.0",
   "scripts": {
-    "build": "VITE_ENTRY=modal vite build && VITE_ENTRY=shell vite build && VITE_ENTRY=toast vite build && VITE_ENTRY=confirm vite build && VITE_ENTRY=page-loader vite build && VITE_ENTRY=theme vite build && VITE_ENTRY=orb vite build",
+    "build": "VITE_ENTRY=modal vite build && VITE_ENTRY=shell vite build && VITE_ENTRY=toast vite build && VITE_ENTRY=confirm vite build && VITE_ENTRY=page-loader vite build && VITE_ENTRY=theme vite build && VITE_ENTRY=orb vite build && VITE_ENTRY=clipboard vite build && VITE_ENTRY=tabs vite build",
     "build:modal": "VITE_ENTRY=modal vite build",
     "build:shell": "VITE_ENTRY=shell vite build",
     "build:toast": "VITE_ENTRY=toast vite build",
@@ -12,6 +12,8 @@
     "build:page-loader": "VITE_ENTRY=page-loader vite build",
     "build:theme": "VITE_ENTRY=theme vite build",
     "build:orb": "VITE_ENTRY=orb vite build",
+    "build:clipboard": "VITE_ENTRY=clipboard vite build",
+    "build:tabs": "VITE_ENTRY=tabs vite build",
     "watch": "VITE_ENTRY=modal vite build --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

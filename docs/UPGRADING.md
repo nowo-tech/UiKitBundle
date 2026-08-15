@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.8.0](#to-180)
 - [To 1.6.0](#to-160)
 - [To 1.5.1](#to-151)
 - [To 1.5.0](#to-150)
@@ -15,6 +16,34 @@
 
 
 ## Unreleased
+
+## To 1.8.0
+
+From **1.7.x** — **Additive** clipboard/tabs IIFEs and optional Stimulus peer TypeScript sources. No breaking Twig/CSS API changes. Contributors: `pnpm run build` emits **nine** IIFEs (adds `clipboard`, `tabs`). Optional Stimulus peers under `src/Resources/assets/stimulus-peers/`. See [STIMULUS.md](STIMULUS.md).
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+php bin/console assets:install
+```
+
+### New optional scripts
+
+```twig
+<script src="{{ asset('js/nowo-ui-clipboard.js', 'nowo_ui_kit') }}" defer></script>
+<script src="{{ asset('js/nowo-ui-tabs.js', 'nowo_ui_kit') }}" defer></script>
+```
+
+### Stimulus peers (optional)
+
+If the host uses Symfony UX Stimulus, you may import peers from:
+
+`vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/`
+
+and **omit** the matching IIFE for that behaviour. See [STIMULUS.md](STIMULUS.md).
+
+### Beacon hosts
+
+Prefer `data-nowo-ui-*` contracts. Legacy Beacon attrs (`data-confirm-dialog-close`, `data-tab-id`, Stimulus value attrs) remain documented for migration; delete duplicated host controllers once re-exported from the vendor peers.
 
 ## To 1.6.0
 

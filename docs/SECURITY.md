@@ -16,7 +16,7 @@ If you discover a security-related issue, please report it privately (e.g. by em
 | --- | --- |
 | **Twig macros / partials** | Labels, hrefs, and optional HTML fragments passed by the host app |
 | **Configuration** | `nowo_ui_kit.css_framework` / `icon_set` / `row_actions_display` (compile-time enums) |
-| **Frontend JS** | IIFEs: `nowo-ui-modal.js`, `nowo-ui-shell.js`, `nowo-ui-toast.js`, `nowo-ui-confirm.js`, `nowo-ui-page-loader.js`, `nowo-ui-theme.js`, `nowo-ui-orb.js` (DOM / canvas only; no network I/O) |
+| **Frontend JS** | IIFEs: `nowo-ui-modal.js`, `nowo-ui-shell.js`, `nowo-ui-toast.js`, `nowo-ui-confirm.js`, `nowo-ui-page-loader.js`, `nowo-ui-theme.js`, `nowo-ui-orb.js`, `nowo-ui-clipboard.js`, `nowo-ui-tabs.js` (DOM / canvas; clipboard may `fetch` same-origin URL bodies) |
 | **Translations** | Domain `NowoUiKitBundle` strings rendered in Twig |
 
 The bundle does **not** expose CLI commands that mutate production data, outbound HTTP integrations, file uploads, or cookie writers.

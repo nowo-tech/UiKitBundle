@@ -54,7 +54,7 @@ Before tagging, confirm each item in [SECURITY.md — Release security checklist
 
 4. Create an **annotated** tag: `git tag -a vX.Y.Z -m "Release vX.Y.Z"`.
 5. Run `make check-no-cursor-coauthor` again **before** `git push` (REQ-GIT-001). The release commit itself is not covered by an earlier `release-check` run.
-6. Push: `git push origin main` and `git push origin vX.Y.Z`.
+6. Push: `git push origin main` and `git push origin vX.Y.Z` (remote: `git@github.com:nowo-tech/UiKitBundle.git`).
 7. Confirm GitHub workflows `release.yml` and `sync-releases.yml` completed successfully.
 8. Prefer `gh -R nowo-tech/UiKitBundle …` if the local remote hostname is not recognized by `gh`.
 

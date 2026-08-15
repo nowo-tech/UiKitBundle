@@ -5,7 +5,16 @@
  */
 import { defineConfig } from 'vite';
 
-type Entry = 'modal' | 'shell' | 'toast' | 'confirm' | 'page-loader' | 'theme' | 'orb';
+type Entry =
+  | 'modal'
+  | 'shell'
+  | 'toast'
+  | 'confirm'
+  | 'page-loader'
+  | 'theme'
+  | 'orb'
+  | 'clipboard'
+  | 'tabs';
 
 const entry = process.env.VITE_ENTRY as Entry | undefined;
 
@@ -109,6 +118,36 @@ const configs: Record<Entry, { build: object }> = {
         output: {
           format: 'iife' as const,
           entryFileNames: 'js/nowo-ui-orb.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  clipboard: {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-clipboard.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-clipboard.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  tabs: {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-tabs.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-tabs.js',
         },
       },
       minify: true,

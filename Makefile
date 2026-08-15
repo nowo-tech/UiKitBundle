@@ -57,7 +57,7 @@ install: ensure-up
 assets: ensure-up
 	@$(COMPOSE) exec -T -e CI=true $(SERVICE_PHP) pnpm install
 	@$(COMPOSE) exec -T $(SERVICE_PHP) pnpm run build
-	@echo "Assets: src/Resources/public/js/nowo-ui-{modal,shell,toast,confirm,page-loader,theme,orb}.js"
+	@echo "Assets: src/Resources/public/js/nowo-ui-{modal,shell,toast,confirm,page-loader,theme,orb,clipboard,tabs}.js"
 
 test-ts: ensure-up
 	@$(COMPOSE) exec -T $(SERVICE_PHP) pnpm run test:coverage | tee coverage-ts.txt

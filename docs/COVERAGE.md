@@ -19,7 +19,7 @@ Published README percentage must match the latest `coverage-output.txt` / CI art
 
 `make test-ts` / `pnpm run test:coverage` reports Vitest v8 coverage for `src/Resources/assets/src/*.ts` (top-level IIFE entrypoints; excluding `*.test.ts`). Thresholds: lines/statements/functions ≥ 90%, branches ≥ 85%.
 
-Latest local run: **~95.5%** lines / **~88.1%** branches (seven IIFE entrypoints).
+Latest local run: **~95.5%** lines / **~88.1%** branches (nine IIFE entrypoints as of 1.8.0).
 
 ## Justified exclusions
 

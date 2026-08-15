@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [1.8.0 - 2026-08-15](#180---2026-08-15)
 - [1.7.0 - 2026-08-05](#170---2026-08-05)
 - [1.6.0 - 2026-08-04](#160---2026-08-04)
   - [Added](#added)
@@ -34,6 +35,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   - [Added](#added-6)
 
 ## [Unreleased]
+
+## [1.8.0] - 2026-08-15
+
+### Added
+
+- **Clipboard IIFE:** `nowo-ui-clipboard.js` (`data-nowo-ui-clipboard*`) → `nowoUiCopyText`.
+- **In-page tabs IIFE:** `nowo-ui-tabs.js` (`data-nowo-ui-tabs*`) → `nowoUiActivateTab`. Twig `_tabs` remains link-based navigation.
+- **Stimulus peer sources** under `src/Resources/assets/stimulus-peers/`: `clipboard_copy`, `confirm_dialog`, `confirm_submit`, `page_loader`, `toast_stack`, `tabs` (optional; hosts import via AssetMapper/Vite). Docs: [STIMULUS.md](STIMULUS.md).
+
+### Changed
+
+- Vite/`pnpm run build` emits **nine** IIFEs (adds `clipboard`, `tabs`).
+- [STIMULUS.md](STIMULUS.md): peer import examples + Beacon attribute migration notes.
+
+[1.8.0]: https://github.com/nowo-tech/UiKitBundle/releases/tag/v1.8.0
 
 ## [1.7.0] - 2026-08-05
 
