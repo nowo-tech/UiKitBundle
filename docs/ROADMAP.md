@@ -22,14 +22,14 @@ Goal: one place to restyle chrome so Beacon and feature bundles stop shipping pa
 
 ## Already in UiKit
 
-Shipped through **v1.4.x** (phases A–D implemented in the kit):
+Shipped through **v1.8.x** (phases A–D implemented in the kit; v1.5–1.8 add `row_actions_display`, clipboard IIFE, in-page tabs IIFE, Stimulus peers):
 
 | Area | Surface |
 |------|---------|
 | Class macros | `btn`, `toolbar`, `page_header`, `search_*`, `list*`, `table*`, `row_actions`, `badge` (+ variants), `flash`, `empty`, `tabs`, modal/confirm attrs, shell/header/aside/avatar/user_menu/burger/footer, `card*`, `filters`, `progress*`, `spinner` |
 | Partials | pagination, empty, flashes, **toasts**, row actions, page header, tabs, **filters**, **card**, modal shell, **confirm**, **page loader** (`spinner`/`orb`), **thinking orb**, **brand**, **theme toggle**, **width toggle**, **locale switcher**, **kebab**, icon, burger, avatar, aside (**nested groups**), user menu, footer, composed `_shell` |
 | Assets | `nowo-ui.css` (+ dark tokens); Vite/pnpm IIFEs: modal, shell, **toast**, **confirm**, **page-loader**, **theme**, **orb**, **clipboard**, **tabs**; optional Stimulus peers |
-| Config | `css_framework`, `icon_set` |
+| Config | `css_framework`, `icon_set`, `row_actions_display` (`icon` / `text` / `icon_text`) |
 | Docs | [ADOPTION.md](ADOPTION.md), [STIMULUS.md](STIMULUS.md), [THIRD_PARTY.md](THIRD_PARTY.md) |
 
 ## Gap analysis
