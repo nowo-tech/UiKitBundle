@@ -40,7 +40,7 @@ describe('nowo-ui-tabs', () => {
     mod.activateTab('#tabs', '');
     mod.activateTab(null, 'b');
     mod.activateTab('#tabs', 'b');
-    expect(document.querySelector('[data-nowo-ui-tab-id="b"][data-nowo-ui-tabs-panel]')!.hidden).toBe(false);
+    expect((document.querySelector('[data-nowo-ui-tab-id="b"][data-nowo-ui-tabs-panel]') as HTMLElement).hidden).toBe(false);
   });
 
   it('bindNowoUiTabs is idempotent', () => {
@@ -69,7 +69,7 @@ describe('nowo-ui-tabs', () => {
       .dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
     document.querySelector('[data-nowo-ui-tabs] [data-nowo-ui-tabs-trigger]')!
       .dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
-    expect(document.querySelector('[data-nowo-ui-tabs-panel]')!.hidden).toBe(false);
+    expect((document.querySelector('[data-nowo-ui-tabs-panel]') as HTMLElement).hidden).toBe(false);
   });
 
   it('syncs from data-active when active attr missing', () => {
@@ -82,8 +82,8 @@ describe('nowo-ui-tabs', () => {
       </div>
     `;
     mod.bindNowoUiTabs();
-    expect(document.querySelector('[data-nowo-ui-tab-id="b"][data-nowo-ui-tabs-panel]')!.hidden).toBe(false);
-    expect(document.querySelector('[data-nowo-ui-tab-id="a"][data-nowo-ui-tabs-panel]')!.hidden).toBe(true);
+    expect((document.querySelector('[data-nowo-ui-tab-id="b"][data-nowo-ui-tabs-panel]') as HTMLElement).hidden).toBe(false);
+    expect((document.querySelector('[data-nowo-ui-tab-id="a"][data-nowo-ui-tabs-panel]') as HTMLElement).hidden).toBe(true);
   });
 
   it('activateTab ignores unknown selector', () => {
