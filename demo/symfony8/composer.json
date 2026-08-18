@@ -51,6 +51,7 @@
         "test": "@php vendor/bin/phpunit --color=always"
     },
     "require-dev": {
+        "nowo-tech/hot-reload-bundle": "^1.4",
         "nowo-tech/twig-inspector-bundle": "*",
         "phpunit/phpunit": "^10.5 || ^11.0",
         "symfony/debug-bundle": "^7.4 || ^8.0",
