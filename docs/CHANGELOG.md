@@ -36,6 +36,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.8.1] - 2026-08-18
+
+### Changed
+
+- **Demos:** pin `nowo-tech/hot-reload-bundle` to `^1.4` with FrankenPHP Mercure/`hot_reload` (`dev`/`test` only).
+
+[1.8.1]: https://github.com/nowo-tech/UiKitBundle/releases/tag/v1.8.1
+
 ## [1.8.0] - 2026-08-15
 
 ### Added
@@ -168,7 +176,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.1...HEAD
 [1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/nowo-tech/UiKitBundle/compare/v1.2.0...v1.2.1

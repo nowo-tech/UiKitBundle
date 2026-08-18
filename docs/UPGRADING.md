@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.8.1](#to-181)
 - [To 1.8.0](#to-180)
 - [To 1.6.0](#to-160)
 - [To 1.5.1](#to-151)
@@ -16,6 +17,14 @@
 
 
 ## Unreleased
+
+## To 1.8.1
+
+From **1.8.0** — No application upgrade steps. **Demos only:** Hot Reload Bundle `^1.4` (FrankenPHP Mercure/`hot_reload`, `dev`/`test`).
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 ## To 1.8.0
 
