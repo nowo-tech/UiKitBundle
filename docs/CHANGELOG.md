@@ -36,6 +36,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.8.2] - 2026-08-19
+
+### Security
+
+- **CI:** run `composer audit --locked` after dependency install (REQ-SEC / P3).
+
+### Changed
+
+- **Maintainer:** PR template checklist; keep `tests/Integration` for REQ-TEST-002.
+
 ## [1.8.1] - 2026-08-18
 
 ### Changed
