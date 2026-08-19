@@ -112,6 +112,9 @@ jobs:
             symfony/twig-bundle:^${{ matrix.symfony }} \
             --no-interaction --no-update
           composer update symfony/* --with-all-dependencies --no-interaction --prefer-dist --no-progress
+      - name: Composer audit (Critical/High)
+        run: composer audit --locked
+
 
       - name: Run tests
         env:
