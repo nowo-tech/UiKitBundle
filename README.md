@@ -92,6 +92,7 @@ Developer-facing docs are **English only** ([Contributing — Language policy](d
 
 - [Installation](docs/INSTALLATION.md)
 - [Configuration](docs/CONFIGURATION.md)
+- [PSR evaluation (REQ-CS-007)](docs/PSR.md)
 - [Usage](docs/USAGE.md)
 - [Row actions (canonical kinds)](docs/ROW_ACTIONS.md)
 - [Adoption (Beacon + bundles)](docs/ADOPTION.md)
