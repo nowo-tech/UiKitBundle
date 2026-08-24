@@ -9,6 +9,11 @@ declare global {
   }
 }
 
+/**
+ * Removes a toast element with a short leave animation.
+ *
+ * @param el - Toast root (`[data-nowo-ui-toast]`) or `null` to no-op.
+ */
 export function dismissToast(el: HTMLElement | null): void {
   if (!el) {
     return;
