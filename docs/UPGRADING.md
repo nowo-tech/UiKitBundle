@@ -2,6 +2,8 @@
 
 ## Table of contents
 
+
+- [From 1.8.2 to 1.8.3](#from-182-to-183)
 - [Unreleased](#unreleased)
 - [To 1.8.2](#to-182)
 - [To 1.8.1](#to-181)
@@ -15,6 +17,22 @@
 - [From 1.1.x to 1.2.0](#from-11x-to-120)
 - [From 1.0.x to 1.1.0](#from-10x-to-110)
 - [From nothing to 1.0.0](#from-nothing-to-100)
+
+## From 1.8.2 to 1.8.3
+
+Review the [CHANGELOG](CHANGELOG.md) entry. PHP **8.2+** may now be required.
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+## From 1.8.2 to 1.8.3
+
+Review the [CHANGELOG](CHANGELOG.md) entry. PHP **8.2+** may now be required.
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 
 ## Unreleased

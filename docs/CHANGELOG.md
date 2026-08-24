@@ -36,6 +36,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+
+## [1.8.3] - 2026-08-24
+
+### Changed
+
+- Raise minimum PHP to **8.2** and sync README badge (REQ-SF-001).
+- **QA:** add `phpstan-frankenphp` extension (REQ-CS-005).
+- **Assets:** English JSDoc on TypeScript sources (REQ-ASSETS-002).
+- **Docs:** PHP-FIG PSR evaluation (REQ-CS-007).
+
+### Notes
+
+- **No API or configuration changes** for integrators unless noted above.
+
+[1.8.3]: https://github.com/nowo-tech/UiKitBundle/releases/tag/v1.8.3
+
 ## [1.8.2] - 2026-08-19
 
 ### Security
