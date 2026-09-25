@@ -2,9 +2,8 @@
 
 ## Table of contents
 
-
+- [From 1.8.3 to 1.8.4](#from-183-to-184)
 - [From 1.8.2 to 1.8.3](#from-182-to-183)
-- [Unreleased](#unreleased)
 - [To 1.8.2](#to-182)
 - [To 1.8.1](#to-181)
 - [To 1.8.0](#to-180)
@@ -18,6 +17,16 @@
 - [From 1.0.x to 1.1.0](#from-10x-to-110)
 - [From nothing to 1.0.0](#from-nothing-to-100)
 
+## From 1.8.3 to 1.8.4
+
+**Documentation / QA only** — no Twig/CSS/JS API changes.
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+Optional reading: [FRANKENPHP-WORKER-AUDIT.md](FRANKENPHP-WORKER-AUDIT.md) if you run FrankenPHP worker without kernel reset.
+
 ## From 1.8.2 to 1.8.3
 
 Review the [CHANGELOG](CHANGELOG.md) entry. PHP **8.2+** may now be required.
@@ -25,17 +34,6 @@ Review the [CHANGELOG](CHANGELOG.md) entry. PHP **8.2+** may now be required.
 ```bash
 composer update nowo-tech/ui-kit-bundle
 ```
-
-## From 1.8.2 to 1.8.3
-
-Review the [CHANGELOG](CHANGELOG.md) entry. PHP **8.2+** may now be required.
-
-```bash
-composer update nowo-tech/ui-kit-bundle
-```
-
-
-## Unreleased
 
 ## To 1.8.2
 

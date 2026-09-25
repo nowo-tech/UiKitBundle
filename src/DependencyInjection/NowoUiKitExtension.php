@@ -33,7 +33,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
             ]);
         }
 
-        $translationsPath = \dirname(__DIR__).'/Resources/translations';
+        $translationsPath = __DIR__.'/../Resources/translations';
         if (is_dir($translationsPath) && $container->hasExtension('framework')) {
             $container->prependExtensionConfig('framework', [
                 'translator' => [
@@ -61,6 +61,8 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
 
     /**
      * @param array<int, array<string, mixed>> $configs
+     *
+     * @return void
      */
     public function load(array $configs, ContainerBuilder $container): void
     {

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [1.8.4 - 2026-09-25](#184---2026-09-25)
 - [1.8.0 - 2026-08-15](#180---2026-08-15)
 - [1.7.0 - 2026-08-05](#170---2026-08-05)
 - [1.6.0 - 2026-08-04](#160---2026-08-04)
@@ -36,6 +37,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.8.4] - 2026-09-25
+
+### Added
+
+- **Docs:** [FRANKENPHP-WORKER-AUDIT.md](FRANKENPHP-WORKER-AUDIT.md) — full audit confirming **100%** compatibility with FrankenPHP worker mode when the Symfony kernel is **not** reset between requests (no runtime PHP services / no per-request mutable state).
+- Spec baseline: `FR-FRANKENPHP-001` / `FR-FRANKENPHP-002` + user story for worker / `reset_kernel=false`.
+
+### Changed
+
+- README, [DEMO-FRANKENPHP.md](DEMO-FRANKENPHP.md), and [SECURITY.md](SECURITY.md) link the worker audit; README states worker friendliness including no kernel reset.
+- Rector: `NowoUiKitExtension` translations path uses `__DIR__.'/../Resources/translations'`.
 
 ## [1.8.3] - 2026-08-24
 
@@ -202,7 +214,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.1...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.4...HEAD
+[1.8.4]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.3...v1.8.4
 [1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/nowo-tech/UiKitBundle/compare/v1.2.0...v1.2.1

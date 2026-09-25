@@ -71,6 +71,8 @@ There is no separate executable spec language (for example Gherkin); Spec Kit sp
 | `REQ-DEMO-005` | `demo/symfony8/Makefile`, `demo/symfony8-tailwind/Makefile` | Canonical `make up`: ends with `Demo started at:` from `PORT`. |
 | `REQ-DEMO-007` | `demo/Makefile`, demo Makefiles | `update-bundle` before demo tests in `release-check`. |
 | `REQ-DEMO-010` | demo `.env.example`, entrypoint | `FRANKENPHP_MODE=classic\|worker`. |
+| `REQ-FRANKENPHP-001` | `docs/FRANKENPHP-WORKER-AUDIT.md`, PHP `src/` | Bundle safe under worker with kernel not reset (no runtime services / no per-request state). |
+| `REQ-FRANKENPHP-002` | `phpstan.neon.dist` | `phpstan-frankenphp` classic + worker rulesets. |
 | `REQ-MAKE-001` | Root `Makefile` | Docker-driven development workflow for the bundle. |
 | `REQ-MAKE-008` | Root `Makefile` | `update-deps` via shared `.scripts/`. |
 | `REQ-GIT-001` | `.githooks/commit-msg`, `.scripts/check-no-cursor-coauthor.sh` | No Cursor co-author trailers in git history. |

@@ -10,7 +10,7 @@ Canonical **admin UI kit** for Nowo Symfony bundles and host apps: Twig macros, 
 
 ![FrankenPHP Friendly Worker Mode](docs/images/frankenphp-friendly.png)
 
-This bundle is **FrankenPHP worker mode friendly**.
+This bundle is **FrankenPHP worker mode friendly** (including when the kernel is **not** reset between requests). See [docs/FRANKENPHP-WORKER-AUDIT.md](docs/FRANKENPHP-WORKER-AUDIT.md).
 
 ## Table of contents
 
@@ -101,6 +101,7 @@ Developer-facing docs are **English only** ([Contributing — Language policy](d
 - [Roadmap](docs/ROADMAP.md)
 - [Flex recipe](docs/RECIPE.md)
 - [FrankenPHP demos](docs/DEMO-FRANKENPHP.md)
+- [FrankenPHP worker audit](docs/FRANKENPHP-WORKER-AUDIT.md)
 - [Contributing](docs/CONTRIBUTING.md)
 - [Code of Conduct](CODE_OF_CONDUCT.md)
 - [Security](docs/SECURITY.md)

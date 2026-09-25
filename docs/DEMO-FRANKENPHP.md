@@ -164,3 +164,9 @@ Restart after env or Caddyfile changes: `docker compose restart` or `make down &
 - Confirm Docker Compose can pull Packagist packages (demo DNS is `8.8.8.8` / `8.8.4.4`)
 
 For the full FrankenPHP pattern used across Nowo bundles, see also [TwigInspectorBundle — DEMO-FRANKENPHP.md](https://github.com/nowo-tech/TwigInspectorBundle/blob/main/docs/DEMO-FRANKENPHP.md).
+
+## Bundle compatibility (`reset_kernel=false`)
+
+UiKit registers **no runtime PHP services** and holds **no per-request state**. It is safe under FrankenPHP worker mode when the Symfony kernel is **not** reset between requests.
+
+See the full matrix and re-audit triggers: [FRANKENPHP-WORKER-AUDIT.md](FRANKENPHP-WORKER-AUDIT.md).

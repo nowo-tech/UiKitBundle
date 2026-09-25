@@ -2,11 +2,11 @@
 
 **Feature Branch**: `001-baseline`  
 **Created**: 2026-08-03  
-**Updated**: 2026-08-04  
+**Updated**: 2026-09-25  
 **Status**: Active  
 **Input**: Backfill GitHub Spec Kit baseline documenting 100% of production code in `src/`.
 
-**Related docs**: [`docs/SPEC-DRIVEN-DEVELOPMENT.md`](../../docs/SPEC-DRIVEN-DEVELOPMENT.md), [`docs/CONFIGURATION.md`](../../docs/CONFIGURATION.md), [`docs/USAGE.md`](../../docs/USAGE.md), [`docs/STIMULUS.md`](../../docs/STIMULUS.md), [`docs/THIRD_PARTY.md`](../../docs/THIRD_PARTY.md), [`docs/ROADMAP.md`](../../docs/ROADMAP.md)  
+**Related docs**: [`docs/SPEC-DRIVEN-DEVELOPMENT.md`](../../docs/SPEC-DRIVEN-DEVELOPMENT.md), [`docs/CONFIGURATION.md`](../../docs/CONFIGURATION.md), [`docs/USAGE.md`](../../docs/USAGE.md), [`docs/STIMULUS.md`](../../docs/STIMULUS.md), [`docs/THIRD_PARTY.md`](../../docs/THIRD_PARTY.md), [`docs/ROADMAP.md`](../../docs/ROADMAP.md), [`docs/FRANKENPHP-WORKER-AUDIT.md`](../../docs/FRANKENPHP-WORKER-AUDIT.md)  
 **Code inventory (traceability)**: [`code-inventory.md`](code-inventory.md)
 
 ---
@@ -15,7 +15,7 @@
 
 **Package**: `nowo-tech/ui-kit-bundle`  
 **Configuration root**: `nowo_ui_kit`  
-**Target release**: **1.4.0** (phases A–D on the kit side)
+**Target release**: **1.8.x** (baseline kept current with shipped surfaces)
 
 Canonical **admin UI kit** for Nowo Symfony bundles and host apps: Twig macros, semantic `nowo-ui-*` CSS, pagination/tabs/modals/toasts/confirm/page loader, shell chrome (aside, width toggle, theme), Thinking Orbs (local MIT canvas), and multi-framework class helpers (`bootstrap5`, `tailwind`, `foundation`, `custom`, …) per **REQ-UI-001**. No manage/CRUD routes (REQ-UI-002 N/A).
 
@@ -116,6 +116,20 @@ As an AI/agent UI host, I render dotted thought-orbs via `_thinking_orb.html.twi
 
 ---
 
+### User Story 8 — FrankenPHP worker without kernel reset (Priority: P1)
+
+As an integrator running FrankenPHP worker mode with the Symfony kernel **not** reset between requests, I can depend on UiKit without request-state leaks.
+
+**Independent Test**: PHPStan worker ruleset clean; [FRANKENPHP-WORKER-AUDIT.md](../../docs/FRANKENPHP-WORKER-AUDIT.md) verdict viable under scenario B; demos boot with `FRANKENPHP_MODE=worker`.
+
+**Acceptance Scenarios**:
+
+1. **Given** the bundle is installed, **When** the PHP sources are reviewed, **Then** no runtime services, mutable statics, or request-scoped globals exist.
+2. **Given** Twig globals `nowo_ui_kit_*`, **When** rendered across users/requests on one worker, **Then** values remain compile-time config scalars (not per-user).
+3. **Given** templates that need the current request, **When** rendered, **Then** they read `app.request` / `app.flashes` lazily (no captured request in a shared service).
+
+---
+
 ### Edge Cases
 
 - Twig namespace `NowoUiKitBundle` with app override path `templates/bundles/NowoUiKitBundle/` (REQ-TWIG-001/002).
@@ -146,6 +160,8 @@ As an AI/agent UI host, I render dotted thought-orbs via `_thinking_orb.html.twi
 - **FR-ORB-001**: Local Thinking Orbs engine under `assets/src/orb/` (MIT adapted from thinking-orbs); `mountThinkingOrb` + auto-mount on `[data-nowo-ui-orb]`.
 - **FR-ORB-002**: Page loader supports `visual: spinner|orb` (default `spinner` for BC).
 - **FR-I18N-001**: Translation domain files for seven locales (incl. `orb.*`, `layout.*`, theme, loader, toast, filters).
+- **FR-FRANKENPHP-001**: Bundle PHP is safe under FrankenPHP worker with kernel not reset between requests (no runtime services / no per-request mutable state); documented in `docs/FRANKENPHP-WORKER-AUDIT.md`.
+- **FR-FRANKENPHP-002**: PHPStan includes `phpstan-frankenphp` classic + worker rulesets.
 
 ### Tests (non-packaged runtime)
 
@@ -160,3 +176,4 @@ As an AI/agent UI host, I render dotted thought-orbs via `_thinking_orb.html.twi
 - PHPUnit + Vitest + `coverage-check` (≥99% PHP lines) pass in CI.
 - FrankenPHP demos boot on ports 8092 / 8093 with HTTP 200.
 - Kitchen sink demonstrates feedback surfaces, shell width toggle, and Thinking Orbs states.
+- FrankenPHP worker audit documents **100%** compatibility with kernel not reset (`FR-FRANKENPHP-001`).

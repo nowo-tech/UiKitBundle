@@ -36,6 +36,7 @@ The bundle does **not** expose CLI commands that mutate production data, outboun
 - Twig auto-escaping remains enabled for normal variables; documented composition slots use `|raw` for **developer-controlled** HTML only.
 - Kit JS toggles DOM attributes / theme / loader / canvas; it does not call `eval`, `document.write`, or load remote scripts.
 - Recipe defaults contain no secrets.
+- **FrankenPHP worker:** no runtime PHP services / no per-request mutable state; safe with kernel not reset between requests ([FRANKENPHP-WORKER-AUDIT.md](FRANKENPHP-WORKER-AUDIT.md)).
 
 ## AI security audit (REQ-SEC-004)
 
