@@ -51,6 +51,7 @@ make install
 make cs-check
 make cs-fix
 make phpstan
+make igor
 make rector-dry
 ```
 

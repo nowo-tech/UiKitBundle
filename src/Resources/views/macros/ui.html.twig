@@ -6,18 +6,18 @@
   Most macros accept an optional trailing `framework` to override the global
   (so feature bundles can pass their own css_framework without coupling configs).
 #}
-{% macro resolve_fw(framework=null) -%}
+{% macro resolve_fw(framework = null) -%}
 {%- if framework -%}{{ framework|trim }}{%- else -%}{{ nowo_ui_kit_css_framework|default('bootstrap5') }}{%- endif -%}
 {%- endmacro %}
 
-{% macro fw(framework=null) %}{{ _self.resolve_fw(framework) }}{% endmacro %}
+{% macro fw(framework = null) %}{{ _self.resolve_fw(framework) }}{% endmacro %}
 
-{% macro is_bootstrap(framework=null) %}
+{% macro is_bootstrap(framework = null) %}
 {%- set f = _self.resolve_fw(framework) -%}
 {{- f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] ? '1' : '' -}}
 {% endmacro %}
 
-{% macro btn(variant='secondary', size=null, framework=null) -%}
+{% macro btn(variant = 'secondary', size = null, framework = null) -%}
 {%- set f = _self.resolve_fw(framework) -%}
 {%- set v = variant|default('secondary') -%}
 nowo-ui-btn nowo-ui-btn--{{ v }}{% if size %} nowo-ui-btn--{{ size }}{% endif %}
@@ -37,7 +37,7 @@ nowo-ui-btn nowo-ui-btn--{{ v }}{% if size %} nowo-ui-btn--{{ size }}{% endif %}
 {%- endif -%}
 {%- endmacro %}
 
-{% macro toolbar(framework=null) -%}
+{% macro toolbar(framework = null) -%}
 nowo-ui-toolbar
 {%- set f = _self.resolve_fw(framework) -%}
 {%- if f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %} d-flex flex-wrap align-items-center gap-1 mb-2
@@ -46,7 +46,7 @@ nowo-ui-toolbar
 {%- endif -%}
 {%- endmacro %}
 
-{% macro page_header(framework=null) -%}
+{% macro page_header(framework = null) -%}
 nowo-ui-page-header
 {%- set f = _self.resolve_fw(framework) -%}
 {%- if f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %} d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3
@@ -55,7 +55,7 @@ nowo-ui-page-header
 {%- endif -%}
 {%- endmacro %}
 
-{% macro search_form(framework=null) -%}
+{% macro search_form(framework = null) -%}
 nowo-ui-search
 {%- set f = _self.resolve_fw(framework) -%}
 {%- if f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %} d-flex flex-wrap gap-2 mb-3
@@ -64,7 +64,7 @@ nowo-ui-search
 {%- endif -%}
 {%- endmacro %}
 
-{% macro input(framework=null) -%}
+{% macro input(framework = null) -%}
 nowo-ui-input
 {%- set f = _self.resolve_fw(framework) -%}
 {%- if f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %} form-control
@@ -73,14 +73,14 @@ nowo-ui-input
 {%- endif -%}
 {%- endmacro %}
 
-{% macro search_input(framework=null) -%}
+{% macro search_input(framework = null) -%}
 {{ _self.input(framework) }} nowo-ui-search__input
 {%- set f = _self.resolve_fw(framework) -%}
 {%- if f == 'tailwind' %} min-w-56 flex-1 max-w-none
 {%- endif -%}
 {%- endmacro %}
 
-{% macro list(framework=null) -%}
+{% macro list(framework = null) -%}
 nowo-ui-list
 {%- set f = _self.resolve_fw(framework) -%}
 {%- if f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %} list-group m-0
@@ -89,7 +89,7 @@ nowo-ui-list
 {%- endif -%}
 {%- endmacro %}
 
-{% macro list_item(framework=null) -%}
+{% macro list_item(framework = null) -%}
 nowo-ui-list-item
 {%- set f = _self.resolve_fw(framework) -%}
 {%- if f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %} list-group-item d-flex justify-content-between align-items-center
@@ -98,7 +98,7 @@ nowo-ui-list-item
 {%- endif -%}
 {%- endmacro %}
 
-{% macro table_wrap(framework=null) -%}
+{% macro table_wrap(framework = null) -%}
 nowo-ui-table-wrap
 {%- set f = _self.resolve_fw(framework) -%}
 {%- if f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %} table-responsive
@@ -106,7 +106,7 @@ nowo-ui-table-wrap
 {%- endif -%}
 {%- endmacro %}
 
-{% macro table(framework=null) -%}
+{% macro table(framework = null) -%}
 nowo-ui-table nowo-ui-table--striped
 {%- set f = _self.resolve_fw(framework) -%}
 {%- if f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %} table table-hover align-middle
@@ -115,7 +115,7 @@ nowo-ui-table nowo-ui-table--striped
 {%- endif -%}
 {%- endmacro %}
 
-{% macro row_actions(framework=null) -%}
+{% macro row_actions(framework = null) -%}
 nowo-ui-row-actions
 {%- set f = _self.resolve_fw(framework) -%}
 {%- if f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %} d-flex gap-1
@@ -124,7 +124,7 @@ nowo-ui-row-actions
 {%- endif -%}
 {%- endmacro %}
 
-{% macro muted(framework=null) -%}
+{% macro muted(framework = null) -%}
 nowo-ui-muted
 {%- set f = _self.resolve_fw(framework) -%}
 {%- if f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %} text-muted
@@ -133,11 +133,11 @@ nowo-ui-muted
 {%- endif -%}
 {%- endmacro %}
 
-{% macro empty(framework=null) -%}
+{% macro empty(framework = null) -%}
 nowo-ui-empty {{ _self.muted(framework) }}
 {%- endmacro %}
 
-{% macro flash(type='success', framework=null) -%}
+{% macro flash(type = 'success', framework = null) -%}
 nowo-ui-flash nowo-ui-flash--{{ type == 'danger' or type == 'error' ? 'error' : type }}
 {%- set f = _self.resolve_fw(framework) -%}
 {%- if f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %} alert alert-{{ type == 'error' ? 'danger' : type }}
@@ -146,7 +146,7 @@ nowo-ui-flash nowo-ui-flash--{{ type == 'danger' or type == 'error' ? 'error' : 
 {%- endif -%}
 {%- endmacro %}
 
-{% macro badge(variantOrFramework=null, framework=null) -%}
+{% macro badge(variantOrFramework = null, framework = null) -%}
 {%- set frameworks = ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler', 'tailwind', 'foundation', 'custom', 'none'] -%}
 {%- set variant = null -%}
 {%- if framework -%}
@@ -166,7 +166,7 @@ nowo-ui-badge{% if variant %} nowo-ui-badge--{{ variant }}{% endif %}
 {%- endif -%}
 {%- endmacro %}
 
-{% macro action(kind='edit', framework=null, variant=null) -%}
+{% macro action(kind = 'edit', framework = null, variant = null) -%}
 {%- set k = kind|default('edit') -%}
 {%- set v = variant -%}
 {%- if v is null or v is same as(false) or v == '' -%}
@@ -181,22 +181,22 @@ nowo-ui-badge{% if variant %} nowo-ui-badge--{{ variant }}{% endif %}
 nowo-ui-action nowo-ui-action--{{ k }} {{ _self.btn(v, 'sm', framework) }}
 {%- endmacro %}
 
-{% macro modal_toggle_attrs(framework=null) -%}
+{% macro modal_toggle_attrs(framework = null) -%}
 {%- set f = _self.resolve_fw(framework) -%}
 {%- if f in ['bootstrap', 'bootstrap5', 'tabler'] %}data-bs-toggle="modal"{%- elseif f == 'bootstrap4' %}data-toggle="modal"{%- else %}data-nowo-modal-open{% endif -%}
 {%- endmacro %}
 
-{% macro modal_target_attr(id, framework=null) -%}
+{% macro modal_target_attr(id, framework = null) -%}
 {%- set f = _self.resolve_fw(framework) -%}
 {%- if f in ['bootstrap', 'bootstrap5', 'tabler'] %}data-bs-target="#{{ id }}"{%- elseif f == 'bootstrap4' %}data-target="#{{ id }}"{%- else %}data-nowo-modal-target="{{ id }}"{% endif -%}
 {%- endmacro %}
 
-{% macro modal_dismiss_attrs(framework=null) -%}
+{% macro modal_dismiss_attrs(framework = null) -%}
 {%- set f = _self.resolve_fw(framework) -%}
 {%- if f in ['bootstrap', 'bootstrap5', 'tabler'] %}data-bs-dismiss="modal"{%- elseif f == 'bootstrap4' %}data-dismiss="modal"{%- else %}data-nowo-modal-close{% endif -%}
 {%- endmacro %}
 
-{% macro pagination_wrap(framework=null) -%}
+{% macro pagination_wrap(framework = null) -%}
 nowo-ui-pagination
 {%- set f = _self.resolve_fw(framework) -%}
 {%- if f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %} d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3
@@ -204,7 +204,7 @@ nowo-ui-pagination
 {%- endif -%}
 {%- endmacro %}
 
-{% macro tab_list(framework=null) -%}
+{% macro tab_list(framework = null) -%}
 nowo-ui-tabs
 {%- set f = _self.resolve_fw(framework) -%}
 {%- if f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %} nav nav-tabs mb-3
@@ -213,7 +213,7 @@ nowo-ui-tabs
 {%- endif -%}
 {%- endmacro %}
 
-{% macro tab_item(active=false, framework=null) -%}
+{% macro tab_item(active = false, framework = null) -%}
 nowo-ui-tabs__item{% if active %} nowo-ui-tabs__item--active{% endif %}
 {%- set f = _self.resolve_fw(framework) -%}
 {%- if f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %} nav-link{% if active %} active{% endif %}
@@ -222,11 +222,11 @@ nowo-ui-tabs__item{% if active %} nowo-ui-tabs__item--active{% endif %}
 {%- endif -%}
 {%- endmacro %}
 
-{% macro shell(framework=null) -%}
+{% macro shell(framework = null) -%}
 nowo-ui-shell
 {%- endmacro %}
 
-{% macro header(framework=null) -%}
+{% macro header(framework = null) -%}
 nowo-ui-header
 {%- set f = _self.resolve_fw(framework) -%}
 {%- if f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %} d-flex align-items-center justify-content-between gap-2
@@ -234,27 +234,27 @@ nowo-ui-header
 {%- endif -%}
 {%- endmacro %}
 
-{% macro aside(framework=null) -%}
+{% macro aside(framework = null) -%}
 nowo-ui-aside
 {%- endmacro %}
 
-{% macro avatar(size=null, framework=null) -%}
+{% macro avatar(size = null, framework = null) -%}
 nowo-ui-avatar{% if size %} nowo-ui-avatar--{{ size }}{% endif %}
 {%- endmacro %}
 
-{% macro user_menu(framework=null) -%}
+{% macro user_menu(framework = null) -%}
 nowo-ui-user-menu
 {%- endmacro %}
 
-{% macro burger(framework=null) -%}
+{% macro burger(framework = null) -%}
 nowo-ui-burger {{ _self.btn('secondary', 'sm', framework) }}
 {%- endmacro %}
 
-{% macro footer(framework=null) -%}
+{% macro footer(framework = null) -%}
 nowo-ui-footer
 {%- endmacro %}
 
-{% macro card(framework=null) -%}
+{% macro card(framework = null) -%}
 nowo-ui-card
 {%- set f = _self.resolve_fw(framework) -%}
 {%- if f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %} card
@@ -263,7 +263,7 @@ nowo-ui-card
 {%- endif -%}
 {%- endmacro %}
 
-{% macro card_header(framework=null) -%}
+{% macro card_header(framework = null) -%}
 nowo-ui-card__header
 {%- set f = _self.resolve_fw(framework) -%}
 {%- if f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %} card-header d-flex flex-wrap align-items-start justify-content-between gap-2
@@ -271,7 +271,7 @@ nowo-ui-card__header
 {%- endif -%}
 {%- endmacro %}
 
-{% macro card_body(framework=null) -%}
+{% macro card_body(framework = null) -%}
 nowo-ui-card__body
 {%- set f = _self.resolve_fw(framework) -%}
 {%- if f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %} card-body
@@ -279,7 +279,7 @@ nowo-ui-card__body
 {%- endif -%}
 {%- endmacro %}
 
-{% macro card_footer(framework=null) -%}
+{% macro card_footer(framework = null) -%}
 nowo-ui-card__footer
 {%- set f = _self.resolve_fw(framework) -%}
 {%- if f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %} card-footer
@@ -287,11 +287,11 @@ nowo-ui-card__footer
 {%- endif -%}
 {%- endmacro %}
 
-{% macro filters(framework=null) -%}
+{% macro filters(framework = null) -%}
 nowo-ui-filters {{ _self.search_form(framework) }}
 {%- endmacro %}
 
-{% macro progress(framework=null) -%}
+{% macro progress(framework = null) -%}
 nowo-ui-progress
 {%- set f = _self.resolve_fw(framework) -%}
 {%- if f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %} progress
@@ -299,7 +299,7 @@ nowo-ui-progress
 {%- endif -%}
 {%- endmacro %}
 
-{% macro progress_bar(value=0, framework=null) -%}
+{% macro progress_bar(value = 0, framework = null) -%}
 nowo-ui-progress__bar
 {%- set f = _self.resolve_fw(framework) -%}
 {%- if f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %} progress-bar
@@ -307,7 +307,7 @@ nowo-ui-progress__bar
 {%- endif -%}
 {%- endmacro %}
 
-{% macro spinner(size=null, framework=null) -%}
+{% macro spinner(size = null, framework = null) -%}
 nowo-ui-spinner{% if size %} nowo-ui-spinner--{{ size }}{% endif %}
 {%- set f = _self.resolve_fw(framework) -%}
 {%- if f in ['bootstrap', 'bootstrap5', 'tabler'] %} spinner-border{% if size == 'sm' %} spinner-border-sm{% endif %}

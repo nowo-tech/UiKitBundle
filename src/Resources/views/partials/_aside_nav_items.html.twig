@@ -25,10 +25,10 @@
                 <span class="nowo-ui-aside__chevron" aria-hidden="true"></span>
             </button>
             <div id="{{ group_id }}" class="nowo-ui-aside__group-panel" role="group">
-                {% include '@NowoUiKitBundle/partials/_aside_nav_items.html.twig' with {
+                {{ include('@NowoUiKitBundle/partials/_aside_nav_items.html.twig', {
                     items: children,
-                    prefix: group_id
-                } only %}
+                    prefix: group_id,
+                }, false) }}
             </div>
         </div>
     {% else %}

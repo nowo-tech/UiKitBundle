@@ -23,12 +23,12 @@
 >
     <div class="nowo-ui-page-loader__inner">
         {% if visual == 'orb' %}
-            {% include '@NowoUiKitBundle/partials/_thinking_orb.html.twig' with {
+            {{ include('@NowoUiKitBundle/partials/_thinking_orb.html.twig', {
                 state: orb_state|default('breathing'),
                 size: orb_size|default(64),
                 theme: orb_theme|default('auto'),
-                label: label
-            } %}
+                label: label,
+            }) }}
         {% else %}
             <span class="{{ ui.spinner(spinner_size) }}" aria-hidden="true"></span>
         {% endif %}

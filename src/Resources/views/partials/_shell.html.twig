@@ -20,11 +20,11 @@
 >
     <header class="{{ ui.header(framework) }}">
         <div class="nowo-ui-header__start">
-            {% include '@NowoUiKitBundle/partials/_burger.html.twig' with {
+            {{ include('@NowoUiKitBundle/partials/_burger.html.twig', {
                 controls: aside_id,
                 expanded: not collapsed,
-                framework: framework
-            } %}
+                framework: framework,
+            }) }}
             {% if brand_html is defined and brand_html %}
                 {{ brand_html|raw }}
             {% elseif brand is defined %}
@@ -36,7 +36,7 @@
                 {{ header_end|raw }}
             {% endif %}
             {% if show_user_menu|default(name is defined or initials is defined) %}
-                {% include '@NowoUiKitBundle/partials/_user_menu.html.twig' with {
+                {{ include('@NowoUiKitBundle/partials/_user_menu.html.twig', {
                     name: name|default(null),
                     email: email|default(null),
                     initials: initials|default(null),
@@ -45,29 +45,29 @@
                     logout_href: logout_href|default(null),
                     logout_path: logout_path|default(null),
                     logout_csrf: logout_csrf|default(null),
-                    framework: framework
-                } only %}
+                    framework: framework,
+                }, false) }}
             {% endif %}
         </div>
     </header>
 
-    {% include '@NowoUiKitBundle/partials/_aside.html.twig' with {
+    {{ include('@NowoUiKitBundle/partials/_aside.html.twig', {
         id: aside_id,
         label: aside_label|default(null),
         items: aside_items|default([]),
-        framework: framework
-    } %}
+        framework: framework,
+    }) }}
 
     <div class="nowo-ui-main">
         {% if main is defined %}{{ main|raw }}{% endif %}
     </div>
 
-    {% include '@NowoUiKitBundle/partials/_footer.html.twig' with {
+    {{ include('@NowoUiKitBundle/partials/_footer.html.twig', {
         brand: footer_brand|default(null),
         links: footer_links|default([]),
         copyright: footer_copyright|default(null),
-        framework: framework
-    } %}
+        framework: framework,
+    }) }}
 
     <div class="nowo-ui-aside-backdrop" data-nowo-ui-aside-backdrop></div>
 </div>

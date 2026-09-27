@@ -21,22 +21,22 @@
 <div class="{{ ui.user_menu(framework) }}" data-nowo-ui-user-menu>
     <details class="nowo-ui-user-menu__details">
         <summary class="nowo-ui-user-menu__summary" aria-label="{{ account_label }}">
-            {% include '@NowoUiKitBundle/partials/_avatar.html.twig' with {
+            {{ include('@NowoUiKitBundle/partials/_avatar.html.twig', {
                 initials: initials|default((name|default('?')|slice(0, 1))),
                 src: avatar_src|default(null),
                 alt: name|default(''),
-                framework: framework
-            } only %}
+                framework: framework,
+            }, false) }}
         </summary>
         <div class="nowo-ui-user-menu__panel" role="menu">
             <div class="nowo-ui-user-menu__identity">
-                {% include '@NowoUiKitBundle/partials/_avatar.html.twig' with {
+                {{ include('@NowoUiKitBundle/partials/_avatar.html.twig', {
                     initials: initials|default((name|default('?')|slice(0, 1))),
                     src: avatar_src|default(null),
                     size: 'sm',
                     alt: name|default(''),
-                    framework: framework
-                } only %}
+                    framework: framework,
+                }, false) }}
                 <div class="nowo-ui-user-menu__meta">
                     {% if name is defined and name %}
                         <p class="nowo-ui-user-menu__name">{{ name }}</p>

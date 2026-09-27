@@ -32,7 +32,7 @@
 {% if display not in ['icon', 'text', 'icon_text'] %}
     {% set display = 'icon' %}
 {% endif %}
-<div class="{{ ui.row_actions(framework) }} nowo-ui-row-actions--{{ display|replace({'_': '-'}) }}">
+<div class="{{ ui.row_actions(framework) }} nowo-ui-row-actions--{{ display|replace({_: '-'}) }}">
     {% for action in actions %}
         {% if action.visible is not defined or action.visible %}
             {% set kind = action.kind|default('edit') %}
@@ -74,11 +74,11 @@
                         aria-label="{{ label }}"
                         {% if disabled %}disabled{% endif %}
                     >
-                        {% include '@NowoUiKitBundle/partials/_action_inner.html.twig' with {
+                        {{ include('@NowoUiKitBundle/partials/_action_inner.html.twig', {
                             display: display,
                             icon_name: icon_name,
-                            label: label
-                        } only %}
+                            label: label,
+                        }, false) }}
                     </button>
                 </form>
             {% elseif tag == 'button' %}
@@ -100,11 +100,11 @@
                         {% for name, value in action.attr %}{{ name }}="{{ value }}" {% endfor %}
                     {% endif %}
                 >
-                    {% include '@NowoUiKitBundle/partials/_action_inner.html.twig' with {
+                    {{ include('@NowoUiKitBundle/partials/_action_inner.html.twig', {
                         display: display,
                         icon_name: icon_name,
-                        label: label
-                    } only %}
+                        label: label,
+                    }, false) }}
                 </button>
             {% else %}
                 <a
@@ -125,11 +125,11 @@
                         {% for name, value in action.attr %}{{ name }}="{{ value }}" {% endfor %}
                     {% endif %}
                 >
-                    {% include '@NowoUiKitBundle/partials/_action_inner.html.twig' with {
+                    {{ include('@NowoUiKitBundle/partials/_action_inner.html.twig', {
                         display: display,
                         icon_name: icon_name,
-                        label: label
-                    } only %}
+                        label: label,
+                    }, false) }}
                 </a>
             {% endif %}
         {% endif %}

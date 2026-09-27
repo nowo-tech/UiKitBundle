@@ -17,10 +17,10 @@
             <p class="nowo-ui-aside__label">{{ label }}</p>
         {% endif %}
         <nav class="nowo-ui-aside__nav">
-            {% include '@NowoUiKitBundle/partials/_aside_nav_items.html.twig' with {
+            {{ include('@NowoUiKitBundle/partials/_aside_nav_items.html.twig', {
                 items: items|default([]),
-                prefix: id
-            } only %}
+                prefix: id,
+            }, false) }}
         </nav>
         {% if aside_extra is defined and aside_extra %}
             <div class="nowo-ui-aside__extra">{{ aside_extra|raw }}</div>

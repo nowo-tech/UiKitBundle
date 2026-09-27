@@ -3,7 +3,7 @@
   Used by _row_actions.html.twig — not meant as a public include.
 #}
 {% if display != 'text' %}
-    {% include '@NowoUiKitBundle/components/_icon.html.twig' with { name: icon_name, label: label } only %}
+    {{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: icon_name, label: label}, false) }}
 {% endif %}
 {% if display == 'icon' %}
     <span class="visually-hidden">{{ label }}</span>
