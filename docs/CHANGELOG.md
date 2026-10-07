@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [1.9.0 - 2026-10-07](#190---2026-10-07)
 - [1.8.4 - 2026-09-25](#184---2026-09-25)
 - [1.8.0 - 2026-08-15](#180---2026-08-15)
 - [1.7.0 - 2026-08-05](#170---2026-08-05)
@@ -36,6 +37,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   - [Added](#added-6)
 
 ## [Unreleased]
+
+## [1.9.0] - 2026-10-07
+
+### Added
+
+- **`nowo_ui_kit.panel_path_rewrites`** (default `{}`): map of legacy path prefix → new prefix.
+- **`PanelPathRewriter`** and **`PanelPathRewritingLoader`**: when the map is non-empty, `routing.loader` is decorated and route paths are rewritten (longest prefix first, segment-boundary matching).
+- **`LegacyPanelPathRedirectSubscriber`**: permanent redirect (301 for GET/HEAD, 308 otherwise) from legacy prefixes to the new ones, preserving sub-path and query string.
+- Parameter `%nowo_ui_kit.panel_path_rewrites%`; config validation rejects non-absolute prefixes and targets nested under their source (redirect loops).
+
+### Changed
+
+- None for existing setups: an empty map registers no routing services (BC).
+
+[1.9.0]: https://github.com/nowo-tech/UiKitBundle/releases/tag/v1.9.0
 
 ## [1.8.5] - 2026-09-27
 

@@ -60,6 +60,8 @@ nowo_ui_kit:
     css_framework: bootstrap5   # or: tailwind | foundation | custom
     icon_set: bootstrap-icons
     row_actions_display: icon   # or: text | icon_text
+    # panel_path_rewrites:      # optional (1.9.0+): rewrite kit routes + 301 legacy URLs
+    #     '/admin/blog': '/panel/blog'
 ```
 
 ```twig

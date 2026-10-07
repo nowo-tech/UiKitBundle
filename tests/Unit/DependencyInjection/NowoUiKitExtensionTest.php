@@ -34,6 +34,47 @@ final class NowoUiKitExtensionTest extends TestCase
         self::assertSame('icon_text', $container->getParameter('nowo_ui_kit.row_actions_display'));
     }
 
+    public function testEmptyPanelPathRewritesRegistersNoRoutingServices(): void
+    {
+        $container = new ContainerBuilder();
+        (new NowoUiKitExtension())->load([[]], $container);
+
+        self::assertSame([], $container->getParameter('nowo_ui_kit.panel_path_rewrites'));
+        self::assertFalse($container->hasDefinition('nowo_ui_kit.panel_path_rewriter'));
+        self::assertFalse($container->hasDefinition('nowo_ui_kit.panel_path_rewriting_loader'));
+        self::assertFalse($container->hasDefinition('nowo_ui_kit.legacy_panel_path_redirect_subscriber'));
+    }
+
+    public function testPanelPathRewritesRegistersLoaderDecoratorAndSubscriber(): void
+    {
+        $container = new ContainerBuilder();
+        (new NowoUiKitExtension())->load([['panel_path_rewrites' => ['/admin/blog' => '/panel/blog']]], $container);
+
+        self::assertSame(['/admin/blog' => '/panel/blog'], $container->getParameter('nowo_ui_kit.panel_path_rewrites'));
+        self::assertTrue($container->hasDefinition('nowo_ui_kit.panel_path_rewriter'));
+
+        $loader = $container->getDefinition('nowo_ui_kit.panel_path_rewriting_loader');
+        self::assertSame('routing.loader', $loader->getDecoratedService()[0] ?? null);
+
+        $subscriber = $container->getDefinition('nowo_ui_kit.legacy_panel_path_redirect_subscriber');
+        self::assertTrue($subscriber->hasTag('kernel.event_subscriber'));
+    }
+
+    public function testDecoratorWrapsRoutingLoaderWhenCompiled(): void
+    {
+        $container = new ContainerBuilder();
+        $container->register('routing.loader', \Symfony\Component\Config\Loader\DelegatingLoader::class)
+            ->setArguments([new \Symfony\Component\Config\Loader\LoaderResolver()])
+            ->setPublic(true);
+        (new NowoUiKitExtension())->load([['panel_path_rewrites' => ['/admin/blog' => '/panel/blog']]], $container);
+        $container->compile();
+
+        self::assertInstanceOf(
+            \Nowo\UiKitBundle\Routing\PanelPathRewritingLoader::class,
+            $container->get('routing.loader'),
+        );
+    }
+
     public function testPrependRegistersAssetPackage(): void
     {
         $container = new ContainerBuilder();

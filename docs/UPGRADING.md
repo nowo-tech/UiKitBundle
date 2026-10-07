@@ -3,6 +3,18 @@
 
 ## Unreleased
 
+## To 1.9.0
+
+From **1.8.5** — optional `panel_path_rewrites` (route path rewriting + legacy 301 redirects).
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+php bin/console cache:clear
+```
+
+- **No action required.** The default (`panel_path_rewrites: {}`) registers nothing and behaves exactly like 1.8.5.
+- To adopt it, add a prefix map (see [CONFIGURATION.md](CONFIGURATION.md#panel-path-rewrites)). If you already have a host-side routing loader decorator and redirect subscriber doing the same, remove them to avoid rewriting twice.
+
 ## To 1.8.5
 
 From **1.8.4** — REQ-CS-008 Igor FrankenPHP worker audit (igor-php require-dev, igor.json, make igor).
@@ -16,6 +28,8 @@ php bin/console cache:clear
 
 ## Table of contents
 
+- [To 1.9.0](#to-190)
+- [To 1.8.5](#to-185)
 - [From 1.8.3 to 1.8.4](#from-183-to-184)
 - [From 1.8.2 to 1.8.3](#from-182-to-183)
 - [To 1.8.2](#to-182)

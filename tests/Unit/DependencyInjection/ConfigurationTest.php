@@ -8,6 +8,7 @@ use Nowo\UiKitBundle\DependencyInjection\Configuration;
 use Nowo\UiKitBundle\Enum\CssFramework;
 use Nowo\UiKitBundle\Enum\IconSet;
 use Nowo\UiKitBundle\Enum\RowActionsDisplay;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Definition\Processor;
@@ -21,6 +22,39 @@ final class ConfigurationTest extends TestCase
         self::assertSame(CssFramework::Bootstrap5->value, $config['css_framework']);
         self::assertSame(IconSet::BootstrapIcons->value, $config['icon_set']);
         self::assertSame(RowActionsDisplay::Icon->value, $config['row_actions_display']);
+        self::assertSame([], $config['panel_path_rewrites']);
+    }
+
+    public function testPanelPathRewritesMap(): void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'panel_path_rewrites' => ['/admin/blog' => '/panel/blog', '/settings/geo' => '/panel/geo'],
+        ]]);
+
+        self::assertSame(['/admin/blog' => '/panel/blog', '/settings/geo' => '/panel/geo'], $config['panel_path_rewrites']);
+    }
+
+    /**
+     * @return iterable<string, array{array<string, mixed>}>
+     */
+    public static function invalidRewrites(): iterable
+    {
+        yield 'source without slash' => [['admin' => '/panel']];
+        yield 'target without slash' => [['/admin' => 'panel']];
+        yield 'identical' => [['/admin' => '/admin/']];
+        yield 'nested target (loop)' => [['/admin' => '/admin/panel']];
+        yield 'non scalar target' => [['/admin' => ['x']]];
+    }
+
+    /**
+     * @param array<string, mixed> $map
+     */
+    #[DataProvider('invalidRewrites')]
+    public function testRejectsInvalidPanelPathRewrites(array $map): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+
+        (new Processor())->processConfiguration(new Configuration(), [['panel_path_rewrites' => $map]]);
     }
 
     public function testCustomAndSvgInline(): void
