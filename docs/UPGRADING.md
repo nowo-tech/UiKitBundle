@@ -3,6 +3,17 @@
 
 ## Unreleased
 
+## To 1.9.1
+
+From **1.9.0** — legacy panel redirect runs before the router (priority 64).
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+php bin/console cache:clear
+```
+
+- Remove any host workaround that re-tagged `LegacyPanelPathRedirectSubscriber` above priority 32; the kit now listens at 64.
+
 ## To 1.9.0
 
 From **1.8.5** — optional `panel_path_rewrites` (route path rewriting + legacy 301 redirects).
@@ -28,6 +39,7 @@ php bin/console cache:clear
 
 ## Table of contents
 
+- [To 1.9.1](#to-191)
 - [To 1.9.0](#to-190)
 - [To 1.8.5](#to-185)
 - [From 1.8.3 to 1.8.4](#from-183-to-184)

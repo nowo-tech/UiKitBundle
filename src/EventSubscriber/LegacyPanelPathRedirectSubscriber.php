@@ -25,7 +25,8 @@ final class LegacyPanelPathRedirectSubscriber implements EventSubscriberInterfac
 
     public static function getSubscribedEvents(): array
     {
-        return [KernelEvents::REQUEST => ['onKernelRequest', 32]];
+        // Above RouterListener (32) so legacy paths 301 before a 404 from unmatched routes.
+        return [KernelEvents::REQUEST => ['onKernelRequest', 64]];
     }
 
     public function onKernelRequest(RequestEvent $event): void

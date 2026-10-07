@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [1.9.1 - 2026-10-07](#191---2026-10-07)
 - [1.9.0 - 2026-10-07](#190---2026-10-07)
 - [1.8.4 - 2026-09-25](#184---2026-09-25)
 - [1.8.0 - 2026-08-15](#180---2026-08-15)
@@ -37,6 +38,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   - [Added](#added-6)
 
 ## [Unreleased]
+
+## [1.9.1] - 2026-10-07
+
+### Fixed
+
+- `LegacyPanelPathRedirectSubscriber` now listens at `kernel.request` priority **64** (above `RouterListener` at 32) so legacy `/admin/…` paths 301 instead of 404 when the rewritten route is not matched first.
+
+[1.9.1]: https://github.com/nowo-tech/UiKitBundle/compare/v1.9.0...v1.9.1
 
 ## [1.9.0] - 2026-10-07
 

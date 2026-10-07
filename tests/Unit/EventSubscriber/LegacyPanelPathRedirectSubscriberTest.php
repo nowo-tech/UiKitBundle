@@ -18,7 +18,7 @@ final class LegacyPanelPathRedirectSubscriberTest extends TestCase
     public function testSubscribesToKernelRequest(): void
     {
         self::assertSame(
-            [KernelEvents::REQUEST => ['onKernelRequest', 32]],
+            [KernelEvents::REQUEST => ['onKernelRequest', 64]],
             LegacyPanelPathRedirectSubscriber::getSubscribedEvents(),
         );
     }
