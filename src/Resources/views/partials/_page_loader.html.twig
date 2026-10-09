@@ -5,33 +5,66 @@
     - label
     - active (bool): start visible
     - spinner_size: sm|md|lg (when visual=spinner)
-    - visual: spinner|orb (default spinner — BC)
+    - visual (default spinner — BC):
+        veil:    spinner | orb (centered, translucent veil over the page)
+        minimal: bar (top progress bar) | bar_loop (looping top segment) | bar_spinner (bar + corner spinner)
+                 | corner_spinner | dots (three corner dots) | glow (top-edge glow) | corner_mark (small image)
+      Minimal visuals never block the page and only fade in after ~120 ms, so fast loads show nothing.
+    - mark_src / mark_alt: image for visual=corner_mark
     - orb_state / orb_size / orb_theme: passed to _thinking_orb when visual=orb
+    - stimulus (bool, default false): attach the `page-loader` peer (min-visible timing, link interception,
+      leave animation) with timing that matches the visual; override with min_visible_ms / leave_ms.
 #}
 {% set label = label|default('loader.loading'|trans({}, 'NowoUiKitBundle')) %}
 {% set active = active|default(false) %}
 {% set spinner_size = spinner_size|default('lg') %}
 {% set visual = visual|default('spinner') %}
+{% set _minimal = visual in ['bar', 'bar_loop', 'bar_spinner', 'corner_spinner', 'dots', 'glow', 'corner_mark'] %}
+{% set _stimulus = stimulus|default(false) %}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 <div
-    class="nowo-ui-page-loader{{ active ? ' is-active' : '' }}"
+    class="nowo-ui-page-loader{{ _minimal ? ' nowo-ui-page-loader--minimal nowo-ui-page-loader--' ~ visual : '' }}{{ active ? ' is-active' : '' }}"
     data-nowo-ui-page-loader
+    {% if _stimulus %}
+        data-controller="page-loader"
+        data-page-loader-min-visible-value="{{ min_visible_ms is defined ? min_visible_ms : (_minimal ? 0 : 720) }}"
+        data-page-loader-leave-ms-value="{{ leave_ms is defined ? leave_ms : (_minimal ? 560 : 450) }}"
+    {% endif %}
     role="status"
     aria-live="polite"
     aria-busy="{{ active ? 'true' : 'false' }}"
     {% if not active %}hidden{% endif %}
 >
-    <div class="nowo-ui-page-loader__inner">
-        {% if visual == 'orb' %}
-            {{ include('@NowoUiKitBundle/partials/_thinking_orb.html.twig', {
-                state: orb_state|default('breathing'),
-                size: orb_size|default(64),
-                theme: orb_theme|default('auto'),
-                label: label,
-            }) }}
-        {% else %}
-            <span class="{{ ui.spinner(spinner_size) }}" aria-hidden="true"></span>
+    {% if _minimal %}
+        {% if visual in ['bar', 'bar_spinner', 'bar_loop'] %}
+            <span class="nowo-ui-page-loader__bar{{ visual == 'bar_loop' ? ' nowo-ui-page-loader__bar--loop' : '' }}" aria-hidden="true"><span class="nowo-ui-page-loader__bar-fill"></span></span>
         {% endif %}
-        <p class="nowo-ui-page-loader__label">{{ label }}</p>
-    </div>
+        {% if visual in ['bar_spinner', 'corner_spinner'] %}
+            <span class="nowo-ui-page-loader__spinner" aria-hidden="true"></span>
+        {% endif %}
+        {% if visual == 'dots' %}
+            <span class="nowo-ui-page-loader__dots" aria-hidden="true"><span></span><span></span><span></span></span>
+        {% endif %}
+        {% if visual == 'glow' %}
+            <span class="nowo-ui-page-loader__glow" aria-hidden="true"></span>
+        {% endif %}
+        {% if visual == 'corner_mark' and mark_src|default('') %}
+            <img class="nowo-ui-page-loader__mark" src="{{ mark_src }}" alt="{{ mark_alt|default('') }}" aria-hidden="true">
+        {% endif %}
+        <span class="nowo-ui-page-loader__sr">{{ label }}</span>
+    {% else %}
+        <div class="nowo-ui-page-loader__inner">
+            {% if visual == 'orb' %}
+                {{ include('@NowoUiKitBundle/partials/_thinking_orb.html.twig', {
+                    state: orb_state|default('breathing'),
+                    size: orb_size|default(64),
+                    theme: orb_theme|default('auto'),
+                    label: label,
+                }) }}
+            {% else %}
+                <span class="{{ ui.spinner(spinner_size) }}" aria-hidden="true"></span>
+            {% endif %}
+            <p class="nowo-ui-page-loader__label">{{ label }}</p>
+        </div>
+    {% endif %}
 </div>

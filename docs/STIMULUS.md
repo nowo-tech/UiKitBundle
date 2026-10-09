@@ -121,11 +121,14 @@ Peer: `confirm_submit_controller.ts`. Replaces inline `onsubmit="return confirm(
 | `data-nowo-ui-page-loader-show` / `…-hide` | Optional triggers |
 | class `is-active` | Visible state |
 
-Twig: `visual: spinner` (default) or `visual: orb` (+ optional `orb_state` / `orb_size` / `orb_theme`).
+Twig: `visual: spinner` (default) or `visual: orb` (+ optional `orb_state` / `orb_size` / `orb_theme`), or a minimal
+indicator `bar` | `bar_loop` | `bar_spinner` | `corner_spinner` | `dots` | `glow` | `corner_mark` (see
+[USAGE.md](USAGE.md#page-loader-and-page-transitions)). `stimulus: true` adds `data-controller="page-loader"` with
+timing that matches the visual (`min_visible_ms` / `leave_ms` to override).
 
 Script: `js/nowo-ui-page-loader.js` → `nowoUiShowPageLoader` / `nowoUiHidePageLoader`. With `visual: orb`, also load `js/nowo-ui-orb.js`.
 
-Stimulus peer: identifier `page-loader` (`page_loader_controller.ts`) — min-visible timing, same-origin link interception, leave animation. Resolves `[data-nowo-ui-page-loader]` when no `overlay` target.
+Stimulus peer: identifier `page-loader` (`page_loader_controller.ts`) — min-visible timing, same-origin link interception, leave animation. Resolves `[data-nowo-ui-page-loader]` when no `overlay` target. The leave (`.is-leaving`) ends on the overlay's own `opacity` `transitionend` (children may use transitions freely) or after `leave-ms` + 80 ms.
 
 ## Release status
 

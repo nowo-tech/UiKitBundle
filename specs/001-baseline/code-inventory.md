@@ -48,7 +48,8 @@ This file proves that **every production source artifact** under `src/` is refer
 | `Resources/views/partials/_locale_switcher.html.twig` | Locale switcher | FR-PARTIAL-001 |
 | `Resources/views/partials/_modal_shell.html.twig` | Modal shell | FR-PARTIAL-001 |
 | `Resources/views/partials/_page_header.html.twig` | Page header | FR-PARTIAL-001 |
-| `Resources/views/partials/_page_loader.html.twig` | Page loader | FR-PARTIAL-001 / FR-ORB-002 |
+| `Resources/views/partials/_page_loader.html.twig` | Page loader (veil + minimal visuals) | FR-PARTIAL-001 / FR-ORB-002 / FR-LOADER-001 |
+| `Resources/views/partials/_page_transition.html.twig` | Cross-document page transitions | FR-TRANSITION-001 |
 | `Resources/views/partials/_pagination.html.twig` | Pagination | FR-PARTIAL-001 |
 | `Resources/views/partials/_row_actions.html.twig` | Row actions | FR-PARTIAL-001 |
 | `Resources/views/partials/_action_inner.html.twig` | Row action inner (icon/label) | FR-PARTIAL-001 |

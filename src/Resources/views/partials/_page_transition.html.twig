@@ -1,0 +1,37 @@
+{#
+  Cross-document page transitions (View Transitions API) — include once in <head> on every page that
+  should take part (both the outgoing and the incoming page must opt in).
+
+  Emits one self-contained <style> (no kit CSS needed, no JS). Browsers without cross-document View
+  Transitions navigate as usual; `prefers-reduced-motion: reduce` disables the opt-in.
+
+  Optional:
+    - style: fade_slide (default) | fade | slide | zoom | blur | wipe | none (renders nothing)
+    - persist: map of CSS selector => transition name for chrome that should stay put while the page
+      cross-fades, e.g. {'.site-header': 'site-header'} (each selector must match a single element).
+      Output raw into the stylesheet: pass developer-defined values only, never user input.
+    - nonce: CSP nonce (default: request attribute `csp_nonce` when set)
+#}
+{% set _style = style|default('fade_slide') %}
+{% set _styles = ['fade_slide', 'fade', 'slide', 'zoom', 'blur', 'wipe'] %}
+{% set _nonce = nonce|default(app is defined and app.request ? app.request.attributes.get('csp_nonce') : null) %}
+{% if _style in _styles %}
+    {% set _ease = 'cubic-bezier(0.22, 0.75, 0.2, 1)' %}
+    {% set _frames = {
+        fade_slide: ['to{opacity:0;transform:translateY(-4px)}', 'from{opacity:0;transform:translateY(6px)}'],
+        fade: ['to{opacity:0}', 'from{opacity:0}'],
+        slide: ['to{opacity:0;transform:translateX(-3rem)}', 'from{opacity:0;transform:translateX(3rem)}'],
+        zoom: ['to{opacity:0;transform:scale(.97)}', 'from{opacity:0;transform:scale(1.03)}'],
+        blur: ['to{opacity:0;filter:blur(8px)}', 'from{opacity:0;filter:blur(8px)}'],
+        wipe: [null, 'from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0)}'],
+    }[_style] %}
+<style{% if _nonce %} nonce="{{ _nonce }}"{% endif %} data-nowo-ui-page-transition="{{ _style }}">
+@media (prefers-reduced-motion: no-preference){@view-transition{navigation:auto}}
+{% if _frames[0] is null %}::view-transition-old(root){animation:none}{% else %}::view-transition-old(root){animation:nowo-ui-page-out .32s cubic-bezier(.4,0,1,1) both}@keyframes nowo-ui-page-out{ {{- _frames[0] -}} }{% endif %}
+
+::view-transition-new(root){animation:nowo-ui-page-in {{ _style == 'wipe' ? '.55s' : '.5s' }} {{ _ease }} {{ _style == 'wipe' ? '0s' : '.06s' }} both}@keyframes nowo-ui-page-in{ {{- _frames[1] -}} }
+{% for _selector, _name in persist|default({}) %}
+{{ _selector|raw }}{view-transition-name:{{ _name|raw }}}::view-transition-group({{ _name|raw }}){animation-duration:.4s;animation-timing-function:{{ _ease }}}
+{% endfor %}
+</style>
+{% endif %}

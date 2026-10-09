@@ -1,6 +1,20 @@
 # Upgrading
 
 
+## To 1.11.0
+
+From **1.10.1** — new optional page loader visuals and page transitions; no breaking changes.
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+php bin/console assets:install
+php bin/console cache:clear
+```
+
+- **No action required.** `visual: spinner` / `orb` render exactly as before.
+- Veil loaders driven by the `page-loader` peer now fade out (`.nowo-ui-page-loader.is-leaving`) instead of disappearing at once; override that rule if you relied on the instant hide.
+- Hosts with their own minimal loader / View Transitions CSS can switch to `visual: …` + `_page_transition.html.twig` ([USAGE.md](USAGE.md#page-loader-and-page-transitions)).
+
 ## To 1.10.1
 
 From **1.10.0** — `page-loader` Stimulus peer fixes only; no breaking changes.

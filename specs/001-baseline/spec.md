@@ -98,6 +98,8 @@ As an admin host, I include toast stack, confirm dialog, and page loader partial
 2. **Given** `_confirm.html.twig` + `nowo-ui-confirm.js`, **When** open trigger fires, **Then** dialog opens; host owns POST+CSRF in footer.
 3. **Given** `_page_loader.html.twig` with `visual: spinner` (default), **When** show trigger fires, **Then** overlay is active.
 4. **Given** `_page_loader.html.twig` with `visual: orb`, **When** `nowo-ui-orb.js` is loaded, **Then** Thinking Orb canvas mounts inside the loader.
+5. **Given** `_page_loader.html.twig` with a minimal visual (`bar`, `bar_loop`, `bar_spinner`, `corner_spinner`, `dots`, `glow`, `corner_mark`), **When** the page loads fast, **Then** nothing is visible and the page is never blocked.
+6. **Given** `_page_transition.html.twig` in `<head>` on two pages, **When** navigating between them in a browser with cross-document View Transitions, **Then** the pages cross-fade with the chosen style (none under reduced motion).
 
 ---
 
@@ -159,6 +161,8 @@ As an integrator running FrankenPHP worker mode with the Symfony kernel **not** 
 - **FR-JS-001**: Built IIFEs `nowo-ui-modal.js`, `nowo-ui-shell.js`, `nowo-ui-toast.js`, `nowo-ui-confirm.js`, `nowo-ui-page-loader.js`, `nowo-ui-theme.js`, `nowo-ui-orb.js` from Vite TS entries.
 - **FR-ORB-001**: Local Thinking Orbs engine under `assets/src/orb/` (MIT adapted from thinking-orbs); `mountThinkingOrb` + auto-mount on `[data-nowo-ui-orb]`.
 - **FR-ORB-002**: Page loader supports `visual: spinner|orb` (default `spinner` for BC).
+- **FR-LOADER-001**: Page loader minimal visuals `bar` | `bar_loop` | `bar_spinner` | `corner_spinner` | `dots` | `glow` | `corner_mark` (`mark_src`): no veil, no pointer capture, delayed fade-in, children animated with keyframes only; `stimulus: true` attaches the `page-loader` peer with matching timing (`min_visible_ms` / `leave_ms` overrides). The peer ends the leave only on the overlay's own `opacity` `transitionend`.
+- **FR-TRANSITION-001**: `_page_transition.html.twig` emits one nonce-aware `<style>` opting into cross-document View Transitions (`style`: `fade_slide` default, `fade`, `slide`, `zoom`, `blur`, `wipe`, `none`), optional `persist` selector → name map; no JS; disabled under `prefers-reduced-motion: reduce`.
 - **FR-I18N-001**: Translation domain files for seven locales (incl. `orb.*`, `layout.*`, theme, loader, toast, filters).
 - **FR-FRANKENPHP-001**: Bundle PHP is safe under FrankenPHP worker with kernel not reset between requests (no runtime services / no per-request mutable state); documented in `docs/FRANKENPHP-WORKER-AUDIT.md`.
 - **FR-RELEASE-001**: Optional `release_check` (off by default): `ReleaseUpdateChecker` compares `current_version` (clean semver) with GitHub `releases/latest` of `github_repo` (`owner/name` only), counts newer non-prerelease releases, caches per repo+version (`cache_ttl`, `cache.app`), soft-fails to `skipped`/`error`; registered only when enabled (requires `symfony/http-client`).

@@ -1074,6 +1074,291 @@ body.nowo-modal-open {
   font-size: 0.875rem;
 }
 
+/* Leave fade (page-loader Stimulus peer adds .is-leaving, then [hidden] once the overlay's opacity ends). */
+.nowo-ui-page-loader.is-leaving {
+  opacity: 0;
+  transition: opacity 0.45s ease;
+}
+
+/*
+ * Minimal visuals (bar, bar_loop, bar_spinner, corner_spinner, dots, glow, corner_mark): no veil, never
+ * block the page, fade in after a short delay so fast loads show nothing. Children only use keyframes.
+ * Tune with --nowo-ui-page-loader-color / --nowo-ui-page-loader-corner-bottom / --nowo-ui-page-loader-corner-left.
+ */
+.nowo-ui-page-loader--minimal {
+  --nowo-ui-page-loader-color: var(--nowo-ui-primary);
+  --nowo-ui-page-loader-corner-bottom: 1rem;
+  --nowo-ui-page-loader-corner-left: 1rem;
+
+  background: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  pointer-events: none;
+}
+
+.nowo-ui-page-loader--minimal.is-active {
+  display: block;
+}
+
+.nowo-ui-page-loader--minimal.is-leaving {
+  transition: opacity 0.3s ease-out 0.22s;
+}
+
+.nowo-ui-page-loader--corner_spinner.is-leaving,
+.nowo-ui-page-loader--bar_loop.is-leaving,
+.nowo-ui-page-loader--dots.is-leaving,
+.nowo-ui-page-loader--glow.is-leaving,
+.nowo-ui-page-loader--corner_mark.is-leaving {
+  transition: opacity 0.3s ease-out;
+}
+
+.nowo-ui-page-loader__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.nowo-ui-page-loader__bar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 3px;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.nowo-ui-page-loader__bar-fill,
+.nowo-ui-page-loader__bar::after {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background: var(--nowo-ui-page-loader-color);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--nowo-ui-page-loader-color) 55%, transparent);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+
+.nowo-ui-page-loader__bar::after {
+  content: "";
+}
+
+.nowo-ui-page-loader--minimal.is-active .nowo-ui-page-loader__bar {
+  animation: nowo-ui-loader-appear 0.25s ease-out 0.12s both;
+}
+
+/* Trickle towards 90 %; the leave sweep then runs it to the end. */
+.nowo-ui-page-loader--minimal.is-active .nowo-ui-page-loader__bar-fill {
+  animation: nowo-ui-loader-trickle 9s cubic-bezier(0.08, 0.6, 0.2, 1) 0.12s both;
+}
+
+.nowo-ui-page-loader--minimal.is-leaving .nowo-ui-page-loader__bar:not(.nowo-ui-page-loader__bar--loop)::after {
+  animation: nowo-ui-loader-complete 0.24s ease-out both;
+}
+
+.nowo-ui-page-loader__bar--loop .nowo-ui-page-loader__bar-fill {
+  width: 35%;
+  transform: none;
+}
+
+.nowo-ui-page-loader--minimal.is-active .nowo-ui-page-loader__bar--loop .nowo-ui-page-loader__bar-fill {
+  animation: nowo-ui-loader-loop 1.3s cubic-bezier(0.45, 0, 0.25, 1) infinite;
+}
+
+.nowo-ui-page-loader__spinner,
+.nowo-ui-page-loader__dots,
+.nowo-ui-page-loader__mark {
+  position: fixed;
+  bottom: var(--nowo-ui-page-loader-corner-bottom);
+  left: var(--nowo-ui-page-loader-corner-left);
+  opacity: 0;
+}
+
+.nowo-ui-page-loader__spinner {
+  box-sizing: border-box;
+  width: 1.125rem;
+  height: 1.125rem;
+  border: 2px solid color-mix(in srgb, var(--nowo-ui-page-loader-color) 22%, transparent);
+  border-top-color: var(--nowo-ui-page-loader-color);
+  border-radius: 50%;
+}
+
+.nowo-ui-page-loader--minimal.is-active .nowo-ui-page-loader__spinner {
+  animation:
+    nowo-ui-loader-appear 0.3s ease-out 0.15s both,
+    nowo-ui-loader-spin 0.75s linear infinite;
+}
+
+.nowo-ui-page-loader__dots {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.nowo-ui-page-loader__dots span {
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: var(--nowo-ui-page-loader-color);
+}
+
+.nowo-ui-page-loader--minimal.is-active .nowo-ui-page-loader__dots {
+  animation: nowo-ui-loader-appear 0.3s ease-out 0.15s both;
+}
+
+.nowo-ui-page-loader--minimal.is-active .nowo-ui-page-loader__dots span {
+  animation: nowo-ui-loader-dot 1s ease-in-out infinite;
+}
+
+.nowo-ui-page-loader--minimal.is-active .nowo-ui-page-loader__dots span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.nowo-ui-page-loader--minimal.is-active .nowo-ui-page-loader__dots span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.nowo-ui-page-loader__mark {
+  display: block;
+  width: auto;
+  height: 1.75rem;
+}
+
+.nowo-ui-page-loader--minimal.is-active .nowo-ui-page-loader__mark {
+  animation:
+    nowo-ui-loader-appear 0.35s ease-out 0.15s both,
+    nowo-ui-loader-breathe 1.8s ease-in-out 0.5s infinite;
+}
+
+.nowo-ui-page-loader__glow {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 4.5rem;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--nowo-ui-page-loader-color) 32%, transparent), transparent);
+  opacity: 0;
+}
+
+.nowo-ui-page-loader--minimal.is-active .nowo-ui-page-loader__glow {
+  animation: nowo-ui-loader-glow 1.6s ease-in-out 0.12s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nowo-ui-page-loader.is-leaving,
+  .nowo-ui-page-loader--minimal.is-leaving {
+    transition: none;
+  }
+
+  .nowo-ui-page-loader--minimal.is-active .nowo-ui-page-loader__bar-fill {
+    animation: none;
+    transform: scaleX(0.6);
+  }
+
+  .nowo-ui-page-loader--minimal.is-active .nowo-ui-page-loader__bar--loop .nowo-ui-page-loader__bar-fill,
+  .nowo-ui-page-loader--minimal.is-active .nowo-ui-page-loader__dots span {
+    animation: none;
+  }
+
+  .nowo-ui-page-loader--minimal.is-active .nowo-ui-page-loader__spinner,
+  .nowo-ui-page-loader--minimal.is-active .nowo-ui-page-loader__mark,
+  .nowo-ui-page-loader--minimal.is-active .nowo-ui-page-loader__glow {
+    animation: nowo-ui-loader-appear 0.3s ease-out 0.15s both;
+  }
+}
+
+@keyframes nowo-ui-loader-appear {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes nowo-ui-loader-trickle {
+  0% {
+    transform: scaleX(0);
+  }
+
+  10% {
+    transform: scaleX(0.3);
+  }
+
+  35% {
+    transform: scaleX(0.6);
+  }
+
+  100% {
+    transform: scaleX(0.9);
+  }
+}
+
+@keyframes nowo-ui-loader-complete {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes nowo-ui-loader-loop {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(290%);
+  }
+}
+
+@keyframes nowo-ui-loader-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes nowo-ui-loader-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.8);
+  }
+
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes nowo-ui-loader-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.75;
+  }
+}
+
+@keyframes nowo-ui-loader-glow {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
 /* --- Thinking orb (canvas) --- */
 .nowo-ui-orb {
   --nowo-ui-orb-size: 64px;

@@ -56,7 +56,8 @@ Twig globals (from config):
 | `partials/_card.html.twig` | Card / panel (header/body/footer) |
 | `partials/_modal_shell.html.twig` | Modal shell |
 | `partials/_confirm.html.twig` | Confirm `<dialog>` (host owns POST+CSRF) |
-| `partials/_page_loader.html.twig` | Full-page loader overlay (`visual: spinner\|orb`) |
+| `partials/_page_loader.html.twig` | Page loader: veil (`visual: spinner\|orb`) or minimal indicator (`bar`, `bar_loop`, `bar_spinner`, `corner_spinner`, `dots`, `glow`, `corner_mark`). See [Page loader and page transitions](#page-loader-and-page-transitions) |
+| `partials/_page_transition.html.twig` | Cross-document page transitions (View Transitions, `<head>`, no JS) |
 | `partials/_thinking_orb.html.twig` | Thinking orb canvas (`data-nowo-ui-orb`) |
 | `partials/_release_version.html.twig` | Installed-version button + lazy GitHub release dialog (optional `release_check`; renders nothing while disabled). See [CONFIGURATION.md](CONFIGURATION.md#release-check) |
 | `partials/_brand.html.twig` | Brand mark (text / img / SVG) |
@@ -168,6 +169,37 @@ Run `php bin/console assets:install` after install/update.
 Optional Stimulus peers: `src/Resources/assets/stimulus-peers/` — see [STIMULUS.md](STIMULUS.md).
 
 `nowo-ui-orb.js` mounts Thinking Orbs on `canvas[data-nowo-ui-orb]` (local MIT canvas engine; no CDN). Use `_thinking_orb.html.twig` or `_page_loader.html.twig` with `visual: 'orb'`.
+
+## Page loader and page transitions
+
+The veil (`visual: spinner` / `orb`) suits slow admin screens. Public sites usually want a **minimal** indicator that never
+blocks the page and stays invisible on fast loads:
+
+```twig
+{% include '@NowoUiKitBundle/partials/_page_loader.html.twig' with {
+    visual: 'bar_spinner',   {# bar | bar_loop | bar_spinner | corner_spinner | dots | glow | corner_mark #}
+    active: true,            {# visible from first paint; hidden on window load #}
+    stimulus: true,          {# page-loader peer: link interception + leave animation, timing per visual #}
+    mark_src: asset('brand/mark.png'), {# corner_mark only #}
+} %}
+```
+
+Tune colour and corner position with CSS variables on `.nowo-ui-page-loader--minimal`:
+`--nowo-ui-page-loader-color` (default `--nowo-ui-primary`), `--nowo-ui-page-loader-corner-bottom`,
+`--nowo-ui-page-loader-corner-left` (e.g. add a fixed footer height).
+
+Cross-page fades: include once in `<head>` on every page that should take part (both pages must opt in):
+
+```twig
+{% include '@NowoUiKitBundle/partials/_page_transition.html.twig' with {
+    style: 'fade_slide',                     {# fade_slide | fade | slide | zoom | blur | wipe | none #}
+    persist: {'.site-header': 'site-header'}, {# optional: chrome that stays put (developer values only) #}
+} %}
+```
+
+It renders a single `<style>` with the request `csp_nonce` (or `nonce:`), so it works under a strict CSP. Browsers
+without cross-document View Transitions (e.g. Firefox today) navigate as usual; `prefers-reduced-motion: reduce`
+disables it.
 
 ## App chrome (aside, avatar, user menu, footer)
 

@@ -91,6 +91,7 @@ final class UiMacrosTwigTest extends TestCase
             '_thinking_orb.html.twig',
             '_locale_switcher.html.twig',
             '_kebab.html.twig',
+            '_page_transition.html.twig',
         ] as $file) {
             self::assertFileExists($views.'/'.$file);
         }
@@ -225,6 +226,105 @@ final class UiMacrosTwigTest extends TestCase
         self::assertStringContainsString('data-nowo-ui-release-url="/custom/status"', $html);
         self::assertStringContainsString('Custom title', $html);
         self::assertStringNotContainsString('data-nowo-confirm-open', $html);
+    }
+
+    public function testPageLoaderVeilKeepsDefaultMarkup(): void
+    {
+        $html = $this->renderPartial('_page_loader.html.twig', []);
+
+        self::assertStringContainsString('class="nowo-ui-page-loader"', $html);
+        self::assertStringContainsString('nowo-ui-page-loader__inner', $html);
+        self::assertStringContainsString('nowo-ui-page-loader__label', $html);
+        self::assertStringContainsString('hidden', $html);
+        self::assertStringNotContainsString('data-controller', $html);
+        self::assertStringNotContainsString('--minimal', $html);
+    }
+
+    public function testPageLoaderMinimalVisuals(): void
+    {
+        $expected = [
+            'bar' => ['nowo-ui-page-loader__bar"', 'nowo-ui-page-loader__bar-fill'],
+            'bar_loop' => ['nowo-ui-page-loader__bar--loop'],
+            'bar_spinner' => ['nowo-ui-page-loader__bar"', 'nowo-ui-page-loader__spinner'],
+            'corner_spinner' => ['nowo-ui-page-loader__spinner'],
+            'dots' => ['nowo-ui-page-loader__dots'],
+            'glow' => ['nowo-ui-page-loader__glow'],
+            'corner_mark' => ['<img class="nowo-ui-page-loader__mark" src="/mark.png" alt="Brand"'],
+        ];
+        foreach ($expected as $visual => $needles) {
+            $html = $this->renderPartial('_page_loader.html.twig', [
+                'visual' => $visual,
+                'active' => true,
+                'mark_src' => '/mark.png',
+                'mark_alt' => 'Brand',
+            ]);
+            self::assertStringContainsString('nowo-ui-page-loader--minimal nowo-ui-page-loader--'.$visual.' is-active', $html, $visual);
+            self::assertStringContainsString('nowo-ui-page-loader__sr', $html, $visual);
+            self::assertStringNotContainsString('nowo-ui-page-loader__inner', $html, $visual);
+            foreach ($needles as $needle) {
+                self::assertStringContainsString($needle, $html, $visual);
+            }
+        }
+
+        $noMark = $this->renderPartial('_page_loader.html.twig', ['visual' => 'corner_mark']);
+        self::assertStringNotContainsString('<img', $noMark);
+    }
+
+    public function testPageLoaderStimulusTiming(): void
+    {
+        $veil = $this->renderPartial('_page_loader.html.twig', ['stimulus' => true]);
+        self::assertStringContainsString('data-controller="page-loader"', $veil);
+        self::assertStringContainsString('data-page-loader-min-visible-value="720"', $veil);
+        self::assertStringContainsString('data-page-loader-leave-ms-value="450"', $veil);
+
+        $bar = $this->renderPartial('_page_loader.html.twig', ['stimulus' => true, 'visual' => 'bar']);
+        self::assertStringContainsString('data-page-loader-min-visible-value="0"', $bar);
+        self::assertStringContainsString('data-page-loader-leave-ms-value="560"', $bar);
+
+        $custom = $this->renderPartial('_page_loader.html.twig', ['stimulus' => true, 'min_visible_ms' => 0, 'leave_ms' => 900]);
+        self::assertStringContainsString('data-page-loader-min-visible-value="0"', $custom);
+        self::assertStringContainsString('data-page-loader-leave-ms-value="900"', $custom);
+    }
+
+    public function testPageTransitionStyles(): void
+    {
+        self::assertSame('', $this->renderPartial('_page_transition.html.twig', ['style' => 'none']));
+        self::assertSame('', $this->renderPartial('_page_transition.html.twig', ['style' => 'bogus']));
+
+        $default = $this->renderPartial('_page_transition.html.twig', []);
+        self::assertStringContainsString('data-nowo-ui-page-transition="fade_slide"', $default);
+        self::assertStringContainsString('@media (prefers-reduced-motion: no-preference){@view-transition{navigation:auto}}', $default);
+        self::assertStringContainsString('@keyframes nowo-ui-page-out{to{opacity:0;transform:translateY(-4px)}}', $default);
+        self::assertStringContainsString('@keyframes nowo-ui-page-in{from{opacity:0;transform:translateY(6px)}}', $default);
+        self::assertStringNotContainsString('nonce=', $default);
+
+        foreach (['fade' => 'to{opacity:0}', 'slide' => 'translateX(-3rem)', 'zoom' => 'scale(.97)', 'blur' => 'blur(8px)'] as $style => $needle) {
+            self::assertStringContainsString($needle, $this->renderPartial('_page_transition.html.twig', ['style' => $style]), $style);
+        }
+
+        $wipe = $this->renderPartial('_page_transition.html.twig', ['style' => 'wipe', 'nonce' => 'abc', 'persist' => ['.site-header > nav' => 'site-header']]);
+        self::assertStringContainsString('<style nonce="abc"', $wipe);
+        self::assertStringContainsString('::view-transition-old(root){animation:none}', $wipe);
+        self::assertStringNotContainsString('nowo-ui-page-out', $wipe);
+        self::assertStringContainsString('clip-path:inset(0 0 100% 0)', $wipe);
+        self::assertStringContainsString('.site-header > nav{view-transition-name:site-header}', $wipe);
+        self::assertStringContainsString('::view-transition-group(site-header)', $wipe);
+    }
+
+    /**
+     * @param array<string, mixed> $vars
+     */
+    private function renderPartial(string $partial, array $vars): string
+    {
+        $views = \dirname(__DIR__, 2).'/src/Resources/views';
+        $fs = new FilesystemLoader();
+        $fs->addPath($views, 'NowoUiKitBundle');
+        $loader = new ArrayLoader(['t.twig' => "{% include '@NowoUiKitBundle/partials/{$partial}' %}"]);
+        $twig = new Environment(new \Twig\Loader\ChainLoader([$loader, $fs]));
+        $twig->addExtension(new TranslationExtension(new IdentityTranslator()));
+        $twig->addGlobal('nowo_ui_kit_css_framework', 'custom');
+
+        return trim($twig->render('t.twig', $vars));
     }
 
     /**

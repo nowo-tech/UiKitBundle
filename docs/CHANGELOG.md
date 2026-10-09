@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - [Unreleased](#unreleased)
 
+- [[1.11.0] - 2026-10-09](#1110---2026-10-09)
 - [[1.10.1] - 2026-10-09](#1101---2026-10-09)
 - [[1.10.0] - 2026-10-09](#1100---2026-10-09)
 - [1.9.2 - 2026-10-09](#192---2026-10-09)
@@ -42,6 +43,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   - [Added](#added-6)
 
 ## [Unreleased]
+
+## [1.11.0] - 2026-10-09
+
+### Added
+
+- **Page loader minimal visuals:** `_page_loader.html.twig` `visual: bar | bar_loop | bar_spinner | corner_spinner | dots | glow | corner_mark` (`mark_src` / `mark_alt`). No veil, no pointer capture, delayed fade-in (fast loads show nothing), keyframe-only children. CSS variables `--nowo-ui-page-loader-color`, `--nowo-ui-page-loader-corner-bottom`, `--nowo-ui-page-loader-corner-left`.
+- `_page_loader.html.twig` `stimulus: true`: attaches the `page-loader` peer with timing that matches the visual (`min_visible_ms` / `leave_ms` overrides).
+- **Page transitions:** `partials/_page_transition.html.twig` — cross-document View Transitions opt-in in one nonce-aware `<style>` (`style: fade_slide | fade | slide | zoom | blur | wipe | none`, optional `persist` selector → name map). No JS; off under `prefers-reduced-motion: reduce`.
+- CSS: `.nowo-ui-page-loader.is-leaving` fade for the veil when driven by the Stimulus peer.
+
+[1.11.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.10.1...v1.11.0
 
 ## [1.10.1] - 2026-10-09
 
@@ -293,7 +305,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v1.10.1...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v1.11.0...HEAD
 [1.10.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.4...v1.10.0
 [1.8.4]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.3...v1.8.4
 [1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0
