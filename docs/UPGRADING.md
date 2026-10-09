@@ -1,6 +1,17 @@
 # Upgrading
 
 
+## To 1.10.1
+
+From **1.10.0** — `page-loader` Stimulus peer fixes only; no breaking changes.
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+- Rebuild host assets that import the peer (`page_loader_controller.ts`).
+- Hosts that worked around the early dismissal (children animated with keyframes only, never transitions) can keep it or go back to transitions.
+
 ## To 1.10.0
 
 From **1.9.2** — new optional features only; no breaking changes.

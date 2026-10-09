@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - [Unreleased](#unreleased)
 
+- [[1.10.1] - 2026-10-09](#1101---2026-10-09)
 - [[1.10.0] - 2026-10-09](#1100---2026-10-09)
 - [1.9.2 - 2026-10-09](#192---2026-10-09)
 - [1.9.1 - 2026-10-07](#191---2026-10-07)
@@ -41,6 +42,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   - [Added](#added-6)
 
 ## [Unreleased]
+
+## [1.10.1] - 2026-10-09
+
+### Fixed
+
+- `page-loader` peer: the leave only ends on the overlay's own `opacity` `transitionend`. The event bubbles, so a child transition (logo, label…) finishing first used to hide the veil mid-fade (visible cut).
+- `page-loader` peer: the leave fallback timer no longer hides an overlay that was shown again before it fired (e.g. quick back-to-back navigations).
+
+### Added
+
+- Vitest coverage for the `page-loader` peer (`stimulus-peers/page_loader_controller.test.ts`).
+
+[1.10.1]: https://github.com/nowo-tech/UiKitBundle/compare/v1.10.0...v1.10.1
 
 ## [1.10.0] - 2026-10-09
 
@@ -279,7 +293,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v1.10.0...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v1.10.1...HEAD
 [1.10.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.4...v1.10.0
 [1.8.4]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.3...v1.8.4
 [1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0

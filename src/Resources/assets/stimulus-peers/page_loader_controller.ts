@@ -176,10 +176,25 @@ export default class extends Controller {
       return;
     }
     this.showGeneration += 1;
+    const generation = this.showGeneration;
     overlay.setAttribute('aria-busy', 'false');
     document.documentElement.classList.remove('is-page-loading');
 
+    // Only the overlay's own opacity transition ends the leave: `transitionend` bubbles, so a
+    // child (logo, label, bar) finishing first must not cut the veil short.
+    const onTransitionEnd = (event: TransitionEvent): void => {
+      if (event.target !== overlay || event.propertyName !== 'opacity') {
+        return;
+      }
+      dismiss();
+    };
+
     const dismiss = (): void => {
+      overlay.removeEventListener('transitionend', onTransitionEnd);
+      // A show() after this hide() owns the overlay now: do not hide it from a stale timer.
+      if (generation !== this.showGeneration) {
+        return;
+      }
       overlay.hidden = true;
       overlay.classList.remove('is-leaving', 'is-active');
       overlay.style.removeProperty('opacity');
@@ -192,7 +207,7 @@ export default class extends Controller {
     }
 
     overlay.classList.add('is-leaving');
-    overlay.addEventListener('transitionend', dismiss, { once: true });
+    overlay.addEventListener('transitionend', onTransitionEnd);
     window.setTimeout(dismiss, this.leaveMsValue + 80);
   }
 
