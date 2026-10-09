@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [1.9.2 - 2026-10-09](#192---2026-10-09)
 - [1.9.1 - 2026-10-07](#191---2026-10-07)
 - [1.9.0 - 2026-10-07](#190---2026-10-07)
 - [1.8.4 - 2026-09-25](#184---2026-09-25)
@@ -38,6 +39,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   - [Added](#added-6)
 
 ## [Unreleased]
+
+## [1.9.2] - 2026-10-09
+
+### Dependencies
+
+- Bundle lockfile: Symfony 8.1.8, `twig/twig` 3.30.0; dev `phpstan/phpstan` 2.3.1, `phpstan/phpstan-symfony` 2.1.0, `nowo-tech/phpstan-frankenphp` 1.2.3, `rector/rector` 2.7.0.
+- Demos (`demo/symfony8`, `demo/symfony8-tailwind`): Symfony 8.1.8, `twig/twig` 3.30.0; regenerated `config/reference.php`.
+
+[1.9.2]: https://github.com/nowo-tech/UiKitBundle/compare/v1.9.1...v1.9.2
 
 ## [1.9.1] - 2026-10-07
 

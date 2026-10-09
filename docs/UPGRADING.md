@@ -3,6 +3,16 @@
 
 ## Unreleased
 
+## To 1.9.2
+
+From **1.9.1** — dependency updates only.
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+No breaking changes. **No application upgrade steps.**
+
 ## To 1.9.1
 
 From **1.9.0** — legacy panel redirect runs before the router (priority 64).
@@ -39,6 +49,7 @@ php bin/console cache:clear
 
 ## Table of contents
 
+- [To 1.9.2](#to-192)
 - [To 1.9.1](#to-191)
 - [To 1.9.0](#to-190)
 - [To 1.8.5](#to-185)
