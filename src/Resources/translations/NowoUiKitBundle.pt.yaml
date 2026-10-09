@@ -48,3 +48,17 @@ layout.switch_to_content: Mudar para largura de conteúdo
 locale.nav: Idioma
 demo.kitchen_sink.title: Kitchen sink UiKit
 demo.kitchen_sink.intro: Componentes UI Nowo canónicos (macros, tabelas, paginação, modais, toasts, confirmação, chrome).
+release.open: "Versão instalada %version% — abrir detalhes da versão"
+release.dialog_title: "Versão instalada"
+release.installed: "Versão instalada: %version%"
+release.update_available: "Atualização disponível: %version%"
+release.view_release: "Ver versão"
+release.view_compare: "Ver alterações"
+release.upgrade_hint: "As atualizações ficam a cargo do operador — siga o guia de atualização do projeto."
+release.versions_behind: "%count% versão(ões) mais recente(s) disponível(eis)."
+release.checking: "A verificar atualizações…"
+release.up_to_date: "Atualizado com a versão mais recente."
+release.check_skipped: "Verificação ignorada (desativada, ou a versão não é uma etiqueta x.y.z limpa)."
+release.check_unavailable: "Não foi possível verificar uma versão mais recente agora."
+release.latest_label: "Versão mais recente: %version%"
+release.checked_at: "Última verificação: %when%"

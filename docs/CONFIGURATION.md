@@ -4,6 +4,7 @@
 
 - [Root keys](#root-keys)
 - [Panel path rewrites](#panel-path-rewrites)
+- [Release check](#release-check)
 - [Examples](#examples)
 
 ## Root keys
@@ -16,6 +17,7 @@ Alias: **`nowo_ui_kit`**
 | `icon_set` | enum | `bootstrap-icons` | `bootstrap-icons`, `tabler-icons`, `ux_icon`, `svg_inline`, `none` — how glyphs are drawn |
 | `row_actions_display` | enum | `icon` | Table/list row actions: `icon` (glyph + visually hidden label), `text` (visible label only), `icon_text` (glyph + visible label) |
 | `panel_path_rewrites` | map | `{}` | Legacy path prefix → new prefix (e.g. `/admin/blog: /panel/blog`). Empty = feature disabled (since 1.9.0) |
+| `release_check` | map | `enabled: false` | Optional GitHub release-version checker (footer dialog + JSON endpoint). See [Release check](#release-check) |
 
 Parameters / Twig globals:
 
@@ -23,6 +25,7 @@ Parameters / Twig globals:
 - `%nowo_ui_kit.icon_set%` → `nowo_ui_kit_icon_set`
 - `%nowo_ui_kit.row_actions_display%` → `nowo_ui_kit_row_actions_display`
 - `%nowo_ui_kit.panel_path_rewrites%` — the validated rewrite map (no Twig global)
+- `%nowo_ui_kit.release_check.enabled%`, `%nowo_ui_kit.release_check.github_repo%`, `%nowo_ui_kit.release_check.current_version%` → Twig global `nowo_ui_kit_release_check` (`{enabled, current_version}`)
 
 Asset package (always prepended): `nowo_ui_kit` → `/bundles/nowouikit`.
 
@@ -53,6 +56,51 @@ Rules:
 - The target must differ from the source and must not be nested under it (`/admin` → `/admin/panel` is rejected to avoid redirect loops).
 - Route names and URL generation are unaffected (routes keep their names; generated URLs use the new paths).
 - With the default empty map, nothing is registered — behavior is identical to 1.8.x.
+
+## Release check
+
+Optional, **off by default**. Shows the installed version as a small button; the dialog lazily asks GitHub whether a newer **public** release exists (no request on page render, no auto-upgrade).
+
+```yaml
+# config/packages/nowo_ui_kit.yaml
+nowo_ui_kit:
+    release_check:
+        enabled: true
+        github_repo: 'acme/my-app'          # public owner/name
+        current_version: '%app.version%'     # clean x.y.z (optional leading v)
+        # cache_ttl: 43200                   # seconds (min 60), cache.app
+        # default_branch: main               # compare target when already up to date
+        # user_agent: nowo-ui-kit-release-check
+```
+
+```yaml
+# config/routes/nowo_ui_kit.yaml
+nowo_ui_kit_release:
+    resource: '@NowoUiKitBundle/Resources/config/routes/release_check.yaml'
+```
+
+```twig
+{% include '@NowoUiKitBundle/partials/_release_version.html.twig' %}
+<script src="{{ asset('js/nowo-ui-confirm.js', 'nowo_ui_kit') }}" defer nonce="{{ app.request.attributes.get('csp_nonce') }}"></script>
+<script src="{{ asset('js/nowo-ui-release.js', 'nowo_ui_kit') }}" defer nonce="{{ app.request.attributes.get('csp_nonce') }}"></script>
+```
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `enabled` | `false` | Registers `ReleaseUpdateChecker` (needs `symfony/http-client`; `LogicException` at container build otherwise) |
+| `github_repo` | `''` | `owner/name`; anything else (URLs, `..`, extra segments) skips the check at runtime |
+| `current_version` | `''` | Installed label; empty / git-describe / pre-release labels → `status: skipped` |
+| `cache_ttl` | `43200` | Seconds the GitHub answer is cached per repo + version (`cache.app`) |
+| `default_branch` | `main` | Compare target when the installed version is the latest |
+| `user_agent` | `nowo-ui-kit-release-check` | Sent to `api.github.com` |
+
+Behaviour:
+
+- Route `nowo_ui_kit_release_status` (`GET /_nowo-ui/release/status`) → JSON `{status, current, latest, updateAvailable, versionsBehind, releaseUrl, compareUrl, checkedAt}` with `Cache-Control: private, no-store`. While disabled the controller still exists and answers **404**, so an imported route never breaks the router.
+- At most two GitHub calls per TTL (`releases/latest` + one page of `releases` to count newer non-prerelease tags). Timeouts 5 s / 8 s, no redirects; every failure soft-fails to `status: error` and is logged (`logger` if present).
+- Only `https://github.com/…` URLs are returned and rendered.
+- Partial options: `version`, `status_url`, `id`, `title`, `stimulus` (use peers `confirm-dialog` + `release-status` instead of the IIFEs), `force`, `framework`, `trigger_class`, `wrapper_class`. Labels live in the `NowoUiKitBundle` domain (`release.*`).
+- Public endpoint: it only exposes the configured version label and public GitHub metadata. Exclude it from access logs / auth firewalls as you see fit.
 
 ## Examples
 

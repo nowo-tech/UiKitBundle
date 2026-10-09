@@ -58,6 +58,7 @@ Twig globals (from config):
 | `partials/_confirm.html.twig` | Confirm `<dialog>` (host owns POST+CSRF) |
 | `partials/_page_loader.html.twig` | Full-page loader overlay (`visual: spinner\|orb`) |
 | `partials/_thinking_orb.html.twig` | Thinking orb canvas (`data-nowo-ui-orb`) |
+| `partials/_release_version.html.twig` | Installed-version button + lazy GitHub release dialog (optional `release_check`; renders nothing while disabled). See [CONFIGURATION.md](CONFIGURATION.md#release-check) |
 | `partials/_brand.html.twig` | Brand mark (text / img / SVG) |
 | `partials/_theme_toggle.html.twig` | Light/dark toggle |
 | `partials/_width_toggle.html.twig` | Main full width ↔ content toggle |
@@ -149,7 +150,10 @@ pnpm run build
 <script src="{{ asset('js/nowo-ui-tabs.js', 'nowo_ui_kit') }}" defer></script>
 <script src="{{ asset('js/nowo-ui-theme.js', 'nowo_ui_kit') }}" defer></script>
 <script src="{{ asset('js/nowo-ui-orb.js', 'nowo_ui_kit') }}" defer></script>
+<script src="{{ asset('js/nowo-ui-release.js', 'nowo_ui_kit') }}" defer></script>{# only with release_check #}
 ```
+
+Strict CSP: kit scripts are external files (no inline JS, no `on*=` handlers). When your CSP uses nonces, pass the per-request nonce your app stores in the request attribute `csp_nonce`: `nonce="{{ app.request.attributes.get('csp_nonce') }}"`.
 
 Run `php bin/console assets:install` after install/update.
 
@@ -158,6 +162,8 @@ Run `php bin/console assets:install` after install/update.
 `nowo-ui-shell.js` toggles the left aside via `data-nowo-ui-burger`, nested groups via `data-nowo-ui-nav-group-toggle`, and main width via `data-nowo-ui-width-toggle`.
 
 `nowo-ui-clipboard.js` copies via `data-nowo-ui-clipboard*` (text or same-origin URL). `nowo-ui-tabs.js` switches in-page panels via `data-nowo-ui-tabs*` (Twig `_tabs` remains link navigation).
+
+`nowo-ui-release.js` lazily fetches the release-status JSON the first time a `dialog[data-nowo-ui-release]` opens (`_release_version.html.twig`).
 
 Optional Stimulus peers: `src/Resources/assets/stimulus-peers/` — see [STIMULUS.md](STIMULUS.md).
 

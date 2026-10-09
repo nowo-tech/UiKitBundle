@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [Unreleased](#unreleased)
+
+- [[1.10.0] - 2026-10-09](#1100---2026-10-09)
 - [1.9.2 - 2026-10-09](#192---2026-10-09)
 - [1.9.1 - 2026-10-07](#191---2026-10-07)
 - [1.9.0 - 2026-10-07](#190---2026-10-07)
@@ -39,6 +41,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   - [Added](#added-6)
 
 ## [Unreleased]
+
+## [1.10.0] - 2026-10-09
+
+### Added
+
+- **Release check (optional, off by default):** `nowo_ui_kit.release_check` (`enabled`, `github_repo`, `current_version`, `cache_ttl`, `default_branch`, `user_agent`). `ReleaseUpdateChecker` compares the installed clean semver with GitHub `releases/latest` (cached, soft-fail, counts newer non-prerelease releases); `ReleaseStatusController` + opt-in route file `@NowoUiKitBundle/Resources/config/routes/release_check.yaml` (`GET /_nowo-ui/release/status`, 404 while disabled); partial `partials/_release_version.html.twig`; IIFE `js/nowo-ui-release.js` (`window.nowoUiLoadReleaseStatus`); Stimulus peer `release_status_controller.ts`; `release.*` translations (7 locales); `.nowo-ui-release*` CSS. Ported from the podologiapriego-web footer.
+- Stimulus peers are now type-checked (`tsconfig.json`) and tested with Vitest (`stimulus-peers/peers.test.ts`; dev dependency `@hotwired/stimulus`).
+- Dev dependency `symfony/http-client` (tests / PHPStan for the release check).
+
+### Changed
+
+- `confirm-submit` peer: documented single-button usage (`click->confirm-submit#confirm`) next to form `submit`, plus `blocked` / empty-message behaviour (no API change).
+
+### Fixed
+
+- `tabs` peer: `activeTabValue` was declared `readonly`, so `open()` failed type-checking when the peer was compiled by a strict host TypeScript build.
 
 ## [1.9.2] - 2026-10-09
 
@@ -261,7 +279,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.4...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v1.10.0...HEAD
+[1.10.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.4...v1.10.0
 [1.8.4]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.3...v1.8.4
 [1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.2.1...v1.3.0

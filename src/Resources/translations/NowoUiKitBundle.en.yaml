@@ -48,3 +48,17 @@ layout.switch_to_content: Switch to content width
 locale.nav: Language
 demo.kitchen_sink.title: UiKit kitchen sink
 demo.kitchen_sink.intro: Canonical Nowo UI components (macros, tables, pagination, modals, toasts, confirm, shell chrome).
+release.open: "Installed version %version% — open release details"
+release.dialog_title: "Installed release"
+release.installed: "Installed version: %version%"
+release.update_available: "Update available: %version%"
+release.view_release: "View release"
+release.view_compare: "View changes"
+release.upgrade_hint: "Upgrades stay operator-driven — follow the project upgrade guide."
+release.versions_behind: "%count% newer release(s) available."
+release.checking: "Checking for updates…"
+release.up_to_date: "Up to date with the latest release."
+release.check_skipped: "Update check skipped (disabled, or the version is not a clean x.y.z tag)."
+release.check_unavailable: "Could not check for a newer release right now."
+release.latest_label: "Latest release: %version%"
+release.checked_at: "Last checked: %when%"

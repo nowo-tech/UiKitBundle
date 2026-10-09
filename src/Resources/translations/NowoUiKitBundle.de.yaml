@@ -48,3 +48,17 @@ layout.switch_to_content: Zur Inhaltsbreite wechseln
 locale.nav: Sprache
 demo.kitchen_sink.title: UiKit Kitchen Sink
 demo.kitchen_sink.intro: Kanonische Nowo-UI-Komponenten (Makros, Tabellen, Paginierung, Modals, Toasts, Bestätigung, Shell).
+release.open: "Installierte Version %version% — Release-Details öffnen"
+release.dialog_title: "Installiertes Release"
+release.installed: "Installierte Version: %version%"
+release.update_available: "Update verfügbar: %version%"
+release.view_release: "Release ansehen"
+release.view_compare: "Änderungen ansehen"
+release.upgrade_hint: "Upgrades führt der Betreiber durch — siehe Upgrade-Anleitung des Projekts."
+release.versions_behind: "%count% neuere(s) Release(s) verfügbar."
+release.checking: "Suche nach Updates…"
+release.up_to_date: "Auf dem Stand des neuesten Releases."
+release.check_skipped: "Prüfung übersprungen (deaktiviert oder Version ist kein sauberes x.y.z-Tag)."
+release.check_unavailable: "Neueres Release kann derzeit nicht geprüft werden."
+release.latest_label: "Neuestes Release: %version%"
+release.checked_at: "Zuletzt geprüft: %when%"

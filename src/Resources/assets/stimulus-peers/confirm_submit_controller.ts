@@ -1,11 +1,24 @@
 /**
- * Optional Stimulus peer — `window.confirm()` on form submit (CSP-safe, no inline onsubmit).
+ * Optional Stimulus peer — `window.confirm()` before a submit, without inline
+ * `onsubmit=` / `onclick=` handlers (blocked by a strict CSP `script-src`).
  *
  * Identifier: `confirm-submit`
+ *
+ * On the form (every submit is confirmed):
  *
  *   <form data-controller="confirm-submit"
  *         data-confirm-submit-message-value="Delete?"
  *         data-action="submit->confirm-submit#confirm">
+ *
+ * On one submit button (only that button is confirmed — e.g. a "Reset" next to "Save"):
+ *
+ *   <button type="submit" name="reset" value="1"
+ *           data-controller="confirm-submit"
+ *           data-confirm-submit-message-value="Reset to defaults?"
+ *           data-action="click->confirm-submit#confirm">
+ *
+ * `data-confirm-submit-blocked-value="true"` always cancels (e.g. last owner cannot be removed).
+ * An empty message lets the event through unchanged.
  */
 
 import { Controller } from '@hotwired/stimulus';

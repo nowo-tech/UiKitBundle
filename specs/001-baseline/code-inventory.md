@@ -17,12 +17,18 @@ This file proves that **every production source artifact** under `src/` is refer
 | `Enum/CssFramework.php` | Framework enum | FR-ENUM-001 |
 | `Enum/IconSet.php` | Icon set enum | FR-ENUM-001 |
 | `Enum/RowActionsDisplay.php` | Row actions display enum | FR-ENUM-001 |
+| `Release/ReleaseUpdateChecker.php` | Optional GitHub release check | FR-RELEASE-001 |
+| `Release/ReleaseUpdateInfo.php` | Release check result DTO | FR-RELEASE-001 |
+| `Release/ReleaseStatusController.php` | Release status JSON endpoint | FR-RELEASE-002 |
 
 ## Twig / translations / CSS / JS (`src/Resources/`)
 
 | Source file | Spec section | Requirement IDs |
 | --- | --- | --- |
 | `Resources/config/services.yaml` | Service wiring | FR-CFG-002 |
+| `Resources/config/routes/release_check.yaml` | Opt-in release status route | FR-RELEASE-002 |
+| `Resources/views/partials/_release_version.html.twig` | Version button + release dialog | FR-RELEASE-003 |
+| `Resources/public/js/nowo-ui-release.js` | Built release IIFE | FR-RELEASE-003 / FR-BUILD-001 |
 | `Resources/views/macros/ui.html.twig` | UI macros | FR-MACRO-001 |
 | `Resources/views/components/_icon.html.twig` | Icons | FR-ICON-001 |
 | `Resources/views/components/_icon_ux.html.twig` | Optional UX Icons | FR-ICON-001 |
@@ -80,6 +86,10 @@ This file proves that **every production source artifact** under `src/` is refer
 | `Resources/assets/src/nowo-ui-page-loader.ts` | Page loader runtime | FR-JS-001 / FR-BUILD-001 |
 | `Resources/assets/src/nowo-ui-theme.ts` | Theme runtime | FR-JS-001 / FR-BUILD-001 |
 | `Resources/assets/src/nowo-ui-orb.ts` | Orb auto-mount | FR-JS-001 / FR-ORB-001 / FR-BUILD-001 |
+| `Resources/assets/src/nowo-ui-release-core.ts` | Release dialog shared logic | FR-RELEASE-003 |
+| `Resources/assets/src/nowo-ui-release.ts` | Release dialog IIFE | FR-RELEASE-003 / FR-BUILD-001 |
+| `Resources/assets/stimulus-peers/release_status_controller.ts` | Stimulus peer `release-status` | FR-RELEASE-003 / FR-PEER-001 |
+| `Resources/assets/stimulus-peers/confirm_submit_controller.ts` | Stimulus peer `confirm-submit` (form submit / button click, `blocked`) | FR-PEER-001 |
 | `Resources/assets/src/orb/types.ts` | Orb types | FR-ORB-001 |
 | `Resources/assets/src/orb/theme.ts` | Orb theme helpers | FR-ORB-001 |
 | `Resources/assets/src/orb/mount.ts` | Orb mount API | FR-ORB-001 |
@@ -106,13 +116,15 @@ This file proves that **every production source artifact** under `src/` is refer
 | `Resources/assets/src/nowo-ui-page-loader.test.ts` | Vitest | FR-TEST-001 |
 | `Resources/assets/src/nowo-ui-theme.test.ts` | Vitest | FR-TEST-001 |
 | `Resources/assets/src/nowo-ui-orb.test.ts` | Vitest | FR-TEST-001 |
+| `Resources/assets/src/nowo-ui-release.test.ts` | Vitest | FR-TEST-001 / FR-RELEASE-003 |
+| `Resources/assets/stimulus-peers/peers.test.ts` | Vitest (Stimulus peers) | FR-TEST-001 / FR-PEER-001 |
 
 ## Coverage summary
 
 | Category | Files | Mapped |
 | --- | ---: | ---: |
-| PHP classes | 6 | 6 |
-| Twig / CSS / JS / i18n / services | 45 | 45 |
-| TypeScript sources (excl. tests) | 21 | 21 |
-| Vitest (excluded from Packagist “production units”) | 7 | 7 |
-| **Total production sources (excl. tests)** | **72** | **72** |
+| PHP classes | 9 | 9 |
+| Twig / CSS / JS / i18n / services | 48 | 48 |
+| TypeScript sources (excl. tests) | 25 | 25 |
+| Vitest (excluded from Packagist “production units”) | 9 | 9 |
+| **Total production sources (excl. tests)** | **82** | **82** |

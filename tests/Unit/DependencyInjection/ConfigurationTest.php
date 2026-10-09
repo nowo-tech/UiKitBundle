@@ -23,6 +23,27 @@ final class ConfigurationTest extends TestCase
         self::assertSame(IconSet::BootstrapIcons->value, $config['icon_set']);
         self::assertSame(RowActionsDisplay::Icon->value, $config['row_actions_display']);
         self::assertSame([], $config['panel_path_rewrites']);
+        self::assertSame([
+            'enabled' => false,
+            'github_repo' => '',
+            'current_version' => '',
+            'cache_ttl' => 43200,
+            'default_branch' => 'main',
+            'user_agent' => 'nowo-ui-kit-release-check',
+        ], $config['release_check']);
+    }
+
+    public function testReleaseCheckOverridesAndTtlFloor(): void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'release_check' => ['enabled' => true, 'github_repo' => 'acme/app', 'current_version' => 'v1.2.3', 'cache_ttl' => 600],
+        ]]);
+        self::assertTrue($config['release_check']['enabled']);
+        self::assertSame('acme/app', $config['release_check']['github_repo']);
+        self::assertSame(600, $config['release_check']['cache_ttl']);
+
+        $this->expectException(InvalidConfigurationException::class);
+        (new Processor())->processConfiguration(new Configuration(), [['release_check' => ['cache_ttl' => 10]]]);
     }
 
     public function testPanelPathRewritesMap(): void

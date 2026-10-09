@@ -16,7 +16,7 @@ export default class extends Controller {
 
   declare readonly triggerTargets: HTMLElement[];
   declare readonly tabTargets: HTMLElement[];
-  declare readonly activeTabValue: string;
+  declare activeTabValue: string;
 
   open(e: Event): void {
     const currentTarget = e.currentTarget as HTMLElement | null;

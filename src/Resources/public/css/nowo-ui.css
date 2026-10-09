@@ -1003,6 +1003,48 @@ body.nowo-modal-open {
   border-top: 1px solid var(--nowo-ui-border);
 }
 
+/* --- Release version (optional release_check) --- */
+.nowo-ui-release {
+  display: inline-block;
+}
+
+.nowo-ui-release__trigger {
+  border: 0;
+  padding: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.85em;
+  color: var(--nowo-ui-muted);
+  text-decoration: underline dotted;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.nowo-ui-release__trigger:hover,
+.nowo-ui-release__trigger:focus-visible {
+  color: var(--nowo-ui-text);
+}
+
+.nowo-ui-release__body > * + * {
+  margin-top: 0.5rem;
+}
+
+.nowo-ui-release__installed,
+.nowo-ui-release__summary {
+  margin: 0;
+  color: var(--nowo-ui-text);
+}
+
+.nowo-ui-release__summary {
+  font-weight: 600;
+}
+
+.nowo-ui-release__muted {
+  margin: 0;
+  font-size: 0.85em;
+  color: var(--nowo-ui-muted);
+}
+
 /* --- Page loader --- */
 .nowo-ui-page-loader {
   position: fixed;

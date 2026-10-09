@@ -1,0 +1,89 @@
+{#
+  Installed-version button + lazy GitHub release dialog (optional `release_check` feature).
+
+  Renders nothing when `nowo_ui_kit.release_check.enabled` is false or the version is empty
+  (unless `force: true`). The dialog fetches `status_url` (JSON from ReleaseStatusController)
+  only after it opens — no request on page render.
+
+  Behaviour (no inline JS; CSP-safe):
+    - IIFE path (default): load `js/nowo-ui-confirm.js` + `js/nowo-ui-release.js`.
+    - Stimulus path (`stimulus: true`): host registers peers `confirm-dialog` + `release-status`.
+
+  Optional:
+    - version (default: nowo_ui_kit_release_check.current_version)
+    - status_url (default: path('nowo_ui_kit_release_status'))
+    - id (default: nowo-ui-release-dialog)
+    - title (default: release.dialog_title)
+    - stimulus (bool, default false)
+    - force (bool, default false) — render even when the feature flag is off
+    - framework
+    - trigger_class (extra classes on the version button)
+    - wrapper_class
+#}
+{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
+{% set _rc = nowo_ui_kit_release_check|default({enabled: false, current_version: ''}) %}
+{% set _version = (version|default(_rc.current_version|default('')))|trim %}
+{% set _enabled = force|default(false) or _rc.enabled|default(false) %}
+{% if _enabled and _version != '' %}
+    {% set framework = framework|default(null) %}
+    {% set _id = id|default('nowo-ui-release-dialog') %}
+    {% set _stimulus = stimulus|default(false) %}
+    {% set _url = status_url|default(path('nowo_ui_kit_release_status')) %}
+    {% set _messages = {
+        update_available: 'release.update_available'|trans({}, 'NowoUiKitBundle'),
+        versions_behind: 'release.versions_behind'|trans({}, 'NowoUiKitBundle'),
+        upgrade_hint: 'release.upgrade_hint'|trans({}, 'NowoUiKitBundle'),
+        up_to_date: 'release.up_to_date'|trans({}, 'NowoUiKitBundle'),
+        latest_label: 'release.latest_label'|trans({}, 'NowoUiKitBundle'),
+        check_skipped: 'release.check_skipped'|trans({}, 'NowoUiKitBundle'),
+        check_unavailable: 'release.check_unavailable'|trans({}, 'NowoUiKitBundle'),
+        checked_at: 'release.checked_at'|trans({}, 'NowoUiKitBundle'),
+    } %}
+    {% set _open_label = 'release.open'|trans({'%version%': _version}, 'NowoUiKitBundle') %}
+    <div class="nowo-ui-release {{ wrapper_class|default('') }}"{% if _stimulus %} data-controller="confirm-dialog"{% endif %}>
+        <button
+            type="button"
+            class="nowo-ui-release__trigger {{ trigger_class|default('') }}"
+            {% if _stimulus %}data-action="confirm-dialog#open"{% else %}data-nowo-confirm-open data-nowo-confirm-target="{{ _id }}"{% endif %}
+            title="{{ _open_label }}"
+            aria-haspopup="dialog"
+            aria-controls="{{ _id }}"
+            aria-label="{{ _open_label }}"
+        >{{ _version }}</button>
+        <dialog
+            id="{{ _id }}"
+            class="nowo-ui-confirm nowo-ui-release__dialog"
+            data-nowo-ui-confirm
+            data-nowo-ui-release
+            data-nowo-ui-release-url="{{ _url }}"
+            data-nowo-ui-release-messages="{{ _messages|json_encode(constant('JSON_UNESCAPED_UNICODE')) }}"
+            {% if _stimulus %}
+                data-controller="release-status"
+                data-action="toggle->release-status#onToggle"
+                data-confirm-dialog-target="dialog"
+            {% endif %}
+            aria-labelledby="{{ _id }}-title"
+        >
+            <div class="nowo-ui-confirm__panel">
+                <header class="nowo-ui-confirm__header">
+                    <h2 class="nowo-ui-confirm__title" id="{{ _id }}-title">{{ title|default('release.dialog_title'|trans({}, 'NowoUiKitBundle')) }}</h2>
+                </header>
+                <div class="nowo-ui-confirm__body nowo-ui-release__body">
+                    <p class="nowo-ui-release__installed">{{ 'release.installed'|trans({'%version%': _version}, 'NowoUiKitBundle') }}</p>
+                    <p class="nowo-ui-release__muted" data-nowo-ui-release-part="loading" role="status" hidden>{{ 'release.checking'|trans({}, 'NowoUiKitBundle') }}</p>
+                    <div data-nowo-ui-release-part="content" aria-live="polite" hidden>
+                        <p class="nowo-ui-release__summary" data-nowo-ui-release-part="summary"></p>
+                        <p class="nowo-ui-release__muted" data-nowo-ui-release-part="detail" hidden></p>
+                        <p class="nowo-ui-release__muted" data-nowo-ui-release-part="meta" hidden></p>
+                    </div>
+                    <p class="nowo-ui-release__muted" data-nowo-ui-release-part="error" role="alert" hidden></p>
+                </div>
+                <div class="nowo-ui-confirm__footer">
+                    <button type="button" class="{{ ui.btn('secondary', null, framework) }}" data-nowo-confirm-close>{{ 'action.close'|trans({}, 'NowoUiKitBundle') }}</button>
+                    <a class="{{ ui.btn('secondary', null, framework) }}" href="#" rel="noopener noreferrer" target="_blank" hidden data-nowo-ui-release-part="compare">{{ 'release.view_compare'|trans({}, 'NowoUiKitBundle') }}</a>
+                    <a class="{{ ui.btn('primary', null, framework) }}" href="#" rel="noopener noreferrer" target="_blank" hidden data-nowo-ui-release-part="release">{{ 'release.view_release'|trans({}, 'NowoUiKitBundle') }}</a>
+                </div>
+            </div>
+        </dialog>
+    </div>
+{% endif %}

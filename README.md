@@ -37,7 +37,8 @@ This bundle is **FrankenPHP worker mode friendly** (including when the kernel is
 - Twig macros (`@NowoUiKitBundle/macros/ui.html.twig`) with optional per-call `framework` override
 - Semantic stylesheet `css/nowo-ui.css` (asset package `nowo_ui_kit`), including dark `[data-theme="dark"]` tokens
 - TypeScript → IIFEs: modal, shell, toast, confirm, page-loader, theme, orb, clipboard, tabs
-- Optional Stimulus peers under `src/Resources/assets/stimulus-peers/` (see [docs/STIMULUS.md](docs/STIMULUS.md))
+- Optional Stimulus peers under `src/Resources/assets/stimulus-peers/` (see [docs/STIMULUS.md](docs/STIMULUS.md)) — `confirm-submit` (form submit or single button click, `blocked` value), `confirm-dialog`, `tabs`, `toast-stack`, `clipboard-copy`, `page-loader`, `release-status`
+- Optional **release check** (off by default): installed-version button + lazy GitHub “newer release?” dialog (`release_check` config, `_release_version.html.twig`, `nowo-ui-release.js`) — see [docs/CONFIGURATION.md](docs/CONFIGURATION.md#release-check)
 - Thinking Orbs: `_thinking_orb` + `nowo-ui-orb.js`; page loader `visual: orb|spinner` ([THIRD_PARTY.md](docs/THIRD_PARTY.md))
 - Config: `css_framework`, `icon_set`, `row_actions_display`; i18n domain `NowoUiKitBundle` (`en`, `es`, `it`, `fr`, `pt`, `de`, `nl`)
 - Twig namespace overrides under `templates/bundles/NowoUiKitBundle/`
@@ -62,6 +63,10 @@ nowo_ui_kit:
     row_actions_display: icon   # or: text | icon_text
     # panel_path_rewrites:      # optional (1.9.0+): rewrite kit routes + 301 legacy URLs
     #     '/admin/blog': '/panel/blog'
+    # release_check:            # optional (1.10.0+): footer version + GitHub release dialog
+    #     enabled: true
+    #     github_repo: 'acme/my-app'
+    #     current_version: '%app.version%'
 ```
 
 ```twig

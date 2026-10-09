@@ -1,7 +1,20 @@
 # Upgrading
 
 
-## Unreleased
+## To 1.10.0
+
+From **1.9.2** — new optional features only; no breaking changes.
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+php bin/console assets:install
+php bin/console cache:clear
+```
+
+- **No action required.** `release_check` is disabled by default and registers only an inert controller.
+- To show the installed version + GitHub “newer release?” dialog: `composer require symfony/http-client` (if missing), set `nowo_ui_kit.release_check` (`enabled: true`, `github_repo`, `current_version`), import `@NowoUiKitBundle/Resources/config/routes/release_check.yaml`, include `@NowoUiKitBundle/partials/_release_version.html.twig` and load `js/nowo-ui-confirm.js` + `js/nowo-ui-release.js` (or render with `stimulus: true` and register the `confirm-dialog` + `release-status` peers). See [CONFIGURATION.md](CONFIGURATION.md#release-check).
+- Apps keeping copies of `confirm_submit`, `confirm_dialog`, `tabs`, `toast_stack`, `clipboard_copy`, `page_loader` (or a `release_status`) controllers can re-export the vendor peers instead ([STIMULUS.md](STIMULUS.md#stimulus-peers--import-examples)). The peers are supersets of the Beacon/podologiapriego copies: legacy `data-confirm-dialog-close`, `data-tab-id` and `data-toast-stack-target="toast"` keep working.
+- Migrating an app-level release checker: map `app.version` → `current_version`, `app.release_github_repo` → `github_repo`, `app.update_check` → `enabled`. The JSON payload keys are unchanged; the route becomes `nowo_ui_kit_release_status` and translations move to the `NowoUiKitBundle` domain (`release.*`). The compare target when up to date is `default_branch` (default `main`).
 
 ## To 1.9.2
 

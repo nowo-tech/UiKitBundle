@@ -13,6 +13,7 @@ Optional **Stimulus peer** TypeScript sources live under `src/Resources/assets/s
 - [Confirm dialog](#confirm-dialog)
 - [Confirm submit (Stimulus peer only)](#confirm-submit-stimulus-peer-only)
 - [Page loader](#page-loader)
+- [Release status](#release-status)
 - [Thinking orb](#thinking-orb)
 - [Shell / nested nav](#shell--nested-nav)
 - [Theme toggle](#theme-toggle)
@@ -94,12 +95,23 @@ No kit IIFE (uses `window.confirm`).
 
 | Stimulus | Role |
 |----------|------|
-| `data-controller="confirm-submit"` | Form root |
-| `data-confirm-submit-message-value` | Confirm message |
+| `data-controller="confirm-submit"` | Form root **or** a single submit button |
+| `data-confirm-submit-message-value` | Confirm message (trimmed; empty → no prompt, event passes) |
 | `data-confirm-submit-blocked-value` | When true, always block submit |
-| `data-action="submit->confirm-submit#confirm"` | Hook |
+| `data-action="submit->confirm-submit#confirm"` | Hook on the form (every submit) |
+| `data-action="click->confirm-submit#confirm"` | Hook on one button (e.g. “Reset” next to “Save”; other buttons submit without prompt) |
 
-Peer: `confirm_submit_controller.ts`.
+Peer: `confirm_submit_controller.ts`. Replaces inline `onsubmit="return confirm(…)"` / `onclick=` handlers, which a strict CSP (`script-src` without `'unsafe-inline'`) blocks.
+
+```twig
+<form method="post" data-controller="confirm-submit"
+      data-confirm-submit-message-value="{{ 'Delete?'|e('html_attr') }}"
+      data-action="submit->confirm-submit#confirm">…</form>
+
+<button type="submit" name="reset" value="1" data-controller="confirm-submit"
+        data-confirm-submit-message-value="{{ 'Reset?'|e('html_attr') }}"
+        data-action="click->confirm-submit#confirm">Reset</button>
+```
 
 ## Page loader
 
@@ -114,6 +126,23 @@ Twig: `visual: spinner` (default) or `visual: orb` (+ optional `orb_state` / `or
 Script: `js/nowo-ui-page-loader.js` → `nowoUiShowPageLoader` / `nowoUiHidePageLoader`. With `visual: orb`, also load `js/nowo-ui-orb.js`.
 
 Stimulus peer: identifier `page-loader` (`page_loader_controller.ts`) — min-visible timing, same-origin link interception, leave animation. Resolves `[data-nowo-ui-page-loader]` when no `overlay` target.
+
+## Release status
+
+Optional `release_check` feature ([CONFIGURATION.md](CONFIGURATION.md#release-check)).
+
+| Attribute | Role |
+|-----------|------|
+| `data-nowo-ui-release` on `<dialog>` | Root (also `data-nowo-ui-confirm` for open/close) |
+| `data-nowo-ui-release-url` | Same-origin JSON endpoint (`nowo_ui_kit_release_status`) |
+| `data-nowo-ui-release-messages` | JSON map of translated strings (`%version%`, `%count%`, `%when%` placeholders) |
+| `data-nowo-ui-release-part` | `loading` / `content` / `summary` / `detail` / `meta` / `error` / `compare` / `release` |
+| `data-nowo-ui-release-state` | Set by the IIFE: `loading` / `loaded` / `error` |
+| `data-nowo-ui-release-update` | On the compare link after load: `true` when an update exists (style hook) |
+
+Script: `js/nowo-ui-release.js` → `window.nowoUiLoadReleaseStatus(dialog)`; loads once on the dialog `toggle` (open) event. Skips dialogs whose `data-controller` includes `release-status`.
+
+Stimulus peer: identifier `release-status` (`release_status_controller.ts`). Put it **on the `<dialog>`** (`confirm-dialog` portals the dialog to `body`) with `data-action="toggle->release-status#onToggle"`. Values `url` / `messages` override the kit attributes; Stimulus targets (`loading`, `summary`, …) override `data-nowo-ui-release-part`. Render the Twig partial with `stimulus: true` to get this wiring.
 
 ## Thinking orb
 
@@ -195,6 +224,9 @@ return [
     'tabs' => [
         'path' => './vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/tabs_controller.ts',
     ],
+    'release-status' => [
+        'path' => './vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/release_status_controller.ts',
+    ],
 ];
 ```
 
@@ -207,7 +239,11 @@ Or lazy-load from `assets/controllers.json` pointing at the same paths.
 export { default } from '../../vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/clipboard_copy_controller';
 ```
 
-Repeat for `confirm_dialog`, `confirm_submit`, `page_loader`, `toast_stack`, `tabs`.
+Repeat for `confirm_dialog`, `confirm_submit`, `page_loader`, `toast_stack`, `tabs`, `release_status`.
+
+`release_status_controller.ts` imports `../src/nowo-ui-release-core.ts`, so keep the vendor directory layout intact (do not copy the peer file alone).
+
+Peers are covered by Vitest (`stimulus-peers/peers.test.ts`) and type-checked with `pnpm run typecheck`.
 
 When using a Stimulus peer, **do not** also load the matching IIFE for the same markup (duplicate listeners / double dismiss).
 

@@ -48,3 +48,17 @@ layout.switch_to_content: Overschakelen naar inhoudsbreedte
 locale.nav: Taal
 demo.kitchen_sink.title: UiKit kitchen sink
 demo.kitchen_sink.intro: Canonieke Nowo UI-componenten (macro’s, tabellen, paginering, modals, toasts, bevestiging, shell).
+release.open: "Geïnstalleerde versie %version% — releasedetails openen"
+release.dialog_title: "Geïnstalleerde release"
+release.installed: "Geïnstalleerde versie: %version%"
+release.update_available: "Update beschikbaar: %version%"
+release.view_release: "Release bekijken"
+release.view_compare: "Wijzigingen bekijken"
+release.upgrade_hint: "Upgrades blijven de taak van de beheerder — volg de upgradehandleiding van het project."
+release.versions_behind: "%count% nieuwere release(s) beschikbaar."
+release.checking: "Controleren op updates…"
+release.up_to_date: "Up-to-date met de nieuwste release."
+release.check_skipped: "Controle overgeslagen (uitgeschakeld, of de versie is geen zuivere x.y.z-tag)."
+release.check_unavailable: "Kan nu niet controleren op een nieuwere release."
+release.latest_label: "Nieuwste release: %version%"
+release.checked_at: "Laatst gecontroleerd: %when%"

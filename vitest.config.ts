@@ -3,7 +3,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     environment: 'happy-dom',
-    include: ['src/Resources/assets/src/**/*.test.ts'],
+    include: ['src/Resources/assets/src/**/*.test.ts', 'src/Resources/assets/stimulus-peers/**/*.test.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'text-summary', 'html'],

@@ -14,7 +14,8 @@ type Entry =
   | 'theme'
   | 'orb'
   | 'clipboard'
-  | 'tabs';
+  | 'tabs'
+  | 'release';
 
 const entry = process.env.VITE_ENTRY as Entry | undefined;
 
@@ -148,6 +149,21 @@ const configs: Record<Entry, { build: object }> = {
         output: {
           format: 'iife' as const,
           entryFileNames: 'js/nowo-ui-tabs.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  release: {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-release.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-release.js',
         },
       },
       minify: true,

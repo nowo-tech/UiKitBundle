@@ -145,7 +145,7 @@ As an integrator running FrankenPHP worker mode with the Symfony kernel **not** 
 ### Bundle & DI
 
 - **FR-BUNDLE-001**: `NowoUiKitBundle` registers the extension and compiler pass.
-- **FR-CFG-001**: `Configuration` defines `css_framework`, `icon_set`, and `row_actions_display` enums.
+- **FR-CFG-001**: `Configuration` defines `css_framework`, `icon_set`, and `row_actions_display` enums, `panel_path_rewrites`, and the optional `release_check` node.
 - **FR-CFG-002**: `NowoUiKitExtension` loads services, sets Twig globals, registers asset package.
 - **FR-TWIG-001**: `TwigPathsPass` ensures namespace `NowoUiKitBundle`.
 - **FR-ENUM-001**: `CssFramework` / `IconSet` / `RowActionsDisplay` backed enums used by configuration.
@@ -161,6 +161,10 @@ As an integrator running FrankenPHP worker mode with the Symfony kernel **not** 
 - **FR-ORB-002**: Page loader supports `visual: spinner|orb` (default `spinner` for BC).
 - **FR-I18N-001**: Translation domain files for seven locales (incl. `orb.*`, `layout.*`, theme, loader, toast, filters).
 - **FR-FRANKENPHP-001**: Bundle PHP is safe under FrankenPHP worker with kernel not reset between requests (no runtime services / no per-request mutable state); documented in `docs/FRANKENPHP-WORKER-AUDIT.md`.
+- **FR-RELEASE-001**: Optional `release_check` (off by default): `ReleaseUpdateChecker` compares `current_version` (clean semver) with GitHub `releases/latest` of `github_repo` (`owner/name` only), counts newer non-prerelease releases, caches per repo+version (`cache_ttl`, `cache.app`), soft-fails to `skipped`/`error`; registered only when enabled (requires `symfony/http-client`).
+- **FR-RELEASE-002**: `ReleaseStatusController` (`nowo_ui_kit_release_status`, `GET /_nowo-ui/release/status`, opt-in route import) returns the JSON payload with `private, no-store`; answers 404 while disabled.
+- **FR-RELEASE-003**: `_release_version.html.twig` renders nothing unless enabled + version set; dialog loads lazily on open via `nowo-ui-release.js` or Stimulus peer `release-status`; only `https://github.com/` links rendered; no inline JS.
+- **FR-PEER-001**: Stimulus peers (`stimulus-peers/*.ts`) are type-checked and covered by Vitest; `confirm-submit` supports form `submit` and single-button `click` hooks plus `blocked`.
 - **FR-FRANKENPHP-002**: PHPStan includes `phpstan-frankenphp` classic + worker rulesets.
 
 ### Tests (non-packaged runtime)

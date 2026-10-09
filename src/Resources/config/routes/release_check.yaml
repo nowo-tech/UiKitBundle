@@ -1,0 +1,9 @@
+# Optional: import only when nowo_ui_kit.release_check.enabled is true.
+#
+#   # config/routes/nowo_ui_kit.yaml
+#   nowo_ui_kit_release:
+#       resource: '@NowoUiKitBundle/Resources/config/routes/release_check.yaml'
+nowo_ui_kit_release_status:
+    path: /_nowo-ui/release/status
+    controller: nowo_ui_kit.release_status_controller
+    methods: [GET]

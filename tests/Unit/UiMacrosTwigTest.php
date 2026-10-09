@@ -58,7 +58,7 @@ final class UiMacrosTwigTest extends TestCase
     {
         $base = \dirname(__DIR__, 2).'/src/Resources/public';
         self::assertFileExists($base.'/css/nowo-ui.css');
-        foreach (['nowo-ui-modal.js', 'nowo-ui-shell.js', 'nowo-ui-toast.js', 'nowo-ui-confirm.js', 'nowo-ui-page-loader.js', 'nowo-ui-theme.js', 'nowo-ui-orb.js'] as $js) {
+        foreach (['nowo-ui-modal.js', 'nowo-ui-shell.js', 'nowo-ui-toast.js', 'nowo-ui-confirm.js', 'nowo-ui-page-loader.js', 'nowo-ui-theme.js', 'nowo-ui-orb.js', 'nowo-ui-release.js'] as $js) {
             self::assertFileExists($base.'/js/'.$js);
         }
         self::assertStringContainsString('--nowo-ui-primary', (string) file_get_contents($base.'/css/nowo-ui.css'));
@@ -180,6 +180,72 @@ final class UiMacrosTwigTest extends TestCase
 
         $create = $this->renderMacro("{{ ui.action('create') }}", 'bootstrap5');
         self::assertStringContainsString('btn-primary', $create);
+    }
+
+    public function testReleaseVersionPartialHiddenWhenDisabledOrEmpty(): void
+    {
+        self::assertSame('', $this->renderRelease(['enabled' => false, 'current_version' => 'v1.0.0'], []));
+        self::assertSame('', $this->renderRelease(['enabled' => true, 'current_version' => '  '], []));
+        self::assertSame('', $this->renderRelease(null, []));
+    }
+
+    public function testReleaseVersionPartialIifeMarkup(): void
+    {
+        $html = $this->renderRelease(['enabled' => true, 'current_version' => 'v1.2.3'], []);
+
+        self::assertStringContainsString('>v1.2.3</button>', $html);
+        self::assertStringContainsString('data-nowo-confirm-open data-nowo-confirm-target="nowo-ui-release-dialog"', $html);
+        self::assertStringContainsString('data-nowo-ui-release-url="/_nowo-ui/release/status"', $html);
+        self::assertStringContainsString('data-nowo-ui-release-messages="{&quot;update_available&quot;', $html);
+        self::assertStringContainsString('data-nowo-ui-release-part="summary"', $html);
+        self::assertStringContainsString('data-nowo-confirm-close', $html);
+        self::assertStringContainsString('aria-labelledby="nowo-ui-release-dialog-title"', $html);
+        self::assertStringNotContainsString('data-controller', $html);
+        self::assertStringNotContainsString('<script', $html);
+        self::assertDoesNotMatchRegularExpression('/\son[a-z]+=/i', $html);
+    }
+
+    public function testReleaseVersionPartialStimulusAndOverrides(): void
+    {
+        $html = $this->renderRelease(['enabled' => false, 'current_version' => ''], [
+            'force' => true,
+            'version' => '2.0.0',
+            'stimulus' => true,
+            'id' => 'rel',
+            'status_url' => '/custom/status',
+            'title' => 'Custom title',
+        ]);
+
+        self::assertStringContainsString('data-controller="confirm-dialog"', $html);
+        self::assertStringContainsString('data-action="confirm-dialog#open"', $html);
+        self::assertStringContainsString('data-controller="release-status"', $html);
+        self::assertStringContainsString('data-action="toggle->release-status#onToggle"', $html);
+        self::assertStringContainsString('data-confirm-dialog-target="dialog"', $html);
+        self::assertStringContainsString('id="rel"', $html);
+        self::assertStringContainsString('data-nowo-ui-release-url="/custom/status"', $html);
+        self::assertStringContainsString('Custom title', $html);
+        self::assertStringNotContainsString('data-nowo-confirm-open', $html);
+    }
+
+    /**
+     * @param array{enabled: bool, current_version: string}|null $global
+     * @param array<string, mixed>                               $vars
+     */
+    private function renderRelease(?array $global, array $vars): string
+    {
+        $views = \dirname(__DIR__, 2).'/src/Resources/views';
+        $fs = new FilesystemLoader();
+        $fs->addPath($views, 'NowoUiKitBundle');
+        $loader = new ArrayLoader(['t.twig' => "{% include '@NowoUiKitBundle/partials/_release_version.html.twig' %}"]);
+        $twig = new Environment(new \Twig\Loader\ChainLoader([$loader, $fs]));
+        $twig->addExtension(new TranslationExtension(new IdentityTranslator()));
+        $twig->addFunction(new \Twig\TwigFunction('path', static fn (string $name): string => 'nowo_ui_kit_release_status' === $name ? '/_nowo-ui/release/status' : '/'.$name));
+        $twig->addGlobal('nowo_ui_kit_css_framework', 'bootstrap5');
+        if (null !== $global) {
+            $twig->addGlobal('nowo_ui_kit_release_check', $global);
+        }
+
+        return trim($twig->render('t.twig', $vars));
     }
 
     private function renderMacro(string $expression, string $framework): string

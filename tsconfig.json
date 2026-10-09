@@ -9,5 +9,5 @@
     "noEmit": true,
     "types": ["vite/client"]
   },
-  "include": ["src/Resources/assets/src/**/*.ts"]
+  "include": ["src/Resources/assets/src/**/*.ts", "src/Resources/assets/stimulus-peers/**/*.ts"]
 }
