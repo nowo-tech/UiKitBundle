@@ -8,6 +8,7 @@ use Nowo\UiKitBundle\NowoUiKitBundle;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bridge\Twig\Extension\TranslationExtension;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Translation\IdentityTranslator;
 use Twig\Environment;
 use Twig\Loader\ArrayLoader;
@@ -309,6 +310,83 @@ final class UiMacrosTwigTest extends TestCase
         self::assertStringContainsString('clip-path:inset(0 0 100% 0)', $wipe);
         self::assertStringContainsString('.site-header > nav{view-transition-name:site-header}', $wipe);
         self::assertStringContainsString('::view-transition-group(site-header)', $wipe);
+    }
+
+    public function testOpenModalOnLoadIslandRendersOnlyWhenRequested(): void
+    {
+        $partial = '_open_modal_on_load.html.twig';
+        self::assertSame('', $this->renderPartial($partial, ['modal' => 'modal-item-form']));
+        self::assertSame('', $this->renderPartial($partial, ['modal' => 'modal-item-form', 'app' => ['request' => new Request()]]));
+        self::assertSame('', $this->renderPartial($partial, ['modal' => 'modal-item-form', 'app' => ['request' => new Request(['new' => '0'])]]));
+        self::assertSame('', $this->renderPartial($partial, ['modal' => '', 'param' => false]));
+
+        $html = $this->renderPartial($partial, [
+            'modal' => 'modal-item-form',
+            'trigger' => 'button.btn-new',
+            'app' => ['request' => new Request(['new' => '1'])],
+        ]);
+        self::assertSame(
+            '<script type="application/json" id="nowo-ui-open-modal-on-load">{"modal":"modal-item-form","trigger":"button.btn-new","clearParam":"new"}</script>',
+            $html,
+        );
+    }
+
+    public function testOpenModalOnLoadIslandEscapingNonceAndCustomParam(): void
+    {
+        $partial = '_open_modal_on_load.html.twig';
+
+        $always = $this->renderPartial($partial, ['modal' => 'm</script><b>&\'"', 'param' => false, 'nonce' => 'n0nce']);
+        self::assertStringStartsWith('<script type="application/json" id="nowo-ui-open-modal-on-load" nonce="n0nce">', $always);
+        self::assertStringNotContainsString('</script><b>', $always);
+        self::assertStringContainsString(trim(json_encode('</script><b>&\'"', \JSON_HEX_TAG | \JSON_HEX_AMP | \JSON_HEX_APOS | \JSON_HEX_QUOT | \JSON_UNESCAPED_SLASHES | \JSON_THROW_ON_ERROR), '"'), $always);
+        self::assertStringNotContainsString('clearParam', $always);
+        self::assertStringNotContainsString('trigger', $always);
+        /** @var array{modal: string} $decoded */
+        $decoded = json_decode((string) preg_replace('#^<script[^>]*>|</script>$#', '', $always), true, 512, \JSON_THROW_ON_ERROR);
+        self::assertSame('m</script><b>&\'"', $decoded['modal']);
+
+        $request = new Request(['create' => 'yes']);
+        $request->attributes->set('csp_nonce', 'req-nonce');
+        $custom = $this->renderPartial($partial, ['modal' => 'm', 'param' => 'create', 'app' => ['request' => $request]]);
+        self::assertStringContainsString('nonce="req-nonce"', $custom);
+        self::assertStringContainsString('{"modal":"m","clearParam":"create"}', $custom);
+    }
+
+    public function testFilterActionsPartial(): void
+    {
+        $plain = $this->renderPartial('_filter_actions.html.twig', []);
+        self::assertStringContainsString('class="nowo-ui-filter-bar__actions" data-nowo-ui-filter-actions', $plain);
+        self::assertStringContainsString('nowo-ui-btn--primary nowo-ui-filter-bar__submit', $plain);
+        self::assertStringContainsString('>filters.apply</button>', $plain);
+        self::assertStringNotContainsString('nowo-ui-filter-bar__clear', $plain);
+        self::assertStringNotContainsString('--pager', $plain);
+
+        $full = $this->renderPartial('_filter_actions.html.twig', [
+            'pager' => new \Twig\Markup('<div class="nowo-ui-filter-bar__pager"><select name="per_page"></select></div>', 'UTF-8'),
+            'clear_href' => '/items',
+            'submit_label' => 'Filter',
+            'clear_label' => 'Clear filters',
+            'submit_class' => 'btn-primary',
+            'clear_class' => 'btn-ghost',
+        ]);
+        self::assertStringContainsString('nowo-ui-filter-bar__actions nowo-ui-filter-bar__actions--pager', $full);
+        self::assertStringContainsString('<div class="nowo-ui-filter-bar__pager"><select name="per_page"></select></div>', $full);
+        self::assertStringContainsString('class="btn-primary nowo-ui-filter-bar__submit">Filter</button>', $full);
+        self::assertStringContainsString('<a class="btn-ghost nowo-ui-filter-bar__clear" href="/items">Clear filters</a>', $full);
+
+        $empty = $this->renderPartial('_filter_actions.html.twig', ['pager' => new \Twig\Markup('', 'UTF-8'), 'clear_href' => '/x']);
+        self::assertStringNotContainsString('--pager', $empty);
+        self::assertStringContainsString('nowo-ui-btn--secondary nowo-ui-filter-bar__clear', $empty);
+        self::assertStringContainsString('>filters.clear</a>', $empty);
+    }
+
+    public function testOptInFilterBarAndDataTableCss(): void
+    {
+        $css = (string) file_get_contents(\dirname(__DIR__, 2).'/src/Resources/public/css/nowo-ui.css');
+        foreach (['.nowo-ui-filter-bar {', '.nowo-ui-filter-bar--compact', '.nowo-ui-filter-bar__actions--pager', '.nowo-ui-filter-bar__help', 'table.nowo-ui-data-table.nowo-ui-data-table', '.nowo-ui-data-table--compact'] as $needle) {
+            self::assertStringContainsString($needle, $css);
+        }
+        self::assertStringContainsString('nowoUiOpenModalOnLoad', (string) file_get_contents(\dirname(__DIR__, 2).'/src/Resources/public/js/nowo-ui-open-modal.js'));
     }
 
     /**

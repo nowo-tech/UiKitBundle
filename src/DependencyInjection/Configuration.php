@@ -94,6 +94,8 @@ final class Configuration implements ConfigurationInterface
      * Returns a description of the first invalid entry, or null when the map is valid.
      *
      * @param array<mixed> $map
+     *
+     * @return ?string
      */
     public static function findInvalidRewrite(array $map): ?string
     {

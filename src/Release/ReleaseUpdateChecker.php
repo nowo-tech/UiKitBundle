@@ -70,25 +70,7 @@ final readonly class ReleaseUpdateChecker
             /** @var array{tag: string, url: string, at: string, behind: int|null} $payload */
             $payload = $this->cache->get(
                 $this->cacheKey($repo, $currentNorm),
-                function (ItemInterface $item) use ($repo, $currentNorm): array {
-                    $item->expiresAfter(max(60, $this->cacheTtl));
-                    $fetched = $this->fetchLatestRelease($repo);
-                    if (null === $fetched) {
-                        throw new \RuntimeException('GitHub latest release fetch failed.');
-                    }
-
-                    $latestNorm = self::parseCleanSemver($fetched['tag']);
-                    $behind = null;
-                    if (null !== $latestNorm && version_compare($latestNorm, $currentNorm, '>')) {
-                        $behind = $this->countVersionsBehind($repo, $currentNorm);
-                    } elseif (null !== $latestNorm && version_compare($latestNorm, $currentNorm, '==')) {
-                        $behind = 0;
-                    }
-
-                    $fetched['behind'] = $behind;
-
-                    return $fetched;
-                },
+                fn (ItemInterface $item): array => $this->computeReleasePayload($item, $repo, $currentNorm),
             );
         } catch (\Throwable $e) {
             $this->logger?->warning('Release update check cache/fetch failed.', [
@@ -127,6 +109,8 @@ final readonly class ReleaseUpdateChecker
 
     /**
      * Clean `x.y.z` only (optional leading `v`). Rejects git-describe suffixes, pre-releases and SHAs.
+     *
+     * @return ?string
      */
     public static function parseCleanSemver(string $raw): ?string
     {
@@ -139,6 +123,8 @@ final readonly class ReleaseUpdateChecker
 
     /**
      * `owner/name` with GitHub-safe characters only (no path traversal, no host override).
+     *
+     * @return bool
      */
     public static function isValidRepo(string $repo): bool
     {
@@ -242,6 +228,32 @@ final readonly class ReleaseUpdateChecker
             'User-Agent' => '' !== trim($this->userAgent) ? $this->userAgent : 'nowo-ui-kit-release-check',
             'X-GitHub-Api-Version' => '2022-11-28',
         ];
+    }
+
+    /**
+     * Cache miss: fetches the latest release and counts how many versions the install is behind.
+     *
+     * @return array{tag: string, url: string, at: string, behind: int|null}
+     */
+    private function computeReleasePayload(ItemInterface $item, string $repo, string $currentNorm): array
+    {
+        $item->expiresAfter(max(60, $this->cacheTtl));
+        $fetched = $this->fetchLatestRelease($repo);
+        if (null === $fetched) {
+            throw new \RuntimeException('GitHub latest release fetch failed.');
+        }
+
+        $latestNorm = self::parseCleanSemver($fetched['tag']);
+        $behind = null;
+        if (null !== $latestNorm && version_compare($latestNorm, $currentNorm, '>')) {
+            $behind = $this->countVersionsBehind($repo, $currentNorm);
+        } elseif (null !== $latestNorm && version_compare($latestNorm, $currentNorm, '==')) {
+            $behind = 0;
+        }
+
+        $fetched['behind'] = $behind;
+
+        return $fetched;
     }
 
     private function cacheKey(string $repo, string $currentNorm): string

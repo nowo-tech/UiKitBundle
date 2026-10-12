@@ -1,6 +1,21 @@
 # Upgrading
 
 
+## To 1.12.0
+
+From **1.11.0** — new optional features only; no breaking changes.
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+php bin/console assets:install
+php bin/console cache:clear
+```
+
+- **No action required.** The new CSS classes (`.nowo-ui-filter-bar*`, `.nowo-ui-data-table*`), partials and script only apply when used.
+- `?new=1` create-in-modal deep links: include `_open_modal_on_load.html.twig` (`modal`, `trigger`) and load `js/nowo-ui-open-modal.js` (or call `openModalOnLoad()` from `assets/src/nowo-ui-open-modal-core.ts`). Hosts with their own island (e.g. Beacon `#beacon-open-modal-on-load`) switch to the kit id `nowo-ui-open-modal-on-load`. See [USAGE.md](USAGE.md#open-a-modal-on-load-deep-link).
+- Hosts with a local `auto-refresh` Stimulus controller can register the kit peer instead (same identifier, values, targets and region attribute). See [STIMULUS.md](STIMULUS.md#auto-refresh-stimulus-peer-only).
+- Filter bars / list tables: add `.nowo-ui-filter-bar` / `.nowo-ui-data-table` and `_filter_actions.html.twig`. See [USAGE.md](USAGE.md#filter-bar-and-data-table-opt-in).
+
 ## To 1.11.0
 
 From **1.10.1** — new optional page loader visuals and page transitions; no breaking changes.

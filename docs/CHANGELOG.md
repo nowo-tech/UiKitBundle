@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - [Unreleased](#unreleased)
 
+- [[1.12.0] - 2026-10-12](#1120---2026-10-12)
 - [[1.11.0] - 2026-10-09](#1110---2026-10-09)
 - [[1.10.1] - 2026-10-09](#1101---2026-10-09)
 - [[1.10.0] - 2026-10-09](#1100---2026-10-09)
@@ -43,6 +44,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   - [Added](#added-6)
 
 ## [Unreleased]
+
+## [1.12.0] - 2026-10-12
+
+### Added
+
+- **Open modal on load (deep link):** `partials/_open_modal_on_load.html.twig` emits a CSP-safe JSON island `script#nowo-ui-open-modal-on-load` (`modal`, optional `trigger`, `param` default `new` — rendered only when `?new=1`; hex-escaped JSON; request `csp_nonce`). IIFE `js/nowo-ui-open-modal.js` (`window.nowoUiOpenModalOnLoad`) clicks the trigger / opens the modal directly, retries while kit scripts boot, then drops the parameter from the URL. Side-effect-free helpers for bundled hosts in `assets/src/nowo-ui-open-modal-core.ts` (`openModalOnLoad`, `readOpenModalConfig`, `tryOpenModal`, `isModalOpen`, `clearQueryParam`, `OPEN_MODAL_ISLAND_ID`). Ported from Symfony Beacon.
+- **Stimulus peer `auto-refresh`** (`stimulus-peers/auto_refresh_controller.ts`): periodic same-origin re-render of `[data-auto-refresh-region]` elements by id; `interval` / `url` values, `toggle` / `status` targets, pauses on hidden tabs, `auto-refresh:refreshed` event. Ported from Symfony Beacon.
+- **Opt-in filter bar / data table CSS:** `.nowo-ui-filter-bar` (explicit 38px control height, compact 34px via `--compact` or `[data-ui-density="compact"]`, actions on the field baseline, `__actions--pager` keeps pager + Filter + Clear on one row, `__help` visually hidden) and `table.nowo-ui-data-table` (`--compact`, `--nowo-ui-table-*` tokens). Partial `partials/_filter_actions.html.twig` (pre-rendered `pager`, `clear_href`, label / class overrides). Existing selectors unchanged.
+- Vitest coverage for the new modules and the `auto-refresh` peer (gated at 100%); Twig tests for both partials.
+
+[1.12.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.11.0...v1.12.0
 
 ## [1.11.0] - 2026-10-09
 

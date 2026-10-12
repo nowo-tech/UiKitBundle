@@ -36,9 +36,11 @@ This bundle is **FrankenPHP worker mode friendly** (including when the kernel is
 
 - Twig macros (`@NowoUiKitBundle/macros/ui.html.twig`) with optional per-call `framework` override
 - Semantic stylesheet `css/nowo-ui.css` (asset package `nowo_ui_kit`), including dark `[data-theme="dark"]` tokens
-- TypeScript → IIFEs: modal, shell, toast, confirm, page-loader, theme, orb, clipboard, tabs
+- TypeScript → IIFEs: modal, shell, toast, confirm, page-loader, theme, orb, clipboard, tabs, release, open-modal
+- Deep link "open modal on load" (`?new=1`): `_open_modal_on_load.html.twig` JSON island + `nowo-ui-open-modal.js` (CSP-safe, no inline JS)
+- Opt-in filter bar / data table chrome: `.nowo-ui-filter-bar` (38px / compact 34px controls, actions on one row) + `_filter_actions.html.twig`, `table.nowo-ui-data-table`
 - Page loader: veil (spinner / orb) or minimal indicators (top bar, looping bar, corner spinner, dots, glow, corner logo); cross-page fades via `_page_transition.html.twig` (View Transitions, no JS)
-- Optional Stimulus peers under `src/Resources/assets/stimulus-peers/` (see [docs/STIMULUS.md](docs/STIMULUS.md)) — `confirm-submit` (form submit or single button click, `blocked` value), `confirm-dialog`, `tabs`, `toast-stack`, `clipboard-copy`, `page-loader`, `release-status`
+- Optional Stimulus peers under `src/Resources/assets/stimulus-peers/` (see [docs/STIMULUS.md](docs/STIMULUS.md)) — `confirm-submit` (form submit or single button click, `blocked` value), `confirm-dialog`, `tabs`, `toast-stack`, `clipboard-copy`, `page-loader`, `release-status`, `auto-refresh`
 - Optional **release check** (off by default): installed-version button + lazy GitHub “newer release?” dialog (`release_check` config, `_release_version.html.twig`, `nowo-ui-release.js`) — see [docs/CONFIGURATION.md](docs/CONFIGURATION.md#release-check)
 - Thinking Orbs: `_thinking_orb` + `nowo-ui-orb.js`; page loader `visual: orb|spinner` ([THIRD_PARTY.md](docs/THIRD_PARTY.md))
 - Config: `css_framework`, `icon_set`, `row_actions_display`; i18n domain `NowoUiKitBundle` (`en`, `es`, `it`, `fr`, `pt`, `de`, `nl`)

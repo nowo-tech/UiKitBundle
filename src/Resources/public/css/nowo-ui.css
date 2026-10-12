@@ -1464,6 +1464,167 @@ body.nowo-modal-open {
   margin-left: auto;
 }
 
+/* --- Filter bar (opt-in, 1.12) ---
+ * One control height for every single-line field and button in the bar in every engine (an explicit
+ * height, not only min-height: WebKit gives native selects a taller intrinsic box, Firefox a shorter
+ * one). Actions sit on the bottom edge of the field row; `__actions--pager` keeps
+ * "N per page" + Filter + Clear in one unbreakable group. Compact: `--compact` modifier or
+ * `[data-ui-density="compact"]` on an ancestor. Nothing here applies without `.nowo-ui-filter-bar`.
+ */
+.nowo-ui-filter-bar {
+  --nowo-ui-filter-control-height: var(--nowo-ui-control-height, 2.375rem);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.nowo-ui-filter-bar--compact,
+[data-ui-density='compact'] .nowo-ui-filter-bar {
+  --nowo-ui-filter-control-height: var(--nowo-ui-control-height-compact, 2.125rem);
+}
+
+.nowo-ui-filter-bar > * {
+  margin: 0;
+  min-width: 0;
+}
+
+.nowo-ui-filter-bar__field {
+  display: flex;
+  flex: 1 1 10rem;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.nowo-ui-filter-bar__field--search {
+  flex-basis: 14rem;
+}
+
+.nowo-ui-filter-bar input:not([type='checkbox']):not([type='radio']):not([type='color']):not([type='range']):not([type='file']):not([type='hidden']),
+.nowo-ui-filter-bar select:not([multiple]):not([size]),
+.nowo-ui-filter-bar .nowo-ui-filter-bar__submit,
+.nowo-ui-filter-bar .nowo-ui-filter-bar__clear {
+  box-sizing: border-box;
+  height: var(--nowo-ui-filter-control-height);
+  min-height: var(--nowo-ui-filter-control-height);
+}
+
+.nowo-ui-filter-bar--compact input:not([type='checkbox']):not([type='radio']):not([type='color']):not([type='range']):not([type='file']):not([type='hidden']),
+.nowo-ui-filter-bar--compact select:not([multiple]):not([size]),
+[data-ui-density='compact'] .nowo-ui-filter-bar input:not([type='checkbox']):not([type='radio']):not([type='color']):not([type='range']):not([type='file']):not([type='hidden']),
+[data-ui-density='compact'] .nowo-ui-filter-bar select:not([multiple]):not([size]) {
+  padding-block: 0.3rem;
+  font-size: 0.8125rem;
+  line-height: 1.25;
+}
+
+/* Per-field help stays for assistive tech only (aria-describedby); the placeholder names the filter. */
+.nowo-ui-filter-bar__help {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.nowo-ui-filter-bar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  align-self: flex-end;
+  gap: 0.5rem;
+  min-height: var(--nowo-ui-filter-control-height, 2.375rem);
+}
+
+.nowo-ui-filter-bar__submit,
+.nowo-ui-filter-bar__clear {
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.nowo-ui-filter-bar__actions--pager {
+  flex-wrap: nowrap;
+  align-items: flex-end;
+}
+
+.nowo-ui-filter-bar__actions--pager .nowo-ui-filter-bar__pager {
+  flex: 1 1 8rem;
+  min-width: 8.25rem;
+  margin: 0;
+}
+
+.nowo-ui-filter-bar__actions--pager .nowo-ui-filter-bar__submit,
+.nowo-ui-filter-bar__actions--pager .nowo-ui-filter-bar__clear {
+  flex: 0 0 auto;
+  width: auto;
+}
+
+/* --- Data table (opt-in, 1.12) ---
+ * One header / cell contract for list tables: `table.nowo-ui-data-table` (alone or next to
+ * `.nowo-ui-table` / `.table`). Doubled class + child combinators outrank framework table remaps.
+ * Compact: `--compact` modifier or `[data-ui-density="compact"]` on an ancestor.
+ */
+.nowo-ui-data-table {
+  --nowo-ui-table-head-py: 0.625rem;
+  --nowo-ui-table-cell-py: 0.625rem;
+  --nowo-ui-table-cell-px: 0.75rem;
+  --nowo-ui-table-font-size: 0.875rem;
+  --nowo-ui-table-head-font-size: 0.75rem;
+}
+
+.nowo-ui-data-table--compact,
+[data-ui-density='compact'] .nowo-ui-data-table {
+  --nowo-ui-table-head-py: 0.45rem;
+  --nowo-ui-table-cell-py: 0.45rem;
+  --nowo-ui-table-cell-px: 0.625rem;
+  --nowo-ui-table-font-size: 0.8125rem;
+}
+
+table.nowo-ui-data-table.nowo-ui-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--nowo-ui-table-font-size);
+  text-align: left;
+}
+
+table.nowo-ui-data-table.nowo-ui-data-table > thead > tr > th {
+  padding: var(--nowo-ui-table-head-py) var(--nowo-ui-table-cell-px);
+  border-bottom: 1px solid var(--nowo-ui-border);
+  background: transparent;
+  color: var(--nowo-ui-muted);
+  font-size: var(--nowo-ui-table-head-font-size);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  text-transform: uppercase;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+
+table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr > td,
+table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr > th {
+  padding: var(--nowo-ui-table-cell-py) var(--nowo-ui-table-cell-px);
+  border-bottom: 1px solid color-mix(in srgb, var(--nowo-ui-border) 70%, transparent);
+  font-size: var(--nowo-ui-table-font-size);
+  line-height: 1.4;
+  vertical-align: middle;
+}
+
+table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr:last-child > td,
+table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr:last-child > th {
+  border-bottom: 0;
+}
+
+table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr:hover > td {
+  background: color-mix(in srgb, var(--nowo-ui-surface-muted) 80%, transparent);
+}
+
 /* --- Brand --- */
 .nowo-ui-brand {
   display: inline-flex;

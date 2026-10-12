@@ -5,6 +5,9 @@
 - [Import macros](#import-macros)
 - [Partials](#partials)
 - [Assets](#assets)
+- [Page loader and page transitions](#page-loader-and-page-transitions)
+- [Open a modal on load (deep link)](#open-a-modal-on-load-deep-link)
+- [Filter bar and data table (opt-in)](#filter-bar-and-data-table-opt-in)
 - [App chrome](#app-chrome-aside-avatar-user-menu-footer)
 - [Overriding templates (REQ-TWIG-001)](#overriding-templates-req-twig-001)
 - [Override vs upgrade](#override-vs-upgrade)
@@ -53,6 +56,8 @@ Twig globals (from config):
 | `partials/_page_header.html.twig` | Title + intro + toolbar HTML |
 | `partials/_tabs.html.twig` | Tab **link** nav (no JS). In-page panels: `nowo-ui-tabs.js` / Stimulus `tabs` peer |
 | `partials/_filters.html.twig` | Search + apply/clear + actions slot |
+| `partials/_filter_actions.html.twig` | Opt-in filter bar actions: optional pager row + Filter + Clear on one row. See [Filter bar and data table](#filter-bar-and-data-table-opt-in) |
+| `partials/_open_modal_on_load.html.twig` | CSP-safe JSON island that opens a modal on load (`?new=1` deep link). See [Open a modal on load](#open-a-modal-on-load-deep-link) |
 | `partials/_card.html.twig` | Card / panel (header/body/footer) |
 | `partials/_modal_shell.html.twig` | Modal shell |
 | `partials/_confirm.html.twig` | Confirm `<dialog>` (host owns POST+CSRF) |
@@ -152,6 +157,7 @@ pnpm run build
 <script src="{{ asset('js/nowo-ui-theme.js', 'nowo_ui_kit') }}" defer></script>
 <script src="{{ asset('js/nowo-ui-orb.js', 'nowo_ui_kit') }}" defer></script>
 <script src="{{ asset('js/nowo-ui-release.js', 'nowo_ui_kit') }}" defer></script>{# only with release_check #}
+<script src="{{ asset('js/nowo-ui-open-modal.js', 'nowo_ui_kit') }}" defer></script>{# only with _open_modal_on_load #}
 ```
 
 Strict CSP: kit scripts are external files (no inline JS, no `on*=` handlers). When your CSP uses nonces, pass the per-request nonce your app stores in the request attribute `csp_nonce`: `nonce="{{ app.request.attributes.get('csp_nonce') }}"`.
@@ -200,6 +206,71 @@ Cross-page fades: include once in `<head>` on every page that should take part (
 It renders a single `<style>` with the request `csp_nonce` (or `nonce:`), so it works under a strict CSP. Browsers
 without cross-document View Transitions (e.g. Firefox today) navigate as usual; `prefers-reduced-motion: reduce`
 disables it.
+
+## Open a modal on load (deep link)
+
+Links such as `/admin/items?new=1` can land on the list with the create form already open, without inline JS.
+Render the island (only emitted when the request carries the parameter) and load the script after the kit modal scripts:
+
+```twig
+{% include '@NowoUiKitBundle/partials/_open_modal_on_load.html.twig' with {
+    modal: 'modal-item-form',          {# id of the <dialog> / .nowo-ui-modal root #}
+    trigger: 'button.js-new-item',     {# optional: clicked first so kit JS can load the form body #}
+    param: 'new',                      {# default; false = always render, keep the URL #}
+} %}
+<script src="{{ asset('js/nowo-ui-open-modal.js', 'nowo_ui_kit') }}" defer></script>
+```
+
+Output: `<script type="application/json" id="nowo-ui-open-modal-on-load">{"modal":…,"trigger":…,"clearParam":"new"}</script>`
+(JSON with `<`, `>`, `&`, quotes hex-escaped; request `csp_nonce` or `nonce:` added — the island never executes).
+The script clicks the trigger (when given), falls back to opening the modal directly (`<dialog>.showModal()` or the
+`nowo-ui-modal-open` class, plus a `show.bs.modal` event with `relatedTarget`), retries every 50 ms for up to 2 s while
+kit scripts boot, then removes `?new` from the URL (`history.replaceState`). `window.nowoUiOpenModalOnLoad()` re-runs it.
+
+Vite / Encore hosts can import the side-effect-free helpers instead of loading the IIFE:
+
+```ts
+import { openModalOnLoad } from '../vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/src/nowo-ui-open-modal-core';
+
+document.readyState === 'loading'
+  ? document.addEventListener('DOMContentLoaded', () => openModalOnLoad())
+  : openModalOnLoad();
+```
+
+Exports: `OPEN_MODAL_ISLAND_ID`, `readOpenModalConfig(doc, islandId?)`, `isModalOpen(el)`, `tryOpenModal(doc, config)`,
+`clearQueryParam(win, param)`, `openModalOnLoad(doc?, win?, maxTries = 40, intervalMs = 50)`.
+
+## Filter bar and data table (opt-in)
+
+New classes only — nothing changes for markup that does not use them.
+
+- **`.nowo-ui-filter-bar`** on the filter `<form>`: flex row, fields and actions aligned on the bottom edge, every
+  single-line input / select and the Filter / Clear buttons get one explicit height (`--nowo-ui-control-height`,
+  default 38px — WebKit selects are otherwise taller). Compact (34px, `--nowo-ui-control-height-compact`):
+  `.nowo-ui-filter-bar--compact` or `[data-ui-density="compact"]` on an ancestor.
+  Helpers: `__field` (`--search` wider), `__help` (visually hidden help kept for `aria-describedby`), `__actions`,
+  `__actions--pager` (pager + Filter + Clear never split), `__pager`, `__submit`, `__clear`.
+- **`table.nowo-ui-data-table`**: one header / cell contract for list tables (uppercase muted headers, row hover,
+  no border on the last row; works next to `.nowo-ui-table` / Bootstrap `.table`). Tokens
+  `--nowo-ui-table-head-py`, `--nowo-ui-table-cell-py`, `--nowo-ui-table-cell-px`, `--nowo-ui-table-font-size`,
+  `--nowo-ui-table-head-font-size`; compact via `.nowo-ui-data-table--compact` or `[data-ui-density="compact"]`.
+
+```twig
+<form method="get" class="nowo-ui-filter-bar">
+    <div class="nowo-ui-filter-bar__field nowo-ui-filter-bar__field--search">{{ form_widget(form.q) }}</div>
+    <div class="nowo-ui-filter-bar__field">{{ form_widget(form.status) }}</div>
+    {% include '@NowoUiKitBundle/partials/_filter_actions.html.twig' with {
+        pager: form.per_page is defined ? form_row(form.per_page, {row_attr: {class: 'nowo-ui-filter-bar__pager'}}) : null,
+        clear_href: path('app_items'),
+    } %}
+</form>
+
+<table class="nowo-ui-data-table">…</table>
+```
+
+`_filter_actions` options: `pager` (pre-rendered trusted HTML — no Symfony Form dependency in the kit), `clear_href`,
+`submit_label` / `clear_label` (default `filters.apply` / `filters.clear`), `submit_class` / `clear_class`
+(default `ui.btn('primary')` / `ui.btn('secondary')`), `framework`.
 
 ## App chrome (aside, avatar, user menu, footer)
 

@@ -2,7 +2,7 @@
 
 **Feature Branch**: `001-baseline`  
 **Created**: 2026-08-03  
-**Updated**: 2026-09-25  
+**Updated**: 2026-10-12 (1.12.0 — open modal on load, auto-refresh peer, filter bar / data table)  
 **Status**: Active  
 **Input**: Backfill GitHub Spec Kit baseline documenting 100% of production code in `src/`.
 
@@ -100,6 +100,9 @@ As an admin host, I include toast stack, confirm dialog, and page loader partial
 4. **Given** `_page_loader.html.twig` with `visual: orb`, **When** `nowo-ui-orb.js` is loaded, **Then** Thinking Orb canvas mounts inside the loader.
 5. **Given** `_page_loader.html.twig` with a minimal visual (`bar`, `bar_loop`, `bar_spinner`, `corner_spinner`, `dots`, `glow`, `corner_mark`), **When** the page loads fast, **Then** nothing is visible and the page is never blocked.
 6. **Given** `_page_transition.html.twig` in `<head>` on two pages, **When** navigating between them in a browser with cross-document View Transitions, **Then** the pages cross-fade with the chosen style (none under reduced motion).
+7. **Given** `_open_modal_on_load.html.twig` with `modal` (+ optional `trigger`) and a request carrying `?new=1`, **When** `nowo-ui-open-modal.js` runs, **Then** the modal opens (trigger click first, direct open as fallback, retried while kit scripts boot) and `new` is removed from the URL; without the parameter nothing is rendered.
+8. **Given** `data-controller="auto-refresh"` with `[data-auto-refresh-region]` children carrying ids, **When** the interval elapses on a visible tab and refresh is not paused, **Then** each region is replaced by the same-id element of a same-origin GET of the page.
+9. **Given** a `<form class="nowo-ui-filter-bar">` with `_filter_actions.html.twig` (`pager` passed), **When** rendered in any engine, **Then** single-line controls and actions share one height (38px, compact 34px) and pager + Filter + Clear stay on one row; markup without the new classes is unaffected.
 
 ---
 
@@ -136,7 +139,7 @@ As an integrator running FrankenPHP worker mode with the Symfony kernel **not** 
 
 - Twig namespace `NowoUiKitBundle` with app override path `templates/bundles/NowoUiKitBundle/` (REQ-TWIG-001/002).
 - Asset package `nowo_ui_kit` base path `/bundles/nowouikit`.
-- TypeScript sources under `Resources/assets/src/` (including `orb/` engine); published IIFEs under `Resources/public/js/` (REQ-ASSETS-001/002). Seven Vite entries: modal, shell, toast, confirm, page-loader, theme, orb.
+- TypeScript sources under `Resources/assets/src/` (including `orb/` engine); published IIFEs under `Resources/public/js/` (REQ-ASSETS-001/002). Vite entries: modal, shell, toast, confirm, page-loader, theme, orb, clipboard, tabs, release, open-modal.
 - Co-located `*.test.ts` files are **test artifacts** (FR-TEST-*), not runtime production units.
 - `symfony/ux-icons` is optional (`suggest`); only required when `icon_set: ux_icon`.
 
@@ -163,12 +166,15 @@ As an integrator running FrankenPHP worker mode with the Symfony kernel **not** 
 - **FR-ORB-002**: Page loader supports `visual: spinner|orb` (default `spinner` for BC).
 - **FR-LOADER-001**: Page loader minimal visuals `bar` | `bar_loop` | `bar_spinner` | `corner_spinner` | `dots` | `glow` | `corner_mark` (`mark_src`): no veil, no pointer capture, delayed fade-in, children animated with keyframes only; `stimulus: true` attaches the `page-loader` peer with matching timing (`min_visible_ms` / `leave_ms` overrides). The peer ends the leave only on the overlay's own `opacity` `transitionend`.
 - **FR-TRANSITION-001**: `_page_transition.html.twig` emits one nonce-aware `<style>` opting into cross-document View Transitions (`style`: `fade_slide` default, `fade`, `slide`, `zoom`, `blur`, `wipe`, `none`), optional `persist` selector → name map; no JS; disabled under `prefers-reduced-motion: reduce`.
+- **FR-OPENMODAL-001**: `_open_modal_on_load.html.twig` emits `script[type=application/json]#nowo-ui-open-modal-on-load` (`modal` required, optional `trigger`, `param` default `new` — rendered only when the request query carries it truthy, `param: false` always; JSON hex-escaped; nonce from `nonce` or request `csp_nonce`). `nowo-ui-open-modal-core.ts` (side-effect free: `readOpenModalConfig`, `isModalOpen`, `tryOpenModal`, `clearQueryParam`, `openModalOnLoad`) + IIFE `nowo-ui-open-modal.js` (`window.nowoUiOpenModalOnLoad`).
+- **FR-FILTERBAR-001**: Opt-in CSS `.nowo-ui-filter-bar` (explicit control height `--nowo-ui-control-height` 38px / compact 34px via `--compact` or `[data-ui-density=compact]`, `__field`, `__help`, `__actions`, `__actions--pager`, `__pager`, `__submit`, `__clear`) and `table.nowo-ui-data-table` (`--compact`, `--nowo-ui-table-*` tokens); `_filter_actions.html.twig` renders optional pre-rendered `pager` + Filter + Clear (no Symfony Form dependency). No existing selector changes.
 - **FR-I18N-001**: Translation domain files for seven locales (incl. `orb.*`, `layout.*`, theme, loader, toast, filters).
 - **FR-FRANKENPHP-001**: Bundle PHP is safe under FrankenPHP worker with kernel not reset between requests (no runtime services / no per-request mutable state); documented in `docs/FRANKENPHP-WORKER-AUDIT.md`.
 - **FR-RELEASE-001**: Optional `release_check` (off by default): `ReleaseUpdateChecker` compares `current_version` (clean semver) with GitHub `releases/latest` of `github_repo` (`owner/name` only), counts newer non-prerelease releases, caches per repo+version (`cache_ttl`, `cache.app`), soft-fails to `skipped`/`error`; registered only when enabled (requires `symfony/http-client`).
 - **FR-RELEASE-002**: `ReleaseStatusController` (`nowo_ui_kit_release_status`, `GET /_nowo-ui/release/status`, opt-in route import) returns the JSON payload with `private, no-store`; answers 404 while disabled.
 - **FR-RELEASE-003**: `_release_version.html.twig` renders nothing unless enabled + version set; dialog loads lazily on open via `nowo-ui-release.js` or Stimulus peer `release-status`; only `https://github.com/` links rendered; no inline JS.
 - **FR-PEER-001**: Stimulus peers (`stimulus-peers/*.ts`) are type-checked and covered by Vitest; `confirm-submit` supports form `submit` and single-button `click` hooks plus `blocked`.
+- **FR-PEER-002**: Stimulus peer `auto-refresh` (`auto_refresh_controller.ts`): values `interval` (default 10000 ms, floor 2000) and `url`; targets `toggle` (`aria-pressed`) and `status`; replaces id-carrying `[data-auto-refresh-region]` from a same-origin GET; skips hidden tabs, paused state and overlapping requests; dispatches `auto-refresh:refreshed`. Gated at 100% Vitest coverage.
 - **FR-FRANKENPHP-002**: PHPStan includes `phpstan-frankenphp` classic + worker rulesets.
 
 ### Tests (non-packaged runtime)

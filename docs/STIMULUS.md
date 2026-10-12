@@ -14,6 +14,8 @@ Optional **Stimulus peer** TypeScript sources live under `src/Resources/assets/s
 - [Confirm submit (Stimulus peer only)](#confirm-submit-stimulus-peer-only)
 - [Page loader](#page-loader)
 - [Release status](#release-status)
+- [Auto refresh (Stimulus peer only)](#auto-refresh-stimulus-peer-only)
+- [Open modal on load](#open-modal-on-load)
 - [Thinking orb](#thinking-orb)
 - [Shell / nested nav](#shell--nested-nav)
 - [Theme toggle](#theme-toggle)
@@ -147,6 +149,38 @@ Script: `js/nowo-ui-release.js` → `window.nowoUiLoadReleaseStatus(dialog)`; lo
 
 Stimulus peer: identifier `release-status` (`release_status_controller.ts`). Put it **on the `<dialog>`** (`confirm-dialog` portals the dialog to `body`) with `data-action="toggle->release-status#onToggle"`. Values `url` / `messages` override the kit attributes; Stimulus targets (`loading`, `summary`, …) override `data-nowo-ui-release-part`. Render the Twig partial with `stimulus: true` to get this wiring.
 
+## Auto refresh (Stimulus peer only)
+
+No kit IIFE. Periodically re-renders server regions of the current page: same-origin `GET` of the current URL
+(header `X-Requested-With: auto-refresh`), then every `[data-auto-refresh-region]` **with an id** inside the controller
+root is replaced by the element with the same id in the response. Paused while the tab is hidden or after the toggle.
+
+| Stimulus | Role |
+|----------|------|
+| `data-controller="auto-refresh"` | Root containing the regions |
+| `data-auto-refresh-interval-value` | Interval in ms (default `10000`, floor `2000`) |
+| `data-auto-refresh-url-value` | Optional URL to fetch (default: current location) |
+| `data-auto-refresh-region` + `id` | Region swapped on each tick |
+| `data-auto-refresh-target="toggle"` + `data-action="auto-refresh#toggle"` | Pause / resume (`aria-pressed`) |
+| `data-auto-refresh-target="status"` | Receives the last refresh time (`toLocaleTimeString()`) |
+| event `auto-refresh:refreshed` | Dispatched on the root after a swap (`detail.regions`) |
+
+Peer: `auto_refresh_controller.ts`. Swapped regions are new nodes: Stimulus controllers inside them reconnect.
+
+```twig
+<div data-controller="auto-refresh" data-auto-refresh-interval-value="10000">
+    <span data-auto-refresh-target="status"></span>
+    <button type="button" data-auto-refresh-target="toggle" data-action="auto-refresh#toggle" aria-pressed="true">Auto</button>
+    <section id="stats" data-auto-refresh-region>…</section>
+</div>
+```
+
+## Open modal on load
+
+Not a Stimulus peer: JSON island `script#nowo-ui-open-modal-on-load` (`_open_modal_on_load.html.twig`) read by
+`js/nowo-ui-open-modal.js` → `window.nowoUiOpenModalOnLoad()`, or `openModalOnLoad()` from
+`assets/src/nowo-ui-open-modal-core.ts` in bundled hosts. See [USAGE.md](USAGE.md#open-a-modal-on-load-deep-link).
+
 ## Thinking orb
 
 | Attribute | Role |
@@ -230,6 +264,9 @@ return [
     'release-status' => [
         'path' => './vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/release_status_controller.ts',
     ],
+    'auto-refresh' => [
+        'path' => './vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/auto_refresh_controller.ts',
+    ],
 ];
 ```
 
@@ -242,7 +279,16 @@ Or lazy-load from `assets/controllers.json` pointing at the same paths.
 export { default } from '../../vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/clipboard_copy_controller';
 ```
 
-Repeat for `confirm_dialog`, `confirm_submit`, `page_loader`, `toast_stack`, `tabs`, `release_status`.
+Repeat for `confirm_dialog`, `confirm_submit`, `page_loader`, `toast_stack`, `tabs`, `release_status`, `auto_refresh`.
+
+Or register directly in the host Stimulus bootstrap (Vite + pnpm):
+
+```ts
+// assets/stimulus_bootstrap.ts (host)
+import AutoRefreshController from '../vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/auto_refresh_controller';
+
+app.register('auto-refresh', AutoRefreshController);
+```
 
 `release_status_controller.ts` imports `../src/nowo-ui-release-core.ts`, so keep the vendor directory layout intact (do not copy the peer file alone).
 

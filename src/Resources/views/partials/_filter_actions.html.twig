@@ -1,0 +1,31 @@
+{#
+  Filter bar actions: the optional "N per page" field + Filter + Clear always share one row
+  (`.nowo-ui-filter-bar__actions`, never split). Pair with `.nowo-ui-filter-bar` on the <form>.
+  No Symfony Form coupling: the host renders the pager row and passes the HTML, e.g.
+    pager: form.per_page is defined and not form.per_page.rendered
+        ? form_row(form.per_page, {row_attr: {class: 'nowo-ui-filter-bar__pager'}}) : null
+  (loops that render the other fields must then skip `per_page`).
+
+  Optional:
+    - pager: pre-rendered "N per page" row (trusted HTML, output raw); adds `--pager` (one unbreakable group)
+    - clear_href: "Clear" link target (omitted when empty)
+    - submit_label / clear_label: override the `filters.apply` / `filters.clear` translations
+    - submit_class / clear_class: override the button classes (default `ui.btn('primary')` / `ui.btn('secondary')`)
+    - framework
+#}
+{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
+{% set framework = framework|default(null) %}
+{% set _pager = pager|default('') %}
+<div class="nowo-ui-filter-bar__actions{% if _pager is not empty %} nowo-ui-filter-bar__actions--pager{% endif %}" data-nowo-ui-filter-actions>
+    {% if _pager is not empty %}
+        {{ _pager|raw }}
+    {% endif %}
+    <button type="submit" class="{{ submit_class|default(ui.btn('primary', null, framework)) }} nowo-ui-filter-bar__submit">
+        {{- submit_label|default('filters.apply'|trans({}, 'NowoUiKitBundle')) -}}
+    </button>
+    {% if clear_href|default('') is not empty %}
+        <a class="{{ clear_class|default(ui.btn('secondary', null, framework)) }} nowo-ui-filter-bar__clear" href="{{ clear_href }}">
+            {{- clear_label|default('filters.clear'|trans({}, 'NowoUiKitBundle')) -}}
+        </a>
+    {% endif %}
+</div>

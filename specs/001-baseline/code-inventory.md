@@ -2,7 +2,7 @@
 
 **Baseline spec**: [`spec.md`](spec.md)  
 **Package**: `nowo-tech/ui-kit-bundle`  
-**Last audited**: 2026-08-04 (1.5.0 — row_actions_display)
+**Last audited**: 2026-10-12 (1.12.0 — open modal on load, auto-refresh peer, filter bar / data table)
 
 This file proves that **every production source artifact** under `src/` is referenced by the baseline specification. Test-only files (`*.test.ts`) are listed under Tests. Demo *apps* under `demo/` are out of Packagist scope; the kitchen sink Twig template inside the bundle is included.
 
@@ -50,6 +50,8 @@ This file proves that **every production source artifact** under `src/` is refer
 | `Resources/views/partials/_page_header.html.twig` | Page header | FR-PARTIAL-001 |
 | `Resources/views/partials/_page_loader.html.twig` | Page loader (veil + minimal visuals) | FR-PARTIAL-001 / FR-ORB-002 / FR-LOADER-001 |
 | `Resources/views/partials/_page_transition.html.twig` | Cross-document page transitions | FR-TRANSITION-001 |
+| `Resources/views/partials/_open_modal_on_load.html.twig` | Open-modal-on-load JSON island | FR-OPENMODAL-001 |
+| `Resources/views/partials/_filter_actions.html.twig` | Filter bar actions (pager + Filter + Clear) | FR-FILTERBAR-001 |
 | `Resources/views/partials/_pagination.html.twig` | Pagination | FR-PARTIAL-001 |
 | `Resources/views/partials/_row_actions.html.twig` | Row actions | FR-PARTIAL-001 |
 | `Resources/views/partials/_action_inner.html.twig` | Row action inner (icon/label) | FR-PARTIAL-001 |
@@ -68,6 +70,7 @@ This file proves that **every production source artifact** under `src/` is refer
 | `Resources/public/js/nowo-ui-page-loader.js` | Built page-loader IIFE | FR-JS-001 / FR-BUILD-001 |
 | `Resources/public/js/nowo-ui-theme.js` | Built theme IIFE | FR-JS-001 / FR-BUILD-001 |
 | `Resources/public/js/nowo-ui-orb.js` | Built orb IIFE | FR-JS-001 / FR-ORB-001 / FR-BUILD-001 |
+| `Resources/public/js/nowo-ui-open-modal.js` | Built open-modal-on-load IIFE | FR-OPENMODAL-001 / FR-BUILD-001 |
 | `Resources/translations/NowoUiKitBundle.en.yaml` | i18n | FR-I18N-001 |
 | `Resources/translations/NowoUiKitBundle.es.yaml` | i18n | FR-I18N-001 |
 | `Resources/translations/NowoUiKitBundle.it.yaml` | i18n | FR-I18N-001 |
@@ -90,6 +93,9 @@ This file proves that **every production source artifact** under `src/` is refer
 | `Resources/assets/src/nowo-ui-release-core.ts` | Release dialog shared logic | FR-RELEASE-003 |
 | `Resources/assets/src/nowo-ui-release.ts` | Release dialog IIFE | FR-RELEASE-003 / FR-BUILD-001 |
 | `Resources/assets/stimulus-peers/release_status_controller.ts` | Stimulus peer `release-status` | FR-RELEASE-003 / FR-PEER-001 |
+| `Resources/assets/src/nowo-ui-open-modal-core.ts` | Open-modal-on-load helpers (side-effect free) | FR-OPENMODAL-001 |
+| `Resources/assets/src/nowo-ui-open-modal.ts` | Open-modal-on-load IIFE | FR-OPENMODAL-001 / FR-BUILD-001 |
+| `Resources/assets/stimulus-peers/auto_refresh_controller.ts` | Stimulus peer `auto-refresh` | FR-PEER-002 |
 | `Resources/assets/stimulus-peers/confirm_submit_controller.ts` | Stimulus peer `confirm-submit` (form submit / button click, `blocked`) | FR-PEER-001 |
 | `Resources/assets/src/orb/types.ts` | Orb types | FR-ORB-001 |
 | `Resources/assets/src/orb/theme.ts` | Orb theme helpers | FR-ORB-001 |
@@ -119,13 +125,16 @@ This file proves that **every production source artifact** under `src/` is refer
 | `Resources/assets/src/nowo-ui-orb.test.ts` | Vitest | FR-TEST-001 |
 | `Resources/assets/src/nowo-ui-release.test.ts` | Vitest | FR-TEST-001 / FR-RELEASE-003 |
 | `Resources/assets/stimulus-peers/peers.test.ts` | Vitest (Stimulus peers) | FR-TEST-001 / FR-PEER-001 |
+| `Resources/assets/src/nowo-ui-open-modal-core.test.ts` | Vitest | FR-TEST-001 / FR-OPENMODAL-001 |
+| `Resources/assets/src/nowo-ui-open-modal.test.ts` | Vitest | FR-TEST-001 / FR-OPENMODAL-001 |
+| `Resources/assets/stimulus-peers/auto_refresh_controller.test.ts` | Vitest (Stimulus peer) | FR-TEST-001 / FR-PEER-002 |
 
 ## Coverage summary
 
 | Category | Files | Mapped |
 | --- | ---: | ---: |
 | PHP classes | 9 | 9 |
-| Twig / CSS / JS / i18n / services | 48 | 48 |
-| TypeScript sources (excl. tests) | 25 | 25 |
-| Vitest (excluded from Packagist “production units”) | 9 | 9 |
-| **Total production sources (excl. tests)** | **82** | **82** |
+| Twig / CSS / JS / i18n / services | 51 | 51 |
+| TypeScript sources (excl. tests) | 28 | 28 |
+| Vitest (excluded from Packagist “production units”) | 12 | 12 |
+| **Total production sources (excl. tests)** | **88** | **88** |

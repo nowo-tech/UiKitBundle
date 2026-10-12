@@ -1,0 +1,31 @@
+{#
+  Deep link "open modal on load" (e.g. `?new=1` opens the create form in its modal) without inline JS.
+
+  Emits a non-executable JSON island `<script type="application/json" id="nowo-ui-open-modal-on-load">`
+  read by `js/nowo-ui-open-modal.js` (or `openModalOnLoad()` from
+  `assets/src/nowo-ui-open-modal-core.ts` in Vite / Encore hosts). Include once per page.
+
+  Required:
+    - modal: id of the modal element (`<dialog>` or `.nowo-ui-modal` root)
+  Optional:
+    - trigger: CSS selector of the button that normally opens the modal (clicked first so kit JS
+      can load remote form bodies); omit to open the modal directly
+    - param: query parameter that requests the deep link (default `new`). The island renders only
+      when the current request carries it with a truthy value (`?new=1`) and the script removes it
+      from the URL afterwards. `param: false` renders unconditionally and keeps the URL.
+    - nonce: CSP nonce (default: request attribute `csp_nonce` when set; the island never executes)
+#}
+{% set _param = param is defined ? param : 'new' %}
+{% set _request = app is defined and app.request ? app.request : null %}
+{% set _requested = _param is same as(false) or (_request and _request.query.get(_param)|default(false)) %}
+{% if modal|default('') is not empty and _requested %}
+    {% set _nonce = nonce|default(_request ? _request.attributes.get('csp_nonce') : null) %}
+    {% set _data = {modal: modal} %}
+    {% if trigger|default('') is not empty %}
+        {% set _data = _data|merge({trigger: trigger}) %}
+    {% endif %}
+    {% if _param is not same as(false) %}
+        {% set _data = _data|merge({clearParam: _param}) %}
+    {% endif %}
+<script type="application/json" id="nowo-ui-open-modal-on-load"{% if _nonce %} nonce="{{ _nonce }}"{% endif %}>{{ _data|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_HEX_APOS') b-or constant('JSON_HEX_QUOT') b-or constant('JSON_UNESCAPED_SLASHES'))|raw }}</script>
+{% endif %}

@@ -57,6 +57,8 @@ final class PanelPathRewriter
 
     /**
      * Rewrite the path of every route in the collection (in place).
+     *
+     * @return void
      */
     public function rewriteCollection(RouteCollection $collection): void
     {
@@ -78,6 +80,8 @@ final class PanelPathRewriter
 
     /**
      * Map a legacy request path to its new path, or null when unchanged.
+     *
+     * @return ?string
      */
     public function legacyRedirectTarget(string $requestPath): ?string
     {
