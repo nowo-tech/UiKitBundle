@@ -109,8 +109,6 @@ final readonly class ReleaseUpdateChecker
 
     /**
      * Clean `x.y.z` only (optional leading `v`). Rejects git-describe suffixes, pre-releases and SHAs.
-     *
-     * @return ?string
      */
     public static function parseCleanSemver(string $raw): ?string
     {
@@ -123,8 +121,6 @@ final readonly class ReleaseUpdateChecker
 
     /**
      * `owner/name` with GitHub-safe characters only (no path traversal, no host override).
-     *
-     * @return bool
      */
     public static function isValidRepo(string $repo): bool
     {
