@@ -1,5 +1,16 @@
 # Upgrading
 
+## To 1.13.2
+
+From **1.13.1** — security: attribute-safe row-action confirm handler, panel path rewrite hardening.
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+- Hosts that override `_row_actions.html.twig` should apply the same `|e('html_attr')` fix to the `confirm()` handler.
+- `panel_path_rewrites` entries starting with `//` or containing a backslash now fail config validation.
+
 ## To 1.13.1
 
 From **1.13.0** — dependency refresh and repository maintenance.

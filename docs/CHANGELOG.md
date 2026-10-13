@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - [Unreleased](#unreleased)
 
+- [[1.13.2] - 2026-10-13](#1132---2026-10-13)
 - [[1.13.1] - 2026-10-13](#1131---2026-10-13)
 - [[1.13.0] - 2026-10-13](#1130---2026-10-13)
 - [[1.12.0] - 2026-10-12](#1120---2026-10-12)
@@ -47,10 +48,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.13.2] - 2026-10-13
+
 ### Security
 
 - Row actions: the `confirm_message` `onsubmit` handler is now HTML-attribute escaped. Messages containing double quotes previously broke the attribute (the destructive POST was sent without confirmation) and allowed attribute injection / XSS.
 - `panel_path_rewrites`: a root target (`'/admin': '/'`) no longer produces protocol-relative `Location: //host` redirects; redirect targets always start with a single `/`. Config validation now rejects prefixes starting with `//` or containing backslashes.
+
+[1.13.2]: https://github.com/nowo-tech/UiKitBundle/compare/v1.13.1...v1.13.2
 
 ## [1.13.1] - 2026-10-13
 
