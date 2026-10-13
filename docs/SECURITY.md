@@ -38,7 +38,7 @@ The bundle does **not** expose CLI commands that mutate production data, file up
 - Row actions `confirm_message` is JSON-encoded and HTML-attribute escaped inside the `onsubmit` handler, so quotes / `=` / markup in messages cannot break out of the attribute.
 - `panel_path_rewrites` redirect targets are always a single-`/` same-origin path (no `//host` / `/\host`); config rejects `//`-prefixed or backslash prefixes.
 - Kit JS toggles DOM attributes / theme / loader / canvas; it does not call `eval`, `document.write`, or load remote scripts.
-- Release check: GitHub answers are rendered with `textContent`; only `https://github.com/…` links are emitted (server and client side). Failures soft-fail and are cached for the TTL, so GitHub rate limits are not hit per page view.
+- Release check: GitHub answers are rendered with `textContent`; only `https://github.com/…` links are emitted (server and client side). Successful answers are cached for `cache_ttl`; failures soft-fail and are negatively cached for 5 minutes (`ReleaseUpdateChecker::ERROR_CACHE_TTL`), so neither page views nor endpoint hits fan out to GitHub. The status endpoint is anonymous unless you protect it and it reveals the installed version: import it behind your admin firewall / `access_control` (see [CONFIGURATION.md — Release check](CONFIGURATION.md#release-check)).
 - Recipe defaults contain no secrets.
 - **FrankenPHP worker:** runtime PHP services (`ReleaseUpdateChecker`, `ReleaseStatusController`, routing helpers) are `readonly` / stateless — no per-request mutable state; safe with kernel not reset between requests ([FRANKENPHP-WORKER-AUDIT.md](FRANKENPHP-WORKER-AUDIT.md)).
 

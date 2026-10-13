@@ -9,6 +9,11 @@ const tick = (): Promise<void> => new Promise((r) => setTimeout(r, 0));
 
 let app: Application;
 
+// vitest 4 + happy-dom no longer expose window.confirm; give vi.spyOn() a function to wrap.
+if (typeof window.confirm !== 'function') {
+  Object.defineProperty(window, 'confirm', { value: (): boolean => true, configurable: true, writable: true });
+}
+
 beforeEach(() => {
   app = Application.start();
   app.register('confirm-submit', ConfirmSubmitController);

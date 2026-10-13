@@ -177,6 +177,62 @@ final class ReleaseUpdateCheckerTest extends TestCase
         self::assertNull($info->versionsBehind);
     }
 
+    public function testFailedFetchIsNegativelyCachedForErrorTtl(): void
+    {
+        $calls = 0;
+        $http = new MockHttpClient(function () use (&$calls): MockResponse {
+            ++$calls;
+
+            return 3 === $calls ? $this->latestResponse('v1.0.6') : new MockResponse('rate limited', ['http_code' => 403]);
+        });
+        $cache = new ArrayAdapter();
+        $checker = $this->checker($http, 'v1.0.6', cache: $cache);
+
+        $first = $checker->check();
+        $second = $checker->check();
+
+        self::assertSame(ReleaseUpdateInfo::STATUS_ERROR, $first->status);
+        self::assertSame(ReleaseUpdateInfo::STATUS_ERROR, $second->status);
+        self::assertNull($second->latest);
+        self::assertNotNull($second->checkedAt);
+        self::assertSame(1, $calls, 'A failed GitHub fetch must not be retried on every request.');
+
+        $expiries = new \ReflectionProperty(ArrayAdapter::class, 'expiries');
+        /** @var array<string, float> $values */
+        $values = $expiries->getValue($cache);
+        self::assertCount(1, $values);
+        $ttl = reset($values) - microtime(true);
+        self::assertGreaterThan(ReleaseUpdateChecker::ERROR_CACHE_TTL - 5, $ttl);
+        self::assertLessThanOrEqual(ReleaseUpdateChecker::ERROR_CACHE_TTL + 1, $ttl);
+
+        // Once the negative entry expires, the next check retries (and this time fails again, then succeeds).
+        $expiries->setValue($cache, array_map(static fn (): float => microtime(true) - 1, $values));
+        self::assertSame(ReleaseUpdateInfo::STATUS_ERROR, $checker->check()->status);
+        self::assertSame(2, $calls);
+        $expiries->setValue($cache, array_map(static fn (): float => microtime(true) - 1, $values));
+        self::assertSame(ReleaseUpdateInfo::STATUS_OK, $checker->check()->status);
+        self::assertSame(3, $calls);
+    }
+
+    public function testErrorTtlNeverExceedsConfiguredTtl(): void
+    {
+        $cache = new ArrayAdapter();
+        $checker = new ReleaseUpdateChecker(new MockHttpClient([new MockResponse('', ['http_code' => 500])]), $cache, 'v1.0.6', self::REPO, true, 90);
+        $checker->check();
+
+        /** @var array<string, float> $values */
+        $values = (new \ReflectionProperty(ArrayAdapter::class, 'expiries'))->getValue($cache);
+        self::assertLessThanOrEqual(91, reset($values) - microtime(true));
+    }
+
+    public function testCacheFailureSoftFails(): void
+    {
+        $cache = $this->createMock(CacheInterface::class);
+        $cache->method('get')->willThrowException(new \RuntimeException('cache down'));
+
+        self::assertSame(ReleaseUpdateInfo::STATUS_ERROR, $this->checker($this->noHttp(), 'v1.0.6', cache: $cache)->check()->status);
+    }
+
     public function testCacheHitAvoidsSecondRoundTrip(): void
     {
         $calls = 0;

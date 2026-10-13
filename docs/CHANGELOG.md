@@ -48,6 +48,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Symfony floor raised to `^7.4 || ^8.0`** for every `symfony/*` requirement, matching the CI matrix (7.4, 8.0, 8.1). README badge and INSTALLATION requirements updated (PHP minimum documented as 8.2, as in `composer.json`).
+- The extension no longer prepends `framework.translator` (`paths` and `fallbacks: [en]`): the bundle catalogue is auto-discovered, and the host's translator enablement and fallback order are left untouched. The bundle still boots with the translator disabled.
+- Dev: vitest and `@vitest/coverage-v8` upgraded to ^4.1.11 (stimulus peer tests stub `window.confirm`, no longer provided by happy-dom under vitest 4).
+
+### Fixed
+
+- Release check: a failed GitHub fetch threw inside the cache callback, so failures were never cached and every status request triggered outbound GitHub calls. Failures are now negatively cached for 5 minutes (`ReleaseUpdateChecker::ERROR_CACHE_TTL`, capped by `cache_ttl`).
+
+### Security
+
+- Documented that `GET /_nowo-ui/release/status` is anonymous by default and discloses the installed version, and how to protect it (route prefix + `access_control`).
+
 ## [1.13.2] - 2026-10-13
 
 ### Security

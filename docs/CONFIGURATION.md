@@ -98,10 +98,24 @@ nowo_ui_kit_release:
 Behaviour:
 
 - Route `nowo_ui_kit_release_status` (`GET /_nowo-ui/release/status`) → JSON `{status, current, latest, updateAvailable, versionsBehind, releaseUrl, compareUrl, checkedAt}` with `Cache-Control: private, no-store`. While disabled the controller still exists and answers **404**, so an imported route never breaks the router.
-- At most two GitHub calls per TTL (`releases/latest` + one page of `releases` to count newer non-prerelease tags). Timeouts 5 s / 8 s, no redirects; every failure soft-fails to `status: error` and is logged (`logger` if present).
+- At most two GitHub calls per TTL (`releases/latest` + one page of `releases` to count newer non-prerelease tags). Timeouts 5 s / 8 s, no redirects; every failure soft-fails to `status: error` and is logged (`logger` if present). A failed `releases/latest` fetch (rate limit, outage, bad payload) is cached as an error for `ReleaseUpdateChecker::ERROR_CACHE_TTL` (5 minutes, or `cache_ttl` if shorter), so failures are not retried on every hit.
 - Only `https://github.com/…` URLs are returned and rendered.
 - Partial options: `version`, `status_url`, `id`, `title`, `stimulus` (use peers `confirm-dialog` + `release-status` instead of the IIFEs), `force`, `framework`, `trigger_class`, `wrapper_class`. Labels live in the `NowoUiKitBundle` domain (`release.*`).
-- Public endpoint: it only exposes the configured version label and public GitHub metadata. Exclude it from access logs / auth firewalls as you see fit.
+- **The endpoint is anonymous by default** and discloses the installed version (useful to an attacker matching known CVEs). Unless the version is public anyway, put it behind your admin firewall, for example by importing it under an admin prefix and adding an access rule:
+
+  ```yaml
+  # config/routes/nowo_ui_kit.yaml
+  nowo_ui_kit_release:
+      resource: '@NowoUiKitBundle/Resources/config/routes/release_check.yaml'
+      prefix: /admin
+
+  # config/packages/security.yaml
+  security:
+      access_control:
+          - { path: ^/admin/_nowo-ui/release/status, roles: ROLE_ADMIN }
+  ```
+
+  The partial's default `status_url` is `path('nowo_ui_kit_release_status')`, so the prefix is picked up automatically; only include the partial for users who can reach the route.
 
 ## Examples
 

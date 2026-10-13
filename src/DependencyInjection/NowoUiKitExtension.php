@@ -42,15 +42,9 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
             ]);
         }
 
-        $translationsPath = __DIR__.'/../Resources/translations';
-        if (is_dir($translationsPath) && $container->hasExtension('framework')) {
-            $container->prependExtensionConfig('framework', [
-                'translator' => [
-                    'paths' => [$translationsPath],
-                    'fallbacks' => ['en'],
-                ],
-            ]);
-        }
+        // No framework.translator prepend: FrameworkBundle already discovers this bundle's
+        // Resources/translations (NowoUiKitBundle domain), and prepending would force-enable
+        // the translator and push `en` in front of the host's fallbacks.
 
         if (!$container->hasExtension('twig')) {
             return;

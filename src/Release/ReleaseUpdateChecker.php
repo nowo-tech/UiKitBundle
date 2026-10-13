@@ -14,7 +14,9 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  *
  * Opt-in (`nowo_ui_kit.release_check.enabled`). Every failure soft-fails to
  * {@see ReleaseUpdateInfo::STATUS_ERROR} / {@see ReleaseUpdateInfo::STATUS_SKIPPED};
- * results are cached so the GitHub API is hit at most once per TTL and version.
+ * results are cached so the GitHub API is hit at most once per TTL and version, and
+ * GitHub failures are negatively cached for {@see self::ERROR_CACHE_TTL} so an outage or
+ * rate limit does not turn every request into an outbound call.
  * Intended for on-demand use (dialog / JSON endpoint), not every HTML render.
  *
  * Stateless (readonly) — safe for FrameworkBundle worker runtimes (REQ-CS-008).
@@ -22,6 +24,9 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 final readonly class ReleaseUpdateChecker
 {
     public const DEFAULT_CACHE_TTL = 43_200; // 12h
+
+    /** Seconds a failed GitHub fetch is remembered (capped by the configured TTL). */
+    public const ERROR_CACHE_TTL = 300;
 
     private const API_HOST = 'https://api.github.com';
 
@@ -67,7 +72,7 @@ final readonly class ReleaseUpdateChecker
         }
 
         try {
-            /** @var array{tag: string, url: string, at: string, behind: int|null} $payload */
+            /** @var array{tag: string, url: string, at: string, behind: int|null, error?: bool} $payload */
             $payload = $this->cache->get(
                 $this->cacheKey($repo, $currentNorm),
                 fn (ItemInterface $item): array => $this->computeReleasePayload($item, $repo, $currentNorm),
@@ -82,6 +87,10 @@ final readonly class ReleaseUpdateChecker
         }
 
         $checkedAt = $this->parseCheckedAt($payload['at']);
+        if (true === ($payload['error'] ?? false)) {
+            return new ReleaseUpdateInfo(status: ReleaseUpdateInfo::STATUS_ERROR, current: $currentRaw, checkedAt: $checkedAt);
+        }
+
         $latestNorm = self::parseCleanSemver($payload['tag']);
         if (null === $latestNorm) {
             return new ReleaseUpdateInfo(
@@ -228,15 +237,25 @@ final readonly class ReleaseUpdateChecker
 
     /**
      * Cache miss: fetches the latest release and counts how many versions the install is behind.
+     * A failed fetch is cached too (short TTL, `error: true`) instead of throwing, so it is not retried per request.
      *
-     * @return array{tag: string, url: string, at: string, behind: int|null}
+     * @return array{tag: string, url: string, at: string, behind: int|null, error: bool}
      */
     private function computeReleasePayload(ItemInterface $item, string $repo, string $currentNorm): array
     {
-        $item->expiresAfter(max(60, $this->cacheTtl));
+        $ttl = max(60, $this->cacheTtl);
+        $item->expiresAfter($ttl);
         $fetched = $this->fetchLatestRelease($repo);
         if (null === $fetched) {
-            throw new \RuntimeException('GitHub latest release fetch failed.');
+            $item->expiresAfter(min(self::ERROR_CACHE_TTL, $ttl));
+
+            return [
+                'tag' => '',
+                'url' => '',
+                'at' => (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format(\DateTimeInterface::ATOM),
+                'behind' => null,
+                'error' => true,
+            ];
         }
 
         $latestNorm = self::parseCleanSemver($fetched['tag']);
@@ -248,6 +267,7 @@ final readonly class ReleaseUpdateChecker
         }
 
         $fetched['behind'] = $behind;
+        $fetched['error'] = false;
 
         return $fetched;
     }

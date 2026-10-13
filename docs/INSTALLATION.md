@@ -16,15 +16,14 @@ This guide covers installing Ui Kit Bundle in a Symfony application.
 
 ## Requirements
 
-- **PHP** `>=8.1` (`<8.6`). Symfony **8.0** and **8.1** require **PHP 8.4+**.
-- **Symfony** `^6.0 || ^7.0 || ^8.0` — CI mandatory minors: **7.4**, **8.0**, **8.1**.
+- **PHP** `>=8.2` (`<8.6`). Symfony **8.0** and **8.1** require **PHP 8.4+**.
+- **Symfony** `^7.4 || ^8.0` — CI mandatory minors: **7.4**, **8.0**, **8.1**.
 - Twig 3.8+ (via `symfony/twig-bundle`).
 
 ### PHP and Symfony matrix
 
 | Symfony | Minimum PHP (bundle) | Minimum PHP (Symfony) |
 |---------|----------------------|------------------------|
-| 6.x / 7.0–7.3 | 8.1 | as per Symfony |
 | 7.4     | 8.2                  | 8.2                    |
 | 8.0     | 8.4                  | 8.4                    |
 | 8.1     | 8.4                  | 8.4                    |
