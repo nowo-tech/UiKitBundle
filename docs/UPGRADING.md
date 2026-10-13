@@ -1,5 +1,43 @@
 # Upgrading
 
+## Table of contents
+
+- [Unreleased](#unreleased)
+- [To 1.14.0](#to-1140)
+- [To 1.13.2](#to-1132)
+- [To 1.13.1](#to-1131)
+- [To 1.13.0](#to-1130)
+- [To 1.12.0](#to-1120)
+- [To 1.11.0](#to-1110)
+- [To 1.10.1](#to-1101)
+- [To 1.10.0](#to-1100)
+- [To 1.9.2](#to-192)
+- [To 1.9.1](#to-191)
+- [To 1.9.0](#to-190)
+- [To 1.8.5](#to-185)
+- [From 1.8.3 to 1.8.4](#from-183-to-184)
+- [From 1.8.2 to 1.8.3](#from-182-to-183)
+- [To 1.8.2](#to-182)
+- [To 1.8.1](#to-181)
+- [To 1.8.0](#to-180)
+  - [New optional scripts](#new-optional-scripts)
+  - [Stimulus peers (optional)](#stimulus-peers-optional)
+  - [Beacon hosts](#beacon-hosts)
+- [To 1.6.0](#to-160)
+  - [Row actions display (REQ-UI-001)](#row-actions-display-req-ui-001)
+  - [Default `ui.action` variants](#default-uiaction-variants)
+- [To 1.5.1](#to-151)
+- [To 1.5.0](#to-150)
+  - [Twig Extra Bundle (REQ-TWIG-004)](#twig-extra-bundle-req-twig-004)
+  - [Twig-CS-Fixer (maintainers)](#twig-cs-fixer-maintainers)
+- [From 1.3.x to 1.4.0](#from-13x-to-140)
+- [From 1.2.x to 1.3.0](#from-12x-to-130)
+- [From 1.2.0 to 1.2.1](#from-120-to-121)
+- [From 1.1.x to 1.2.0](#from-11x-to-120)
+- [From 1.0.x to 1.1.0](#from-10x-to-110)
+- [From nothing to 1.0.0](#from-nothing-to-100)
+  - [Install](#install)
+
 ## Unreleased
 
 ## To 1.14.0
@@ -149,27 +187,6 @@ php bin/console cache:clear
 ```
 
 - No application upgrade steps for require-dev Igor tooling (REQ-CS-008). Consumers do not pull `igor-php/igor-php` transitively.
-
-## Table of contents
-
-- [To 1.9.2](#to-192)
-- [To 1.9.1](#to-191)
-- [To 1.9.0](#to-190)
-- [To 1.8.5](#to-185)
-- [From 1.8.3 to 1.8.4](#from-183-to-184)
-- [From 1.8.2 to 1.8.3](#from-182-to-183)
-- [To 1.8.2](#to-182)
-- [To 1.8.1](#to-181)
-- [To 1.8.0](#to-180)
-- [To 1.6.0](#to-160)
-- [To 1.5.1](#to-151)
-- [To 1.5.0](#to-150)
-- [From 1.3.x to 1.4.0](#from-13x-to-140)
-- [From 1.2.x to 1.3.0](#from-12x-to-130)
-- [From 1.2.0 to 1.2.1](#from-120-to-121)
-- [From 1.1.x to 1.2.0](#from-11x-to-120)
-- [From 1.0.x to 1.1.0](#from-10x-to-110)
-- [From nothing to 1.0.0](#from-nothing-to-100)
 
 ## From 1.8.3 to 1.8.4
 
