@@ -8,7 +8,9 @@
 - [Page loader and page transitions](#page-loader-and-page-transitions)
 - [Open a modal on load (deep link)](#open-a-modal-on-load-deep-link)
 - [Filter bar and data table (opt-in)](#filter-bar-and-data-table-opt-in)
+- [Pre-paint theme boot](#pre-paint-theme-boot)
 - [App chrome](#app-chrome-aside-avatar-user-menu-footer)
+- [Sidebar rail (opt-in)](#sidebar-rail-opt-in)
 - [Overriding templates (REQ-TWIG-001)](#overriding-templates-req-twig-001)
 - [Override vs upgrade](#override-vs-upgrade)
 - [Remap CSS tokens (theming)](#remap-css-tokens)
@@ -155,6 +157,7 @@ pnpm run build
 <script src="{{ asset('js/nowo-ui-clipboard.js', 'nowo_ui_kit') }}" defer></script>
 <script src="{{ asset('js/nowo-ui-tabs.js', 'nowo_ui_kit') }}" defer></script>
 <script src="{{ asset('js/nowo-ui-theme.js', 'nowo_ui_kit') }}" defer></script>
+{# nowo-ui-theme-boot.js: blocking, in <head> — prefer partials/_theme_boot.html.twig (inline + nonce) #}
 <script src="{{ asset('js/nowo-ui-orb.js', 'nowo_ui_kit') }}" defer></script>
 <script src="{{ asset('js/nowo-ui-release.js', 'nowo_ui_kit') }}" defer></script>{# only with release_check #}
 <script src="{{ asset('js/nowo-ui-open-modal.js', 'nowo_ui_kit') }}" defer></script>{# only with _open_modal_on_load #}
@@ -272,6 +275,58 @@ New classes only — nothing changes for markup that does not use them.
 `submit_label` / `clear_label` (default `filters.apply` / `filters.clear`), `submit_class` / `clear_class`
 (default `ui.btn('primary')` / `ui.btn('secondary')`), `framework`.
 
+Icon actions (1.15): `submit_icon` / `clear_icon` render an icon through `components/_icon.html.twig`
+(`nowo_ui_kit.icon_set`; canonical kinds such as `filter` / `close`, or any icon name of the set) before the label.
+`icon_only: true` hides the visible label of the buttons that have an icon: the label stays as a visually-hidden
+text, `title` and `aria-label`, and the button becomes square (`.nowo-ui-filter-bar__action--icon-only`). Without
+any icon option the output is unchanged.
+
+```twig
+{% include '@NowoUiKitBundle/partials/_filter_actions.html.twig' with {
+    clear_href: path('app_items'),
+    submit_icon: 'filter',
+    clear_icon: 'close',
+    icon_only: true,
+} %}
+```
+
+## Pre-paint theme boot
+
+`partials/_theme_boot.html.twig` (1.15) prints a small blocking script in `<head>` (inline with the request CSP
+nonce by default, or `inline: false` for `<script src>` of `js/nowo-ui-theme-boot.js`). It runs before the first
+paint and sets the attributes the kit and host CSS read on `<html>`:
+
+| Input on `<html>` (optional) | Output on `<html>` |
+|------------------------------|--------------------|
+| `data-nowo-ui-pref-theme` = `light` / `dark` (anything else: stored theme → OS) | `data-theme` |
+| `data-nowo-ui-pref-density` = `compact` | `data-ui-density` (`comfortable` / `compact`) |
+| `data-nowo-ui-pref-motion` = `reduce` / `full` | `data-motion` (`system` / `reduce` / `full`) |
+| `data-nowo-ui-pref-font-scale` = `sm` / `lg` | `data-font-scale` (`sm` / `md` / `lg`) |
+| `data-nowo-ui-pref-contrast` = `more` (else `prefers-contrast`) | `data-contrast` (`system` / `more`) |
+| `data-nowo-ui-pref-sidebar` = `expanded` / `rail` / `hidden` | seeds the [sidebar rail](#sidebar-rail-opt-in) storage |
+
+`data-user-*` with the same suffixes is accepted as an alias. Storage keys, shared with `nowo-ui-theme.js` (the
+toggle), so the toggle and the boot never disagree:
+
+- `data-nowo-ui-theme-storage` — localStorage key (default `nowo-ui-theme`);
+- `data-nowo-ui-theme-cookie` — optional cookie read before localStorage and written with the theme (lets the
+  server render `data-theme` itself);
+- `data-nowo-ui-sidebar-storage` / `data-nowo-ui-sidebar-cookie` / `data-nowo-ui-sidebar-hidden-value` — opt-in
+  sidebar sync (a valid cookie wins over localStorage, the server default seeds an empty localStorage, then
+  localStorage is mirrored into the cookie).
+
+The resolved values are mirrored to `window.nowoUiPrefs` (`theme`, `density`, `motion`, `fontScale`, `contrast`,
+`sidebar`); `window.nowoUiThemeBoot()` re-runs the boot.
+
+```twig
+<html lang="{{ app.request.locale }}"
+      data-nowo-ui-pref-theme="{{ user_theme }}" data-nowo-ui-pref-density="{{ user_density }}"
+      data-nowo-ui-theme-storage="app-theme">
+<head>
+    {% include '@NowoUiKitBundle/partials/_theme_boot.html.twig' %}
+    <link rel="stylesheet" href="{{ asset('css/nowo-ui.css', 'nowo_ui_kit') }}">
+```
+
 ## App chrome (aside, avatar, user menu, footer)
 
 ```twig
@@ -302,6 +357,41 @@ New classes only — nothing changes for markup that does not use them.
 ```
 
 Or include `_burger`, `_aside`, `_avatar`, `_user_menu`, and `_footer` individually. Pass `header_end` for theme/locale toggles.
+
+## Sidebar rail (opt-in)
+
+Since 1.15 the shell can run a three-mode desktop sidebar: **expanded**, **icons-only rail** and **hidden**. The
+burger walks hidden → rail → expanded → rail → hidden (the direction is kept per tab in sessionStorage); phones keep
+the drawer (open / hidden, never persisted). Enable it on `_shell.html.twig`:
+
+```twig
+{% include '@NowoUiKitBundle/partials/_shell.html.twig' with {
+    sidebar_rail: {storage: 'app-sidebar', cookie: 'app_sidebar', default: user_sidebar_default},
+    sidebar_mode: app.request.cookies.get('app_sidebar'),
+    aside_items: items,
+    main: page_html,
+} %}
+```
+
+or by hand: `data-nowo-ui-sidebar-rail` on `[data-nowo-ui-shell]`, plus optional `data-nowo-ui-sidebar-storage`
+(localStorage key, default `nowo-ui-sidebar`), `data-nowo-ui-sidebar-cookie` (cookie name; empty = no cookie),
+`data-nowo-ui-sidebar-hidden-value` (value stored for hidden, default `hidden`; `collapsed` is always read as
+hidden), `data-nowo-ui-sidebar-default` (server / account default), `data-nowo-ui-sidebar-rail-labels` (selector of
+the items that get rail tooltips). The burger reads `data-label-expand` / `data-label-rail` / `data-label-hide`
+(`_burger.html.twig` `rail: true` prints them from `nav.sidebar_*`).
+
+`nowo-ui-shell.js` sets `is-aside-rail` / `is-aside-collapsed` / `is-aside-open-mobile` and
+`data-nowo-ui-sidebar-mode` on the shell, `aria-expanded` + next-action `aria-label` / `title` +
+`data-nowo-ui-sidebar-state` (`closed` / `rail` / `open`) on the burger, `data-nowo-ui-rail-label` (CSS tooltip) and
+`data-nowo-ui-rail-initial` (first letter for items without an icon) on aside links, dispatches
+`nowo-ui:sidebar-mode`, and exposes `window.nowoUiSetSidebarMode(mode, shell?)`. Rail width:
+`--nowo-ui-aside-rail-width` (default `3.75rem`). To render the right mode on the first byte, read the cookie on the
+server (`sidebar_mode`) and put the theme boot in `<head>` with the same keys.
+
+Bundled hosts with their own shell markup import the side-effect-free helpers from
+`src/Resources/assets/src/nowo-ui-sidebar-core.ts` (`advanceSidebarMode`, `resolveSidebarMode`,
+`persistSidebarMode`, `syncSidebarStorageFromCookie`, `syncSidebarToggle`, `applySidebarShellState` with their own
+classes / attribute prefix / label lookup, …).
 
 ## Overriding templates (REQ-TWIG-001)
 

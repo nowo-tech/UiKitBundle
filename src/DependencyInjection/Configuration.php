@@ -102,7 +102,7 @@ final class Configuration implements ConfigurationInterface
                 return \sprintf('both prefixes must be strings starting with "/" ("%s" => "%s").', $from, \is_string($to) ? $to : get_debug_type($to));
             }
 
-            if (str_starts_with((string) $from, '//') || str_starts_with($to, '//') || str_contains((string) $from.$to, '\\')) {
+            if (str_starts_with((string) $from, '//') || str_starts_with($to, '//') || str_contains($from.$to, '\\')) {
                 return \sprintf('prefixes must be same-origin paths: no leading "//" and no backslashes ("%s" => "%s").', $from, $to);
             }
 

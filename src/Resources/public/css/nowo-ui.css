@@ -644,6 +644,7 @@ a.nowo-ui-pagination__link:hover {
 
 :root {
   --nowo-ui-aside-width: 15.5rem;
+  --nowo-ui-aside-rail-width: 3.75rem;
   --nowo-ui-aside-duration: 0.36s;
   --nowo-ui-aside-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --nowo-ui-header-height: 3.25rem;
@@ -1022,6 +1023,71 @@ a.nowo-ui-pagination__link:hover {
   .nowo-ui-shell.is-aside-collapsed .nowo-ui-aside__inner {
     opacity: 1;
     pointer-events: auto;
+  }
+}
+
+/* --- Sidebar rail (opt-in, 1.15) ---
+ * `data-nowo-ui-sidebar-rail` on the shell + `nowo-ui-shell.js`: icons-only rail on desktop. Labels are
+ * hidden; `data-nowo-ui-rail-label` (set by the script) shows them as a tooltip, links without an icon
+ * show `data-nowo-ui-rail-initial`. Width: `--nowo-ui-aside-rail-width`.
+ */
+@media (min-width: 901px) {
+  .nowo-ui-shell.is-aside-rail {
+    --nowo-ui-aside-width: var(--nowo-ui-aside-rail-width);
+  }
+
+  .nowo-ui-shell.is-aside-rail .nowo-ui-aside {
+    overflow: visible;
+  }
+
+  .nowo-ui-shell.is-aside-rail .nowo-ui-aside__inner {
+    width: var(--nowo-ui-aside-rail-width);
+    padding-inline: 0.375rem;
+  }
+
+  .nowo-ui-shell.is-aside-rail .nowo-ui-aside__label,
+  .nowo-ui-shell.is-aside-rail .nowo-ui-aside__chevron {
+    display: none;
+  }
+
+  .nowo-ui-shell.is-aside-rail :is(.nowo-ui-aside__link, .nowo-ui-aside__group-toggle) {
+    position: relative;
+    justify-content: center;
+    font-size: 0;
+  }
+
+  .nowo-ui-shell.is-aside-rail :is(.nowo-ui-aside__link, .nowo-ui-aside__group-toggle) :is(svg, img, i, .nowo-ui-icon) {
+    font-size: 1rem;
+  }
+
+  .nowo-ui-shell.is-aside-rail [data-nowo-ui-rail-initial]::before {
+    content: attr(data-nowo-ui-rail-initial);
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .nowo-ui-shell.is-aside-rail [data-nowo-ui-rail-label]::after {
+    content: attr(data-nowo-ui-rail-label);
+    position: absolute;
+    top: 50%;
+    left: calc(100% + 0.5rem);
+    z-index: 60;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--nowo-ui-radius);
+    background: var(--nowo-ui-text);
+    color: var(--nowo-ui-surface);
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-0.25rem, -50%);
+    transition: opacity 0.12s ease, transform 0.12s ease;
+  }
+
+  .nowo-ui-shell.is-aside-rail [data-nowo-ui-rail-label]:is(:hover, :focus-visible)::after {
+    opacity: 1;
+    transform: translate(0, -50%);
   }
 }
 
@@ -1730,6 +1796,18 @@ a.nowo-ui-pagination__link:hover {
 .nowo-ui-filter-bar__clear {
   justify-content: center;
   white-space: nowrap;
+}
+
+/* Icon actions (1.15): `submit_icon` / `clear_icon`, square with `icon_only`. */
+.nowo-ui-filter-bar__submit,
+.nowo-ui-filter-bar__clear {
+  gap: 0.375rem;
+}
+
+.nowo-ui-filter-bar__action--icon-only {
+  aspect-ratio: 1;
+  padding-inline: 0;
+  min-width: var(--nowo-ui-filter-control-height, 2.375rem);
 }
 
 .nowo-ui-filter-bar__actions--pager {

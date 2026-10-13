@@ -3,9 +3,12 @@
  * Host may sync preference via Stimulus using the same data attributes.
  *
  * Markup: [data-nowo-ui-theme-toggle]
- * Optional: data-nowo-ui-theme-storage="nowo-ui-theme"
+ * Optional: data-nowo-ui-theme-storage="nowo-ui-theme" (on the toggle, or on <html> — shared with
+ *           `nowo-ui-theme-boot.js`, 1.15), data-nowo-ui-theme-cookie (optional cookie, 1.15)
  *           data-aria-to-light / data-aria-to-dark
  */
+
+import { isTheme, persistTheme, prefersMatch } from './nowo-ui-theme-core';
 
 declare global {
   interface Window {
@@ -14,19 +17,12 @@ declare global {
   }
 }
 
-function storageKey(btn: Element | null): string {
-  if (btn instanceof HTMLElement) {
-    return btn.getAttribute('data-nowo-ui-theme-storage') || 'nowo-ui-theme';
-  }
-  return 'nowo-ui-theme';
-}
-
 function currentTheme(): 'light' | 'dark' {
   const attr = document.documentElement.getAttribute('data-theme');
-  if (attr === 'dark' || attr === 'light') {
+  if (isTheme(attr)) {
     return attr;
   }
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  return prefersMatch('(prefers-color-scheme: dark)') ? 'dark' : 'light';
 }
 
 function syncToggleUi(theme: 'light' | 'dark'): void {
@@ -49,11 +45,7 @@ function syncToggleUi(theme: 'light' | 'dark'): void {
 
 export function setTheme(theme: 'light' | 'dark', btn: Element | null = null): void {
   document.documentElement.setAttribute('data-theme', theme);
-  try {
-    window.localStorage.setItem(storageKey(btn), theme);
-  } catch {
-    /* private mode */
-  }
+  persistTheme(theme, btn instanceof HTMLElement ? btn : null);
   syncToggleUi(theme);
 }
 

@@ -1,0 +1,212 @@
+import { Application } from '@hotwired/stimulus';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import TemporaryRevealController, { maskSecret } from './temporary_reveal_controller';
+
+describe('temporary-reveal controller', () => {
+  let application: Application;
+
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <div
+        data-controller="temporary-reveal"
+        data-temporary-reveal-secret-value="https://pk:supersecret@localhost/uuid"
+        data-temporary-reveal-duration-value="5000"
+        data-temporary-reveal-show-label-value="Show secret"
+        data-temporary-reveal-hide-label-value="Hide secret"
+      >
+        <code data-temporary-reveal-target="display"></code>
+        <button
+          type="button"
+          data-temporary-reveal-target="toggle"
+          data-action="click->temporary-reveal#toggle"
+        >Show secret</button>
+      </div>
+    `;
+    application = Application.start();
+    application.register('temporary-reveal', TemporaryRevealController);
+  });
+
+  afterEach(() => {
+    application.stop();
+    document.body.innerHTML = '';
+    vi.useRealTimers();
+  });
+
+  const getController = async (): Promise<TemporaryRevealController> => {
+    await Promise.resolve();
+    const root = document.querySelector('[data-controller="temporary-reveal"]') as HTMLElement;
+    return application.getControllerForElementAndIdentifier(
+      root,
+      'temporary-reveal',
+    ) as TemporaryRevealController;
+  };
+
+  it('masks the secret on connect', async () => {
+    await getController();
+    const display = document.querySelector('code') as HTMLElement;
+    expect(display.textContent).toBe('https://pk:••••••••@localhost/uuid');
+    expect(display.dataset.revealed).toBeUndefined();
+  });
+
+  it('reveals then auto-hides after duration', async () => {
+    vi.useFakeTimers();
+    const controller = await getController();
+    const display = document.querySelector('code') as HTMLElement;
+    const toggle = document.querySelector('button') as HTMLButtonElement;
+
+    controller.toggle();
+    expect(display.textContent).toBe('https://pk:supersecret@localhost/uuid');
+    expect(display.dataset.revealed).toBe('true');
+    expect(toggle.textContent).toBe('Hide secret');
+
+    vi.advanceTimersByTime(5000);
+    expect(display.textContent).toBe('https://pk:••••••••@localhost/uuid');
+    expect(display.dataset.revealed).toBeUndefined();
+    expect(toggle.textContent).toBe('Show secret');
+  });
+
+  it('hides immediately on second toggle', async () => {
+    const controller = await getController();
+    const display = document.querySelector('code') as HTMLElement;
+
+    controller.toggle();
+    expect(display.dataset.revealed).toBe('true');
+    controller.toggle();
+    expect(display.textContent).toBe('https://pk:••••••••@localhost/uuid');
+    expect(display.dataset.revealed).toBeUndefined();
+  });
+
+  it('no-ops reveal when secret is empty and when already cleared', async () => {
+    document.body.innerHTML = `
+      <div
+        data-controller="temporary-reveal"
+        data-temporary-reveal-secret-value="   "
+        data-temporary-reveal-duration-value="0"
+      >
+        <code data-temporary-reveal-target="display"></code>
+      </div>
+    `;
+    application.stop();
+    application = Application.start();
+    application.register('temporary-reveal', TemporaryRevealController);
+    const controller = await getController();
+    const display = document.querySelector('code') as HTMLElement;
+    expect(display.textContent).toBe('');
+    controller.reveal();
+    expect(display.dataset.revealed).toBeUndefined();
+    controller.toggle();
+    expect(display.dataset.revealed).toBeUndefined();
+    controller.disconnect();
+  });
+
+  it('ignores toggle after clearOnHide purge', async () => {
+    vi.useFakeTimers();
+    document.body.innerHTML = `
+      <div
+        data-controller="temporary-reveal"
+        data-temporary-reveal-secret-value="https://pk:supersecret@localhost/uuid"
+        data-temporary-reveal-duration-value="1000"
+        data-temporary-reveal-start-revealed-value="true"
+        data-temporary-reveal-clear-on-hide-value="true"
+        data-temporary-reveal-cleared-label-value="Hidden — rotate"
+      >
+        <code data-temporary-reveal-target="display"></code>
+        <button type="button" data-temporary-reveal-target="toggle">Hide secret</button>
+      </div>
+    `;
+    application.stop();
+    application = Application.start();
+    application.register('temporary-reveal', TemporaryRevealController);
+    await Promise.resolve();
+
+    const controller = await getController();
+    const display = document.querySelector('code') as HTMLElement;
+    expect(display.textContent).toBe('https://pk:supersecret@localhost/uuid');
+
+    vi.advanceTimersByTime(1000);
+    expect(display.dataset.cleared).toBe('true');
+    controller.toggle();
+    controller.reveal();
+    expect(display.textContent).toBe('Hidden — rotate');
+    controller.disconnect();
+  });
+
+  it('reveals and hides without a toggle target', async () => {
+    document.body.innerHTML = `
+      <div
+        data-controller="temporary-reveal"
+        data-temporary-reveal-secret-value="https://pk:supersecret@localhost/uuid"
+        data-temporary-reveal-duration-value="0"
+      >
+        <code data-temporary-reveal-target="display"></code>
+      </div>
+    `;
+    application.stop();
+    application = Application.start();
+    application.register('temporary-reveal', TemporaryRevealController);
+    const controller = await getController();
+    const display = document.querySelector('code') as HTMLElement;
+
+    controller.reveal();
+    expect(display.dataset.revealed).toBe('true');
+    expect(display.textContent).toBe('https://pk:supersecret@localhost/uuid');
+
+    controller.hide();
+    expect(display.dataset.revealed).toBeUndefined();
+    expect(display.textContent).toBe('https://pk:••••••••@localhost/uuid');
+  });
+
+  it('starts revealed and purges secret when clearOnHide is set', async () => {
+    vi.useFakeTimers();
+    document.body.innerHTML = `
+      <div
+        data-controller="temporary-reveal"
+        data-temporary-reveal-secret-value="https://pk:supersecret@localhost/uuid"
+        data-temporary-reveal-duration-value="5000"
+        data-temporary-reveal-start-revealed-value="true"
+        data-temporary-reveal-clear-on-hide-value="true"
+        data-temporary-reveal-cleared-label-value="Hidden — rotate"
+        data-temporary-reveal-show-label-value="Show secret"
+        data-temporary-reveal-hide-label-value="Hide secret"
+      >
+        <code data-temporary-reveal-target="display"></code>
+        <button type="button" data-temporary-reveal-target="toggle">Hide secret</button>
+        <button type="button" data-clipboard-copy-text-value="https://pk:supersecret@localhost/uuid">Copy</button>
+        <span data-nowo-ui-clipboard data-nowo-ui-clipboard-text="https://pk:supersecret@localhost/uuid">Copy</span>
+      </div>
+    `;
+    application.stop();
+    application = Application.start();
+    application.register('temporary-reveal', TemporaryRevealController);
+    await Promise.resolve();
+
+    const root = document.querySelector('[data-controller="temporary-reveal"]') as HTMLElement;
+    const display = document.querySelector('code') as HTMLElement;
+    const copy = document.querySelector('[data-clipboard-copy-text-value]') as HTMLButtonElement;
+    expect(display.textContent).toBe('https://pk:supersecret@localhost/uuid');
+
+    vi.advanceTimersByTime(5000);
+    expect(display.textContent).toBe('Hidden — rotate');
+    expect(display.dataset.cleared).toBe('true');
+    expect(root.getAttribute('data-temporary-reveal-secret-value')).toBeNull();
+    expect(copy.getAttribute('data-clipboard-copy-text-value')).toBe('');
+    expect(copy.disabled).toBe(true);
+    expect(document.querySelector('[data-nowo-ui-clipboard]')!.getAttribute('data-nowo-ui-clipboard-text')).toBe('');
+  });
+
+  it('masks non-URL secrets entirely', async () => {
+    expect(maskSecret('abc')).toBe('••••••••');
+    expect(maskSecret('x'.repeat(40))).toBe('•'.repeat(24));
+    expect(maskSecret('postgres://u:p@db/x')).toBe('postgres://u:••••••••@db/x');
+    document.body.innerHTML = `
+      <div data-controller="temporary-reveal" data-temporary-reveal-secret-value="sk_live_0123456789">
+        <code data-temporary-reveal-target="display"></code>
+      </div>
+    `;
+    application.stop();
+    application = Application.start();
+    application.register('temporary-reveal', TemporaryRevealController);
+    await getController();
+    expect(document.querySelector('code')!.textContent).toBe('•'.repeat(18));
+  });
+});

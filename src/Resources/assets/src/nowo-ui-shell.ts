@@ -1,13 +1,34 @@
 /**
  * App shell chrome: burger / left aside toggle, backdrop, main width (full ↔ content).
  * Expects a root with [data-nowo-ui-shell].
+ *
+ * Opt-in three-mode rail (1.15): add `data-nowo-ui-sidebar-rail` to the shell root. The burger then
+ * walks hidden → rail → expanded → rail → hidden on desktop (drawer open / hidden on phones) and the
+ * mode is persisted (localStorage + optional cookie). Key names: `data-nowo-ui-sidebar-storage`,
+ * `data-nowo-ui-sidebar-cookie`, `data-nowo-ui-sidebar-hidden-value`, `data-nowo-ui-sidebar-default`
+ * (server / account default). See `nowo-ui-sidebar-core.ts`.
  */
+
+import {
+  advanceSidebarMode,
+  applySidebarShellState,
+  isMobileSidebar,
+  parseSidebarMode,
+  persistSidebarMode,
+  readStoredSidebarMode,
+  resolveSidebarMode,
+  sidebarOptionsFrom,
+  SIDEBAR_KIT_RAIL_LABEL_SELECTOR,
+  syncSidebarToggle,
+  type SidebarMode,
+} from './nowo-ui-sidebar-core';
 
 declare global {
   interface Window {
     nowoUiToggleAside?: (shell: HTMLElement | null, forceOpen?: boolean) => void;
     nowoUiSetMainWidth?: (width: 'full' | 'content', shell?: HTMLElement | null) => void;
     nowoUiToggleMainWidth?: (shell?: HTMLElement | null) => void;
+    nowoUiSetSidebarMode?: (mode: SidebarMode, shell?: HTMLElement | null) => void;
   }
 }
 
@@ -51,6 +72,64 @@ export function toggleAside(shell: HTMLElement | null, forceOpen?: boolean): voi
   shell.classList.toggle('is-aside-open-mobile', open);
   document.body.classList.toggle('nowo-ui-aside-open', open);
   setExpanded(btn, open);
+}
+
+function isRailShell(shell: HTMLElement | null): shell is HTMLElement {
+  return shell instanceof HTMLElement && shell.hasAttribute('data-nowo-ui-sidebar-rail');
+}
+
+/** Current rail-shell mode (from `data-nowo-ui-sidebar-mode`, else resolved from storage / default). */
+export function currentSidebarMode(shell: HTMLElement): SidebarMode {
+  const options = sidebarOptionsFrom(shell);
+  return (
+    parseSidebarMode(shell.getAttribute('data-nowo-ui-sidebar-mode'), options) ??
+    resolveSidebarMode(isMobileSidebar(options), readStoredSidebarMode(options), shell.getAttribute('data-nowo-ui-sidebar-default'), options)
+  );
+}
+
+/**
+ * Apply a mode to a rail shell (classes, burger a11y, rail tooltips). Desktop modes are persisted unless
+ * `persist` is false; phone drawer state never is.
+ */
+export function setSidebarMode(shell: HTMLElement | null, mode: SidebarMode, persist = true): void {
+  if (!isRailShell(shell)) {
+    return;
+  }
+  const options = sidebarOptionsFrom(shell);
+  const mobile = isMobileSidebar(options);
+  const selector = shell.getAttribute('data-nowo-ui-sidebar-rail-labels') || SIDEBAR_KIT_RAIL_LABEL_SELECTOR;
+  applySidebarShellState(shell, mode, mobile, { railLabelSelector: selector });
+  document.body.classList.toggle('nowo-ui-aside-open', mobile && mode !== 'hidden');
+  shell.querySelectorAll('[data-nowo-ui-burger]').forEach((btn) => {
+    if (btn instanceof HTMLElement) {
+      syncSidebarToggle(btn, mode, mobile, options);
+    }
+  });
+  if (persist && !mobile) {
+    persistSidebarMode(mode, options);
+  }
+  shell.dispatchEvent(new CustomEvent('nowo-ui:sidebar-mode', { bubbles: true, detail: { mode, mobile } }));
+}
+
+/** One burger click on a rail shell. */
+export function advanceSidebar(shell: HTMLElement | null): void {
+  if (!isRailShell(shell)) {
+    return;
+  }
+  const options = sidebarOptionsFrom(shell);
+  setSidebarMode(shell, advanceSidebarMode(currentSidebarMode(shell), isMobileSidebar(options), options));
+}
+
+/** Initial (or viewport-change) mode: phones hidden, desktop stored → server default → expanded. */
+export function initSidebarRail(shell: HTMLElement): void {
+  const options = sidebarOptionsFrom(shell);
+  const mode = resolveSidebarMode(
+    isMobileSidebar(options),
+    readStoredSidebarMode(options),
+    shell.getAttribute('data-nowo-ui-sidebar-default'),
+    options,
+  );
+  setSidebarMode(shell, mode, false);
 }
 
 function toggleNavGroup(group: HTMLElement): void {
@@ -147,14 +226,33 @@ function onDocumentClick(event: MouseEvent): void {
   const burger = target.closest('[data-nowo-ui-burger]');
   if (burger) {
     event.preventDefault();
-    toggleAside(shellRoot(burger));
+    const shell = shellRoot(burger);
+    if (isRailShell(shell)) {
+      advanceSidebar(shell);
+    } else {
+      toggleAside(shell);
+    }
     return;
   }
 
   const backdrop = target.closest('[data-nowo-ui-aside-backdrop]');
   if (backdrop) {
-    toggleAside(shellRoot(backdrop), false);
+    const shell = shellRoot(backdrop);
+    if (isRailShell(shell)) {
+      setSidebarMode(shell, 'hidden');
+    } else {
+      toggleAside(shell, false);
+    }
     return;
+  }
+
+  // Phones: choosing a destination closes the rail-shell drawer.
+  const asideLink = target.closest('[data-nowo-ui-aside] a[href]');
+  if (asideLink) {
+    const shell = shellRoot(asideLink);
+    if (isRailShell(shell) && isMobileSidebar(sidebarOptionsFrom(shell))) {
+      setSidebarMode(shell, 'hidden');
+    }
   }
 
   const widthToggle = target.closest('[data-nowo-ui-width-toggle]');
@@ -180,8 +278,20 @@ function onDocumentKeydown(event: KeyboardEvent): void {
   }
   const shell = document.querySelector('[data-nowo-ui-shell].is-aside-open-mobile');
   if (shell instanceof HTMLElement) {
-    toggleAside(shell, false);
+    if (isRailShell(shell)) {
+      setSidebarMode(shell, 'hidden');
+    } else {
+      toggleAside(shell, false);
+    }
   }
+}
+
+function onViewportChange(): void {
+  document.querySelectorAll('[data-nowo-ui-shell][data-nowo-ui-sidebar-rail]').forEach((el) => {
+    if (el instanceof HTMLElement) {
+      initSidebarRail(el);
+    }
+  });
 }
 
 let shellBound = false;
@@ -194,10 +304,20 @@ export function bindNowoUiShell(): void {
     window.nowoUiToggleAside = toggleAside;
     window.nowoUiSetMainWidth = (width, shell) => setMainWidth(width, shell ?? null);
     window.nowoUiToggleMainWidth = (shell) => toggleMainWidth(shell ?? null);
+    window.nowoUiSetSidebarMode = (mode, shell) =>
+      setSidebarMode(shell ?? (document.querySelector('[data-nowo-ui-shell][data-nowo-ui-sidebar-rail]') as HTMLElement | null), mode);
+    const railShell = document.querySelector('[data-nowo-ui-shell][data-nowo-ui-sidebar-rail]');
+    if (railShell && typeof window.matchMedia === 'function') {
+      const query = window.matchMedia(sidebarOptionsFrom(railShell).mobileQuery);
+      query.addEventListener?.('change', onViewportChange);
+    }
   }
   document.querySelectorAll('[data-nowo-ui-shell]').forEach((el) => {
     if (el instanceof HTMLElement) {
       applyStoredMainWidth(el);
+      if (isRailShell(el)) {
+        initSidebarRail(el);
+      }
     }
   });
 }

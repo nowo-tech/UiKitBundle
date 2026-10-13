@@ -11,6 +11,10 @@
     - clear_href: "Clear" link target (omitted when empty)
     - submit_label / clear_label: override the `filters.apply` / `filters.clear` translations
     - submit_class / clear_class: override the button classes (default `ui.btn('primary')` / `ui.btn('secondary')`)
+    - submit_icon / clear_icon (1.15): icon name rendered through `components/_icon.html.twig`
+      (`nowo_ui_kit.icon_set`; canonical kinds such as `filter`, `close`, or any set-specific name)
+    - icon_only (1.15, default false): with an icon, hide the visible label; it stays as a visually-hidden
+      text plus `title` / `aria-label`. Without an icon the label is always visible.
     - framework
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
@@ -20,12 +24,39 @@
     {% if _pager is not empty %}
         {{ _pager|raw }}
     {% endif %}
-    <button type="submit" class="{{ submit_class|default(ui.btn('primary', null, framework)) }} nowo-ui-filter-bar__submit">
-        {{- submit_label|default('filters.apply'|trans({}, 'NowoUiKitBundle')) -}}
+    {% set _icon_only = icon_only|default(false) %}
+    {% set _submit_label = submit_label|default('filters.apply'|trans({}, 'NowoUiKitBundle')) %}
+    {% set _submit_icon = submit_icon|default('') %}
+    {% set _submit_icon_only = _icon_only and _submit_icon is not empty %}
+    <button type="submit" class="{{ submit_class|default(ui.btn('primary', null, framework)) }} nowo-ui-filter-bar__submit{% if _submit_icon_only %} nowo-ui-filter-bar__action--icon-only{% endif %}"
+        {%- if _submit_icon_only %} title="{{ _submit_label }}" aria-label="{{ _submit_label }}"{% endif %}>
+        {%- if _submit_icon is not empty -%}
+            {{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _submit_icon, label: _submit_label}, false)|trim|raw }}
+        {%- endif -%}
+        {%- if _submit_icon_only -%}
+            <span class="visually-hidden">{{ _submit_label }}</span>
+        {%- elseif _submit_icon is not empty -%}
+            <span class="nowo-ui-filter-bar__action-label">{{ _submit_label }}</span>
+        {%- else -%}
+            {{ _submit_label }}
+        {%- endif -%}
     </button>
     {% if clear_href|default('') is not empty %}
-        <a class="{{ clear_class|default(ui.btn('secondary', null, framework)) }} nowo-ui-filter-bar__clear" href="{{ clear_href }}">
-            {{- clear_label|default('filters.clear'|trans({}, 'NowoUiKitBundle')) -}}
+        {% set _clear_label = clear_label|default('filters.clear'|trans({}, 'NowoUiKitBundle')) %}
+        {% set _clear_icon = clear_icon|default('') %}
+        {% set _clear_icon_only = _icon_only and _clear_icon is not empty %}
+        <a class="{{ clear_class|default(ui.btn('secondary', null, framework)) }} nowo-ui-filter-bar__clear{% if _clear_icon_only %} nowo-ui-filter-bar__action--icon-only{% endif %}" href="{{ clear_href }}"
+            {%- if _clear_icon_only %} title="{{ _clear_label }}" aria-label="{{ _clear_label }}"{% endif %}>
+            {%- if _clear_icon is not empty -%}
+                {{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _clear_icon, label: _clear_label}, false)|trim|raw }}
+            {%- endif -%}
+            {%- if _clear_icon_only -%}
+                <span class="visually-hidden">{{ _clear_label }}</span>
+            {%- elseif _clear_icon is not empty -%}
+                <span class="nowo-ui-filter-bar__action-label">{{ _clear_label }}</span>
+            {%- else -%}
+                {{ _clear_label }}
+            {%- endif -%}
         </a>
     {% endif %}
 </div>

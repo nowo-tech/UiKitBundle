@@ -407,6 +407,94 @@ final class UiMacrosTwigTest extends TestCase
         self::assertStringContainsString('>filters.clear</a>', $empty);
     }
 
+    public function testFilterActionsIconOptions(): void
+    {
+        $iconOnly = $this->renderPartial('_filter_actions.html.twig', [
+            'clear_href' => '/items',
+            'submit_icon' => 'filter',
+            'clear_icon' => 'close',
+            'icon_only' => true,
+            'submit_label' => 'Filter "now"',
+        ]);
+        self::assertStringContainsString('nowo-ui-filter-bar__submit nowo-ui-filter-bar__action--icon-only" title="Filter &quot;now&quot;" aria-label="Filter &quot;now&quot;">', $iconOnly);
+        self::assertStringContainsString('<i class="bi bi-funnel" aria-hidden="true"></i><span class="visually-hidden">Filter &quot;now&quot;</span></button>', $iconOnly);
+        self::assertStringContainsString('nowo-ui-filter-bar__clear nowo-ui-filter-bar__action--icon-only" href="/items" title="filters.clear" aria-label="filters.clear">', $iconOnly);
+        self::assertStringContainsString('<i class="bi bi-x-lg" aria-hidden="true"></i><span class="visually-hidden">filters.clear</span></a>', $iconOnly);
+
+        $withLabel = $this->renderPartial('_filter_actions.html.twig', ['clear_href' => '/items', 'submit_icon' => 'filter', 'clear_icon' => 'close']);
+        self::assertStringNotContainsString('icon-only', $withLabel);
+        self::assertStringNotContainsString('title=', $withLabel);
+        self::assertStringContainsString('<i class="bi bi-funnel" aria-hidden="true"></i><span class="nowo-ui-filter-bar__action-label">filters.apply</span></button>', $withLabel);
+        self::assertStringContainsString('<i class="bi bi-x-lg" aria-hidden="true"></i><span class="nowo-ui-filter-bar__action-label">filters.clear</span></a>', $withLabel);
+
+        // icon_only without icons keeps the visible labels (defaults unchanged).
+        $noIcons = $this->renderPartial('_filter_actions.html.twig', ['clear_href' => '/items', 'icon_only' => true]);
+        self::assertStringContainsString('class="nowo-ui-btn nowo-ui-btn--primary nowo-ui-filter-bar__submit">filters.apply</button>', $noIcons);
+        self::assertStringContainsString('nowo-ui-filter-bar__clear" href="/items">filters.clear</a>', $noIcons);
+
+        $css = (string) file_get_contents(\dirname(__DIR__, 2).'/src/Resources/public/css/nowo-ui.css');
+        self::assertStringContainsString('.nowo-ui-filter-bar__action--icon-only {', $css);
+    }
+
+    public function testThemeBootPartialInlinesTheBuiltScriptWithNonce(): void
+    {
+        $base = \dirname(__DIR__, 2).'/src/Resources';
+        $built = (string) file_get_contents($base.'/public/js/nowo-ui-theme-boot.js');
+        self::assertSame($built, (string) file_get_contents($base.'/views/inline/nowo-ui-theme-boot.js'), 'Run `pnpm run build:theme-boot`: the inline copy must match the built IIFE.');
+        self::assertStringContainsString('nowoUiThemeBoot', $built);
+        self::assertStringNotContainsString('</script', $built);
+
+        $inline = $this->renderPartial('_theme_boot.html.twig', ['nonce' => 'abc']);
+        self::assertStringStartsWith('<script nonce="abc" data-nowo-ui-theme-boot>', $inline);
+        self::assertStringContainsString(trim($built), $inline);
+
+        $request = new Request();
+        $request->attributes->set('csp_nonce', 'req');
+        $fromRequest = $this->renderPartial('_theme_boot.html.twig', ['app' => ['request' => $request]]);
+        self::assertStringStartsWith('<script nonce="req" data-nowo-ui-theme-boot>', $fromRequest);
+
+        $external = $this->renderPartial('_theme_boot.html.twig', ['inline' => false]);
+        self::assertSame('<script src="/bundles/nowouikit/js/nowo-ui-theme-boot.js" data-nowo-ui-theme-boot></script>', $external);
+        $custom = $this->renderPartial('_theme_boot.html.twig', ['inline' => false, 'src' => '/build/boot.js', 'nonce' => 'n']);
+        self::assertSame('<script src="/build/boot.js" nonce="n" data-nowo-ui-theme-boot></script>', $custom);
+    }
+
+    public function testShellSidebarRailOptIn(): void
+    {
+        $plain = $this->renderPartial('_shell.html.twig', ['brand' => 'App']);
+        self::assertStringNotContainsString('data-nowo-ui-sidebar-rail', $plain);
+        self::assertStringNotContainsString('data-label-rail', $plain);
+
+        $rail = (string) preg_replace('/\s+/', ' ', $this->renderPartial('_shell.html.twig', [
+            'brand' => 'App',
+            'sidebar_rail' => ['storage' => 'app-sidebar', 'cookie' => 'app_sidebar', 'hidden_value' => 'collapsed', 'default' => 'rail'],
+            'sidebar_mode' => 'rail',
+        ]));
+        self::assertStringContainsString('is-aside-rail"', $rail);
+        self::assertStringContainsString('data-nowo-ui-sidebar-rail data-nowo-ui-sidebar-storage="app-sidebar" data-nowo-ui-sidebar-cookie="app_sidebar" data-nowo-ui-sidebar-hidden-value="collapsed" data-nowo-ui-sidebar-default="rail" data-nowo-ui-sidebar-mode="rail"', $rail);
+        self::assertStringContainsString('data-label-expand="nav.sidebar_expand" data-label-rail="nav.sidebar_rail" data-label-hide="nav.sidebar_hide"', $rail);
+
+        $hidden = (string) preg_replace('/\s+/', ' ', $this->renderPartial('_shell.html.twig', ['sidebar_rail' => true, 'sidebar_mode' => 'collapsed']));
+        self::assertStringContainsString('is-aside-collapsed"', $hidden);
+        self::assertStringContainsString('data-nowo-ui-sidebar-mode="hidden"', $hidden);
+        self::assertStringContainsString('aria-expanded="false"', $hidden);
+        self::assertStringNotContainsString('data-nowo-ui-sidebar-storage', $hidden);
+    }
+
+    public function testSidebarRailCssIsOptIn(): void
+    {
+        $css = (string) file_get_contents(\dirname(__DIR__, 2).'/src/Resources/public/css/nowo-ui.css');
+        self::assertStringContainsString('--nowo-ui-aside-rail-width: 3.75rem;', $css);
+        self::assertSame(1, preg_match('/\/\* --- Sidebar rail.*?(?=\/\* --- Nested aside groups)/s', $css, $m));
+        $rules = (string) preg_replace('/\/\*.*?\*\//s', '', $m[0]);
+        preg_match_all('/^\s*([^{}@\n][^{}]*)\{/m', $rules, $selectors);
+        self::assertNotEmpty($selectors[1]);
+        foreach ($selectors[1] as $selector) {
+            self::assertStringContainsString('.nowo-ui-shell.is-aside-rail', $selector);
+        }
+        self::assertStringContainsString('nowoUiSetSidebarMode', (string) file_get_contents(\dirname(__DIR__, 2).'/src/Resources/public/js/nowo-ui-shell.js'));
+    }
+
     public function testOptInFilterBarAndDataTableCss(): void
     {
         $css = (string) file_get_contents(\dirname(__DIR__, 2).'/src/Resources/public/css/nowo-ui.css');
@@ -427,6 +515,7 @@ final class UiMacrosTwigTest extends TestCase
         $loader = new ArrayLoader(['t.twig' => "{% include '@NowoUiKitBundle/partials/{$partial}' %}"]);
         $twig = new Environment(new \Twig\Loader\ChainLoader([$loader, $fs]));
         $twig->addExtension(new TranslationExtension(new IdentityTranslator()));
+        $twig->addFunction(new \Twig\TwigFunction('asset', static fn (string $path, ?string $package = null): string => '/bundles/nowouikit/'.$path));
         $twig->addGlobal('nowo_ui_kit_css_framework', 'custom');
 
         return trim($twig->render('t.twig', $vars));

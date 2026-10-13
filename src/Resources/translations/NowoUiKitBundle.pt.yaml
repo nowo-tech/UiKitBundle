@@ -20,6 +20,9 @@ empty.default: Nenhum item encontrado.
 tabs.nav: Secções
 nav.aside: Navegação
 nav.toggle_aside: Mostrar ou ocultar navegação
+nav.sidebar_expand: Expandir navegação
+nav.sidebar_rail: Mostrar apenas ícones
+nav.sidebar_hide: Ocultar navegação
 nav.account: Menu da conta
 nav.logout: Terminar sessão
 footer.nav: Rodapé

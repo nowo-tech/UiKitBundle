@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.15.0] - 2026-10-13](#1150---2026-10-13)
 - [[1.14.0] - 2026-10-13](#1140---2026-10-13)
 - [[1.13.2] - 2026-10-13](#1132---2026-10-13)
 - [[1.13.1] - 2026-10-13](#1131---2026-10-13)
@@ -37,6 +38,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [1.15.0] - 2026-10-13
+
+### Added
+
+- **Icon filter actions** (`partials/_filter_actions.html.twig`): `submit_icon` / `clear_icon` (rendered through `components/_icon.html.twig` and `icon_set`) and `icon_only` (visually-hidden label + `title` / `aria-label`, square `.nowo-ui-filter-bar__action--icon-only`). Defaults unchanged.
+- **Pre-paint theme boot**: `partials/_theme_boot.html.twig` (inline script with the CSP nonce, or `inline: false` → `js/nowo-ui-theme-boot.js`). Reads `data-nowo-ui-pref-{theme,density,motion,font-scale,contrast,sidebar}` (alias `data-user-*`) on `<html>`, falls back to the theme cookie / localStorage / OS and sets `data-theme`, `data-ui-density`, `data-motion`, `data-font-scale`, `data-contrast` before first paint; `window.nowoUiPrefs`, `window.nowoUiThemeBoot()`.
+- Theme storage keys shared by the boot and the toggle: `data-nowo-ui-theme-storage` is also read from `<html>`, new optional `data-nowo-ui-theme-cookie` (`assets/src/nowo-ui-theme-core.ts`).
+- **Sidebar rail** (opt-in `data-nowo-ui-sidebar-rail` on the shell, `_shell.html.twig` `sidebar_rail` / `sidebar_mode`): expanded / icons-only rail / hidden, burger ping-pong through the rail, phones keep the drawer, localStorage + optional cookie sync with configurable keys (`data-nowo-ui-sidebar-storage`, `-cookie`, `-hidden-value`, `-default`, `-rail-labels`), rail tooltips and initials, `nowo-ui:sidebar-mode` event, `window.nowoUiSetSidebarMode()`. CSS: `.nowo-ui-shell.is-aside-rail` (desktop only), `--nowo-ui-aside-rail-width`. Side-effect-free helpers for host shells: `assets/src/nowo-ui-sidebar-core.ts`. `_burger.html.twig` `rail: true` prints the next-action labels (`nav.sidebar_expand`, `nav.sidebar_rail`, `nav.sidebar_hide`; 7 locales).
+- **Stimulus peers** `temporary-reveal` (masked secret, timed reveal, clear-on-hide purge), `collapse-panel` (persistent panels; storage key and server default as values) and `datatable` (responsive DataTables with server-side paging / sorting; `datatables.net-dt` and `datatables.net-responsive-dt` are optional peer dependencies). Ported from Symfony Beacon with neutral copy.
+- Vitest suites for the new modules and peers (coverage-gated); PHPUnit for the new partial options.
+
+### Changed
+
+- Dev: Rector `RemoveConcatAutocastRector` applied to `Configuration::findInvalidRewrite()` (drops a redundant `(string)` cast; behaviour-neutral).
+
+### Fixed
+
+- `_burger.html.twig`: `expanded: false` (e.g. `_shell.html.twig` with `collapsed: true`) rendered `aria-expanded="true"` because of `|default(true)`.
+
+[1.15.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.14.0...v1.15.0
 
 ## [1.14.0] - 2026-10-13
 

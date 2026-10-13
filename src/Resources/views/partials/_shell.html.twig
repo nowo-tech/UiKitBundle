@@ -8,21 +8,42 @@
     - footer_links, footer_copyright, footer_brand
     - main: HTML string for main content (or use embed / set main)
     - show_user_menu: bool (default true when name/initials present)
+    - sidebar_rail (1.15): opt-in three-mode sidebar (expanded / icons-only rail / hidden). `true` or a map
+      {storage, cookie, hidden_value, default}: localStorage key, cookie name (server rendering), value
+      stored for "hidden", server / account default. Needs `nowo-ui-shell.js`.
+    - sidebar_mode (1.15): server-rendered initial mode (expanded | rail | hidden), e.g. from the cookie,
+      so the first paint already matches
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 {% set framework = framework|default(null) %}
 {% set aside_id = aside_id|default('nowo-ui-aside') %}
 {% set collapsed = collapsed|default(false) %}
+{% set _rail = sidebar_rail|default(false) %}
+{% set _rail_opts = _rail is iterable ? _rail : {} %}
+{% set _mode = sidebar_mode|default(null) %}
+{% set _mode = _mode == 'collapsed' ? 'hidden' : _mode %}
+{% if _rail and _mode in ['expanded', 'rail', 'hidden'] %}
+    {% set collapsed = _mode == 'hidden' %}
+{% endif %}
 
 <div
-    class="{{ ui.shell(framework) }}{{ collapsed ? ' is-aside-collapsed' : '' }}"
+    class="{{ ui.shell(framework) }}{{ collapsed ? ' is-aside-collapsed' : '' }}{{ _rail and _mode == 'rail' ? ' is-aside-rail' : '' }}"
     data-nowo-ui-shell
+    {% if _rail %}
+        data-nowo-ui-sidebar-rail
+        {% if _rail_opts.storage is defined %}data-nowo-ui-sidebar-storage="{{ _rail_opts.storage }}"{% endif %}
+        {% if _rail_opts.cookie is defined %}data-nowo-ui-sidebar-cookie="{{ _rail_opts.cookie }}"{% endif %}
+        {% if _rail_opts.hidden_value is defined %}data-nowo-ui-sidebar-hidden-value="{{ _rail_opts.hidden_value }}"{% endif %}
+        {% if _rail_opts.default is defined %}data-nowo-ui-sidebar-default="{{ _rail_opts.default }}"{% endif %}
+        {% if _mode in ['expanded', 'rail', 'hidden'] %}data-nowo-ui-sidebar-mode="{{ _mode }}"{% endif %}
+    {% endif %}
 >
     <header class="{{ ui.header(framework) }}">
         <div class="nowo-ui-header__start">
             {{ include('@NowoUiKitBundle/partials/_burger.html.twig', {
                 controls: aside_id,
                 expanded: not collapsed,
+                rail: _rail ? true : false,
                 framework: framework,
             }) }}
             {% if brand_html is defined and brand_html %}

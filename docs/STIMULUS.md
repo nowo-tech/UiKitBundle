@@ -15,10 +15,14 @@ Optional **Stimulus peer** TypeScript sources live under `src/Resources/assets/s
 - [Page loader](#page-loader)
 - [Release status](#release-status)
 - [Auto refresh (Stimulus peer only)](#auto-refresh-stimulus-peer-only)
+- [Temporary reveal (Stimulus peer only)](#temporary-reveal-stimulus-peer-only)
+- [Collapse panel (Stimulus peer only)](#collapse-panel-stimulus-peer-only)
+- [Data table (Stimulus peer only)](#data-table-stimulus-peer-only)
 - [Open modal on load](#open-modal-on-load)
 - [Thinking orb](#thinking-orb)
 - [Shell / nested nav](#shell--nested-nav)
 - [Theme toggle](#theme-toggle)
+- [Theme boot](#theme-boot)
 - [Locale / kebab](#locale--kebab)
 - [Stimulus peers — import examples](#stimulus-peers--import-examples)
 - [Beacon attribute migration](#beacon-attribute-migration)
@@ -175,6 +179,75 @@ Peer: `auto_refresh_controller.ts`. Swapped regions are new nodes: Stimulus cont
 </div>
 ```
 
+## Temporary reveal (Stimulus peer only)
+
+No kit IIFE (1.15). Shows a secret masked, reveals it on demand and hides it again after `duration`.
+
+| Stimulus | Role |
+|----------|------|
+| `data-controller="temporary-reveal"` | Root |
+| `data-temporary-reveal-secret-value` | The secret (removed from the DOM after hide with `clear-on-hide`) |
+| `data-temporary-reveal-duration-value` | Auto-hide after ms (default `30000`; `0` = never) |
+| `data-temporary-reveal-show-label-value` / `-hide-label-value` | Toggle labels (default `Show` / `Hide`) |
+| `data-temporary-reveal-start-revealed-value` | Reveal on connect (e.g. right after creating a key) |
+| `data-temporary-reveal-clear-on-hide-value` | After the first hide: drop the secret attribute, empty and disable copy buttons inside the root (`data-clipboard-copy-text-value`, `data-nowo-ui-clipboard-text`), show `cleared-label` |
+| `data-temporary-reveal-cleared-label-value` | Text shown once cleared (default `Hidden`) |
+| target `display` | Receives the masked / clear value (`data-revealed` / `data-cleared` style hooks) |
+| target `toggle` + `data-action="temporary-reveal#toggle"` | Button (`aria-pressed`, label) |
+
+Masking keeps URLs readable (`https://user:••••••••@host/…`); any other secret is replaced by bullets.
+Peer: `temporary_reveal_controller.ts` (exports `maskSecret()`).
+
+## Collapse panel (Stimulus peer only)
+
+No kit IIFE (1.15). A collapsible panel whose open state survives navigation: every panel id is stored in one
+localStorage JSON map, so the same panel keeps its state across pages. Without a saved state the **server default**
+applies — render per-user defaults as a value, no global JS.
+
+| Stimulus | Role |
+|----------|------|
+| `data-controller="collapse-panel"` | Root (gets `is-collapsed`) |
+| `data-collapse-panel-id-value` | Panel id (no id = no persistence) |
+| `data-collapse-panel-storage-key-value` | localStorage key (default `nowo-ui.collapse-panels`) |
+| `data-collapse-panel-collapsed-value` | Server default when nothing is saved (default `false` = open) |
+| `data-collapse-panel-open-icon-value` / `-closed-icon-value` | Icon target text (default `▾` / `▸`) |
+| targets `body` (hidden when collapsed), `button` (`aria-expanded`), `icon` | |
+| `data-action="collapse-panel#toggle"` | Toggle (persists, dispatches `collapse-panel:toggled` with `detail.open` / `detail.id`) |
+
+Peer: `collapse_panel_controller.ts`. The state is only written when the user toggles, so changing the server default
+reaches every panel the user never touched.
+
+```twig
+<section data-controller="collapse-panel" data-collapse-panel-id-value="raw"
+         data-collapse-panel-collapsed-value="{{ 'raw' in collapsed_panels ? 'true' : 'false' }}">
+    <button type="button" data-collapse-panel-target="button" data-action="collapse-panel#toggle">
+        <span data-collapse-panel-target="icon"></span> Raw data
+    </button>
+    <div data-collapse-panel-target="body">…</div>
+</section>
+```
+
+## Data table (Stimulus peer only)
+
+No kit IIFE (1.15). Responsive [DataTables](https://datatables.net/) layout for server-rendered tables: sorting,
+searching and paging stay server-side (`paging`, `searching`, `ordering`, `info`, `lengthChange` off), DataTables
+only folds overflowing columns into child rows (`<th data-priority>` sets the order).
+
+**Optional dependencies** (peer dependencies of the kit assets, not installed by the kit): `datatables.net-dt`
+(^2.3) and `datatables.net-responsive-dt` (^3.0). The peer imports their JS only; load their stylesheets in the host
+(`datatables.net-dt/css/dataTables.dataTables.min.css`, `datatables.net-responsive-dt/css/responsive.dataTables.min.css`)
+or style the table yourself. Hosts that do not register this peer never need the packages.
+
+| Stimulus | Role |
+|----------|------|
+| `data-controller="datatable"` | Stable wrapper **around** the table (DataTables moves the table node) |
+| target `table` | The `<table>` |
+| `data-datatable-options-value` | JSON merged over the defaults (e.g. `{"responsive":{"details":{"type":"column"}}}`) |
+| `data-action="click->datatable#stop"` | On links / buttons inside rows: keep Responsive from toggling the child row |
+
+Mounted on the next animation frame, destroyed (`destroy(false)`) on disconnect. Peer: `datatable_controller.ts`
+(exports `DATATABLE_DEFAULT_OPTIONS`).
+
 ## Open modal on load
 
 Not a Stimulus peer: JSON island `script#nowo-ui-open-modal-on-load` (`_open_modal_on_load.html.twig`) read by
@@ -207,21 +280,38 @@ Engine adapted from [thinking-orbs](https://github.com/Jakubantalik/thinking-orb
 | `data-nowo-ui-nav-group-toggle` | Group toggle (`aria-expanded`) |
 | `data-nowo-ui-width-toggle` | Main full ↔ content width |
 | class `is-main-content` | Constrained main max-width |
+| `data-nowo-ui-sidebar-rail` *(1.15)* | Opt-in three-mode sidebar on the shell (expanded / rail / hidden) |
+| `data-nowo-ui-sidebar-storage` / `-cookie` / `-hidden-value` / `-default` / `-rail-labels` | Rail keys and server default ([USAGE.md](USAGE.md#sidebar-rail-opt-in)) |
+| `data-label-expand` / `data-label-rail` / `data-label-hide` on the burger | Next-action labels |
+| `data-nowo-ui-sidebar-mode` (shell), `data-nowo-ui-sidebar-state` (burger), `data-nowo-ui-rail-label` / `-initial` (items) | Set by the script |
+| classes `is-aside-rail` / `is-aside-collapsed` / `is-aside-open-mobile` | Mode classes |
+| event `nowo-ui:sidebar-mode` | `detail.mode`, `detail.mobile` |
 
-Script: `js/nowo-ui-shell.js` → `nowoUiToggleAside` / `nowoUiSetMainWidth` / `nowoUiToggleMainWidth`.
+Script: `js/nowo-ui-shell.js` → `nowoUiToggleAside` / `nowoUiSetMainWidth` / `nowoUiToggleMainWidth` /
+`nowoUiSetSidebarMode` (1.15). Side-effect-free helpers for bundled hosts: `assets/src/nowo-ui-sidebar-core.ts`.
 
 ## Theme toggle
 
 | Attribute | Role |
 |-----------|------|
 | `data-nowo-ui-theme-toggle` | Toggle button |
-| `data-nowo-ui-theme-storage` | localStorage key |
+| `data-nowo-ui-theme-storage` | localStorage key (on the toggle or, since 1.15, on `<html>` — shared with the theme boot) |
+| `data-nowo-ui-theme-cookie` *(1.15)* | Optional cookie written with the theme (toggle or `<html>`) |
 | `data-aria-to-light` / `data-aria-to-dark` | Accessibility labels |
 | `data-nowo-ui-theme-label` | Optional visible label node |
 
 Script: `js/nowo-ui-theme.js` → `nowoUiSetTheme` / `nowoUiToggleTheme`. Sets `data-theme` on `<html>`.
 
 Hosts that sync theme to the server (Beacon `account_theme`) can ignore kit storage and drive `data-theme` from the user preference.
+
+## Theme boot
+
+Blocking `<head>` script (1.15): `partials/_theme_boot.html.twig` (inline + CSP nonce) or `js/nowo-ui-theme-boot.js`.
+Reads `data-nowo-ui-pref-{theme,density,motion,font-scale,contrast,sidebar}` (alias `data-user-*`),
+`data-nowo-ui-theme-storage` / `data-nowo-ui-theme-cookie` and the optional sidebar keys on `<html>`; writes
+`data-theme`, `data-ui-density`, `data-motion`, `data-font-scale`, `data-contrast`. Globals:
+`window.nowoUiPrefs`, `window.nowoUiThemeBoot()`. Shared storage helpers: `assets/src/nowo-ui-theme-core.ts`.
+Details: [USAGE.md](USAGE.md#pre-paint-theme-boot).
 
 ## Locale / kebab
 
@@ -267,6 +357,13 @@ return [
     'auto-refresh' => [
         'path' => './vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/auto_refresh_controller.ts',
     ],
+    'temporary-reveal' => [
+        'path' => './vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/temporary_reveal_controller.ts',
+    ],
+    'collapse-panel' => [
+        'path' => './vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/collapse_panel_controller.ts',
+    ],
+    // 'datatable' needs datatables.net-dt + datatables.net-responsive-dt in the host importmap.
 ];
 ```
 
@@ -279,7 +376,7 @@ Or lazy-load from `assets/controllers.json` pointing at the same paths.
 export { default } from '../../vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/clipboard_copy_controller';
 ```
 
-Repeat for `confirm_dialog`, `confirm_submit`, `page_loader`, `toast_stack`, `tabs`, `release_status`, `auto_refresh`.
+Repeat for `confirm_dialog`, `confirm_submit`, `page_loader`, `toast_stack`, `tabs`, `release_status`, `auto_refresh`, `temporary_reveal`, `collapse_panel`, `datatable` (the last one needs the optional DataTables packages).
 
 Or register directly in the host Stimulus bootstrap (Vite + pnpm):
 
@@ -292,7 +389,7 @@ app.register('auto-refresh', AutoRefreshController);
 
 `release_status_controller.ts` imports `../src/nowo-ui-release-core.ts`, so keep the vendor directory layout intact (do not copy the peer file alone).
 
-Peers are covered by Vitest (`stimulus-peers/peers.test.ts`) and type-checked with `pnpm run typecheck`.
+Peers are covered by Vitest (`stimulus-peers/*.test.ts`) and type-checked with `pnpm run typecheck`.
 
 When using a Stimulus peer, **do not** also load the matching IIFE for the same markup (duplicate listeners / double dismiss).
 

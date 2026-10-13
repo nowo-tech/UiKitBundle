@@ -2,6 +2,8 @@
 
 This checklist helps maintainers prepare and publish a release safely.
 
+**Current stable:** `v1.15.0` (2026-10-13).
+
 ## Table of contents
 
 - [Pre-release](#pre-release)

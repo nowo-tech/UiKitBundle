@@ -37,11 +37,13 @@ This bundle is **FrankenPHP worker mode friendly** (including when the kernel is
 - Twig macros (`@NowoUiKitBundle/macros/ui.html.twig`) with optional per-call `framework` override
 - Semantic stylesheet `css/nowo-ui.css` (asset package `nowo_ui_kit`), including dark `[data-theme="dark"]` tokens
 - Complete `--nowo-ui-*` theming tokens (1.13): every colour, radius, font, focus ring, overlay and shadow in kit output reads a token — no hard-coded Tailwind palette / Bootstrap colour utilities; a host theme is a short `:root` block ([docs/THEMING.md](docs/THEMING.md)); opt-in `.nowo-ui-bs-tokens` bridge for Bootstrap 5.3 stacks
-- TypeScript → IIFEs: modal, shell, toast, confirm, page-loader, theme, orb, clipboard, tabs, release, open-modal
+- TypeScript → IIFEs: modal, shell, toast, confirm, page-loader, theme, theme-boot, orb, clipboard, tabs, release, open-modal
+- Pre-paint theme boot (1.15): `_theme_boot.html.twig` inlines a blocking script (CSP nonce) that applies theme / density / motion / font scale / contrast from `<html>` attributes before first paint, sharing storage keys with the theme toggle
+- Opt-in three-mode sidebar (1.15): expanded / icons-only rail / hidden, cookie + localStorage sync with configurable keys (`data-nowo-ui-sidebar-rail`)
 - Deep link "open modal on load" (`?new=1`): `_open_modal_on_load.html.twig` JSON island + `nowo-ui-open-modal.js` (CSP-safe, no inline JS)
-- Opt-in filter bar / data table chrome: `.nowo-ui-filter-bar` (38px / compact 34px controls, actions on one row) + `_filter_actions.html.twig`, `table.nowo-ui-data-table`
+- Opt-in filter bar / data table chrome: `.nowo-ui-filter-bar` (38px / compact 34px controls, actions on one row) + `_filter_actions.html.twig` (icon / icon-only actions since 1.15), `table.nowo-ui-data-table`
 - Page loader: veil (spinner / orb) or minimal indicators (top bar, looping bar, corner spinner, dots, glow, corner logo); cross-page fades via `_page_transition.html.twig` (View Transitions, no JS)
-- Optional Stimulus peers under `src/Resources/assets/stimulus-peers/` (see [docs/STIMULUS.md](docs/STIMULUS.md)) — `confirm-submit` (form submit or single button click, `blocked` value), `confirm-dialog`, `tabs`, `toast-stack`, `clipboard-copy`, `page-loader`, `release-status`, `auto-refresh`
+- Optional Stimulus peers under `src/Resources/assets/stimulus-peers/` (see [docs/STIMULUS.md](docs/STIMULUS.md)) — `confirm-submit` (form submit or single button click, `blocked` value), `confirm-dialog`, `tabs`, `toast-stack`, `clipboard-copy`, `page-loader`, `release-status`, `auto-refresh`, `temporary-reveal`, `collapse-panel`, `datatable` (optional DataTables dependency)
 - Optional **release check** (off by default): installed-version button + lazy GitHub “newer release?” dialog (`release_check` config, `_release_version.html.twig`, `nowo-ui-release.js`) — see [docs/CONFIGURATION.md](docs/CONFIGURATION.md#release-check)
 - Thinking Orbs: `_thinking_orb` + `nowo-ui-orb.js`; page loader `visual: orb|spinner` ([THIRD_PARTY.md](docs/THIRD_PARTY.md))
 - Config: `css_framework`, `icon_set`, `row_actions_display`; i18n domain `NowoUiKitBundle` (`en`, `es`, `it`, `fr`, `pt`, `de`, `nl`)

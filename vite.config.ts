@@ -12,6 +12,7 @@ type Entry =
   | 'confirm'
   | 'page-loader'
   | 'theme'
+  | 'theme-boot'
   | 'orb'
   | 'clipboard'
   | 'tabs'
@@ -105,6 +106,21 @@ const configs: Record<Entry, { build: object }> = {
         output: {
           format: 'iife' as const,
           entryFileNames: 'js/nowo-ui-theme.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  'theme-boot': {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-theme-boot.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-theme-boot.js',
         },
       },
       minify: true,

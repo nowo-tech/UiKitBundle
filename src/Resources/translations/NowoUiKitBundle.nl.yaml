@@ -20,6 +20,9 @@ empty.default: Geen items gevonden.
 tabs.nav: Secties
 nav.aside: Navigatie
 nav.toggle_aside: Navigatie tonen of verbergen
+nav.sidebar_expand: Navigatie uitklappen
+nav.sidebar_rail: Alleen pictogrammen tonen
+nav.sidebar_hide: Navigatie verbergen
 nav.account: Accountmenu
 nav.logout: Uitloggen
 footer.nav: Voettekst

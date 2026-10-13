@@ -238,7 +238,8 @@ lays out as a row on every stack (zero-specificity rule; Bootstrap's own `.pagin
 
 ## Layout and metrics tokens
 
-Unchanged, listed for completeness: `--nowo-ui-aside-width`, `--nowo-ui-aside-duration`,
+Unchanged, listed for completeness: `--nowo-ui-aside-width`, `--nowo-ui-aside-rail-width` *(1.15, icons-only
+rail width, default `3.75rem`)*, `--nowo-ui-aside-duration`,
 `--nowo-ui-aside-ease`, `--nowo-ui-header-height`, `--nowo-ui-content-max-width`,
 `--nowo-ui-control-height`, `--nowo-ui-control-height-compact`, `--nowo-ui-filter-control-height`,
 `--nowo-ui-orb-size`, `--nowo-ui-page-loader-corner-bottom`, `--nowo-ui-page-loader-corner-left`.

@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.15.0](#to-1150)
 - [To 1.14.0](#to-1140)
 - [To 1.13.2](#to-1132)
 - [To 1.13.1](#to-1131)
@@ -39,6 +40,22 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 1.15.0
+
+From **1.14.0** — icon filter actions, pre-paint theme boot, sidebar rail, three Stimulus peers. Everything is opt-in.
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+php bin/console assets:install
+```
+
+- No breaking changes. New options render nothing until used.
+- `_burger.html.twig` now honours `expanded: false` (`aria-expanded="false"`); shells rendered with `collapsed: true` get the correct state.
+- `nowo-ui-theme.js` also reads `data-nowo-ui-theme-storage` from `<html>` (the toggle attribute still wins) and writes the optional `data-nowo-ui-theme-cookie`.
+- To use the theme boot, print your preference attributes on `<html>` and include `@NowoUiKitBundle/partials/_theme_boot.html.twig` first in `<head>` (see USAGE.md — Pre-paint theme boot). Hosts with their own boot script can keep it: the output attributes are the same (`data-theme`, `data-ui-density`, `data-motion`, `data-font-scale`, `data-contrast`).
+- The `datatable` peer needs `datatables.net-dt` (^2.3) and `datatables.net-responsive-dt` (^3.0) in the host, plus their stylesheets; the other peers have no extra dependency.
+- Moving from a host sidebar that stores `collapsed`: set `data-nowo-ui-sidebar-hidden-value="collapsed"` and keep your storage / cookie names through the `data-nowo-ui-sidebar-*` attributes, so stored state and server rendering keep working.
 
 ## To 1.14.0
 
