@@ -66,6 +66,20 @@ final class LegacyPanelPathRedirectSubscriberTest extends TestCase
         self::assertNull($event->getResponse());
     }
 
+    public function testRootTargetDoesNotProduceProtocolRelativeLocation(): void
+    {
+        $subscriber = new LegacyPanelPathRedirectSubscriber(new PanelPathRewriter(['/admin' => '/']));
+        $event = new RequestEvent($this->createMock(HttpKernelInterface::class), Request::create('/admin/evil.com'), HttpKernelInterface::MAIN_REQUEST);
+        $subscriber->onKernelRequest($event);
+
+        self::assertSame('/evil.com', $event->getResponse()?->headers->get('Location'));
+
+        $event = new RequestEvent($this->createMock(HttpKernelInterface::class), Request::create('/admin//evil.com'), HttpKernelInterface::MAIN_REQUEST);
+        $subscriber->onKernelRequest($event);
+
+        self::assertSame('/evil.com', $event->getResponse()?->headers->get('Location'));
+    }
+
     private function dispatch(Request $request, int $type = HttpKernelInterface::MAIN_REQUEST): RequestEvent
     {
         $subscriber = new LegacyPanelPathRedirectSubscriber(new PanelPathRewriter(['/admin/blog' => '/panel/blog']));

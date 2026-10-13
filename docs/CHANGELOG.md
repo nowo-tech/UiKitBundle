@@ -47,6 +47,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Security
+
+- Row actions: the `confirm_message` `onsubmit` handler is now HTML-attribute escaped. Messages containing double quotes previously broke the attribute (the destructive POST was sent without confirmation) and allowed attribute injection / XSS.
+- `panel_path_rewrites`: a root target (`'/admin': '/'`) no longer produces protocol-relative `Location: //host` redirects; redirect targets always start with a single `/`. Config validation now rejects prefixes starting with `//` or containing backslashes.
+
 ## [1.13.1] - 2026-10-13
 
 ### Changed

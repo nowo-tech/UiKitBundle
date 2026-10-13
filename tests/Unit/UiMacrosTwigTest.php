@@ -174,6 +174,30 @@ final class UiMacrosTwigTest extends TestCase
         self::assertStringContainsString('<button', $btn);
     }
 
+    public function testRowActionsConfirmMessageIsAttributeSafe(): void
+    {
+        $message = 'Delete "Acme, Inc." = forever? <b>it\'s</b> " onmouseover="alert(1)';
+        $html = $this->renderRowActions('text', [[
+            'kind' => 'delete',
+            'method' => 'POST',
+            'href' => '/delete/1',
+            'confirm_message' => $message,
+        ]]);
+
+        $doc = new \DOMDocument();
+        self::assertTrue(@$doc->loadHTML('<!doctype html><html><body>'.$html.'</body></html>'));
+        $form = $doc->getElementsByTagName('form')->item(0);
+        self::assertInstanceOf(\DOMElement::class, $form);
+
+        // The browser-decoded handler is exactly confirm(<JSON string literal>): no broken quoting, no injected attributes.
+        self::assertSame('return confirm('.json_encode($message).');', $form->getAttribute('onsubmit'));
+        self::assertFalse($form->hasAttribute('onmouseover'));
+        self::assertSame(['method', 'action', 'class', 'onsubmit'], array_map(
+            static fn (\DOMAttr $attr): string => $attr->name,
+            iterator_to_array($form->attributes, false),
+        ));
+    }
+
     public function testActionMacroDefaultsAreSecondaryExceptDeleteAndCreate(): void
     {
         $edit = $this->renderMacro("{{ ui.action('edit') }}", 'bootstrap5');

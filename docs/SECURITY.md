@@ -35,6 +35,8 @@ The bundle does **not** expose CLI commands that mutate production data, file up
 ## Mitigations
 
 - Twig auto-escaping remains enabled for normal variables; documented composition slots use `|raw` for **developer-controlled** HTML only.
+- Row actions `confirm_message` is JSON-encoded and HTML-attribute escaped inside the `onsubmit` handler, so quotes / `=` / markup in messages cannot break out of the attribute.
+- `panel_path_rewrites` redirect targets are always a single-`/` same-origin path (no `//host` / `/\host`); config rejects `//`-prefixed or backslash prefixes.
 - Kit JS toggles DOM attributes / theme / loader / canvas; it does not call `eval`, `document.write`, or load remote scripts.
 - Release check: GitHub answers are rendered with `textContent`; only `https://github.com/…` links are emitted (server and client side). Failures soft-fail and are cached for the TTL, so GitHub rate limits are not hit per page view.
 - Recipe defaults contain no secrets.

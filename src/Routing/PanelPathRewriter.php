@@ -68,7 +68,7 @@ final class PanelPathRewriter
             $path = $route->getPath();
             foreach ($this->map as $from => $to) {
                 if ($this->matches($path, $from, true)) {
-                    $route->setPath($to.substr($path, \strlen($from)));
+                    $route->setPath($this->join($to, substr($path, \strlen($from))));
 
                     break;
                 }
@@ -83,7 +83,7 @@ final class PanelPathRewriter
     {
         foreach ($this->map as $from => $to) {
             if ($this->matches($requestPath, $from, false)) {
-                return $to.substr($requestPath, \strlen($from));
+                return $this->join($to, substr($requestPath, \strlen($from)));
             }
         }
 
@@ -99,6 +99,17 @@ final class PanelPathRewriter
         $next = substr($path, \strlen($prefix), 1);
 
         return '' === $next || '/' === $next || ($allowPlaceholder && '{' === $next);
+    }
+
+    /**
+     * Join target prefix and remaining path with exactly one leading "/".
+     *
+     * A root target ("/") plus "/evil.com" would otherwise yield "//evil.com" (protocol-relative open redirect);
+     * leading slashes and backslashes are collapsed so the result is always a same-origin path.
+     */
+    private function join(string $to, string $rest): string
+    {
+        return '/'.ltrim($to.$rest, '/\\');
     }
 
     private function normalizePrefix(string $prefix): string

@@ -65,6 +65,9 @@ final class ConfigurationTest extends TestCase
         yield 'identical' => [['/admin' => '/admin/']];
         yield 'nested target (loop)' => [['/admin' => '/admin/panel']];
         yield 'non scalar target' => [['/admin' => ['x']]];
+        yield 'protocol-relative target' => [['/admin' => '//evil.com']];
+        yield 'protocol-relative source' => [['//admin' => '/panel']];
+        yield 'backslash target' => [['/admin' => '/\\evil.com']];
     }
 
     /**
@@ -76,6 +79,13 @@ final class ConfigurationTest extends TestCase
         $this->expectException(InvalidConfigurationException::class);
 
         (new Processor())->processConfiguration(new Configuration(), [['panel_path_rewrites' => $map]]);
+    }
+
+    public function testRootTargetIsAllowed(): void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [['panel_path_rewrites' => ['/admin' => '/']]]);
+
+        self::assertSame(['/admin' => '/'], $config['panel_path_rewrites']);
     }
 
     public function testCustomAndSvgInline(): void

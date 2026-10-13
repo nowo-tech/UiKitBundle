@@ -69,4 +69,26 @@ final class PanelPathRewriterTest extends TestCase
         self::assertNull($rewriter->legacyRedirectTarget('/panel/blog'));
         self::assertNull($rewriter->legacyRedirectTarget('/'));
     }
+
+    public function testRootTargetNeverYieldsProtocolRelativeRedirect(): void
+    {
+        $rewriter = new PanelPathRewriter(['/admin' => '/']);
+
+        self::assertSame('/', $rewriter->legacyRedirectTarget('/admin'));
+        self::assertSame('/evil.com', $rewriter->legacyRedirectTarget('/admin/evil.com'));
+        self::assertSame('/evil.com', $rewriter->legacyRedirectTarget('/admin//evil.com'));
+        self::assertSame('/evil.com', $rewriter->legacyRedirectTarget('/admin/\\evil.com'));
+    }
+
+    public function testRootTargetRewritesRoutePaths(): void
+    {
+        $collection = new RouteCollection();
+        $collection->add('blog', new Route('/admin/blog/{id}'));
+        $collection->add('home', new Route('/admin'));
+
+        (new PanelPathRewriter(['/admin' => '/']))->rewriteCollection($collection);
+
+        self::assertSame('/blog/{id}', $collection->get('blog')?->getPath());
+        self::assertSame('/', $collection->get('home')?->getPath());
+    }
 }

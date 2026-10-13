@@ -53,6 +53,7 @@ Rules:
 
 - Prefixes are matched on path-segment boundaries: `/admin/blog` matches `/admin/blog`, `/admin/blog/{id}` and `/admin/blog{_format}`, but not `/admin/blogger`.
 - Both prefixes must start with `/`; trailing slashes are ignored.
+- Prefixes must be same-origin paths: a leading `//` or any backslash is rejected. A root target (`'/admin': '/'`) is allowed; redirect targets are always normalised to a single leading `/` (never `//host`).
 - The target must differ from the source and must not be nested under it (`/admin` → `/admin/panel` is rejected to avoid redirect loops).
 - Route names and URL generation are unaffected (routes keep their names; generated URLs use the new paths).
 - With the default empty map, nothing is registered — behavior is identical to 1.8.x.
