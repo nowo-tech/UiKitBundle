@@ -2,7 +2,13 @@
  * Semantic dashboard styles (REQ-UI-001).
  * Used with css_framework custom/none, and as dual-class base for all stacks.
  *
- * Hosts may remap --nowo-ui-* under .kit-admin / page root (see docs/USAGE.md).
+ * Theming (1.13): every colour, radius, font, focus ring, overlay and shadow reads a --nowo-ui-* token.
+ * Base tokens below have :root defaults (light) and [data-theme="dark"] defaults (end of file).
+ * Component tokens (--nowo-ui-btn-*, --nowo-ui-input-*, --nowo-ui-table-*, --nowo-ui-tab-*,
+ * --nowo-ui-pagination-*, --nowo-ui-list-*, …) are optional: they are NOT declared here and resolve
+ * at the use site through var() fallbacks to the base tokens, so a host can set them on :root or on
+ * any scope (.kit-admin, a dialog) and dark mode keeps following the base tokens.
+ * Full list + defaults: docs/THEMING.md. Hosts: a short :root { --nowo-ui-…: … } block.
  */
 :root {
   --nowo-ui-primary: #2563eb;
@@ -15,6 +21,12 @@
   --nowo-ui-success-bg: #ecfdf5;
   --nowo-ui-success-border: #a7f3d0;
   --nowo-ui-success-text: #065f46;
+  --nowo-ui-warning-bg: #fffbeb;
+  --nowo-ui-warning-border: #fde68a;
+  --nowo-ui-warning-text: #92400e;
+  --nowo-ui-info-bg: #f0f9ff;
+  --nowo-ui-info-border: #bae6fd;
+  --nowo-ui-info-text: #075985;
   --nowo-ui-surface: #ffffff;
   --nowo-ui-surface-muted: #f8fafc;
   --nowo-ui-border: #e2e8f0;
@@ -57,15 +69,27 @@
   align-items: center;
   gap: 0.25rem;
   padding: 0.35rem 0.75rem;
-  border: 1px solid var(--nowo-ui-border-strong);
-  border-radius: var(--nowo-ui-radius);
-  background: var(--nowo-ui-surface);
-  color: var(--nowo-ui-text);
+  border: 1px solid var(--nowo-ui-btn-border, var(--nowo-ui-border-strong));
+  border-radius: var(--nowo-ui-btn-radius, var(--nowo-ui-radius));
+  background: var(--nowo-ui-btn-bg, var(--nowo-ui-surface));
+  color: var(--nowo-ui-btn-text, var(--nowo-ui-text));
   font: inherit;
   font-size: 0.875rem;
   line-height: 1.25;
   text-decoration: none;
   cursor: pointer;
+}
+
+/* Hover / focus for the kit-painted stacks (custom, none, tailwind). Bootstrap `.btn` keeps its own states. */
+.nowo-ui-btn:not(.btn):hover {
+  border-color: var(--nowo-ui-btn-hover-border, var(--nowo-ui-btn-border, var(--nowo-ui-border-strong)));
+  background: var(--nowo-ui-btn-hover-bg, var(--nowo-ui-surface-muted));
+  color: var(--nowo-ui-btn-hover-text, var(--nowo-ui-btn-text, var(--nowo-ui-text)));
+}
+
+.nowo-ui-btn:focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline-offset: 2px;
 }
 
 .nowo-ui-btn--sm {
@@ -74,39 +98,127 @@
 }
 
 .nowo-ui-btn--primary {
-  background: var(--nowo-ui-primary);
-  border-color: var(--nowo-ui-primary);
-  color: var(--nowo-ui-primary-contrast);
+  background: var(--nowo-ui-btn-primary-bg, var(--nowo-ui-primary));
+  border-color: var(--nowo-ui-btn-primary-border, var(--nowo-ui-btn-primary-bg, var(--nowo-ui-primary)));
+  color: var(--nowo-ui-btn-primary-text, var(--nowo-ui-primary-contrast));
+}
+
+.nowo-ui-btn--primary:not(.btn):hover {
+  background: var(--nowo-ui-btn-primary-hover-bg, var(--nowo-ui-primary-hover, color-mix(in srgb, var(--nowo-ui-primary) 85%, white)));
+  border-color: var(--nowo-ui-btn-primary-hover-bg, var(--nowo-ui-primary-hover, color-mix(in srgb, var(--nowo-ui-primary) 85%, white)));
+  color: var(--nowo-ui-btn-primary-text, var(--nowo-ui-primary-contrast));
 }
 
 .nowo-ui-btn--danger {
-  border-color: var(--nowo-ui-danger);
-  color: var(--nowo-ui-danger-text);
-  background: var(--nowo-ui-surface);
+  border-color: var(--nowo-ui-btn-danger-border, var(--nowo-ui-danger));
+  color: var(--nowo-ui-btn-danger-text, var(--nowo-ui-danger-text));
+  background: var(--nowo-ui-btn-danger-bg, var(--nowo-ui-surface));
 }
 
-.nowo-ui-btn--link {
+.nowo-ui-btn--danger:not(.btn):hover {
+  border-color: var(--nowo-ui-btn-danger-border, var(--nowo-ui-danger));
+  background: var(--nowo-ui-btn-danger-hover-bg, var(--nowo-ui-danger-bg));
+  color: var(--nowo-ui-btn-danger-text, var(--nowo-ui-danger-text));
+}
+
+/* Outline (primary-tinted) variant, 1.13. */
+.nowo-ui-btn--outline {
+  border-color: var(--nowo-ui-btn-outline-border, var(--nowo-ui-primary));
+  background: var(--nowo-ui-btn-outline-bg, transparent);
+  color: var(--nowo-ui-btn-outline-text, var(--nowo-ui-primary));
+}
+
+.nowo-ui-btn--outline:not(.btn):hover {
+  border-color: var(--nowo-ui-btn-outline-border, var(--nowo-ui-primary));
+  background: var(--nowo-ui-btn-outline-hover-bg, color-mix(in srgb, var(--nowo-ui-primary) 10%, var(--nowo-ui-surface)));
+  color: var(--nowo-ui-btn-outline-text, var(--nowo-ui-primary));
+}
+
+.nowo-ui-btn--link,
+.nowo-ui-btn--link:not(.btn):hover {
   border: 0;
   background: transparent;
-  color: var(--nowo-ui-primary);
+  color: var(--nowo-ui-link, var(--nowo-ui-primary));
   padding-left: 0;
   padding-right: 0;
+}
+
+.nowo-ui-btn--link:not(.btn):hover {
+  color: var(--nowo-ui-link-hover, var(--nowo-ui-link, var(--nowo-ui-primary)));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Text link (1.13). */
+.nowo-ui-link {
+  color: var(--nowo-ui-link, var(--nowo-ui-primary));
+  text-decoration: none;
+}
+
+.nowo-ui-link:hover {
+  color: var(--nowo-ui-link-hover, var(--nowo-ui-link, var(--nowo-ui-primary)));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.nowo-ui-link:focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 .nowo-ui-input {
   max-width: 20rem;
   padding: 0.35rem 0.6rem;
-  border: 1px solid var(--nowo-ui-border-strong);
-  border-radius: var(--nowo-ui-radius);
+  border: 1px solid var(--nowo-ui-input-border, var(--nowo-ui-border-strong));
+  border-radius: var(--nowo-ui-input-radius, var(--nowo-ui-radius));
   font: inherit;
+  accent-color: var(--nowo-ui-accent, var(--nowo-ui-primary));
+}
+
+/* Surface, text, placeholder and focus for the kit-painted stacks; Bootstrap `.form-control` keeps its own. */
+.nowo-ui-input:not(.form-control) {
+  background-color: var(--nowo-ui-input-bg, var(--nowo-ui-surface));
+  color: var(--nowo-ui-input-text, var(--nowo-ui-text));
+}
+
+.nowo-ui-input:not(.form-control)::placeholder {
+  color: var(--nowo-ui-input-placeholder, var(--nowo-ui-muted));
+  opacity: 1;
+}
+
+.nowo-ui-input:not(.form-control):focus {
+  outline: 0;
+  border-color: var(--nowo-ui-input-focus-border, var(--nowo-ui-primary));
+  box-shadow: var(--nowo-ui-focus-ring, 0 0 0 0.2rem var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent)));
+}
+
+/* Checkbox / radio (1.13): `.nowo-ui-check` label wrapper + accent colour inside kit surfaces. */
+.nowo-ui-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  color: var(--nowo-ui-text);
+  cursor: pointer;
+}
+
+.nowo-ui-check > input:is([type='checkbox'], [type='radio']),
+:is(.nowo-ui-filter-bar, .nowo-ui-search, .nowo-ui-table, .nowo-ui-data-table, .nowo-ui-list, .nowo-ui-card, .nowo-ui-modal, .nowo-ui-confirm) input:is([type='checkbox'], [type='radio']) {
+  accent-color: var(--nowo-ui-accent, var(--nowo-ui-primary));
+}
+
+.nowo-ui-check > input:is([type='checkbox'], [type='radio']):focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline-offset: 2px;
 }
 
 .nowo-ui-list {
   list-style: none;
   margin: 0;
   padding: 0;
-  border: 1px solid var(--nowo-ui-border);
-  border-radius: var(--nowo-ui-radius);
+  border: 1px solid var(--nowo-ui-list-border, var(--nowo-ui-border));
+  border-radius: var(--nowo-ui-list-radius, var(--nowo-ui-radius));
 }
 
 .nowo-ui-list-item {
@@ -115,7 +227,15 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--nowo-ui-border);
+  border-bottom: 1px solid var(--nowo-ui-list-item-border, var(--nowo-ui-list-border, var(--nowo-ui-border)));
+}
+
+.nowo-ui-list-item:not(.list-group-item) {
+  background: var(--nowo-ui-list-item-bg, transparent);
+}
+
+.nowo-ui-list-item:not(.list-group-item):hover {
+  background: var(--nowo-ui-list-item-hover-bg, var(--nowo-ui-list-item-bg, transparent));
 }
 
 .nowo-ui-list-item:last-child {
@@ -134,13 +254,23 @@
 .nowo-ui-table th,
 .nowo-ui-table td {
   padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid var(--nowo-ui-border);
+  border-bottom: 1px solid var(--nowo-ui-table-border, var(--nowo-ui-border));
   text-align: left;
   vertical-align: middle;
 }
 
+/* Head + hover paint for the kit-painted stacks; Bootstrap `.table` keeps --bs-table-* (see .nowo-ui-bs-tokens). */
+.nowo-ui-table:not(.table) > thead > tr > th {
+  background: var(--nowo-ui-table-head-bg, transparent);
+  color: var(--nowo-ui-table-head-text, currentColor);
+}
+
 .nowo-ui-table--striped tbody tr:nth-child(even) {
-  background: var(--nowo-ui-surface-muted);
+  background: var(--nowo-ui-table-stripe-bg, var(--nowo-ui-surface-muted));
+}
+
+.nowo-ui-table:not(.table) > tbody > tr:hover {
+  background: var(--nowo-ui-table-hover-bg, color-mix(in srgb, var(--nowo-ui-surface-muted) 80%, transparent));
 }
 
 .nowo-ui-row-actions {
@@ -191,15 +321,15 @@
 }
 
 .nowo-ui-flash--warning {
-  background: #fffbeb;
-  border-color: #fde68a;
-  color: #92400e;
+  background: var(--nowo-ui-warning-bg);
+  border-color: var(--nowo-ui-warning-border);
+  color: var(--nowo-ui-warning-text);
 }
 
 .nowo-ui-flash--info {
-  background: #f0f9ff;
-  border-color: #bae6fd;
-  color: #075985;
+  background: var(--nowo-ui-info-bg);
+  border-color: var(--nowo-ui-info-border);
+  color: var(--nowo-ui-info-text);
 }
 
 .nowo-ui-empty,
@@ -212,7 +342,7 @@
   align-items: center;
   padding: 0.1rem 0.45rem;
   border: 1px solid var(--nowo-ui-border);
-  border-radius: 999px;
+  border-radius: var(--nowo-ui-badge-radius, 999px);
   font-size: 0.75rem;
   margin-left: 0.35rem;
   background: var(--nowo-ui-surface-muted);
@@ -226,9 +356,9 @@
 }
 
 .nowo-ui-badge--warning {
-  background: #fffbeb;
-  border-color: #fde68a;
-  color: #92400e;
+  background: var(--nowo-ui-warning-bg);
+  border-color: var(--nowo-ui-warning-border);
+  color: var(--nowo-ui-warning-text);
 }
 
 .nowo-ui-badge--danger,
@@ -239,9 +369,9 @@
 }
 
 .nowo-ui-badge--info {
-  background: #f0f9ff;
-  border-color: #bae6fd;
-  color: #075985;
+  background: var(--nowo-ui-info-bg);
+  border-color: var(--nowo-ui-info-border);
+  color: var(--nowo-ui-info-text);
 }
 
 .nowo-ui-badge--neutral {
@@ -267,7 +397,7 @@
   z-index: 1050;
   overflow-x: hidden;
   overflow-y: auto;
-  background: rgba(0, 0, 0, 0.45);
+  background: var(--nowo-ui-overlay, rgba(0, 0, 0, 0.45));
   padding: 1.5rem;
   align-items: flex-start;
   justify-content: center;
@@ -285,10 +415,11 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  background: var(--nowo-ui-surface, #ffffff);
-  border: 1px solid var(--nowo-ui-border, #e2e8f0);
-  border-radius: var(--nowo-ui-radius, 0.375rem);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  background: var(--nowo-ui-surface);
+  color: var(--nowo-ui-text);
+  border: 1px solid var(--nowo-ui-border);
+  border-radius: var(--nowo-ui-modal-radius, var(--nowo-ui-radius));
+  box-shadow: var(--nowo-ui-shadow-dialog, 0 8px 32px rgba(0, 0, 0, 0.18));
   pointer-events: auto;
   outline: 0;
 }
@@ -299,14 +430,15 @@
   justify-content: space-between;
   gap: 0.5rem;
   padding: 1rem 1.25rem;
-  border-bottom: 1px solid var(--nowo-ui-border, #e2e8f0);
+  border-bottom: 1px solid var(--nowo-ui-border);
 }
 
 .nowo-ui-modal.nowo-ui-modal-open .modal-title {
   margin: 0;
+  font-family: var(--nowo-ui-font-display, inherit);
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--nowo-ui-text, #0f172a);
+  color: var(--nowo-ui-text);
 }
 
 .nowo-ui-modal.nowo-ui-modal-open .modal-body {
@@ -320,7 +452,7 @@
   justify-content: flex-end;
   gap: 0.5rem;
   padding: 0.75rem 1.25rem;
-  border-top: 1px solid var(--nowo-ui-border, #e2e8f0);
+  border-top: 1px solid var(--nowo-ui-border);
 }
 
 .nowo-ui-modal.nowo-ui-modal-open .btn-close {
@@ -332,17 +464,23 @@
   padding: 0;
   background: transparent;
   border: 0;
-  border-radius: var(--nowo-ui-radius, 0.375rem);
+  border-radius: var(--nowo-ui-radius);
   cursor: pointer;
   opacity: 0.55;
   font-size: 1.25rem;
   line-height: 1;
-  color: var(--nowo-ui-text, #0f172a);
+  color: var(--nowo-ui-text);
 }
 
 .nowo-ui-modal.nowo-ui-modal-open .btn-close:hover {
   opacity: 1;
-  background: var(--nowo-ui-surface-muted, #f8fafc);
+  background: var(--nowo-ui-surface-muted);
+}
+
+.nowo-ui-modal.nowo-ui-modal-open .btn-close:focus-visible {
+  opacity: 1;
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline-offset: 2px;
 }
 
 .nowo-ui-modal.nowo-ui-modal-open .btn-close::before {
@@ -380,24 +518,47 @@ body.nowo-modal-open {
   gap: 0.25rem;
 }
 
+/* The partial's <ul class="pagination"> lays out as a row on every stack (zero specificity: Bootstrap wins). */
+:where(.nowo-ui-pagination__nav) > :where(ul.pagination) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
 .nowo-ui-pagination__link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 2rem;
   padding: 0.25rem 0.5rem;
-  border: 1px solid var(--nowo-ui-border-strong);
-  border-radius: var(--nowo-ui-radius);
-  background: var(--nowo-ui-surface);
-  color: var(--nowo-ui-text);
+  border: 1px solid var(--nowo-ui-pagination-border, var(--nowo-ui-border-strong));
+  border-radius: var(--nowo-ui-pagination-radius, var(--nowo-ui-radius));
+  background: var(--nowo-ui-pagination-bg, var(--nowo-ui-surface));
+  color: var(--nowo-ui-pagination-text, var(--nowo-ui-text));
   text-decoration: none;
   font-size: 0.875rem;
 }
 
+a.nowo-ui-pagination__link:hover {
+  border-color: var(--nowo-ui-pagination-hover-border, var(--nowo-ui-pagination-border, var(--nowo-ui-border-strong)));
+  background: var(--nowo-ui-pagination-hover-bg, var(--nowo-ui-surface-muted));
+  color: var(--nowo-ui-pagination-hover-text, var(--nowo-ui-pagination-text, var(--nowo-ui-text)));
+}
+
+.nowo-ui-pagination__link:focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline-offset: 2px;
+}
+
 .nowo-ui-pagination__link.is-active {
-  background: var(--nowo-ui-primary);
-  border-color: var(--nowo-ui-primary);
-  color: var(--nowo-ui-primary-contrast);
+  background: var(--nowo-ui-pagination-active-bg, var(--nowo-ui-primary));
+  border-color: var(--nowo-ui-pagination-active-border, var(--nowo-ui-pagination-active-bg, var(--nowo-ui-primary)));
+  color: var(--nowo-ui-pagination-active-text, var(--nowo-ui-primary-contrast));
+  font-weight: var(--nowo-ui-pagination-active-weight, inherit);
 }
 
 .nowo-ui-pagination__link.is-disabled {
@@ -414,31 +575,45 @@ body.nowo-modal-open {
 .nowo-ui-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem;
+  gap: var(--nowo-ui-tabs-gap, 0.25rem);
   margin-bottom: 1rem;
-  border-bottom: 1px solid var(--nowo-ui-border);
+  border-bottom: 1px solid var(--nowo-ui-tabs-border, var(--nowo-ui-border));
 }
 
 .nowo-ui-tabs__item {
   display: inline-flex;
   padding: 0.5rem 0.75rem;
-  color: var(--nowo-ui-muted);
+  color: var(--nowo-ui-tab-text, var(--nowo-ui-muted));
+  background: var(--nowo-ui-tab-bg, transparent);
   text-decoration: none;
   border-bottom: 2px solid transparent;
+  border-radius: var(--nowo-ui-tab-radius, 0);
   margin-bottom: -1px;
+}
+
+.nowo-ui-tabs__item:not(.nowo-ui-tabs__item--active):not(.is-active):hover {
+  color: var(--nowo-ui-tab-hover-text, var(--nowo-ui-text));
+  background: var(--nowo-ui-tab-hover-bg, var(--nowo-ui-tab-bg, transparent));
+}
+
+.nowo-ui-tabs__item:focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline-offset: 2px;
 }
 
 .nowo-ui-tabs__item--active,
 .nowo-ui-tabs__item.is-active {
-  color: var(--nowo-ui-text);
-  border-bottom-color: var(--nowo-ui-primary);
-  font-weight: 600;
+  color: var(--nowo-ui-tab-active-text, var(--nowo-ui-text));
+  background: var(--nowo-ui-tab-active-bg, var(--nowo-ui-tab-bg, transparent));
+  border-bottom-color: var(--nowo-ui-tab-active-border, var(--nowo-ui-primary));
+  font-weight: var(--nowo-ui-tab-active-weight, 600);
 }
 
 .nowo-ui-page-header__title {
   margin: 0;
+  font-family: var(--nowo-ui-font-display, inherit);
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: var(--nowo-ui-heading-weight, 700);
   color: var(--nowo-ui-text);
 }
 
@@ -487,6 +662,7 @@ body.nowo-modal-open {
   min-height: 100vh;
   background: var(--nowo-ui-surface-muted);
   color: var(--nowo-ui-text);
+  font-family: var(--nowo-ui-font-family, inherit);
   transition: grid-template-columns var(--nowo-ui-aside-duration) var(--nowo-ui-aside-ease);
 }
 
@@ -599,16 +775,22 @@ body.nowo-modal-open {
 
 .nowo-ui-aside__link.is-current,
 .nowo-ui-aside__link--active {
-  background: color-mix(in srgb, var(--nowo-ui-primary) 12%, transparent);
-  color: var(--nowo-ui-primary);
+  background: var(--nowo-ui-nav-active-bg, color-mix(in srgb, var(--nowo-ui-primary) 12%, transparent));
+  color: var(--nowo-ui-nav-active-text, var(--nowo-ui-primary));
   font-weight: 600;
+}
+
+.nowo-ui-aside__link:focus-visible,
+.nowo-ui-aside__group-toggle:focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline-offset: 1px;
 }
 
 .nowo-ui-aside-backdrop {
   position: fixed;
   inset: 0;
   z-index: 30;
-  background: rgba(15, 23, 42, 0.35);
+  background: var(--nowo-ui-overlay, rgba(15, 23, 42, 0.35));
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -700,7 +882,7 @@ body.nowo-modal-open {
 
 .nowo-ui-user-menu__summary:hover,
 .nowo-ui-user-menu__summary:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent);
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
   outline-offset: 2px;
 }
 
@@ -713,7 +895,7 @@ body.nowo-modal-open {
   border: 1px solid var(--nowo-ui-border);
   border-radius: var(--nowo-ui-radius);
   background: var(--nowo-ui-surface);
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
+  box-shadow: var(--nowo-ui-shadow-popover, 0 10px 28px rgba(15, 23, 42, 0.12));
   z-index: 50;
 }
 
@@ -915,7 +1097,7 @@ body.nowo-modal-open {
   gap: 0.5rem;
   margin: 0;
   pointer-events: auto;
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.14);
+  box-shadow: var(--nowo-ui-shadow-toast, 0 10px 28px rgba(15, 23, 42, 0.14));
   transition: opacity 0.18s ease, transform 0.18s ease;
 }
 
@@ -965,7 +1147,7 @@ body.nowo-modal-open {
 }
 
 .nowo-ui-confirm::backdrop {
-  background: rgba(15, 23, 42, 0.45);
+  background: var(--nowo-ui-overlay, rgba(15, 23, 42, 0.45));
 }
 
 .nowo-ui-confirm__panel {
@@ -973,8 +1155,8 @@ body.nowo-modal-open {
   background: var(--nowo-ui-surface);
   color: var(--nowo-ui-text);
   border: 1px solid var(--nowo-ui-border);
-  border-radius: var(--nowo-ui-radius);
-  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.2);
+  border-radius: var(--nowo-ui-modal-radius, var(--nowo-ui-radius));
+  box-shadow: var(--nowo-ui-shadow-dialog, 0 16px 40px rgba(15, 23, 42, 0.2));
   overflow: hidden;
 }
 
@@ -984,6 +1166,7 @@ body.nowo-modal-open {
 
 .nowo-ui-confirm__title {
   margin: 0;
+  font-family: var(--nowo-ui-font-display, inherit);
   font-size: 1.1rem;
   font-weight: 600;
 }
@@ -1403,9 +1586,9 @@ body.nowo-modal-open {
 
 /* --- Card / panel --- */
 .nowo-ui-card {
-  background: var(--nowo-ui-surface);
-  border: 1px solid var(--nowo-ui-border);
-  border-radius: var(--nowo-ui-radius);
+  background: var(--nowo-ui-card-bg, var(--nowo-ui-surface));
+  border: 1px solid var(--nowo-ui-card-border, var(--nowo-ui-border));
+  border-radius: var(--nowo-ui-card-radius, var(--nowo-ui-radius));
   margin-bottom: 1rem;
   overflow: hidden;
 }
@@ -1422,6 +1605,7 @@ body.nowo-modal-open {
 
 .nowo-ui-card__title {
   margin: 0;
+  font-family: var(--nowo-ui-font-display, inherit);
   font-size: 1.05rem;
   font-weight: 600;
 }
@@ -1595,9 +1779,9 @@ table.nowo-ui-data-table.nowo-ui-data-table {
 
 table.nowo-ui-data-table.nowo-ui-data-table > thead > tr > th {
   padding: var(--nowo-ui-table-head-py) var(--nowo-ui-table-cell-px);
-  border-bottom: 1px solid var(--nowo-ui-border);
-  background: transparent;
-  color: var(--nowo-ui-muted);
+  border-bottom: 1px solid var(--nowo-ui-table-border, var(--nowo-ui-border));
+  background: var(--nowo-ui-table-head-bg, transparent);
+  color: var(--nowo-ui-table-head-text, var(--nowo-ui-muted));
   font-size: var(--nowo-ui-table-head-font-size);
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -1610,7 +1794,7 @@ table.nowo-ui-data-table.nowo-ui-data-table > thead > tr > th {
 table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr > td,
 table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr > th {
   padding: var(--nowo-ui-table-cell-py) var(--nowo-ui-table-cell-px);
-  border-bottom: 1px solid color-mix(in srgb, var(--nowo-ui-border) 70%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--nowo-ui-table-border, var(--nowo-ui-border)) 70%, transparent);
   font-size: var(--nowo-ui-table-font-size);
   line-height: 1.4;
   vertical-align: middle;
@@ -1622,7 +1806,7 @@ table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr:last-child > th {
 }
 
 table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr:hover > td {
-  background: color-mix(in srgb, var(--nowo-ui-surface-muted) 80%, transparent);
+  background: var(--nowo-ui-table-hover-bg, color-mix(in srgb, var(--nowo-ui-surface-muted) 80%, transparent));
 }
 
 /* --- Brand --- */
@@ -1653,6 +1837,7 @@ table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr:hover > td {
 }
 
 .nowo-ui-brand__text {
+  font-family: var(--nowo-ui-font-display, inherit);
   font-size: 0.95rem;
 }
 
@@ -1669,6 +1854,16 @@ table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr:hover > td {
   cursor: pointer;
   font: inherit;
   font-size: 0.8125rem;
+}
+
+.nowo-ui-theme-toggle:focus-visible,
+.nowo-ui-width-toggle:focus-visible,
+.nowo-ui-locale-switcher__summary:focus-visible,
+.nowo-ui-kebab__summary:focus-visible,
+.nowo-ui-toast__dismiss:focus-visible,
+.nowo-ui-release__trigger:focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline-offset: 2px;
 }
 
 .nowo-ui-theme-toggle--compact {
@@ -1754,7 +1949,7 @@ table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr:hover > td {
   border: 1px solid var(--nowo-ui-border);
   border-radius: var(--nowo-ui-radius);
   background: var(--nowo-ui-surface);
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
+  box-shadow: var(--nowo-ui-shadow-popover, 0 10px 28px rgba(15, 23, 42, 0.12));
   z-index: 50;
 }
 
@@ -1837,7 +2032,7 @@ table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr:hover > td {
   border: 1px solid var(--nowo-ui-border);
   border-radius: var(--nowo-ui-radius);
   background: var(--nowo-ui-surface);
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
+  box-shadow: var(--nowo-ui-shadow-popover, 0 10px 28px rgba(15, 23, 42, 0.12));
   z-index: 50;
 }
 
@@ -1866,14 +2061,14 @@ table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr:hover > td {
   height: 0.5rem;
   overflow: hidden;
   border-radius: 999px;
-  background: var(--nowo-ui-surface-muted);
+  background: var(--nowo-ui-progress-track, var(--nowo-ui-surface-muted));
   border: 1px solid var(--nowo-ui-border);
 }
 
 .nowo-ui-progress__bar {
   display: block;
   height: 100%;
-  background: var(--nowo-ui-primary);
+  background: var(--nowo-ui-progress-bar, var(--nowo-ui-primary));
   transition: width 0.2s ease;
 }
 
@@ -1905,6 +2100,259 @@ table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr:hover > td {
   }
 }
 
+/* --- Bootstrap token bridge (opt-in, 1.13) ---
+ * Bootstrap stacks keep Bootstrap's own variant classes (btn-primary, alert-*, badge bg-*, text-muted,
+ * table, list-group, pagination, nav-tabs) and therefore Bootstrap's palette by default. Add the class
+ * `nowo-ui-bs-tokens` to an ancestor (e.g. <body> or the panel root) to paint those Bootstrap 5.3
+ * components from the same --nowo-ui-* tokens. Nothing here applies without that class.
+ */
+.nowo-ui-bs-tokens {
+  --bs-body-color: var(--nowo-ui-text);
+  --bs-body-bg: var(--nowo-ui-surface);
+  --bs-border-color: var(--nowo-ui-border);
+  --bs-secondary-color: var(--nowo-ui-muted);
+  --bs-tertiary-bg: var(--nowo-ui-surface-muted);
+  --bs-border-radius: var(--nowo-ui-radius);
+  --bs-focus-ring-color: var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+}
+
+.nowo-ui-bs-tokens .text-muted {
+  color: var(--nowo-ui-muted) !important;
+}
+
+.nowo-ui-bs-tokens a:not([class]),
+.nowo-ui-bs-tokens .nowo-ui-link {
+  color: var(--nowo-ui-link, var(--nowo-ui-primary));
+}
+
+.nowo-ui-bs-tokens .btn {
+  --bs-btn-border-radius: var(--nowo-ui-btn-radius, var(--nowo-ui-radius));
+  --bs-btn-focus-box-shadow: var(--nowo-ui-focus-ring, 0 0 0 0.2rem var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent)));
+}
+
+.nowo-ui-bs-tokens .btn-primary {
+  --bs-btn-color: var(--nowo-ui-btn-primary-text, var(--nowo-ui-primary-contrast));
+  --bs-btn-bg: var(--nowo-ui-btn-primary-bg, var(--nowo-ui-primary));
+  --bs-btn-border-color: var(--nowo-ui-btn-primary-border, var(--nowo-ui-btn-primary-bg, var(--nowo-ui-primary)));
+  --bs-btn-hover-color: var(--nowo-ui-btn-primary-text, var(--nowo-ui-primary-contrast));
+  --bs-btn-hover-bg: var(--nowo-ui-btn-primary-hover-bg, var(--nowo-ui-primary-hover, color-mix(in srgb, var(--nowo-ui-primary) 85%, white)));
+  --bs-btn-hover-border-color: var(--nowo-ui-btn-primary-hover-bg, var(--nowo-ui-primary-hover, color-mix(in srgb, var(--nowo-ui-primary) 85%, white)));
+  --bs-btn-active-color: var(--nowo-ui-btn-primary-text, var(--nowo-ui-primary-contrast));
+  --bs-btn-active-bg: var(--nowo-ui-btn-primary-hover-bg, var(--nowo-ui-primary-hover, color-mix(in srgb, var(--nowo-ui-primary) 85%, white)));
+  --bs-btn-active-border-color: var(--nowo-ui-btn-primary-hover-bg, var(--nowo-ui-primary-hover, color-mix(in srgb, var(--nowo-ui-primary) 85%, white)));
+  --bs-btn-disabled-color: var(--nowo-ui-btn-primary-text, var(--nowo-ui-primary-contrast));
+  --bs-btn-disabled-bg: var(--nowo-ui-btn-primary-bg, var(--nowo-ui-primary));
+  --bs-btn-disabled-border-color: var(--nowo-ui-btn-primary-bg, var(--nowo-ui-primary));
+}
+
+.nowo-ui-bs-tokens .btn-secondary,
+.nowo-ui-bs-tokens .btn-outline-secondary {
+  --bs-btn-color: var(--nowo-ui-btn-text, var(--nowo-ui-text));
+  --bs-btn-bg: var(--nowo-ui-btn-bg, var(--nowo-ui-surface));
+  --bs-btn-border-color: var(--nowo-ui-btn-border, var(--nowo-ui-border-strong));
+  --bs-btn-hover-color: var(--nowo-ui-btn-hover-text, var(--nowo-ui-btn-text, var(--nowo-ui-text)));
+  --bs-btn-hover-bg: var(--nowo-ui-btn-hover-bg, var(--nowo-ui-surface-muted));
+  --bs-btn-hover-border-color: var(--nowo-ui-btn-hover-border, var(--nowo-ui-btn-border, var(--nowo-ui-border-strong)));
+  --bs-btn-active-color: var(--nowo-ui-btn-hover-text, var(--nowo-ui-btn-text, var(--nowo-ui-text)));
+  --bs-btn-active-bg: var(--nowo-ui-btn-hover-bg, var(--nowo-ui-surface-muted));
+  --bs-btn-active-border-color: var(--nowo-ui-btn-hover-border, var(--nowo-ui-btn-border, var(--nowo-ui-border-strong)));
+  --bs-btn-disabled-color: var(--nowo-ui-muted);
+  --bs-btn-disabled-bg: var(--nowo-ui-btn-bg, var(--nowo-ui-surface));
+  --bs-btn-disabled-border-color: var(--nowo-ui-btn-border, var(--nowo-ui-border-strong));
+}
+
+.nowo-ui-bs-tokens .btn-outline-primary {
+  --bs-btn-color: var(--nowo-ui-btn-outline-text, var(--nowo-ui-primary));
+  --bs-btn-bg: var(--nowo-ui-btn-outline-bg, transparent);
+  --bs-btn-border-color: var(--nowo-ui-btn-outline-border, var(--nowo-ui-primary));
+  --bs-btn-hover-color: var(--nowo-ui-btn-outline-text, var(--nowo-ui-primary));
+  --bs-btn-hover-bg: var(--nowo-ui-btn-outline-hover-bg, color-mix(in srgb, var(--nowo-ui-primary) 10%, var(--nowo-ui-surface)));
+  --bs-btn-hover-border-color: var(--nowo-ui-btn-outline-border, var(--nowo-ui-primary));
+  --bs-btn-active-color: var(--nowo-ui-btn-outline-text, var(--nowo-ui-primary));
+  --bs-btn-active-bg: var(--nowo-ui-btn-outline-hover-bg, color-mix(in srgb, var(--nowo-ui-primary) 10%, var(--nowo-ui-surface)));
+  --bs-btn-active-border-color: var(--nowo-ui-btn-outline-border, var(--nowo-ui-primary));
+}
+
+.nowo-ui-bs-tokens .btn-outline-danger {
+  --bs-btn-color: var(--nowo-ui-btn-danger-text, var(--nowo-ui-danger-text));
+  --bs-btn-bg: var(--nowo-ui-btn-danger-bg, var(--nowo-ui-surface));
+  --bs-btn-border-color: var(--nowo-ui-btn-danger-border, var(--nowo-ui-danger));
+  --bs-btn-hover-color: var(--nowo-ui-btn-danger-text, var(--nowo-ui-danger-text));
+  --bs-btn-hover-bg: var(--nowo-ui-btn-danger-hover-bg, var(--nowo-ui-danger-bg));
+  --bs-btn-hover-border-color: var(--nowo-ui-btn-danger-border, var(--nowo-ui-danger));
+  --bs-btn-active-color: var(--nowo-ui-btn-danger-text, var(--nowo-ui-danger-text));
+  --bs-btn-active-bg: var(--nowo-ui-btn-danger-hover-bg, var(--nowo-ui-danger-bg));
+  --bs-btn-active-border-color: var(--nowo-ui-btn-danger-border, var(--nowo-ui-danger));
+}
+
+.nowo-ui-bs-tokens .btn-link {
+  --bs-btn-color: var(--nowo-ui-link, var(--nowo-ui-primary));
+  --bs-btn-hover-color: var(--nowo-ui-link-hover, var(--nowo-ui-link, var(--nowo-ui-primary)));
+  --bs-btn-active-color: var(--nowo-ui-link-hover, var(--nowo-ui-link, var(--nowo-ui-primary)));
+}
+
+.nowo-ui-bs-tokens .form-control,
+.nowo-ui-bs-tokens .form-select {
+  border-color: var(--nowo-ui-input-border, var(--nowo-ui-border-strong));
+  border-radius: var(--nowo-ui-input-radius, var(--nowo-ui-radius));
+  background-color: var(--nowo-ui-input-bg, var(--nowo-ui-surface));
+  color: var(--nowo-ui-input-text, var(--nowo-ui-text));
+}
+
+.nowo-ui-bs-tokens .form-control::placeholder {
+  color: var(--nowo-ui-input-placeholder, var(--nowo-ui-muted));
+}
+
+.nowo-ui-bs-tokens .form-control:focus,
+.nowo-ui-bs-tokens .form-select:focus,
+.nowo-ui-bs-tokens .form-check-input:focus {
+  border-color: var(--nowo-ui-input-focus-border, var(--nowo-ui-primary));
+  box-shadow: var(--nowo-ui-focus-ring, 0 0 0 0.2rem var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent)));
+}
+
+.nowo-ui-bs-tokens .form-check-input:checked {
+  border-color: var(--nowo-ui-accent, var(--nowo-ui-primary));
+  background-color: var(--nowo-ui-accent, var(--nowo-ui-primary));
+}
+
+.nowo-ui-bs-tokens .table {
+  --bs-table-color: var(--nowo-ui-text);
+  --bs-table-bg: transparent;
+  --bs-table-border-color: var(--nowo-ui-table-border, var(--nowo-ui-border));
+  --bs-table-striped-color: var(--nowo-ui-text);
+  --bs-table-striped-bg: var(--nowo-ui-table-stripe-bg, var(--nowo-ui-surface-muted));
+  --bs-table-hover-color: var(--nowo-ui-text);
+  --bs-table-hover-bg: var(--nowo-ui-table-hover-bg, color-mix(in srgb, var(--nowo-ui-surface-muted) 80%, transparent));
+}
+
+.nowo-ui-bs-tokens .table > thead > tr > th {
+  background-color: var(--nowo-ui-table-head-bg, transparent);
+  color: var(--nowo-ui-table-head-text, currentColor);
+}
+
+.nowo-ui-bs-tokens .list-group {
+  --bs-list-group-color: var(--nowo-ui-text);
+  --bs-list-group-bg: var(--nowo-ui-list-item-bg, transparent);
+  --bs-list-group-border-color: var(--nowo-ui-list-border, var(--nowo-ui-border));
+  --bs-list-group-border-radius: var(--nowo-ui-list-radius, var(--nowo-ui-radius));
+  --bs-list-group-action-hover-bg: var(--nowo-ui-list-item-hover-bg, var(--nowo-ui-surface-muted));
+  --bs-list-group-active-bg: var(--nowo-ui-primary);
+  --bs-list-group-active-border-color: var(--nowo-ui-primary);
+  --bs-list-group-active-color: var(--nowo-ui-primary-contrast);
+}
+
+.nowo-ui-bs-tokens .pagination {
+  --bs-pagination-color: var(--nowo-ui-pagination-text, var(--nowo-ui-text));
+  --bs-pagination-bg: var(--nowo-ui-pagination-bg, var(--nowo-ui-surface));
+  --bs-pagination-border-color: var(--nowo-ui-pagination-border, var(--nowo-ui-border-strong));
+  --bs-pagination-border-radius: var(--nowo-ui-pagination-radius, var(--nowo-ui-radius));
+  --bs-pagination-hover-color: var(--nowo-ui-pagination-hover-text, var(--nowo-ui-pagination-text, var(--nowo-ui-text)));
+  --bs-pagination-hover-bg: var(--nowo-ui-pagination-hover-bg, var(--nowo-ui-surface-muted));
+  --bs-pagination-hover-border-color: var(--nowo-ui-pagination-hover-border, var(--nowo-ui-pagination-border, var(--nowo-ui-border-strong)));
+  --bs-pagination-focus-color: var(--nowo-ui-pagination-text, var(--nowo-ui-text));
+  --bs-pagination-focus-bg: var(--nowo-ui-pagination-hover-bg, var(--nowo-ui-surface-muted));
+  --bs-pagination-focus-box-shadow: var(--nowo-ui-focus-ring, 0 0 0 0.2rem var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent)));
+  --bs-pagination-active-color: var(--nowo-ui-pagination-active-text, var(--nowo-ui-primary-contrast));
+  --bs-pagination-active-bg: var(--nowo-ui-pagination-active-bg, var(--nowo-ui-primary));
+  --bs-pagination-active-border-color: var(--nowo-ui-pagination-active-border, var(--nowo-ui-pagination-active-bg, var(--nowo-ui-primary)));
+  --bs-pagination-disabled-color: var(--nowo-ui-muted);
+  --bs-pagination-disabled-bg: var(--nowo-ui-pagination-bg, var(--nowo-ui-surface));
+  --bs-pagination-disabled-border-color: var(--nowo-ui-pagination-border, var(--nowo-ui-border-strong));
+}
+
+.nowo-ui-bs-tokens .nav-tabs {
+  --bs-nav-link-color: var(--nowo-ui-tab-text, var(--nowo-ui-muted));
+  --bs-nav-link-hover-color: var(--nowo-ui-tab-hover-text, var(--nowo-ui-text));
+  --bs-nav-tabs-border-color: var(--nowo-ui-tabs-border, var(--nowo-ui-border));
+  --bs-nav-tabs-link-hover-border-color: var(--nowo-ui-tabs-border, var(--nowo-ui-border));
+  --bs-nav-tabs-link-active-color: var(--nowo-ui-tab-active-text, var(--nowo-ui-text));
+  --bs-nav-tabs-link-active-bg: var(--nowo-ui-tab-active-bg, var(--nowo-ui-surface));
+  --bs-nav-tabs-link-active-border-color: var(--nowo-ui-tabs-border, var(--nowo-ui-border)) var(--nowo-ui-tabs-border, var(--nowo-ui-border)) var(--nowo-ui-tab-active-border, var(--nowo-ui-primary));
+}
+
+.nowo-ui-bs-tokens .card {
+  --bs-card-bg: var(--nowo-ui-card-bg, var(--nowo-ui-surface));
+  --bs-card-color: var(--nowo-ui-text);
+  --bs-card-border-color: var(--nowo-ui-card-border, var(--nowo-ui-border));
+  --bs-card-border-radius: var(--nowo-ui-card-radius, var(--nowo-ui-radius));
+  --bs-card-cap-bg: var(--nowo-ui-surface-muted);
+}
+
+.nowo-ui-bs-tokens .modal {
+  --bs-modal-bg: var(--nowo-ui-surface);
+  --bs-modal-color: var(--nowo-ui-text);
+  --bs-modal-border-color: var(--nowo-ui-border);
+  --bs-modal-border-radius: var(--nowo-ui-modal-radius, var(--nowo-ui-radius));
+  --bs-modal-header-border-color: var(--nowo-ui-border);
+  --bs-modal-footer-border-color: var(--nowo-ui-border);
+}
+
+.nowo-ui-bs-tokens .progress {
+  --bs-progress-bg: var(--nowo-ui-progress-track, var(--nowo-ui-surface-muted));
+  --bs-progress-bar-bg: var(--nowo-ui-progress-bar, var(--nowo-ui-primary));
+}
+
+.nowo-ui-bs-tokens .alert-success {
+  --bs-alert-color: var(--nowo-ui-success-text);
+  --bs-alert-bg: var(--nowo-ui-success-bg);
+  --bs-alert-border-color: var(--nowo-ui-success-border);
+}
+
+.nowo-ui-bs-tokens .alert-danger {
+  --bs-alert-color: var(--nowo-ui-danger-text-strong);
+  --bs-alert-bg: var(--nowo-ui-danger-bg);
+  --bs-alert-border-color: var(--nowo-ui-danger-border);
+}
+
+.nowo-ui-bs-tokens .alert-warning {
+  --bs-alert-color: var(--nowo-ui-warning-text);
+  --bs-alert-bg: var(--nowo-ui-warning-bg);
+  --bs-alert-border-color: var(--nowo-ui-warning-border);
+}
+
+.nowo-ui-bs-tokens .alert-info {
+  --bs-alert-color: var(--nowo-ui-info-text);
+  --bs-alert-bg: var(--nowo-ui-info-bg);
+  --bs-alert-border-color: var(--nowo-ui-info-border);
+}
+
+/* Bootstrap colour utilities on kit badges use !important; the bridge answers in kind, scoped to .nowo-ui-badge. */
+.nowo-ui-bs-tokens .nowo-ui-badge.badge {
+  border: 1px solid var(--nowo-ui-border) !important;
+  border-radius: var(--nowo-ui-badge-radius, 999px);
+  background-color: var(--nowo-ui-surface-muted) !important;
+  color: var(--nowo-ui-text) !important;
+}
+
+.nowo-ui-bs-tokens .nowo-ui-badge--success.badge {
+  border-color: var(--nowo-ui-success-border) !important;
+  background-color: var(--nowo-ui-success-bg) !important;
+  color: var(--nowo-ui-success-text) !important;
+}
+
+.nowo-ui-bs-tokens .nowo-ui-badge--warning.badge {
+  border-color: var(--nowo-ui-warning-border) !important;
+  background-color: var(--nowo-ui-warning-bg) !important;
+  color: var(--nowo-ui-warning-text) !important;
+}
+
+.nowo-ui-bs-tokens .nowo-ui-badge--danger.badge,
+.nowo-ui-bs-tokens .nowo-ui-badge--error.badge {
+  border-color: var(--nowo-ui-danger-border) !important;
+  background-color: var(--nowo-ui-danger-bg) !important;
+  color: var(--nowo-ui-danger-text-strong) !important;
+}
+
+.nowo-ui-bs-tokens .nowo-ui-badge--info.badge {
+  border-color: var(--nowo-ui-info-border) !important;
+  background-color: var(--nowo-ui-info-bg) !important;
+  color: var(--nowo-ui-info-text) !important;
+}
+
+.nowo-ui-bs-tokens .nowo-ui-badge--neutral.badge {
+  color: var(--nowo-ui-muted) !important;
+}
+
 /* --- Dark theme token defaults --- */
 [data-theme="dark"] {
   --nowo-ui-primary: #60a5fa;
@@ -1917,6 +2365,12 @@ table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr:hover > td {
   --nowo-ui-success-bg: #052e1f;
   --nowo-ui-success-border: #065f46;
   --nowo-ui-success-text: #6ee7b7;
+  --nowo-ui-warning-bg: #3b2a0b;
+  --nowo-ui-warning-border: #78350f;
+  --nowo-ui-warning-text: #fcd34d;
+  --nowo-ui-info-bg: #082f49;
+  --nowo-ui-info-border: #075985;
+  --nowo-ui-info-text: #7dd3fc;
   --nowo-ui-surface: #0f172a;
   --nowo-ui-surface-muted: #1e293b;
   --nowo-ui-border: #334155;

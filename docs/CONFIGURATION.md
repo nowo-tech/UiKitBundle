@@ -142,4 +142,4 @@ nowo_ui_kit:
     row_actions_display: icon_text
 ```
 
-Host CSS remaps `--nowo-ui-*`. Markup uses only semantic classes. Include `asset('js/nowo-ui-modal.js', 'nowo_ui_kit')` for modals.
+Host CSS remaps `--nowo-ui-*` ([THEMING.md](THEMING.md)). Markup uses only semantic classes. Include `asset('js/nowo-ui-modal.js', 'nowo_ui_kit')` for modals.

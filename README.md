@@ -36,6 +36,7 @@ This bundle is **FrankenPHP worker mode friendly** (including when the kernel is
 
 - Twig macros (`@NowoUiKitBundle/macros/ui.html.twig`) with optional per-call `framework` override
 - Semantic stylesheet `css/nowo-ui.css` (asset package `nowo_ui_kit`), including dark `[data-theme="dark"]` tokens
+- Complete `--nowo-ui-*` theming tokens (1.13): every colour, radius, font, focus ring, overlay and shadow in kit output reads a token — no hard-coded Tailwind palette / Bootstrap colour utilities; a host theme is a short `:root` block ([docs/THEMING.md](docs/THEMING.md)); opt-in `.nowo-ui-bs-tokens` bridge for Bootstrap 5.3 stacks
 - TypeScript → IIFEs: modal, shell, toast, confirm, page-loader, theme, orb, clipboard, tabs, release, open-modal
 - Deep link "open modal on load" (`?new=1`): `_open_modal_on_load.html.twig` JSON island + `nowo-ui-open-modal.js` (CSP-safe, no inline JS)
 - Opt-in filter bar / data table chrome: `.nowo-ui-filter-bar` (38px / compact 34px controls, actions on one row) + `_filter_actions.html.twig`, `table.nowo-ui-data-table`
@@ -104,6 +105,7 @@ Developer-facing docs are **English only** ([Contributing — Language policy](d
 - [Configuration](docs/CONFIGURATION.md)
 - [PSR evaluation (REQ-CS-007)](docs/PSR.md)
 - [Usage](docs/USAGE.md)
+- [Theming (`--nowo-ui-*` tokens)](docs/THEMING.md)
 - [Row actions (canonical kinds)](docs/ROW_ACTIONS.md)
 - [Adoption (Beacon + bundles)](docs/ADOPTION.md)
 - [Stimulus / data contracts](docs/STIMULUS.md)

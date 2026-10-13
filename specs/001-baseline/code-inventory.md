@@ -2,7 +2,7 @@
 
 **Baseline spec**: [`spec.md`](spec.md)  
 **Package**: `nowo-tech/ui-kit-bundle`  
-**Last audited**: 2026-10-12 (1.12.0 — open modal on load, auto-refresh peer, filter bar / data table)
+**Last audited**: 2026-10-13 (1.13.0 — theming tokens: `nowo-ui.css`, `macros/ui.html.twig`; no new production files)
 
 This file proves that **every production source artifact** under `src/` is referenced by the baseline specification. Test-only files (`*.test.ts`) are listed under Tests. Demo *apps* under `demo/` are out of Packagist scope; the kitchen sink Twig template inside the bundle is included.
 

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - [Unreleased](#unreleased)
 
+- [[1.13.0] - 2026-10-13](#1130---2026-10-13)
 - [[1.12.0] - 2026-10-12](#1120---2026-10-12)
 - [[1.11.0] - 2026-10-09](#1110---2026-10-09)
 - [[1.10.1] - 2026-10-09](#1101---2026-10-09)
@@ -44,6 +45,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   - [Added](#added-6)
 
 ## [Unreleased]
+
+## [1.13.0] - 2026-10-13
+
+### Added
+
+- **Complete `--nowo-ui-*` theming tokens** (Symfony Beacon spec 134 FR-002): every colour, radius, font, focus ring, overlay and shadow used by `nowo-ui.css`, the `ui.*` macros and the partials reads a documented token. New base tokens with light + dark defaults: `--nowo-ui-warning-{bg,border,text}`, `--nowo-ui-info-{bg,border,text}` (were fixed hex). New optional component tokens, resolved at the use site through `var()` fallbacks to the base tokens (so they also work on a scope such as `.kit-admin` and follow dark mode): typography (`--nowo-ui-font-family`, `--nowo-ui-font-display`, `--nowo-ui-heading-weight`), focus (`--nowo-ui-focus-ring-color`, `--nowo-ui-focus-ring`), links (`--nowo-ui-link`, `--nowo-ui-link-hover`, `--nowo-ui-primary-hover`, `--nowo-ui-accent`), radii / overlays / shadows (`--nowo-ui-badge-radius`, `--nowo-ui-modal-radius`, `--nowo-ui-card-radius`, `--nowo-ui-overlay`, `--nowo-ui-shadow-{popover,toast,dialog}`), buttons (`--nowo-ui-btn-*`: base, hover, primary, danger, outline), inputs (`--nowo-ui-input-{bg,text,border,radius,placeholder,focus-border}`), tables (`--nowo-ui-table-{border,head-bg,head-text,stripe-bg,hover-bg}`), tabs (`--nowo-ui-tabs-{border,gap}`, `--nowo-ui-tab-*` incl. active / hover), pagination (`--nowo-ui-pagination-*` incl. hover / active), lists (`--nowo-ui-list-*`), cards, aside current link (`--nowo-ui-nav-active-{bg,text}`), progress.
+- **Theming guide** [docs/THEMING.md](THEMING.md): every token with its default, framework notes, a generic host theme and the Symfony Beacon (moss / sand) mapping.
+- `.nowo-ui-btn--outline` variant (`ui.btn('outline')`; Bootstrap: `btn-outline-primary`), `.nowo-ui-link` (`ui.link()`), `.nowo-ui-check` checkbox / radio label (`ui.check()`), `accent-color` on checkboxes / radios inside kit surfaces.
+- `:focus-visible` rings (token-driven) on buttons, links, tabs, pagination links, toggles, menus, modal close, aside links; focused `.nowo-ui-input` gets the primary border + ring.
+- Hover states for the kit-painted stacks (`custom` / `none` / `tailwind`): buttons (replacing the removed Tailwind `hover:bg-*` utilities, same default colours), pagination links, inactive tabs, plain `.nowo-ui-table` rows (matching the `table-hover` the Bootstrap branch already emits).
+- **Opt-in Bootstrap token bridge** `.nowo-ui-bs-tokens`: on an ancestor, paints Bootstrap 5.3 buttons, forms, tables, list groups, pagination, nav tabs, cards, modals, progress, alerts, `text-muted` and kit badges from the same tokens. No effect without the class.
+- Twig tests guarding the contract: no palette / radius / divide utilities in any macro output (tailwind, custom, none, foundation), no hex in partials / components / macros or outside the two token blocks of `nowo-ui.css`, base tokens present in light + dark, component tokens never declared, bridge rules scoped, every token documented.
+
+### Changed
+
+- **Tailwind macro output no longer carries palette, radius or divide utilities** (`bg-blue-600`, `hover:bg-blue-500`, `text-white`, `border-red-500`, `text-red-600`, `hover:bg-red-50`, `text-blue-600`, `hover:underline`, `border-slate-*`, `text-slate-*`, `hover:bg-slate-50`, `bg-emerald/amber/sky/red-*`, `divide-y`, `divide-slate-200`, `rounded-md`, `rounded-full`, `bg-white`, `bg-slate-200`, `border-blue-600`, `text-blue-700`, `border-t-blue-600`, `animate-spin`). The semantic `nowo-ui-*` classes (unchanged) paint the same default colours from tokens; layout / spacing / type-scale utilities stay. `ui.muted()` in Tailwind no longer appends `text-slate-500` (`.nowo-ui-muted` has the same `#64748b`).
+- `.nowo-ui-input` (non-Bootstrap) now paints `--nowo-ui-input-bg` / `--nowo-ui-input-text` (white / text in light — same as the browser default; dark mode now gets the dark surface instead of a white field).
+- Warning / info flashes and badges have dark-mode defaults (they kept the light hex before).
+- `_pagination.html.twig`'s `<ul class="pagination">` lays out as a wrapping row with a 0.25rem gap on every stack (zero-specificity rule; it stacked vertically on `custom` / `tailwind` unless the host fixed it).
+- Modal hex fallbacks (`var(--nowo-ui-surface, #ffffff)` …) removed — base tokens are always declared.
+
+[1.13.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.12.0...v1.13.0
 
 ## [1.12.0] - 2026-10-12
 

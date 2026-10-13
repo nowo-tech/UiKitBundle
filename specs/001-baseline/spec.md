@@ -2,7 +2,7 @@
 
 **Feature Branch**: `001-baseline`  
 **Created**: 2026-08-03  
-**Updated**: 2026-10-12 (1.12.0 — open modal on load, auto-refresh peer, filter bar / data table)  
+**Updated**: 2026-10-13 (1.13.0 — complete `--nowo-ui-*` theming tokens, see [`../002-theming-tokens/spec.md`](../002-theming-tokens/spec.md))  
 **Status**: Active  
 **Input**: Backfill GitHub Spec Kit baseline documenting 100% of production code in `src/`.
 
@@ -168,6 +168,7 @@ As an integrator running FrankenPHP worker mode with the Symfony kernel **not** 
 - **FR-TRANSITION-001**: `_page_transition.html.twig` emits one nonce-aware `<style>` opting into cross-document View Transitions (`style`: `fade_slide` default, `fade`, `slide`, `zoom`, `blur`, `wipe`, `none`), optional `persist` selector → name map; no JS; disabled under `prefers-reduced-motion: reduce`.
 - **FR-OPENMODAL-001**: `_open_modal_on_load.html.twig` emits `script[type=application/json]#nowo-ui-open-modal-on-load` (`modal` required, optional `trigger`, `param` default `new` — rendered only when the request query carries it truthy, `param: false` always; JSON hex-escaped; nonce from `nonce` or request `csp_nonce`). `nowo-ui-open-modal-core.ts` (side-effect free: `readOpenModalConfig`, `isModalOpen`, `tryOpenModal`, `clearQueryParam`, `openModalOnLoad`) + IIFE `nowo-ui-open-modal.js` (`window.nowoUiOpenModalOnLoad`).
 - **FR-FILTERBAR-001**: Opt-in CSS `.nowo-ui-filter-bar` (explicit control height `--nowo-ui-control-height` 38px / compact 34px via `--compact` or `[data-ui-density=compact]`, `__field`, `__help`, `__actions`, `__actions--pager`, `__pager`, `__submit`, `__clear`) and `table.nowo-ui-data-table` (`--compact`, `--nowo-ui-table-*` tokens); `_filter_actions.html.twig` renders optional pre-rendered `pager` + Filter + Clear (no Symfony Form dependency). No existing selector changes.
+- **FR-THEME-001**: Every colour, radius, font, focus ring, overlay and shadow painted by `nowo-ui.css`, the `ui.*` macros and the partials reads a documented `--nowo-ui-*` token (base tokens with light + dark defaults; component tokens optional, resolved through `var()` fallbacks); macros emit no Tailwind palette / radius / divide utilities; opt-in `.nowo-ui-bs-tokens` Bootstrap bridge. Detailed in [`../002-theming-tokens/spec.md`](../002-theming-tokens/spec.md) and `docs/THEMING.md`.
 - **FR-I18N-001**: Translation domain files for seven locales (incl. `orb.*`, `layout.*`, theme, loader, toast, filters).
 - **FR-FRANKENPHP-001**: Bundle PHP is safe under FrankenPHP worker with kernel not reset between requests (no runtime services / no per-request mutable state); documented in `docs/FRANKENPHP-WORKER-AUDIT.md`.
 - **FR-RELEASE-001**: Optional `release_check` (off by default): `ReleaseUpdateChecker` compares `current_version` (clean semver) with GitHub `releases/latest` of `github_repo` (`owner/name` only), counts newer non-prerelease releases, caches per repo+version (`cache_ttl`, `cache.app`), soft-fails to `skipped`/`error`; registered only when enabled (requires `symfony/http-client`).

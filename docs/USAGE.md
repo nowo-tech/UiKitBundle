@@ -11,7 +11,7 @@
 - [App chrome](#app-chrome-aside-avatar-user-menu-footer)
 - [Overriding templates (REQ-TWIG-001)](#overriding-templates-req-twig-001)
 - [Override vs upgrade](#override-vs-upgrade)
-- [Remap CSS tokens](#remap-css-tokens)
+- [Remap CSS tokens (theming)](#remap-css-tokens)
 - [Feature bundles](#feature-bundles)
 - [Kitchen sink](#kitchen-sink)
 - [Related docs](#related-docs)
@@ -321,17 +321,29 @@ Application overrides **always win**. Twig namespace: **`NowoUiKitBundle`**.
 
 ## Remap CSS tokens
 
+Every colour, radius, font, focus ring, overlay and shadow in kit output reads a `--nowo-ui-*` token
+(1.13). Full token list, defaults, framework notes and a worked host example: **[THEMING.md](THEMING.md)**.
+
 ```css
-:root, .kit-admin {
+/* html:root beats both :root and the kit's [data-theme="dark"] defaults, whatever the load order. */
+html:root {
   --nowo-ui-primary: #1f6f54;
   --nowo-ui-danger: #c0392b;
   --nowo-ui-surface: #fff;
   --nowo-ui-text: #0c1210;
-  /* …see nowo-ui.css for full token list */
+  --nowo-ui-font-display: "Montserrat", system-ui, sans-serif;
 }
 
 /* Dark: kit ships defaults under [data-theme="dark"]; remap as needed */
+html:root[data-theme="dark"] {
+  --nowo-ui-primary: #4aad7f;
+}
 ```
+
+Component tokens (`--nowo-ui-btn-*`, `--nowo-ui-input-*`, `--nowo-ui-table-*`, `--nowo-ui-tab-*`,
+`--nowo-ui-pagination-*`, `--nowo-ui-list-*`) are optional and resolved where they are used, so they also
+work on a scope (`.kit-admin`, a portalled dialog). Bootstrap stacks: add `nowo-ui-bs-tokens` to an
+ancestor to paint Bootstrap's own components from the same tokens.
 
 ## Feature bundles
 
@@ -347,6 +359,7 @@ Render `@NowoUiKitBundle/demo/kitchen_sink.html.twig` from a host controller (se
 
 ## Related docs
 
+- [THEMING.md](THEMING.md) — every `--nowo-ui-*` token, defaults, host theme examples
 - [STIMULUS.md](STIMULUS.md) — data-attribute contracts / Stimulus peers
 - [ADOPTION.md](ADOPTION.md) — consolidating Beacon + feature bundles
 - [ROADMAP.md](ROADMAP.md) — phase status

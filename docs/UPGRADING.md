@@ -1,6 +1,22 @@
 # Upgrading
 
 
+## To 1.13.0
+
+From **1.12.0** — theming tokens; no removed `nowo-ui-*` classes, macro arguments or partial variables.
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+php bin/console assets:install
+php bin/console cache:clear
+```
+
+- **Default look is unchanged** in light mode for every stack (same base token values). Visible differences are limited to new interaction states (`:focus-visible` rings, hover on kit-painted buttons / pagination / inactive tabs / plain table rows), dark-mode defaults for warning / info and for `.nowo-ui-input`, and the pagination list laid out as a row.
+- **Tailwind hosts:** macros no longer emit palette / radius / divide utilities (`bg-blue-600`, `border-slate-300`, `rounded-md`, `divide-y`, …). If your CSS targeted those classes inside kit output (e.g. `.nowo-ui-btn--primary.bg-blue-600`, `.text-slate-500`, `.hover\:bg-blue-500:hover`, `.divide-slate-200 > * + *`), replace the rules with tokens — see [THEMING.md](THEMING.md). If you relied on them being present in markup (tests, JS selectors), select the `nowo-ui-*` class instead.
+- **Theme with tokens instead of selector remaps:** move `--nowo-ui-*` remaps to one `html:root { … }` block (beats the kit's `:root` and `[data-theme="dark"]` regardless of load order) and delete colour overrides of `.nowo-ui-btn*`, `.nowo-ui-input`, `.nowo-ui-table*`, `.nowo-ui-tabs__item*`, `.nowo-ui-pagination__link*`, `.nowo-ui-list*`, `.nowo-ui-badge*`. Remaining host CSS should only be product layout (heights, paddings, spacing).
+- **Bootstrap hosts:** nothing changes unless you add `class="nowo-ui-bs-tokens"` on an ancestor; then Bootstrap's components follow the `--nowo-ui-*` tokens.
+- `ui.btn('outline')` now maps to `btn-outline-primary` on Bootstrap stacks (was the generic `btn-outline-secondary`) and to the new `.nowo-ui-btn--outline` elsewhere.
+
 ## To 1.12.0
 
 From **1.11.0** — new optional features only; no breaking changes.

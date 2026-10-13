@@ -51,8 +51,10 @@ final class UiMacrosTwigTest extends TestCase
     public function testBtnMacroAcceptsFrameworkOverride(): void
     {
         $html = $this->renderMacro("{{ ui.btn('primary', null, 'tailwind') }}", 'bootstrap5');
-        self::assertStringContainsString('bg-blue-600', $html);
+        self::assertStringContainsString('nowo-ui-btn--primary', $html);
+        self::assertStringContainsString('inline-flex', $html);
         self::assertStringNotContainsString('btn-primary', $html);
+        self::assertStringNotContainsString('bg-blue-600', $html);
     }
 
     public function testPublicCssAndJsExist(): void
@@ -104,7 +106,8 @@ final class UiMacrosTwigTest extends TestCase
         self::assertStringContainsString('nowo-ui-badge--success', $badge);
 
         $badgeFw = $this->renderMacro("{{ ui.badge('tailwind') }}", 'bootstrap5');
-        self::assertStringContainsString('rounded-full', $badgeFw);
+        self::assertStringContainsString('inline-flex', $badgeFw);
+        self::assertStringNotContainsString('rounded-full', $badgeFw);
 
         $card = $this->renderMacro('{{ ui.card() }}', 'custom');
         self::assertStringContainsString('nowo-ui-card', $card);

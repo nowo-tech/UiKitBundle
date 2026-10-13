@@ -1,0 +1,361 @@
+# Theming (`--nowo-ui-*` tokens)
+
+Since **1.13.0** every colour, radius, font, focus ring, overlay and shadow that UiKit paints — in
+`nowo-ui.css`, the `ui.*` macros and every partial — reads a documented `--nowo-ui-*` CSS custom
+property. Kit output carries **no hard-coded palette**: no Tailwind colour / radius / divide
+utilities (`bg-blue-600`, `border-slate-300`, `rounded-md`, `divide-y`…) and no fixed hex outside the
+two token blocks of `nowo-ui.css`. A host theme is a short `:root` block.
+
+## Table of contents
+
+- [How it works](#how-it-works)
+- [Writing a host theme](#writing-a-host-theme)
+- [Base tokens](#base-tokens)
+- [Typography, focus, links](#typography-focus-links)
+- [Radii, overlays, shadows](#radii-overlays-shadows)
+- [Buttons](#buttons)
+- [Inputs, checkboxes, radios](#inputs-checkboxes-radios)
+- [Tables](#tables)
+- [Tabs](#tabs)
+- [Pagination](#pagination)
+- [Lists](#lists)
+- [Cards, navigation, progress](#cards-navigation-progress)
+- [Layout and metrics tokens](#layout-and-metrics-tokens)
+- [CSS framework notes](#css-framework-notes)
+- [Example: generic brand](#example-generic-brand)
+- [Example: Symfony Beacon (moss / sand)](#example-symfony-beacon-moss--sand)
+
+## How it works
+
+- **Base tokens** (palette, `--nowo-ui-radius`) are declared on `:root` (light) and on
+  `[data-theme="dark"]` (dark) in `nowo-ui.css`.
+- **Component tokens** (`--nowo-ui-btn-*`, `--nowo-ui-input-*`, `--nowo-ui-table-*`, `--nowo-ui-tab-*`,
+  `--nowo-ui-pagination-*`, `--nowo-ui-list-*`, fonts, focus ring, shadows…) are **optional**. They are
+  not declared anywhere: each rule reads them through a `var()` fallback chain that ends at a base token,
+  e.g. `background: var(--nowo-ui-btn-primary-bg, var(--nowo-ui-primary))`. Consequences:
+  - leave them unset and the kit looks exactly as it does from the base tokens;
+  - set them on `:root` **or on any scope** (`.kit-admin`, a portalled `<dialog>`) — they are resolved
+    where they are used, so a scoped `--nowo-ui-primary` also recolours hover states, focus rings, etc.;
+  - dark mode keeps working: the fallbacks follow the dark base tokens.
+- The *Default* column below is that fallback chain.
+
+## Writing a host theme
+
+```css
+/* Load after nowo-ui.css, or use html:root (beats both :root and [data-theme="dark"] regardless of order). */
+html:root {
+  --nowo-ui-primary: #7c3aed;
+  --nowo-ui-primary-contrast: #ffffff;
+  /* …only what differs from the defaults */
+}
+
+html:root[data-theme="dark"] {
+  --nowo-ui-primary: #a78bfa;
+  --nowo-ui-primary-contrast: #0b0618;
+}
+```
+
+If your own palette already switches with the theme (`--brand-*` redefined under
+`[data-theme="dark"]`), one `html:root { --nowo-ui-primary: var(--brand-primary); … }` block covers
+light and dark.
+
+## Base tokens
+
+Declared in `nowo-ui.css` (light on `:root`, dark on `[data-theme="dark"]`).
+
+| Token | Light | Dark | Used by |
+|-------|-------|------|---------|
+| `--nowo-ui-primary` | `#2563eb` | `#60a5fa` | primary buttons, active tab border, active page, links, focus ring, progress, spinner, accent |
+| `--nowo-ui-primary-contrast` | `#ffffff` | `#0b1220` | text on primary |
+| `--nowo-ui-danger` | `#ef4444` | `#f87171` | danger button border |
+| `--nowo-ui-danger-text` | `#b91c1c` | `#fecaca` | danger button / menu item text |
+| `--nowo-ui-danger-bg` | `#fef2f2` | `#3f1d1d` | error flash / badge, danger button hover |
+| `--nowo-ui-danger-border` | `#fecaca` | `#7f1d1d` | error flash / badge border |
+| `--nowo-ui-danger-text-strong` | `#991b1b` | `#fecaca` | error flash / badge text |
+| `--nowo-ui-success-bg` | `#ecfdf5` | `#052e1f` | success flash / badge |
+| `--nowo-ui-success-border` | `#a7f3d0` | `#065f46` | success flash / badge border |
+| `--nowo-ui-success-text` | `#065f46` | `#6ee7b7` | success flash / badge text |
+| `--nowo-ui-warning-bg` *(1.13)* | `#fffbeb` | `#3b2a0b` | warning flash / badge |
+| `--nowo-ui-warning-border` *(1.13)* | `#fde68a` | `#78350f` | warning flash / badge border |
+| `--nowo-ui-warning-text` *(1.13)* | `#92400e` | `#fcd34d` | warning flash / badge text |
+| `--nowo-ui-info-bg` *(1.13)* | `#f0f9ff` | `#082f49` | info flash / badge |
+| `--nowo-ui-info-border` *(1.13)* | `#bae6fd` | `#075985` | info flash / badge border |
+| `--nowo-ui-info-text` *(1.13)* | `#075985` | `#7dd3fc` | info flash / badge text |
+| `--nowo-ui-surface` | `#ffffff` | `#0f172a` | cards, header, aside, menus, modals, inputs, buttons |
+| `--nowo-ui-surface-muted` | `#f8fafc` | `#1e293b` | shell background, hover rows, stripes, neutral badge |
+| `--nowo-ui-border` | `#e2e8f0` | `#334155` | dividers, cards, tables, tabs, lists |
+| `--nowo-ui-border-strong` | `#cbd5e1` | `#475569` | control borders (buttons, inputs, pagination) |
+| `--nowo-ui-text` | `#0f172a` | `#e2e8f0` | body text |
+| `--nowo-ui-muted` | `#64748b` | `#94a3b8` | secondary text, placeholders, table head (data table) |
+| `--nowo-ui-radius` | `0.375rem` | — | every control / surface radius (overridable per component) |
+
+## Typography, focus, links
+
+| Token | Default | Used by |
+|-------|---------|---------|
+| `--nowo-ui-font-family` | `inherit` | `.nowo-ui-shell` |
+| `--nowo-ui-font-display` | `inherit` | page header title, card title, modal / confirm title, brand text |
+| `--nowo-ui-heading-weight` | `700` | page header title |
+| `--nowo-ui-focus-ring-color` | `color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent)` | `:focus-visible` outline on buttons, links, tabs, pagination, toggles, menus, checkboxes |
+| `--nowo-ui-focus-ring` | `0 0 0 0.2rem var(--nowo-ui-focus-ring-color)` | `box-shadow` of focused inputs (and Bootstrap controls with the bridge) |
+| `--nowo-ui-link` | `var(--nowo-ui-primary)` | `.nowo-ui-link`, `.nowo-ui-btn--link` |
+| `--nowo-ui-link-hover` | `var(--nowo-ui-link)` | link hover |
+| `--nowo-ui-primary-hover` | `color-mix(in srgb, var(--nowo-ui-primary) 85%, white)` | primary button hover (custom / Tailwind stacks) |
+| `--nowo-ui-accent` | `var(--nowo-ui-primary)` | `accent-color` of checkboxes / radios in kit surfaces |
+
+## Radii, overlays, shadows
+
+| Token | Default | Used by |
+|-------|---------|---------|
+| `--nowo-ui-badge-radius` | `999px` | `.nowo-ui-badge` |
+| `--nowo-ui-modal-radius` | `var(--nowo-ui-radius)` | modal content, confirm panel |
+| `--nowo-ui-card-radius` | `var(--nowo-ui-radius)` | `.nowo-ui-card` |
+| `--nowo-ui-overlay` | modal `rgba(0, 0, 0, 0.45)`, confirm `rgba(15, 23, 42, 0.45)`, mobile aside `rgba(15, 23, 42, 0.35)` | one value for every backdrop when set |
+| `--nowo-ui-shadow-popover` | `0 10px 28px rgba(15, 23, 42, 0.12)` | user menu, locale switcher, kebab menu |
+| `--nowo-ui-shadow-toast` | `0 10px 28px rgba(15, 23, 42, 0.14)` | toasts |
+| `--nowo-ui-shadow-dialog` | modal `0 8px 32px rgba(0, 0, 0, 0.18)`, confirm `0 16px 40px rgba(15, 23, 42, 0.2)` | modal, confirm |
+
+## Buttons
+
+`ui.btn(variant)` → `.nowo-ui-btn` + `.nowo-ui-btn--{secondary|primary|danger|outline|link}`. Hover
+rules apply to the kit-painted stacks (`custom`, `none`, `tailwind`); Bootstrap `.btn` keeps its own
+states (see the [bridge](#css-framework-notes)).
+
+| Token | Default |
+|-------|---------|
+| `--nowo-ui-btn-radius` | `var(--nowo-ui-radius)` |
+| `--nowo-ui-btn-bg` | `var(--nowo-ui-surface)` |
+| `--nowo-ui-btn-text` | `var(--nowo-ui-text)` |
+| `--nowo-ui-btn-border` | `var(--nowo-ui-border-strong)` |
+| `--nowo-ui-btn-hover-bg` | `var(--nowo-ui-surface-muted)` |
+| `--nowo-ui-btn-hover-border` | `var(--nowo-ui-btn-border)` |
+| `--nowo-ui-btn-hover-text` | `var(--nowo-ui-btn-text)` |
+| `--nowo-ui-btn-primary-bg` | `var(--nowo-ui-primary)` |
+| `--nowo-ui-btn-primary-border` | `var(--nowo-ui-btn-primary-bg)` |
+| `--nowo-ui-btn-primary-text` | `var(--nowo-ui-primary-contrast)` |
+| `--nowo-ui-btn-primary-hover-bg` | `var(--nowo-ui-primary-hover)` (also the hover border) |
+| `--nowo-ui-btn-danger-bg` | `var(--nowo-ui-surface)` |
+| `--nowo-ui-btn-danger-border` | `var(--nowo-ui-danger)` |
+| `--nowo-ui-btn-danger-text` | `var(--nowo-ui-danger-text)` |
+| `--nowo-ui-btn-danger-hover-bg` | `var(--nowo-ui-danger-bg)` |
+| `--nowo-ui-btn-outline-bg` *(new variant)* | `transparent` |
+| `--nowo-ui-btn-outline-border` | `var(--nowo-ui-primary)` |
+| `--nowo-ui-btn-outline-text` | `var(--nowo-ui-primary)` |
+| `--nowo-ui-btn-outline-hover-bg` | `color-mix(in srgb, var(--nowo-ui-primary) 10%, var(--nowo-ui-surface))` |
+
+The link variant uses `--nowo-ui-link` / `--nowo-ui-link-hover`.
+
+## Inputs, checkboxes, radios
+
+`ui.input()` / `ui.search_input()` → `.nowo-ui-input`; `ui.check()` → `.nowo-ui-check` (label wrapper,
+1.13). Surface / text / placeholder / focus apply when the element is not a Bootstrap `.form-control`.
+
+| Token | Default |
+|-------|---------|
+| `--nowo-ui-input-bg` | `var(--nowo-ui-surface)` |
+| `--nowo-ui-input-text` | `var(--nowo-ui-text)` |
+| `--nowo-ui-input-border` | `var(--nowo-ui-border-strong)` |
+| `--nowo-ui-input-radius` | `var(--nowo-ui-radius)` |
+| `--nowo-ui-input-placeholder` | `var(--nowo-ui-muted)` |
+| `--nowo-ui-input-focus-border` | `var(--nowo-ui-primary)` (+ `--nowo-ui-focus-ring` shadow) |
+| `--nowo-ui-accent` | `var(--nowo-ui-primary)` — checkboxes / radios in `.nowo-ui-check`, filter bars, searches, tables, lists, cards, modals, confirms |
+
+## Tables
+
+`ui.table()` (`.nowo-ui-table`, striped) and the opt-in `table.nowo-ui-data-table`.
+
+| Token | Default |
+|-------|---------|
+| `--nowo-ui-table-border` | `var(--nowo-ui-border)` (data-table body rows: 70 % of it) |
+| `--nowo-ui-table-head-bg` | `transparent` |
+| `--nowo-ui-table-head-text` | plain table: inherited text colour; data table: `var(--nowo-ui-muted)` |
+| `--nowo-ui-table-stripe-bg` | `var(--nowo-ui-surface-muted)` |
+| `--nowo-ui-table-hover-bg` | `color-mix(in srgb, var(--nowo-ui-surface-muted) 80%, transparent)` |
+
+Metrics (1.12): `--nowo-ui-table-head-py`, `--nowo-ui-table-cell-py`, `--nowo-ui-table-cell-px`,
+`--nowo-ui-table-font-size`, `--nowo-ui-table-head-font-size` (data table only).
+
+## Tabs
+
+`ui.tab_list()` / `ui.tab_item(active)` and `partials/_tabs.html.twig`.
+
+| Token | Default |
+|-------|---------|
+| `--nowo-ui-tabs-border` | `var(--nowo-ui-border)` (the list underline; `transparent` removes it) |
+| `--nowo-ui-tabs-gap` | `0.25rem` |
+| `--nowo-ui-tab-text` | `var(--nowo-ui-muted)` |
+| `--nowo-ui-tab-bg` | `transparent` |
+| `--nowo-ui-tab-radius` | `0` |
+| `--nowo-ui-tab-hover-text` | `var(--nowo-ui-text)` |
+| `--nowo-ui-tab-hover-bg` | `var(--nowo-ui-tab-bg)` |
+| `--nowo-ui-tab-active-text` | `var(--nowo-ui-text)` |
+| `--nowo-ui-tab-active-bg` | `var(--nowo-ui-tab-bg)` |
+| `--nowo-ui-tab-active-border` | `var(--nowo-ui-primary)` (2px bottom border) |
+| `--nowo-ui-tab-active-weight` | `600` |
+
+## Pagination
+
+`partials/_pagination.html.twig` (`.nowo-ui-pagination__link`). Since 1.13 its `<ul class="pagination">`
+lays out as a row on every stack (zero-specificity rule; Bootstrap's own `.pagination` still wins).
+
+| Token | Default |
+|-------|---------|
+| `--nowo-ui-pagination-bg` | `var(--nowo-ui-surface)` |
+| `--nowo-ui-pagination-text` | `var(--nowo-ui-text)` |
+| `--nowo-ui-pagination-border` | `var(--nowo-ui-border-strong)` |
+| `--nowo-ui-pagination-radius` | `var(--nowo-ui-radius)` |
+| `--nowo-ui-pagination-hover-bg` | `var(--nowo-ui-surface-muted)` |
+| `--nowo-ui-pagination-hover-border` | `var(--nowo-ui-pagination-border)` |
+| `--nowo-ui-pagination-hover-text` | `var(--nowo-ui-pagination-text)` |
+| `--nowo-ui-pagination-active-bg` | `var(--nowo-ui-primary)` |
+| `--nowo-ui-pagination-active-border` | `var(--nowo-ui-pagination-active-bg)` |
+| `--nowo-ui-pagination-active-text` | `var(--nowo-ui-primary-contrast)` |
+| `--nowo-ui-pagination-active-weight` | `inherit` |
+
+## Lists
+
+`ui.list()` / `ui.list_item()`.
+
+| Token | Default |
+|-------|---------|
+| `--nowo-ui-list-border` | `var(--nowo-ui-border)` (outer border; `transparent` removes it) |
+| `--nowo-ui-list-radius` | `var(--nowo-ui-radius)` |
+| `--nowo-ui-list-item-border` | `var(--nowo-ui-list-border)` (row separator) |
+| `--nowo-ui-list-item-bg` | `transparent` |
+| `--nowo-ui-list-item-hover-bg` | `var(--nowo-ui-list-item-bg)` (no hover by default) |
+
+## Cards, navigation, progress
+
+| Token | Default |
+|-------|---------|
+| `--nowo-ui-card-bg` | `var(--nowo-ui-surface)` |
+| `--nowo-ui-card-border` | `var(--nowo-ui-border)` |
+| `--nowo-ui-nav-active-bg` | `color-mix(in srgb, var(--nowo-ui-primary) 12%, transparent)` (current aside link) |
+| `--nowo-ui-nav-active-text` | `var(--nowo-ui-primary)` |
+| `--nowo-ui-progress-track` | `var(--nowo-ui-surface-muted)` |
+| `--nowo-ui-progress-bar` | `var(--nowo-ui-primary)` |
+| `--nowo-ui-page-loader-color` | `var(--nowo-ui-primary)` (minimal page loaders) |
+
+## Layout and metrics tokens
+
+Unchanged, listed for completeness: `--nowo-ui-aside-width`, `--nowo-ui-aside-duration`,
+`--nowo-ui-aside-ease`, `--nowo-ui-header-height`, `--nowo-ui-content-max-width`,
+`--nowo-ui-control-height`, `--nowo-ui-control-height-compact`, `--nowo-ui-filter-control-height`,
+`--nowo-ui-orb-size`, `--nowo-ui-page-loader-corner-bottom`, `--nowo-ui-page-loader-corner-left`.
+
+Control heights, paddings and font sizes are deliberately **not** themed per component: they are product
+layout. Hosts that need a different density keep a few metric rules (or use the compact modifiers).
+
+## CSS framework notes
+
+- **custom / none:** `nowo-ui.css` paints everything from the tokens.
+- **tailwind:** macros add layout, spacing and type-scale utilities only (`inline-flex`, `px-3`,
+  `text-sm`, `border` width…). Colours, radii and dividers come from the semantic classes. Because
+  Tailwind v4 utilities live in `@layer utilities`, the unlayered `nowo-ui.css` also wins any overlap.
+- **bootstrap5 / bootstrap4 / tabler:** macros keep Bootstrap's variant classes (`btn-primary`,
+  `btn-outline-*`, `alert-*`, `badge bg-*`, `text-muted`, `table`, `list-group`, `pagination`,
+  `nav-tabs`), so the default look is Bootstrap's. Add the opt-in class **`nowo-ui-bs-tokens`** to an
+  ancestor (`<body>`, the panel root) to paint those Bootstrap 5.3 components from the same tokens
+  (it sets the components' `--bs-*` variables; badge colour utilities are answered with scoped
+  `!important`).
+- **foundation:** Foundation's semantic classes (`button primary`, `callout success`) stay; colour them
+  through Foundation's settings or the semantic `nowo-ui-*` classes.
+
+## Example: generic brand
+
+```css
+html:root {
+  --nowo-ui-primary: #0f766e;
+  --nowo-ui-primary-contrast: #ffffff;
+  --nowo-ui-surface-muted: #f5f5f4;
+  --nowo-ui-border: #e7e5e4;
+  --nowo-ui-border-strong: #d6d3d1;
+  --nowo-ui-text: #1c1917;
+  --nowo-ui-muted: #78716c;
+  --nowo-ui-radius: 0.5rem;
+  --nowo-ui-font-display: "Inter Display", system-ui, sans-serif;
+}
+
+html:root[data-theme="dark"] {
+  --nowo-ui-primary: #2dd4bf;
+  --nowo-ui-primary-contrast: #042f2e;
+  --nowo-ui-surface: #1c1917;
+  --nowo-ui-surface-muted: #292524;
+  --nowo-ui-border: #44403c;
+  --nowo-ui-border-strong: #57534e;
+  --nowo-ui-text: #f5f5f4;
+  --nowo-ui-muted: #a8a29e;
+}
+```
+
+## Example: Symfony Beacon (moss / sand)
+
+Beacon defines its palette once (`assets/styles/tailwind.css`): `--color-moss` (`#1f6f54` / dark
+`#4aad7f`), `--color-moss-deep`, `--color-sand` (`#d8e2dc` / `#2a3832`), `--color-mist`,
+`--color-ink` (`#0f1c18` / `#e6eee9`), `--color-surface` (`#ffffff` / `#151c19`), `--color-alert`,
+`--font-display` (Montserrat), and the `--beacon-flash-*` pairs; all of them switch under
+`[data-theme="dark"]`. The whole kit then themes from one block — no `.kit-admin` colour remap, no
+neutralising of Tailwind `slate` / `blue` utilities:
+
+```css
+html:root {
+  --nowo-ui-primary: var(--color-moss);
+  --nowo-ui-primary-hover: var(--color-moss-deep);
+  --nowo-ui-link-hover: var(--color-moss-deep);
+  --nowo-ui-surface: var(--color-surface);
+  --nowo-ui-surface-muted: var(--color-mist);
+  --nowo-ui-border: var(--color-sand);
+  --nowo-ui-border-strong: var(--color-sand);
+  --nowo-ui-text: var(--color-ink);
+  --nowo-ui-muted: color-mix(in srgb, var(--color-ink) 55%, transparent);
+  --nowo-ui-danger: var(--color-alert);
+  --nowo-ui-danger-text: var(--color-alert);
+  --nowo-ui-danger-text-strong: var(--color-alert);
+  --nowo-ui-danger-bg: var(--beacon-flash-error-bg);
+  --nowo-ui-danger-border: var(--beacon-flash-error-border);
+  --nowo-ui-success-bg: var(--beacon-flash-ok-bg);
+  --nowo-ui-success-border: var(--beacon-flash-ok-border);
+  --nowo-ui-success-text: var(--beacon-flash-ok-text);
+  --nowo-ui-font-display: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  --nowo-ui-heading-weight: 600;
+  --nowo-ui-modal-radius: 0.75rem;
+  --nowo-ui-badge-radius: 0.375rem;
+  --nowo-ui-focus-ring-color: color-mix(in srgb, var(--color-moss) 20%, transparent);
+  --nowo-ui-btn-bg: transparent;
+  --nowo-ui-btn-hover-bg: var(--color-surface);
+  --nowo-ui-btn-hover-border: color-mix(in srgb, var(--color-moss) 40%, var(--color-sand));
+  --nowo-ui-btn-danger-bg: transparent;
+  --nowo-ui-btn-danger-border: color-mix(in srgb, var(--color-alert) 55%, var(--color-sand));
+  --nowo-ui-btn-danger-hover-bg: color-mix(in srgb, var(--color-alert) 12%, var(--color-surface));
+  --nowo-ui-table-border: color-mix(in srgb, var(--color-sand) 85%, transparent);
+  --nowo-ui-table-head-text: color-mix(in srgb, var(--color-ink) 55%, transparent);
+  --nowo-ui-table-hover-bg: color-mix(in srgb, var(--color-mist) 55%, transparent);
+  --nowo-ui-table-stripe-bg: color-mix(in srgb, var(--color-mist) 55%, transparent);
+  --nowo-ui-list-border: transparent;
+  --nowo-ui-list-item-border: color-mix(in srgb, var(--color-sand) 85%, transparent);
+  --nowo-ui-list-item-hover-bg: color-mix(in srgb, var(--color-mist) 70%, transparent);
+  --nowo-ui-tabs-border: transparent;
+  --nowo-ui-tab-radius: 0.375rem;
+  --nowo-ui-tab-text: color-mix(in srgb, var(--color-ink) 70%, transparent);
+  --nowo-ui-tab-hover-bg: color-mix(in srgb, var(--color-sand) 35%, transparent);
+  --nowo-ui-tab-active-bg: color-mix(in srgb, var(--color-moss) 12%, var(--color-surface));
+  --nowo-ui-tab-active-text: var(--color-moss-deep);
+  --nowo-ui-tab-active-weight: 500;
+  --nowo-ui-pagination-hover-border: var(--color-moss);
+  --nowo-ui-pagination-hover-text: var(--color-moss);
+  --nowo-ui-pagination-hover-bg: var(--color-surface);
+  --nowo-ui-pagination-active-bg: color-mix(in srgb, var(--color-moss) 12%, var(--color-surface));
+  --nowo-ui-pagination-active-border: var(--color-moss);
+  --nowo-ui-pagination-active-text: var(--color-moss);
+  --nowo-ui-pagination-active-weight: 600;
+}
+
+html:root[data-theme="dark"] {
+  --nowo-ui-primary-contrast: #0c1210;
+}
+```
+
+The first 17 lines are the palette mapping; the rest only reproduces Beacon's existing look (ghost
+secondary buttons, moss-tinted pills, sand table rules) and can be dropped for the kit defaults. What
+stays in the host is product layout: control heights / paddings, Beacon's `<dialog>` confirm-panel
+chrome, pill borders on all four sides of the active tab, toolbar and panel spacing.

@@ -68,6 +68,31 @@
                 <span class="{{ ui.spinner('sm') }}" aria-hidden="true"></span>
                 <span class="{{ ui.muted() }}"> Spinner</span>
             </p>
+            <div class="{{ ui.toolbar() }}">
+                <button type="button" class="{{ ui.btn('outline') }}">Outline</button>
+                <a href="#buttons" class="{{ ui.link() }}">Text link</a>
+                <span class="{{ ui.badge('warning') }}">Warning</span>
+                <span class="{{ ui.badge('info') }}">Info</span>
+                <span class="{{ ui.badge('neutral') }}">Neutral</span>
+                <label class="{{ ui.check() }}"><input type="checkbox" checked> Checkbox</label>
+                <input type="search" class="{{ ui.input() }}" placeholder="Input placeholder" aria-label="Input">
+            </div>
+            {# Theming (1.13): a host theme is a short block of --nowo-ui-* tokens; here scoped to one wrapper (docs/THEMING.md). #}
+            <div class="nowo-ui-body" style="--nowo-ui-primary: #1f6f54; --nowo-ui-primary-hover: #134736; --nowo-ui-border: #d8e2dc; --nowo-ui-border-strong: #d8e2dc; --nowo-ui-surface-muted: #e7f0eb; --nowo-ui-text: #0f1c18; --nowo-ui-radius: 0.5rem; --nowo-ui-tab-active-weight: 500;">
+                <p class="{{ ui.muted() }}">Same macros, themed with eight tokens on a wrapper:</p>
+                <div class="{{ ui.toolbar() }}">
+                    <button type="button" class="{{ ui.btn('primary') }}">Primary</button>
+                    <button type="button" class="{{ ui.btn('secondary') }}">Secondary</button>
+                    <button type="button" class="{{ ui.btn('outline') }}">Outline</button>
+                    <button type="button" class="{{ ui.btn('link') }}">Link</button>
+                    <span class="{{ ui.badge('success') }}">Success</span>
+                    <label class="{{ ui.check() }}"><input type="checkbox" checked> Checkbox</label>
+                </div>
+                <nav class="{{ ui.tab_list() }}" aria-label="Themed tabs">
+                    <a href="#buttons" class="{{ ui.tab_item(true) }}">Active</a>
+                    <a href="#table" class="{{ ui.tab_item(false) }}">Inactive</a>
+                </nav>
+            </div>
         </section>
 
         {% set card_body %}
