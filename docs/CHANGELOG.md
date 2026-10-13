@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - [Unreleased](#unreleased)
 
+- [[1.13.1] - 2026-10-13](#1131---2026-10-13)
 - [[1.13.0] - 2026-10-13](#1130---2026-10-13)
 - [[1.12.0] - 2026-10-12](#1120---2026-10-12)
 - [[1.11.0] - 2026-10-09](#1110---2026-10-09)
@@ -45,6 +46,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   - [Added](#added-6)
 
 ## [Unreleased]
+
+## [1.13.1] - 2026-10-13
+
+### Changed
+
+- Repository: `.twig-cs-fixer.cache` is now git-ignored.
+- Assets: the six `src/Resources/public/js/nowo-ui-*.js` builds were re-minified by Vite 8.3.4 (equivalent output; no behaviour change).
+
+### Dependencies
+
+- `vite` 8.3.2 → 8.3.4 (frontend tooling; #21).
+- `happy-dom` 20.14.5 → 20.14.6 (frontend tooling; #22).
+
+[1.13.1]: https://github.com/nowo-tech/UiKitBundle/compare/v1.13.0...v1.13.1
 
 ## [1.13.0] - 2026-10-13
 

@@ -1,5 +1,14 @@
 # Upgrading
 
+## To 1.13.1
+
+From **1.13.0** — dependency refresh and repository maintenance.
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+- No breaking changes. No application upgrade steps.
 
 ## To 1.13.0
 
@@ -254,7 +263,6 @@ and enable `Twig\Extra\TwigExtraBundle\TwigExtraBundle`. Flex recipes usually re
 ### Twig-CS-Fixer (maintainers)
 
 Package maintainers: `composer twig:lint` / `composer twig:fix` use `.twig-cs-fixer.php` over `src/` (and `templates/` when present).
-
 
 ## From 1.3.x to 1.4.0
 
