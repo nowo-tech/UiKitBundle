@@ -65,3 +65,34 @@ release.check_skipped: "Controle overgeslagen (uitgeschakeld, of de versie is ge
 release.check_unavailable: "Kan nu niet controleren op een nieuwere release."
 release.latest_label: "Nieuwste release: %version%"
 release.checked_at: "Laatst gecontroleerd: %when%"
+appearance.form.brand_name: Merknaam
+appearance.form.brand_eyebrow: Merkslogan
+appearance.form.theme_id: Licht thema
+appearance.form.theme_id_dark: Donker thema
+appearance.form.light: Lichte kleuren
+appearance.form.dark: Donkere kleuren
+appearance.form.corner_style: Hoeken
+appearance.form.border_strength: Randen
+appearance.form.footer_fixed: Vaste footer
+appearance.form.color.accent: Accent
+appearance.form.color.accent_deep: Accent (diep)
+appearance.form.color.danger: Gevaar
+appearance.form.color.warn: Waarschuwing
+appearance.form.color.paper: Paginaachtergrond
+appearance.form.color.ink: Tekst
+appearance.form.color.surface: Oppervlak
+appearance.form.invalid_color: 'Voer een geldige CSS-kleur in (bijvoorbeeld #1f6f54).'
+appearance.corner.sharp: Scherp
+appearance.corner.soft: Zacht
+appearance.corner.rounded: Afgerond
+appearance.border.subtle: Subtiel
+appearance.border.medium: Gemiddeld
+appearance.border.strong: Sterk
+appearance.preset.ocean: Oceaan
+appearance.preset.slate: Leisteen
+appearance.preset.sandstone: Zandsteen
+appearance.preset.midnight: Middernacht
+appearance.preset.obsidian: Obsidiaan
+appearance.preset.aurora: Aurora
+appearance.preset.ember: Gloed
+appearance.preset.custom: Aangepast

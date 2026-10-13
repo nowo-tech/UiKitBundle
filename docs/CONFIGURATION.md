@@ -5,6 +5,7 @@
 - [Root keys](#root-keys)
 - [Panel path rewrites](#panel-path-rewrites)
 - [Release check](#release-check)
+- [Appearance](#appearance)
 - [Examples](#examples)
 
 ## Root keys
@@ -18,6 +19,7 @@ Alias: **`nowo_ui_kit`**
 | `row_actions_display` | enum | `icon` | Table/list row actions: `icon` (glyph + visually hidden label), `text` (visible label only), `icon_text` (glyph + visible label) |
 | `panel_path_rewrites` | map | `{}` | Legacy path prefix → new prefix (e.g. `/admin/blog: /panel/blog`). Empty = feature disabled (since 1.9.0) |
 | `release_check` | map | `enabled: false` | Optional GitHub release-version checker (footer dialog + JSON endpoint). See [Release check](#release-check) |
+| `appearance` | map | `enabled: false` | Optional site appearance SPI: presets, `--nowo-ui-*` token emitter, Twig functions, optional form (since 1.16.0). See [Appearance](#appearance) |
 
 Parameters / Twig globals:
 
@@ -25,6 +27,7 @@ Parameters / Twig globals:
 - `%nowo_ui_kit.icon_set%` → `nowo_ui_kit_icon_set`
 - `%nowo_ui_kit.row_actions_display%` → `nowo_ui_kit_row_actions_display`
 - `%nowo_ui_kit.panel_path_rewrites%` — the validated rewrite map (no Twig global)
+- `%nowo_ui_kit.appearance.enabled%` (no Twig global; use the `nowo_ui_appearance*()` functions)
 - `%nowo_ui_kit.release_check.enabled%`, `%nowo_ui_kit.release_check.github_repo%`, `%nowo_ui_kit.release_check.current_version%` → Twig global `nowo_ui_kit_release_check` (`{enabled, current_version}`)
 
 Asset package (always prepended): `nowo_ui_kit` → `/bundles/nowouikit`.
@@ -116,6 +119,62 @@ Behaviour:
   ```
 
   The partial's default `status_url` is `path('nowo_ui_kit_release_status')`, so the prefix is picked up automatically; only include the partial for users who can reach the route.
+
+## Appearance
+
+Since **1.16.0**, off by default. Lets an admin pick the site palette (light and dark), corner style and border
+strength, stored by the host; the kit ships the presets, emits the `--nowo-ui-*` tokens and prints them with the CSP
+nonce. No entity, no controller: storage stays in the host behind `AppearanceProviderInterface`. Details and the
+token list: [THEMING.md — Appearance SPI](THEMING.md#appearance-spi).
+
+```yaml
+# config/packages/nowo_ui_kit.yaml
+nowo_ui_kit:
+    appearance:
+        enabled: true
+        provider: App\Appearance\DbAppearanceProvider   # service implementing AppearanceProviderInterface; null = `defaults`
+        defaults:                    # used by the config provider (and as your "reset" values)
+            brand_name: 'Acme'
+            brand_eyebrow: 'Operations'
+            preset: slate            # light colours from this preset
+            preset_dark: midnight    # dark colours from this preset
+            corner_style: soft       # sharp | soft | rounded
+            border_strength: medium  # subtle | medium | strong
+            footer_fixed: false
+        presets:                     # host presets (listed first); a built-in id replaces the built-in
+            acme:
+                mode: light          # which half "applying" the preset replaces
+                light: { accent: '#7c3aed', accent_deep: '#5b21b6', danger: '#b42318', warn: '#b54708', paper: '#f7f5ff', ink: '#1e1b4b', surface: '#ffffff' }
+                dark:  { accent: '#a78bfa', accent_deep: '#c4b5fd', danger: '#f97066', warn: '#fdb022', paper: '#0b0618', ink: '#ede9fe', surface: '#140d26' }
+        builtin_presets: [ocean, slate, sandstone, midnight, obsidian, aurora, ember]   # default: all
+        kit_tokens: true             # false = write only the aliases
+        token_aliases:               # kit token => extra properties that receive the same value
+            '--nowo-ui-primary': ['--brand-primary']
+        selectors:                   # the three emitted blocks
+            root: ':root'
+            light: ':root, [data-theme="light"]'
+            dark: '[data-theme="dark"]'
+        shadow_rgb_fallback: '15 23 42'   # --nowo-ui-shadow-rgb when the light ink is not hex
+```
+
+| Key | Default | Notes |
+|-----|---------|-------|
+| `enabled` | `false` | Registers the services and Twig functions |
+| `provider` | `null` | Service id; null = `nowo_ui_kit.appearance.config_provider` (the `defaults`) |
+| `defaults.*` | see above | `preset` / `preset_dark` may name a host preset |
+| `presets` | `{}` | Ids: lowercase letters, digits, `-`, `_`; colours validated as CSS colours |
+| `builtin_presets` | all 7 | Subset of `ocean`, `slate`, `sandstone`, `midnight`, `obsidian`, `aurora`, `ember` |
+| `kit_tokens` | `true` | |
+| `token_aliases` | `{}` | Keys must be emitted kit tokens; values `--name` (a single string is accepted) |
+| `selectors` | `:root` / `:root, [data-theme="light"]` / `[data-theme="dark"]` | No `{`, `}`, `;`, `<`, `>` |
+| `shadow_rgb_fallback` | `15 23 42` | Three channels |
+
+Services (when enabled): `nowo_ui_kit.appearance.provider` (alias of your provider; also
+`AppearanceProviderInterface`), `nowo_ui_kit.appearance.config_provider` (`ConfigAppearanceProvider`),
+`nowo_ui_kit.appearance.preset_registry` (`AppearancePresetRegistry`), `nowo_ui_kit.appearance.css_emitter`
+(`AppearanceCssEmitter`), the Twig extension, and — only when `symfony/form` is installed — the form types
+`AppearanceType` / `AppearancePaletteType`. Services implementing `AppearancePresetProviderInterface` are tagged
+`nowo_ui_kit.appearance_preset_provider` automatically and add their presets.
 
 ## Examples
 

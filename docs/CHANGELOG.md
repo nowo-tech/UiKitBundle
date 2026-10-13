@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.16.0] - 2026-10-13](#1160---2026-10-13)
 - [[1.15.0] - 2026-10-13](#1150---2026-10-13)
 - [[1.14.0] - 2026-10-13](#1140---2026-10-13)
 - [[1.13.2] - 2026-10-13](#1132---2026-10-13)
@@ -38,6 +39,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [1.16.0] - 2026-10-13
+
+### Added
+
+- **Appearance SPI** (opt-in `nowo_ui_kit.appearance`; Symfony Beacon spec 138 FR-005, kit spec 004): `Appearance` value object (brand name / eyebrow, light and dark `AppearancePalette`, theme ids, corner style, border strength, fixed footer; `with*()`, `toArray()` / `fromArray()`), `AppearanceProviderInterface` (host storage; default `ConfigAppearanceProvider` from `appearance.defaults`), `AppearancePresetRegistry` (config `presets`, tagged `AppearancePresetProviderInterface` services, built-ins `ocean`, `slate`, `sandstone`, `midnight`, `obsidian`, `aurora`, `ember`; `apply()`, `matchLightId()` / `matchDarkId()`), `CornerStyle` / `BorderStrength` enums (radius / border maps).
+- `AppearanceCssEmitter`: `:root` + light + dark blocks of `--nowo-ui-*` tokens (radius, card radius, border width, primary / deep / hover / contrast, danger, warning, paper, text, surface, border, accent-soft, surface-muted, paper-accent, paper-ink, muted, brand-mark, shadow-rgb), colour sanitising, configurable `selectors`, `token_aliases` (extra property names with the same literal value) and `kit_tokens: false` (aliases only) — enough to reproduce a host emitter's legacy variable names exactly.
+- Twig functions `nowo_ui_appearance()`, `nowo_ui_appearance_css()`, `nowo_ui_appearance_style(nonce)` (CSP nonce from the `csp_nonce` request attribute by default), `nowo_ui_appearance_presets(mode)`.
+- Optional forms `AppearanceType` / `AppearancePaletteType` when `symfony/form` is installed (colour validation with `symfony/validator`); translations (7 locales). `symfony/form` and `symfony/validator` are only suggested (dev requirements for the test suite).
+- Docs: THEMING.md — Appearance SPI (token table, storage / presets, legacy aliases); CONFIGURATION.md — Appearance.
+
+[1.16.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.15.0...v1.16.0
 
 ## [1.15.0] - 2026-10-13
 

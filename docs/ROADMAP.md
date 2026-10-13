@@ -22,14 +22,14 @@ Goal: one place to restyle chrome so Beacon and feature bundles stop shipping pa
 
 ## Already in UiKit
 
-Shipped through **v1.15.x** (phases A–D implemented in the kit; v1.5–1.8 add `row_actions_display`, clipboard IIFE, in-page tabs IIFE, Stimulus peers; 1.12–1.15 add filter bar / data table chrome, theming tokens, theme boot, sidebar rail and more peers — see [CHANGELOG.md](CHANGELOG.md)):
+Shipped through **v1.16.x** (phases A–D implemented in the kit; v1.5–1.8 add `row_actions_display`, clipboard IIFE, in-page tabs IIFE, Stimulus peers; 1.12–1.16 add filter bar / data table chrome, theming tokens, theme boot, sidebar rail, more peers and the appearance SPI — see [CHANGELOG.md](CHANGELOG.md)):
 
 | Area | Surface |
 |------|---------|
 | Class macros | `btn`, `toolbar`, `page_header`, `search_*`, `list*`, `table*`, `row_actions`, `badge` (+ variants), `flash`, `empty`, `tabs`, modal/confirm attrs, shell/header/aside/avatar/user_menu/burger/footer, `card*`, `filters`, `progress*`, `spinner` |
 | Partials | pagination, empty, flashes, **toasts**, row actions, page header, tabs, **filters**, **card**, modal shell, **confirm**, **page loader** (`spinner`/`orb`), **thinking orb**, **brand**, **theme toggle**, **width toggle**, **locale switcher**, **kebab**, icon, burger, avatar, aside (**nested groups**), user menu, footer, composed `_shell` |
 | Assets | `nowo-ui.css` (+ dark tokens); Vite/pnpm IIFEs: modal, shell (+ opt-in **sidebar rail**, 1.15), **toast**, **confirm**, **page-loader**, **theme**, **theme-boot** (pre-paint, 1.15), **orb**, **clipboard**, **tabs**; optional Stimulus peers (incl. `temporary-reveal`, `collapse-panel`, `datatable`, 1.15) |
-| Config | `css_framework`, `icon_set`, `row_actions_display` (`icon` / `text` / `icon_text`) |
+| Config | `css_framework`, `icon_set`, `row_actions_display` (`icon` / `text` / `icon_text`), opt-in `appearance` SPI (1.16: presets, token emitter + aliases, Twig functions, optional form; storage stays in the host) |
 | Docs | [ADOPTION.md](ADOPTION.md), [STIMULUS.md](STIMULUS.md), [THIRD_PARTY.md](THIRD_PARTY.md) |
 
 ## Gap analysis
@@ -61,6 +61,8 @@ Shipped through **v1.15.x** (phases A–D implemented in the kit; v1.5–1.8 add
 | Brand mark | ✅ |
 | Kebab / overflow | ✅ |
 | Progress + spinner | ✅ |
+| Site appearance (palette presets, corners, borders) | ✅ SPI (1.16; host keeps entity + admin controller) |
+| Pre-paint theme boot / sidebar rail | ✅ (1.15) |
 | Breadcrumbs / combobox / charts | ❌ (BreadcrumbKit / FormKit / product) |
 
 ## Planned phases
@@ -100,6 +102,8 @@ Shipped through **v1.15.x** (phases A–D implemented in the kit; v1.5–1.8 add
 | Auth login pages | AuthKit |
 | Charts, Mercure realtime, product tour, PWA install | Beacon product features |
 | Full design-system Storybook | Optional later; kitchen sink remains the demo |
+| Appearance storage (entity / settings row) and its admin controller | Host app — the kit only defines `AppearanceProviderInterface` (1.16) |
+| Config export / import portability | No kit fits yet (candidate for a dedicated bundle) |
 
 ## Adoption notes
 

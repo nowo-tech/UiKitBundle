@@ -65,3 +65,34 @@ release.check_skipped: "Update check skipped (disabled, or the version is not a 
 release.check_unavailable: "Could not check for a newer release right now."
 release.latest_label: "Latest release: %version%"
 release.checked_at: "Last checked: %when%"
+appearance.form.brand_name: Brand name
+appearance.form.brand_eyebrow: Brand tagline
+appearance.form.theme_id: Light theme
+appearance.form.theme_id_dark: Dark theme
+appearance.form.light: Light colours
+appearance.form.dark: Dark colours
+appearance.form.corner_style: Corners
+appearance.form.border_strength: Borders
+appearance.form.footer_fixed: Fixed footer
+appearance.form.color.accent: Accent
+appearance.form.color.accent_deep: Accent (deep)
+appearance.form.color.danger: Danger
+appearance.form.color.warn: Warning
+appearance.form.color.paper: Page background
+appearance.form.color.ink: Text
+appearance.form.color.surface: Surface
+appearance.form.invalid_color: 'Enter a valid CSS colour (for example #1f6f54).'
+appearance.corner.sharp: Sharp
+appearance.corner.soft: Soft
+appearance.corner.rounded: Rounded
+appearance.border.subtle: Subtle
+appearance.border.medium: Medium
+appearance.border.strong: Strong
+appearance.preset.ocean: Ocean
+appearance.preset.slate: Slate
+appearance.preset.sandstone: Sandstone
+appearance.preset.midnight: Midnight
+appearance.preset.obsidian: Obsidian
+appearance.preset.aurora: Aurora
+appearance.preset.ember: Ember
+appearance.preset.custom: Custom

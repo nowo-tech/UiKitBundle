@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.16.0](#to-1160)
 - [To 1.15.0](#to-1150)
 - [To 1.14.0](#to-1140)
 - [To 1.13.2](#to-1132)
@@ -40,6 +41,17 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 1.16.0
+
+From **1.15.0** — optional appearance SPI. Nothing changes unless `nowo_ui_kit.appearance.enabled` is set.
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+- No breaking changes; no new required dependency (`symfony/form` / `symfony/validator` are only suggested for the optional form types).
+- To adopt: enable `appearance`, point `appearance.provider` at a service implementing `AppearanceProviderInterface` (map your stored settings to an `Appearance`), register your own presets in `appearance.presets` (or a tagged `AppearancePresetProviderInterface`), and print `{{ nowo_ui_appearance_style() }}` after `nowo-ui.css`. Hosts that already emit their own variables can keep the names with `token_aliases` (+ `kit_tokens: false` for an identical stylesheet) — see THEMING.md — Appearance SPI.
 
 ## To 1.15.0
 

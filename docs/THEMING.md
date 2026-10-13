@@ -24,6 +24,10 @@ two token blocks of `nowo-ui.css`. A host theme is a short `:root` block.
 - [CSS framework notes](#css-framework-notes)
 - [Example: generic brand](#example-generic-brand)
 - [Example: Symfony Beacon (moss / sand)](#example-symfony-beacon-moss--sand)
+- [Appearance SPI](#appearance-spi)
+  - [Emitted tokens](#emitted-tokens)
+  - [Host storage and presets](#host-storage-and-presets)
+  - [Keeping legacy variable names (`token_aliases`)](#keeping-legacy-variable-names-token_aliases)
 
 ## How it works
 
@@ -360,3 +364,119 @@ The first 17 lines are the palette mapping; the rest only reproduces Beacon's ex
 secondary buttons, moss-tinted pills, sand table rules) and can be dropped for the kit defaults. What
 stays in the host is product layout: control heights / paddings, Beacon's `<dialog>` confirm-panel
 chrome, pill borders on all four sides of the active tab, toolbar and panel spacing.
+
+## Appearance SPI
+
+Since **1.16.0** (opt-in, `nowo_ui_kit.appearance.enabled: true`, see
+[CONFIGURATION.md](CONFIGURATION.md#appearance)). Instead of a static host theme, an admin picks the site look:
+a light and a dark **palette** of seven colours (accent, accent deep, danger, warn, paper, ink, surface), a **corner
+style** (`sharp` / `soft` / `rounded`) and a **border strength** (`subtle` / `medium` / `strong`). The kit turns it
+into tokens and prints them:
+
+```twig
+<head>
+    {% include '@NowoUiKitBundle/partials/_theme_boot.html.twig' %}
+    <link rel="stylesheet" href="{{ asset('css/nowo-ui.css', 'nowo_ui_kit') }}">
+    {{ nowo_ui_appearance_style() }}   {# <style nonce="…" data-nowo-ui-appearance>…</style>, after nowo-ui.css #}
+    <title>{{ nowo_ui_appearance().brandName }}</title>
+```
+
+Twig functions: `nowo_ui_appearance()` (the `Appearance` value object: `brandName`, `brandEyebrow`, `light` / `dark`
+palettes, `themeId` / `themeIdDark`, `cornerStyle`, `borderStrength`, `footerFixed`), `nowo_ui_appearance_css()`
+(stylesheet text), `nowo_ui_appearance_style(nonce = null)` (the nonce defaults to the request attribute
+`csp_nonce`), `nowo_ui_appearance_presets(mode = null)`.
+
+Stored colours are sanitised (hex, CSS colour functions, named colours); anything else falls back to the default
+palette, so admin input can never break out of the `<style>` element.
+
+### Emitted tokens
+
+Root block (`selectors.root`, default `:root`):
+
+| Token | Value |
+|-------|-------|
+| `--nowo-ui-radius` | control radius: sharp `0.0625rem`, soft `0.375rem`, rounded `0.5rem` |
+| `--nowo-ui-card-radius` | card radius: sharp `0.125rem`, soft `0.75rem`, rounded `1.25rem` |
+| `--nowo-ui-border-width` | `1px` (subtle / medium), `1.5px` (strong) — not read by `nowo-ui.css`; for host CSS |
+
+Light block (`selectors.light`, default `:root, [data-theme="light"]`) and dark block (`selectors.dark`, default
+`[data-theme="dark"]`), each from its own palette. *m* is the border mix: subtle 7 / 9, medium 14 / 16, strong
+26 / 30 (light / dark).
+
+| Token | Value |
+|-------|-------|
+| `--nowo-ui-primary` | accent |
+| `--nowo-ui-primary-deep` | accent deep *(new; for host CSS)* |
+| `--nowo-ui-primary-hover` | accent deep |
+| `--nowo-ui-primary-contrast` | surface or ink, whichever contrasts more with the accent (hex colours only) |
+| `--nowo-ui-danger` | danger |
+| `--nowo-ui-warning` | warn *(new; for host CSS)* |
+| `--nowo-ui-paper` | paper (page background) *(new; for host CSS)* |
+| `--nowo-ui-text` | ink |
+| `--nowo-ui-surface` | surface |
+| `--nowo-ui-border`, `--nowo-ui-border-strong` | `color-mix(in srgb, ink m%, paper)` |
+| `--nowo-ui-accent-soft` | `color-mix(in srgb, accent 10%, paper)` *(new)* |
+| `--nowo-ui-surface-muted` | `color-mix(in srgb, ink 5%, surface)` |
+| `--nowo-ui-paper-accent` | `color-mix(in srgb, accent 8%, paper)` *(new; shell gradients)* |
+| `--nowo-ui-paper-ink` | `color-mix(in srgb, ink 6%, paper)` *(new; shell gradients)* |
+| `--nowo-ui-muted` | `color-mix(in srgb, ink 60%, surface)` |
+| `--nowo-ui-brand-mark` | accent *(new)* |
+| `--nowo-ui-shadow-rgb` | light: ink as `r g b` channels (`shadow_rgb_fallback` if not hex); dark: `0 0 0` — use as `rgb(var(--nowo-ui-shadow-rgb) / 0.12)` |
+
+The default selectors have the same specificity as the `nowo-ui.css` token blocks: print the style **after** the
+kit stylesheet (or set `selectors` to `html:root` / `html:root[data-theme="dark"]`). A host theme written as
+`html:root { … }` (see above) still wins over the emitted values.
+
+### Host storage and presets
+
+- Implement `Nowo\UiKitBundle\Appearance\AppearanceProviderInterface::getAppearance(): Appearance` on top of your
+  storage (entity, settings row…) and set `appearance.provider` to that service. Without one,
+  `ConfigAppearanceProvider` serves `appearance.defaults`.
+- `AppearancePresetRegistry`: the presets in display order — config `presets`, then services implementing
+  `AppearancePresetProviderInterface` (autoconfigured tag `nowo_ui_kit.appearance_preset_provider`), then the
+  built-ins **ocean**, **slate**, **sandstone** (light) and **midnight**, **obsidian**, **aurora**, **ember** (dark),
+  restricted with `builtin_presets`. `apply($appearance, $id)` returns a copy with the preset's half applied (a light
+  preset replaces the light colours and `themeId`, a dark one the dark colours and `themeIdDark`);
+  `matchLightId()` / `matchDarkId()` recognise a stored palette (`custom` otherwise).
+- `Appearance::toArray()` / `Appearance::fromArray($data, $defaults)` bridge to forms and storage. With
+  `symfony/form` installed, `Nowo\UiKitBundle\Form\AppearanceType` (options `with_brand`, `with_colors`,
+  `with_footer`) edits that array; colours are validated when `symfony/validator` is installed. The admin
+  controller and persistence stay in the host.
+
+### Keeping legacy variable names (`token_aliases`)
+
+`token_aliases` writes extra custom properties with the **same literal value** as a kit token (never
+`var(--nowo-ui-…)`, so a host that also maps `--nowo-ui-*` onto its own names cannot create a cycle). With
+`kit_tokens: false` only the aliases are written. This reproduces, declaration for declaration, the stylesheet
+Symfony Beacon emitted before adopting the SPI (`--beacon-*` + Tailwind `--color-*`; guarded by
+`AppearanceCssEmitterTest`):
+
+```yaml
+nowo_ui_kit:
+    appearance:
+        enabled: true
+        provider: App\Shared\Appearance\SiteAppearanceProvider
+        kit_tokens: false
+        shadow_rgb_fallback: '15 28 24'
+        token_aliases:
+            '--nowo-ui-card-radius': ['--beacon-radius-card']
+            '--nowo-ui-radius': ['--beacon-radius-control']
+            '--nowo-ui-border-width': ['--beacon-border-width']
+            '--nowo-ui-primary': ['--beacon-moss', '--color-moss']
+            '--nowo-ui-primary-deep': ['--beacon-moss-deep', '--color-moss-deep']
+            '--nowo-ui-danger': ['--beacon-alert', '--color-alert']
+            '--nowo-ui-warning': ['--beacon-warn', '--color-warn']
+            '--nowo-ui-paper': ['--beacon-paper', '--color-paper']
+            '--nowo-ui-text': ['--beacon-ink', '--color-ink']
+            '--nowo-ui-surface': ['--beacon-surface', '--color-surface']
+            '--nowo-ui-border': ['--beacon-sand', '--color-sand']
+            '--nowo-ui-accent-soft': ['--beacon-mist', '--color-mist']
+            '--nowo-ui-surface-muted': ['--beacon-surface-muted', '--color-surface-muted']
+            '--nowo-ui-paper-accent': ['--beacon-shell-a']
+            '--nowo-ui-paper-ink': ['--beacon-shell-b']
+            '--nowo-ui-brand-mark': ['--beacon-mark']
+            '--nowo-ui-shadow-rgb': ['--beacon-shadow']
+```
+
+Dropping `kit_tokens: false` later also emits the `--nowo-ui-*` tokens, which makes most of the
+[Beacon mapping block](#example-symfony-beacon-moss--sand) redundant.

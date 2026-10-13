@@ -65,3 +65,34 @@ release.check_skipped: "Prüfung übersprungen (deaktiviert oder Version ist kei
 release.check_unavailable: "Neueres Release kann derzeit nicht geprüft werden."
 release.latest_label: "Neuestes Release: %version%"
 release.checked_at: "Zuletzt geprüft: %when%"
+appearance.form.brand_name: Markenname
+appearance.form.brand_eyebrow: 'Marken-Slogan'
+appearance.form.theme_id: Helles Design
+appearance.form.theme_id_dark: Dunkles Design
+appearance.form.light: Helle Farben
+appearance.form.dark: Dunkle Farben
+appearance.form.corner_style: Ecken
+appearance.form.border_strength: Rahmen
+appearance.form.footer_fixed: Fixierte Fußzeile
+appearance.form.color.accent: Akzent
+appearance.form.color.accent_deep: Akzent (dunkel)
+appearance.form.color.danger: Gefahr
+appearance.form.color.warn: Warnung
+appearance.form.color.paper: Seitenhintergrund
+appearance.form.color.ink: Text
+appearance.form.color.surface: Fläche
+appearance.form.invalid_color: 'Gib eine gültige CSS-Farbe ein (z. B. #1f6f54).'
+appearance.corner.sharp: Eckig
+appearance.corner.soft: Weich
+appearance.corner.rounded: Abgerundet
+appearance.border.subtle: Dezent
+appearance.border.medium: Mittel
+appearance.border.strong: Kräftig
+appearance.preset.ocean: Ozean
+appearance.preset.slate: Schiefer
+appearance.preset.sandstone: Sandstein
+appearance.preset.midnight: Mitternacht
+appearance.preset.obsidian: Obsidian
+appearance.preset.aurora: Aurora
+appearance.preset.ember: Glut
+appearance.preset.custom: Benutzerdefiniert

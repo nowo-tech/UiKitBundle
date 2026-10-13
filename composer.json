@@ -55,7 +55,9 @@
         "phpstan/phpstan-symfony": "^2.0",
         "phpunit/phpunit": "^10.5 || ^11.0",
         "rector/rector": "^2.0",
+        "symfony/form": "^7.4 || ^8.0",
         "symfony/http-client": "^7.4 || ^8.0",
+        "symfony/validator": "^7.4 || ^8.0",
         "symfony/yaml": "^7.4 || ^8.0",
         "vincentlanglet/twig-cs-fixer": "^3.0"
     },
@@ -88,8 +90,10 @@
         ]
     },
     "suggest": {
+        "symfony/form": "For the optional AppearanceType / AppearancePaletteType forms (appearance SPI)",
         "symfony/http-client": "For the optional release_check feature (GitHub release-version dialog)",
-        "symfony/ux-icons": "For icon_set: ux_icon in row actions and icons"
+        "symfony/ux-icons": "For icon_set: ux_icon in row actions and icons",
+        "symfony/validator": "Colour validation in the optional appearance forms"
     },
     "scripts": {
         "test": "@php vendor/bin/phpunit --color=always",

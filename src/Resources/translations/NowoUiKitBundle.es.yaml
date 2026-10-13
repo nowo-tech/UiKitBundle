@@ -65,3 +65,34 @@ release.check_skipped: "Comprobación omitida (desactivada, o la versión no es 
 release.check_unavailable: "No se pudo comprobar si hay una versión más reciente ahora mismo."
 release.latest_label: "Última versión: %version%"
 release.checked_at: "Última comprobación: %when%"
+appearance.form.brand_name: Nombre de la marca
+appearance.form.brand_eyebrow: Lema de la marca
+appearance.form.theme_id: Tema claro
+appearance.form.theme_id_dark: Tema oscuro
+appearance.form.light: Colores claros
+appearance.form.dark: Colores oscuros
+appearance.form.corner_style: Esquinas
+appearance.form.border_strength: Bordes
+appearance.form.footer_fixed: Pie fijo
+appearance.form.color.accent: Acento
+appearance.form.color.accent_deep: Acento (intenso)
+appearance.form.color.danger: Peligro
+appearance.form.color.warn: Aviso
+appearance.form.color.paper: Fondo de página
+appearance.form.color.ink: Texto
+appearance.form.color.surface: Superficie
+appearance.form.invalid_color: 'Introduce un color CSS válido (por ejemplo #1f6f54).'
+appearance.corner.sharp: Rectas
+appearance.corner.soft: Suaves
+appearance.corner.rounded: Redondeadas
+appearance.border.subtle: Sutiles
+appearance.border.medium: Medios
+appearance.border.strong: Marcados
+appearance.preset.ocean: Océano
+appearance.preset.slate: Pizarra
+appearance.preset.sandstone: Arenisca
+appearance.preset.midnight: Medianoche
+appearance.preset.obsidian: Obsidiana
+appearance.preset.aurora: Aurora
+appearance.preset.ember: Brasa
+appearance.preset.custom: Personalizado

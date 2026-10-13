@@ -4,20 +4,32 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\DependencyInjection;
 
+use Nowo\UiKitBundle\Appearance\AppearanceCssEmitter;
+use Nowo\UiKitBundle\Appearance\AppearancePreset;
+use Nowo\UiKitBundle\Appearance\AppearancePresetProviderInterface;
+use Nowo\UiKitBundle\Appearance\AppearancePresetRegistry;
+use Nowo\UiKitBundle\Appearance\AppearanceProviderInterface;
+use Nowo\UiKitBundle\Appearance\ConfigAppearanceProvider;
 use Nowo\UiKitBundle\Enum\CssFramework;
 use Nowo\UiKitBundle\EventSubscriber\LegacyPanelPathRedirectSubscriber;
+use Nowo\UiKitBundle\Form\AppearancePaletteType;
+use Nowo\UiKitBundle\Form\AppearanceType;
 use Nowo\UiKitBundle\Release\ReleaseStatusController;
 use Nowo\UiKitBundle\Release\ReleaseUpdateChecker;
 use Nowo\UiKitBundle\Routing\PanelPathRewriter;
 use Nowo\UiKitBundle\Routing\PanelPathRewritingLoader;
+use Nowo\UiKitBundle\Twig\AppearanceExtension;
 use Symfony\Component\Asset\Package;
 use Symfony\Component\Config\FileLocator;
+use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
+use Symfony\Component\Form\AbstractType;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -90,8 +102,74 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
         $container->setParameter('nowo_ui_kit.release_check.current_version', $releaseCheck['current_version']);
         $this->registerReleaseCheck($container, $releaseCheck);
 
+        /** @var array{enabled: bool, provider: ?string, defaults: array{brand_name: string, brand_eyebrow: string, preset: string, preset_dark: string, corner_style: string, border_strength: string, footer_fixed: bool}, presets: array<string, array<string, mixed>>, builtin_presets: list<string>, kit_tokens: bool, token_aliases: array<string, list<string>>, selectors: array{root: string, light: string, dark: string}, shadow_rgb_fallback: string} $appearance */
+        $appearance = $config['appearance'];
+        $container->setParameter('nowo_ui_kit.appearance.enabled', $appearance['enabled']);
+        $this->registerAppearance($container, $appearance);
+
         $loader = new YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.yaml');
+    }
+
+    /**
+     * Appearance SPI services (only when enabled): preset registry, config provider, CSS emitter, Twig
+     * extension, optional form types (symfony/form).
+     *
+     * @param array{enabled: bool, provider: ?string, defaults: array{brand_name: string, brand_eyebrow: string, preset: string, preset_dark: string, corner_style: string, border_strength: string, footer_fixed: bool}, presets: array<string, array<string, mixed>>, builtin_presets: list<string>, kit_tokens: bool, token_aliases: array<string, list<string>>, selectors: array{root: string, light: string, dark: string}, shadow_rgb_fallback: string} $appearance
+     */
+    private function registerAppearance(ContainerBuilder $container, array $appearance): void
+    {
+        if (!$appearance['enabled']) {
+            return;
+        }
+
+        $container->registerForAutoconfiguration(AppearancePresetProviderInterface::class)
+            ->addTag(AppearancePresetProviderInterface::TAG);
+
+        $presets = [];
+        foreach ($appearance['presets'] as $id => $data) {
+            $presets[] = (new Definition(AppearancePreset::class))
+                ->setFactory([AppearancePreset::class, 'fromArray'])
+                ->setArguments([(string) $id, $data]);
+        }
+
+        $container->register('nowo_ui_kit.appearance.preset_registry', AppearancePresetRegistry::class)
+            ->setArguments([$presets, new TaggedIteratorArgument(AppearancePresetProviderInterface::TAG), $appearance['builtin_presets']]);
+        $container->setAlias(AppearancePresetRegistry::class, 'nowo_ui_kit.appearance.preset_registry');
+
+        $container->register('nowo_ui_kit.appearance.config_provider', ConfigAppearanceProvider::class)
+            ->setArguments([new Reference('nowo_ui_kit.appearance.preset_registry'), $appearance['defaults']]);
+        $container->setAlias(ConfigAppearanceProvider::class, 'nowo_ui_kit.appearance.config_provider');
+
+        $providerId = $appearance['provider'] ?? 'nowo_ui_kit.appearance.config_provider';
+        $container->setAlias('nowo_ui_kit.appearance.provider', $providerId);
+        $container->setAlias(AppearanceProviderInterface::class, 'nowo_ui_kit.appearance.provider');
+
+        $container->register('nowo_ui_kit.appearance.css_emitter', AppearanceCssEmitter::class)
+            ->setArguments([
+                $appearance['token_aliases'],
+                $appearance['kit_tokens'],
+                $appearance['selectors'],
+                $appearance['shadow_rgb_fallback'],
+            ]);
+        $container->setAlias(AppearanceCssEmitter::class, 'nowo_ui_kit.appearance.css_emitter');
+
+        $container->register('nowo_ui_kit.appearance.twig_extension', AppearanceExtension::class)
+            ->setArguments([
+                new Reference('nowo_ui_kit.appearance.provider'),
+                new Reference('nowo_ui_kit.appearance.css_emitter'),
+                new Reference('nowo_ui_kit.appearance.preset_registry'),
+                new Reference('request_stack', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+            ])
+            ->addTag('twig.extension');
+
+        if (class_exists(AbstractType::class)) {
+            $container->register('nowo_ui_kit.appearance.form_type', AppearanceType::class)
+                ->setArguments([new Reference('nowo_ui_kit.appearance.preset_registry')])
+                ->addTag('form.type');
+            $container->register('nowo_ui_kit.appearance.palette_form_type', AppearancePaletteType::class)
+                ->addTag('form.type');
+        }
     }
 
     /**
