@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## To 1.14.0
+
+From **1.13.2** — Symfony >=7.4, host translator settings respected, release-check failures cached, vitest 4.
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
 - **Symfony floor raised to `^7.4 || ^8.0`** (was `^6.0 || ^7.0 || ^8.0`; only 7.4 / 8.x were ever tested in CI). Apps on Symfony 6.x or 7.0–7.3 stay on 1.13.x until they upgrade Symfony; Composer will not install this version for them.
 - The bundle no longer prepends `framework.translator` (`paths` + `fallbacks: [en]`). Its `NowoUiKitBundle` catalogue is still auto-discovered by FrameworkBundle; your own `fallbacks` order is now respected (`en` is no longer forced first). If you relied on the bundle to turn the translator on (rare: only setups where FrameworkBundle does not enable it by default), set `framework.translator.enabled: true` yourself.
 - Release check: failed GitHub fetches are now cached for 5 minutes (`status: error`) instead of being retried on every request. The `/_nowo-ui/release/status` endpoint is still anonymous by default and reveals the installed version — import it behind your admin firewall (see CONFIGURATION.md — Release check).

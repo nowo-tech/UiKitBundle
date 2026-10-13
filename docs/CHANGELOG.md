@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - [Unreleased](#unreleased)
 
+- [[1.14.0] - 2026-10-13](#1140---2026-10-13)
 - [[1.13.2] - 2026-10-13](#1132---2026-10-13)
 - [[1.13.1] - 2026-10-13](#1131---2026-10-13)
 - [[1.13.0] - 2026-10-13](#1130---2026-10-13)
@@ -48,6 +49,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.14.0] - 2026-10-13
+
 ### Changed
 
 - **Symfony floor raised to `^7.4 || ^8.0`** for every `symfony/*` requirement, matching the CI matrix (7.4, 8.0, 8.1). README badge and INSTALLATION requirements updated (PHP minimum documented as 8.2, as in `composer.json`).
@@ -61,6 +64,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Security
 
 - Documented that `GET /_nowo-ui/release/status` is anonymous by default and discloses the installed version, and how to protect it (route prefix + `access_control`).
+
+[1.14.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.13.2...v1.14.0
 
 ## [1.13.2] - 2026-10-13
 
