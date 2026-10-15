@@ -62,3 +62,7 @@ Follow these rules when contributing PHP, TypeScript, Twig, and documentation to
 - Commit secrets, `.env` files, or demo `var/` caches.
 - Add Spanish PHPDoc or comments in `src/`.
 - Touch unrelated files when fixing a focused issue.
+
+## Commits
+
+- Never add AI co-author trailers: no `Co-authored-by: Cursor` / `cursoragent@cursor.com`, no `Co-Authored-By: Claude …` / `noreply@anthropic.com` (REQ-GIT-001).
