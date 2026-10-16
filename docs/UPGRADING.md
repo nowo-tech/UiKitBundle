@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.17.4](#to-1174)
 - [To 1.17.3](#to-1173)
 - [To 1.17.2](#to-1172)
 - [To 1.17.1](#to-1171)
@@ -45,6 +46,11 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 1.17.4
+
+From **1.17.3** — nothing to change for hosts: same runtime code and CSS (maintainer release gate only). Prefer 1.17.4
+over 1.17.3.
 
 ## To 1.17.3
 

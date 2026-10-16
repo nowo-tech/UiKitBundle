@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.17.4] - 2026-10-16](#1174---2026-10-16)
 - [[1.17.3] - 2026-10-16](#1173---2026-10-16)
 - [[1.17.2] - 2026-10-16](#1172---2026-10-16)
 - [[1.17.1] - 2026-10-16](#1171---2026-10-16)
@@ -43,6 +44,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [1.17.4] - 2026-10-16
+
+Supersedes 1.17.3: same runtime code and CSS, release gate hardened so the tagged commit is exactly what was checked.
+
+### Changed
+
+- `make release-check` is check-only: it starts and ends with the new `check-clean-tree` target (fails on any `git status --porcelain` output), runs `cs-check` instead of `cs-fix` + `cs-check`, and `validate-phpdoc` no longer writes files.
+- `.scripts/complete-public-phpdoc.php` (`make validate-phpdoc`) is a read-only gate: it fails when a documented public method returning `array` / `iterable` lacks `@return`, and no longer adds redundant `@return` tags that php-cs-fixer removes (the two tools used to fight and leave the tree dirty).
+- Tests: php-cs-fixer quote style in `HostChromePartialsTest` (no behaviour change).
+
+[1.17.4]: https://github.com/nowo-tech/UiKitBundle/compare/v1.17.3...v1.17.4
 
 ## [1.17.3] - 2026-10-16
 

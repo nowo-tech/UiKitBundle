@@ -3,56 +3,44 @@
 declare(strict_types=1);
 
 /**
- * Adds missing @return tags to public methods that already have PHPDoc.
+ * Read-only PHPDoc gate (`make validate-phpdoc`, part of `make release-check`).
+ *
+ * Fails (exit 1) when a public method that has a PHPDoc block returns `array` or `iterable` without a `@return`
+ * tag: those native types cannot say what they contain, so the tag (with generics) is required. Scalar, void,
+ * nullable and class return types are fully expressed natively — php-cs-fixer (`no_superfluous_phpdoc_tags`) removes
+ * a redundant `@return` for them, so this gate never asks for one. It never writes files: a release gate must not
+ * rewrite the tree it is proving.
  */
-$srcDir = dirname(__DIR__) . '/src';
+$srcDir = dirname(__DIR__).'/src';
+$missing = [];
 
 foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($srcDir)) as $file) {
-    if (!$file->isFile() || $file->getExtension() !== 'php') {
+    if (!$file->isFile() || 'php' !== $file->getExtension()) {
         continue;
     }
 
     $path = $file->getPathname();
     $content = file_get_contents($path);
-    if ($content === false) {
+    if (false === $content) {
         continue;
     }
 
-    $updated = preg_replace_callback(
-        '#(/\*\*(?:(?!\*/).)*?\*/)\s*public\s+(?:static\s+)?function\s+\w+\s*\([^)]*\)\s*:\s*([^\s{]+)#s',
-        static function (array $matches): string {
-            $doc = $matches[1];
-            $returnType = $matches[2];
-
-            if (str_contains($doc, '@return')) {
-                return $matches[0];
-            }
-
-            $returnTag = match ($returnType) {
-                'void' => '     * @return void',
-                'self' => '     * @return self Fluent interface',
-                'bool' => '     * @return bool',
-                'string' => '     * @return string',
-                'int' => '     * @return int',
-                'float' => '     * @return float',
-                'array' => '     * @return array',
-                default => str_starts_with($returnType, '?') || str_contains($returnType, '\\')
-                    ? '     * @return ' . $returnType
-                    : '     * @return ' . $returnType,
-            };
-
-            $newDoc = preg_replace('/\n\s*\*\/\s*$/', "\n     *\n" . $returnTag . "\n     */", $doc, 1);
-            if (!is_string($newDoc)) {
-                return $matches[0];
-            }
-
-            return str_replace($doc, $newDoc, $matches[0]);
-        },
+    preg_match_all(
+        '#(/\*\*(?:(?!\*/).)*?\*/)\s*public\s+(?:static\s+)?function\s+(\w+)\s*\([^)]*\)\s*:\s*([^\s{]+)#s',
         $content,
+        $matches,
+        PREG_SET_ORDER,
     );
-
-    if (is_string($updated) && $updated !== $content) {
-        file_put_contents($path, $updated);
-        echo 'Updated: ' . str_replace($srcDir . '/', '', $path) . PHP_EOL;
+    foreach ($matches as [, $doc, $method, $returnType]) {
+        if (in_array(ltrim($returnType, '?'), ['array', 'iterable'], true) && !str_contains($doc, '@return')) {
+            $missing[] = str_replace($srcDir.'/', '', $path).'::'.$method.'(): '.$returnType;
+        }
     }
 }
+
+if ([] !== $missing) {
+    fwrite(STDERR, "Public methods returning array/iterable without a @return tag:\n  ".implode("\n  ", $missing)."\n");
+    exit(1);
+}
+
+echo "validate-phpdoc: OK\n";

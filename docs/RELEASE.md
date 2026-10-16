@@ -2,7 +2,7 @@
 
 This checklist helps maintainers prepare and publish a release safely.
 
-**Current stable:** `v1.17.3` (2026-10-16).
+**Current stable:** `v1.17.4` (2026-10-16).
 
 ## Table of contents
 
@@ -19,6 +19,12 @@ Run the full release pipeline (Docker-backed Makefile):
 ```bash
 make release-check
 ```
+
+`release-check` is **check-only** (1.17.4): it starts and ends with `check-clean-tree` (fails on any
+`git status --porcelain` output), runs `cs-check` (never `cs-fix`) and the read-only `validate-phpdoc`. Commit first,
+then run it; if a step regenerates a tracked file (e.g. a demo `config/reference.php` after a config change) the final
+guard fails — commit the file and run it again. The tag message's `release-check: OK <sha>` must name that exact
+commit.
 
 Expected steps:
 
