@@ -9,10 +9,12 @@ namespace Nowo\UiKitBundle\Theme;
  * `--nowo-ui-*` tokens, with optional per-bundle exceptions. Immutable, request-independent (worker safe).
  *
  * Resolution of a slot class: semantic `nowo-ui-*` class + UiKit framework defaults (per `css_framework`) +
- * host classes; a bundle exception (`bundles.<Bundle>.classes.<slot>`) replaces the host classes of that slot.
- * Framework defaults can be dropped globally (`framework_defaults: false`), per bundle, or per slot (a class entry
- * `{value: '…', framework_defaults: false}`); the most specific setting wins (bundle slot > bundle > host slot >
- * host). Attributes: host attributes, bundle attributes merged over them. Partials: bundle > host > UiKit default.
+ * host classes; a page-type variation (`pages.<type>.classes.<slot>`, type = the scaffold rendering the slot)
+ * replaces the host classes of that slot, and a bundle exception (`bundles.<Bundle>.classes.<slot>`) replaces both.
+ * Framework defaults can be dropped globally (`framework_defaults: false`), per page type, per bundle, or per slot
+ * (a class entry `{value: '…', framework_defaults: false}`); the most specific setting wins (bundle slot > bundle >
+ * page-type slot > page type > host slot > host). Attributes: host, then page type, then bundle merged over them.
+ * Partials: bundle > host > UiKit default.
  * Tokens: host tokens on `:root` (dark ones on `[data-theme="dark"]`); bundle tokens scoped to
  * `[data-nowo-ui-bundle="<Bundle>"]`.
  */
@@ -30,6 +32,9 @@ final readonly class Theme
     /** @var array<string, array{classes: array<string, array{0: string, 1: bool|null}>, framework_defaults: bool|null, attributes: array<string, array<string, string|int|float|bool|null>>, partials: array<string, string>, tokens: array<string, string>, tokens_dark: array<string, string>}> */
     private array $bundles;
 
+    /** @var array<string, array{classes: array<string, array{0: string, 1: bool|null}>, framework_defaults: bool|null, attributes: array<string, array<string, string|int|float|bool|null>>}> */
+    private array $pages;
+
     /**
      * A class entry is a class string, a list of classes, or `{value: string|list, framework_defaults: bool}`.
      *
@@ -40,6 +45,7 @@ final readonly class Theme
      * @param array<string, string>                                    $tokensDark        dark-mode tokens
      * @param array<string, array<string, mixed>>                      $bundles           bundle => {classes, framework_defaults, attributes, partials, tokens, tokens_dark}
      * @param bool                                                     $frameworkDefaults false = semantic + host classes only, for every slot
+     * @param array<string, array<string, mixed>>                      $pages             page type ({@see ThemeSlots::PAGE_TYPES}) => {classes, framework_defaults, attributes}
      */
     public function __construct(
         private string $framework = 'bootstrap5',
@@ -50,8 +56,10 @@ final readonly class Theme
         private array $tokensDark = [],
         array $bundles = [],
         private bool $frameworkDefaults = true,
+        array $pages = [],
     ) {
         $this->classes = $this->normalizeClasses($classes, 'classes');
+        $this->pages = $this->normalizePages($pages);
         $normalized = [];
         foreach ($bundles as $bundle => $data) {
             $this->assertBundleName((string) $bundle);
@@ -79,7 +87,7 @@ final readonly class Theme
             ];
         }
         $this->bundles = $normalized;
-        foreach ([$attributes, ...array_column($normalized, 'attributes')] as $map) {
+        foreach ([$attributes, ...array_column($normalized, 'attributes'), ...array_column($this->pages, 'attributes')] as $map) {
             foreach ($map as $slot => $attrs) {
                 ThemeSlots::semantic($slot);
                 foreach (array_keys($attrs) as $name) {
@@ -120,8 +128,10 @@ final readonly class Theme
         $tokensDark = $theme['tokens_dark'] ?? [];
         /** @var array<string, array<string, mixed>> $bundles */
         $bundles = $theme['bundles'] ?? [];
+        /** @var array<string, array<string, mixed>> $pages */
+        $pages = $theme['pages'] ?? [];
 
-        return new self($framework, $classes, $attributes, $partials, $tokens, $tokensDark, $bundles, false !== ($theme['framework_defaults'] ?? true));
+        return new self($framework, $classes, $attributes, $partials, $tokens, $tokensDark, $bundles, false !== ($theme['framework_defaults'] ?? true), $pages);
     }
 
     public function framework(): string
@@ -134,37 +144,40 @@ final readonly class Theme
      * classes, de-duplicated.
      *
      * @param string|null $framework css_framework override (partials that accept `framework`)
+     * @param string|null $page      page type of the scaffold rendering the slot ({@see ThemeSlots::PAGE_TYPES})
      */
-    public function classFor(string $slot, ?string $bundle = null, ?string $framework = null): string
+    public function classFor(string $slot, ?string $bundle = null, ?string $framework = null, ?string $page = null): string
     {
         $framework = null !== $framework && '' !== trim($framework) ? trim($framework) : $this->framework;
-        $defaults = $this->frameworkDefaults($slot, $bundle) ? ThemeSlots::defaults($slot, $framework) : '';
+        $defaults = $this->frameworkDefaults($slot, $bundle, $page) ? ThemeSlots::defaults($slot, $framework) : '';
 
-        return $this->merge(ThemeSlots::semantic($slot), $defaults, $this->extraClasses($slot, $bundle));
+        return $this->merge(ThemeSlots::semantic($slot), $defaults, $this->extraClasses($slot, $bundle, $page));
     }
 
     /**
-     * Only the host / bundle classes of a slot ('' when none). Used by the 1.x partials, which keep their
-     * macro classes and append these.
+     * Only the host / page-type / bundle classes of a slot ('' when none): the bundle entry, else the page-type
+     * entry, else the host entry. Used by the 1.x partials, which keep their macro classes and append these.
      */
-    public function extraClasses(string $slot, ?string $bundle = null): string
+    public function extraClasses(string $slot, ?string $bundle = null, ?string $page = null): string
     {
         ThemeSlots::semantic($slot);
         $bundleClasses = null !== $bundle ? ($this->bundles[$bundle]['classes'] ?? []) : [];
+        $pageClasses = $this->pageData($page)['classes'] ?? [];
 
-        return $this->merge(($bundleClasses[$slot] ?? $this->classes[$slot] ?? [''])[0]);
+        return $this->merge(($bundleClasses[$slot] ?? $pageClasses[$slot] ?? $this->classes[$slot] ?? [''])[0]);
     }
 
     /**
      * Whether the UiKit framework defaults apply to a slot: bundle slot entry > bundle `framework_defaults` >
-     * host slot entry > host `framework_defaults`.
+     * page-type slot entry > page-type `framework_defaults` > host slot entry > host `framework_defaults`.
      */
-    public function frameworkDefaults(string $slot, ?string $bundle = null): bool
+    public function frameworkDefaults(string $slot, ?string $bundle = null, ?string $page = null): bool
     {
         ThemeSlots::semantic($slot);
         $data = null !== $bundle ? ($this->bundles[$bundle] ?? null) : null;
+        $pageData = $this->pageData($page);
 
-        return $data['classes'][$slot][1] ?? $data['framework_defaults'] ?? $this->classes[$slot][1] ?? $this->frameworkDefaults;
+        return $data['classes'][$slot][1] ?? $data['framework_defaults'] ?? $pageData['classes'][$slot][1] ?? $pageData['framework_defaults'] ?? $this->classes[$slot][1] ?? $this->frameworkDefaults;
     }
 
     /**
@@ -172,10 +185,10 @@ final readonly class Theme
      * (exactly as 1.x when the framework defaults apply); when they are dropped for the slot, only the `nowo-ui-*`
      * and `is-*` classes of the macro are kept, plus the slot's semantic and host / bundle classes.
      */
-    public function macroClasses(string $slot, string|\Stringable $macroClasses, ?string $bundle = null): string
+    public function macroClasses(string $slot, string|\Stringable $macroClasses, ?string $bundle = null, ?string $page = null): string
     {
-        $extra = $this->extraClasses($slot, $bundle);
-        if ($this->frameworkDefaults($slot, $bundle)) {
+        $extra = $this->extraClasses($slot, $bundle, $page);
+        if ($this->frameworkDefaults($slot, $bundle, $page)) {
             return $macroClasses.('' !== $extra ? ' '.$extra : '');
         }
         $kept = array_filter(preg_split('/\s+/', trim((string) $macroClasses)) ?: [], static fn (string $c): bool => str_starts_with($c, 'nowo-ui-') || str_starts_with($c, 'is-'));
@@ -184,18 +197,19 @@ final readonly class Theme
     }
 
     /**
-     * Slot attributes (host, then bundle merged over them).
+     * Slot attributes (host, then page type, then bundle merged over them).
      *
      * @param array<string, string|int|float|bool|null> $extra attributes merged last (call site)
      *
      * @return array<string, string|int|float|bool|null>
      */
-    public function attributesFor(string $slot, ?string $bundle = null, array $extra = []): array
+    public function attributesFor(string $slot, ?string $bundle = null, array $extra = [], ?string $page = null): array
     {
         ThemeSlots::semantic($slot);
         $bundleAttributes = null !== $bundle ? ($this->bundles[$bundle]['attributes'] ?? []) : [];
+        $pageAttributes = $this->pageData($page)['attributes'] ?? [];
 
-        return array_merge($this->attributes[$slot] ?? [], $bundleAttributes[$slot] ?? [], $extra);
+        return array_merge($this->attributes[$slot] ?? [], $pageAttributes[$slot] ?? [], $bundleAttributes[$slot] ?? [], $extra);
     }
 
     /**
@@ -203,13 +217,27 @@ final readonly class Theme
      *
      * @param array<string, string|int|float|bool|null> $extra
      */
-    public function renderAttributes(string $slot, ?string $bundle = null, array $extra = []): string
+    public function renderAttributes(string $slot, ?string $bundle = null, array $extra = [], ?string $page = null): string
+    {
+        return $this->renderAttributeMap($this->attributesFor($slot, $bundle, $extra, $page));
+    }
+
+    /**
+     * Rendered, escaped attribute string of a plain attribute map (page model `attributes`, call-site hashes).
+     *
+     * @param array<array-key, mixed> $attributes true = bare attribute, false / null = omitted; no on* handlers
+     */
+    public function renderAttributeMap(array $attributes): string
     {
         $html = '';
-        foreach ($this->attributesFor($slot, $bundle, $extra) as $name => $value) {
+        foreach ($attributes as $name => $value) {
+            $name = (string) $name;
             $this->assertAttributeName($name);
             if (null === $value || false === $value) {
                 continue;
+            }
+            if (!\is_scalar($value)) {
+                throw new \InvalidArgumentException(\sprintf('Invalid UiKit attribute "%s": values are strings, numbers, booleans or null.', $name));
             }
             $html .= ' '.$name;
             if (true !== $value) {
@@ -390,6 +418,58 @@ final readonly class Theme
         }
 
         return $normalized;
+    }
+
+    /**
+     * @param array<string, array<string, mixed>> $pages
+     *
+     * @return array<string, array{classes: array<string, array{0: string, 1: bool|null}>, framework_defaults: bool|null, attributes: array<string, array<string, string|int|float|bool|null>>}>
+     */
+    private function normalizePages(array $pages): array
+    {
+        $normalized = [];
+        foreach ($pages as $page => $data) {
+            $page = (string) $page;
+            $error = self::pageTypeError($page);
+            if (null !== $error) {
+                throw new \InvalidArgumentException('Invalid UiKit theme pages key: '.$error);
+            }
+            $defaults = $data['framework_defaults'] ?? null;
+            if (null !== $defaults && !\is_bool($defaults)) {
+                throw new \InvalidArgumentException(\sprintf('Invalid UiKit theme pages.%s.framework_defaults: a boolean is expected.', $page));
+            }
+            /** @var array<string, mixed> $pageClasses */
+            $pageClasses = $data['classes'] ?? [];
+            /** @var array<string, array<string, string|int|float|bool|null>> $pageAttributes */
+            $pageAttributes = $data['attributes'] ?? [];
+            $normalized[$page] = [
+                'classes' => $this->normalizeClasses($pageClasses, 'pages.'.$page.'.classes'),
+                'framework_defaults' => $defaults,
+                'attributes' => $pageAttributes,
+            ];
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * Error message for an unknown page type, null when valid.
+     */
+    public static function pageTypeError(string $page): ?string
+    {
+        if (!\in_array($page, ThemeSlots::PAGE_TYPES, true)) {
+            return \sprintf('unknown page type "%s" (known: %s).', $page, implode(', ', ThemeSlots::PAGE_TYPES));
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array{classes: array<string, array{0: string, 1: bool|null}>, framework_defaults: bool|null, attributes: array<string, array<string, string|int|float|bool|null>>}|null
+     */
+    private function pageData(?string $page): ?array
+    {
+        return null !== $page ? ($this->pages[$page] ?? null) : null;
     }
 
     private function merge(string ...$parts): string

@@ -14,13 +14,14 @@
 {% set bundle = bundle|default(null) %}
 {% set trans_domain = trans_domain|default(null) %}
 {% set _t = nowo_ui_theme|default(null) %}
+{% set _pt = nowo_ui_page_type|default(null) %}
 {% set _messages = flashes is defined and flashes is not null ? flashes : app.flashes %}
-{% set _wrap_extra = _t ? _t.extraClasses('flashes', bundle) : '' %}
-{% set _wrap_attrs = _t ? _t.renderAttributes('flashes', bundle) : '' %}
+{% set _wrap_extra = _t ? _t.extraClasses('flashes', bundle, _pt) : '' %}
+{% set _wrap_attrs = _t ? _t.renderAttributes('flashes', bundle, {}, _pt) : '' %}
 {% if _wrap_extra or _wrap_attrs %}<div class="nowo-ui-flashes {{ _wrap_extra }}"{{ _wrap_attrs|raw }}>{% endif %}
 {% for label, messages in _messages %}
     {% set flashType = label == 'error' or label == 'danger' ? 'error' : (label == 'notice' ? 'info' : label) %}
-    {% set _class = _t and flashType in ['success', 'error', 'warning', 'info'] ? _t.macroClasses('flash_' ~ flashType, ui.flash(flashType, framework), bundle) : ui.flash(flashType, framework) %}
+    {% set _class = _t and flashType in ['success', 'error', 'warning', 'info'] ? _t.macroClasses('flash_' ~ flashType, ui.flash(flashType, framework), bundle, _pt) : ui.flash(flashType, framework) %}
     {% for message in messages %}
         {% if message is iterable and message.title is defined %}
             {% set _text = (trans_domain ? message.title|trans({}, trans_domain) : message.title) ~ (message.message is defined and message.message ? ' — ' ~ (trans_domain ? message.message|trans({}, trans_domain) : message.message) : '') %}

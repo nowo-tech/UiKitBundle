@@ -84,19 +84,22 @@ nowo_ui_kit:
     tokens_dark: { primary: '#9c9' }                                   # on :root[data-theme="dark"]
     bundles:
       NowoHttpLogBundle: { classes: { table: 'data-table data-table--dense' } }
+    pages:                                                             # per page type (scaffold)
+      list: { classes: { table: 'data-table data-table--sticky' } }    # bundle slot > bundle > page slot > page > host
 ```
 
 Validation (container compile time): unknown slots and partial names, class entries with keys other than `value` /
 `framework_defaults` or a non-boolean `framework_defaults`, `on*` attributes, attribute names outside
 `[a-zA-Z_:][a-zA-Z0-9_:.-]*`, class lists with `"`, `<` or `>`, token names outside `[a-z0-9-]` and token values with
-`{ } ; < >` are rejected with an explicit message. Full reference: [`THEME_SLOTS.md`](THEME_SLOTS.md).
+`{ } ; < >` and unknown page types under `theme.pages` are rejected with an explicit message. Full reference: [`THEME_SLOTS.md`](THEME_SLOTS.md).
 
 ## Twig API
 
 | Function / filter / global | Result |
 | --- | --- |
-| `nowo_ui_class(slot, bundle = null, framework = null)` | semantic `nowo-ui-*` + framework defaults (`css_framework`, or `framework`; unless `framework_defaults` drops them) + host classes (or the bundle's exception) |
-| `nowo_ui_attrs(slot, bundle = null, extra = {})` | escaped attribute string with leading spaces (`true` = bare attribute, `false`/`null` = omitted) |
+| `nowo_ui_class(slot, bundle = null, framework = null, page = null)` | semantic `nowo-ui-*` + framework defaults (`css_framework`, or `framework`; unless `framework_defaults` drops them) + host classes (or the page type's / bundle's exception); `page` defaults to `nowo_ui_page_type` (set by every scaffold) |
+| `nowo_ui_attrs(slot, bundle = null, extra = {}, page = null)` | escaped attribute string with leading spaces (`true` = bare attribute, `false`/`null` = omitted): host → page type → bundle → `extra` |
+| `nowo_ui_html_attrs(attributes)` | escaped attribute string of a plain map (page model `attributes`; same rules, no `on*`) |
 | `nowo_ui_partial(name, bundle = null)` | template name of a UiKit partial (bundle > host > UiKit default) |
 | `nowo_ui_theme_tokens(nonce = null)` | `<style data-nowo-ui-theme-tokens>` with the tokens ('' without tokens; nonce defaults to the `csp_nonce` request attribute) |
 | `nowo_ui_theme_css()` | the token stylesheet text (for a host that inlines it elsewhere) |

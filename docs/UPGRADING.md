@@ -95,6 +95,13 @@ Changes to markup, inputs and cascade a host or a bundle may depend on (REQ-UI-0
   [`PAGE_CONTRACT.md#cascade-layers`](PAGE_CONTRACT.md#cascade-layers)). Hosts without layers: your unlayered CSS
   (and an unlayered framework such as Bootstrap from a CDN) now always beats the kit; to keep the 1.x cascade, link
   `css/nowo-ui.unlayered.css` (identical rules, no layer) instead of `css/nowo-ui.css`.
+- **Page types.** Scaffolds set `nowo_ui_page_type` (`list`, `show`, `form`, `settings`, `dashboard`, `confirm`,
+  `wizard`, `auth`) and pass it to the partials they include; `theme.pages.<type>.{classes,attributes,framework_defaults}`
+  varies a slot per page type (bundle slot > bundle > page-type slot > page type > host slot > host).
+  `nowo_ui_class()` / `nowo_ui_attrs()` take an optional `page` argument and read `nowo_ui_page_type` from the
+  context; `Theme::classFor()`, `extraClasses()`, `frameworkDefaults()`, `macroClasses()`, `attributesFor()` and
+  `renderAttributes()` take an optional trailing `page`. Host overrides of UiKit partials receive
+  `nowo_ui_page_type` and should forward it to `nowo_ui_theme.macroClasses(…, bundle, nowo_ui_page_type)`.
 
 ## To 1.17.4
 

@@ -19,6 +19,7 @@
 {% set framework = framework|default(null) %}
 {% set bundle = bundle|default(null) %}
 {% set _t = nowo_ui_theme|default(null) %}
+{% set _pt = nowo_ui_page_type|default(null) %}
 {% set controls = controls|default('nowo-ui-aside') %}
 {% set expanded = expanded is defined and expanded is not null ? expanded : true %}
 {% set label = label|default('nav.toggle_aside'|trans({}, 'NowoUiKitBundle')) %}
@@ -26,7 +27,7 @@
 {% set _extra = root_class|default('')|trim %}
 <button
     type="button"
-    class="{{ _t ? _t.macroClasses('burger', ui.burger(framework), bundle) : ui.burger(framework) }}{{ _extra ? ' ' ~ _extra }}"
+    class="{{ _t ? _t.macroClasses('burger', ui.burger(framework), bundle, _pt) : ui.burger(framework) }}{{ _extra ? ' ' ~ _extra }}"
     data-nowo-ui-burger
     aria-controls="{{ controls }}"
     aria-expanded="{{ expanded ? 'true' : 'false' }}"
@@ -36,7 +37,7 @@
         {{ _names.rail }}="{{ label_rail|default('nav.sidebar_rail'|trans({}, 'NowoUiKitBundle')) }}"
         {{ _names.hide }}="{{ label_hide|default('nav.sidebar_hide'|trans({}, 'NowoUiKitBundle')) }}"
     {% endif %}
-    {{- _t ? _t.renderAttributes('burger', bundle, attr|default({}))|raw : '' }}
+    {{- _t ? _t.renderAttributes('burger', bundle, attr|default({}), _pt)|raw : '' }}
     {%- if not _t %}{% for name, value in attr|default({}) %} {{ name }}="{{ value }}"{% endfor %}{% endif %}
 >
     <svg class="nowo-ui-burger__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">

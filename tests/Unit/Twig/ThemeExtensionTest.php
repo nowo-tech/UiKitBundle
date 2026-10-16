@@ -24,7 +24,7 @@ final class ThemeExtensionTest extends TestCase
         $extension = new ThemeExtension($theme, ['admin' => 'layouts/admin.html.twig', 'guest' => 'layouts/guest.html.twig']);
 
         $names = array_map(static fn (TwigFunction $f): string => $f->getName(), $extension->getFunctions());
-        self::assertSame(['nowo_ui_class', 'nowo_ui_attrs', 'nowo_ui_partial', 'nowo_ui_theme_tokens', 'nowo_ui_theme_css', 'nowo_ui_breadcrumb_kit', 'nowo_ui_breadcrumb_kit_available'], $names);
+        self::assertSame(['nowo_ui_class', 'nowo_ui_attrs', 'nowo_ui_html_attrs', 'nowo_ui_partial', 'nowo_ui_theme_tokens', 'nowo_ui_theme_css', 'nowo_ui_breadcrumb_kit', 'nowo_ui_breadcrumb_kit_available'], $names);
         self::assertSame('nowo_ui_trans', $extension->getFilters()[0]->getName());
         self::assertSame(['admin' => 'layouts/admin.html.twig', 'guest' => 'layouts/guest.html.twig'], $extension->getGlobals()['nowo_ui_layout']);
         self::assertSame($theme, $extension->getGlobals()['nowo_ui_theme']);
@@ -32,6 +32,16 @@ final class ThemeExtensionTest extends TestCase
 
         $html = $this->twig($extension, "<a class=\"{{ nowo_ui_class('btn_primary') }}\"{{ nowo_ui_attrs('toasts', null, {'data-x': '\"'}) }}>{{ nowo_ui_partial('pagination') }}|{{ nowo_ui_layout.admin }}</a>")->render('t');
         self::assertSame('<a class="nowo-ui-btn nowo-ui-btn--primary btn btn-primary btn-moss" data-controller="toast-stack" data-x="&quot;">kit/_p.html.twig|layouts/admin.html.twig</a>', $html);
+    }
+
+    public function testPageTypeFromContextAndPlainAttributeMaps(): void
+    {
+        $theme = new Theme('custom', classes: ['table' => 'host'], attributes: ['table' => ['data-h' => '1']], pages: ['list' => ['classes' => ['table' => 'list'], 'attributes' => ['table' => ['data-p' => 'list']]]]);
+        $extension = new ThemeExtension($theme);
+        $template = "{{ nowo_ui_class('table') }}|{{ nowo_ui_attrs('table') }}|{{ nowo_ui_class('table', null, null, 'show') }}|{{ nowo_ui_attrs('table', null, {}, 'show') }}|{{ nowo_ui_html_attrs({'data-testid': 'orders', hidden: true, 'data-off': false, 'data-n': null}) }}";
+
+        self::assertSame('nowo-ui-table nowo-ui-table--striped list| data-h="1" data-p="list"|nowo-ui-table nowo-ui-table--striped host| data-h="1"| data-testid="orders" hidden', $this->twig($extension, $template)->render('t', ['nowo_ui_page_type' => 'list']));
+        self::assertStringStartsWith('nowo-ui-table nowo-ui-table--striped host| data-h="1"|', $this->twig($extension, $template)->render('t', ['nowo_ui_page_type' => '']));
     }
 
     public function testTokensStyleWithRequestNonceExplicitNonceAndNoTokens(): void

@@ -18,7 +18,8 @@
 {% set framework = framework|default(null) %}
 {% set bundle = bundle|default(null) %}
 {% set _t = nowo_ui_theme|default(null) %}
-{% set _extra = _t ? _t.extraClasses('confirm', bundle) : '' %}
+{% set _pt = nowo_ui_page_type|default(null) %}
+{% set _extra = _t ? _t.extraClasses('confirm', bundle, _pt) : '' %}
 {% set _confirm = confirm|default(null) %}
 {% set _message = null %}
 {% set _confirm_label = null %}
@@ -39,7 +40,7 @@
     class="nowo-ui-confirm{{ _extra ? ' ' ~ _extra }}"
     data-nowo-ui-confirm
     aria-labelledby="{{ id }}-title"
-    {{- _t ? _t.renderAttributes('confirm', bundle)|raw }}
+    {{- _t ? _t.renderAttributes('confirm', bundle, {}, _pt)|raw }}
 >
     <div class="nowo-ui-confirm__panel">
         <header class="nowo-ui-confirm__header">

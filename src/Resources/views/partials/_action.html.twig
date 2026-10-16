@@ -17,6 +17,7 @@
 {% set context = context|default('toolbar') %}
 {% set framework = framework|default(null) %}
 {% set bundle = bundle|default(null) %}
+{% set _pt = nowo_ui_page_type|default(null) %}
 {% set display = display|default(nowo_ui_kit_row_actions_display|default('icon')) %}
 {% if display not in ['icon', 'text', 'icon_text'] %}
     {% set display = 'icon' %}
@@ -26,11 +27,11 @@
     {% set href = action.href ?? (action.route ? path(action.route, action.params) : null) %}
     {% set variant = action.resolvedVariant() %}
     {% if context == 'row' %}
-        {% set class = nowo_ui_theme.macroClasses('action', ui.action(action.kind, framework, action.variant), bundle) %}
+        {% set class = nowo_ui_theme.macroClasses('action', ui.action(action.kind, framework, action.variant), bundle, _pt) %}
     {% elseif variant in ['primary', 'secondary', 'danger'] %}
         {% set class = nowo_ui_class('btn_' ~ variant, bundle, framework) ~ ' nowo-ui-action--' ~ action.kind %}
     {% else %}
-        {% set class = nowo_ui_theme.macroClasses('btn', ui.btn(variant, null, framework), bundle) ~ ' nowo-ui-action--' ~ action.kind %}
+        {% set class = nowo_ui_theme.macroClasses('btn', ui.btn(variant, null, framework), bundle, _pt) ~ ' nowo-ui-action--' ~ action.kind %}
     {% endif %}
     {% set inner %}
         {%- if context == 'row' -%}
@@ -53,6 +54,7 @@
             action_href: href,
             framework: framework,
             bundle: bundle,
+            nowo_ui_page_type: _pt,
         }, false) }}
     {% elseif action.isPost() %}
         {{ include('@NowoUiKitBundle/partials/_action_post.html.twig', {

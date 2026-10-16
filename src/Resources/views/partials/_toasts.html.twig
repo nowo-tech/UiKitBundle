@@ -14,7 +14,8 @@
 {% set bundle = bundle|default(null) %}
 {% set trans_domain = trans_domain|default(null) %}
 {% set _t = nowo_ui_theme|default(null) %}
-{% set _extra = _t ? _t.extraClasses('toasts', bundle) : '' %}
+{% set _pt = nowo_ui_page_type|default(null) %}
+{% set _extra = _t ? _t.extraClasses('toasts', bundle, _pt) : '' %}
 {% set toast_messages = flashes|default(app.flashes) %}
 {% if toast_messages is not empty %}
     <div
@@ -23,7 +24,7 @@
         aria-live="polite"
         aria-atomic="false"
         aria-relevant="additions"
-        {{- _t ? _t.renderAttributes('toasts', bundle)|raw }}
+        {{- _t ? _t.renderAttributes('toasts', bundle, {}, _pt)|raw }}
     >
         {% for label, messages in toast_messages %}
             {% for message in messages %}
@@ -31,7 +32,7 @@
                 {% set isWarning = label == 'warning' %}
                 {% set flashType = isError ? 'error' : (label == 'notice' ? 'info' : label) %}
                 {% set structured = message is iterable and message.title is defined %}
-                {% set _toast_class = _t and flashType in ['success', 'error', 'warning', 'info'] ? _t.macroClasses('flash_' ~ flashType, ui.flash(flashType, framework), bundle) : ui.flash(flashType, framework) %}
+                {% set _toast_class = _t and flashType in ['success', 'error', 'warning', 'info'] ? _t.macroClasses('flash_' ~ flashType, ui.flash(flashType, framework), bundle, _pt) : ui.flash(flashType, framework) %}
                 <div
                     class="nowo-ui-toast {{ _toast_class }}"
                     role="{{ isError or isWarning ? 'alert' : 'status' }}"

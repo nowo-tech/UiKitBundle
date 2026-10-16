@@ -308,15 +308,34 @@ final class Configuration implements ConfigurationInterface
                 ->end()
                 ->arrayPrototype();
         $this->addThemeChildren($bundles->children(), 'theme.bundles.<bundle>', true);
+        $pages = $children
+            ->arrayNode('pages')
+                ->info('Optional per-page-type variation keyed by scaffold type ('.implode(', ', ThemeSlots::PAGE_TYPES).'): classes replace the host classes of a slot on that page type, attributes merge, framework_defaults overrides the host setting. Precedence: bundle slot > bundle > page-type slot > page type > host slot > host.')
+                ->useAttributeAsKey('page')
+                ->normalizeKeys(false)
+                ->validate()
+                    ->always(static function (array $pages): array {
+                        foreach (array_keys($pages) as $page) {
+                            $error = Theme::pageTypeError((string) $page);
+                            if (null !== $error) {
+                                throw new InvalidConfigurationException('Invalid nowo_ui_kit.theme.pages key: '.$error);
+                            }
+                        }
+
+                        return $pages;
+                    })
+                ->end()
+                ->arrayPrototype();
+        $this->addThemeChildren($pages->children(), 'theme.pages.<page>', true, false);
 
         return $node;
     }
 
-    private function addThemeChildren(NodeBuilder $children, string $name, bool $scoped): void
+    private function addThemeChildren(NodeBuilder $children, string $name, bool $scoped, bool $assets = true): void
     {
         $defaults = $children->booleanNode('framework_defaults');
         if ($scoped) {
-            $defaults->info('Override of theme.framework_defaults for this bundle (unset = inherit).');
+            $defaults->info(\sprintf('Override of theme.framework_defaults for this %s (unset = inherit).', $assets ? 'bundle' : 'page type'));
         } else {
             $defaults->defaultTrue()->info('false = slots print the semantic nowo-ui-* class and the host classes only (no UiKit framework defaults such as btn / badge / card). Per slot: classes.<slot>: {value: …, framework_defaults: false}.');
         }
@@ -372,7 +391,11 @@ final class Configuration implements ConfigurationInterface
                         return $attributes;
                     })
                 ->end()
-            ->end()
+            ->end();
+        if (!$assets) {
+            return;
+        }
+        $children
             ->arrayNode('partials')
                 ->info('Partial name => template replacing the UiKit partial for every bundle (known: '.implode(', ', ThemeSlots::partialNames()).').')
                 ->useAttributeAsKey('partial')

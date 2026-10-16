@@ -21,6 +21,7 @@
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 {% set bundle = bundle|default(null) %}
 {% set _t = nowo_ui_theme|default(null) %}
+{% set _pt = nowo_ui_page_type|default(null) %}
 {% if pagination is not iterable %}
     {% set item_count = item_count|default(pagination.to() - pagination.from() + 1) %}
     {% set pagination = pagination.toArray() %}
@@ -34,10 +35,10 @@
 {% set route_params = route_params|default(pagination.route_params|default(app.request.attributes.get('_route_params')|default({}))) %}
 {% set page_param = pagination.page_param|default('page') %}
 {% set per_page_param = pagination.per_page_param|default('per_page') %}
-{% set _info_extra = _t ? _t.extraClasses('pagination_info', bundle) : '' %}
-{% set _link_class = _t ? _t.macroClasses('pagination_link', 'page-link nowo-ui-pagination__link', bundle) : 'page-link nowo-ui-pagination__link' %}
-{% set _disabled_class = _t ? _t.macroClasses('pagination_link', 'page-link nowo-ui-pagination__link is-disabled', bundle) : 'page-link nowo-ui-pagination__link is-disabled' %}
-{% set _active_class = _t ? _t.macroClasses('pagination_active', 'page-link nowo-ui-pagination__link is-active', bundle) : 'page-link nowo-ui-pagination__link is-active' %}
+{% set _info_extra = _t ? _t.extraClasses('pagination_info', bundle, _pt) : '' %}
+{% set _link_class = _t ? _t.macroClasses('pagination_link', 'page-link nowo-ui-pagination__link', bundle, _pt) : 'page-link nowo-ui-pagination__link' %}
+{% set _disabled_class = _t ? _t.macroClasses('pagination_link', 'page-link nowo-ui-pagination__link is-disabled', bundle, _pt) : 'page-link nowo-ui-pagination__link is-disabled' %}
+{% set _active_class = _t ? _t.macroClasses('pagination_active', 'page-link nowo-ui-pagination__link is-active', bundle, _pt) : 'page-link nowo-ui-pagination__link is-active' %}
 {% set page = pagination.page|default(1) %}
 {% set per_page = pagination.per_page|default(25) %}
 {% set total = pagination.total|default(0) %}
@@ -49,7 +50,7 @@
     {% set from = (page - 1) * per_page + 1 %}
     {% set to = (page - 1) * per_page + item_count %}
     {% set base_params = route_params|merge(query)|merge({(per_page_param): per_page}) %}
-    <div class="{{ _t ? _t.macroClasses('pagination', ui.pagination_wrap(framework), bundle) : ui.pagination_wrap(framework) }}"{{ _t ? _t.renderAttributes('pagination', bundle)|raw }}>
+    <div class="{{ _t ? _t.macroClasses('pagination', ui.pagination_wrap(framework), bundle, _pt) : ui.pagination_wrap(framework) }}"{{ _t ? _t.renderAttributes('pagination', bundle, {}, _pt)|raw }}>
         <p class="nowo-ui-pagination__info{{ _info_extra ? ' ' ~ _info_extra }}">
             {{ 'pagination.showing'|trans({'%from%': from, '%to%': to, '%total%': total}, trans_domain) }}
         </p>

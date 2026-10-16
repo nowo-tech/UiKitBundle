@@ -24,7 +24,8 @@
 {% set framework = framework|default(null) %}
 {% set bundle = bundle|default(null) %}
 {% set _t = nowo_ui_theme|default(null) %}
-{% set _root_extra = ((_t ? _t.extraClasses('shell', bundle) : '') ~ ' ' ~ root_class|default(''))|trim %}
+{% set _pt = nowo_ui_page_type|default(null) %}
+{% set _root_extra = ((_t ? _t.extraClasses('shell', bundle, _pt) : '') ~ ' ' ~ root_class|default(''))|trim %}
 {% set aside_id = aside_id|default('nowo-ui-aside') %}
 {% set collapsed = collapsed|default(false) %}
 {% set _rail = sidebar_rail|default(false) %}
@@ -46,7 +47,7 @@
         {% if _rail_opts.default is defined %}data-nowo-ui-sidebar-default="{{ _rail_opts.default }}"{% endif %}
         {% if _mode in ['expanded', 'rail', 'hidden'] %}data-nowo-ui-sidebar-mode="{{ _mode }}"{% endif %}
     {% endif %}
-    {{- _t ? _t.renderAttributes('shell', bundle, attr|default({}))|raw : '' }}
+    {{- _t ? _t.renderAttributes('shell', bundle, attr|default({}), _pt)|raw : '' }}
     {%- if not _t %}{% for name, value in attr|default({}) %} {{ name }}="{{ value }}"{% endfor %}{% endif %}
 >
     <header class="{{ ui.header(framework) }}{{ header_class|default('') ? ' ' ~ header_class }}">

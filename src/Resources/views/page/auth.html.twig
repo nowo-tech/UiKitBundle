@@ -7,6 +7,7 @@
 #}
 {% extends page.layout ?? nowo_ui_layout.guest %}
 {% set nowo_ui_bundle = page.bundle %}
+{% set nowo_ui_page_type = 'auth' %}
 
 {% block nowo_ui_document_title %}{{ page.title|nowo_ui_trans }}{% endblock %}
 

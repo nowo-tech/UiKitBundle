@@ -255,6 +255,14 @@ final class ThemeSlots
     ];
 
     /**
+     * Page types (one per scaffold): keys of `theme.pages`, values of the `nowo_ui_page_type` Twig variable the
+     * scaffolds set for slot resolution.
+     *
+     * @var list<string>
+     */
+    public const PAGE_TYPES = ['list', 'show', 'form', 'settings', 'dashboard', 'confirm', 'wizard', 'auth'];
+
+    /**
      * Partial name => default template (replaceable through `theme.partials`).
      *
      * @var array<string, string>

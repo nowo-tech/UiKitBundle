@@ -22,7 +22,7 @@ final class PageContractConfigurationTest extends TestCase
 
         self::assertSame(['admin' => '@NowoUiKit/layout/admin.html.twig', 'guest' => '@NowoUiKit/layout/guest.html.twig'], $config['layouts']);
         self::assertSame(['breadcrumb_kit' => true, 'collection' => null], $config['breadcrumbs']);
-        self::assertSame(['framework_defaults' => true, 'classes' => [], 'attributes' => [], 'partials' => [], 'tokens' => [], 'tokens_dark' => [], 'bundles' => []], $config['theme']);
+        self::assertSame(['framework_defaults' => true, 'classes' => [], 'attributes' => [], 'partials' => [], 'tokens' => [], 'tokens_dark' => [], 'bundles' => [], 'pages' => []], $config['theme']);
     }
 
     public function testFullThemeConfig(): void
@@ -89,11 +89,44 @@ final class PageContractConfigurationTest extends TestCase
         self::assertSame('nowo-ui-card acme-card', $theme->classFor('card', 'NowoXBundle'));
     }
 
+    public function testPageTypeVariationConfig(): void
+    {
+        $config = $this->process([
+            'theme' => [
+                'classes' => ['table' => 'host-table', 'card' => 'host-card'],
+                'attributes' => ['table' => ['data-host' => '1']],
+                'pages' => [
+                    'list' => ['classes' => ['table' => 'list-table', 'card' => ['value' => 'list-card', 'framework_defaults' => false]], 'attributes' => ['table' => ['data-page' => 'list']]],
+                    'dashboard' => ['framework_defaults' => false],
+                ],
+                'bundles' => ['NowoXBundle' => ['classes' => ['table' => 'x-table']]],
+            ],
+        ]);
+
+        self::assertSame('list-table', $config['theme']['pages']['list']['classes']['table']);
+        self::assertSame(['value' => 'list-card', 'framework_defaults' => false], $config['theme']['pages']['list']['classes']['card']);
+        self::assertFalse($config['theme']['pages']['dashboard']['framework_defaults']);
+        self::assertArrayNotHasKey('partials', $config['theme']['pages']['list']);
+        self::assertArrayNotHasKey('tokens', $config['theme']['pages']['list']);
+
+        $theme = Theme::fromConfig('bootstrap5', $config['theme']);
+        self::assertSame('nowo-ui-table nowo-ui-table--striped table table-hover align-middle host-table', $theme->classFor('table'));
+        self::assertSame('nowo-ui-table nowo-ui-table--striped table table-hover align-middle list-table', $theme->classFor('table', null, null, 'list'));
+        self::assertSame('nowo-ui-table nowo-ui-table--striped table table-hover align-middle x-table', $theme->classFor('table', 'NowoXBundle', null, 'list'));
+        self::assertSame('nowo-ui-card list-card', $theme->classFor('card', null, null, 'list'));
+        self::assertSame('nowo-ui-card host-card', $theme->classFor('card', null, null, 'dashboard'));
+        self::assertSame(' data-host="1" data-page="list"', $theme->renderAttributes('table', null, [], 'list'));
+    }
+
     /**
      * @return iterable<string, array{array<string, mixed>, string}>
      */
     public static function invalidConfigs(): iterable
     {
+        yield 'unknown page type' => [['theme' => ['pages' => ['index' => []]]], 'Invalid nowo_ui_kit.theme.pages key: unknown page type "index"'];
+        yield 'unknown page slot' => [['theme' => ['pages' => ['list' => ['classes' => ['nope' => 'x']]]]], 'Unknown nowo_ui_kit.theme.pages.<page>.classes slot "nope"'];
+        yield 'page partials not supported' => [['theme' => ['pages' => ['list' => ['partials' => ['card' => 'x']]]]], 'Unrecognized option "partials"'];
+        yield 'page on* attribute' => [['theme' => ['pages' => ['form' => ['attributes' => ['form' => ['onsubmit' => 'x']]]]]], 'Invalid nowo_ui_kit.theme.pages.<page>.attributes.form'];
         yield 'unknown class entry key' => [['theme' => ['classes' => ['btn' => ['value' => 'x', 'framework' => false]]]], 'Invalid nowo_ui_kit.theme.classes.btn: unknown key(s) "framework"'];
         yield 'non-boolean framework_defaults entry' => [['theme' => ['classes' => ['btn' => ['value' => 'x', 'framework_defaults' => 'no']]]], '"framework_defaults" must be a boolean'];
         yield 'non-string class list' => [['theme' => ['classes' => ['btn' => ['a', ['b']]]]], 'class lists are strings or lists of strings'];

@@ -11,15 +11,16 @@
 {% set framework = framework|default(null) %}
 {% set bundle = bundle|default(null) %}
 {% set _t = nowo_ui_theme|default(null) %}
-{% set _class = _t ? _t.macroClasses('empty', ui.empty(framework), bundle) : ui.empty(framework) %}
+{% set _pt = nowo_ui_page_type|default(null) %}
+{% set _class = _t ? _t.macroClasses('empty', ui.empty(framework), bundle, _pt) : ui.empty(framework) %}
 {% if empty is defined and empty %}
     {% set _title = empty.title is null ? null : (empty.title.key is defined ? empty.title.key|trans(empty.title.params, empty.title.domain) : empty.title) %}
     {% set _message = empty.message is null ? 'empty.default'|trans({}, 'NowoUiKitBundle') : (empty.message.key is defined ? empty.message.key|trans(empty.message.params, empty.message.domain) : empty.message) %}
-    <div class="{{ _class }}"{{ _t ? _t.renderAttributes('empty', bundle)|raw }}>
+    <div class="{{ _class }}"{{ _t ? _t.renderAttributes('empty', bundle, {}, _pt)|raw }}>
         {% if _title %}<p class="nowo-ui-empty__title">{{ _title }}</p>{% endif %}
         <p class="nowo-ui-empty__message">{{ _message }}</p>
         {% if empty.action %}
-            <div class="nowo-ui-empty__action">{{ include('@NowoUiKitBundle/partials/_action.html.twig', {action: empty.action, context: 'toolbar', framework: framework, bundle: bundle}, false) }}</div>
+            <div class="nowo-ui-empty__action">{{ include('@NowoUiKitBundle/partials/_action.html.twig', {action: empty.action, context: 'toolbar', framework: framework, bundle: bundle, nowo_ui_page_type: _pt}, false) }}</div>
         {% endif %}
     </div>
 {% else %}

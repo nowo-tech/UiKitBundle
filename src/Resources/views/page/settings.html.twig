@@ -7,11 +7,12 @@
 #}
 {% extends page.layout ?? nowo_ui_layout.admin %}
 {% set nowo_ui_bundle = page.bundle %}
+{% set nowo_ui_page_type = 'settings' %}
 
 {% block nowo_ui_document_title %}{{ page.header.title|nowo_ui_trans }}{% endblock %}
 
 {% block nowo_ui_page_header %}
-    {{ include(nowo_ui_partial('page_header', page.bundle), {header: page.header, bundle: page.bundle}, false) }}
+    {{ include(nowo_ui_partial('page_header', page.bundle), {header: page.header, bundle: page.bundle, nowo_ui_page_type: nowo_ui_page_type}, false) }}
 {% endblock %}
 
 {% block nowo_ui_content %}
@@ -36,7 +37,7 @@
                 <div class="{{ nowo_ui_class('card_body', _b) }}">
                     {% block nowo_ui_settings_section %}
                         {% if section.form %}
-                            {{ include('@NowoUiKitBundle/page/_section_form.html.twig', {form: section.form, submit_label: section.submitLabel, bundle: _b}, false) }}
+                            {{ include('@NowoUiKitBundle/page/_section_form.html.twig', {form: section.form, submit_label: section.submitLabel, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
                         {% endif %}
                     {% endblock %}
                 </div>

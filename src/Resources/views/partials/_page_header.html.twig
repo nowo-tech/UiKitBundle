@@ -17,26 +17,27 @@
 {% set framework = framework|default(null) %}
 {% set bundle = bundle|default(null) %}
 {% set _t = nowo_ui_theme|default(null) %}
+{% set _pt = nowo_ui_page_type|default(null) %}
 {% if header is defined and header %}
     {% set title = header.title.key is defined ? header.title.key|trans(header.title.params, header.title.domain) : header.title %}
     {% set intro = header.intro is null ? null : (header.intro.key is defined ? header.intro.key|trans(header.intro.params, header.intro.domain) : header.intro) %}
 {% endif %}
-<div class="{{ _t ? _t.macroClasses('page_header', ui.page_header(framework), bundle) : ui.page_header(framework) }}"{{ _t ? _t.renderAttributes('page_header', bundle)|raw }}>
+<div class="{{ _t ? _t.macroClasses('page_header', ui.page_header(framework), bundle, _pt) : ui.page_header(framework) }}"{{ _t ? _t.renderAttributes('page_header', bundle, {}, _pt)|raw }}>
     <div class="nowo-ui-page-header__text">
         {% if header is defined and header %}
-            {{ include('@NowoUiKitBundle/partials/_breadcrumbs.html.twig', {header: header, bundle: bundle}, false) }}
+            {{ include('@NowoUiKitBundle/partials/_breadcrumbs.html.twig', {header: header, bundle: bundle, nowo_ui_page_type: _pt}, false) }}
         {% endif %}
-        {% set _title_extra = _t ? _t.extraClasses('page_title', bundle) : '' %}
+        {% set _title_extra = _t ? _t.extraClasses('page_title', bundle, _pt) : '' %}
         <h1 class="nowo-ui-page-header__title{{ _title_extra ? ' ' ~ _title_extra }}">{{ title }}</h1>
         {% if intro is defined and intro %}
-            {% set _intro_extra = _t ? _t.extraClasses('page_intro', bundle) : '' %}
+            {% set _intro_extra = _t ? _t.extraClasses('page_intro', bundle, _pt) : '' %}
             <p class="nowo-ui-page-header__intro{{ _intro_extra ? ' ' ~ _intro_extra }}">{{ intro }}</p>
         {% endif %}
     </div>
     {% if header is defined and header and header.actions is not empty %}
-        <div class="{{ _t ? _t.macroClasses('toolbar', ui.toolbar(framework), bundle) : ui.toolbar(framework) }}">
+        <div class="{{ _t ? _t.macroClasses('toolbar', ui.toolbar(framework), bundle, _pt) : ui.toolbar(framework) }}">
             {% for action in header.actions %}
-                {{ include('@NowoUiKitBundle/partials/_action.html.twig', {action: action, context: 'toolbar', framework: framework, bundle: bundle}, false) }}
+                {{ include('@NowoUiKitBundle/partials/_action.html.twig', {action: action, context: 'toolbar', framework: framework, bundle: bundle, nowo_ui_page_type: _pt}, false) }}
             {% endfor %}
             {% if toolbar is defined and toolbar %}{{ toolbar|raw }}{% endif %}
         </div>

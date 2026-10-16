@@ -16,6 +16,7 @@ Adding a slot or partial name is a **minor** change; renaming or removing one is
 - [Attributes](#attributes)
 - [Partials](#partials)
 - [Tokens](#tokens)
+- [Per-page-type variation](#per-page-type-variation)
 - [Per-bundle exceptions](#per-bundle-exceptions)
 - [Configuration reference](#configuration-reference)
 - [Contract-test allow-lists](#contract-test-allow-lists)
@@ -26,7 +27,7 @@ Adding a slot or partial name is a **minor** change; renaming or removing one is
 <table class="{{ nowo_ui_class('table', page.bundle) }}"{{ nowo_ui_attrs('table', page.bundle) }}>
 ```
 
-`nowo_ui_class(slot, bundle = null, framework = null)` returns, de-duplicated and in this order:
+`nowo_ui_class(slot, bundle = null, framework = null, page = null)` returns, de-duplicated and in this order:
 
 1. the **semantic** class(es) of the slot (`nowo-ui-*`, always present — `nowo-ui.css` styles them from tokens);
 2. the **UiKit framework defaults** for `nowo_ui_kit.css_framework` (or the `framework` argument): `bootstrap5`,
@@ -34,8 +35,10 @@ Adding a slot or partial name is a **minor** change; renaming or removing one is
    Bootstrap 5 for the rest, `tailwind` only carries layout / spacing / type-scale utilities (never palette or
    radius), `foundation` its own; `custom` and `none` get the semantic class only — unless the theme drops them for
    that slot ([below](#dropping-the-framework-defaults));
-3. the **host** classes of `theme.classes.<slot>` — or, when `bundle` is given and `theme.bundles.<bundle>.classes`
-   defines the slot, the **bundle exception instead** (it replaces the host classes of that slot).
+3. the **host** classes of `theme.classes.<slot>` — or, on a page type whose `theme.pages.<type>.classes` defines
+   the slot, the **page-type classes instead**, or, when `bundle` is given and `theme.bundles.<bundle>.classes`
+   defines the slot, the **bundle exception instead** (it replaces both). `page` defaults to the
+   `nowo_ui_page_type` Twig variable every scaffold sets ([below](#per-page-type-variation)).
 
 Example (`css_framework: bootstrap5`, `theme.classes.table: 'data-table'`):
 `nowo-ui-table nowo-ui-table--striped table table-hover align-middle data-table`.
@@ -63,8 +66,8 @@ nowo_ui_kit:
         classes: { table: { value: 'dense', framework_defaults: true } }
 ```
 
-The most specific setting wins: bundle slot entry > bundle `framework_defaults` > host slot entry > host
-`framework_defaults`. With `css_framework: bootstrap5`:
+The most specific setting wins: bundle slot entry > bundle `framework_defaults` > page-type slot entry > page-type
+`framework_defaults` > host slot entry > host `framework_defaults`. With `css_framework: bootstrap5`:
 
 | Config | `nowo_ui_class('badge_success')` |
 | --- | --- |
@@ -221,6 +224,34 @@ listed in [`THEMING.md`](THEMING.md); every one of them can be set through `them
 When tokens are configured, `<html data-nowo-ui-host-tokens>` (UiKit document layout, or added by the host layout)
 drops UiKit's own palette to zero specificity, so the host values win without `!important`.
 
+## Per-page-type variation
+
+`theme.pages.<type>` varies a slot by **page type** — the scaffold that renders it: `list`, `show`, `form`,
+`settings`, `dashboard`, `confirm`, `wizard`, `auth` (`ThemeSlots::PAGE_TYPES`; unknown types are rejected).
+
+| Key | Semantics |
+| --- | --- |
+| `classes` | **replace** the host classes of that slot on that page type (same entry forms as `theme.classes`) |
+| `framework_defaults` | overrides `theme.framework_defaults` on that page type (unset = inherit) |
+| `attributes` | **merge** over the host attributes of that slot; bundle attributes merge over them |
+
+Precedence: **bundle slot > bundle > page-type slot > page type > host slot > host** (classes: the most specific
+entry replaces the others; attributes: merged host → page type → bundle → call site).
+
+```yaml
+nowo_ui_kit:
+  theme:
+    classes: { table: 'data-table', page_header: 'app-header' }
+    pages:
+      list:      { classes: { table: 'data-table data-table--sticky' }, attributes: { table: { data-controller: 'sticky-head' } } }
+      dashboard: { framework_defaults: false, classes: { page_header: 'app-header app-header--hero' } }
+```
+
+Every scaffold sets `{% set nowo_ui_page_type = '<type>' %}` before its blocks and passes `nowo_ui_page_type` to the
+partials it includes, so slots read in partials (`_pagination`, `_row_actions`, `_empty`…), in layouts and in the data
+blocks a bundle overrides resolve with the page type without extra arguments. Pass `page` explicitly
+(`nowo_ui_class('card', bundle, null, 'dashboard')`) in templates that are not scaffolds.
+
 ## Per-bundle exceptions
 
 `theme.bundles.<Bundle>` (bundle class short name, e.g. `NowoHttpLogBundle`) takes the same keys as the theme and is
@@ -261,6 +292,8 @@ nowo_ui_kit:
     tokens_dark:  { <token>: '<css value>' }
     bundles:
       <BundleShortName>: { framework_defaults: bool, classes: …, attributes: …, partials: …, tokens: …, tokens_dark: … }
+    pages:
+      <list|show|form|settings|dashboard|confirm|wizard|auth>: { framework_defaults: bool, classes: …, attributes: … }
 ```
 
 ## Contract-test allow-lists

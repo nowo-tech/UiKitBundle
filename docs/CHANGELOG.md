@@ -63,6 +63,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   - `_card` reads the theme slots `card`, `card_header`, `card_body`, `card_footer` (new slot) and `cards`, and accepts `Label` titles / intros, `actions` (`View\Action` list), `id`, `attr`, `cards` (grid of cards through the `card` partial) and `bundle`; 1.x inputs render as in 1.17.4 (added to the legacy fixtures).
   - Docs: [`PAGE_CONTRACT.md`](PAGE_CONTRACT.md) (full guide), [`THEME_SLOTS.md`](THEME_SLOTS.md) (slot vocabulary with defaults per framework, partials, tokens, per-bundle exception semantics), [`MIGRATING_BUNDLES.md`](MIGRATING_BUNDLES.md) (bundle recipe).
 
+- **Per-page-type theme variation** `theme.pages.<list|show|form|settings|dashboard|confirm|wizard|auth>.{classes,attributes,framework_defaults}` (validated; precedence bundle slot > bundle > page-type slot > page type > host slot > host). Scaffolds set `nowo_ui_page_type` and pass it to their partials; `nowo_ui_class()` / `nowo_ui_attrs()` gain an optional `page` argument (default: the context's `nowo_ui_page_type`); new `nowo_ui_html_attrs(map)` and `Theme::renderAttributeMap()`; `ThemeSlots::PAGE_TYPES`.
+
 ### Changed
 
 - **Template contract — CSS cascade layer:** `nowo-ui.css` ships inside `@layer nowo-ui` with the order statement `@layer theme, base, nowo-ui, components, utilities;` so Tailwind v4 utilities placed in theme slots beat the kit while the kit stays above Tailwind's preflight (dialogs). `nowo-ui.unlayered.css` keeps the 1.x unlayered stylesheet for hosts that relied on the kit beating unlayered framework CSS. `nowo-ui.css` is generated from it (`pnpm run build:css`, checked by `LayeredCssTest`).

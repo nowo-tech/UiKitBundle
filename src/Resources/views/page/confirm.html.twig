@@ -4,11 +4,12 @@
 #}
 {% extends page.layout ?? nowo_ui_layout.admin %}
 {% set nowo_ui_bundle = page.bundle %}
+{% set nowo_ui_page_type = 'confirm' %}
 
 {% block nowo_ui_document_title %}{{ page.header.title|nowo_ui_trans }}{% endblock %}
 
 {% block nowo_ui_page_header %}
-    {{ include(nowo_ui_partial('page_header', page.bundle), {header: page.header, bundle: page.bundle}, false) }}
+    {{ include(nowo_ui_partial('page_header', page.bundle), {header: page.header, bundle: page.bundle, nowo_ui_page_type: nowo_ui_page_type}, false) }}
 {% endblock %}
 
 {% block nowo_ui_content %}

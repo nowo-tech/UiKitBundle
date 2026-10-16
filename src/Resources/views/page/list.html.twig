@@ -8,18 +8,19 @@
 #}
 {% extends page.layout ?? nowo_ui_layout.admin %}
 {% set nowo_ui_bundle = page.bundle %}
+{% set nowo_ui_page_type = 'list' %}
 
 {% block nowo_ui_document_title %}{{ page.header.title|nowo_ui_trans }}{% endblock %}
 
 {% block nowo_ui_page_header %}
-    {{ include(nowo_ui_partial('page_header', page.bundle), {header: page.header, bundle: page.bundle}, false) }}
+    {{ include(nowo_ui_partial('page_header', page.bundle), {header: page.header, bundle: page.bundle, nowo_ui_page_type: nowo_ui_page_type}, false) }}
 {% endblock %}
 
 {% block nowo_ui_content %}
     {% set _b = page.bundle %}
     <section class="nowo-ui-list-page" data-nowo-ui-page="list">
         {% if page.filters %}
-            {{ include('@NowoUiKitBundle/page/_list_filters.html.twig', {page: page}, false) }}
+            {{ include('@NowoUiKitBundle/page/_list_filters.html.twig', {page: page, nowo_ui_page_type: nowo_ui_page_type}, false) }}
         {% endif %}
         {% if page.rows is not empty %}
             {% set _route = page.pagination and page.pagination.route ? page.pagination.route : (app is defined and app ? app.request.attributes.get('_route') : null) %}
@@ -56,7 +57,7 @@
                                 {% endblock %}
                                 {% if page.hasRowActions() %}
                                     <td class="{{ nowo_ui_class('table_cell', _b) }} nowo-ui-cell--end nowo-ui-table__actions">
-                                        {{ include(nowo_ui_partial('row_actions', _b), {actions: page.rowActions(row, row_key), bundle: _b}, false) }}
+                                        {{ include(nowo_ui_partial('row_actions', _b), {actions: page.rowActions(row, row_key), bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
                                     </td>
                                 {% endif %}
                             </tr>
@@ -65,10 +66,10 @@
                 </table>
             </div>
             {% if page.pagination %}
-                {{ include(nowo_ui_partial('pagination', _b), {pagination: page.pagination, item_count: page.rows|length, bundle: _b}, false) }}
+                {{ include(nowo_ui_partial('pagination', _b), {pagination: page.pagination, item_count: page.rows|length, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
             {% endif %}
         {% else %}
-            {{ include(nowo_ui_partial('empty', _b), {empty: page.empty ?? null, bundle: _b}, false) }}
+            {{ include(nowo_ui_partial('empty', _b), {empty: page.empty ?? null, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
         {% endif %}
         {% block nowo_ui_list_after %}{% endblock %}
     </section>

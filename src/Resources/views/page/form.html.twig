@@ -7,11 +7,12 @@
 #}
 {% extends page.layout ?? nowo_ui_layout.admin %}
 {% set nowo_ui_bundle = page.bundle %}
+{% set nowo_ui_page_type = 'form' %}
 
 {% block nowo_ui_document_title %}{{ page.header.title|nowo_ui_trans }}{% endblock %}
 
 {% block nowo_ui_page_header %}
-    {{ include(nowo_ui_partial('page_header', page.bundle), {header: page.header, bundle: page.bundle}, false) }}
+    {{ include(nowo_ui_partial('page_header', page.bundle), {header: page.header, bundle: page.bundle, nowo_ui_page_type: nowo_ui_page_type}, false) }}
 {% endblock %}
 
 {% block nowo_ui_content %}
@@ -37,14 +38,14 @@
             {% if page.secondaryActions is not empty %}
                 <div class="{{ nowo_ui_class('toolbar', _b) }} nowo-ui-form-page__secondary">
                     {% for action in page.secondaryActions %}
-                        {{ include(nowo_ui_partial('action', _b), {action: action, context: 'toolbar', bundle: _b}, false) }}
+                        {{ include(nowo_ui_partial('action', _b), {action: action, context: 'toolbar', bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
                     {% endfor %}
                 </div>
             {% endif %}
             {% if page.deleteAction %}
                 <section class="{{ nowo_ui_class('danger_zone', _b) }}"{{ nowo_ui_attrs('danger_zone', _b) }}>
                     <h2 class="nowo-ui-danger-zone__title">{{ 'form.danger_zone'|trans({}, 'NowoUiKitBundle') }}</h2>
-                    {{ include(nowo_ui_partial('action', _b), {action: page.deleteAction, context: 'toolbar', bundle: _b}, false) }}
+                    {{ include(nowo_ui_partial('action', _b), {action: page.deleteAction, context: 'toolbar', bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
                 </section>
             {% endif %}
         </div>

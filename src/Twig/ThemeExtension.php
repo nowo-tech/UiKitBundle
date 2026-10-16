@@ -17,8 +17,10 @@ use Twig\TwigFunction;
 /**
  * Page contract Twig API (REQ-UI-003):
  *
- * - `nowo_ui_class(slot, bundle = null)` — semantic + framework default + host classes of a theme slot
- * - `nowo_ui_attrs(slot, bundle = null, extra = {})` — escaped attribute string of a slot
+ * - `nowo_ui_class(slot, bundle = null, framework = null, page = null)` — semantic + framework default + host
+ *   classes of a theme slot; `page` (page type) defaults to the `nowo_ui_page_type` variable the scaffolds set
+ * - `nowo_ui_attrs(slot, bundle = null, extra = {}, page = null)` — escaped attribute string of a slot
+ * - `nowo_ui_html_attrs(attributes)` — escaped attribute string of a plain map (page model `attributes`)
  * - `nowo_ui_partial(name, bundle = null)` — template of a (possibly host-replaced) UiKit partial
  * - `nowo_ui_theme_tokens(nonce = null)` — `<style data-nowo-ui-theme-tokens>` with the host tokens ('' without)
  * - `nowo_ui_theme_css()` — the token stylesheet text
@@ -45,8 +47,9 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
     public function getFunctions(): array
     {
         return [
-            new TwigFunction('nowo_ui_class', $this->theme->classFor(...)),
-            new TwigFunction('nowo_ui_attrs', $this->theme->renderAttributes(...), ['is_safe' => ['html']]),
+            new TwigFunction('nowo_ui_class', $this->slotClass(...), ['needs_context' => true]),
+            new TwigFunction('nowo_ui_attrs', $this->slotAttributes(...), ['needs_context' => true, 'is_safe' => ['html']]),
+            new TwigFunction('nowo_ui_html_attrs', $this->theme->renderAttributeMap(...), ['is_safe' => ['html']]),
             new TwigFunction('nowo_ui_partial', $this->theme->partial(...)),
             new TwigFunction('nowo_ui_theme_tokens', $this->tokens(...), ['is_safe' => ['html']]),
             new TwigFunction('nowo_ui_theme_css', $this->theme->tokensCss(...)),
@@ -72,6 +75,27 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             'nowo_ui_theme' => $this->theme,
             'nowo_ui_breadcrumbs' => $this->breadcrumbs,
         ];
+    }
+
+    /**
+     * `nowo_ui_class()`: the page type defaults to `nowo_ui_page_type` from the template context.
+     *
+     * @param array<string, mixed> $context
+     */
+    public function slotClass(array $context, string $slot, ?string $bundle = null, ?string $framework = null, ?string $page = null): string
+    {
+        return $this->theme->classFor($slot, $bundle, $framework, $page ?? $this->pageType($context));
+    }
+
+    /**
+     * `nowo_ui_attrs()`: the page type defaults to `nowo_ui_page_type` from the template context.
+     *
+     * @param array<string, mixed>                      $context
+     * @param array<string, string|int|float|bool|null> $extra
+     */
+    public function slotAttributes(array $context, string $slot, ?string $bundle = null, array $extra = [], ?string $page = null): string
+    {
+        return $this->theme->renderAttributes($slot, $bundle, $extra, $page ?? $this->pageType($context));
     }
 
     /**
@@ -131,6 +155,16 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
         $html = $callable($env, $collection ?? $this->breadcrumbs['collection']);
 
         return \is_scalar($html) || $html instanceof \Stringable ? (string) $html : '';
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     */
+    private function pageType(array $context): ?string
+    {
+        $page = $context['nowo_ui_page_type'] ?? null;
+
+        return \is_string($page) && '' !== $page ? $page : null;
     }
 
     private function requestNonce(): ?string

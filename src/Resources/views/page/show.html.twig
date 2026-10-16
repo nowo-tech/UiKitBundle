@@ -7,11 +7,12 @@
 #}
 {% extends page.layout ?? nowo_ui_layout.admin %}
 {% set nowo_ui_bundle = page.bundle %}
+{% set nowo_ui_page_type = 'show' %}
 
 {% block nowo_ui_document_title %}{{ page.header.title|nowo_ui_trans }}{% endblock %}
 
 {% block nowo_ui_page_header %}
-    {{ include(nowo_ui_partial('page_header', page.bundle), {header: page.header, bundle: page.bundle}, false) }}
+    {{ include(nowo_ui_partial('page_header', page.bundle), {header: page.header, bundle: page.bundle, nowo_ui_page_type: nowo_ui_page_type}, false) }}
 {% endblock %}
 
 {% block nowo_ui_content %}
@@ -24,14 +25,14 @@
                         <header class="{{ nowo_ui_class('card_header', _b) }}"><h2 class="nowo-ui-card__title">{{ section.title|nowo_ui_trans }}</h2></header>
                     {% endif %}
                     <div class="{{ nowo_ui_class('card_body', _b) }}">
-                        {{ include('@NowoUiKitBundle/page/_detail_list.html.twig', {items: section.items, bundle: _b}, false) }}
+                        {{ include('@NowoUiKitBundle/page/_detail_list.html.twig', {items: section.items, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
                     </div>
                 </section>
             {% endfor %}
         {% endblock %}
         {% if page.meta is not empty %}
             <aside class="nowo-ui-show-page__meta">
-                {{ include('@NowoUiKitBundle/page/_detail_list.html.twig', {items: page.meta, bundle: _b, modifier: 'meta'}, false) }}
+                {{ include('@NowoUiKitBundle/page/_detail_list.html.twig', {items: page.meta, bundle: _b, modifier: 'meta', nowo_ui_page_type: nowo_ui_page_type}, false) }}
             </aside>
         {% endif %}
         {% block nowo_ui_show_after %}{% endblock %}
