@@ -18,6 +18,7 @@ This bundle is **FrankenPHP worker mode friendly** (including when the kernel is
 - [Features](#features)
 - [Installation](#installation)
 - [Quick start](#quick-start)
+- [Page contract (UiKit 2.0)](#page-contract-uikit-20)
 - [Demos](#demos)
 - [Documentation](#documentation)
 - [Tests and coverage](#tests-and-coverage)
@@ -87,13 +88,29 @@ nowo_ui_kit:
 
 See [docs/USAGE.md](docs/USAGE.md) and [docs/CONFIGURATION.md](docs/CONFIGURATION.md).
 
+## Page contract (UiKit 2.0)
+
+**REQ-UI-003** — UiKit owns the page shell of every Nowo UI bundle: canonical layouts, one scaffold per view type
+(`@NowoUiKit/page/{list,show,form,settings,dashboard,confirm,wizard,auth}.html.twig`), immutable view models
+(`Nowo\UiKitBundle\View\*`) and one global theme (`nowo_ui_kit.theme`: slot classes, attributes, partial overrides,
+`--nowo-ui-*` tokens, per-bundle exceptions). A host themes each view type once; bundles fill data blocks only.
+
+| Host theme (tokens + class map + partial override) | UiKit default theme |
+| --- | --- |
+| ![Orders list rendered by the list scaffold with a host theme](docs/images/demo/page-contract-list.webp) | ![The same list with UiKit's default theme](docs/images/demo/page-contract-default-list.webp) |
+
+- [Page contract](docs/PAGE_CONTRACT.md) — concepts, layouts, scaffolds and data blocks, view models, bundle and host examples
+- [Theme slots](docs/THEME_SLOTS.md) — slot vocabulary with defaults per `css_framework`, partials, tokens, per-bundle exceptions
+- [Migrating bundles](docs/MIGRATING_BUNDLES.md) — recipe for UI bundles (view models, scaffolds, bridges, config aliases, contract test, `docs/TEMPLATES.md`)
+- `Nowo\UiKitBundle\Test\PageContractTestCase` — shared contract test for UI bundles (needs `phpunit/phpunit` in the bundle's `require-dev`)
+
 ## Demos
 
 FrankenPHP demos (Caddy + PHP). Runtime mode: **`FRANKENPHP_MODE`** (`worker` default; `classic` for per-request PHP). See [docs/DEMO-FRANKENPHP.md](docs/DEMO-FRANKENPHP.md).
 
 | Demo | Port | Notes |
 |------|------|--------|
-| [demo/symfony8](demo/symfony8/) | 8092 | Bootstrap 5 kitchen sink |
+| [demo/symfony8](demo/symfony8/) | 8092 | Bootstrap 5 kitchen sink; page contract host-theme demo at `/page-contract` |
 | [demo/symfony8-tailwind](demo/symfony8-tailwind/) | 8093 | Tailwind kitchen sink |
 
 ```bash
@@ -110,6 +127,9 @@ Developer-facing docs are **English only** ([Contributing — Language policy](d
 - [PSR evaluation (REQ-CS-007)](docs/PSR.md)
 - [Usage](docs/USAGE.md)
 - [Theming (`--nowo-ui-*` tokens)](docs/THEMING.md)
+- [Page contract (REQ-UI-003)](docs/PAGE_CONTRACT.md)
+- [Theme slots](docs/THEME_SLOTS.md)
+- [Migrating bundles to the page contract](docs/MIGRATING_BUNDLES.md)
 - [Row actions (canonical kinds)](docs/ROW_ACTIONS.md)
 - [Adoption (Beacon + bundles)](docs/ADOPTION.md)
 - [Stimulus / data contracts](docs/STIMULUS.md)

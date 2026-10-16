@@ -66,6 +66,9 @@ macros keep their 1.x inputs and output.
   the kit palette then never beats a host declaration, so `!important` remaps of `--nowo-ui-*` can be removed.
   Hosts with their own layout add the attribute themselves and print `{{ nowo_ui_theme_tokens() }}` after
   `nowo-ui.css`.
+- UI bundles get a shared contract test, `Nowo\UiKitBundle\Test\PageContractTestCase` (add `phpunit/phpunit` to
+  the bundle's `require-dev`); migration recipe in [`MIGRATING_BUNDLES.md`](MIGRATING_BUNDLES.md), slot vocabulary in
+  [`THEME_SLOTS.md`](THEME_SLOTS.md).
 - Hosts that override `_pagination`, `_toasts`, `_flashes`, `_page_header`, `_row_actions`, `_confirm`, `_empty`,
   `_shell` or `_burger` keep working; to pick up view-model inputs, re-sync from the bundle (or replace the fork with
   `theme.classes` / `theme.attributes` / `theme.partials`).
