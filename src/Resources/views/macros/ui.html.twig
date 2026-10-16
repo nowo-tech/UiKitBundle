@@ -169,7 +169,7 @@ nowo-ui-flash nowo-ui-flash--{{ type == 'danger' or type == 'error' ? 'error' : 
   {%- set f = _self.resolve_fw(null) -%}
 {%- endif -%}
 nowo-ui-badge{% if variant %} nowo-ui-badge--{{ variant }}{% endif %}
-{%- if f in ['bootstrap', 'bootstrap5', 'tabler'] %} badge{% if variant == 'success' %} bg-success{% elseif variant == 'warning' %} bg-warning text-dark{% elseif variant == 'danger' or variant == 'error' %} bg-danger{% elseif variant == 'info' %} bg-info text-dark{% else %} bg-light text-dark border{% endif %} ms-2
+{%- if f in ['bootstrap', 'bootstrap5', 'tabler'] %} badge{% if variant == 'success' %} text-bg-success{% elseif variant == 'warning' %} text-bg-warning{% elseif variant == 'danger' or variant == 'error' %} text-bg-danger{% elseif variant == 'info' %} text-bg-info{% else %} text-bg-light border{% endif %} ms-2
 {%- elseif f == 'bootstrap4' %} badge{% if variant == 'success' %} badge-success{% elseif variant == 'warning' %} badge-warning{% elseif variant == 'danger' or variant == 'error' %} badge-danger{% elseif variant == 'info' %} badge-info{% else %} badge-light border{% endif %} ml-2
 {%- elseif f == 'tailwind' %} ml-2 inline-flex border px-2 py-0.5 text-xs
 {%- elseif f == 'foundation' %} badge{% if variant == 'success' %} success{% elseif variant == 'warning' %} warning{% elseif variant == 'danger' or variant == 'error' %} alert{% else %} secondary{% endif %}

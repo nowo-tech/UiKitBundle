@@ -314,25 +314,30 @@ final class Configuration implements ConfigurationInterface
 
     private function addThemeChildren(NodeBuilder $children, string $name, bool $scoped): void
     {
+        $defaults = $children->booleanNode('framework_defaults');
+        if ($scoped) {
+            $defaults->info('Override of theme.framework_defaults for this bundle (unset = inherit).');
+        } else {
+            $defaults->defaultTrue()->info('false = slots print the semantic nowo-ui-* class and the host classes only (no UiKit framework defaults such as btn / badge / card). Per slot: classes.<slot>: {value: …, framework_defaults: false}.');
+        }
+        $defaults->end();
         $children
             ->arrayNode('classes')
-                ->info('Slot => host classes, merged after the UiKit framework defaults (vocabulary: Theme\ThemeSlots, docs/PAGE_CONTRACT.md).')
+                ->info('Slot => host classes, merged after the UiKit framework defaults (vocabulary: Theme\ThemeSlots, docs/THEME_SLOTS.md): a string, a list, or {value: classes, framework_defaults: false} to drop the framework defaults of that slot.')
                 ->useAttributeAsKey('slot')
                 ->normalizeKeys(false)
-                ->scalarPrototype()
-                    ->beforeNormalization()
-                        ->ifArray()
-                        ->then(static fn (array $classes): string => implode(' ', array_map(static fn (mixed $c): string => \is_scalar($c) ? (string) $c : '', $classes)))
-                    ->end()
-                ->end()
+                ->variablePrototype()->end()
                 ->defaultValue([])
                 ->validate()
                     ->always(static function (array $classes) use ($name): array {
                         foreach ($classes as $slot => $value) {
                             self::assertSlot($name.'.classes', (string) $slot);
-                            if (!\is_string($value) || 1 === preg_match('/["<>]/', $value)) {
-                                throw new InvalidConfigurationException(\sprintf('Invalid nowo_ui_kit.%s.classes.%s: class lists are plain strings without \'"\', "<" or ">".', $name, $slot));
+                            $error = Theme::classEntryError($value);
+                            if (null !== $error) {
+                                throw new InvalidConfigurationException(\sprintf('Invalid nowo_ui_kit.%s.classes.%s: %s', $name, $slot, $error));
                             }
+                            [$value, $defaults] = Theme::normalizeClassEntry($value);
+                            $classes[$slot] = null === $defaults ? $value : ['value' => $value, 'framework_defaults' => $defaults];
                         }
 
                         return $classes;

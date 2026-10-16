@@ -11,6 +11,7 @@ Adding a slot or partial name is a **minor** change; renaming or removing one is
 ## Table of contents
 
 - [How a slot resolves](#how-a-slot-resolves)
+  - [Dropping the framework defaults](#dropping-the-framework-defaults)
 - [Slots](#slots)
 - [Attributes](#attributes)
 - [Partials](#partials)
@@ -31,7 +32,8 @@ Adding a slot or partial name is a **minor** change; renaming or removing one is
 2. the **UiKit framework defaults** for `nowo_ui_kit.css_framework` (or the `framework` argument): `bootstrap5`,
    `bootstrap` and `tabler` share the Bootstrap 5 defaults, `bootstrap4` has its own badge classes and falls back to
    Bootstrap 5 for the rest, `tailwind` only carries layout / spacing / type-scale utilities (never palette or
-   radius), `foundation` its own; `custom` and `none` get the semantic class only;
+   radius), `foundation` its own; `custom` and `none` get the semantic class only — unless the theme drops them for
+   that slot ([below](#dropping-the-framework-defaults));
 3. the **host** classes of `theme.classes.<slot>` — or, when `bundle` is given and `theme.bundles.<bundle>.classes`
    defines the slot, the **bundle exception instead** (it replaces the host classes of that slot).
 
@@ -39,7 +41,41 @@ Example (`css_framework: bootstrap5`, `theme.classes.table: 'data-table'`):
 `nowo-ui-table nowo-ui-table--striped table table-hover align-middle data-table`.
 
 The 1.x partials keep their macro classes and append only the host / bundle classes
-(`nowo_ui_theme.extraClasses(slot, bundle)`), so their output is unchanged until a theme is configured.
+(`nowo_ui_theme.macroClasses(slot, macroClasses, bundle)`), so their output is unchanged until a theme is configured.
+
+### Dropping the framework defaults
+
+A host whose design system already styles a slot can drop UiKit's framework defaults for it, so no Bootstrap /
+Tailwind / Foundation class (e.g. `badge text-bg-success`, `btn btn-primary`, `card`) fights the host classes. The
+semantic `nowo-ui-*` class always stays.
+
+```yaml
+nowo_ui_kit:
+  theme:
+    framework_defaults: true                       # default; false = semantic + host classes for every slot
+    classes:
+      table: 'data-table'                          # string (or list): appended to the defaults, as before
+      badge_success: { value: 'acme-badge acme-badge--ok', framework_defaults: false }   # this slot only
+      card: { framework_defaults: false }          # drop the defaults, no host class
+    bundles:
+      NowoHttpLogBundle:
+        framework_defaults: false                  # every slot of this bundle (unset = inherit)
+        classes: { table: { value: 'dense', framework_defaults: true } }
+```
+
+The most specific setting wins: bundle slot entry > bundle `framework_defaults` > host slot entry > host
+`framework_defaults`. With `css_framework: bootstrap5`:
+
+| Config | `nowo_ui_class('badge_success')` |
+| --- | --- |
+| none | `nowo-ui-badge nowo-ui-badge--success badge text-bg-success ms-2` |
+| `classes.badge_success: 'acme-badge'` | `nowo-ui-badge nowo-ui-badge--success badge text-bg-success ms-2 acme-badge` |
+| `classes.badge_success: { value: 'acme-badge', framework_defaults: false }` | `nowo-ui-badge nowo-ui-badge--success acme-badge` |
+| `framework_defaults: false` | `nowo-ui-badge nowo-ui-badge--success` |
+
+The 1.x partials honour it too: when the defaults are dropped for a slot, only the `nowo-ui-*` and `is-*` classes of
+the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros called directly are not affected.
+`nowo_ui_theme.frameworkDefaults(slot, bundle)` tells whether they apply.
 
 ## Slots
 
@@ -71,12 +107,12 @@ The 1.x partials keep their macro classes and append only the host / bundle clas
 | `table_cell` | `nowo-ui-table__cell` | — | — | — | — |
 | `row_actions` | `nowo-ui-row-actions` | `d-flex gap-1` | `d-flex gap-1` | `flex gap-1` | `button-group` |
 | `action` | `nowo-ui-action` | — | — | — | — |
-| `badge` | `nowo-ui-badge` | `badge bg-light text-dark border ms-2` | `badge badge-light border ml-2` | `ml-2 inline-flex border px-2 py-0.5 text-xs` | `badge secondary` |
-| `badge_success` | `nowo-ui-badge nowo-ui-badge--success` | `badge bg-success ms-2` | `badge badge-success ml-2` | `ml-2 inline-flex border px-2 py-0.5 text-xs` | `badge success` |
-| `badge_warning` | `nowo-ui-badge nowo-ui-badge--warning` | `badge bg-warning text-dark ms-2` | `badge badge-warning ml-2` | `ml-2 inline-flex border px-2 py-0.5 text-xs` | `badge warning` |
-| `badge_danger` | `nowo-ui-badge nowo-ui-badge--danger` | `badge bg-danger ms-2` | `badge badge-danger ml-2` | `ml-2 inline-flex border px-2 py-0.5 text-xs` | `badge alert` |
-| `badge_info` | `nowo-ui-badge nowo-ui-badge--info` | `badge bg-info text-dark ms-2` | `badge badge-info ml-2` | `ml-2 inline-flex border px-2 py-0.5 text-xs` | `badge secondary` |
-| `badge_neutral` | `nowo-ui-badge nowo-ui-badge--neutral` | `badge bg-light text-dark border ms-2` | `badge badge-light border ml-2` | `ml-2 inline-flex border px-2 py-0.5 text-xs` | `badge secondary` |
+| `badge` | `nowo-ui-badge` | `badge text-bg-light border ms-2` | `badge badge-light border ml-2` | `ml-2 inline-flex border px-2 py-0.5 text-xs` | `badge secondary` |
+| `badge_success` | `nowo-ui-badge nowo-ui-badge--success` | `badge text-bg-success ms-2` | `badge badge-success ml-2` | `ml-2 inline-flex border px-2 py-0.5 text-xs` | `badge success` |
+| `badge_warning` | `nowo-ui-badge nowo-ui-badge--warning` | `badge text-bg-warning ms-2` | `badge badge-warning ml-2` | `ml-2 inline-flex border px-2 py-0.5 text-xs` | `badge warning` |
+| `badge_danger` | `nowo-ui-badge nowo-ui-badge--danger` | `badge text-bg-danger ms-2` | `badge badge-danger ml-2` | `ml-2 inline-flex border px-2 py-0.5 text-xs` | `badge alert` |
+| `badge_info` | `nowo-ui-badge nowo-ui-badge--info` | `badge text-bg-info ms-2` | `badge badge-info ml-2` | `ml-2 inline-flex border px-2 py-0.5 text-xs` | `badge secondary` |
+| `badge_neutral` | `nowo-ui-badge nowo-ui-badge--neutral` | `badge text-bg-light border ms-2` | `badge badge-light border ml-2` | `ml-2 inline-flex border px-2 py-0.5 text-xs` | `badge secondary` |
 | `filters` | `nowo-ui-filters nowo-ui-search` | `d-flex flex-wrap gap-2 mb-3` | `d-flex flex-wrap gap-2 mb-3` | `flex flex-wrap gap-2 mb-4` | `grid-x grid-margin-x mb-3` |
 | `filters_actions` | `nowo-ui-filters__actions` | `d-flex flex-wrap align-items-end gap-2` | `d-flex flex-wrap align-items-end gap-2` | `flex flex-wrap items-end gap-2` | — |
 | `input` | `nowo-ui-input` | `form-control` | `form-control` | `block w-full max-w-xs border px-3 py-1.5 text-sm` | — |
@@ -115,7 +151,9 @@ The 1.x partials keep their macro classes and append only the host / bundle clas
 
 Slot groups: document / layout (`document` … `breadcrumbs`), page header (`page_header` … `toolbar`), buttons (`btn`
 … `btn_sm`; variants are complete button classes, `btn_sm` a size modifier), tables (`table_wrap` … `action`),
-badges, filters / inputs, pagination, feedback (`empty`, flashes, `toasts`), surfaces (`card` … `modal`,
+badges (Bootstrap variants use `text-bg-*`, Bootstrap 5.2+, which sets text and background together so the colour
+pair never mixes with the semantic `nowo-ui-badge--*` palette; on 5.0 / 5.1 the semantic palette paints the badge;
+Bootstrap 4 / Foundation variant classes set both colours too), filters / inputs, pagination, feedback (`empty`, flashes, `toasts`), surfaces (`card` … `modal`,
 `confirm`), forms (`form`, `form_actions`, `danger_zone`), wizard / auth.
 
 ## Attributes
@@ -189,7 +227,8 @@ selected by the `bundle` argument / the view model's `bundle`:
 
 | Key | Semantics |
 | --- | --- |
-| `classes` | **replace** the host classes of that slot (semantic + framework defaults stay); `''` removes the host classes for the bundle |
+| `classes` | **replace** the host classes of that slot (semantic + framework defaults stay); `''` removes the host classes for the bundle; `{value, framework_defaults}` also sets the framework defaults of the slot for the bundle |
+| `framework_defaults` | `false` / `true` overrides `theme.framework_defaults` for the bundle (unset = inherit) |
 | `attributes` | **merge** over the host attributes of that slot (`false` / `null` removes a host attribute) |
 | `partials` | **replace** the host (or UiKit) partial for that bundle |
 | `tokens`, `tokens_dark` | **scoped** to `[data-nowo-ui-bundle="<Bundle>"]` (the layouts put that attribute on `<main>` from `nowo_ui_bundle`) |
@@ -213,13 +252,14 @@ Deprecated per-bundle chrome maps (`AdminChrome`, `PanelChrome`, `DashboardUiCon
 ```yaml
 nowo_ui_kit:
   theme:
-    classes:      { <slot>: 'classes' | ['class', …] }
+    framework_defaults: true | false
+    classes:      { <slot>: 'classes' | ['class', …] | { value: 'classes' | ['class', …], framework_defaults: bool } }
     attributes:   { <slot>: { <name>: string | int | float | bool | null } }
     partials:     { <partial>: '<template>' }
     tokens:       { <token>: '<css value>' }
     tokens_dark:  { <token>: '<css value>' }
     bundles:
-      <BundleShortName>: { classes: …, attributes: …, partials: …, tokens: …, tokens_dark: … }
+      <BundleShortName>: { framework_defaults: bool, classes: …, attributes: …, partials: …, tokens: …, tokens_dark: … }
 ```
 
 ## Contract-test allow-lists
@@ -229,4 +269,5 @@ the slot defaults of the rendered `css_framework`, the classes the `ui.btn` macr
 variants (Bootstrap `btn-outline-primary`, `btn-link`; Tailwind `underline-offset-2`, `px-0`) and UiKit's own helpers
 (`visually-hidden`, state classes, the 1.x pagination list `pagination` / `page-item` / `page-link`). Any other class
 that looks like a Bootstrap / Tabler / Tailwind / Foundation class fails `testPageUsesFrameworkClassesOnlyThroughThemeSlots`.
-Change the defaults here and the allow-lists follow.
+Change the defaults here and the allow-lists follow (the allow-list does not depend on `framework_defaults`: dropping
+defaults only removes classes).

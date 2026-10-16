@@ -34,11 +34,10 @@
 {% set route_params = route_params|default(pagination.route_params|default(app.request.attributes.get('_route_params')|default({}))) %}
 {% set page_param = pagination.page_param|default('page') %}
 {% set per_page_param = pagination.per_page_param|default('per_page') %}
-{% set _wrap_extra = _t ? _t.extraClasses('pagination', bundle) : '' %}
-{% set _link_extra = _t ? _t.extraClasses('pagination_link', bundle) : '' %}
-{% set _active_extra = _t ? _t.extraClasses('pagination_active', bundle) : '' %}
 {% set _info_extra = _t ? _t.extraClasses('pagination_info', bundle) : '' %}
-{% set _link_extra = _link_extra ? ' ' ~ _link_extra : '' %}
+{% set _link_class = _t ? _t.macroClasses('pagination_link', 'page-link nowo-ui-pagination__link', bundle) : 'page-link nowo-ui-pagination__link' %}
+{% set _disabled_class = _t ? _t.macroClasses('pagination_link', 'page-link nowo-ui-pagination__link is-disabled', bundle) : 'page-link nowo-ui-pagination__link is-disabled' %}
+{% set _active_class = _t ? _t.macroClasses('pagination_active', 'page-link nowo-ui-pagination__link is-active', bundle) : 'page-link nowo-ui-pagination__link is-active' %}
 {% set page = pagination.page|default(1) %}
 {% set per_page = pagination.per_page|default(25) %}
 {% set total = pagination.total|default(0) %}
@@ -50,7 +49,7 @@
     {% set from = (page - 1) * per_page + 1 %}
     {% set to = (page - 1) * per_page + item_count %}
     {% set base_params = route_params|merge(query)|merge({(per_page_param): per_page}) %}
-    <div class="{{ ui.pagination_wrap(framework) }}{{ _wrap_extra ? ' ' ~ _wrap_extra }}"{{ _t ? _t.renderAttributes('pagination', bundle)|raw }}>
+    <div class="{{ _t ? _t.macroClasses('pagination', ui.pagination_wrap(framework), bundle) : ui.pagination_wrap(framework) }}"{{ _t ? _t.renderAttributes('pagination', bundle)|raw }}>
         <p class="nowo-ui-pagination__info{{ _info_extra ? ' ' ~ _info_extra }}">
             {{ 'pagination.showing'|trans({'%from%': from, '%to%': to, '%total%': total}, trans_domain) }}
         </p>
@@ -59,20 +58,20 @@
                 <ul class="pagination">
                     <li class="page-item{% if page <= 1 %} disabled{% endif %}">
                         {% if page > 1 %}
-                            <a class="page-link nowo-ui-pagination__link{{ _link_extra }}" href="{{ path(route, base_params|merge({(page_param): page - 1})) }}" aria-label="{{ 'pagination.previous'|trans({}, trans_domain) }}">«</a>
+                            <a class="{{ _link_class }}" href="{{ path(route, base_params|merge({(page_param): page - 1})) }}" aria-label="{{ 'pagination.previous'|trans({}, trans_domain) }}">«</a>
                         {% else %}
-                            <span class="page-link nowo-ui-pagination__link is-disabled{{ _link_extra }}" aria-disabled="true" aria-label="{{ 'pagination.previous'|trans({}, trans_domain) }}">«</span>
+                            <span class="{{ _disabled_class }}" aria-disabled="true" aria-label="{{ 'pagination.previous'|trans({}, trans_domain) }}">«</span>
                         {% endif %}
                     </li>
 
                     {% for p in 1..total_pages %}
                         {% if p == page %}
                             <li class="page-item active" aria-current="page">
-                                <span class="page-link nowo-ui-pagination__link is-active{{ _active_extra ? ' ' ~ _active_extra }}">{{ p }}</span>
+                                <span class="{{ _active_class }}">{{ p }}</span>
                             </li>
                         {% elseif p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
                             <li class="page-item">
-                                <a class="page-link nowo-ui-pagination__link{{ _link_extra }}" href="{{ path(route, base_params|merge({(page_param): p})) }}">{{ p }}</a>
+                                <a class="{{ _link_class }}" href="{{ path(route, base_params|merge({(page_param): p})) }}">{{ p }}</a>
                             </li>
                         {% elseif p == page - 3 or p == page + 3 %}
                             <li class="page-item disabled" aria-hidden="true">
@@ -83,9 +82,9 @@
 
                     <li class="page-item{% if page >= total_pages %} disabled{% endif %}">
                         {% if page < total_pages %}
-                            <a class="page-link nowo-ui-pagination__link{{ _link_extra }}" href="{{ path(route, base_params|merge({(page_param): page + 1})) }}" aria-label="{{ 'pagination.next'|trans({}, trans_domain) }}">»</a>
+                            <a class="{{ _link_class }}" href="{{ path(route, base_params|merge({(page_param): page + 1})) }}" aria-label="{{ 'pagination.next'|trans({}, trans_domain) }}">»</a>
                         {% else %}
-                            <span class="page-link nowo-ui-pagination__link is-disabled{{ _link_extra }}" aria-disabled="true" aria-label="{{ 'pagination.next'|trans({}, trans_domain) }}">»</span>
+                            <span class="{{ _disabled_class }}" aria-disabled="true" aria-label="{{ 'pagination.next'|trans({}, trans_domain) }}">»</span>
                         {% endif %}
                     </li>
                 </ul>

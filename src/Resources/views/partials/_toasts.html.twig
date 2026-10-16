@@ -31,9 +31,9 @@
                 {% set isWarning = label == 'warning' %}
                 {% set flashType = isError ? 'error' : (label == 'notice' ? 'info' : label) %}
                 {% set structured = message is iterable and message.title is defined %}
-                {% set _toast_extra = _t and flashType in ['success', 'error', 'warning', 'info'] ? _t.extraClasses('flash_' ~ flashType, bundle) : '' %}
+                {% set _toast_class = _t and flashType in ['success', 'error', 'warning', 'info'] ? _t.macroClasses('flash_' ~ flashType, ui.flash(flashType, framework), bundle) : ui.flash(flashType, framework) %}
                 <div
-                    class="nowo-ui-toast {{ ui.flash(flashType, framework) }}{{ _toast_extra ? ' ' ~ _toast_extra }}"
+                    class="nowo-ui-toast {{ _toast_class }}"
                     role="{{ isError or isWarning ? 'alert' : 'status' }}"
                     data-nowo-ui-toast
                     data-timeout="{{ isError or isWarning ? 8000 : 5000 }}"

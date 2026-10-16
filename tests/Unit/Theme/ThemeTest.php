@@ -35,6 +35,54 @@ final class ThemeTest extends TestCase
         self::assertSame('', $theme->extraClasses('page_header'));
     }
 
+    public function testFrameworkDefaultsCanBeDroppedGloballyPerBundleAndPerSlot(): void
+    {
+        $theme = new Theme('bootstrap5', classes: [
+            'badge_success' => ['value' => 'acme-badge', 'framework_defaults' => false],
+            'btn_primary' => ['acme-btn', 'acme-btn--primary'],
+            'table' => ['framework_defaults' => true],
+        ], bundles: [
+            'NowoAllOffBundle' => ['framework_defaults' => false],
+            'NowoSlotOnBundle' => ['framework_defaults' => false, 'classes' => ['btn_primary' => ['value' => 'x-btn', 'framework_defaults' => true]]],
+            'NowoBadgeOnBundle' => ['classes' => ['badge_success' => ['value' => 'x-badge', 'framework_defaults' => true]]],
+        ]);
+
+        // host slot entry drops the defaults; list entries still work
+        self::assertFalse($theme->frameworkDefaults('badge_success'));
+        self::assertSame('nowo-ui-badge nowo-ui-badge--success acme-badge', $theme->classFor('badge_success'));
+        self::assertSame('nowo-ui-btn nowo-ui-btn--primary btn btn-primary acme-btn acme-btn--primary', $theme->classFor('btn_primary'));
+        self::assertSame('acme-btn acme-btn--primary', $theme->extraClasses('btn_primary'));
+        self::assertSame('', $theme->extraClasses('table'));
+        // bundle-wide switch beats the host slot entry; a bundle slot entry beats the bundle switch
+        self::assertSame('nowo-ui-table nowo-ui-table--striped', $theme->classFor('table', 'NowoAllOffBundle'));
+        self::assertSame('nowo-ui-btn nowo-ui-btn--primary acme-btn acme-btn--primary', $theme->classFor('btn_primary', 'NowoAllOffBundle'));
+        self::assertSame('nowo-ui-btn nowo-ui-btn--primary btn btn-primary x-btn', $theme->classFor('btn_primary', 'NowoSlotOnBundle'));
+        self::assertSame('nowo-ui-badge nowo-ui-badge--success badge text-bg-success ms-2 x-badge', $theme->classFor('badge_success', 'NowoBadgeOnBundle'));
+        // unknown bundle: host rules
+        self::assertSame('nowo-ui-badge nowo-ui-badge--success acme-badge', $theme->classFor('badge_success', 'OtherBundle'));
+
+        // global switch, re-enabled per slot
+        $off = new Theme('bootstrap5', classes: ['table' => ['value' => 'x', 'framework_defaults' => true]], frameworkDefaults: false);
+        self::assertSame('nowo-ui-btn nowo-ui-btn--primary', $off->classFor('btn_primary'));
+        self::assertSame('nowo-ui-table nowo-ui-table--striped table table-hover align-middle x', $off->classFor('table'));
+        self::assertFalse(Theme::fromConfig('bootstrap5', ['framework_defaults' => false])->frameworkDefaults('btn'));
+        self::assertTrue(Theme::fromConfig('bootstrap5', [])->frameworkDefaults('btn'));
+    }
+
+    public function testMacroClassesKeepThe1xOutputUnlessFrameworkDefaultsAreDropped(): void
+    {
+        $theme = new Theme('bootstrap5', classes: [
+            'empty' => 'app-empty',
+            'card' => ['value' => 'acme-card', 'framework_defaults' => false],
+            'pagination_link' => ['framework_defaults' => false],
+        ]);
+
+        self::assertSame('nowo-ui-empty nowo-ui-muted text-muted app-empty', $theme->macroClasses('empty', 'nowo-ui-empty nowo-ui-muted text-muted'));
+        self::assertSame('nowo-ui-flash nowo-ui-flash--success alert alert-success', $theme->macroClasses('flash_success', new \Twig\Markup('nowo-ui-flash nowo-ui-flash--success alert alert-success', 'UTF-8')));
+        self::assertSame('nowo-ui-card acme-card', $theme->macroClasses('card', 'nowo-ui-card card'));
+        self::assertSame('nowo-ui-pagination__link is-disabled', $theme->macroClasses('pagination_link', 'page-link nowo-ui-pagination__link is-disabled'));
+    }
+
     public function testCustomFrameworkKeepsOnlySemanticAndHostClasses(): void
     {
         $theme = new Theme('custom', classes: ['page_header' => '  app-header   app-header--sticky ']);
@@ -124,6 +172,15 @@ final class ThemeTest extends TestCase
         self::assertNotNull(Theme::tokenError('primary', ['red']));
         self::assertNotNull(Theme::tokenError('primary', 'red; } body { x'));
         self::assertNotNull(Theme::tokenError('primary', '  '));
+        self::assertNull(Theme::classEntryError('a b'));
+        self::assertNull(Theme::classEntryError(['a', 'b']));
+        self::assertNull(Theme::classEntryError(['value' => ['a'], 'framework_defaults' => false]));
+        self::assertNull(Theme::classEntryError([]));
+        self::assertNotNull(Theme::classEntryError(null));
+        self::assertSame(['a b', null], Theme::normalizeClassEntry([' a', 'b ']));
+        self::assertSame(['a', false], Theme::normalizeClassEntry(['value' => 'a', 'framework_defaults' => false]));
+        self::assertSame(['', true], Theme::normalizeClassEntry(['framework_defaults' => true]));
+        self::assertSame(['a', null], Theme::normalizeClassEntry(['value' => [new \stdClass(), 'a']]));
         self::assertNull(Theme::attributeNameError('data-controller'));
         self::assertNotNull(Theme::attributeNameError('on-click'));
         self::assertNotNull(Theme::attributeNameError('a b'));
@@ -142,6 +199,9 @@ final class ThemeTest extends TestCase
         yield 'unknown partial' => [static fn (): Theme => new Theme(partials: ['layout' => 'x.twig']), 'Unknown UiKit theme partial "layout"'];
         yield 'bad token' => [static fn (): Theme => new Theme(tokens: ['primary' => '</style>']), 'unsafe value'];
         yield 'bad bundle token' => [static fn (): Theme => new Theme(bundles: ['NowoXBundle' => ['tokens_dark' => ['X' => 'red']]]), 'token name "X"'];
+        yield 'bad class entry' => [static fn (): Theme => new Theme(classes: ['btn' => ['value' => 'x', 'nope' => 1]]), 'Invalid UiKit theme classes.btn: unknown key(s) "nope"'];
+        yield 'bad bundle class entry' => [static fn (): Theme => new Theme(bundles: ['NowoXBundle' => ['classes' => ['btn' => ['framework_defaults' => 1]]]]), 'Invalid UiKit theme bundles.NowoXBundle.classes.btn: "framework_defaults" must be a boolean'];
+        yield 'bad bundle framework_defaults' => [static fn (): Theme => new Theme(bundles: ['NowoXBundle' => ['framework_defaults' => 'no']]), 'bundles.NowoXBundle.framework_defaults: a boolean is expected'];
         yield 'bad bundle name' => [static fn (): Theme => new Theme(bundles: ['nowo-x' => []]), 'Invalid UiKit theme bundle key "nowo-x"'];
     }
 

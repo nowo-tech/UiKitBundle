@@ -21,8 +21,7 @@
     {% set title = header.title.key is defined ? header.title.key|trans(header.title.params, header.title.domain) : header.title %}
     {% set intro = header.intro is null ? null : (header.intro.key is defined ? header.intro.key|trans(header.intro.params, header.intro.domain) : header.intro) %}
 {% endif %}
-{% set _extra = _t ? _t.extraClasses('page_header', bundle) : '' %}
-<div class="{{ ui.page_header(framework) }}{{ _extra ? ' ' ~ _extra }}"{{ _t ? _t.renderAttributes('page_header', bundle)|raw }}>
+<div class="{{ _t ? _t.macroClasses('page_header', ui.page_header(framework), bundle) : ui.page_header(framework) }}"{{ _t ? _t.renderAttributes('page_header', bundle)|raw }}>
     <div class="nowo-ui-page-header__text">
         {% if header is defined and header %}
             {{ include('@NowoUiKitBundle/partials/_breadcrumbs.html.twig', {header: header, bundle: bundle}, false) }}
@@ -35,8 +34,7 @@
         {% endif %}
     </div>
     {% if header is defined and header and header.actions is not empty %}
-        {% set _toolbar_extra = _t ? _t.extraClasses('toolbar', bundle) : '' %}
-        <div class="{{ ui.toolbar(framework) }}{{ _toolbar_extra ? ' ' ~ _toolbar_extra }}">
+        <div class="{{ _t ? _t.macroClasses('toolbar', ui.toolbar(framework), bundle) : ui.toolbar(framework) }}">
             {% for action in header.actions %}
                 {{ include('@NowoUiKitBundle/partials/_action.html.twig', {action: action, context: 'toolbar', framework: framework, bundle: bundle}, false) }}
             {% endfor %}

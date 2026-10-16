@@ -22,7 +22,7 @@ final class PageContractConfigurationTest extends TestCase
 
         self::assertSame(['admin' => '@NowoUiKit/layout/admin.html.twig', 'guest' => '@NowoUiKit/layout/guest.html.twig'], $config['layouts']);
         self::assertSame(['breadcrumb_kit' => true, 'collection' => null], $config['breadcrumbs']);
-        self::assertSame(['classes' => [], 'attributes' => [], 'partials' => [], 'tokens' => [], 'tokens_dark' => [], 'bundles' => []], $config['theme']);
+        self::assertSame(['framework_defaults' => true, 'classes' => [], 'attributes' => [], 'partials' => [], 'tokens' => [], 'tokens_dark' => [], 'bundles' => []], $config['theme']);
     }
 
     public function testFullThemeConfig(): void
@@ -54,11 +54,52 @@ final class PageContractConfigurationTest extends TestCase
         self::assertStringContainsString('data-table--dense', $theme->classFor('table', 'NowoHttpLogBundle'));
     }
 
+    public function testFrameworkDefaultsConfig(): void
+    {
+        $config = $this->process([
+            'theme' => [
+                'framework_defaults' => false,
+                'classes' => [
+                    'badge_success' => ['value' => 'acme-badge acme-badge--ok', 'framework_defaults' => false],
+                    'btn_primary' => ['value' => ['acme-btn', 'acme-btn--primary']],
+                    'table' => ['framework_defaults' => true],
+                    'card' => ['acme-card'],
+                ],
+                'bundles' => [
+                    'NowoHttpLogBundle' => ['framework_defaults' => true, 'classes' => ['table' => ['value' => 'dense', 'framework_defaults' => false]]],
+                    'NowoXBundle' => [],
+                ],
+            ],
+        ]);
+
+        self::assertFalse($config['theme']['framework_defaults']);
+        self::assertSame(['value' => 'acme-badge acme-badge--ok', 'framework_defaults' => false], $config['theme']['classes']['badge_success']);
+        self::assertSame('acme-btn acme-btn--primary', $config['theme']['classes']['btn_primary']);
+        self::assertSame(['value' => '', 'framework_defaults' => true], $config['theme']['classes']['table']);
+        self::assertSame('acme-card', $config['theme']['classes']['card']);
+        self::assertTrue($config['theme']['bundles']['NowoHttpLogBundle']['framework_defaults']);
+        self::assertArrayNotHasKey('framework_defaults', $config['theme']['bundles']['NowoXBundle']);
+
+        $theme = Theme::fromConfig('bootstrap5', $config['theme']);
+        self::assertSame('nowo-ui-badge nowo-ui-badge--success acme-badge acme-badge--ok', $theme->classFor('badge_success'));
+        self::assertSame('nowo-ui-btn nowo-ui-btn--primary acme-btn acme-btn--primary', $theme->classFor('btn_primary'));
+        self::assertSame('nowo-ui-table nowo-ui-table--striped table table-hover align-middle', $theme->classFor('table'));
+        self::assertSame('nowo-ui-table nowo-ui-table--striped dense', $theme->classFor('table', 'NowoHttpLogBundle'));
+        self::assertSame('nowo-ui-card card acme-card', $theme->classFor('card', 'NowoHttpLogBundle'));
+        self::assertSame('nowo-ui-card acme-card', $theme->classFor('card', 'NowoXBundle'));
+    }
+
     /**
      * @return iterable<string, array{array<string, mixed>, string}>
      */
     public static function invalidConfigs(): iterable
     {
+        yield 'unknown class entry key' => [['theme' => ['classes' => ['btn' => ['value' => 'x', 'framework' => false]]]], 'Invalid nowo_ui_kit.theme.classes.btn: unknown key(s) "framework"'];
+        yield 'non-boolean framework_defaults entry' => [['theme' => ['classes' => ['btn' => ['value' => 'x', 'framework_defaults' => 'no']]]], '"framework_defaults" must be a boolean'];
+        yield 'non-string class list' => [['theme' => ['classes' => ['btn' => ['a', ['b']]]]], 'class lists are strings or lists of strings'];
+        yield 'non-string classes' => [['theme' => ['classes' => ['btn' => 3]]], 'class lists are plain strings'];
+        yield 'unsafe bundle class entry' => [['theme' => ['bundles' => ['NowoXBundle' => ['classes' => ['btn' => ['value' => '<b>']]]]]], 'Invalid nowo_ui_kit.theme.bundles.<bundle>.classes.btn'];
+        yield 'non-boolean theme framework_defaults' => [['theme' => ['framework_defaults' => 'no']], 'framework_defaults'];
         yield 'unknown class slot' => [['theme' => ['classes' => ['btn_moss' => 'x']]], 'Unknown nowo_ui_kit.theme.classes slot "btn_moss"'];
         yield 'unsafe classes' => [['theme' => ['classes' => ['btn' => 'x" onclick="y']]], 'class lists are plain strings'];
         yield 'unknown attribute slot' => [['theme' => ['attributes' => ['nope' => ['data-x' => '1']]]], 'Unknown nowo_ui_kit.theme.attributes slot "nope"'];

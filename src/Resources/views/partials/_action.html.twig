@@ -26,11 +26,11 @@
     {% set href = action.href ?? (action.route ? path(action.route, action.params) : null) %}
     {% set variant = action.resolvedVariant() %}
     {% if context == 'row' %}
-        {% set class = (ui.action(action.kind, framework, action.variant) ~ ' ' ~ nowo_ui_theme.extraClasses('action', bundle))|trim %}
+        {% set class = nowo_ui_theme.macroClasses('action', ui.action(action.kind, framework, action.variant), bundle) %}
     {% elseif variant in ['primary', 'secondary', 'danger'] %}
         {% set class = nowo_ui_class('btn_' ~ variant, bundle, framework) ~ ' nowo-ui-action--' ~ action.kind %}
     {% else %}
-        {% set class = (ui.btn(variant, null, framework) ~ ' ' ~ nowo_ui_theme.extraClasses('btn', bundle))|trim ~ ' nowo-ui-action--' ~ action.kind %}
+        {% set class = nowo_ui_theme.macroClasses('btn', ui.btn(variant, null, framework), bundle) ~ ' nowo-ui-action--' ~ action.kind %}
     {% endif %}
     {% set inner %}
         {%- if context == 'row' -%}

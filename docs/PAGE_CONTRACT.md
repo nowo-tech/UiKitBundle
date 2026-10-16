@@ -74,7 +74,9 @@ nowo_ui_kit:
     breadcrumb_kit: true              # render PageHeader trails with BreadcrumbKit's breadcrumb_render() when installed
     collection: null                  # BreadcrumbKit collection (PageHeader::breadcrumbCollection overrides)
   theme:
+    framework_defaults: true                                           # false = no UiKit framework classes on any slot
     classes:    { btn_primary: 'btn-moss', table: 'data-table' }        # slot => classes (string or list)
+    #           badge_success: { value: 'acme-badge', framework_defaults: false }   # per slot: drop btn/badge/card… defaults
     attributes: { toasts: { data-controller: toast-stack } }           # slot => attributes (no on*)
     partials:   { pagination: 'kit/_pagination.html.twig' }            # partial name => template
     tokens:      { primary: 'var(--color-moss)', radius: '0.75rem' }   # --nowo-ui-<name> on :root
@@ -83,7 +85,8 @@ nowo_ui_kit:
       NowoHttpLogBundle: { classes: { table: 'data-table data-table--dense' } }
 ```
 
-Validation (container compile time): unknown slots and partial names, `on*` attributes, attribute names outside
+Validation (container compile time): unknown slots and partial names, class entries with keys other than `value` /
+`framework_defaults` or a non-boolean `framework_defaults`, `on*` attributes, attribute names outside
 `[a-zA-Z_:][a-zA-Z0-9_:.-]*`, class lists with `"`, `<` or `>`, token names outside `[a-z0-9-]` and token values with
 `{ } ; < >` are rejected with an explicit message. Full reference: [`THEME_SLOTS.md`](THEME_SLOTS.md).
 
@@ -91,7 +94,7 @@ Validation (container compile time): unknown slots and partial names, `on*` attr
 
 | Function / filter / global | Result |
 | --- | --- |
-| `nowo_ui_class(slot, bundle = null, framework = null)` | semantic `nowo-ui-*` + framework defaults (`css_framework`, or `framework`) + host classes (or the bundle's exception) |
+| `nowo_ui_class(slot, bundle = null, framework = null)` | semantic `nowo-ui-*` + framework defaults (`css_framework`, or `framework`; unless `framework_defaults` drops them) + host classes (or the bundle's exception) |
 | `nowo_ui_attrs(slot, bundle = null, extra = {})` | escaped attribute string with leading spaces (`true` = bare attribute, `false`/`null` = omitted) |
 | `nowo_ui_partial(name, bundle = null)` | template name of a UiKit partial (bundle > host > UiKit default) |
 | `nowo_ui_theme_tokens(nonce = null)` | `<style data-nowo-ui-theme-tokens>` with the tokens ('' without tokens; nonce defaults to the `csp_nonce` request attribute) |
@@ -99,7 +102,7 @@ Validation (container compile time): unknown slots and partial names, `on*` attr
 | `nowo_ui_breadcrumb_kit(collection = null)` / `nowo_ui_breadcrumb_kit_available()` | BreadcrumbKit bridge used by the page header |
 | `value\|nowo_ui_trans(params = {})` | translates a `View\Label` (or `{key, domain, params}`); plain strings pass through (escaped by Twig) |
 | global `nowo_ui_layout` | `{admin, guest}` — the configured layouts |
-| global `nowo_ui_theme` | the `Theme\Theme` object (used by the 1.x partials: `extraClasses()`, `renderAttributes()`, `partial()`, `hasTokens()`) |
+| global `nowo_ui_theme` | the `Theme\Theme` object (used by the 1.x partials: `macroClasses()`, `extraClasses()`, `frameworkDefaults()`, `renderAttributes()`, `partial()`, `hasTokens()`) |
 | global `nowo_ui_breadcrumbs` | `{breadcrumb_kit, collection}` |
 
 ## Layouts

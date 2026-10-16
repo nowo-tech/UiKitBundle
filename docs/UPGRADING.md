@@ -69,6 +69,15 @@ macros keep their 1.x inputs and output.
 - UI bundles get a shared contract test, `Nowo\UiKitBundle\Test\PageContractTestCase` (add `phpunit/phpunit` to
   the bundle's `require-dev`); migration recipe in [`MIGRATING_BUNDLES.md`](MIGRATING_BUNDLES.md), slot vocabulary in
   [`THEME_SLOTS.md`](THEME_SLOTS.md).
+- **Badge classes (Bootstrap 5 / Tabler).** `ui.badge()` and the `badge*` slots now print `text-bg-<variant>`
+  instead of `bg-<variant>` (+ `text-dark`): contrast fix, text and background come from the same utility. Hosts that
+  recoloured badges through `--bs-<variant>-rgb` and a plain `color` rule now see Bootstrap's `!important` text colour;
+  move those badges to `theme.classes.badge_*: {value: '…', framework_defaults: false}` (no framework classes) or
+  style `.text-bg-*`. Bootstrap < 5.2 has no `text-bg-*`: the semantic palette paints the badge.
+- **`theme.framework_defaults`** (new, default `true`) and the class entry map `{value, framework_defaults}` (also
+  under `theme.bundles.<B>`) drop UiKit's framework defaults globally, per bundle or per slot
+  ([`THEME_SLOTS.md`](THEME_SLOTS.md#dropping-the-framework-defaults)). The processed config of a map entry is
+  `{value: string, framework_defaults: bool}`; string / list entries stay strings.
 - Hosts that override `_pagination`, `_toasts`, `_flashes`, `_page_header`, `_row_actions`, `_confirm`, `_empty`,
   `_shell` or `_burger` keep working; to pick up view-model inputs, re-sync from the bundle (or replace the fork with
   `theme.classes` / `theme.attributes` / `theme.partials`).

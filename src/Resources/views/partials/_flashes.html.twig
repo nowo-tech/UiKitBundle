@@ -20,14 +20,14 @@
 {% if _wrap_extra or _wrap_attrs %}<div class="nowo-ui-flashes {{ _wrap_extra }}"{{ _wrap_attrs|raw }}>{% endif %}
 {% for label, messages in _messages %}
     {% set flashType = label == 'error' or label == 'danger' ? 'error' : (label == 'notice' ? 'info' : label) %}
-    {% set _extra = _t and flashType in ['success', 'error', 'warning', 'info'] ? _t.extraClasses('flash_' ~ flashType, bundle) : '' %}
+    {% set _class = _t and flashType in ['success', 'error', 'warning', 'info'] ? _t.macroClasses('flash_' ~ flashType, ui.flash(flashType, framework), bundle) : ui.flash(flashType, framework) %}
     {% for message in messages %}
         {% if message is iterable and message.title is defined %}
             {% set _text = (trans_domain ? message.title|trans({}, trans_domain) : message.title) ~ (message.message is defined and message.message ? ' — ' ~ (trans_domain ? message.message|trans({}, trans_domain) : message.message) : '') %}
         {% else %}
             {% set _text = trans_domain ? message|trans({}, trans_domain) : message %}
         {% endif %}
-        <div class="{{ ui.flash(flashType, framework) }}{{ _extra ? ' ' ~ _extra }}" role="alert">{{ _text }}</div>
+        <div class="{{ _class }}" role="alert">{{ _text }}</div>
     {% endfor %}
 {% endfor %}
 {% if _wrap_extra or _wrap_attrs %}</div>{% endif %}

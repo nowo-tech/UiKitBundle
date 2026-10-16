@@ -216,6 +216,42 @@ final class ViewPartialsTest extends TestCase
         self::assertStringContainsString(' data-s="y"', $bareShell);
     }
 
+    public function testLegacyPartialsDropFrameworkDefaultsWhenTheThemeSaysSo(): void
+    {
+        $theme = ['framework_defaults' => false, 'classes' => ['flash_success' => 'app-flash']];
+        $flashes = $this->render("{% include '@NowoUiKitBundle/partials/_flashes.html.twig' with {flashes: {success: ['Saved'], notice: ['n'], custom: ['c']}} only %}", [], $theme);
+        self::assertStringContainsString('<div class="nowo-ui-flash nowo-ui-flash--success app-flash" role="alert">Saved</div>', $flashes);
+        self::assertStringContainsString('<div class="nowo-ui-flash nowo-ui-flash--info" role="alert">n</div>', $flashes);
+        // flash types without a slot keep the macro classes
+        self::assertStringContainsString('alert alert-custom', $flashes);
+
+        $toasts = $this->render("{% include '@NowoUiKitBundle/partials/_toasts.html.twig' with {flashes: {success: ['Saved']}} only %}", [], $theme);
+        self::assertStringContainsString('class="nowo-ui-toast nowo-ui-flash nowo-ui-flash--success app-flash"', $toasts);
+
+        $empty = $this->render("{% include '@NowoUiKitBundle/partials/_empty.html.twig' only %}", [], $theme);
+        self::assertStringContainsString('<p class="nowo-ui-empty nowo-ui-muted">', $empty);
+
+        $header = $this->render("{% include '@NowoUiKitBundle/partials/_page_header.html.twig' with {header: header} only %}", ['header' => new PageHeader('T', actions: [Action::create('/n'), new Action('custom', 'Go', '/go', variant: 'outline')])], $theme);
+        self::assertStringContainsString('<div class="nowo-ui-page-header">', $header);
+        self::assertStringContainsString('<div class="nowo-ui-toolbar">', $header);
+        self::assertStringContainsString('class="nowo-ui-btn nowo-ui-btn--primary nowo-ui-action--create"', $header);
+        self::assertStringNotContainsString('btn-link', $header);
+        self::assertStringNotContainsString('btn-outline', $header);
+
+        $rows = $this->render("{% include '@NowoUiKitBundle/partials/_row_actions.html.twig' with {actions: actions} only %}", ['actions' => [Action::edit('/e'), ['kind' => 'view', 'href' => '/v']]], $theme);
+        self::assertStringContainsString('<div class="nowo-ui-row-actions nowo-ui-row-actions--icon">', $rows);
+        self::assertStringNotContainsString('btn-sm', $rows);
+
+        $pager = $this->render("{% include '@NowoUiKitBundle/partials/_pagination.html.twig' with {pagination: pagination} only %}", ['pagination' => new Pagination(1, 10, 35)], $theme);
+        self::assertStringContainsString('<div class="nowo-ui-pagination">', $pager);
+        self::assertStringContainsString('<span class="nowo-ui-pagination__link is-disabled"', $pager);
+        self::assertStringContainsString('<span class="nowo-ui-pagination__link is-active">1</span>', $pager);
+        self::assertStringContainsString('<a class="nowo-ui-pagination__link" href=', $pager);
+
+        $burger = $this->render("{% include '@NowoUiKitBundle/partials/_burger.html.twig' with {root_class: 'app-burger'} only %}", [], $theme);
+        self::assertStringContainsString('class="nowo-ui-burger nowo-ui-btn nowo-ui-btn--secondary nowo-ui-btn--sm app-burger"', $burger);
+    }
+
     /**
      * @param array<string, mixed> $vars
      * @param array<string, mixed> $theme

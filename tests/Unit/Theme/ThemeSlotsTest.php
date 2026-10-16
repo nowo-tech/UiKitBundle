@@ -91,6 +91,20 @@ final class ThemeSlotsTest extends TestCase
         self::assertSame('', ThemeSlots::defaults('table_head', 'bootstrap4'));
     }
 
+    /**
+     * Contrast: a Bootstrap badge variant sets text and background together (`text-bg-*`, 5.2+), never a bare
+     * `bg-*` whose text colour would come from the semantic nowo-ui-badge--* palette (dark text on a solid fill).
+     */
+    public function testBootstrapBadgeVariantsPairTextAndBackground(): void
+    {
+        foreach (['badge', 'badge_success', 'badge_warning', 'badge_danger', 'badge_info', 'badge_neutral'] as $slot) {
+            $defaults = ThemeSlots::defaults($slot, 'bootstrap5');
+            self::assertMatchesRegularExpression('/(^| )text-bg-(success|warning|danger|info|light)( |$)/', $defaults, $slot);
+            self::assertDoesNotMatchRegularExpression('/(^| )bg-/', $defaults, $slot);
+        }
+        self::assertSame('badge text-bg-success ms-2', ThemeSlots::defaults('badge_success', 'tabler'));
+    }
+
     public function testUnknownSlotThrows(): void
     {
         $this->expectException(\InvalidArgumentException::class);

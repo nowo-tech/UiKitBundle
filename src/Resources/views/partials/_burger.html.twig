@@ -23,10 +23,10 @@
 {% set expanded = expanded is defined and expanded is not null ? expanded : true %}
 {% set label = label|default('nav.toggle_aside'|trans({}, 'NowoUiKitBundle')) %}
 {% set _names = {expand: 'data-label-expand', rail: 'data-label-rail', hide: 'data-label-hide'}|merge(label_attr_names|default({})) %}
-{% set _extra = ((_t ? _t.extraClasses('burger', bundle) : '') ~ ' ' ~ root_class|default(''))|trim %}
+{% set _extra = root_class|default('')|trim %}
 <button
     type="button"
-    class="{{ ui.burger(framework) }}{{ _extra ? ' ' ~ _extra }}"
+    class="{{ _t ? _t.macroClasses('burger', ui.burger(framework), bundle) : ui.burger(framework) }}{{ _extra ? ' ' ~ _extra }}"
     data-nowo-ui-burger
     aria-controls="{{ controls }}"
     aria-expanded="{{ expanded ? 'true' : 'false' }}"

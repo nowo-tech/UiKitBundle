@@ -98,39 +98,40 @@ final class ThemeSlots
             'foundation' => 'button-group',
         ]],
         'action' => ['nowo-ui-action', []],
-        // Badges
+        // Badges (Bootstrap: `text-bg-*` (5.2+) sets text and background together, so the colour pair never mixes
+        // with the semantic nowo-ui-badge--* palette; on 5.0 / 5.1 the semantic palette paints the badge)
         'badge' => ['nowo-ui-badge', [
-            'bootstrap' => 'badge bg-light text-dark border ms-2',
+            'bootstrap' => 'badge text-bg-light border ms-2',
             'bootstrap4' => 'badge badge-light border ml-2',
             'tailwind' => 'ml-2 inline-flex border px-2 py-0.5 text-xs',
             'foundation' => 'badge secondary',
         ]],
         'badge_success' => ['nowo-ui-badge nowo-ui-badge--success', [
-            'bootstrap' => 'badge bg-success ms-2',
+            'bootstrap' => 'badge text-bg-success ms-2',
             'bootstrap4' => 'badge badge-success ml-2',
             'tailwind' => 'ml-2 inline-flex border px-2 py-0.5 text-xs',
             'foundation' => 'badge success',
         ]],
         'badge_warning' => ['nowo-ui-badge nowo-ui-badge--warning', [
-            'bootstrap' => 'badge bg-warning text-dark ms-2',
+            'bootstrap' => 'badge text-bg-warning ms-2',
             'bootstrap4' => 'badge badge-warning ml-2',
             'tailwind' => 'ml-2 inline-flex border px-2 py-0.5 text-xs',
             'foundation' => 'badge warning',
         ]],
         'badge_danger' => ['nowo-ui-badge nowo-ui-badge--danger', [
-            'bootstrap' => 'badge bg-danger ms-2',
+            'bootstrap' => 'badge text-bg-danger ms-2',
             'bootstrap4' => 'badge badge-danger ml-2',
             'tailwind' => 'ml-2 inline-flex border px-2 py-0.5 text-xs',
             'foundation' => 'badge alert',
         ]],
         'badge_info' => ['nowo-ui-badge nowo-ui-badge--info', [
-            'bootstrap' => 'badge bg-info text-dark ms-2',
+            'bootstrap' => 'badge text-bg-info ms-2',
             'bootstrap4' => 'badge badge-info ml-2',
             'tailwind' => 'ml-2 inline-flex border px-2 py-0.5 text-xs',
             'foundation' => 'badge secondary',
         ]],
         'badge_neutral' => ['nowo-ui-badge nowo-ui-badge--neutral', [
-            'bootstrap' => 'badge bg-light text-dark border ms-2',
+            'bootstrap' => 'badge text-bg-light border ms-2',
             'bootstrap4' => 'badge badge-light border ml-2',
             'tailwind' => 'ml-2 inline-flex border px-2 py-0.5 text-xs',
             'foundation' => 'badge secondary',

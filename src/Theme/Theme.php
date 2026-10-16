@@ -10,7 +10,9 @@ namespace Nowo\UiKitBundle\Theme;
  *
  * Resolution of a slot class: semantic `nowo-ui-*` class + UiKit framework defaults (per `css_framework`) +
  * host classes; a bundle exception (`bundles.<Bundle>.classes.<slot>`) replaces the host classes of that slot.
- * Attributes: host attributes, bundle attributes merged over them. Partials: bundle > host > UiKit default.
+ * Framework defaults can be dropped globally (`framework_defaults: false`), per bundle, or per slot (a class entry
+ * `{value: '…', framework_defaults: false}`); the most specific setting wins (bundle slot > bundle > host slot >
+ * host). Attributes: host attributes, bundle attributes merged over them. Partials: bundle > host > UiKit default.
  * Tokens: host tokens on `:root` (dark ones on `[data-theme="dark"]`); bundle tokens scoped to
  * `[data-nowo-ui-bundle="<Bundle>"]`.
  */
@@ -19,29 +21,65 @@ final readonly class Theme
     /** Attribute value: string/number, true = bare attribute, false/null = omitted. */
     private const ATTRIBUTE_NAME = '/^[a-zA-Z_:][a-zA-Z0-9_:.-]*$/';
 
+    /** Keys of the map form of a class entry. */
+    private const CLASS_ENTRY_KEYS = ['value', 'framework_defaults'];
+
+    /** @var array<string, array{0: string, 1: bool|null}> slot => [host classes, framework defaults (null = inherit)] */
+    private array $classes;
+
+    /** @var array<string, array{classes: array<string, array{0: string, 1: bool|null}>, framework_defaults: bool|null, attributes: array<string, array<string, string|int|float|bool|null>>, partials: array<string, string>, tokens: array<string, string>, tokens_dark: array<string, string>}> */
+    private array $bundles;
+
     /**
-     * @param array<string, string>                                                                                                                                                                                                               $classes    slot => host classes
-     * @param array<string, array<string, string|int|float|bool|null>>                                                                                                                                                                            $attributes slot => attributes
-     * @param array<string, string>                                                                                                                                                                                                               $partials   partial name => template
-     * @param array<string, string>                                                                                                                                                                                                               $tokens     token name (without --nowo-ui-) => value
-     * @param array<string, string>                                                                                                                                                                                                               $tokensDark dark-mode tokens
-     * @param array<string, array{classes?: array<string, string>, attributes?: array<string, array<string, string|int|float|bool|null>>, partials?: array<string, string>, tokens?: array<string, string>, tokens_dark?: array<string, string>}> $bundles
+     * A class entry is a class string, a list of classes, or `{value: string|list, framework_defaults: bool}`.
+     *
+     * @param array<string, mixed>                                     $classes           slot => class entry
+     * @param array<string, array<string, string|int|float|bool|null>> $attributes        slot => attributes
+     * @param array<string, string>                                    $partials          partial name => template
+     * @param array<string, string>                                    $tokens            token name (without --nowo-ui-) => value
+     * @param array<string, string>                                    $tokensDark        dark-mode tokens
+     * @param array<string, array<string, mixed>>                      $bundles           bundle => {classes, framework_defaults, attributes, partials, tokens, tokens_dark}
+     * @param bool                                                     $frameworkDefaults false = semantic + host classes only, for every slot
      */
     public function __construct(
         private string $framework = 'bootstrap5',
-        private array $classes = [],
+        array $classes = [],
         private array $attributes = [],
         private array $partials = [],
         private array $tokens = [],
         private array $tokensDark = [],
-        private array $bundles = [],
+        array $bundles = [],
+        private bool $frameworkDefaults = true,
     ) {
-        foreach ([$classes, ...array_map(static fn (array $b): array => $b['classes'] ?? [], $bundles)] as $map) {
-            foreach (array_keys($map) as $slot) {
-                ThemeSlots::semantic($slot);
+        $this->classes = $this->normalizeClasses($classes, 'classes');
+        $normalized = [];
+        foreach ($bundles as $bundle => $data) {
+            $this->assertBundleName((string) $bundle);
+            $defaults = $data['framework_defaults'] ?? null;
+            if (null !== $defaults && !\is_bool($defaults)) {
+                throw new \InvalidArgumentException(\sprintf('Invalid UiKit theme bundles.%s.framework_defaults: a boolean is expected.', $bundle));
             }
+            /** @var array<string, mixed> $bundleClasses */
+            $bundleClasses = $data['classes'] ?? [];
+            /** @var array<string, array<string, string|int|float|bool|null>> $bundleAttributes */
+            $bundleAttributes = $data['attributes'] ?? [];
+            /** @var array<string, string> $bundlePartials */
+            $bundlePartials = $data['partials'] ?? [];
+            /** @var array<string, string> $bundleTokens */
+            $bundleTokens = $data['tokens'] ?? [];
+            /** @var array<string, string> $bundleTokensDark */
+            $bundleTokensDark = $data['tokens_dark'] ?? [];
+            $normalized[(string) $bundle] = [
+                'classes' => $this->normalizeClasses($bundleClasses, 'bundles.'.$bundle.'.classes'),
+                'framework_defaults' => $defaults,
+                'attributes' => $bundleAttributes,
+                'partials' => $bundlePartials,
+                'tokens' => $bundleTokens,
+                'tokens_dark' => $bundleTokensDark,
+            ];
         }
-        foreach ([$attributes, ...array_map(static fn (array $b): array => $b['attributes'] ?? [], $bundles)] as $map) {
+        $this->bundles = $normalized;
+        foreach ([$attributes, ...array_column($normalized, 'attributes')] as $map) {
             foreach ($map as $slot => $attrs) {
                 ThemeSlots::semantic($slot);
                 foreach (array_keys($attrs) as $name) {
@@ -49,18 +87,15 @@ final readonly class Theme
                 }
             }
         }
-        foreach ([$partials, ...array_map(static fn (array $b): array => $b['partials'] ?? [], $bundles)] as $map) {
+        foreach ([$partials, ...array_column($normalized, 'partials')] as $map) {
             foreach (array_keys($map) as $name) {
                 $this->assertPartialName($name);
             }
         }
-        foreach ([$tokens, $tokensDark, ...array_map(static fn (array $b): array => array_merge($b['tokens'] ?? [], $b['tokens_dark'] ?? []), $bundles)] as $map) {
+        foreach ([$tokens, $tokensDark, ...array_map(static fn (array $b): array => array_merge($b['tokens'], $b['tokens_dark']), $normalized)] as $map) {
             foreach ($map as $name => $value) {
                 $this->assertToken($name, $value);
             }
-        }
-        foreach (array_keys($bundles) as $bundle) {
-            $this->assertBundleName($bundle);
         }
     }
 
@@ -73,7 +108,7 @@ final readonly class Theme
      */
     public static function fromConfig(string $framework, array $theme): self
     {
-        /** @var array<string, string> $classes */
+        /** @var array<string, mixed> $classes */
         $classes = $theme['classes'] ?? [];
         /** @var array<string, array<string, string|int|float|bool|null>> $attributes */
         $attributes = $theme['attributes'] ?? [];
@@ -83,10 +118,10 @@ final readonly class Theme
         $tokens = $theme['tokens'] ?? [];
         /** @var array<string, string> $tokensDark */
         $tokensDark = $theme['tokens_dark'] ?? [];
-        /** @var array<string, array{classes?: array<string, string>, attributes?: array<string, array<string, string|int|float|bool|null>>, partials?: array<string, string>, tokens?: array<string, string>, tokens_dark?: array<string, string>}> $bundles */
+        /** @var array<string, array<string, mixed>> $bundles */
         $bundles = $theme['bundles'] ?? [];
 
-        return new self($framework, $classes, $attributes, $partials, $tokens, $tokensDark, $bundles);
+        return new self($framework, $classes, $attributes, $partials, $tokens, $tokensDark, $bundles, false !== ($theme['framework_defaults'] ?? true));
     }
 
     public function framework(): string
@@ -95,15 +130,17 @@ final readonly class Theme
     }
 
     /**
-     * Full class list of a slot: semantic + framework defaults + host (or bundle) classes, de-duplicated.
+     * Full class list of a slot: semantic + framework defaults (unless dropped for the slot) + host (or bundle)
+     * classes, de-duplicated.
      *
      * @param string|null $framework css_framework override (partials that accept `framework`)
      */
     public function classFor(string $slot, ?string $bundle = null, ?string $framework = null): string
     {
         $framework = null !== $framework && '' !== trim($framework) ? trim($framework) : $this->framework;
+        $defaults = $this->frameworkDefaults($slot, $bundle) ? ThemeSlots::defaults($slot, $framework) : '';
 
-        return $this->merge(ThemeSlots::semantic($slot), ThemeSlots::defaults($slot, $framework), $this->extraClasses($slot, $bundle));
+        return $this->merge(ThemeSlots::semantic($slot), $defaults, $this->extraClasses($slot, $bundle));
     }
 
     /**
@@ -115,7 +152,35 @@ final readonly class Theme
         ThemeSlots::semantic($slot);
         $bundleClasses = null !== $bundle ? ($this->bundles[$bundle]['classes'] ?? []) : [];
 
-        return $this->merge($bundleClasses[$slot] ?? $this->classes[$slot] ?? '');
+        return $this->merge(($bundleClasses[$slot] ?? $this->classes[$slot] ?? [''])[0]);
+    }
+
+    /**
+     * Whether the UiKit framework defaults apply to a slot: bundle slot entry > bundle `framework_defaults` >
+     * host slot entry > host `framework_defaults`.
+     */
+    public function frameworkDefaults(string $slot, ?string $bundle = null): bool
+    {
+        ThemeSlots::semantic($slot);
+        $data = null !== $bundle ? ($this->bundles[$bundle] ?? null) : null;
+
+        return $data['classes'][$slot][1] ?? $data['framework_defaults'] ?? $this->classes[$slot][1] ?? $this->frameworkDefaults;
+    }
+
+    /**
+     * Classes of a slot printed by a 1.x partial from a `ui.*` macro: the macro classes + host / bundle classes
+     * (exactly as 1.x when the framework defaults apply); when they are dropped for the slot, only the `nowo-ui-*`
+     * and `is-*` classes of the macro are kept, plus the slot's semantic and host / bundle classes.
+     */
+    public function macroClasses(string $slot, string|\Stringable $macroClasses, ?string $bundle = null): string
+    {
+        $extra = $this->extraClasses($slot, $bundle);
+        if ($this->frameworkDefaults($slot, $bundle)) {
+            return $macroClasses.('' !== $extra ? ' '.$extra : '');
+        }
+        $kept = array_filter(preg_split('/\s+/', trim((string) $macroClasses)) ?: [], static fn (string $c): bool => str_starts_with($c, 'nowo-ui-') || str_starts_with($c, 'is-'));
+
+        return $this->merge(ThemeSlots::semantic($slot), implode(' ', $kept), $extra);
     }
 
     /**
@@ -172,7 +237,7 @@ final readonly class Theme
             return true;
         }
         foreach ($this->bundles as $bundle) {
-            if ([] !== ($bundle['tokens'] ?? []) || [] !== ($bundle['tokens_dark'] ?? [])) {
+            if ([] !== $bundle['tokens'] || [] !== $bundle['tokens_dark']) {
                 return true;
             }
         }
@@ -191,8 +256,8 @@ final readonly class Theme
         $blocks[] = $this->block(':root[data-theme="dark"]', $this->tokensDark);
         foreach ($this->bundles as $bundle => $data) {
             $scope = '[data-nowo-ui-bundle="'.$bundle.'"]';
-            $blocks[] = $this->block($scope, $data['tokens'] ?? []);
-            $blocks[] = $this->block('[data-theme="dark"] '.$scope, $data['tokens_dark'] ?? []);
+            $blocks[] = $this->block($scope, $data['tokens']);
+            $blocks[] = $this->block('[data-theme="dark"] '.$scope, $data['tokens_dark']);
         }
 
         return implode("\n", array_filter($blocks, static fn (string $b): bool => '' !== $b));
@@ -226,6 +291,56 @@ final readonly class Theme
     }
 
     /**
+     * Error message for an invalid class entry, null when valid. An entry is a class string, a list of classes, or
+     * `{value: string|list, framework_defaults: bool}`; class lists may not contain `"`, `<` or `>`.
+     */
+    public static function classEntryError(mixed $entry): ?string
+    {
+        if (\is_array($entry) && !array_is_list($entry)) {
+            $unknown = array_diff(array_map(strval(...), array_keys($entry)), self::CLASS_ENTRY_KEYS);
+            if ([] !== $unknown) {
+                return \sprintf('unknown key(s) "%s" (use "value" and "framework_defaults").', implode('", "', $unknown));
+            }
+            if (isset($entry['framework_defaults']) && !\is_bool($entry['framework_defaults'])) {
+                return '"framework_defaults" must be a boolean.';
+            }
+            $entry = $entry['value'] ?? '';
+        }
+        if (\is_array($entry)) {
+            foreach ($entry as $class) {
+                if (!\is_string($class)) {
+                    return 'class lists are strings or lists of strings.';
+                }
+            }
+            $entry = implode(' ', $entry);
+        }
+        if (!\is_string($entry) || 1 === preg_match('/["<>]/', $entry)) {
+            return 'class lists are plain strings without \'"\', "<" or ">".';
+        }
+
+        return null;
+    }
+
+    /**
+     * Normalises a valid class entry to [classes, framework defaults (null = inherit)].
+     *
+     * @return array{0: string, 1: bool|null}
+     */
+    public static function normalizeClassEntry(mixed $entry): array
+    {
+        $defaults = null;
+        if (\is_array($entry) && !array_is_list($entry)) {
+            $defaults = isset($entry['framework_defaults']) ? (bool) $entry['framework_defaults'] : null;
+            $entry = $entry['value'] ?? '';
+        }
+        if (\is_array($entry)) {
+            $entry = implode(' ', array_map(static fn (mixed $c): string => \is_scalar($c) ? (string) $c : '', $entry));
+        }
+
+        return [trim(\is_scalar($entry) ? (string) $entry : ''), $defaults];
+    }
+
+    /**
      * Error message for an invalid attribute name, null when valid (`on*` handlers are refused: CSP).
      */
     public static function attributeNameError(string $name): ?string
@@ -255,6 +370,26 @@ final readonly class Theme
         $lines[] = '}';
 
         return implode("\n", $lines);
+    }
+
+    /**
+     * @param array<string, mixed> $classes
+     *
+     * @return array<string, array{0: string, 1: bool|null}>
+     */
+    private function normalizeClasses(array $classes, string $path): array
+    {
+        $normalized = [];
+        foreach ($classes as $slot => $entry) {
+            ThemeSlots::semantic((string) $slot);
+            $error = self::classEntryError($entry);
+            if (null !== $error) {
+                throw new \InvalidArgumentException(\sprintf('Invalid UiKit theme %s.%s: %s', $path, $slot, $error));
+            }
+            $normalized[(string) $slot] = self::normalizeClassEntry($entry);
+        }
+
+        return $normalized;
     }
 
     private function merge(string ...$parts): string

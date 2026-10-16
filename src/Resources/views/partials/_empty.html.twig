@@ -11,11 +11,11 @@
 {% set framework = framework|default(null) %}
 {% set bundle = bundle|default(null) %}
 {% set _t = nowo_ui_theme|default(null) %}
-{% set _extra = _t ? _t.extraClasses('empty', bundle) : '' %}
+{% set _class = _t ? _t.macroClasses('empty', ui.empty(framework), bundle) : ui.empty(framework) %}
 {% if empty is defined and empty %}
     {% set _title = empty.title is null ? null : (empty.title.key is defined ? empty.title.key|trans(empty.title.params, empty.title.domain) : empty.title) %}
     {% set _message = empty.message is null ? 'empty.default'|trans({}, 'NowoUiKitBundle') : (empty.message.key is defined ? empty.message.key|trans(empty.message.params, empty.message.domain) : empty.message) %}
-    <div class="{{ ui.empty(framework) }}{{ _extra ? ' ' ~ _extra }}"{{ _t ? _t.renderAttributes('empty', bundle)|raw }}>
+    <div class="{{ _class }}"{{ _t ? _t.renderAttributes('empty', bundle)|raw }}>
         {% if _title %}<p class="nowo-ui-empty__title">{{ _title }}</p>{% endif %}
         <p class="nowo-ui-empty__message">{{ _message }}</p>
         {% if empty.action %}
@@ -23,5 +23,5 @@
         {% endif %}
     </div>
 {% else %}
-<p class="{{ ui.empty(framework) }}{{ _extra ? ' ' ~ _extra }}">{{ message|default('empty.default'|trans({}, 'NowoUiKitBundle')) }}</p>
+<p class="{{ _class }}">{{ message|default('empty.default'|trans({}, 'NowoUiKitBundle')) }}</p>
 {% endif %}
