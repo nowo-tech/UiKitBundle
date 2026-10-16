@@ -213,7 +213,8 @@ abstract class PageContractTestCase extends TestCase
     protected function renderPage(PageFixture $fixture, string $framework = 'none'): RenderedPage
     {
         [$twig, $translator] = $this->buildEnvironment($framework);
-        self::resetFormViews($fixture->context, new \SplObjectStorage());
+        $seen = [];
+        self::resetFormViews($fixture->context, $seen);
         $html = $twig->render($fixture->template, $fixture->context);
         $missing = [];
         foreach ($translator->getCollectedMessages() as $message) {
@@ -363,9 +364,9 @@ abstract class PageContractTestCase extends TestCase
     /**
      * Fixtures are rendered several times (one per test and css_framework): mark their FormViews as not rendered.
      *
-     * @param \SplObjectStorage<object, null> $seen
+     * @param array<int, true> $seen visited objects (spl_object_id)
      */
-    private static function resetFormViews(mixed $value, \SplObjectStorage $seen): void
+    private static function resetFormViews(mixed $value, array &$seen): void
     {
         if (\is_array($value)) {
             foreach ($value as $item) {
@@ -374,10 +375,10 @@ abstract class PageContractTestCase extends TestCase
 
             return;
         }
-        if (!\is_object($value) || $seen->contains($value)) {
+        if (!\is_object($value) || isset($seen[spl_object_id($value)])) {
             return;
         }
-        $seen->attach($value);
+        $seen[spl_object_id($value)] = true;
         if ($value instanceof FormView) {
             foreach (['rendered', 'methodRendered'] as $property) {
                 (new \ReflectionProperty(FormView::class, $property))->setValue($value, false);
