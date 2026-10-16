@@ -88,6 +88,7 @@ final class ViewModelsTest extends TestCase
         yield 'link attr' => [static fn (): object => new Link('x', '/x', ['onmouseover' => 'y']), 'Invalid or unsafe attribute'];
         yield 'confirm variant' => [static fn (): object => new Confirm('x', variant: 'moss'), 'Invalid Confirm variant'];
         yield 'confirm id' => [static fn (): object => new Confirm('x', id: '1 2'), 'Invalid Confirm id'];
+        yield 'confirm empty expected value' => [static fn (): object => new Confirm('x', expectedValue: ' '), 'expectedValue must not be empty'];
         yield 'column key' => [static fn (): object => new Column(''), 'non-empty key'];
         yield 'column align' => [static fn (): object => new Column('a', align: 'left'), 'Invalid Column align'];
         yield 'kpi variant' => [static fn (): object => new KpiTile('a', 1, variant: 'moss'), 'Invalid KpiTile variant'];
@@ -114,6 +115,8 @@ final class ViewModelsTest extends TestCase
 
     public function testSmallValueObjects(): void
     {
+        self::assertNull(Confirm::delete()->expectedPattern());
+        self::assertSame('a\\.b-\\(c\\)\\\\d\\/e\\|\\[x\\]\\{1\\}\\^\\$\\*\\+\\?', (new Confirm('x', expectedValue: 'a.b-(c)\\d/e|[x]{1}^$*+?'))->expectedPattern());
         $confirm = Confirm::delete('Really?');
         self::assertSame(['Really?', 'danger'], [$confirm->message, $confirm->variant]);
         self::assertInstanceOf(Label::class, $confirm->confirmLabel);

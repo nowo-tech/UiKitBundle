@@ -65,6 +65,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - **Per-page-type theme variation** `theme.pages.<list|show|form|settings|dashboard|confirm|wizard|auth>.{classes,attributes,framework_defaults}` (validated; precedence bundle slot > bundle > page-type slot > page type > host slot > host). Scaffolds set `nowo_ui_page_type` and pass it to their partials; `nowo_ui_class()` / `nowo_ui_attrs()` gain an optional `page` argument (default: the context's `nowo_ui_page_type`); new `nowo_ui_html_attrs(map)` and `Theme::renderAttributeMap()`; `ThemeSlots::PAGE_TYPES`.
 
+- **Confirm dialogs:** `_confirm` cancel / confirm buttons read the `btn_secondary` / `btn_<variant>` slots (and `framework_defaults`) instead of the bare `ui.btn()` macro (1.x output unchanged without host classes). Type-to-confirm `View\Confirm::expectedValue` (+ `expectedLabel`, `expectedPattern()`): input with `required` + `pattern` joined to the POST form, confirm button disabled until the value matches (`nowo-ui-confirm.js`: `syncExpected()`, `resetExpected()`, `syncAllExpected()`; CSP-safe), also on the full-page `ConfirmPage`. Translation `confirm.type_to_confirm` (7 locales); `_action_post` / `_action_form_view` accept `form_id`.
+- **Row-action variant slots** `action_primary`, `action_secondary`, `action_danger`: host classes per resolved variant in row context (objects and 1.x hashes), e.g. a red delete on Tailwind.
+
 ### Changed
 
 - **Template contract — CSS cascade layer:** `nowo-ui.css` ships inside `@layer nowo-ui` with the order statement `@layer theme, base, nowo-ui, components, utilities;` so Tailwind v4 utilities placed in theme slots beat the kit while the kit stays above Tailwind's preflight (dialogs). `nowo-ui.unlayered.css` keeps the 1.x unlayered stylesheet for hosts that relied on the kit beating unlayered framework CSS. `nowo-ui.css` is generated from it (`pnpm run build:css`, checked by `LayeredCssTest`).

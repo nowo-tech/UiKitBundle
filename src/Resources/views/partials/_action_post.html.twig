@@ -8,6 +8,7 @@
 
   Optional:
     - button_attrs: extra button attributes
+    - form_id: id of the <form> (inputs outside it join through form="…", e.g. the type-to-confirm input)
 
   With action.form (CSRF-only FormView, REQ-TWIG-005) the form renders through form_start / form_end;
   otherwise action.csrfToken is a hidden field (csrfField). PUT / PATCH / DELETE are spoofed with _method.
@@ -16,7 +17,7 @@
 {% if action.form %}
     {{ include('@NowoUiKitBundle/partials/_action_form_view.html.twig', _context, false) }}
 {% else %}
-    <form method="post" action="{{ action_href ?? '#' }}" class="nowo-ui-action__form">
+    <form method="post" action="{{ action_href ?? '#' }}" class="nowo-ui-action__form"{% if form_id|default(null) %} id="{{ form_id }}"{% endif %}>
         {% if action.method != 'POST' %}
             <input type="hidden" name="_method" value="{{ action.method }}">
         {% endif %}

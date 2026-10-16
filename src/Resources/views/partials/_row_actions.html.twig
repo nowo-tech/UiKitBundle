@@ -8,7 +8,8 @@
   Optional:
     - framework: css_framework override
     - display: icon | text | icon_text (defaults to nowo_ui_kit_row_actions_display)
-    - bundle (2.0): per-bundle theme exceptions (slots row_actions, action: host classes; row_actions attributes)
+    - bundle (2.0): per-bundle theme exceptions (slots row_actions, action, action_primary | action_secondary |
+      action_danger (by resolved variant): host classes; row_actions attributes)
 
   Each action:
     kind          edit|delete|view|copy|create|save|cancel|restore|share|config|export|filter|prev|next|close
@@ -58,6 +59,11 @@
                 {% endif %}
             {% endif %}
             {% set class = _t ? _t.macroClasses('action', ui.action(kind, framework, action.variant|default(null)), bundle, _pt) : ui.action(kind, framework, action.variant|default(null)) %}
+            {% if _t %}
+                {% set _variant = action.variant|default(null) ?: (kind == 'delete' ? 'danger' : (kind in ['create', 'save'] ? 'primary' : 'secondary')) %}
+                {% set _variant_extra = _variant in ['primary', 'secondary', 'danger'] ? _t.extraClasses('action_' ~ _variant, bundle, _pt) : '' %}
+                {% set class = class ~ (_variant_extra ? ' ' ~ _variant_extra) %}
+            {% endif %}
             {% set disabled = action.disabled|default(false) %}
 
             {% if tag == 'form' %}

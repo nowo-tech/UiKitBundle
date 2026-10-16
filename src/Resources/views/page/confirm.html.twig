@@ -16,10 +16,16 @@
     {% set _b = page.bundle %}
     {% set _confirm = page.confirm %}
     {% set _href = page.action.href ?? (page.action.route ? path(page.action.route, page.action.params) : null) %}
-    <section class="{{ nowo_ui_class('confirm', _b) }} nowo-ui-confirm-page {{ nowo_ui_class('card', _b) }}" data-nowo-ui-page="confirm"{{ nowo_ui_attrs('confirm', _b) }}>
+    <section class="{{ nowo_ui_class('confirm', _b) }} nowo-ui-confirm-page {{ nowo_ui_class('card', _b) }}" data-nowo-ui-page="confirm" data-nowo-confirm-scope{{ nowo_ui_attrs('confirm', _b) }}>
         <div class="{{ nowo_ui_class('card_body', _b) }}">
             <h2 class="nowo-ui-confirm__title">{{ _confirm.title|nowo_ui_trans }}</h2>
             {% if _confirm.message %}<p class="nowo-ui-confirm__message">{{ _confirm.message|nowo_ui_trans }}</p>{% endif %}
+            {% if _confirm.expectedValue is not null %}
+                <div class="nowo-ui-confirm__expect">
+                    <label class="nowo-ui-confirm__expect-label" for="nowo-ui-confirm-page-expected">{{ _confirm.expectedLabel is null ? 'confirm.type_to_confirm'|trans({'%value%': _confirm.expectedValue}, 'NowoUiKitBundle') : _confirm.expectedLabel|nowo_ui_trans({'%value%': _confirm.expectedValue}) }}</label>
+                    <input id="nowo-ui-confirm-page-expected" class="{{ nowo_ui_class('input', _b) }} nowo-ui-confirm__expect-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" required pattern="{{ _confirm.expectedPattern() }}" data-nowo-confirm-expected="{{ _confirm.expectedValue }}" form="nowo-ui-confirm-page-form">
+                </div>
+            {% endif %}
             <div class="{{ nowo_ui_class('form_actions', _b) }}">
                 {% if page.cancelHref %}
                     <a class="{{ nowo_ui_class('btn_secondary', _b) }}" href="{{ page.cancelHref }}">{{ _confirm.cancelLabel is null ? 'action.cancel'|trans({}, 'NowoUiKitBundle') : _confirm.cancelLabel|nowo_ui_trans }}</a>
@@ -28,7 +34,8 @@
                     action: page.action,
                     action_href: _href,
                     button_class: nowo_ui_class('btn_' ~ _confirm.variant, _b) ~ ' nowo-ui-confirm__submit',
-                    button_attrs: {},
+                    button_attrs: _confirm.expectedValue is null ? {} : {'data-nowo-confirm-submit': true},
+                    form_id: _confirm.expectedValue is null ? null : 'nowo-ui-confirm-page-form',
                     button_html: _confirm.confirmLabel is null ? 'action.confirm'|trans({}, 'NowoUiKitBundle') : _confirm.confirmLabel|nowo_ui_trans,
                 }, false) }}
             </div>

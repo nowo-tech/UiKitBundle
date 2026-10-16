@@ -110,6 +110,9 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `table_cell` | `nowo-ui-table__cell` | — | — | — | — |
 | `row_actions` | `nowo-ui-row-actions` | `d-flex gap-1` | `d-flex gap-1` | `flex gap-1` | `button-group` |
 | `action` | `nowo-ui-action` | — | — | — | — |
+| `action_primary` | `nowo-ui-btn--primary` | — | — | — | — |
+| `action_secondary` | `nowo-ui-btn--secondary` | — | — | — | — |
+| `action_danger` | `nowo-ui-btn--danger` | — | — | — | — |
 | `badge` | `nowo-ui-badge` | `badge text-bg-light border ms-2` | `badge badge-light border ml-2` | `ml-2 inline-flex border px-2 py-0.5 text-xs` | `badge secondary` |
 | `badge_success` | `nowo-ui-badge nowo-ui-badge--success` | `badge text-bg-success ms-2` | `badge badge-success ml-2` | `ml-2 inline-flex border px-2 py-0.5 text-xs` | `badge success` |
 | `badge_warning` | `nowo-ui-badge nowo-ui-badge--warning` | `badge text-bg-warning ms-2` | `badge badge-warning ml-2` | `ml-2 inline-flex border px-2 py-0.5 text-xs` | `badge warning` |

@@ -230,7 +230,7 @@ or a plain string printed escaped. Never pre-render HTML into a view model.
 | `Label` | `(key, domain = 'messages', params = [])`, `Label::kit(key)` (UiKit domain), `withParams()` |
 | `PageHeader` | `(title, intro = null, actions = [], breadcrumbs = [], breadcrumbCollection = null)` |
 | `Action` | `(kind = 'custom', label = null, href = null, route = null, params = [], method = 'GET', csrfToken = null, confirm = null, icon = null, variant = null, attributes = [], form = null, csrfField = '_token', modalId = null, disabled = false, visible = true)`; factories `create()`, `edit()`, `view()`, `delete()`, `route()`; `isPost()`, `resolvedVariant()`, `confirmId()`, `toArray()` |
-| `Confirm` | `(title, message = null, confirmLabel = null, variant = 'danger', cancelLabel = null, id = null)`, `Confirm::delete(message = null)` |
+| `Confirm` | `(title, message = null, confirmLabel = null, variant = 'danger', cancelLabel = null, id = null, expectedValue = null, expectedLabel = null)`, `Confirm::delete(message = null)`, `expectedPattern()` |
 | `Crumb` | `(label, href = null)` |
 | `Link` | `(label, href, attributes = [])` |
 | `Pagination` | `(page, perPage, total, totalPages = null, route = null, query = [], routeParams = null, pageParam = 'page', perPageParam = 'per_page')`; `fromArray()`, `fromPagerfanta()`, `fromKnp()` (duck typed); `from()`, `to()`, `hasPrevious()`, `hasNext()`, `toArray()` — the **only** pagination shape |
@@ -256,6 +256,22 @@ or a plain string printed escaped. Never pre-render HTML into a view model.
 `share`, `config`, `filter`, `prev`, `next`, `close`; variants `primary`, `secondary`, `danger`, `outline`, `link`.
 Non-GET actions render a POST form (CSRF-only `FormView` in `form`, REQ-TWIG-005, or `csrfToken`); an action with a
 `Confirm` renders a toggle button + UiKit confirm `<dialog>` (`nowo-ui-confirm.js`) — never an inline `confirm()`.
+The dialog buttons read the theme slots `btn_secondary` (cancel) and `btn_<variant>` (confirm), so host classes and
+`framework_defaults: false` apply to them like to any toolbar button.
+
+**Type-to-confirm.** `new Confirm(…, expectedValue: 'acme-prod')` adds a text input (slot `input`; prompt
+`confirm.type_to_confirm` "Type %value% to confirm", or `expectedLabel` — a `Label` receives `%value%`) and renders
+the confirm button `disabled` with `data-nowo-confirm-submit`; `nowo-ui-confirm.js` enables it only while the input
+holds exactly the value, and clears + focuses the input each time the dialog opens. The input also carries `required`
+and an escaped `pattern` and joins the POST form through `form="…"`, so the full-page `ConfirmPage` enforces the
+value without JavaScript. CSP-safe: data attributes only.
+
+**Row actions per variant.** In row context an action keeps the `ui.action` classes (slot `action`) and adds the
+host classes of `action_primary`, `action_secondary` or `action_danger` for its resolved variant (`delete` → danger,
+`create` / `save` → primary, otherwise secondary, or the explicit `variant`), so a delete looks dangerous on stacks
+whose defaults carry no palette (Tailwind): `theme.classes.action_danger: 'text-red-700 border-red-300'`. The same
+applies to 1.x row-action hashes. These slots have no framework defaults; the `action` slot's `framework_defaults`
+still governs the `ui.action` classes.
 
 ## Partials
 

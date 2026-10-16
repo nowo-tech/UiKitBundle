@@ -87,6 +87,9 @@ Macro `ui.action(kind, framework, variant=null)` only emits **classes**; prefer 
 1. Prefer **UiKit `_confirm`** + `confirm_id` on the trigger; keep the real **POST + CSRF** form in the confirm footer (host owns the destructive request).
 2. Inline POST without a dialog: `method: 'POST'` + `csrf_token` (optional `confirm_message` until migrated).
 3. Never use GET for delete.
+4. 2.0: `View\Action` + `View\Confirm` render the dialog for you; `Confirm::expectedValue` adds type-to-confirm. Theme
+   slots `action_primary` / `action_secondary` / `action_danger` add host classes per resolved variant (e.g. a red
+   delete on Tailwind) — [`PAGE_CONTRACT.md`](PAGE_CONTRACT.md#view-models).
 
 ## Do / don't
 

@@ -95,6 +95,14 @@ Changes to markup, inputs and cascade a host or a bundle may depend on (REQ-UI-0
   [`PAGE_CONTRACT.md#cascade-layers`](PAGE_CONTRACT.md#cascade-layers)). Hosts without layers: your unlayered CSS
   (and an unlayered framework such as Bootstrap from a CDN) now always beats the kit; to keep the 1.x cascade, link
   `css/nowo-ui.unlayered.css` (identical rules, no layer) instead of `css/nowo-ui.css`.
+- **`_confirm` buttons** read the theme slots `btn_secondary` / `btn_<variant>` when the ThemeExtension is loaded
+  (output identical to 1.17.4 with an empty theme; host classes and `framework_defaults: false` now apply). Hosts that
+  styled `.nowo-ui-confirm .btn` to compensate can move that to `theme.classes`.
+- **Type-to-confirm:** `Confirm::expectedValue` / `expectedLabel`; `_action_post` accepts `form_id`. Hosts that
+  override `_confirm` render the expected input themselves (see the default partial) — the JS contract is
+  `input[data-nowo-confirm-expected]` + `[data-nowo-confirm-submit]` inside the dialog or a `[data-nowo-confirm-scope]`.
+- **Row-action variant slots** `action_primary`, `action_secondary`, `action_danger` (host classes added in row
+  context by resolved variant; new slots = minor).
 - **Page types.** Scaffolds set `nowo_ui_page_type` (`list`, `show`, `form`, `settings`, `dashboard`, `confirm`,
   `wizard`, `auth`) and pass it to the partials they include; `theme.pages.<type>.{classes,attributes,framework_defaults}`
   varies a slot per page type (bundle slot > bundle > page-type slot > page type > host slot > host).

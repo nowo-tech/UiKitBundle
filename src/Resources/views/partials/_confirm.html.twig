@@ -10,9 +10,13 @@
     - footer (HTML string; default Cancel button)
     - cancel_label
     - framework
-    - confirm (2.0 contract): View\Confirm — title / message / confirm + cancel labels / variant
+    - confirm (2.0 contract): View\Confirm — title / message / confirm + cancel labels / variant / expectedValue
+      (type-to-confirm input: the confirm button stays disabled until the value matches, nowo-ui-confirm.js)
     - action + action_href (2.0): non-GET View\Action submitted by the confirm button (POST form in the footer)
     - bundle: per-bundle theme exceptions (slot `confirm` classes / attributes)
+  Buttons read the theme slots btn_secondary (cancel) and btn_<variant> (confirm) when the ThemeExtension is
+  loaded (1.x output unchanged with an empty theme; framework_defaults honoured); the expected-value input reads
+  the `input` slot.
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 {% set framework = framework|default(null) %}
@@ -51,20 +55,29 @@
         {% elseif body is defined and body %}
             <div class="nowo-ui-confirm__body">{{ body|raw }}</div>
         {% endif %}
+        {% set _expected = _confirm ? _confirm.expectedValue : null %}
+        {% if _expected is not null %}
+            {% set _expected_label = _confirm.expectedLabel is null ? 'confirm.type_to_confirm'|trans({'%value%': _expected}, 'NowoUiKitBundle') : (_confirm.expectedLabel.key is defined ? _confirm.expectedLabel.key|trans(_confirm.expectedLabel.params|merge({'%value%': _expected}), _confirm.expectedLabel.domain) : _confirm.expectedLabel) %}
+            <div class="nowo-ui-confirm__expect">
+                <label class="nowo-ui-confirm__expect-label" for="{{ id }}-expected">{{ _expected_label }}</label>
+                <input id="{{ id }}-expected" class="{{ _t ? _t.classFor('input', bundle, framework, _pt) : 'nowo-ui-input' }} nowo-ui-confirm__expect-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" required pattern="{{ _confirm.expectedPattern() }}" data-nowo-confirm-expected="{{ _expected }}"{% if action is defined and action %} form="{{ id }}-form"{% endif %}>
+            </div>
+        {% endif %}
         <div class="nowo-ui-confirm__footer">
             {% if footer is defined and footer %}
                 {{ footer|raw }}
             {% else %}
-                <button type="button" class="{{ ui.btn('secondary', null, framework) }}" data-nowo-confirm-close>
+                <button type="button" class="{{ _t ? _t.macroClasses('btn_secondary', ui.btn('secondary', null, framework), bundle, _pt) : ui.btn('secondary', null, framework) }}" data-nowo-confirm-close>
                     {{ cancel_label }}
                 </button>
                 {% if _confirm and action is defined and action %}
                     {{ include('@NowoUiKitBundle/partials/_action_post.html.twig', {
                         action: action,
                         action_href: action_href|default(action.href),
-                        button_class: ui.btn(_confirm.variant, null, framework) ~ ' nowo-ui-confirm__submit',
-                        button_attrs: {},
+                        button_class: (_t ? _t.macroClasses('btn_' ~ _confirm.variant, ui.btn(_confirm.variant, null, framework), bundle, _pt) : ui.btn(_confirm.variant, null, framework)) ~ ' nowo-ui-confirm__submit',
+                        button_attrs: _expected is null ? {} : {'data-nowo-confirm-submit': true, disabled: not action.disabled},
                         button_html: _confirm_label,
+                        form_id: _expected is null ? null : id ~ '-form',
                     }, false) }}
                 {% endif %}
             {% endif %}

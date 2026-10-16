@@ -98,6 +98,12 @@ final class ThemeSlots
             'foundation' => 'button-group',
         ]],
         'action' => ['nowo-ui-action', []],
+        // Row actions per variant (resolved like Action::resolvedVariant(): delete = danger, create / save = primary,
+        // else secondary): host classes added on top of the `action` slot in row context; no framework defaults
+        // (the row action keeps the `ui.action` classes, governed by the `action` slot's framework_defaults)
+        'action_primary' => ['nowo-ui-btn--primary', []],
+        'action_secondary' => ['nowo-ui-btn--secondary', []],
+        'action_danger' => ['nowo-ui-btn--danger', []],
         // Badges (Bootstrap: `text-bg-*` (5.2+) sets text and background together, so the colour pair never mixes
         // with the semantic nowo-ui-badge--* palette; on 5.0 / 5.1 the semantic palette paints the badge)
         'badge' => ['nowo-ui-badge', [
