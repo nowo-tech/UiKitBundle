@@ -1,0 +1,45 @@
+{#
+  Acme host layout — the one-file bridge of REQ-UI-003 (nowo_ui_kit.layouts.admin): extends the project base and
+  renders every UiKit canonical block. A host with its own layout adds data-nowo-ui-host-tokens on <html> and calls
+  nowo_ui_theme_tokens() so the theme tokens win over UiKit's palette without !important.
+#}
+{% extends 'base.html.twig' %}
+
+{% block html_attributes %}{% if nowo_ui_theme.hasTokens() %} data-nowo-ui-host-tokens{% endif %}{% endblock %}
+
+{% block title %}{% block nowo_ui_document_title %}{% endblock %} · Acme Admin{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/nowo-ui.css', 'nowo_ui_kit') }}">
+    {{ nowo_ui_theme_tokens() }}
+    <link rel="stylesheet" href="{{ asset('css/acme-theme.css') }}">
+    {% block nowo_ui_head %}{% endblock %}
+    {% block nowo_ui_styles %}{% endblock %}
+{% endblock %}
+
+{% block body_class %}acme-body{% endblock %}
+
+{% block body %}
+    <div class="acme-shell">
+        <aside class="acme-sidebar">
+            {% block nowo_ui_navigation %}
+                {{ include('page_contract/_nav.html.twig') }}
+            {% endblock %}
+        </aside>
+        <main class="acme-main" id="nowo-ui-content"{% if nowo_ui_bundle|default(null) %} data-nowo-ui-bundle="{{ nowo_ui_bundle }}"{% endif %}>
+            {% block nowo_ui_page_header %}{% endblock %}
+            {% block nowo_ui_flashes %}
+                {{ include(nowo_ui_partial('flashes', nowo_ui_bundle|default(null)), {bundle: nowo_ui_bundle|default(null)}) }}
+            {% endblock %}
+            {% block nowo_ui_content %}{% endblock %}
+        </main>
+    </div>
+    {% block nowo_ui_modals %}{% endblock %}
+{% endblock %}
+
+{% block javascripts %}
+    {% for _script in ['nowo-ui-modal', 'nowo-ui-confirm', 'nowo-ui-toast', 'nowo-ui-tabs'] %}
+        <script src="{{ asset('js/' ~ _script ~ '.js', 'nowo_ui_kit') }}" defer></script>
+    {% endfor %}
+    {% block nowo_ui_scripts %}{% endblock %}
+{% endblock %}

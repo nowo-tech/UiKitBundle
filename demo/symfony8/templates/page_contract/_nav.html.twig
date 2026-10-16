@@ -1,0 +1,15 @@
+{# Acme host sidebar (host markup: the host owns its shell). #}
+{% set _route = app.request.attributes.get('_route') %}
+<p class="acme-brand"><span class="acme-brand__mark">A</span> Acme Admin</p>
+<nav class="acme-nav" aria-label="Main">
+    {% for item in [
+        {route: 'page_contract_index', label: 'Overview', icon: 'grid'},
+        {route: 'page_contract_dashboard', label: 'Dashboard', icon: 'speedometer2'},
+        {route: 'page_contract_orders', label: 'Orders', icon: 'receipt'},
+        {route: 'page_contract_wizard', label: 'Onboarding', icon: 'signpost'},
+        {route: 'page_contract_settings', label: 'Settings', icon: 'gear'},
+    ] %}
+        <a class="acme-nav__link{{ _route starts with item.route ? ' is-current' }}" href="{{ path(item.route) }}"><i class="bi bi-{{ item.icon }}" aria-hidden="true"></i> {{ item.label }}</a>
+    {% endfor %}
+</nav>
+<p class="acme-nav__foot"><a href="{{ path('page_contract_default_index', {theme: 'default'}) }}">Compare with the default theme →</a></p>

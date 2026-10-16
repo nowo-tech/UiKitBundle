@@ -1,0 +1,11 @@
+{# Edit order (form scaffold): default REQ-TWIG-003 field loop, plus a side note in the aside block. #}
+{% extends '@NowoUiKit/page/form.html.twig' %}
+
+{% block nowo_ui_form_aside %}
+    <aside class="{{ nowo_ui_class('card', page.bundle) }} nowo-ui-form-page__aside"{{ nowo_ui_attrs('card', page.bundle) }}>
+        <div class="{{ nowo_ui_class('card_body', page.bundle) }}">
+            <h2 class="nowo-ui-card__title">Heads-up</h2>
+            <p class="nowo-ui-card__intro">Changing the total does not refund the customer; use Refund on the order page.</p>
+        </div>
+    </aside>
+{% endblock %}

@@ -1,0 +1,34 @@
+{#
+  Acme guest layout (nowo_ui_kit.layouts.guest): sign-in, password reset, setup pages. Same canonical blocks as the
+  admin bridge, without navigation.
+#}
+{% extends 'base.html.twig' %}
+
+{% block html_attributes %}{% if nowo_ui_theme.hasTokens() %} data-nowo-ui-host-tokens{% endif %}{% endblock %}
+
+{% block title %}{% block nowo_ui_document_title %}{% endblock %} · Acme Admin{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/nowo-ui.css', 'nowo_ui_kit') }}">
+    {{ nowo_ui_theme_tokens() }}
+    <link rel="stylesheet" href="{{ asset('css/acme-theme.css') }}">
+    {% block nowo_ui_head %}{% endblock %}
+    {% block nowo_ui_styles %}{% endblock %}
+{% endblock %}
+
+{% block body_class %}acme-body acme-body--guest{% endblock %}
+
+{% block body %}
+    <main class="acme-guest" id="nowo-ui-content"{% if nowo_ui_bundle|default(null) %} data-nowo-ui-bundle="{{ nowo_ui_bundle }}"{% endif %}>
+        {% block nowo_ui_page_header %}{% endblock %}
+        {% block nowo_ui_flashes %}
+            {{ include(nowo_ui_partial('flashes', nowo_ui_bundle|default(null)), {bundle: nowo_ui_bundle|default(null)}) }}
+        {% endblock %}
+        {% block nowo_ui_content %}{% endblock %}
+    </main>
+    {% block nowo_ui_modals %}{% endblock %}
+{% endblock %}
+
+{% block javascripts %}
+    {% block nowo_ui_scripts %}{% endblock %}
+{% endblock %}

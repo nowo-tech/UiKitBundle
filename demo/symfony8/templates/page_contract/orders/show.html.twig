@@ -1,0 +1,15 @@
+{# Order detail (show scaffold): sections from the view model, order history from the page. #}
+{% extends '@NowoUiKit/page/show.html.twig' %}
+
+{% block nowo_ui_show_after %}
+    <section class="{{ nowo_ui_class('section', page.bundle) }} {{ nowo_ui_class('card', page.bundle) }}"{{ nowo_ui_attrs('section', page.bundle) }}>
+        <header class="{{ nowo_ui_class('card_header', page.bundle) }}"><h2 class="nowo-ui-card__title">History</h2></header>
+        <div class="{{ nowo_ui_class('card_body', page.bundle) }}">
+            <ol class="nowo-ui-timeline">
+                <li>{{ order.placed }} — order placed</li>
+                <li>2026-10-16 09:15 — payment captured ({{ order.total }} €)</li>
+                <li>2026-10-16 10:30 — invoice sent to {{ order.email }}</li>
+            </ol>
+        </div>
+    </section>
+{% endblock %}

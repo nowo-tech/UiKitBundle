@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-nowo-ui-thin-scrollbars>
+<html lang="en" data-nowo-ui-thin-scrollbars{% block html_attributes %}{% endblock %}>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -9,7 +9,7 @@
     {% block stylesheets %}{% endblock %}
     <style>body.page-demo { margin: 0; padding: 0; }</style>
 </head>
-<body class="page-demo">
+<body class="{% block body_class %}page-demo{% endblock %}">
     {% block body %}{% endblock %}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     {% block javascripts %}{% endblock %}

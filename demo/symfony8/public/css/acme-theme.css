@@ -1,0 +1,92 @@
+/*
+ * Acme host stylesheet for the REQ-UI-003 host-theme demo. Colours / radius come from the --nowo-ui-* tokens set
+ * once in nowo_ui_kit.theme.tokens; this file only styles the host shell and the classes of the theme class map
+ * (acme-*). No !important, no selectors on bundle markup.
+ */
+:root {
+  --acme-font: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --acme-display: "Georgia", "Times New Roman", serif;
+  --bs-body-font-family: var(--acme-font);
+  --bs-body-color: var(--nowo-ui-text);
+  --bs-body-bg: var(--nowo-ui-surface-muted);
+  --bs-primary: var(--nowo-ui-primary);
+  --bs-primary-rgb: 15, 118, 110;
+  --bs-link-color: var(--nowo-ui-primary);
+  --bs-link-color-rgb: 15, 118, 110;
+  --bs-border-color: var(--nowo-ui-border);
+  --bs-border-radius: var(--nowo-ui-radius);
+}
+
+.acme-body { background: var(--nowo-ui-surface-muted); color: var(--nowo-ui-text); font-family: var(--acme-font); }
+
+/* Shell */
+.acme-shell { display: grid; grid-template-columns: 15rem 1fr; min-height: 100vh; }
+.acme-sidebar { background: #12302c; color: #d9efe9; padding: 1.25rem 1rem; display: flex; flex-direction: column; gap: 1rem; }
+.acme-brand { display: flex; align-items: center; gap: 0.6rem; font-family: var(--acme-display); font-size: 1.2rem; margin: 0; color: #fff; }
+.acme-brand__mark { display: inline-grid; place-items: center; width: 2rem; height: 2rem; border-radius: 0.6rem; background: #f2b84b; color: #12302c; font-weight: 700; font-family: var(--acme-font); }
+.acme-nav { display: flex; flex-direction: column; gap: 0.15rem; }
+.acme-nav__link { display: flex; gap: 0.6rem; align-items: center; padding: 0.5rem 0.75rem; border-radius: 0.6rem; color: #b8d8d0; text-decoration: none; font-size: 0.925rem; }
+.acme-nav__link:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
+.acme-nav__link.is-current { background: rgba(242, 184, 75, 0.16); color: #fff; }
+.acme-nav__foot { margin-top: auto; font-size: 0.8rem; }
+.acme-nav__foot a { color: #f2b84b; }
+.acme-main { padding: 1.75rem 2.25rem 3rem; max-width: 80rem; }
+.acme-guest { min-height: 100vh; display: grid; place-items: center; padding: 2rem 1rem; background: radial-gradient(circle at 20% 10%, #d8efe8, transparent 45%), var(--nowo-ui-surface-muted); }
+
+/* Page header (partial override) */
+.acme-header { margin-bottom: 1.5rem; }
+.acme-header__trail { display: flex; gap: 0.4rem; list-style: none; margin: 0 0 0.35rem; padding: 0; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--nowo-ui-muted); }
+.acme-header__trail li + li::before { content: "/"; margin-right: 0.4rem; opacity: 0.6; }
+.acme-header__trail a { color: inherit; text-decoration: none; }
+.acme-header__row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 1rem; }
+.acme-title { font-family: var(--acme-display); font-weight: 600; font-size: 2rem; margin: 0; letter-spacing: -0.01em; }
+.acme-intro { color: var(--nowo-ui-muted); margin: 0.25rem 0 0; }
+
+/* Buttons */
+.acme-btn { border-radius: 999px; padding-inline: 1rem; border: 1px solid var(--nowo-ui-border-strong); background: var(--nowo-ui-surface); color: var(--nowo-ui-text); }
+.acme-btn:hover { border-color: var(--nowo-ui-primary); color: var(--nowo-ui-primary); background: var(--nowo-ui-surface); }
+.acme-btn--primary { background: var(--nowo-ui-primary); border-color: var(--nowo-ui-primary); color: var(--nowo-ui-primary-contrast); }
+.acme-btn--primary:hover { background: #0b5e57; border-color: #0b5e57; color: #fff; }
+.acme-btn--danger { color: #b42318; border-color: #f1c4bf; }
+.acme-btn--danger:hover { background: #fdecea; color: #912018; border-color: #e8a29a; }
+
+/* Surfaces */
+.acme-card { background: var(--nowo-ui-surface); border: 1px solid var(--nowo-ui-border); border-radius: var(--nowo-ui-radius); box-shadow: 0 1px 2px rgba(28, 42, 39, 0.05), 0 8px 24px -16px rgba(28, 42, 39, 0.25); }
+.acme-card__header { background: transparent; border-bottom: 1px dashed var(--nowo-ui-border); }
+.acme-kpis { gap: 1rem; }
+.acme-kpi { background: var(--nowo-ui-surface); border: 1px solid var(--nowo-ui-border); border-top: 4px solid var(--nowo-ui-primary); border-radius: var(--nowo-ui-radius); }
+.acme-kpi .nowo-ui-kpi__value { font-family: var(--acme-display); font-size: 1.9rem; }
+
+/* Tables */
+.acme-table { --bs-table-bg: var(--nowo-ui-surface); --bs-table-hover-bg: #f0f7f5; border-radius: var(--nowo-ui-radius); overflow: hidden; }
+.acme-table thead th { background: #eaf3f0; color: #335b54; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 0; }
+.acme-table[data-acme-table="zebra"] .acme-row:nth-child(even) > td { background: #faf6ee; }
+
+/* Badges: the Bootstrap defaults of the slot (bg-*) stay; the host re-points their variables. */
+.acme-badge { --bs-badge-font-weight: 600; border-radius: 999px; padding: 0.35em 0.8em; font-size: 0.75rem; border: 0; --bs-light-rgb: 238, 234, 226; }
+.acme-badge.acme-badge { color: #4b4a40; }
+.acme-badge--ok { --bs-success-rgb: 231, 246, 239; }
+.acme-badge--ok.acme-badge { color: var(--nowo-ui-success-text); }
+.acme-badge--warn { --bs-warning-rgb: 253, 243, 220; }
+.acme-badge--warn.acme-badge { color: var(--nowo-ui-warning-text); }
+.acme-badge--info { --bs-info-rgb: 230, 242, 246; }
+.acme-badge--info.acme-badge { color: var(--nowo-ui-info-text); }
+.acme-badge--danger { --bs-danger-rgb: 253, 236, 234; }
+.acme-badge--danger.acme-badge { color: #912018; }
+
+/* Form controls (Bootstrap compiles its accent colour; the host re-points it) */
+.acme-body .form-check-input:checked { background-color: var(--nowo-ui-primary); border-color: var(--nowo-ui-primary); }
+.acme-body .form-control:focus, .acme-body .form-select:focus, .acme-body .form-check-input:focus { border-color: var(--nowo-ui-primary); box-shadow: 0 0 0 0.2rem rgba(15, 118, 110, 0.18); }
+.acme-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); gap: 1rem; }
+.acme-card .nowo-ui-card__intro { margin-bottom: 0.9rem; color: var(--nowo-ui-muted); }
+.acme-main .nowo-ui-form-page:has(> .nowo-ui-form-page__aside) { display: grid; grid-template-columns: minmax(0, 1fr) 18rem; gap: 1.5rem; align-items: start; }
+.acme-main .nowo-ui-form-page__secondary { margin-top: 0.75rem; }
+
+/* Filters, tabs, wizard, auth */
+.acme-filters { background: var(--nowo-ui-surface); border: 1px solid var(--nowo-ui-border); border-radius: var(--nowo-ui-radius); padding: 0.75rem 1rem; }
+.acme-tabs { border-bottom: 1px solid var(--nowo-ui-border); }
+.acme-tabs a.acme-tab--active[aria-current] { border-color: transparent transparent var(--nowo-ui-primary); border-bottom-width: 3px; color: var(--nowo-ui-primary); background: transparent; }
+.acme-step--active { color: var(--nowo-ui-primary); font-weight: 700; }
+.acme-auth { width: min(26rem, 100%); background: var(--nowo-ui-surface); border: 1px solid var(--nowo-ui-border); border-radius: 1.25rem; box-shadow: 0 24px 48px -24px rgba(18, 48, 44, 0.35); }
+.acme-auth form { margin-top: 1.25rem; }
+.acme-auth .nowo-ui-auth-panel__brand { font-family: var(--acme-display); color: var(--nowo-ui-primary); font-size: 1.1rem; }

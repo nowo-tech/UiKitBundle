@@ -1,0 +1,17 @@
+{# Overview of the page contract demo (dashboard scaffold): one card per scaffold. #}
+{% extends '@NowoUiKit/page/dashboard.html.twig' %}
+
+{% block nowo_ui_dashboard_cards %}
+    {% for card in cards %}
+        <section class="{{ nowo_ui_class('card', page.bundle) }}"{{ nowo_ui_attrs('card', page.bundle) }}>
+            <header class="{{ nowo_ui_class('card_header', page.bundle) }}">
+                <h2 class="nowo-ui-card__title">{{ card.title }}</h2>
+                <span class="{{ nowo_ui_class('badge_neutral', page.bundle) }}">{{ card.scaffold }}</span>
+            </header>
+            <div class="{{ nowo_ui_class('card_body', page.bundle) }}">
+                <p class="nowo-ui-card__intro">{{ card.text }}</p>
+                <a class="{{ nowo_ui_class('btn_secondary', page.bundle) }}" href="{{ card.href }}">Open</a>
+            </div>
+        </section>
+    {% endfor %}
+{% endblock %}

@@ -1,0 +1,35 @@
+{# Shop dashboard (dashboard scaffold): KPI tiles from the view model, two cards from the page. #}
+{% extends '@NowoUiKit/page/dashboard.html.twig' %}
+
+{% block nowo_ui_dashboard_cards %}
+    {% set _b = page.bundle %}
+    <section class="{{ nowo_ui_class('card', _b) }}"{{ nowo_ui_attrs('card', _b) }}>
+        <header class="{{ nowo_ui_class('card_header', _b) }}"><h2 class="nowo-ui-card__title">Recent orders</h2></header>
+        <div class="{{ nowo_ui_class('table_wrap', _b) }}">
+            <table class="{{ nowo_ui_class('table', _b) }}"{{ nowo_ui_attrs('table', _b) }}>
+                <tbody>
+                    {% for order in recent %}
+                        <tr class="{{ nowo_ui_class('table_row', _b) }}">
+                            <td class="{{ nowo_ui_class('table_cell', _b) }}">#{{ order.id }}</td>
+                            <td class="{{ nowo_ui_class('table_cell', _b) }}">{{ order.customer }}</td>
+                            <td class="{{ nowo_ui_class('table_cell', _b) }} nowo-ui-cell--end">{{ order.total }} €</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    <section class="{{ nowo_ui_class('card', _b) }}"{{ nowo_ui_attrs('card', _b) }}>
+        <header class="{{ nowo_ui_class('card_header', _b) }}"><h2 class="nowo-ui-card__title">Low stock</h2></header>
+        <div class="{{ nowo_ui_class('card_body', _b) }}">
+            <dl class="{{ nowo_ui_class('detail_list', _b) }}">
+                {% for item in stock %}
+                    <div class="nowo-ui-detail-list__item">
+                        <dt class="nowo-ui-detail-list__label">{{ item.product }}</dt>
+                        <dd class="nowo-ui-detail-list__value"><span class="{{ nowo_ui_class(item.left < 5 ? 'badge_danger' : 'badge_warning', _b) }}">{{ item.left }} left</span></dd>
+                    </div>
+                {% endfor %}
+            </dl>
+        </div>
+    </section>
+{% endblock %}

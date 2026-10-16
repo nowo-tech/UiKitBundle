@@ -1,0 +1,13 @@
+{# Orders (list scaffold): the page fills only the row cells; header, filters, table frame, row actions, confirm
+   dialogs, pagination and empty state come from the scaffold. #}
+{% extends '@NowoUiKit/page/list.html.twig' %}
+
+{% block nowo_ui_list_row %}
+    {% set _b = page.bundle %}
+    {% set _status = {paid: 'badge_success', pending: 'badge_warning', shipped: 'badge_info', refunded: 'badge_neutral'} %}
+    <td class="{{ nowo_ui_class('table_cell', _b) }}">#{{ row.id }}</td>
+    <td class="{{ nowo_ui_class('table_cell', _b) }}">{{ row.customer }}<br><small class="nowo-ui-muted">{{ row.email }}</small></td>
+    <td class="{{ nowo_ui_class('table_cell', _b) }}">{{ row.placed }}</td>
+    <td class="{{ nowo_ui_class('table_cell', _b) }}"><span class="{{ nowo_ui_class(_status[row.status], _b) }}">{{ row.status|capitalize }}</span></td>
+    <td class="{{ nowo_ui_class('table_cell', _b) }} nowo-ui-cell--end">{{ row.total }} €</td>
+{% endblock %}

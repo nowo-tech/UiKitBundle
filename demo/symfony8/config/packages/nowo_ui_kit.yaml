@@ -2,3 +2,85 @@ nowo_ui_kit:
     css_framework: bootstrap5
     icon_set: bootstrap-icons
     row_actions_display: icon
+
+    # REQ-UI-003 host-theme demo (/page-contract): the host layouts (bridges into base.html.twig)…
+    layouts:
+        admin: 'page_contract/layouts/admin.html.twig'
+        guest: 'page_contract/layouts/guest.html.twig'
+
+    # …and ONE theme for every bundle page: tokens, a class map, one attribute, one partial override.
+    theme:
+        tokens:
+            primary: '#0f766e'
+            primary-contrast: '#ffffff'
+            surface: '#fffdf8'
+            surface-muted: '#f5efe4'
+            border: '#e8dfd0'
+            border-strong: '#d6c8b2'
+            text: '#1c2a27'
+            muted: '#6b6a5e'
+            radius: '0.75rem'
+            success-bg: '#e7f6ef'
+            success-text: '#14532d'
+            warning-bg: '#fdf3dc'
+            warning-text: '#7c4a03'
+            info-bg: '#e6f2f6'
+            info-text: '#0c4a6e'
+        classes:
+            page_title: 'acme-title'
+            page_intro: 'acme-intro'
+            btn_primary: 'acme-btn acme-btn--primary'
+            btn_secondary: 'acme-btn'
+            btn_danger: 'acme-btn acme-btn--danger'
+            table: 'acme-table'
+            table_row: 'acme-row'
+            card: 'acme-card'
+            card_header: 'acme-card__header'
+            kpi: 'acme-kpi'
+            kpis: 'acme-kpis'
+            cards: 'acme-cards'
+            badge_success: 'acme-badge acme-badge--ok'
+            badge_warning: 'acme-badge acme-badge--warn'
+            badge_info: 'acme-badge acme-badge--info'
+            badge_danger: 'acme-badge acme-badge--danger'
+            badge_neutral: 'acme-badge'
+            filters: 'acme-filters'
+            tabs: 'acme-tabs'
+            tab_active: 'acme-tab--active'
+            wizard_step_active: 'acme-step--active'
+            auth_panel: 'acme-auth'
+        attributes:
+            table: { data-acme-table: 'zebra' }
+        partials:
+            page_header: 'page_contract/theme/_page_header.html.twig'
+        bundles:
+            # The default-theme view (/page-contract/default/…): a per-bundle exception that resets the host class
+            # map (an exception class REPLACES the host class of the slot) and the partial override.
+            DemoDefaultTheme:
+                classes:
+                    page_title: ''
+                    page_intro: ''
+                    btn_primary: ''
+                    btn_secondary: ''
+                    btn_danger: ''
+                    table: ''
+                    table_row: ''
+                    card: ''
+                    card_header: ''
+                    kpi: ''
+                    kpis: ''
+                    cards: ''
+                    badge_success: ''
+                    badge_warning: ''
+                    badge_info: ''
+                    badge_danger: ''
+                    badge_neutral: ''
+                    filters: ''
+                    tabs: ''
+                    tab_active: ''
+                    wizard_step_active: ''
+                    auth_panel: ''
+                attributes:
+                    table: { data-acme-table: false }   # attributes merge; false removes the host attribute
+                partials:
+                    page_header: '@NowoUiKitBundle/partials/_page_header.html.twig'
