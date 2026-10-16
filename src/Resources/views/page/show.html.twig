@@ -12,27 +12,28 @@
 {% block nowo_ui_document_title %}{{ page.header.title|nowo_ui_trans }}{% endblock %}
 
 {% block nowo_ui_page_header %}
-    {{ include(nowo_ui_partial('page_header', page.bundle), {header: page.header, bundle: page.bundle, nowo_ui_page_type: nowo_ui_page_type}, false) }}
+    {% import '@NowoUiKitBundle/page/_scaffold.html.twig' as scaffold %}
+    {{ scaffold.page_header(page, nowo_ui_page_type) }}
 {% endblock %}
 
 {% block nowo_ui_content %}
     {% set _b = page.bundle %}
-    <div class="nowo-ui-show-page" data-nowo-ui-page="show">
+    <div class="nowo-ui-show-page" data-nowo-ui-page="show"{{ nowo_ui_html_attrs(page.attributes) }}>
         {% block nowo_ui_show_sections %}
             {% for section in page.sections %}
-                <section class="{{ nowo_ui_class('section', _b) }} {{ nowo_ui_class('card', _b) }}"{% if section.id %} id="{{ section.id }}"{% endif %}{{ nowo_ui_attrs('section', _b) }}>
+                <section class="{{ nowo_ui_class('section', _b) }} {{ nowo_ui_class('card', _b) }}"{% if section.id %} id="{{ section.id }}"{% endif %} data-nowo-ui-region="section"{{ nowo_ui_attrs('section', _b) }}>
                     {% if section.title %}
                         <header class="{{ nowo_ui_class('card_header', _b) }}"><h2 class="nowo-ui-card__title">{{ section.title|nowo_ui_trans }}</h2></header>
                     {% endif %}
                     <div class="{{ nowo_ui_class('card_body', _b) }}">
-                        {{ include('@NowoUiKitBundle/page/_detail_list.html.twig', {items: section.items, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
+                        {{ include(nowo_ui_partial('detail_list', _b), {items: section.items, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
                     </div>
                 </section>
             {% endfor %}
         {% endblock %}
         {% if page.meta is not empty %}
-            <aside class="nowo-ui-show-page__meta">
-                {{ include('@NowoUiKitBundle/page/_detail_list.html.twig', {items: page.meta, bundle: _b, modifier: 'meta', nowo_ui_page_type: nowo_ui_page_type}, false) }}
+            <aside class="nowo-ui-show-page__meta" data-nowo-ui-region="meta">
+                {{ include(nowo_ui_partial('detail_list', _b), {items: page.meta, bundle: _b, modifier: 'meta', nowo_ui_page_type: nowo_ui_page_type}, false) }}
             </aside>
         {% endif %}
         {% block nowo_ui_show_after %}{% endblock %}

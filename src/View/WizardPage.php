@@ -16,7 +16,8 @@ final readonly class WizardPage
     public array $steps;
 
     /**
-     * @param iterable<WizardStep> $steps
+     * @param iterable<WizardStep>                      $steps
+     * @param array<string, string|int|float|bool|null> $attributes extra attributes of the scaffold root (data-testid…; no on* handlers)
      */
     public function __construct(
         public PageHeader $header,
@@ -28,7 +29,9 @@ final readonly class WizardPage
         public Label|string|null $backLabel = null,
         public ?string $bundle = null,
         public ?string $layout = null,
+        public array $attributes = [],
     ) {
+        Action::assertAttributes($attributes);
         $this->steps = ViewList::of($steps, WizardStep::class, 'WizardPage steps');
         if (null === $this->currentIndex()) {
             throw new \InvalidArgumentException(\sprintf('WizardPage current step "%s" is not one of its steps.', $current));

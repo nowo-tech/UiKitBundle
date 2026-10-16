@@ -191,17 +191,25 @@ as the UiKit partial (documented in the header comment of each template) and sho
 | `breadcrumbs` | `partials/_breadcrumbs.html.twig` | `header` (`PageHeader`), `bundle` | page header |
 | `burger` | `partials/_burger.html.twig` | `controls`, `expanded`, `label`, `root_class`, `label_attr_names`, `attr`, `bundle` | shell |
 | `card` | `partials/_card.html.twig` | `title` / `intro` (`Label` or string), `body`, `footer`, `toolbar`, `actions` (list of `View\Action`), `id`, `attr`, `cards` (list of card hashes → `cards` grid), `bundle`; slots `card`, `card_header`, `card_body`, `card_footer`, `cards` | bundle cards, dashboard cards |
-| `confirm` | `partials/_confirm.html.twig` | `id`, `confirm` (`View\Confirm`), `action`, `action_href`, `bundle` | actions with a `Confirm` |
-| `empty` | `partials/_empty.html.twig` | `empty` (`View\EmptyState`) or `message`, `bundle` | list scaffold |
+| `confirm` | `partials/_confirm.html.twig` | `id`, `confirm` (`View\Confirm`), `action`, `action_href`, `bundle` | actions with a `Confirm`; list scaffold (once per row action, after the table) |
+| `detail_list` | `page/_detail_list.html.twig` | `items` (list of `View\DetailItem`), `modifier`, `bundle` | show scaffold (sections, meta) |
+| `empty` | `partials/_empty.html.twig` | `empty` (`View\EmptyState`) **and** `message` (translated), `region`, `bundle` | list scaffold |
 | `filters` | `partials/_filters.html.twig` | `action`, `method`, `q`, `placeholder`, `actions`, `clear_href`, `collapsible` | bundle filter bars |
 | `flashes` | `partials/_flashes.html.twig` | `flashes` (default `app.flashes`), `trans_domain`, `bundle` | layouts (`nowo_ui_flashes`) |
+| `list_filters` | `page/_list_filters.html.twig` | `page` (`View\ListPage`, `page.filters` FormView), `region`, `bundle` | list scaffold |
 | `modal_shell` | `partials/_modal_shell.html.twig` | `id`, `title`, `body`, `footer` | modals |
-| `page_header` | `partials/_page_header.html.twig` | `header` (`View\PageHeader`) or `title` / `intro` / `toolbar`, `bundle` | every scaffold (`nowo_ui_page_header`) |
-| `pagination` | `partials/_pagination.html.twig` | `pagination` (`View\Pagination` or 1.x array), `item_count`, `bundle` | list scaffold |
-| `row_actions` | `partials/_row_actions.html.twig` | `actions` (list of `View\Action` or 1.x arrays), `bundle` | list scaffold |
+| `page_header` | `partials/_page_header.html.twig` | scaffolds pass **both** `header` (`View\PageHeader`) + `actions` (toolbar `View\Action`s) **and** the 1.x `title` / `intro` (translated) / `toolbar` (pre-rendered actions) with `header_actions_rendered: true`; `region`, `bundle` | every scaffold (`nowo_ui_page_header`) |
+| `pagination` | `partials/_pagination.html.twig` | scaffolds pass the 1.x array (`pagination.toArray()`) + `pagination_model` (`View\Pagination`), `item_count`, `region`, `bundle`; also accepts the object | list scaffold |
+| `row_actions` | `partials/_row_actions.html.twig` | scaffolds pass 1.x hashes (translated `label`, resolved `href`, `method` POST/GET, `csrf_token` / `csrf_field` also from a CSRF `FormView`, `confirm_id`…) with the `View\Action` as `view`, and `confirm_external: true`; also accepts `View\Action` objects; `bundle` | list scaffold |
+| `section_form` | `page/_section_form.html.twig` | `form` (FormView), `submit_label`, `bundle` | settings scaffold |
 | `shell` | `partials/_shell.html.twig` | `brand_html`, `aside_items`, `main`, `root_class`, `header_class`, `attr`, `burger_root_class`, `bundle` | host shells |
-| `tabs` | `partials/_tabs.html.twig` | `items`, `aria_label` | bundle tab bars |
+| `tabs` | `partials/_tabs.html.twig` | `items` (`{label, href, current, attr}`, label also a `Label`), `aria_label`, `region`, `bundle`; slots `tabs`, `tab`, `tab_active` | settings scaffold, bundle tab bars |
 | `toasts` | `partials/_toasts.html.twig` | `flashes`, `trans_domain`, `bundle` | layouts / hosts |
+| `wizard_form` | `page/_wizard_form.html.twig` | `page` (`View\WizardPage`), `bundle` | wizard scaffold |
+
+Every partial also receives `nowo_ui_page_type` from the scaffolds. Internal templates that are not theme partials
+(implementation details, not public includes): `_action_post`, `_action_form_view`, `_action_inner`,
+`page/_scaffold` (scaffold macros).
 
 ## Tokens
 

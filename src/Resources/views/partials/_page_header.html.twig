@@ -12,6 +12,11 @@
       plain trail), actions (toolbar buttons through _action); theme slots page_header, page_title, page_intro,
       toolbar
     - bundle: per-bundle theme exceptions
+    - header_actions_rendered (scaffolds): true when `toolbar` already holds the rendered header actions (the
+      scaffolds pre-render them, plus FormPage secondary actions, so 1.x overrides that print `toolbar` show them);
+      `actions` then lists every View\Action of that toolbar for 2.0 overrides
+    - region: data-nowo-ui-region on the root (scaffolds pass `header`)
+  Breadcrumbs and actions render through the theme partials `breadcrumbs` and `action`.
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 {% set framework = framework|default(null) %}
@@ -22,10 +27,11 @@
     {% set title = header.title.key is defined ? header.title.key|trans(header.title.params, header.title.domain) : header.title %}
     {% set intro = header.intro is null ? null : (header.intro.key is defined ? header.intro.key|trans(header.intro.params, header.intro.domain) : header.intro) %}
 {% endif %}
-<div class="{{ _t ? _t.macroClasses('page_header', ui.page_header(framework), bundle, _pt) : ui.page_header(framework) }}"{{ _t ? _t.renderAttributes('page_header', bundle, {}, _pt)|raw }}>
+{% set _toolbar_class = _t ? _t.macroClasses('toolbar', ui.toolbar(framework), bundle, _pt) : ui.toolbar(framework) %}
+<div class="{{ _t ? _t.macroClasses('page_header', ui.page_header(framework), bundle, _pt) : ui.page_header(framework) }}"{{ _t ? _t.renderAttributes('page_header', bundle, {}, _pt)|raw }}{% if region|default(null) %} data-nowo-ui-region="{{ region }}"{% endif %}>
     <div class="nowo-ui-page-header__text">
         {% if header is defined and header %}
-            {{ include('@NowoUiKitBundle/partials/_breadcrumbs.html.twig', {header: header, bundle: bundle, nowo_ui_page_type: _pt}, false) }}
+            {{ include(_t ? _t.partial('breadcrumbs', bundle) : '@NowoUiKitBundle/partials/_breadcrumbs.html.twig', {header: header, bundle: bundle, nowo_ui_page_type: _pt}, false) }}
         {% endif %}
         {% set _title_extra = _t ? _t.extraClasses('page_title', bundle, _pt) : '' %}
         <h1 class="nowo-ui-page-header__title{{ _title_extra ? ' ' ~ _title_extra }}">{{ title }}</h1>
@@ -34,14 +40,14 @@
             <p class="nowo-ui-page-header__intro{{ _intro_extra ? ' ' ~ _intro_extra }}">{{ intro }}</p>
         {% endif %}
     </div>
-    {% if header is defined and header and header.actions is not empty %}
-        <div class="{{ _t ? _t.macroClasses('toolbar', ui.toolbar(framework), bundle, _pt) : ui.toolbar(framework) }}">
+    {% if header is defined and header and header.actions is not empty and not header_actions_rendered|default(false) %}
+        <div class="{{ _toolbar_class }}">
             {% for action in header.actions %}
-                {{ include('@NowoUiKitBundle/partials/_action.html.twig', {action: action, context: 'toolbar', framework: framework, bundle: bundle, nowo_ui_page_type: _pt}, false) }}
+                {{ include(_t ? _t.partial('action', bundle) : '@NowoUiKitBundle/partials/_action.html.twig', {action: action, context: 'toolbar', framework: framework, bundle: bundle, nowo_ui_page_type: _pt}, false) }}
             {% endfor %}
             {% if toolbar is defined and toolbar %}{{ toolbar|raw }}{% endif %}
         </div>
     {% elseif toolbar is defined and toolbar %}
-        <div class="{{ ui.toolbar(framework) }}">{{ toolbar|raw }}</div>
+        <div class="{{ _toolbar_class }}">{{ toolbar|raw }}</div>
     {% endif %}
 </div>

@@ -17,7 +17,8 @@ final readonly class FormPage
     public array $secondaryActions;
 
     /**
-     * @param iterable<Action> $secondaryActions
+     * @param iterable<Action>                          $secondaryActions
+     * @param array<string, string|int|float|bool|null> $attributes       extra attributes of the scaffold root (data-testid…; no on* handlers)
      */
     public function __construct(
         public PageHeader $header,
@@ -29,7 +30,9 @@ final readonly class FormPage
         public ?Action $deleteAction = null,
         public ?string $bundle = null,
         public ?string $layout = null,
+        public array $attributes = [],
     ) {
+        Action::assertAttributes($attributes);
         $this->secondaryActions = ViewList::of($secondaryActions, Action::class, 'FormPage secondaryActions');
     }
 }

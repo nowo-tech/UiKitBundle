@@ -25,6 +25,7 @@ Normative spec: REQ-UI-003 in `BUNDLES_FULL_SPECS_DETAILS.md` · design and migr
   - [Auth](#auth)
 - [View models](#view-models)
 - [Partials](#partials)
+- [Template contract](#template-contract)
 - [Tokens and CSS](#tokens-and-css)
   - [Cascade layers](#cascade-layers)
 - [Example: a bundle page](#example-a-bundle-page)
@@ -240,17 +241,21 @@ or a plain string printed escaped. Never pre-render HTML into a view model.
 | `KpiTile` | `(label, value, hint = null, href = null, variant = 'neutral')` |
 | `SettingsSection` | `(id, label, href = null, form = null, intro = null, submitLabel = null)` |
 | `WizardStep` | `(id, label, href = null)` |
-| `ListPage` | `(header, columns = [], rows = [], filters = null, rowActions = [] \| callable(row, key), pagination = null, empty = null, filtersClearHref = null, sort = null, direction = 'asc', caption = null, bundle = null, layout = null)` |
-| `ShowPage` | `(header, sections = [], meta = [], bundle = null, layout = null)` |
-| `FormPage` | `(header, form, submitLabel = null, cancelHref = null, cancelLabel = null, secondaryActions = [], deleteAction = null, bundle = null, layout = null)` |
-| `SettingsPage` | `(header, sections = [], current = null, bundle = null, layout = null)` |
-| `DashboardPage` | `(header, kpis = [], bundle = null, layout = null)` |
-| `ConfirmPage` | `(header, confirm, action (non-GET), cancelHref = null, bundle = null, layout = null)` |
-| `WizardPage` | `(header, steps, current, form = null, backHref = null, nextLabel = null, backLabel = null, bundle = null, layout = null)` |
-| `AuthPage` | `(title, form = null, intro = null, brand = null, error = null, submitLabel = null, links = [], bundle = null, layout = null)` |
+| `ListPage` | `(header, columns = [], rows = [], filters = null, rowActions = [] \| callable(row, key), pagination = null, empty = null, filtersClearHref = null, sort = null, direction = 'asc', caption = null, bundle = null, layout = null, attributes = [])` |
+| `ShowPage` | `(header, sections = [], meta = [], bundle = null, layout = null, attributes = [])` |
+| `FormPage` | `(header, form, submitLabel = null, cancelHref = null, cancelLabel = null, secondaryActions = [], deleteAction = null, bundle = null, layout = null, attributes = [])` |
+| `SettingsPage` | `(header, sections = [], current = null, bundle = null, layout = null, attributes = [])` |
+| `DashboardPage` | `(header, kpis = [], bundle = null, layout = null, attributes = [])` |
+| `ConfirmPage` | `(header, confirm, action (non-GET), cancelHref = null, bundle = null, layout = null, attributes = [])` |
+| `WizardPage` | `(header, steps, current, form = null, backHref = null, nextLabel = null, backLabel = null, bundle = null, layout = null, attributes = [])` |
+| `AuthPage` | `(title, form = null, intro = null, brand = null, error = null, submitLabel = null, links = [], bundle = null, layout = null, attributes = [])` |
 
 `bundle` selects the per-bundle theme exception (`theme.bundles.<bundle>`); `layout` is the bundle's
-`web_ui.layout_template` override (null = `nowo_ui_layout.admin`, `.guest` for `AuthPage`).
+`web_ui.layout_template` override (null = `nowo_ui_layout.admin`, `.guest` for `AuthPage`); `attributes` (no `on*`)
+are printed on the scaffold root next to `data-nowo-ui-page` — e.g. `['data-testid' => 'orders-list']`.
+`Pagination` and `Action` implement `ArrayAccess` (read-only) with their 1.x snake_case keys (`per_page`,
+`total_pages`, `csrf_token`, `confirm_id`, `modal_id`, `attr`…), so templates written for the 1.x hashes read them
+from the objects too.
 
 `Action` kinds: `create`, `edit`, `delete`, `view`, `export`, `import`, `custom`, `copy`, `save`, `cancel`, `restore`,
 `share`, `config`, `filter`, `prev`, `next`, `close`; variants `primary`, `secondary`, `danger`, `outline`, `link`.
@@ -282,6 +287,50 @@ slots; `Label` title / intro, `actions`, `id`, `attr`, `cards` grid), `_paginati
 (`trans_domain`, slot hooks), `_shell` / `_burger` (`root_class`, `label_attr_names`, `attr`, `header_class`,
 `main_class`, `burger_*`). All accept `bundle`. Bundles include them through `nowo_ui_partial('<name>')` so a host
 override applies everywhere — never a local copy. Names: [`THEME_SLOTS.md#partials`](THEME_SLOTS.md#partials).
+
+## Template contract
+
+What a host override or a bundle data block can rely on. Changing any of it is a breaking change documented under
+"Template contract" in [`UPGRADING.md`](UPGRADING.md).
+
+**Every include goes through `nowo_ui_partial()`.** Scaffolds and partials resolve each other through the theme
+(`page_header`, `breadcrumbs`, `action`, `confirm`, `row_actions`, `pagination`, `empty`, `list_filters`,
+`detail_list`, `section_form`, `wizard_form`, `tabs`, `card`), so one `theme.partials` entry replaces a partial on
+every page, including inside other partials. Only `_action_post`, `_action_form_view`, `_action_inner` and the
+scaffold macros (`page/_scaffold`) are internal.
+
+**1.x shapes next to the view models.** Host overrides of the partials hosts commonly fork keep working unchanged:
+
+| Partial | 1.x input passed by the scaffolds | 2.0 input passed too |
+| --- | --- | --- |
+| `page_header` | `title`, `intro` (translated strings), `toolbar` (the header actions — and FormPage secondary actions — pre-rendered through the `action` partial) | `header` (`PageHeader`), `actions` (`list<Action>` of the toolbar), `header_actions_rendered: true` |
+| `pagination` | `pagination` = `Pagination::toArray()` (`page`, `per_page`, `total`, `total_pages`, `route`, `query`, `route_params`, `page_param`, `per_page_param`), `item_count` | `pagination_model` (`Pagination`) |
+| `row_actions` | `actions` = 1.x hashes: `kind`, `label` (translated), `href` (route resolved), `method` (`POST` for any non-GET), `csrf_token` / `csrf_field` (also taken from a CSRF `FormView`), `confirm_id`, `icon`, `variant`, `attr`, `modal_id`, `disabled`, `visible` | each hash's `view` (`Action`); `confirm_external: true` |
+| `empty` | `message` (translated) | `empty` (`EmptyState`) |
+| `flashes` / `toasts` | `bundle` only (flashes from `app.flashes`) | — |
+
+The list scaffold renders the confirm `<dialog>` of every row action with a `Confirm` **once, after the table**
+(region `confirms`, through the `confirm` partial), so a 1.x `_row_actions` override that prints a toggle for
+`confirm_id` (`data-nowo-confirm-open data-nowo-confirm-target="…"`) opens it. Limits of the 1.x hashes: methods
+other than GET / POST lose their `_method` spoofing (an override that needs it reads `view.method`), and the label
+of an icon-only action is the visible text the override chooses to print.
+
+**Regions.** Scaffold roots carry `data-nowo-ui-page="<type>"` plus the page model's `attributes`; standard regions
+carry `data-nowo-ui-region` for tests and host styling:
+
+| Scaffold | Regions |
+| --- | --- |
+| every scaffold but auth | `header` (page header partial root) |
+| list | `filters`, `table`, `confirms`, `pagination`, `empty` |
+| show | `section` (each), `meta` |
+| form | `form`, `secondary-actions` (when below the form), `danger-zone` |
+| settings | `tabs`, `section` (each), `form` (each section form) |
+| dashboard | `kpis`, `cards` |
+| confirm | `confirm` |
+| wizard | `steps`, `step`, `form` |
+| auth | `panel`, `form` |
+
+Partials print `data-nowo-ui-region` only when they receive `region` (1.x callers get the 1.x markup).
 
 ## Tokens and CSS
 

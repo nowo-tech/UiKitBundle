@@ -17,7 +17,8 @@ final readonly class AuthPage
     public array $links;
 
     /**
-     * @param iterable<Link> $links footer links (forgot password, register, back to site…)
+     * @param iterable<Link>                            $links      footer links (forgot password, register, back to site…)
+     * @param array<string, string|int|float|bool|null> $attributes extra attributes of the scaffold root (data-testid…; no on* handlers)
      */
     public function __construct(
         public Label|string $title,
@@ -29,7 +30,9 @@ final readonly class AuthPage
         iterable $links = [],
         public ?string $bundle = null,
         public ?string $layout = null,
+        public array $attributes = [],
     ) {
+        Action::assertAttributes($attributes);
         $this->links = ViewList::of($links, Link::class, 'AuthPage links');
     }
 }

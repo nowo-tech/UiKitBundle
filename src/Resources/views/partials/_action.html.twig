@@ -10,6 +10,8 @@
     - display: icon | text | icon_text (row context; default nowo_ui_kit_row_actions_display)
     - framework: css_framework override
     - bundle: bundle name for per-bundle theme exceptions
+    - confirm_external: true = an action with a Confirm prints only its toggle button (the dialog is rendered
+      elsewhere with the same id, e.g. once after the list table)
 
   Non-GET actions submit a POST form (CSRF-only FormView when given, else csrf token field); actions with a
   Confirm open the UiKit confirm <dialog>, whose confirm button submits. No inline on* handlers.
@@ -50,15 +52,17 @@
     {% set confirm_id = action.confirmId() %}
     {% if confirm_id %}
         <button type="button" class="{{ class }}"{% for name, value in attrs %}{% if value is same as(true) %} {{ name }}{% elseif value is not null and value is not same as(false) %} {{ name }}="{{ value }}"{% endif %}{% endfor %}{% if action.disabled %} disabled{% endif %} {{ ui.confirm_toggle_attrs() }} {{ ui.confirm_target_attr(confirm_id) }}>{{ inner }}</button>
-        {{ include(nowo_ui_partial('confirm', bundle), {
-            id: confirm_id,
-            confirm: action.confirm,
-            action: action,
-            action_href: href,
-            framework: framework,
-            bundle: bundle,
-            nowo_ui_page_type: _pt,
-        }, false) }}
+        {% if not confirm_external|default(false) %}
+            {{ include(nowo_ui_partial('confirm', bundle), {
+                id: confirm_id,
+                confirm: action.confirm,
+                action: action,
+                action_href: href,
+                framework: framework,
+                bundle: bundle,
+                nowo_ui_page_type: _pt,
+            }, false) }}
+        {% endif %}
     {% elseif action.isPost() %}
         {{ include('@NowoUiKitBundle/partials/_action_post.html.twig', {
             action: action,

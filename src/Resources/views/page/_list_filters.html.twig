@@ -1,9 +1,14 @@
 {#
-  Filters region of page/list.html.twig (separate file: form_start / form_end need symfony/form).
-  REQ-TWIG-003 child loop; apply / clear chrome outside the loop.
+  Filters region of page/list.html.twig (theme partial `list_filters`; separate file: form_start / form_end need
+  symfony/form). REQ-TWIG-003 child loop; apply / clear chrome outside the loop.
+
+  Required:
+    - page: View\ListPage (page.filters: FormView)
+  Optional:
+    - region (data-nowo-ui-region, default filters), bundle (default page.bundle), nowo_ui_page_type
 #}
-{% set _b = page.bundle %}
-{{ form_start(page.filters, {attr: {class: nowo_ui_class('filters', _b), role: 'search', 'data-nowo-ui-filters': ''}}) }}
+{% set _b = bundle|default(page.bundle) %}
+{{ form_start(page.filters, {attr: {class: nowo_ui_class('filters', _b), role: 'search', 'data-nowo-ui-filters': '', 'data-nowo-ui-region': region|default('filters')}|merge(nowo_ui_theme.attributesFor('filters', _b, {}, nowo_ui_page_type|default(null)))}) }}
     {% for child in page.filters %}
         {% if not child.rendered %}
             {{ form_row(child) }}

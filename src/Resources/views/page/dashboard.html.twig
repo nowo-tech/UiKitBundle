@@ -12,14 +12,15 @@
 {% block nowo_ui_document_title %}{{ page.header.title|nowo_ui_trans }}{% endblock %}
 
 {% block nowo_ui_page_header %}
-    {{ include(nowo_ui_partial('page_header', page.bundle), {header: page.header, bundle: page.bundle, nowo_ui_page_type: nowo_ui_page_type}, false) }}
+    {% import '@NowoUiKitBundle/page/_scaffold.html.twig' as scaffold %}
+    {{ scaffold.page_header(page, nowo_ui_page_type) }}
 {% endblock %}
 
 {% block nowo_ui_content %}
     {% set _b = page.bundle %}
-    <div class="nowo-ui-dashboard-page" data-nowo-ui-page="dashboard">
+    <div class="nowo-ui-dashboard-page" data-nowo-ui-page="dashboard"{{ nowo_ui_html_attrs(page.attributes) }}>
         {% if page.kpis is not empty %}
-            <div class="{{ nowo_ui_class('kpis', _b) }}"{{ nowo_ui_attrs('kpis', _b) }}>
+            <div class="{{ nowo_ui_class('kpis', _b) }}" data-nowo-ui-region="kpis"{{ nowo_ui_attrs('kpis', _b) }}>
                 {% for kpi in page.kpis %}
                     <div class="{{ nowo_ui_class('kpi', _b) }} nowo-ui-kpi--{{ kpi.variant }}">
                         <p class="nowo-ui-kpi__label">{{ kpi.label|nowo_ui_trans }}</p>
@@ -31,7 +32,7 @@
                 {% endfor %}
             </div>
         {% endif %}
-        <div class="{{ nowo_ui_class('cards', _b) }}"{{ nowo_ui_attrs('cards', _b) }}>
+        <div class="{{ nowo_ui_class('cards', _b) }}" data-nowo-ui-region="cards"{{ nowo_ui_attrs('cards', _b) }}>
             {% block nowo_ui_dashboard_cards %}{% endblock %}
         </div>
     </div>

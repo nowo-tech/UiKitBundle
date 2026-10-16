@@ -279,16 +279,20 @@ final class ThemeSlots
         'burger' => '@NowoUiKitBundle/partials/_burger.html.twig',
         'card' => '@NowoUiKitBundle/partials/_card.html.twig',
         'confirm' => '@NowoUiKitBundle/partials/_confirm.html.twig',
+        'detail_list' => '@NowoUiKitBundle/page/_detail_list.html.twig',
         'empty' => '@NowoUiKitBundle/partials/_empty.html.twig',
         'filters' => '@NowoUiKitBundle/partials/_filters.html.twig',
         'flashes' => '@NowoUiKitBundle/partials/_flashes.html.twig',
+        'list_filters' => '@NowoUiKitBundle/page/_list_filters.html.twig',
         'modal_shell' => '@NowoUiKitBundle/partials/_modal_shell.html.twig',
         'page_header' => '@NowoUiKitBundle/partials/_page_header.html.twig',
         'pagination' => '@NowoUiKitBundle/partials/_pagination.html.twig',
         'row_actions' => '@NowoUiKitBundle/partials/_row_actions.html.twig',
+        'section_form' => '@NowoUiKitBundle/page/_section_form.html.twig',
         'shell' => '@NowoUiKitBundle/partials/_shell.html.twig',
         'tabs' => '@NowoUiKitBundle/partials/_tabs.html.twig',
         'toasts' => '@NowoUiKitBundle/partials/_toasts.html.twig',
+        'wizard_form' => '@NowoUiKitBundle/page/_wizard_form.html.twig',
     ];
 
     /**

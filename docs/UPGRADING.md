@@ -103,6 +103,20 @@ Changes to markup, inputs and cascade a host or a bundle may depend on (REQ-UI-0
   `input[data-nowo-confirm-expected]` + `[data-nowo-confirm-submit]` inside the dialog or a `[data-nowo-confirm-scope]`.
 - **Row-action variant slots** `action_primary`, `action_secondary`, `action_danger` (host classes added in row
   context by resolved variant; new slots = minor).
+- **Every include goes through `nowo_ui_partial()`**: `_page_header` resolves `breadcrumbs` / `action`, `_empty`,
+  `_card` and `_row_actions` resolve `action`, the settings scaffold renders its tabs through the `tabs` partial
+  (which now reads the `tabs` / `tab` / `tab_active` slots; 1.x output unchanged with an empty theme). New partial
+  names `list_filters`, `detail_list`, `section_form`, `wizard_form`. A `theme.partials.action` override now also
+  applies inside page headers, empty states, cards and row actions.
+- **1.x shapes for host overrides** ([`PAGE_CONTRACT.md#template-contract`](PAGE_CONTRACT.md#template-contract)):
+  the list scaffold passes `pagination` as the 1.x array (+ `pagination_model`), row actions as 1.x hashes (+ the
+  `Action` as `view`, `confirm_external: true`) and renders the row confirm dialogs once after the table; every
+  scaffold passes `title` / `intro` / `toolbar` to `page_header` next to `header`. `Pagination` and `Action`
+  implement read-only `ArrayAccess` with the 1.x keys. Overrides written for the 2.0 inputs: `header.actions` are
+  still there, but render `actions` (or `toolbar`) to include FormPage secondary actions.
+- **Regions and page attributes:** standard regions carry `data-nowo-ui-region="…"`; every page model takes
+  `attributes` (rendered on the scaffold root, validated: no `on*`). `_page_header`, `_pagination`, `_empty` and
+  `_tabs` accept `region`.
 - **Page types.** Scaffolds set `nowo_ui_page_type` (`list`, `show`, `form`, `settings`, `dashboard`, `confirm`,
   `wizard`, `auth`) and pass it to the partials they include; `theme.pages.<type>.{classes,attributes,framework_defaults}`
   varies a slot per page type (bundle slot > bundle > page-type slot > page type > host slot > host).

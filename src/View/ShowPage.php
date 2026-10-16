@@ -17,8 +17,9 @@ final readonly class ShowPage
     public array $meta;
 
     /**
-     * @param iterable<DetailSection> $sections
-     * @param iterable<DetailItem>    $meta     audit meta (created / updated by, …)
+     * @param iterable<DetailSection>                   $sections
+     * @param iterable<DetailItem>                      $meta       audit meta (created / updated by, …)
+     * @param array<string, string|int|float|bool|null> $attributes extra attributes of the scaffold root (data-testid…; no on* handlers)
      */
     public function __construct(
         public PageHeader $header,
@@ -26,7 +27,9 @@ final readonly class ShowPage
         iterable $meta = [],
         public ?string $bundle = null,
         public ?string $layout = null,
+        public array $attributes = [],
     ) {
+        Action::assertAttributes($attributes);
         $this->sections = ViewList::of($sections, DetailSection::class, 'ShowPage sections');
         $this->meta = ViewList::of($meta, DetailItem::class, 'ShowPage meta');
     }

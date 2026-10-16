@@ -126,7 +126,7 @@ final class ScaffoldRenderTest extends TestCase
         self::assertStringContainsString('<p>AFTER</p>', $html);
 
         $bare = $this->twig()->render('@NowoUiKit/page/list.html.twig', ['page' => new ListPage(new PageHeader('Items'))]);
-        self::assertStringContainsString('<p class="nowo-ui-empty nowo-ui-muted text-muted">No items found.</p>', $bare);
+        self::assertStringContainsString('<p class="nowo-ui-empty nowo-ui-muted text-muted" data-nowo-ui-region="empty">No items found.</p>', $bare);
     }
 
     public function testListUsesTheRequestRouteForSortingWithoutPagination(): void
@@ -148,7 +148,7 @@ final class ScaffoldRenderTest extends TestCase
         );
         $html = $this->twig()->render('@NowoUiKit/page/show.html.twig', ['page' => $page]);
 
-        self::assertStringContainsString('<section class="nowo-ui-section mb-4 nowo-ui-card card" id="general">', $html);
+        self::assertStringContainsString('<section class="nowo-ui-section mb-4 nowo-ui-card card" id="general" data-nowo-ui-region="section">', $html);
         self::assertStringContainsString('<h2 class="nowo-ui-card__title">General</h2>', $html);
         self::assertStringContainsString('<dl class="nowo-ui-detail-list app-dl">', $html);
         self::assertStringContainsString('<dd class="nowo-ui-detail-list__value"><a href="/site">example.org</a></dd>', $html);
@@ -171,7 +171,7 @@ final class ScaffoldRenderTest extends TestCase
         $page = new FormPage(new PageHeader('Edit item'), $form, cancelHref: '/items', secondaryActions: [Action::view('/items/1'), new Action('custom', 'Duplicate', '/dup', variant: 'link')], deleteAction: Action::delete('/items/1', form: $this->csrfForm()), bundle: 'NowoXBundle');
         $html = $this->twig()->render('@NowoUiKit/page/form.html.twig', ['page' => $page]);
 
-        self::assertMatchesRegularExpression('#<form name="item" method="post" class="nowo-ui-form app-form">#', $html);
+        self::assertMatchesRegularExpression('#<form name="item" method="post" class="nowo-ui-form app-form" data-nowo-ui-region="form">#', $html);
         self::assertStringContainsString('<input type="text" id="item_name" name="item[name]"', $html);
         self::assertStringContainsString('<input type="checkbox" id="item_active" name="item[active]"', $html);
         self::assertStringContainsString('<button type="submit" class="nowo-ui-btn nowo-ui-btn--primary btn btn-primary btn-moss">Save</button>', $html);
@@ -199,9 +199,10 @@ final class ScaffoldRenderTest extends TestCase
         ], 'mail');
         $html = $this->twig()->render('@NowoUiKit/page/settings.html.twig', ['page' => $page]);
 
-        self::assertStringContainsString('<nav class="nowo-ui-tabs nav nav-tabs mb-3" aria-label="Sections">', $html);
-        self::assertStringContainsString('<a class="nowo-ui-tabs__item nav-link" href="/settings/general">General</a>', $html);
-        self::assertStringContainsString('<a class="nowo-ui-tabs__item nowo-ui-tabs__item--active nav-link active app-tab-on" href="/settings/mail" aria-current="page">Mail</a>', $html);
+        self::assertStringContainsString('<nav class="nowo-ui-tabs nav nav-tabs mb-3" aria-label="Sections" data-nowo-ui-region="tabs">', $html);
+        // tabs through the `tabs` theme partial (1.x markup: one attribute per line)
+        self::assertMatchesRegularExpression('#<a\s+class="nowo-ui-tabs__item nav-link"\s+href="/settings/general"\s*>General</a>#', $html);
+        self::assertMatchesRegularExpression('#<a\s+class="nowo-ui-tabs__item nowo-ui-tabs__item--active nav-link active app-tab-on"\s+href="/settings/mail"\s+aria-current="page"\s*>Mail</a>#', $html);
         self::assertStringContainsString('id="nowo-ui-settings-mail"', $html);
         self::assertStringNotContainsString('id="nowo-ui-settings-general"', $html);
         self::assertStringContainsString('<p class="nowo-ui-card__intro">Outgoing mail</p>', $html);
@@ -228,7 +229,7 @@ final class ScaffoldRenderTest extends TestCase
         self::assertStringContainsString('<p class="nowo-ui-kpi__value"><a href="/users">42</a></p>', $html);
         self::assertStringContainsString('<p class="nowo-ui-kpi__hint">last 7 days</p>', $html);
         self::assertStringContainsString('<p class="nowo-ui-kpi__value">0</p>', $html);
-        self::assertMatchesRegularExpression('#<div class="nowo-ui-cards">\s*<section class="nowo-ui-card card">CARD</section>\s*</div>#', $html);
+        self::assertMatchesRegularExpression('#<div class="nowo-ui-cards" data-nowo-ui-region="cards">\s*<section class="nowo-ui-card card">CARD</section>\s*</div>#', $html);
         $this->assertContract($html);
 
         $html = $this->twig()->render('@NowoUiKit/page/dashboard.html.twig', ['page' => new DashboardPage(new PageHeader('D'))]);
@@ -282,7 +283,7 @@ final class ScaffoldRenderTest extends TestCase
         $html = $this->twig()->render('@NowoUiKit/page/auth.html.twig', ['page' => $page]);
 
         self::assertStringContainsString('nowo-ui-page--guest', $html);
-        self::assertStringContainsString('<section class="nowo-ui-auth-panel card app-auth" data-nowo-ui-page="auth">', $html);
+        self::assertStringContainsString('<section class="nowo-ui-auth-panel card app-auth" data-nowo-ui-page="auth" data-nowo-ui-region="panel">', $html);
         self::assertStringContainsString('<p class="nowo-ui-auth-panel__brand">Acme</p>', $html);
         self::assertStringContainsString('<h1 class="nowo-ui-page-header__title h3 mb-1">Sign in</h1>', $html);
         self::assertStringContainsString('<div class="nowo-ui-flash nowo-ui-flash--error alert alert-danger" role="alert">Invalid credentials.</div>', $html);
@@ -333,7 +334,7 @@ final class ScaffoldRenderTest extends TestCase
     {
         $views = PageContractTwig::root().'/src/Resources/views';
         $files = array_merge(glob($views.'/layout/*.twig') ?: [], glob($views.'/page/*.twig') ?: [], glob($views.'/partials/_action*.twig') ?: [], [$views.'/partials/_breadcrumbs.html.twig']);
-        self::assertCount(20, $files);
+        self::assertCount(21, $files);
         foreach ($files as $file) {
             $code = (string) preg_replace('/\{#.*?#\}/s', '', (string) file_get_contents($file));
             self::assertSame(0, preg_match('/(?:bg|text|border)-(?:slate|gray|zinc|red|blue|green|white|black)|rounded|\bon[a-z]+=|confirm\(|https?:\/\//', $code, $m), basename($file).': '.($m[0] ?? ''));

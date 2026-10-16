@@ -1,0 +1,28 @@
+{#
+  Scaffold helpers (internal to page/*.html.twig; not a theme partial).
+
+  page_header(page, page_type, extra_actions = []): includes the `page_header` theme partial with both the 2.0
+  input (`header`, `actions`) and the 1.x input (`title`, `intro` translated, `toolbar` = the header actions + the
+  extra actions pre-rendered through the `action` partial, `header_actions_rendered: true`), so host overrides
+  written for either contract render the same header.
+#}
+{% macro page_header(page, page_type, extra_actions = []) %}
+    {%- set _b = page.bundle -%}
+    {%- set _actions = page.header.actions|merge(extra_actions) -%}
+    {%- set _toolbar -%}
+        {%- for action in _actions -%}
+            {{ include(nowo_ui_partial('action', _b), {action: action, context: 'toolbar', bundle: _b, nowo_ui_page_type: page_type}, false) }}
+        {%- endfor -%}
+    {%- endset -%}
+    {{ include(nowo_ui_partial('page_header', _b), {
+        header: page.header,
+        actions: _actions,
+        title: page.header.title|nowo_ui_trans,
+        intro: page.header.intro is null ? null : page.header.intro|nowo_ui_trans,
+        toolbar: _actions is empty ? null : _toolbar|trim,
+        header_actions_rendered: true,
+        region: 'header',
+        bundle: _b,
+        nowo_ui_page_type: page_type,
+    }, false) }}
+{% endmacro %}

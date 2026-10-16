@@ -47,7 +47,7 @@
             {% if _actions is not empty or (toolbar is defined and toolbar) %}
                 <div class="nowo-ui-card__toolbar">
                     {%- for action in _actions -%}
-                        {{ include('@NowoUiKitBundle/partials/_action.html.twig', {action: action, context: 'toolbar', framework: framework, bundle: bundle, nowo_ui_page_type: _pt}, false) }}
+                        {{ include(_t ? _t.partial('action', bundle) : '@NowoUiKitBundle/partials/_action.html.twig', {action: action, context: 'toolbar', framework: framework, bundle: bundle, nowo_ui_page_type: _pt}, false) }}
                     {%- endfor -%}
                     {%- if toolbar is defined and toolbar %}{{ toolbar|raw }}{% endif -%}
                 </div>

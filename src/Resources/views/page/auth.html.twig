@@ -14,14 +14,14 @@
 {% block nowo_ui_content %}
     {% set _b = page.bundle %}
     {% set form = page.form %}
-    <section class="{{ nowo_ui_class('auth_panel', _b) }}" data-nowo-ui-page="auth"{{ nowo_ui_attrs('auth_panel', _b) }}>
+    <section class="{{ nowo_ui_class('auth_panel', _b) }}" data-nowo-ui-page="auth" data-nowo-ui-region="panel"{{ nowo_ui_attrs('auth_panel', _b) }}{{ nowo_ui_html_attrs(page.attributes) }}>
         <div class="{{ nowo_ui_class('card_body', _b) }}">
             {% if page.brand %}<p class="nowo-ui-auth-panel__brand">{{ page.brand|nowo_ui_trans }}</p>{% endif %}
             <h1 class="{{ nowo_ui_class('page_title', _b) }}">{{ page.title|nowo_ui_trans }}</h1>
             {% if page.intro %}<p class="{{ nowo_ui_class('page_intro', _b) }}">{{ page.intro|nowo_ui_trans }}</p>{% endif %}
             {% if page.error %}<div class="{{ nowo_ui_class('flash_error', _b) }}" role="alert">{{ page.error|nowo_ui_trans }}</div>{% endif %}
             {% if form %}
-                {{ form_start(form, {attr: {class: nowo_ui_class('form', _b)}}) }}
+                {{ form_start(form, {attr: {class: nowo_ui_class('form', _b), 'data-nowo-ui-region': 'form'}|merge(nowo_ui_theme.attributesFor('form', _b, {}, nowo_ui_page_type))}) }}
                     {% block nowo_ui_auth_fields %}
                         {% for child in form %}
                             {% if not child.rendered %}

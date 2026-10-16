@@ -14,8 +14,13 @@ use Symfony\Component\Form\FormView;
  * form: preferably a CSRF-only `form` (FormView, REQ-TWIG-005), else `csrfToken` as a hidden field; methods other
  * than GET/POST are spoofed with `_method`. With `confirm`, the action opens the UiKit confirm `<dialog>` and the
  * dialog's confirm button submits (no inline `confirm()`).
+ *
+ * Implements `ArrayAccess` with the 1.x `_row_actions` keys of {@see self::toArray()} (read-only: `csrf_token`,
+ * `confirm_id`, `modal_id`, `attr`…), so host overrides of `_row_actions` written for 1.x read them from the object.
+ *
+ * @implements \ArrayAccess<array-key, mixed>
  */
-final readonly class Action
+final readonly class Action implements \ArrayAccess
 {
     /** Canonical kinds (REQ-UI-003) plus the 1.x row-action kinds (docs/ROW_ACTIONS.md). */
     public const KINDS = ['create', 'edit', 'delete', 'view', 'export', 'import', 'custom', 'copy', 'save', 'cancel', 'restore', 'share', 'config', 'filter', 'prev', 'next', 'close'];
@@ -180,5 +185,31 @@ final readonly class Action
                 throw new \InvalidArgumentException(\sprintf('Attribute "%s" must be a scalar, bool or null.', $name));
             }
         }
+    }
+
+    /**
+     * 1.x `_row_actions` hash key (`action['csrf_token']` / `action.csrf_token` in Twig): see {@see self::toArray()}.
+     */
+    public function offsetExists(mixed $offset): bool
+    {
+        return null !== $this->offsetGet($offset);
+    }
+
+    /**
+     * Value of a 1.x key ({@see self::toArray()}), null when unknown.
+     */
+    public function offsetGet(mixed $offset): mixed
+    {
+        return \is_string($offset) ? ($this->toArray()[$offset] ?? null) : null;
+    }
+
+    public function offsetSet(mixed $offset, mixed $value): never
+    {
+        throw new \LogicException(self::class.' is immutable.');
+    }
+
+    public function offsetUnset(mixed $offset): never
+    {
+        throw new \LogicException(self::class.' is immutable.');
     }
 }

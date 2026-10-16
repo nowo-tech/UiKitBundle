@@ -13,19 +13,21 @@
 {% block nowo_ui_document_title %}{{ page.header.title|nowo_ui_trans }}{% endblock %}
 
 {% block nowo_ui_page_header %}
-    {{ include(nowo_ui_partial('page_header', page.bundle), {header: page.header, bundle: page.bundle, nowo_ui_page_type: nowo_ui_page_type}, false) }}
+    {% import '@NowoUiKitBundle/page/_scaffold.html.twig' as scaffold %}
+    {{ scaffold.page_header(page, nowo_ui_page_type) }}
 {% endblock %}
 
 {% block nowo_ui_content %}
     {% set _b = page.bundle %}
-    <section class="nowo-ui-list-page" data-nowo-ui-page="list">
+    <section class="nowo-ui-list-page" data-nowo-ui-page="list"{{ nowo_ui_html_attrs(page.attributes) }}>
         {% if page.filters %}
-            {{ include('@NowoUiKitBundle/page/_list_filters.html.twig', {page: page, nowo_ui_page_type: nowo_ui_page_type}, false) }}
+            {{ include(nowo_ui_partial('list_filters', _b), {page: page, region: 'filters', bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
         {% endif %}
         {% if page.rows is not empty %}
             {% set _route = page.pagination and page.pagination.route ? page.pagination.route : (app is defined and app ? app.request.attributes.get('_route') : null) %}
             {% set _route_params = (app is defined and app ? app.request.attributes.get('_route_params') : {})|default({})|merge(app is defined and app ? app.request.query.all : {}) %}
-            <div class="{{ nowo_ui_class('table_wrap', _b) }}"{{ nowo_ui_attrs('table_wrap', _b) }}>
+            {% set _confirms = [] %}
+            <div class="{{ nowo_ui_class('table_wrap', _b) }}" data-nowo-ui-region="table"{{ nowo_ui_attrs('table_wrap', _b) }}>
                 <table class="{{ nowo_ui_class('table', _b) }}"{{ nowo_ui_attrs('table', _b) }}>
                     {% if page.caption %}<caption class="nowo-ui-table__caption">{{ page.caption|nowo_ui_trans }}</caption>{% endif %}
                     <thead class="{{ nowo_ui_class('table_head', _b) }}">
@@ -56,8 +58,26 @@
                                     {% endfor %}
                                 {% endblock %}
                                 {% if page.hasRowActions() %}
+                                    {#- 1.x hashes (label translated, href resolved, CSRF token) + the View\Action as `view`: the
+                                        default partial renders the object, 1.x overrides read the hash; confirm
+                                        dialogs render once after the table (confirm_external) -#}
+                                    {% set _row_actions = [] %}
+                                    {% for _action in page.rowActions(row, row_key) %}
+                                        {% set _token = _action.form and _action.form._token is defined ? _action.form._token.vars : null %}
+                                        {% set _row_actions = _row_actions|merge([_action.toArray()|merge({
+                                            label: _action.label is null ? ('action.' ~ _action.kind)|trans({}, 'NowoUiKitBundle') : _action.label|nowo_ui_trans,
+                                            href: _action.href ?? (_action.route ? path(_action.route, _action.params) : null),
+                                            method: _action.isPost() ? 'POST' : 'GET',
+                                            csrf_token: _token ? _token.value : _action.csrfToken,
+                                            csrf_field: _token ? _token.full_name : _action.csrfField,
+                                            view: _action,
+                                        })]) %}
+                                        {% if _action.confirm and _action.visible %}
+                                            {% set _confirms = _confirms|merge([_action]) %}
+                                        {% endif %}
+                                    {% endfor %}
                                     <td class="{{ nowo_ui_class('table_cell', _b) }} nowo-ui-cell--end nowo-ui-table__actions">
-                                        {{ include(nowo_ui_partial('row_actions', _b), {actions: page.rowActions(row, row_key), bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
+                                        {{ include(nowo_ui_partial('row_actions', _b), {actions: _row_actions, confirm_external: true, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
                                     </td>
                                 {% endif %}
                             </tr>
@@ -65,11 +85,27 @@
                     </tbody>
                 </table>
             </div>
+            {% if _confirms is not empty %}
+                <div class="nowo-ui-list-page__confirms" data-nowo-ui-region="confirms">
+                    {% for _action in _confirms %}
+                        {{ include(nowo_ui_partial('confirm', _b), {
+                            id: _action.confirmId(),
+                            confirm: _action.confirm,
+                            action: _action,
+                            action_href: _action.href ?? (_action.route ? path(_action.route, _action.params) : null),
+                            bundle: _b,
+                            nowo_ui_page_type: nowo_ui_page_type,
+                        }, false) }}
+                    {% endfor %}
+                </div>
+            {% endif %}
             {% if page.pagination %}
-                {{ include(nowo_ui_partial('pagination', _b), {pagination: page.pagination, item_count: page.rows|length, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
+                {#- 1.x array shape (+ the object as pagination_model) so host overrides of _pagination keep working -#}
+                {{ include(nowo_ui_partial('pagination', _b), {pagination: page.pagination.toArray(), pagination_model: page.pagination, item_count: page.rows|length, region: 'pagination', bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
             {% endif %}
         {% else %}
-            {{ include(nowo_ui_partial('empty', _b), {empty: page.empty ?? null, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
+            {% set _empty = page.empty ?? null %}
+            {{ include(nowo_ui_partial('empty', _b), {empty: _empty, message: _empty and _empty.message is not null ? _empty.message|nowo_ui_trans : null, region: 'empty', bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
         {% endif %}
         {% block nowo_ui_list_after %}{% endblock %}
     </section>

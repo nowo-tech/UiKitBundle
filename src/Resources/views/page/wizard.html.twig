@@ -12,14 +12,15 @@
 {% block nowo_ui_document_title %}{{ page.header.title|nowo_ui_trans }}{% endblock %}
 
 {% block nowo_ui_page_header %}
-    {{ include(nowo_ui_partial('page_header', page.bundle), {header: page.header, bundle: page.bundle, nowo_ui_page_type: nowo_ui_page_type}, false) }}
+    {% import '@NowoUiKitBundle/page/_scaffold.html.twig' as scaffold %}
+    {{ scaffold.page_header(page, nowo_ui_page_type) }}
 {% endblock %}
 
 {% block nowo_ui_content %}
     {% set _b = page.bundle %}
     {% set step = page.steps[page.currentIndex()] %}
-    <div class="nowo-ui-wizard-page" data-nowo-ui-page="wizard">
-        <ol class="{{ nowo_ui_class('wizard_steps', _b) }}" aria-label="{{ 'wizard.steps'|trans({}, 'NowoUiKitBundle') }}"{{ nowo_ui_attrs('wizard_steps', _b) }}>
+    <div class="nowo-ui-wizard-page" data-nowo-ui-page="wizard"{{ nowo_ui_html_attrs(page.attributes) }}>
+        <ol class="{{ nowo_ui_class('wizard_steps', _b) }}" aria-label="{{ 'wizard.steps'|trans({}, 'NowoUiKitBundle') }}" data-nowo-ui-region="steps"{{ nowo_ui_attrs('wizard_steps', _b) }}>
             {% for s in page.steps %}
                 {% set _status = page.status(s) %}
                 <li class="{{ nowo_ui_class(_status == 'current' ? 'wizard_step_active' : 'wizard_step', _b) }} nowo-ui-wizard-steps__item--{{ _status }}"{% if _status == 'current' %} aria-current="step"{% endif %}>
@@ -32,11 +33,11 @@
             {% endfor %}
         </ol>
         <p class="nowo-ui-wizard-page__progress">{{ 'wizard.step_of'|trans({'%current%': page.currentIndex() + 1, '%total%': page.steps|length}, 'NowoUiKitBundle') }}</p>
-        <section class="{{ nowo_ui_class('card', _b) }}">
+        <section class="{{ nowo_ui_class('card', _b) }}" data-nowo-ui-region="step">
             <div class="{{ nowo_ui_class('card_body', _b) }}">
                 {% block nowo_ui_wizard_step %}
                     {% if page.form %}
-                        {{ include('@NowoUiKitBundle/page/_wizard_form.html.twig', {page: page, nowo_ui_page_type: nowo_ui_page_type}, false) }}
+                        {{ include(nowo_ui_partial('wizard_form', _b), {page: page, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
                     {% endif %}
                 {% endblock %}
             </div>

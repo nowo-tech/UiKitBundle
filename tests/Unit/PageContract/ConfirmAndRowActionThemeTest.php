@@ -63,7 +63,7 @@ final class ConfirmAndRowActionThemeTest extends TestCase
         $page = new ConfirmPage(new PageHeader('Delete'), new Confirm('Delete order?', expectedValue: 'ORDER-7', expectedLabel: new Label('Type %value%', 'admin')), Action::delete('/o/7', 'tok'));
         $html = PageContractTwig::create()->render('@NowoUiKit/page/confirm.html.twig', ['page' => $page]);
 
-        self::assertStringContainsString('data-nowo-ui-page="confirm" data-nowo-confirm-scope', $html);
+        self::assertStringContainsString('data-nowo-ui-page="confirm" data-nowo-ui-region="confirm" data-nowo-confirm-scope', $html);
         self::assertStringContainsString('for="nowo-ui-confirm-page-expected">Type ORDER-7</label>', $html);
         self::assertStringContainsString('required pattern="ORDER-7" data-nowo-confirm-expected="ORDER-7" form="nowo-ui-confirm-page-form">', $html);
         self::assertStringContainsString('id="nowo-ui-confirm-page-form"', $html);

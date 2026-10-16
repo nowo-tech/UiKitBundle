@@ -6,6 +6,8 @@
     - framework: css_framework override
     - empty (2.0 contract): View\EmptyState — title, message (labels translated), action (through _action)
     - bundle: per-bundle theme exceptions (slot `empty`)
+    - region: data-nowo-ui-region on the root (scaffolds pass `empty`)
+  The empty-state action renders through the theme partial `action`.
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 {% set framework = framework|default(null) %}
@@ -16,13 +18,13 @@
 {% if empty is defined and empty %}
     {% set _title = empty.title is null ? null : (empty.title.key is defined ? empty.title.key|trans(empty.title.params, empty.title.domain) : empty.title) %}
     {% set _message = empty.message is null ? 'empty.default'|trans({}, 'NowoUiKitBundle') : (empty.message.key is defined ? empty.message.key|trans(empty.message.params, empty.message.domain) : empty.message) %}
-    <div class="{{ _class }}"{{ _t ? _t.renderAttributes('empty', bundle, {}, _pt)|raw }}>
+    <div class="{{ _class }}"{{ _t ? _t.renderAttributes('empty', bundle, {}, _pt)|raw }}{% if region|default(null) %} data-nowo-ui-region="{{ region }}"{% endif %}>
         {% if _title %}<p class="nowo-ui-empty__title">{{ _title }}</p>{% endif %}
         <p class="nowo-ui-empty__message">{{ _message }}</p>
         {% if empty.action %}
-            <div class="nowo-ui-empty__action">{{ include('@NowoUiKitBundle/partials/_action.html.twig', {action: empty.action, context: 'toolbar', framework: framework, bundle: bundle, nowo_ui_page_type: _pt}, false) }}</div>
+            <div class="nowo-ui-empty__action">{{ include(_t ? _t.partial('action', bundle) : '@NowoUiKitBundle/partials/_action.html.twig', {action: empty.action, context: 'toolbar', framework: framework, bundle: bundle, nowo_ui_page_type: _pt}, false) }}</div>
         {% endif %}
     </div>
 {% else %}
-<p class="{{ _class }}">{{ message|default('empty.default'|trans({}, 'NowoUiKitBundle')) }}</p>
+<p class="{{ _class }}"{% if region|default(null) %} data-nowo-ui-region="{{ region }}"{% endif %}>{{ message|default('empty.default'|trans({}, 'NowoUiKitBundle')) }}</p>
 {% endif %}

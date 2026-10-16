@@ -30,6 +30,7 @@ final readonly class ListPage
      * @param iterable<Column>                                                 $columns
      * @param iterable<mixed>                                                  $rows
      * @param (callable(mixed, int|string): iterable<Action>)|iterable<Action> $rowActions
+     * @param array<string, string|int|float|bool|null>                        $attributes extra attributes of the scaffold root (data-testid…; no on* handlers)
      */
     public function __construct(
         public PageHeader $header,
@@ -45,7 +46,9 @@ final readonly class ListPage
         public Label|string|null $caption = null,
         public ?string $bundle = null,
         public ?string $layout = null,
+        public array $attributes = [],
     ) {
+        Action::assertAttributes($attributes);
         $this->columns = ViewList::of($columns, Column::class, 'ListPage columns');
         $this->rows = \is_array($rows) ? $rows : iterator_to_array($rows, false);
         if (\is_callable($rowActions)) {

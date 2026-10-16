@@ -61,6 +61,10 @@ final class LegacyPartialsBcTest extends TestCase
         yield 'card empty body' => ['_card', ['body' => '', 'title' => 'T'], 'tailwind'];
         yield 'card framework arg' => ['_card', ['title' => 'T', 'intro' => '', 'toolbar' => '', 'footer' => '', 'framework' => 'tailwind'], 'bootstrap5'];
         yield 'card nothing' => ['_card', [], 'custom'];
+        foreach (['bootstrap5', 'tailwind', 'foundation', 'custom'] as $fw) {
+            yield 'tabs '.$fw => ['_tabs', ['items' => [['label' => 'General', 'href' => '/g'], ['label' => 'Mail <b>', 'href' => '/m', 'current' => true, 'attr' => ['data-x' => '1']]], 'aria_label' => 'Sections'], $fw];
+        }
+        yield 'tabs default label' => ['_tabs', ['items' => [], 'framework' => 'tailwind'], 'bootstrap5'];
         yield 'shell rail' => ['_shell', ['brand_html' => '<b>A</b>', 'sidebar_rail' => ['storage' => 's', 'cookie' => 'c', 'hidden_value' => 'h', 'default' => 'rail'], 'sidebar_mode' => 'collapsed', 'show_user_menu' => false, 'header_end' => '<i>e</i>'], 'custom'];
     }
 

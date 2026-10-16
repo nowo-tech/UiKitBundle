@@ -8,8 +8,13 @@ namespace Nowo\UiKitBundle\View;
  * The only pagination shape of the page contract (REQ-UI-003). `route` null = current request route.
  * Factories normalise the shapes found in bundles (`fromArray`), Pagerfanta (`fromPagerfanta`) and
  * KnpPaginator (`fromKnp`) by duck typing — neither library is a dependency.
+ *
+ * Implements `ArrayAccess` with the 1.x snake_case keys of {@see self::toArray()} (read-only), so host overrides of
+ * `_pagination` written for 1.x read `pagination.per_page` / `pagination.total_pages` from the object too.
+ *
+ * @implements \ArrayAccess<array-key, mixed>
  */
-final readonly class Pagination
+final readonly class Pagination implements \ArrayAccess
 {
     public int $page;
 
@@ -177,5 +182,31 @@ final readonly class Pagination
                 throw new \InvalidArgumentException(\sprintf('%s does not look like a %s pager: method %s() is missing.', get_debug_type($object), $library, $method));
             }
         }
+    }
+
+    /**
+     * 1.x `_pagination` hash key (`pagination['per_page']` / `pagination.per_page` in Twig): see {@see self::toArray()}.
+     */
+    public function offsetExists(mixed $offset): bool
+    {
+        return null !== $this->offsetGet($offset);
+    }
+
+    /**
+     * Value of a 1.x key ({@see self::toArray()}), null when unknown.
+     */
+    public function offsetGet(mixed $offset): mixed
+    {
+        return \is_string($offset) ? ($this->toArray()[$offset] ?? null) : null;
+    }
+
+    public function offsetSet(mixed $offset, mixed $value): never
+    {
+        throw new \LogicException(self::class.' is immutable.');
+    }
+
+    public function offsetUnset(mixed $offset): never
+    {
+        throw new \LogicException(self::class.' is immutable.');
     }
 }

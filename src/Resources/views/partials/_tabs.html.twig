@@ -7,20 +7,29 @@
 
   Optional:
     - framework
+
+  2.0 contract (REQ-UI-003; 1.x inputs render unchanged):
+    - label: also a View\Label (or {key, domain, params}), translated
+    - bundle: per-bundle theme exceptions; theme slots tabs (classes + attributes), tab, tab_active
+    - region: data-nowo-ui-region on the <nav> (scaffolds pass `tabs`)
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 {% set framework = framework|default(null) %}
+{% set bundle = bundle|default(null) %}
+{% set _t = nowo_ui_theme|default(null) %}
+{% set _pt = nowo_ui_page_type|default(null) %}
 {% set aria_label = aria_label|default('tabs.nav'|trans({}, 'NowoUiKitBundle')) %}
-<nav class="{{ ui.tab_list(framework) }}" aria-label="{{ aria_label }}">
+<nav class="{{ _t ? _t.macroClasses('tabs', ui.tab_list(framework), bundle, _pt) : ui.tab_list(framework) }}" aria-label="{{ aria_label }}"{{ _t ? _t.renderAttributes('tabs', bundle, {}, _pt)|raw }}{% if region|default(null) %} data-nowo-ui-region="{{ region }}"{% endif %}>
     {% for item in items %}
         {% set is_current = item.current|default(false) %}
+        {% set _label = item.label.key is defined ? item.label.key|trans(item.label.params|default({}), item.label.domain|default('messages')) : item.label %}
         <a
-            class="{{ ui.tab_item(is_current, framework) }}"
+            class="{{ _t ? _t.macroClasses(is_current ? 'tab_active' : 'tab', ui.tab_item(is_current, framework), bundle, _pt) : ui.tab_item(is_current, framework) }}"
             href="{{ item.href }}"
             {% if is_current %}aria-current="page"{% endif %}
             {% if item.attr is defined %}
                 {% for name, value in item.attr %}{{ name }}="{{ value }}" {% endfor %}
             {% endif %}
-        >{{ item.label }}</a>
+        >{{ _label }}</a>
     {% endfor %}
 </nav>

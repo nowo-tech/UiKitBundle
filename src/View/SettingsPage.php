@@ -15,7 +15,8 @@ final readonly class SettingsPage
     public array $sections;
 
     /**
-     * @param iterable<SettingsSection> $sections
+     * @param iterable<SettingsSection>                 $sections
+     * @param array<string, string|int|float|bool|null> $attributes extra attributes of the scaffold root (data-testid…; no on* handlers)
      */
     public function __construct(
         public PageHeader $header,
@@ -23,7 +24,9 @@ final readonly class SettingsPage
         public ?string $current = null,
         public ?string $bundle = null,
         public ?string $layout = null,
+        public array $attributes = [],
     ) {
+        Action::assertAttributes($attributes);
         $this->sections = ViewList::of($sections, SettingsSection::class, 'SettingsPage sections');
         if (null !== $current && [] === array_filter($this->sections, static fn (SettingsSection $s): bool => $s->id === $current)) {
             throw new \InvalidArgumentException(\sprintf('SettingsPage current section "%s" is not one of its sections.', $current));

@@ -9,14 +9,15 @@
 {% block nowo_ui_document_title %}{{ page.header.title|nowo_ui_trans }}{% endblock %}
 
 {% block nowo_ui_page_header %}
-    {{ include(nowo_ui_partial('page_header', page.bundle), {header: page.header, bundle: page.bundle, nowo_ui_page_type: nowo_ui_page_type}, false) }}
+    {% import '@NowoUiKitBundle/page/_scaffold.html.twig' as scaffold %}
+    {{ scaffold.page_header(page, nowo_ui_page_type) }}
 {% endblock %}
 
 {% block nowo_ui_content %}
     {% set _b = page.bundle %}
     {% set _confirm = page.confirm %}
     {% set _href = page.action.href ?? (page.action.route ? path(page.action.route, page.action.params) : null) %}
-    <section class="{{ nowo_ui_class('confirm', _b) }} nowo-ui-confirm-page {{ nowo_ui_class('card', _b) }}" data-nowo-ui-page="confirm" data-nowo-confirm-scope{{ nowo_ui_attrs('confirm', _b) }}>
+    <section class="{{ nowo_ui_class('confirm', _b) }} nowo-ui-confirm-page {{ nowo_ui_class('card', _b) }}" data-nowo-ui-page="confirm" data-nowo-ui-region="confirm" data-nowo-confirm-scope{{ nowo_ui_attrs('confirm', _b) }}{{ nowo_ui_html_attrs(page.attributes) }}>
         <div class="{{ nowo_ui_class('card_body', _b) }}">
             <h2 class="nowo-ui-confirm__title">{{ _confirm.title|nowo_ui_trans }}</h2>
             {% if _confirm.message %}<p class="nowo-ui-confirm__message">{{ _confirm.message|nowo_ui_trans }}</p>{% endif %}

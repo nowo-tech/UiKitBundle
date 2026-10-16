@@ -12,15 +12,16 @@
 {% block nowo_ui_document_title %}{{ page.header.title|nowo_ui_trans }}{% endblock %}
 
 {% block nowo_ui_page_header %}
-    {{ include(nowo_ui_partial('page_header', page.bundle), {header: page.header, bundle: page.bundle, nowo_ui_page_type: nowo_ui_page_type}, false) }}
+    {% import '@NowoUiKitBundle/page/_scaffold.html.twig' as scaffold %}
+    {{ scaffold.page_header(page, nowo_ui_page_type) }}
 {% endblock %}
 
 {% block nowo_ui_content %}
     {% set _b = page.bundle %}
     {% set form = page.form %}
-    <div class="nowo-ui-form-page" data-nowo-ui-page="form">
+    <div class="nowo-ui-form-page" data-nowo-ui-page="form"{{ nowo_ui_html_attrs(page.attributes) }}>
         <div class="nowo-ui-form-page__main">
-            {{ form_start(form, {attr: {class: nowo_ui_class('form', _b)}}) }}
+            {{ form_start(form, {attr: {class: nowo_ui_class('form', _b), 'data-nowo-ui-region': 'form'}|merge(nowo_ui_theme.attributesFor('form', _b, {}, nowo_ui_page_type))}) }}
                 {% block nowo_ui_form_body %}
                     {% for child in form %}
                         {% if not child.rendered %}
@@ -36,14 +37,14 @@
                 </div>
             {{ form_end(form) }}
             {% if page.secondaryActions is not empty %}
-                <div class="{{ nowo_ui_class('toolbar', _b) }} nowo-ui-form-page__secondary">
+                <div class="{{ nowo_ui_class('toolbar', _b) }} nowo-ui-form-page__secondary" data-nowo-ui-region="secondary-actions">
                     {% for action in page.secondaryActions %}
                         {{ include(nowo_ui_partial('action', _b), {action: action, context: 'toolbar', bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
                     {% endfor %}
                 </div>
             {% endif %}
             {% if page.deleteAction %}
-                <section class="{{ nowo_ui_class('danger_zone', _b) }}"{{ nowo_ui_attrs('danger_zone', _b) }}>
+                <section class="{{ nowo_ui_class('danger_zone', _b) }}" data-nowo-ui-region="danger-zone"{{ nowo_ui_attrs('danger_zone', _b) }}>
                     <h2 class="nowo-ui-danger-zone__title">{{ 'form.danger_zone'|trans({}, 'NowoUiKitBundle') }}</h2>
                     {{ include(nowo_ui_partial('action', _b), {action: page.deleteAction, context: 'toolbar', bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
                 </section>
