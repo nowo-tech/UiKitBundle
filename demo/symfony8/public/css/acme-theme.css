@@ -55,7 +55,17 @@
 .acme-card__header { background: transparent; border-bottom: 1px dashed var(--nowo-ui-border); }
 .acme-kpis { gap: 1rem; }
 .acme-kpi { background: var(--nowo-ui-surface); border: 1px solid var(--nowo-ui-border); border-top: 4px solid var(--nowo-ui-primary); border-radius: var(--nowo-ui-radius); }
-.acme-kpi .nowo-ui-kpi__value { font-family: var(--acme-display); font-size: 1.9rem; }
+a.acme-kpi:hover { border-color: var(--nowo-ui-primary); }
+
+/* KPI value through the kpi_value slot, written as a utility in @layer utilities (Tailwind v4 style): it still beats
+   the kit, which ships in @layer nowo-ui below components / utilities (order declared by nowo-ui.css). */
+@layer utilities {
+  .acme-kpi-value { font-family: var(--acme-display); font-size: 1.9rem; }
+}
+
+/* Row actions per variant (theme slot action_danger) */
+.acme-action--danger { color: #b42318; border-color: #f1c4bf; }
+.acme-action--danger:hover { background: #fdecea; color: #912018; border-color: #e8a29a; }
 
 /* Tables */
 .acme-table { --bs-table-bg: var(--nowo-ui-surface); --bs-table-hover-bg: #f0f7f5; border-radius: var(--nowo-ui-radius); overflow: hidden; }

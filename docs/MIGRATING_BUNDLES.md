@@ -109,10 +109,20 @@ After — only the data the scaffold cannot know:
 {% extends '@NowoUiKit/page/list.html.twig' %}
 
 {% block nowo_ui_list_row %}
-    <td class="{{ nowo_ui_class('table_cell', page.bundle) }}"><a href="{{ path('nowo_xxx_show', {id: row.id}) }}">{{ row.name }}</a></td>
-    <td class="{{ nowo_ui_class('table_cell', page.bundle) }}">{{ row.updatedAt|date('Y-m-d H:i') }}</td>
+    <td class="{{ nowo_ui_class('table_cell', page.bundle) }}" data-label="{{ 'items.name'|trans({}, 'NowoXxxBundle') }}"><a href="{{ path('nowo_xxx_show', {id: row.id}) }}">{{ row.name }}</a></td>
+    <td class="{{ nowo_ui_class('table_cell', page.bundle) }}" data-label="{{ 'items.updated'|trans({}, 'NowoXxxBundle') }}" data-nowo-ui-priority="2">{{ row.updatedAt|date('Y-m-d H:i') }}</td>
 {% endblock %}
 ```
+
+- Overridden cells carry `data-label` (card mode of responsive lists) and, for optional columns,
+  `data-nowo-ui-priority` matching `Column::priority`; the default cells do it for you.
+- Test ids: put `attributes: ['data-testid' => 'xxx-list']` on the page model (scaffold root) and target the
+  standard regions with `[data-nowo-ui-region="table|filters|pagination|…"]` instead of adding markup.
+- Filters: per-field placeholder / width through `ListPage::filterFields` (`FilterField`), apply / clear / extra
+  actions through `filtersSubmit`, `filtersClear`, `filterActions`; replace the whole region with the
+  `nowo_ui_list_filters` block only when the form needs custom layout.
+- Destructive actions: `Action::delete(…, confirm: Confirm::delete())`; type-to-confirm with
+  `new Confirm(…, expectedValue: $item->getName())`. Form pages: secondary actions land in the page header.
 
 - Header, actions, breadcrumbs, flashes, filters, table frame, row actions, confirm dialogs, pagination and empty
   state now come from the scaffold. Delete the local partials.
@@ -138,7 +148,8 @@ Every framework class in bundle markup becomes a slot (or a `nowo-ui-*` / bundle
 | `class="alert alert-danger"` | `nowo_ui_class('flash_error', …)` (or the `flashes` partial) |
 | per-framework template copies (`_x_bootstrap`, `_x_tailwind`) | one template with slots |
 
-Pass `page.bundle` (or `nowo_ui_bundle`) so per-bundle exceptions apply. The vocabulary and the defaults per
+Inside scaffolds the page type is implicit (`nowo_ui_page_type`), so `theme.pages.<type>` variations reach your
+data blocks too. Pass `page.bundle` (or `nowo_ui_bundle`) so per-bundle exceptions apply. The vocabulary and the defaults per
 framework: [`THEME_SLOTS.md`](THEME_SLOTS.md). Missing slot? Propose it in UiKit (minor) instead of hard-coding.
 
 ## 5. Local chrome map → theme.bundles bridge

@@ -14,6 +14,7 @@ use Nowo\UiKitBundle\View\DashboardPage;
 use Nowo\UiKitBundle\View\DetailItem;
 use Nowo\UiKitBundle\View\DetailSection;
 use Nowo\UiKitBundle\View\EmptyState;
+use Nowo\UiKitBundle\View\FilterField;
 use Nowo\UiKitBundle\View\FormPage;
 use Nowo\UiKitBundle\View\KpiTile;
 use Nowo\UiKitBundle\View\Link;
@@ -85,7 +86,7 @@ final class PageContractController extends AbstractController
                 $this->header($theme, 'Dashboard', 'Sales of the last 30 days.', 'Dashboard', [new Action('export', 'Export report', '#', icon: 'export')]),
                 [
                     new KpiTile('Revenue', '48,210 €', '+12% vs previous 30 days', null, 'success'),
-                    new KpiTile('Orders', '1,284', '42 today', $this->generateUrl($this->route('page_contract_orders', $theme), $this->params($theme))),
+                    new KpiTile('Orders', '1,284', '42 today', $this->generateUrl($this->route('page_contract_orders', $theme), $this->params($theme)), linkTile: true),
                     new KpiTile('Refunds', '17', '1.3% of orders', null, 'warning'),
                     new KpiTile('Failed payments', '5', 'needs review', null, 'danger'),
                 ],
@@ -114,7 +115,7 @@ final class PageContractController extends AbstractController
                 Action::create('#', 'New order'),
                 new Action('export', 'Export CSV', '#', icon: 'export'),
             ]),
-            [new Column('id', '#', true), new Column('customer', 'Customer', true), new Column('placed', 'Placed'), new Column('status', 'Status'), new Column('total', 'Total', true, 'end')],
+            [new Column('id', '#', true, required: true), new Column('customer', 'Customer', true, required: true), new Column('placed', 'Placed', priority: 3), new Column('status', 'Status'), new Column('total', 'Total', true, 'end')],
             $rows,
             $filters->createView(),
             fn (array $row): array => [
@@ -129,6 +130,9 @@ final class PageContractController extends AbstractController
             'desc',
             bundle: $this->bundle($theme),
             layout: $this->layout($theme),
+            attributes: ['data-testid' => 'orders-list'],
+            filterFields: [new FilterField('q', 'Search customers…', 'md'), new FilterField('status', width: 'sm')],
+            filtersSubmit: new Action('filter', 'Filter', icon: 'filter'),
         )]);
     }
 
@@ -211,7 +215,7 @@ final class PageContractController extends AbstractController
 
         return $this->render('@NowoUiKit/page/confirm.html.twig', ['page' => new ConfirmPage(
             $this->header($theme, \sprintf('Delete order #%d', $id), null, 'Delete'),
-            new Confirm('Delete this order?', \sprintf('Order #%d of %s (%s €) and its invoice will be deleted. This cannot be undone.', $id, $order['customer'], $order['total']), 'Delete order'),
+            new Confirm('Delete this order?', \sprintf('Order #%d of %s (%s €) and its invoice will be deleted. This cannot be undone.', $id, $order['customer'], $order['total']), 'Delete order', expectedValue: (string) $id),
             Action::delete('#', 'demo-token'),
             $this->generateUrl($this->route('page_contract_order', $theme), $this->params($theme, ['id' => $id])),
             $this->bundle($theme),

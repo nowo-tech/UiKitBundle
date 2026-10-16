@@ -19,9 +19,15 @@ Kitchen sink: macros, shell chrome, modal, pagination, tabs.
 
 - `layouts.admin` / `layouts.guest` → `templates/page_contract/layouts/*.html.twig` (one-file bridges into
   `base.html.twig` that render every canonical block, add `data-nowo-ui-host-tokens` and call
-  `nowo_ui_theme_tokens()`);
-- `theme.tokens` (palette + radius), `theme.classes` (class map → `public/css/acme-theme.css`),
-  `theme.attributes.table`, `theme.partials.page_header` (`templates/page_contract/theme/_page_header.html.twig`).
+  `nowo_ui_tokens()`); `base.html.twig` imports Bootstrap into the `base` cascade layer below `nowo-ui`;
+- `theme.tokens` (palette + radius), `theme.classes` (class map → `public/css/acme-theme.css`, incl. a
+  `@layer utilities` class on `kpi_value` and `action_danger` for delete row actions), `theme.attributes.table`,
+  `theme.pages.list` (page-type attribute), `theme.partials.page_header`
+  (`templates/page_contract/theme/_page_header.html.twig`).
+
+The list shows filter field options and an icon apply button, `data-testid` / `data-nowo-ui-region` hooks and a
+responsive table (cards on phones, priority column hidden on mid widths); the form puts its secondary action in the
+header; the dashboard's Orders KPI is a link tile; the delete page is type-to-confirm.
 
 `/page-contract/default/…` renders the same pages with UiKit's default theme: a per-page layout without the host
 tokens (`ListPage(layout: …)`) plus the `DemoDefaultTheme` per-bundle exception that resets the class map, the

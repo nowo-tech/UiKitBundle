@@ -388,8 +388,16 @@ overrides the theme tokens**: both blocks use the same selectors' specificity (`
 - **Hosts without layers** (Bootstrap / Tabler from a CDN, a plain host theme file): unlayered CSS always beats
   layered CSS, so host rules win over the kit whatever their specificity or load order. That includes the framework:
   where 1.x kit rules overrode an unlayered framework rule of equal specificity (e.g. pagination `.page-link`
-  colours, button paddings), the framework now wins. Hosts that want the 1.x cascade link
-  **`nowo-ui.unlayered.css`** (same rules, no layer) instead of `nowo-ui.css`.
+  colours, button paddings), the framework now wins. Two ways back to the 1.x look:
+  - put the framework into the `base` layer, below the kit (what `demo/symfony8` does with Bootstrap from a CDN):
+
+    ```html
+    <style>@layer theme, base, nowo-ui, components, utilities; @import url("…/bootstrap.min.css") layer(base);</style>
+    <link rel="stylesheet" href="{{ asset('css/nowo-ui.css', 'nowo_ui_kit') }}">
+    ```
+
+    Host stylesheets stay unlayered (they win), and host utilities can live in `@layer utilities`;
+  - or link **`nowo-ui.unlayered.css`** (same rules, no layer) instead of `nowo-ui.css`.
 
 `nowo-ui.css` is generated from `nowo-ui.unlayered.css` (`pnpm run build:css`); token fallbacks on `:root` and the
 `data-nowo-ui-host-tokens` zero-specificity palette work the same in both files.

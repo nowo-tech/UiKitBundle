@@ -37,7 +37,9 @@ nowo_ui_kit:
             card: 'acme-card'
             card_header: 'acme-card__header'
             kpi: 'acme-kpi'
+            kpi_value: 'acme-kpi-value'
             kpis: 'acme-kpis'
+            action_danger: 'acme-action--danger'
             cards: 'acme-cards'
             # Badges: the host paints them alone — drop UiKit's Bootstrap defaults (badge text-bg-*) for these slots.
             badge_success: { value: 'acme-badge acme-badge--ok', framework_defaults: false }
@@ -54,6 +56,11 @@ nowo_ui_kit:
             table: { data-acme-table: 'zebra' }
         partials:
             page_header: 'page_contract/theme/_page_header.html.twig'
+        # Per page type (scaffold): list tables get one more attribute than the other pages' tables.
+        pages:
+            list:
+                attributes:
+                    table: { data-acme-page: 'list' }
         bundles:
             # The default-theme view (/page-contract/default/…): a per-bundle exception that resets the host class
             # map (an exception class REPLACES the host class of the slot) and the partial override.
@@ -70,7 +77,9 @@ nowo_ui_kit:
                     card: ''
                     card_header: ''
                     kpi: ''
+                    kpi_value: ''
                     kpis: ''
+                    action_danger: ''
                     cards: ''
                     badge_success: ''
                     badge_warning: ''
@@ -83,6 +92,6 @@ nowo_ui_kit:
                     wizard_step_active: ''
                     auth_panel: ''
                 attributes:
-                    table: { data-acme-table: false }   # attributes merge; false removes the host attribute
+                    table: { data-acme-table: false, data-acme-page: false }   # attributes merge; false removes the host / page-type attribute
                 partials:
                     page_header: '@NowoUiKitBundle/partials/_page_header.html.twig'

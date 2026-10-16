@@ -76,6 +76,90 @@ test.describe('page contract — host theme', () => {
   });
 });
 
+test.describe('page contract — validation follow-ups (REQ-UI-003)', () => {
+  test('cascade layers: a host utility (@layer utilities) in a slot beats the kit (@layer nowo-ui)', async ({ page }) => {
+    await page.goto('/page-contract/dashboard');
+    const value = page.locator('.nowo-ui-kpi__value.acme-kpi-value').first();
+    await expect(value).toBeVisible();
+    // nowo-ui.css sets 1.5rem (24px) on .nowo-ui-kpi__value; the host utility sets 1.9rem
+    expect(await value.evaluate((el) => getComputedStyle(el).fontSize)).toBe('30.4px');
+    // the kit still beats the base layer: the confirm dialog keeps its centred, padded panel
+    const layers = await page.evaluate(() => [...document.styleSheets].some((sheet) => {
+      try {
+        return [...sheet.cssRules].some((rule) => rule.constructor.name === 'CSSLayerStatementRule' && rule.cssText.includes('nowo-ui'));
+      } catch {
+        return false;
+      }
+    }));
+    expect(layers).toBe(true);
+  });
+
+  test('list: regions, page attributes, page-type attribute, danger row action, filters options', async ({ page }) => {
+    await page.goto('/page-contract/orders');
+    const list = page.locator('[data-nowo-ui-page="list"][data-testid="orders-list"]');
+    await expect(list).toBeVisible();
+    // the page header renders in the layout's nowo_ui_page_header block (host partial override keeps the region)
+    await expect(page.locator('.acme-header[data-nowo-ui-region="header"]')).toHaveCount(1);
+    for (const region of ['filters', 'table', 'confirms', 'pagination']) {
+      await expect(list.locator(`[data-nowo-ui-region="${region}"]`).first()).toBeAttached();
+    }
+    await expect(page.locator('table[data-acme-page="list"]')).toHaveCount(1);
+    const del = page.locator('tbody tr').first().locator('.nowo-ui-action--delete');
+    await expect(del).toHaveClass(/\bacme-action--danger\b/);
+    expect(await del.evaluate((el) => getComputedStyle(el).color)).toBe('rgb(180, 35, 24)');
+    await expect(page.locator('#filters_q')).toHaveAttribute('placeholder', 'Search customers…');
+    await expect(page.locator('.nowo-ui-filters__field--md #filters_q')).toHaveCount(1);
+    await expect(page.locator('.nowo-ui-filters__submit')).toContainText('Filter');
+  });
+
+  test('list: the table turns into labelled cards on a phone', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/page-contract/orders');
+    const cell = page.locator('tbody tr').first().locator('td[data-label="Customer"]');
+    await expect(cell).toBeVisible();
+    expect(await cell.evaluate((el) => getComputedStyle(el).display)).toBe('grid');
+    expect(await cell.evaluate((el) => getComputedStyle(el, '::before').content)).toBe('"Customer"');
+    expect(await page.locator('table.nowo-ui-table--cards > thead').evaluate((el) => getComputedStyle(el).position)).toBe('absolute');
+    // every column shows again in card mode, including the priority 3 "Placed" column
+    await expect(page.locator('tbody tr').first().locator('td[data-label="Placed"]')).toBeVisible();
+  });
+
+  test('list: priority columns hide on mid widths, the table layout stays', async ({ page }) => {
+    // 1100px viewport: the Acme main column leaves the table ~790px wide (between 48rem and 60rem)
+    await page.setViewportSize({ width: 1100, height: 860 });
+    await page.goto('/page-contract/orders');
+    const width = await page.locator('[data-nowo-ui-region="table"]').evaluate((el) => el.getBoundingClientRect().width);
+    expect(width).toBeGreaterThan(768);
+    expect(width).toBeLessThan(960);
+    await expect(page.locator('tbody tr').first().locator('td[data-label="Placed"]')).toBeHidden();
+    await expect(page.locator('tbody tr').first().locator('td[data-label="Status"]')).toBeVisible();
+    expect(await page.locator('table.nowo-ui-table--cards').evaluate((el) => getComputedStyle(el).display)).toBe('table');
+    await page.setViewportSize({ width: 1400, height: 860 });
+    await expect(page.locator('tbody tr').first().locator('td[data-label="Placed"]')).toBeVisible();
+  });
+
+  test('confirm: type-to-confirm keeps the delete button disabled until the order number is typed', async ({ page }) => {
+    await page.goto('/page-contract/orders/1041/delete');
+    const button = page.locator('.nowo-ui-confirm__submit');
+    await expect(button).toBeDisabled();
+    await page.locator('#nowo-ui-confirm-page-expected').fill('104');
+    await expect(button).toBeDisabled();
+    await page.locator('#nowo-ui-confirm-page-expected').fill('1041');
+    await expect(button).toBeEnabled();
+  });
+
+  test('form: secondary actions in the page-header toolbar; dashboard: KPI tile as a link', async ({ page }) => {
+    await page.goto('/page-contract/orders/1042/edit');
+    await expect(page.locator('.acme-header .nowo-ui-action--copy')).toHaveText('Duplicate');
+    await expect(page.locator('[data-nowo-ui-region="secondary-actions"]')).toHaveCount(0);
+    await expect(page.locator('.nowo-ui-form-panel form[data-nowo-ui-region="form"]')).toHaveCount(1);
+    await page.goto('/page-contract/dashboard');
+    await expect(page.locator('a.acme-kpi.nowo-ui-kpi--link[href*="/orders"]')).toContainText('1,284');
+    // the dashboard table is not a list page: no page-type attribute
+    await expect(page.locator('table[data-acme-page]')).toHaveCount(0);
+  });
+});
+
 test.describe('page contract — default theme view', () => {
   test('same list page with UiKit defaults (no host tokens, classes or partial)', async ({ page }) => {
     const response = await page.goto('/page-contract/default/orders');
@@ -83,7 +167,7 @@ test.describe('page contract — default theme view', () => {
     await expect(page.locator('[data-nowo-ui-page="list"]')).toBeVisible();
     await expect(page.locator('style[data-nowo-ui-theme-tokens]')).toHaveCount(0);
     await expect(page.locator('.nowo-ui-page-header')).toBeVisible();
-    await expect(page.locator('.acme-header, .acme-table, .acme-badge')).toHaveCount(0);
+    await expect(page.locator('.acme-header, .acme-table, .acme-badge, .acme-action--danger, [data-acme-page]')).toHaveCount(0);
     await expect(page.locator('table.nowo-ui-table')).not.toHaveAttribute('data-acme-table', /.*/);
     await expect(page.locator('main[data-nowo-ui-bundle="DemoDefaultTheme"]')).toBeVisible();
     const primary = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--nowo-ui-primary').trim());

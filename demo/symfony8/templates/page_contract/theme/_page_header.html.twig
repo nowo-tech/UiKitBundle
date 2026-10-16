@@ -1,10 +1,12 @@
 {#
   Acme partial override of UiKit's page header (nowo_ui_kit.theme.partials.page_header): every scaffold of every
   bundle renders its header through this template. Same inputs as the UiKit partial (header: View\PageHeader,
-  bundle); actions still go through the UiKit action partial (confirm contract, POST forms).
+  bundle, plus `actions` — the toolbar actions incl. FormPage secondary actions — and `region`); actions still go
+  through the UiKit action partial (confirm contract, POST forms).
 #}
 {% set _bundle = bundle|default(null) %}
-<header class="acme-header">
+{% set _actions = actions|default(header.actions) %}
+<header class="acme-header"{% if region|default(null) %} data-nowo-ui-region="{{ region }}"{% endif %}>
     {% if header.breadcrumbs is not empty %}
         <ol class="acme-header__trail">
             {% for crumb in header.breadcrumbs %}
@@ -17,10 +19,10 @@
             <h1 class="{{ nowo_ui_class('page_title', _bundle) }}">{{ header.title|nowo_ui_trans }}</h1>
             {% if header.intro %}<p class="{{ nowo_ui_class('page_intro', _bundle) }}">{{ header.intro|nowo_ui_trans }}</p>{% endif %}
         </div>
-        {% if header.actions is not empty %}
+        {% if _actions is not empty %}
             <div class="{{ nowo_ui_class('toolbar', _bundle) }}">
-                {% for action in header.actions %}
-                    {{ include(nowo_ui_partial('action', _bundle), {action: action, context: 'toolbar', bundle: _bundle}, false) }}
+                {% for action in _actions %}
+                    {{ include(nowo_ui_partial('action', _bundle), {action: action, context: 'toolbar', bundle: _bundle, nowo_ui_page_type: nowo_ui_page_type|default(null)}, false) }}
                 {% endfor %}
             </div>
         {% endif %}
