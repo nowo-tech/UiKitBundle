@@ -1,0 +1,7 @@
+{% extends '@NowoUiKit/page/show.html.twig' %}
+
+{% block nowo_ui_show_after %}
+    <section class="{{ nowo_ui_class('section', page.bundle) }}"{{ nowo_ui_attrs('section', page.bundle) }}>
+        <h2 class="nowo-ui-card__title">{{ 'fixture.history'|trans({}, 'NowoContractFixtureBundle') }}</h2>
+    </section>
+{% endblock %}

@@ -90,6 +90,7 @@
         ]
     },
     "suggest": {
+        "phpunit/phpunit": "UI bundles: require-dev, to run Nowo\\UiKitBundle\\Test\\PageContractTestCase (REQ-UI-003 contract test)",
         "symfony/form": "For the optional AppearanceType / AppearancePaletteType forms (appearance SPI)",
         "symfony/http-client": "For the optional release_check feature (GitHub release-version dialog)",
         "symfony/ux-icons": "For icon_set: ux_icon in row actions and icons",

@@ -1,0 +1,9 @@
+fixture:
+  items: Items
+  item: Item
+  board: Board
+  history: History
+  form_help: Fields marked with * are required.
+  status:
+    active: Active
+    inactive: Inactive

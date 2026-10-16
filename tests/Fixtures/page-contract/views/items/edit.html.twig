@@ -1,0 +1,6 @@
+{% extends '@NowoUiKit/page/form.html.twig' %}
+
+{% block nowo_ui_form_body %}
+    <p class="nowo-contract-fixture-help">{{ 'fixture.form_help'|trans({}, 'NowoContractFixtureBundle') }}</p>
+    {{ parent() }}
+{% endblock %}

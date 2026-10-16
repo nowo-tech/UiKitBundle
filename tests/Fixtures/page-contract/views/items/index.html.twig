@@ -1,0 +1,12 @@
+{% extends '@NowoUiKit/page/list.html.twig' %}
+
+{% block nowo_ui_list_row %}
+    <td class="{{ nowo_ui_class('table_cell', page.bundle) }}">{{ row.name }}</td>
+    <td class="{{ nowo_ui_class('table_cell', page.bundle) }}">
+        <span class="{{ nowo_ui_class(row.active ? 'badge_success' : 'badge_neutral', page.bundle) }}">{{ (row.active ? 'fixture.status.active' : 'fixture.status.inactive')|trans({}, 'NowoContractFixtureBundle') }}</span>
+    </td>
+{% endblock %}
+
+{% block nowo_ui_list_after %}
+    <p class="nowo-contract-fixture-note">{{ fixture_status() }}</p>
+{% endblock %}

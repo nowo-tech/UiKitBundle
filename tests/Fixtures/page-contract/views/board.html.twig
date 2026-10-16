@@ -1,0 +1,16 @@
+{# Unique page (kanban board): extends the host layout directly and fills the canonical blocks. #}
+{% extends nowo_ui_layout.admin %}
+
+{% block nowo_ui_document_title %}{{ 'fixture.board'|trans({}, 'NowoContractFixtureBundle') }}{% endblock %}
+
+{% block nowo_ui_page_header %}
+    {{ include(nowo_ui_partial('page_header'), {header: header}, false) }}
+{% endblock %}
+
+{% block nowo_ui_content %}
+    <div class="{{ nowo_ui_class('cards') }} nowo-contract-fixture-board"{{ nowo_ui_attrs('cards') }}>
+        {% for column in columns %}
+            <section class="{{ nowo_ui_class('card') }}"><h2 class="nowo-ui-card__title">{{ column }}</h2></section>
+        {% endfor %}
+    </div>
+{% endblock %}

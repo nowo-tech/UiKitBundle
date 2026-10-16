@@ -1,0 +1,7 @@
+{% extends '@NowoUiKit/page/dashboard.html.twig' %}
+
+{% block nowo_ui_dashboard_cards %}
+    <section class="{{ nowo_ui_class('card', page.bundle) }}"{{ nowo_ui_attrs('card', page.bundle) }}>
+        <div class="{{ nowo_ui_class('card_body', page.bundle) }}">{{ 'fixture.history'|trans({}, 'NowoContractFixtureBundle') }}</div>
+    </section>
+{% endblock %}
