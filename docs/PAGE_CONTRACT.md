@@ -397,7 +397,9 @@ overrides the theme tokens**: both blocks use the same selectors' specificity (`
     ```
 
     Host stylesheets stay unlayered (they win), and host utilities can live in `@layer utilities`;
-  - or link **`nowo-ui.unlayered.css`** (same rules, no layer) instead of `nowo-ui.css`.
+  - or link **`nowo-ui.unlayered.css`** (same rules, no layer) instead of `nowo-ui.css` — also the choice for
+    Tailwind v3 / the Tailwind play CDN, whose output (preflight included) is unlayered. The UiKit kitchen sink
+    (`demo/kitchen_sink.html.twig`) links it for that reason.
 
 `nowo-ui.css` is generated from `nowo-ui.unlayered.css` (`pnpm run build:css`); token fallbacks on `:root` and the
 `data-nowo-ui-host-tokens` zero-specificity palette work the same in both files.

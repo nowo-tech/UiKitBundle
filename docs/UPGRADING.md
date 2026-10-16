@@ -94,7 +94,9 @@ Changes to markup, inputs and cascade a host or a bundle may depend on (REQ-UI-0
   `nowo-ui` above `base` (load `nowo-ui.css` first or put the statement at the top of your stylesheet —
   [`PAGE_CONTRACT.md#cascade-layers`](PAGE_CONTRACT.md#cascade-layers)). Hosts without layers: your unlayered CSS
   (and an unlayered framework such as Bootstrap from a CDN) now always beats the kit; to keep the 1.x cascade, link
-  `css/nowo-ui.unlayered.css` (identical rules, no layer) instead of `css/nowo-ui.css`.
+  `css/nowo-ui.unlayered.css` (identical rules, no layer) instead of `css/nowo-ui.css`, or import the framework into
+  the `base` layer (`@import url(…) layer(base)` after the order statement). Tailwind v3 / play CDN output is
+  unlayered: use `nowo-ui.unlayered.css`. The kitchen sink links the unlayered file.
 - **`_confirm` buttons** read the theme slots `btn_secondary` / `btn_<variant>` when the ThemeExtension is loaded
   (output identical to 1.17.4 with an empty theme; host classes and `framework_defaults: false` now apply). Hosts that
   styled `.nowo-ui-confirm .btn` to compensate can move that to `theme.classes`.

@@ -4,7 +4,9 @@
 
 {% block stylesheets %}
     {{ parent() }}
-    <link rel="stylesheet" href="{{ asset('css/nowo-ui.css', 'nowo_ui_kit') }}">
+    {#- 1.x partials on hosts whose framework CSS is unlayered (Bootstrap / Tailwind play CDN): the unlayered kit keeps
+        the 1.x cascade (PAGE_CONTRACT.md#cascade-layers) -#}
+    <link rel="stylesheet" href="{{ asset('css/nowo-ui.unlayered.css', 'nowo_ui_kit') }}">
 {% endblock %}
 
 {% block body %}
