@@ -252,7 +252,14 @@ final class HostChromePartialsTest extends TestCase
         // 1.17.2: dialogs centre under a <dialog> margin reset (Tailwind preflight); responsive cells wrap their
         // nowrap descendants too (no horizontal scroll at 320px and above).
         self::assertMatchesRegularExpression('/\.nowo-ui-confirm \{[^}]*margin: auto;[^}]*max-height: calc\(100dvh - 2rem\);/s', $css);
-        self::assertStringContainsString(".nowo-ui-responsive-table[data-table-mode='responsive'] :is(th, td) * {\n  white-space: normal !important;\n  overflow-wrap: anywhere;", $css);
+        // 1.17.3 regression: no mid-word breaks above 30rem (they lowered the min-content width, so the fit never hid
+        // a column); `anywhere` only inside the narrow media query.
+        self::assertStringContainsString(".nowo-ui-responsive-table[data-table-mode='responsive'] :is(th, td) * {\n  white-space: normal !important;\n  overflow-wrap: break-word;", $css);
+        $wide = (string) preg_replace('/@media \(max-width: 30rem\) \{.*?\n\}\n/s', '', $css);
+        $tableRules = (string) preg_replace('/\/\*.*?\*\//s', '', (string) strstr((string) strstr($wide, '/* --- Responsive table'), '/* Row detail dialog', true));
+        self::assertStringContainsString('overflow-wrap: break-word', $tableRules);
+        self::assertStringNotContainsString('overflow-wrap: anywhere', $tableRules);
+        self::assertMatchesRegularExpression("/@media \\(max-width: 30rem\\) \\{[^@]*:is\\(th, td\\) \\* \\{\\s*overflow-wrap: anywhere;/s", $css);
 
         $keys = ['table_mode.to_responsive', 'table_mode.to_scroll', 'table_mode.details', 'table_mode.details_column', 'table_mode.close', 'table_mode.save_error',
             'filters_collapse.collapse', 'filters_collapse.expand', 'filters_collapse.none', 'filters_collapse.one', 'filters_collapse.many', 'edge_tab.manual'];

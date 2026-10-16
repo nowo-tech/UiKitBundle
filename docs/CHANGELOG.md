@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.17.3] - 2026-10-16](#1173---2026-10-16)
 - [[1.17.2] - 2026-10-16](#1172---2026-10-16)
 - [[1.17.1] - 2026-10-16](#1171---2026-10-16)
 - [[1.17.0] - 2026-10-16](#1170---2026-10-16)
@@ -42,6 +43,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [1.17.3] - 2026-10-16
+
+### Fixed
+
+- Responsive table mode (regression in 1.17.2): `overflow-wrap: anywhere` on cells and descendants at every width broke words mid-word ("Symf ony") instead of hiding columns — mid-word breaks lower the min-content width, so the table always "fit" and the row detail button never appeared (e.g. at 600px). Above 30rem cells now use `overflow-wrap: break-word` (no effect on min-content: the two-phase column fit hides columns before any word splits); `overflow-wrap: anywhere` (cells + descendants) only applies under 30rem, as in 1.17.1. `white-space: normal !important` on descendants (the 1.17.2 nowrap fix) is kept.
+
+[1.17.3]: https://github.com/nowo-tech/UiKitBundle/compare/v1.17.2...v1.17.3
 
 ## [1.17.2] - 2026-10-16
 

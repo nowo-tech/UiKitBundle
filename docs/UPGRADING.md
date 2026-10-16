@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.17.3](#to-1173)
 - [To 1.17.2](#to-1172)
 - [To 1.17.1](#to-1171)
 - [To 1.17.0](#to-1170)
@@ -44,6 +45,12 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 1.17.3
+
+From **1.17.2** — CSS fix only, nothing to change. Responsive tables hide columns again before splitting words: above
+30rem cell text wraps at spaces only (`overflow-wrap: break-word`), mid-word breaks (`anywhere`) are back to narrow
+screens (≤ 30rem). Host workarounds for "Symf ony"-style breaks in responsive tables can be removed.
 
 ## To 1.17.2
 

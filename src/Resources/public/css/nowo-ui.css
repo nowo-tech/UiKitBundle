@@ -2608,13 +2608,15 @@ table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr:hover > td {
   display: none !important;
 }
 
-/* Text wraps so the required columns and the detail button fit narrow screens (no horizontal scroll at 320px and
-   above): cells AND their descendants — nowrap utilities (Tailwind .whitespace-nowrap, Bootstrap .text-nowrap) would
-   otherwise keep the table wider than its scroller. */
+/* Text wraps at spaces so the required columns and the detail button fit (no horizontal scroll at 320px and above):
+   cells AND their descendants — nowrap utilities (Tailwind .whitespace-nowrap, Bootstrap .text-nowrap) would
+   otherwise keep the table wider than its scroller. Words are NOT broken here (`break-word` does not lower the
+   min-content width), so the column fit still hides columns before any word splits; mid-word breaks
+   (`overflow-wrap: anywhere`) only apply under 30rem, below. */
 .nowo-ui-responsive-table[data-table-mode='responsive'] :is(th, td),
 .nowo-ui-responsive-table[data-table-mode='responsive'] :is(th, td) * {
   white-space: normal !important;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .nowo-ui-responsive-table[data-table-mode='responsive'][data-rt-has-hidden] :is(.nowo-ui-row-detail-col, .nowo-ui-row-detail-cell) {
@@ -2634,6 +2636,11 @@ table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr:hover > td {
   .nowo-ui-responsive-table[data-table-mode='responsive'] :is(th, td) {
     padding-right: 0.375rem;
     padding-left: 0.375rem;
+  }
+
+  /* Narrow screens only: long unbreakable strings (URLs, ids) may split mid-word once only required columns remain. */
+  .nowo-ui-responsive-table[data-table-mode='responsive'] :is(th, td),
+  .nowo-ui-responsive-table[data-table-mode='responsive'] :is(th, td) * {
     overflow-wrap: anywhere;
   }
 
