@@ -186,7 +186,7 @@ links) renders as a card.
 
 | Data block | Default | Context |
 | --- | --- | --- |
-| `nowo_ui_dashboard_cards` | empty, inside the `cards` grid — use the `card` / `card_header` / `card_body` slots | `page` |
+| `nowo_ui_dashboard_cards` | empty, inside the `cards` grid — include `nowo_ui_partial('card')` per card (`title`, `body`, `actions`, `bundle: page.bundle`), or use the `card` / `card_header` / `card_body` slots | `page` |
 
 ### Confirm
 
@@ -256,7 +256,8 @@ Non-GET actions render a POST form (CSRF-only `FormView` in `form`, REQ-TWIG-005
 ## Partials
 
 New in 2.0: `_action` (one `Action`: link, modal trigger, POST form, confirm `<dialog>`), `_action_post`,
-`_breadcrumbs`. Upgraded (1.x inputs unchanged): `_pagination` (`Pagination`), `_page_header` (`header`),
+`_breadcrumbs`. Upgraded (1.x inputs unchanged): `_card` (`card`, `card_header`, `card_body`, `card_footer`, `cards`
+slots; `Label` title / intro, `actions`, `id`, `attr`, `cards` grid), `_pagination` (`Pagination`), `_page_header` (`header`),
 `_row_actions` (`Action` objects), `_confirm` (`confirm`, `action`), `_empty` (`empty`), `_toasts` / `_flashes`
 (`trans_domain`, slot hooks), `_shell` / `_burger` (`root_class`, `label_attr_names`, `attr`, `header_class`,
 `main_class`, `burger_*`). All accept `bundle`. Bundles include them through `nowo_ui_partial('<name>')` so a host

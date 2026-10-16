@@ -42,6 +42,7 @@ final class ThemeSlotsTest extends TestCase
         'card' => 'ui.card()',
         'card_header' => 'ui.card_header()',
         'card_body' => 'ui.card_body()',
+        'card_footer' => 'ui.card_footer()',
         'tabs' => 'ui.tab_list()',
         'tab' => 'ui.tab_item(false)',
         'tab_active' => 'ui.tab_item(true)',
@@ -103,6 +104,7 @@ final class ThemeSlotsTest extends TestCase
             self::assertDoesNotMatchRegularExpression('/(^| )bg-/', $defaults, $slot);
         }
         self::assertSame('badge text-bg-success ms-2', ThemeSlots::defaults('badge_success', 'tabler'));
+        self::assertSame('nowo-ui-card__footer card-footer', ThemeSlots::semantic('card_footer').' '.ThemeSlots::defaults('card_footer', 'bootstrap4'));
     }
 
     public function testUnknownSlotThrows(): void

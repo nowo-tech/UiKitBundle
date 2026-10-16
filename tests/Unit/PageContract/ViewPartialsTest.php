@@ -216,6 +216,45 @@ final class ViewPartialsTest extends TestCase
         self::assertStringContainsString(' data-s="y"', $bareShell);
     }
 
+    public function testCardReadsThemeSlotsAndViewModels(): void
+    {
+        $theme = [
+            'classes' => ['card' => 'app-card', 'card_header' => 'app-card__header', 'card_body' => 'app-card__body', 'card_footer' => 'app-card__footer', 'cards' => 'app-grid'],
+            'attributes' => ['card' => ['data-card' => 'x'], 'cards' => ['data-grid' => true]],
+        ];
+        $html = $this->render("{% include '@NowoUiKitBundle/partials/_card.html.twig' with {title: title, intro: intro, actions: actions, toolbar: '<i>t</i>', body: '<p>b</p>', footer: '<a>f</a>', id: 'stats', attr: {'data-extra': '1'}, bundle: 'NowoXBundle'} only %}", [
+            'title' => new Label('pagination.nav', 'NowoUiKitBundle'),
+            'intro' => ['key' => 'empty.default', 'domain' => 'NowoUiKitBundle'],
+            'actions' => [Action::create('/new')],
+        ], $theme);
+
+        self::assertStringContainsString('<section class="nowo-ui-card card app-card" id="stats" data-nowo-ui-card data-card="x" data-extra="1">', $html);
+        self::assertStringContainsString('<header class="nowo-ui-card__header card-header d-flex flex-wrap align-items-start justify-content-between gap-2 app-card__header">', $html);
+        self::assertStringContainsString('<h2 class="nowo-ui-card__title">Pagination</h2>', $html);
+        self::assertStringContainsString('<p class="nowo-ui-card__intro">No items found.</p>', $html);
+        self::assertMatchesRegularExpression('#<div class="nowo-ui-card__toolbar">\s*<a class="nowo-ui-btn nowo-ui-btn--primary btn btn-primary nowo-ui-action--create" href="/new">.*</a>\s*<i>t</i></div>#s', $html);
+        self::assertStringContainsString('<div class="nowo-ui-card__body card-body app-card__body"><p>b</p></div>', $html);
+        self::assertStringContainsString('<footer class="nowo-ui-card__footer card-footer app-card__footer"><a>f</a></footer>', $html);
+
+        // the per-slot switch drops Bootstrap's card classes, the semantic ones stay
+        $off = $this->render("{% include '@NowoUiKitBundle/partials/_card.html.twig' with {title: 'T', body: 'b', footer: 'f'} only %}", [], [
+            'classes' => ['card' => ['value' => 'acme-card', 'framework_defaults' => false], 'card_header' => ['framework_defaults' => false]],
+        ]);
+        self::assertStringContainsString('<section class="nowo-ui-card acme-card" data-nowo-ui-card>', $off);
+        self::assertStringContainsString('<header class="nowo-ui-card__header">', $off);
+        self::assertStringContainsString('<div class="nowo-ui-card__body card-body">b</div>', $off);
+
+        // cards grid: every card through the card partial, inheriting the bundle
+        $grid = $this->render("{% include '@NowoUiKitBundle/partials/_card.html.twig' with {cards: [{title: 'A', body: 'a'}, {title: 'B', body: 'b', framework: 'tailwind'}], bundle: 'NowoXBundle'} only %}", [], $theme);
+        self::assertStringContainsString('<div class="nowo-ui-cards app-grid" data-grid>', $grid);
+        self::assertSame(2, substr_count($grid, 'data-nowo-ui-card'));
+        self::assertStringContainsString('<div class="nowo-ui-card__body px-4 py-3 app-card__body">b</div>', $grid);
+
+        $bare = $this->bare("{% include '@NowoUiKitBundle/partials/_card.html.twig' with {cards: [{body: 'x', attr: {'data-a': '1'}}]} only %}");
+        self::assertStringContainsString('<div class="nowo-ui-cards">', $bare);
+        self::assertStringContainsString('data-nowo-ui-card data-a="1">', $bare);
+    }
+
     public function testLegacyPartialsDropFrameworkDefaultsWhenTheThemeSaysSo(): void
     {
         $theme = ['framework_defaults' => false, 'classes' => ['flash_success' => 'app-flash']];

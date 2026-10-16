@@ -78,8 +78,9 @@ macros keep their 1.x inputs and output.
   under `theme.bundles.<B>`) drop UiKit's framework defaults globally, per bundle or per slot
   ([`THEME_SLOTS.md`](THEME_SLOTS.md#dropping-the-framework-defaults)). The processed config of a map entry is
   `{value: string, framework_defaults: bool}`; string / list entries stay strings.
+- New slot `card_footer`; `_card` reads the `card*` slots and accepts view-model inputs (1.x inputs unchanged).
 - Hosts that override `_pagination`, `_toasts`, `_flashes`, `_page_header`, `_row_actions`, `_confirm`, `_empty`,
-  `_shell` or `_burger` keep working; to pick up view-model inputs, re-sync from the bundle (or replace the fork with
+  `_card`, `_shell` or `_burger` keep working; to pick up view-model inputs, re-sync from the bundle (or replace the fork with
   `theme.classes` / `theme.attributes` / `theme.partials`).
 
 ## To 1.17.4

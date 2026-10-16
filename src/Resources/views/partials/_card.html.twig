@@ -8,27 +8,56 @@
     - footer (HTML)
     - toolbar (HTML)
     - framework
+
+  2.0 contract (REQ-UI-003; 1.x inputs render unchanged):
+    - title / intro: also a View\Label (or {key, domain, params}), translated
+    - actions: list of View\Action rendered in the header toolbar (through _action), before `toolbar`
+    - id: id of the card root
+    - attr: extra root attributes (hash; theme slot `card` attributes are merged first)
+    - cards: list of card variable hashes rendered as a grid (theme slot `cards`); each one through the `card`
+      partial (theme.partials.card applies), inheriting framework / bundle
+    - bundle: per-bundle theme exceptions
+    Theme slots: card, card_header, card_body, card_footer, cards.
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 {% set framework = framework|default(null) %}
-<section class="{{ ui.card(framework) }}" data-nowo-ui-card>
-    {% if title is defined and title %}
-        <header class="{{ ui.card_header(framework) }}">
+{% set bundle = bundle|default(null) %}
+{% set _t = nowo_ui_theme|default(null) %}
+{% if cards is defined and cards is iterable %}
+    {% set _card_partial = _t ? _t.partial('card', bundle) : '@NowoUiKitBundle/partials/_card.html.twig' %}
+    <div class="{{ _t ? _t.classFor('cards', bundle, framework) : 'nowo-ui-cards' }}"{{ _t ? _t.renderAttributes('cards', bundle)|raw }}>
+        {% for _card in cards %}
+            {{ include(_card_partial, {framework: framework, bundle: bundle}|merge(_card), false) }}
+        {% endfor %}
+    </div>
+{% else %}
+{% set _title = title is defined and title ? (title.key is defined ? title.key|trans(title.params|default({}), title.domain|default('messages')) : title) : null %}
+{% set _intro = intro is defined and intro ? (intro.key is defined ? intro.key|trans(intro.params|default({}), intro.domain|default('messages')) : intro) : null %}
+{% set _actions = actions is defined and actions is iterable ? actions : [] %}
+<section class="{{ _t ? _t.macroClasses('card', ui.card(framework), bundle) : ui.card(framework) }}"{% if id is defined and id %} id="{{ id }}"{% endif %} data-nowo-ui-card{{ _t ? _t.renderAttributes('card', bundle, attr|default({}))|raw }}{% if not _t %}{% for name, value in attr|default({}) %} {{ name }}="{{ value }}"{% endfor %}{% endif %}>
+    {% if _title %}
+        <header class="{{ _t ? _t.macroClasses('card_header', ui.card_header(framework), bundle) : ui.card_header(framework) }}">
             <div class="nowo-ui-card__heading">
-                <h2 class="nowo-ui-card__title">{{ title }}</h2>
-                {% if intro is defined and intro %}
-                    <p class="nowo-ui-card__intro">{{ intro }}</p>
+                <h2 class="nowo-ui-card__title">{{ _title }}</h2>
+                {% if _intro %}
+                    <p class="nowo-ui-card__intro">{{ _intro }}</p>
                 {% endif %}
             </div>
-            {% if toolbar is defined and toolbar %}
-                <div class="nowo-ui-card__toolbar">{{ toolbar|raw }}</div>
+            {% if _actions is not empty or (toolbar is defined and toolbar) %}
+                <div class="nowo-ui-card__toolbar">
+                    {%- for action in _actions -%}
+                        {{ include('@NowoUiKitBundle/partials/_action.html.twig', {action: action, context: 'toolbar', framework: framework, bundle: bundle}, false) }}
+                    {%- endfor -%}
+                    {%- if toolbar is defined and toolbar %}{{ toolbar|raw }}{% endif -%}
+                </div>
             {% endif %}
         </header>
     {% endif %}
     {% if body is defined %}
-        <div class="{{ ui.card_body(framework) }}">{{ body|raw }}</div>
+        <div class="{{ _t ? _t.macroClasses('card_body', ui.card_body(framework), bundle) : ui.card_body(framework) }}">{{ body|raw }}</div>
     {% endif %}
     {% if footer is defined and footer %}
-        <footer class="{{ ui.card_footer(framework) }}">{{ footer|raw }}</footer>
+        <footer class="{{ _t ? _t.macroClasses('card_footer', ui.card_footer(framework), bundle) : ui.card_footer(framework) }}">{{ footer|raw }}</footer>
     {% endif %}
 </section>
+{% endif %}

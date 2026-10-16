@@ -1,0 +1,34 @@
+{#
+  Card / panel building block.
+
+  Optional:
+    - title
+    - intro
+    - body (HTML)
+    - footer (HTML)
+    - toolbar (HTML)
+    - framework
+#}
+{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
+{% set framework = framework|default(null) %}
+<section class="{{ ui.card(framework) }}" data-nowo-ui-card>
+    {% if title is defined and title %}
+        <header class="{{ ui.card_header(framework) }}">
+            <div class="nowo-ui-card__heading">
+                <h2 class="nowo-ui-card__title">{{ title }}</h2>
+                {% if intro is defined and intro %}
+                    <p class="nowo-ui-card__intro">{{ intro }}</p>
+                {% endif %}
+            </div>
+            {% if toolbar is defined and toolbar %}
+                <div class="nowo-ui-card__toolbar">{{ toolbar|raw }}</div>
+            {% endif %}
+        </header>
+    {% endif %}
+    {% if body is defined %}
+        <div class="{{ ui.card_body(framework) }}">{{ body|raw }}</div>
+    {% endif %}
+    {% if footer is defined and footer %}
+        <footer class="{{ ui.card_footer(framework) }}">{{ footer|raw }}</footer>
+    {% endif %}
+</section>

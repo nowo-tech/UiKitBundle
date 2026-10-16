@@ -54,6 +54,13 @@ final class LegacyPartialsBcTest extends TestCase
         yield 'burger' => ['_burger', [], 'bootstrap5'];
         yield 'burger rail' => ['_burger', ['rail' => true, 'controls' => 'side', 'expanded' => false, 'label' => 'Menu', 'label_hide' => 'Hide'], 'tailwind'];
         yield 'shell' => ['_shell', ['brand' => 'Acme', 'name' => 'Ann', 'initials' => 'A', 'aside_items' => [], 'footer_copyright' => '(c)', 'main' => '<p>main</p>'], 'bootstrap5'];
+        foreach (['bootstrap5', 'bootstrap4', 'tailwind', 'foundation', 'custom'] as $fw) {
+            yield 'card '.$fw => ['_card', ['title' => 'Stats <b>', 'intro' => 'Last 7 days', 'body' => '<p>42</p>', 'footer' => '<a href="/more">More</a>', 'toolbar' => '<button>x</button>'], $fw];
+        }
+        yield 'card body only' => ['_card', ['body' => '<p>Only</p>'], 'bootstrap5'];
+        yield 'card empty body' => ['_card', ['body' => '', 'title' => 'T'], 'tailwind'];
+        yield 'card framework arg' => ['_card', ['title' => 'T', 'intro' => '', 'toolbar' => '', 'footer' => '', 'framework' => 'tailwind'], 'bootstrap5'];
+        yield 'card nothing' => ['_card', [], 'custom'];
         yield 'shell rail' => ['_shell', ['brand_html' => '<b>A</b>', 'sidebar_rail' => ['storage' => 's', 'cookie' => 'c', 'hidden_value' => 'h', 'default' => 'rail'], 'sidebar_mode' => 'collapsed', 'show_user_menu' => false, 'header_end' => '<i>e</i>'], 'custom'];
     }
 

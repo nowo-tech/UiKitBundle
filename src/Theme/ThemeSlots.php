@@ -200,6 +200,10 @@ final class ThemeSlots
             'bootstrap' => 'card-body',
             'tailwind' => 'px-4 py-3',
         ]],
+        'card_footer' => ['nowo-ui-card__footer', [
+            'bootstrap' => 'card-footer',
+            'tailwind' => 'border-t px-4 py-3',
+        ]],
         'cards' => ['nowo-ui-cards', []],
         'section' => ['nowo-ui-section', [
             'bootstrap' => 'mb-4',

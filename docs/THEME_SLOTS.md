@@ -131,6 +131,7 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `card` | `nowo-ui-card` | `card` | `card` | `border` | `callout` |
 | `card_header` | `nowo-ui-card__header` | `card-header d-flex flex-wrap align-items-start justify-content-between gap-2` | `card-header d-flex flex-wrap align-items-start justify-content-between gap-2` | `flex flex-wrap items-start justify-between gap-2 border-b px-4 py-3` | — |
 | `card_body` | `nowo-ui-card__body` | `card-body` | `card-body` | `px-4 py-3` | — |
+| `card_footer` | `nowo-ui-card__footer` | `card-footer` | `card-footer` | `border-t px-4 py-3` | — |
 | `cards` | `nowo-ui-cards` | — | — | — | — |
 | `section` | `nowo-ui-section` | `mb-4` | `mb-4` | `mb-6` | — |
 | `detail_list` | `nowo-ui-detail-list` | — | — | — | — |
@@ -183,7 +184,7 @@ as the UiKit partial (documented in the header comment of each template) and sho
 | `action` | `@NowoUiKitBundle/partials/_action.html.twig` | `action` (`View\Action`), `context` (`toolbar` \| `row`), `display`, `bundle` | header / form / empty-state actions |
 | `breadcrumbs` | `partials/_breadcrumbs.html.twig` | `header` (`PageHeader`), `bundle` | page header |
 | `burger` | `partials/_burger.html.twig` | `controls`, `expanded`, `label`, `root_class`, `label_attr_names`, `attr`, `bundle` | shell |
-| `card` | `partials/_card.html.twig` | `title`, `intro`, `body`, `footer`, `toolbar` | bundle cards (1.x) |
+| `card` | `partials/_card.html.twig` | `title` / `intro` (`Label` or string), `body`, `footer`, `toolbar`, `actions` (list of `View\Action`), `id`, `attr`, `cards` (list of card hashes → `cards` grid), `bundle`; slots `card`, `card_header`, `card_body`, `card_footer`, `cards` | bundle cards, dashboard cards |
 | `confirm` | `partials/_confirm.html.twig` | `id`, `confirm` (`View\Confirm`), `action`, `action_href`, `bundle` | actions with a `Confirm` |
 | `empty` | `partials/_empty.html.twig` | `empty` (`View\EmptyState`) or `message`, `bundle` | list scaffold |
 | `filters` | `partials/_filters.html.twig` | `action`, `method`, `q`, `placeholder`, `actions`, `clear_href`, `collapsible` | bundle filter bars |
