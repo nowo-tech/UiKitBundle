@@ -18,8 +18,10 @@ use Nowo\UiKitBundle\Release\ReleaseStatusController;
 use Nowo\UiKitBundle\Release\ReleaseUpdateChecker;
 use Nowo\UiKitBundle\Routing\PanelPathRewriter;
 use Nowo\UiKitBundle\Routing\PanelPathRewritingLoader;
+use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Twig\AppearanceExtension;
 use Nowo\UiKitBundle\Twig\RouteLinkExtension;
+use Nowo\UiKitBundle\Twig\ThemeExtension;
 use Symfony\Component\Asset\Package;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
@@ -131,8 +133,44 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
             ])
             ->addTag('twig.extension');
 
+        $this->registerPageContract($container, $fw, $config);
+
         $loader = new YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.yaml');
+    }
+
+    /**
+     * REQ-UI-003 page contract: theme service (slot classes / attributes / partials / tokens) and its Twig
+     * extension (functions + `nowo_ui_layout` / `nowo_ui_theme` / `nowo_ui_breadcrumbs` globals).
+     *
+     * @param array<string, mixed> $config
+     */
+    private function registerPageContract(ContainerBuilder $container, string $framework, array $config): void
+    {
+        /** @var array{admin: string, guest: string} $layouts */
+        $layouts = $config['layouts'];
+        /** @var array{breadcrumb_kit: bool, collection: string|null} $breadcrumbs */
+        $breadcrumbs = $config['breadcrumbs'];
+        /** @var array<string, mixed> $theme */
+        $theme = $config['theme'];
+
+        $container->setParameter('nowo_ui_kit.layouts', $layouts);
+        $container->setParameter('nowo_ui_kit.theme', $theme);
+
+        $container->register('nowo_ui_kit.theme', Theme::class)
+            ->setFactory([Theme::class, 'fromConfig'])
+            ->setArguments([$framework, $theme]);
+        $container->setAlias(Theme::class, 'nowo_ui_kit.theme');
+
+        $container->register('nowo_ui_kit.theme_twig_extension', ThemeExtension::class)
+            ->setArguments([
+                new Reference('nowo_ui_kit.theme'),
+                $layouts,
+                $breadcrumbs,
+                new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                new Reference('request_stack', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+            ])
+            ->addTag('twig.extension');
     }
 
     /**

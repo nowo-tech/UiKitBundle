@@ -1,0 +1,10 @@
+{#
+  Empty state.
+
+  Optional:
+    - message: string (default empty.default translation)
+    - framework: css_framework override
+#}
+{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
+{% set framework = framework|default(null) %}
+<p class="{{ ui.empty(framework) }}">{{ message|default('empty.default'|trans({}, 'NowoUiKitBundle')) }}</p>

@@ -1,0 +1,36 @@
+{#
+  REQ-UI-003 full-page confirm (no-JS fallback of the confirm dialog). Variable: page (View\ConfirmPage).
+  No data blocks. The confirm button submits page.action (POST form; CSRF FormView or token).
+#}
+{% extends page.layout ?? nowo_ui_layout.admin %}
+{% set nowo_ui_bundle = page.bundle %}
+
+{% block nowo_ui_document_title %}{{ page.header.title|nowo_ui_trans }}{% endblock %}
+
+{% block nowo_ui_page_header %}
+    {{ include(nowo_ui_partial('page_header', page.bundle), {header: page.header, bundle: page.bundle}, false) }}
+{% endblock %}
+
+{% block nowo_ui_content %}
+    {% set _b = page.bundle %}
+    {% set _confirm = page.confirm %}
+    {% set _href = page.action.href ?? (page.action.route ? path(page.action.route, page.action.params) : null) %}
+    <section class="{{ nowo_ui_class('confirm', _b) }} nowo-ui-confirm-page {{ nowo_ui_class('card', _b) }}" data-nowo-ui-page="confirm"{{ nowo_ui_attrs('confirm', _b) }}>
+        <div class="{{ nowo_ui_class('card_body', _b) }}">
+            <h2 class="nowo-ui-confirm__title">{{ _confirm.title|nowo_ui_trans }}</h2>
+            {% if _confirm.message %}<p class="nowo-ui-confirm__message">{{ _confirm.message|nowo_ui_trans }}</p>{% endif %}
+            <div class="{{ nowo_ui_class('form_actions', _b) }}">
+                {% if page.cancelHref %}
+                    <a class="{{ nowo_ui_class('btn_secondary', _b) }}" href="{{ page.cancelHref }}">{{ _confirm.cancelLabel is null ? 'action.cancel'|trans({}, 'NowoUiKitBundle') : _confirm.cancelLabel|nowo_ui_trans }}</a>
+                {% endif %}
+                {{ include('@NowoUiKitBundle/partials/_action_post.html.twig', {
+                    action: page.action,
+                    action_href: _href,
+                    button_class: nowo_ui_class('btn_' ~ _confirm.variant, _b) ~ ' nowo-ui-confirm__submit',
+                    button_attrs: {},
+                    button_html: _confirm.confirmLabel is null ? 'action.confirm'|trans({}, 'NowoUiKitBundle') : _confirm.confirmLabel|nowo_ui_trans,
+                }, false) }}
+            </div>
+        </div>
+    </section>
+{% endblock %}

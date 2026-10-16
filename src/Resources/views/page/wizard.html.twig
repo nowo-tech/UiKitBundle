@@ -1,0 +1,44 @@
+{#
+  REQ-UI-003 wizard scaffold. Variable: page (View\WizardPage).
+
+  Regions: steps indicator (done / current / upcoming), the current step's form, back / next.
+  Data block: nowo_ui_wizard_step (`step` = current View\WizardStep in context; default: page.form with the
+  REQ-TWIG-003 child loop, back link and next button).
+#}
+{% extends page.layout ?? nowo_ui_layout.admin %}
+{% set nowo_ui_bundle = page.bundle %}
+
+{% block nowo_ui_document_title %}{{ page.header.title|nowo_ui_trans }}{% endblock %}
+
+{% block nowo_ui_page_header %}
+    {{ include(nowo_ui_partial('page_header', page.bundle), {header: page.header, bundle: page.bundle}, false) }}
+{% endblock %}
+
+{% block nowo_ui_content %}
+    {% set _b = page.bundle %}
+    {% set step = page.steps[page.currentIndex()] %}
+    <div class="nowo-ui-wizard-page" data-nowo-ui-page="wizard">
+        <ol class="{{ nowo_ui_class('wizard_steps', _b) }}" aria-label="{{ 'wizard.steps'|trans({}, 'NowoUiKitBundle') }}"{{ nowo_ui_attrs('wizard_steps', _b) }}>
+            {% for s in page.steps %}
+                {% set _status = page.status(s) %}
+                <li class="{{ nowo_ui_class(_status == 'current' ? 'wizard_step_active' : 'wizard_step', _b) }} nowo-ui-wizard-steps__item--{{ _status }}"{% if _status == 'current' %} aria-current="step"{% endif %}>
+                    {%- if s.href and _status == 'done' -%}
+                        <a href="{{ s.href }}">{{ s.label|nowo_ui_trans }}</a>
+                    {%- else -%}
+                        <span>{{ s.label|nowo_ui_trans }}</span>
+                    {%- endif -%}
+                </li>
+            {% endfor %}
+        </ol>
+        <p class="nowo-ui-wizard-page__progress">{{ 'wizard.step_of'|trans({'%current%': page.currentIndex() + 1, '%total%': page.steps|length}, 'NowoUiKitBundle') }}</p>
+        <section class="{{ nowo_ui_class('card', _b) }}">
+            <div class="{{ nowo_ui_class('card_body', _b) }}">
+                {% block nowo_ui_wizard_step %}
+                    {% if page.form %}
+                        {{ include('@NowoUiKitBundle/page/_wizard_form.html.twig', {page: page}, false) }}
+                    {% endif %}
+                {% endblock %}
+            </div>
+        </section>
+    </div>
+{% endblock %}

@@ -13,9 +13,18 @@
       stored for "hidden", server / account default. Needs `nowo-ui-shell.js`.
     - sidebar_mode (1.15): server-rendered initial mode (expanded | rail | hidden), e.g. from the cookie,
       so the first paint already matches
+    - root_class (2.0): extra classes on the shell root (appended; theme slot `shell` classes too)
+    - header_class / main_class (2.0): extra classes on the header / main region
+    - attr (2.0): extra root attributes (hash; theme slot `shell` attributes are merged first)
+    - burger_root_class / burger_label_attr_names / burger_attr (2.0): forwarded to _burger (root_class /
+      label_attr_names / attr)
+    - bundle (2.0): per-bundle theme exceptions; the burger partial follows theme.partials.burger
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 {% set framework = framework|default(null) %}
+{% set bundle = bundle|default(null) %}
+{% set _t = nowo_ui_theme|default(null) %}
+{% set _root_extra = ((_t ? _t.extraClasses('shell', bundle) : '') ~ ' ' ~ root_class|default(''))|trim %}
 {% set aside_id = aside_id|default('nowo-ui-aside') %}
 {% set collapsed = collapsed|default(false) %}
 {% set _rail = sidebar_rail|default(false) %}
@@ -27,7 +36,7 @@
 {% endif %}
 
 <div
-    class="{{ ui.shell(framework) }}{{ collapsed ? ' is-aside-collapsed' : '' }}{{ _rail and _mode == 'rail' ? ' is-aside-rail' : '' }}"
+    class="{{ ui.shell(framework) }}{{ collapsed ? ' is-aside-collapsed' : '' }}{{ _rail and _mode == 'rail' ? ' is-aside-rail' : '' }}{{ _root_extra ? ' ' ~ _root_extra }}"
     data-nowo-ui-shell
     {% if _rail %}
         data-nowo-ui-sidebar-rail
@@ -37,14 +46,20 @@
         {% if _rail_opts.default is defined %}data-nowo-ui-sidebar-default="{{ _rail_opts.default }}"{% endif %}
         {% if _mode in ['expanded', 'rail', 'hidden'] %}data-nowo-ui-sidebar-mode="{{ _mode }}"{% endif %}
     {% endif %}
+    {{- _t ? _t.renderAttributes('shell', bundle, attr|default({}))|raw : '' }}
+    {%- if not _t %}{% for name, value in attr|default({}) %} {{ name }}="{{ value }}"{% endfor %}{% endif %}
 >
-    <header class="{{ ui.header(framework) }}">
+    <header class="{{ ui.header(framework) }}{{ header_class|default('') ? ' ' ~ header_class }}">
         <div class="nowo-ui-header__start">
-            {{ include('@NowoUiKitBundle/partials/_burger.html.twig', {
+            {{ include(_t ? _t.partial('burger', bundle) : '@NowoUiKitBundle/partials/_burger.html.twig', {
                 controls: aside_id,
                 expanded: not collapsed,
                 rail: _rail ? true : false,
                 framework: framework,
+                root_class: burger_root_class|default(''),
+                label_attr_names: burger_label_attr_names|default({}),
+                attr: burger_attr|default({}),
+                bundle: bundle,
             }) }}
             {% if brand_html is defined and brand_html %}
                 {{ brand_html|raw }}
@@ -79,7 +94,7 @@
         framework: framework,
     }) }}
 
-    <div class="nowo-ui-main">
+    <div class="nowo-ui-main{{ main_class|default('') ? ' ' ~ main_class }}">
         {% if main is defined %}{{ main|raw }}{% endif %}
     </div>
 

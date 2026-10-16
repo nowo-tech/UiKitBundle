@@ -4,7 +4,24 @@
   Optional:
     - message: string (default empty.default translation)
     - framework: css_framework override
+    - empty (2.0 contract): View\EmptyState — title, message (labels translated), action (through _action)
+    - bundle: per-bundle theme exceptions (slot `empty`)
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 {% set framework = framework|default(null) %}
-<p class="{{ ui.empty(framework) }}">{{ message|default('empty.default'|trans({}, 'NowoUiKitBundle')) }}</p>
+{% set bundle = bundle|default(null) %}
+{% set _t = nowo_ui_theme|default(null) %}
+{% set _extra = _t ? _t.extraClasses('empty', bundle) : '' %}
+{% if empty is defined and empty %}
+    {% set _title = empty.title is null ? null : (empty.title.key is defined ? empty.title.key|trans(empty.title.params, empty.title.domain) : empty.title) %}
+    {% set _message = empty.message is null ? 'empty.default'|trans({}, 'NowoUiKitBundle') : (empty.message.key is defined ? empty.message.key|trans(empty.message.params, empty.message.domain) : empty.message) %}
+    <div class="{{ ui.empty(framework) }}{{ _extra ? ' ' ~ _extra }}"{{ _t ? _t.renderAttributes('empty', bundle)|raw }}>
+        {% if _title %}<p class="nowo-ui-empty__title">{{ _title }}</p>{% endif %}
+        <p class="nowo-ui-empty__message">{{ _message }}</p>
+        {% if empty.action %}
+            <div class="nowo-ui-empty__action">{{ include('@NowoUiKitBundle/partials/_action.html.twig', {action: empty.action, context: 'toolbar', framework: framework, bundle: bundle}, false) }}</div>
+        {% endif %}
+    </div>
+{% else %}
+<p class="{{ ui.empty(framework) }}{{ _extra ? ' ' ~ _extra }}">{{ message|default('empty.default'|trans({}, 'NowoUiKitBundle')) }}</p>
+{% endif %}

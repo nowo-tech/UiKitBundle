@@ -9,8 +9,13 @@
  * at the use site through var() fallbacks to the base tokens, so a host can set them on :root or on
  * any scope (.kit-admin, a dialog) and dark mode keeps following the base tokens.
  * Full list + defaults: docs/THEMING.md. Hosts: a short :root { --nowo-ui-…: … } block.
+ *
+ * 2.0 (REQ-UI-003): when the host sets nowo_ui_kit.theme.tokens, the UiKit document layout marks <html> with
+ * data-nowo-ui-host-tokens and these palette defaults drop to zero specificity (:where), so any host
+ * declaration wins whatever the load order — no !important remaps. Without the attribute nothing changes.
  */
-:root {
+:root:where(:not([data-nowo-ui-host-tokens])),
+:where(:root[data-nowo-ui-host-tokens]) {
   --nowo-ui-primary: #2563eb;
   --nowo-ui-primary-contrast: #ffffff;
   --nowo-ui-danger: #ef4444;
@@ -2434,8 +2439,9 @@ table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr:hover > td {
   color: var(--nowo-ui-muted) !important;
 }
 
-/* --- Dark theme token defaults --- */
-[data-theme="dark"] {
+/* --- Dark theme token defaults (zero specificity under data-nowo-ui-host-tokens, see the top of the file) --- */
+[data-theme="dark"]:where(:not([data-nowo-ui-host-tokens], [data-nowo-ui-host-tokens] *)),
+:where([data-nowo-ui-host-tokens][data-theme="dark"], [data-nowo-ui-host-tokens] [data-theme="dark"]) {
   --nowo-ui-primary: #60a5fa;
   --nowo-ui-primary-contrast: #0b1220;
   --nowo-ui-danger: #f87171;
@@ -2968,4 +2974,240 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
 
 :is(.nowo-ui-thin-scroll, html[data-nowo-ui-thin-scrollbars], [data-nowo-ui-thin-scrollbars] :is(body, .nowo-ui-aside, .nowo-ui-main, .nowo-ui-modal, .nowo-ui-modal .modal-body, .nowo-ui-row-detail__content, .nowo-ui-table-wrap, .nowo-ui-responsive-table__scroller))::-webkit-scrollbar-thumb:hover {
   background-color: var(--nowo-ui-scrollbar-thumb-hover, color-mix(in srgb, var(--nowo-ui-text) 45%, transparent));
+}
+
+/* =============================================================================================
+ * 2.0 — page contract (REQ-UI-003): layouts, scaffolds and view-model partials. Semantic classes only,
+ * painted from the base tokens; framework classes come from the theme slots.
+ * ============================================================================================= */
+.nowo-ui-page {
+  min-height: 100vh;
+}
+
+.nowo-ui-page--guest {
+  display: grid;
+  place-items: start center;
+  padding: 2rem 1rem;
+}
+
+.nowo-ui-page--guest > .nowo-ui-content {
+  width: 100%;
+  max-width: 28rem;
+}
+
+.nowo-ui-breadcrumbs__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0 0 0.35rem;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8125rem;
+  color: var(--nowo-ui-muted);
+}
+
+.nowo-ui-breadcrumbs__item + .nowo-ui-breadcrumbs__item::before {
+  content: "/";
+  margin-right: 0.35rem;
+}
+
+.nowo-ui-breadcrumbs__link {
+  color: inherit;
+}
+
+.nowo-ui-cell--center {
+  text-align: center;
+}
+
+.nowo-ui-cell--end {
+  text-align: end;
+}
+
+.nowo-ui-sort {
+  color: inherit;
+  text-decoration: none;
+}
+
+.nowo-ui-sort--asc::after {
+  content: " \2191";
+}
+
+.nowo-ui-sort--desc::after {
+  content: " \2193";
+}
+
+.nowo-ui-form__actions,
+.nowo-ui-filters__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nowo-ui-action__form {
+  display: inline;
+  margin: 0;
+}
+
+.nowo-ui-detail-list {
+  display: grid;
+  grid-template-columns: minmax(8rem, max-content) 1fr;
+  gap: 0.35rem 1rem;
+  margin: 0;
+}
+
+.nowo-ui-detail-list__item {
+  display: contents;
+}
+
+.nowo-ui-detail-list__term {
+  color: var(--nowo-ui-muted);
+  font-weight: 500;
+}
+
+.nowo-ui-detail-list__value {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.nowo-ui-detail-list--meta {
+  margin-top: 1rem;
+  font-size: 0.8125rem;
+}
+
+.nowo-ui-kpis,
+.nowo-ui-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.nowo-ui-cards {
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+}
+
+.nowo-ui-kpi {
+  padding: 0.75rem 1rem;
+  border: var(--nowo-ui-border-width, 1px) solid var(--nowo-ui-border);
+  border-radius: var(--nowo-ui-radius);
+  background: var(--nowo-ui-surface);
+}
+
+.nowo-ui-kpi__label,
+.nowo-ui-kpi__hint {
+  margin: 0;
+  color: var(--nowo-ui-muted);
+  font-size: 0.8125rem;
+}
+
+.nowo-ui-kpi__value {
+  margin: 0.25rem 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.nowo-ui-kpi--success .nowo-ui-kpi__value {
+  color: var(--nowo-ui-success-text);
+}
+
+.nowo-ui-kpi--warning .nowo-ui-kpi__value {
+  color: var(--nowo-ui-warning-text);
+}
+
+.nowo-ui-kpi--danger .nowo-ui-kpi__value {
+  color: var(--nowo-ui-danger-text);
+}
+
+.nowo-ui-kpi--info .nowo-ui-kpi__value {
+  color: var(--nowo-ui-info-text);
+}
+
+.nowo-ui-wizard-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  list-style: none;
+  counter-reset: nowo-ui-wizard;
+}
+
+.nowo-ui-wizard-steps__item {
+  counter-increment: nowo-ui-wizard;
+  padding: 0.25rem 0.75rem;
+  border: var(--nowo-ui-border-width, 1px) solid var(--nowo-ui-border);
+  border-radius: var(--nowo-ui-radius);
+  color: var(--nowo-ui-muted);
+  font-size: 0.875rem;
+}
+
+.nowo-ui-wizard-steps__item::before {
+  content: counter(nowo-ui-wizard) ". ";
+}
+
+.nowo-ui-wizard-steps__item--active {
+  border-color: var(--nowo-ui-primary);
+  color: var(--nowo-ui-text);
+  font-weight: 600;
+}
+
+.nowo-ui-wizard-steps__item--done {
+  color: var(--nowo-ui-text);
+}
+
+.nowo-ui-wizard-page__progress {
+  color: var(--nowo-ui-muted);
+  font-size: 0.8125rem;
+}
+
+.nowo-ui-auth-panel {
+  border: var(--nowo-ui-border-width, 1px) solid var(--nowo-ui-border);
+  border-radius: var(--nowo-ui-radius);
+  background: var(--nowo-ui-surface);
+}
+
+.nowo-ui-auth-panel__brand {
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+}
+
+.nowo-ui-auth-panel__footer {
+  padding: 0.75rem 1rem;
+  border-top: var(--nowo-ui-border-width, 1px) solid var(--nowo-ui-border);
+  font-size: 0.875rem;
+}
+
+.nowo-ui-auth-panel__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nowo-ui-danger-zone {
+  padding: 0.75rem 1rem;
+  border: var(--nowo-ui-border-width, 1px) solid var(--nowo-ui-danger-border);
+  border-radius: var(--nowo-ui-radius);
+}
+
+.nowo-ui-danger-zone__title {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  color: var(--nowo-ui-danger-text);
+}
+
+.nowo-ui-empty__title {
+  margin: 0 0 0.25rem;
+  font-weight: 600;
+}
+
+.nowo-ui-empty__message {
+  margin: 0;
+}
+
+.nowo-ui-empty__action {
+  margin-top: 0.75rem;
 }

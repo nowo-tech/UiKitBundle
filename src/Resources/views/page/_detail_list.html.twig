@@ -1,0 +1,20 @@
+{#
+  Definition list of View\DetailItem (show sections, audit meta). Values are printed escaped.
+
+  Required:
+    - items: list<View\DetailItem>
+  Optional:
+    - bundle, modifier (adds nowo-ui-detail-list--<modifier>)
+#}
+{% set bundle = bundle|default(null) %}
+<dl class="{{ nowo_ui_class('detail_list', bundle) }}{{ modifier|default(null) ? ' nowo-ui-detail-list--' ~ modifier }}"{{ nowo_ui_attrs('detail_list', bundle) }}>
+    {% for item in items %}
+        <div class="nowo-ui-detail-list__item">
+            <dt class="nowo-ui-detail-list__term">{{ item.label|nowo_ui_trans }}</dt>
+            <dd class="nowo-ui-detail-list__value">
+                {%- set _value = item.value is same as(true) ? '✓' : (item.value is same as(false) ? '—' : (item.value is null or item.value is same as('') ? '—' : item.value|nowo_ui_trans)) -%}
+                {%- if item.href -%}<a href="{{ item.href }}">{{ _value }}</a>{%- else -%}{{ _value }}{%- endif -%}
+            </dd>
+        </div>
+    {% endfor %}
+</dl>

@@ -5,17 +5,25 @@
   Optional:
     - framework
     - flashes: override app.flashes (for tests / embedding)
+    - trans_domain (2.0): translate messages / titles with this domain (default null = print as given)
+    - bundle (2.0): per-bundle theme exceptions — slot `toasts` classes + attributes on the stack root
+      (e.g. a host Stimulus controller), slots flash_<type> classes on each toast
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 {% set framework = framework|default(null) %}
+{% set bundle = bundle|default(null) %}
+{% set trans_domain = trans_domain|default(null) %}
+{% set _t = nowo_ui_theme|default(null) %}
+{% set _extra = _t ? _t.extraClasses('toasts', bundle) : '' %}
 {% set toast_messages = flashes|default(app.flashes) %}
 {% if toast_messages is not empty %}
     <div
-        class="nowo-ui-toast-stack"
+        class="nowo-ui-toast-stack{{ _extra ? ' ' ~ _extra }}"
         data-nowo-ui-toast-stack
         aria-live="polite"
         aria-atomic="false"
         aria-relevant="additions"
+        {{- _t ? _t.renderAttributes('toasts', bundle)|raw }}
     >
         {% for label, messages in toast_messages %}
             {% for message in messages %}
@@ -23,20 +31,21 @@
                 {% set isWarning = label == 'warning' %}
                 {% set flashType = isError ? 'error' : (label == 'notice' ? 'info' : label) %}
                 {% set structured = message is iterable and message.title is defined %}
+                {% set _toast_extra = _t and flashType in ['success', 'error', 'warning', 'info'] ? _t.extraClasses('flash_' ~ flashType, bundle) : '' %}
                 <div
-                    class="nowo-ui-toast {{ ui.flash(flashType, framework) }}"
+                    class="nowo-ui-toast {{ ui.flash(flashType, framework) }}{{ _toast_extra ? ' ' ~ _toast_extra }}"
                     role="{{ isError or isWarning ? 'alert' : 'status' }}"
                     data-nowo-ui-toast
                     data-timeout="{{ isError or isWarning ? 8000 : 5000 }}"
                 >
                     <div class="nowo-ui-toast__content">
                         {% if structured %}
-                            <p class="nowo-ui-toast__title">{{ message.title }}</p>
+                            <p class="nowo-ui-toast__title">{{ trans_domain ? message.title|trans({}, trans_domain) : message.title }}</p>
                             {% if message.message is defined and message.message is not empty %}
-                                <p class="nowo-ui-toast__message">{{ message.message }}</p>
+                                <p class="nowo-ui-toast__message">{{ trans_domain ? message.message|trans({}, trans_domain) : message.message }}</p>
                             {% endif %}
                         {% else %}
-                            <p class="nowo-ui-toast__message">{{ message }}</p>
+                            <p class="nowo-ui-toast__message">{{ trans_domain ? message|trans({}, trans_domain) : message }}</p>
                         {% endif %}
                     </div>
                     <button

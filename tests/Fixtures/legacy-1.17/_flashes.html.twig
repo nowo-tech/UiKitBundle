@@ -1,0 +1,14 @@
+{#
+  Symfony flash messages → nowo-ui-flash.
+
+  Optional:
+    - framework: css_framework override
+#}
+{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
+{% set framework = framework|default(null) %}
+{% for label, messages in app.flashes %}
+    {% set flashType = label == 'error' or label == 'danger' ? 'error' : (label == 'notice' ? 'info' : label) %}
+    {% for message in messages %}
+        <div class="{{ ui.flash(flashType, framework) }}" role="alert">{{ message }}</div>
+    {% endfor %}
+{% endfor %}

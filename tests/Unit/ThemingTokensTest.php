@@ -139,7 +139,7 @@ final class ThemingTokensTest extends TestCase
     public function testCssHasNoHexOutsideTokenBlocks(): void
     {
         $css = $this->css();
-        $withoutTokenBlocks = (string) preg_replace('/^(?::root|\[data-theme="dark"\]) \{[^}]*\}/m', '', $css);
+        $withoutTokenBlocks = (string) preg_replace('/^(?::root|\[data-theme="dark"\])[^{]*\{[^}]*\}/m', '', $css);
         self::assertSame(0, preg_match('/#[0-9a-fA-F]{3,8}\b/', $withoutTokenBlocks, $m), 'Hard-coded hex outside token blocks: '.($m[0] ?? ''));
         self::assertSame(0, preg_match('/var\(--nowo-ui-[a-z-]+, #/', $css), 'Base tokens are always declared; no hex fallbacks.');
     }
@@ -147,8 +147,8 @@ final class ThemingTokensTest extends TestCase
     public function testBaseTokensHaveLightAndDarkDefaults(): void
     {
         $css = $this->css();
-        self::assertSame(1, preg_match('/^:root \{([^}]*)\}/m', $css, $light));
-        self::assertSame(1, preg_match('/^\[data-theme="dark"\] \{([^}]*)\}/m', $css, $dark));
+        self::assertSame(1, preg_match('/^:root:where\(:not\(\[data-nowo-ui-host-tokens\]\)\),\n:where\(:root\[data-nowo-ui-host-tokens\]\) \{([^}]*)\}/m', $css, $light));
+        self::assertSame(1, preg_match('/^\[data-theme="dark"\]:where\(:not\(\[data-nowo-ui-host-tokens\], \[data-nowo-ui-host-tokens\] \*\)\),\n:where\(\[data-nowo-ui-host-tokens\]\[data-theme="dark"\], \[data-nowo-ui-host-tokens\] \[data-theme="dark"\]\) \{([^}]*)\}/m', $css, $dark));
         foreach (['primary', 'primary-contrast', 'danger', 'danger-text', 'danger-bg', 'danger-border', 'danger-text-strong', 'success-bg', 'success-border', 'success-text', 'warning-bg', 'warning-border', 'warning-text', 'info-bg', 'info-border', 'info-text', 'surface', 'surface-muted', 'border', 'border-strong', 'text', 'muted'] as $token) {
             self::assertStringContainsString('--nowo-ui-'.$token.':', $light[1], $token);
             self::assertStringContainsString('--nowo-ui-'.$token.':', $dark[1], $token);

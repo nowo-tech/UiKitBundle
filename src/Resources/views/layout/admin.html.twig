@@ -1,0 +1,23 @@
+{#
+  REQ-UI-003 admin layout (signed-in pages inside the host shell). Canonical blocks: nowo_ui_page_header,
+  nowo_ui_flashes, nowo_ui_content, nowo_ui_modals (+ the document blocks); nowo_ui_navigation is the
+  navigation region (empty by default — host bridges put their shell / DashboardMenu there).
+
+  Hosts point nowo_ui_kit.layouts.admin at their own layout or at a one-file bridge that renders these blocks.
+#}
+{% extends '@NowoUiKitBundle/layout/document.html.twig' %}
+
+{% block nowo_ui_body %}
+    {% set _bundle = nowo_ui_bundle|default(null) %}
+    <div class="{{ nowo_ui_class('page', _bundle) }} nowo-ui-page--admin"{{ nowo_ui_attrs('page', _bundle) }}>
+        {% block nowo_ui_navigation %}{% endblock %}
+        <main class="{{ nowo_ui_class('content', _bundle) }}" id="nowo-ui-content"{% if _bundle %} data-nowo-ui-bundle="{{ _bundle }}"{% endif %}{{ nowo_ui_attrs('content', _bundle) }}>
+            {% block nowo_ui_page_header %}{% endblock %}
+            {% block nowo_ui_flashes %}
+                {{ include(nowo_ui_partial('flashes', _bundle), {bundle: _bundle}) }}
+            {% endblock %}
+            {% block nowo_ui_content %}{% endblock %}
+        </main>
+        {% block nowo_ui_modals %}{% endblock %}
+    </div>
+{% endblock %}

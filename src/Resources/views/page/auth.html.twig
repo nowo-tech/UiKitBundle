@@ -1,0 +1,51 @@
+{#
+  REQ-UI-003 auth scaffold (guest layout). Variable: page (View\AuthPage).
+
+  Regions: brand, panel heading + intro, error, form, footer links.
+  Data blocks: nowo_ui_auth_fields (default: REQ-TWIG-003 child loop of page.form), nowo_ui_auth_actions (default:
+  submit button), nowo_ui_auth_footer (default: page.links).
+#}
+{% extends page.layout ?? nowo_ui_layout.guest %}
+{% set nowo_ui_bundle = page.bundle %}
+
+{% block nowo_ui_document_title %}{{ page.title|nowo_ui_trans }}{% endblock %}
+
+{% block nowo_ui_content %}
+    {% set _b = page.bundle %}
+    {% set form = page.form %}
+    <section class="{{ nowo_ui_class('auth_panel', _b) }}" data-nowo-ui-page="auth"{{ nowo_ui_attrs('auth_panel', _b) }}>
+        <div class="{{ nowo_ui_class('card_body', _b) }}">
+            {% if page.brand %}<p class="nowo-ui-auth-panel__brand">{{ page.brand|nowo_ui_trans }}</p>{% endif %}
+            <h1 class="{{ nowo_ui_class('page_title', _b) }}">{{ page.title|nowo_ui_trans }}</h1>
+            {% if page.intro %}<p class="{{ nowo_ui_class('page_intro', _b) }}">{{ page.intro|nowo_ui_trans }}</p>{% endif %}
+            {% if page.error %}<div class="{{ nowo_ui_class('flash_error', _b) }}" role="alert">{{ page.error|nowo_ui_trans }}</div>{% endif %}
+            {% if form %}
+                {{ form_start(form, {attr: {class: nowo_ui_class('form', _b)}}) }}
+                    {% block nowo_ui_auth_fields %}
+                        {% for child in form %}
+                            {% if not child.rendered %}
+                                {{ form_row(child) }}
+                            {% endif %}
+                        {% endfor %}
+                    {% endblock %}
+                    <div class="{{ nowo_ui_class('form_actions', _b) }}"{{ nowo_ui_attrs('form_actions', _b) }}>
+                        {% block nowo_ui_auth_actions %}
+                            <button type="submit" class="{{ nowo_ui_class('btn_primary', _b) }}">{{ page.submitLabel is null ? 'action.submit'|trans({}, 'NowoUiKitBundle') : page.submitLabel|nowo_ui_trans }}</button>
+                        {% endblock %}
+                    </div>
+                {{ form_end(form) }}
+            {% endif %}
+        </div>
+        <footer class="nowo-ui-auth-panel__footer">
+            {% block nowo_ui_auth_footer %}
+                {% if page.links is not empty %}
+                    <ul class="nowo-ui-auth-panel__links">
+                        {% for link in page.links %}
+                            <li><a href="{{ link.href }}"{% for name, value in link.attributes %}{% if value is same as(true) %} {{ name }}{% elseif value is not null and value is not same as(false) %} {{ name }}="{{ value }}"{% endif %}{% endfor %}>{{ link.label|nowo_ui_trans }}</a></li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endblock %}
+        </footer>
+    </section>
+{% endblock %}

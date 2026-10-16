@@ -1,0 +1,17 @@
+{#
+  Default body of page/wizard.html.twig (separate file: form_start / form_end need symfony/form).
+#}
+{% set _b = page.bundle %}
+{{ form_start(page.form, {attr: {class: nowo_ui_class('form', _b)}}) }}
+    {% for child in page.form %}
+        {% if not child.rendered %}
+            {{ form_row(child) }}
+        {% endif %}
+    {% endfor %}
+    <div class="{{ nowo_ui_class('form_actions', _b) }}"{{ nowo_ui_attrs('form_actions', _b) }}>
+        {% if page.backHref %}
+            <a class="{{ nowo_ui_class('btn_secondary', _b) }}" href="{{ page.backHref }}">{{ page.backLabel is null ? 'action.back'|trans({}, 'NowoUiKitBundle') : page.backLabel|nowo_ui_trans }}</a>
+        {% endif %}
+        <button type="submit" class="{{ nowo_ui_class('btn_primary', _b) }}">{{ page.nextLabel is null ? 'action.next'|trans({}, 'NowoUiKitBundle') : page.nextLabel|nowo_ui_trans }}</button>
+    </div>
+{{ form_end(page.form) }}

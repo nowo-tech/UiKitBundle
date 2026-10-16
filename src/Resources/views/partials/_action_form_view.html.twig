@@ -1,0 +1,6 @@
+{#
+  FormView branch of _action_post (separate file: form_start / form_end need symfony/form).
+#}
+{{ form_start(action.form, {action: action_href ?? '#', method: action.method, attr: {class: 'nowo-ui-action__form'}}) }}
+    <button type="submit" class="{{ button_class }}"{% for name, value in button_attrs %}{% if value is same as(true) %} {{ name }}{% elseif value is not null and value is not same as(false) %} {{ name }}="{{ value }}"{% endif %}{% endfor %}{% if action.disabled %} disabled{% endif %}>{{ button_html }}</button>
+{{ form_end(action.form) }}

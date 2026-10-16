@@ -9,24 +9,35 @@
       (`data-label-expand` / `data-label-rail` / `data-label-hide`, defaults nav.sidebar_*)
     - label_expand / label_rail / label_hide: override those labels
     - framework
+    - root_class (2.0): extra classes on the button (appended; theme slot `burger` classes too)
+    - label_attr_names (2.0): attribute names of the rail labels, map {expand, rail, hide}
+      (default data-label-expand / data-label-rail / data-label-hide) — for host scripts with other names
+    - attr (2.0): extra attributes (hash; theme slot `burger` attributes are merged first)
+    - bundle (2.0): per-bundle theme exceptions
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 {% set framework = framework|default(null) %}
+{% set bundle = bundle|default(null) %}
+{% set _t = nowo_ui_theme|default(null) %}
 {% set controls = controls|default('nowo-ui-aside') %}
 {% set expanded = expanded is defined and expanded is not null ? expanded : true %}
 {% set label = label|default('nav.toggle_aside'|trans({}, 'NowoUiKitBundle')) %}
+{% set _names = {expand: 'data-label-expand', rail: 'data-label-rail', hide: 'data-label-hide'}|merge(label_attr_names|default({})) %}
+{% set _extra = ((_t ? _t.extraClasses('burger', bundle) : '') ~ ' ' ~ root_class|default(''))|trim %}
 <button
     type="button"
-    class="{{ ui.burger(framework) }}"
+    class="{{ ui.burger(framework) }}{{ _extra ? ' ' ~ _extra }}"
     data-nowo-ui-burger
     aria-controls="{{ controls }}"
     aria-expanded="{{ expanded ? 'true' : 'false' }}"
     aria-label="{{ label }}"
     {% if rail|default(false) %}
-        data-label-expand="{{ label_expand|default('nav.sidebar_expand'|trans({}, 'NowoUiKitBundle')) }}"
-        data-label-rail="{{ label_rail|default('nav.sidebar_rail'|trans({}, 'NowoUiKitBundle')) }}"
-        data-label-hide="{{ label_hide|default('nav.sidebar_hide'|trans({}, 'NowoUiKitBundle')) }}"
+        {{ _names.expand }}="{{ label_expand|default('nav.sidebar_expand'|trans({}, 'NowoUiKitBundle')) }}"
+        {{ _names.rail }}="{{ label_rail|default('nav.sidebar_rail'|trans({}, 'NowoUiKitBundle')) }}"
+        {{ _names.hide }}="{{ label_hide|default('nav.sidebar_hide'|trans({}, 'NowoUiKitBundle')) }}"
     {% endif %}
+    {{- _t ? _t.renderAttributes('burger', bundle, attr|default({}))|raw : '' }}
+    {%- if not _t %}{% for name, value in attr|default({}) %} {{ name }}="{{ value }}"{% endfor %}{% endif %}
 >
     <svg class="nowo-ui-burger__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
         <path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>

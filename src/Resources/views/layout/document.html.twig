@@ -1,0 +1,37 @@
+{#
+  REQ-UI-003 document skeleton: <html>, theme boot, UiKit assets (own asset package only, never a CDN), host
+  theme tokens. Canonical blocks: nowo_ui_document_title, nowo_ui_head, nowo_ui_styles, nowo_ui_scripts,
+  nowo_ui_body. Stack assets with {{ parent() }}.
+
+  Optional variables:
+    - nowo_ui_document_title: <title> text when the block is not overridden
+    - nowo_ui_theme_boot: false skips the pre-paint theme boot script (default true)
+    - nowo_ui_bundle: bundle name for per-bundle theme exceptions (also set by the scaffolds from page.bundle)
+#}
+{% set _request = app is defined and app ? app.request : null %}
+{% set _nonce = _request ? _request.attributes.get('csp_nonce') : null %}
+{% set _bundle = nowo_ui_bundle|default(null) %}
+<!DOCTYPE html>
+<html lang="{{ _request ? _request.locale : 'en' }}"{% if nowo_ui_theme.hasTokens() %} data-nowo-ui-host-tokens{% endif %}{{ nowo_ui_attrs('document', _bundle) }}>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block nowo_ui_document_title %}{{ nowo_ui_document_title|default('') }}{% endblock %}</title>
+    {% if nowo_ui_theme_boot is not defined or nowo_ui_theme_boot %}
+        {{ include('@NowoUiKitBundle/partials/_theme_boot.html.twig', {inline: _nonce ? true : false, nonce: _nonce}, false) }}
+    {% endif %}
+    {% block nowo_ui_head %}{% endblock %}
+    {% block nowo_ui_styles %}
+        <link rel="stylesheet" href="{{ asset('css/nowo-ui.css', 'nowo_ui_kit') }}">
+        {{ nowo_ui_theme_tokens(_nonce) }}
+    {% endblock %}
+</head>
+<body class="{{ nowo_ui_class('body', _bundle) }}"{{ nowo_ui_attrs('body', _bundle) }}>
+    {% block nowo_ui_body %}{% endblock %}
+    {% block nowo_ui_scripts %}
+        {% for _script in ['nowo-ui-modal', 'nowo-ui-confirm', 'nowo-ui-toast', 'nowo-ui-tabs', 'nowo-ui-theme'] %}
+            <script src="{{ asset('js/' ~ _script ~ '.js', 'nowo_ui_kit') }}" defer{% if _nonce %} nonce="{{ _nonce }}"{% endif %}></script>
+        {% endfor %}
+    {% endblock %}
+</body>
+</html>

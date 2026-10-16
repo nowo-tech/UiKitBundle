@@ -1,0 +1,34 @@
+{#
+  Burger / sidebar toggle button.
+
+  Optional:
+    - controls: id of aside (default nowo-ui-aside)
+    - expanded: bool (default true on desktop intent)
+    - label: aria-label (default nav.toggle_aside)
+    - rail (1.15): true adds the next-action labels used by the opt-in sidebar rail
+      (`data-label-expand` / `data-label-rail` / `data-label-hide`, defaults nav.sidebar_*)
+    - label_expand / label_rail / label_hide: override those labels
+    - framework
+#}
+{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
+{% set framework = framework|default(null) %}
+{% set controls = controls|default('nowo-ui-aside') %}
+{% set expanded = expanded is defined and expanded is not null ? expanded : true %}
+{% set label = label|default('nav.toggle_aside'|trans({}, 'NowoUiKitBundle')) %}
+<button
+    type="button"
+    class="{{ ui.burger(framework) }}"
+    data-nowo-ui-burger
+    aria-controls="{{ controls }}"
+    aria-expanded="{{ expanded ? 'true' : 'false' }}"
+    aria-label="{{ label }}"
+    {% if rail|default(false) %}
+        data-label-expand="{{ label_expand|default('nav.sidebar_expand'|trans({}, 'NowoUiKitBundle')) }}"
+        data-label-rail="{{ label_rail|default('nav.sidebar_rail'|trans({}, 'NowoUiKitBundle')) }}"
+        data-label-hide="{{ label_hide|default('nav.sidebar_hide'|trans({}, 'NowoUiKitBundle')) }}"
+    {% endif %}
+>
+    <svg class="nowo-ui-burger__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+    </svg>
+</button>

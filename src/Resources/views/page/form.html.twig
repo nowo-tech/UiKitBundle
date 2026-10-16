@@ -1,0 +1,53 @@
+{#
+  REQ-UI-003 form scaffold. Variable: page (View\FormPage).
+
+  Regions: page header, form (form_start / form_end; form theme from the host / FormKit profile), submit + cancel +
+  secondary actions, delete zone (page.deleteAction through the confirm contract).
+  Data blocks: nowo_ui_form_body (default: REQ-TWIG-003 child loop), nowo_ui_form_aside (side column).
+#}
+{% extends page.layout ?? nowo_ui_layout.admin %}
+{% set nowo_ui_bundle = page.bundle %}
+
+{% block nowo_ui_document_title %}{{ page.header.title|nowo_ui_trans }}{% endblock %}
+
+{% block nowo_ui_page_header %}
+    {{ include(nowo_ui_partial('page_header', page.bundle), {header: page.header, bundle: page.bundle}, false) }}
+{% endblock %}
+
+{% block nowo_ui_content %}
+    {% set _b = page.bundle %}
+    {% set form = page.form %}
+    <div class="nowo-ui-form-page" data-nowo-ui-page="form">
+        <div class="nowo-ui-form-page__main">
+            {{ form_start(form, {attr: {class: nowo_ui_class('form', _b)}}) }}
+                {% block nowo_ui_form_body %}
+                    {% for child in form %}
+                        {% if not child.rendered %}
+                            {{ form_row(child) }}
+                        {% endif %}
+                    {% endfor %}
+                {% endblock %}
+                <div class="{{ nowo_ui_class('form_actions', _b) }}"{{ nowo_ui_attrs('form_actions', _b) }}>
+                    <button type="submit" class="{{ nowo_ui_class('btn_primary', _b) }}">{{ page.submitLabel is null ? 'action.save'|trans({}, 'NowoUiKitBundle') : page.submitLabel|nowo_ui_trans }}</button>
+                    {% if page.cancelHref %}
+                        <a class="{{ nowo_ui_class('btn_secondary', _b) }}" href="{{ page.cancelHref }}">{{ page.cancelLabel is null ? 'action.cancel'|trans({}, 'NowoUiKitBundle') : page.cancelLabel|nowo_ui_trans }}</a>
+                    {% endif %}
+                </div>
+            {{ form_end(form) }}
+            {% if page.secondaryActions is not empty %}
+                <div class="{{ nowo_ui_class('toolbar', _b) }} nowo-ui-form-page__secondary">
+                    {% for action in page.secondaryActions %}
+                        {{ include(nowo_ui_partial('action', _b), {action: action, context: 'toolbar', bundle: _b}, false) }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+            {% if page.deleteAction %}
+                <section class="{{ nowo_ui_class('danger_zone', _b) }}"{{ nowo_ui_attrs('danger_zone', _b) }}>
+                    <h2 class="nowo-ui-danger-zone__title">{{ 'form.danger_zone'|trans({}, 'NowoUiKitBundle') }}</h2>
+                    {{ include(nowo_ui_partial('action', _b), {action: page.deleteAction, context: 'toolbar', bundle: _b}, false) }}
+                </section>
+            {% endif %}
+        </div>
+        {% block nowo_ui_form_aside %}{% endblock %}
+    </div>
+{% endblock %}

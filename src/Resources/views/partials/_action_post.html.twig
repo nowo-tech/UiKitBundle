@@ -1,0 +1,28 @@
+{#
+  POST form of a non-GET View\Action (used by _action and _confirm; not meant as a public include).
+
+  Required:
+    - action: View\Action (method != GET)
+    - action_href: resolved target URL
+    - button_class, button_html (pre-rendered inner markup)
+
+  Optional:
+    - button_attrs: extra button attributes
+
+  With action.form (CSRF-only FormView, REQ-TWIG-005) the form renders through form_start / form_end;
+  otherwise action.csrfToken is a hidden field (csrfField). PUT / PATCH / DELETE are spoofed with _method.
+#}
+{% set button_attrs = button_attrs|default({}) %}
+{% if action.form %}
+    {{ include('@NowoUiKitBundle/partials/_action_form_view.html.twig', _context, false) }}
+{% else %}
+    <form method="post" action="{{ action_href ?? '#' }}" class="nowo-ui-action__form">
+        {% if action.method != 'POST' %}
+            <input type="hidden" name="_method" value="{{ action.method }}">
+        {% endif %}
+        {% if action.csrfToken %}
+            <input type="hidden" name="{{ action.csrfField }}" value="{{ action.csrfToken }}">
+        {% endif %}
+        <button type="submit" class="{{ button_class }}"{% for name, value in button_attrs %}{% if value is same as(true) %} {{ name }}{% elseif value is not null and value is not same as(false) %} {{ name }}="{{ value }}"{% endif %}{% endfor %}{% if action.disabled %} disabled{% endif %}>{{ button_html }}</button>
+    </form>
+{% endif %}

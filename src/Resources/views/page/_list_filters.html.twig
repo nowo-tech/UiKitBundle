@@ -1,0 +1,18 @@
+{#
+  Filters region of page/list.html.twig (separate file: form_start / form_end need symfony/form).
+  REQ-TWIG-003 child loop; apply / clear chrome outside the loop.
+#}
+{% set _b = page.bundle %}
+{{ form_start(page.filters, {attr: {class: nowo_ui_class('filters', _b), role: 'search', 'data-nowo-ui-filters': ''}}) }}
+    {% for child in page.filters %}
+        {% if not child.rendered %}
+            {{ form_row(child) }}
+        {% endif %}
+    {% endfor %}
+    <div class="{{ nowo_ui_class('filters_actions', _b) }}"{{ nowo_ui_attrs('filters_actions', _b) }}>
+        <button type="submit" class="{{ nowo_ui_class('btn_primary', _b) }}">{{ 'filters.apply'|trans({}, 'NowoUiKitBundle') }}</button>
+        {% if page.filtersClearHref %}
+            <a class="{{ nowo_ui_class('btn_secondary', _b) }}" href="{{ page.filtersClearHref }}">{{ 'filters.clear'|trans({}, 'NowoUiKitBundle') }}</a>
+        {% endif %}
+    </div>
+{{ form_end(page.filters) }}

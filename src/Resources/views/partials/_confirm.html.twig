@@ -2,29 +2,52 @@
   Accessible confirm <dialog> (destructive actions). Host supplies POST+CSRF in footer/body.
 
   Required:
-    - id
-    - title
+    - id (optional with confirm: falls back to confirm.id)
+    - title (or confirm)
 
   Optional:
     - body (HTML string)
     - footer (HTML string; default Cancel button)
     - cancel_label
     - framework
+    - confirm (2.0 contract): View\Confirm — title / message / confirm + cancel labels / variant
+    - action + action_href (2.0): non-GET View\Action submitted by the confirm button (POST form in the footer)
+    - bundle: per-bundle theme exceptions (slot `confirm` classes / attributes)
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 {% set framework = framework|default(null) %}
+{% set bundle = bundle|default(null) %}
+{% set _t = nowo_ui_theme|default(null) %}
+{% set _extra = _t ? _t.extraClasses('confirm', bundle) : '' %}
+{% set _confirm = confirm|default(null) %}
+{% set _message = null %}
+{% set _confirm_label = null %}
+{% if _confirm %}
+    {% set id = id|default(_confirm.id) %}
+    {% set title = _confirm.title.key is defined ? _confirm.title.key|trans(_confirm.title.params, _confirm.title.domain) : _confirm.title %}
+    {% if _confirm.message is not null %}
+        {% set _message = _confirm.message.key is defined ? _confirm.message.key|trans(_confirm.message.params, _confirm.message.domain) : _confirm.message %}
+    {% endif %}
+    {% if _confirm.cancelLabel is not null %}
+        {% set cancel_label = _confirm.cancelLabel.key is defined ? _confirm.cancelLabel.key|trans(_confirm.cancelLabel.params, _confirm.cancelLabel.domain) : _confirm.cancelLabel %}
+    {% endif %}
+    {% set _confirm_label = _confirm.confirmLabel is null ? 'action.confirm'|trans({}, 'NowoUiKitBundle') : (_confirm.confirmLabel.key is defined ? _confirm.confirmLabel.key|trans(_confirm.confirmLabel.params, _confirm.confirmLabel.domain) : _confirm.confirmLabel) %}
+{% endif %}
 {% set cancel_label = cancel_label|default('action.cancel'|trans({}, 'NowoUiKitBundle')) %}
 <dialog
     id="{{ id }}"
-    class="nowo-ui-confirm"
+    class="nowo-ui-confirm{{ _extra ? ' ' ~ _extra }}"
     data-nowo-ui-confirm
     aria-labelledby="{{ id }}-title"
+    {{- _t ? _t.renderAttributes('confirm', bundle)|raw }}
 >
     <div class="nowo-ui-confirm__panel">
         <header class="nowo-ui-confirm__header">
             <h2 class="nowo-ui-confirm__title" id="{{ id }}-title">{{ title }}</h2>
         </header>
-        {% if body is defined and body %}
+        {% if _message is not null %}
+            <div class="nowo-ui-confirm__body"><p class="nowo-ui-confirm__message">{{ _message }}</p></div>
+        {% elseif body is defined and body %}
             <div class="nowo-ui-confirm__body">{{ body|raw }}</div>
         {% endif %}
         <div class="nowo-ui-confirm__footer">
@@ -34,6 +57,15 @@
                 <button type="button" class="{{ ui.btn('secondary', null, framework) }}" data-nowo-confirm-close>
                     {{ cancel_label }}
                 </button>
+                {% if _confirm and action is defined and action %}
+                    {{ include('@NowoUiKitBundle/partials/_action_post.html.twig', {
+                        action: action,
+                        action_href: action_href|default(action.href),
+                        button_class: ui.btn(_confirm.variant, null, framework) ~ ' nowo-ui-confirm__submit',
+                        button_attrs: {},
+                        button_html: _confirm_label,
+                    }, false) }}
+                {% endif %}
             {% endif %}
         </div>
     </div>

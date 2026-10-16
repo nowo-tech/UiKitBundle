@@ -1,0 +1,46 @@
+{#
+  REQ-UI-003 settings scaffold. Variable: page (View\SettingsPage).
+
+  Regions: page header, section tabs (sections with hrefs), one card + form per visible section.
+  Data block: nowo_ui_settings_section (`section` in context; default: the section's form with the REQ-TWIG-003
+  child loop and a submit button).
+#}
+{% extends page.layout ?? nowo_ui_layout.admin %}
+{% set nowo_ui_bundle = page.bundle %}
+
+{% block nowo_ui_document_title %}{{ page.header.title|nowo_ui_trans }}{% endblock %}
+
+{% block nowo_ui_page_header %}
+    {{ include(nowo_ui_partial('page_header', page.bundle), {header: page.header, bundle: page.bundle}, false) }}
+{% endblock %}
+
+{% block nowo_ui_content %}
+    {% set _b = page.bundle %}
+    <div class="nowo-ui-settings-page" data-nowo-ui-page="settings">
+        {% if page.hasTabs() %}
+            <nav class="{{ nowo_ui_class('tabs', _b) }}" aria-label="{{ 'tabs.nav'|trans({}, 'NowoUiKitBundle') }}"{{ nowo_ui_attrs('tabs', _b) }}>
+                {% for section in page.sections %}
+                    {% set _current = section.id == page.current %}
+                    <a class="{{ nowo_ui_class(_current ? 'tab_active' : 'tab', _b) }}" href="{{ section.href }}"{% if _current %} aria-current="page"{% endif %}>{{ section.label|nowo_ui_trans }}</a>
+                {% endfor %}
+            </nav>
+        {% endif %}
+        {% for section in page.visibleSections() %}
+            <section class="{{ nowo_ui_class('section', _b) }} {{ nowo_ui_class('card', _b) }}" id="nowo-ui-settings-{{ section.id }}"{{ nowo_ui_attrs('section', _b) }}>
+                <header class="{{ nowo_ui_class('card_header', _b) }}">
+                    <div class="nowo-ui-card__heading">
+                        <h2 class="nowo-ui-card__title">{{ section.label|nowo_ui_trans }}</h2>
+                        {% if section.intro %}<p class="nowo-ui-card__intro">{{ section.intro|nowo_ui_trans }}</p>{% endif %}
+                    </div>
+                </header>
+                <div class="{{ nowo_ui_class('card_body', _b) }}">
+                    {% block nowo_ui_settings_section %}
+                        {% if section.form %}
+                            {{ include('@NowoUiKitBundle/page/_section_form.html.twig', {form: section.form, submit_label: section.submitLabel, bundle: _b}, false) }}
+                        {% endif %}
+                    {% endblock %}
+                </div>
+            </section>
+        {% endfor %}
+    </div>
+{% endblock %}

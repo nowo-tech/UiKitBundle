@@ -13,7 +13,10 @@ use Nowo\UiKitBundle\Appearance\CornerStyle;
 use Nowo\UiKitBundle\Enum\CssFramework;
 use Nowo\UiKitBundle\Enum\IconSet;
 use Nowo\UiKitBundle\Enum\RowActionsDisplay;
+use Nowo\UiKitBundle\Theme\Theme;
+use Nowo\UiKitBundle\Theme\ThemeSlots;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
+use Symfony\Component\Config\Definition\Builder\NodeBuilder;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
@@ -125,6 +128,7 @@ final class Configuration implements ConfigurationInterface
             ->end();
 
         $this->addAppearanceSection($root);
+        $this->addPageContractSection($root);
 
         return $treeBuilder;
     }
@@ -248,6 +252,170 @@ final class Configuration implements ConfigurationInterface
                     ->end()
                 ->end()
             ->end();
+    }
+
+    /**
+     * REQ-UI-003 page contract: canonical layouts, global theme (slot classes / attributes / partials / tokens,
+     * per-bundle exceptions) and the breadcrumb renderer used by page headers.
+     */
+    private function addPageContractSection(ArrayNodeDefinition $root): void
+    {
+        $root
+            ->children()
+                ->arrayNode('layouts')
+                    ->info('Layouts the page scaffolds extend (Twig global nowo_ui_layout). Host layouts or one-file bridges must render the canonical nowo_ui_* blocks.')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->scalarNode('admin')->defaultValue('@NowoUiKit/layout/admin.html.twig')->cannotBeEmpty()->end()
+                        ->scalarNode('guest')->defaultValue('@NowoUiKit/layout/guest.html.twig')->cannotBeEmpty()->end()
+                    ->end()
+                ->end()
+                ->arrayNode('breadcrumbs')
+                    ->info('Page header breadcrumbs: BreadcrumbKit (breadcrumb_render) when installed and enabled here, else the plain trail from PageHeader::breadcrumbs.')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->booleanNode('breadcrumb_kit')->defaultTrue()->info('Use BreadcrumbKit when its breadcrumb_render() Twig function exists.')->end()
+                        ->scalarNode('collection')->defaultNull()->info('BreadcrumbKit collection code (null = its default collection). PageHeader::breadcrumbCollection overrides it.')->end()
+                    ->end()
+                ->end()
+                ->append($this->themeNode())
+            ->end();
+    }
+
+    private function themeNode(): ArrayNodeDefinition
+    {
+        $node = new ArrayNodeDefinition('theme');
+        $node
+            ->info('Global theme (REQ-UI-003): semantic slot classes / attributes, partial overrides and --nowo-ui-* tokens, configured once for every bundle.')
+            ->addDefaultsIfNotSet();
+        $children = $node->children();
+        self::addThemeChildren($children, 'theme', false);
+        $bundles = $children
+            ->arrayNode('bundles')
+                ->info('Optional per-bundle exceptions keyed by bundle name (e.g. NowoHttpLogBundle): a bundle slot class replaces the host class of that slot; attributes merge; partials replace; tokens are scoped to [data-nowo-ui-bundle="<Bundle>"].')
+                ->useAttributeAsKey('bundle')
+                ->normalizeKeys(false)
+                ->validate()
+                    ->always(static function (array $bundles): array {
+                        foreach (array_keys($bundles) as $bundle) {
+                            if (1 !== preg_match('/^[A-Za-z][A-Za-z0-9_]*$/', (string) $bundle)) {
+                                throw new InvalidConfigurationException(\sprintf('Invalid nowo_ui_kit.theme.bundles key "%s": use the bundle class short name (e.g. NowoHttpLogBundle).', $bundle));
+                            }
+                        }
+
+                        return $bundles;
+                    })
+                ->end()
+                ->arrayPrototype();
+        self::addThemeChildren($bundles->children(), 'theme.bundles.<bundle>', true);
+
+        return $node;
+    }
+
+    private static function addThemeChildren(NodeBuilder $children, string $name, bool $scoped): void
+    {
+        $children
+            ->arrayNode('classes')
+                ->info('Slot => host classes, merged after the UiKit framework defaults (vocabulary: Theme\ThemeSlots, docs/PAGE_CONTRACT.md).')
+                ->useAttributeAsKey('slot')
+                ->normalizeKeys(false)
+                ->scalarPrototype()
+                    ->beforeNormalization()
+                        ->ifArray()
+                        ->then(static fn (array $classes): string => implode(' ', array_map(static fn (mixed $c): string => \is_scalar($c) ? (string) $c : '', $classes)))
+                    ->end()
+                ->end()
+                ->defaultValue([])
+                ->validate()
+                    ->always(static function (array $classes) use ($name): array {
+                        foreach ($classes as $slot => $value) {
+                            self::assertSlot($name.'.classes', (string) $slot);
+                            if (!\is_string($value) || 1 === preg_match('/["<>]/', $value)) {
+                                throw new InvalidConfigurationException(\sprintf('Invalid nowo_ui_kit.%s.classes.%s: class lists are plain strings without \'"\', "<" or ">".', $name, $slot));
+                            }
+                        }
+
+                        return $classes;
+                    })
+                ->end()
+            ->end()
+            ->arrayNode('attributes')
+                ->info('Slot => {attribute: value} rendered on the slot root (true = bare attribute, false/null = omitted; no on* handlers).')
+                ->useAttributeAsKey('slot')
+                ->normalizeKeys(false)
+                ->arrayPrototype()
+                    ->useAttributeAsKey('attribute')
+                    ->normalizeKeys(false)
+                    ->variablePrototype()->end()
+                ->end()
+                ->defaultValue([])
+                ->validate()
+                    ->always(static function (array $attributes) use ($name): array {
+                        foreach ($attributes as $slot => $attrs) {
+                            self::assertSlot($name.'.attributes', (string) $slot);
+                            foreach ($attrs as $attr => $value) {
+                                $error = Theme::attributeNameError((string) $attr);
+                                if (null !== $error) {
+                                    throw new InvalidConfigurationException(\sprintf('Invalid nowo_ui_kit.%s.attributes.%s: %s', $name, $slot, $error));
+                                }
+                                if (null !== $value && !\is_scalar($value)) {
+                                    throw new InvalidConfigurationException(\sprintf('Invalid nowo_ui_kit.%s.attributes.%s.%s: values are strings, numbers, booleans or null.', $name, $slot, $attr));
+                                }
+                            }
+                        }
+
+                        return $attributes;
+                    })
+                ->end()
+            ->end()
+            ->arrayNode('partials')
+                ->info('Partial name => template replacing the UiKit partial for every bundle (known: '.implode(', ', ThemeSlots::partialNames()).').')
+                ->useAttributeAsKey('partial')
+                ->normalizeKeys(false)
+                ->scalarPrototype()->cannotBeEmpty()->end()
+                ->defaultValue([])
+                ->validate()
+                    ->always(static function (array $partials) use ($name): array {
+                        foreach (array_keys($partials) as $partial) {
+                            if (!isset(ThemeSlots::PARTIALS[$partial])) {
+                                throw new InvalidConfigurationException(\sprintf('Unknown nowo_ui_kit.%s.partials key "%s" (known: %s).', $name, $partial, implode(', ', ThemeSlots::partialNames())));
+                            }
+                        }
+
+                        return $partials;
+                    })
+                ->end()
+            ->end();
+
+        foreach (['tokens' => 'Token => value, emitted as --nowo-ui-<token> on :root by nowo_ui_theme_tokens() (e.g. primary: "var(--color-moss)"). When set, the UiKit palette no longer re-asserts itself.', 'tokens_dark' => 'Dark-mode tokens, emitted on :root[data-theme="dark"].'] as $key => $info) {
+            $children
+                ->arrayNode($key)
+                    ->info($scoped ? $info.' Scoped to [data-nowo-ui-bundle="<Bundle>"].' : $info)
+                    ->useAttributeAsKey('token')
+                    ->normalizeKeys(false)
+                    ->variablePrototype()->end()
+                    ->defaultValue([])
+                    ->validate()
+                        ->always(static function (array $tokens) use ($name, $key): array {
+                            foreach ($tokens as $token => $value) {
+                                $error = Theme::tokenError((string) $token, $value);
+                                if (null !== $error) {
+                                    throw new InvalidConfigurationException(\sprintf('Invalid nowo_ui_kit.%s.%s: %s', $name, $key, $error));
+                                }
+                            }
+
+                            return array_map(static fn (mixed $v): string => trim(\is_scalar($v) ? (string) $v : ''), $tokens);
+                        })
+                    ->end()
+                ->end();
+        }
+    }
+
+    private static function assertSlot(string $path, string $slot): void
+    {
+        if (!ThemeSlots::has($slot)) {
+            throw new InvalidConfigurationException(\sprintf('Unknown nowo_ui_kit.%s slot "%s" (known: %s).', $path, $slot, implode(', ', ThemeSlots::names())));
+        }
     }
 
     /**

@@ -1,0 +1,75 @@
+{#
+  REQ-UI-003 list scaffold. Variable: page (View\ListPage).
+
+  Regions: page header + actions, filters (FormView), table frame, row actions, pagination, empty state, confirm
+  dialogs (from row actions with a Confirm).
+  Data blocks: nowo_ui_list_head (header cells), nowo_ui_list_row (row cells; `row`, `row_key`, `loop` in
+  context), nowo_ui_list_after (after the list). Default cells print row[column.key] for each page.columns.
+#}
+{% extends page.layout ?? nowo_ui_layout.admin %}
+{% set nowo_ui_bundle = page.bundle %}
+
+{% block nowo_ui_document_title %}{{ page.header.title|nowo_ui_trans }}{% endblock %}
+
+{% block nowo_ui_page_header %}
+    {{ include(nowo_ui_partial('page_header', page.bundle), {header: page.header, bundle: page.bundle}, false) }}
+{% endblock %}
+
+{% block nowo_ui_content %}
+    {% set _b = page.bundle %}
+    <section class="nowo-ui-list-page" data-nowo-ui-page="list">
+        {% if page.filters %}
+            {{ include('@NowoUiKitBundle/page/_list_filters.html.twig', {page: page}, false) }}
+        {% endif %}
+        {% if page.rows is not empty %}
+            {% set _route = page.pagination and page.pagination.route ? page.pagination.route : (app is defined and app ? app.request.attributes.get('_route') : null) %}
+            {% set _route_params = (app is defined and app ? app.request.attributes.get('_route_params') : {})|default({})|merge(app is defined and app ? app.request.query.all : {}) %}
+            <div class="{{ nowo_ui_class('table_wrap', _b) }}"{{ nowo_ui_attrs('table_wrap', _b) }}>
+                <table class="{{ nowo_ui_class('table', _b) }}"{{ nowo_ui_attrs('table', _b) }}>
+                    {% if page.caption %}<caption class="nowo-ui-table__caption">{{ page.caption|nowo_ui_trans }}</caption>{% endif %}
+                    <thead class="{{ nowo_ui_class('table_head', _b) }}">
+                        <tr>
+                            {% block nowo_ui_list_head %}
+                                {% for column in page.columns %}
+                                    <th scope="col" class="nowo-ui-cell--{{ column.align }}{{ column.class ? ' ' ~ column.class }}"{% if column.required %} data-required="1"{% endif %}{% if page.sort == column.key %} aria-sort="{{ page.direction == 'asc' ? 'ascending' : 'descending' }}"{% endif %}>
+                                        {%- set _label = column.label is null ? column.key : column.label|nowo_ui_trans -%}
+                                        {%- if column.sortable and _route -%}
+                                            <a class="nowo-ui-sort{{ page.sort == column.key ? ' nowo-ui-sort--' ~ page.direction }}" href="{{ path(_route, _route_params|merge({sort: column.key, direction: page.nextDirection(column.key)})) }}">{{ _label }}</a>
+                                        {%- else -%}
+                                            {{ _label }}
+                                        {%- endif -%}
+                                    </th>
+                                {% endfor %}
+                            {% endblock %}
+                            {% if page.hasRowActions() %}
+                                <th scope="col" class="nowo-ui-cell--end nowo-ui-table__actions"><span class="visually-hidden">{{ 'table.actions'|trans({}, 'NowoUiKitBundle') }}</span></th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row_key, row in page.rows %}
+                            <tr class="{{ nowo_ui_class('table_row', _b) }}">
+                                {% block nowo_ui_list_row %}
+                                    {% for column in page.columns %}
+                                        <td class="{{ nowo_ui_class('table_cell', _b) }} nowo-ui-cell--{{ column.align }}{{ column.class ? ' ' ~ column.class }}">{{ row is iterable ? row[column.key]|default('') : attribute(row, column.key) }}</td>
+                                    {% endfor %}
+                                {% endblock %}
+                                {% if page.hasRowActions() %}
+                                    <td class="{{ nowo_ui_class('table_cell', _b) }} nowo-ui-cell--end nowo-ui-table__actions">
+                                        {{ include(nowo_ui_partial('row_actions', _b), {actions: page.rowActions(row, row_key), bundle: _b}, false) }}
+                                    </td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if page.pagination %}
+                {{ include(nowo_ui_partial('pagination', _b), {pagination: page.pagination, item_count: page.rows|length, bundle: _b}, false) }}
+            {% endif %}
+        {% else %}
+            {{ include(nowo_ui_partial('empty', _b), {empty: page.empty ?? null, bundle: _b}, false) }}
+        {% endif %}
+        {% block nowo_ui_list_after %}{% endblock %}
+    </section>
+{% endblock %}

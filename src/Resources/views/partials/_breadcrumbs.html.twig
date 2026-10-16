@@ -1,0 +1,28 @@
+{#
+  Breadcrumbs of a View\PageHeader (REQ-UI-003): BreadcrumbKit's breadcrumb_render() when installed and enabled
+  (nowo_ui_kit.breadcrumbs.breadcrumb_kit), else the plain trail from header.breadcrumbs.
+
+  Required:
+    - header: View\PageHeader
+
+  Optional:
+    - bundle
+#}
+{% set bundle = bundle|default(null) %}
+{% if nowo_ui_breadcrumb_kit_available() %}
+    <div class="{{ nowo_ui_class('breadcrumbs', bundle) }}"{{ nowo_ui_attrs('breadcrumbs', bundle) }}>{{ nowo_ui_breadcrumb_kit(header.breadcrumbCollection) }}</div>
+{% elseif header.breadcrumbs is not empty %}
+    <nav class="{{ nowo_ui_class('breadcrumbs', bundle) }}" aria-label="{{ 'breadcrumbs.nav'|trans({}, 'NowoUiKitBundle') }}"{{ nowo_ui_attrs('breadcrumbs', bundle) }}>
+        <ol class="nowo-ui-breadcrumbs__list">
+            {% for crumb in header.breadcrumbs %}
+                <li class="nowo-ui-breadcrumbs__item">
+                    {% if crumb.href and not loop.last %}
+                        <a class="nowo-ui-breadcrumbs__link" href="{{ crumb.href }}">{{ crumb.label|nowo_ui_trans }}</a>
+                    {% else %}
+                        <span class="nowo-ui-breadcrumbs__current"{% if loop.last %} aria-current="page"{% endif %}>{{ crumb.label|nowo_ui_trans }}</span>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ol>
+    </nav>
+{% endif %}

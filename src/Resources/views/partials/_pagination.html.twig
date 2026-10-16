@@ -2,8 +2,9 @@
   Server-side table pagination (never client DataTables paging).
 
   Required:
-    - pagination: {page, per_page, total, total_pages}
-    - item_count: number of rows on the current page
+    - pagination: {page, per_page, total, total_pages} OR (2.0 contract) a View\Pagination object
+      (route / query / route_params / page_param / per_page_param taken from it when not passed)
+    - item_count: number of rows on the current page (optional with a View\Pagination: computed)
 
   Route resolution:
     - route (+ route_params), OR omit route to use the current request route
@@ -14,15 +15,30 @@
     - trans_domain (default NowoUiKitBundle) for showing/previous/next
     - nav_trans_domain (default = trans_domain) for aria-label
     - framework: css_framework override for macros
+    - bundle: per-bundle theme exceptions (slots pagination, pagination_link, pagination_active, pagination_info
+      add host classes; slot pagination attributes on the root)
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
-{% set query = query|default({}) %}
+{% set bundle = bundle|default(null) %}
+{% set _t = nowo_ui_theme|default(null) %}
+{% if pagination is not iterable %}
+    {% set item_count = item_count|default(pagination.to() - pagination.from() + 1) %}
+    {% set pagination = pagination.toArray() %}
+{% endif %}
+{% set query = query|default(pagination.query|default({})) %}
 {% set nav_label = nav_label|default('pagination.nav') %}
 {% set framework = framework|default(null) %}
 {% set trans_domain = trans_domain|default('NowoUiKitBundle') %}
 {% set nav_trans_domain = nav_trans_domain|default(trans_domain) %}
-{% set route = route|default(app.request.attributes.get('_route')) %}
-{% set route_params = route_params|default(app.request.attributes.get('_route_params')|default({})) %}
+{% set route = route|default(pagination.route|default(app.request.attributes.get('_route'))) %}
+{% set route_params = route_params|default(pagination.route_params|default(app.request.attributes.get('_route_params')|default({}))) %}
+{% set page_param = pagination.page_param|default('page') %}
+{% set per_page_param = pagination.per_page_param|default('per_page') %}
+{% set _wrap_extra = _t ? _t.extraClasses('pagination', bundle) : '' %}
+{% set _link_extra = _t ? _t.extraClasses('pagination_link', bundle) : '' %}
+{% set _active_extra = _t ? _t.extraClasses('pagination_active', bundle) : '' %}
+{% set _info_extra = _t ? _t.extraClasses('pagination_info', bundle) : '' %}
+{% set _link_extra = _link_extra ? ' ' ~ _link_extra : '' %}
 {% set page = pagination.page|default(1) %}
 {% set per_page = pagination.per_page|default(25) %}
 {% set total = pagination.total|default(0) %}
@@ -33,9 +49,9 @@
 {% if total > 0 %}
     {% set from = (page - 1) * per_page + 1 %}
     {% set to = (page - 1) * per_page + item_count %}
-    {% set base_params = route_params|merge(query)|merge({per_page: per_page}) %}
-    <div class="{{ ui.pagination_wrap(framework) }}">
-        <p class="nowo-ui-pagination__info">
+    {% set base_params = route_params|merge(query)|merge({(per_page_param): per_page}) %}
+    <div class="{{ ui.pagination_wrap(framework) }}{{ _wrap_extra ? ' ' ~ _wrap_extra }}"{{ _t ? _t.renderAttributes('pagination', bundle)|raw }}>
+        <p class="nowo-ui-pagination__info{{ _info_extra ? ' ' ~ _info_extra }}">
             {{ 'pagination.showing'|trans({'%from%': from, '%to%': to, '%total%': total}, trans_domain) }}
         </p>
         {% if total_pages > 1 %}
@@ -43,20 +59,20 @@
                 <ul class="pagination">
                     <li class="page-item{% if page <= 1 %} disabled{% endif %}">
                         {% if page > 1 %}
-                            <a class="page-link nowo-ui-pagination__link" href="{{ path(route, base_params|merge({page: page - 1})) }}" aria-label="{{ 'pagination.previous'|trans({}, trans_domain) }}">«</a>
+                            <a class="page-link nowo-ui-pagination__link{{ _link_extra }}" href="{{ path(route, base_params|merge({(page_param): page - 1})) }}" aria-label="{{ 'pagination.previous'|trans({}, trans_domain) }}">«</a>
                         {% else %}
-                            <span class="page-link nowo-ui-pagination__link is-disabled" aria-disabled="true" aria-label="{{ 'pagination.previous'|trans({}, trans_domain) }}">«</span>
+                            <span class="page-link nowo-ui-pagination__link is-disabled{{ _link_extra }}" aria-disabled="true" aria-label="{{ 'pagination.previous'|trans({}, trans_domain) }}">«</span>
                         {% endif %}
                     </li>
 
                     {% for p in 1..total_pages %}
                         {% if p == page %}
                             <li class="page-item active" aria-current="page">
-                                <span class="page-link nowo-ui-pagination__link is-active">{{ p }}</span>
+                                <span class="page-link nowo-ui-pagination__link is-active{{ _active_extra ? ' ' ~ _active_extra }}">{{ p }}</span>
                             </li>
                         {% elseif p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
                             <li class="page-item">
-                                <a class="page-link nowo-ui-pagination__link" href="{{ path(route, base_params|merge({page: p})) }}">{{ p }}</a>
+                                <a class="page-link nowo-ui-pagination__link{{ _link_extra }}" href="{{ path(route, base_params|merge({(page_param): p})) }}">{{ p }}</a>
                             </li>
                         {% elseif p == page - 3 or p == page + 3 %}
                             <li class="page-item disabled" aria-hidden="true">
@@ -67,9 +83,9 @@
 
                     <li class="page-item{% if page >= total_pages %} disabled{% endif %}">
                         {% if page < total_pages %}
-                            <a class="page-link nowo-ui-pagination__link" href="{{ path(route, base_params|merge({page: page + 1})) }}" aria-label="{{ 'pagination.next'|trans({}, trans_domain) }}">»</a>
+                            <a class="page-link nowo-ui-pagination__link{{ _link_extra }}" href="{{ path(route, base_params|merge({(page_param): page + 1})) }}" aria-label="{{ 'pagination.next'|trans({}, trans_domain) }}">»</a>
                         {% else %}
-                            <span class="page-link nowo-ui-pagination__link is-disabled" aria-disabled="true" aria-label="{{ 'pagination.next'|trans({}, trans_domain) }}">»</span>
+                            <span class="page-link nowo-ui-pagination__link is-disabled{{ _link_extra }}" aria-disabled="true" aria-label="{{ 'pagination.next'|trans({}, trans_domain) }}">»</span>
                         {% endif %}
                     </li>
                 </ul>

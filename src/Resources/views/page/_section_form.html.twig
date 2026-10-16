@@ -1,0 +1,19 @@
+{#
+  Form with the REQ-TWIG-003 child loop + submit (settings sections, wizard / auth defaults).
+
+  Required:
+    - form: FormView
+  Optional:
+    - submit_label (View\Label|string; default action.save), bundle, extra_actions (pre-rendered HTML)
+#}
+{% set bundle = bundle|default(null) %}
+{{ form_start(form, {attr: {class: nowo_ui_class('form', bundle)}}) }}
+    {% for child in form %}
+        {% if not child.rendered %}
+            {{ form_row(child) }}
+        {% endif %}
+    {% endfor %}
+    <div class="{{ nowo_ui_class('form_actions', bundle) }}"{{ nowo_ui_attrs('form_actions', bundle) }}>
+        <button type="submit" class="{{ nowo_ui_class('btn_primary', bundle) }}">{{ submit_label|default(null) is null ? 'action.save'|trans({}, 'NowoUiKitBundle') : submit_label|nowo_ui_trans }}</button>
+    </div>
+{{ form_end(form) }}

@@ -1,0 +1,70 @@
+{#
+  One view-model Action (REQ-UI-003, Nowo\UiKitBundle\View\Action) — toolbar button or row action.
+
+  Required:
+    - action: View\Action
+
+  Optional:
+    - context: toolbar (default; theme slot btn_<variant>) | row (ui.action classes + `action` slot, display modes)
+    - display: icon | text | icon_text (row context; default nowo_ui_kit_row_actions_display)
+    - framework: css_framework override
+    - bundle: bundle name for per-bundle theme exceptions
+
+  Non-GET actions submit a POST form (CSRF-only FormView when given, else csrf token field); actions with a
+  Confirm open the UiKit confirm <dialog>, whose confirm button submits. No inline on* handlers.
+#}
+{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
+{% set context = context|default('toolbar') %}
+{% set framework = framework|default(null) %}
+{% set bundle = bundle|default(null) %}
+{% set display = display|default(nowo_ui_kit_row_actions_display|default('icon')) %}
+{% if display not in ['icon', 'text', 'icon_text'] %}
+    {% set display = 'icon' %}
+{% endif %}
+{% if action.visible %}
+    {% set label = action.label is not null ? action.label|nowo_ui_trans : ('action.' ~ action.kind)|trans({}, 'NowoUiKitBundle') %}
+    {% set href = action.href ?? (action.route ? path(action.route, action.params) : null) %}
+    {% set variant = action.resolvedVariant() %}
+    {% if context == 'row' %}
+        {% set class = (ui.action(action.kind, framework, action.variant) ~ ' ' ~ nowo_ui_theme.extraClasses('action', bundle))|trim %}
+    {% elseif variant in ['primary', 'secondary', 'danger'] %}
+        {% set class = nowo_ui_class('btn_' ~ variant, bundle, framework) ~ ' nowo-ui-action--' ~ action.kind %}
+    {% else %}
+        {% set class = (ui.btn(variant, null, framework) ~ ' ' ~ nowo_ui_theme.extraClasses('btn', bundle))|trim ~ ' nowo-ui-action--' ~ action.kind %}
+    {% endif %}
+    {% set inner %}
+        {%- if context == 'row' -%}
+            {{ include('@NowoUiKitBundle/partials/_action_inner.html.twig', {display: display, icon_name: action.icon ?? action.kind, label: label}, false) }}
+        {%- else -%}
+            {%- if action.icon -%}
+                {{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: action.icon, label: label}, false) }}
+            {%- endif -%}
+            <span class="nowo-ui-action__label">{{ label }}</span>
+        {%- endif -%}
+    {% endset %}
+    {% set attrs = action.attributes|merge(context == 'row' ? {title: label, 'aria-label': label} : {}) %}
+    {% set confirm_id = action.confirmId() %}
+    {% if confirm_id %}
+        <button type="button" class="{{ class }}"{% for name, value in attrs %}{% if value is same as(true) %} {{ name }}{% elseif value is not null and value is not same as(false) %} {{ name }}="{{ value }}"{% endif %}{% endfor %}{% if action.disabled %} disabled{% endif %} {{ ui.confirm_toggle_attrs() }} {{ ui.confirm_target_attr(confirm_id) }}>{{ inner }}</button>
+        {{ include(nowo_ui_partial('confirm', bundle), {
+            id: confirm_id,
+            confirm: action.confirm,
+            action: action,
+            action_href: href,
+            framework: framework,
+            bundle: bundle,
+        }, false) }}
+    {% elseif action.isPost() %}
+        {{ include('@NowoUiKitBundle/partials/_action_post.html.twig', {
+            action: action,
+            action_href: href,
+            button_class: class,
+            button_attrs: attrs,
+            button_html: inner,
+        }, false) }}
+    {% elseif action.modalId %}
+        <button type="button" class="{{ class }}"{% for name, value in attrs %}{% if value is same as(true) %} {{ name }}{% elseif value is not null and value is not same as(false) %} {{ name }}="{{ value }}"{% endif %}{% endfor %}{% if action.disabled %} disabled{% endif %} {{ ui.modal_toggle_attrs(framework) }} {{ ui.modal_target_attr(action.modalId, framework) }}>{{ inner }}</button>
+    {% else %}
+        <a class="{{ class }}{% if action.disabled %} is-disabled{% endif %}" href="{{ href ?? '#' }}"{% for name, value in attrs %}{% if value is same as(true) %} {{ name }}{% elseif value is not null and value is not same as(false) %} {{ name }}="{{ value }}"{% endif %}{% endfor %}{% if action.disabled %} aria-disabled="true" tabindex="-1"{% endif %}>{{ inner }}</a>
+    {% endif %}
+{% endif %}
