@@ -18,6 +18,10 @@ Optional **Stimulus peer** TypeScript sources live under `src/Resources/assets/s
 - [Temporary reveal (Stimulus peer only)](#temporary-reveal-stimulus-peer-only)
 - [Collapse panel (Stimulus peer only)](#collapse-panel-stimulus-peer-only)
 - [Data table (Stimulus peer only)](#data-table-stimulus-peer-only)
+- [Responsive table (Stimulus peer only)](#responsive-table-stimulus-peer-only)
+- [Filters collapse (Stimulus peer only)](#filters-collapse-stimulus-peer-only)
+- [Disclosure icon (Stimulus peer only)](#disclosure-icon-stimulus-peer-only)
+- [Icon state bridge and morphicons](#icon-state-bridge-and-morphicons)
 - [Open modal on load](#open-modal-on-load)
 - [Thinking orb](#thinking-orb)
 - [Shell / nested nav](#shell--nested-nav)
@@ -248,6 +252,67 @@ or style the table yourself. Hosts that do not register this peer never need the
 Mounted on the next animation frame, destroyed (`destroy(false)`) on disconnect. Peer: `datatable_controller.ts`
 (exports `DATATABLE_DEFAULT_OPTIONS`).
 
+## Responsive table (Stimulus peer only)
+
+No kit IIFE (1.17). *Scroll* ↔ *Responsive* table with a row detail dialog — markup from
+`partials/_responsive_table.html.twig`, `_row_detail_head.html.twig`, `_row_detail_cell.html.twig`
+([USAGE.md](USAGE.md#responsive-table)).
+
+| Stimulus | Role |
+|----------|------|
+| `data-controller="responsive-table"` | Root (gets `data-table-mode`, `data-rt-has-hidden`) |
+| `data-responsive-table-mode-value` | `scroll` \| `responsive` \| empty (default: responsive when `phone-query` matches, else scroll) |
+| `data-responsive-table-url-value` | Save endpoint (JSON `{"mode": …}`, `X-CSRF-TOKEN` header); empty = client-side only |
+| `data-responsive-table-token-value` / `-token-url-value` | CSRF token / GET URL answering `{"token": "…"}` (one refresh on 403) |
+| `data-responsive-table-method-value` | HTTP method of the save (default `PUT`) |
+| `data-responsive-table-phone-query-value` | Default-responsive media query (default `(max-width: 767px)`) |
+| `data-responsive-table-part-selector-value` | Stacked header parts joined in dialog labels (default `[data-cell-part]`) |
+| `data-responsive-table-messages-value` | `{toResponsive, toScroll, details}` (toggle name / title, detail button prefix) |
+| targets `scroller`, `table`, `toggle` (optional), `dialog`, `dialogTitle`, `dialogBody` | |
+| header cells `th[data-column]` (+ `data-required="1"`), row cells `td[data-column]` | Columns (document order = hiding order, from the end) |
+| `[data-responsive-detail]` cell with a `button[data-action="responsive-table#open"]` | Row detail button (last cell) |
+| `data-action="responsive-table#toggle"` / `#close` | Mode toggle / dialog close |
+
+Events: `responsive-table:changed` (`detail.mode`, optimistic), `responsive-table:save-failed` (`detail.mode`,
+`detail.previous`; the mode is already switched back). Hosts that want a toast listen to it or subclass the peer and
+override the protected `saveFailed(mode, previous)`. Peer: `responsive_table_controller.ts` (exports
+`RESPONSIVE_TABLE_PHONE_QUERY`, type `TableMode`). No inline styles (CSP); ResizeObserver + rAF; everything undone on
+disconnect (an open dialog is closed and its cells put back).
+
+## Filters collapse (Stimulus peer only)
+
+No kit IIFE (1.17). Markup from `partials/_filters_collapse.html.twig` ([USAGE.md](USAGE.md#foldable-filter-card)).
+
+| Stimulus | Role |
+|----------|------|
+| `data-controller="filters-collapse"` | Root, first child of the `<form>` (gets `is-collapsed`) |
+| `data-filters-collapse-key-value` | Page key stored in the cookie (empty = not remembered) |
+| `data-filters-collapse-cookie-value` | Cookie name (default `nowo_ui_filters_collapsed`; comma-separated keys, `path`, one year, `SameSite=Lax`) |
+| `data-filters-collapse-cookie-path-value` / `-max-age-value` | Cookie path (default `/`) / lifetime in seconds |
+| `data-filters-collapse-messages-value` | `{collapse, expand, none, one, many}` (`many` gets `%count%`) |
+| targets `toggle` (`aria-expanded`, label), `summary` (optional "N active filters" line) | |
+| `data-action="filters-collapse#toggle"` | Fold / unfold (dispatches `filters-collapse:toggled` with `detail.collapsed`, `detail.key`, `detail.count`) |
+
+Peer: `filters_collapse_controller.ts` (exports `FILTERS_COLLAPSE_COOKIE`, `foldedKeys(cookie?)`,
+`activeFilterCount(form)`).
+
+## Disclosure icon (Stimulus peer only)
+
+No kit IIFE (1.17). `data-controller="disclosure-icon"` on a toggle that contains `partials/_disclosure_icon.html.twig`:
+on a `<summary>` it follows its `<details>` (`toggle` event), on any other element its `aria-expanded` (e.g. a
+`collapse-panel` button). It only reports the state (`disclosure` / `open` | `closed`) to the icon state bridge —
+the static chevrons follow the state through CSS without it. Peer: `disclosure_icon_controller.ts`.
+
+## Icon state bridge and morphicons
+
+`stimulus-peers/icon_state.ts`: `setIconStateHandler(handler | null)`, `syncIconState(kind, host, state, animate)`.
+The peers `responsive-table` (`table-mode`: `scroll` | `responsive`), `filters-collapse` (`filters-collapse`:
+`expanded` | `collapsed`) and `disclosure-icon` (`disclosure`: `open` | `closed`) report their state through it and
+never import an icon library. `assets/morphicons/index.ts` (optional `morphicons` + `lucide`) provides
+`installMorphiconPeers()` — call it once in the Stimulus bootstrap, before the controllers connect
+([USAGE.md](USAGE.md#morphicons-animated-icons)). Keep the vendor directory layout (the peers and the morphicons
+module must resolve the same `icon_state.ts`).
+
 ## Open modal on load
 
 Not a Stimulus peer: JSON island `script#nowo-ui-open-modal-on-load` (`_open_modal_on_load.html.twig`) read by
@@ -363,6 +428,15 @@ return [
     'collapse-panel' => [
         'path' => './vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/collapse_panel_controller.ts',
     ],
+    'responsive-table' => [
+        'path' => './vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/responsive_table_controller.ts',
+    ],
+    'filters-collapse' => [
+        'path' => './vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/filters_collapse_controller.ts',
+    ],
+    'disclosure-icon' => [
+        'path' => './vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/disclosure_icon_controller.ts',
+    ],
     // 'datatable' needs datatables.net-dt + datatables.net-responsive-dt in the host importmap.
 ];
 ```
@@ -376,7 +450,7 @@ Or lazy-load from `assets/controllers.json` pointing at the same paths.
 export { default } from '../../vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/clipboard_copy_controller';
 ```
 
-Repeat for `confirm_dialog`, `confirm_submit`, `page_loader`, `toast_stack`, `tabs`, `release_status`, `auto_refresh`, `temporary_reveal`, `collapse_panel`, `datatable` (the last one needs the optional DataTables packages).
+Repeat for `confirm_dialog`, `confirm_submit`, `page_loader`, `toast_stack`, `tabs`, `release_status`, `auto_refresh`, `temporary_reveal`, `collapse_panel`, `responsive_table`, `filters_collapse`, `disclosure_icon`, `datatable` (the last one needs the optional DataTables packages).
 
 Or register directly in the host Stimulus bootstrap (Vite + pnpm):
 
@@ -385,6 +459,12 @@ Or register directly in the host Stimulus bootstrap (Vite + pnpm):
 import AutoRefreshController from '../vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/auto_refresh_controller';
 
 app.register('auto-refresh', AutoRefreshController);
+
+// 1.17 chrome peers (lazy: createLazyController from vite-plugin-symfony) + optional animated icons.
+import { installMorphiconPeers } from '../vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/morphicons';
+installMorphiconPeers();
+app.register('responsive-table', createLazyController(() => import('../vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/responsive_table_controller')));
+app.register('filters-collapse', createLazyController(() => import('../vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/filters_collapse_controller')));
 ```
 
 `release_status_controller.ts` imports `../src/nowo-ui-release-core.ts`, so keep the vendor directory layout intact (do not copy the peer file alone).

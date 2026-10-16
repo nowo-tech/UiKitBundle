@@ -20,6 +20,7 @@ two token blocks of `nowo-ui.css`. A host theme is a short `:root` block.
 - [Pagination](#pagination)
 - [Lists](#lists)
 - [Cards, navigation, progress](#cards-navigation-progress)
+- [Corner tabs, edge tabs, scrollbars (1.17)](#corner-tabs-edge-tabs-scrollbars-117)
 - [Layout and metrics tokens](#layout-and-metrics-tokens)
 - [CSS framework notes](#css-framework-notes)
 - [Example: generic brand](#example-generic-brand)
@@ -239,6 +240,28 @@ lays out as a row on every stack (zero-specificity rule; Bootstrap's own `.pagin
 | `--nowo-ui-progress-track` | `var(--nowo-ui-surface-muted)` |
 | `--nowo-ui-progress-bar` | `var(--nowo-ui-primary)` |
 | `--nowo-ui-page-loader-color` | `var(--nowo-ui-primary)` (minimal page loaders) |
+
+## Corner tabs, edge tabs, scrollbars (1.17)
+
+Opt-in chrome ([USAGE.md — Host chrome](USAGE.md#host-chrome-117-opt-in)); not declared, resolved through fallbacks.
+
+| Token | Default | Used by |
+|-------|---------|---------|
+| `--nowo-ui-corner-tab-width` | `1.5rem` | `.nowo-ui-corner-tab` (table mode toggle, filter fold, `_corner_tab`) |
+| `--nowo-ui-corner-tab-height` | `1.375rem` | same |
+| `--nowo-ui-corner-tab-icon` | `0.875rem` | corner tab icons |
+| `--nowo-ui-corner-tab-accent` | `var(--nowo-ui-primary)` | corner tab text; border 35 % / background 10 % (hover 18 %) of it mixed with `--nowo-ui-border` / `--nowo-ui-surface` |
+| `--nowo-ui-border-width` | `1px` | corner and edge tab borders (also emitted by the appearance SPI) |
+| `--nowo-ui-edge-tab-top` | `calc(var(--nowo-ui-header-height, 3.5rem) + 0.75rem)` | `.nowo-ui-edge-tab__link` top of slot 0 |
+| `--nowo-ui-edge-tab-step` | `3.25rem` | offset per `slot` |
+| `--nowo-ui-edge-tab-slot` | `0` | set by `data-nowo-ui-edge-tab-slot` (1–3); a number, multiplied by the step |
+| `--nowo-ui-edge-tab-z` | `74` | edge tab z-index |
+| `--nowo-ui-scrollbar-size` | `6px` | thin scrollbars (`.nowo-ui-thin-scroll`, `html[data-nowo-ui-thin-scrollbars]`) |
+| `--nowo-ui-scrollbar-thumb` | `color-mix(in srgb, var(--nowo-ui-text) 28%, transparent)` | thumb (and Firefox `scrollbar-color`) |
+| `--nowo-ui-scrollbar-thumb-hover` | `color-mix(in srgb, var(--nowo-ui-text) 45%, transparent)` | thumb on hover |
+
+The row detail dialog uses the confirm dialog chrome (`--nowo-ui-modal-radius`, `--nowo-ui-shadow-dialog`,
+`--nowo-ui-overlay`); its detail list labels use `--nowo-ui-muted`.
 
 ## Layout and metrics tokens
 

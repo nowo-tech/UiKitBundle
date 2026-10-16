@@ -6,6 +6,7 @@
 - [Panel path rewrites](#panel-path-rewrites)
 - [Release check](#release-check)
 - [Appearance](#appearance)
+- [Route links](#route-links)
 - [Examples](#examples)
 
 ## Root keys
@@ -20,6 +21,7 @@ Alias: **`nowo_ui_kit`**
 | `panel_path_rewrites` | map | `{}` | Legacy path prefix → new prefix (e.g. `/admin/blog: /panel/blog`). Empty = feature disabled (since 1.9.0) |
 | `release_check` | map | `enabled: false` | Optional GitHub release-version checker (footer dialog + JSON endpoint). See [Release check](#release-check) |
 | `appearance` | map | `enabled: false` | Optional site appearance SPI: presets, `--nowo-ui-*` token emitter, Twig functions, optional form (since 1.16.0). See [Appearance](#appearance) |
+| `route_links` | map | `routes: {}` | Route (prefix) → link map for `nowo_ui_route_link()`, e.g. the page-edge manual tab (since 1.17.0). See [Route links](#route-links) |
 
 Parameters / Twig globals:
 
@@ -28,6 +30,7 @@ Parameters / Twig globals:
 - `%nowo_ui_kit.row_actions_display%` → `nowo_ui_kit_row_actions_display`
 - `%nowo_ui_kit.panel_path_rewrites%` — the validated rewrite map (no Twig global)
 - `%nowo_ui_kit.appearance.enabled%` (no Twig global; use the `nowo_ui_appearance*()` functions)
+- `%nowo_ui_kit.route_links%` (no Twig global; use `nowo_ui_route_link()`)
 - `%nowo_ui_kit.release_check.enabled%`, `%nowo_ui_kit.release_check.github_repo%`, `%nowo_ui_kit.release_check.current_version%` → Twig global `nowo_ui_kit_release_check` (`{enabled, current_version}`)
 
 Asset package (always prepended): `nowo_ui_kit` → `/bundles/nowouikit`.
@@ -175,6 +178,33 @@ Services (when enabled): `nowo_ui_kit.appearance.provider` (alias of your provid
 (`AppearanceCssEmitter`), the Twig extension, and — only when `symfony/form` is installed — the form types
 `AppearanceType` / `AppearancePaletteType`. Services implementing `AppearancePresetProviderInterface` are tagged
 `nowo_ui_kit.appearance_preset_provider` automatically and add their presets.
+
+## Route links
+
+Since **1.17.0**. A route or route prefix → link map read by the Twig function `nowo_ui_route_link(route = current
+route)`, which returns `{url, path, testid, prefix}` or `null`. A key matches the route itself or any route starting
+with `<key>_` (`admin_users` matches `admin_users_edit`, not `admin_usersx`); the longest key wins. Typical use: the
+"Read this chapter in the manual" page-edge tab (`partials/_edge_tab.html.twig`, see
+[USAGE.md](USAGE.md#page-edge-tab-and-route-links)). The function is always registered; with an empty map it returns
+`null`.
+
+```yaml
+# config/packages/nowo_ui_kit.yaml
+nowo_ui_kit:
+    route_links:
+        base_url: '%env(DOCS_URL)%'          # prepended to relative paths ("/", "//", "http(s)://" are kept as is)
+        default_testid: manual-link-admin    # testid of entries without their own (optional)
+        routes:
+            admin: manual/05-admin.md         # admin, admin_* …
+            admin_users: manual/05-admin.md#users
+            admin_mailer: { path: manual/10-email.md, testid: manual-link-mailer }
+```
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `base_url` | `''` | Prefix of relative paths |
+| `default_testid` | `null` | `testid` returned when an entry has none |
+| `routes` | `{}` | Route / prefix → path string, or `{path, testid}` (`path` required, non-empty) |
 
 ## Examples
 

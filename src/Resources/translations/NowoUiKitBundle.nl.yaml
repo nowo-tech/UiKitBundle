@@ -96,3 +96,15 @@ appearance.preset.obsidian: Obsidiaan
 appearance.preset.aurora: Aurora
 appearance.preset.ember: Gloed
 appearance.preset.custom: Aangepast
+table_mode.to_responsive: "Naar responsieve tabel"
+table_mode.to_scroll: "Naar horizontaal scrollen"
+table_mode.details: "Rijdetails"
+table_mode.details_column: "Details"
+table_mode.close: "Sluiten"
+table_mode.save_error: "De tabelweergave kon niet worden opgeslagen."
+filters_collapse.collapse: "Filters verbergen"
+filters_collapse.expand: "Filters tonen"
+filters_collapse.none: "Filters (geen actief)"
+filters_collapse.one: "1 actief filter"
+filters_collapse.many: "%count% actieve filters"
+edge_tab.manual: "Lees dit hoofdstuk in de handleiding"

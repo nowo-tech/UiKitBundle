@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.17.0](#to-1170)
 - [To 1.16.0](#to-1160)
 - [To 1.15.0](#to-1150)
 - [To 1.14.0](#to-1140)
@@ -41,6 +42,31 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 1.17.0
+
+From **1.16.0** — host chrome: responsive tables, foldable filter cards, corner / edge tabs, thin scrollbars,
+optional morphicons. Everything is opt-in (new partials, classes, peers, config key).
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+php bin/console assets:install
+```
+
+- No breaking changes; no new Composer dependency. New optional **JS** peer dependencies `morphicons` (^1.7) and
+  `lucide` (^1.0), only for hosts that import `assets/morphicons`.
+- Responsive tables: embed `partials/_responsive_table.html.twig`, add `data-column` (+ `data-required="1"`) to the
+  header cells, `data-column` to the row cells, `_row_detail_head` / `_row_detail_cell` at the end of each row, and
+  register the `responsive-table` peer. Persisting the mode needs a host endpoint (JSON `{"mode"}`, `X-CSRF-TOKEN`).
+- Foldable filters: `partials/_filters_collapse.html.twig` as the first child of the filter form (or
+  `collapsible: true` on `_filters.html.twig`) + the `filters-collapse` peer.
+- Animated icons: call `installMorphiconPeers()` from `assets/morphicons` once in the Stimulus bootstrap and pass
+  `morph: true` to the partials.
+- Thin scrollbars: `data-nowo-ui-thin-scrollbars` on `<html>` (or `.nowo-ui-thin-scroll`, or the SCSS mixin).
+- Route links: `nowo_ui_kit.route_links` + `nowo_ui_route_link()` with `partials/_edge_tab.html.twig`.
+- Hosts that override `components/_icon.html.twig` should add the new canonical kinds (`filter_off`,
+  `scroll_horizontal`, `rows`, `chevron_up`, `chevron_down`, `chevron_right`, `book`) or pass `icons` to the new
+  partials.
 
 ## To 1.16.0
 

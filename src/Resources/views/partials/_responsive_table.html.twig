@@ -1,0 +1,100 @@
+{#
+  Responsive table (1.17): *Scroll* (every column, horizontal scroll) ↔ *Responsive* (the columns that fit, no
+  horizontal scroll, row detail dialog). Stimulus peer `responsive-table` (stimulus-peers/responsive_table_controller.ts).
+  Embed it and put the <table> in the `table` block:
+
+      {% embed '@NowoUiKitBundle/partials/_responsive_table.html.twig' with {table_mode: stored_mode, save_url: path('app_table_mode', {key: 'items'}), save_token: csrf_token('table_mode')} %}
+          {% block table %}
+              <table class="nowo-ui-data-table" data-responsive-table-target="table">
+                  <thead><tr>
+                      <th data-column="name" data-required="1">Name</th> …
+                      {% include '@NowoUiKitBundle/partials/_row_detail_head.html.twig' only %}
+                  </tr></thead>
+                  <tbody>{% for item in items %}<tr>
+                      <td data-column="name">…</td> …
+                      {% include '@NowoUiKitBundle/partials/_row_detail_cell.html.twig' only %}
+                  </tr>{% endfor %}</tbody>
+              </table>
+          {% endblock %}
+      {% endembed %}
+
+  Optional (names are prefixed where a page variable could leak in — an embed inherits the page context):
+    - table_mode: '' (default: responsive on phones, scroll elsewhere) | 'scroll' | 'responsive'
+    - save_url: persistence endpoint (JSON {"mode": …}, X-CSRF-TOKEN header); empty = client-side only
+    - save_token / save_token_url: CSRF token and a GET URL answering {"token": "…"} (refreshed once on 403)
+    - save_method: HTTP method of the save (default PUT)
+    - phone_query: media query of the default responsive mode (default `(max-width: 767px)`)
+    - part_selector: stacked header parts joined in the dialog labels (default `[data-cell-part]`)
+    - mode_toggle (default true): render the mode toggle
+    - corner (default true): toggle as a corner tab of the nearest `.nowo-ui-corner-host` / `.nowo-ui-card`
+      (else of the table wrapper); false = a small bar above the table
+    - morph (default false): add `<morph-icon data-table-mode-morph>` (assets/morphicons, installMorphiconPeers())
+    - icons: {scroll, responsive, close} — names for components/_icon.html.twig
+      (default scroll_horizontal / rows / close; e.g. `tabler:arrows-horizontal` with icon_set ux_icon)
+    - labels: {to_responsive, to_scroll, details, close} — override the NowoUiKitBundle translations
+    - dialog_id: dialog id prefix (default generated)
+    - root_class, scroller_class, dialog_class: extra classes (root, scroller, <dialog>)
+    - testids (default false): data-testid `responsive-table`, `table-mode-toggle`, `row-detail-dialog`
+#}
+{% set _mode = table_mode|default('') %}
+{% set _icons = {scroll: 'scroll_horizontal', responsive: 'rows', close: 'close'}|merge(icons|default({})) %}
+{% set _labels = {
+    to_responsive: 'table_mode.to_responsive'|trans({}, 'NowoUiKitBundle'),
+    to_scroll: 'table_mode.to_scroll'|trans({}, 'NowoUiKitBundle'),
+    details: 'table_mode.details'|trans({}, 'NowoUiKitBundle'),
+    close: 'table_mode.close'|trans({}, 'NowoUiKitBundle'),
+}|merge(labels|default({})) %}
+{% set _id = dialog_id|default('nowo-ui-rt-' ~ random()) %}
+{% set _corner = corner ?? true %}
+{% set _testids = testids|default(false) %}
+{% set _toggle_label = _mode == 'responsive' ? _labels.to_scroll : _labels.to_responsive %}
+<div
+    class="nowo-ui-responsive-table{{ _corner ? ' nowo-ui-responsive-table--corner' : '' }}{{ root_class|default('') ? ' ' ~ root_class : '' }}"
+    data-controller="responsive-table"
+    data-responsive-table-mode-value="{{ _mode }}"
+    {%- if save_url|default('') %} data-responsive-table-url-value="{{ save_url }}"{% endif %}
+    {%- if save_token|default('') %} data-responsive-table-token-value="{{ save_token }}"{% endif %}
+    {%- if save_token_url|default('') %} data-responsive-table-token-url-value="{{ save_token_url }}"{% endif %}
+    {%- if save_method|default('') %} data-responsive-table-method-value="{{ save_method }}"{% endif %}
+    {%- if phone_query|default('') %} data-responsive-table-phone-query-value="{{ phone_query }}"{% endif %}
+    {%- if part_selector|default('') %} data-responsive-table-part-selector-value="{{ part_selector }}"{% endif %}
+    data-responsive-table-messages-value="{{ {toResponsive: _labels.to_responsive, toScroll: _labels.to_scroll, details: _labels.details}|json_encode }}"
+    {%- if _mode %} data-table-mode="{{ _mode }}"{% endif %}
+    {%- if _testids %} data-testid="responsive-table"{% endif %}
+>
+    {% if mode_toggle ?? true %}
+        <div class="nowo-ui-responsive-table__bar">
+            <button
+                type="button"
+                class="nowo-ui-responsive-table__toggle{{ _corner ? ' nowo-ui-corner-tab' : '' }}"
+                data-responsive-table-target="toggle"
+                data-action="responsive-table#toggle"
+                aria-pressed="{{ _mode == 'responsive' ? 'true' : 'false' }}"
+                aria-label="{{ _toggle_label }}"
+                title="{{ _toggle_label }}"
+                {%- if _testids %} data-testid="table-mode-toggle"{% endif %}
+            >
+                {#- Static icons paint before JS (CSS shows the current mode); a morph-icon takes over once ready. -#}
+                <span class="nowo-ui-responsive-table__icon nowo-ui-responsive-table__icon--scroll" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _icons.scroll, label: _labels.to_scroll}, false)|trim|raw }}</span>
+                <span class="nowo-ui-responsive-table__icon nowo-ui-responsive-table__icon--responsive" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _icons.responsive, label: _labels.to_responsive}, false)|trim|raw }}</span>
+                {%- if morph|default(false) %}
+                <morph-icon class="nowo-ui-responsive-table__morph" data-table-mode-morph size="14" stroke-width="2" aria-hidden="true"></morph-icon>
+                {%- endif %}
+            </button>
+        </div>
+    {% endif %}
+    <div class="nowo-ui-table-wrap nowo-ui-responsive-table__scroller{{ scroller_class|default('') ? ' ' ~ scroller_class : '' }}" data-responsive-table-target="scroller">
+        {% block table %}{% endblock %}
+    </div>
+    <dialog class="nowo-ui-confirm nowo-ui-row-detail{{ dialog_class|default('') ? ' ' ~ dialog_class : '' }}" data-responsive-table-target="dialog" aria-labelledby="{{ _id }}-title"{% if _testids %} data-testid="row-detail-dialog"{% endif %}>
+        <div class="nowo-ui-confirm__panel nowo-ui-row-detail__panel">
+            <div class="nowo-ui-confirm__header nowo-ui-row-detail__header">
+                <h2 class="nowo-ui-confirm__title nowo-ui-row-detail__title" id="{{ _id }}-title" data-responsive-table-target="dialogTitle"></h2>
+                <button type="button" class="nowo-ui-row-detail__close" data-action="responsive-table#close" aria-label="{{ _labels.close }}" title="{{ _labels.close }}">
+                    {{- include('@NowoUiKitBundle/components/_icon.html.twig', {name: _icons.close, label: _labels.close}, false)|trim|raw -}}
+                </button>
+            </div>
+            <div class="nowo-ui-row-detail__content" data-responsive-table-target="dialogBody"></div>
+        </div>
+    </dialog>
+</div>

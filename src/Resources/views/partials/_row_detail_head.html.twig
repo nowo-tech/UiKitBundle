@@ -1,0 +1,7 @@
+{#
+  Responsive table (1.17): header cell of the row detail column — last <th> of the header row. Hidden in Scroll mode
+  and while every column fits; no `data-column`, so the fit never hides it. Empty visible label, named for
+  assistive tech.
+  Optional: label (default `table_mode.details_column`), th_class.
+#}
+<th class="nowo-ui-row-detail-col{{ th_class|default('') ? ' ' ~ th_class : '' }}" data-responsive-detail><span class="visually-hidden">{{ label|default('table_mode.details_column'|trans({}, 'NowoUiKitBundle')) }}</span></th>

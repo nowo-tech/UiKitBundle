@@ -96,3 +96,15 @@ appearance.preset.obsidian: Obsidienne
 appearance.preset.aurora: Aurore
 appearance.preset.ember: Braise
 appearance.preset.custom: Personnalisé
+table_mode.to_responsive: "Passer au tableau adaptatif"
+table_mode.to_scroll: "Passer au défilement horizontal"
+table_mode.details: "Détails de la ligne"
+table_mode.details_column: "Détails"
+table_mode.close: "Fermer"
+table_mode.save_error: "Impossible d’enregistrer le mode du tableau."
+filters_collapse.collapse: "Masquer les filtres"
+filters_collapse.expand: "Afficher les filtres"
+filters_collapse.none: "Filtres (aucun actif)"
+filters_collapse.one: "1 filtre actif"
+filters_collapse.many: "%count% filtres actifs"
+edge_tab.manual: "Lire ce chapitre du manuel"

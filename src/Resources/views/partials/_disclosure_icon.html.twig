@@ -1,0 +1,15 @@
+{#
+  Disclosure chevron (1.17): static icons of both states (down = open, right = closed) shown by CSS from the host
+  state — `aria-expanded` on the toggle, or `<details open>` around its <summary> — then an optional morph-icon.
+  Put it inside the toggle; add data-controller="disclosure-icon" on the toggle for the animated icon.
+  Optional: class, morph (default false: `<morph-icon data-disclosure-morph>`), icons: {open, closed}
+  (default chevron_down / chevron_right).
+#}
+{% set _icons = {open: 'chevron_down', closed: 'chevron_right'}|merge(icons|default({})) %}
+<span class="nowo-ui-disclosure-icon{{ class|default('') ? ' ' ~ class : '' }}" aria-hidden="true">
+    <span class="nowo-ui-disclosure-icon__static nowo-ui-disclosure-icon__static--open">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _icons.open, label: ''}, false)|trim|raw }}</span>
+    <span class="nowo-ui-disclosure-icon__static nowo-ui-disclosure-icon__static--closed">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _icons.closed, label: ''}, false)|trim|raw }}</span>
+    {%- if morph|default(false) %}
+    <morph-icon class="nowo-ui-disclosure-icon__morph" data-disclosure-morph size="14" stroke-width="2"></morph-icon>
+    {%- endif %}
+</span>

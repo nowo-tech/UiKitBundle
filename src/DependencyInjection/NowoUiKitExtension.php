@@ -19,6 +19,7 @@ use Nowo\UiKitBundle\Release\ReleaseUpdateChecker;
 use Nowo\UiKitBundle\Routing\PanelPathRewriter;
 use Nowo\UiKitBundle\Routing\PanelPathRewritingLoader;
 use Nowo\UiKitBundle\Twig\AppearanceExtension;
+use Nowo\UiKitBundle\Twig\RouteLinkExtension;
 use Symfony\Component\Asset\Package;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
@@ -106,6 +107,18 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
         $appearance = $config['appearance'];
         $container->setParameter('nowo_ui_kit.appearance.enabled', $appearance['enabled']);
         $this->registerAppearance($container, $appearance);
+
+        /** @var array{base_url: string, default_testid: ?string, routes: array<string, array{path: string, testid: ?string}>} $routeLinks */
+        $routeLinks = $config['route_links'];
+        $container->setParameter('nowo_ui_kit.route_links', $routeLinks);
+        $container->register('nowo_ui_kit.route_link_twig_extension', RouteLinkExtension::class)
+            ->setArguments([
+                $routeLinks['routes'],
+                $routeLinks['base_url'],
+                $routeLinks['default_testid'],
+                new Reference('request_stack', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+            ])
+            ->addTag('twig.extension');
 
         $loader = new YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.yaml');

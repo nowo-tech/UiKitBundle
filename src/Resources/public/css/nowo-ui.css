@@ -2457,3 +2457,501 @@ table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr:hover > td {
   --nowo-ui-muted: #94a3b8;
 }
 
+
+/* =============================================================================================
+ * 1.17 — host chrome (opt-in by class / attribute; nothing here applies to existing markup).
+ * Component tokens resolve through var() fallbacks (docs/THEMING.md — Corner tabs, tables, scrollbars).
+ * ============================================================================================= */
+
+/* --- Card corner tab (partials/_corner_tab.html.twig; table mode toggle, filter fold) ---
+ * Stuck to the top-right corner of the nearest positioned ancestor: `.nowo-ui-corner-host` (or a kit card). */
+.nowo-ui-corner-host,
+.nowo-ui-card:has(.nowo-ui-corner-tab) {
+  position: relative;
+}
+
+.nowo-ui-corner-tab {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: var(--nowo-ui-corner-tab-width, 1.5rem);
+  height: var(--nowo-ui-corner-tab-height, 1.375rem);
+  margin: 0;
+  padding: 0;
+  border: var(--nowo-ui-border-width, 1px) solid color-mix(in srgb, var(--nowo-ui-corner-tab-accent, var(--nowo-ui-primary)) 35%, var(--nowo-ui-border));
+  border-top: 0;
+  border-right: 0;
+  border-radius: 0 var(--nowo-ui-card-radius, var(--nowo-ui-radius)) 0 var(--nowo-ui-radius);
+  background: color-mix(in srgb, var(--nowo-ui-corner-tab-accent, var(--nowo-ui-primary)) 10%, var(--nowo-ui-surface));
+  color: var(--nowo-ui-corner-tab-accent, var(--nowo-ui-primary));
+  font-size: var(--nowo-ui-corner-tab-icon, 0.875rem);
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.nowo-ui-corner-tab:hover {
+  background: color-mix(in srgb, var(--nowo-ui-corner-tab-accent, var(--nowo-ui-primary)) 18%, var(--nowo-ui-surface));
+  color: var(--nowo-ui-corner-tab-accent, var(--nowo-ui-primary));
+}
+
+.nowo-ui-corner-tab:focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline-offset: 2px;
+}
+
+/* Under the host's content (fields, buttons, dropdowns) where they overlap: the host gets its own stacking context. */
+.nowo-ui-corner-tab--under {
+  z-index: -1;
+}
+
+.nowo-ui-corner-host:has(> .nowo-ui-corner-tab--under) {
+  isolation: isolate;
+}
+
+.nowo-ui-corner-tab__icon,
+.nowo-ui-responsive-table__icon,
+.nowo-ui-filters-collapse__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--nowo-ui-corner-tab-icon, 0.875rem);
+  height: var(--nowo-ui-corner-tab-icon, 0.875rem);
+  font-size: var(--nowo-ui-corner-tab-icon, 0.875rem);
+  line-height: 1;
+}
+
+:is(.nowo-ui-corner-tab__icon, .nowo-ui-responsive-table__icon, .nowo-ui-filters-collapse__icon, .nowo-ui-disclosure-icon__static, .nowo-ui-edge-tab__icon) > svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* --- Responsive table (partials/_responsive_table.html.twig, Stimulus peer `responsive-table`) --- */
+.nowo-ui-responsive-table {
+  position: relative;
+}
+
+/* The corner toggle climbs to the card (or any .nowo-ui-corner-host) instead of the table wrapper. */
+:where(.nowo-ui-corner-host, .nowo-ui-card) .nowo-ui-responsive-table--corner {
+  position: static;
+}
+
+.nowo-ui-responsive-table__bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.375rem;
+}
+
+.nowo-ui-responsive-table--corner > .nowo-ui-responsive-table__bar {
+  display: contents;
+}
+
+.nowo-ui-responsive-table__toggle:not(.nowo-ui-corner-tab) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: var(--nowo-ui-border-width, 1px) solid var(--nowo-ui-border);
+  border-radius: var(--nowo-ui-radius);
+  background: var(--nowo-ui-surface);
+  color: var(--nowo-ui-muted);
+  cursor: pointer;
+}
+
+.nowo-ui-responsive-table__toggle:not(.nowo-ui-corner-tab):hover,
+.nowo-ui-responsive-table__toggle:not(.nowo-ui-corner-tab)[aria-pressed='true'] {
+  color: var(--nowo-ui-primary);
+  border-color: color-mix(in srgb, var(--nowo-ui-primary) 45%, var(--nowo-ui-border));
+}
+
+.nowo-ui-responsive-table__toggle:not(.nowo-ui-corner-tab):focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline-offset: 2px;
+}
+
+/* Static icon of the current mode until a morph-icon is ready; afterwards only the morph-icon. */
+.nowo-ui-responsive-table__toggle .nowo-ui-responsive-table__icon--responsive,
+.nowo-ui-responsive-table[data-table-mode='responsive'] .nowo-ui-responsive-table__toggle .nowo-ui-responsive-table__icon--scroll,
+.nowo-ui-responsive-table__toggle.is-morph-ready .nowo-ui-responsive-table__icon,
+.nowo-ui-responsive-table__toggle:not(.is-morph-ready) .nowo-ui-responsive-table__morph {
+  display: none;
+}
+
+.nowo-ui-responsive-table[data-table-mode='responsive'] .nowo-ui-responsive-table__toggle:not(.is-morph-ready) .nowo-ui-responsive-table__icon--responsive {
+  display: inline-flex;
+}
+
+.nowo-ui-row-detail-col,
+.nowo-ui-row-detail-cell {
+  display: none;
+}
+
+.nowo-ui-responsive-table[data-table-mode='responsive'] .nowo-ui-responsive-table__scroller {
+  overflow-x: hidden;
+}
+
+.nowo-ui-responsive-table[data-table-mode='responsive'] table {
+  width: 100%;
+}
+
+.nowo-ui-responsive-table[data-table-mode='responsive'] [data-rt-hidden] {
+  display: none !important;
+}
+
+/* Text wraps so the required columns and the detail button fit narrow screens (no horizontal scroll). */
+.nowo-ui-responsive-table[data-table-mode='responsive'] :is(th, td) {
+  white-space: normal;
+}
+
+.nowo-ui-responsive-table[data-table-mode='responsive'][data-rt-has-hidden] :is(.nowo-ui-row-detail-col, .nowo-ui-row-detail-cell) {
+  display: table-cell;
+  width: 2.75rem;
+  text-align: right;
+  vertical-align: middle;
+}
+
+@media (pointer: coarse) {
+  .nowo-ui-responsive-table[data-table-mode='responsive'][data-rt-has-hidden] tbody tr {
+    cursor: pointer;
+  }
+}
+
+@media (max-width: 30rem) {
+  .nowo-ui-responsive-table[data-table-mode='responsive'] :is(th, td) {
+    padding-right: 0.375rem;
+    padding-left: 0.375rem;
+    overflow-wrap: anywhere;
+  }
+
+  .nowo-ui-responsive-table[data-table-mode='responsive'][data-rt-has-hidden] :is(.nowo-ui-row-detail-col, .nowo-ui-row-detail-cell) {
+    width: 2.25rem;
+  }
+}
+
+.nowo-ui-row-detail-btn,
+.nowo-ui-row-detail__close {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--nowo-ui-radius);
+  background: transparent;
+  color: var(--nowo-ui-muted);
+  font-size: 1.125rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.nowo-ui-row-detail-btn:hover {
+  color: var(--nowo-ui-primary);
+  background: color-mix(in srgb, var(--nowo-ui-primary) 10%, transparent);
+}
+
+.nowo-ui-row-detail__close:hover {
+  color: var(--nowo-ui-text);
+  background: color-mix(in srgb, var(--nowo-ui-text) 8%, transparent);
+}
+
+.nowo-ui-row-detail-btn:focus-visible,
+.nowo-ui-row-detail__close:focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline-offset: 2px;
+}
+
+.nowo-ui-row-detail-btn > svg,
+.nowo-ui-row-detail__close > svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.nowo-ui-row-detail-btn[hidden] {
+  display: none;
+}
+
+/* Row detail dialog: the confirm dialog chrome, wider, scrollable content. */
+.nowo-ui-row-detail .nowo-ui-row-detail__panel {
+  width: min(40rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 4rem);
+  display: flex;
+  flex-direction: column;
+}
+
+.nowo-ui-row-detail__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.nowo-ui-row-detail__title {
+  overflow-wrap: anywhere;
+}
+
+.nowo-ui-row-detail__content {
+  padding: 0.5rem 1.25rem 1.25rem;
+  overflow-y: auto;
+}
+
+.nowo-ui-row-detail__list {
+  display: grid;
+  grid-template-columns: minmax(7rem, max-content) minmax(0, 1fr);
+  gap: 0.625rem 1rem;
+  margin: 0;
+}
+
+.nowo-ui-row-detail__list dt {
+  padding-top: 0.125rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--nowo-ui-muted);
+}
+
+.nowo-ui-row-detail__list dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 30rem) {
+  .nowo-ui-row-detail__list {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.25rem;
+  }
+
+  .nowo-ui-row-detail__list dd {
+    margin-bottom: 0.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .nowo-ui-row-detail[open] .nowo-ui-row-detail__panel {
+    animation: nowo-ui-row-detail-in 0.16s ease-out;
+  }
+}
+
+[data-motion='reduce'] .nowo-ui-row-detail[open] .nowo-ui-row-detail__panel {
+  animation: none;
+}
+
+@keyframes nowo-ui-row-detail-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* --- Foldable filter card (partials/_filters_collapse.html.twig, Stimulus peer `filters-collapse`) ---
+ * The fold tab sits in the form's top-right corner, stacked UNDER the fields (z-index -1 inside the form's own
+ * stacking context), so dropdowns keep stacking normally. Folding hides the fields only: they keep their values. */
+form:has(> .nowo-ui-filters-collapse) {
+  position: relative;
+  isolation: isolate;
+}
+
+.nowo-ui-filters-collapse {
+  display: contents;
+}
+
+.nowo-ui-filters-collapse__toggle .nowo-ui-filters-collapse__icon--collapsed,
+.nowo-ui-filters-collapse.is-collapsed .nowo-ui-filters-collapse__toggle .nowo-ui-filters-collapse__icon--expanded,
+.nowo-ui-filters-collapse__toggle.is-morph-ready .nowo-ui-filters-collapse__icon,
+.nowo-ui-filters-collapse__toggle:not(.is-morph-ready) .nowo-ui-filters-collapse__morph {
+  display: none;
+}
+
+.nowo-ui-filters-collapse.is-collapsed .nowo-ui-filters-collapse__toggle:not(.is-morph-ready) .nowo-ui-filters-collapse__icon--collapsed {
+  display: inline-flex;
+}
+
+.nowo-ui-filters-collapse__summary {
+  flex-basis: 100%;
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--nowo-ui-muted);
+}
+
+.nowo-ui-filters-collapse__summary[hidden] {
+  display: none;
+}
+
+/* Folded: only the tab and the summary line stay visible (the fields keep their values and still submit). */
+form:has(> .nowo-ui-filters-collapse.is-collapsed) > :not(.nowo-ui-filters-collapse) {
+  display: none;
+}
+
+form:has(> .nowo-ui-filters-collapse.is-collapsed) {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+/* --- Disclosure chevron (partials/_disclosure_icon.html.twig, Stimulus peer `disclosure-icon`) ---
+ * Static icon of the host state — `aria-expanded` on the toggle or `<details open>` — then the morph-icon. */
+.nowo-ui-disclosure-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  font-size: 0.875rem;
+  line-height: 1;
+}
+
+.nowo-ui-disclosure-icon__static {
+  display: inline-flex;
+  width: 1rem;
+  height: 1rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.nowo-ui-disclosure-icon__static--closed,
+[aria-expanded='false'] > .nowo-ui-disclosure-icon .nowo-ui-disclosure-icon__static--open,
+details:not([open]) > summary > .nowo-ui-disclosure-icon .nowo-ui-disclosure-icon__static--open,
+.is-morph-ready > .nowo-ui-disclosure-icon .nowo-ui-disclosure-icon__static,
+:not(.is-morph-ready) > .nowo-ui-disclosure-icon .nowo-ui-disclosure-icon__morph {
+  display: none;
+}
+
+[aria-expanded='false']:not(.is-morph-ready) > .nowo-ui-disclosure-icon .nowo-ui-disclosure-icon__static--closed,
+details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .nowo-ui-disclosure-icon__static--closed {
+  display: inline-flex;
+}
+
+/* --- Page-edge tab (partials/_edge_tab.html.twig) --- */
+.nowo-ui-edge-tab {
+  display: contents;
+}
+
+.nowo-ui-edge-tab__link {
+  position: fixed;
+  top: calc(var(--nowo-ui-edge-tab-top, calc(var(--nowo-ui-header-height, 3.5rem) + 0.75rem)) + var(--nowo-ui-edge-tab-slot, 0) * var(--nowo-ui-edge-tab-step, 3.25rem));
+  right: 0;
+  z-index: var(--nowo-ui-edge-tab-z, 74);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.75rem;
+  border: var(--nowo-ui-border-width, 1px) solid var(--nowo-ui-border);
+  border-right: 0;
+  border-radius: var(--nowo-ui-radius) 0 0 var(--nowo-ui-radius);
+  background: var(--nowo-ui-surface);
+  color: var(--nowo-ui-text);
+  box-shadow: -2px 2px 8px rgb(var(--nowo-ui-shadow-rgb, 15 23 42) / 10%);
+  font-size: 1.15rem;
+  line-height: 1;
+  text-decoration: none;
+  transition: width 0.15s ease, color 0.15s ease;
+}
+
+.nowo-ui-edge-tab[data-nowo-ui-edge-tab-slot='1'] .nowo-ui-edge-tab__link {
+  --nowo-ui-edge-tab-slot: 1;
+}
+
+.nowo-ui-edge-tab[data-nowo-ui-edge-tab-slot='2'] .nowo-ui-edge-tab__link {
+  --nowo-ui-edge-tab-slot: 2;
+}
+
+.nowo-ui-edge-tab[data-nowo-ui-edge-tab-slot='3'] .nowo-ui-edge-tab__link {
+  --nowo-ui-edge-tab-slot: 3;
+}
+
+.nowo-ui-edge-tab__link:hover {
+  width: 2.6rem;
+  color: var(--nowo-ui-primary);
+}
+
+.nowo-ui-edge-tab__link:focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline-offset: 2px;
+}
+
+.nowo-ui-edge-tab__icon {
+  display: inline-flex;
+  width: 1.15rem;
+  height: 1.15rem;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nowo-ui-edge-tab__link {
+    transition: none;
+  }
+}
+
+[data-motion='reduce'] .nowo-ui-edge-tab__link {
+  transition: none;
+}
+
+@media print {
+  .nowo-ui-edge-tab__link {
+    display: none;
+  }
+}
+
+.nowo-ui-edge-link {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--nowo-ui-muted);
+}
+
+/* --- Thin scrollbars ---
+ * `.nowo-ui-thin-scroll` on any scroller, or `data-nowo-ui-thin-scrollbars` on <html> for the page and every kit
+ * scroller (shell, aside, main, modals, dialogs, table wrappers). Chromium 121+ ignores ::-webkit-scrollbar once the
+ * standard scrollbar-width / scrollbar-color are set (and then draws the wide bar with arrow buttons), so the
+ * standard properties are for engines without ::-webkit-scrollbar (Firefox) only. Hosts with their own selector
+ * lists: the SCSS mixin assets/styles/_thin-scrollbars.scss. */
+@supports not selector(::-webkit-scrollbar) {
+  .nowo-ui-thin-scroll,
+  html[data-nowo-ui-thin-scrollbars],
+  [data-nowo-ui-thin-scrollbars] :is(body, .nowo-ui-aside, .nowo-ui-main, .nowo-ui-modal, .nowo-ui-modal .modal-body, .nowo-ui-row-detail__content, .nowo-ui-table-wrap, .nowo-ui-responsive-table__scroller) {
+    scrollbar-width: thin;
+    scrollbar-color: var(--nowo-ui-scrollbar-thumb, color-mix(in srgb, var(--nowo-ui-text) 28%, transparent)) transparent;
+  }
+}
+
+:is(.nowo-ui-thin-scroll, html[data-nowo-ui-thin-scrollbars], [data-nowo-ui-thin-scrollbars] :is(body, .nowo-ui-aside, .nowo-ui-main, .nowo-ui-modal, .nowo-ui-modal .modal-body, .nowo-ui-row-detail__content, .nowo-ui-table-wrap, .nowo-ui-responsive-table__scroller))::-webkit-scrollbar {
+  width: var(--nowo-ui-scrollbar-size, 6px);
+  height: var(--nowo-ui-scrollbar-size, 6px);
+}
+
+:is(.nowo-ui-thin-scroll, html[data-nowo-ui-thin-scrollbars], [data-nowo-ui-thin-scrollbars] :is(body, .nowo-ui-aside, .nowo-ui-main, .nowo-ui-modal, .nowo-ui-modal .modal-body, .nowo-ui-row-detail__content, .nowo-ui-table-wrap, .nowo-ui-responsive-table__scroller))::-webkit-scrollbar-button {
+  display: none;
+}
+
+:is(.nowo-ui-thin-scroll, html[data-nowo-ui-thin-scrollbars], [data-nowo-ui-thin-scrollbars] :is(body, .nowo-ui-aside, .nowo-ui-main, .nowo-ui-modal, .nowo-ui-modal .modal-body, .nowo-ui-row-detail__content, .nowo-ui-table-wrap, .nowo-ui-responsive-table__scroller))::-webkit-scrollbar-track,
+:is(.nowo-ui-thin-scroll, html[data-nowo-ui-thin-scrollbars], [data-nowo-ui-thin-scrollbars] :is(body, .nowo-ui-aside, .nowo-ui-main, .nowo-ui-modal, .nowo-ui-modal .modal-body, .nowo-ui-row-detail__content, .nowo-ui-table-wrap, .nowo-ui-responsive-table__scroller))::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+:is(.nowo-ui-thin-scroll, html[data-nowo-ui-thin-scrollbars], [data-nowo-ui-thin-scrollbars] :is(body, .nowo-ui-aside, .nowo-ui-main, .nowo-ui-modal, .nowo-ui-modal .modal-body, .nowo-ui-row-detail__content, .nowo-ui-table-wrap, .nowo-ui-responsive-table__scroller))::-webkit-scrollbar-thumb {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background-color: var(--nowo-ui-scrollbar-thumb, color-mix(in srgb, var(--nowo-ui-text) 28%, transparent));
+  background-clip: padding-box;
+}
+
+:is(.nowo-ui-thin-scroll, html[data-nowo-ui-thin-scrollbars], [data-nowo-ui-thin-scrollbars] :is(body, .nowo-ui-aside, .nowo-ui-main, .nowo-ui-modal, .nowo-ui-modal .modal-body, .nowo-ui-row-detail__content, .nowo-ui-table-wrap, .nowo-ui-responsive-table__scroller))::-webkit-scrollbar-thumb:hover {
+  background-color: var(--nowo-ui-scrollbar-thumb-hover, color-mix(in srgb, var(--nowo-ui-text) 45%, transparent));
+}

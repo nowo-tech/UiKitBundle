@@ -29,19 +29,30 @@
     "datatables.net-dt": "2.3.8",
     "datatables.net-responsive-dt": "3.0.8",
     "happy-dom": "^20.14.6",
+    "lucide": "1.56.0",
+    "morphicons": "1.7.1",
+    "sass": "1.93.2",
     "typescript": "~7.0.2",
     "vite": "^8.3.4",
     "vitest": "^4.1.11"
   },
   "peerDependencies": {
     "datatables.net-dt": "^2.3.0",
-    "datatables.net-responsive-dt": "^3.0.0"
+    "datatables.net-responsive-dt": "^3.0.0",
+    "lucide": "^1.0.0",
+    "morphicons": "^1.7.0"
   },
   "peerDependenciesMeta": {
     "datatables.net-dt": {
       "optional": true
     },
     "datatables.net-responsive-dt": {
+      "optional": true
+    },
+    "lucide": {
+      "optional": true
+    },
+    "morphicons": {
       "optional": true
     }
   }

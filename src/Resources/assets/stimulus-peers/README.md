@@ -16,6 +16,12 @@ They are **not** built into the kit IIFEs. Prefer the no-build scripts under `sr
 | `temporary_reveal_controller.ts` | `temporary-reveal` | — (peer only, 1.15) |
 | `collapse_panel_controller.ts` | `collapse-panel` | — (peer only, 1.15) |
 | `datatable_controller.ts` | `datatable` | — (peer only, 1.15; needs the optional `datatables.net-dt` + `datatables.net-responsive-dt`) |
+| `responsive_table_controller.ts` | `responsive-table` | — (peer only, 1.17; `partials/_responsive_table.html.twig`) |
+| `filters_collapse_controller.ts` | `filters-collapse` | — (peer only, 1.17; `partials/_filters_collapse.html.twig`) |
+| `disclosure_icon_controller.ts` | `disclosure-icon` | — (peer only, 1.17; `partials/_disclosure_icon.html.twig`) |
+
+`icon_state.ts` (1.17) is the icon bridge of the last three peers; `../morphicons/index.ts` (optional `morphicons` +
+`lucide`) animates them with `installMorphiconPeers()`.
 
 See [docs/STIMULUS.md](../../../../docs/STIMULUS.md) for data attributes and import examples.
 Requires `@hotwired/stimulus` in the host app (not a kit runtime dependency).

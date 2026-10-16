@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.17.0] - 2026-10-16](#1170---2026-10-16)
 - [[1.16.0] - 2026-10-13](#1160---2026-10-13)
 - [[1.15.0] - 2026-10-13](#1150---2026-10-13)
 - [[1.14.0] - 2026-10-13](#1140---2026-10-13)
@@ -39,6 +40,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [1.17.0] - 2026-10-16
+
+### Added
+
+- **Responsive table** (opt-in; Symfony Beacon spec 148, kit spec 005): `partials/_responsive_table.html.twig` (embed, block `table`), `_row_detail_head.html.twig`, `_row_detail_cell.html.twig` and the Stimulus peer `responsive-table` — Scroll ↔ Responsive toggle (corner tab or bar, static icons before JS), Responsive mode hides the last non-required columns until the table fits (two-phase, on resize; `data-required="1"` never hides), no horizontal scroll at 320px and above, row detail `<dialog>` (confirm chrome) that moves the cell contents in and back (forms and listeners intact), row title from the first two columns, tap-on-row on coarse pointers, default responsive on phones. Persistence is host-owned (`save_url`, `save_token`, `save_token_url`, `save_method`; JSON `{"mode"}` + `X-CSRF-TOKEN`, one token refresh on 403); a failed save reverts and dispatches `responsive-table:save-failed`.
+- **Foldable filter card**: `partials/_filters_collapse.html.twig` + peer `filters-collapse` — corner tab under the fields, "N active filters" line (FormView count or `active_count`), state in a cookie read server-side (no flash), values kept while folded. `partials/_filters.html.twig`: `collapsible` / `collapse` options.
+- **Card corner tab** `.nowo-ui-corner-tab` (`--under`, `.nowo-ui-corner-host`, `partials/_corner_tab.html.twig`) and tokens `--nowo-ui-corner-tab-{width,height,icon,accent}`.
+- **Disclosure chevron** `partials/_disclosure_icon.html.twig` + peer `disclosure-icon` (follows `aria-expanded` or `<details open>`).
+- **Page-edge tab** `partials/_edge_tab.html.twig` (slots, inline variant) and the Twig function `nowo_ui_route_link()` fed by the new `nowo_ui_kit.route_links` config (`base_url`, `default_testid`, `routes`; longest prefix wins).
+- **Thin scrollbars**: `.nowo-ui-thin-scroll`, `html[data-nowo-ui-thin-scrollbars]` (page + kit scrollers), tokens `--nowo-ui-scrollbar-{size,thumb,thumb-hover}`; SCSS mixin `assets/styles/_thin-scrollbars.scss` for host selector lists.
+- **Morphicons module** `assets/morphicons/index.ts` (optional peer dependencies `morphicons` ^1.7 and `lucide` ^1.0): `prepareMorphHost`, `asMorphIcon`, `syncMorphIcon` and sync helpers for theme, content width, sidebar, password, listing customizer, table mode, filters collapse, disclosure, search (magnifier ↔ X ↔ loader) and support (lifebuoy ↔ X); honours `data-motion="reduce"`. Icon state bridge `stimulus-peers/icon_state.ts` + `installMorphiconPeers()`.
+- Canonical icon kinds `filter_off`, `scroll_horizontal`, `rows`, `chevron_up`, `chevron_down`, `chevron_right`, `book` in every icon set; recommended icon-only Filter / Clear pair (`tabler:filter` / `tabler:filter-off`, or `filter` / `filter_off`) documented.
+- Translations `table_mode.*`, `filters_collapse.*`, `edge_tab.manual` (7 locales). Kitchen sink: *Host chrome* section; demos enable the thin scrollbars.
+- Vitest suites for the new peers, the bridge, the morphicons module and the SCSS mixin (gated); PHPUnit for the partials, icons, CSS hooks, translations, configuration and Twig function.
+
+[1.17.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.16.0...v1.17.0
 
 ## [1.16.0] - 2026-10-13
 

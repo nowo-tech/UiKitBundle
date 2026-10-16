@@ -8,6 +8,14 @@
 - [Page loader and page transitions](#page-loader-and-page-transitions)
 - [Open a modal on load (deep link)](#open-a-modal-on-load-deep-link)
 - [Filter bar and data table (opt-in)](#filter-bar-and-data-table-opt-in)
+- [Host chrome (1.17, opt-in)](#host-chrome-117-opt-in)
+  - [Responsive table](#responsive-table)
+  - [Foldable filter card](#foldable-filter-card)
+  - [Card corner tab](#card-corner-tab)
+  - [Disclosure chevron](#disclosure-chevron)
+  - [Page-edge tab and route links](#page-edge-tab-and-route-links)
+  - [Thin scrollbars](#thin-scrollbars)
+  - [Morphicons (animated icons)](#morphicons-animated-icons)
 - [Pre-paint theme boot](#pre-paint-theme-boot)
 - [App chrome](#app-chrome-aside-avatar-user-menu-footer)
 - [Sidebar rail (opt-in)](#sidebar-rail-opt-in)
@@ -289,6 +297,218 @@ any icon option the output is unchanged.
     icon_only: true,
 } %}
 ```
+
+Recommended icon-only pair (1.17): **Filter** = funnel, **Clear filters** = funnel with a slash. With
+`icon_set: ux_icon` pass the Tabler names directly; with the other sets use the canonical kinds `filter` /
+`filter_off` (1.17: `ti ti-filter-off`, Bootstrap Icons `bi-x-circle`, inline SVG funnel with a slash):
+
+```twig
+{% include '@NowoUiKitBundle/partials/_filter_actions.html.twig' with {
+    clear_href: path('app_items'),
+    submit_icon: 'tabler:filter',      {# or 'filter' #}
+    clear_icon: 'tabler:filter-off',   {# or 'filter_off' #}
+    icon_only: true,
+} %}
+```
+
+## Host chrome (1.17, opt-in)
+
+Generic chrome extracted from Symfony Beacon (kit spec 005). Every piece is opt-in: new partials, new classes and
+three optional Stimulus peers — nothing changes for markup that does not use them. Static icons render through
+`components/_icon.html.twig` (`nowo_ui_kit.icon_set`), so every partial works without JS; the peers add the
+behaviour and the optional [morphicons module](#morphicons-animated-icons) animates the icons.
+
+New canonical icon kinds (all icon sets): `filter_off`, `scroll_horizontal`, `rows`, `chevron_up`, `chevron_down`,
+`chevron_right`, `book`. Every partial below accepts an `icons` hash to use set-specific names instead (e.g.
+`tabler:arrows-horizontal` with `icon_set: ux_icon`).
+
+### Responsive table
+
+`partials/_responsive_table.html.twig` (embed) + `_row_detail_head.html.twig` / `_row_detail_cell.html.twig` +
+Stimulus peer `responsive-table` ([STIMULUS.md](STIMULUS.md#responsive-table-stimulus-peer-only)).
+
+- **Scroll** mode: every column, horizontal scroll (thin scrollbar with `data-nowo-ui-thin-scrollbars`).
+- **Responsive** mode: no horizontal scroll at 320px and above. The peer shows every column, then hides the last
+  non-required ones (document order; `data-required="1"` never hides) until the table fits — measured first without
+  the detail column, then with it — and recomputes on resize. Cell text wraps; tighter padding under 30rem.
+- Each row ends with an eye button (shown only while a column is hidden, named "Row details: <row title>", row
+  title = text of the first two columns). It opens a native `<dialog>` (confirm dialog chrome) with **every** column
+  as label / value pairs; the cell contents are **moved** into the dialog and back on close, so forms, links, ids and
+  listeners keep working. Esc, ✕ or a backdrop click closes it; focus returns to the button. On coarse pointers a
+  tap on the row (outside links / buttons / fields) opens it too.
+- Default mode without a stored choice: responsive on phones (`phone_query`, default `(max-width: 767px)`), scroll
+  elsewhere. The toggle switches at once; persistence is **host-owned**: with `save_url` the peer sends
+  `{"mode": "scroll"|"responsive"}` as JSON with an `X-CSRF-TOKEN` header (`save_method`, default `PUT`) and
+  refreshes a stale token once from `save_token_url` (`{"token": "…"}`); a failed save switches back and dispatches
+  `responsive-table:save-failed`. Without `save_url` the choice stays on the page.
+
+```twig
+<div class="nowo-ui-card">
+    {% embed '@NowoUiKitBundle/partials/_responsive_table.html.twig' with {
+        table_mode: user_table_mode,                          {# '', 'scroll' or 'responsive' #}
+        save_url: path('app_table_mode', {listing: 'items'}),
+        save_token: csrf_token('table_mode'),
+        save_token_url: path('app_table_mode_token'),
+        morph: true,                                          {# with the morphicons module #}
+    } %}
+        {% block table %}
+            <table class="nowo-ui-data-table" data-responsive-table-target="table">
+                <thead><tr>
+                    <th data-column="name" data-required="1">Name</th>
+                    <th data-column="owner">Owner</th>
+                    <th data-column="notes">Notes</th>
+                    {% include '@NowoUiKitBundle/partials/_row_detail_head.html.twig' only %}
+                </tr></thead>
+                <tbody>
+                {% for item in items %}
+                    <tr>
+                        <td data-column="name">{{ item.name }}</td>
+                        <td data-column="owner">{{ item.owner }}</td>
+                        <td data-column="notes">{{ item.notes }}</td>
+                        {% include '@NowoUiKitBundle/partials/_row_detail_cell.html.twig' only %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% endblock %}
+    {% endembed %}
+</div>
+```
+
+Options of `_responsive_table`: `table_mode`, `save_url`, `save_token`, `save_token_url`, `save_method`,
+`phone_query`, `part_selector` (stacked header parts joined with " · " in the dialog labels, default
+`[data-cell-part]`), `mode_toggle` (default true), `corner` (default true: the toggle is a [corner tab](#card-corner-tab)
+of the nearest `.nowo-ui-corner-host` / `.nowo-ui-card`; false: a small bar above the table), `morph`, `icons`
+(`scroll`, `responsive`, `close`), `labels` (`to_responsive`, `to_scroll`, `details`, `close`), `dialog_id`,
+`root_class`, `scroller_class`, `dialog_class`, `testids` (adds `data-testid` `responsive-table`,
+`table-mode-toggle`, `row-detail-dialog`). `_row_detail_head`: `label`, `th_class`. `_row_detail_cell`: `label`,
+`icon` (default `view`), `td_class`, `testids` (`row-detail`). Include the two cell partials with `only`.
+
+Root attributes for CSS / tests: `data-table-mode` (`scroll` | `responsive`; rendered server-side when `table_mode`
+is set, so `.nowo-ui-responsive-table:not([data-table-mode])` targets the no-JS state), `data-rt-has-hidden`;
+hidden header / cells get `data-rt-hidden`.
+
+### Foldable filter card
+
+`partials/_filters_collapse.html.twig` + Stimulus peer `filters-collapse`. Include it as the **first child** of the
+filter `<form>` (works with `.nowo-ui-filter-bar`), or pass `collapsible: true` to `partials/_filters.html.twig`.
+A corner tab (top-right, stacked **under** the fields) folds the card to an "N active filters" line; the fields stay
+in the form with their values. The state is a cookie of page keys the partial reads, so a folded card renders
+folded (no flash).
+
+```twig
+<form method="get" class="nowo-ui-filter-bar nowo-ui-card">
+    {% include '@NowoUiKitBundle/partials/_filters_collapse.html.twig' with {filter_form: form} only %}
+    {# …fields… #}
+    {% include '@NowoUiKitBundle/partials/_filter_actions.html.twig' with {
+        clear_href: path('app_items'), submit_icon: 'filter', clear_icon: 'filter_off', icon_only: true,
+    } only %}
+</form>
+
+{% include '@NowoUiKitBundle/partials/_filters.html.twig' with {q: q, collapsible: true, collapse: {fold_key: 'items'}} %}
+```
+
+Options: `fold_key` (default the current route; empty = not remembered), `fold_cookie` (default
+`nowo_ui_filters_collapsed`), `folded` (force the state), `filter_form` (FormView: counts non-empty / checked fields,
+skipping `page`, `per_page`, `_token`, `sort`, `dir` and hidden fields), `active_count` (count without a FormView),
+`morph`, `icons` (`expanded`, `collapsed`), `labels` (`collapse`, `expand`, `none`, `one`, `many` with `%count%`),
+`testids` (`filters-collapse-toggle`, `filters-collapse-summary`).
+
+### Card corner tab
+
+`.nowo-ui-corner-tab` (partial `_corner_tab.html.twig`): a small icon button or link stuck to the top-right corner
+of the nearest positioned ancestor — add `.nowo-ui-corner-host` to the card (`.nowo-ui-card` works as is). One size
+for every corner control (table mode toggle, filter fold, host tabs): tokens `--nowo-ui-corner-tab-width`
+(1.5rem), `--nowo-ui-corner-tab-height` (1.375rem), `--nowo-ui-corner-tab-icon` (0.875rem), accent
+`--nowo-ui-corner-tab-accent` (default `--nowo-ui-primary`). `.nowo-ui-corner-tab--under` stacks it under the host's
+content (z-index -1; the host gets `isolation: isolate`).
+
+```twig
+<div class="nowo-ui-card nowo-ui-corner-host">
+    {% include '@NowoUiKitBundle/partials/_corner_tab.html.twig' with {
+        label: 'Customize columns', icon: 'config', attr: {'data-action': 'drawer#open'},
+    } only %}
+    …
+</div>
+```
+
+### Disclosure chevron
+
+`partials/_disclosure_icon.html.twig` inside a toggle: static chevrons (down = open, right = closed) chosen by CSS
+from the toggle's `aria-expanded` or the `<details open>` around its `<summary>`. Add
+`data-controller="disclosure-icon"` on the toggle (and `morph: true`) for the animated icon. Options: `class`,
+`morph`, `icons` (`open`, `closed`).
+
+```twig
+<details>
+    <summary data-controller="disclosure-icon">{% include '@NowoUiKitBundle/partials/_disclosure_icon.html.twig' with {morph: true} only %} Stack frame</summary>
+    …
+</details>
+```
+
+### Page-edge tab and route links
+
+`partials/_edge_tab.html.twig`: a fixed tab on the right edge of the viewport under the header (e.g. "Read this
+chapter in the manual"), so page help never pushes the content down. Options: `href` (required), `label` (default
+`edge_tab.manual`), `icon` (default `book`), `new_tab` (default true), `slot` (0–3: one tab lower per slot when the
+page has other edge tabs; or set `--nowo-ui-edge-tab-top` / `--nowo-ui-edge-tab-step`), `inline` (a text link in the
+flow instead), `class`, `testid`.
+
+`nowo_ui_route_link(route = current route)` returns `{url, path, testid, prefix}` (or `null`) from the
+`nowo_ui_kit.route_links` map ([CONFIGURATION.md](CONFIGURATION.md#route-links)): a key matches the route itself or
+any route starting with `<key>_`; the longest key wins.
+
+```twig
+{% set manual = nowo_ui_route_link() %}
+{% if manual %}
+    {% include '@NowoUiKitBundle/partials/_edge_tab.html.twig' with {href: manual.url, testid: manual.testid} only %}
+{% endif %}
+```
+
+### Thin scrollbars
+
+One thin bar everywhere (6px, rounded thumb from `--nowo-ui-text`, no arrow buttons; light / dark follow the
+tokens): `.nowo-ui-thin-scroll` on any scroller, or `data-nowo-ui-thin-scrollbars` on `<html>` for the page and every
+kit scroller (`body`, `.nowo-ui-aside`, `.nowo-ui-main`, modals, the row detail dialog, `.nowo-ui-table-wrap`,
+responsive table scrollers). Tokens: `--nowo-ui-scrollbar-size`, `--nowo-ui-scrollbar-thumb`,
+`--nowo-ui-scrollbar-thumb-hover`. Firefox gets `scrollbar-width: thin` (only where `::-webkit-scrollbar` is not
+supported: Chromium 121+ would otherwise draw its wide bar).
+
+Hosts with their own selector lists (Sass via Vite / Encore) use the mixin:
+
+```scss
+@use '../../vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/styles/thin-scrollbars' as thin;
+
+@include thin.thin-scrollbars('html, body, .app-sidebar, .modal-body, .overflow-x-auto', $ink: var(--color-ink));
+@include thin.thin-scrollbars('.app-sidebar__inner', $size: 3px, $thumb: 22%, $thumb-hover: 40%);
+```
+
+### Morphicons (animated icons)
+
+`src/Resources/assets/morphicons/index.ts` — optional module for bundled hosts. Requires the **optional** packages
+`morphicons` (^1.7) and `lucide` (^1.0) (peer dependencies of the kit assets). Contract: Twig paints a static icon
+of the current state next to an empty `<morph-icon data-…-morph>`; CSS shows the static icon until the host element
+gets `is-morph-ready`; the sync helper hydrates the morph-icon (no animation on the first paint) and morphs between
+states afterwards. `<html data-motion="reduce">` makes every morph an instant swap.
+
+```ts
+// assets/stimulus_bootstrap.ts (host)
+import { installMorphiconPeers } from '../vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/morphicons';
+
+installMorphiconPeers(); // responsive-table, filters-collapse, disclosure-icon icons now morph
+```
+
+Exports: `prepareMorphHost`, `asMorphIcon`, `resolveReducedMotion`, generic `syncMorphIcon(host, selector, icon,
+animate, size)`, icon sets (`themeIcons`, `passwordIcons`, `contentWidthIcons`, `sidebarIcons`,
+`listingCustomizerIcons`, `tableModeIcons`, `filtersCollapseIcons`, `disclosureIcons`, `searchIcons`,
+`supportIcons`) and helpers `syncThemeMorphIcon`, `syncContentWidthMorphIcon`, `syncSidebarMorphIcon`,
+`syncPasswordMorphIcon`, `syncListingCustomizerMorphIcon`, `syncTableModeMorphIcon`, `syncFiltersCollapseMorphIcon`,
+`syncDisclosureMorphIcon`, `syncSearchMorphIcon` (magnifier ↔ X ↔ loader + `is-loading`), `syncSupportMorphIcon`
+(lifebuoy ↔ X). Each helper takes `{selector, size}` options (defaults `[data-theme-morph]`,
+`[data-content-width-morph]`, `[data-sidebar-morph]`, `[data-password-morph]`, `[data-listing-morph]`,
+`[data-table-mode-morph]`, `[data-filters-collapse-morph]`, `[data-disclosure-morph]`, `[data-search-morph]`,
+`[data-support-morph]`). `morphiconsIconStateHandler` / `installMorphiconPeers()` plug it into
+`stimulus-peers/icon_state.ts`.
 
 ## Pre-paint theme boot
 

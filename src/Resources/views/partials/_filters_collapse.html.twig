@@ -1,0 +1,69 @@
+{#
+  Foldable filter card (1.17): corner tab (top-right of the filter <form>, stacked UNDER the fields) + the
+  "N active filters" line shown while folded. Stimulus peer `filters-collapse`.
+  Include it as the FIRST child of the filter <form> (CSS: `form:has(> .nowo-ui-filters-collapse)`), e.g. in a
+  `.nowo-ui-filter-bar`, or pass `collapsible: true` to partials/_filters.html.twig.
+
+  Folding only hides the fields (their values stay and submit). The state is a cookie of comma-separated page keys
+  read here, so a folded card is rendered folded (no unfold-then-fold flash on load).
+
+  Optional (prefixed names: an include inherits the page context):
+    - fold_key: page key the state is remembered for (default: the current route; empty = not remembered)
+    - fold_cookie: cookie name (default `nowo_ui_filters_collapsed`)
+    - folded: force the initial state (default: from the cookie)
+    - filter_form: Symfony FormView of the filters, used to count the active ones (non-empty / checked fields;
+      page, per_page, _token, sort, dir and hidden fields excluded)
+    - active_count: the count when there is no FormView (wins over filter_form)
+    - morph (default false): add `<morph-icon data-filters-collapse-morph>` (assets/morphicons)
+    - icons: {expanded, collapsed} (default chevron_up / chevron_down, names for components/_icon.html.twig)
+    - labels: {collapse, expand, none, one, many} — override the NowoUiKitBundle translations (`many` gets %count%)
+    - testids (default false): data-testid `filters-collapse-toggle`, `filters-collapse-summary`
+#}
+{% set _request = app.request|default(null) %}
+{% set _cookie = fold_cookie|default('nowo_ui_filters_collapsed') %}
+{% set _key = fold_key ?? (_request ? _request.attributes.get('_route')|default('') : '') %}
+{% if folded is defined and folded is not null %}
+    {% set _collapsed = folded %}
+{% else %}
+    {% set _collapsed = _key is not empty and _request and _key in (_request.cookies.get(_cookie, '')|split(',')) %}
+{% endif %}
+{% if active_count is defined and active_count is not null %}
+    {% set _count = active_count %}
+{% else %}
+    {% set _count = 0 %}
+    {% for _field in filter_form|default([]) %}
+        {% if _field.vars.name not in ['page', 'per_page', '_token', 'sort', 'dir'] and 'hidden' not in _field.vars.block_prefixes %}
+            {% if 'checkbox' in _field.vars.block_prefixes or 'radio' in _field.vars.block_prefixes %}
+                {% set _count = _count + (_field.vars.checked|default(false) ? 1 : 0) %}
+            {% elseif _field.vars.value is not iterable and _field.vars.value|default('')|trim != '' %}
+                {% set _count = _count + 1 %}
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+{% endif %}
+{% set _labels = {
+    collapse: 'filters_collapse.collapse'|trans({}, 'NowoUiKitBundle'),
+    expand: 'filters_collapse.expand'|trans({}, 'NowoUiKitBundle'),
+    none: 'filters_collapse.none'|trans({}, 'NowoUiKitBundle'),
+    one: 'filters_collapse.one'|trans({}, 'NowoUiKitBundle'),
+    many: 'filters_collapse.many'|trans({}, 'NowoUiKitBundle'),
+}|merge(labels|default({})) %}
+{% set _icons = {expanded: 'chevron_up', collapsed: 'chevron_down'}|merge(icons|default({})) %}
+{% set _summary = _count == 0 ? _labels.none : (_count == 1 ? _labels.one : _labels.many|replace({'%count%': _count})) %}
+{% set _label = _collapsed ? _labels.expand : _labels.collapse %}
+{% set _testids = testids|default(false) %}
+<div class="nowo-ui-filters-collapse{{ _collapsed ? ' is-collapsed' : '' }}" data-controller="filters-collapse"
+    data-filters-collapse-key-value="{{ _key }}"
+    {%- if _cookie != 'nowo_ui_filters_collapsed' %} data-filters-collapse-cookie-value="{{ _cookie }}"{% endif %}
+    data-filters-collapse-messages-value="{{ _labels|json_encode }}">
+    <button type="button" class="nowo-ui-filters-collapse__toggle nowo-ui-corner-tab nowo-ui-corner-tab--under" data-filters-collapse-target="toggle" data-action="filters-collapse#toggle"
+        aria-expanded="{{ _collapsed ? 'false' : 'true' }}" aria-label="{{ _label }}" title="{{ _label }}"
+        {%- if _testids %} data-testid="filters-collapse-toggle"{% endif %}>
+        <span class="nowo-ui-filters-collapse__icon nowo-ui-filters-collapse__icon--expanded" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _icons.expanded, label: _labels.collapse}, false)|trim|raw }}</span>
+        <span class="nowo-ui-filters-collapse__icon nowo-ui-filters-collapse__icon--collapsed" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _icons.collapsed, label: _labels.expand}, false)|trim|raw }}</span>
+        {%- if morph|default(false) %}
+        <morph-icon class="nowo-ui-filters-collapse__morph" data-filters-collapse-morph size="14" stroke-width="2" aria-hidden="true"></morph-icon>
+        {%- endif %}
+    </button>
+    <p class="nowo-ui-filters-collapse__summary" data-filters-collapse-target="summary"{% if _testids %} data-testid="filters-collapse-summary"{% endif %}{{ _collapsed ? '' : ' hidden' }}>{{ _summary }}</p>
+</div>

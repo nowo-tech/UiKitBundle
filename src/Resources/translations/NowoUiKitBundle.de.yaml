@@ -96,3 +96,15 @@ appearance.preset.obsidian: Obsidian
 appearance.preset.aurora: Aurora
 appearance.preset.ember: Glut
 appearance.preset.custom: Benutzerdefiniert
+table_mode.to_responsive: "Zur responsiven Tabelle wechseln"
+table_mode.to_scroll: "Zum horizontalen Scrollen wechseln"
+table_mode.details: "Zeilendetails"
+table_mode.details_column: "Details"
+table_mode.close: "Schließen"
+table_mode.save_error: "Der Tabellenmodus konnte nicht gespeichert werden."
+filters_collapse.collapse: "Filter ausblenden"
+filters_collapse.expand: "Filter einblenden"
+filters_collapse.none: "Filter (keiner aktiv)"
+filters_collapse.one: "1 aktiver Filter"
+filters_collapse.many: "%count% aktive Filter"
+edge_tab.manual: "Dieses Kapitel im Handbuch lesen"

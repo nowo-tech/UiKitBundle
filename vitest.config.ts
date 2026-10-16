@@ -3,7 +3,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     environment: 'happy-dom',
-    include: ['src/Resources/assets/src/**/*.test.ts', 'src/Resources/assets/stimulus-peers/**/*.test.ts'],
+    include: ['src/Resources/assets/src/**/*.test.ts', 'src/Resources/assets/stimulus-peers/**/*.test.ts', 'src/Resources/assets/morphicons/**/*.test.ts', 'src/Resources/assets/styles/**/*.test.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'text-summary', 'html'],
@@ -15,6 +15,11 @@ export default defineConfig({
         'src/Resources/assets/stimulus-peers/auto_refresh_controller.ts',
         'src/Resources/assets/stimulus-peers/collapse_panel_controller.ts',
         'src/Resources/assets/stimulus-peers/datatable_controller.ts',
+        'src/Resources/assets/stimulus-peers/disclosure_icon_controller.ts',
+        'src/Resources/assets/stimulus-peers/filters_collapse_controller.ts',
+        'src/Resources/assets/stimulus-peers/icon_state.ts',
+        'src/Resources/assets/stimulus-peers/responsive_table_controller.ts',
+        'src/Resources/assets/morphicons/index.ts',
         'src/Resources/assets/stimulus-peers/temporary_reveal_controller.ts',
       ],
       exclude: ['**/*.test.ts', '**/node_modules/**'],

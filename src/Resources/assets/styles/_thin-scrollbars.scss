@@ -1,0 +1,45 @@
+// Thin scrollbars for a host's own selector list (1.17) — the same bar as `.nowo-ui-thin-scroll` /
+// `html[data-nowo-ui-thin-scrollbars]` in nowo-ui.css, for hosts that compile Sass (Vite, Encore):
+//
+//   @use '../../vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/styles/thin-scrollbars' as thin;
+//   @include thin.thin-scrollbars('html, body, .app-sidebar, .modal-body, .overflow-x-auto');
+//   @include thin.thin-scrollbars('.app-sidebar__inner', $size: 3px, $thumb: 22%, $thumb-hover: 40%);
+//
+// Chromium 121+ ignores ::-webkit-scrollbar once the standard scrollbar-width / scrollbar-color are set (and then
+// draws the wide bar with arrow buttons), so the standard properties only apply where ::-webkit-scrollbar is not
+// supported (Firefox). Colours mix `$ink` (default the kit text token) with transparency, so light / dark follow it.
+@use 'sass:selector';
+
+@mixin thin-scrollbars($selectors, $size: 6px, $thumb: 28%, $thumb-hover: 45%, $ink: var(--nowo-ui-text, currentColor)) {
+  @supports not selector(::-webkit-scrollbar) {
+    #{$selectors} {
+      scrollbar-width: thin;
+      scrollbar-color: color-mix(in srgb, #{$ink} #{$thumb}, transparent) transparent;
+    }
+  }
+
+  #{selector.append($selectors, '::-webkit-scrollbar')} {
+    width: $size;
+    height: $size;
+  }
+
+  #{selector.append($selectors, '::-webkit-scrollbar-button')} {
+    display: none;
+  }
+
+  #{selector.append($selectors, '::-webkit-scrollbar-track')},
+  #{selector.append($selectors, '::-webkit-scrollbar-corner')} {
+    background: transparent;
+  }
+
+  #{selector.append($selectors, '::-webkit-scrollbar-thumb')} {
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background-color: color-mix(in srgb, #{$ink} #{$thumb}, transparent);
+    background-clip: padding-box;
+  }
+
+  #{selector.append($selectors, '::-webkit-scrollbar-thumb:hover')} {
+    background-color: color-mix(in srgb, #{$ink} #{$thumb-hover}, transparent);
+  }
+}

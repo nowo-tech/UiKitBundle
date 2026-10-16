@@ -96,3 +96,15 @@ appearance.preset.obsidian: Obsidiana
 appearance.preset.aurora: Aurora
 appearance.preset.ember: Brasa
 appearance.preset.custom: Personalizado
+table_mode.to_responsive: "Mudar para tabela responsiva"
+table_mode.to_scroll: "Mudar para deslocamento horizontal"
+table_mode.details: "Detalhes da linha"
+table_mode.details_column: "Detalhes"
+table_mode.close: "Fechar"
+table_mode.save_error: "Não foi possível guardar o modo da tabela."
+filters_collapse.collapse: "Ocultar filtros"
+filters_collapse.expand: "Mostrar filtros"
+filters_collapse.none: "Filtros (nenhum ativo)"
+filters_collapse.one: "1 filtro ativo"
+filters_collapse.many: "%count% filtros ativos"
+edge_tab.manual: "Ler este capítulo no manual"

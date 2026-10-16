@@ -32,6 +32,7 @@
             items: [
                 { label: 'Buttons', href: '#buttons', current: true },
                 { label: 'Table', href: '#table', current: false },
+                { label: 'Host chrome', href: '#host-chrome', current: false },
                 { label: 'Feedback', href: '#feedback', current: false },
                 { label: 'Orbs', href: '#orbs', current: false }
             ]
@@ -169,6 +170,70 @@
                     query: query|default({})
                 } %}
             {% endif %}
+        </section>
+
+        {# 1.17 host chrome: static markup (no-JS fallback) — the Stimulus peers responsive-table, filters-collapse and
+           disclosure-icon add the behaviour in hosts that register them (docs/STIMULUS.md). #}
+        <section id="host-chrome" class="nowo-ui-body">
+            <form method="get" class="nowo-ui-filter-bar nowo-ui-card" action="#host-chrome">
+                {% include '@NowoUiKitBundle/partials/_filters_collapse.html.twig' with {fold_key: 'kitchen_sink', active_count: 1} only %}
+                <div class="nowo-ui-filter-bar__field nowo-ui-filter-bar__field--search">
+                    <input class="{{ ui.search_input() }}" type="search" name="q" value="beta" aria-label="Search">
+                </div>
+                {% include '@NowoUiKitBundle/partials/_filter_actions.html.twig' with {
+                    clear_href: '#host-chrome',
+                    submit_icon: 'filter',
+                    clear_icon: 'filter_off',
+                    icon_only: true,
+                } only %}
+            </form>
+
+            <div class="nowo-ui-card">
+                {% embed '@NowoUiKitBundle/partials/_responsive_table.html.twig' with {table_mode: 'scroll', dialog_id: 'kitchen-sink-rt'} %}
+                    {% block table %}
+                        {# Macro imports are not inherited by embed blocks. #}
+                        {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
+                        <table class="nowo-ui-data-table" data-responsive-table-target="table">
+                            <thead>
+                                <tr>
+                                    <th data-column="name" data-required="1">Name</th>
+                                    <th data-column="status" data-required="1">Status</th>
+                                    <th data-column="owner">Owner</th>
+                                    <th data-column="updated">Updated</th>
+                                    <th data-column="notes">Notes</th>
+                                    {% include '@NowoUiKitBundle/partials/_row_detail_head.html.twig' only %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in [
+                                    {name: 'Alpha', status: 'success', owner: 'Ada Lovelace', updated: '2026-10-16 09:12', notes: 'First row of the responsive table demo.'},
+                                    {name: 'Beta', status: 'warning', owner: 'Grace Hopper', updated: '2026-10-15 17:40', notes: 'Columns hide from the end while the table does not fit.'},
+                                ] %}
+                                    <tr>
+                                        <td data-column="name">{{ row.name }}</td>
+                                        <td data-column="status"><span class="{{ ui.badge(row.status) }}">{{ row.status }}</span></td>
+                                        <td data-column="owner">{{ row.owner }}</td>
+                                        <td data-column="updated">{{ row.updated }}</td>
+                                        <td data-column="notes">{{ row.notes }}</td>
+                                        {% include '@NowoUiKitBundle/partials/_row_detail_cell.html.twig' only %}
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% endblock %}
+                {% endembed %}
+            </div>
+
+            <div class="nowo-ui-card nowo-ui-corner-host">
+                {% include '@NowoUiKitBundle/partials/_corner_tab.html.twig' with {label: 'Card settings', icon: 'config'} only %}
+                <details open>
+                    <summary>{% include '@NowoUiKitBundle/partials/_disclosure_icon.html.twig' only %} Disclosure chevron (open)</summary>
+                    <p class="{{ ui.muted() }}">Static icons follow &lt;details open&gt; or aria-expanded; the morphicons module animates them.</p>
+                </details>
+                <p class="{{ ui.muted() }}">Thin scrollbars: <code>data-nowo-ui-thin-scrollbars</code> on &lt;html&gt; (this demo) or <code>.nowo-ui-thin-scroll</code> on any scroller.</p>
+            </div>
+
+            {% include '@NowoUiKitBundle/partials/_edge_tab.html.twig' with {href: 'https://github.com/nowo-tech/UiKitBundle/blob/main/docs/USAGE.md'} only %}
         </section>
 
         <section id="feedback" class="nowo-ui-body">

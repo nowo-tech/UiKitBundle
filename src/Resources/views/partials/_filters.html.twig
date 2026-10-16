@@ -10,6 +10,10 @@
     - actions: HTML string (extra buttons)
     - clear_href: clear filters link
     - framework
+    - collapsible (1.17, default false): foldable card — partials/_filters_collapse.html.twig as the first child
+      (the active count is 1 when `q` is set)
+    - collapse (1.17): options for _filters_collapse (fold_key, fold_cookie, folded, active_count, morph, icons,
+      labels, testids)
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 {% set framework = framework|default(null) %}
@@ -23,6 +27,9 @@
     data-nowo-ui-filters
     role="search"
 >
+    {% if collapsible|default(false) %}
+        {{ include('@NowoUiKitBundle/partials/_filters_collapse.html.twig', {active_count: q|default('')|trim is not empty ? 1 : 0}|merge(collapse|default({})), false) }}
+    {% endif %}
     <label class="visually-hidden" for="nowo-ui-filter-q">{{ placeholder }}</label>
     <input
         id="nowo-ui-filter-q"

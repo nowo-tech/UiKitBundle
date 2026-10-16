@@ -1,0 +1,23 @@
+{#
+  Card corner tab (1.17): a small icon button (or link) stuck to the top-right corner of the nearest positioned
+  ancestor — add `.nowo-ui-corner-host` to the card (`.nowo-ui-card` works as is). Same size and accent as the
+  table mode toggle and the filter fold (tokens --nowo-ui-corner-tab-*).
+
+  Required: label (accessible name + title).
+  Optional:
+    - icon: name for components/_icon.html.twig
+    - href: render an <a> instead of a <button type="button">
+    - under (default false): stack the tab under the host's content (`isolation: isolate` on the host)
+    - class: extra classes
+    - attr: extra attributes (hash; e.g. {'data-action': 'drawer#open', 'aria-expanded': 'false'})
+#}
+{% set _tag = href|default('') ? 'a' : 'button' %}
+<{{ _tag }} class="nowo-ui-corner-tab{{ under|default(false) ? ' nowo-ui-corner-tab--under' : '' }}{{ class|default('') ? ' ' ~ class : '' }}"
+    {%- if _tag == 'a' %} href="{{ href }}"{% else %} type="button"{% endif %} aria-label="{{ label }}" title="{{ label }}"
+    {%- for _name, _value in attr|default({}) %} {{ _name|e('html_attr') }}="{{ _value }}"{% endfor %}>
+    {%- if icon|default('') -%}
+        <span class="nowo-ui-corner-tab__icon" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: icon, label: label}, false)|trim|raw }}</span>
+    {%- else -%}
+        <span class="visually-hidden">{{ label }}</span>
+    {%- endif -%}
+</{{ _tag }}>

@@ -1,0 +1,12 @@
+{#
+  Responsive table (1.17): row detail cell — last <td> of each row. Its button opens the row in the detail dialog
+  (`responsive-table#open`); the peer shows it only when Responsive mode hides a column and names it
+  "<details>: <row title>".
+  Optional: label (default `table_mode.details`), icon (default `view`), td_class, testids (data-testid `row-detail`).
+#}
+{% set _label = label|default('table_mode.details'|trans({}, 'NowoUiKitBundle')) %}
+<td class="nowo-ui-row-detail-cell{{ td_class|default('') ? ' ' ~ td_class : '' }}" data-responsive-detail>
+    <button type="button" class="nowo-ui-row-detail-btn" data-action="responsive-table#open" aria-label="{{ _label }}" title="{{ _label }}"{% if testids|default(false) %} data-testid="row-detail"{% endif %} hidden>
+        {{- include('@NowoUiKitBundle/components/_icon.html.twig', {name: icon|default('view'), label: _label}, false)|trim|raw -}}
+    </button>
+</td>
