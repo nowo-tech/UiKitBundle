@@ -259,7 +259,7 @@ final class HostChromePartialsTest extends TestCase
         $tableRules = (string) preg_replace('/\/\*.*?\*\//s', '', (string) strstr((string) strstr($wide, '/* --- Responsive table'), '/* Row detail dialog', true));
         self::assertStringContainsString('overflow-wrap: break-word', $tableRules);
         self::assertStringNotContainsString('overflow-wrap: anywhere', $tableRules);
-        self::assertMatchesRegularExpression("/@media \\(max-width: 30rem\\) \\{[^@]*:is\\(th, td\\) \\* \\{\\s*overflow-wrap: anywhere;/s", $css);
+        self::assertMatchesRegularExpression('/@media \\(max-width: 30rem\\) \\{[^@]*:is\\(th, td\\) \\* \\{\\s*overflow-wrap: anywhere;/s', $css);
 
         $keys = ['table_mode.to_responsive', 'table_mode.to_scroll', 'table_mode.details', 'table_mode.details_column', 'table_mode.close', 'table_mode.save_error',
             'filters_collapse.collapse', 'filters_collapse.expand', 'filters_collapse.none', 'filters_collapse.one', 'filters_collapse.many', 'edge_tab.manual'];
