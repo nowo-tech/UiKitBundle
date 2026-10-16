@@ -45,7 +45,10 @@ test.describe('page contract — host theme', () => {
     const table = page.locator('table.acme-table');
     await expect(table).toHaveAttribute('data-acme-table', 'zebra');
     await expect(table.locator('tbody tr.acme-row')).toHaveCount(5);
-    await expect(page.locator('.acme-badge--ok').first()).toHaveText('Paid');
+    const paid = page.locator('.acme-badge--ok').first();
+    await expect(paid).toHaveText('Paid');
+    // framework_defaults: false on the badge slots — the host paints them alone (no Bootstrap badge classes)
+    await expect(paid).toHaveClass('nowo-ui-badge nowo-ui-badge--success acme-badge acme-badge--ok');
     await expect(page.locator('.nowo-ui-pagination')).toContainText('of 42');
     await page.locator('tbody tr').first().locator('.nowo-ui-action--delete').click();
     const dialog = page.locator('dialog[open]');
@@ -85,5 +88,14 @@ test.describe('page contract — default theme view', () => {
     await expect(page.locator('main[data-nowo-ui-bundle="DemoDefaultTheme"]')).toBeVisible();
     const primary = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--nowo-ui-primary').trim());
     expect(primary).toBe('#2563eb');
+  });
+
+  test('badges keep a readable text / background pair (Bootstrap text-bg-*)', async ({ page }) => {
+    await page.goto('/page-contract/default/orders');
+    const paid = page.locator('.nowo-ui-badge--success').first();
+    await expect(paid).toHaveClass(/\btext-bg-success\b/);
+    const [color, background] = await paid.evaluate((el) => [getComputedStyle(el).color, getComputedStyle(el).backgroundColor]);
+    expect(color).toBe('rgb(255, 255, 255)');
+    expect(background).not.toBe(color);
   });
 });

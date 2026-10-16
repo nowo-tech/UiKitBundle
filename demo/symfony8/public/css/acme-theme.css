@@ -62,17 +62,13 @@
 .acme-table thead th { background: #eaf3f0; color: #335b54; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 0; }
 .acme-table[data-acme-table="zebra"] .acme-row:nth-child(even) > td { background: #faf6ee; }
 
-/* Badges: the Bootstrap defaults of the slot (bg-*) stay; the host re-points their variables. */
-.acme-badge { --bs-badge-font-weight: 600; border-radius: 999px; padding: 0.35em 0.8em; font-size: 0.75rem; border: 0; --bs-light-rgb: 238, 234, 226; }
-.acme-badge.acme-badge { color: #4b4a40; }
-.acme-badge--ok { --bs-success-rgb: 231, 246, 239; }
-.acme-badge--ok.acme-badge { color: var(--nowo-ui-success-text); }
-.acme-badge--warn { --bs-warning-rgb: 253, 243, 220; }
-.acme-badge--warn.acme-badge { color: var(--nowo-ui-warning-text); }
-.acme-badge--info { --bs-info-rgb: 230, 242, 246; }
-.acme-badge--info.acme-badge { color: var(--nowo-ui-info-text); }
-.acme-badge--danger { --bs-danger-rgb: 253, 236, 234; }
-.acme-badge--danger.acme-badge { color: #912018; }
+/* Badges: the theme drops the Bootstrap defaults of the badge slots (framework_defaults: false), so the host paints
+   them alone — no text-bg-* utility (with !important) to fight. */
+.acme-badge.acme-badge { display: inline-flex; align-items: center; font-weight: 600; border-radius: 999px; padding: 0.35em 0.8em; font-size: 0.75rem; line-height: 1; border: 0; margin-left: 0.5rem; background: #eeeae2; color: #4b4a40; }
+.acme-badge--ok.acme-badge { background: var(--nowo-ui-success-bg); color: var(--nowo-ui-success-text); }
+.acme-badge--warn.acme-badge { background: var(--nowo-ui-warning-bg); color: var(--nowo-ui-warning-text); }
+.acme-badge--info.acme-badge { background: var(--nowo-ui-info-bg); color: var(--nowo-ui-info-text); }
+.acme-badge--danger.acme-badge { background: #fdecea; color: #912018; }
 
 /* Form controls (Bootstrap compiles its accent colour; the host re-points it) */
 .acme-body .form-check-input:checked { background-color: var(--nowo-ui-primary); border-color: var(--nowo-ui-primary); }

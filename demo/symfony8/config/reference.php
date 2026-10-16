@@ -854,13 +854,15 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         collection?: scalar|Param|null, // BreadcrumbKit collection code (null = its default collection). PageHeader::breadcrumbCollection overrides it. // Default: null
  *     },
  *     theme?: array{ // Global theme (REQ-UI-003): semantic slot classes / attributes, partial overrides and --nowo-ui-* tokens, configured once for every bundle.
- *         classes?: array<string, scalar|Param|null>,
+ *         framework_defaults?: bool|Param, // false = slots print the semantic nowo-ui-* class and the host classes only (no UiKit framework defaults such as btn / badge / card). Per slot: classes.<slot>: {value: …, framework_defaults: false}. // Default: true
+ *         classes?: array<string, mixed>,
  *         attributes?: array<string, array<string, mixed>>,
  *         partials?: array<string, scalar|Param|null>,
  *         tokens?: array<string, mixed>,
  *         tokens_dark?: array<string, mixed>,
  *         bundles?: array<string, array{ // Default: []
- *             classes?: array<string, scalar|Param|null>,
+ *             framework_defaults?: bool|Param, // Override of theme.framework_defaults for this bundle (unset = inherit).
+ *             classes?: array<string, mixed>,
  *             attributes?: array<string, array<string, mixed>>,
  *             partials?: array<string, scalar|Param|null>,
  *             tokens?: array<string, mixed>,

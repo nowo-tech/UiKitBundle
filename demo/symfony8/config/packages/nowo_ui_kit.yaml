@@ -39,11 +39,12 @@ nowo_ui_kit:
             kpi: 'acme-kpi'
             kpis: 'acme-kpis'
             cards: 'acme-cards'
-            badge_success: 'acme-badge acme-badge--ok'
-            badge_warning: 'acme-badge acme-badge--warn'
-            badge_info: 'acme-badge acme-badge--info'
-            badge_danger: 'acme-badge acme-badge--danger'
-            badge_neutral: 'acme-badge'
+            # Badges: the host paints them alone — drop UiKit's Bootstrap defaults (badge text-bg-*) for these slots.
+            badge_success: { value: 'acme-badge acme-badge--ok', framework_defaults: false }
+            badge_warning: { value: 'acme-badge acme-badge--warn', framework_defaults: false }
+            badge_info: { value: 'acme-badge acme-badge--info', framework_defaults: false }
+            badge_danger: { value: 'acme-badge acme-badge--danger', framework_defaults: false }
+            badge_neutral: { value: 'acme-badge', framework_defaults: false }
             filters: 'acme-filters'
             tabs: 'acme-tabs'
             tab_active: 'acme-tab--active'
@@ -57,6 +58,7 @@ nowo_ui_kit:
             # The default-theme view (/page-contract/default/…): a per-bundle exception that resets the host class
             # map (an exception class REPLACES the host class of the slot) and the partial override.
             DemoDefaultTheme:
+                framework_defaults: true   # beats the host's per-slot framework_defaults: false (bundle > host)
                 classes:
                     page_title: ''
                     page_intro: ''
