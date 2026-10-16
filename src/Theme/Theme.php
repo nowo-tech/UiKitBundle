@@ -275,13 +275,15 @@ final readonly class Theme
 
     /**
      * Token stylesheet text ('' without tokens): host `:root` + `[data-theme="dark"]` blocks, then the bundle
-     * scopes. Values are validated at construction (no `{`, `}`, `;`, `<`, `>`).
+     * scopes. Values are validated at construction (no `{`, `}`, `;`, `<`, `>`). The host blocks have the same
+     * specificity as the appearance SPI blocks (`:root` / `[data-theme="dark"]`), so the appearance printed after
+     * them (`nowo_ui_tokens()`) overrides the host defaults.
      */
     public function tokensCss(): string
     {
         $blocks = [];
         $blocks[] = $this->block(':root', $this->tokens);
-        $blocks[] = $this->block(':root[data-theme="dark"]', $this->tokensDark);
+        $blocks[] = $this->block('[data-theme="dark"]', $this->tokensDark);
         foreach ($this->bundles as $bundle => $data) {
             $scope = '[data-nowo-ui-bundle="'.$bundle.'"]';
             $blocks[] = $this->block($scope, $data['tokens']);

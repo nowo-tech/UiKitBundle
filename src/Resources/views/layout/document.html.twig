@@ -1,6 +1,7 @@
 {#
   REQ-UI-003 document skeleton: <html>, theme boot, UiKit assets (own asset package only, never a CDN), host
-  theme tokens. Canonical blocks: nowo_ui_document_title, nowo_ui_head, nowo_ui_styles, nowo_ui_scripts,
+  theme tokens then the appearance SPI style (nowo_ui_tokens(): the appearance, user-chosen, overrides the theme
+  tokens, host defaults). Canonical blocks: nowo_ui_document_title, nowo_ui_head, nowo_ui_styles, nowo_ui_scripts,
   nowo_ui_body. Stack assets with {{ parent() }}.
 
   Optional variables:
@@ -23,7 +24,8 @@
     {% block nowo_ui_head %}{% endblock %}
     {% block nowo_ui_styles %}
         <link rel="stylesheet" href="{{ asset('css/nowo-ui.css', 'nowo_ui_kit') }}">
-        {{ nowo_ui_theme_tokens(_nonce) }}
+        {#- theme tokens (host defaults), then the appearance SPI (user choice) when enabled: the later wins -#}
+        {{ nowo_ui_tokens(_nonce) }}
     {% endblock %}
 </head>
 <body class="{{ nowo_ui_class('body', _bundle) }}"{{ nowo_ui_attrs('body', _bundle) }}>

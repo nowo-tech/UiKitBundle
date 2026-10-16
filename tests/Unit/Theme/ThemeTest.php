@@ -138,7 +138,7 @@ final class ThemeTest extends TestCase
               --nowo-ui-primary: var(--color-moss);
               --nowo-ui-surface: #fff;
             }
-            :root[data-theme="dark"] {
+            [data-theme="dark"] {
               --nowo-ui-primary: #9c9;
             }
             [data-nowo-ui-bundle="NowoXBundle"] {

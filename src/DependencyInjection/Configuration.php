@@ -415,7 +415,7 @@ final class Configuration implements ConfigurationInterface
                 ->end()
             ->end();
 
-        foreach (['tokens' => 'Token => value, emitted as --nowo-ui-<token> on :root by nowo_ui_theme_tokens() (e.g. primary: "var(--color-moss)"). When set, the UiKit palette no longer re-asserts itself.', 'tokens_dark' => 'Dark-mode tokens, emitted on :root[data-theme="dark"].'] as $key => $info) {
+        foreach (['tokens' => 'Token => value, emitted as --nowo-ui-<token> on :root by nowo_ui_theme_tokens() (e.g. primary: "var(--color-moss)"). When set, the UiKit palette no longer re-asserts itself.', 'tokens_dark' => 'Dark-mode tokens, emitted on [data-theme="dark"].'] as $key => $info) {
             $children
                 ->arrayNode($key)
                     ->info($scoped ? $info.' Scoped to [data-nowo-ui-bundle="<Bundle>"].' : $info)

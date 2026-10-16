@@ -412,6 +412,12 @@ palettes, `themeId` / `themeIdDark`, `cornerStyle`, `borderStrength`, `footerFix
 Stored colours are sanitised (hex, CSS colour functions, named colours); anything else falls back to the default
 palette, so admin input can never break out of the `<style>` element.
 
+**With the page contract's `theme.tokens`** both sources set `--nowo-ui-*`. Precedence (2.0): `theme.tokens` /
+`tokens_dark` are the **host defaults**, the appearance is the **user's choice** and overrides them. Both are printed
+with the same specificity (`:root` / `[data-theme="dark"]`), so the order decides: print the theme tokens first and
+the appearance last — `{{ nowo_ui_tokens() }}` does exactly that (the UiKit document layout uses it). With custom
+`selectors` of higher specificity the appearance wins regardless of order.
+
 ### Emitted tokens
 
 Root block (`selectors.root`, default `:root`):

@@ -24,7 +24,7 @@ final class ThemeExtensionTest extends TestCase
         $extension = new ThemeExtension($theme, ['admin' => 'layouts/admin.html.twig', 'guest' => 'layouts/guest.html.twig']);
 
         $names = array_map(static fn (TwigFunction $f): string => $f->getName(), $extension->getFunctions());
-        self::assertSame(['nowo_ui_class', 'nowo_ui_attrs', 'nowo_ui_html_attrs', 'nowo_ui_partial', 'nowo_ui_theme_tokens', 'nowo_ui_theme_css', 'nowo_ui_breadcrumb_kit', 'nowo_ui_breadcrumb_kit_available'], $names);
+        self::assertSame(['nowo_ui_class', 'nowo_ui_attrs', 'nowo_ui_html_attrs', 'nowo_ui_partial', 'nowo_ui_theme_tokens', 'nowo_ui_theme_css', 'nowo_ui_tokens', 'nowo_ui_breadcrumb_kit', 'nowo_ui_breadcrumb_kit_available'], $names);
         self::assertSame('nowo_ui_trans', $extension->getFilters()[0]->getName());
         self::assertSame(['admin' => 'layouts/admin.html.twig', 'guest' => 'layouts/guest.html.twig'], $extension->getGlobals()['nowo_ui_layout']);
         self::assertSame($theme, $extension->getGlobals()['nowo_ui_theme']);
@@ -59,6 +59,22 @@ final class ThemeExtensionTest extends TestCase
         self::assertStringStartsWith('<style data-nowo-ui-theme-tokens>', $extension->tokens(''));
         self::assertSame('', (new ThemeExtension(new Theme()))->tokens('n'));
         self::assertSame(":root {\n  --nowo-ui-primary: var(--moss);\n}", $this->twig($extension, '{{ nowo_ui_theme_css() }}')->render('t'));
+    }
+
+    public function testAllTokensPrintTheThemeThenTheAppearance(): void
+    {
+        $extension = new ThemeExtension(new Theme(tokens: ['primary' => 'red']));
+        self::assertSame("<style nonce=\"n\" data-nowo-ui-theme-tokens>\n:root {\n  --nowo-ui-primary: red;\n}\n</style>", $this->twig($extension, '{{ nowo_ui_tokens("n") }}')->render('t'));
+
+        $appearance = static fn (?string $nonce = null): string => '<style nonce="'.$nonce.'" data-nowo-ui-appearance>:root { --nowo-ui-primary: blue; }</style>';
+        $html = $this->twig($extension, '{{ nowo_ui_tokens("n") }}', $appearance)->render('t');
+        self::assertStringStartsWith('<style nonce="n" data-nowo-ui-theme-tokens>', $html);
+        self::assertStringEndsWith("\n".'<style nonce="n" data-nowo-ui-appearance>:root { --nowo-ui-primary: blue; }</style>', $html);
+
+        // appearance only (no theme tokens); a non-string appearance result is ignored
+        $only = new ThemeExtension(new Theme());
+        self::assertSame('<style data-nowo-ui-appearance></style>', $this->twig($only, '{{ nowo_ui_tokens() }}', static fn (): string => '<style data-nowo-ui-appearance></style>')->render('t'));
+        self::assertSame('[]', $this->twig($only, '[{{ nowo_ui_tokens() }}]', static fn (): array => [])->render('t'));
     }
 
     public function testTrans(): void
@@ -119,10 +135,13 @@ final class ThemeExtensionTest extends TestCase
         self::assertSame('', $noCallable->render('t'));
     }
 
-    private function twig(ThemeExtension $extension, string $template): Environment
+    private function twig(ThemeExtension $extension, string $template, ?\Closure $appearanceStyle = null): Environment
     {
         $twig = new Environment(new ArrayLoader(['t' => $template]), ['strict_variables' => true]);
         $twig->addExtension($extension);
+        if ($appearanceStyle instanceof \Closure) {
+            $twig->addFunction(new TwigFunction('nowo_ui_appearance_style', $appearanceStyle, ['is_safe' => ['html']]));
+        }
 
         return $twig;
     }

@@ -62,6 +62,17 @@ final class LayoutRenderTest extends TestCase
         self::assertStringContainsString('<script src="/bundles/nowouikit/js/nowo-ui-confirm.js" defer nonce="abc"></script>', $html);
     }
 
+    public function testAppearanceIsPrintedAfterTheThemeTokens(): void
+    {
+        $request = new Request([], [], ['_route' => 'x', 'csp_nonce' => 'abc']);
+        $twig = PageContractTwig::create(['child' => self::CHILD], ['tokens' => ['primary' => 'var(--moss)']], request: $request);
+        $twig->addFunction(new \Twig\TwigFunction('nowo_ui_appearance_style', static fn (?string $nonce = null): string => '<style nonce="'.$nonce.'" data-nowo-ui-appearance>:root { --nowo-ui-primary: #c00; }</style>', ['is_safe' => ['html']]));
+
+        $html = $twig->render('child', ['layout' => '@NowoUiKit/layout/admin.html.twig']);
+
+        self::assertMatchesRegularExpression('#<link rel="stylesheet" href="/bundles/nowouikit/css/nowo-ui.css">\s*<style nonce="abc" data-nowo-ui-theme-tokens>.*?</style>\s*<style nonce="abc" data-nowo-ui-appearance>#s', $html);
+    }
+
     public function testThemeBootCanBeDisabledAndDocumentTitleVariable(): void
     {
         $html = PageContractTwig::create(['child' => "{% extends '@NowoUiKit/layout/document.html.twig' %}{% block nowo_ui_body %}<p>B</p>{% endblock %}"])

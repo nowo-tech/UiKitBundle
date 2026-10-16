@@ -97,7 +97,7 @@ final class StubHost
     private static function layout(string $kind, array $blocks): string
     {
         $defaults = [
-            'nowo_ui_styles' => '{{ nowo_ui_theme_tokens() }}',
+            'nowo_ui_styles' => '{{ nowo_ui_tokens() }}',
             'nowo_ui_flashes' => '{{ include(nowo_ui_partial(\'flashes\', nowo_ui_bundle|default(null)), {bundle: nowo_ui_bundle|default(null)}) }}',
         ];
         $twig = '<div data-nowo-ui-contract-layout="'.$kind.'"{% if nowo_ui_bundle|default(null) %} data-nowo-ui-bundle="{{ nowo_ui_bundle }}"{% endif %}>'."\n";

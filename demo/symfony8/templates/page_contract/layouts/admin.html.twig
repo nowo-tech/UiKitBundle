@@ -1,7 +1,7 @@
 {#
   Acme host layout — the one-file bridge of REQ-UI-003 (nowo_ui_kit.layouts.admin): extends the project base and
   renders every UiKit canonical block. A host with its own layout adds data-nowo-ui-host-tokens on <html> and calls
-  nowo_ui_theme_tokens() so the theme tokens win over UiKit's palette without !important.
+  nowo_ui_tokens() (theme tokens, then the appearance when enabled) so the tokens win over UiKit's palette without !important.
 #}
 {% extends 'base.html.twig' %}
 
@@ -11,7 +11,7 @@
 
 {% block stylesheets %}
     <link rel="stylesheet" href="{{ asset('css/nowo-ui.css', 'nowo_ui_kit') }}">
-    {{ nowo_ui_theme_tokens() }}
+    {{ nowo_ui_tokens() }}
     <link rel="stylesheet" href="{{ asset('css/acme-theme.css') }}">
     {% block nowo_ui_head %}{% endblock %}
     {% block nowo_ui_styles %}{% endblock %}

@@ -133,6 +133,11 @@ Changes to markup, inputs and cascade a host or a bundle may depend on (REQ-UI-0
   `KpiTile::linkTile` renders the whole tile as the link.
 - New slots (minor): `table_head_row`, `table_head_cell`, `table_actions_head`, `filters_field`, `kpi_label`,
   `kpi_value`, `kpi_hint`, `form_panel`, `danger_zone_title`, `danger_zone_intro`.
+- **Token precedence:** `theme.tokens_dark` is emitted on `[data-theme="dark"]` (was `:root[data-theme="dark"]`),
+  the same specificity as the appearance SPI, and the new `nowo_ui_tokens()` prints the theme tokens then the
+  appearance style; the document layout uses it, so a user-chosen appearance now overrides `theme.tokens` (before,
+  the theme's dark tokens won by specificity and the light ones by order only when the host printed them last).
+  Host layouts: replace `nowo_ui_theme_tokens()` + `nowo_ui_appearance_style()` with `{{ nowo_ui_tokens() }}`.
 - **Page types.** Scaffolds set `nowo_ui_page_type` (`list`, `show`, `form`, `settings`, `dashboard`, `confirm`,
   `wizard`, `auth`) and pass it to the partials they include; `theme.pages.<type>.{classes,attributes,framework_defaults}`
   varies a slot per page type (bundle slot > bundle > page-type slot > page type > host slot > host).

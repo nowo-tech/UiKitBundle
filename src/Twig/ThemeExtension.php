@@ -23,6 +23,8 @@ use Twig\TwigFunction;
  * - `nowo_ui_html_attrs(attributes)` — escaped attribute string of a plain map (page model `attributes`)
  * - `nowo_ui_partial(name, bundle = null)` — template of a (possibly host-replaced) UiKit partial
  * - `nowo_ui_theme_tokens(nonce = null)` — `<style data-nowo-ui-theme-tokens>` with the host tokens ('' without)
+ * - `nowo_ui_tokens(nonce = null)` — every token stylesheet in precedence order: the theme tokens (host defaults),
+ *   then the appearance SPI style (user choice, `nowo_ui_appearance_style()`) when the appearance is enabled
  * - `nowo_ui_theme_css()` — the token stylesheet text
  * - `nowo_ui_breadcrumb_kit(collection = null)` — BreadcrumbKit's `breadcrumb_render()` output ('' when absent)
  * - `nowo_ui_breadcrumb_kit_available()` — whether BreadcrumbKit is installed and enabled for page headers
@@ -53,6 +55,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             new TwigFunction('nowo_ui_partial', $this->theme->partial(...)),
             new TwigFunction('nowo_ui_theme_tokens', $this->tokens(...), ['is_safe' => ['html']]),
             new TwigFunction('nowo_ui_theme_css', $this->theme->tokensCss(...)),
+            new TwigFunction('nowo_ui_tokens', $this->allTokens(...), ['is_safe' => ['html'], 'needs_environment' => true]),
             new TwigFunction('nowo_ui_breadcrumb_kit', $this->breadcrumbKit(...), ['is_safe' => ['html'], 'needs_environment' => true]),
             new TwigFunction('nowo_ui_breadcrumb_kit_available', $this->breadcrumbKitAvailable(...), ['needs_environment' => true]),
         ];
@@ -111,6 +114,23 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
         $attr = null !== $nonce && '' !== $nonce ? ' nonce="'.htmlspecialchars($nonce, \ENT_QUOTES | \ENT_SUBSTITUTE, 'UTF-8').'"' : '';
 
         return '<style'.$attr.' data-nowo-ui-theme-tokens>'."\n".$css."\n".'</style>';
+    }
+
+    /**
+     * Theme tokens, then the appearance style (`nowo_ui_appearance_style()`, registered with
+     * `nowo_ui_kit.appearance.enabled`): both set `--nowo-ui-*` with the same specificity, so the appearance
+     * (user-chosen) overrides the theme tokens (host defaults).
+     */
+    public function allTokens(Environment $env, ?string $nonce = null): string
+    {
+        $parts = [$this->tokens($nonce)];
+        $callable = $env->getFunction('nowo_ui_appearance_style')?->getCallable();
+        if (\is_callable($callable)) {
+            $style = $callable($nonce);
+            $parts[] = \is_scalar($style) || $style instanceof \Stringable ? (string) $style : '';
+        }
+
+        return implode("\n", array_filter($parts, static fn (string $part): bool => '' !== $part));
     }
 
     /**

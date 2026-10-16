@@ -223,8 +223,8 @@ Every partial also receives `nowo_ui_page_type` from the scaffolds. Internal tem
 
 ## Tokens
 
-`theme.tokens` (light, on `:root`) and `theme.tokens_dark` (on `:root[data-theme="dark"]`) are emitted by
-`nowo_ui_theme_tokens()` as `--nowo-ui-<name>`. Keys are written without the prefix (`primary`) or with it
+`theme.tokens` (light, on `:root`) and `theme.tokens_dark` (on `[data-theme="dark"]`) are emitted by
+`nowo_ui_theme_tokens()` (or `nowo_ui_tokens()`, below) as `--nowo-ui-<name>`. Keys are written without the prefix (`primary`) or with it
 (`--nowo-ui-primary`); names are `[a-z0-9-]`, values may not contain `{ } ; < >`. Base tokens:
 
 | Token | Purpose |
@@ -244,6 +244,12 @@ listed in [`THEMING.md`](THEMING.md); every one of them can be set through `them
 
 When tokens are configured, `<html data-nowo-ui-host-tokens>` (UiKit document layout, or added by the host layout)
 drops UiKit's own palette to zero specificity, so the host values win without `!important`.
+
+**Precedence with the appearance SPI.** `appearance` (and its `token_aliases`) also sets `--nowo-ui-*`. The theme
+tokens are the host defaults; the appearance (user-chosen) overrides them. Both use the same specificity (`:root`,
+`[data-theme="dark"]`), so the later `<style>` wins: `nowo_ui_tokens()` prints the theme tokens, then
+`nowo_ui_appearance_style()` when the appearance is enabled — the UiKit document layout calls it after
+`nowo-ui.css`; host layouts should call it instead of the two functions.
 
 ## Per-page-type variation
 

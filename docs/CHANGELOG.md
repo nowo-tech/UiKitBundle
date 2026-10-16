@@ -75,8 +75,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Responsive list tables (CSS only):** `ListPage::responsive` (`cards` default, `scroll`) — the table wrap is a size container, `Column::priority` 2 / 3 hide below 48rem / 60rem, below 40rem rows become labelled cards (`td[data-label]`).
 - **Form secondary actions in the page header:** `FormPage::secondaryActionsInHeader` (default `true`; `false` keeps them below the form).
 
+- **Token precedence** `nowo_ui_tokens(nonce)`: theme tokens (host defaults) then the appearance SPI style (user choice); the document layout prints it after `nowo-ui.css`.
+
 ### Changed
 
+- **Template contract — theme dark tokens** are emitted on `[data-theme="dark"]` (was `:root[data-theme="dark"]`): same specificity as the appearance SPI, so the appearance printed after them wins.
 - **Template contract — CSS cascade layer:** `nowo-ui.css` ships inside `@layer nowo-ui` with the order statement `@layer theme, base, nowo-ui, components, utilities;` so Tailwind v4 utilities placed in theme slots beat the kit while the kit stays above Tailwind's preflight (dialogs). `nowo-ui.unlayered.css` keeps the 1.x unlayered stylesheet for hosts that relied on the kit beating unlayered framework CSS. `nowo-ui.css` is generated from it (`pnpm run build:css`, checked by `LayeredCssTest`).
 
 ### Fixed

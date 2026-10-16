@@ -27,6 +27,7 @@ Normative spec: REQ-UI-003 in `BUNDLES_FULL_SPECS_DETAILS.md` · design and migr
 - [Partials](#partials)
 - [Template contract](#template-contract)
 - [Tokens and CSS](#tokens-and-css)
+  - [Token precedence](#token-precedence)
   - [Cascade layers](#cascade-layers)
 - [Example: a bundle page](#example-a-bundle-page)
 - [Example: host integration](#example-host-integration)
@@ -82,7 +83,7 @@ nowo_ui_kit:
     attributes: { toasts: { data-controller: toast-stack } }           # slot => attributes (no on*)
     partials:   { pagination: 'kit/_pagination.html.twig' }            # partial name => template
     tokens:      { primary: 'var(--color-moss)', radius: '0.75rem' }   # --nowo-ui-<name> on :root
-    tokens_dark: { primary: '#9c9' }                                   # on :root[data-theme="dark"]
+    tokens_dark: { primary: '#9c9' }                                   # on [data-theme="dark"]
     bundles:
       NowoHttpLogBundle: { classes: { table: 'data-table data-table--dense' } }
     pages:                                                             # per page type (scaffold)
@@ -104,6 +105,7 @@ Validation (container compile time): unknown slots and partial names, class entr
 | `nowo_ui_partial(name, bundle = null)` | template name of a UiKit partial (bundle > host > UiKit default) |
 | `nowo_ui_theme_tokens(nonce = null)` | `<style data-nowo-ui-theme-tokens>` with the tokens ('' without tokens; nonce defaults to the `csp_nonce` request attribute) |
 | `nowo_ui_theme_css()` | the token stylesheet text (for a host that inlines it elsewhere) |
+| `nowo_ui_tokens(nonce = null)` | every token stylesheet in precedence order: `nowo_ui_theme_tokens()` (host defaults), then `nowo_ui_appearance_style()` (user choice) when the appearance SPI is enabled |
 | `nowo_ui_breadcrumb_kit(collection = null)` / `nowo_ui_breadcrumb_kit_available()` | BreadcrumbKit bridge used by the page header |
 | `value\|nowo_ui_trans(params = {})` | translates a `View\Label` (or `{key, domain, params}`); plain strings pass through (escaped by Twig) |
 | global `nowo_ui_layout` | `{admin, guest}` — the configured layouts |
@@ -114,7 +116,7 @@ Validation (container compile time): unknown slots and partial names, class entr
 
 | Template | Canonical blocks | Notes |
 | --- | --- | --- |
-| `@NowoUiKit/layout/document.html.twig` | `nowo_ui_document_title`, `nowo_ui_head`, `nowo_ui_styles`, `nowo_ui_scripts`, `nowo_ui_body` | `<html>` skeleton: theme boot, `nowo-ui.css` + `nowo_ui_theme_tokens()`, UiKit scripts (asset package `nowo_ui_kit`, never a CDN); `<html data-nowo-ui-host-tokens>` when the theme has tokens |
+| `@NowoUiKit/layout/document.html.twig` | `nowo_ui_document_title`, `nowo_ui_head`, `nowo_ui_styles`, `nowo_ui_scripts`, `nowo_ui_body` | `<html>` skeleton: theme boot, `nowo-ui.css` + `nowo_ui_tokens()` (theme tokens, then the appearance), UiKit scripts (asset package `nowo_ui_kit`, never a CDN); `<html data-nowo-ui-host-tokens>` when the theme has tokens |
 | `@NowoUiKit/layout/admin.html.twig` | + `nowo_ui_navigation`, `nowo_ui_page_header`, `nowo_ui_flashes`, `nowo_ui_content`, `nowo_ui_modals` | `nowo_ui_navigation` is empty (hosts put their shell / DashboardMenu there); flashes default to `nowo_ui_partial('flashes')` |
 | `@NowoUiKit/layout/guest.html.twig` | same as admin without `nowo_ui_navigation` | login, reset, setup wizard, maintenance, public status |
 
@@ -354,6 +356,14 @@ Partials print `data-nowo-ui-region` only when they receive `region` (1.x caller
 declared on `:root` for hosts without tokens. With `<html data-nowo-ui-host-tokens>` (set by `layout/document` when
 `theme.tokens` is configured, or by the host layout) the palette blocks have **zero specificity**, so the host's
 `nowo_ui_theme_tokens()` output — or any host declaration — wins regardless of load order: no `!important` remaps.
+
+### Token precedence
+
+Two sources set `--nowo-ui-*`: `theme.tokens` / `tokens_dark` (host defaults, `nowo_ui_theme_tokens()`) and the
+appearance SPI (`nowo_ui_appearance_style()`, user-chosen, incl. `appearance.token_aliases`). The **appearance
+overrides the theme tokens**: both blocks use the same selectors' specificity (`:root`, `[data-theme="dark"]`), and
+`nowo_ui_tokens()` prints the theme tokens first and the appearance last. `layout/document` calls it after
+`nowo-ui.css`; a host layout calls `{{ nowo_ui_tokens() }}` there too (instead of the two functions).
 
 ### Cascade layers
 
