@@ -133,7 +133,7 @@ final readonly class Action
      */
     public function confirmId(): ?string
     {
-        if (null === $this->confirm) {
+        if (!$this->confirm instanceof Confirm) {
             return null;
         }
 

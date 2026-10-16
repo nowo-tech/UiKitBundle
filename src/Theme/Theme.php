@@ -45,22 +45,22 @@ final readonly class Theme
             foreach ($map as $slot => $attrs) {
                 ThemeSlots::semantic($slot);
                 foreach (array_keys($attrs) as $name) {
-                    self::assertAttributeName($name);
+                    $this->assertAttributeName($name);
                 }
             }
         }
         foreach ([$partials, ...array_map(static fn (array $b): array => $b['partials'] ?? [], $bundles)] as $map) {
             foreach (array_keys($map) as $name) {
-                self::assertPartialName($name);
+                $this->assertPartialName($name);
             }
         }
         foreach ([$tokens, $tokensDark, ...array_map(static fn (array $b): array => array_merge($b['tokens'] ?? [], $b['tokens_dark'] ?? []), $bundles)] as $map) {
             foreach ($map as $name => $value) {
-                self::assertToken($name, $value);
+                $this->assertToken($name, $value);
             }
         }
         foreach (array_keys($bundles) as $bundle) {
-            self::assertBundleName($bundle);
+            $this->assertBundleName($bundle);
         }
     }
 
@@ -103,7 +103,7 @@ final readonly class Theme
     {
         $framework = null !== $framework && '' !== trim($framework) ? trim($framework) : $this->framework;
 
-        return self::merge(ThemeSlots::semantic($slot), ThemeSlots::defaults($slot, $framework), $this->extraClasses($slot, $bundle));
+        return $this->merge(ThemeSlots::semantic($slot), ThemeSlots::defaults($slot, $framework), $this->extraClasses($slot, $bundle));
     }
 
     /**
@@ -115,7 +115,7 @@ final readonly class Theme
         ThemeSlots::semantic($slot);
         $bundleClasses = null !== $bundle ? ($this->bundles[$bundle]['classes'] ?? []) : [];
 
-        return self::merge($bundleClasses[$slot] ?? $this->classes[$slot] ?? '');
+        return $this->merge($bundleClasses[$slot] ?? $this->classes[$slot] ?? '');
     }
 
     /**
@@ -142,7 +142,7 @@ final readonly class Theme
     {
         $html = '';
         foreach ($this->attributesFor($slot, $bundle, $extra) as $name => $value) {
-            self::assertAttributeName($name);
+            $this->assertAttributeName($name);
             if (null === $value || false === $value) {
                 continue;
             }
@@ -160,7 +160,7 @@ final readonly class Theme
      */
     public function partial(string $name, ?string $bundle = null): string
     {
-        self::assertPartialName($name);
+        $this->assertPartialName($name);
         $bundlePartials = null !== $bundle ? ($this->bundles[$bundle]['partials'] ?? []) : [];
 
         return $bundlePartials[$name] ?? $this->partials[$name] ?? ThemeSlots::PARTIALS[$name];
@@ -187,12 +187,12 @@ final readonly class Theme
     public function tokensCss(): string
     {
         $blocks = [];
-        $blocks[] = self::block(':root', $this->tokens);
-        $blocks[] = self::block(':root[data-theme="dark"]', $this->tokensDark);
+        $blocks[] = $this->block(':root', $this->tokens);
+        $blocks[] = $this->block(':root[data-theme="dark"]', $this->tokensDark);
         foreach ($this->bundles as $bundle => $data) {
             $scope = '[data-nowo-ui-bundle="'.$bundle.'"]';
-            $blocks[] = self::block($scope, $data['tokens'] ?? []);
-            $blocks[] = self::block('[data-theme="dark"] '.$scope, $data['tokens_dark'] ?? []);
+            $blocks[] = $this->block($scope, $data['tokens'] ?? []);
+            $blocks[] = $this->block('[data-theme="dark"] '.$scope, $data['tokens_dark'] ?? []);
         }
 
         return implode("\n", array_filter($blocks, static fn (string $b): bool => '' !== $b));
@@ -243,7 +243,7 @@ final readonly class Theme
     /**
      * @param array<string, string> $tokens
      */
-    private static function block(string $selector, array $tokens): string
+    private function block(string $selector, array $tokens): string
     {
         if ([] === $tokens) {
             return '';
@@ -257,7 +257,7 @@ final readonly class Theme
         return implode("\n", $lines);
     }
 
-    private static function merge(string ...$parts): string
+    private function merge(string ...$parts): string
     {
         $tokens = [];
         foreach ($parts as $part) {
@@ -271,7 +271,7 @@ final readonly class Theme
         return implode(' ', array_keys($tokens));
     }
 
-    private static function assertAttributeName(string $name): void
+    private function assertAttributeName(string $name): void
     {
         $error = self::attributeNameError($name);
         if (null !== $error) {
@@ -279,14 +279,14 @@ final readonly class Theme
         }
     }
 
-    private static function assertPartialName(string $name): void
+    private function assertPartialName(string $name): void
     {
         if (!isset(ThemeSlots::PARTIALS[$name])) {
             throw new \InvalidArgumentException(\sprintf('Unknown UiKit theme partial "%s" (known: %s).', $name, implode(', ', ThemeSlots::partialNames())));
         }
     }
 
-    private static function assertToken(string $name, mixed $value): void
+    private function assertToken(string $name, mixed $value): void
     {
         $error = self::tokenError($name, $value);
         if (null !== $error) {
@@ -294,7 +294,7 @@ final readonly class Theme
         }
     }
 
-    private static function assertBundleName(string $bundle): void
+    private function assertBundleName(string $bundle): void
     {
         if (1 !== preg_match('/^[A-Za-z][A-Za-z0-9_]*$/', $bundle)) {
             throw new \InvalidArgumentException(\sprintf('Invalid UiKit theme bundle key "%s" (bundle class short name, e.g. NowoHttpLogBundle).', $bundle));

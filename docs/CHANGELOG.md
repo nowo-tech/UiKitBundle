@@ -45,6 +45,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Standard page contract (REQ-UI-003, phase 0 core)** — opt-in; nothing changes for hosts that do not use it. Summary of the API in [`PAGE_CONTRACT.md`](PAGE_CONTRACT.md).
+  - Configuration: `nowo_ui_kit.layouts.{admin,guest}` (defaults `@NowoUiKit/layout/admin.html.twig` / `guest`), `nowo_ui_kit.breadcrumbs.{breadcrumb_kit,collection}` and the global theme `nowo_ui_kit.theme.{classes,attributes,partials,tokens,tokens_dark,bundles}` (unknown slot / partial, `on*` attributes, unsafe token values and bad bundle keys are rejected with explicit messages).
+  - Theme: `Theme\ThemeSlots` (slot vocabulary + framework defaults per `css_framework`, identical to the `ui.*` macros) and `Theme\Theme` (semantic + framework + host classes, per-bundle exceptions, attributes, partial overrides, token CSS).
+  - Twig: `nowo_ui_class()`, `nowo_ui_attrs()`, `nowo_ui_partial()`, `nowo_ui_theme_tokens()` (CSP nonce from the `csp_nonce` request attribute), `nowo_ui_theme_css()`, `nowo_ui_breadcrumb_kit()` / `nowo_ui_breadcrumb_kit_available()` (BreadcrumbKit bridge), filter `|nowo_ui_trans`; globals `nowo_ui_layout`, `nowo_ui_theme`, `nowo_ui_breadcrumbs`.
+  - View models (`Nowo\UiKitBundle\View\`): `Label`, `PageHeader`, `Action`, `Confirm`, `Crumb`, `Link`, `Pagination` (`fromArray` / `fromPagerfanta` / `fromKnp`, duck typed), `Column`, `EmptyState`, `DetailItem`, `DetailSection`, `KpiTile`, `SettingsSection`, `WizardStep`, `ListPage`, `ShowPage`, `FormPage`, `SettingsPage`, `DashboardPage`, `ConfirmPage`, `WizardPage`, `AuthPage`.
+  - Layouts `layout/{document,admin,guest}.html.twig` (canonical `nowo_ui_*` blocks, UiKit asset package only) and scaffolds `page/{list,show,form,settings,dashboard,confirm,wizard,auth}.html.twig` with the REQ-UI-003 data blocks.
+  - New partials `_action` (one view-model action: link, POST form, confirm `<dialog>`, modal), `_action_post`, `_breadcrumbs`.
+  - Upgraded partials accept view models and theme slot hooks: `_pagination` (`Pagination` object, page / per-page parameter names), `_page_header` (`header`), `_row_actions` (`Action` objects), `_confirm` (`confirm` + `action`), `_empty` (`empty`), `_toasts` / `_flashes` (`trans_domain`, slot attributes), `_shell` / `_burger` (`root_class`, `label_attr_names`, `attr`, theme partial for the burger). 1.x inputs render as in 1.17.4 (fixture-based BC tests).
+  - CSS: the base palette drops to zero specificity when `<html data-nowo-ui-host-tokens>` is set (UiKit layout + `theme.tokens`), so host tokens win without `!important`; semantic styles for breadcrumbs, detail lists, KPI tiles, cards grid, wizard steps, auth panel, danger zone.
+  - Translations `action.{confirm,back,next,submit,import}`, `confirm.delete_{title,message}`, `breadcrumbs.nav`, `table.actions`, `wizard.{steps,step_of}`, `form.danger_zone` (7 locales).
+
 ## [1.17.4] - 2026-10-16
 
 Supersedes 1.17.3: same runtime code and CSS, release gate hardened so the tagged commit is exactly what was checked.

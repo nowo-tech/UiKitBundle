@@ -147,7 +147,7 @@ final class ViewModelsTest extends TestCase
             yield ['id' => 1];
             yield ['id' => 2];
         })();
-        $page = new ListPage($header, [new Column('id')], $rows, rowActions: static fn (array $row, int|string $key): array => [Action::edit('/items/'.$row['id'])], sort: 'id', direction: 'desc', bundle: 'NowoXBundle', layout: 'x.html.twig', caption: 'All');
+        $page = new ListPage($header, [new Column('id')], $rows, rowActions: static fn (array $row, int|string $key): array => [Action::edit('/items/'.$row['id'])], sort: 'id', direction: 'desc', caption: 'All', bundle: 'NowoXBundle', layout: 'x.html.twig');
         self::assertSame([['id' => 1], ['id' => 2]], $page->rows);
         self::assertTrue($page->hasRowActions());
         self::assertSame('/items/2', $page->rowActions(['id' => 2], 1)[0]->href);

@@ -104,7 +104,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
         if ($value instanceof Label) {
             $all = array_merge($value->params, $params);
 
-            return null !== $this->translator ? $this->translator->trans($value->key, $all, $value->domain) : strtr($value->key, array_map(static fn (mixed $v): string => \is_scalar($v) || $v instanceof \Stringable ? (string) $v : '', $all));
+            return $this->translator?->trans($value->key, $all, $value->domain) ?? strtr($value->key, array_map(static fn (mixed $v): string => \is_scalar($v) || $v instanceof \Stringable ? (string) $v : '', $all));
         }
         if (null === $value || \is_scalar($value) || $value instanceof \Stringable) {
             return (string) $value;
@@ -115,7 +115,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
 
     public function breadcrumbKitAvailable(Environment $env): bool
     {
-        return $this->breadcrumbs['breadcrumb_kit'] && null !== $env->getFunction('breadcrumb_render');
+        return $this->breadcrumbs['breadcrumb_kit'] && $env->getFunction('breadcrumb_render') instanceof TwigFunction;
     }
 
     public function breadcrumbKit(Environment $env, ?string $collection = null): string

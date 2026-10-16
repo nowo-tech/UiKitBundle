@@ -47,6 +47,29 @@
 
 ## Unreleased
 
+**Template contract (REQ-UI-003, new — no breaking changes).** Everything below is additive; existing partials and
+macros keep their 1.x inputs and output.
+
+- New layouts: `@NowoUiKit/layout/document.html.twig`, `layout/admin.html.twig`, `layout/guest.html.twig`
+  (blocks `nowo_ui_document_title`, `nowo_ui_head`, `nowo_ui_styles`, `nowo_ui_scripts`, `nowo_ui_body`,
+  `nowo_ui_navigation` (admin), `nowo_ui_page_header`, `nowo_ui_flashes`, `nowo_ui_content`, `nowo_ui_modals`).
+  Point `nowo_ui_kit.layouts.admin` / `guest` at your layout or a one-file bridge that renders these blocks.
+- New scaffolds `@NowoUiKit/page/{list,show,form,settings,dashboard,confirm,wizard,auth}.html.twig` (variable
+  `page`, data blocks `nowo_ui_list_head`, `nowo_ui_list_row`, `nowo_ui_list_after`, `nowo_ui_show_sections`,
+  `nowo_ui_show_after`, `nowo_ui_form_body`, `nowo_ui_form_aside`, `nowo_ui_settings_section`,
+  `nowo_ui_dashboard_cards`, `nowo_ui_wizard_step`, `nowo_ui_auth_fields`, `nowo_ui_auth_actions`,
+  `nowo_ui_auth_footer`).
+- New view models under `Nowo\UiKitBundle\View\` and theme config `nowo_ui_kit.theme` (classes, attributes,
+  partials, tokens, tokens_dark, bundles) with the Twig functions `nowo_ui_class()`, `nowo_ui_attrs()`,
+  `nowo_ui_partial()`, `nowo_ui_theme_tokens()`. See [`PAGE_CONTRACT.md`](PAGE_CONTRACT.md).
+- Hosts that set `theme.tokens` and render the UiKit document layout get `data-nowo-ui-host-tokens` on `<html>`:
+  the kit palette then never beats a host declaration, so `!important` remaps of `--nowo-ui-*` can be removed.
+  Hosts with their own layout add the attribute themselves and print `{{ nowo_ui_theme_tokens() }}` after
+  `nowo-ui.css`.
+- Hosts that override `_pagination`, `_toasts`, `_flashes`, `_page_header`, `_row_actions`, `_confirm`, `_empty`,
+  `_shell` or `_burger` keep working; to pick up view-model inputs, re-sync from the bundle (or replace the fork with
+  `theme.classes` / `theme.attributes` / `theme.partials`).
+
 ## To 1.17.4
 
 From **1.17.3** — nothing to change for hosts: same runtime code and CSS (maintainer release gate only). Prefer 1.17.4

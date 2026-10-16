@@ -110,10 +110,10 @@ final class ViewPartialsTest extends TestCase
         $actions = [
             Action::edit('/e'),
             Action::route('view', 'items_show', ['id' => 3]),
-            new Action('config', 'Settings', modalId: 'm1', attributes: ['data-x' => '1', 'data-flag' => true, 'data-off' => false]),
+            new Action('config', 'Settings', attributes: ['data-x' => '1', 'data-flag' => true, 'data-off' => false], modalId: 'm1'),
             new Action('restore', href: '/r', method: 'PATCH', csrfToken: 't'),
             new Action('delete', href: '/d', method: 'POST', form: $csrf),
-            new Action('copy', href: '/c', disabled: true, icon: 'clipboard'),
+            new Action('copy', href: '/c', icon: 'clipboard', disabled: true),
             new Action('share', href: '/s', visible: false),
             ['kind' => 'export', 'href' => '/x'],
         ];
@@ -141,10 +141,10 @@ final class ViewPartialsTest extends TestCase
     public function testToolbarActionVariantsAndDisabledStates(): void
     {
         $html = $this->render("{% for a in actions %}{% include '@NowoUiKitBundle/partials/_action.html.twig' with {action: a} only %}{% endfor %}", ['actions' => [
-            new Action('custom', 'Modal', modalId: 'm', disabled: true, variant: 'outline'),
-            new Action('delete', 'Gone', '/d', method: 'POST', csrfToken: 't', disabled: true, attributes: ['data-y' => '1', 'data-z' => true]),
-            new Action('delete', 'Ask', '/a', method: 'POST', confirm: new Confirm('Sure?', id: 'ask'), disabled: true, attributes: ['data-q' => true]),
-            new Action('edit', 'Off', '/o', disabled: true, attributes: ['data-b' => true]),
+            new Action('custom', 'Modal', variant: 'outline', modalId: 'm', disabled: true),
+            new Action('delete', 'Gone', '/d', method: 'POST', csrfToken: 't', attributes: ['data-y' => '1', 'data-z' => true], disabled: true),
+            new Action('delete', 'Ask', '/a', method: 'POST', confirm: new Confirm('Sure?', id: 'ask'), attributes: ['data-q' => true], disabled: true),
+            new Action('edit', 'Off', '/o', attributes: ['data-b' => true], disabled: true),
         ]], ['classes' => ['btn' => 'app-btn']]);
 
         self::assertStringContainsString('<button type="button" class="nowo-ui-btn nowo-ui-btn--outline btn btn-outline-primary app-btn nowo-ui-action--custom" disabled data-bs-toggle="modal" data-bs-target="#m">', $html);

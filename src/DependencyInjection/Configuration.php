@@ -289,7 +289,7 @@ final class Configuration implements ConfigurationInterface
             ->info('Global theme (REQ-UI-003): semantic slot classes / attributes, partial overrides and --nowo-ui-* tokens, configured once for every bundle.')
             ->addDefaultsIfNotSet();
         $children = $node->children();
-        self::addThemeChildren($children, 'theme', false);
+        $this->addThemeChildren($children, 'theme', false);
         $bundles = $children
             ->arrayNode('bundles')
                 ->info('Optional per-bundle exceptions keyed by bundle name (e.g. NowoHttpLogBundle): a bundle slot class replaces the host class of that slot; attributes merge; partials replace; tokens are scoped to [data-nowo-ui-bundle="<Bundle>"].')
@@ -307,12 +307,12 @@ final class Configuration implements ConfigurationInterface
                     })
                 ->end()
                 ->arrayPrototype();
-        self::addThemeChildren($bundles->children(), 'theme.bundles.<bundle>', true);
+        $this->addThemeChildren($bundles->children(), 'theme.bundles.<bundle>', true);
 
         return $node;
     }
 
-    private static function addThemeChildren(NodeBuilder $children, string $name, bool $scoped): void
+    private function addThemeChildren(NodeBuilder $children, string $name, bool $scoped): void
     {
         $children
             ->arrayNode('classes')
