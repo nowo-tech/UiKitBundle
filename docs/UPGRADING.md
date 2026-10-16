@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.17.2](#to-1172)
 - [To 1.17.1](#to-1171)
 - [To 1.17.0](#to-1170)
 - [To 1.16.0](#to-1160)
@@ -43,6 +44,13 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 1.17.2
+
+From **1.17.1** — CSS fixes only, nothing to change. Kit dialogs (`.nowo-ui-confirm`, row detail) centre under
+Tailwind preflight; in Responsive table mode `nowrap` content inside cells wraps. Hosts that worked around either
+(their own `dialog { margin: auto }`, `.whitespace-nowrap` overrides in responsive tables) can drop the workaround.
+Cell content that must never wrap in Responsive mode needs a host rule with higher specificity and `!important`.
 
 ## To 1.17.1
 

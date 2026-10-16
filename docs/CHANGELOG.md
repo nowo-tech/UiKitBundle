@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.17.2] - 2026-10-16](#1172---2026-10-16)
 - [[1.17.1] - 2026-10-16](#1171---2026-10-16)
 - [[1.17.0] - 2026-10-16](#1170---2026-10-16)
 - [[1.16.0] - 2026-10-13](#1160---2026-10-13)
@@ -41,6 +42,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [1.17.2] - 2026-10-16
+
+### Fixed
+
+- `.nowo-ui-confirm` dialogs (confirm, row detail) opened at the top-left under a `<dialog>` margin reset such as Tailwind's preflight: they now set `margin: auto` and `max-height: calc(100dvh - 2rem)` (next to the existing `max-width`), so they centre whatever the host reset.
+- Responsive table mode: descendants of cells with `white-space: nowrap` (Tailwind `.whitespace-nowrap`, Bootstrap `.text-nowrap`) kept the table wider than its scroller (horizontal scroll on phones). In `[data-table-mode='responsive']` cells and their descendants now wrap (`white-space: normal !important`, `overflow-wrap: anywhere`) — part of the "no horizontal scroll at 320px and above" contract.
+
+[1.17.2]: https://github.com/nowo-tech/UiKitBundle/compare/v1.17.1...v1.17.2
 
 ## [1.17.1] - 2026-10-16
 

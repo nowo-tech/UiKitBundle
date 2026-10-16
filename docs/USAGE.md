@@ -330,9 +330,11 @@ Stimulus peer `responsive-table` ([STIMULUS.md](STIMULUS.md#responsive-table-sti
 - **Scroll** mode: every column, horizontal scroll (thin scrollbar with `data-nowo-ui-thin-scrollbars`).
 - **Responsive** mode: no horizontal scroll at 320px and above. The peer shows every column, then hides the last
   non-required ones (document order; `data-required="1"` never hides) until the table fits — measured first without
-  the detail column, then with it — and recomputes on resize. Cell text wraps; tighter padding under 30rem.
+  the detail column, then with it — and recomputes on resize. Cell text wraps — including descendants with
+  `white-space: nowrap` (Tailwind `.whitespace-nowrap`, Bootstrap `.text-nowrap`; 1.17.2) — and padding tightens
+  under 30rem.
 - Each row ends with an eye button (shown only while a column is hidden, named "Row details: <row title>", row
-  title = text of the first two columns). It opens a native `<dialog>` (confirm dialog chrome) with **every** column
+  title = text of the first two columns). It opens a native `<dialog>` (confirm dialog chrome, centred with `margin: auto` even under Tailwind preflight — 1.17.2) with **every** column
   as label / value pairs; the cell contents are **moved** into the dialog and back on close, so forms, links, ids and
   listeners keep working. Esc, ✕ or a backdrop click closes it; focus returns to the button. On coarse pointers a
   tap on the row (outside links / buttons / fields) opens it too.

@@ -249,6 +249,11 @@ final class HostChromePartialsTest extends TestCase
         }
         self::assertFileExists($root.'/src/Resources/assets/styles/_thin-scrollbars.scss');
 
+        // 1.17.2: dialogs centre under a <dialog> margin reset (Tailwind preflight); responsive cells wrap their
+        // nowrap descendants too (no horizontal scroll at 320px and above).
+        self::assertMatchesRegularExpression('/\.nowo-ui-confirm \{[^}]*margin: auto;[^}]*max-height: calc\(100dvh - 2rem\);/s', $css);
+        self::assertStringContainsString(".nowo-ui-responsive-table[data-table-mode='responsive'] :is(th, td) * {\n  white-space: normal !important;\n  overflow-wrap: anywhere;", $css);
+
         $keys = ['table_mode.to_responsive', 'table_mode.to_scroll', 'table_mode.details', 'table_mode.details_column', 'table_mode.close', 'table_mode.save_error',
             'filters_collapse.collapse', 'filters_collapse.expand', 'filters_collapse.none', 'filters_collapse.one', 'filters_collapse.many', 'edge_tab.manual'];
         foreach (['en', 'es', 'de', 'fr', 'it', 'nl', 'pt'] as $locale) {

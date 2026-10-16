@@ -1206,10 +1206,13 @@ a.nowo-ui-pagination__link:hover {
 
 /* --- Confirm dialog --- */
 .nowo-ui-confirm {
+  /* Centred whatever the host reset does to <dialog> (Tailwind preflight sets margin: 0). */
+  margin: auto;
   border: 0;
   padding: 0;
   background: transparent;
   max-width: calc(100vw - 2rem);
+  max-height: calc(100dvh - 2rem);
 }
 
 .nowo-ui-confirm::backdrop {
@@ -2605,9 +2608,13 @@ table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr:hover > td {
   display: none !important;
 }
 
-/* Text wraps so the required columns and the detail button fit narrow screens (no horizontal scroll). */
-.nowo-ui-responsive-table[data-table-mode='responsive'] :is(th, td) {
-  white-space: normal;
+/* Text wraps so the required columns and the detail button fit narrow screens (no horizontal scroll at 320px and
+   above): cells AND their descendants — nowrap utilities (Tailwind .whitespace-nowrap, Bootstrap .text-nowrap) would
+   otherwise keep the table wider than its scroller. */
+.nowo-ui-responsive-table[data-table-mode='responsive'] :is(th, td),
+.nowo-ui-responsive-table[data-table-mode='responsive'] :is(th, td) * {
+  white-space: normal !important;
+  overflow-wrap: anywhere;
 }
 
 .nowo-ui-responsive-table[data-table-mode='responsive'][data-rt-has-hidden] :is(.nowo-ui-row-detail-col, .nowo-ui-row-detail-cell) {
