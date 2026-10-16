@@ -117,6 +117,22 @@ Changes to markup, inputs and cascade a host or a bundle may depend on (REQ-UI-0
 - **Regions and page attributes:** standard regions carry `data-nowo-ui-region="…"`; every page model takes
   `attributes` (rendered on the scaffold root, validated: no `on*`). `_page_header`, `_pagination`, `_empty` and
   `_tabs` accept `region`.
+- **List scaffold:** new data block `nowo_ui_list_filters`; the filters render through the `list_filters` partial
+  with per-field options (`View\FilterField`), every filter row gets the `filters_field` slot class, the apply button
+  gets `nowo-ui-filters__submit` (and `filtersSubmit` label / icon / variant), `filtersClear` / `filterActions`
+  render through the `action` partial. Header cells get the `table_head_cell` slot, the head row `table_head_row`,
+  the actions header `table_actions_head` (`actionsLabel`, `actionsLabelVisible`). **Responsive by default:**
+  `ListPage::responsive = 'cards'` adds `data-nowo-ui-responsive="cards"` to the table wrap, `nowo-ui-table--cards`
+  to the table and `data-label` to the default cells — below 40rem of table width rows become cards; pass
+  `responsive: 'scroll'` for the 1.x horizontal scroll. `Column::priority` (2 / 3) hides columns on mid widths.
+- **Form scaffold:** the form is wrapped in the `form_panel` slot; **secondary actions move to the page-header
+  toolbar by default** (`FormPage::secondaryActionsInHeader`, set `false` for the previous placement below the
+  form); the danger zone title / intro use the `danger_zone_title` / `danger_zone_intro` slots
+  (`dangerZoneTitle`, `dangerZoneIntro`).
+- **Dashboard:** KPI label / value / hint read the `kpi_label` / `kpi_value` / `kpi_hint` slots;
+  `KpiTile::linkTile` renders the whole tile as the link.
+- New slots (minor): `table_head_row`, `table_head_cell`, `table_actions_head`, `filters_field`, `kpi_label`,
+  `kpi_value`, `kpi_hint`, `form_panel`, `danger_zone_title`, `danger_zone_intro`.
 - **Page types.** Scaffolds set `nowo_ui_page_type` (`list`, `show`, `form`, `settings`, `dashboard`, `confirm`,
   `wizard`, `auth`) and pass it to the partials they include; `theme.pages.<type>.{classes,attributes,framework_defaults}`
   varies a slot per page type (bundle slot > bundle > page-type slot > page type > host slot > host).

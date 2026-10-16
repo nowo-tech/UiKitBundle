@@ -90,6 +90,9 @@ final class ThemeSlots
             'foundation' => 'stack table',
         ]],
         'table_head' => ['nowo-ui-table__head', []],
+        'table_head_row' => ['nowo-ui-table__head-row', []],
+        'table_head_cell' => ['nowo-ui-table__head-cell', []],
+        'table_actions_head' => ['nowo-ui-table__actions', []],
         'table_row' => ['nowo-ui-table__row', []],
         'table_cell' => ['nowo-ui-table__cell', []],
         'row_actions' => ['nowo-ui-row-actions', [
@@ -152,6 +155,7 @@ final class ThemeSlots
             'bootstrap' => 'd-flex flex-wrap align-items-end gap-2',
             'tailwind' => 'flex flex-wrap items-end gap-2',
         ]],
+        'filters_field' => ['nowo-ui-filters__field', []],
         'input' => ['nowo-ui-input', [
             'bootstrap' => 'form-control',
             'tailwind' => 'block w-full max-w-xs border px-3 py-1.5 text-sm',
@@ -222,6 +226,9 @@ final class ThemeSlots
             'tailwind' => 'border',
             'foundation' => 'callout',
         ]],
+        'kpi_label' => ['nowo-ui-kpi__label', []],
+        'kpi_value' => ['nowo-ui-kpi__value', []],
+        'kpi_hint' => ['nowo-ui-kpi__hint', []],
         'tabs' => ['nowo-ui-tabs', [
             'bootstrap' => 'nav nav-tabs mb-3',
             'tailwind' => 'flex flex-wrap gap-2 border-b mb-3',
@@ -241,6 +248,7 @@ final class ThemeSlots
         'confirm' => ['nowo-ui-confirm', []],
         // Forms
         'form' => ['nowo-ui-form', []],
+        'form_panel' => ['nowo-ui-form-panel', []],
         'form_actions' => ['nowo-ui-form__actions', [
             'bootstrap' => 'd-flex flex-wrap gap-2 mt-3',
             'tailwind' => 'flex flex-wrap gap-2 mt-4',
@@ -249,6 +257,8 @@ final class ThemeSlots
             'bootstrap' => 'mt-4',
             'tailwind' => 'mt-6',
         ]],
+        'danger_zone_title' => ['nowo-ui-danger-zone__title', []],
+        'danger_zone_intro' => ['nowo-ui-danger-zone__intro', []],
         // Wizard / auth
         'wizard_steps' => ['nowo-ui-wizard-steps', []],
         'wizard_step' => ['nowo-ui-wizard-steps__item', []],

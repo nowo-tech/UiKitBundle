@@ -139,17 +139,27 @@ fills `nowo_ui_document_title` with the page title and renders the page header t
 | Region | From |
 | --- | --- |
 | header + actions + breadcrumbs | `page.header` (`PageHeader`) |
-| filters (GET form, apply / clear) | `page.filters` (`FormView`, REQ-TWIG-003 child loop), `page.filtersClearHref` |
-| table frame, sortable headers (`aria-sort`) | `page.columns` (`Column`), `page.sort`, `page.direction`, `page.caption` |
-| row actions + confirm `<dialog>`s | `page.rowActions` (list of `Action`, or `callable(row, key): list<Action>`) |
+| filters (GET form, apply / clear, extra actions) | `page.filters` (`FormView`, REQ-TWIG-003 child loop) through the `list_filters` partial; `page.filterFields` (`FilterField`: placeholder, `width` `xs`…`full`, widget / row classes and attributes; every row gets the `filters_field` slot), `page.filtersSubmit` (`Action`: label, icon, variant of the apply button), `page.filtersClear` (`Action`, rendered through the `action` partial; default a plain link to `page.filtersClearHref`), `page.filterActions` — all in the `filters_actions` slot |
+| table frame, sortable headers (`aria-sort`) | `page.columns` (`Column`), `page.sort`, `page.direction`, `page.caption`; slots `table_wrap`, `table`, `table_head`, `table_head_row`, `table_head_cell`, `table_row`, `table_cell` |
+| row actions + confirm `<dialog>`s | `page.rowActions` (list of `Action`, or `callable(row, key): list<Action>`); actions column header `table_actions_head` with `page.actionsLabel` (default `table.actions`), visually hidden unless `page.actionsLabelVisible` |
 | pagination | `page.pagination` (`Pagination`) |
 | empty state | `page.empty` (`EmptyState`) when `page.rows` is empty |
 
 | Data block | Default | Context |
 | --- | --- | --- |
+| `nowo_ui_list_filters` | the `list_filters` partial when `page.filters` is set | `page` |
 | `nowo_ui_list_head` | one `<th>` per column (sort links) | `page` |
 | `nowo_ui_list_row` | one `<td>` per column: `row[column.key]` | `row`, `row_key`, `loop` |
 | `nowo_ui_list_after` | empty (after the table / empty state) | `page` |
+
+**Responsive tables.** With `page.responsive = 'cards'` (default) the table wrap is a CSS size container
+(`data-nowo-ui-responsive="cards"`, table class `nowo-ui-table--cards`): columns with `Column::priority` 3 hide
+below 60rem of table width, priority 2 below 48rem (`required` columns never hide), and below 40rem every row turns
+into a card of labelled cells — every column shows again, each cell labelled from its `data-label` (the column
+label). CSS only, no JavaScript, works in any host. Cells of an overridden `nowo_ui_list_row` add
+`data-label="{{ column.label|nowo_ui_trans }}"` (and `data-nowo-ui-priority`) themselves. `responsive: 'scroll'`
+keeps the 1.x horizontal scroll. For the Scroll / Responsive toggle with a row-detail dialog (Stimulus peer), embed
+`partials/_responsive_table.html.twig` in `nowo_ui_list_after` or a bundle template instead.
 
 ### Show
 
@@ -171,8 +181,11 @@ fills `nowo_ui_document_title` with the page title and renders the page header t
 | `nowo_ui_form_body` | REQ-TWIG-003 loop: `form_row()` of every child not yet rendered (call `{{ parent() }}` after custom rows) | `form`, `page` |
 | `nowo_ui_form_aside` | empty (side column after the main column) | `page` |
 
-Submit + cancel render in the `form_actions` slot; `secondaryActions` in a `toolbar`; `deleteAction` in the
-`danger_zone` through the confirm contract.
+The form renders inside the `form_panel` slot (wrapper on the form scaffold only). Submit + cancel render in the
+`form_actions` slot; `secondaryActions` in the page-header toolbar after the header actions
+(`secondaryActionsInHeader: true`, the default) or in a `toolbar` below the form (`false`); `deleteAction` in the
+`danger_zone` through the confirm contract, titled `dangerZoneTitle` (default `form.danger_zone`, slot
+`danger_zone_title`) with an optional `dangerZoneIntro` (slot `danger_zone_intro`).
 
 ### Settings
 
@@ -187,7 +200,9 @@ links) renders as a card.
 ### Dashboard
 
 `page/dashboard.html.twig` · `page: DashboardPage` (`header`, `kpis: list<KpiTile>`). KPI tiles render in the `kpis`
-/ `kpi` slots (`nowo-ui-kpi--<variant>`: `neutral`, `success`, `warning`, `danger`, `info`).
+/ `kpi` slots (`nowo-ui-kpi--<variant>`: `neutral`, `success`, `warning`, `danger`, `info`) with `kpi_label`,
+`kpi_value` and `kpi_hint`; a tile with `href` links its value, or — with `linkTile: true` — the whole tile is the
+`<a>` (`nowo-ui-kpi--link`).
 
 | Data block | Default | Context |
 | --- | --- | --- |
@@ -235,15 +250,16 @@ or a plain string printed escaped. Never pre-render HTML into a view model.
 | `Crumb` | `(label, href = null)` |
 | `Link` | `(label, href, attributes = [])` |
 | `Pagination` | `(page, perPage, total, totalPages = null, route = null, query = [], routeParams = null, pageParam = 'page', perPageParam = 'per_page')`; `fromArray()`, `fromPagerfanta()`, `fromKnp()` (duck typed); `from()`, `to()`, `hasPrevious()`, `hasNext()`, `toArray()` — the **only** pagination shape |
-| `Column` | `(key, label = null, sortable = false, align = 'start', class = null, required = false)` |
+| `Column` | `(key, label = null, sortable = false, align = 'start', class = null, required = false, priority = null)` — `priority` 1–3 for responsive tables |
+| `FilterField` | `(name, placeholder = null, width = null, class = null, rowClass = null, attributes = [], rowAttributes = [])` — `width`: `xs`, `sm`, `md`, `lg`, `full` |
 | `EmptyState` | `(title = null, message = null, action = null)` |
 | `DetailItem` / `DetailSection` | `(label, value, href = null)` / `(title = null, items = [], id = null)` |
-| `KpiTile` | `(label, value, hint = null, href = null, variant = 'neutral')` |
+| `KpiTile` | `(label, value, hint = null, href = null, variant = 'neutral', linkTile = false)` |
 | `SettingsSection` | `(id, label, href = null, form = null, intro = null, submitLabel = null)` |
 | `WizardStep` | `(id, label, href = null)` |
-| `ListPage` | `(header, columns = [], rows = [], filters = null, rowActions = [] \| callable(row, key), pagination = null, empty = null, filtersClearHref = null, sort = null, direction = 'asc', caption = null, bundle = null, layout = null, attributes = [])` |
+| `ListPage` | `(header, columns = [], rows = [], filters = null, rowActions = [] \| callable(row, key), pagination = null, empty = null, filtersClearHref = null, sort = null, direction = 'asc', caption = null, bundle = null, layout = null, attributes = [], actionsLabel = null, actionsLabelVisible = false, filterFields = [], filtersSubmit = null, filtersClear = null, filterActions = [], responsive = 'cards')` |
 | `ShowPage` | `(header, sections = [], meta = [], bundle = null, layout = null, attributes = [])` |
-| `FormPage` | `(header, form, submitLabel = null, cancelHref = null, cancelLabel = null, secondaryActions = [], deleteAction = null, bundle = null, layout = null, attributes = [])` |
+| `FormPage` | `(header, form, submitLabel = null, cancelHref = null, cancelLabel = null, secondaryActions = [], deleteAction = null, bundle = null, layout = null, attributes = [], secondaryActionsInHeader = true, dangerZoneTitle = null, dangerZoneIntro = null)` |
 | `SettingsPage` | `(header, sections = [], current = null, bundle = null, layout = null, attributes = [])` |
 | `DashboardPage` | `(header, kpis = [], bundle = null, layout = null, attributes = [])` |
 | `ConfirmPage` | `(header, confirm, action (non-GET), cancelHref = null, bundle = null, layout = null, attributes = [])` |

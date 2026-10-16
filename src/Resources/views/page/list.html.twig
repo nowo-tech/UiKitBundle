@@ -3,8 +3,13 @@
 
   Regions: page header + actions, filters (FormView), table frame, row actions, pagination, empty state, confirm
   dialogs (from row actions with a Confirm).
-  Data blocks: nowo_ui_list_head (header cells), nowo_ui_list_row (row cells; `row`, `row_key`, `loop` in
-  context), nowo_ui_list_after (after the list). Default cells print row[column.key] for each page.columns.
+  Data blocks: nowo_ui_list_filters (the filters region; default: the `list_filters` partial), nowo_ui_list_head
+  (header cells), nowo_ui_list_row (row cells; `row`, `row_key`, `loop` in context), nowo_ui_list_after (after the
+  list). Default cells print row[column.key] for each page.columns.
+  Responsive (page.responsive = cards, default): the table wrap is a size container; below 40rem the rows render as
+  labelled cards (cells need data-label — the default cells print the column label; overridden cells add it), and
+  columns with Column::priority 2 / 3 hide below 48rem / 60rem. CSS only (no JS).
+  Slots: table_wrap, table, table_head, table_head_row, table_head_cell, table_actions_head, table_row, table_cell.
 #}
 {% extends page.layout ?? nowo_ui_layout.admin %}
 {% set nowo_ui_bundle = page.bundle %}
@@ -20,21 +25,24 @@
 {% block nowo_ui_content %}
     {% set _b = page.bundle %}
     <section class="nowo-ui-list-page" data-nowo-ui-page="list"{{ nowo_ui_html_attrs(page.attributes) }}>
-        {% if page.filters %}
-            {{ include(nowo_ui_partial('list_filters', _b), {page: page, region: 'filters', bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
-        {% endif %}
+        {% block nowo_ui_list_filters %}
+            {% if page.filters %}
+                {{ include(nowo_ui_partial('list_filters', _b), {page: page, region: 'filters', bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
+            {% endif %}
+        {% endblock %}
         {% if page.rows is not empty %}
             {% set _route = page.pagination and page.pagination.route ? page.pagination.route : (app is defined and app ? app.request.attributes.get('_route') : null) %}
             {% set _route_params = (app is defined and app ? app.request.attributes.get('_route_params') : {})|default({})|merge(app is defined and app ? app.request.query.all : {}) %}
             {% set _confirms = [] %}
-            <div class="{{ nowo_ui_class('table_wrap', _b) }}" data-nowo-ui-region="table"{{ nowo_ui_attrs('table_wrap', _b) }}>
-                <table class="{{ nowo_ui_class('table', _b) }}"{{ nowo_ui_attrs('table', _b) }}>
+            {% set _cards = page.responsive == 'cards' %}
+            <div class="{{ nowo_ui_class('table_wrap', _b) }}" data-nowo-ui-region="table"{% if _cards %} data-nowo-ui-responsive="cards"{% endif %}{{ nowo_ui_attrs('table_wrap', _b) }}>
+                <table class="{{ nowo_ui_class('table', _b) }}{{ _cards ? ' nowo-ui-table--cards' }}"{{ nowo_ui_attrs('table', _b) }}>
                     {% if page.caption %}<caption class="nowo-ui-table__caption">{{ page.caption|nowo_ui_trans }}</caption>{% endif %}
-                    <thead class="{{ nowo_ui_class('table_head', _b) }}">
-                        <tr>
+                    <thead class="{{ nowo_ui_class('table_head', _b) }}"{{ nowo_ui_attrs('table_head', _b) }}>
+                        <tr class="{{ nowo_ui_class('table_head_row', _b) }}"{{ nowo_ui_attrs('table_head_row', _b) }}>
                             {% block nowo_ui_list_head %}
                                 {% for column in page.columns %}
-                                    <th scope="col" class="nowo-ui-cell--{{ column.align }}{{ column.class ? ' ' ~ column.class }}"{% if column.required %} data-required="1"{% endif %}{% if page.sort == column.key %} aria-sort="{{ page.direction == 'asc' ? 'ascending' : 'descending' }}"{% endif %}>
+                                    <th scope="col" class="{{ nowo_ui_class('table_head_cell', _b) }} nowo-ui-cell--{{ column.align }}{{ column.class ? ' ' ~ column.class }}"{% if column.required %} data-required="1"{% elseif column.priority and column.priority > 1 %} data-nowo-ui-priority="{{ column.priority }}"{% endif %}{% if page.sort == column.key %} aria-sort="{{ page.direction == 'asc' ? 'ascending' : 'descending' }}"{% endif %}{{ nowo_ui_attrs('table_head_cell', _b) }}>
                                         {%- set _label = column.label is null ? column.key : column.label|nowo_ui_trans -%}
                                         {%- if column.sortable and _route -%}
                                             <a class="nowo-ui-sort{{ page.sort == column.key ? ' nowo-ui-sort--' ~ page.direction }}" href="{{ path(_route, _route_params|merge({sort: column.key, direction: page.nextDirection(column.key)})) }}">{{ _label }}</a>
@@ -45,7 +53,14 @@
                                 {% endfor %}
                             {% endblock %}
                             {% if page.hasRowActions() %}
-                                <th scope="col" class="nowo-ui-cell--end nowo-ui-table__actions"><span class="visually-hidden">{{ 'table.actions'|trans({}, 'NowoUiKitBundle') }}</span></th>
+                                {% set _actions_label = page.actionsLabel is null ? 'table.actions'|trans({}, 'NowoUiKitBundle') : page.actionsLabel|nowo_ui_trans %}
+                                <th scope="col" class="{{ nowo_ui_class('table_head_cell', _b) }} {{ nowo_ui_class('table_actions_head', _b) }} nowo-ui-cell--end"{{ nowo_ui_attrs('table_actions_head', _b) }}>
+                                    {%- if page.actionsLabelVisible -%}
+                                        {{ _actions_label }}
+                                    {%- else -%}
+                                        <span class="visually-hidden">{{ _actions_label }}</span>
+                                    {%- endif -%}
+                                </th>
                             {% endif %}
                         </tr>
                     </thead>
@@ -54,7 +69,7 @@
                             <tr class="{{ nowo_ui_class('table_row', _b) }}">
                                 {% block nowo_ui_list_row %}
                                     {% for column in page.columns %}
-                                        <td class="{{ nowo_ui_class('table_cell', _b) }} nowo-ui-cell--{{ column.align }}{{ column.class ? ' ' ~ column.class }}">{{ row is iterable ? row[column.key]|default('') : attribute(row, column.key) }}</td>
+                                        <td class="{{ nowo_ui_class('table_cell', _b) }} nowo-ui-cell--{{ column.align }}{{ column.class ? ' ' ~ column.class }}" data-label="{{ column.label is null ? column.key : column.label|nowo_ui_trans }}"{% if not column.required and column.priority and column.priority > 1 %} data-nowo-ui-priority="{{ column.priority }}"{% endif %}>{{ row is iterable ? row[column.key]|default('') : attribute(row, column.key) }}</td>
                                     {% endfor %}
                                 {% endblock %}
                                 {% if page.hasRowActions() %}

@@ -12,9 +12,17 @@ use Symfony\Component\Form\FormView;
  * in context) and `nowo_ui_list_after`.
  *
  * `rowActions`: a callable `fn (mixed $row, int|string $key): iterable<Action>` or one static list for every row.
+ * `actionsLabel` / `actionsLabelVisible`: header of the row-actions column (default `table.actions`, visually hidden).
+ * Filters: `filterFields` (per-field placeholder / width / classes), `filtersSubmit` (label / icon / variant of the
+ * apply button), `filtersClear` (the clear link as an Action; default: a plain link to `filtersClearHref`),
+ * `filterActions` (extra actions). `responsive`: `cards` (default; the table turns into labelled cards on narrow
+ * containers and hides `Column::priority` columns first) or `scroll` (horizontal scroll only).
  */
 final readonly class ListPage
 {
+    /** Responsive behaviour of the table: `cards` (card mode on narrow containers), `scroll` (horizontal scroll only). */
+    public const RESPONSIVE = ['cards', 'scroll'];
+
     /** @var list<Column> */
     public array $columns;
 
@@ -24,13 +32,21 @@ final readonly class ListPage
     /** @var list<Action> */
     private array $staticRowActions;
 
+    /** @var array<string, FilterField> filter field options keyed by form child name */
+    public array $filterFields;
+
+    /** @var list<Action> */
+    public array $filterActions;
+
     private ?\Closure $rowActionsFactory;
 
     /**
      * @param iterable<Column>                                                 $columns
      * @param iterable<mixed>                                                  $rows
      * @param (callable(mixed, int|string): iterable<Action>)|iterable<Action> $rowActions
-     * @param array<string, string|int|float|bool|null>                        $attributes extra attributes of the scaffold root (data-testid…; no on* handlers)
+     * @param iterable<FilterField>                                            $filterFields  per-field filter options (placeholder, width, classes)
+     * @param iterable<Action>                                                 $filterActions extra actions after apply / clear
+     * @param array<string, string|int|float|bool|null>                        $attributes    extra attributes of the scaffold root (data-testid…; no on* handlers)
      */
     public function __construct(
         public PageHeader $header,
@@ -47,8 +63,24 @@ final readonly class ListPage
         public ?string $bundle = null,
         public ?string $layout = null,
         public array $attributes = [],
+        public Label|string|null $actionsLabel = null,
+        public bool $actionsLabelVisible = false,
+        iterable $filterFields = [],
+        public ?Action $filtersSubmit = null,
+        public ?Action $filtersClear = null,
+        iterable $filterActions = [],
+        public string $responsive = 'cards',
     ) {
         Action::assertAttributes($attributes);
+        $fields = [];
+        foreach (ViewList::of($filterFields, FilterField::class, 'ListPage filterFields') as $field) {
+            $fields[$field->name] = $field;
+        }
+        $this->filterFields = $fields;
+        $this->filterActions = ViewList::of($filterActions, Action::class, 'ListPage filterActions');
+        if (!\in_array($responsive, self::RESPONSIVE, true)) {
+            throw new \InvalidArgumentException(\sprintf('Invalid ListPage responsive "%s" (%s).', $responsive, implode('|', self::RESPONSIVE)));
+        }
         $this->columns = ViewList::of($columns, Column::class, 'ListPage columns');
         $this->rows = \is_array($rows) ? $rows : iterator_to_array($rows, false);
         if (\is_callable($rowActions)) {

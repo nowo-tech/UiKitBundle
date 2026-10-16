@@ -3227,6 +3227,141 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
   color: var(--nowo-ui-danger-text);
 }
 
+.nowo-ui-danger-zone__intro {
+  margin: 0 0 0.75rem;
+  color: var(--nowo-ui-muted);
+  font-size: 0.875rem;
+}
+
+/* KPI tile as one link (View\KpiTile::linkTile) */
+a.nowo-ui-kpi--link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+a.nowo-ui-kpi--link:hover,
+a.nowo-ui-kpi--link:focus-visible {
+  border-color: var(--nowo-ui-primary);
+}
+
+a.nowo-ui-kpi--link:focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring, var(--nowo-ui-primary));
+  outline-offset: 2px;
+}
+
+/* List filter field widths (View\FilterField::width) */
+.nowo-ui-filters__field--xs {
+  flex: 0 1 8rem;
+}
+
+.nowo-ui-filters__field--sm {
+  flex: 0 1 12rem;
+}
+
+.nowo-ui-filters__field--md {
+  flex: 0 1 18rem;
+}
+
+.nowo-ui-filters__field--lg {
+  flex: 1 1 26rem;
+}
+
+.nowo-ui-filters__field--full {
+  flex: 1 1 100%;
+}
+
+.nowo-ui-filters__submit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/*
+ * Responsive list tables (page/list.html.twig, ListPage::responsive = cards): the table wrap is a size container;
+ * Column::priority 3 / 2 columns hide below 60rem / 48rem of table width, and below 40rem every row becomes a card
+ * of labelled cells (td[data-label]). CSS only.
+ */
+.nowo-ui-table-wrap[data-nowo-ui-responsive='cards'] {
+  container: nowo-ui-table / inline-size;
+}
+
+@container nowo-ui-table (max-width: 59.99rem) {
+  .nowo-ui-table--cards [data-nowo-ui-priority='3'] {
+    display: none;
+  }
+}
+
+@container nowo-ui-table (max-width: 47.99rem) {
+  .nowo-ui-table--cards [data-nowo-ui-priority='2'] {
+    display: none;
+  }
+}
+
+@container nowo-ui-table (max-width: 39.99rem) {
+  .nowo-ui-table--cards,
+  .nowo-ui-table--cards > tbody,
+  .nowo-ui-table--cards > tbody > tr,
+  .nowo-ui-table--cards > tbody > tr > td {
+    display: block;
+    width: 100%;
+  }
+
+  .nowo-ui-table--cards > thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .nowo-ui-table--cards > caption {
+    display: block;
+    text-align: start;
+  }
+
+  .nowo-ui-table--cards > tbody > tr {
+    margin-bottom: 0.75rem;
+    padding: 0.25rem 0.75rem;
+    border: var(--nowo-ui-border-width, 1px) solid var(--nowo-ui-table-border, var(--nowo-ui-border));
+    border-radius: var(--nowo-ui-radius);
+    background: var(--nowo-ui-surface);
+  }
+
+  .nowo-ui-table--cards > tbody > tr > td {
+    display: grid;
+    grid-template-columns: minmax(6rem, 40%) minmax(0, 1fr);
+    gap: 0.75rem;
+    padding: 0.4rem 0;
+    text-align: start;
+    overflow-wrap: anywhere;
+  }
+
+  .nowo-ui-table--cards > tbody > tr > td:last-child {
+    border-bottom: 0;
+  }
+
+  .nowo-ui-table--cards > tbody > tr > td[data-label]::before {
+    content: attr(data-label);
+    color: var(--nowo-ui-muted);
+    font-weight: 600;
+  }
+
+  .nowo-ui-table--cards > tbody > tr > td:not([data-label]),
+  .nowo-ui-table--cards > tbody > tr > td.nowo-ui-table__actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .nowo-ui-table--cards > tbody > tr > td.nowo-ui-table__actions .nowo-ui-row-actions {
+    justify-content: flex-end;
+  }
+
+  .nowo-ui-table--cards > tbody > tr > td[data-nowo-ui-priority] {
+    display: grid;
+  }
+}
+
 .nowo-ui-empty__title {
   margin: 0 0 0.25rem;
   font-weight: 600;

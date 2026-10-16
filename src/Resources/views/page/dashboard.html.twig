@@ -1,7 +1,8 @@
 {#
   REQ-UI-003 dashboard scaffold. Variable: page (View\DashboardPage).
 
-  Regions: page header, KPI tiles (page.kpis), cards grid.
+  Regions: page header, KPI tiles (page.kpis; slots kpis, kpi, kpi_label, kpi_value, kpi_hint; KpiTile::linkTile
+  makes the whole tile the link), cards grid.
   Data block: nowo_ui_dashboard_cards (cards inside the grid; use the `card` / `card_header` / `card_body` slots or
   partials/_card.html.twig).
 #}
@@ -22,13 +23,14 @@
         {% if page.kpis is not empty %}
             <div class="{{ nowo_ui_class('kpis', _b) }}" data-nowo-ui-region="kpis"{{ nowo_ui_attrs('kpis', _b) }}>
                 {% for kpi in page.kpis %}
-                    <div class="{{ nowo_ui_class('kpi', _b) }} nowo-ui-kpi--{{ kpi.variant }}">
-                        <p class="nowo-ui-kpi__label">{{ kpi.label|nowo_ui_trans }}</p>
-                        <p class="nowo-ui-kpi__value">
-                            {%- if kpi.href -%}<a href="{{ kpi.href }}">{{ kpi.value }}</a>{%- else -%}{{ kpi.value }}{%- endif -%}
+                    {% set _tile_link = kpi.href and kpi.linkTile %}
+                    <{{ _tile_link ? 'a' : 'div' }} class="{{ nowo_ui_class('kpi', _b) }} nowo-ui-kpi--{{ kpi.variant }}{{ _tile_link ? ' nowo-ui-kpi--link' }}"{% if _tile_link %} href="{{ kpi.href }}"{% endif %}{{ nowo_ui_attrs('kpi', _b) }}>
+                        <p class="{{ nowo_ui_class('kpi_label', _b) }}">{{ kpi.label|nowo_ui_trans }}</p>
+                        <p class="{{ nowo_ui_class('kpi_value', _b) }}">
+                            {%- if kpi.href and not _tile_link -%}<a href="{{ kpi.href }}">{{ kpi.value }}</a>{%- else -%}{{ kpi.value }}{%- endif -%}
                         </p>
-                        {% if kpi.hint %}<p class="nowo-ui-kpi__hint">{{ kpi.hint|nowo_ui_trans }}</p>{% endif %}
-                    </div>
+                        {% if kpi.hint %}<p class="{{ nowo_ui_class('kpi_hint', _b) }}">{{ kpi.hint|nowo_ui_trans }}</p>{% endif %}
+                    </{{ _tile_link ? 'a' : 'div' }}>
                 {% endfor %}
             </div>
         {% endif %}

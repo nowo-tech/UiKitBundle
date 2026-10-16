@@ -106,6 +106,9 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `table_wrap` | `nowo-ui-table-wrap` | `table-responsive` | `table-responsive` | `overflow-x-auto` | — |
 | `table` | `nowo-ui-table nowo-ui-table--striped` | `table table-hover align-middle` | `table table-hover align-middle` | `min-w-full text-sm text-left` | `stack table` |
 | `table_head` | `nowo-ui-table__head` | — | — | — | — |
+| `table_head_row` | `nowo-ui-table__head-row` | — | — | — | — |
+| `table_head_cell` | `nowo-ui-table__head-cell` | — | — | — | — |
+| `table_actions_head` | `nowo-ui-table__actions` | — | — | — | — |
 | `table_row` | `nowo-ui-table__row` | — | — | — | — |
 | `table_cell` | `nowo-ui-table__cell` | — | — | — | — |
 | `row_actions` | `nowo-ui-row-actions` | `d-flex gap-1` | `d-flex gap-1` | `flex gap-1` | `button-group` |
@@ -121,6 +124,7 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `badge_neutral` | `nowo-ui-badge nowo-ui-badge--neutral` | `badge text-bg-light border ms-2` | `badge badge-light border ml-2` | `ml-2 inline-flex border px-2 py-0.5 text-xs` | `badge secondary` |
 | `filters` | `nowo-ui-filters nowo-ui-search` | `d-flex flex-wrap gap-2 mb-3` | `d-flex flex-wrap gap-2 mb-3` | `flex flex-wrap gap-2 mb-4` | `grid-x grid-margin-x mb-3` |
 | `filters_actions` | `nowo-ui-filters__actions` | `d-flex flex-wrap align-items-end gap-2` | `d-flex flex-wrap align-items-end gap-2` | `flex flex-wrap items-end gap-2` | — |
+| `filters_field` | `nowo-ui-filters__field` | — | — | — | — |
 | `input` | `nowo-ui-input` | `form-control` | `form-control` | `block w-full max-w-xs border px-3 py-1.5 text-sm` | — |
 | `pagination` | `nowo-ui-pagination` | `d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3` | `d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3` | `flex flex-wrap items-center justify-between gap-2 mt-3` | — |
 | `pagination_link` | `nowo-ui-pagination__link` | `page-link` | `page-link` | — | — |
@@ -143,14 +147,20 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `detail_list` | `nowo-ui-detail-list` | — | — | — | — |
 | `kpis` | `nowo-ui-kpis` | — | — | — | — |
 | `kpi` | `nowo-ui-kpi` | `card` | `card` | `border` | `callout` |
+| `kpi_label` | `nowo-ui-kpi__label` | — | — | — | — |
+| `kpi_value` | `nowo-ui-kpi__value` | — | — | — | — |
+| `kpi_hint` | `nowo-ui-kpi__hint` | — | — | — | — |
 | `tabs` | `nowo-ui-tabs` | `nav nav-tabs mb-3` | `nav nav-tabs mb-3` | `flex flex-wrap gap-2 border-b mb-3` | `tabs` |
 | `tab` | `nowo-ui-tabs__item` | `nav-link` | `nav-link` | `px-3 py-2 text-sm no-underline` | `tabs-title` |
 | `tab_active` | `nowo-ui-tabs__item nowo-ui-tabs__item--active` | `nav-link active` | `nav-link active` | `px-3 py-2 text-sm no-underline border-b-2` | `tabs-title is-active` |
 | `modal` | `nowo-ui-modal` | — | — | — | — |
 | `confirm` | `nowo-ui-confirm` | — | — | — | — |
 | `form` | `nowo-ui-form` | — | — | — | — |
+| `form_panel` | `nowo-ui-form-panel` | — | — | — | — |
 | `form_actions` | `nowo-ui-form__actions` | `d-flex flex-wrap gap-2 mt-3` | `d-flex flex-wrap gap-2 mt-3` | `flex flex-wrap gap-2 mt-4` | — |
 | `danger_zone` | `nowo-ui-danger-zone` | `mt-4` | `mt-4` | `mt-6` | — |
+| `danger_zone_title` | `nowo-ui-danger-zone__title` | — | — | — | — |
+| `danger_zone_intro` | `nowo-ui-danger-zone__intro` | — | — | — | — |
 | `wizard_steps` | `nowo-ui-wizard-steps` | — | — | — | — |
 | `wizard_step` | `nowo-ui-wizard-steps__item` | — | — | — | — |
 | `wizard_step_active` | `nowo-ui-wizard-steps__item nowo-ui-wizard-steps__item--active` | — | — | — | — |

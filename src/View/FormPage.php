@@ -10,6 +10,10 @@ use Symfony\Component\Form\FormView;
  * View model of `@NowoUiKit/page/form.html.twig`: header, form (`form_start` / child loop / `form_end`),
  * submit / cancel / secondary actions and an optional delete zone. Bundles may override `nowo_ui_form_body`
  * (default: REQ-TWIG-003 child loop) and `nowo_ui_form_aside`.
+ *
+ * `secondaryActionsInHeader` (default true) renders the secondary actions in the page-header toolbar after the
+ * header actions; false keeps them in a toolbar below the form. `dangerZoneTitle` / `dangerZoneIntro` label the
+ * delete zone (default title `form.danger_zone`).
  */
 final readonly class FormPage
 {
@@ -31,6 +35,9 @@ final readonly class FormPage
         public ?string $bundle = null,
         public ?string $layout = null,
         public array $attributes = [],
+        public bool $secondaryActionsInHeader = true,
+        public Label|string|null $dangerZoneTitle = null,
+        public Label|string|null $dangerZoneIntro = null,
     ) {
         Action::assertAttributes($attributes);
         $this->secondaryActions = ViewList::of($secondaryActions, Action::class, 'FormPage secondaryActions');

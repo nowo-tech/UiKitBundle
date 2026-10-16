@@ -6,18 +6,55 @@
     - page: View\ListPage (page.filters: FormView)
   Optional:
     - region (data-nowo-ui-region, default filters), bundle (default page.bundle), nowo_ui_page_type
+
+  Per field (page.filterFields[child name], View\FilterField): placeholder (translated), widget class / attributes,
+  row class / attributes and width (`nowo-ui-filters__field--<width>`); every row gets the `filters_field` slot.
+  Actions (slot `filters_actions`): the apply button (page.filtersSubmit: label, icon through the icon partial,
+  variant; default `filters.apply`, btn_primary), the clear link (page.filtersClear through the `action` partial, or a
+  plain link to page.filtersClearHref) and page.filterActions (through the `action` partial).
 #}
 {% set _b = bundle|default(page.bundle) %}
-{{ form_start(page.filters, {attr: {class: nowo_ui_class('filters', _b), role: 'search', 'data-nowo-ui-filters': '', 'data-nowo-ui-region': region|default('filters')}|merge(nowo_ui_theme.attributesFor('filters', _b, {}, nowo_ui_page_type|default(null)))}) }}
+{% set _pt = nowo_ui_page_type|default(null) %}
+{% set _field_class = nowo_ui_class('filters_field', _b) %}
+{{ form_start(page.filters, {attr: {class: nowo_ui_class('filters', _b), role: 'search', 'data-nowo-ui-filters': '', 'data-nowo-ui-region': region|default('filters')}|merge(nowo_ui_theme.attributesFor('filters', _b, {}, _pt))}) }}
     {% for child in page.filters %}
         {% if not child.rendered %}
-            {{ form_row(child) }}
+            {% set _field = page.filterFields[child.vars.name] ?? null %}
+            {% set _attr = child.vars.attr %}
+            {% set _row_attr = child.vars.row_attr %}
+            {% set _row_class = [_row_attr.class ?? null, _field_class] %}
+            {% if _field %}
+                {% set _attr = _attr|merge(_field.attributes) %}
+                {% if _field.placeholder is not null %}
+                    {% set _attr = _attr|merge({placeholder: _field.placeholder|nowo_ui_trans}) %}
+                {% endif %}
+                {% if _field.class %}
+                    {% set _attr = _attr|merge({class: ((_attr.class ?? '') ~ ' ' ~ _field.class)|trim}) %}
+                {% endif %}
+                {% set _row_attr = _row_attr|merge(_field.rowAttributes) %}
+                {% set _row_class = _row_class|merge([_field.width ? 'nowo-ui-filters__field--' ~ _field.width : null, _field.rowClass]) %}
+            {% endif %}
+            {{ form_row(child, {attr: _attr, row_attr: _row_attr|merge({class: _row_class|filter(c => c)|join(' ')})}) }}
         {% endif %}
     {% endfor %}
     <div class="{{ nowo_ui_class('filters_actions', _b) }}"{{ nowo_ui_attrs('filters_actions', _b) }}>
-        <button type="submit" class="{{ nowo_ui_class('btn_primary', _b) }}">{{ 'filters.apply'|trans({}, 'NowoUiKitBundle') }}</button>
-        {% if page.filtersClearHref %}
+        {% set _submit = page.filtersSubmit %}
+        {% set _submit_label = _submit and _submit.label is not null ? _submit.label|nowo_ui_trans : 'filters.apply'|trans({}, 'NowoUiKitBundle') %}
+        <button type="submit" class="{{ nowo_ui_class('btn_' ~ (_submit and _submit.variant in ['primary', 'secondary', 'danger'] ? _submit.variant : 'primary'), _b) }} nowo-ui-filters__submit"{% if _submit %}{{ nowo_ui_html_attrs(_submit.attributes) }}{% endif %}>
+            {%- if _submit and _submit.icon -%}
+                {{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _submit.icon, label: _submit_label}, false)|trim|raw }}
+                <span class="nowo-ui-action__label">{{ _submit_label }}</span>
+            {%- else -%}
+                {{ _submit_label }}
+            {%- endif -%}
+        </button>
+        {% if page.filtersClear %}
+            {{ include(nowo_ui_partial('action', _b), {action: page.filtersClear, context: 'toolbar', bundle: _b, nowo_ui_page_type: _pt}, false) }}
+        {% elseif page.filtersClearHref %}
             <a class="{{ nowo_ui_class('btn_secondary', _b) }}" href="{{ page.filtersClearHref }}">{{ 'filters.clear'|trans({}, 'NowoUiKitBundle') }}</a>
         {% endif %}
+        {% for action in page.filterActions %}
+            {{ include(nowo_ui_partial('action', _b), {action: action, context: 'toolbar', bundle: _b, nowo_ui_page_type: _pt}, false) }}
+        {% endfor %}
     </div>
 {{ form_end(page.filters) }}

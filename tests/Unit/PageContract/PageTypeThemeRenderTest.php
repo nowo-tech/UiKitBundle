@@ -37,7 +37,7 @@ final class PageTypeThemeRenderTest extends TestCase
         $page = new ListPage(new PageHeader('Items', actions: [Action::create('/new')]), [new Column('name')], [['name' => 'A']], pagination: new Pagination(1, 1, 3));
         $html = PageContractTwig::create([], self::THEME)->render('@NowoUiKit/page/list.html.twig', ['page' => $page]);
 
-        self::assertStringContainsString('<table class="nowo-ui-table nowo-ui-table--striped table table-hover align-middle list-table" data-host="1" data-page="list">', $html);
+        self::assertStringContainsString('<table class="nowo-ui-table nowo-ui-table--striped table table-hover align-middle list-table nowo-ui-table--cards" data-host="1" data-page="list">', $html);
         self::assertStringContainsString('nowo-ui-page-header d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3 list-header', $html);
         self::assertStringContainsString('nowo-ui-pagination d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3 list-pager', $html);
         self::assertStringContainsString('nowo-ui-table__cell list-cell', $html);
