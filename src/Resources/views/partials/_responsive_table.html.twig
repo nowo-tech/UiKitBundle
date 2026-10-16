@@ -31,7 +31,9 @@
     - morph (default false): add `<morph-icon data-table-mode-morph>` (assets/morphicons, installMorphiconPeers())
     - icons: {scroll, responsive, close} — names for components/_icon.html.twig
       (default scroll_horizontal / rows / close; e.g. `tabler:arrows-horizontal` with icon_set ux_icon)
-    - labels: {to_responsive, to_scroll, details, close} — override the NowoUiKitBundle translations
+    - labels: {to_responsive, to_scroll, details, close, save_error} — override the NowoUiKitBundle translations
+      (save_error, 1.17.1: sent as `messages.saveError`, in the `responsive-table:save-failed` event detail)
+    - attr (1.17.1): extra attributes on the root element (hash; e.g. {'data-testid': 'items-table'})
     - dialog_id: dialog id prefix (default generated)
     - root_class, scroller_class, dialog_class: extra classes (root, scroller, <dialog>)
     - testids (default false): data-testid `responsive-table`, `table-mode-toggle`, `row-detail-dialog`
@@ -43,6 +45,7 @@
     to_scroll: 'table_mode.to_scroll'|trans({}, 'NowoUiKitBundle'),
     details: 'table_mode.details'|trans({}, 'NowoUiKitBundle'),
     close: 'table_mode.close'|trans({}, 'NowoUiKitBundle'),
+    save_error: 'table_mode.save_error'|trans({}, 'NowoUiKitBundle'),
 }|merge(labels|default({})) %}
 {% set _id = dialog_id|default('nowo-ui-rt-' ~ random()) %}
 {% set _corner = corner ?? true %}
@@ -58,9 +61,10 @@
     {%- if save_method|default('') %} data-responsive-table-method-value="{{ save_method }}"{% endif %}
     {%- if phone_query|default('') %} data-responsive-table-phone-query-value="{{ phone_query }}"{% endif %}
     {%- if part_selector|default('') %} data-responsive-table-part-selector-value="{{ part_selector }}"{% endif %}
-    data-responsive-table-messages-value="{{ {toResponsive: _labels.to_responsive, toScroll: _labels.to_scroll, details: _labels.details}|json_encode }}"
+    data-responsive-table-messages-value="{{ {toResponsive: _labels.to_responsive, toScroll: _labels.to_scroll, details: _labels.details, saveError: _labels.save_error}|json_encode }}"
     {%- if _mode %} data-table-mode="{{ _mode }}"{% endif %}
     {%- if _testids %} data-testid="responsive-table"{% endif %}
+    {%- for _name, _value in attr|default({}) %} {{ _name|e('html_attr') }}="{{ _value }}"{% endfor %}
 >
     {% if mode_toggle ?? true %}
         <div class="nowo-ui-responsive-table__bar">

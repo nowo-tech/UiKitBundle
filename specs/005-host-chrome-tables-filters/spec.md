@@ -2,7 +2,7 @@
 
 **Feature Branch**: `005-host-chrome-tables-filters`  
 **Created**: 2026-10-16  
-**Status**: Implemented (1.17.0)  
+**Status**: Implemented (1.17.0; 1.17.1: root `attr`, `saveError` message in the save-failed event)  
 **Input**: Symfony Beacon spec 148 (responsive tables, implementation notes) and the chrome built with it — move the
 generic pieces into the kit, opt-in, with neutral `nowo-ui-*` names, `--nowo-ui-*` tokens and copy.
 

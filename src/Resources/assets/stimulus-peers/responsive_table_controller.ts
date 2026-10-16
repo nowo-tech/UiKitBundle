@@ -20,11 +20,11 @@
  * Values: `mode` (`scroll` | `responsive` | empty = default), `url`, `token`, `tokenUrl`, `method` (default `PUT`),
  *         `phoneQuery` (default `(max-width: 767px)`: no stored mode → responsive there, scroll elsewhere),
  *         `partSelector` (stacked header parts joined in the dialog labels, default `[data-cell-part]`),
- *         `messages` (`{toResponsive, toScroll, details}`).
+ *         `messages` (`{toResponsive, toScroll, details, saveError}`; `saveError` since 1.17.1).
  * Actions: `responsive-table#toggle`, `responsive-table#open` (detail button), `responsive-table#close`.
  * Root attributes: `data-table-mode`, `data-rt-has-hidden`; hidden cells: `data-rt-hidden`.
  * Events: `responsive-table:changed` (`detail.mode`), `responsive-table:save-failed` (`detail.mode`,
- *         `detail.previous`).
+ *         `detail.previous`, `detail.message` = `messages.saveError` or empty).
  */
 
 import { Controller } from '@hotwired/stimulus';
@@ -42,6 +42,8 @@ type Messages = {
   toResponsive?: string;
   toScroll?: string;
   details?: string;
+  /** Text for the host's error toast (1.17.1), passed in the `save-failed` event detail. */
+  saveError?: string;
 };
 
 export default class ResponsiveTableController extends Controller<HTMLElement> {
@@ -157,11 +159,11 @@ export default class ResponsiveTableController extends Controller<HTMLElement> {
   }
 
   /**
-   * A save failed (the mode is already switched back). Dispatches `responsive-table:save-failed`; hosts that want
-   * a toast either listen to it or override this method in a subclass.
+   * A save failed (the mode is already switched back). Dispatches `responsive-table:save-failed` with the
+   * `saveError` message; hosts show it from a listener or override this method in a subclass.
    */
   protected saveFailed(mode: TableMode, previous: string): void {
-    this.dispatch('save-failed', { detail: { mode, previous } });
+    this.dispatch('save-failed', { detail: { mode, previous, message: this.messagesValue.saveError ?? '' } });
   }
 
   /** Applies the mode to the markup (and the toggle) and fits the columns. */

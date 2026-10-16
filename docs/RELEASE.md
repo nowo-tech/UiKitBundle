@@ -2,7 +2,7 @@
 
 This checklist helps maintainers prepare and publish a release safely.
 
-**Current stable:** `v1.17.0` (2026-10-16).
+**Current stable:** `v1.17.1` (2026-10-16).
 
 ## Table of contents
 

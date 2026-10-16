@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.17.1] - 2026-10-16](#1171---2026-10-16)
 - [[1.17.0] - 2026-10-16](#1170---2026-10-16)
 - [[1.16.0] - 2026-10-13](#1160---2026-10-13)
 - [[1.15.0] - 2026-10-13](#1150---2026-10-13)
@@ -40,6 +41,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [1.17.1] - 2026-10-16
+
+### Added
+
+- `partials/_responsive_table.html.twig`: `attr` — extra attributes on the root element (hash, attribute names escaped); `labels.save_error` (default: the existing `table_mode.save_error` translation) rendered as `messages.saveError`.
+- `responsive-table` peer: `messages.saveError`; the `responsive-table:save-failed` event detail now carries `message` (the save error text, or empty) next to `mode` / `previous`, so hosts show their toast from a listener. `saveFailed(mode, previous)` stays protected and overridable.
+
+### Changed
+
+- `NowoUiKitExtension` accepts an optional `\Closure(): bool` (whether `symfony/http-client` is installed) so the "release check needs symfony/http-client" error path is tested; PHP line coverage back to 100 %. No behaviour change.
+
+[1.17.1]: https://github.com/nowo-tech/UiKitBundle/compare/v1.17.0...v1.17.1
 
 ## [1.17.0] - 2026-10-16
 

@@ -160,6 +160,13 @@ final class NowoUiKitExtensionTest extends TestCase
         self::assertFalse($container->hasDefinition('nowo_ui_kit.release_update_checker'));
     }
 
+    public function testReleaseCheckEnabledRequiresTheHttpClient(): void
+    {
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage('requires symfony/http-client');
+        (new NowoUiKitExtension(static fn (): bool => false))->load([['release_check' => ['enabled' => true]]], new ContainerBuilder());
+    }
+
     public function testReleaseCheckEnabledRegistersCheckerAndWiresController(): void
     {
         $container = new ContainerBuilder();

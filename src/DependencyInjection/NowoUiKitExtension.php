@@ -36,6 +36,17 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 final class NowoUiKitExtension extends Extension implements PrependExtensionInterface
 {
+    /** @var \Closure(): bool */
+    private readonly \Closure $httpClientAvailable;
+
+    /**
+     * @param (\Closure(): bool)|null $httpClientAvailable whether symfony/http-client is installed (overridable in tests)
+     */
+    public function __construct(?\Closure $httpClientAvailable = null)
+    {
+        $this->httpClientAvailable = $httpClientAvailable ?? static fn (): bool => interface_exists(HttpClientInterface::class) && class_exists(HttpClient::class);
+    }
+
     public function getAlias(): string
     {
         return Configuration::ALIAS;
@@ -201,7 +212,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
             return;
         }
 
-        if (!interface_exists(HttpClientInterface::class) || !class_exists(HttpClient::class)) {
+        if (!($this->httpClientAvailable)()) {
             throw new \LogicException('nowo_ui_kit.release_check.enabled requires symfony/http-client (composer require symfony/http-client).');
         }
 

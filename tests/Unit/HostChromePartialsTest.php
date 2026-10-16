@@ -32,7 +32,7 @@ final class HostChromePartialsTest extends TestCase
         self::assertStringNotContainsString('data-table-mode=', $html);
         self::assertStringNotContainsString('data-testid', $html);
         self::assertStringNotContainsString('<morph-icon', $html);
-        self::assertStringContainsString('data-responsive-table-messages-value="{&quot;toResponsive&quot;:&quot;table_mode.to_responsive&quot;,&quot;toScroll&quot;:&quot;table_mode.to_scroll&quot;,&quot;details&quot;:&quot;table_mode.details&quot;}"', $html);
+        self::assertStringContainsString('data-responsive-table-messages-value="{&quot;toResponsive&quot;:&quot;table_mode.to_responsive&quot;,&quot;toScroll&quot;:&quot;table_mode.to_scroll&quot;,&quot;details&quot;:&quot;table_mode.details&quot;,&quot;saveError&quot;:&quot;table_mode.save_error&quot;}"', $html);
         self::assertStringContainsString('class="nowo-ui-responsive-table__toggle nowo-ui-corner-tab"', $html);
         self::assertStringContainsString('aria-pressed="false"', $html);
         self::assertStringContainsString('aria-label="table_mode.to_responsive"', $html);
@@ -60,7 +60,8 @@ final class HostChromePartialsTest extends TestCase
                 'corner' => false,
                 'morph' => true,
                 'icons' => ['scroll' => 'arrows', 'close' => 'x'],
-                'labels' => ['to_scroll' => 'Scroll it', 'close' => 'Shut'],
+                'labels' => ['to_scroll' => 'Scroll it', 'close' => 'Shut', 'save_error' => 'Mode "not" saved'],
+                'attr' => ['data-listing' => 'items', 'aria-describedby' => 'help "x"'],
                 'dialog_id' => 'rt-items',
                 'root_class' => 'mine',
                 'scroller_class' => 'overflow-x-auto',
@@ -71,7 +72,8 @@ final class HostChromePartialsTest extends TestCase
 
         self::assertStringContainsString('class="nowo-ui-responsive-table mine"', $html);
         self::assertStringContainsString('data-responsive-table-mode-value="responsive" data-responsive-table-url-value="/prefs/items/mode" data-responsive-table-token-value="tok" data-responsive-table-token-url-value="/prefs/token" data-responsive-table-method-value="POST" data-responsive-table-phone-query-value="(max-width: 600px)" data-responsive-table-part-selector-value=".part"', $html);
-        self::assertStringContainsString('data-table-mode="responsive" data-testid="responsive-table"', $html);
+        self::assertStringContainsString('data-table-mode="responsive" data-testid="responsive-table" data-listing="items" aria-describedby="help &quot;x&quot;"', $html);
+        self::assertStringContainsString('&quot;saveError&quot;:&quot;Mode \\&quot;not\\&quot; saved&quot;', $html);
         self::assertStringContainsString('class="nowo-ui-responsive-table__toggle"', $html);
         self::assertStringContainsString('aria-pressed="true"', $html);
         self::assertMatchesRegularExpression('/aria-label="Scroll it"\s+title="Scroll it" data-testid="table-mode-toggle"/', $html);

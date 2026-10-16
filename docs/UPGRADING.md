@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.17.1](#to-1171)
 - [To 1.17.0](#to-1170)
 - [To 1.16.0](#to-1160)
 - [To 1.15.0](#to-1150)
@@ -42,6 +43,18 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 1.17.1
+
+From **1.17.0** — patch, nothing to change. Optional: pass `attr` to `_responsive_table.html.twig` for extra root
+attributes, and show your error toast from `responsive-table:save-failed` using `event.detail.message` (the
+`labels.save_error` text, default `table_mode.save_error`) instead of subclassing the peer:
+
+```ts
+document.addEventListener('responsive-table:save-failed', (event) => {
+  showToast({ title: (event as CustomEvent<{ message: string }>).detail.message, tone: 'error' });
+});
+```
 
 ## To 1.17.0
 

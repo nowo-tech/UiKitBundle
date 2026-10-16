@@ -340,7 +340,7 @@ Stimulus peer `responsive-table` ([STIMULUS.md](STIMULUS.md#responsive-table-sti
   elsewhere. The toggle switches at once; persistence is **host-owned**: with `save_url` the peer sends
   `{"mode": "scroll"|"responsive"}` as JSON with an `X-CSRF-TOKEN` header (`save_method`, default `PUT`) and
   refreshes a stale token once from `save_token_url` (`{"token": "…"}`); a failed save switches back and dispatches
-  `responsive-table:save-failed`. Without `save_url` the choice stays on the page.
+  `responsive-table:save-failed` (1.17.1: `detail.message` = the `labels.save_error` text, for the host's toast). Without `save_url` the choice stays on the page.
 
 ```twig
 <div class="nowo-ui-card">
@@ -379,7 +379,8 @@ Options of `_responsive_table`: `table_mode`, `save_url`, `save_token`, `save_to
 `phone_query`, `part_selector` (stacked header parts joined with " · " in the dialog labels, default
 `[data-cell-part]`), `mode_toggle` (default true), `corner` (default true: the toggle is a [corner tab](#card-corner-tab)
 of the nearest `.nowo-ui-corner-host` / `.nowo-ui-card`; false: a small bar above the table), `morph`, `icons`
-(`scroll`, `responsive`, `close`), `labels` (`to_responsive`, `to_scroll`, `details`, `close`), `dialog_id`,
+(`scroll`, `responsive`, `close`), `labels` (`to_responsive`, `to_scroll`, `details`, `close`, `save_error` — 1.17.1), `attr` (1.17.1: extra root
+attributes, hash), `dialog_id`,
 `root_class`, `scroller_class`, `dialog_class`, `testids` (adds `data-testid` `responsive-table`,
 `table-mode-toggle`, `row-detail-dialog`). `_row_detail_head`: `label`, `th_class`. `_row_detail_cell`: `label`,
 `icon` (default `view`), `td_class`, `testids` (`row-detail`). Include the two cell partials with `only`.

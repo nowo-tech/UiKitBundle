@@ -267,15 +267,15 @@ No kit IIFE (1.17). *Scroll* ↔ *Responsive* table with a row detail dialog —
 | `data-responsive-table-method-value` | HTTP method of the save (default `PUT`) |
 | `data-responsive-table-phone-query-value` | Default-responsive media query (default `(max-width: 767px)`) |
 | `data-responsive-table-part-selector-value` | Stacked header parts joined in dialog labels (default `[data-cell-part]`) |
-| `data-responsive-table-messages-value` | `{toResponsive, toScroll, details}` (toggle name / title, detail button prefix) |
+| `data-responsive-table-messages-value` | `{toResponsive, toScroll, details, saveError}` (toggle name / title, detail button prefix, save error text — 1.17.1) |
 | targets `scroller`, `table`, `toggle` (optional), `dialog`, `dialogTitle`, `dialogBody` | |
 | header cells `th[data-column]` (+ `data-required="1"`), row cells `td[data-column]` | Columns (document order = hiding order, from the end) |
 | `[data-responsive-detail]` cell with a `button[data-action="responsive-table#open"]` | Row detail button (last cell) |
 | `data-action="responsive-table#toggle"` / `#close` | Mode toggle / dialog close |
 
 Events: `responsive-table:changed` (`detail.mode`, optimistic), `responsive-table:save-failed` (`detail.mode`,
-`detail.previous`; the mode is already switched back). Hosts that want a toast listen to it or subclass the peer and
-override the protected `saveFailed(mode, previous)`. Peer: `responsive_table_controller.ts` (exports
+`detail.previous`, `detail.message` = `messages.saveError` or empty — 1.17.1; the mode is already switched back).
+Hosts show their toast from a listener, or subclass the peer and override the protected `saveFailed(mode, previous)`. Peer: `responsive_table_controller.ts` (exports
 `RESPONSIVE_TABLE_PHONE_QUERY`, type `TableMode`). No inline styles (CSP); ResizeObserver + rAF; everything undone on
 disconnect (an open dialog is closed and its cells put back).
 

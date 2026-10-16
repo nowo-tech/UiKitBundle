@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setIconStateHandler } from './icon_state';
 import ResponsiveTableController, { RESPONSIVE_TABLE_PHONE_QUERY } from './responsive_table_controller';
 
-const MESSAGES = { toResponsive: 'To responsive', toScroll: 'To scroll', details: 'Details' };
+const MESSAGES = { toResponsive: 'To responsive', toScroll: 'To scroll', details: 'Details', saveError: 'Not saved' };
 
 /** Column widths of the fake layout (px); the scroller is `width` wide. */
 let widths: Record<string, number> = {};
@@ -297,7 +297,7 @@ describe('responsive-table peer', () => {
     await tick();
     expect(root.dataset.tableMode).toBe('scroll');
     expect(changed).toEqual(['responsive', 'scroll', 'responsive']);
-    expect(failed).toEqual([{ mode: 'responsive', previous: 'scroll' }]);
+    expect(failed).toEqual([{ mode: 'responsive', previous: 'scroll', message: 'Not saved' }]);
   });
 
   it('treats network errors, a missing token URL or a bad token answer as a failed save, and a page without URL as saved', async () => {
@@ -342,6 +342,16 @@ describe('responsive-table peer', () => {
     await tick();
     await tick();
     expect(fourth.dataset.tableMode).toBe('scroll');
+
+    const noMessages: unknown[] = [];
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('{}', { status: 500 })));
+    const sixth = mount('scroll', '/prefs/items/mode', {});
+    sixth.addEventListener('responsive-table:save-failed', (event) => noMessages.push((event as CustomEvent).detail.message));
+    await tick();
+    sixth.querySelector<HTMLButtonElement>('[data-responsive-table-target="toggle"]')?.click();
+    await tick();
+    await tick();
+    expect(noMessages).toEqual(['']);
 
     const fifth = mount('scroll', '');
     await tick();
