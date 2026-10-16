@@ -1,0 +1,14 @@
+/*
+ * nowo-ui.css — UiKit 2.0 stylesheet inside the cascade layer `nowo-ui` (GENERATED from nowo-ui.unlayered.css by
+ * `pnpm run build:css`; edit the unlayered file).
+ *
+ * Layer order: the statement below declares `theme, base, nowo-ui, components, utilities` (Tailwind v4 names) when
+ * this file is the first stylesheet that names them. `nowo-ui` sits ABOVE `base` (Tailwind preflight would otherwise
+ * reset the kit dialogs) and BELOW `components` / `utilities` (host utilities in theme slots win). Load it before the
+ * host Tailwind stylesheet, or declare the same order at the top of that stylesheet.
+ *
+ * Unlayered host CSS (Bootstrap from a CDN, a host theme file) always beats layered rules: hosts that relied on the
+ * 1.x cascade (kit rules overriding unlayered framework rules) link nowo-ui.unlayered.css instead.
+ */
+@layer theme, base, nowo-ui, components, utilities;
+

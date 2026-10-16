@@ -63,6 +63,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   - `_card` reads the theme slots `card`, `card_header`, `card_body`, `card_footer` (new slot) and `cards`, and accepts `Label` titles / intros, `actions` (`View\Action` list), `id`, `attr`, `cards` (grid of cards through the `card` partial) and `bundle`; 1.x inputs render as in 1.17.4 (added to the legacy fixtures).
   - Docs: [`PAGE_CONTRACT.md`](PAGE_CONTRACT.md) (full guide), [`THEME_SLOTS.md`](THEME_SLOTS.md) (slot vocabulary with defaults per framework, partials, tokens, per-bundle exception semantics), [`MIGRATING_BUNDLES.md`](MIGRATING_BUNDLES.md) (bundle recipe).
 
+### Changed
+
+- **Template contract — CSS cascade layer:** `nowo-ui.css` ships inside `@layer nowo-ui` with the order statement `@layer theme, base, nowo-ui, components, utilities;` so Tailwind v4 utilities placed in theme slots beat the kit while the kit stays above Tailwind's preflight (dialogs). `nowo-ui.unlayered.css` keeps the 1.x unlayered stylesheet for hosts that relied on the kit beating unlayered framework CSS. `nowo-ui.css` is generated from it (`pnpm run build:css`, checked by `LayeredCssTest`).
+
 ### Fixed
 
 - Badge contrast on Bootstrap 5 / Tabler: the `ui.badge()` macro and the `badge*` slot defaults used `bg-success` / `bg-danger` (background with `!important`) without a text utility, so the semantic `nowo-ui-badge--*` text colour (dark green / red) landed on the solid Bootstrap fill. They now use `text-bg-{success,warning,danger,info,light}` (Bootstrap 5.2+; text and background set together); on 5.0 / 5.1 the semantic palette paints the badge. `nowo-ui.css` also clears the tinted border on solid badges and gives 1.x `bg-*` badges without a text utility Bootstrap's badge text colour.

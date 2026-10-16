@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+  - [Template contract](#template-contract)
 - [To 1.17.4](#to-1174)
 - [To 1.17.3](#to-1173)
 - [To 1.17.2](#to-1172)
@@ -47,8 +48,8 @@
 
 ## Unreleased
 
-**Template contract (REQ-UI-003, new — no breaking changes).** Everything below is additive; existing partials and
-macros keep their 1.x inputs and output.
+**Page contract (REQ-UI-003, new).** Everything below is additive; existing partials and macros keep their 1.x
+inputs and output. Changes a host may notice are listed under [Template contract](#template-contract).
 
 - New layouts: `@NowoUiKit/layout/document.html.twig`, `layout/admin.html.twig`, `layout/guest.html.twig`
   (blocks `nowo_ui_document_title`, `nowo_ui_head`, `nowo_ui_styles`, `nowo_ui_scripts`, `nowo_ui_body`,
@@ -82,6 +83,18 @@ macros keep their 1.x inputs and output.
 - Hosts that override `_pagination`, `_toasts`, `_flashes`, `_page_header`, `_row_actions`, `_confirm`, `_empty`,
   `_card`, `_shell` or `_burger` keep working; to pick up view-model inputs, re-sync from the bundle (or replace the fork with
   `theme.classes` / `theme.attributes` / `theme.partials`).
+
+### Template contract
+
+Changes to markup, inputs and cascade a host or a bundle may depend on (REQ-UI-003 validation in Symfony Beacon).
+1.x partial inputs keep rendering as in 1.17.4 unless a bullet says otherwise.
+
+- **CSS cascade layer.** `nowo-ui.css` is now wrapped in `@layer nowo-ui` and declares the order
+  `theme, base, nowo-ui, components, utilities`. Tailwind v4 hosts: utilities in theme slots now beat the kit; keep
+  `nowo-ui` above `base` (load `nowo-ui.css` first or put the statement at the top of your stylesheet —
+  [`PAGE_CONTRACT.md#cascade-layers`](PAGE_CONTRACT.md#cascade-layers)). Hosts without layers: your unlayered CSS
+  (and an unlayered framework such as Bootstrap from a CDN) now always beats the kit; to keep the 1.x cascade, link
+  `css/nowo-ui.unlayered.css` (identical rules, no layer) instead of `css/nowo-ui.css`.
 
 ## To 1.17.4
 

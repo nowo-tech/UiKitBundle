@@ -26,6 +26,7 @@ Normative spec: REQ-UI-003 in `BUNDLES_FULL_SPECS_DETAILS.md` · design and migr
 - [View models](#view-models)
 - [Partials](#partials)
 - [Tokens and CSS](#tokens-and-css)
+  - [Cascade layers](#cascade-layers)
 - [Example: a bundle page](#example-a-bundle-page)
 - [Example: host integration](#example-host-integration)
 - [Contract test](#contract-test)
@@ -269,6 +270,35 @@ override applies everywhere — never a local copy. Names: [`THEME_SLOTS.md#part
 declared on `:root` for hosts without tokens. With `<html data-nowo-ui-host-tokens>` (set by `layout/document` when
 `theme.tokens` is configured, or by the host layout) the palette blocks have **zero specificity**, so the host's
 `nowo_ui_theme_tokens()` output — or any host declaration — wins regardless of load order: no `!important` remaps.
+
+### Cascade layers
+
+`nowo-ui.css` ships inside the cascade layer **`nowo-ui`** and starts with the order statement
+`@layer theme, base, nowo-ui, components, utilities;` (Tailwind v4 layer names). Consequences:
+
+- **Tailwind v4 hosts** (Vite, `@import "tailwindcss"`): utilities placed in theme slots (`theme.classes.*`) beat the
+  kit rules, and the kit still beats Tailwind's preflight. `nowo-ui` must stay **above `base`** — below it, the
+  preflight reset of `<dialog>` breaks the confirm / row-detail dialog positioning. The order is fixed by the
+  **first** stylesheet that names the layers, so either link `nowo-ui.css` before the Tailwind stylesheet (the
+  UiKit document layout does: `nowo_ui_styles` prints it first, host styles follow with `{{ parent() }}`), or put the
+  same statement at the very top of the host stylesheet:
+
+  ```css
+  /* assets/app.css */
+  @layer theme, base, nowo-ui, components, utilities;
+  @import "tailwindcss";
+  ```
+
+  Importing the kit from the host bundle works too:
+  `@import "../public/bundles/nowouikit/css/nowo-ui.unlayered.css" layer(nowo-ui);` after the statement above.
+- **Hosts without layers** (Bootstrap / Tabler from a CDN, a plain host theme file): unlayered CSS always beats
+  layered CSS, so host rules win over the kit whatever their specificity or load order. That includes the framework:
+  where 1.x kit rules overrode an unlayered framework rule of equal specificity (e.g. pagination `.page-link`
+  colours, button paddings), the framework now wins. Hosts that want the 1.x cascade link
+  **`nowo-ui.unlayered.css`** (same rules, no layer) instead of `nowo-ui.css`.
+
+`nowo-ui.css` is generated from `nowo-ui.unlayered.css` (`pnpm run build:css`); token fallbacks on `:root` and the
+`data-nowo-ui-host-tokens` zero-specificity palette work the same in both files.
 
 ## Example: a bundle page
 
