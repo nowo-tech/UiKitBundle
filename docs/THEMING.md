@@ -107,6 +107,12 @@ Declared in `nowo-ui.css` (light on `:root`, dark on `[data-theme="dark"]`).
 | `--nowo-ui-link-hover` | `var(--nowo-ui-link)` | link hover |
 | `--nowo-ui-primary-hover` | `color-mix(in srgb, var(--nowo-ui-primary) 85%, white)` | primary button hover (custom / Tailwind stacks) |
 | `--nowo-ui-accent` | `var(--nowo-ui-primary)` | `accent-color` of checkboxes / radios in kit surfaces |
+| `--nowo-ui-font-mono` *(2.1)* | `ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace` | `.nowo-ui-code`, `.nowo-ui-code-block` (slots `code`, `code_block`) |
+| `--nowo-ui-code-bg` *(2.1)* | `var(--nowo-ui-surface-muted)` | inline code and code block background |
+| `--nowo-ui-code-text` *(2.1)* | `var(--nowo-ui-text)` | inline code and code block text |
+| `--nowo-ui-code-border` *(2.1)* | `var(--nowo-ui-border)` | code block border |
+| `--nowo-ui-code-radius` *(2.1)* | `var(--nowo-ui-radius)` | inline code and code block radius |
+| `--nowo-ui-code-block-max-height` *(2.1)* | `32rem` | code block height before it scrolls |
 
 ## Radii, overlays, shadows
 

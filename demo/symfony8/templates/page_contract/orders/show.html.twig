@@ -12,4 +12,12 @@
             </ol>
         </div>
     </section>
+    {# Slots code / code_block (2.1): inline identifier + scrollable JSON payload #}
+    <section class="{{ nowo_ui_class('section', page.bundle) }} {{ nowo_ui_class('card', page.bundle) }}" data-demo-payload>
+        <header class="{{ nowo_ui_class('card_header', page.bundle) }}"><h2 class="nowo-ui-card__title">Webhook payload</h2></header>
+        <div class="{{ nowo_ui_class('card_body', page.bundle) }}">
+            <p>Event <code class="{{ nowo_ui_class('code', page.bundle) }}"{{ nowo_ui_attrs('code', page.bundle) }}>order.paid</code></p>
+            <pre class="{{ nowo_ui_class('code_block', page.bundle) }}"{{ nowo_ui_attrs('code_block', page.bundle) }}><code>{{ {event: 'order.paid', order: {id: order.id, customer: order.customer, email: order.email, total: order.total, currency: 'EUR'}, placed_at: order.placed}|json_encode(constant('JSON_PRETTY_PRINT') b-or constant('JSON_UNESCAPED_SLASHES') b-or constant('JSON_UNESCAPED_UNICODE')) }}</code></pre>
+        </div>
+    </section>
 {% endblock %}

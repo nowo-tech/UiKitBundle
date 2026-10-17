@@ -193,6 +193,15 @@ final class ThemeSlots
         'pagination_link' => ['nowo-ui-pagination__link', ['bootstrap' => 'page-link']],
         'pagination_active' => ['nowo-ui-pagination__link is-active', ['bootstrap' => 'page-link']],
         'pagination_info' => ['nowo-ui-pagination__info', []],
+        // Code: inline <code> (identifiers, short values) and <pre> blocks (payloads, JSON, logs). Monospace,
+        // muted surface, scrollable block (max height) — tokens --nowo-ui-font-mono, --nowo-ui-code-*
+        'code' => ['nowo-ui-code', [
+            'tailwind' => 'font-mono text-sm',
+        ]],
+        'code_block' => ['nowo-ui-code-block', [
+            'bootstrap' => 'border p-3',
+            'tailwind' => 'font-mono text-sm p-3 border',
+        ]],
         // Feedback
         // Secondary text (ui.muted()): the "—" placeholder of empty detail-list values
         'muted' => ['nowo-ui-muted', [

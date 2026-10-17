@@ -58,6 +58,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Theme slots `code` and `code_block`** (REQ-UI-003): inline `<code>` (identifiers, keys) and a `<pre>` block for
+  payloads / JSON / logs. Semantic classes `nowo-ui-code` / `nowo-ui-code-block` (monospace, muted surface; the block
+  has a border, scrolls both ways above `--nowo-ui-code-block-max-height`, `nowo-ui-code-block--wrap` wraps lines);
+  framework defaults Bootstrap `border p-3` (block), Tailwind `font-mono text-sm` (+ `p-3 border` on the block). New
+  optional tokens `--nowo-ui-font-mono`, `--nowo-ui-code-bg`, `--nowo-ui-code-text`, `--nowo-ui-code-border`,
+  `--nowo-ui-code-radius`, `--nowo-ui-code-block-max-height` (docs/THEME_SLOTS.md, docs/THEMING.md). Demo: webhook
+  payload on the page contract show page.
 - **`PageContractTestCase`**: the stub host's `page_header` override renders the header `actions` itself (after the
   scaffold's pre-rendered `toolbar`), and a seventh test per fixture, `testPageActionFormsKeepTheirHiddenFields`
   (helper `assertActionFormsKeepHiddenFields()`, `RenderedPage::$actionForms` / `hiddenFieldValues()`), fails when a

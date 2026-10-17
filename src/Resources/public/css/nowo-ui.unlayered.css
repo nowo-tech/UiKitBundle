@@ -534,6 +534,49 @@ body.nowo-modal-open {
   font-size: 0.875rem;
 }
 
+/* Code (slots code / code_block, 2.1): inline identifiers and <pre> payloads / JSON; the block scrolls. */
+.nowo-ui-code,
+.nowo-ui-code-block {
+  font-family: var(--nowo-ui-font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace);
+  font-size: 0.875em;
+  color: var(--nowo-ui-code-text, var(--nowo-ui-text));
+  background: var(--nowo-ui-code-bg, var(--nowo-ui-surface-muted));
+}
+
+.nowo-ui-code {
+  padding: 0.1em 0.35em;
+  border-radius: var(--nowo-ui-code-radius, var(--nowo-ui-radius));
+  overflow-wrap: anywhere;
+}
+
+.nowo-ui-code-block {
+  display: block;
+  box-sizing: border-box;
+  max-width: 100%;
+  max-height: var(--nowo-ui-code-block-max-height, 32rem);
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  overflow: auto;
+  border: 1px solid var(--nowo-ui-code-border, var(--nowo-ui-border));
+  border-radius: var(--nowo-ui-code-radius, var(--nowo-ui-radius));
+  line-height: 1.5;
+  white-space: pre;
+  tab-size: 2;
+}
+
+.nowo-ui-code-block--wrap {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.nowo-ui-code-block > code {
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  background: none;
+  white-space: inherit;
+}
+
 .nowo-ui-pagination__nav {
   display: flex;
   flex-wrap: wrap;

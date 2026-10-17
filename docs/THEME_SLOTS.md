@@ -146,6 +146,8 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `pagination_link` | `nowo-ui-pagination__link` | `page-link` | `page-link` | — | — |
 | `pagination_active` | `nowo-ui-pagination__link is-active` | `page-link` | `page-link` | — | — |
 | `pagination_info` | `nowo-ui-pagination__info` | — | — | — | — |
+| `code` | `nowo-ui-code` | — | — | `font-mono text-sm` | — |
+| `code_block` | `nowo-ui-code-block` | `border p-3` | `border p-3` | `font-mono text-sm p-3 border` | — |
 | `muted` | `nowo-ui-muted` | `text-muted` | `text-muted` | — | `text-secondary` |
 | `empty` | `nowo-ui-empty nowo-ui-muted` | `text-muted` | `text-muted` | — | `text-secondary` |
 | `flashes` | `nowo-ui-flashes` | — | — | — | — |
@@ -209,8 +211,21 @@ Slot groups: document / layout (`document` … `breadcrumb_separator`), page hea
 … `btn_icon`; variants are complete button classes — `btn_link` included —, `btn_sm` a size modifier, `btn_icon` the icon-only modifier), tables (`table_wrap` … `row_action_disabled`),
 badges (Bootstrap variants use `text-bg-*`, Bootstrap 5.2+, which sets text and background together so the colour
 pair never mixes with the semantic `nowo-ui-badge--*` palette; on 5.0 / 5.1 the semantic palette paints the badge;
-Bootstrap 4 / Foundation variant classes set both colours too), filters / inputs, pagination, feedback (`muted`, `empty`, flashes, `toasts`), surfaces (`card` … `modal_footer`,
+Bootstrap 4 / Foundation variant classes set both colours too), filters / inputs, pagination, code (`code`, `code_block`), feedback (`muted`, `empty`, flashes, `toasts`), surfaces (`card` … `modal_footer`,
 `confirm` … `confirm_footer`), forms (`form`, `form_actions`, `danger_zone`), wizard / auth (`auth_panel` … `auth_links`).
+
+Code: `code` for inline `<code>` (identifiers, keys, short values) and `code_block` for a `<pre>` holding a payload,
+JSON or a log excerpt. UiKit's CSS sets a monospace font (`--nowo-ui-font-mono`), the muted surface
+(`--nowo-ui-code-bg`, `--nowo-ui-code-text`), a border and radius on the block (`--nowo-ui-code-border`,
+`--nowo-ui-code-radius`), and scrolls the block in both directions above `--nowo-ui-code-block-max-height` (default
+`32rem`). Lines are not wrapped (`white-space: pre`); add `nowo-ui-code-block--wrap` to wrap long lines. A `<code>`
+inside the block inherits the block's font and colours. Bootstrap and Foundation already style `<code>` / `<pre>`
+(their element rules win over the `nowo-ui` layer); the Bootstrap `code_block` default only adds `border p-3`.
+
+```twig
+<p>Key <code class="{{ nowo_ui_class('code', bundle) }}"{{ nowo_ui_attrs('code', bundle) }}>{{ log.key }}</code></p>
+<pre class="{{ nowo_ui_class('code_block', bundle) }}"{{ nowo_ui_attrs('code_block', bundle) }}><code>{{ log.payload|json_encode(constant('JSON_PRETTY_PRINT') b-or constant('JSON_UNESCAPED_SLASHES')) }}</code></pre>
+```
 
 Minor hooks for kit class maps: `btn_link` (toolbar `Action` with `variant: 'link'`; same classes as
 `ui.btn('link')`); `muted` (same classes as `ui.muted()`; UiKit prints it on the `—` placeholder of empty detail-list

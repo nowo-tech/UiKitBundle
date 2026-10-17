@@ -245,6 +245,21 @@ test.describe('page contract — validation round 3 (REQ-UI-003)', () => {
     });
   }
 
+  test('show: code slots — inline code and a monospace, scrollable JSON block', async ({ page }) => {
+    await page.goto('/page-contract/orders/1042');
+    const payload = page.locator('[data-demo-payload]');
+    await expect(payload.locator('code.nowo-ui-code')).toHaveText('order.paid');
+    const block = payload.locator('pre.nowo-ui-code-block');
+    await expect(block).toContainText('"event": "order.paid"');
+    const style = await block.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { font: s.fontFamily, overflow: s.overflowX, whiteSpace: s.whiteSpace };
+    });
+    expect(style.font).toMatch(/mono/i);
+    expect(style.overflow).toBe('auto');
+    expect(style.whiteSpace).toBe('pre');
+  });
+
   test('default view: header actions stay in the page header', async ({ page }) => {
     await page.goto('/page-contract/default/orders');
     await expect(page.locator('.nowo-ui-page-header .nowo-ui-action--create')).toBeVisible();
