@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.0.0] - 2026-10-17](#200---2026-10-17)
 - [[1.17.4] - 2026-10-16](#1174---2026-10-16)
 - [[1.17.3] - 2026-10-16](#1173---2026-10-16)
 - [[1.17.2] - 2026-10-16](#1172---2026-10-16)
@@ -44,6 +45,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [2.0.0] - 2026-10-17
+
+**Standard page contract (REQ-UI-003).** Canonical layouts, page scaffolds (list, show, form, settings, dashboard, confirm, wizard, auth), view models, one global theme (classes, attributes, partials, tokens, per-page-type and per-bundle exceptions) and `PageContractTestCase` for UI bundles — validated in a real host (symfony-beacon). 1.x partials and macros keep their inputs and output; `nowo-ui.css` now ships inside `@layer nowo-ui` (use `nowo-ui.unlayered.css` for the 1.x cascade). See [UPGRADING](UPGRADING.md#to-200) and [PAGE_CONTRACT.md](PAGE_CONTRACT.md).
 
 ### Added
 
@@ -99,6 +104,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **List pagination keeps filters in 1.x overrides** (validation round 3): the list scaffold passed only the `pagination` array, so an untouched 1.x `_pagination` override (which reads the top-level `route`, `route_params`, `query`) lost the filters and sort. It now also passes `route`, `route_params` and `query` (current request query without the page parameters, merged with `Pagination::query`) plus `page_param` / `per_page_param`; the default partial accepts `page_param` / `per_page_param` as variables and, through the scaffold, now keeps the request's filters across pages too.
 - Show scaffold: the meta detail list (`nowo-ui-detail-list--meta`) gets a bottom margin too, so content of `nowo_ui_show_after` no longer touches it.
 - Badge contrast on Bootstrap 5 / Tabler: the `ui.badge()` macro and the `badge*` slot defaults used `bg-success` / `bg-danger` (background with `!important`) without a text utility, so the semantic `nowo-ui-badge--*` text colour (dark green / red) landed on the solid Bootstrap fill. They now use `text-bg-{success,warning,danger,info,light}` (Bootstrap 5.2+; text and background set together); on 5.0 / 5.1 the semantic palette paints the badge. `nowo-ui.css` also clears the tinted border on solid badges and gives 1.x `bg-*` badges without a text utility Bootstrap's badge text colour.
+
+[2.0.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.17.4...v2.0.0
 
 ## [1.17.4] - 2026-10-16
 
@@ -527,7 +534,7 @@ Supersedes 1.17.3: same runtime code and CSS, release gate hardened so the tagge
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v1.11.0...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.0.0...HEAD
 [1.10.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.4...v1.10.0
 [1.8.4]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.3...v1.8.4
 [1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0

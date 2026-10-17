@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.0.0](#to-200)
   - [Template contract](#template-contract)
 - [To 1.17.4](#to-1174)
 - [To 1.17.3](#to-1173)
@@ -47,6 +48,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.0.0
+
+From **1.17.x**:
+
+```bash
+composer require nowo-tech/ui-kit-bundle:^2.0
+```
 
 **Page contract (REQ-UI-003, new).** Everything below is additive; existing partials and macros keep their 1.x
 inputs and output. Changes a host may notice are listed under [Template contract](#template-contract).
