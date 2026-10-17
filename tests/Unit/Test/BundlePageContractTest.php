@@ -88,7 +88,8 @@ final class BundlePageContractTest extends PageContractTestCase
         self::assertFalse(FrameworkClasses::isFrameworkClass('pc-table'));
         self::assertContains('btn-primary', FrameworkClasses::allowed('bootstrap5'));
         self::assertNotContains('btn-primary', FrameworkClasses::allowed('tailwind'));
-        self::assertSame(FrameworkClasses::UIKIT, FrameworkClasses::allowed('none'));
+        self::assertSame([...FrameworkClasses::UIKIT, ...FrameworkClasses::MODAL_SHELL], FrameworkClasses::allowed('none'));
+        self::assertSame([], FrameworkClasses::violations(FrameworkClasses::MODAL_SHELL, 'tailwind'));
         self::assertSame(['btn'], FrameworkClasses::violations(['btn', 'nowo-ui-x', 'host-ok'], 'none'));
         self::assertSame([], FrameworkClasses::violations(['btn'], 'none', ['btn']));
     }
@@ -105,6 +106,21 @@ final class BundlePageContractTest extends PageContractTestCase
         $forms = new RenderedPage('t', '<form name="a"><input type="hidden" name="a[_token]" value="t"><input type="hidden" name="other" value="o"></form><form name="b"></form><form name="a"></form>', 'none', [], ['a' => ['a[_token]' => 't']]);
         self::assertSame([['a[_token]' => ['t']], ['a[_token]' => []]], $forms->hiddenFieldValues('a', ['a[_token]']));
         self::assertSame(['a' => ['a[_token]' => 't']], $forms->actionForms);
+    }
+
+    public function testModalShellStructureIsAStructuralException(): void
+    {
+        $fixture = new PageFixture('@NowoContractFixture/bad/modal_shell.html.twig', ['page' => new DashboardPage(new PageHeader('Modal'), [new KpiTile('Items', '1')])]);
+        self::$extraTemplates = [$fixture->template => "{% extends '@NowoUiKit/page/dashboard.html.twig' %}{% block nowo_ui_modals %}{{ include(nowo_ui_partial('modal_shell'), {id: 'm1', title: 'Import', body: '<p>x</p>', footer: '<span>ok</span>'}) }}{% endblock %}"];
+        try {
+            foreach (['bootstrap5', 'tailwind', 'none'] as $framework) {
+                $page = $this->renderPage($fixture, $framework);
+                self::assertStringContainsString('modal-content', $page->html);
+                $this->assertNoFrameworkUtilityClasses($page);
+            }
+        } finally {
+            self::$extraTemplates = [];
+        }
     }
 
     /**

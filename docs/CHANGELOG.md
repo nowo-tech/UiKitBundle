@@ -50,6 +50,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **`PageContractTestCase` no longer flags the `modal_shell` structure**: `modal`, `fade`, `modal-dialog`,
+  `modal-content`, `modal-header`, `modal-title`, `btn-close`, `modal-body`, `modal-footer` are a documented structural
+  exception (`FrameworkClasses::MODAL_SHELL`, like the pagination list), allowed for every `css_framework`; the partial
+  keeps its 1.x output, so bundles drop them from `allowedClasses()`. Page-contract bundles should prefer the new
+  framework-free `dialog` partial.
 - **Header actions backed by a `FormView` keep their CSRF token** when a host `page_header` partial override renders
   `actions` itself (REQ-UI-003): the scaffolds pre-render the 1.x `toolbar`, which marked the form's fields rendered,
   so the override's `form_end` printed no `_token`. The `FormView` branch of the action partial now prints the hidden

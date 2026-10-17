@@ -28,6 +28,15 @@ final class FrameworkClasses
     public const UIKIT = ['visually-hidden', 'is-active', 'is-disabled', 'is-open', 'active', 'show', 'disabled', 'collapsed', 'pagination', 'page-item', 'page-link'];
 
     /**
+     * Structural classes of the 1.x `modal_shell` partial, printed on every stack (2.1 structural exception, like the
+     * pagination list): Bootstrap JS and UiKit's modal CSS rely on them, and the partial keeps its 1.x output. Prefer
+     * the framework-free `dialog` partial in page-contract bundles.
+     *
+     * @var list<string>
+     */
+    public const MODAL_SHELL = ['modal', 'fade', 'modal-dialog', 'modal-content', 'modal-header', 'modal-title', 'btn-close', 'modal-body', 'modal-footer'];
+
+    /**
      * Framework classes emitted by UiKit macros outside the slot defaults (`ui.btn` outline / link variants), per
      * framework family.
      *
@@ -77,14 +86,14 @@ final class FrameworkClasses
 
     /**
      * Framework classes allowed in output rendered with a `css_framework`: slot defaults + macro extras + UiKit's
-     * own helpers.
+     * own helpers + the `modal_shell` structure ({@see self::MODAL_SHELL}).
      *
      * @return list<string>
      */
     public static function allowed(string $framework): array
     {
         $family = ThemeSlots::family($framework);
-        $allowed = self::UIKIT;
+        $allowed = [...self::UIKIT, ...self::MODAL_SHELL];
         if (null !== $family) {
             foreach (ThemeSlots::names() as $slot) {
                 $allowed = [...$allowed, ...self::split(ThemeSlots::defaults($slot, $framework))];

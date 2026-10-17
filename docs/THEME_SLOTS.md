@@ -424,7 +424,11 @@ nowo_ui_kit:
 `Nowo\UiKitBundle\Test\FrameworkClasses` derives the per-framework allow-list of the contract test from this table:
 the slot defaults of the rendered `css_framework`, the classes the `ui.btn` macro adds for the `outline` / `link`
 variants (Bootstrap `btn-outline-primary`, `btn-link`; Tailwind `underline-offset-2`, `px-0`) and UiKit's own helpers
-(`visually-hidden`, state classes, the 1.x pagination list `pagination` / `page-item` / `page-link`). Any other class
+(`visually-hidden`, state classes, the 1.x pagination list `pagination` / `page-item` / `page-link`) and, since 2.1, the
+structure of the `modal_shell` partial (`FrameworkClasses::MODAL_SHELL`: `modal`, `fade`, `modal-dialog`,
+`modal-content`, `modal-header`, `modal-title`, `btn-close`, `modal-body`, `modal-footer` — a documented structural
+exception: Bootstrap JS and the kit's modal CSS rely on them and the 1.x output stays identical, so bundles no longer
+allow-list them; page-contract bundles should prefer the framework-free `dialog` partial). Any other class
 that looks like a Bootstrap / Tabler / Tailwind / Foundation class fails `testPageUsesFrameworkClassesOnlyThroughThemeSlots`.
 Change the defaults here and the allow-lists follow (the allow-list does not depend on `framework_defaults`: dropping
 defaults only removes classes).
