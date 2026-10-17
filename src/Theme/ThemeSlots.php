@@ -35,6 +35,9 @@ final class ThemeSlots
             'foundation' => 'button secondary tiny',
         ]],
         'breadcrumbs' => ['nowo-ui-breadcrumbs', []],
+        // Plain breadcrumb trail (_breadcrumbs without BreadcrumbKit): crumb links and the separators between items
+        'breadcrumb_link' => ['nowo-ui-breadcrumbs__link', []],
+        'breadcrumb_separator' => ['nowo-ui-breadcrumbs__separator', []],
         // Page header
         'page_header' => ['nowo-ui-page-header', [
             'bootstrap' => 'd-flex flex-wrap align-items-start justify-content-between gap-2 mb-3',
@@ -75,6 +78,12 @@ final class ThemeSlots
             'tailwind' => 'inline-flex items-center gap-1 font-medium px-3 py-1.5 text-sm border',
             'foundation' => 'button alert',
         ]],
+        // Link-styled button (Action variant `link`, toolbar context)
+        'btn_link' => ['nowo-ui-btn nowo-ui-btn--link', [
+            'bootstrap' => 'btn btn-link',
+            'tailwind' => 'inline-flex items-center gap-1 font-medium px-3 py-1.5 text-sm underline-offset-2 px-0',
+            'foundation' => 'button secondary',
+        ]],
         'btn_sm' => ['nowo-ui-btn--sm', [
             'bootstrap' => 'btn-sm',
             'foundation' => 'tiny',
@@ -94,17 +103,27 @@ final class ThemeSlots
         'table_head' => ['nowo-ui-table__head', []],
         'table_head_row' => ['nowo-ui-table__head-row', []],
         'table_head_cell' => ['nowo-ui-table__head-cell', []],
+        // Header cell of a sortable column (added to table_head_cell) and its sort link (+ nowo-ui-sort--asc|desc)
+        'sortable_header' => ['nowo-ui-table__head-cell--sortable', []],
+        'sort_link' => ['nowo-ui-sort', []],
         'table_actions_head' => ['nowo-ui-table__actions', []],
         // Row-actions body cell (alignment: ListPage::actionsAlign → nowo-ui-cell--<align> on head and cell)
         'table_actions_cell' => ['nowo-ui-table__actions', []],
         'table_row' => ['nowo-ui-table__row', []],
         'table_cell' => ['nowo-ui-table__cell', []],
+        // Default list cell without a value (null / ''): added to table_cell, the cell prints a muted "—"
+        'table_cell_muted' => ['nowo-ui-table__cell--muted', [
+            'bootstrap' => 'text-muted',
+            'foundation' => 'text-secondary',
+        ]],
         'row_actions' => ['nowo-ui-row-actions', [
             'bootstrap' => 'd-flex gap-1',
             'tailwind' => 'flex gap-1',
             'foundation' => 'button-group',
         ]],
         'action' => ['nowo-ui-action', []],
+        // Disabled row action (Action::disabled / 1.x hash `disabled`): added to the action classes in row context
+        'row_action_disabled' => ['nowo-ui-action--disabled', []],
         // Row actions per variant (resolved like Action::resolvedVariant(): delete = danger, create / save = primary,
         // else neutral; explicit variants as given): host classes added on top of the `action` slot in row context;
         // no framework defaults (the row action keeps the `ui.action` classes, governed by the `action` slot's
@@ -175,6 +194,11 @@ final class ThemeSlots
         'pagination_active' => ['nowo-ui-pagination__link is-active', ['bootstrap' => 'page-link']],
         'pagination_info' => ['nowo-ui-pagination__info', []],
         // Feedback
+        // Secondary text (ui.muted()): the "—" placeholder of empty detail-list values
+        'muted' => ['nowo-ui-muted', [
+            'bootstrap' => 'text-muted',
+            'foundation' => 'text-secondary',
+        ]],
         'empty' => ['nowo-ui-empty nowo-ui-muted', [
             'bootstrap' => 'text-muted',
             'foundation' => 'text-secondary',
@@ -261,6 +285,12 @@ final class ThemeSlots
             'foundation' => 'tabs-title is-active',
         ]],
         'modal' => ['nowo-ui-modal', []],
+        // _modal_shell internals (1.x markup: the Bootstrap structure classes modal-content / modal-header /
+        // modal-body / modal-footer stay; the theme adds host classes and attributes)
+        'modal_panel' => ['nowo-ui-modal__panel', []],
+        'modal_header' => ['nowo-ui-modal__header', []],
+        'modal_body' => ['nowo-ui-modal__body', []],
+        'modal_footer' => ['nowo-ui-modal__footer', []],
         // Confirm <dialog> root (dialog partial only: never on the full-page confirm, so host dialog CSS such as
         // `:not([open]) { display: none }` cannot hide the page)
         'confirm' => ['nowo-ui-confirm', []],

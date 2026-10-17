@@ -154,8 +154,8 @@ fills `nowo_ui_document_title` with the page title and renders the page header t
 | Data block | Default | Context |
 | --- | --- | --- |
 | `nowo_ui_list_filters` | the `list_filters` partial when `page.filters` is set | `page` |
-| `nowo_ui_list_head` | one `<th>` per column (sort links) | `page` |
-| `nowo_ui_list_row` | one `<td>` per column: `row[column.key]` | `row`, `row_key`, `loop` |
+| `nowo_ui_list_head` | one `<th>` per column; sortable columns add the `sortable_header` slot and a `sort_link` (`nowo-ui-sort`, `--asc` / `--desc` when active) | `page` |
+| `nowo_ui_list_row` | one `<td>` per column: `row[column.key]`; a cell without a value (`null`, `''`, `false`) prints a muted `—` with the `table_cell_muted` slot | `row`, `row_key`, `loop` |
 | `nowo_ui_list_after` | empty (after the table / empty state) | `page` |
 
 **Filter row layout.** The `filters` form is a wrapping flex row: the field rows (`filters_field`, sized by

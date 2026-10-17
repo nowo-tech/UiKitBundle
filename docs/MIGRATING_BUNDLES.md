@@ -158,6 +158,12 @@ Every framework class in bundle markup becomes a slot (or a `nowo-ui-*` / bundle
 | `class="alert alert-danger"` | `nowo_ui_class('flash_error', …)` (or the `flashes` partial) |
 | `class="card-title"` / `card-subtitle` in a card heading | `nowo_ui_class('card_title', …)` / `nowo_ui_class('card_intro', …)` (or the `card` partial) |
 | `<dl class="row">` with `col-sm-3` / `col-sm-9` | the `detail_list` partial (`detail_item` / `detail_term` / `detail_value` slots; stacked layout via `nowo-ui-detail-list--stacked`) |
+| `btn btn-link` on a toolbar link button | `Action` `variant: 'link'` (slot `btn_link`) or `nowo_ui_class('btn_link', …)` |
+| `text-muted` / `text-gray-500` helper text | `nowo_ui_class('muted', …)`; empty list cells use `table_cell_muted` |
+| breadcrumb link / separator classes | `breadcrumb_link` / `breadcrumb_separator` slots (the `breadcrumbs` partial) |
+| sortable header / sort link classes | `sortable_header` / `sort_link` slots (list scaffold) |
+| `opacity-50 pointer-events-none` on disabled row actions | `row_action_disabled` slot |
+| modal panel / header / body / footer classes | `modal_panel` / `modal_header` / `modal_body` / `modal_footer` (the `modal_shell` partial) |
 | local confirm modal markup | the `confirm` partial (`confirm_*` slots; title + message header: `Confirm::messageInHeader`) |
 | full-page delete confirm template | `page/confirm` (root slot `confirm_page`, never the dialog slot `confirm`) |
 | audit / meta `<dl>` under a show page | `ShowPage::meta` (slots `detail_list` + `detail_list_meta`) |

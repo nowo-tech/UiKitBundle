@@ -153,7 +153,7 @@ final class ScaffoldRenderTest extends TestCase
         self::assertStringContainsString('<dl class="nowo-ui-detail-list app-dl">', $html);
         self::assertStringContainsString('<dd class="nowo-ui-detail-list__value"><a href="/site">example.org</a></dd>', $html);
         self::assertStringContainsString('<dd class="nowo-ui-detail-list__value">✓</dd>', $html);
-        self::assertSame(2, substr_count($html, '<dd class="nowo-ui-detail-list__value">—</dd>'));
+        self::assertSame(2, substr_count($html, '<dd class="nowo-ui-detail-list__value"><span class="nowo-ui-muted text-muted">—</span></dd>'));
         self::assertStringContainsString('nowo-ui-detail-list--meta', $html);
         self::assertStringContainsString('class="nowo-ui-btn nowo-ui-btn--danger btn btn-outline-danger nowo-ui-action--delete"', $html);
         $this->assertContract($html);

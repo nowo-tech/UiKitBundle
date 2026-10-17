@@ -64,6 +64,10 @@ final class LegacyPartialsBcTest extends TestCase
         foreach (['bootstrap5', 'tailwind', 'foundation', 'custom'] as $fw) {
             yield 'tabs '.$fw => ['_tabs', ['items' => [['label' => 'General', 'href' => '/g'], ['label' => 'Mail <b>', 'href' => '/m', 'current' => true, 'attr' => ['data-x' => '1']]], 'aria_label' => 'Sections'], $fw];
         }
+        foreach (['bootstrap5', 'bootstrap4', 'tailwind', 'custom'] as $fw) {
+            yield 'modal shell '.$fw => ['_modal_shell', ['id' => 'm1', 'title' => 'Import <b>', 'body' => '<p>Body</p>', 'footer' => '<button>OK</button>'], $fw];
+        }
+        yield 'modal shell no footer' => ['_modal_shell', ['id' => 'm2', 'title' => 'T', 'framework' => 'tailwind'], 'bootstrap5'];
         yield 'tabs default label' => ['_tabs', ['items' => [], 'framework' => 'tailwind'], 'bootstrap5'];
         yield 'shell rail' => ['_shell', ['brand_html' => '<b>A</b>', 'sidebar_rail' => ['storage' => 's', 'cookie' => 'c', 'hidden_value' => 'h', 'default' => 'rail'], 'sidebar_mode' => 'collapsed', 'show_user_menu' => false, 'header_end' => '<i>e</i>'], 'custom'];
     }

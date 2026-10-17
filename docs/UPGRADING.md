@@ -201,6 +201,15 @@ Changes to markup, inputs and cascade a host or a bundle may depend on (REQ-UI-0
   / extra filter buttons directly instead of sitting alone at the far end of the row. To keep the previous split,
   add `ms-auto` / `ml-auto` (or `margin-inline-start: auto`) to `.nowo-ui-filters__header-actions` and let
   `filters_actions` grow (`flex-grow-1` / `grow`). Themes whose filter fields grow add `flex-none` to `filters_actions`.
+- **Minor slots** `btn_link`, `muted`, `modal_panel`, `modal_header`, `modal_body`, `modal_footer`, `breadcrumb_link`,
+  `breadcrumb_separator`, `table_cell_muted`, `row_action_disabled`, `sortable_header`, `sort_link`. Markup notes:
+  toolbar link-variant actions read `btn_link` instead of `btn` (same default classes; move `theme.classes.btn` hacks
+  for link buttons to `btn_link`); empty detail-list values wrap their `—` in `<span class="nowo-ui-muted …">`;
+  default list cells with `null` / `''` / `false` print `—` (was empty) with `nowo-ui-table__cell--muted`; sortable
+  header cells get `nowo-ui-table__head-cell--sortable`; disabled `Action` row actions get `nowo-ui-action--disabled`;
+  the plain breadcrumb trail prints `<span class="nowo-ui-breadcrumbs__separator" aria-hidden="true">/</span>` (the
+  CSS separator only applies to items without it); `_modal_shell` appends the `modal*` host classes / attributes
+  (unchanged with an empty theme).
 
 ## To 1.17.4
 

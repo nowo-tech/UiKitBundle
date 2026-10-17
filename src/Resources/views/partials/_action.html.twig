@@ -7,7 +7,8 @@
   Optional:
     - context: toolbar (default; theme slot btn_<variant>) | row (ui.action classes + `action` slot + the
       `action_<variant>` slot of the resolved variant — primary | secondary | danger | neutral —, display modes;
-      toolbar: neutral paints with btn_secondary)
+      toolbar: neutral paints with btn_secondary, variant link with btn_link; a disabled row action adds the
+      row_action_disabled slot)
     - display: icon | text | icon_text — row context: default nowo_ui_kit_row_actions_display; toolbar context:
       only when passed (context option, e.g. ListPage::filtersDisplay), default icon + text with an icon, else text.
       Action::display wins over both. Icon-only: icon (action.icon, else the kind icon) + visually-hidden label,
@@ -38,8 +39,8 @@
     {% if context == 'row' %}
         {% set class = nowo_ui_theme.macroClasses('action', ui.action(action.kind, framework, variant == 'neutral' ? null : action.variant), bundle, _pt) %}
         {% set _variant_extra = variant in ['primary', 'secondary', 'danger', 'neutral'] ? nowo_ui_theme.extraClasses('action_' ~ variant, bundle, _pt) : '' %}
-        {% set class = class ~ (_variant_extra ? ' ' ~ _variant_extra) %}
-    {% elseif variant in ['primary', 'secondary', 'danger', 'neutral'] %}
+        {% set class = class ~ (_variant_extra ? ' ' ~ _variant_extra) ~ (action.disabled ? ' ' ~ nowo_ui_class('row_action_disabled', bundle, framework)) %}
+    {% elseif variant in ['primary', 'secondary', 'danger', 'neutral', 'link'] %}
         {% set class = nowo_ui_class('btn_' ~ (variant == 'neutral' ? 'secondary' : variant), bundle, framework) ~ ' nowo-ui-action--' ~ action.kind %}
     {% else %}
         {% set class = nowo_ui_theme.macroClasses('btn', ui.btn(variant, null, framework), bundle, _pt) ~ ' nowo-ui-action--' ~ action.kind %}

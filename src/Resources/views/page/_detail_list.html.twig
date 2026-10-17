@@ -6,7 +6,8 @@
     - items: list<View\DetailItem>
   Optional:
     - bundle, modifier (adds nowo-ui-detail-list--<modifier>; `meta` adds the detail_list_meta slot classes instead)
-  Slots: detail_list, detail_list_meta (show scaffold audit meta list), detail_item, detail_term, detail_value. Layout: two columns (term | value); the
+  Slots: detail_list, detail_list_meta (show scaffold audit meta list), detail_item, detail_term, detail_value, muted
+  (the "—" placeholder of empty values: null, '' and false). Layout: two columns (term | value); the
   `nowo-ui-detail-list--stacked` modifier (e.g. in the detail_list slot classes) puts each label over its value, and
   any host class on detail_item replaces the default `display: contents` (zero-specificity rule).
 #}
@@ -17,7 +18,9 @@
         <div class="{{ nowo_ui_class('detail_item', bundle) }}">
             <dt class="{{ nowo_ui_class('detail_term', bundle) }}">{{ item.label|nowo_ui_trans }}</dt>
             <dd class="{{ nowo_ui_class('detail_value', bundle) }}">
-                {%- set _value = item.value is same as(true) ? '✓' : (item.value is same as(false) ? '—' : (item.value is null or item.value is same as('') ? '—' : item.value|nowo_ui_trans)) -%}
+                {%- set _blank = item.value is same as(false) or item.value is null or item.value is same as('') -%}
+                {%- set _value = item.value is same as(true) ? '✓' : (_blank ? '—' : item.value|nowo_ui_trans) -%}
+                {%- if _blank %}{% set _value %}<span class="{{ nowo_ui_class('muted', bundle) }}">—</span>{% endset %}{% endif -%}
                 {%- if item.href -%}<a href="{{ item.href }}">{{ _value }}</a>{%- else -%}{{ _value }}{%- endif -%}
             </dd>
         </div>

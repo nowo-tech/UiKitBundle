@@ -13,7 +13,8 @@
   labelled cards (cells need data-label — the default cells print the column label; overridden cells add it), and
   columns with Column::priority 2 / 3 hide below 48rem / 60rem. CSS only (no JS).
   Slots: table_wrap, table, table_head, table_head_row, table_head_cell, table_actions_head, table_row, table_cell,
-  table_actions_cell (alignment of the actions column: page.actionsAlign → nowo-ui-cell--<align>). Inside a bordered
+  table_actions_cell (alignment of the actions column: page.actionsAlign → nowo-ui-cell--<align>), sortable_header +
+  sort_link (sortable columns), table_cell_muted (default cells without a value print a muted "—"). Inside a bordered
   panel, add `nowo-ui-table-wrap--flush` to the table_wrap slot: card-mode rows then drop their own border.
 #}
 {% extends page.layout ?? nowo_ui_layout.admin %}
@@ -49,10 +50,11 @@
                         <tr class="{{ nowo_ui_class('table_head_row', _b) }}"{{ nowo_ui_attrs('table_head_row', _b) }}>
                             {% block nowo_ui_list_head %}
                                 {% for column in page.columns %}
-                                    <th scope="col" class="{{ nowo_ui_class('table_head_cell', _b) }} nowo-ui-cell--{{ column.align }}{{ column.class ? ' ' ~ column.class }}"{% if column.required %} data-required="1"{% elseif column.priority and column.priority > 1 %} data-nowo-ui-priority="{{ column.priority }}"{% endif %}{% if page.sort == column.key %} aria-sort="{{ page.direction == 'asc' ? 'ascending' : 'descending' }}"{% endif %}{{ nowo_ui_attrs('table_head_cell', _b) }}>
+                                    {%- set _sortable = column.sortable and _route %}
+                                    <th scope="col" class="{{ nowo_ui_class('table_head_cell', _b) }}{{ _sortable ? ' ' ~ nowo_ui_class('sortable_header', _b) }} nowo-ui-cell--{{ column.align }}{{ column.class ? ' ' ~ column.class }}"{% if column.required %} data-required="1"{% elseif column.priority and column.priority > 1 %} data-nowo-ui-priority="{{ column.priority }}"{% endif %}{% if page.sort == column.key %} aria-sort="{{ page.direction == 'asc' ? 'ascending' : 'descending' }}"{% endif %}{{ nowo_ui_attrs('table_head_cell', _b) }}>
                                         {%- set _label = column.label is null ? column.key : column.label|nowo_ui_trans -%}
-                                        {%- if column.sortable and _route -%}
-                                            <a class="nowo-ui-sort{{ page.sort == column.key ? ' nowo-ui-sort--' ~ page.direction }}" href="{{ path(_route, _route_params|merge({sort: column.key, direction: page.nextDirection(column.key)})) }}">{{ _label }}</a>
+                                        {%- if _sortable -%}
+                                            <a class="{{ nowo_ui_class('sort_link', _b) }}{{ page.sort == column.key ? ' nowo-ui-sort--' ~ page.direction }}" href="{{ path(_route, _route_params|merge({sort: column.key, direction: page.nextDirection(column.key)})) }}"{{ nowo_ui_attrs('sort_link', _b) }}>{{ _label }}</a>
                                         {%- else -%}
                                             {{ _label }}
                                         {%- endif -%}
@@ -76,7 +78,9 @@
                             <tr class="{{ nowo_ui_class('table_row', _b) }}">
                                 {% block nowo_ui_list_row %}
                                     {% for column in page.columns %}
-                                        <td class="{{ nowo_ui_class('table_cell', _b) }} nowo-ui-cell--{{ column.align }}{{ column.class ? ' ' ~ column.class }}" data-label="{{ column.label is null ? column.key : column.label|nowo_ui_trans }}"{% if not column.required and column.priority and column.priority > 1 %} data-nowo-ui-priority="{{ column.priority }}"{% endif %}>{{ row is iterable ? row[column.key]|default('') : attribute(row, column.key) }}</td>
+                                        {%- set _value = row is iterable ? row[column.key]|default(null) : attribute(row, column.key) %}
+                                        {%- set _blank = _value is null or _value is same as('') or _value is same as(false) %}
+                                        <td class="{{ nowo_ui_class('table_cell', _b) }}{{ _blank ? ' ' ~ nowo_ui_class('table_cell_muted', _b) }} nowo-ui-cell--{{ column.align }}{{ column.class ? ' ' ~ column.class }}" data-label="{{ column.label is null ? column.key : column.label|nowo_ui_trans }}"{% if not column.required and column.priority and column.priority > 1 %} data-nowo-ui-priority="{{ column.priority }}"{% endif %}>{{ _blank ? '—' : _value }}</td>
                                     {% endfor %}
                                 {% endblock %}
                                 {% if page.hasRowActions() %}

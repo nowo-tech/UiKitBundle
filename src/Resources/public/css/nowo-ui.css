@@ -3063,8 +3063,13 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
   color: var(--nowo-ui-muted);
 }
 
-.nowo-ui-breadcrumbs__item + .nowo-ui-breadcrumbs__item::before {
+/* The plain trail prints its separators (slot breadcrumb_separator); host overrides without them keep the CSS one */
+.nowo-ui-breadcrumbs__item + .nowo-ui-breadcrumbs__item:not(:has(> .nowo-ui-breadcrumbs__separator))::before {
   content: "/";
+  margin-right: 0.35rem;
+}
+
+.nowo-ui-breadcrumbs__separator {
   margin-right: 0.35rem;
 }
 
@@ -3087,6 +3092,10 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
 
 .nowo-ui-table__actions.nowo-ui-cell--end > .nowo-ui-row-actions {
   justify-content: flex-end;
+}
+
+.nowo-ui-table__cell--muted {
+  color: var(--nowo-ui-muted);
 }
 
 .nowo-ui-sort {

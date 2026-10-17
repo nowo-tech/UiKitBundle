@@ -100,6 +100,8 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `shell` | `nowo-ui-shell` | — | — | — | — |
 | `burger` | `nowo-ui-burger nowo-ui-btn nowo-ui-btn--secondary nowo-ui-btn--sm` | `btn btn-outline-secondary btn-sm` | `btn btn-outline-secondary btn-sm` | `inline-flex items-center gap-1 font-medium px-2 py-1 text-sm border` | `button secondary tiny` |
 | `breadcrumbs` | `nowo-ui-breadcrumbs` | — | — | — | — |
+| `breadcrumb_link` | `nowo-ui-breadcrumbs__link` | — | — | — | — |
+| `breadcrumb_separator` | `nowo-ui-breadcrumbs__separator` | — | — | — | — |
 | `page_header` | `nowo-ui-page-header` | `d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3` | `d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3` | `flex flex-wrap items-start justify-between gap-2 mb-3` | `grid-x grid-margin-x align-middle mb-3` |
 | `page_title` | `nowo-ui-page-header__title` | `h3 mb-1` | `h3 mb-1` | `text-xl font-semibold mb-1` | — |
 | `page_intro` | `nowo-ui-page-header__intro` | `mb-0` | `mb-0` | `text-sm` | — |
@@ -108,6 +110,7 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `btn_primary` | `nowo-ui-btn nowo-ui-btn--primary` | `btn btn-primary` | `btn btn-primary` | `inline-flex items-center gap-1 font-medium px-3 py-1.5 text-sm` | `button primary` |
 | `btn_secondary` | `nowo-ui-btn nowo-ui-btn--secondary` | `btn btn-outline-secondary` | `btn btn-outline-secondary` | `inline-flex items-center gap-1 font-medium px-3 py-1.5 text-sm border` | `button secondary` |
 | `btn_danger` | `nowo-ui-btn nowo-ui-btn--danger` | `btn btn-outline-danger` | `btn btn-outline-danger` | `inline-flex items-center gap-1 font-medium px-3 py-1.5 text-sm border` | `button alert` |
+| `btn_link` | `nowo-ui-btn nowo-ui-btn--link` | `btn btn-link` | `btn btn-link` | `inline-flex items-center gap-1 font-medium px-3 py-1.5 text-sm underline-offset-2 px-0` | `button secondary` |
 | `btn_sm` | `nowo-ui-btn--sm` | `btn-sm` | `btn-sm` | — | `tiny` |
 | `btn_icon` | `nowo-ui-btn--icon` | — | — | — | — |
 | `table_wrap` | `nowo-ui-table-wrap` | `table-responsive` | `table-responsive` | `overflow-x-auto` | — |
@@ -115,12 +118,16 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `table_head` | `nowo-ui-table__head` | — | — | — | — |
 | `table_head_row` | `nowo-ui-table__head-row` | — | — | — | — |
 | `table_head_cell` | `nowo-ui-table__head-cell` | — | — | — | — |
+| `sortable_header` | `nowo-ui-table__head-cell--sortable` | — | — | — | — |
+| `sort_link` | `nowo-ui-sort` | — | — | — | — |
 | `table_actions_head` | `nowo-ui-table__actions` | — | — | — | — |
 | `table_actions_cell` | `nowo-ui-table__actions` | — | — | — | — |
 | `table_row` | `nowo-ui-table__row` | — | — | — | — |
 | `table_cell` | `nowo-ui-table__cell` | — | — | — | — |
+| `table_cell_muted` | `nowo-ui-table__cell--muted` | `text-muted` | `text-muted` | — | `text-secondary` |
 | `row_actions` | `nowo-ui-row-actions` | `d-flex gap-1` | `d-flex gap-1` | `flex gap-1` | `button-group` |
 | `action` | `nowo-ui-action` | — | — | — | — |
+| `row_action_disabled` | `nowo-ui-action--disabled` | — | — | — | — |
 | `action_primary` | `nowo-ui-btn--primary` | — | — | — | — |
 | `action_secondary` | `nowo-ui-btn--secondary` | — | — | — | — |
 | `action_danger` | `nowo-ui-btn--danger` | — | — | — | — |
@@ -139,6 +146,7 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `pagination_link` | `nowo-ui-pagination__link` | `page-link` | `page-link` | — | — |
 | `pagination_active` | `nowo-ui-pagination__link is-active` | `page-link` | `page-link` | — | — |
 | `pagination_info` | `nowo-ui-pagination__info` | — | — | — | — |
+| `muted` | `nowo-ui-muted` | `text-muted` | `text-muted` | — | `text-secondary` |
 | `empty` | `nowo-ui-empty nowo-ui-muted` | `text-muted` | `text-muted` | — | `text-secondary` |
 | `flashes` | `nowo-ui-flashes` | — | — | — | — |
 | `flash` | `nowo-ui-flash` | — | — | — | — |
@@ -170,6 +178,10 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `tab` | `nowo-ui-tabs__item` | `nav-link` | `nav-link` | `px-3 py-2 text-sm no-underline` | `tabs-title` |
 | `tab_active` | `nowo-ui-tabs__item nowo-ui-tabs__item--active` | `nav-link active` | `nav-link active` | `px-3 py-2 text-sm no-underline border-b-2` | `tabs-title is-active` |
 | `modal` | `nowo-ui-modal` | — | — | — | — |
+| `modal_panel` | `nowo-ui-modal__panel` | — | — | — | — |
+| `modal_header` | `nowo-ui-modal__header` | — | — | — | — |
+| `modal_body` | `nowo-ui-modal__body` | — | — | — | — |
+| `modal_footer` | `nowo-ui-modal__footer` | — | — | — | — |
 | `confirm` | `nowo-ui-confirm` | — | — | — | — |
 | `confirm_page` | `nowo-ui-confirm-page` | — | — | — | — |
 | `confirm_panel` | `nowo-ui-confirm__panel` | — | — | — | — |
@@ -193,12 +205,25 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `auth_footer` | `nowo-ui-auth-panel__footer` | — | — | — | — |
 | `auth_links` | `nowo-ui-auth-panel__links` | — | — | — | — |
 
-Slot groups: document / layout (`document` … `breadcrumbs`), page header (`page_header` … `toolbar`), buttons (`btn`
-… `btn_icon`; variants are complete button classes, `btn_sm` a size modifier, `btn_icon` the icon-only modifier), tables (`table_wrap` … `action`),
+Slot groups: document / layout (`document` … `breadcrumb_separator`), page header (`page_header` … `toolbar`), buttons (`btn`
+… `btn_icon`; variants are complete button classes — `btn_link` included —, `btn_sm` a size modifier, `btn_icon` the icon-only modifier), tables (`table_wrap` … `row_action_disabled`),
 badges (Bootstrap variants use `text-bg-*`, Bootstrap 5.2+, which sets text and background together so the colour
 pair never mixes with the semantic `nowo-ui-badge--*` palette; on 5.0 / 5.1 the semantic palette paints the badge;
-Bootstrap 4 / Foundation variant classes set both colours too), filters / inputs, pagination, feedback (`empty`, flashes, `toasts`), surfaces (`card` … `modal`,
+Bootstrap 4 / Foundation variant classes set both colours too), filters / inputs, pagination, feedback (`muted`, `empty`, flashes, `toasts`), surfaces (`card` … `modal_footer`,
 `confirm` … `confirm_footer`), forms (`form`, `form_actions`, `danger_zone`), wizard / auth (`auth_panel` … `auth_links`).
+
+Minor hooks for kit class maps: `btn_link` (toolbar `Action` with `variant: 'link'`; same classes as
+`ui.btn('link')`); `muted` (same classes as `ui.muted()`; UiKit prints it on the `—` placeholder of empty detail-list
+values); `breadcrumb_link` / `breadcrumb_separator` (plain trail: crumb links and an `aria-hidden` `/` before every item
+but the first — a host `breadcrumbs` partial without separator elements keeps the CSS `::before` separator);
+`sortable_header` (added to `table_head_cell` on sortable columns) and `sort_link` (the header link, plus
+`nowo-ui-sort--asc|desc` on the active column); `table_cell_muted` (added to `table_cell` when a default list cell has
+no value — `null`, `''`, `false` — and prints a muted `—`); `row_action_disabled` (disabled row actions: semantic +
+host classes on `Action` objects, host classes on 1.x hashes); `modal`, `modal_panel`, `modal_header`, `modal_body`,
+`modal_footer` (the `modal_shell` partial keeps its 1.x structure classes `nowo-ui-modal modal fade` / `modal-content` /
+`modal-header` / `modal-body` / `modal-footer`, which Bootstrap JS and the kit's modal CSS rely on, and appends the host
+classes and attributes of these slots; the semantic `nowo-ui-modal__*` classes are for modals a host builds with
+`nowo_ui_class()`).
 
 Internals: `card_title` / `card_intro` (card heading, also the show and settings section cards); `detail_item`,
 `detail_term`, `detail_value` (one `<div>` + `<dt>` + `<dd>` per `DetailItem`; the item is `display: contents` at zero

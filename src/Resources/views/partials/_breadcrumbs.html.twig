@@ -7,6 +7,8 @@
 
   Optional:
     - bundle
+  Slots: breadcrumbs (root), breadcrumb_link (crumb links), breadcrumb_separator (the "/" before every item but the
+  first, aria-hidden; host overrides without it keep the CSS separator).
 #}
 {% set bundle = bundle|default(null) %}
 {% if nowo_ui_breadcrumb_kit_available() %}
@@ -16,8 +18,9 @@
         <ol class="nowo-ui-breadcrumbs__list">
             {% for crumb in header.breadcrumbs %}
                 <li class="nowo-ui-breadcrumbs__item">
+                    {%- if not loop.first %}<span class="{{ nowo_ui_class('breadcrumb_separator', bundle) }}" aria-hidden="true"{{ nowo_ui_attrs('breadcrumb_separator', bundle) }}>/</span>{% endif %}
                     {% if crumb.href and not loop.last %}
-                        <a class="nowo-ui-breadcrumbs__link" href="{{ crumb.href }}">{{ crumb.label|nowo_ui_trans }}</a>
+                        <a class="{{ nowo_ui_class('breadcrumb_link', bundle) }}" href="{{ crumb.href }}"{{ nowo_ui_attrs('breadcrumb_link', bundle) }}>{{ crumb.label|nowo_ui_trans }}</a>
                     {% else %}
                         <span class="nowo-ui-breadcrumbs__current"{% if loop.last %} aria-current="page"{% endif %}>{{ crumb.label|nowo_ui_trans }}</span>
                     {% endif %}

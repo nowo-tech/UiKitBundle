@@ -9,29 +9,42 @@
     - body: HTML string
     - footer: HTML string
     - framework: affects dismiss attrs
+    - bundle: per-bundle theme exceptions
+  Theme slots (ThemeExtension loaded): modal (root), modal_panel (.modal-content), modal_header, modal_body,
+  modal_footer add their host classes and attributes; the 1.x structure classes stay (Bootstrap JS and the UiKit
+  modal CSS rely on them), so the markup is unchanged with an empty theme.
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 {% set framework = framework|default(null) %}
 {% set f = ui.resolve_fw(framework)|trim %}
+{% set bundle = bundle|default(null) %}
+{% set _t = nowo_ui_theme|default(null) %}
+{% set _pt = nowo_ui_page_type|default(null) %}
+{% set _x = {} %}
+{% for _slot in ['modal', 'modal_panel', 'modal_header', 'modal_body', 'modal_footer'] %}
+    {% set _classes = _t ? _t.extraClasses(_slot, bundle, _pt) : '' %}
+    {% set _x = _x|merge({(_slot): _classes ? ' ' ~ _classes : ''}) %}
+{% endfor %}
 <div
     id="{{ id }}"
-    class="nowo-ui-modal{% if f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %} modal fade{% endif %}"
+    class="nowo-ui-modal{% if f in ['bootstrap', 'bootstrap5', 'bootstrap4', 'tabler'] %} modal fade{% endif %}{{ _x.modal }}"
     tabindex="-1"
     aria-labelledby="{{ id }}-title"
     aria-hidden="true"
     {% if f in ['bootstrap', 'bootstrap5', 'tabler'] %}data-bs-backdrop="true"{% elseif f == 'bootstrap4' %}data-backdrop="true"{% endif %}
+    {{- _t ? _t.renderAttributes('modal', bundle, {}, _pt)|raw }}
 >
     <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
+        <div class="modal-content{{ _x.modal_panel }}"{{ _t ? _t.renderAttributes('modal_panel', bundle, {}, _pt)|raw }}>
+            <div class="modal-header{{ _x.modal_header }}"{{ _t ? _t.renderAttributes('modal_header', bundle, {}, _pt)|raw }}>
                 <h2 class="modal-title" id="{{ id }}-title">{{ title }}</h2>
                 <button type="button" class="btn-close" {{ ui.modal_dismiss_attrs(framework) }} aria-label="{{ 'action.close'|trans({}, 'NowoUiKitBundle') }}"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body{{ _x.modal_body }}"{{ _t ? _t.renderAttributes('modal_body', bundle, {}, _pt)|raw }}>
                 {% if body is defined %}{{ body|raw }}{% endif %}
             </div>
             {% if footer is defined and footer %}
-                <div class="modal-footer">{{ footer|raw }}</div>
+                <div class="modal-footer{{ _x.modal_footer }}"{{ _t ? _t.renderAttributes('modal_footer', bundle, {}, _pt)|raw }}>{{ footer|raw }}</div>
             {% endif %}
         </div>
     </div>

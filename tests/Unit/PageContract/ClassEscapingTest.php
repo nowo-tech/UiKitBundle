@@ -63,6 +63,8 @@ final class ClassEscapingTest extends TestCase
             '_confirm' => ['confirm' => new Confirm('Delete?', 'Gone.', expectedValue: 'acme'), 'id' => 'c1', 'action' => Action::delete('/x', 'tok')],
             '_empty' => ['message' => 'Nothing'],
             '_burger' => [],
+            '_modal_shell' => ['id' => 'm1', 'title' => 'Modal', 'body' => '<p>b</p>', 'footer' => '<p>f</p>'],
+            '_breadcrumbs' => ['header' => new \Nowo\UiKitBundle\View\PageHeader('T', breadcrumbs: [new \Nowo\UiKitBundle\View\Crumb('Home', '/'), new \Nowo\UiKitBundle\View\Crumb('T')])],
             '_shell' => ['brand' => 'Acme', 'name' => 'Ann', 'initials' => 'A', 'aside_items' => [], 'main' => '<p>main</p>'],
         ];
         foreach ($partials as $partial => $vars) {

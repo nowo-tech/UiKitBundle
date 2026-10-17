@@ -21,6 +21,8 @@ final class ThemeSlotsTest extends TestCase
         'btn_primary' => "ui.btn('primary')",
         'btn_secondary' => "ui.btn('secondary')",
         'btn_danger' => "ui.btn('danger')",
+        'btn_link' => "ui.btn('link')",
+        'muted' => 'ui.muted()',
         'burger' => 'ui.burger()',
         'table_wrap' => 'ui.table_wrap()',
         'table' => 'ui.table()',

@@ -13,7 +13,8 @@
       renders them once after the table): actions with a Confirm print only their toggle button
     - bundle (2.0): per-bundle theme exceptions (slots row_actions, action, action_primary | action_secondary |
       action_danger | action_neutral (by resolved variant: delete = danger, create / save = primary, other kinds
-      neutral, explicit variants as given): host classes; row_actions attributes)
+      neutral, explicit variants as given): host classes; row_action_disabled (disabled actions): host classes
+      on 1.x hashes, semantic + host classes on objects; row_actions attributes)
 
   Each action:
     kind          edit|delete|view|copy|create|save|cancel|restore|share|config|export|filter|prev|next|close
@@ -70,6 +71,10 @@
                 {% set class = class ~ (_variant_extra ? ' ' ~ _variant_extra) %}
             {% endif %}
             {% set disabled = action.disabled|default(false) %}
+            {% if disabled and _t %}
+                {% set _disabled_extra = _t.extraClasses('row_action_disabled', bundle, _pt) %}
+                {% set class = class ~ (_disabled_extra ? ' ' ~ _disabled_extra) %}
+            {% endif %}
 
             {% if tag == 'form' %}
                 <form
