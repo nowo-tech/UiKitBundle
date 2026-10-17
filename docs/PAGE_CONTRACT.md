@@ -144,7 +144,7 @@ fills `nowo_ui_document_title` with the page title and renders the page header t
 | header + actions + breadcrumbs | `page.header` (`PageHeader`); with `page.headerActionsInFilters` (or `theme.pages.list.header_actions_in_filters`) and filters, the header actions render at the end of the filter row instead (`nowo-ui-filters__header-actions`, region `header-actions`) |
 | filters (GET form, apply / clear, extra actions) | `page.filters` (`FormView`, REQ-TWIG-003 child loop) through the `list_filters` partial; `page.filterFields` (`FilterField`: placeholder, `width` `xs`…`full`, widget / row classes and attributes; every row gets the `filters_field` slot), `page.filtersSubmit` (`Action`: label, icon, variant of the apply button), `page.filtersClear` (`Action`, rendered through the `action` partial; default a plain link to `page.filtersClearHref`), `page.filterActions` — all in the `filters_actions` slot; `page.filtersDisplay` (`icon` / `text` / `icon_text`) for these buttons |
 | table frame, sortable headers (`aria-sort`) | `page.columns` (`Column`), `page.sort`, `page.direction`, `page.caption`; slots `table_wrap`, `table`, `table_head`, `table_head_row`, `table_head_cell`, `table_row`, `table_cell` |
-| row actions + confirm `<dialog>`s | `page.rowActions` (list of `Action`, or `callable(row, key): list<Action>`); actions column header `table_actions_head` with `page.actionsLabel` (default `table.actions`), visually hidden unless `page.actionsLabelVisible` |
+| row actions + confirm `<dialog>`s | `page.rowActions` (list of `Action`, or `callable(row, key): list<Action>`); actions column header `table_actions_head` with `page.actionsLabel` (default `table.actions`), visually hidden unless `page.actionsLabelVisible`; body cells `table_actions_cell`; `page.actionsAlign` (`start` / `center` / `end`, default `end`) aligns header, cells and the action cluster (`nowo-ui-cell--<align>`) |
 | pagination | `page.pagination` (`Pagination`) |
 | empty state | `page.empty` (`EmptyState`) when `page.rows` is empty |
 
@@ -161,7 +161,10 @@ below 60rem of table width, priority 2 below 48rem (`required` columns never hid
 into a card of labelled cells — every column shows again, each cell labelled from its `data-label` (the column
 label). CSS only, no JavaScript, works in any host. Cells of an overridden `nowo_ui_list_row` add
 `data-label="{{ column.label|nowo_ui_trans }}"` (and `data-nowo-ui-priority`) themselves. `responsive: 'scroll'`
-keeps the 1.x horizontal scroll. For the Scroll / Responsive toggle with a row-detail dialog (Stimulus peer), embed
+keeps the 1.x horizontal scroll. In card mode inline cell content (badges, links) keeps its own width
+(`justify-self: start`); a list inside a bordered panel adds `nowo-ui-table-wrap--flush` to the `table_wrap` slot
+(e.g. `theme.pages.list.classes.table_wrap`) so the cards become divided rows instead of bordered boxes inside the
+panel's border. For the Scroll / Responsive toggle with a row-detail dialog (Stimulus peer), embed
 `partials/_responsive_table.html.twig` in `nowo_ui_list_after` or a bundle template instead.
 
 ### Show
@@ -280,7 +283,9 @@ are printed on the scaffold root next to `data-nowo-ui-page` — e.g. `['data-te
 from the objects too.
 
 `Action` kinds: `create`, `edit`, `delete`, `view`, `export`, `import`, `custom`, `copy`, `save`, `cancel`, `restore`,
-`share`, `config`, `filter`, `prev`, `next`, `close`; variants `primary`, `secondary`, `danger`, `outline`, `link`.
+`share`, `config`, `filter`, `prev`, `next`, `close`; variants `primary`, `secondary`, `danger`, `neutral`, `outline`,
+`link` — `resolvedVariant()`: explicit, else `danger` (delete), `primary` (create / save), `neutral` (any other kind;
+painted like secondary, toolbar `btn_secondary`).
 Non-GET actions render a POST form (CSRF-only `FormView` in `form`, REQ-TWIG-005, or `csrfToken`); an action with a
 `Confirm` renders a toggle button + UiKit confirm `<dialog>` (`nowo-ui-confirm.js`) — never an inline `confirm()`.
 The dialog buttons read the theme slots `btn_secondary` (cancel) and `btn_<variant>` (confirm), so host classes and
@@ -310,8 +315,9 @@ Confirm repeated renders once); two actions with the **same explicit id but diff
 `LogicException` (they would print duplicate DOM ids) — give each its own id or omit it.
 
 **Row actions per variant.** In row context an action keeps the `ui.action` classes (slot `action`) and adds the
-host classes of `action_primary`, `action_secondary` or `action_danger` for its resolved variant (`delete` → danger,
-`create` / `save` → primary, otherwise secondary, or the explicit `variant`), so a delete looks dangerous on stacks
+host classes of `action_primary`, `action_secondary`, `action_danger` or `action_neutral` for its resolved variant
+(`delete` → danger, `create` / `save` → primary, otherwise neutral, or the explicit `variant` — so an explicit
+`secondary` can be styled apart from the neutral default), so a delete looks dangerous on stacks
 whose defaults carry no palette (Tailwind): `theme.classes.action_danger: 'text-red-700 border-red-300'`. The same
 applies to 1.x row-action hashes. These slots have no framework defaults; the `action` slot's `framework_defaults`
 still governs the `ui.action` classes.

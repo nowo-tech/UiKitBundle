@@ -95,6 +95,8 @@ final class ThemeSlots
         'table_head_row' => ['nowo-ui-table__head-row', []],
         'table_head_cell' => ['nowo-ui-table__head-cell', []],
         'table_actions_head' => ['nowo-ui-table__actions', []],
+        // Row-actions body cell (alignment: ListPage::actionsAlign → nowo-ui-cell--<align> on head and cell)
+        'table_actions_cell' => ['nowo-ui-table__actions', []],
         'table_row' => ['nowo-ui-table__row', []],
         'table_cell' => ['nowo-ui-table__cell', []],
         'row_actions' => ['nowo-ui-row-actions', [
@@ -104,11 +106,13 @@ final class ThemeSlots
         ]],
         'action' => ['nowo-ui-action', []],
         // Row actions per variant (resolved like Action::resolvedVariant(): delete = danger, create / save = primary,
-        // else secondary): host classes added on top of the `action` slot in row context; no framework defaults
-        // (the row action keeps the `ui.action` classes, governed by the `action` slot's framework_defaults)
+        // else neutral; explicit variants as given): host classes added on top of the `action` slot in row context;
+        // no framework defaults (the row action keeps the `ui.action` classes, governed by the `action` slot's
+        // framework_defaults). Neutral kinds paint like secondary (same macro classes) but read their own slot.
         'action_primary' => ['nowo-ui-btn--primary', []],
         'action_secondary' => ['nowo-ui-btn--secondary', []],
         'action_danger' => ['nowo-ui-btn--danger', []],
+        'action_neutral' => ['nowo-ui-btn--secondary', []],
         // Badges (Bootstrap: `text-bg-*` (5.2+) sets text and background together, so the colour pair never mixes
         // with the semantic nowo-ui-badge--* palette; on 5.0 / 5.1 the semantic palette paints the badge)
         'badge' => ['nowo-ui-badge', [

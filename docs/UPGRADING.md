@@ -155,6 +155,18 @@ Changes to markup, inputs and cascade a host or a bundle may depend on (REQ-UI-0
   `.nowo-ui-detail-list__item { display: contents }` now have zero specificity (`:where()`), so host link colours on KPI
   tiles and host classes on detail items win. Full-page confirm: the title sits in a
   `<header class="nowo-ui-confirm-page__header">` and the message in `<div class="nowo-ui-confirm-page__body">`.
+- **Neutral variant:** `Action::resolvedVariant()` returns `neutral` (was `secondary`) for kinds other than delete /
+  create / save without an explicit variant. Rendering is unchanged (toolbar `btn_secondary`, row `ui.action`
+  secondary classes), but row actions now read the new `action_neutral` slot instead of `action_secondary`: move
+  `theme.classes.action_secondary` to `action_neutral` (or set both) to keep styling every plain row action;
+  `action_secondary` now targets explicit `variant: 'secondary'` only. Code comparing `resolvedVariant()` with
+  `'secondary'` checks `'neutral'` too.
+- **Actions column:** header and cells use `nowo-ui-cell--<ListPage::actionsAlign>` (default `end`, as before) and
+  the body cell gets the `table_actions_cell` slot (`nowo-ui-table__actions`, same class as before; class order in
+  the cell changed). The row-action cluster is now aligned with the column (`justify-content: flex-end` by default:
+  in table mode the buttons sit at the cell end, under the header).
+- **Card-mode CSS:** direct children of card cells get `justify-self: start` (badges no longer stretch);
+  `nowo-ui-table-wrap--flush` is new.
 - **Row confirm dialog ids** are derived from the target, the CSRF token, the whole `Confirm` content and the row
   key (`ListPage::rowActions()` returns `Action::withConfirmScope(key)` copies), so the `confirm_id` / dialog ids of
   list rows change value (still `nowo-ui-confirm-<12 hex>`). Tests or scripts that computed

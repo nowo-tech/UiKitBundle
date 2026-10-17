@@ -34,7 +34,8 @@ final readonly class Action implements \ArrayAccess
     /** Canonical kinds (REQ-UI-003) plus the 1.x row-action kinds (docs/ROW_ACTIONS.md). */
     public const KINDS = ['create', 'edit', 'delete', 'view', 'export', 'import', 'custom', 'copy', 'save', 'cancel', 'restore', 'share', 'config', 'filter', 'prev', 'next', 'close'];
 
-    public const VARIANTS = ['primary', 'secondary', 'danger', 'outline', 'link'];
+    /** `neutral` = the default of kinds without a variant of their own (painted like secondary, own row slot). */
+    public const VARIANTS = ['primary', 'secondary', 'danger', 'neutral', 'outline', 'link'];
 
     public const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
 
@@ -139,14 +140,16 @@ final readonly class Action implements \ArrayAccess
     }
 
     /**
-     * Button variant: explicit, else danger for delete, primary for create/save, secondary otherwise.
+     * Button variant: explicit, else danger for delete, primary for create/save, neutral otherwise (neutral paints
+     * like secondary — toolbar `btn_secondary` — but row actions read the `action_neutral` slot, so an explicit
+     * `secondary` can be styled apart).
      */
     public function resolvedVariant(): string
     {
         return $this->variant ?? match ($this->kind) {
             'delete' => 'danger',
             'create', 'save' => 'primary',
-            default => 'secondary',
+            default => 'neutral',
         };
     }
 

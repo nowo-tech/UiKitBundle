@@ -12,7 +12,8 @@
     - confirm_external (2.0): true when the confirm dialogs of the actions are rendered elsewhere (the list scaffold
       renders them once after the table): actions with a Confirm print only their toggle button
     - bundle (2.0): per-bundle theme exceptions (slots row_actions, action, action_primary | action_secondary |
-      action_danger (by resolved variant): host classes; row_actions attributes)
+      action_danger | action_neutral (by resolved variant: delete = danger, create / save = primary, other kinds
+      neutral, explicit variants as given): host classes; row_actions attributes)
 
   Each action:
     kind          edit|delete|view|copy|create|save|cancel|restore|share|config|export|filter|prev|next|close
@@ -61,10 +62,11 @@
                     {% set tag = 'a' %}
                 {% endif %}
             {% endif %}
-            {% set class = _t ? _t.macroClasses('action', ui.action(kind, framework, action.variant|default(null)), bundle, _pt) : ui.action(kind, framework, action.variant|default(null)) %}
+            {% set _hash_variant = action.variant|default(null) == 'neutral' ? null : action.variant|default(null) %}
+            {% set class = _t ? _t.macroClasses('action', ui.action(kind, framework, _hash_variant), bundle, _pt) : ui.action(kind, framework, _hash_variant) %}
             {% if _t %}
-                {% set _variant = action.variant|default(null) ?: (kind == 'delete' ? 'danger' : (kind in ['create', 'save'] ? 'primary' : 'secondary')) %}
-                {% set _variant_extra = _variant in ['primary', 'secondary', 'danger'] ? _t.extraClasses('action_' ~ _variant, bundle, _pt) : '' %}
+                {% set _variant = action.variant|default(null) ?: (kind == 'delete' ? 'danger' : (kind in ['create', 'save'] ? 'primary' : 'neutral')) %}
+                {% set _variant_extra = _variant in ['primary', 'secondary', 'danger', 'neutral'] ? _t.extraClasses('action_' ~ _variant, bundle, _pt) : '' %}
                 {% set class = class ~ (_variant_extra ? ' ' ~ _variant_extra) %}
             {% endif %}
             {% set disabled = action.disabled|default(false) %}

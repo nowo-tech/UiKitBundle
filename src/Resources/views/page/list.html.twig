@@ -12,7 +12,9 @@
   Responsive (page.responsive = cards, default): the table wrap is a size container; below 40rem the rows render as
   labelled cards (cells need data-label — the default cells print the column label; overridden cells add it), and
   columns with Column::priority 2 / 3 hide below 48rem / 60rem. CSS only (no JS).
-  Slots: table_wrap, table, table_head, table_head_row, table_head_cell, table_actions_head, table_row, table_cell.
+  Slots: table_wrap, table, table_head, table_head_row, table_head_cell, table_actions_head, table_row, table_cell,
+  table_actions_cell (alignment of the actions column: page.actionsAlign → nowo-ui-cell--<align>). Inside a bordered
+  panel, add `nowo-ui-table-wrap--flush` to the table_wrap slot: card-mode rows then drop their own border.
 #}
 {% extends page.layout ?? nowo_ui_layout.admin %}
 {% set nowo_ui_bundle = page.bundle %}
@@ -59,7 +61,7 @@
                             {% endblock %}
                             {% if page.hasRowActions() %}
                                 {% set _actions_label = page.actionsLabel is null ? 'table.actions'|trans({}, 'NowoUiKitBundle') : page.actionsLabel|nowo_ui_trans %}
-                                <th scope="col" class="{{ nowo_ui_class('table_head_cell', _b) }} {{ nowo_ui_class('table_actions_head', _b) }} nowo-ui-cell--end"{{ nowo_ui_attrs('table_actions_head', _b) }}>
+                                <th scope="col" class="{{ nowo_ui_class('table_head_cell', _b) }} {{ nowo_ui_class('table_actions_head', _b) }} nowo-ui-cell--{{ page.actionsAlign }}"{{ nowo_ui_attrs('table_actions_head', _b) }}>
                                     {%- if page.actionsLabelVisible -%}
                                         {{ _actions_label }}
                                     {%- else -%}
@@ -96,7 +98,7 @@
                                             {% set _confirms = _confirms|merge([_action]) %}
                                         {% endif %}
                                     {% endfor %}
-                                    <td class="{{ nowo_ui_class('table_cell', _b) }} nowo-ui-cell--end nowo-ui-table__actions">
+                                    <td class="{{ nowo_ui_class('table_cell', _b) }} {{ nowo_ui_class('table_actions_cell', _b) }} nowo-ui-cell--{{ page.actionsAlign }}"{{ nowo_ui_attrs('table_actions_cell', _b) }}>
                                         {{ include(nowo_ui_partial('row_actions', _b), {actions: _row_actions, confirm_external: true, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
                                     </td>
                                 {% endif %}

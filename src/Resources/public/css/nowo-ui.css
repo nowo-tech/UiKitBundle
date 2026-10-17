@@ -3073,6 +3073,15 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
   text-align: end;
 }
 
+/* Row actions follow the actions column alignment (ListPage::actionsAlign) */
+.nowo-ui-table__actions.nowo-ui-cell--center > .nowo-ui-row-actions {
+  justify-content: center;
+}
+
+.nowo-ui-table__actions.nowo-ui-cell--end > .nowo-ui-row-actions {
+  justify-content: flex-end;
+}
+
 .nowo-ui-sort {
   color: inherit;
   text-decoration: none;
@@ -3403,8 +3412,33 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .nowo-ui-table--cards > tbody > tr > td.nowo-ui-table__actions .nowo-ui-row-actions {
+  .nowo-ui-table--cards > tbody > tr > td.nowo-ui-table__actions:not(.nowo-ui-cell--start, .nowo-ui-cell--center) .nowo-ui-row-actions {
     justify-content: flex-end;
+  }
+
+  /* Inline content (badges, links, icons) keeps its own width inside the label | value grid */
+  .nowo-ui-table--cards > tbody > tr > td > * {
+    justify-self: start;
+    max-width: 100%;
+  }
+
+  .nowo-ui-table--cards > tbody > tr > td.nowo-ui-table__actions > * {
+    justify-self: stretch;
+  }
+
+  /* Inside a bordered panel (table_wrap slot class nowo-ui-table-wrap--flush): rows become divided sections, no
+     second border around each card */
+  .nowo-ui-table-wrap--flush > .nowo-ui-table--cards > tbody > tr {
+    margin-bottom: 0;
+    padding-inline: 0;
+    border: 0;
+    border-bottom: var(--nowo-ui-border-width, 1px) solid var(--nowo-ui-table-border, var(--nowo-ui-border));
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .nowo-ui-table-wrap--flush > .nowo-ui-table--cards > tbody > tr:last-child {
+    border-bottom: 0;
   }
 
   .nowo-ui-table--cards > tbody > tr > td[data-nowo-ui-priority] {

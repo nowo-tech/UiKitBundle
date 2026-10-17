@@ -81,9 +81,13 @@ final class ConfirmAndRowActionThemeTest extends TestCase
             'action_danger' => 'row-btn--danger',
             'action_primary' => 'row-btn--primary',
             'action_secondary' => 'row-btn--muted',
+            'action_neutral' => 'row-btn--plain',
         ]]);
-        $objects = $twig->render('@NowoUiKitBundle/partials/_row_actions.html.twig', ['actions' => [Action::edit('/e'), Action::delete('/d', 'tok', new Confirm('Sure?', id: 'del')), new Action('restore', href: '/r', variant: 'primary'), new Action('share', href: '/s', variant: 'link')]]);
-        self::assertStringContainsString('btn-sm row-btn row-btn--muted" href="/e"', $objects);
+        $objects = $twig->render('@NowoUiKitBundle/partials/_row_actions.html.twig', ['actions' => [Action::edit('/e'), Action::delete('/d', 'tok', new Confirm('Sure?', id: 'del')), new Action('restore', href: '/r', variant: 'primary'), new Action('share', href: '/s', variant: 'link'), new Action('copy', href: '/c', variant: 'secondary'), new Action('view', href: '/n', variant: 'neutral')]]);
+        // neutral kinds (no variant) read action_neutral; an explicit secondary reads action_secondary; both paint as secondary
+        self::assertStringContainsString('nowo-ui-btn--secondary nowo-ui-btn--sm btn btn-outline-secondary btn-sm row-btn row-btn--plain" href="/e"', $objects);
+        self::assertStringContainsString('btn btn-outline-secondary btn-sm row-btn row-btn--muted" href="/c"', $objects);
+        self::assertStringContainsString('nowo-ui-btn--secondary nowo-ui-btn--sm btn btn-outline-secondary btn-sm row-btn row-btn--plain" href="/n"', $objects);
         self::assertStringContainsString('btn-sm row-btn row-btn--danger" title="Delete"', $objects);
         self::assertStringContainsString('btn-sm row-btn row-btn--primary" href="/r"', $objects);
         self::assertMatchesRegularExpression('#btn-link btn-sm row-btn" href="/s"#', $objects);
@@ -93,7 +97,13 @@ final class ConfirmAndRowActionThemeTest extends TestCase
             ['kind' => 'create', 'href' => '/c'],
             ['kind' => 'view', 'href' => '/v', 'variant' => 'danger'],
             ['kind' => 'edit', 'href' => '/e', 'variant' => 'outline'],
+            ['kind' => 'copy', 'href' => '/k'],
+            ['kind' => 'copy', 'href' => '/k2', 'variant' => 'secondary'],
+            ['kind' => 'copy', 'href' => '/k3', 'variant' => 'neutral'],
         ]]);
+        self::assertMatchesRegularExpression('#nowo-ui-btn--secondary nowo-ui-btn--sm btn btn-outline-secondary btn-sm row-btn row-btn--plain"\s+href="/k"#', $hashes);
+        self::assertMatchesRegularExpression('#btn-sm row-btn row-btn--muted"\s+href="/k2"#', $hashes);
+        self::assertMatchesRegularExpression('#nowo-ui-btn--secondary nowo-ui-btn--sm btn btn-outline-secondary btn-sm row-btn row-btn--plain"\s+href="/k3"#', $hashes);
         self::assertStringContainsString('btn-sm row-btn row-btn--danger"', $hashes);
         self::assertStringContainsString('btn-sm row-btn row-btn--primary"', $hashes);
         self::assertSame(2, substr_count($hashes, 'row-btn--danger'));

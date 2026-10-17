@@ -45,7 +45,7 @@
         {% set _submit_label = _submit and _submit.label is not null ? _submit.label|nowo_ui_trans : 'filters.apply'|trans({}, 'NowoUiKitBundle') %}
         {% set _submit_display = _submit and _submit.display ? _submit.display : (page.filtersDisplay ?? (_submit and _submit.icon ? 'icon_text' : 'text')) %}
         {% set _submit_attrs = (_submit ? _submit.attributes : {})|merge(_submit_display == 'icon' ? {title: _submit_label, 'aria-label': _submit_label} : {}) %}
-        <button type="submit" class="{{ nowo_ui_class('btn_' ~ (_submit and _submit.variant in ['primary', 'secondary', 'danger'] ? _submit.variant : 'primary'), _b) }} nowo-ui-filters__submit{{ _submit_display == 'icon' ? ' ' ~ nowo_ui_class('btn_icon', _b) }}"{{ nowo_ui_html_attrs(_submit_attrs) }}>
+        <button type="submit" class="{{ nowo_ui_class('btn_' ~ (_submit and _submit.variant in ['primary', 'secondary', 'danger', 'neutral'] ? (_submit.variant == 'neutral' ? 'secondary' : _submit.variant) : 'primary'), _b) }} nowo-ui-filters__submit{{ _submit_display == 'icon' ? ' ' ~ nowo_ui_class('btn_icon', _b) }}"{{ nowo_ui_html_attrs(_submit_attrs) }}>
             {%- if _submit_display == 'icon' -%}
                 {{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _submit and _submit.icon ? _submit.icon : 'filter', label: _submit_label}, false)|trim|raw }}
                 <span class="visually-hidden">{{ _submit_label }}</span>

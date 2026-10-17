@@ -49,7 +49,8 @@ final class ViewModelsTest extends TestCase
         self::assertSame(['create', '/items/new', 'GET', 'primary'], [$create->kind, $create->href, $create->method, $create->resolvedVariant()]);
         self::assertFalse($create->isPost());
         self::assertNull($create->confirmId());
-        self::assertSame('secondary', Action::edit('/e', 'Edit it')->resolvedVariant());
+        self::assertSame('neutral', Action::edit('/e', 'Edit it')->resolvedVariant());
+        self::assertSame('secondary', (new Action('edit', variant: 'secondary'))->resolvedVariant());
         self::assertSame('view', Action::view('/v')->kind);
         self::assertSame('primary', (new Action('save'))->resolvedVariant());
         self::assertSame('link', (new Action('custom', 'X', variant: 'link'))->resolvedVariant());

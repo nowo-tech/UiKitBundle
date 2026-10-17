@@ -12,7 +12,9 @@ use Symfony\Component\Form\FormView;
  * in context) and `nowo_ui_list_after`.
  *
  * `rowActions`: a callable `fn (mixed $row, int|string $key): iterable<Action>` or one static list for every row.
- * `actionsLabel` / `actionsLabelVisible`: header of the row-actions column (default `table.actions`, visually hidden).
+ * `actionsLabel` / `actionsLabelVisible`: header of the row-actions column (default `table.actions`, visually hidden);
+ * `actionsAlign` (`start` | `center` | `end`, default `end`): alignment of that header and its cells (slots
+ * `table_actions_head` / `table_actions_cell`).
  * Filters: `filterFields` (per-field placeholder / width / classes), `filtersSubmit` (label / icon / variant of the
  * apply button), `filtersClear` (the clear link as an Action; default: a plain link to `filtersClearHref`),
  * `filterActions` (extra actions), `filtersDisplay` (`icon` | `text` | `icon_text`: display of the apply / clear /
@@ -75,7 +77,11 @@ final readonly class ListPage
         public string $responsive = 'cards',
         public ?string $filtersDisplay = null,
         public ?bool $headerActionsInFilters = null,
+        public string $actionsAlign = 'end',
     ) {
+        if (!\in_array($actionsAlign, Column::ALIGNS, true)) {
+            throw new \InvalidArgumentException(\sprintf('Invalid ListPage actionsAlign "%s" (%s).', $actionsAlign, implode('|', Column::ALIGNS)));
+        }
         Action::assertAttributes($attributes);
         if (null !== $filtersDisplay && !\in_array($filtersDisplay, Action::DISPLAYS, true)) {
             throw new \InvalidArgumentException(\sprintf('Invalid ListPage filtersDisplay "%s" (%s).', $filtersDisplay, implode('|', Action::DISPLAYS)));
