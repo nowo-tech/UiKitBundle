@@ -81,7 +81,7 @@ final class ViewModelsTest extends TestCase
         self::assertSame([
             'kind' => 'delete', 'label' => 'Del', 'href' => '/x', 'route' => null, 'params' => [], 'method' => 'DELETE',
             'csrf_token' => 't', 'csrf_field' => '_csrf', 'confirm_id' => 'c1', 'icon' => 'trash', 'variant' => 'danger',
-            'attr' => ['data-x' => '1'], 'modal_id' => 'm', 'disabled' => true, 'visible' => false,
+            'attr' => ['data-x' => '1'], 'modal_id' => 'm', 'disabled' => true, 'visible' => false, 'fallback_href' => null,
         ], $hash);
     }
 
