@@ -63,6 +63,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **No-JS fallback for confirm actions**: `Action::$fallbackHref` (last constructor argument, kept by
+  `withConfirmScope()`, `fallback_href` in `toArray()`) prints a `<noscript>` link (class `nowo-ui-action__fallback`)
+  to e.g. a `page/confirm` page next to the dialog toggle, in toolbars and row actions.
 - **`theme.bundles.<Bundle>.pages.<type>`** (`classes`, `attributes`, `framework_defaults`): per-bundle variation by
   page type. Precedence: bundle page slot > bundle slot > bundle page > bundle > page-type slot > page type > host
   slot > host; attributes merge host → page type → bundle → bundle page type. Validated by the configuration and by

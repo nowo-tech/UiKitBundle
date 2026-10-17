@@ -19,7 +19,8 @@
       elsewhere with the same id, e.g. once after the list table)
 
   Non-GET actions submit a POST form (CSRF-only FormView when given, else csrf token field); actions with a
-  Confirm open the UiKit confirm <dialog>, whose confirm button submits. No inline on* handlers.
+  Confirm open the UiKit confirm <dialog>, whose confirm button submits. Action::fallbackHref (2.1) adds a
+  <noscript> link to that URL (e.g. a page/confirm page) next to the dialog toggle. No inline on* handlers.
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 {% set context = context|default('toolbar') %}
@@ -62,6 +63,9 @@
     {% set confirm_id = action.confirmId() %}
     {% if confirm_id %}
         <button type="button" class="{{ class }}"{% for name, value in attrs %}{% if value is same as(true) %} {{ name }}{% elseif value is not null and value is not same as(false) %} {{ name }}="{{ value }}"{% endif %}{% endfor %}{% if action.disabled %} disabled{% endif %} {{ ui.confirm_toggle_attrs() }} {{ ui.confirm_target_attr(confirm_id) }}>{{ inner }}</button>
+        {% if action.fallbackHref and not action.disabled %}
+            <noscript><a class="{{ class }} nowo-ui-action__fallback" href="{{ action.fallbackHref }}"{% if context == 'row' or display == 'icon' %} title="{{ label }}" aria-label="{{ label }}"{% endif %}>{{ inner }}</a></noscript>
+        {% endif %}
         {% if not confirm_external|default(false) %}
             {{ include(nowo_ui_partial('confirm', bundle), {
                 id: confirm_id,

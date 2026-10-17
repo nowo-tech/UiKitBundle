@@ -27,6 +27,9 @@ use Symfony\Component\Form\FormView;
  * `confirmScope` — the list scaffold scopes every row action by its row key ({@see ListPage::rowActions()}), so two
  * rows never share a dialog id.
  *
+ * `fallbackHref` (2.1): no-JS fallback of an action with a Confirm — a `<noscript>` link to that URL (usually a
+ * `page/confirm` page of the same action) is printed next to the dialog toggle, in toolbars and row actions alike.
+ *
  * @implements \ArrayAccess<array-key, mixed>
  */
 final readonly class Action implements \ArrayAccess
@@ -67,6 +70,7 @@ final readonly class Action implements \ArrayAccess
         public bool $visible = true,
         public ?string $display = null,
         public ?string $confirmScope = null,
+        public ?string $fallbackHref = null,
     ) {
         if (!\in_array($kind, self::KINDS, true)) {
             throw new \InvalidArgumentException(\sprintf('Invalid Action kind "%s" (%s).', $kind, implode('|', self::KINDS)));
@@ -198,6 +202,7 @@ final readonly class Action implements \ArrayAccess
             $this->kind, $this->label, $this->href, $this->route, $this->params, $this->method, $this->csrfToken,
             $this->confirm, $this->icon, $this->variant, $this->attributes, $this->form, $this->csrfField,
             $this->modalId, $this->disabled, $this->visible, $this->display, null === $scope ? null : (string) $scope,
+            $this->fallbackHref,
         );
     }
 
@@ -224,6 +229,7 @@ final readonly class Action implements \ArrayAccess
             'modal_id' => $this->modalId,
             'disabled' => $this->disabled,
             'visible' => $this->visible,
+            'fallback_href' => $this->fallbackHref,
         ];
     }
 

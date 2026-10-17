@@ -278,7 +278,7 @@ or a plain string printed escaped. Never pre-render HTML into a view model.
 | `Label` | `(key, domain = 'messages', params = [])`, `Label::kit(key)` (UiKit domain), `withParams()` |
 | `PageHeader` | `(title, intro = null, actions = [], breadcrumbs = [], breadcrumbCollection = null, tabs = null)`, `withActions(actions)`, `withTabs(tabs)` |
 | `AreaNav` / `AreaNavItem` *(2.1)* | `(items = [], label = null, attributes = [])`, `isEmpty()`, `active()`, `withActive(href)` / `(label, href, active = false, attributes = [])`, `withActive(bool)` — see [Area navigation](#area-navigation) |
-| `Action` | `(kind = 'custom', label = null, href = null, route = null, params = [], method = 'GET', csrfToken = null, confirm = null, icon = null, variant = null, attributes = [], form = null, csrfField = '_token', modalId = null, disabled = false, visible = true, display = null, confirmScope = null)`; factories `create()`, `edit()`, `view()`, `delete()`, `route()`; `isPost()`, `resolvedVariant()`, `confirmId()`, `confirmKey()`, `withConfirmScope()`, `toArray()` |
+| `Action` | `(kind = 'custom', label = null, href = null, route = null, params = [], method = 'GET', csrfToken = null, confirm = null, icon = null, variant = null, attributes = [], form = null, csrfField = '_token', modalId = null, disabled = false, visible = true, display = null, confirmScope = null, fallbackHref = null)`; factories `create()`, `edit()`, `view()`, `delete()`, `route()`; `isPost()`, `resolvedVariant()`, `confirmId()`, `confirmKey()`, `withConfirmScope()`, `toArray()` |
 | `Confirm` | `(title, message = null, confirmLabel = null, variant = 'danger', cancelLabel = null, id = null, expectedValue = null, expectedLabel = null, messageInHeader = null)`, `Confirm::delete(message = null)`, `expectedPattern()` |
 | `Crumb` | `(label, href = null)` |
 | `Link` | `(label, href, attributes = [])` |
@@ -315,6 +315,9 @@ action prints the hidden leaf fields of its form (the CSRF token) on **every** r
 (other children render through `form_end`, first render only): the scaffolds pre-render the 1.x `toolbar` before a
 host `page_header` override renders `actions` again, and one CSRF `FormView` may back every row. An action with a
 `Confirm` renders a toggle button + UiKit confirm `<dialog>` (`nowo-ui-confirm.js`) — never an inline `confirm()`.
+**No-JS fallback (2.1):** `Action::$fallbackHref` (usually the URL of a `page/confirm` page for the same action) prints
+`<noscript><a class="… nowo-ui-action__fallback" href="…">` next to the toggle, in toolbars and row actions (not for
+disabled actions; row and icon-only links keep `title` / `aria-label`). Exposed to 1.x overrides as `fallback_href`.
 The dialog buttons read the theme slots `btn_secondary` (cancel) and `btn_<variant>` (confirm), so host classes and
 `framework_defaults: false` apply to them like to any toolbar button.
 
