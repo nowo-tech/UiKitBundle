@@ -160,6 +160,65 @@ test.describe('page contract — validation follow-ups (REQ-UI-003)', () => {
   });
 });
 
+test.describe('page contract — validation round 3 (REQ-UI-003)', () => {
+  test('list: primary actions in the filter row, icon-only toolbar buttons keep an accessible name', async ({ page }) => {
+    await page.goto('/page-contract/orders');
+    const inFilters = page.locator('[data-nowo-ui-region="filters"] [data-nowo-ui-region="header-actions"]');
+    await expect(inFilters.locator('.nowo-ui-action--create')).toHaveText('New order');
+    await expect(page.locator('.acme-header .nowo-ui-action--create')).toHaveCount(0);
+    const exportCsv = inFilters.locator('.nowo-ui-action--export');
+    await expect(exportCsv).toHaveClass(/\bnowo-ui-btn--icon\b/);
+    await expect(exportCsv).toHaveAttribute('aria-label', 'Export CSV');
+    await expect(exportCsv.locator('.visually-hidden')).toHaveText('Export CSV');
+    await expect(exportCsv.locator('.nowo-ui-action__label')).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Clear filters' })).toHaveClass(/\bnowo-ui-btn--icon\b/);
+  });
+
+  test('list: every row opens its own confirm dialog (unique ids)', async ({ page }) => {
+    await page.goto('/page-contract/orders');
+    const ids = await page.locator('dialog[data-nowo-ui-confirm]').evaluateAll((els) => els.map((el) => el.id));
+    expect(ids.length).toBe(5);
+    expect(new Set(ids).size).toBe(5);
+    await page.locator('tbody tr').nth(1).locator('.nowo-ui-action--delete').click();
+    const dialog = page.locator('dialog[open]');
+    await expect(dialog).toContainText('Order #1041 of Marco Rossi will be deleted.');
+  });
+
+  test('list: pagination links keep the active filters; actions column aligned to the end', async ({ page }) => {
+    await page.goto('/page-contract/orders?filters%5Bq%5D=e');
+    await expect(page.locator('.nowo-ui-pagination a[href*="page=2"]').first()).toHaveAttribute('href', /filters%5Bq%5D=e/);
+    const cell = page.locator('tbody tr').first().locator('td.nowo-ui-table__actions');
+    await expect(cell).toHaveClass(/\bnowo-ui-cell--end\b/);
+    expect(await cell.locator('.nowo-ui-row-actions').evaluate((el) => getComputedStyle(el).justifyContent)).toBe('flex-end');
+  });
+
+  test('list (phone): badges keep their width in card mode', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/page-contract/orders');
+    const cell = page.locator('tbody tr').first().locator('td[data-label="Status"]');
+    const badge = cell.locator('.nowo-ui-badge');
+    const [badgeWidth, cellWidth] = [await badge.evaluate((el) => el.getBoundingClientRect().width), await cell.evaluate((el) => el.getBoundingClientRect().width)];
+    expect(badgeWidth).toBeLessThan(cellWidth / 2);
+  });
+
+  test('show: stacked detail list; dashboard: host colour on the KPI link tile; confirm: title slot', async ({ page }) => {
+    await page.goto('/page-contract/orders/1042');
+    const item = page.locator('[data-nowo-ui-region="section"] .acme-details .nowo-ui-detail-list__item').first();
+    expect(await item.evaluate((el) => getComputedStyle(el).display)).toBe('grid');
+    await page.goto('/page-contract/dashboard');
+    const tile = page.locator('a.nowo-ui-kpi--link.acme-kpi-link');
+    expect(await tile.evaluate((el) => getComputedStyle(el).color)).toBe('rgb(15, 118, 110)');
+    await page.goto('/page-contract/orders/1041/delete');
+    await expect(page.locator('.nowo-ui-confirm-page__header .nowo-ui-confirm__title.acme-confirm-title')).toBeVisible();
+  });
+
+  test('default view: header actions stay in the page header', async ({ page }) => {
+    await page.goto('/page-contract/default/orders');
+    await expect(page.locator('.nowo-ui-page-header .nowo-ui-action--create')).toBeVisible();
+    await expect(page.locator('[data-nowo-ui-region="header-actions"]')).toHaveCount(0);
+  });
+});
+
 test.describe('page contract — default theme view', () => {
   test('same list page with UiKit defaults (no host tokens, classes or partial)', async ({ page }) => {
     const response = await page.goto('/page-contract/default/orders');

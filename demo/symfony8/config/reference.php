@@ -872,6 +872,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *             framework_defaults?: bool|Param, // Override of theme.framework_defaults for this page type (unset = inherit).
  *             classes?: array<string, mixed>,
  *             attributes?: array<string, array<string, mixed>>,
+ *             header_actions_in_filters?: bool|Param, // list only: render the page-header actions at the end of the filter row instead of the page header (ListPage::headerActionsInFilters wins when set; unset = false).
  *         }>,
  *     },
  * }

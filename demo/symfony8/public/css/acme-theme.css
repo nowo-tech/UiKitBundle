@@ -56,6 +56,12 @@
 .acme-kpis { gap: 1rem; }
 .acme-kpi { background: var(--nowo-ui-surface); border: 1px solid var(--nowo-ui-border); border-top: 4px solid var(--nowo-ui-primary); border-radius: var(--nowo-ui-radius); }
 a.acme-kpi:hover { border-color: var(--nowo-ui-primary); }
+/* Whole-tile KPI link (slot kpi_link): host link colour + hover (the kit's colour reset has zero specificity) */
+.acme-kpi-link { color: var(--nowo-ui-primary); }
+.acme-kpi-link:hover { color: #115e59; background: var(--nowo-ui-surface-muted); }
+/* Stacked detail lists (pages.show: detail_list slot) and the confirm title (confirm_title slot) */
+.acme-details { gap: 0.9rem; }
+.acme-confirm-title { font-family: var(--acme-display); letter-spacing: -0.01em; }
 
 /* KPI value through the kpi_value slot, written as a utility in @layer utilities (Tailwind v4 style): it still beats
    the kit, which ships in @layer nowo-ui below components / utilities (order declared by nowo-ui.css). */

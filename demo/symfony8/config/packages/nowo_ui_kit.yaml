@@ -52,6 +52,8 @@ nowo_ui_kit:
             tab_active: 'acme-tab--active'
             wizard_step_active: 'acme-step--active'
             auth_panel: 'acme-auth'
+            kpi_link: 'acme-kpi-link'
+            confirm_title: 'acme-confirm-title'
         attributes:
             table: { data-acme-table: 'zebra' }
         partials:
@@ -61,6 +63,10 @@ nowo_ui_kit:
             list:
                 attributes:
                     table: { data-acme-page: 'list' }
+            # Show pages: every label sits over its value (detail_item / detail_term / detail_value slots)
+            show:
+                classes:
+                    detail_list: 'nowo-ui-detail-list--stacked acme-details'
         bundles:
             # The default-theme view (/page-contract/default/…): a per-bundle exception that resets the host class
             # map (an exception class REPLACES the host class of the slot) and the partial override.
@@ -91,6 +97,9 @@ nowo_ui_kit:
                     tab_active: ''
                     wizard_step_active: ''
                     auth_panel: ''
+                    kpi_link: ''
+                    confirm_title: ''
+                    detail_list: ''
                 attributes:
                     table: { data-acme-table: false, data-acme-page: false }   # attributes merge; false removes the host / page-type attribute
                 partials:

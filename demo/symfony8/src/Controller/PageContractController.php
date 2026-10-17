@@ -113,7 +113,7 @@ final class PageContractController extends AbstractController
         return $this->render('page_contract/orders/index.html.twig', ['page' => new ListPage(
             $this->header($theme, 'Orders', 'Every order placed in the shop, newest first.', 'Orders', [
                 Action::create('#', 'New order'),
-                new Action('export', 'Export CSV', '#', icon: 'export'),
+                new Action('export', 'Export CSV', '#', icon: 'export', display: 'icon'),
             ]),
             [new Column('id', '#', true, required: true), new Column('customer', 'Customer', true, required: true), new Column('placed', 'Placed', priority: 3), new Column('status', 'Status'), new Column('total', 'Total', true, 'end')],
             $rows,
@@ -133,6 +133,9 @@ final class PageContractController extends AbstractController
             attributes: ['data-testid' => 'orders-list'],
             filterFields: [new FilterField('q', 'Search customers…', 'md'), new FilterField('status', width: 'sm')],
             filtersSubmit: new Action('filter', 'Filter', icon: 'filter'),
+            filtersClear: new Action('close', 'Clear filters', $this->generateUrl($this->route('page_contract_orders', $theme), $this->params($theme)), icon: 'close', display: 'icon'),
+            // host theme: the primary actions sit at the end of the filter row (default view: page header)
+            headerActionsInFilters: null === $theme,
         )]);
     }
 
