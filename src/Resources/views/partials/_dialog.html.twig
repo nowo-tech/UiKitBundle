@@ -13,13 +13,14 @@
     - body: HTML string (raw), or override the `nowo_ui_dialog_body` block through embed
     - footer: HTML string (raw)
     - size: sm | md (default) | lg | xl → nowo-ui-dialog--<size>
-    - body_muted: true = muted body text (nowo-ui-dialog__body--muted; no framework CSS needed)
+    - body_muted: true = muted body text (slot dialog_body_muted, nowo-ui-dialog__body--muted; no framework CSS needed)
     - dismissible: false hides the header close button (default true)
     - backdrop_close: false keeps the dialog open on a backdrop click (default true)
     - close_label: accessible name of the close button (default action.close)
     - attr: extra attributes of the <dialog>, merged over the `dialog` slot attributes
     - bundle: per-bundle theme exceptions
-  Slots: dialog (root), dialog_header, dialog_title, dialog_body, dialog_footer (classes + attributes).
+  Slots: dialog (root), dialog_header, dialog_title, dialog_body (+ dialog_body_muted), dialog_footer (classes +
+  attributes).
 #}
 {% set bundle = bundle|default(null) %}
 {% set _pt = nowo_ui_page_type|default(null) %}
@@ -35,7 +36,7 @@
             <button type="button" class="nowo-ui-dialog__close" data-nowo-ui-dialog-close aria-label="{{ _close_label }}" title="{{ _close_label }}"><span aria-hidden="true">&times;</span></button>
         {% endif %}
     </header>
-    <div class="{{ nowo_ui_class('dialog_body', bundle) }}{{ body_muted|default(false) ? ' nowo-ui-dialog__body--muted' }}"{{ nowo_ui_attrs('dialog_body', bundle) }}>
+    <div class="{{ nowo_ui_class('dialog_body', bundle) }}{{ body_muted|default(false) ? ' ' ~ nowo_ui_class('dialog_body_muted', bundle) }}"{{ nowo_ui_attrs('dialog_body', bundle) }}>
         {%- block nowo_ui_dialog_body %}{{ body|default('')|raw }}{% endblock -%}
     </div>
     {% if footer|default(null) %}

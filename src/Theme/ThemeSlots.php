@@ -185,6 +185,15 @@ final class ThemeSlots
             'bootstrap' => 'form-control',
             'tailwind' => 'block w-full max-w-xs border px-3 py-1.5 text-sm',
         ]],
+        // Wide / full-width inputs (2.1): complete input class lists (use instead of `input`, like the btn variants)
+        'input_wide' => ['nowo-ui-input nowo-ui-input--wide', [
+            'bootstrap' => 'form-control',
+            'tailwind' => 'block w-full max-w-xl border px-3 py-1.5 text-sm',
+        ]],
+        'input_full' => ['nowo-ui-input nowo-ui-input--full', [
+            'bootstrap' => 'form-control',
+            'tailwind' => 'block w-full border px-3 py-1.5 text-sm',
+        ]],
         // Pagination
         'pagination' => ['nowo-ui-pagination', [
             'bootstrap' => 'd-flex flex-wrap align-items-center justify-content-between gap-2 mt-3',
@@ -305,6 +314,8 @@ final class ThemeSlots
         'dialog_header' => ['nowo-ui-dialog__header', []],
         'dialog_title' => ['nowo-ui-dialog__title', []],
         'dialog_body' => ['nowo-ui-dialog__body', []],
+        // Muted dialog body text (dialog partial `body_muted`), added to dialog_body; framework-free
+        'dialog_body_muted' => ['nowo-ui-dialog__body--muted', []],
         'dialog_footer' => ['nowo-ui-dialog__footer', []],
         // Confirm <dialog> root (dialog partial only: never on the full-page confirm, so host dialog CSS such as
         // `:not([open]) { display: none }` cannot hide the page)

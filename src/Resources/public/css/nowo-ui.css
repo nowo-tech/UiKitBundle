@@ -213,6 +213,17 @@
   accent-color: var(--nowo-ui-accent, var(--nowo-ui-primary));
 }
 
+/* Wide / full-width inputs (slots input_wide / input_full, 2.1) */
+.nowo-ui-input--wide {
+  width: 100%;
+  max-width: 36rem;
+}
+
+.nowo-ui-input--full {
+  width: 100%;
+  max-width: none;
+}
+
 /* Surface, text, placeholder and focus for the kit-painted stacks; Bootstrap `.form-control` keeps its own. */
 .nowo-ui-input:not(.form-control) {
   background-color: var(--nowo-ui-input-bg, var(--nowo-ui-surface));
@@ -1411,6 +1422,13 @@ a.nowo-ui-pagination__link:hover {
 
 .nowo-ui-dialog__body {
   padding: 0.5rem 1.25rem 1rem;
+}
+
+/* Muted body text (dialog body_muted / slot dialog_body_muted; also usable on a confirm_body), no framework CSS */
+.nowo-ui-dialog__body--muted,
+.nowo-ui-confirm__body--muted {
+  color: var(--nowo-ui-muted);
+  font-size: 0.925rem;
 }
 
 .nowo-ui-dialog__footer {

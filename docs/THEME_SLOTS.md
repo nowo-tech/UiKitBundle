@@ -142,6 +142,8 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `filters_actions` | `nowo-ui-filters__actions` | `d-flex flex-wrap align-items-end gap-2` | `d-flex flex-wrap align-items-end gap-2` | `flex flex-wrap items-end gap-2` | — |
 | `filters_field` | `nowo-ui-filters__field` | — | — | — | — |
 | `input` | `nowo-ui-input` | `form-control` | `form-control` | `block w-full max-w-xs border px-3 py-1.5 text-sm` | — |
+| `input_wide` | `nowo-ui-input nowo-ui-input--wide` | `form-control` | `form-control` | `block w-full max-w-xl border px-3 py-1.5 text-sm` | — |
+| `input_full` | `nowo-ui-input nowo-ui-input--full` | `form-control` | `form-control` | `block w-full border px-3 py-1.5 text-sm` | — |
 | `pagination` | `nowo-ui-pagination` | `d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3` | `d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3` | `flex flex-wrap items-center justify-between gap-2 mt-3` | — |
 | `pagination_link` | `nowo-ui-pagination__link` | `page-link` | `page-link` | — | — |
 | `pagination_active` | `nowo-ui-pagination__link is-active` | `page-link` | `page-link` | — | — |
@@ -188,6 +190,7 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `dialog_header` | `nowo-ui-dialog__header` | — | — | — | — |
 | `dialog_title` | `nowo-ui-dialog__title` | — | — | — | — |
 | `dialog_body` | `nowo-ui-dialog__body` | — | — | — | — |
+| `dialog_body_muted` | `nowo-ui-dialog__body--muted` | — | — | — | — |
 | `dialog_footer` | `nowo-ui-dialog__footer` | — | — | — | — |
 | `confirm` | `nowo-ui-confirm` | — | — | — | — |
 | `confirm_page` | `nowo-ui-confirm-page` | — | — | — | — |
@@ -231,6 +234,13 @@ inside the block inherits the block's font and colours. Bootstrap and Foundation
 <p>Key <code class="{{ nowo_ui_class('code', bundle) }}"{{ nowo_ui_attrs('code', bundle) }}>{{ log.key }}</code></p>
 <pre class="{{ nowo_ui_class('code_block', bundle) }}"{{ nowo_ui_attrs('code_block', bundle) }}><code>{{ log.payload|json_encode(constant('JSON_PRETTY_PRINT') b-or constant('JSON_UNESCAPED_SLASHES')) }}</code></pre>
 ```
+
+Wide forms (2.1): `input_wide` (max width `36rem`) and `input_full` (no max width) are **complete** input class lists —
+use one of them instead of `input` on a widget (e.g. `attr: {class: nowo_ui_class('input_wide')}`), like the button
+variants; the semantic modifiers `nowo-ui-input--wide` / `nowo-ui-input--full` work without framework CSS. Muted
+dialog text: `dialog_body_muted` (the `dialog` partial's `body_muted: true`) and the `nowo-ui-confirm__body--muted`
+modifier (e.g. on the full-page confirm through the `confirm_body` classes) paint `--nowo-ui-muted` without relying on
+Bootstrap's `text-muted`; for inline text use the `muted` slot.
 
 Minor hooks for kit class maps: `btn_link` (toolbar `Action` with `variant: 'link'`; same classes as
 `ui.btn('link')`); `muted` (same classes as `ui.muted()`; UiKit prints it on the `—` placeholder of empty detail-list

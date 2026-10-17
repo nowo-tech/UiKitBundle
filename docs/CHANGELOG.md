@@ -66,6 +66,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Wide-form and muted-dialog slots**: `input_wide` / `input_full` (complete input class lists with the semantic
+  modifiers `nowo-ui-input--wide` — max width 36rem — and `nowo-ui-input--full`; Tailwind defaults `max-w-xl` / no
+  max width), `dialog_body_muted` (`nowo-ui-dialog__body--muted`) and the `nowo-ui-confirm__body--muted` modifier:
+  muted text and wide inputs that do not depend on Bootstrap CSS.
 - **Generic native dialog**: partial `dialog` (`partials/_dialog.html.twig`; header / title / close button, body,
   footer; `size`, `body_muted`, `dismissible`, `backdrop_close`, `attr`), slots `dialog`, `dialog_header`,
   `dialog_title`, `dialog_body`, `dialog_footer`, and `js/nowo-ui-dialog.js` (CSP-safe opener
