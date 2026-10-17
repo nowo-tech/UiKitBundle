@@ -176,7 +176,7 @@ panel's border. For the Scroll / Responsive toggle with a row-detail dialog (Sti
 
 | Data block | Default | Context |
 | --- | --- | --- |
-| `nowo_ui_show_sections` | one card (title: `card_title` slot) + definition list per `DetailSection` (booleans as ✓ / —, links via `DetailItem::href`; slots `detail_list`, `detail_item`, `detail_term`, `detail_value` — add `nowo-ui-detail-list--stacked` to `detail_list` for label over value) | `page` |
+| `nowo_ui_show_sections` | one card (title: `card_title` slot) + definition list per `DetailSection` (booleans as ✓ / —, links via `DetailItem::href`; slots `detail_list`, `detail_item`, `detail_term`, `detail_value` — add `nowo-ui-detail-list--stacked` to `detail_list` for label over value). `page.meta` renders after the sections as one more list with the `detail_list` + `detail_list_meta` slots (`nowo-ui-detail-list--meta`) | `page` |
 | `nowo_ui_show_after` | empty (related tables, history) | `page` |
 
 ### Form
@@ -222,9 +222,14 @@ and hover apply).
 
 `page/confirm.html.twig` · `page: ConfirmPage` (`header`, `confirm: Confirm`, `action: Action` (non-GET),
 `cancelHref`). Full-page fallback of the confirm dialog (no JS): cancel link + POST form (CSRF `FormView` or token).
-No data blocks. Same internal slots as the dialog: `confirm_title`, `confirm_message`, `confirm_expect_label` (semantic
-+ host classes) and `confirm_panel` / `confirm_header` / `confirm_body` / `confirm_footer` (host classes on the page's
-`card_body` panel, `<header>`, message wrapper and `form_actions` row).
+No data blocks. The page root is a `<section>` with the **`confirm_page`** slot (`nowo-ui-confirm-page`) and the
+`card` slot — never the dialog root slot `confirm`, so host dialog CSS (e.g. `.confirm-dialog:not([open]) { display:
+none }` on `theme.classes.confirm`) and UiKit's own `<dialog>` box rules cannot hide or reshape the page. Same
+internal slots as the dialog: `confirm_title`, `confirm_message`, `confirm_expect` (type-to-confirm wrapper),
+`confirm_expect_label` (semantic + host classes) and `confirm_panel` / `confirm_header` / `confirm_body` /
+`confirm_footer` (host classes on the page's `card_body` panel, `<header>`, message wrapper and `form_actions` row).
+`Confirm::messageInHeader` (or `theme.confirm_message_in_header`) moves the message under the title, as in the
+dialog.
 
 ### Wizard
 
@@ -258,7 +263,7 @@ or a plain string printed escaped. Never pre-render HTML into a view model.
 | `Label` | `(key, domain = 'messages', params = [])`, `Label::kit(key)` (UiKit domain), `withParams()` |
 | `PageHeader` | `(title, intro = null, actions = [], breadcrumbs = [], breadcrumbCollection = null)`, `withActions(actions)` |
 | `Action` | `(kind = 'custom', label = null, href = null, route = null, params = [], method = 'GET', csrfToken = null, confirm = null, icon = null, variant = null, attributes = [], form = null, csrfField = '_token', modalId = null, disabled = false, visible = true, display = null, confirmScope = null)`; factories `create()`, `edit()`, `view()`, `delete()`, `route()`; `isPost()`, `resolvedVariant()`, `confirmId()`, `confirmKey()`, `withConfirmScope()`, `toArray()` |
-| `Confirm` | `(title, message = null, confirmLabel = null, variant = 'danger', cancelLabel = null, id = null, expectedValue = null, expectedLabel = null)`, `Confirm::delete(message = null)`, `expectedPattern()` |
+| `Confirm` | `(title, message = null, confirmLabel = null, variant = 'danger', cancelLabel = null, id = null, expectedValue = null, expectedLabel = null, messageInHeader = null)`, `Confirm::delete(message = null)`, `expectedPattern()` |
 | `Crumb` | `(label, href = null)` |
 | `Link` | `(label, href, attributes = [])` |
 | `Pagination` | `(page, perPage, total, totalPages = null, route = null, query = [], routeParams = null, pageParam = 'page', perPageParam = 'per_page')`; `fromArray()`, `fromPagerfanta()`, `fromKnp()` (duck typed); `from()`, `to()`, `hasPrevious()`, `hasNext()`, `toArray()` — the **only** pagination shape |
@@ -299,7 +304,15 @@ The dialog buttons read the theme slots `btn_secondary` (cancel) and `btn_<varia
 the confirm button `disabled` with `data-nowo-confirm-submit`; `nowo-ui-confirm.js` enables it only while the input
 holds exactly the value, and clears + focuses the input each time the dialog opens. The input also carries `required`
 and an escaped `pattern` and joins the POST form through `form="…"`, so the full-page `ConfirmPage` enforces the
-value without JavaScript. CSP-safe: data attributes only.
+value without JavaScript. CSP-safe: data attributes only. The label + input wrapper is the `confirm_expect` slot
+(`nowo-ui-confirm__expect`).
+
+**Message placement.** The message renders in the body (`confirm_body` > `confirm_message`) by default. Hosts whose
+dialog header is title + message set `theme.confirm_message_in_header: true` (or a bundle sets
+`new Confirm(…, messageInHeader: true)`, which wins either way): the `<p class="nowo-ui-confirm__message">` then sits in
+the header under the title and the body wrapper is omitted. A 1.x `body` (HTML) passed to the `confirm` partial
+stays in the body; it is wrapped in a `<div>` carrying the `confirm_message` slot classes / attributes only when the
+theme sets them (1.x markup unchanged with an empty theme).
 
 **Display modes.** `Action::display` — `icon` (icon only: the label stays as a visually-hidden span plus
 `aria-label` / `title`), `text` (label only) or `icon_text` — applies in every context. Without it, toolbar / header

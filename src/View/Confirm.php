@@ -11,6 +11,9 @@ namespace Nowo\UiKitBundle\View;
  * exactly that value (nowo-ui-confirm.js; the input also carries `required` + `pattern`, so the browser blocks the
  * submit without JS on the full-page confirm). `expectedLabel` replaces the prompt (default
  * `confirm.type_to_confirm` with `%value%`).
+ *
+ * `messageInHeader` renders the message inside the header, under the title (hosts whose dialog header is title +
+ * message); null = the theme option `theme.confirm_message_in_header` (default false: message in the body).
  */
 final readonly class Confirm
 {
@@ -25,6 +28,7 @@ final readonly class Confirm
         public ?string $id = null,
         public ?string $expectedValue = null,
         public Label|string|null $expectedLabel = null,
+        public ?bool $messageInHeader = null,
     ) {
         if (!\in_array($variant, self::VARIANTS, true)) {
             throw new \InvalidArgumentException(\sprintf('Invalid Confirm variant "%s" (%s).', $variant, implode('|', self::VARIANTS)));

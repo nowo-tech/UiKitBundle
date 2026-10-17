@@ -187,6 +187,16 @@ Changes to markup, inputs and cascade a host or a bundle may depend on (REQ-UI-0
 - **Theme class validation relaxed:** class lists may contain `"`, `'`, `<`, `>` and `&` (Tailwind arbitrary / child
   variants); only control characters and invalid UTF-8 are rejected. Host overrides of UiKit partials must keep
   printing slot classes through Twig's escaping (`class="{{ nowo_ui_class(…) }}"`, never `|raw`).
+- **Full-page confirm root:** the `<section>` of `page/confirm.html.twig` now carries `nowo-ui-confirm-page` + the new
+  `confirm_page` slot (classes / attributes) and the `card` slot; it no longer carries `nowo-ui-confirm` nor the
+  `confirm` slot classes / attributes (those are the `<dialog>`'s). Move page-only classes from `theme.classes.confirm`
+  to `confirm_page`; UiKit's `.nowo-ui-confirm` dialog box rules (transparent background, no padding / border) no
+  longer apply to the page, so it paints as a regular card.
+- **Confirm hooks (minor):** new slots `confirm_page`, `confirm_expect`, `detail_list_meta`; `Confirm::messageInHeader`
+  (last constructor argument) and `theme.confirm_message_in_header` move the message under the title. With a theme
+  that sets `confirm_message` classes or attributes, a 1.x `body` passed to `_confirm` is wrapped in
+  `<div class="nowo-ui-confirm__message …">`; `_confirm` overrides read `confirm.messageInHeader ??
+  nowo_ui_theme.confirmMessageInHeader()` to support it.
 
 ## To 1.17.4
 

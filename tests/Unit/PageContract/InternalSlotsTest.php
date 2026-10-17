@@ -73,7 +73,8 @@ final class InternalSlotsTest extends TestCase
         self::assertStringContainsString('<label class="nowo-ui-confirm__expect-label app-expect-label" for="c1-expected">', $html);
         self::assertStringContainsString('<div class="nowo-ui-confirm__footer app-confirm-footer">', $html);
         $html = $twig->render('@NowoUiKitBundle/partials/_confirm.html.twig', ['id' => 'c2', 'title' => 'T', 'body' => '<b>x</b>']);
-        self::assertStringContainsString('<div class="nowo-ui-confirm__body app-confirm-body"><b>x</b></div>', $html);
+        // a 1.x body is wrapped in the confirm_message slot element once the theme styles that slot
+        self::assertStringContainsString('<div class="nowo-ui-confirm__body app-confirm-body"><div class="nowo-ui-confirm__message app-confirm-message"><b>x</b></div></div>', $html);
 
         $page = new ConfirmPage(new PageHeader('Delete'), new Confirm('Delete Ann?', 'Really.', expectedValue: 'ann'), Action::delete('/people/1', 'tok'), '/people');
         $html = $twig->render('@NowoUiKit/page/confirm.html.twig', ['page' => $page]);

@@ -232,6 +232,8 @@ final class ThemeSlots
         'detail_item' => ['nowo-ui-detail-list__item', []],
         'detail_term' => ['nowo-ui-detail-list__term', []],
         'detail_value' => ['nowo-ui-detail-list__value', []],
+        // Show scaffold audit meta list (ShowPage::meta): added to the detail_list classes of that list
+        'detail_list_meta' => ['nowo-ui-detail-list--meta', []],
         'kpis' => ['nowo-ui-kpis', []],
         'kpi' => ['nowo-ui-kpi', [
             'bootstrap' => 'card',
@@ -259,7 +261,11 @@ final class ThemeSlots
             'foundation' => 'tabs-title is-active',
         ]],
         'modal' => ['nowo-ui-modal', []],
+        // Confirm <dialog> root (dialog partial only: never on the full-page confirm, so host dialog CSS such as
+        // `:not([open]) { display: none }` cannot hide the page)
         'confirm' => ['nowo-ui-confirm', []],
+        // Full-page confirm root (page/confirm.html.twig; next to the `card` slot)
+        'confirm_page' => ['nowo-ui-confirm-page', []],
         // Confirm internals (dialog partial and full-page confirm scaffold; on the page only the host classes are added
         // to its own wrappers, the dialog box styles of the semantic classes stay dialog-only)
         'confirm_panel' => ['nowo-ui-confirm__panel', []],
@@ -267,6 +273,8 @@ final class ThemeSlots
         'confirm_title' => ['nowo-ui-confirm__title', []],
         'confirm_body' => ['nowo-ui-confirm__body', []],
         'confirm_message' => ['nowo-ui-confirm__message', []],
+        // Type-to-confirm wrapper (label + input; Confirm::expectedValue)
+        'confirm_expect' => ['nowo-ui-confirm__expect', []],
         'confirm_expect_label' => ['nowo-ui-confirm__expect-label', []],
         'confirm_footer' => ['nowo-ui-confirm__footer', []],
         // Forms

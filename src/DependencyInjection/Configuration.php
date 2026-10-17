@@ -290,6 +290,11 @@ final class Configuration implements ConfigurationInterface
             ->addDefaultsIfNotSet();
         $children = $node->children();
         $this->addThemeChildren($children, 'theme', false);
+        $children
+            ->booleanNode('confirm_message_in_header')
+                ->defaultFalse()
+                ->info('Confirm dialogs and the full-page confirm render the message inside the header, under the title (hosts whose dialog header is title + message). View\\Confirm::messageInHeader wins when set.')
+            ->end();
         $bundles = $children
             ->arrayNode('bundles')
                 ->info('Optional per-bundle exceptions keyed by bundle name (e.g. NowoHttpLogBundle): a bundle slot class replaces the host class of that slot; attributes merge; partials replace; tokens are scoped to [data-nowo-ui-bundle="<Bundle>"].')

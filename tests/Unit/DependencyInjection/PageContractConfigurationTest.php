@@ -22,7 +22,7 @@ final class PageContractConfigurationTest extends TestCase
 
         self::assertSame(['admin' => '@NowoUiKit/layout/admin.html.twig', 'guest' => '@NowoUiKit/layout/guest.html.twig'], $config['layouts']);
         self::assertSame(['breadcrumb_kit' => true, 'collection' => null], $config['breadcrumbs']);
-        self::assertSame(['framework_defaults' => true, 'classes' => [], 'attributes' => [], 'partials' => [], 'tokens' => [], 'tokens_dark' => [], 'bundles' => [], 'pages' => []], $config['theme']);
+        self::assertSame(['framework_defaults' => true, 'classes' => [], 'attributes' => [], 'partials' => [], 'tokens' => [], 'tokens_dark' => [], 'confirm_message_in_header' => false, 'bundles' => [], 'pages' => []], $config['theme']);
     }
 
     public function testFullThemeConfig(): void

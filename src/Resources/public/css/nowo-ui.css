@@ -1284,6 +1284,13 @@ a.nowo-ui-pagination__link:hover {
   color: var(--nowo-ui-muted);
 }
 
+/* Message under the title (Confirm::messageInHeader / theme.confirm_message_in_header) */
+:is(.nowo-ui-confirm__header, .nowo-ui-confirm-page__header) > .nowo-ui-confirm__message {
+  margin: 0.25rem 0 0;
+  font-size: 0.925rem;
+  color: var(--nowo-ui-muted);
+}
+
 /* Type-to-confirm (2.0, View\Confirm::expectedValue) */
 .nowo-ui-confirm__expect {
   display: grid;

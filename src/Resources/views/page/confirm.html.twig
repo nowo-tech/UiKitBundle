@@ -1,8 +1,11 @@
 {#
   REQ-UI-003 full-page confirm (no-JS fallback of the confirm dialog). Variable: page (View\ConfirmPage).
   No data blocks. The confirm button submits page.action (POST form; CSRF FormView or token).
-  Slots: confirm (root), card_body + confirm_panel, confirm_header, confirm_title, confirm_body, confirm_message,
-  confirm_expect_label, form_actions + confirm_footer (confirm_panel / header / body / footer add host classes only).
+  Slots: confirm_page + card (root; the dialog root slot `confirm` is never printed here, so host dialog CSS such as
+  `.confirm-dialog:not([open]) { display: none }` cannot reach the page), card_body + confirm_panel, confirm_header,
+  confirm_title, confirm_body, confirm_message, confirm_expect, confirm_expect_label, form_actions + confirm_footer
+  (confirm_panel / header / body / footer add host classes only). The message renders under the title inside the
+  header with page.confirm.messageInHeader (null = theme.confirm_message_in_header).
 #}
 {% extends page.layout ?? nowo_ui_layout.admin %}
 {% set nowo_ui_bundle = page.bundle %}
@@ -19,7 +22,7 @@
     {% set _b = page.bundle %}
     {% set _confirm = page.confirm %}
     {% set _href = page.action.href ?? (page.action.route ? path(page.action.route, page.action.params) : null) %}
-    <section class="{{ nowo_ui_class('confirm', _b) }} nowo-ui-confirm-page {{ nowo_ui_class('card', _b) }}" data-nowo-ui-page="confirm" data-nowo-ui-region="confirm" data-nowo-confirm-scope{{ nowo_ui_attrs('confirm', _b) }}{{ nowo_ui_html_attrs(page.attributes) }}>
+    <section class="{{ nowo_ui_class('confirm_page', _b) }} {{ nowo_ui_class('card', _b) }}" data-nowo-ui-page="confirm" data-nowo-ui-region="confirm" data-nowo-confirm-scope{{ nowo_ui_attrs('confirm_page', _b) }}{{ nowo_ui_html_attrs(page.attributes) }}>
         {#- the confirm_* slots add their host classes to the page's own wrappers (the semantic dialog-box classes stay
             on the dialog); title, message and expect label keep their semantic classes -#}
         {% set _extra = {} %}
@@ -27,15 +30,19 @@
             {% set _classes = nowo_ui_theme.extraClasses(_slot, _b, nowo_ui_page_type) %}
             {% set _extra = _extra|merge({(_slot): _classes ? ' ' ~ _classes : ''}) %}
         {% endfor %}
+        {% set _message_in_header = _confirm.message and (_confirm.messageInHeader ?? nowo_ui_theme.confirmMessageInHeader()) %}
         <div class="{{ nowo_ui_class('card_body', _b) }} nowo-ui-confirm-page__panel{{ _extra.confirm_panel }}">
             <header class="nowo-ui-confirm-page__header{{ _extra.confirm_header }}">
                 <h2 class="{{ nowo_ui_class('confirm_title', _b) }}">{{ _confirm.title|nowo_ui_trans }}</h2>
+                {% if _message_in_header %}
+                <p class="{{ nowo_ui_class('confirm_message', _b) }}"{{ nowo_ui_attrs('confirm_message', _b) }}>{{ _confirm.message|nowo_ui_trans }}</p>
+                {% endif %}
             </header>
-            {% if _confirm.message %}
-                <div class="nowo-ui-confirm-page__body{{ _extra.confirm_body }}"><p class="{{ nowo_ui_class('confirm_message', _b) }}">{{ _confirm.message|nowo_ui_trans }}</p></div>
+            {% if _confirm.message and not _message_in_header %}
+                <div class="nowo-ui-confirm-page__body{{ _extra.confirm_body }}"><p class="{{ nowo_ui_class('confirm_message', _b) }}"{{ nowo_ui_attrs('confirm_message', _b) }}>{{ _confirm.message|nowo_ui_trans }}</p></div>
             {% endif %}
             {% if _confirm.expectedValue is not null %}
-                <div class="nowo-ui-confirm__expect">
+                <div class="{{ nowo_ui_class('confirm_expect', _b) }}"{{ nowo_ui_attrs('confirm_expect', _b) }}>
                     <label class="{{ nowo_ui_class('confirm_expect_label', _b) }}" for="nowo-ui-confirm-page-expected">{{ _confirm.expectedLabel is null ? 'confirm.type_to_confirm'|trans({'%value%': _confirm.expectedValue}, 'NowoUiKitBundle') : _confirm.expectedLabel|nowo_ui_trans({'%value%': _confirm.expectedValue}) }}</label>
                     <input id="nowo-ui-confirm-page-expected" class="{{ nowo_ui_class('input', _b) }} nowo-ui-confirm__expect-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" required pattern="{{ _confirm.expectedPattern() }}" data-nowo-confirm-expected="{{ _confirm.expectedValue }}" form="nowo-ui-confirm-page-form">
                 </div>

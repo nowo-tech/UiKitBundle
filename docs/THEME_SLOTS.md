@@ -159,6 +159,7 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `detail_item` | `nowo-ui-detail-list__item` | — | — | — | — |
 | `detail_term` | `nowo-ui-detail-list__term` | — | — | — | — |
 | `detail_value` | `nowo-ui-detail-list__value` | — | — | — | — |
+| `detail_list_meta` | `nowo-ui-detail-list--meta` | — | — | — | — |
 | `kpis` | `nowo-ui-kpis` | — | — | — | — |
 | `kpi` | `nowo-ui-kpi` | `card` | `card` | `border` | `callout` |
 | `kpi_label` | `nowo-ui-kpi__label` | — | — | — | — |
@@ -170,11 +171,13 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `tab_active` | `nowo-ui-tabs__item nowo-ui-tabs__item--active` | `nav-link active` | `nav-link active` | `px-3 py-2 text-sm no-underline border-b-2` | `tabs-title is-active` |
 | `modal` | `nowo-ui-modal` | — | — | — | — |
 | `confirm` | `nowo-ui-confirm` | — | — | — | — |
+| `confirm_page` | `nowo-ui-confirm-page` | — | — | — | — |
 | `confirm_panel` | `nowo-ui-confirm__panel` | — | — | — | — |
 | `confirm_header` | `nowo-ui-confirm__header` | — | — | — | — |
 | `confirm_title` | `nowo-ui-confirm__title` | — | — | — | — |
 | `confirm_body` | `nowo-ui-confirm__body` | — | — | — | — |
 | `confirm_message` | `nowo-ui-confirm__message` | — | — | — | — |
+| `confirm_expect` | `nowo-ui-confirm__expect` | — | — | — | — |
 | `confirm_expect_label` | `nowo-ui-confirm__expect-label` | — | — | — | — |
 | `confirm_footer` | `nowo-ui-confirm__footer` | — | — | — | — |
 | `form` | `nowo-ui-form` | — | — | — | — |
@@ -200,11 +203,17 @@ Bootstrap 4 / Foundation variant classes set both colours too), filters / inputs
 Internals: `card_title` / `card_intro` (card heading, also the show and settings section cards); `detail_item`,
 `detail_term`, `detail_value` (one `<div>` + `<dt>` + `<dd>` per `DetailItem`; the item is `display: contents` at zero
 specificity, so a host class on `detail_item` gives it a box, and the `nowo-ui-detail-list--stacked` modifier — e.g.
-`classes.detail_list: 'nowo-ui-detail-list--stacked'` — puts each label over its value); `confirm_panel`,
-`confirm_header`, `confirm_title`, `confirm_body`, `confirm_message`, `confirm_expect_label`, `confirm_footer` (the
-`_confirm` dialog; on the full-page confirm scaffold the panel / header / body / footer slots add only their host
-classes to the page's own wrappers — `card_body`, `nowo-ui-confirm-page__header`, `nowo-ui-confirm-page__body`,
-`form_actions` — so the dialog-box styles never apply to the page); `kpi_link` (only on a whole-tile KPI `<a>`; the
+`classes.detail_list: 'nowo-ui-detail-list--stacked'` — puts each label over its value); `detail_list_meta` (added to
+the `detail_list` classes of the show scaffold's audit meta list, `ShowPage::meta`); `confirm` is the `<dialog>` root
+only and `confirm_page` the full-page confirm root (with `card`): dialog styles on `confirm` — e.g.
+`.confirm-dialog:not([open]) { display: none }` — never reach the page; `confirm_panel`, `confirm_header`,
+`confirm_title`, `confirm_body`, `confirm_message`, `confirm_expect` (type-to-confirm label + input wrapper),
+`confirm_expect_label`, `confirm_footer` (the `_confirm` dialog; on the full-page confirm scaffold the panel / header /
+body / footer slots add only their host classes to the page's own wrappers — `card_body`,
+`nowo-ui-confirm-page__header`, `nowo-ui-confirm-page__body`, `form_actions` — so the dialog-box styles never apply to
+the page; a 1.x `body` passed to `_confirm` is wrapped in a `confirm_message` `<div>` only when the theme sets classes or
+attributes for that slot; `theme.confirm_message_in_header` / `Confirm::messageInHeader` render the message under the
+title inside the header); `kpi_link` (only on a whole-tile KPI `<a>`; the
 kit rule `:where(a.nowo-ui-kpi--link)` has zero specificity, so host link colours and hover win).
 
 ## Attributes
@@ -352,6 +361,7 @@ nowo_ui_kit:
     partials:     { <partial>: '<template>' }
     tokens:       { <token>: '<css value>' }
     tokens_dark:  { <token>: '<css value>' }
+    confirm_message_in_header: false   # true = confirm dialogs / page print the message under the title (Confirm::messageInHeader wins)
     bundles:
       <BundleShortName>: { framework_defaults: bool, classes: …, attributes: …, partials: …, tokens: …, tokens_dark: … }
     pages:

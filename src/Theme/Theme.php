@@ -41,14 +41,15 @@ final readonly class Theme
     /**
      * A class entry is a class string, a list of classes, or `{value: string|list, framework_defaults: bool}`.
      *
-     * @param array<string, mixed>                                     $classes           slot => class entry
-     * @param array<string, array<string, string|int|float|bool|null>> $attributes        slot => attributes
-     * @param array<string, string>                                    $partials          partial name => template
-     * @param array<string, string>                                    $tokens            token name (without --nowo-ui-) => value
-     * @param array<string, string>                                    $tokensDark        dark-mode tokens
-     * @param array<string, array<string, mixed>>                      $bundles           bundle => {classes, framework_defaults, attributes, partials, tokens, tokens_dark}
-     * @param bool                                                     $frameworkDefaults false = semantic + host classes only, for every slot
-     * @param array<string, array<string, mixed>>                      $pages             page type ({@see ThemeSlots::PAGE_TYPES}) => {classes, framework_defaults, attributes}; `list` also takes `header_actions_in_filters` (bool)
+     * @param array<string, mixed>                                     $classes                slot => class entry
+     * @param array<string, array<string, string|int|float|bool|null>> $attributes             slot => attributes
+     * @param array<string, string>                                    $partials               partial name => template
+     * @param array<string, string>                                    $tokens                 token name (without --nowo-ui-) => value
+     * @param array<string, string>                                    $tokensDark             dark-mode tokens
+     * @param array<string, array<string, mixed>>                      $bundles                bundle => {classes, framework_defaults, attributes, partials, tokens, tokens_dark}
+     * @param bool                                                     $frameworkDefaults      false = semantic + host classes only, for every slot
+     * @param array<string, array<string, mixed>>                      $pages                  page type ({@see ThemeSlots::PAGE_TYPES}) => {classes, framework_defaults, attributes}; `list` also takes `header_actions_in_filters` (bool)
+     * @param bool                                                     $confirmMessageInHeader confirm dialogs / page render the message inside the header (`Confirm::$messageInHeader` wins when set)
      */
     public function __construct(
         private string $framework = 'bootstrap5',
@@ -60,6 +61,7 @@ final readonly class Theme
         array $bundles = [],
         private bool $frameworkDefaults = true,
         array $pages = [],
+        private bool $confirmMessageInHeader = false,
     ) {
         $this->classes = $this->normalizeClasses($classes, 'classes');
         $this->pages = $this->normalizePages($pages);
@@ -135,7 +137,7 @@ final readonly class Theme
         /** @var array<string, array<string, mixed>> $pages */
         $pages = $theme['pages'] ?? [];
 
-        return new self($framework, $classes, $attributes, $partials, $tokens, $tokensDark, $bundles, false !== ($theme['framework_defaults'] ?? true), $pages);
+        return new self($framework, $classes, $attributes, $partials, $tokens, $tokensDark, $bundles, false !== ($theme['framework_defaults'] ?? true), $pages, true === ($theme['confirm_message_in_header'] ?? false));
     }
 
     public function framework(): string
@@ -471,6 +473,15 @@ final readonly class Theme
     public function listHeaderActionsInFilters(): bool
     {
         return $this->listHeaderActionsInFilters;
+    }
+
+    /**
+     * Whether confirm dialogs and the full-page confirm render the message inside the header, under the title
+     * (`theme.confirm_message_in_header`; `Confirm::$messageInHeader` wins when set).
+     */
+    public function confirmMessageInHeader(): bool
+    {
+        return $this->confirmMessageInHeader;
     }
 
     /**

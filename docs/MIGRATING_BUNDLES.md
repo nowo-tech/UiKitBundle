@@ -158,7 +158,9 @@ Every framework class in bundle markup becomes a slot (or a `nowo-ui-*` / bundle
 | `class="alert alert-danger"` | `nowo_ui_class('flash_error', …)` (or the `flashes` partial) |
 | `class="card-title"` / `card-subtitle` in a card heading | `nowo_ui_class('card_title', …)` / `nowo_ui_class('card_intro', …)` (or the `card` partial) |
 | `<dl class="row">` with `col-sm-3` / `col-sm-9` | the `detail_list` partial (`detail_item` / `detail_term` / `detail_value` slots; stacked layout via `nowo-ui-detail-list--stacked`) |
-| local confirm modal markup | the `confirm` partial (`confirm_*` slots) |
+| local confirm modal markup | the `confirm` partial (`confirm_*` slots; title + message header: `Confirm::messageInHeader`) |
+| full-page delete confirm template | `page/confirm` (root slot `confirm_page`, never the dialog slot `confirm`) |
+| audit / meta `<dl>` under a show page | `ShowPage::meta` (slots `detail_list` + `detail_list_meta`) |
 | per-framework template copies (`_x_bootstrap`, `_x_tailwind`) | one template with slots |
 
 Inside scaffolds the page type is implicit (`nowo_ui_page_type`), so `theme.pages.<type>` variations reach your
