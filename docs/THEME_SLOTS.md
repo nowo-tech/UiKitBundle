@@ -346,8 +346,9 @@ tokens are the host defaults; the appearance (user-chosen) overrides them. Both 
 | `attributes` | **merge** over the host attributes of that slot; bundle attributes merge over them |
 | `header_actions_in_filters` | `list` only (bool, default `false`): the list scaffold renders the page-header actions at the end of the filter row (when the page has filters); `ListPage::headerActionsInFilters` wins when set |
 
-Precedence: **bundle slot > bundle > page-type slot > page type > host slot > host** (classes: the most specific
-entry replaces the others; attributes: merged host → page type → bundle → call site).
+Precedence: **bundle page slot > bundle slot > bundle page > bundle > page-type slot > page type > host slot > host**
+(classes: the most specific entry replaces the others; attributes: merged host → page type → bundle → bundle page
+type → call site). Bundle page types: see [Per-bundle exceptions](#per-bundle-exceptions).
 
 ```yaml
 nowo_ui_kit:
@@ -375,6 +376,7 @@ selected by the `bundle` argument / the view model's `bundle`:
 | `attributes` | **merge** over the host attributes of that slot (`false` / `null` removes a host attribute) |
 | `partials` | **replace** the host (or UiKit) partial for that bundle |
 | `tokens`, `tokens_dark` | **scoped** to `[data-nowo-ui-bundle="<Bundle>"]` (the layouts put that attribute on `<main>` from `nowo_ui_bundle`) |
+| `pages.<type>` *(2.1)* | per-bundle variation by page type: `classes` (replace every other entry of the slot on that bundle's pages of that type), `framework_defaults` (overrides the bundle setting there), `attributes` (merge last, before the call site); no `partials`, `tokens` or `header_actions_in_filters` |
 
 ```yaml
 nowo_ui_kit:
@@ -385,7 +387,12 @@ nowo_ui_kit:
         classes: { table: 'data-table data-table--dense' }   # replaces 'data-table' for HttpLog pages only
         attributes: { table: { data-density: 'compact' } }
         tokens: { radius: '0.25rem' }                        # [data-nowo-ui-bundle="NowoHttpLogBundle"] { --nowo-ui-radius: … }
+        pages:
+          show: { classes: { detail_list: 'nowo-ui-detail-list--stacked log-details' }, framework_defaults: false }
 ```
+
+Precedence with bundle page types (classes and framework defaults): **bundle page slot > bundle slot > bundle page >
+bundle > page-type slot > page type > host slot > host**.
 
 Deprecated per-bundle chrome maps (`AdminChrome`, `PanelChrome`, `DashboardUiConfig`…) are bridged into
 `theme.bundles.<Bundle>` for one minor version ([`MIGRATING_BUNDLES.md`](MIGRATING_BUNDLES.md)).
@@ -403,7 +410,10 @@ nowo_ui_kit:
     tokens_dark:  { <token>: '<css value>' }
     confirm_message_in_header: false   # true = confirm dialogs / page print the message under the title (Confirm::messageInHeader wins)
     bundles:
-      <BundleShortName>: { framework_defaults: bool, classes: …, attributes: …, partials: …, tokens: …, tokens_dark: … }
+      <BundleShortName>:
+        { framework_defaults: bool, classes: …, attributes: …, partials: …, tokens: …, tokens_dark: … }
+        pages:   # 2.1
+          <list|show|form|settings|dashboard|confirm|wizard|auth>: { framework_defaults: bool, classes: …, attributes: … }
     pages:
       <list|show|form|settings|dashboard|confirm|wizard|auth>: { framework_defaults: bool, classes: …, attributes: … }
       list: { header_actions_in_filters: bool }   # list page type only

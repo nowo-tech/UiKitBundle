@@ -10,10 +10,12 @@ namespace Nowo\UiKitBundle\Theme;
  *
  * Resolution of a slot class: semantic `nowo-ui-*` class + UiKit framework defaults (per `css_framework`) +
  * host classes; a page-type variation (`pages.<type>.classes.<slot>`, type = the scaffold rendering the slot)
- * replaces the host classes of that slot, and a bundle exception (`bundles.<Bundle>.classes.<slot>`) replaces both.
- * Framework defaults can be dropped globally (`framework_defaults: false`), per page type, per bundle, or per slot
- * (a class entry `{value: '…', framework_defaults: false}`); the most specific setting wins (bundle slot > bundle >
- * page-type slot > page type > host slot > host). Attributes: host, then page type, then bundle merged over them.
+ * replaces the host classes of that slot, a bundle exception (`bundles.<Bundle>.classes.<slot>`) replaces both, and
+ * a bundle page-type variation (`bundles.<Bundle>.pages.<type>.classes.<slot>`, 2.1) replaces all of them.
+ * Framework defaults can be dropped globally (`framework_defaults: false`), per page type, per bundle, per bundle page
+ * type, or per slot (a class entry `{value: '…', framework_defaults: false}`); the most specific setting wins (bundle
+ * page slot > bundle slot > bundle page > bundle > page-type slot > page type > host slot > host). Attributes: host,
+ * then page type, then bundle, then bundle page type merged over them.
  * Partials: bundle > host > UiKit default.
  * Tokens: host tokens on `:root` (dark ones on `[data-theme="dark"]`); bundle tokens scoped to
  * `[data-nowo-ui-bundle="<Bundle>"]`.
@@ -29,7 +31,7 @@ final readonly class Theme
     /** @var array<string, array{0: string, 1: bool|null}> slot => [host classes, framework defaults (null = inherit)] */
     private array $classes;
 
-    /** @var array<string, array{classes: array<string, array{0: string, 1: bool|null}>, framework_defaults: bool|null, attributes: array<string, array<string, string|int|float|bool|null>>, partials: array<string, string>, tokens: array<string, string>, tokens_dark: array<string, string>}> */
+    /** @var array<string, array{classes: array<string, array{0: string, 1: bool|null}>, framework_defaults: bool|null, attributes: array<string, array<string, string|int|float|bool|null>>, partials: array<string, string>, tokens: array<string, string>, tokens_dark: array<string, string>, pages: array<string, array{classes: array<string, array{0: string, 1: bool|null}>, framework_defaults: bool|null, attributes: array<string, array<string, string|int|float|bool|null>>}>}> */
     private array $bundles;
 
     /** @var array<string, array{classes: array<string, array{0: string, 1: bool|null}>, framework_defaults: bool|null, attributes: array<string, array<string, string|int|float|bool|null>>}> */
@@ -46,7 +48,7 @@ final readonly class Theme
      * @param array<string, string>                                    $partials               partial name => template
      * @param array<string, string>                                    $tokens                 token name (without --nowo-ui-) => value
      * @param array<string, string>                                    $tokensDark             dark-mode tokens
-     * @param array<string, array<string, mixed>>                      $bundles                bundle => {classes, framework_defaults, attributes, partials, tokens, tokens_dark}
+     * @param array<string, array<string, mixed>>                      $bundles                bundle => {classes, framework_defaults, attributes, partials, tokens, tokens_dark, pages: page type => {classes, framework_defaults, attributes}}
      * @param bool                                                     $frameworkDefaults      false = semantic + host classes only, for every slot
      * @param array<string, array<string, mixed>>                      $pages                  page type ({@see ThemeSlots::PAGE_TYPES}) => {classes, framework_defaults, attributes}; `list` also takes `header_actions_in_filters` (bool)
      * @param bool                                                     $confirmMessageInHeader confirm dialogs / page render the message inside the header (`Confirm::$messageInHeader` wins when set)
@@ -64,7 +66,7 @@ final readonly class Theme
         private bool $confirmMessageInHeader = false,
     ) {
         $this->classes = $this->normalizeClasses($classes, 'classes');
-        $this->pages = $this->normalizePages($pages);
+        $this->pages = $this->normalizePages($pages, 'pages');
         $this->listHeaderActionsInFilters = $this->listHeaderActionsInFiltersOption($pages);
         $normalized = [];
         foreach ($bundles as $bundle => $data) {
@@ -83,6 +85,8 @@ final readonly class Theme
             $bundleTokens = $data['tokens'] ?? [];
             /** @var array<string, string> $bundleTokensDark */
             $bundleTokensDark = $data['tokens_dark'] ?? [];
+            /** @var array<string, array<string, mixed>> $bundlePages */
+            $bundlePages = $data['pages'] ?? [];
             $normalized[(string) $bundle] = [
                 'classes' => $this->normalizeClasses($bundleClasses, 'bundles.'.$bundle.'.classes'),
                 'framework_defaults' => $defaults,
@@ -90,10 +94,15 @@ final readonly class Theme
                 'partials' => $bundlePartials,
                 'tokens' => $bundleTokens,
                 'tokens_dark' => $bundleTokensDark,
+                'pages' => $this->normalizePages($bundlePages, 'bundles.'.$bundle.'.pages'),
             ];
         }
         $this->bundles = $normalized;
-        foreach ([$attributes, ...array_column($normalized, 'attributes'), ...array_column($this->pages, 'attributes')] as $map) {
+        $bundlePageAttributes = [];
+        foreach ($normalized as $data) {
+            $bundlePageAttributes = [...$bundlePageAttributes, ...array_column($data['pages'], 'attributes')];
+        }
+        foreach ([$attributes, ...array_column($normalized, 'attributes'), ...array_column($this->pages, 'attributes'), ...$bundlePageAttributes] as $map) {
             foreach ($map as $slot => $attrs) {
                 ThemeSlots::semantic($slot);
                 foreach (array_keys($attrs) as $name) {
@@ -168,22 +177,25 @@ final readonly class Theme
     {
         ThemeSlots::semantic($slot);
         $bundleClasses = null !== $bundle ? ($this->bundles[$bundle]['classes'] ?? []) : [];
+        $bundlePageClasses = $this->bundlePageData($bundle, $page)['classes'] ?? [];
         $pageClasses = $this->pageData($page)['classes'] ?? [];
 
-        return $this->merge(($bundleClasses[$slot] ?? $pageClasses[$slot] ?? $this->classes[$slot] ?? [''])[0]);
+        return $this->merge(($bundlePageClasses[$slot] ?? $bundleClasses[$slot] ?? $pageClasses[$slot] ?? $this->classes[$slot] ?? [''])[0]);
     }
 
     /**
-     * Whether the UiKit framework defaults apply to a slot: bundle slot entry > bundle `framework_defaults` >
-     * page-type slot entry > page-type `framework_defaults` > host slot entry > host `framework_defaults`.
+     * Whether the UiKit framework defaults apply to a slot: bundle page-type slot entry > bundle slot entry > bundle
+     * page-type `framework_defaults` > bundle `framework_defaults` > page-type slot entry > page-type
+     * `framework_defaults` > host slot entry > host `framework_defaults`.
      */
     public function frameworkDefaults(string $slot, ?string $bundle = null, ?string $page = null): bool
     {
         ThemeSlots::semantic($slot);
         $data = null !== $bundle ? ($this->bundles[$bundle] ?? null) : null;
         $pageData = $this->pageData($page);
+        $bundlePage = $this->bundlePageData($bundle, $page);
 
-        return $data['classes'][$slot][1] ?? $data['framework_defaults'] ?? $pageData['classes'][$slot][1] ?? $pageData['framework_defaults'] ?? $this->classes[$slot][1] ?? $this->frameworkDefaults;
+        return $bundlePage['classes'][$slot][1] ?? $data['classes'][$slot][1] ?? $bundlePage['framework_defaults'] ?? $data['framework_defaults'] ?? $pageData['classes'][$slot][1] ?? $pageData['framework_defaults'] ?? $this->classes[$slot][1] ?? $this->frameworkDefaults;
     }
 
     /**
@@ -203,7 +215,7 @@ final readonly class Theme
     }
 
     /**
-     * Slot attributes (host, then page type, then bundle merged over them).
+     * Slot attributes (host, then page type, then bundle, then bundle page type merged over them).
      *
      * @param array<string, string|int|float|bool|null> $extra attributes merged last (call site)
      *
@@ -214,8 +226,9 @@ final readonly class Theme
         ThemeSlots::semantic($slot);
         $bundleAttributes = null !== $bundle ? ($this->bundles[$bundle]['attributes'] ?? []) : [];
         $pageAttributes = $this->pageData($page)['attributes'] ?? [];
+        $bundlePageAttributes = $this->bundlePageData($bundle, $page)['attributes'] ?? [];
 
-        return array_merge($this->attributes[$slot] ?? [], $pageAttributes[$slot] ?? [], $bundleAttributes[$slot] ?? [], $extra);
+        return array_merge($this->attributes[$slot] ?? [], $pageAttributes[$slot] ?? [], $bundleAttributes[$slot] ?? [], $bundlePageAttributes[$slot] ?? [], $extra);
     }
 
     /**
@@ -436,28 +449,29 @@ final readonly class Theme
 
     /**
      * @param array<string, array<string, mixed>> $pages
+     * @param string                              $path  config path of the map (`pages`, `bundles.<Bundle>.pages`)
      *
      * @return array<string, array{classes: array<string, array{0: string, 1: bool|null}>, framework_defaults: bool|null, attributes: array<string, array<string, string|int|float|bool|null>>}>
      */
-    private function normalizePages(array $pages): array
+    private function normalizePages(array $pages, string $path): array
     {
         $normalized = [];
         foreach ($pages as $page => $data) {
             $page = (string) $page;
             $error = self::pageTypeError($page);
             if (null !== $error) {
-                throw new \InvalidArgumentException('Invalid UiKit theme pages key: '.$error);
+                throw new \InvalidArgumentException('Invalid UiKit theme '.$path.' key: '.$error);
             }
             $defaults = $data['framework_defaults'] ?? null;
             if (null !== $defaults && !\is_bool($defaults)) {
-                throw new \InvalidArgumentException(\sprintf('Invalid UiKit theme pages.%s.framework_defaults: a boolean is expected.', $page));
+                throw new \InvalidArgumentException(\sprintf('Invalid UiKit theme %s.%s.framework_defaults: a boolean is expected.', $path, $page));
             }
             /** @var array<string, mixed> $pageClasses */
             $pageClasses = $data['classes'] ?? [];
             /** @var array<string, array<string, string|int|float|bool|null>> $pageAttributes */
             $pageAttributes = $data['attributes'] ?? [];
             $normalized[$page] = [
-                'classes' => $this->normalizeClasses($pageClasses, 'pages.'.$page.'.classes'),
+                'classes' => $this->normalizeClasses($pageClasses, $path.'.'.$page.'.classes'),
                 'framework_defaults' => $defaults,
                 'attributes' => $pageAttributes,
             ];
@@ -520,6 +534,14 @@ final readonly class Theme
     private function pageData(?string $page): ?array
     {
         return null !== $page ? ($this->pages[$page] ?? null) : null;
+    }
+
+    /**
+     * @return array{classes: array<string, array{0: string, 1: bool|null}>, framework_defaults: bool|null, attributes: array<string, array<string, string|int|float|bool|null>>}|null
+     */
+    private function bundlePageData(?string $bundle, ?string $page): ?array
+    {
+        return null !== $bundle && null !== $page ? ($this->bundles[$bundle]['pages'][$page] ?? null) : null;
     }
 
     private function merge(string ...$parts): string

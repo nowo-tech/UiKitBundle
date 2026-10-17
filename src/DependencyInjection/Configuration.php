@@ -313,9 +313,29 @@ final class Configuration implements ConfigurationInterface
                 ->end()
                 ->arrayPrototype();
         $this->addThemeChildren($bundles->children(), 'theme.bundles.<bundle>', true);
+        $bundlePages = $bundles
+            ->children()
+                ->arrayNode('pages')
+                    ->info('Optional per-page-type variation of this bundle (2.1), keyed by scaffold type ('.implode(', ', ThemeSlots::PAGE_TYPES).'): classes replace every other class entry of the slot on that bundle page type, attributes merge last, framework_defaults overrides the bundle setting. Precedence: bundle page slot > bundle slot > bundle page > bundle > page-type slot > page type > host slot > host.')
+                    ->useAttributeAsKey('page')
+                    ->normalizeKeys(false)
+                    ->validate()
+                        ->always(static function (array $pages): array {
+                            foreach (array_keys($pages) as $page) {
+                                $error = Theme::pageTypeError((string) $page);
+                                if (null !== $error) {
+                                    throw new InvalidConfigurationException('Invalid nowo_ui_kit.theme.bundles.<bundle>.pages key: '.$error);
+                                }
+                            }
+
+                            return $pages;
+                        })
+                    ->end()
+                    ->arrayPrototype();
+        $this->addThemeChildren($bundlePages->children(), 'theme.bundles.<bundle>.pages.<page>', true, false);
         $pages = $children
             ->arrayNode('pages')
-                ->info('Optional per-page-type variation keyed by scaffold type ('.implode(', ', ThemeSlots::PAGE_TYPES).'): classes replace the host classes of a slot on that page type, attributes merge, framework_defaults overrides the host setting. Precedence: bundle slot > bundle > page-type slot > page type > host slot > host.')
+                ->info('Optional per-page-type variation keyed by scaffold type ('.implode(', ', ThemeSlots::PAGE_TYPES).'): classes replace the host classes of a slot on that page type, attributes merge, framework_defaults overrides the host setting. Precedence: bundle page slot > bundle slot > bundle page > bundle > page-type slot > page type > host slot > host.')
                 ->useAttributeAsKey('page')
                 ->normalizeKeys(false)
                 ->validate()

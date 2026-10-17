@@ -121,11 +121,79 @@ final class PageContractConfigurationTest extends TestCase
         self::assertSame(' data-host="1" data-page="list"', $theme->renderAttributes('table', null, [], 'list'));
     }
 
+    public function testBundlePageTypeVariationPrecedence(): void
+    {
+        $config = $this->process(['theme' => [
+            'classes' => ['table' => 'host-table', 'card' => 'host-card'],
+            'attributes' => ['table' => ['data-host' => '1', 'data-who' => 'host']],
+            'pages' => ['list' => ['classes' => ['table' => 'list-table', 'card' => 'list-card'], 'attributes' => ['table' => ['data-who' => 'page']]]],
+            'bundles' => ['NowoXBundle' => [
+                'classes' => ['table' => 'x-table'],
+                'attributes' => ['table' => ['data-who' => 'bundle']],
+                'pages' => [
+                    'list' => [
+                        'classes' => ['table' => 'x-list-table', 'badge' => ['value' => 'x-list-badge', 'framework_defaults' => true]],
+                        'attributes' => ['table' => ['data-who' => 'bundle-page', 'data-bp' => true]],
+                        'framework_defaults' => false,
+                    ],
+                    'show' => ['framework_defaults' => true],
+                ],
+                'framework_defaults' => true,
+            ]],
+        ]]);
+        self::assertSame(['table' => 'x-list-table', 'badge' => ['value' => 'x-list-badge', 'framework_defaults' => true]], $config['theme']['bundles']['NowoXBundle']['pages']['list']['classes']);
+        $theme = Theme::fromConfig('bootstrap5', $config['theme']);
+
+        // classes: bundle page slot > bundle slot > page-type slot > host slot
+        self::assertSame('nowo-ui-table nowo-ui-table--striped x-list-table', $theme->classFor('table', 'NowoXBundle', null, 'list'));
+        self::assertSame('nowo-ui-table nowo-ui-table--striped table table-hover align-middle x-table', $theme->classFor('table', 'NowoXBundle', null, 'show'));
+        self::assertSame('nowo-ui-table nowo-ui-table--striped table table-hover align-middle x-table', $theme->classFor('table', 'NowoXBundle'));
+        self::assertSame('nowo-ui-table nowo-ui-table--striped table table-hover align-middle list-table', $theme->classFor('table', 'NowoYBundle', null, 'list'));
+        // framework defaults: bundle page slot (true) > bundle page (false) > bundle (true); card falls back to the page-type class
+        self::assertSame('nowo-ui-badge badge text-bg-light border ms-2 x-list-badge', $theme->classFor('badge', 'NowoXBundle', null, 'list'));
+        self::assertSame('nowo-ui-card list-card', $theme->classFor('card', 'NowoXBundle', null, 'list'));
+        self::assertSame('nowo-ui-card card host-card', $theme->classFor('card', 'NowoXBundle', null, 'show'));
+        self::assertTrue($theme->frameworkDefaults('card', 'NowoXBundle', 'show'));
+        self::assertFalse($theme->frameworkDefaults('card', 'NowoXBundle', 'list'));
+        // attributes: host, page, bundle, bundle page
+        self::assertSame(' data-host="1" data-who="bundle-page" data-bp', $theme->renderAttributes('table', 'NowoXBundle', [], 'list'));
+        self::assertSame(' data-host="1" data-who="bundle"', $theme->renderAttributes('table', 'NowoXBundle', [], 'show'));
+    }
+
+    public function testBundlePageTypeVariationIsValidatedByTheTheme(): void
+    {
+        try {
+            new Theme('bootstrap5', bundles: ['NowoXBundle' => ['pages' => ['index' => []]]]);
+            self::fail('page type');
+        } catch (\InvalidArgumentException $e) {
+            self::assertSame('Invalid UiKit theme bundles.NowoXBundle.pages key: unknown page type "index" (known: list, show, form, settings, dashboard, confirm, wizard, auth).', $e->getMessage());
+        }
+        try {
+            new Theme('bootstrap5', bundles: ['NowoXBundle' => ['pages' => ['list' => ['framework_defaults' => 'no']]]]);
+            self::fail('framework_defaults');
+        } catch (\InvalidArgumentException $e) {
+            self::assertSame('Invalid UiKit theme bundles.NowoXBundle.pages.list.framework_defaults: a boolean is expected.', $e->getMessage());
+        }
+        try {
+            new Theme('bootstrap5', bundles: ['NowoXBundle' => ['pages' => ['list' => ['classes' => ['btn' => 3]]]]]);
+            self::fail('classes');
+        } catch (\InvalidArgumentException $e) {
+            self::assertStringContainsString('Invalid UiKit theme bundles.NowoXBundle.pages.list.classes.btn', $e->getMessage());
+        }
+        $this->expectExceptionMessage('Invalid UiKit theme attribute');
+        new Theme('bootstrap5', bundles: ['NowoXBundle' => ['pages' => ['list' => ['attributes' => ['table' => ['onclick' => 'x']]]]]]);
+    }
+
     /**
      * @return iterable<string, array{array<string, mixed>, string}>
      */
     public static function invalidConfigs(): iterable
     {
+        yield 'unknown bundle page type' => [['theme' => ['bundles' => ['NowoXBundle' => ['pages' => ['index' => []]]]]], 'Invalid nowo_ui_kit.theme.bundles.<bundle>.pages key: unknown page type "index"'];
+        yield 'unknown bundle page slot' => [['theme' => ['bundles' => ['NowoXBundle' => ['pages' => ['list' => ['classes' => ['nope' => 'x']]]]]]], 'Unknown nowo_ui_kit.theme.bundles.<bundle>.pages.<page>.classes slot "nope"'];
+        yield 'bundle page on* attribute' => [['theme' => ['bundles' => ['NowoXBundle' => ['pages' => ['form' => ['attributes' => ['form' => ['onsubmit' => 'x']]]]]]]], 'Invalid nowo_ui_kit.theme.bundles.<bundle>.pages.<page>.attributes.form'];
+        yield 'bundle page partials not supported' => [['theme' => ['bundles' => ['NowoXBundle' => ['pages' => ['list' => ['partials' => ['card' => 'x']]]]]]], 'Unrecognized option "partials"'];
+        yield 'bundle page header actions option' => [['theme' => ['bundles' => ['NowoXBundle' => ['pages' => ['list' => ['header_actions_in_filters' => true]]]]]], 'Unrecognized option "header_actions_in_filters"'];
         yield 'unknown page type' => [['theme' => ['pages' => ['index' => []]]], 'Invalid nowo_ui_kit.theme.pages key: unknown page type "index"'];
         yield 'unknown page slot' => [['theme' => ['pages' => ['list' => ['classes' => ['nope' => 'x']]]]], 'Unknown nowo_ui_kit.theme.pages.<page>.classes slot "nope"'];
         yield 'header actions option on a non-list page' => [['theme' => ['pages' => ['show' => ['header_actions_in_filters' => true]]]], 'Invalid nowo_ui_kit.theme.pages.show.header_actions_in_filters: only the list page type takes it.'];

@@ -58,6 +58,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **`theme.bundles.<Bundle>.pages.<type>`** (`classes`, `attributes`, `framework_defaults`): per-bundle variation by
+  page type. Precedence: bundle page slot > bundle slot > bundle page > bundle > page-type slot > page type > host
+  slot > host; attributes merge host → page type → bundle → bundle page type. Validated by the configuration and by
+  `Theme`.
 - **Per-page form themes**: `FormPage::$formThemes` and `SettingsSection::$formThemes` (lists of template names) are
   applied with `form_theme` inside the scaffold before the form renders (settings: before the
   `nowo_ui_settings_section` block), so bundles keep their form theme without overriding `nowo_ui_content`.
