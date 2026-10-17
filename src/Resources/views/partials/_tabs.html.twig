@@ -12,6 +12,8 @@
     - label: also a View\Label (or {key, domain, params}), translated
     - bundle: per-bundle theme exceptions; theme slots tabs (classes + attributes), tab, tab_active
     - region: data-nowo-ui-region on the <nav> (scaffolds pass `tabs`)
+    - attr (2.1): root attributes of the <nav> (e.g. {'data-turbo': 'false'} kept from a bundle's 1.x markup), merged
+      over the `tabs` slot attributes; true = bare attribute, false / null = omitted, no on* handlers
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 {% set framework = framework|default(null) %}
@@ -19,7 +21,11 @@
 {% set _t = nowo_ui_theme|default(null) %}
 {% set _pt = nowo_ui_page_type|default(null) %}
 {% set aria_label = aria_label|default('tabs.nav'|trans({}, 'NowoUiKitBundle')) %}
-<nav class="{{ _t ? _t.macroClasses('tabs', ui.tab_list(framework), bundle, _pt) : ui.tab_list(framework) }}" aria-label="{{ aria_label }}"{{ _t ? _t.renderAttributes('tabs', bundle, {}, _pt)|raw }}{% if region|default(null) %} data-nowo-ui-region="{{ region }}"{% endif %}>
+{% set _attr = attr|default({}) %}
+<nav class="{{ _t ? _t.macroClasses('tabs', ui.tab_list(framework), bundle, _pt) : ui.tab_list(framework) }}" aria-label="{{ aria_label }}"
+    {{- _t ? _t.renderAttributes('tabs', bundle, _attr, _pt)|raw -}}
+    {%- if not _t %}{% for name, value in _attr %}{% if value is same as(true) %} {{ name }}{% elseif value is not null and value is not same as(false) %} {{ name }}="{{ value }}"{% endif %}{% endfor %}{% endif %}
+    {%- if region|default(null) %} data-nowo-ui-region="{{ region }}"{% endif %}>
     {% for item in items %}
         {% set is_current = item.current|default(false) %}
         {% set _label = item.label.key is defined ? item.label.key|trans(item.label.params|default({}), item.label.domain|default('messages')) : item.label %}

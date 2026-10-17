@@ -68,6 +68,7 @@ final class LegacyPartialsBcTest extends TestCase
             yield 'modal shell '.$fw => ['_modal_shell', ['id' => 'm1', 'title' => 'Import <b>', 'body' => '<p>Body</p>', 'footer' => '<button>OK</button>'], $fw];
         }
         yield 'modal shell no footer' => ['_modal_shell', ['id' => 'm2', 'title' => 'T', 'framework' => 'tailwind'], 'bootstrap5'];
+        yield 'tabs empty attr' => ['_tabs', ['items' => [['label' => 'A', 'href' => '/a']], 'attr' => []], 'bootstrap5'];
         yield 'tabs default label' => ['_tabs', ['items' => [], 'framework' => 'tailwind'], 'bootstrap5'];
         yield 'shell rail' => ['_shell', ['brand_html' => '<b>A</b>', 'sidebar_rail' => ['storage' => 's', 'cookie' => 'c', 'hidden_value' => 'h', 'default' => 'rail'], 'sidebar_mode' => 'collapsed', 'show_user_menu' => false, 'header_end' => '<i>e</i>'], 'custom'];
     }

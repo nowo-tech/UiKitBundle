@@ -58,6 +58,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **`_tabs` root `attr`**: attributes of the `<nav>` (e.g. `{'data-turbo': 'false'}` kept from a bundle's 1.x tab
+  bar), merged over the `tabs` slot attributes (call site wins), also without the ThemeExtension; 1.x output unchanged.
 - **Theme slots `code` and `code_block`** (REQ-UI-003): inline `<code>` (identifiers, keys) and a `<pre>` block for
   payloads / JSON / logs. Semantic classes `nowo-ui-code` / `nowo-ui-code-block` (monospace, muted surface; the block
   has a border, scrolls both ways above `--nowo-ui-code-block-max-height`, `nowo-ui-code-block--wrap` wraps lines);

@@ -296,7 +296,7 @@ as the UiKit partial (documented in the header comment of each template) and sho
 | `row_actions` | `partials/_row_actions.html.twig` | scaffolds pass 1.x hashes (translated `label`, resolved `href`, `method` POST/GET, `csrf_token` / `csrf_field` also from a CSRF `FormView`, `confirm_id`…) with the `View\Action` as `view`, and `confirm_external: true`; also accepts `View\Action` objects; `bundle` | list scaffold |
 | `section_form` | `page/_section_form.html.twig` | `form` (FormView), `submit_label`, `bundle` | settings scaffold |
 | `shell` | `partials/_shell.html.twig` | `brand_html`, `aside_items`, `main`, `root_class`, `header_class`, `attr`, `burger_root_class`, `bundle` | host shells |
-| `tabs` | `partials/_tabs.html.twig` | `items` (`{label, href, current, attr}`, label also a `Label`), `aria_label`, `region`, `bundle`; slots `tabs`, `tab`, `tab_active` | settings scaffold, bundle tab bars |
+| `tabs` | `partials/_tabs.html.twig` | `items` (`{label, href, current, attr}`, label also a `Label`), `aria_label`, `region`, `bundle`, `attr` (2.1: `<nav>` attributes such as `data-turbo: 'false'`, merged over the `tabs` slot attributes); slots `tabs`, `tab`, `tab_active` | settings scaffold, bundle tab bars |
 | `toasts` | `partials/_toasts.html.twig` | `flashes`, `trans_domain`, `bundle` | layouts / hosts |
 | `wizard_form` | `page/_wizard_form.html.twig` | `page` (`View\WizardPage`), `bundle` | wizard scaffold |
 
