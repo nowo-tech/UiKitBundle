@@ -23,7 +23,7 @@
             {% for section in page.sections %}
                 <section class="{{ nowo_ui_class('section', _b) }} {{ nowo_ui_class('card', _b) }}"{% if section.id %} id="{{ section.id }}"{% endif %} data-nowo-ui-region="section"{{ nowo_ui_attrs('section', _b) }}>
                     {% if section.title %}
-                        <header class="{{ nowo_ui_class('card_header', _b) }}"><h2 class="nowo-ui-card__title">{{ section.title|nowo_ui_trans }}</h2></header>
+                        <header class="{{ nowo_ui_class('card_header', _b) }}"><h2 class="{{ nowo_ui_class('card_title', _b) }}">{{ section.title|nowo_ui_trans }}</h2></header>
                     {% endif %}
                     <div class="{{ nowo_ui_class('card_body', _b) }}">
                         {{ include(nowo_ui_partial('detail_list', _b), {items: section.items, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}

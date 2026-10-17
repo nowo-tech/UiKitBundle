@@ -30,8 +30,8 @@
             <section class="{{ nowo_ui_class('section', _b) }} {{ nowo_ui_class('card', _b) }}" id="nowo-ui-settings-{{ section.id }}" data-nowo-ui-region="section"{{ nowo_ui_attrs('section', _b) }}>
                 <header class="{{ nowo_ui_class('card_header', _b) }}">
                     <div class="nowo-ui-card__heading">
-                        <h2 class="nowo-ui-card__title">{{ section.label|nowo_ui_trans }}</h2>
-                        {% if section.intro %}<p class="nowo-ui-card__intro">{{ section.intro|nowo_ui_trans }}</p>{% endif %}
+                        <h2 class="{{ nowo_ui_class('card_title', _b) }}">{{ section.label|nowo_ui_trans }}</h2>
+                        {% if section.intro %}<p class="{{ nowo_ui_class('card_intro', _b) }}">{{ section.intro|nowo_ui_trans }}</p>{% endif %}
                     </div>
                 </header>
                 <div class="{{ nowo_ui_class('card_body', _b) }}">

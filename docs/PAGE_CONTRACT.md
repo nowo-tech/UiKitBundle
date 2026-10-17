@@ -170,7 +170,7 @@ keeps the 1.x horizontal scroll. For the Scroll / Responsive toggle with a row-d
 
 | Data block | Default | Context |
 | --- | --- | --- |
-| `nowo_ui_show_sections` | one card + definition list per `DetailSection` (booleans as ✓ / —, links via `DetailItem::href`) | `page` |
+| `nowo_ui_show_sections` | one card (title: `card_title` slot) + definition list per `DetailSection` (booleans as ✓ / —, links via `DetailItem::href`; slots `detail_list`, `detail_item`, `detail_term`, `detail_value` — add `nowo-ui-detail-list--stacked` to `detail_list` for label over value) | `page` |
 | `nowo_ui_show_after` | empty (related tables, history) | `page` |
 
 ### Form
@@ -205,7 +205,8 @@ links) renders as a card.
 `page/dashboard.html.twig` · `page: DashboardPage` (`header`, `kpis: list<KpiTile>`). KPI tiles render in the `kpis`
 / `kpi` slots (`nowo-ui-kpi--<variant>`: `neutral`, `success`, `warning`, `danger`, `info`) with `kpi_label`,
 `kpi_value` and `kpi_hint`; a tile with `href` links its value, or — with `linkTile: true` — the whole tile is the
-`<a>` (`nowo-ui-kpi--link`).
+`<a>` (slot `kpi_link`, `nowo-ui-kpi--link`; the kit's `color: inherit` has zero specificity, so host link colours
+and hover apply).
 
 | Data block | Default | Context |
 | --- | --- | --- |
@@ -215,7 +216,9 @@ links) renders as a card.
 
 `page/confirm.html.twig` · `page: ConfirmPage` (`header`, `confirm: Confirm`, `action: Action` (non-GET),
 `cancelHref`). Full-page fallback of the confirm dialog (no JS): cancel link + POST form (CSRF `FormView` or token).
-No data blocks.
+No data blocks. Same internal slots as the dialog: `confirm_title`, `confirm_message`, `confirm_expect_label` (semantic
++ host classes) and `confirm_panel` / `confirm_header` / `confirm_body` / `confirm_footer` (host classes on the page's
+`card_body` panel, `<header>`, message wrapper and `form_actions` row).
 
 ### Wizard
 
@@ -230,7 +233,7 @@ their `href`), "Step n of m", one card with the current step.
 ### Auth
 
 `page/auth.html.twig` · `page: AuthPage` (`title`, `form`, `intro`, `brand`, `error`, `submitLabel`, `links:
-list<Link>`) on the **guest** layout; panel in the `auth_panel` slot.
+list<Link>`) on the **guest** layout; panel in the `auth_panel` slot, footer `auth_footer`, link list `auth_links`.
 
 | Data block | Default | Context |
 | --- | --- | --- |

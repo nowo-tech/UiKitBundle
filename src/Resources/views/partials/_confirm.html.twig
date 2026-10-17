@@ -13,7 +13,8 @@
     - confirm (2.0 contract): View\Confirm — title / message / confirm + cancel labels / variant / expectedValue
       (type-to-confirm input: the confirm button stays disabled until the value matches, nowo-ui-confirm.js)
     - action + action_href (2.0): non-GET View\Action submitted by the confirm button (POST form in the footer)
-    - bundle: per-bundle theme exceptions (slot `confirm` classes / attributes)
+    - bundle: per-bundle theme exceptions (slot `confirm` classes / attributes; host classes of confirm_panel,
+      confirm_header, confirm_title, confirm_body, confirm_message, confirm_expect_label, confirm_footer)
   Buttons read the theme slots btn_secondary (cancel) and btn_<variant> (confirm) when the ThemeExtension is
   loaded (1.x output unchanged with an empty theme; framework_defaults honoured); the expected-value input reads
   the `input` slot.
@@ -46,24 +47,24 @@
     aria-labelledby="{{ id }}-title"
     {{- _t ? _t.renderAttributes('confirm', bundle, {}, _pt)|raw }}
 >
-    <div class="nowo-ui-confirm__panel">
-        <header class="nowo-ui-confirm__header">
-            <h2 class="nowo-ui-confirm__title" id="{{ id }}-title">{{ title }}</h2>
+    <div class="{{ _t ? _t.macroClasses('confirm_panel', 'nowo-ui-confirm__panel', bundle, _pt) : 'nowo-ui-confirm__panel' }}">
+        <header class="{{ _t ? _t.macroClasses('confirm_header', 'nowo-ui-confirm__header', bundle, _pt) : 'nowo-ui-confirm__header' }}">
+            <h2 class="{{ _t ? _t.macroClasses('confirm_title', 'nowo-ui-confirm__title', bundle, _pt) : 'nowo-ui-confirm__title' }}" id="{{ id }}-title">{{ title }}</h2>
         </header>
         {% if _message is not null %}
-            <div class="nowo-ui-confirm__body"><p class="nowo-ui-confirm__message">{{ _message }}</p></div>
+            <div class="{{ _t ? _t.macroClasses('confirm_body', 'nowo-ui-confirm__body', bundle, _pt) : 'nowo-ui-confirm__body' }}"><p class="{{ _t ? _t.macroClasses('confirm_message', 'nowo-ui-confirm__message', bundle, _pt) : 'nowo-ui-confirm__message' }}">{{ _message }}</p></div>
         {% elseif body is defined and body %}
-            <div class="nowo-ui-confirm__body">{{ body|raw }}</div>
+            <div class="{{ _t ? _t.macroClasses('confirm_body', 'nowo-ui-confirm__body', bundle, _pt) : 'nowo-ui-confirm__body' }}">{{ body|raw }}</div>
         {% endif %}
         {% set _expected = _confirm ? _confirm.expectedValue : null %}
         {% if _expected is not null %}
             {% set _expected_label = _confirm.expectedLabel is null ? 'confirm.type_to_confirm'|trans({'%value%': _expected}, 'NowoUiKitBundle') : (_confirm.expectedLabel.key is defined ? _confirm.expectedLabel.key|trans(_confirm.expectedLabel.params|merge({'%value%': _expected}), _confirm.expectedLabel.domain) : _confirm.expectedLabel) %}
             <div class="nowo-ui-confirm__expect">
-                <label class="nowo-ui-confirm__expect-label" for="{{ id }}-expected">{{ _expected_label }}</label>
+                <label class="{{ _t ? _t.macroClasses('confirm_expect_label', 'nowo-ui-confirm__expect-label', bundle, _pt) : 'nowo-ui-confirm__expect-label' }}" for="{{ id }}-expected">{{ _expected_label }}</label>
                 <input id="{{ id }}-expected" class="{{ _t ? _t.classFor('input', bundle, framework, _pt) : 'nowo-ui-input' }} nowo-ui-confirm__expect-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" required pattern="{{ _confirm.expectedPattern() }}" data-nowo-confirm-expected="{{ _expected }}"{% if action is defined and action %} form="{{ id }}-form"{% endif %}>
             </div>
         {% endif %}
-        <div class="nowo-ui-confirm__footer">
+        <div class="{{ _t ? _t.macroClasses('confirm_footer', 'nowo-ui-confirm__footer', bundle, _pt) : 'nowo-ui-confirm__footer' }}">
             {% if footer is defined and footer %}
                 {{ footer|raw }}
             {% else %}

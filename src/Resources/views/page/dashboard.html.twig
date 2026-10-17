@@ -2,7 +2,7 @@
   REQ-UI-003 dashboard scaffold. Variable: page (View\DashboardPage).
 
   Regions: page header, KPI tiles (page.kpis; slots kpis, kpi, kpi_label, kpi_value, kpi_hint; KpiTile::linkTile
-  makes the whole tile the link), cards grid.
+  makes the whole tile the link, slot kpi_link on that <a> only), cards grid.
   Data block: nowo_ui_dashboard_cards (cards inside the grid; use the `card` / `card_header` / `card_body` slots or
   partials/_card.html.twig).
 #}
@@ -24,7 +24,7 @@
             <div class="{{ nowo_ui_class('kpis', _b) }}" data-nowo-ui-region="kpis"{{ nowo_ui_attrs('kpis', _b) }}>
                 {% for kpi in page.kpis %}
                     {% set _tile_link = kpi.href and kpi.linkTile %}
-                    <{{ _tile_link ? 'a' : 'div' }} class="{{ nowo_ui_class('kpi', _b) }} nowo-ui-kpi--{{ kpi.variant }}{{ _tile_link ? ' nowo-ui-kpi--link' }}"{% if _tile_link %} href="{{ kpi.href }}"{% endif %}{{ nowo_ui_attrs('kpi', _b) }}>
+                    <{{ _tile_link ? 'a' : 'div' }} class="{{ nowo_ui_class('kpi', _b) }} nowo-ui-kpi--{{ kpi.variant }}{{ _tile_link ? ' ' ~ nowo_ui_class('kpi_link', _b) }}"{% if _tile_link %} href="{{ kpi.href }}"{% endif %}{{ nowo_ui_attrs('kpi', _b) }}>
                         <p class="{{ nowo_ui_class('kpi_label', _b) }}">{{ kpi.label|nowo_ui_trans }}</p>
                         <p class="{{ nowo_ui_class('kpi_value', _b) }}">
                             {%- if kpi.href and not _tile_link -%}<a href="{{ kpi.href }}">{{ kpi.value }}</a>{%- else -%}{{ kpi.value }}{%- endif -%}

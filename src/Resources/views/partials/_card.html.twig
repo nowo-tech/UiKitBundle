@@ -17,7 +17,7 @@
     - cards: list of card variable hashes rendered as a grid (theme slot `cards`); each one through the `card`
       partial (theme.partials.card applies), inheriting framework / bundle
     - bundle: per-bundle theme exceptions
-    Theme slots: card, card_header, card_body, card_footer, cards.
+    Theme slots: card, card_header, card_title, card_intro, card_body, card_footer, cards.
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 {% set framework = framework|default(null) %}
@@ -39,9 +39,9 @@
     {% if _title %}
         <header class="{{ _t ? _t.macroClasses('card_header', ui.card_header(framework), bundle, _pt) : ui.card_header(framework) }}">
             <div class="nowo-ui-card__heading">
-                <h2 class="nowo-ui-card__title">{{ _title }}</h2>
+                <h2 class="{{ _t ? _t.macroClasses('card_title', 'nowo-ui-card__title', bundle, _pt) : 'nowo-ui-card__title' }}">{{ _title }}</h2>
                 {% if _intro %}
-                    <p class="nowo-ui-card__intro">{{ _intro }}</p>
+                    <p class="{{ _t ? _t.macroClasses('card_intro', 'nowo-ui-card__intro', bundle, _pt) : 'nowo-ui-card__intro' }}">{{ _intro }}</p>
                 {% endif %}
             </div>
             {% if _actions is not empty or (toolbar is defined and toolbar) %}

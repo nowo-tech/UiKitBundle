@@ -149,6 +149,12 @@ Changes to markup, inputs and cascade a host or a bundle may depend on (REQ-UI-0
   overrides receive `toolbar: null`) and the `list_filters` partial receives the actions as `header_actions`; a bundle
   that overrides `nowo_ui_list_filters` renders `page.header.actions` itself when `nowo_ui_header_actions_in_filters`
   is true. `theme.pages.<type>.header_actions_in_filters` is rejected on page types other than `list`.
+- **Internal slots** `card_title`, `card_intro`, `detail_item`, `detail_term`, `detail_value`, `confirm_panel`,
+  `confirm_header`, `confirm_title`, `confirm_body`, `confirm_message`, `confirm_expect_label`, `confirm_footer`,
+  `auth_footer`, `auth_links`, `kpi_link` (minor; markup unchanged with an empty theme). CSS: `a.nowo-ui-kpi--link` and
+  `.nowo-ui-detail-list__item { display: contents }` now have zero specificity (`:where()`), so host link colours on KPI
+  tiles and host classes on detail items win. Full-page confirm: the title sits in a
+  `<header class="nowo-ui-confirm-page__header">` and the message in `<div class="nowo-ui-confirm-page__body">`.
 - **Row confirm dialog ids** are derived from the target, the CSRF token, the whole `Confirm` content and the row
   key (`ListPage::rowActions()` returns `Action::withConfirmScope(key)` copies), so the `confirm_id` / dialog ids of
   list rows change value (still `nowo-ui-confirm-<12 hex>`). Tests or scripts that computed

@@ -216,12 +216,18 @@ final class ThemeSlots
             'bootstrap' => 'card-footer',
             'tailwind' => 'border-t px-4 py-3',
         ]],
+        'card_title' => ['nowo-ui-card__title', []],
+        'card_intro' => ['nowo-ui-card__intro', []],
         'cards' => ['nowo-ui-cards', []],
         'section' => ['nowo-ui-section', [
             'bootstrap' => 'mb-4',
             'tailwind' => 'mb-6',
         ]],
         'detail_list' => ['nowo-ui-detail-list', []],
+        // Detail list rows (term + value); add `nowo-ui-detail-list--stacked` to detail_list for label over value
+        'detail_item' => ['nowo-ui-detail-list__item', []],
+        'detail_term' => ['nowo-ui-detail-list__term', []],
+        'detail_value' => ['nowo-ui-detail-list__value', []],
         'kpis' => ['nowo-ui-kpis', []],
         'kpi' => ['nowo-ui-kpi', [
             'bootstrap' => 'card',
@@ -231,6 +237,8 @@ final class ThemeSlots
         'kpi_label' => ['nowo-ui-kpi__label', []],
         'kpi_value' => ['nowo-ui-kpi__value', []],
         'kpi_hint' => ['nowo-ui-kpi__hint', []],
+        // Whole-tile KPI link (KpiTile::linkTile): classes on the tile <a> only
+        'kpi_link' => ['nowo-ui-kpi--link', []],
         'tabs' => ['nowo-ui-tabs', [
             'bootstrap' => 'nav nav-tabs mb-3',
             'tailwind' => 'flex flex-wrap gap-2 border-b mb-3',
@@ -248,6 +256,15 @@ final class ThemeSlots
         ]],
         'modal' => ['nowo-ui-modal', []],
         'confirm' => ['nowo-ui-confirm', []],
+        // Confirm internals (dialog partial and full-page confirm scaffold; on the page only the host classes are added
+        // to its own wrappers, the dialog box styles of the semantic classes stay dialog-only)
+        'confirm_panel' => ['nowo-ui-confirm__panel', []],
+        'confirm_header' => ['nowo-ui-confirm__header', []],
+        'confirm_title' => ['nowo-ui-confirm__title', []],
+        'confirm_body' => ['nowo-ui-confirm__body', []],
+        'confirm_message' => ['nowo-ui-confirm__message', []],
+        'confirm_expect_label' => ['nowo-ui-confirm__expect-label', []],
+        'confirm_footer' => ['nowo-ui-confirm__footer', []],
         // Forms
         'form' => ['nowo-ui-form', []],
         'form_panel' => ['nowo-ui-form-panel', []],
@@ -270,6 +287,8 @@ final class ThemeSlots
             'tailwind' => 'border',
             'foundation' => 'callout',
         ]],
+        'auth_footer' => ['nowo-ui-auth-panel__footer', []],
+        'auth_links' => ['nowo-ui-auth-panel__links', []],
     ];
 
     /**

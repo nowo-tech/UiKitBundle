@@ -3106,8 +3106,20 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
   margin: 0;
 }
 
-.nowo-ui-detail-list__item {
+/* Zero specificity: a host class on the detail_item slot (grid, flex, block) replaces it */
+:where(.nowo-ui-detail-list__item) {
   display: contents;
+}
+
+/* Label over value (add the modifier through the detail_list slot or the partial's `modifier: 'stacked'`) */
+.nowo-ui-detail-list--stacked {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+.nowo-ui-detail-list--stacked > .nowo-ui-detail-list__item {
+  display: grid;
+  gap: 0.125rem;
 }
 
 .nowo-ui-detail-list__term {
@@ -3255,19 +3267,22 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
   font-size: 0.875rem;
 }
 
-/* KPI tile as one link (View\KpiTile::linkTile) */
-a.nowo-ui-kpi--link {
+/*
+ * KPI tile as one link (View\KpiTile::linkTile, slot kpi_link). Zero specificity (:where), so host link colours /
+ * hover set through the kpi_link slot classes (or any host rule) win.
+ */
+:where(a.nowo-ui-kpi--link) {
   display: block;
   color: inherit;
   text-decoration: none;
 }
 
-a.nowo-ui-kpi--link:hover,
-a.nowo-ui-kpi--link:focus-visible {
+:where(a.nowo-ui-kpi--link):hover,
+:where(a.nowo-ui-kpi--link):focus-visible {
   border-color: var(--nowo-ui-primary);
 }
 
-a.nowo-ui-kpi--link:focus-visible {
+:where(a.nowo-ui-kpi--link):focus-visible {
   outline: 2px solid var(--nowo-ui-focus-ring, var(--nowo-ui-primary));
   outline-offset: 2px;
 }

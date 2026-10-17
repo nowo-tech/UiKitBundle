@@ -1,7 +1,7 @@
 {#
   REQ-UI-003 auth scaffold (guest layout). Variable: page (View\AuthPage).
 
-  Regions: brand, panel heading + intro, error, form, footer links.
+  Regions: brand, panel heading + intro, error, form, footer links (slots auth_panel, auth_footer, auth_links).
   Data blocks: nowo_ui_auth_fields (default: REQ-TWIG-003 child loop of page.form), nowo_ui_auth_actions (default:
   submit button), nowo_ui_auth_footer (default: page.links).
 #}
@@ -37,10 +37,10 @@
                 {{ form_end(form) }}
             {% endif %}
         </div>
-        <footer class="nowo-ui-auth-panel__footer">
+        <footer class="{{ nowo_ui_class('auth_footer', _b) }}">
             {% block nowo_ui_auth_footer %}
                 {% if page.links is not empty %}
-                    <ul class="nowo-ui-auth-panel__links">
+                    <ul class="{{ nowo_ui_class('auth_links', _b) }}">
                         {% for link in page.links %}
                             <li><a href="{{ link.href }}"{% for name, value in link.attributes %}{% if value is same as(true) %} {{ name }}{% elseif value is not null and value is not same as(false) %} {{ name }}="{{ value }}"{% endif %}{% endfor %}>{{ link.label|nowo_ui_trans }}</a></li>
                         {% endfor %}

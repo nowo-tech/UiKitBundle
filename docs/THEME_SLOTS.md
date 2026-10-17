@@ -143,19 +143,32 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `card_header` | `nowo-ui-card__header` | `card-header d-flex flex-wrap align-items-start justify-content-between gap-2` | `card-header d-flex flex-wrap align-items-start justify-content-between gap-2` | `flex flex-wrap items-start justify-between gap-2 border-b px-4 py-3` | — |
 | `card_body` | `nowo-ui-card__body` | `card-body` | `card-body` | `px-4 py-3` | — |
 | `card_footer` | `nowo-ui-card__footer` | `card-footer` | `card-footer` | `border-t px-4 py-3` | — |
+| `card_title` | `nowo-ui-card__title` | — | — | — | — |
+| `card_intro` | `nowo-ui-card__intro` | — | — | — | — |
 | `cards` | `nowo-ui-cards` | — | — | — | — |
 | `section` | `nowo-ui-section` | `mb-4` | `mb-4` | `mb-6` | — |
 | `detail_list` | `nowo-ui-detail-list` | — | — | — | — |
+| `detail_item` | `nowo-ui-detail-list__item` | — | — | — | — |
+| `detail_term` | `nowo-ui-detail-list__term` | — | — | — | — |
+| `detail_value` | `nowo-ui-detail-list__value` | — | — | — | — |
 | `kpis` | `nowo-ui-kpis` | — | — | — | — |
 | `kpi` | `nowo-ui-kpi` | `card` | `card` | `border` | `callout` |
 | `kpi_label` | `nowo-ui-kpi__label` | — | — | — | — |
 | `kpi_value` | `nowo-ui-kpi__value` | — | — | — | — |
 | `kpi_hint` | `nowo-ui-kpi__hint` | — | — | — | — |
+| `kpi_link` | `nowo-ui-kpi--link` | — | — | — | — |
 | `tabs` | `nowo-ui-tabs` | `nav nav-tabs mb-3` | `nav nav-tabs mb-3` | `flex flex-wrap gap-2 border-b mb-3` | `tabs` |
 | `tab` | `nowo-ui-tabs__item` | `nav-link` | `nav-link` | `px-3 py-2 text-sm no-underline` | `tabs-title` |
 | `tab_active` | `nowo-ui-tabs__item nowo-ui-tabs__item--active` | `nav-link active` | `nav-link active` | `px-3 py-2 text-sm no-underline border-b-2` | `tabs-title is-active` |
 | `modal` | `nowo-ui-modal` | — | — | — | — |
 | `confirm` | `nowo-ui-confirm` | — | — | — | — |
+| `confirm_panel` | `nowo-ui-confirm__panel` | — | — | — | — |
+| `confirm_header` | `nowo-ui-confirm__header` | — | — | — | — |
+| `confirm_title` | `nowo-ui-confirm__title` | — | — | — | — |
+| `confirm_body` | `nowo-ui-confirm__body` | — | — | — | — |
+| `confirm_message` | `nowo-ui-confirm__message` | — | — | — | — |
+| `confirm_expect_label` | `nowo-ui-confirm__expect-label` | — | — | — | — |
+| `confirm_footer` | `nowo-ui-confirm__footer` | — | — | — | — |
 | `form` | `nowo-ui-form` | — | — | — | — |
 | `form_panel` | `nowo-ui-form-panel` | — | — | — | — |
 | `form_actions` | `nowo-ui-form__actions` | `d-flex flex-wrap gap-2 mt-3` | `d-flex flex-wrap gap-2 mt-3` | `flex flex-wrap gap-2 mt-4` | — |
@@ -166,13 +179,25 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `wizard_step` | `nowo-ui-wizard-steps__item` | — | — | — | — |
 | `wizard_step_active` | `nowo-ui-wizard-steps__item nowo-ui-wizard-steps__item--active` | — | — | — | — |
 | `auth_panel` | `nowo-ui-auth-panel` | `card` | `card` | `border` | `callout` |
+| `auth_footer` | `nowo-ui-auth-panel__footer` | — | — | — | — |
+| `auth_links` | `nowo-ui-auth-panel__links` | — | — | — | — |
 
 Slot groups: document / layout (`document` … `breadcrumbs`), page header (`page_header` … `toolbar`), buttons (`btn`
 … `btn_icon`; variants are complete button classes, `btn_sm` a size modifier, `btn_icon` the icon-only modifier), tables (`table_wrap` … `action`),
 badges (Bootstrap variants use `text-bg-*`, Bootstrap 5.2+, which sets text and background together so the colour
 pair never mixes with the semantic `nowo-ui-badge--*` palette; on 5.0 / 5.1 the semantic palette paints the badge;
 Bootstrap 4 / Foundation variant classes set both colours too), filters / inputs, pagination, feedback (`empty`, flashes, `toasts`), surfaces (`card` … `modal`,
-`confirm`), forms (`form`, `form_actions`, `danger_zone`), wizard / auth.
+`confirm` … `confirm_footer`), forms (`form`, `form_actions`, `danger_zone`), wizard / auth (`auth_panel` … `auth_links`).
+
+Internals: `card_title` / `card_intro` (card heading, also the show and settings section cards); `detail_item`,
+`detail_term`, `detail_value` (one `<div>` + `<dt>` + `<dd>` per `DetailItem`; the item is `display: contents` at zero
+specificity, so a host class on `detail_item` gives it a box, and the `nowo-ui-detail-list--stacked` modifier — e.g.
+`classes.detail_list: 'nowo-ui-detail-list--stacked'` — puts each label over its value); `confirm_panel`,
+`confirm_header`, `confirm_title`, `confirm_body`, `confirm_message`, `confirm_expect_label`, `confirm_footer` (the
+`_confirm` dialog; on the full-page confirm scaffold the panel / header / body / footer slots add only their host
+classes to the page's own wrappers — `card_body`, `nowo-ui-confirm-page__header`, `nowo-ui-confirm-page__body`,
+`form_actions` — so the dialog-box styles never apply to the page); `kpi_link` (only on a whole-tile KPI `<a>`; the
+kit rule `:where(a.nowo-ui-kpi--link)` has zero specificity, so host link colours and hover win).
 
 ## Attributes
 
