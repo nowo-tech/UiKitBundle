@@ -177,6 +177,13 @@ final class ThemeTest extends TestCase
         self::assertNull(Theme::classEntryError(['value' => ['a'], 'framework_defaults' => false]));
         self::assertNull(Theme::classEntryError([]));
         self::assertNotNull(Theme::classEntryError(null));
+        // Tailwind arbitrary / child variants: printed HTML-escaped, so quotes and angle brackets are allowed
+        self::assertNull(Theme::classEntryError("[&>li]:mt-1 content-['·'] [&_a]:underline data-[state=\"open\"]:block <x>"));
+        self::assertNull(Theme::classEntryError("a\tb\nc"));
+        self::assertNotNull(Theme::classEntryError("a\x00b"));
+        self::assertNotNull(Theme::classEntryError("a\x1bb"));
+        self::assertNotNull(Theme::classEntryError(['a', "b\x7f"]));
+        self::assertNotNull(Theme::classEntryError("\xff"));
         self::assertSame(['a b', null], Theme::normalizeClassEntry([' a', 'b ']));
         self::assertSame(['a', false], Theme::normalizeClassEntry(['value' => 'a', 'framework_defaults' => false]));
         self::assertSame(['', true], Theme::normalizeClassEntry(['framework_defaults' => true]));

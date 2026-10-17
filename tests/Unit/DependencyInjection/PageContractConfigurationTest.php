@@ -134,11 +134,13 @@ final class PageContractConfigurationTest extends TestCase
         yield 'unknown class entry key' => [['theme' => ['classes' => ['btn' => ['value' => 'x', 'framework' => false]]]], 'Invalid nowo_ui_kit.theme.classes.btn: unknown key(s) "framework"'];
         yield 'non-boolean framework_defaults entry' => [['theme' => ['classes' => ['btn' => ['value' => 'x', 'framework_defaults' => 'no']]]], '"framework_defaults" must be a boolean'];
         yield 'non-string class list' => [['theme' => ['classes' => ['btn' => ['a', ['b']]]]], 'class lists are strings or lists of strings'];
-        yield 'non-string classes' => [['theme' => ['classes' => ['btn' => 3]]], 'class lists are plain strings'];
-        yield 'unsafe bundle class entry' => [['theme' => ['bundles' => ['NowoXBundle' => ['classes' => ['btn' => ['value' => '<b>']]]]]], 'Invalid nowo_ui_kit.theme.bundles.<bundle>.classes.btn'];
+        yield 'non-string classes' => [['theme' => ['classes' => ['btn' => 3]]], 'class lists are strings or lists of strings'];
+        yield 'unsafe bundle class entry' => [['theme' => ['bundles' => ['NowoXBundle' => ['classes' => ['btn' => ['value' => "a\x00b"]]]]]], 'Invalid nowo_ui_kit.theme.bundles.<bundle>.classes.btn'];
+        yield 'unsafe page class entry' => [['theme' => ['pages' => ['list' => ['classes' => ['btn' => "a\x1bb"]]]]], 'Invalid nowo_ui_kit.theme.pages.<page>.classes.btn: class lists must be valid UTF-8 without control characters.'];
         yield 'non-boolean theme framework_defaults' => [['theme' => ['framework_defaults' => 'no']], 'framework_defaults'];
         yield 'unknown class slot' => [['theme' => ['classes' => ['btn_moss' => 'x']]], 'Unknown nowo_ui_kit.theme.classes slot "btn_moss"'];
-        yield 'unsafe classes' => [['theme' => ['classes' => ['btn' => 'x" onclick="y']]], 'class lists are plain strings'];
+        yield 'control characters in classes' => [['theme' => ['classes' => ['btn' => "x\x7fy"]]], 'class lists must be valid UTF-8 without control characters'];
+        yield 'invalid UTF-8 classes' => [['theme' => ['classes' => ['btn' => "x\xc3("]]], 'class lists must be valid UTF-8 without control characters'];
         yield 'unknown attribute slot' => [['theme' => ['attributes' => ['nope' => ['data-x' => '1']]]], 'Unknown nowo_ui_kit.theme.attributes slot "nope"'];
         yield 'on* attribute' => [['theme' => ['attributes' => ['btn' => ['onclick' => 'x()']]]], 'inline event handler attribute "onclick"'];
         yield 'invalid attribute name' => [['theme' => ['attributes' => ['btn' => ['a b' => 'x']]]], 'is not a valid attribute name'];

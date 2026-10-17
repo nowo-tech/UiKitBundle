@@ -326,7 +326,10 @@ final readonly class Theme
 
     /**
      * Error message for an invalid class entry, null when valid. An entry is a class string, a list of classes, or
-     * `{value: string|list, framework_defaults: bool}`; class lists may not contain `"`, `<` or `>`.
+     * `{value: string|list, framework_defaults: bool}`. Any printable character is allowed (Tailwind arbitrary and
+     * child variants such as `[&>li]:mt-1` or `content-['·']`): class lists are always printed HTML-escaped inside
+     * a quoted `class` attribute, so `"`, `'`, `<`, `>` and `&` cannot leave the attribute. Control characters (other
+     * than whitespace) and invalid UTF-8 are refused.
      */
     public static function classEntryError(mixed $entry): ?string
     {
@@ -348,8 +351,11 @@ final readonly class Theme
             }
             $entry = implode(' ', $entry);
         }
-        if (!\is_string($entry) || 1 === preg_match('/["<>]/', $entry)) {
-            return 'class lists are plain strings without \'"\', "<" or ">".';
+        if (!\is_string($entry)) {
+            return 'class lists are strings or lists of strings.';
+        }
+        if (1 !== preg_match('//u', $entry) || 1 === preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', $entry)) {
+            return 'class lists must be valid UTF-8 without control characters.';
         }
 
         return null;

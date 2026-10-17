@@ -86,6 +86,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - **Template contract — theme dark tokens** are emitted on `[data-theme="dark"]` (was `:root[data-theme="dark"]`): same specificity as the appearance SPI, so the appearance printed after them wins.
 - **Template contract — CSS cascade layer:** `nowo-ui.css` ships inside `@layer nowo-ui` with the order statement `@layer theme, base, nowo-ui, components, utilities;` so Tailwind v4 utilities placed in theme slots beat the kit while the kit stays above Tailwind's preflight (dialogs). `nowo-ui.unlayered.css` keeps the 1.x unlayered stylesheet for hosts that relied on the kit beating unlayered framework CSS. `nowo-ui.css` is generated from it (`pnpm run build:css`, checked by `LayeredCssTest`).
+- **Template contract — theme class lists accept any printable character** (final Beacon validation): `"`, `'`, `<`, `>` (and `&`) are no longer rejected in `theme.classes`, `theme.pages.<type>.classes` and `theme.bundles.<B>.classes`, so Tailwind arbitrary and child variants (`[&>li]:mt-1`, `content-['·']`, `data-[state=open]:…`) can live in the theme. Class lists are always printed HTML-escaped inside their quoted `class` attribute (`ClassEscapingTest` renders every scaffold and partial with a break-out payload in every slot, on the host, per page type and per bundle: no attribute / element injection, no double escaping). Control characters (other than whitespace) and invalid UTF-8 are still refused (`class lists must be valid UTF-8 without control characters.`).
 
 ### Fixed
 

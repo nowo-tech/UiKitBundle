@@ -93,8 +93,11 @@ nowo_ui_kit:
 
 Validation (container compile time): unknown slots and partial names, class entries with keys other than `value` /
 `framework_defaults` or a non-boolean `framework_defaults`, `on*` attributes, attribute names outside
-`[a-zA-Z_:][a-zA-Z0-9_:.-]*`, class lists with `"`, `<` or `>`, token names outside `[a-z0-9-]` and token values with
-`{ } ; < >` and unknown page types under `theme.pages` are rejected with an explicit message. Full reference: [`THEME_SLOTS.md`](THEME_SLOTS.md).
+`[a-zA-Z_:][a-zA-Z0-9_:.-]*`, class lists with control characters or invalid UTF-8, token names outside `[a-z0-9-]` and token values with
+`{ } ; < >` and unknown page types under `theme.pages` are rejected with an explicit message. Class lists may contain
+any printable character (`"`, `'`, `<`, `>`, `&` included), so Tailwind arbitrary and child variants such as
+`[&>li]:mt-1` or `content-['·']` work: UiKit always prints them HTML-escaped inside a quoted `class` attribute
+(contract-tested on every scaffold and partial). Full reference: [`THEME_SLOTS.md`](THEME_SLOTS.md).
 
 ## Twig API
 

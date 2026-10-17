@@ -46,6 +46,12 @@ Example (`css_framework: bootstrap5`, `theme.classes.table: 'data-table'`):
 The 1.x partials keep their macro classes and append only the host / bundle classes
 (`nowo_ui_theme.macroClasses(slot, macroClasses, bundle)`), so their output is unchanged until a theme is configured.
 
+Class values may contain any printable character — Tailwind arbitrary and child variants such as `[&>li]:mt-1`,
+`content-['·']` or `data-[state=open]:block` included. UiKit prints slot classes HTML-escaped inside a quoted `class`
+attribute (`"`, `'`, `<`, `>` and `&` become entities), so a value cannot leave its attribute; only control characters
+(other than whitespace) and invalid UTF-8 are rejected. Host templates print them the same way:
+`class="{{ nowo_ui_class('…') }}"`, never through `|raw`.
+
 ### Dropping the framework defaults
 
 A host whose design system already styles a slot can drop UiKit's framework defaults for it, so no Bootstrap /

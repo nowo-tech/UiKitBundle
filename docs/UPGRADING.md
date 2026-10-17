@@ -184,6 +184,9 @@ Changes to markup, inputs and cascade a host or a bundle may depend on (REQ-UI-0
   context; `Theme::classFor()`, `extraClasses()`, `frameworkDefaults()`, `macroClasses()`, `attributesFor()` and
   `renderAttributes()` take an optional trailing `page`. Host overrides of UiKit partials receive
   `nowo_ui_page_type` and should forward it to `nowo_ui_theme.macroClasses(…, bundle, nowo_ui_page_type)`.
+- **Theme class validation relaxed:** class lists may contain `"`, `'`, `<`, `>` and `&` (Tailwind arbitrary / child
+  variants); only control characters and invalid UTF-8 are rejected. Host overrides of UiKit partials must keep
+  printing slot classes through Twig's escaping (`class="{{ nowo_ui_class(…) }}"`, never `|raw`).
 
 ## To 1.17.4
 
