@@ -36,14 +36,14 @@ final class ConfirmPageSlotsTest extends TestCase
         ],
     ];
 
-    private static function page(?bool $inHeader = null): ConfirmPage
+    private function page(?bool $inHeader = null): ConfirmPage
     {
         return new ConfirmPage(new PageHeader('Delete'), new Confirm('Delete Ann?', 'Really.', expectedValue: 'ann', messageInHeader: $inHeader), Action::delete('/people/1', 'tok'), '/people');
     }
 
     public function testConfirmPageNeverPrintsTheDialogRootSlot(): void
     {
-        $html = PageContractTwig::create([], self::THEME)->render('@NowoUiKit/page/confirm.html.twig', ['page' => self::page()]);
+        $html = PageContractTwig::create([], self::THEME)->render('@NowoUiKit/page/confirm.html.twig', ['page' => $this->page()]);
 
         self::assertStringContainsString('<section class="nowo-ui-confirm-page app-confirm-page nowo-ui-card card" data-nowo-ui-page="confirm" data-nowo-ui-region="confirm" data-nowo-confirm-scope data-confirm-page="1">', $html);
         // host dialog CSS (e.g. `.confirm-dialog:not([open]) { display: none }`) and UiKit's own dialog box rules
@@ -55,7 +55,7 @@ final class ConfirmPageSlotsTest extends TestCase
         self::assertStringContainsString('<p class="nowo-ui-confirm__message" data-message="1">Really.</p>', $html);
 
         // empty theme
-        $html = PageContractTwig::create()->render('@NowoUiKit/page/confirm.html.twig', ['page' => self::page()]);
+        $html = PageContractTwig::create()->render('@NowoUiKit/page/confirm.html.twig', ['page' => $this->page()]);
         self::assertStringContainsString('<section class="nowo-ui-confirm-page nowo-ui-card card" data-nowo-ui-page="confirm" data-nowo-ui-region="confirm" data-nowo-confirm-scope>', $html);
         self::assertStringContainsString('<div class="nowo-ui-confirm__expect">', $html);
     }
@@ -96,10 +96,10 @@ final class ConfirmPageSlotsTest extends TestCase
         self::assertStringContainsString('<div class="nowo-ui-confirm__body"><p class="nowo-ui-confirm__message">Gone.</p></div>', $dialog(['confirm_message_in_header' => true], false));
         self::assertStringContainsString('<div class="nowo-ui-confirm__body">', $dialog([], null));
 
-        $page = PageContractTwig::create([], ['confirm_message_in_header' => true])->render('@NowoUiKit/page/confirm.html.twig', ['page' => self::page()]);
+        $page = PageContractTwig::create([], ['confirm_message_in_header' => true])->render('@NowoUiKit/page/confirm.html.twig', ['page' => $this->page()]);
         self::assertMatchesRegularExpression('#<header class="nowo-ui-confirm-page__header">\s*<h2 class="nowo-ui-confirm__title">Delete Ann\?</h2>\s*<p class="nowo-ui-confirm__message">Really.</p>\s*</header>#', $page);
         self::assertStringNotContainsString('nowo-ui-confirm-page__body', $page);
-        $page = PageContractTwig::create([], ['confirm_message_in_header' => true])->render('@NowoUiKit/page/confirm.html.twig', ['page' => self::page(false)]);
+        $page = PageContractTwig::create([], ['confirm_message_in_header' => true])->render('@NowoUiKit/page/confirm.html.twig', ['page' => $this->page(false)]);
         self::assertStringContainsString('nowo-ui-confirm-page__body', $page);
 
         self::assertTrue(Theme::fromConfig('bootstrap5', ['confirm_message_in_header' => true])->confirmMessageInHeader());

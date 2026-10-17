@@ -27,7 +27,7 @@ final class ClassEscapingTest extends TestCase
     /**
      * @return array<string, mixed>
      */
-    private static function theme(string $scope): array
+    private function theme(string $scope): array
     {
         $classes = array_fill_keys(ThemeSlots::names(), self::PAYLOAD);
 
@@ -79,7 +79,7 @@ final class ClassEscapingTest extends TestCase
     #[DataProvider('renders')]
     public function testThemeClassesStayInsideTheirClassAttribute(string $scope, string $template, array $context): void
     {
-        $html = PageContractTwig::create([], self::theme($scope))->render($template, $context);
+        $html = PageContractTwig::create([], $this->theme($scope))->render($template, $context);
 
         foreach (['&amp;quot;', '&amp;gt;', '&amp;lt;', '&amp;#039;', '&amp;amp;amp;'] as $double) {
             self::assertStringNotContainsString($double, $html, 'double-escaped class list');
