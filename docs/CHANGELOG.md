@@ -63,6 +63,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Generic native dialog**: partial `dialog` (`partials/_dialog.html.twig`; header / title / close button, body,
+  footer; `size`, `body_muted`, `dismissible`, `backdrop_close`, `attr`), slots `dialog`, `dialog_header`,
+  `dialog_title`, `dialog_body`, `dialog_footer`, and `js/nowo-ui-dialog.js` (CSP-safe opener
+  `data-nowo-ui-dialog-open="<id>"`, `data-nowo-ui-dialog-close`, backdrop close, focus return;
+  `window.nowoUiOpenDialog` / `nowoUiCloseDialog`; loaded by the UiKit document layout). The framework-free
+  alternative to `modal_shell` (kept for BC) for page-contract bundles. Demo: restock dialog on the dashboard.
 - **No-JS fallback for confirm actions**: `Action::$fallbackHref` (last constructor argument, kept by
   `withConfirmScope()`, `fallback_href` in `toArray()`) prints a `<noscript>` link (class `nowo-ui-action__fallback`)
   to e.g. a `page/confirm` page next to the dialog toggle, in toolbars and row actions.

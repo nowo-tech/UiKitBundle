@@ -1322,6 +1322,91 @@ a.nowo-ui-pagination__link:hover {
   color: var(--nowo-ui-muted);
 }
 
+/* Generic native dialog (partial `dialog`, 2.1): framework-free, the <dialog> is the panel */
+.nowo-ui-dialog {
+  box-sizing: border-box;
+  width: min(32rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+  padding: 0;
+  overflow: auto;
+  background: var(--nowo-ui-surface);
+  color: var(--nowo-ui-text);
+  border: 1px solid var(--nowo-ui-border);
+  border-radius: var(--nowo-ui-modal-radius, var(--nowo-ui-radius));
+  box-shadow: var(--nowo-ui-shadow-dialog, 0 16px 40px rgba(15, 23, 42, 0.2));
+}
+
+.nowo-ui-dialog:not([open]) {
+  display: none;
+}
+
+.nowo-ui-dialog::backdrop {
+  background: var(--nowo-ui-overlay, rgba(15, 23, 42, 0.45));
+}
+
+.nowo-ui-dialog--sm {
+  width: min(22rem, calc(100vw - 2rem));
+}
+
+.nowo-ui-dialog--lg {
+  width: min(48rem, calc(100vw - 2rem));
+}
+
+.nowo-ui-dialog--xl {
+  width: min(64rem, calc(100vw - 2rem));
+}
+
+.nowo-ui-dialog__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem 0.5rem;
+}
+
+.nowo-ui-dialog__title {
+  margin: 0;
+  font-family: var(--nowo-ui-font-display, inherit);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.nowo-ui-dialog__close {
+  flex: none;
+  margin: -0.25rem -0.5rem 0 0;
+  padding: 0.125rem 0.5rem;
+  border: 0;
+  border-radius: var(--nowo-ui-radius);
+  background: transparent;
+  color: var(--nowo-ui-muted);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.nowo-ui-dialog__close:hover {
+  color: var(--nowo-ui-text);
+}
+
+.nowo-ui-dialog__close:focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline-offset: 2px;
+}
+
+.nowo-ui-dialog__body {
+  padding: 0.5rem 1.25rem 1rem;
+}
+
+.nowo-ui-dialog__footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem 1rem;
+  border-top: 1px solid var(--nowo-ui-border);
+}
+
 /* Message under the title (Confirm::messageInHeader / theme.confirm_message_in_header) */
 :is(.nowo-ui-confirm__header, .nowo-ui-confirm-page__header) > .nowo-ui-confirm__message {
   margin: 0.25rem 0 0;

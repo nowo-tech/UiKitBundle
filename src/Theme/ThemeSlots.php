@@ -300,6 +300,12 @@ final class ThemeSlots
         'modal_header' => ['nowo-ui-modal__header', []],
         'modal_body' => ['nowo-ui-modal__body', []],
         'modal_footer' => ['nowo-ui-modal__footer', []],
+        // Generic native <dialog> (partial `dialog`, 2.1): framework-free alternative to modal_shell
+        'dialog' => ['nowo-ui-dialog', []],
+        'dialog_header' => ['nowo-ui-dialog__header', []],
+        'dialog_title' => ['nowo-ui-dialog__title', []],
+        'dialog_body' => ['nowo-ui-dialog__body', []],
+        'dialog_footer' => ['nowo-ui-dialog__footer', []],
         // Confirm <dialog> root (dialog partial only: never on the full-page confirm, so host dialog CSS such as
         // `:not([open]) { display: none }` cannot hide the page)
         'confirm' => ['nowo-ui-confirm', []],
@@ -362,6 +368,7 @@ final class ThemeSlots
         'card' => '@NowoUiKitBundle/partials/_card.html.twig',
         'confirm' => '@NowoUiKitBundle/partials/_confirm.html.twig',
         'detail_list' => '@NowoUiKitBundle/page/_detail_list.html.twig',
+        'dialog' => '@NowoUiKitBundle/partials/_dialog.html.twig',
         'empty' => '@NowoUiKitBundle/partials/_empty.html.twig',
         'filters' => '@NowoUiKitBundle/partials/_filters.html.twig',
         'flashes' => '@NowoUiKitBundle/partials/_flashes.html.twig',

@@ -397,6 +397,23 @@ The list scaffold renders the confirm `<dialog>` of every row action with a `Con
 other than GET / POST lose their `_method` spoofing (an override that needs it reads `view.method`), and the label
 of an icon-only action is the visible text the override chooses to print.
 
+### Dialogs
+
+The **`dialog` partial** (2.1, `nowo_ui_partial('dialog', bundle)`) is a framework-free native `<dialog>`: header
+(title + close button), body, optional footer; slots `dialog`, `dialog_header`, `dialog_title`, `dialog_body`,
+`dialog_footer`; inputs `id`, `title`, `body`, `footer`, `size` (`sm`/`md`/`lg`/`xl`), `body_muted`, `dismissible`,
+`backdrop_close`, `close_label`, `attr`. Any element with `data-nowo-ui-dialog-open="<id>"` opens it
+(`js/nowo-ui-dialog.js`, loaded by the UiKit document layout — host layouts add it to their script list);
+`[data-nowo-ui-dialog-close]`, Escape, `<form method="dialog">` and a backdrop click close it, and focus returns to
+the opener. Page-contract bundles should use it instead of `modal_shell`, which keeps its Bootstrap-JS structure for
+BC (its structure classes are a documented contract-test exception, `FrameworkClasses::MODAL_SHELL`). Confirmations
+keep the `confirm` contract (`View\Confirm`).
+
+```twig
+<button type="button" class="{{ nowo_ui_class('btn_secondary', bundle) }}" data-nowo-ui-dialog-open="payload-42">Payload</button>
+{{ include(nowo_ui_partial('dialog', bundle), {id: 'payload-42', title: 'Payload', size: 'lg', body: payload_html, bundle: bundle}) }}
+```
+
 ### Area navigation
 
 `PageHeader::$tabs` (`AreaNav`, 2.1) is the tab bar between the sections of a bundle area (e.g. "Consents |

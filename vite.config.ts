@@ -17,7 +17,8 @@ type Entry =
   | 'clipboard'
   | 'tabs'
   | 'release'
-  | 'open-modal';
+  | 'open-modal'
+  | 'dialog';
 
 const entry = process.env.VITE_ENTRY as Entry | undefined;
 
@@ -196,6 +197,21 @@ const configs: Record<Entry, { build: object }> = {
         output: {
           format: 'iife' as const,
           entryFileNames: 'js/nowo-ui-open-modal.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  dialog: {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-dialog.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-dialog.js',
         },
       },
       minify: true,

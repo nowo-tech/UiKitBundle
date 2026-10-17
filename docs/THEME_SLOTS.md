@@ -184,6 +184,11 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `modal_header` | `nowo-ui-modal__header` | — | — | — | — |
 | `modal_body` | `nowo-ui-modal__body` | — | — | — | — |
 | `modal_footer` | `nowo-ui-modal__footer` | — | — | — | — |
+| `dialog` | `nowo-ui-dialog` | — | — | — | — |
+| `dialog_header` | `nowo-ui-dialog__header` | — | — | — | — |
+| `dialog_title` | `nowo-ui-dialog__title` | — | — | — | — |
+| `dialog_body` | `nowo-ui-dialog__body` | — | — | — | — |
+| `dialog_footer` | `nowo-ui-dialog__footer` | — | — | — | — |
 | `confirm` | `nowo-ui-confirm` | — | — | — | — |
 | `confirm_page` | `nowo-ui-confirm-page` | — | — | — | — |
 | `confirm_panel` | `nowo-ui-confirm__panel` | — | — | — | — |
@@ -211,7 +216,7 @@ Slot groups: document / layout (`document` … `breadcrumb_separator`), page hea
 … `btn_icon`; variants are complete button classes — `btn_link` included —, `btn_sm` a size modifier, `btn_icon` the icon-only modifier), tables (`table_wrap` … `row_action_disabled`),
 badges (Bootstrap variants use `text-bg-*`, Bootstrap 5.2+, which sets text and background together so the colour
 pair never mixes with the semantic `nowo-ui-badge--*` palette; on 5.0 / 5.1 the semantic palette paints the badge;
-Bootstrap 4 / Foundation variant classes set both colours too), filters / inputs, pagination, code (`code`, `code_block`), feedback (`muted`, `empty`, flashes, `toasts`), surfaces (`card` … `modal_footer`,
+Bootstrap 4 / Foundation variant classes set both colours too), filters / inputs, pagination, code (`code`, `code_block`), feedback (`muted`, `empty`, flashes, `toasts`), surfaces (`card` … `modal_footer`, `dialog` … `dialog_footer`,
 `confirm` … `confirm_footer`), forms (`form`, `form_actions`, `danger_zone`), wizard / auth (`auth_panel` … `auth_links`).
 
 Code: `code` for inline `<code>` (identifiers, keys, short values) and `code_block` for a `<pre>` holding a payload,
@@ -286,6 +291,7 @@ as the UiKit partial (documented in the header comment of each template) and sho
 | `card` | `partials/_card.html.twig` | `title` / `intro` (`Label` or string), `body`, `footer`, `toolbar`, `actions` (list of `View\Action`), `id`, `attr`, `cards` (list of card hashes → `cards` grid), `bundle`; slots `card`, `card_header`, `card_body`, `card_footer`, `cards` | bundle cards, dashboard cards |
 | `confirm` | `partials/_confirm.html.twig` | `id`, `confirm` (`View\Confirm`), `action`, `action_href`, `bundle` | actions with a `Confirm`; list scaffold (once per row action, after the table) |
 | `detail_list` | `page/_detail_list.html.twig` | `items` (list of `View\DetailItem`), `modifier`, `bundle` | show scaffold (sections, meta) |
+| `dialog` *(2.1)* | `partials/_dialog.html.twig` | `id`, `title` (string or `Label`), `body` / `footer` (HTML), `size` (`sm` \| `md` \| `lg` \| `xl`), `body_muted`, `dismissible`, `backdrop_close`, `close_label`, `attr`, `bundle`; block `nowo_ui_dialog_body`; slots `dialog`, `dialog_header`, `dialog_title`, `dialog_body`, `dialog_footer` | framework-free native `<dialog>` (opener `data-nowo-ui-dialog-open="<id>"`, `js/nowo-ui-dialog.js`) — preferred over `modal_shell` in page-contract bundles |
 | `empty` | `partials/_empty.html.twig` | `empty` (`View\EmptyState`) **and** `message` (translated), `region`, `bundle` | list scaffold |
 | `filters` | `partials/_filters.html.twig` | `action`, `method`, `q`, `placeholder`, `actions`, `clear_href`, `collapsible` | bundle filter bars |
 | `flashes` | `partials/_flashes.html.twig` | `flashes` (default `app.flashes`), `trans_domain`, `bundle` | layouts (`nowo_ui_flashes`) |

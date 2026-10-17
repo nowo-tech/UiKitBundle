@@ -271,6 +271,28 @@ test.describe('page contract — validation round 3 (REQ-UI-003)', () => {
     });
   }
 
+  test('dashboard: generic native dialog opens, closes and returns focus', async ({ page }) => {
+    await page.goto('/page-contract/dashboard');
+    const opener = page.getByRole('button', { name: 'Restock details' });
+    const dialog = page.locator('dialog#restock-dialog');
+    await expect(dialog).toBeHidden();
+    await opener.click();
+    await expect(dialog).toBeVisible();
+    await expect(dialog.locator('.nowo-ui-dialog__title')).toHaveText('Restock schedule');
+    await dialog.getByRole('button', { name: 'Got it' }).click();
+    await expect(dialog).toBeHidden();
+    await expect(opener).toBeFocused();
+    await opener.click();
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
+    await opener.click();
+    await dialog.getByRole('button', { name: 'Close' }).click();
+    await expect(dialog).toBeHidden();
+    await opener.click();
+    await page.mouse.click(5, 5);
+    await expect(dialog).toBeHidden();
+  });
+
   test('default view: header actions stay in the page header', async ({ page }) => {
     await page.goto('/page-contract/default/orders');
     await expect(page.locator('.nowo-ui-page-header .nowo-ui-action--create')).toBeVisible();

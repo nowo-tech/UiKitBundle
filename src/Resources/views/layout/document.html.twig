@@ -31,7 +31,7 @@
 <body class="{{ nowo_ui_class('body', _bundle) }}"{{ nowo_ui_attrs('body', _bundle) }}>
     {% block nowo_ui_body %}{% endblock %}
     {% block nowo_ui_scripts %}
-        {% for _script in ['nowo-ui-modal', 'nowo-ui-confirm', 'nowo-ui-toast', 'nowo-ui-tabs', 'nowo-ui-theme'] %}
+        {% for _script in ['nowo-ui-modal', 'nowo-ui-confirm', 'nowo-ui-dialog', 'nowo-ui-toast', 'nowo-ui-tabs', 'nowo-ui-theme'] %}
             <script src="{{ asset('js/' ~ _script ~ '.js', 'nowo_ui_kit') }}" defer{% if _nonce %} nonce="{{ _nonce }}"{% endif %}></script>
         {% endfor %}
     {% endblock %}

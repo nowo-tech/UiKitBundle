@@ -30,5 +30,19 @@
             {% endfor %}
         </dl>
     {% endset %}
+    {% set _stock %}{{ _stock }}<p><button type="button" class="{{ nowo_ui_class('btn_secondary', _b) }}" data-nowo-ui-dialog-open="restock-dialog">Restock details</button></p>{% endset %}
     {{ include(nowo_ui_partial('card', _b), {title: 'Low stock', body: _stock, bundle: _b}, false) }}
+{% endblock %}
+
+{# Generic native dialog (partial `dialog`, 2.1): framework-free, opened by data-nowo-ui-dialog-open #}
+{% block nowo_ui_modals %}
+    {% set _footer %}<button type="button" class="{{ nowo_ui_class('btn_primary', page.bundle) }}" data-nowo-ui-dialog-close>Got it</button>{% endset %}
+    {{ include(nowo_ui_partial('dialog', page.bundle), {
+        id: 'restock-dialog',
+        title: 'Restock schedule',
+        body: '<p>Suppliers deliver on Mondays and Thursdays. Orders placed before 12:00 ship the same day.</p>',
+        body_muted: true,
+        footer: _footer,
+        bundle: page.bundle,
+    }, false) }}
 {% endblock %}
