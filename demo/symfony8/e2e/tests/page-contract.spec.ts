@@ -172,6 +172,13 @@ test.describe('page contract — validation round 3 (REQ-UI-003)', () => {
     await expect(exportCsv.locator('.visually-hidden')).toHaveText('Export CSV');
     await expect(exportCsv.locator('.nowo-ui-action__label')).toHaveCount(0);
     await expect(page.getByRole('link', { name: 'Clear filters' })).toHaveClass(/\bnowo-ui-btn--icon\b/);
+    // the header actions sit right after the filter actions (same group, no gap pushing them to the row end)
+    const clear = await page.getByRole('link', { name: 'Clear filters' }).boundingBox();
+    const actions = await inFilters.boundingBox();
+    expect(clear && actions).toBeTruthy();
+    if (clear && actions && Math.abs(actions.y - clear.y) < clear.height) {
+      expect(actions.x - (clear.x + clear.width)).toBeLessThan(40);
+    }
   });
 
   test('list: every row opens its own confirm dialog (unique ids)', async ({ page }) => {

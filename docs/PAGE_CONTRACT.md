@@ -158,6 +158,21 @@ fills `nowo_ui_document_title` with the page title and renders the page header t
 | `nowo_ui_list_row` | one `<td>` per column: `row[column.key]` | `row`, `row_key`, `loop` |
 | `nowo_ui_list_after` | empty (after the table / empty state) | `page` |
 
+**Filter row layout.** The `filters` form is a wrapping flex row: the field rows (`filters_field`, sized by
+`FilterField::width`), then one `filters_actions` group (`nowo-ui-filters__actions`, pushed to the row end by
+`margin-left: auto`) holding apply, clear, `filterActions` and — with `headerActionsInFilters` — the page-header
+actions (`nowo-ui-filters__header-actions`) **right after the filter actions**, as in most admin UIs. The group does
+not grow; if your theme makes the fields grow (e.g. Tailwind `classes.filters_field: 'flex-1'`), add `flex-none` to
+`filters_actions` so the buttons stay on one line instead of shrinking and wrapping inside the group:
+
+```yaml
+nowo_ui_kit:
+  theme:
+    pages:
+      list:
+        classes: { filters_field: 'flex-1 min-w-48', filters_actions: 'flex-none' }
+```
+
 **Responsive tables.** With `page.responsive = 'cards'` (default) the table wrap is a CSS size container
 (`data-nowo-ui-responsive="cards"`, table class `nowo-ui-table--cards`): columns with `Column::priority` 3 hide
 below 60rem of table width, priority 2 below 48rem (`required` columns never hide), and below 40rem every row turns

@@ -197,6 +197,10 @@ Changes to markup, inputs and cascade a host or a bundle may depend on (REQ-UI-0
   that sets `confirm_message` classes or attributes, a 1.x `body` passed to `_confirm` is wrapped in
   `<div class="nowo-ui-confirm__message …">`; `_confirm` overrides read `confirm.messageInHeader ??
   nowo_ui_theme.confirmMessageInHeader()` to support it.
+- **Filter row with header actions:** the page-header actions moved into the filter row now follow the apply / clear
+  / extra filter buttons directly instead of sitting alone at the far end of the row. To keep the previous split,
+  add `ms-auto` / `ml-auto` (or `margin-inline-start: auto`) to `.nowo-ui-filters__header-actions` and let
+  `filters_actions` grow (`flex-grow-1` / `grow`). Themes whose filter fields grow add `flex-none` to `filters_actions`.
 
 ## To 1.17.4
 

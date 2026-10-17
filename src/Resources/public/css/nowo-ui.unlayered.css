@@ -3315,17 +3315,14 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
   gap: 0.35rem;
 }
 
-/* Page-header actions at the end of the filter row (ListPage::headerActionsInFilters) */
-.nowo-ui-filters__actions:has(> .nowo-ui-filters__header-actions) {
-  flex: 1 1 auto;
-}
-
+/* Page-header actions at the end of the filter row (ListPage::headerActionsInFilters): right after the filter
+ * actions, in the same group (the group does not grow; hosts whose filter fields grow add `flex-none` to the
+ * filters_actions slot to keep the group on one line). */
 .nowo-ui-filters__header-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
-  margin-inline-start: auto;
 }
 
 /*
