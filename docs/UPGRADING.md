@@ -51,6 +51,20 @@
 
 ## Unreleased
 
+No breaking change; everything below is opt-in except where noted.
+
+- **Host layouts** that print their own script list (instead of the UiKit document layout's `nowo_ui_scripts`) add
+  `js/nowo-ui-dialog.js` to use the new `dialog` partial. The UiKit document layout loads it (one more `<script defer>`).
+- **Host `page_header` overrides** should render `header.tabs` (`AreaNav`) through `nowo_ui_partial('tabs')` when
+  bundles start using area navigation (see PAGE_CONTRACT "Area navigation"); without it the tab bar is simply absent.
+- **Action forms**: a `FormView`-backed action prints the hidden leaf fields of its form on every render (fix);
+  overrides of `_action_form_view` are not a public partial and need no change.
+- **Contract test (`PageContractTestCase`)**: one more test per fixture (`testPageActionFormsKeepTheirHiddenFields`),
+  the stub `page_header` override renders `actions`, and the `modal_shell` structure classes no longer need to be in
+  `allowedClasses()` (they can stay).
+- **`Action` / `PageHeader` / `FormPage` / `SettingsSection` constructors** gained trailing optional arguments
+  (`fallbackHref`, `tabs`, `formThemes`): positional calls keep working.
+
 ## To 2.0.1
 
 From **2.0.0** — bug fix, nothing to change (same fix as 1.17.5 on the 1.x line). Responsive tables hide columns again
