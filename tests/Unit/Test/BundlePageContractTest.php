@@ -10,6 +10,7 @@ use Nowo\UiKitBundle\Test\PageContractTestCase;
 use Nowo\UiKitBundle\Test\PageFixture;
 use Nowo\UiKitBundle\Test\RenderedPage;
 use Nowo\UiKitBundle\Test\StubHost;
+use Nowo\UiKitBundle\View\Action;
 use Nowo\UiKitBundle\View\Column;
 use Nowo\UiKitBundle\View\Crumb;
 use Nowo\UiKitBundle\View\DashboardPage;
@@ -101,6 +102,9 @@ final class BundlePageContractTest extends PageContractTestCase
         self::assertNull($page->block('missing'));
         self::assertSame('', $page->blockHtml('missing'));
         self::assertSame(['x', 'Go'], $page->texts());
+        $forms = new RenderedPage('t', '<form name="a"><input type="hidden" name="a[_token]" value="t"><input type="hidden" name="other" value="o"></form><form name="b"></form><form name="a"></form>', 'none', [], ['a' => ['a[_token]' => 't']]);
+        self::assertSame([['a[_token]' => ['t']], ['a[_token]' => []]], $forms->hiddenFieldValues('a', ['a[_token]']));
+        self::assertSame(['a' => ['a[_token]' => 't']], $forms->actionForms);
     }
 
     /**
@@ -126,6 +130,7 @@ final class BundlePageContractTest extends PageContractTestCase
         yield 'no slot attributes' => ['no theme slot attributes', 'assertStubThemeReflected', "{% extends nowo_ui_layout.admin %}{% block nowo_ui_document_title %}T{% endblock %}{% block nowo_ui_content %}<p class=\"{{ nowo_ui_class('card') }}\">x</p>{% endblock %}", []];
         yield 'page header bypasses the partial' => ['ignores the theme partial override', 'assertStubThemeReflected', "{% extends '@NowoUiKit/page/dashboard.html.twig' %}{% block nowo_ui_page_header %}<h1 class=\"{{ nowo_ui_class('page_title') }}\">Bad</h1>{% endblock %}", $header];
         yield 'missing translation' => ['NowoContractFixtureBundle:fixture.missing', 'assertNoRawTranslationKeys', $dashboard("{{ 'fixture.missing'|trans({}, 'NowoContractFixtureBundle') }}"), $header];
+        yield 'action form without its token' => ['rendered form "bad_action" #1 of a FormView-backed action must carry its hidden field "bad_action[_token]" exactly once (got 0)', 'assertActionFormsKeepHiddenFields', $dashboard('{{ form_start(action.form) }}<button>Go</button>{{ form_end(action.form, {render_rest: false}) }}'), $header + ['action' => new Action('custom', 'Go', '/go', method: 'POST', form: ScaffoldFixtures::csrf('bad_action'))]];
         yield 'raw key' => ['raw translation keys: item.name.placeholder', 'assertNoRawTranslationKeys', $dashboard('<input placeholder="item.name.placeholder">'), $header];
     }
 

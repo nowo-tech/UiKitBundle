@@ -48,6 +48,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Header actions backed by a `FormView` keep their CSRF token** when a host `page_header` partial override renders
+  `actions` itself (REQ-UI-003): the scaffolds pre-render the 1.x `toolbar`, which marked the form's fields rendered,
+  so the override's `form_end` printed no `_token`. The `FormView` branch of the action partial now prints the hidden
+  leaf fields of the form on every render (other children still render once through `form_end`); this also covers one
+  CSRF `FormView` shared by every row.
+
+### Added
+
+- **`PageContractTestCase`**: the stub host's `page_header` override renders the header `actions` itself (after the
+  scaffold's pre-rendered `toolbar`), and a seventh test per fixture, `testPageActionFormsKeepTheirHiddenFields`
+  (helper `assertActionFormsKeepHiddenFields()`, `RenderedPage::$actionForms` / `hiddenFieldValues()`), fails when a
+  rendered form of a `FormView`-backed `Action` of the fixture lacks (or duplicates) a hidden field of that form.
+- Demo: the page contract show page has a `FormView`-backed header action (`Reopen`); the Playwright e2e checks its
+  CSRF token through the host override and the default partial.
+
 ## [2.0.1] - 2026-10-18
 
 Port of the 1.17.5 fix to 2.x.

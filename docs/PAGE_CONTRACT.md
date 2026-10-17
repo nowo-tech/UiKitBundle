@@ -309,7 +309,10 @@ from the objects too.
 `share`, `config`, `filter`, `prev`, `next`, `close`; variants `primary`, `secondary`, `danger`, `neutral`, `outline`,
 `link` — `resolvedVariant()`: explicit, else `danger` (delete), `primary` (create / save), `neutral` (any other kind;
 painted like secondary, toolbar `btn_secondary`).
-Non-GET actions render a POST form (CSRF-only `FormView` in `form`, REQ-TWIG-005, or `csrfToken`); an action with a
+Non-GET actions render a POST form (CSRF-only `FormView` in `form`, REQ-TWIG-005, or `csrfToken`). A `FormView`
+action prints the hidden leaf fields of its form (the CSRF token) on **every** render, whatever their rendered flag
+(other children render through `form_end`, first render only): the scaffolds pre-render the 1.x `toolbar` before a
+host `page_header` override renders `actions` again, and one CSRF `FormView` may back every row. An action with a
 `Confirm` renders a toggle button + UiKit confirm `<dialog>` (`nowo-ui-confirm.js`) — never an inline `confirm()`.
 The dialog buttons read the theme slots `btn_secondary` (cancel) and `btn_<variant>` (confirm), so host classes and
 `framework_defaults: false` apply to them like to any toolbar button.
@@ -600,7 +603,8 @@ Each fixture is rendered with a real Twig environment (UiKit + bundle views, tra
 catalogues, Symfony Form when installed, stub `path` / `url` / `asset` / `csrf_token` / `is_granted` /
 `logout_path`) inside a **stub host layout** (every canonical block wrapped in a marker, no `<html>`) and a **stub
 theme** (marker class `pc-<slot>` and attribute `data-pc-<slot>` on every slot, one token, `page_header` partial
-override). Six tests per fixture:
+override that renders the header `actions` itself through the `action` partial, like a typical host override). Seven
+tests per fixture:
 
 | Test | Fails when |
 | --- | --- |
@@ -610,13 +614,14 @@ override). Six tests per fixture:
 | `testPageUsesFrameworkClassesOnlyThroughThemeSlots` | a Bootstrap / Tabler / Tailwind / Foundation class that is not a slot default of the rendered `css_framework` (rendered with every framework of `cssFrameworks()`, default `none`, `bootstrap5`, `tailwind`) |
 | `testPageReflectsTheStubTheme` | no `pc-*` slot class or `data-pc-*` slot attribute in `nowo_ui_content`, or a page header that bypasses `nowo_ui_partial('page_header')` |
 | `testPageHasNoRawTranslationKeys` | a dotted id the translator could not find, or a `*.label\|placeholder\|help\|title` key in the output |
+| `testPageActionFormsKeepTheirHiddenFields` | a rendered `<form name="…">` of a `FormView`-backed `Action` found in the fixture context lacks a hidden field of that `FormView` (the CSRF token), or carries it more than once (e.g. a template that calls `form_start` / `form_end` on an already rendered `FormView` instead of the `action` partial) |
 
 Hooks: `templatePaths()`, `inlineTemplates()`, `translationDirs()`, `templatesDocument()`, `cssFrameworks()`,
 `allowedClasses()` (documented exceptions), `formThemes()` (null disables the Form extension; add your FormKit
 theme), `locale()`, `configureTwig(Environment)` (register the bundle's Twig extensions; functions added there
 override the stubs). The assertion helpers (`assertExtendsScaffoldOrUnique()`, `assertCanonicalBlocksFilled()`,
 `assertNoForbiddenMarkup()`, `assertNoFrameworkUtilityClasses()`, `assertStubThemeReflected()`,
-`assertNoRawTranslationKeys()`) and `renderPage()` / `createTwig()` are protected for the bundle's own tests.
+`assertNoRawTranslationKeys()`, `assertActionFormsKeepHiddenFields()`) and `renderPage()` / `createTwig()` are protected for the bundle's own tests.
 Fixtures are rendered several times; their `FormView`s are reset between renders.
 
 ## Compatibility and versioning

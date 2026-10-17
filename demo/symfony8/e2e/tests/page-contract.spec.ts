@@ -235,6 +235,16 @@ test.describe('page contract — validation round 3 (REQ-UI-003)', () => {
     expect((await sort.getAttribute('class'))?.split(/\s+/)).toContain('[&>span]:underline');
   });
 
+  for (const [view, path] of [['host theme', '/page-contract/orders/1042'], ['default view', '/page-contract/default/orders/1042']]) {
+    test(`show (${view}): a FormView-backed header action keeps its CSRF token once`, async ({ page }) => {
+      await page.goto(path);
+      const form = page.locator('form[name="reopen_order"]');
+      await expect(form).toHaveCount(1);
+      await expect(form.locator('input[type="hidden"][name="reopen_order[_token]"]')).toHaveCount(1);
+      await expect(form.locator('input[name="reopen_order[_token]"]')).toHaveValue('demo-token');
+    });
+  }
+
   test('default view: header actions stay in the page header', async ({ page }) => {
     await page.goto('/page-contract/default/orders');
     await expect(page.locator('.nowo-ui-page-header .nowo-ui-action--create')).toBeVisible();

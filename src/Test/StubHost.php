@@ -9,7 +9,9 @@ use Nowo\UiKitBundle\Theme\ThemeSlots;
 /**
  * The stub host of {@see PageContractTestCase}: host layouts that render every canonical block inside a marker
  * element (no `<html>`), and a stub theme with a distinct marker class (`pc-<slot>`) and attribute
- * (`data-pc-<slot>`) for every slot, one token and one partial override (`page_header`).
+ * (`data-pc-<slot>`) for every slot, one token and one partial override (`page_header`). The override renders the
+ * 2.0 `actions` input itself through the `action` partial (like a typical host override), after the scaffold has
+ * pre-rendered the 1.x `toolbar`: FormView-backed header actions render twice and must keep their hidden fields.
  */
 final class StubHost
 {
@@ -81,11 +83,9 @@ final class StubHost
                 {% set _bundle = bundle|default(null) %}
                 <header class="pc-partial-page-header" data-nowo-ui-contract-partial="page_header">
                     <h1>{{ header is defined and header ? header.title|nowo_ui_trans : title|default('') }}</h1>
-                    {% if header is defined and header %}
-                        {% for action in header.actions %}
-                            {{ include(nowo_ui_partial('action', _bundle), {action: action, context: 'toolbar', bundle: _bundle}, false) }}
-                        {% endfor %}
-                    {% endif %}
+                    {% for action in actions|default(header is defined and header ? header.actions : []) %}
+                        {{ include(nowo_ui_partial('action', _bundle), {action: action, context: 'toolbar', bundle: _bundle, nowo_ui_page_type: nowo_ui_page_type|default(null)}, false) }}
+                    {% endfor %}
                 </header>
                 TWIG,
         ];

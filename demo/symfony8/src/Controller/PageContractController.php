@@ -30,6 +30,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
+use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\MoneyType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\SearchType;
@@ -148,6 +149,9 @@ final class PageContractController extends AbstractController
         return $this->render('page_contract/orders/show.html.twig', ['order' => $order, 'page' => new ShowPage(
             $this->header($theme, \sprintf('Order #%d', $order['id']), \sprintf('Placed by %s on %s.', $order['customer'], $order['placed']), 'Order', [
                 Action::edit($this->generateUrl($this->route('page_contract_order_edit', $theme), $this->params($theme, ['id' => $id]))),
+                // POST action backed by a CSRF-only FormView: the host page_header override renders it again after
+                // the scaffold pre-rendered the 1.x toolbar, and the form keeps its token.
+                new Action('restore', 'Reopen', '#', method: 'POST', form: $this->container->get('form.factory')->createNamedBuilder('reopen_order')->add('_token', HiddenType::class, ['data' => 'demo-token'])->getForm()->createView()),
                 Action::delete('#', 'demo-token', Confirm::delete('The order and its invoice will be deleted.')),
             ]),
             [

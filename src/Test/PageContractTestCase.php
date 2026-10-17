@@ -6,6 +6,7 @@ namespace Nowo\UiKitBundle\Test;
 
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Twig\ThemeExtension;
+use Nowo\UiKitBundle\View\Action;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bridge\Twig\AppVariable;
@@ -29,7 +30,7 @@ use Twig\RuntimeLoader\FactoryRuntimeLoader;
 
 /**
  * Shared page contract test (REQ-UI-003 "Contract tests"). A UI bundle extends it once, returns one
- * {@see PageFixture} per page from {@see self::pageFixtures()} and gets six tests per page, rendered with a real
+ * {@see PageFixture} per page from {@see self::pageFixtures()} and gets seven tests per page, rendered with a real
  * Twig environment (UiKit views + the bundle's views, translator with the bundle catalogues, Symfony Form when
  * installed) against a **stub host layout** and a **stub theme** ({@see StubHost}):
  *
@@ -40,7 +41,10 @@ use Twig\RuntimeLoader\FactoryRuntimeLoader;
  *    `javascript:` URLs;
  * 4. no framework utility classes outside the theme slots, for every framework of {@see self::cssFrameworks()};
  * 5. the stub theme is reflected: marker class + attribute in the content, page header through the partial;
- * 6. no raw translation keys (missing catalogue ids or `*.label|placeholder|help|title` keys in the output).
+ * 6. no raw translation keys (missing catalogue ids or `*.label|placeholder|help|title` keys in the output);
+ * 7. every rendered form of a FormView-backed {@see Action} (`Action::$form`, e.g. a CSRF-only form) carries each
+ *    hidden field of that FormView (the CSRF token) exactly once, however often the page renders the action (the
+ *    stub `page_header` override renders the header `actions` itself, after the scaffold pre-rendered `toolbar`).
  *
  * The assertion helpers are protected so a bundle can reuse them in its own tests. PHPUnit is not a runtime
  * dependency of UiKit: bundles need `phpunit/phpunit` (and `symfony/form` for form pages) in `require-dev`.
@@ -112,6 +116,12 @@ abstract class PageContractTestCase extends TestCase
     public function testPageHasNoRawTranslationKeys(PageFixture $fixture): void
     {
         $this->assertNoRawTranslationKeys($this->renderPage($fixture));
+    }
+
+    #[DataProvider('contractPages')]
+    public function testPageActionFormsKeepTheirHiddenFields(PageFixture $fixture): void
+    {
+        $this->assertActionFormsKeepHiddenFields($this->renderPage($fixture));
     }
 
     /**
@@ -214,7 +224,8 @@ abstract class PageContractTestCase extends TestCase
     {
         [$twig, $translator] = $this->buildEnvironment($framework);
         $seen = [];
-        self::resetFormViews($fixture->context, $seen);
+        $actionForms = [];
+        self::prepareFormViews($fixture->context, $seen, $actionForms);
         $html = $twig->render($fixture->template, $fixture->context);
         $missing = [];
         foreach ($translator->getCollectedMessages() as $message) {
@@ -223,7 +234,7 @@ abstract class PageContractTestCase extends TestCase
             }
         }
 
-        return new RenderedPage($fixture->template, $html, $framework, array_values(array_unique($missing)));
+        return new RenderedPage($fixture->template, $html, $framework, array_values(array_unique($missing)), $actionForms);
     }
 
     /**
@@ -328,6 +339,23 @@ abstract class PageContractTestCase extends TestCase
     }
 
     /**
+     * Every rendered `<form name="…">` of a FormView-backed action carries each hidden field of its FormView (the
+     * CSRF token) exactly once, with its value ({@see RenderedPage::$actionForms}). Forms the page does not render
+     * (invisible actions) are not required.
+     */
+    protected function assertActionFormsKeepHiddenFields(RenderedPage $page): void
+    {
+        $this->addToAssertionCount(1);
+        foreach ($page->actionForms as $form => $fields) {
+            foreach ($page->hiddenFieldValues($form, array_keys($fields)) as $index => $values) {
+                foreach ($fields as $field => $value) {
+                    self::assertSame([$value], $values[$field], \sprintf('Page "%s": rendered form "%s" #%d of a FormView-backed action must carry its hidden field "%s" exactly once (got %d); render it through the UiKit action partial (nowo_ui_partial(\'action\')), not form_start / form_end of an already rendered FormView.', $page->template, $form, $index + 1, $field, \count($values[$field])));
+                }
+            }
+        }
+    }
+
+    /**
      * Unique pages listed under the "Unique pages" heading of {@see self::templatesDocument()}.
      *
      * @return list<string>
@@ -362,15 +390,18 @@ abstract class PageContractTestCase extends TestCase
     }
 
     /**
-     * Fixtures are rendered several times (one per test and css_framework): mark their FormViews as not rendered.
+     * Fixtures are rendered several times (one per test and css_framework): mark their FormViews as not rendered,
+     * and collect the hidden leaf fields of the FormViews backing an {@see Action} (form name => field full name =>
+     * value) for {@see self::assertActionFormsKeepHiddenFields()}.
      *
-     * @param array<int, true> $seen visited objects (spl_object_id)
+     * @param array<int, true>                     $seen        visited objects (spl_object_id)
+     * @param array<string, array<string, string>> $actionForms
      */
-    private static function resetFormViews(mixed $value, array &$seen): void
+    private static function prepareFormViews(mixed $value, array &$seen, array &$actionForms): void
     {
         if (\is_array($value)) {
             foreach ($value as $item) {
-                self::resetFormViews($item, $seen);
+                self::prepareFormViews($item, $seen, $actionForms);
             }
 
             return;
@@ -383,11 +414,18 @@ abstract class PageContractTestCase extends TestCase
             foreach (['rendered', 'methodRendered'] as $property) {
                 (new \ReflectionProperty(FormView::class, $property))->setValue($value, false);
             }
-            self::resetFormViews($value->children, $seen);
+            self::prepareFormViews($value->children, $seen, $actionForms);
 
             return;
         }
-        self::resetFormViews(get_object_vars($value), $seen);
+        if ($value instanceof Action && $value->form instanceof FormView && '' !== (string) ($value->form->vars['name'] ?? '')) {
+            foreach ($value->form->children as $child) {
+                if ([] === $child->children && \in_array('hidden', $child->vars['block_prefixes'] ?? [], true) && \is_scalar($child->vars['value'] ?? null) && '' !== (string) $child->vars['value']) {
+                    $actionForms[(string) $value->form->vars['name']][(string) $child->vars['full_name']] = (string) $child->vars['value'];
+                }
+            }
+        }
+        self::prepareFormViews(get_object_vars($value), $seen, $actionForms);
     }
 
     private function isDeclaredUnique(string $template): bool

@@ -15,6 +15,7 @@ use Nowo\UiKitBundle\View\ListPage;
 use Nowo\UiKitBundle\View\PageHeader;
 use Nowo\UiKitBundle\View\Pagination;
 use Nowo\UiKitBundle\View\ShowPage;
+use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\SearchType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Forms;
@@ -49,7 +50,7 @@ final class PageContractTest extends PageContractTestCase
             new Pagination(1, 5, 1),
         )]);
         yield 'order' => new PageFixture('page_contract/orders/show.html.twig', ['order' => $order, 'page' => new ShowPage(
-            new PageHeader('Order #1042'),
+            new PageHeader('Order #1042', null, [new Action('restore', 'Reopen', '/orders/1042/reopen', method: 'POST', form: $forms->createNamedBuilder('reopen_order')->add('_token', HiddenType::class, ['data' => 'demo-token'])->getForm()->createView())]),
             [new DetailSection('Customer', [new DetailItem('Name', $order['customer'])])],
         )]);
         yield 'order_edit' => new PageFixture('page_contract/orders/edit.html.twig', ['page' => new FormPage(

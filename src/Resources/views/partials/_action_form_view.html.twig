@@ -1,6 +1,15 @@
 {#
   FormView branch of _action_post (separate file: form_start / form_end need symfony/form).
+
+  The hidden leaf fields of the FormView (the CSRF token) are printed on every render, whatever their rendered
+  flag: one FormView can legitimately render several times (the scaffolds pre-render the 1.x `toolbar` and a host
+  `page_header` override renders `actions` again; one CSRF form shared by every row), and form_end alone would
+  print them only the first time. Other children render through form_end (first render only).
 #}
 {{ form_start(action.form, {action: action_href ?? '#', method: action.method, attr: {class: 'nowo-ui-action__form'}|merge(form_id|default(null) ? {id: form_id} : {})}) }}
     <button type="submit" class="{{ button_class }}"{% for name, value in button_attrs %}{% if value is same as(true) %} {{ name }}{% elseif value is not null and value is not same as(false) %} {{ name }}="{{ value }}"{% endif %}{% endfor %}{% if action.disabled %} disabled{% endif %}>{{ button_html }}</button>
+    {%- for _field in action.form|filter(f => 'hidden' in f.vars.block_prefixes and f.children is empty) -%}
+        <input type="hidden" name="{{ _field.vars.full_name }}"{% if _field.vars.value is not empty %} value="{{ _field.vars.value }}"{% endif %}>
+        {%- do _field.setRendered() -%}
+    {%- endfor %}
 {{ form_end(action.form) }}

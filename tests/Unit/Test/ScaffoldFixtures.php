@@ -29,6 +29,7 @@ use Nowo\UiKitBundle\View\WizardPage;
 use Nowo\UiKitBundle\View\WizardStep;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
+use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\SearchType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -70,7 +71,7 @@ final class ScaffoldFixtures
                 bundle: $bundle,
             )]),
             'show' => new PageFixture($templates['show'], ['page' => new ShowPage(
-                $header('Item Alpha', [Action::edit('/items/1/edit'), Action::delete('/items/1', 'tok')]),
+                $header('Item Alpha', [Action::edit('/items/1/edit'), new Action('restore', 'Restore', '/items/1/restore', method: 'POST', form: self::csrf('restore_item')), Action::delete('/items/1', confirm: Confirm::delete(), form: self::csrf('delete_item'))]),
                 [new DetailSection('General', [new DetailItem('Name', 'Alpha'), new DetailItem('Quantity', 3), new DetailItem('Active', true)], 'general')],
                 [new DetailItem('Created', '2026-10-16')],
                 $bundle,
@@ -119,6 +120,14 @@ final class ScaffoldFixtures
                 bundle: $bundle,
             )]),
         ];
+    }
+
+    /**
+     * CSRF-only FormView (one hidden `_token`) backing an action.
+     */
+    public static function csrf(string $name): FormView
+    {
+        return Forms::createFormFactoryBuilder()->getFormFactory()->createNamedBuilder($name, FormType::class)->add('_token', HiddenType::class, ['data' => 'tok-'.$name])->getForm()->createView();
     }
 
     /**

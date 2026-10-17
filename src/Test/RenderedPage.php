@@ -14,13 +14,16 @@ final readonly class RenderedPage
     private \DOMXPath $xpath;
 
     /**
-     * @param list<string> $missingTranslations translation ids (domain-prefixed, `domain:id`) missing in the catalogues
+     * @param list<string>                         $missingTranslations translation ids (domain-prefixed, `domain:id`) missing in the catalogues
+     * @param array<string, array<string, string>> $actionForms         hidden fields of the FormViews backing the
+     *                                                                  fixture's actions: form name => field full name => value
      */
     public function __construct(
         public string $template,
         public string $html,
         public string $framework,
         public array $missingTranslations = [],
+        public array $actionForms = [],
     ) {
         $document = new \DOMDocument();
         $previous = libxml_use_internal_errors(true);
@@ -141,5 +144,32 @@ final readonly class RenderedPage
         }
 
         return array_values(array_filter(array_map(trim(...), $texts), static fn (string $t): bool => '' !== $t));
+    }
+
+    /**
+     * For every `<form name="$form">` in the output (document order): field name => values of its hidden inputs
+     * with that name.
+     *
+     * @param list<string> $fields
+     *
+     * @return list<array<string, list<string>>>
+     */
+    public function hiddenFieldValues(string $form, array $fields): array
+    {
+        $result = [];
+        foreach ($this->xpath->query('//form[@name]') ?: [] as $node) {
+            if (!$node instanceof \DOMElement || $node->getAttribute('name') !== $form) {
+                continue;
+            }
+            $values = array_fill_keys($fields, []);
+            foreach ($this->xpath->query('.//input[@type="hidden"][@name]', $node) ?: [] as $input) {
+                if ($input instanceof \DOMElement && \array_key_exists($input->getAttribute('name'), $values)) {
+                    $values[$input->getAttribute('name')][] = $input->getAttribute('value');
+                }
+            }
+            $result[] = $values;
+        }
+
+        return $result;
     }
 }
