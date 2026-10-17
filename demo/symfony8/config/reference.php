@@ -860,6 +860,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         partials?: array<string, scalar|Param|null>,
  *         tokens?: array<string, mixed>,
  *         tokens_dark?: array<string, mixed>,
+ *         confirm_message_in_header?: bool|Param, // Confirm dialogs and the full-page confirm render the message inside the header, under the title (hosts whose dialog header is title + message). View\Confirm::messageInHeader wins when set. // Default: false
  *         bundles?: array<string, array{ // Default: []
  *             framework_defaults?: bool|Param, // Override of theme.framework_defaults for this bundle (unset = inherit).
  *             classes?: array<string, mixed>,

@@ -54,6 +54,12 @@ nowo_ui_kit:
             auth_panel: 'acme-auth'
             kpi_link: 'acme-kpi-link'
             confirm_title: 'acme-confirm-title'
+            # Dialog root only: the host hides closed dialogs (acme-theme.css); the full-page confirm uses confirm_page
+            confirm: 'acme-dialog'
+            confirm_page: 'acme-confirm-page'
+            detail_list_meta: 'acme-meta'
+            # Tailwind-style arbitrary / child variants are allowed in class lists (printed escaped)
+            sort_link: "acme-sort [&>span]:underline"
         attributes:
             table: { data-acme-table: 'zebra' }
         partials:
@@ -100,6 +106,10 @@ nowo_ui_kit:
                     kpi_link: ''
                     confirm_title: ''
                     detail_list: ''
+                    confirm: ''
+                    confirm_page: ''
+                    detail_list_meta: ''
+                    sort_link: ''
                 attributes:
                     table: { data-acme-table: false, data-acme-page: false }   # attributes merge; false removes the host / page-type attribute
                 partials:

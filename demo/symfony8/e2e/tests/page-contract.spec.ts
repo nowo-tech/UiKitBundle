@@ -219,6 +219,22 @@ test.describe('page contract — validation round 3 (REQ-UI-003)', () => {
     await expect(page.locator('.nowo-ui-confirm-page__header .nowo-ui-confirm__title.acme-confirm-title')).toBeVisible();
   });
 
+  test('final validation: dialog CSS never hides the full-page confirm; arbitrary variants in class lists', async ({ page }) => {
+    await page.goto('/page-contract/orders/1041/delete');
+    const section = page.locator('section[data-nowo-ui-page="confirm"]');
+    await expect(section).toBeVisible();
+    await expect(section).toHaveClass(/\bacme-confirm-page\b/);
+    await expect(section).not.toHaveClass(/\b(acme-dialog|nowo-ui-confirm)(\s|$)/);
+    await page.goto('/page-contract/orders');
+    const dialog = page.locator('dialog.acme-dialog').first();
+    await expect(dialog).toBeHidden();
+    await page.locator('tbody tr').first().locator('[data-nowo-confirm-open]').first().click();
+    await expect(dialog).toBeVisible();
+    await page.keyboard.press('Escape');
+    const sort = page.locator('th a.nowo-ui-sort').first();
+    expect((await sort.getAttribute('class'))?.split(/\s+/)).toContain('[&>span]:underline');
+  });
+
   test('default view: header actions stay in the page header', async ({ page }) => {
     await page.goto('/page-contract/default/orders');
     await expect(page.locator('.nowo-ui-page-header .nowo-ui-action--create')).toBeVisible();
