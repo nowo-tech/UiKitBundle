@@ -8,7 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.0.1] - 2026-10-18](#201---2026-10-18)
 - [[2.0.0] - 2026-10-17](#200---2026-10-17)
+- [[1.17.5] - 2026-10-17](#1175---2026-10-17)
 - [[1.17.4] - 2026-10-16](#1174---2026-10-16)
 - [[1.17.3] - 2026-10-16](#1173---2026-10-16)
 - [[1.17.2] - 2026-10-16](#1172---2026-10-16)
@@ -45,6 +47,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [2.0.1] - 2026-10-18
+
+Port of the 1.17.5 fix to 2.x.
+
+### Fixed
+
+- Responsive tables never hid a column on narrow screens (also in 2.0.0): under 30rem the cells and their descendants had `overflow-wrap: anywhere`, so the table could always shrink by breaking words at any character; the `responsive-table` peer's fit (`scrollWidth <= clientWidth`) never saw an overflow, every column stayed and words split letter by letter. The peer now measures under `data-rt-measuring` (CSS: `overflow-wrap: normal !important; word-break: normal !important` on cells and descendants, `white-space: normal` kept), decides the hidden columns, then removes the state; `overflow-wrap: anywhere` only applies after the fit as a last resort, under `[data-rt-overflow]:not([data-rt-measuring])` (set when the required columns still overflow), keeping 320px free of horizontal scroll. Source edited in `nowo-ui.unlayered.css`, `nowo-ui.css` regenerated (`pnpm run build:css`).
+- Regression tests ported: Vitest with mocked layout widths (fails on 2.0.0), PHPUnit CSS assertions (measuring rule, `anywhere` only under `data-rt-overflow`, row detail column rule).
+- Demo: `demo/symfony8-tailwind/config/reference.php` regenerated for the 2.0 configuration (layouts, breadcrumbs, theme).
+
+[2.0.1]: https://github.com/nowo-tech/UiKitBundle/compare/v2.0.0...v2.0.1
 
 ## [2.0.0] - 2026-10-17
 
@@ -106,6 +120,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Badge contrast on Bootstrap 5 / Tabler: the `ui.badge()` macro and the `badge*` slot defaults used `bg-success` / `bg-danger` (background with `!important`) without a text utility, so the semantic `nowo-ui-badge--*` text colour (dark green / red) landed on the solid Bootstrap fill. They now use `text-bg-{success,warning,danger,info,light}` (Bootstrap 5.2+; text and background set together); on 5.0 / 5.1 the semantic palette paints the badge. `nowo-ui.css` also clears the tinted border on solid badges and gives 1.x `bg-*` badges without a text utility Bootstrap's badge text colour.
 
 [2.0.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.17.4...v2.0.0
+
+## [1.17.5] - 2026-10-17
+
+Released from the `1.x` branch (`main` is 2.x).
+
+### Fixed
+
+- Responsive tables never hid a column on narrow screens (1.17.2–1.17.4): under 30rem the cells and their descendants had `overflow-wrap: anywhere`, so the table could always shrink by breaking words at any character; the peer's fit (`scrollWidth <= clientWidth`) never saw an overflow, every column stayed and words split letter by letter (e.g. at 390px). Root-cause fix:
+  - the `responsive-table` peer measures under a `data-rt-measuring` state (CSS: `overflow-wrap: normal !important; word-break: normal !important` on cells and descendants, `white-space: normal` kept), so a cell's min-content is its longest word; it decides the hidden columns, then removes the state;
+  - `overflow-wrap: anywhere` is no longer tied to the viewport width: it only applies AFTER the fit, as a last resort, when the required columns still overflow — the peer sets `data-rt-overflow` on the root and the visible cells may then break words (long URLs / ids), keeping 320px free of horizontal scroll with the required columns and the row detail button.
+- Regression tests: Vitest with mocked layout widths where the table "fits" by breaking words outside the measuring state (fails on 1.17.4); CSS assertions that `anywhere` only exists under `[data-rt-overflow]:not([data-rt-measuring])` and that the row detail column shows under `[data-rt-has-hidden]`.
+
+[1.17.5]: https://github.com/nowo-tech/UiKitBundle/compare/v1.17.4...v1.17.5
 
 ## [1.17.4] - 2026-10-16
 

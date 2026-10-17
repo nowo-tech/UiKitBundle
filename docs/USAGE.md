@@ -331,9 +331,11 @@ Stimulus peer `responsive-table` ([STIMULUS.md](STIMULUS.md#responsive-table-sti
 - **Responsive** mode: no horizontal scroll at 320px and above. The peer shows every column, then hides the last
   non-required ones (document order; `data-required="1"` never hides) until the table fits — measured first without
   the detail column, then with it — and recomputes on resize. Cell text wraps — including descendants with
-  `white-space: nowrap` (Tailwind `.whitespace-nowrap`, Bootstrap `.text-nowrap`; 1.17.2) — at spaces only, so
-  columns hide before any word splits; under 30rem padding tightens and long unbreakable strings may split mid-word
-  (`overflow-wrap: anywhere`, 1.17.3).
+  `white-space: nowrap` (Tailwind `.whitespace-nowrap`, Bootstrap `.text-nowrap`; 1.17.2) — at spaces only. The
+  fit measures with words unbreakable (`data-rt-measuring`, 1.17.5), so columns hide before any word splits; only
+  when the required columns still overflow (e.g. a long URL at 320px) does the root get `data-rt-overflow` and the
+  visible cells may break words anywhere — the last resort that keeps 320px free of horizontal scroll. Padding
+  tightens under 30rem.
 - Each row ends with an eye button (shown only while a column is hidden, named "Row details: <row title>", row
   title = text of the first two columns). It opens a native `<dialog>` (confirm dialog chrome, centred with `margin: auto` even under Tailwind preflight — 1.17.2) with **every** column
   as label / value pairs; the cell contents are **moved** into the dialog and back on close, so forms, links, ids and
@@ -389,7 +391,8 @@ attributes, hash), `dialog_id`,
 `icon` (default `view`), `td_class`, `testids` (`row-detail`). Include the two cell partials with `only`.
 
 Root attributes for CSS / tests: `data-table-mode` (`scroll` | `responsive`; rendered server-side when `table_mode`
-is set, so `.nowo-ui-responsive-table:not([data-table-mode])` targets the no-JS state), `data-rt-has-hidden`;
+is set, so `.nowo-ui-responsive-table:not([data-table-mode])` targets the no-JS state), `data-rt-has-hidden`,
+`data-rt-overflow` (1.17.5), `data-rt-measuring` (only during a fit — host CSS must not break words under it);
 hidden header / cells get `data-rt-hidden`.
 
 ### Foldable filter card

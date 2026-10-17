@@ -3,8 +3,10 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.0.1](#to-201)
 - [To 2.0.0](#to-200)
   - [Template contract](#template-contract)
+- [To 1.17.5](#to-1175)
 - [To 1.17.4](#to-1174)
 - [To 1.17.3](#to-1173)
 - [To 1.17.2](#to-1172)
@@ -48,6 +50,13 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.0.1
+
+From **2.0.0** — bug fix, nothing to change (same fix as 1.17.5 on the 1.x line). Responsive tables hide columns again
+on narrow screens. New root attributes: `data-rt-overflow` (required columns still too wide: words may break) and
+`data-rt-measuring` (set only during a fit). Host CSS must not force word breaking on responsive table cells while
+`data-rt-measuring` is present; scope host `!important` rules with `:not([data-rt-measuring])`.
 
 ## To 2.0.0
 
@@ -219,6 +228,14 @@ Changes to markup, inputs and cascade a host or a bundle may depend on (REQ-UI-0
   the plain breadcrumb trail prints `<span class="nowo-ui-breadcrumbs__separator" aria-hidden="true">/</span>` (the
   CSS separator only applies to items without it); `_modal_shell` appends the `modal*` host classes / attributes
   (unchanged with an empty theme).
+
+## To 1.17.5
+
+From **1.17.4** — bug fix, nothing to change. Responsive tables hide columns again on narrow screens (1.17.2–1.17.4
+broke words instead). New root attributes: `data-rt-overflow` (required columns still too wide: words may break) and
+`data-rt-measuring` (set only during a fit). Host CSS must not force word breaking (`overflow-wrap: anywhere`,
+`word-break: break-all`) on responsive table cells while `data-rt-measuring` is present — the kit rule wins with
+`!important`; scope host `!important` rules with `:not([data-rt-measuring])`.
 
 ## To 1.17.4
 

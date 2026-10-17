@@ -260,7 +260,7 @@ No kit IIFE (1.17). *Scroll* ↔ *Responsive* table with a row detail dialog —
 
 | Stimulus | Role |
 |----------|------|
-| `data-controller="responsive-table"` | Root (gets `data-table-mode`, `data-rt-has-hidden`) |
+| `data-controller="responsive-table"` | Root (gets `data-table-mode`, `data-rt-has-hidden`, `data-rt-overflow`; `data-rt-measuring` during a fit — 1.17.5) |
 | `data-responsive-table-mode-value` | `scroll` \| `responsive` \| empty (default: responsive when `phone-query` matches, else scroll) |
 | `data-responsive-table-url-value` | Save endpoint (JSON `{"mode": …}`, `X-CSRF-TOKEN` header); empty = client-side only |
 | `data-responsive-table-token-value` / `-token-url-value` | CSRF token / GET URL answering `{"token": "…"}` (one refresh on 403) |
