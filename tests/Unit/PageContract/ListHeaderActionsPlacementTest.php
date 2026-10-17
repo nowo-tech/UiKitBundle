@@ -29,6 +29,13 @@ final class ListHeaderActionsPlacementTest extends TestCase
         self::assertStringNotContainsString('nowo-ui-toolbar', $header);
         self::assertMatchesRegularExpression('#nowo-ui-filters__submit">Apply</button>\s*<div class="nowo-ui-filters__header-actions" data-nowo-ui-region="header-actions">\s*<a class="[^"]*nowo-ui-action--create" href="/orders/new">#', $filters);
         self::assertSame(1, substr_count($html, 'nowo-ui-action--create'));
+
+        // a host page_header override that falls back to header.actions (actions|default(header.actions)) does not
+        // print them twice: the header it receives has no actions
+        $override = ['host/_header.html.twig' => '<header data-host>{% for a in actions|default(header.actions) %}[{{ a.kind }}]{% endfor %}</header>'];
+        $html = PageContractTwig::create($override, ['partials' => ['page_header' => 'host/_header.html.twig']])->render('@NowoUiKit/page/list.html.twig', ['page' => $this->page(true)]);
+        self::assertStringContainsString('<header data-host></header>', $html);
+        self::assertSame(1, substr_count($html, 'nowo-ui-action--create'));
     }
 
     public function testThemeOptionAndPrecedence(): void

@@ -30,4 +30,17 @@ final readonly class PageHeader
         $this->actions = ViewList::of($actions, Action::class, 'PageHeader actions');
         $this->breadcrumbs = ViewList::of($breadcrumbs, Crumb::class, 'PageHeader breadcrumbs');
     }
+
+    /**
+     * Copy with other toolbar actions (the list scaffold passes `withActions([])` to the page header when the
+     * actions render in the filter row, so overrides reading `header.actions` do not print them twice).
+     *
+     * @param iterable<Action> $actions
+     *
+     * @return self Fluent interface
+     */
+    public function withActions(iterable $actions): self
+    {
+        return new self($this->title, $this->intro, $actions, $this->breadcrumbs, $this->breadcrumbCollection);
+    }
 }

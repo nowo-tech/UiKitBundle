@@ -146,7 +146,8 @@ Changes to markup, inputs and cascade a host or a bundle may depend on (REQ-UI-0
   overrides: read `action.display` (and the `display` variable) to support icon-only buttons. New slot `btn_icon` (minor).
 - **List header actions in the filter row** (opt-in: `ListPage::headerActionsInFilters` or
   `theme.pages.list.header_actions_in_filters: true`): the page header then gets no toolbar (1.x `page_header`
-  overrides receive `toolbar: null`) and the `list_filters` partial receives the actions as `header_actions`; a bundle
+  overrides receive `toolbar: null`; 2.0 overrides receive `actions: []` and a `header` without actions —
+  `PageHeader::withActions([])` — so `actions|default(header.actions)` prints nothing) and the `list_filters` partial receives the actions as `header_actions`; a bundle
   that overrides `nowo_ui_list_filters` renders `page.header.actions` itself when `nowo_ui_header_actions_in_filters`
   is true. `theme.pages.<type>.header_actions_in_filters` is rejected on page types other than `list`.
 - **Internal slots** `card_title`, `card_intro`, `detail_item`, `detail_term`, `detail_value`, `confirm_panel`,

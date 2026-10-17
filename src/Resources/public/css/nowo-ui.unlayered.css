@@ -3127,7 +3127,7 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
 }
 
 .nowo-ui-detail-list--meta {
-  margin-top: 1rem;
+  margin: 1rem 0;
   font-size: 0.8125rem;
 }
 

@@ -146,6 +146,10 @@ final class ViewModelsTest extends TestCase
 
     public function testPageHeaderAcceptsIterables(): void
     {
+        $header = new PageHeader('T', 'I', [Action::create('/n')], [new Crumb('Home', '/')], 'admin');
+        $bare = $header->withActions([]);
+        self::assertSame([[], 'T', 'I', 'admin', 1], [$bare->actions, $bare->title, $bare->intro, $bare->breadcrumbCollection, \count($bare->breadcrumbs)]);
+        self::assertCount(1, $header->actions);
         $header = new PageHeader('T', 'I', new \ArrayIterator([Action::create('/n')]), (static function () {
             yield new Crumb('Home', '/');
         })(), 'admin');
