@@ -117,6 +117,13 @@
   font-size: 0.8125rem;
 }
 
+/* Icon-only toolbar button (View\Action::display = icon; slot btn_icon): square padding, label visually hidden */
+.nowo-ui-btn--icon {
+  justify-content: center;
+  gap: 0;
+  padding-inline: 0.5rem;
+}
+
 .nowo-ui-btn--primary {
   background: var(--nowo-ui-btn-primary-bg, var(--nowo-ui-primary));
   border-color: var(--nowo-ui-btn-primary-border, var(--nowo-ui-btn-primary-bg, var(--nowo-ui-primary)));

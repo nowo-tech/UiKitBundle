@@ -15,7 +15,8 @@ use Symfony\Component\Form\FormView;
  * `actionsLabel` / `actionsLabelVisible`: header of the row-actions column (default `table.actions`, visually hidden).
  * Filters: `filterFields` (per-field placeholder / width / classes), `filtersSubmit` (label / icon / variant of the
  * apply button), `filtersClear` (the clear link as an Action; default: a plain link to `filtersClearHref`),
- * `filterActions` (extra actions). `responsive`: `cards` (default; the table turns into labelled cards on narrow
+ * `filterActions` (extra actions), `filtersDisplay` (`icon` | `text` | `icon_text`: display of the apply / clear /
+ * extra filter buttons whose Action has no `display`). `responsive`: `cards` (default; the table turns into labelled cards on narrow
  * containers and hides `Column::priority` columns first) or `scroll` (horizontal scroll only).
  */
 final readonly class ListPage
@@ -70,8 +71,12 @@ final readonly class ListPage
         public ?Action $filtersClear = null,
         iterable $filterActions = [],
         public string $responsive = 'cards',
+        public ?string $filtersDisplay = null,
     ) {
         Action::assertAttributes($attributes);
+        if (null !== $filtersDisplay && !\in_array($filtersDisplay, Action::DISPLAYS, true)) {
+            throw new \InvalidArgumentException(\sprintf('Invalid ListPage filtersDisplay "%s" (%s).', $filtersDisplay, implode('|', Action::DISPLAYS)));
+        }
         $fields = [];
         foreach (ViewList::of($filterFields, FilterField::class, 'ListPage filterFields') as $field) {
             $fields[$field->name] = $field;

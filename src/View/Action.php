@@ -18,6 +18,10 @@ use Symfony\Component\Form\FormView;
  * Implements `ArrayAccess` with the 1.x `_row_actions` keys of {@see self::toArray()} (read-only: `csrf_token`,
  * `confirm_id`, `modal_id`, `attr`…), so host overrides of `_row_actions` written for 1.x read them from the object.
  *
+ * `display` (`icon` | `text` | `icon_text`, {@see self::DISPLAYS}): null = the context default (toolbar: icon + text
+ * when an icon is set, else text; row: `nowo_ui_kit.row_actions_display`). Icon-only buttons keep the label
+ * visually hidden plus `aria-label` / `title`, and get the `btn_icon` slot in toolbar context.
+ *
  * Confirm dialog id ({@see self::confirmId()}): an explicit {@see Confirm::$id} is used as is; otherwise it is
  * derived from the action target, the CSRF token and the whole Confirm content ({@see self::confirmKey()}) plus the
  * `confirmScope` — the list scaffold scopes every row action by its row key ({@see ListPage::rowActions()}), so two
@@ -33,6 +37,9 @@ final readonly class Action implements \ArrayAccess
     public const VARIANTS = ['primary', 'secondary', 'danger', 'outline', 'link'];
 
     public const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
+
+    /** Display modes: icon only (visually-hidden label + aria-label), text only, icon + text. */
+    public const DISPLAYS = ['icon', 'text', 'icon_text'];
 
     public string $method;
 
@@ -57,6 +64,7 @@ final readonly class Action implements \ArrayAccess
         public ?string $modalId = null,
         public bool $disabled = false,
         public bool $visible = true,
+        public ?string $display = null,
         public ?string $confirmScope = null,
     ) {
         if (!\in_array($kind, self::KINDS, true)) {
@@ -68,6 +76,9 @@ final readonly class Action implements \ArrayAccess
         $method = strtoupper($method);
         if (!\in_array($method, self::METHODS, true)) {
             throw new \InvalidArgumentException(\sprintf('Invalid Action method "%s" (%s).', $method, implode('|', self::METHODS)));
+        }
+        if (null !== $display && !\in_array($display, self::DISPLAYS, true)) {
+            throw new \InvalidArgumentException(\sprintf('Invalid Action display "%s" (%s).', $display, implode('|', self::DISPLAYS)));
         }
         if (null !== $href && null !== $route) {
             throw new \InvalidArgumentException('An Action takes either href or route, not both.');
@@ -183,7 +194,7 @@ final readonly class Action implements \ArrayAccess
         return new self(
             $this->kind, $this->label, $this->href, $this->route, $this->params, $this->method, $this->csrfToken,
             $this->confirm, $this->icon, $this->variant, $this->attributes, $this->form, $this->csrfField,
-            $this->modalId, $this->disabled, $this->visible, null === $scope ? null : (string) $scope,
+            $this->modalId, $this->disabled, $this->visible, $this->display, null === $scope ? null : (string) $scope,
         );
     }
 

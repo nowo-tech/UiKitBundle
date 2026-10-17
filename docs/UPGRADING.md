@@ -140,6 +140,10 @@ Changes to markup, inputs and cascade a host or a bundle may depend on (REQ-UI-0
   appearance style; the document layout uses it, so a user-chosen appearance now overrides `theme.tokens` (before,
   the theme's dark tokens won by specificity and the light ones by order only when the host printed them last).
   Host layouts: replace `nowo_ui_theme_tokens()` + `nowo_ui_appearance_style()` with `{{ nowo_ui_tokens() }}`.
+- **Toolbar display modes:** `Action::display` and the `action` partial's `display` option now apply outside rows
+  (`ListPage::filtersDisplay` for filter buttons); icon-only toolbar buttons add the `btn_icon` slot class
+  (`nowo-ui-btn--icon`) and `title` / `aria-label`. Without `display` the toolbar markup is unchanged. `theme.partials.action`
+  overrides: read `action.display` (and the `display` variable) to support icon-only buttons. New slot `btn_icon` (minor).
 - **Row confirm dialog ids** are derived from the target, the CSRF token, the whole `Confirm` content and the row
   key (`ListPage::rowActions()` returns `Action::withConfirmScope(key)` copies), so the `confirm_id` / dialog ids of
   list rows change value (still `nowo-ui-confirm-<12 hex>`). Tests or scripts that computed

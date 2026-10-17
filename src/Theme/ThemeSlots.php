@@ -79,6 +79,8 @@ final class ThemeSlots
             'bootstrap' => 'btn-sm',
             'foundation' => 'tiny',
         ]],
+        // Icon-only toolbar button modifier (Action::display = icon; label visually hidden + aria-label)
+        'btn_icon' => ['nowo-ui-btn--icon', []],
         // Tables / lists
         'table_wrap' => ['nowo-ui-table-wrap', [
             'bootstrap' => 'table-responsive',

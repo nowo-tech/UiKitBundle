@@ -103,6 +103,7 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `btn_secondary` | `nowo-ui-btn nowo-ui-btn--secondary` | `btn btn-outline-secondary` | `btn btn-outline-secondary` | `inline-flex items-center gap-1 font-medium px-3 py-1.5 text-sm border` | `button secondary` |
 | `btn_danger` | `nowo-ui-btn nowo-ui-btn--danger` | `btn btn-outline-danger` | `btn btn-outline-danger` | `inline-flex items-center gap-1 font-medium px-3 py-1.5 text-sm border` | `button alert` |
 | `btn_sm` | `nowo-ui-btn--sm` | `btn-sm` | `btn-sm` | — | `tiny` |
+| `btn_icon` | `nowo-ui-btn--icon` | — | — | — | — |
 | `table_wrap` | `nowo-ui-table-wrap` | `table-responsive` | `table-responsive` | `overflow-x-auto` | — |
 | `table` | `nowo-ui-table nowo-ui-table--striped` | `table table-hover align-middle` | `table table-hover align-middle` | `min-w-full text-sm text-left` | `stack table` |
 | `table_head` | `nowo-ui-table__head` | — | — | — | — |
@@ -167,7 +168,7 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `auth_panel` | `nowo-ui-auth-panel` | `card` | `card` | `border` | `callout` |
 
 Slot groups: document / layout (`document` … `breadcrumbs`), page header (`page_header` … `toolbar`), buttons (`btn`
-… `btn_sm`; variants are complete button classes, `btn_sm` a size modifier), tables (`table_wrap` … `action`),
+… `btn_icon`; variants are complete button classes, `btn_sm` a size modifier, `btn_icon` the icon-only modifier), tables (`table_wrap` … `action`),
 badges (Bootstrap variants use `text-bg-*`, Bootstrap 5.2+, which sets text and background together so the colour
 pair never mixes with the semantic `nowo-ui-badge--*` palette; on 5.0 / 5.1 the semantic palette paints the badge;
 Bootstrap 4 / Foundation variant classes set both colours too), filters / inputs, pagination, feedback (`empty`, flashes, `toasts`), surfaces (`card` … `modal`,

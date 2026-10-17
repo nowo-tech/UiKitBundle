@@ -141,7 +141,7 @@ fills `nowo_ui_document_title` with the page title and renders the page header t
 | Region | From |
 | --- | --- |
 | header + actions + breadcrumbs | `page.header` (`PageHeader`) |
-| filters (GET form, apply / clear, extra actions) | `page.filters` (`FormView`, REQ-TWIG-003 child loop) through the `list_filters` partial; `page.filterFields` (`FilterField`: placeholder, `width` `xs`…`full`, widget / row classes and attributes; every row gets the `filters_field` slot), `page.filtersSubmit` (`Action`: label, icon, variant of the apply button), `page.filtersClear` (`Action`, rendered through the `action` partial; default a plain link to `page.filtersClearHref`), `page.filterActions` — all in the `filters_actions` slot |
+| filters (GET form, apply / clear, extra actions) | `page.filters` (`FormView`, REQ-TWIG-003 child loop) through the `list_filters` partial; `page.filterFields` (`FilterField`: placeholder, `width` `xs`…`full`, widget / row classes and attributes; every row gets the `filters_field` slot), `page.filtersSubmit` (`Action`: label, icon, variant of the apply button), `page.filtersClear` (`Action`, rendered through the `action` partial; default a plain link to `page.filtersClearHref`), `page.filterActions` — all in the `filters_actions` slot; `page.filtersDisplay` (`icon` / `text` / `icon_text`) for these buttons |
 | table frame, sortable headers (`aria-sort`) | `page.columns` (`Column`), `page.sort`, `page.direction`, `page.caption`; slots `table_wrap`, `table`, `table_head`, `table_head_row`, `table_head_cell`, `table_row`, `table_cell` |
 | row actions + confirm `<dialog>`s | `page.rowActions` (list of `Action`, or `callable(row, key): list<Action>`); actions column header `table_actions_head` with `page.actionsLabel` (default `table.actions`), visually hidden unless `page.actionsLabelVisible` |
 | pagination | `page.pagination` (`Pagination`) |
@@ -247,7 +247,7 @@ or a plain string printed escaped. Never pre-render HTML into a view model.
 | --- | --- |
 | `Label` | `(key, domain = 'messages', params = [])`, `Label::kit(key)` (UiKit domain), `withParams()` |
 | `PageHeader` | `(title, intro = null, actions = [], breadcrumbs = [], breadcrumbCollection = null)` |
-| `Action` | `(kind = 'custom', label = null, href = null, route = null, params = [], method = 'GET', csrfToken = null, confirm = null, icon = null, variant = null, attributes = [], form = null, csrfField = '_token', modalId = null, disabled = false, visible = true, confirmScope = null)`; factories `create()`, `edit()`, `view()`, `delete()`, `route()`; `isPost()`, `resolvedVariant()`, `confirmId()`, `confirmKey()`, `withConfirmScope()`, `toArray()` |
+| `Action` | `(kind = 'custom', label = null, href = null, route = null, params = [], method = 'GET', csrfToken = null, confirm = null, icon = null, variant = null, attributes = [], form = null, csrfField = '_token', modalId = null, disabled = false, visible = true, display = null, confirmScope = null)`; factories `create()`, `edit()`, `view()`, `delete()`, `route()`; `isPost()`, `resolvedVariant()`, `confirmId()`, `confirmKey()`, `withConfirmScope()`, `toArray()` |
 | `Confirm` | `(title, message = null, confirmLabel = null, variant = 'danger', cancelLabel = null, id = null, expectedValue = null, expectedLabel = null)`, `Confirm::delete(message = null)`, `expectedPattern()` |
 | `Crumb` | `(label, href = null)` |
 | `Link` | `(label, href, attributes = [])` |
@@ -259,7 +259,7 @@ or a plain string printed escaped. Never pre-render HTML into a view model.
 | `KpiTile` | `(label, value, hint = null, href = null, variant = 'neutral', linkTile = false)` |
 | `SettingsSection` | `(id, label, href = null, form = null, intro = null, submitLabel = null)` |
 | `WizardStep` | `(id, label, href = null)` |
-| `ListPage` | `(header, columns = [], rows = [], filters = null, rowActions = [] \| callable(row, key), pagination = null, empty = null, filtersClearHref = null, sort = null, direction = 'asc', caption = null, bundle = null, layout = null, attributes = [], actionsLabel = null, actionsLabelVisible = false, filterFields = [], filtersSubmit = null, filtersClear = null, filterActions = [], responsive = 'cards')`; `rowActions(row, key)`, `confirmDialogs(actions)` |
+| `ListPage` | `(header, columns = [], rows = [], filters = null, rowActions = [] \| callable(row, key), pagination = null, empty = null, filtersClearHref = null, sort = null, direction = 'asc', caption = null, bundle = null, layout = null, attributes = [], actionsLabel = null, actionsLabelVisible = false, filterFields = [], filtersSubmit = null, filtersClear = null, filterActions = [], responsive = 'cards', filtersDisplay = null)`; `rowActions(row, key)`, `confirmDialogs(actions)` |
 | `ShowPage` | `(header, sections = [], meta = [], bundle = null, layout = null, attributes = [])` |
 | `FormPage` | `(header, form, submitLabel = null, cancelHref = null, cancelLabel = null, secondaryActions = [], deleteAction = null, bundle = null, layout = null, attributes = [], secondaryActionsInHeader = true, dangerZoneTitle = null, dangerZoneIntro = null)` |
 | `SettingsPage` | `(header, sections = [], current = null, bundle = null, layout = null, attributes = [])` |
@@ -288,6 +288,13 @@ the confirm button `disabled` with `data-nowo-confirm-submit`; `nowo-ui-confirm.
 holds exactly the value, and clears + focuses the input each time the dialog opens. The input also carries `required`
 and an escaped `pattern` and joins the POST form through `form="…"`, so the full-page `ConfirmPage` enforces the
 value without JavaScript. CSP-safe: data attributes only.
+
+**Display modes.** `Action::display` — `icon` (icon only: the label stays as a visually-hidden span plus
+`aria-label` / `title`), `text` (label only) or `icon_text` — applies in every context. Without it, toolbar / header
+/ card / filter buttons show icon + label when `icon` is set (else the label), and row actions follow
+`nowo_ui_kit.row_actions_display`. The `action` partial also takes a `display` context option for toolbar context
+(`ListPage::filtersDisplay` uses it for the apply / clear / extra filter buttons). Icon-only toolbar buttons get the
+`btn_icon` slot (`nowo-ui-btn--icon`, square padding) and fall back to the kind icon when `icon` is null.
 
 **Confirm dialog ids.** An explicit `Confirm::$id` is used as is. Otherwise `Action::confirmId()` is
 `nowo-ui-confirm-` + a hash of `confirmKey()` — kind, method, target (`href` / `route` + `params`), CSRF token (also

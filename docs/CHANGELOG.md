@@ -75,6 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Responsive list tables (CSS only):** `ListPage::responsive` (`cards` default, `scroll`) — the table wrap is a size container, `Column::priority` 2 / 3 hide below 48rem / 60rem, below 40rem rows become labelled cards (`td[data-label]`).
 - **Form secondary actions in the page header:** `FormPage::secondaryActionsInHeader` (default `true`; `false` keeps them below the form).
 
+- **Action display modes everywhere** (validation round 3): `Action::display` (`icon` | `text` | `icon_text`, `Action::DISPLAYS`) is honoured in toolbar / header / card / filter context too (icon-only: visually-hidden label + `aria-label` / `title`, kind icon fallback), the `action` partial takes a `display` context option, `ListPage::filtersDisplay` sets it for the apply / clear / extra filter buttons, and the new slot `btn_icon` (`nowo-ui-btn--icon`) marks icon-only toolbar buttons.
 - **Token precedence** `nowo_ui_tokens(nonce)`: theme tokens (host defaults) then the appearance SPI style (user choice); the document layout prints it after `nowo-ui.css`.
 
 ### Changed
