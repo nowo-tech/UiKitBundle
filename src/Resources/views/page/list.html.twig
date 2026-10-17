@@ -2,7 +2,7 @@
   REQ-UI-003 list scaffold. Variable: page (View\ListPage).
 
   Regions: page header + actions, filters (FormView), table frame, row actions, pagination, empty state, confirm
-  dialogs (from row actions with a Confirm).
+  dialogs (from row actions with a Confirm; ids scoped per row, one dialog per id: ListPage::confirmDialogs()).
   Data blocks: nowo_ui_list_filters (the filters region; default: the `list_filters` partial), nowo_ui_list_head
   (header cells), nowo_ui_list_row (row cells; `row`, `row_key`, `loop` in context), nowo_ui_list_after (after the
   list). Default cells print row[column.key] for each page.columns.
@@ -102,7 +102,7 @@
             </div>
             {% if _confirms is not empty %}
                 <div class="nowo-ui-list-page__confirms" data-nowo-ui-region="confirms">
-                    {% for _action in _confirms %}
+                    {% for _action in page.confirmDialogs(_confirms) %}
                         {{ include(nowo_ui_partial('confirm', _b), {
                             id: _action.confirmId(),
                             confirm: _action.confirm,

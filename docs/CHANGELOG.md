@@ -84,6 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **Confirm dialog ids of row actions** (REQ-UI-003 validation round 3): `Action::confirmId()` hashed only kind / href / route / params, so two row actions with the same target but a different `Confirm` (or the same static action on every row) printed duplicate dialog ids and every toggle opened the first dialog. The derived id now covers the whole `Confirm` content, the CSRF token and a scope (`Action::$confirmScope`, `withConfirmScope()`, `confirmKey()`); `ListPage::rowActions()` scopes actions by row key and the list scaffold renders one dialog per id (`ListPage::confirmDialogs()`; an explicit `Confirm::$id` shared by different content throws).
 - Badge contrast on Bootstrap 5 / Tabler: the `ui.badge()` macro and the `badge*` slot defaults used `bg-success` / `bg-danger` (background with `!important`) without a text utility, so the semantic `nowo-ui-badge--*` text colour (dark green / red) landed on the solid Bootstrap fill. They now use `text-bg-{success,warning,danger,info,light}` (Bootstrap 5.2+; text and background set together); on 5.0 / 5.1 the semantic palette paints the badge. `nowo-ui.css` also clears the tinted border on solid badges and gives 1.x `bg-*` badges without a text utility Bootstrap's badge text colour.
 
 ## [1.17.4] - 2026-10-16

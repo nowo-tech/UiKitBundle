@@ -62,8 +62,18 @@ final class ViewModelsTest extends TestCase
         self::assertSame('danger', $delete->resolvedVariant());
         self::assertSame('confirm.delete_title', $delete->confirm?->title instanceof Label ? $delete->confirm->title->key : null);
         self::assertMatchesRegularExpression('/^nowo-ui-confirm-[0-9a-f]{12}$/', (string) $delete->confirmId());
-        self::assertSame($delete->confirmId(), Action::delete('/items/1')->confirmId());
-        self::assertNotSame($delete->confirmId(), Action::delete('/items/2')->confirmId());
+        self::assertSame($delete->confirmId(), Action::delete('/items/1', 'tok')->confirmId());
+        self::assertNotSame($delete->confirmId(), Action::delete('/items/2', 'tok')->confirmId());
+        // the Confirm content, the token and the scope are part of the derived id
+        self::assertNotSame($delete->confirmId(), Action::delete('/items/1', 'tok', new Confirm('Delete Ann?'))->confirmId());
+        self::assertNotSame($delete->confirmId(), Action::delete('/items/1', 'other')->confirmId());
+        self::assertNotSame($delete->confirmId(), $delete->withConfirmScope(3)->confirmId());
+        self::assertSame($delete->withConfirmScope(3)->confirmId(), $delete->withConfirmScope('3')->confirmId());
+        self::assertSame($delete->confirmId(), $delete->withConfirmScope(3)->withConfirmScope(null)->confirmId());
+        self::assertSame($delete->confirmKey(), $delete->withConfirmScope(3)->confirmKey());
+        self::assertSame('my-dialog', Action::delete('/x', confirm: new Confirm('Sure?', id: 'my-dialog'))->withConfirmScope(1)->confirmId());
+        self::assertNull($create->confirmKey());
+        self::assertNull($create->withConfirmScope(1)->confirmId());
         self::assertSame('my-dialog', Action::delete('/x', confirm: new Confirm('Sure?', id: 'my-dialog'))->confirmId());
 
         $hash = (new Action('delete', 'Del', '/x', method: 'delete', csrfToken: 't', confirm: new Confirm('Sure?', id: 'c1'), icon: 'trash', variant: 'danger', attributes: ['data-x' => '1'], csrfField: '_csrf', modalId: 'm', disabled: true, visible: false))->toArray();

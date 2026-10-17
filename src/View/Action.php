@@ -18,6 +18,11 @@ use Symfony\Component\Form\FormView;
  * Implements `ArrayAccess` with the 1.x `_row_actions` keys of {@see self::toArray()} (read-only: `csrf_token`,
  * `confirm_id`, `modal_id`, `attr`…), so host overrides of `_row_actions` written for 1.x read them from the object.
  *
+ * Confirm dialog id ({@see self::confirmId()}): an explicit {@see Confirm::$id} is used as is; otherwise it is
+ * derived from the action target, the CSRF token and the whole Confirm content ({@see self::confirmKey()}) plus the
+ * `confirmScope` — the list scaffold scopes every row action by its row key ({@see ListPage::rowActions()}), so two
+ * rows never share a dialog id.
+ *
  * @implements \ArrayAccess<array-key, mixed>
  */
 final readonly class Action implements \ArrayAccess
@@ -52,6 +57,7 @@ final readonly class Action implements \ArrayAccess
         public ?string $modalId = null,
         public bool $disabled = false,
         public bool $visible = true,
+        public ?string $confirmScope = null,
     ) {
         if (!\in_array($kind, self::KINDS, true)) {
             throw new \InvalidArgumentException(\sprintf('Invalid Action kind "%s" (%s).', $kind, implode('|', self::KINDS)));
@@ -134,7 +140,8 @@ final readonly class Action implements \ArrayAccess
     }
 
     /**
-     * Stable id of the confirm dialog (explicit {@see Confirm::$id}, else derived from kind + target).
+     * Stable id of the confirm dialog: the explicit {@see Confirm::$id}, else `nowo-ui-confirm-` + a hash of
+     * {@see self::confirmKey()} and {@see self::$confirmScope}. Null without a Confirm.
      */
     public function confirmId(): ?string
     {
@@ -142,7 +149,42 @@ final readonly class Action implements \ArrayAccess
             return null;
         }
 
-        return $this->confirm->id ?? 'nowo-ui-confirm-'.substr(md5($this->kind.'|'.($this->href ?? '').'|'.($this->route ?? '').'|'.json_encode($this->params)), 0, 12);
+        return $this->confirm->id ?? 'nowo-ui-confirm-'.substr(md5($this->confirmKey().'|'.($this->confirmScope ?? '')), 0, 12);
+    }
+
+    /**
+     * Fingerprint of everything the confirm dialog renders (kind, method, target, CSRF token / field, disabled and
+     * the whole {@see Confirm}): two actions with the same key render identical dialogs (the list scaffold renders
+     * one dialog per id, {@see ListPage::confirmDialogs()}). Null without a Confirm.
+     */
+    public function confirmKey(): ?string
+    {
+        if (!$this->confirm instanceof Confirm) {
+            return null;
+        }
+        $formToken = null;
+        if ($this->form instanceof FormView && isset($this->form->children['_token'])) {
+            $formToken = $this->form->children['_token']->vars['value'] ?? null;
+        }
+
+        return md5((string) json_encode([
+            $this->kind, $this->method, $this->href, $this->route, $this->params, $this->csrfToken, $this->csrfField,
+            $formToken, $this->disabled, $this->confirm,
+        ], \JSON_PARTIAL_OUTPUT_ON_ERROR));
+    }
+
+    /**
+     * Copy scoped to a row (or any other discriminator) for the derived confirm dialog id.
+     *
+     * @return self Fluent interface
+     */
+    public function withConfirmScope(int|string|null $scope): self
+    {
+        return new self(
+            $this->kind, $this->label, $this->href, $this->route, $this->params, $this->method, $this->csrfToken,
+            $this->confirm, $this->icon, $this->variant, $this->attributes, $this->form, $this->csrfField,
+            $this->modalId, $this->disabled, $this->visible, null === $scope ? null : (string) $scope,
+        );
     }
 
     /**

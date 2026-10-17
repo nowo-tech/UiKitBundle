@@ -96,7 +96,7 @@ final class TemplateContractTest extends TestCase
         foreach (['header', 'table', 'confirms', 'pagination'] as $region) {
             self::assertStringContainsString('data-nowo-ui-region="'.$region.'"', $html, $region);
         }
-        $confirmId = Action::delete('/o/1', 'tok')->confirmId();
+        $confirmId = Action::delete('/o/1', 'tok')->withConfirmScope(0)->confirmId();
         self::assertSame(1, substr_count($html, '<dialog'."\n".'    id="'.$confirmId.'"'));
         self::assertSame(2, substr_count($html, 'data-nowo-confirm-target="nowo-ui-confirm-'));
         self::assertSame(1, substr_count($html, 'nowo-ui-action--create'));

@@ -140,6 +140,11 @@ Changes to markup, inputs and cascade a host or a bundle may depend on (REQ-UI-0
   appearance style; the document layout uses it, so a user-chosen appearance now overrides `theme.tokens` (before,
   the theme's dark tokens won by specificity and the light ones by order only when the host printed them last).
   Host layouts: replace `nowo_ui_theme_tokens()` + `nowo_ui_appearance_style()` with `{{ nowo_ui_tokens() }}`.
+- **Row confirm dialog ids** are derived from the target, the CSRF token, the whole `Confirm` content and the row
+  key (`ListPage::rowActions()` returns `Action::withConfirmScope(key)` copies), so the `confirm_id` / dialog ids of
+  list rows change value (still `nowo-ui-confirm-<12 hex>`). Tests or scripts that computed
+  `Action::delete(…)->confirmId()` for a list row use `->withConfirmScope($rowKey)->confirmId()`, or set an explicit
+  `Confirm::$id`. An explicit id shared by row actions with different content now throws a `LogicException`.
 - **Page types.** Scaffolds set `nowo_ui_page_type` (`list`, `show`, `form`, `settings`, `dashboard`, `confirm`,
   `wizard`, `auth`) and pass it to the partials they include; `theme.pages.<type>.{classes,attributes,framework_defaults}`
   varies a slot per page type (bundle slot > bundle > page-type slot > page type > host slot > host).

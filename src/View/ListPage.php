@@ -101,19 +101,50 @@ final readonly class ListPage
     }
 
     /**
-     * Actions of one row.
+     * Actions of one row. Actions with a {@see Confirm} and no {@see Action::$confirmScope} are scoped by the row key,
+     * so their derived confirm dialog id is unique per row.
      *
      * @return list<Action>
      */
     public function rowActions(mixed $row, int|string $key = 0): array
     {
         if (null === $this->rowActionsFactory) {
-            return $this->staticRowActions;
+            $actions = $this->staticRowActions;
+        } else {
+            $actions = ($this->rowActionsFactory)($row, $key);
+            $actions = ViewList::of(is_iterable($actions) ? $actions : [], Action::class, 'ListPage rowActions()');
         }
 
-        $actions = ($this->rowActionsFactory)($row, $key);
+        return array_map(static fn (Action $action): Action => $action->confirm instanceof Confirm && null === $action->confirmScope ? $action->withConfirmScope($key) : $action, $actions);
+    }
 
-        return ViewList::of(is_iterable($actions) ? $actions : [], Action::class, 'ListPage rowActions()');
+    /**
+     * Confirm dialogs to render after the table: one per {@see Action::confirmId()} (an identical action + Confirm
+     * repeated — same id and {@see Action::confirmKey()} — renders once). Two actions with the same explicit
+     * {@see Confirm::$id} but different content would print duplicate DOM ids: that is rejected.
+     *
+     * @param iterable<Action> $actions
+     *
+     * @return list<Action>
+     */
+    public function confirmDialogs(iterable $actions): array
+    {
+        $dialogs = [];
+        foreach ($actions as $action) {
+            $id = $action->confirmId();
+            if (null === $id) {
+                continue;
+            }
+            if (isset($dialogs[$id])) {
+                if ($dialogs[$id]->confirmKey() !== $action->confirmKey()) {
+                    throw new \LogicException(\sprintf('Confirm id "%s" is used by row actions with different content (target, token or confirm text): give each Confirm its own id, or omit it to derive one per row.', $id));
+                }
+                continue;
+            }
+            $dialogs[$id] = $action;
+        }
+
+        return array_values($dialogs);
     }
 
     /**

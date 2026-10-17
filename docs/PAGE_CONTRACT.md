@@ -247,7 +247,7 @@ or a plain string printed escaped. Never pre-render HTML into a view model.
 | --- | --- |
 | `Label` | `(key, domain = 'messages', params = [])`, `Label::kit(key)` (UiKit domain), `withParams()` |
 | `PageHeader` | `(title, intro = null, actions = [], breadcrumbs = [], breadcrumbCollection = null)` |
-| `Action` | `(kind = 'custom', label = null, href = null, route = null, params = [], method = 'GET', csrfToken = null, confirm = null, icon = null, variant = null, attributes = [], form = null, csrfField = '_token', modalId = null, disabled = false, visible = true)`; factories `create()`, `edit()`, `view()`, `delete()`, `route()`; `isPost()`, `resolvedVariant()`, `confirmId()`, `toArray()` |
+| `Action` | `(kind = 'custom', label = null, href = null, route = null, params = [], method = 'GET', csrfToken = null, confirm = null, icon = null, variant = null, attributes = [], form = null, csrfField = '_token', modalId = null, disabled = false, visible = true, confirmScope = null)`; factories `create()`, `edit()`, `view()`, `delete()`, `route()`; `isPost()`, `resolvedVariant()`, `confirmId()`, `confirmKey()`, `withConfirmScope()`, `toArray()` |
 | `Confirm` | `(title, message = null, confirmLabel = null, variant = 'danger', cancelLabel = null, id = null, expectedValue = null, expectedLabel = null)`, `Confirm::delete(message = null)`, `expectedPattern()` |
 | `Crumb` | `(label, href = null)` |
 | `Link` | `(label, href, attributes = [])` |
@@ -259,7 +259,7 @@ or a plain string printed escaped. Never pre-render HTML into a view model.
 | `KpiTile` | `(label, value, hint = null, href = null, variant = 'neutral', linkTile = false)` |
 | `SettingsSection` | `(id, label, href = null, form = null, intro = null, submitLabel = null)` |
 | `WizardStep` | `(id, label, href = null)` |
-| `ListPage` | `(header, columns = [], rows = [], filters = null, rowActions = [] \| callable(row, key), pagination = null, empty = null, filtersClearHref = null, sort = null, direction = 'asc', caption = null, bundle = null, layout = null, attributes = [], actionsLabel = null, actionsLabelVisible = false, filterFields = [], filtersSubmit = null, filtersClear = null, filterActions = [], responsive = 'cards')` |
+| `ListPage` | `(header, columns = [], rows = [], filters = null, rowActions = [] \| callable(row, key), pagination = null, empty = null, filtersClearHref = null, sort = null, direction = 'asc', caption = null, bundle = null, layout = null, attributes = [], actionsLabel = null, actionsLabelVisible = false, filterFields = [], filtersSubmit = null, filtersClear = null, filterActions = [], responsive = 'cards')`; `rowActions(row, key)`, `confirmDialogs(actions)` |
 | `ShowPage` | `(header, sections = [], meta = [], bundle = null, layout = null, attributes = [])` |
 | `FormPage` | `(header, form, submitLabel = null, cancelHref = null, cancelLabel = null, secondaryActions = [], deleteAction = null, bundle = null, layout = null, attributes = [], secondaryActionsInHeader = true, dangerZoneTitle = null, dangerZoneIntro = null)` |
 | `SettingsPage` | `(header, sections = [], current = null, bundle = null, layout = null, attributes = [])` |
@@ -288,6 +288,15 @@ the confirm button `disabled` with `data-nowo-confirm-submit`; `nowo-ui-confirm.
 holds exactly the value, and clears + focuses the input each time the dialog opens. The input also carries `required`
 and an escaped `pattern` and joins the POST form through `form="…"`, so the full-page `ConfirmPage` enforces the
 value without JavaScript. CSP-safe: data attributes only.
+
+**Confirm dialog ids.** An explicit `Confirm::$id` is used as is. Otherwise `Action::confirmId()` is
+`nowo-ui-confirm-` + a hash of `confirmKey()` — kind, method, target (`href` / `route` + `params`), CSRF token (also
+from a `FormView`), `disabled` and the whole `Confirm` (title, message, labels, variant, expected value) — and of
+`confirmScope`. The list scaffold scopes every row action by its row key (`ListPage::rowActions()` returns
+`withConfirmScope(key)` copies), so rows that share a target or a static action list never share a dialog id, and
+renders the dialogs once after the table through `ListPage::confirmDialogs()`: one dialog per id (the same action and
+Confirm repeated renders once); two actions with the **same explicit id but different content** throw a
+`LogicException` (they would print duplicate DOM ids) — give each its own id or omit it.
 
 **Row actions per variant.** In row context an action keeps the `ui.action` classes (slot `action`) and adds the
 host classes of `action_primary`, `action_secondary` or `action_danger` for its resolved variant (`delete` → danger,
