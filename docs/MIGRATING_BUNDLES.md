@@ -123,6 +123,16 @@ After — only the data the scaffold cannot know:
   `nowo_ui_list_filters` block only when the form needs custom layout.
 - Destructive actions: `Action::delete(…, confirm: Confirm::delete())`; type-to-confirm with
   `new Confirm(…, expectedValue: $item->getName())`. Form pages: secondary actions land in the page header.
+- Row confirm dialogs: let UiKit derive the ids (they cover the target, token, Confirm text and row key); set
+  `Confirm::$id` only when a test or script needs a fixed id, and then one id per distinct dialog (a shared id with
+  different content throws). Tests that look up a row dialog use `$action->withConfirmScope($rowKey)->confirmId()`.
+- Icon-only buttons: `display: 'icon'` on the `Action` (toolbar, header, card or row) or `ListPage::filtersDisplay`
+  for the filter buttons — never a hand-written `<a><i></i></a>`; the label stays for screen readers. Primary list
+  actions next to the filters: `headerActionsInFilters: true` (or the host's `theme.pages.list` option).
+- Variants: leave `variant` null for plain actions (they resolve to `neutral`, slot `action_neutral`); set
+  `secondary` only when the action is deliberately secondary. Actions column alignment: `ListPage::actionsAlign`.
+- Pagination: pass a `Pagination`; filters and sort in the request query are kept across pages automatically
+  (`Pagination::query` adds or overrides keys).
 
 - Header, actions, breadcrumbs, flashes, filters, table frame, row actions, confirm dialogs, pagination and empty
   state now come from the scaffold. Delete the local partials.
@@ -146,6 +156,9 @@ Every framework class in bundle markup becomes a slot (or a `nowo-ui-*` / bundle
 | `class="card"` / `card-body` | `nowo_ui_class('card', …)` / `nowo_ui_class('card_body', …)` |
 | `class="d-flex gap-2 mb-3"` around actions | `nowo_ui_class('toolbar', …)` |
 | `class="alert alert-danger"` | `nowo_ui_class('flash_error', …)` (or the `flashes` partial) |
+| `class="card-title"` / `card-subtitle` in a card heading | `nowo_ui_class('card_title', …)` / `nowo_ui_class('card_intro', …)` (or the `card` partial) |
+| `<dl class="row">` with `col-sm-3` / `col-sm-9` | the `detail_list` partial (`detail_item` / `detail_term` / `detail_value` slots; stacked layout via `nowo-ui-detail-list--stacked`) |
+| local confirm modal markup | the `confirm` partial (`confirm_*` slots) |
 | per-framework template copies (`_x_bootstrap`, `_x_tailwind`) | one template with slots |
 
 Inside scaffolds the page type is implicit (`nowo_ui_page_type`), so `theme.pages.<type>` variations reach your
