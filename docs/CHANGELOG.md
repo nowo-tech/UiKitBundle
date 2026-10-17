@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.1.0] - 2026-10-18](#210---2026-10-18)
 - [[2.0.1] - 2026-10-18](#201---2026-10-18)
 - [[2.0.0] - 2026-10-17](#200---2026-10-17)
 - [[1.17.5] - 2026-10-17](#1175---2026-10-17)
@@ -47,6 +48,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [2.1.0] - 2026-10-18
+
+Page-contract follow-ups from migrating HttpLog, Workflow, CookieConsent and RoutingKit (REQ-UI-003 phase 1). Additive; see [UPGRADING](UPGRADING.md#to-210).
 
 ### Fixed
 
@@ -109,6 +114,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   rendered form of a `FormView`-backed `Action` of the fixture lacks (or duplicates) a hidden field of that form.
 - Demo: the page contract show page has a `FormView`-backed header action (`Reopen`); the Playwright e2e checks its
   CSRF token through the host override and the default partial.
+
+[2.1.0]: https://github.com/nowo-tech/UiKitBundle/compare/v2.0.1...v2.1.0
 
 ## [2.0.1] - 2026-10-18
 
@@ -623,7 +630,7 @@ Supersedes 1.17.3: same runtime code and CSS, release gate hardened so the tagge
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.1.0...HEAD
 [1.10.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.4...v1.10.0
 [1.8.4]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.3...v1.8.4
 [1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0

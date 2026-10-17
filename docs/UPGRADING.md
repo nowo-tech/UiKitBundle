@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.1.0](#to-210)
 - [To 2.0.1](#to-201)
 - [To 2.0.0](#to-200)
   - [Template contract](#template-contract)
@@ -50,6 +51,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.1.0
+
+From **2.0.x**:
+
+```bash
+composer require nowo-tech/ui-kit-bundle:^2.1
+```
 
 No breaking change; everything below is opt-in except where noted.
 
