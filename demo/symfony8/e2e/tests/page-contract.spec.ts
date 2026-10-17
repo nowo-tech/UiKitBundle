@@ -260,6 +260,17 @@ test.describe('page contract — validation round 3 (REQ-UI-003)', () => {
     expect(style.whiteSpace).toBe('pre');
   });
 
+  for (const [view, path] of [['host theme', '/page-contract/dashboard'], ['default view', '/page-contract/default/dashboard']]) {
+    test(`dashboard (${view}): area navigation under the page title`, async ({ page }) => {
+      await page.goto(path);
+      const nav = page.locator('nav[data-nowo-ui-region="area-nav"]');
+      await expect(nav).toHaveAttribute('aria-label', 'Shop');
+      await expect(nav).toHaveAttribute('data-turbo', 'false');
+      await expect(nav.locator('a')).toHaveText(['Dashboard', 'Orders', 'Settings']);
+      await expect(nav.locator('a[aria-current="page"]')).toHaveText('Dashboard');
+    });
+  }
+
   test('default view: header actions stay in the page header', async ({ page }) => {
     await page.goto('/page-contract/default/orders');
     await expect(page.locator('.nowo-ui-page-header .nowo-ui-action--create')).toBeVisible();

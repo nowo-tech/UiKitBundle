@@ -58,6 +58,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Area navigation** (`PageHeader::$tabs`, `View\AreaNav` / `View\AreaNavItem`, `PageHeader::withTabs()`): a tab bar
+  between the sections of a bundle area, rendered by the `page_header` partial through the `tabs` partial (region
+  `area-nav`, row `nowo-ui-page-header__nav`). **`Navigation\AreaNavProviderInterface`** (autoconfigured tag
+  `nowo_ui_kit.area_nav_provider`), **`Navigation\AreaNavRegistry`** (service `nowo_ui_kit.area_nav_registry`) and the
+  Twig function `nowo_ui_area_nav(area, context)` let other bundles (DashboardMenu) consume an area's navigation.
 - **`_tabs` root `attr`**: attributes of the `<nav>` (e.g. `{'data-turbo': 'false'}` kept from a bundle's 1.x tab
   bar), merged over the `tabs` slot attributes (call site wins), also without the ThemeExtension; 1.x output unchanged.
 - **Theme slots `code` and `code_block`** (REQ-UI-003): inline `<code>` (identifiers, keys) and a `<pre>` block for

@@ -16,7 +16,8 @@
       scaffolds pre-render them, plus FormPage secondary actions, so 1.x overrides that print `toolbar` show them);
       `actions` then lists every View\Action of that toolbar for 2.0 overrides
     - region: data-nowo-ui-region on the root (scaffolds pass `header`)
-  Breadcrumbs and actions render through the theme partials `breadcrumbs` and `action`.
+  Breadcrumbs and actions render through the theme partials `breadcrumbs` and `action`; header.tabs (View\AreaNav,
+  2.1) renders under the title row through the `tabs` partial (region `area-nav`, inside nowo-ui-page-header__nav).
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 {% set framework = framework|default(null) %}
@@ -49,5 +50,23 @@
         </div>
     {% elseif toolbar is defined and toolbar %}
         <div class="{{ _toolbar_class }}">{{ toolbar|raw }}</div>
+    {% endif %}
+    {% if header is defined and header and header.tabs is defined and header.tabs and not header.tabs.isEmpty() %}
+        {% set _nav = header.tabs %}
+        {% set _items = [] %}
+        {% for item in _nav.items %}
+            {% set _items = _items|merge([{label: item.label, href: item.href, current: item.active, attr: item.attributes}]) %}
+        {% endfor %}
+        <div class="nowo-ui-page-header__nav">
+            {{ include(_t ? _t.partial('tabs', bundle) : '@NowoUiKitBundle/partials/_tabs.html.twig', {
+                items: _items,
+                aria_label: _nav.label is null ? null : (_nav.label.key is defined ? _nav.label.key|trans(_nav.label.params, _nav.label.domain) : _nav.label),
+                attr: _nav.attributes,
+                region: 'area-nav',
+                framework: framework,
+                bundle: bundle,
+                nowo_ui_page_type: _pt,
+            }, false) }}
+        </div>
     {% endif %}
 </div>

@@ -276,7 +276,8 @@ or a plain string printed escaped. Never pre-render HTML into a view model.
 | Class | Constructor |
 | --- | --- |
 | `Label` | `(key, domain = 'messages', params = [])`, `Label::kit(key)` (UiKit domain), `withParams()` |
-| `PageHeader` | `(title, intro = null, actions = [], breadcrumbs = [], breadcrumbCollection = null)`, `withActions(actions)` |
+| `PageHeader` | `(title, intro = null, actions = [], breadcrumbs = [], breadcrumbCollection = null, tabs = null)`, `withActions(actions)`, `withTabs(tabs)` |
+| `AreaNav` / `AreaNavItem` *(2.1)* | `(items = [], label = null, attributes = [])`, `isEmpty()`, `active()`, `withActive(href)` / `(label, href, active = false, attributes = [])`, `withActive(bool)` — see [Area navigation](#area-navigation) |
 | `Action` | `(kind = 'custom', label = null, href = null, route = null, params = [], method = 'GET', csrfToken = null, confirm = null, icon = null, variant = null, attributes = [], form = null, csrfField = '_token', modalId = null, disabled = false, visible = true, display = null, confirmScope = null)`; factories `create()`, `edit()`, `view()`, `delete()`, `route()`; `isPost()`, `resolvedVariant()`, `confirmId()`, `confirmKey()`, `withConfirmScope()`, `toArray()` |
 | `Confirm` | `(title, message = null, confirmLabel = null, variant = 'danger', cancelLabel = null, id = null, expectedValue = null, expectedLabel = null, messageInHeader = null)`, `Confirm::delete(message = null)`, `expectedPattern()` |
 | `Crumb` | `(label, href = null)` |
@@ -393,12 +394,38 @@ The list scaffold renders the confirm `<dialog>` of every row action with a `Con
 other than GET / POST lose their `_method` spoofing (an override that needs it reads `view.method`), and the label
 of an icon-only action is the visible text the override chooses to print.
 
+### Area navigation
+
+`PageHeader::$tabs` (`AreaNav`, 2.1) is the tab bar between the sections of a bundle area (e.g. "Consents |
+Categories | Settings"). The `page_header` partial renders it after the title row and the toolbar, inside
+`<div class="nowo-ui-page-header__nav">` (own full-width row), through the **`tabs` partial**
+(`nowo_ui_partial('tabs')`: theme slots `tabs` / `tab` / `tab_active`, a host `tabs` override applies) with
+`aria_label` = `AreaNav::$label` (default `tabs.nav`), `attr` = `AreaNav::$attributes` (e.g. `data-turbo: 'false'`),
+`items` = `{label, href, current: item.active, attr: item.attributes}` and region `area-nav`. A host `page_header`
+override renders `header.tabs` the same way.
+
+```php
+$header = new PageHeader(new Label('consent.title', 'NowoCookieConsentBundle'), tabs: new AreaNav([
+    new AreaNavItem(new Label('nav.consents', 'NowoCookieConsentBundle'), $this->generateUrl('consents'), true),
+    new AreaNavItem(new Label('nav.settings', 'NowoCookieConsentBundle'), $this->generateUrl('consent_settings')),
+], new Label('nav.label', 'NowoCookieConsentBundle')));
+```
+
+**Providers.** A service implementing `Nowo\UiKitBundle\Navigation\AreaNavProviderInterface`
+(`areaNav(string $area, array $context = []): ?AreaNav`; autoconfigured with the tag
+`nowo_ui_kit.area_nav_provider`, `priority` orders them) publishes the navigation of an area, so other bundles
+(DashboardMenu, a host menu) can consume it. `Nowo\UiKitBundle\Navigation\AreaNavRegistry::get($area, $context)`
+returns the first provider's answer (null when no provider knows the area); `context.current` (an href) marks only
+that item active. In Twig: `nowo_ui_area_nav('cookie_consent', {current: path(app.request.attributes.get('_route'))})`.
+In a controller: `$header->withTabs($registry->get('cookie_consent', ['current' => $request->getPathInfo()]))`.
+Providers must be stateless (FrankenPHP worker).
+
 **Regions.** Scaffold roots carry `data-nowo-ui-page="<type>"` plus the page model's `attributes`; standard regions
 carry `data-nowo-ui-region` for tests and host styling:
 
 | Scaffold | Regions |
 | --- | --- |
-| every scaffold but auth | `header` (page header partial root) |
+| every scaffold but auth | `header` (page header partial root), `area-nav` (the `PageHeader::tabs` `<nav>`) |
 | list | `filters`, `table`, `confirms`, `pagination`, `empty` |
 | show | `section` (each), `meta` |
 | form | `form`, `secondary-actions` (when below the form), `danger-zone` |

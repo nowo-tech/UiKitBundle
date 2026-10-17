@@ -14,12 +14,15 @@ use Nowo\UiKitBundle\Enum\CssFramework;
 use Nowo\UiKitBundle\EventSubscriber\LegacyPanelPathRedirectSubscriber;
 use Nowo\UiKitBundle\Form\AppearancePaletteType;
 use Nowo\UiKitBundle\Form\AppearanceType;
+use Nowo\UiKitBundle\Navigation\AreaNavProviderInterface;
+use Nowo\UiKitBundle\Navigation\AreaNavRegistry;
 use Nowo\UiKitBundle\Release\ReleaseStatusController;
 use Nowo\UiKitBundle\Release\ReleaseUpdateChecker;
 use Nowo\UiKitBundle\Routing\PanelPathRewriter;
 use Nowo\UiKitBundle\Routing\PanelPathRewritingLoader;
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Twig\AppearanceExtension;
+use Nowo\UiKitBundle\Twig\AreaNavExtension;
 use Nowo\UiKitBundle\Twig\RouteLinkExtension;
 use Nowo\UiKitBundle\Twig\ThemeExtension;
 use Symfony\Component\Asset\Package;
@@ -161,6 +164,15 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
             ->setFactory([Theme::class, 'fromConfig'])
             ->setArguments([$framework, $theme]);
         $container->setAlias(Theme::class, 'nowo_ui_kit.theme');
+
+        $container->registerForAutoconfiguration(AreaNavProviderInterface::class)
+            ->addTag(AreaNavProviderInterface::TAG);
+        $container->register('nowo_ui_kit.area_nav_registry', AreaNavRegistry::class)
+            ->setArguments([new TaggedIteratorArgument(AreaNavProviderInterface::TAG)]);
+        $container->setAlias(AreaNavRegistry::class, 'nowo_ui_kit.area_nav_registry');
+        $container->register('nowo_ui_kit.area_nav_twig_extension', AreaNavExtension::class)
+            ->setArguments([new Reference('nowo_ui_kit.area_nav_registry')])
+            ->addTag('twig.extension');
 
         $container->register('nowo_ui_kit.theme_twig_extension', ThemeExtension::class)
             ->setArguments([

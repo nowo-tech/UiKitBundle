@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use Nowo\UiKitBundle\View\Action;
+use Nowo\UiKitBundle\View\AreaNav;
+use Nowo\UiKitBundle\View\AreaNavItem;
 use Nowo\UiKitBundle\View\AuthPage;
 use Nowo\UiKitBundle\View\Column;
 use Nowo\UiKitBundle\View\Confirm;
@@ -84,7 +86,13 @@ final class PageContractController extends AbstractController
     {
         return $this->render('page_contract/dashboard.html.twig', [
             'page' => new DashboardPage(
-                $this->header($theme, 'Dashboard', 'Sales of the last 30 days.', 'Dashboard', [new Action('export', 'Export report', '#', icon: 'export')]),
+                $this->header($theme, 'Dashboard', 'Sales of the last 30 days.', 'Dashboard', [new Action('export', 'Export report', '#', icon: 'export')])
+                    // Area navigation (PageHeader::tabs, 2.1): the sections of the shop area under the title
+                    ->withTabs(new AreaNav([
+                        new AreaNavItem('Dashboard', $this->generateUrl($this->route('page_contract_dashboard', $theme), $this->params($theme)), true),
+                        new AreaNavItem('Orders', $this->generateUrl($this->route('page_contract_orders', $theme), $this->params($theme))),
+                        new AreaNavItem('Settings', $this->generateUrl($this->route('page_contract_settings', $theme), $this->params($theme))),
+                    ], 'Shop', ['data-turbo' => 'false'])),
                 [
                     new KpiTile('Revenue', '48,210 €', '+12% vs previous 30 days', null, 'success'),
                     new KpiTile('Orders', '1,284', '42 today', $this->generateUrl($this->route('page_contract_orders', $theme), $this->params($theme)), linkTile: true),

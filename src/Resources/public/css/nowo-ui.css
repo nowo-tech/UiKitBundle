@@ -70,6 +70,16 @@
   justify-content: space-between;
 }
 
+/* Area navigation (PageHeader::tabs, 2.1): its own row under the title and the toolbar */
+.nowo-ui-page-header__nav {
+  flex: 1 0 100%;
+  min-width: 0;
+}
+
+.nowo-ui-page-header__nav > .nowo-ui-tabs {
+  margin-bottom: 0;
+}
+
 .nowo-ui-search {
   display: flex;
   flex-wrap: wrap;

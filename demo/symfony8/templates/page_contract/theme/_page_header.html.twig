@@ -27,4 +27,12 @@
             </div>
         {% endif %}
     </div>
+    {# Area navigation (PageHeader::tabs, 2.1) through the tabs partial, like UiKit's own page header #}
+    {% if header.tabs and not header.tabs.isEmpty() %}
+        {% set _items = [] %}
+        {% for item in header.tabs.items %}
+            {% set _items = _items|merge([{label: item.label, href: item.href, current: item.active, attr: item.attributes}]) %}
+        {% endfor %}
+        {{ include(nowo_ui_partial('tabs', _bundle), {items: _items, aria_label: header.tabs.label|nowo_ui_trans, attr: header.tabs.attributes, region: 'area-nav', bundle: _bundle, nowo_ui_page_type: nowo_ui_page_type|default(null)}, false) }}
+    {% endif %}
 </header>
