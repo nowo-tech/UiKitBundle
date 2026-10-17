@@ -288,11 +288,11 @@ or a plain string printed escaped. Never pre-render HTML into a view model.
 | `EmptyState` | `(title = null, message = null, action = null)` |
 | `DetailItem` / `DetailSection` | `(label, value, href = null)` / `(title = null, items = [], id = null)` |
 | `KpiTile` | `(label, value, hint = null, href = null, variant = 'neutral', linkTile = false)` |
-| `SettingsSection` | `(id, label, href = null, form = null, intro = null, submitLabel = null)` |
+| `SettingsSection` | `(id, label, href = null, form = null, intro = null, submitLabel = null, formThemes = [])` — `formThemes` (2.1) applied to `form` with `form_theme` before the `nowo_ui_settings_section` block |
 | `WizardStep` | `(id, label, href = null)` |
 | `ListPage` | `(header, columns = [], rows = [], filters = null, rowActions = [] \| callable(row, key), pagination = null, empty = null, filtersClearHref = null, sort = null, direction = 'asc', caption = null, bundle = null, layout = null, attributes = [], actionsLabel = null, actionsLabelVisible = false, filterFields = [], filtersSubmit = null, filtersClear = null, filterActions = [], responsive = 'cards', filtersDisplay = null, headerActionsInFilters = null)`; `rowActions(row, key)`, `confirmDialogs(actions)` |
 | `ShowPage` | `(header, sections = [], meta = [], bundle = null, layout = null, attributes = [])` |
-| `FormPage` | `(header, form, submitLabel = null, cancelHref = null, cancelLabel = null, secondaryActions = [], deleteAction = null, bundle = null, layout = null, attributes = [], secondaryActionsInHeader = true, dangerZoneTitle = null, dangerZoneIntro = null)` |
+| `FormPage` | `(header, form, submitLabel = null, cancelHref = null, cancelLabel = null, secondaryActions = [], deleteAction = null, bundle = null, layout = null, attributes = [], secondaryActionsInHeader = true, dangerZoneTitle = null, dangerZoneIntro = null, formThemes = [])` — `formThemes` (2.1): form theme templates (e.g. the bundle's FormKit theme) applied to `form` with `form_theme` before it renders, so the bundle does not override `nowo_ui_content` |
 | `SettingsPage` | `(header, sections = [], current = null, bundle = null, layout = null, attributes = [])` |
 | `DashboardPage` | `(header, kpis = [], bundle = null, layout = null, attributes = [])` |
 | `ConfirmPage` | `(header, confirm, action (non-GET), cancelHref = null, bundle = null, layout = null, attributes = [])` |

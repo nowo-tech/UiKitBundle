@@ -58,6 +58,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Per-page form themes**: `FormPage::$formThemes` and `SettingsSection::$formThemes` (lists of template names) are
+  applied with `form_theme` inside the scaffold before the form renders (settings: before the
+  `nowo_ui_settings_section` block), so bundles keep their form theme without overriding `nowo_ui_content`.
 - **Area navigation** (`PageHeader::$tabs`, `View\AreaNav` / `View\AreaNavItem`, `PageHeader::withTabs()`): a tab bar
   between the sections of a bundle area, rendered by the `page_header` partial through the `tabs` partial (region
   `area-nav`, row `nowo-ui-page-header__nav`). **`Navigation\AreaNavProviderInterface`** (autoconfigured tag

@@ -6,6 +6,7 @@
   submit + cancel, secondary actions below the form (secondaryActionsInHeader: false), delete zone
   (page.deleteAction through the confirm contract; `danger_zone`, `danger_zone_title`, `danger_zone_intro` slots).
   Data blocks: nowo_ui_form_body (default: REQ-TWIG-003 child loop), nowo_ui_form_aside (side column).
+  page.formThemes (2.1): form_theme applied to page.form before it renders.
 #}
 {% extends page.layout ?? nowo_ui_layout.admin %}
 {% set nowo_ui_bundle = page.bundle %}
@@ -21,6 +22,9 @@
 {% block nowo_ui_content %}
     {% set _b = page.bundle %}
     {% set form = page.form %}
+    {% if page.formThemes is not empty %}
+        {% form_theme form with page.formThemes %}
+    {% endif %}
     <div class="nowo-ui-form-page" data-nowo-ui-page="form"{{ nowo_ui_html_attrs(page.attributes) }}>
         <div class="nowo-ui-form-page__main">
             <div class="{{ nowo_ui_class('form_panel', _b) }}"{{ nowo_ui_attrs('form_panel', _b) }}>

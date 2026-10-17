@@ -3,7 +3,7 @@
 
   Regions: page header, section tabs (sections with hrefs), one card + form per visible section.
   Data block: nowo_ui_settings_section (`section` in context; default: the section's form with the REQ-TWIG-003
-  child loop and a submit button).
+  child loop and a submit button). section.formThemes (2.1): form_theme applied to section.form before the block.
 #}
 {% extends page.layout ?? nowo_ui_layout.admin %}
 {% set nowo_ui_bundle = page.bundle %}
@@ -35,6 +35,9 @@
                     </div>
                 </header>
                 <div class="{{ nowo_ui_class('card_body', _b) }}">
+                    {% if section.form and section.formThemes is not empty %}
+                        {% form_theme section.form with section.formThemes %}
+                    {% endif %}
                     {% block nowo_ui_settings_section %}
                         {% if section.form %}
                             {{ include(nowo_ui_partial('section_form', _b), {form: section.form, submit_label: section.submitLabel, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
