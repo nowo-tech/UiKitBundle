@@ -390,7 +390,8 @@ abstract class PageContractTestCase extends TestCase
     }
 
     /**
-     * Fixtures are rendered several times (one per test and css_framework): mark their FormViews as not rendered,
+     * Fixtures are rendered several times (one per test and css_framework): mark their FormViews (children and
+     * collection prototypes) as not rendered,
      * and collect the hidden leaf fields of the FormViews backing an {@see Action} (form name => field full name =>
      * value) for {@see self::assertActionFormsKeepHiddenFields()}.
      *
@@ -415,6 +416,8 @@ abstract class PageContractTestCase extends TestCase
                 (new \ReflectionProperty(FormView::class, $property))->setValue($value, false);
             }
             self::prepareFormViews($value->children, $seen, $actionForms);
+            // Collection prototypes (CollectionType `prototype`) are FormViews outside `children`
+            self::prepareFormViews($value->vars['prototype'] ?? null, $seen, $actionForms);
 
             return;
         }

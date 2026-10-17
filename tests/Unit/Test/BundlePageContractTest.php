@@ -14,12 +14,17 @@ use Nowo\UiKitBundle\View\Action;
 use Nowo\UiKitBundle\View\Column;
 use Nowo\UiKitBundle\View\Crumb;
 use Nowo\UiKitBundle\View\DashboardPage;
+use Nowo\UiKitBundle\View\FormPage;
 use Nowo\UiKitBundle\View\KpiTile;
 use Nowo\UiKitBundle\View\Label;
 use Nowo\UiKitBundle\View\ListPage;
 use Nowo\UiKitBundle\View\PageHeader;
 use Nowo\UiKitBundle\View\Pagination;
 use PHPUnit\Framework\AssertionFailedError;
+use Symfony\Component\Form\Extension\Core\Type\CollectionType;
+use Symfony\Component\Form\Extension\Core\Type\FormType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\Forms;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Twig\Environment;
 use Twig\TwigFunction;
@@ -106,6 +111,20 @@ final class BundlePageContractTest extends PageContractTestCase
         $forms = new RenderedPage('t', '<form name="a"><input type="hidden" name="a[_token]" value="t"><input type="hidden" name="other" value="o"></form><form name="b"></form><form name="a"></form>', 'none', [], ['a' => ['a[_token]' => 't']]);
         self::assertSame([['a[_token]' => ['t']], ['a[_token]' => []]], $forms->hiddenFieldValues('a', ['a[_token]']));
         self::assertSame(['a' => ['a[_token]' => 't']], $forms->actionForms);
+    }
+
+    public function testCollectionPrototypesAreResetBetweenRenders(): void
+    {
+        $form = Forms::createFormFactoryBuilder()->getFormFactory()->createNamedBuilder('team', FormType::class, ['members' => ['Ann']])
+            ->add('members', CollectionType::class, ['entry_type' => TextType::class, 'allow_add' => true, 'prototype' => true])
+            ->getForm()->createView();
+        $fixture = new PageFixture('@NowoUiKit/page/form.html.twig', ['page' => new FormPage(new PageHeader('Team'), $form)]);
+
+        foreach (['none', 'bootstrap5'] as $framework) {
+            $page = $this->renderPage($fixture, $framework);
+            self::assertStringContainsString('data-prototype=', $page->html);
+            self::assertStringContainsString('team[members][__name__]', $page->html);
+        }
     }
 
     public function testModalShellStructureIsAStructuralException(): void

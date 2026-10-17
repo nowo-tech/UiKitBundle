@@ -669,7 +669,8 @@ theme), `locale()`, `configureTwig(Environment)` (register the bundle's Twig ext
 override the stubs). The assertion helpers (`assertExtendsScaffoldOrUnique()`, `assertCanonicalBlocksFilled()`,
 `assertNoForbiddenMarkup()`, `assertNoFrameworkUtilityClasses()`, `assertStubThemeReflected()`,
 `assertNoRawTranslationKeys()`, `assertActionFormsKeepHiddenFields()`) and `renderPage()` / `createTwig()` are protected for the bundle's own tests.
-Fixtures are rendered several times; their `FormView`s are reset between renders.
+Fixtures are rendered several times; their `FormView`s are reset between renders (children and, since 2.1, collection
+prototypes — `vars.prototype` of a `CollectionType` with `prototype: true`).
 
 ## Compatibility and versioning
 

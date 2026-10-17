@@ -50,6 +50,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **`PageContractTestCase` resets collection prototypes between renders**: `vars.prototype` FormViews
+  (`CollectionType` with `prototype: true`) are marked not rendered too, so the second render of a fixture keeps its
+  `data-prototype` (it rendered empty or threw "already rendered" with some form themes).
 - **`PageContractTestCase` no longer flags the `modal_shell` structure**: `modal`, `fade`, `modal-dialog`,
   `modal-content`, `modal-header`, `modal-title`, `btn-close`, `modal-body`, `modal-footer` are a documented structural
   exception (`FrameworkClasses::MODAL_SHELL`, like the pagination list), allowed for every `css_framework`; the partial
