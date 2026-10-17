@@ -252,14 +252,21 @@ final class HostChromePartialsTest extends TestCase
         // 1.17.2: dialogs centre under a <dialog> margin reset (Tailwind preflight); responsive cells wrap their
         // nowrap descendants too (no horizontal scroll at 320px and above).
         self::assertMatchesRegularExpression('/\.nowo-ui-confirm \{[^}]*margin: auto;[^}]*max-height: calc\(100dvh - 2rem\);/s', $css);
-        // 1.17.3 regression: no mid-word breaks above 30rem (they lowered the min-content width, so the fit never hid
-        // a column); `anywhere` only inside the narrow media query.
+        // 1.17.3 / 1.17.5 regressions: words never break while the peer measures (data-rt-measuring), and
+        // `overflow-wrap: anywhere` only applies after the fit as a last resort (data-rt-overflow) — never by width alone,
+        // otherwise the table always "fits" and no column is hidden.
         self::assertStringContainsString(".nowo-ui-responsive-table[data-table-mode='responsive'] :is(th, td) * {\n  white-space: normal !important;\n  overflow-wrap: break-word;", $css);
-        $wide = (string) preg_replace('/@media \(max-width: 30rem\) \{.*?\n\}\n/s', '', $css);
-        $tableRules = (string) preg_replace('/\/\*.*?\*\//s', '', (string) strstr((string) strstr($wide, '/* --- Responsive table'), '/* Row detail dialog', true));
-        self::assertStringContainsString('overflow-wrap: break-word', $tableRules);
-        self::assertStringNotContainsString('overflow-wrap: anywhere', $tableRules);
-        self::assertMatchesRegularExpression('/@media \\(max-width: 30rem\\) \\{[^@]*:is\\(th, td\\) \\* \\{\\s*overflow-wrap: anywhere;/s', $css);
+        self::assertStringContainsString(".nowo-ui-responsive-table[data-rt-measuring] :is(th, td) * {\n  overflow-wrap: normal !important;\n  word-break: normal !important;", $css);
+        self::assertStringContainsString(".nowo-ui-responsive-table[data-table-mode='responsive'][data-rt-overflow]:not([data-rt-measuring]) :is(th, td) * {\n  overflow-wrap: anywhere;", $css);
+        $tableRules = (string) preg_replace('/\/\*.*?\*\//s', '', (string) strstr((string) strstr($css, '/* --- Responsive table'), '/* Row detail dialog', true));
+        // The row detail column shows (and only shows) when the fit hid a column.
+        self::assertStringContainsString(".nowo-ui-row-detail-col,\n.nowo-ui-row-detail-cell {\n  display: none;", $tableRules);
+        self::assertStringContainsString(".nowo-ui-responsive-table[data-table-mode='responsive'][data-rt-has-hidden] :is(.nowo-ui-row-detail-col, .nowo-ui-row-detail-cell) {\n  display: table-cell;", $tableRules);
+        self::assertSame(1, substr_count($tableRules, 'overflow-wrap: anywhere'), 'anywhere only in the data-rt-overflow rule');
+        preg_match_all('/([^{}]+)\{[^}]*overflow-wrap: anywhere/', $tableRules, $anywhere);
+        foreach ($anywhere[1] as $selector) {
+            self::assertStringContainsString('[data-rt-overflow]:not([data-rt-measuring])', $selector);
+        }
 
         $keys = ['table_mode.to_responsive', 'table_mode.to_scroll', 'table_mode.details', 'table_mode.details_column', 'table_mode.close', 'table_mode.save_error',
             'filters_collapse.collapse', 'filters_collapse.expand', 'filters_collapse.none', 'filters_collapse.one', 'filters_collapse.many', 'edge_tab.manual'];

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[1.17.5] - 2026-10-17](#1175---2026-10-17)
 - [[1.17.4] - 2026-10-16](#1174---2026-10-16)
 - [[1.17.3] - 2026-10-16](#1173---2026-10-16)
 - [[1.17.2] - 2026-10-16](#1172---2026-10-16)
@@ -44,6 +45,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [1.17.5] - 2026-10-17
+
+Released from the `1.x` branch (`main` is 2.x).
+
+### Fixed
+
+- Responsive tables never hid a column on narrow screens (1.17.2–1.17.4): under 30rem the cells and their descendants had `overflow-wrap: anywhere`, so the table could always shrink by breaking words at any character; the peer's fit (`scrollWidth <= clientWidth`) never saw an overflow, every column stayed and words split letter by letter (e.g. at 390px). Root-cause fix:
+  - the `responsive-table` peer measures under a `data-rt-measuring` state (CSS: `overflow-wrap: normal !important; word-break: normal !important` on cells and descendants, `white-space: normal` kept), so a cell's min-content is its longest word; it decides the hidden columns, then removes the state;
+  - `overflow-wrap: anywhere` is no longer tied to the viewport width: it only applies AFTER the fit, as a last resort, when the required columns still overflow — the peer sets `data-rt-overflow` on the root and the visible cells may then break words (long URLs / ids), keeping 320px free of horizontal scroll with the required columns and the row detail button.
+- Regression tests: Vitest with mocked layout widths where the table "fits" by breaking words outside the measuring state (fails on 1.17.4); CSS assertions that `anywhere` only exists under `[data-rt-overflow]:not([data-rt-measuring])` and that the row detail column shows under `[data-rt-has-hidden]`.
+
+[1.17.5]: https://github.com/nowo-tech/UiKitBundle/compare/v1.17.4...v1.17.5
 
 ## [1.17.4] - 2026-10-16
 

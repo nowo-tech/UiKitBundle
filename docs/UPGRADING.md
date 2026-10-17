@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 1.17.5](#to-1175)
 - [To 1.17.4](#to-1174)
 - [To 1.17.3](#to-1173)
 - [To 1.17.2](#to-1172)
@@ -46,6 +47,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 1.17.5
+
+From **1.17.4** — bug fix, nothing to change. Responsive tables hide columns again on narrow screens (1.17.2–1.17.4
+broke words instead). New root attributes: `data-rt-overflow` (required columns still too wide: words may break) and
+`data-rt-measuring` (set only during a fit). Host CSS must not force word breaking (`overflow-wrap: anywhere`,
+`word-break: break-all`) on responsive table cells while `data-rt-measuring` is present — the kit rule wins with
+`!important`; scope host `!important` rules with `:not([data-rt-measuring])`.
 
 ## To 1.17.4
 

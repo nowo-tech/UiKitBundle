@@ -22,7 +22,8 @@
  *         `partSelector` (stacked header parts joined in the dialog labels, default `[data-cell-part]`),
  *         `messages` (`{toResponsive, toScroll, details, saveError}`; `saveError` since 1.17.1).
  * Actions: `responsive-table#toggle`, `responsive-table#open` (detail button), `responsive-table#close`.
- * Root attributes: `data-table-mode`, `data-rt-has-hidden`; hidden cells: `data-rt-hidden`.
+ * Root attributes: `data-table-mode`, `data-rt-has-hidden`, `data-rt-overflow` (required columns still too wide:
+ *         words may break), `data-rt-measuring` (only during a fit); hidden cells: `data-rt-hidden`.
  * Events: `responsive-table:changed` (`detail.mode`), `responsive-table:save-failed` (`detail.mode`,
  *         `detail.previous`, `detail.message` = `messages.saveError` or empty).
  */
@@ -192,24 +193,32 @@ export default class ResponsiveTableController extends Controller<HTMLElement> {
   /**
    * Responsive mode: show every column, then hide the last non-required ones until the table fits its scroller.
    * Scroll mode: nothing hidden.
+   *
+   * The measurement runs under `data-rt-measuring` (CSS: words unbreakable, `white-space: normal`), so a cell's
+   * min-content is its longest word: wrapping at spaces may shrink the table, breaking words may not — otherwise any
+   * table "fits" by splitting words letter by letter and no column is ever hidden. Only when the required columns
+   * still overflow does the root get `data-rt-overflow` (CSS: `overflow-wrap: anywhere` on the visible cells), the
+   * last resort that keeps 320px screens free of horizontal scroll.
    */
   private fit(): void {
     const headers = this.headers();
+    this.element.setAttribute('data-rt-measuring', '');
+    this.element.removeAttribute('data-rt-overflow');
     headers.forEach((header) => this.setHidden(header, false));
     // Phase 1: without the detail column. Phase 2 (something must go): with it, since it takes room too.
     this.element.removeAttribute('data-rt-has-hidden');
-    if ('responsive' !== this.mode() || this.fits()) {
-      this.markRows();
-      return;
-    }
-    this.element.setAttribute('data-rt-has-hidden', '');
-    const candidates = headers.filter((header) => '1' !== header.dataset.required).reverse();
-    for (const header of candidates) {
-      if (this.fits()) {
-        break;
+    if ('responsive' === this.mode() && !this.fits()) {
+      this.element.setAttribute('data-rt-has-hidden', '');
+      const candidates = headers.filter((header) => '1' !== header.dataset.required).reverse();
+      for (const header of candidates) {
+        if (this.fits()) {
+          break;
+        }
+        this.setHidden(header, true);
       }
-      this.setHidden(header, true);
+      this.element.toggleAttribute('data-rt-overflow', !this.fits());
     }
+    this.element.removeAttribute('data-rt-measuring');
     this.markRows();
   }
 

@@ -11,6 +11,8 @@ let widths: Record<string, number> = {};
 let width = 1000;
 let coarse = false;
 let phone = false;
+/** Simulates `overflow-wrap: anywhere` on the cells: outside the measuring state the table can always shrink. */
+let breakWords = false;
 
 function setMatchMedia(): void {
   window.matchMedia = vi.fn().mockImplementation((query: string) => ({
@@ -61,6 +63,7 @@ function mount(mode = '', url = '/prefs/items/mode', messages: Record<string, st
 
 function tableWidth(): number {
   const table = document.querySelector('table');
+  const root = table?.closest('[data-table-mode]');
   let total = 0;
   for (const th of table?.querySelectorAll<HTMLElement>('thead th') ?? []) {
     if (th.hasAttribute('data-rt-hidden')) {
@@ -73,7 +76,7 @@ function tableWidth(): number {
     total += widths[th.dataset.column ?? ''] ?? 0;
   }
 
-  return total;
+  return breakWords && !root?.hasAttribute('data-rt-measuring') ? Math.min(total, width) : total;
 }
 
 let app: Application;
@@ -84,6 +87,7 @@ beforeEach(() => {
   width = 1000;
   coarse = false;
   phone = false;
+  breakWords = false;
   iconCalls.length = 0;
   setIconStateHandler((kind, _host, state, animate) => iconCalls.push([kind, state, animate]));
   setMatchMedia();
@@ -167,6 +171,32 @@ describe('responsive-table peer', () => {
     const narrow = mount('responsive');
     await tick();
     expect([...narrow.querySelectorAll('thead [data-rt-hidden]')].map((th) => (th as HTMLElement).dataset.column)).toEqual(['project', 'detail']);
+  });
+
+  it('measures with unbreakable words, so word breaking can never hide the overflow (1.17.5 regression)', async () => {
+    // Before 1.17.5 the cells could break words anywhere while measuring: the table always "fit" and no column hid.
+    breakWords = true;
+    width = 700;
+    const root = mount('responsive');
+    await tick();
+    expect([...root.querySelectorAll('thead [data-rt-hidden]')].map((th) => (th as HTMLElement).dataset.column)).toEqual(['detail']);
+    expect(root.hasAttribute('data-rt-has-hidden')).toBe(true);
+    expect(root.hasAttribute('data-rt-measuring')).toBe(false);
+    expect(root.hasAttribute('data-rt-overflow')).toBe(false);
+
+    // Only the required columns are left and they still overflow (320px): last resort, words may break.
+    width = 250;
+    const narrow = mount('responsive');
+    await tick();
+    expect([...narrow.querySelectorAll('thead [data-rt-hidden]')].map((th) => (th as HTMLElement).dataset.column)).toEqual(['project', 'detail']);
+    expect(narrow.hasAttribute('data-rt-overflow')).toBe(true);
+    expect(narrow.hasAttribute('data-rt-measuring')).toBe(false);
+
+    // Back to scroll mode: nothing hidden, no overflow flag.
+    narrow.setAttribute('data-responsive-table-mode-value', 'scroll');
+    await tick();
+    expect(narrow.querySelector('[data-rt-hidden]')).toBeNull();
+    expect(narrow.hasAttribute('data-rt-overflow')).toBe(false);
   });
 
   it('works without messages (no labels touched; detail buttons named after the row)', async () => {
