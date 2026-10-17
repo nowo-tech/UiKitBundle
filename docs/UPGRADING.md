@@ -144,6 +144,11 @@ Changes to markup, inputs and cascade a host or a bundle may depend on (REQ-UI-0
   (`ListPage::filtersDisplay` for filter buttons); icon-only toolbar buttons add the `btn_icon` slot class
   (`nowo-ui-btn--icon`) and `title` / `aria-label`. Without `display` the toolbar markup is unchanged. `theme.partials.action`
   overrides: read `action.display` (and the `display` variable) to support icon-only buttons. New slot `btn_icon` (minor).
+- **List header actions in the filter row** (opt-in: `ListPage::headerActionsInFilters` or
+  `theme.pages.list.header_actions_in_filters: true`): the page header then gets no toolbar (1.x `page_header`
+  overrides receive `toolbar: null`) and the `list_filters` partial receives the actions as `header_actions`; a bundle
+  that overrides `nowo_ui_list_filters` renders `page.header.actions` itself when `nowo_ui_header_actions_in_filters`
+  is true. `theme.pages.<type>.header_actions_in_filters` is rejected on page types other than `list`.
 - **Row confirm dialog ids** are derived from the target, the CSRF token, the whole `Confirm` content and the row
   key (`ListPage::rowActions()` returns `Action::withConfirmScope(key)` copies), so the `confirm_id` / dialog ids of
   list rows change value (still `nowo-ui-confirm-<12 hex>`). Tests or scripts that computed

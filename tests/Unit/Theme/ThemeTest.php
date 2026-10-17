@@ -206,6 +206,8 @@ final class ThemeTest extends TestCase
         yield 'unknown page type' => [static fn (): Theme => new Theme(pages: ['index' => []]), 'Invalid UiKit theme pages key: unknown page type "index"'];
         yield 'bad page framework_defaults' => [static fn (): Theme => new Theme(pages: ['list' => ['framework_defaults' => 1]]), 'pages.list.framework_defaults: a boolean is expected'];
         yield 'bad page class entry' => [static fn (): Theme => new Theme(pages: ['list' => ['classes' => ['btn' => 3]]]), 'Invalid UiKit theme pages.list.classes.btn'];
+        yield 'header actions option on a non-list page' => [static fn (): Theme => new Theme(pages: ['show' => ['header_actions_in_filters' => true]]), 'Invalid UiKit theme pages.show.header_actions_in_filters'];
+        yield 'header actions option not a boolean' => [static fn (): Theme => new Theme(pages: ['list' => ['header_actions_in_filters' => 'yes']]), 'Invalid UiKit theme pages.list.header_actions_in_filters'];
         yield 'page on* attribute' => [static fn (): Theme => new Theme(pages: ['form' => ['attributes' => ['form' => ['onsubmit' => 'x']]]]), 'inline event handler'];
     }
 

@@ -3,6 +3,9 @@
 
   Regions: page header + actions, filters (FormView), table frame, row actions, pagination, empty state, confirm
   dialogs (from row actions with a Confirm; ids scoped per row, one dialog per id: ListPage::confirmDialogs()).
+  Header actions: in the page header, or at the end of the filter row when nowo_ui_header_actions_in_filters
+  (ListPage::headerActionsInFilters ?? theme.pages.list.header_actions_in_filters, only with filters) — an override
+  of nowo_ui_list_filters then renders page.header.actions itself.
   Data blocks: nowo_ui_list_filters (the filters region; default: the `list_filters` partial), nowo_ui_list_head
   (header cells), nowo_ui_list_row (row cells; `row`, `row_key`, `loop` in context), nowo_ui_list_after (after the
   list). Default cells print row[column.key] for each page.columns.
@@ -14,12 +17,14 @@
 {% extends page.layout ?? nowo_ui_layout.admin %}
 {% set nowo_ui_bundle = page.bundle %}
 {% set nowo_ui_page_type = 'list' %}
+{#- header actions at the end of the filter row (ListPage::headerActionsInFilters, else theme.pages.list option) -#}
+{% set nowo_ui_header_actions_in_filters = page.filters is not null and page.header.actions is not empty and (page.headerActionsInFilters ?? nowo_ui_theme.listHeaderActionsInFilters()) %}
 
 {% block nowo_ui_document_title %}{{ page.header.title|nowo_ui_trans }}{% endblock %}
 
 {% block nowo_ui_page_header %}
     {% import '@NowoUiKitBundle/page/_scaffold.html.twig' as scaffold %}
-    {{ scaffold.page_header(page, nowo_ui_page_type) }}
+    {{ scaffold.page_header(page, nowo_ui_page_type, [], not nowo_ui_header_actions_in_filters) }}
 {% endblock %}
 
 {% block nowo_ui_content %}
@@ -27,7 +32,7 @@
     <section class="nowo-ui-list-page" data-nowo-ui-page="list"{{ nowo_ui_html_attrs(page.attributes) }}>
         {% block nowo_ui_list_filters %}
             {% if page.filters %}
-                {{ include(nowo_ui_partial('list_filters', _b), {page: page, region: 'filters', bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
+                {{ include(nowo_ui_partial('list_filters', _b), {page: page, region: 'filters', bundle: _b, nowo_ui_page_type: nowo_ui_page_type, header_actions: nowo_ui_header_actions_in_filters ? page.header.actions : []}, false) }}
             {% endif %}
         {% endblock %}
         {% if page.rows is not empty %}

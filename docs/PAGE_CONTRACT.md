@@ -88,6 +88,7 @@ nowo_ui_kit:
       NowoHttpLogBundle: { classes: { table: 'data-table data-table--dense' } }
     pages:                                                             # per page type (scaffold)
       list: { classes: { table: 'data-table data-table--sticky' } }    # bundle slot > bundle > page slot > page > host
+      # list: { header_actions_in_filters: true }                      # list header actions at the end of the filter row
 ```
 
 Validation (container compile time): unknown slots and partial names, class entries with keys other than `value` /
@@ -140,7 +141,7 @@ fills `nowo_ui_document_title` with the page title and renders the page header t
 
 | Region | From |
 | --- | --- |
-| header + actions + breadcrumbs | `page.header` (`PageHeader`) |
+| header + actions + breadcrumbs | `page.header` (`PageHeader`); with `page.headerActionsInFilters` (or `theme.pages.list.header_actions_in_filters`) and filters, the header actions render at the end of the filter row instead (`nowo-ui-filters__header-actions`, region `header-actions`) |
 | filters (GET form, apply / clear, extra actions) | `page.filters` (`FormView`, REQ-TWIG-003 child loop) through the `list_filters` partial; `page.filterFields` (`FilterField`: placeholder, `width` `xs`…`full`, widget / row classes and attributes; every row gets the `filters_field` slot), `page.filtersSubmit` (`Action`: label, icon, variant of the apply button), `page.filtersClear` (`Action`, rendered through the `action` partial; default a plain link to `page.filtersClearHref`), `page.filterActions` — all in the `filters_actions` slot; `page.filtersDisplay` (`icon` / `text` / `icon_text`) for these buttons |
 | table frame, sortable headers (`aria-sort`) | `page.columns` (`Column`), `page.sort`, `page.direction`, `page.caption`; slots `table_wrap`, `table`, `table_head`, `table_head_row`, `table_head_cell`, `table_row`, `table_cell` |
 | row actions + confirm `<dialog>`s | `page.rowActions` (list of `Action`, or `callable(row, key): list<Action>`); actions column header `table_actions_head` with `page.actionsLabel` (default `table.actions`), visually hidden unless `page.actionsLabelVisible` |
@@ -259,7 +260,7 @@ or a plain string printed escaped. Never pre-render HTML into a view model.
 | `KpiTile` | `(label, value, hint = null, href = null, variant = 'neutral', linkTile = false)` |
 | `SettingsSection` | `(id, label, href = null, form = null, intro = null, submitLabel = null)` |
 | `WizardStep` | `(id, label, href = null)` |
-| `ListPage` | `(header, columns = [], rows = [], filters = null, rowActions = [] \| callable(row, key), pagination = null, empty = null, filtersClearHref = null, sort = null, direction = 'asc', caption = null, bundle = null, layout = null, attributes = [], actionsLabel = null, actionsLabelVisible = false, filterFields = [], filtersSubmit = null, filtersClear = null, filterActions = [], responsive = 'cards', filtersDisplay = null)`; `rowActions(row, key)`, `confirmDialogs(actions)` |
+| `ListPage` | `(header, columns = [], rows = [], filters = null, rowActions = [] \| callable(row, key), pagination = null, empty = null, filtersClearHref = null, sort = null, direction = 'asc', caption = null, bundle = null, layout = null, attributes = [], actionsLabel = null, actionsLabelVisible = false, filterFields = [], filtersSubmit = null, filtersClear = null, filterActions = [], responsive = 'cards', filtersDisplay = null, headerActionsInFilters = null)`; `rowActions(row, key)`, `confirmDialogs(actions)` |
 | `ShowPage` | `(header, sections = [], meta = [], bundle = null, layout = null, attributes = [])` |
 | `FormPage` | `(header, form, submitLabel = null, cancelHref = null, cancelLabel = null, secondaryActions = [], deleteAction = null, bundle = null, layout = null, attributes = [], secondaryActionsInHeader = true, dangerZoneTitle = null, dangerZoneIntro = null)` |
 | `SettingsPage` | `(header, sections = [], current = null, bundle = null, layout = null, attributes = [])` |

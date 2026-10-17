@@ -16,7 +16,9 @@ use Symfony\Component\Form\FormView;
  * Filters: `filterFields` (per-field placeholder / width / classes), `filtersSubmit` (label / icon / variant of the
  * apply button), `filtersClear` (the clear link as an Action; default: a plain link to `filtersClearHref`),
  * `filterActions` (extra actions), `filtersDisplay` (`icon` | `text` | `icon_text`: display of the apply / clear /
- * extra filter buttons whose Action has no `display`). `responsive`: `cards` (default; the table turns into labelled cards on narrow
+ * extra filter buttons whose Action has no `display`), `headerActionsInFilters` (true: the page-header actions render
+ * at the end of the filter row instead of the page header, when there are filters; null = the theme option
+ * `theme.pages.list.header_actions_in_filters`, default false). `responsive`: `cards` (default; the table turns into labelled cards on narrow
  * containers and hides `Column::priority` columns first) or `scroll` (horizontal scroll only).
  */
 final readonly class ListPage
@@ -72,6 +74,7 @@ final readonly class ListPage
         iterable $filterActions = [],
         public string $responsive = 'cards',
         public ?string $filtersDisplay = null,
+        public ?bool $headerActionsInFilters = null,
     ) {
         Action::assertAttributes($attributes);
         if (null !== $filtersDisplay && !\in_array($filtersDisplay, Action::DISPLAYS, true)) {

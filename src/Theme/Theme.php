@@ -35,6 +35,9 @@ final readonly class Theme
     /** @var array<string, array{classes: array<string, array{0: string, 1: bool|null}>, framework_defaults: bool|null, attributes: array<string, array<string, string|int|float|bool|null>>}> */
     private array $pages;
 
+    /** `pages.list.header_actions_in_filters`: list header actions at the end of the filter row (default false). */
+    private bool $listHeaderActionsInFilters;
+
     /**
      * A class entry is a class string, a list of classes, or `{value: string|list, framework_defaults: bool}`.
      *
@@ -45,7 +48,7 @@ final readonly class Theme
      * @param array<string, string>                                    $tokensDark        dark-mode tokens
      * @param array<string, array<string, mixed>>                      $bundles           bundle => {classes, framework_defaults, attributes, partials, tokens, tokens_dark}
      * @param bool                                                     $frameworkDefaults false = semantic + host classes only, for every slot
-     * @param array<string, array<string, mixed>>                      $pages             page type ({@see ThemeSlots::PAGE_TYPES}) => {classes, framework_defaults, attributes}
+     * @param array<string, array<string, mixed>>                      $pages             page type ({@see ThemeSlots::PAGE_TYPES}) => {classes, framework_defaults, attributes}; `list` also takes `header_actions_in_filters` (bool)
      */
     public function __construct(
         private string $framework = 'bootstrap5',
@@ -60,6 +63,7 @@ final readonly class Theme
     ) {
         $this->classes = $this->normalizeClasses($classes, 'classes');
         $this->pages = $this->normalizePages($pages);
+        $this->listHeaderActionsInFilters = $this->listHeaderActionsInFiltersOption($pages);
         $normalized = [];
         foreach ($bundles as $bundle => $data) {
             $this->assertBundleName((string) $bundle);
@@ -452,6 +456,33 @@ final readonly class Theme
         }
 
         return $normalized;
+    }
+
+    /**
+     * Whether list scaffolds render the page-header actions at the end of the filter row
+     * (`theme.pages.list.header_actions_in_filters`; `ListPage::$headerActionsInFilters` wins when set).
+     */
+    public function listHeaderActionsInFilters(): bool
+    {
+        return $this->listHeaderActionsInFilters;
+    }
+
+    /**
+     * @param array<string, array<string, mixed>> $pages
+     */
+    private function listHeaderActionsInFiltersOption(array $pages): bool
+    {
+        foreach ($pages as $page => $data) {
+            $value = $data['header_actions_in_filters'] ?? null;
+            if (null === $value) {
+                continue;
+            }
+            if ('list' !== (string) $page || !\is_bool($value)) {
+                throw new \InvalidArgumentException(\sprintf('Invalid UiKit theme pages.%s.header_actions_in_filters: a boolean, on the list page type only.', $page));
+            }
+        }
+
+        return true === ($pages['list']['header_actions_in_filters'] ?? null);
     }
 
     /**

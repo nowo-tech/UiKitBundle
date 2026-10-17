@@ -6,6 +6,7 @@
     - page: View\ListPage (page.filters: FormView)
   Optional:
     - region (data-nowo-ui-region, default filters), bundle (default page.bundle), nowo_ui_page_type
+    - header_actions: page-header actions rendered last in the actions row (list scaffold, headerActionsInFilters)
 
   Per field (page.filterFields[child name], View\FilterField): placeholder (translated), widget class / attributes,
   row class / attributes and width (`nowo-ui-filters__field--<width>`); every row gets the `filters_field` slot.
@@ -63,5 +64,12 @@
         {% for action in page.filterActions %}
             {{ include(nowo_ui_partial('action', _b), {action: action, context: 'toolbar', display: page.filtersDisplay, bundle: _b, nowo_ui_page_type: _pt}, false) }}
         {% endfor %}
+        {% if header_actions|default([]) is not empty %}
+            <div class="nowo-ui-filters__header-actions" data-nowo-ui-region="header-actions">
+                {% for action in header_actions %}
+                    {{ include(nowo_ui_partial('action', _b), {action: action, context: 'toolbar', bundle: _b, nowo_ui_page_type: _pt}, false) }}
+                {% endfor %}
+            </div>
+        {% endif %}
     </div>
 {{ form_end(page.filters) }}

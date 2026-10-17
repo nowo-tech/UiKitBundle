@@ -262,6 +262,7 @@ tokens are the host defaults; the appearance (user-chosen) overrides them. Both 
 | `classes` | **replace** the host classes of that slot on that page type (same entry forms as `theme.classes`) |
 | `framework_defaults` | overrides `theme.framework_defaults` on that page type (unset = inherit) |
 | `attributes` | **merge** over the host attributes of that slot; bundle attributes merge over them |
+| `header_actions_in_filters` | `list` only (bool, default `false`): the list scaffold renders the page-header actions at the end of the filter row (when the page has filters); `ListPage::headerActionsInFilters` wins when set |
 
 Precedence: **bundle slot > bundle > page-type slot > page type > host slot > host** (classes: the most specific
 entry replaces the others; attributes: merged host → page type → bundle → call site).
@@ -322,6 +323,7 @@ nowo_ui_kit:
       <BundleShortName>: { framework_defaults: bool, classes: …, attributes: …, partials: …, tokens: …, tokens_dark: … }
     pages:
       <list|show|form|settings|dashboard|confirm|wizard|auth>: { framework_defaults: bool, classes: …, attributes: … }
+      list: { header_actions_in_filters: bool }   # list page type only
 ```
 
 ## Contract-test allow-lists

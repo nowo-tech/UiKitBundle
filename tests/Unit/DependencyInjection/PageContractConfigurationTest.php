@@ -96,7 +96,7 @@ final class PageContractConfigurationTest extends TestCase
                 'classes' => ['table' => 'host-table', 'card' => 'host-card'],
                 'attributes' => ['table' => ['data-host' => '1']],
                 'pages' => [
-                    'list' => ['classes' => ['table' => 'list-table', 'card' => ['value' => 'list-card', 'framework_defaults' => false]], 'attributes' => ['table' => ['data-page' => 'list']]],
+                    'list' => ['classes' => ['table' => 'list-table', 'card' => ['value' => 'list-card', 'framework_defaults' => false]], 'attributes' => ['table' => ['data-page' => 'list']], 'header_actions_in_filters' => true],
                     'dashboard' => ['framework_defaults' => false],
                 ],
                 'bundles' => ['NowoXBundle' => ['classes' => ['table' => 'x-table']]],
@@ -106,6 +106,9 @@ final class PageContractConfigurationTest extends TestCase
         self::assertSame('list-table', $config['theme']['pages']['list']['classes']['table']);
         self::assertSame(['value' => 'list-card', 'framework_defaults' => false], $config['theme']['pages']['list']['classes']['card']);
         self::assertFalse($config['theme']['pages']['dashboard']['framework_defaults']);
+        self::assertTrue($config['theme']['pages']['list']['header_actions_in_filters']);
+        self::assertTrue(Theme::fromConfig('bootstrap5', $config['theme'])->listHeaderActionsInFilters());
+        self::assertFalse(Theme::fromConfig('bootstrap5', [])->listHeaderActionsInFilters());
         self::assertArrayNotHasKey('partials', $config['theme']['pages']['list']);
         self::assertArrayNotHasKey('tokens', $config['theme']['pages']['list']);
 
@@ -125,6 +128,7 @@ final class PageContractConfigurationTest extends TestCase
     {
         yield 'unknown page type' => [['theme' => ['pages' => ['index' => []]]], 'Invalid nowo_ui_kit.theme.pages key: unknown page type "index"'];
         yield 'unknown page slot' => [['theme' => ['pages' => ['list' => ['classes' => ['nope' => 'x']]]]], 'Unknown nowo_ui_kit.theme.pages.<page>.classes slot "nope"'];
+        yield 'header actions option on a non-list page' => [['theme' => ['pages' => ['show' => ['header_actions_in_filters' => true]]]], 'Invalid nowo_ui_kit.theme.pages.show.header_actions_in_filters: only the list page type takes it.'];
         yield 'page partials not supported' => [['theme' => ['pages' => ['list' => ['partials' => ['card' => 'x']]]]], 'Unrecognized option "partials"'];
         yield 'page on* attribute' => [['theme' => ['pages' => ['form' => ['attributes' => ['form' => ['onsubmit' => 'x']]]]]], 'Invalid nowo_ui_kit.theme.pages.<page>.attributes.form'];
         yield 'unknown class entry key' => [['theme' => ['classes' => ['btn' => ['value' => 'x', 'framework' => false]]]], 'Invalid nowo_ui_kit.theme.classes.btn: unknown key(s) "framework"'];

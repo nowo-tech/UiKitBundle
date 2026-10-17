@@ -76,6 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Form secondary actions in the page header:** `FormPage::secondaryActionsInHeader` (default `true`; `false` keeps them below the form).
 
 - **Action display modes everywhere** (validation round 3): `Action::display` (`icon` | `text` | `icon_text`, `Action::DISPLAYS`) is honoured in toolbar / header / card / filter context too (icon-only: visually-hidden label + `aria-label` / `title`, kind icon fallback), the `action` partial takes a `display` context option, `ListPage::filtersDisplay` sets it for the apply / clear / extra filter buttons, and the new slot `btn_icon` (`nowo-ui-btn--icon`) marks icon-only toolbar buttons.
+- **List primary actions in the filter row:** `ListPage::headerActionsInFilters` (null = the new theme option `theme.pages.list.header_actions_in_filters`, default `false`) renders the page-header actions at the end of the filter row (`nowo-ui-filters__header-actions`, region `header-actions`) instead of the page header; `Theme::listHeaderActionsInFilters()`, `list_filters` partial input `header_actions`, scaffold macro `page_header(…, header_actions)`.
 - **Token precedence** `nowo_ui_tokens(nonce)`: theme tokens (host defaults) then the appearance SPI style (user choice); the document layout prints it after `nowo-ui.css`.
 
 ### Changed

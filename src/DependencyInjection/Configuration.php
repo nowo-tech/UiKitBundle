@@ -315,10 +315,13 @@ final class Configuration implements ConfigurationInterface
                 ->normalizeKeys(false)
                 ->validate()
                     ->always(static function (array $pages): array {
-                        foreach (array_keys($pages) as $page) {
+                        foreach ($pages as $page => $data) {
                             $error = Theme::pageTypeError((string) $page);
                             if (null !== $error) {
                                 throw new InvalidConfigurationException('Invalid nowo_ui_kit.theme.pages key: '.$error);
+                            }
+                            if ('list' !== (string) $page && isset($data['header_actions_in_filters'])) {
+                                throw new InvalidConfigurationException(\sprintf('Invalid nowo_ui_kit.theme.pages.%s.header_actions_in_filters: only the list page type takes it.', $page));
                             }
                         }
 
@@ -327,6 +330,12 @@ final class Configuration implements ConfigurationInterface
                 ->end()
                 ->arrayPrototype();
         $this->addThemeChildren($pages->children(), 'theme.pages.<page>', true, false);
+        $pages
+            ->children()
+                ->booleanNode('header_actions_in_filters')
+                    ->info('list only: render the page-header actions at the end of the filter row instead of the page header (ListPage::headerActionsInFilters wins when set; unset = false).')
+                ->end()
+            ->end();
 
         return $node;
     }

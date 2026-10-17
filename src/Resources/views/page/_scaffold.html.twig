@@ -1,14 +1,15 @@
 {#
   Scaffold helpers (internal to page/*.html.twig; not a theme partial).
 
-  page_header(page, page_type, extra_actions = []): includes the `page_header` theme partial with both the 2.0
+  page_header(page, page_type, extra_actions = [], header_actions = true): includes the `page_header` theme partial with both the 2.0
   input (`header`, `actions`) and the 1.x input (`title`, `intro` translated, `toolbar` = the header actions + the
   extra actions pre-rendered through the `action` partial, `header_actions_rendered: true`), so host overrides
-  written for either contract render the same header.
+  written for either contract render the same header. header_actions = false leaves page.header.actions out (the
+  list scaffold renders them in the filter row: ListPage::headerActionsInFilters).
 #}
-{% macro page_header(page, page_type, extra_actions = []) %}
+{% macro page_header(page, page_type, extra_actions = [], header_actions = true) %}
     {%- set _b = page.bundle -%}
-    {%- set _actions = page.header.actions|merge(extra_actions) -%}
+    {%- set _actions = (header_actions ? page.header.actions : [])|merge(extra_actions) -%}
     {%- set _toolbar -%}
         {%- for action in _actions -%}
             {{ include(nowo_ui_partial('action', _b), {action: action, context: 'toolbar', bundle: _b, nowo_ui_page_type: page_type}, false) }}

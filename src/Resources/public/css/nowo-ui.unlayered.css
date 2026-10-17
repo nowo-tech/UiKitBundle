@@ -3284,6 +3284,19 @@ a.nowo-ui-kpi--link:focus-visible {
   gap: 0.35rem;
 }
 
+/* Page-header actions at the end of the filter row (ListPage::headerActionsInFilters) */
+.nowo-ui-filters__actions:has(> .nowo-ui-filters__header-actions) {
+  flex: 1 1 auto;
+}
+
+.nowo-ui-filters__header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-inline-start: auto;
+}
+
 /*
  * Responsive list tables (page/list.html.twig, ListPage::responsive = cards): the table wrap is a size container;
  * Column::priority 3 / 2 columns hide below 60rem / 48rem of table width, and below 40rem every row becomes a card
