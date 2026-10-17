@@ -66,6 +66,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **docs/MIGRATING_BUNDLES.md**: FormKit placeholder / help convention vs the contract test's raw-key check
+  (translate every field, `convention_requires_translation: true` or explicit `help: false`), collection pages need
+  2.1, header `FormView` actions, form themes, area navigation, `dialog` vs `modal_shell`, new slot mappings.
 - **Wide-form and muted-dialog slots**: `input_wide` / `input_full` (complete input class lists with the semantic
   modifiers `nowo-ui-input--wide` — max width 36rem — and `nowo-ui-input--full`; Tailwind defaults `max-w-xl` / no
   max width), `dialog_body_muted` (`nowo-ui-dialog__body--muted`) and the `nowo-ui-confirm__body--muted` modifier:

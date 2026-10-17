@@ -143,6 +143,13 @@ After — only the data the scaffold cannot know:
   `nowo_ui_document_title`, `nowo_ui_page_header` (through `nowo_ui_partial('page_header')`) and `nowo_ui_content`.
 - Do not add a layout Twig global of your own; `web_ui.layout_template` reaches the scaffold through the view
   model's `layout`.
+- Form themes (2.1): pass the bundle's form theme(s) as `FormPage::formThemes` / `SettingsSection::formThemes`
+  instead of overriding `nowo_ui_content` to call `form_theme`.
+- Area navigation (2.1): a tab bar between the sections of the bundle area is `PageHeader::tabs` (`AreaNav`), not a
+  local `_tabs` include in a data block; publish it through an `AreaNavProviderInterface` so DashboardMenu can reuse
+  it. 1.x `<nav>` attributes (e.g. `data-turbo="false"`) go in `AreaNav::$attributes` / the `tabs` partial `attr`.
+- Modals: prefer the framework-free `dialog` partial (`data-nowo-ui-dialog-open="<id>"`) over `modal_shell`; confirm
+  actions can add a no-JS `Action::fallbackHref` to a `page/confirm` page.
 
 ## 4. Utility classes → theme slots
 
@@ -164,6 +171,10 @@ Every framework class in bundle markup becomes a slot (or a `nowo-ui-*` / bundle
 | sortable header / sort link classes | `sortable_header` / `sort_link` slots (list scaffold) |
 | `opacity-50 pointer-events-none` on disabled row actions | `row_action_disabled` slot |
 | modal panel / header / body / footer classes | `modal_panel` / `modal_header` / `modal_body` / `modal_footer` (the `modal_shell` partial) |
+| local Bootstrap modal markup (`modal fade` …) | the `dialog` partial (`dialog_*` slots; `modal_shell` stays for BC and its structure classes are allowed by the contract test) |
+| `text-muted` on dialog body text | `dialog` partial `body_muted: true` (slot `dialog_body_muted`) or `nowo-ui-confirm__body--muted` |
+| `w-100` / `mw-100` / `max-w-*` on wide form fields | `nowo_ui_class('input_wide', …)` / `nowo_ui_class('input_full', …)` |
+| `<code>` / `<pre>` with `bg-light p-2 small` for payloads | `nowo_ui_class('code', …)` / `nowo_ui_class('code_block', …)` |
 | local confirm modal markup | the `confirm` partial (`confirm_*` slots; title + message header: `Confirm::messageInHeader`) |
 | full-page delete confirm template | `page/confirm` (root slot `confirm_page`, never the dialog slot `confirm`) |
 | audit / meta `<dl>` under a show page | `ShowPage::meta` (slots `detail_list` + `detail_list_meta`) |
@@ -287,7 +298,23 @@ stub host layout and a stub theme and fails on: no scaffold / undeclared unique 
 `<html>` / CDN / `on*=` / `confirm(`, framework classes outside slots (frameworks `none`, `bootstrap5`, `tailwind` by
 default), stub theme not reflected, raw or missing translation keys. Details and hooks:
 [`PAGE_CONTRACT.md#contract-test`](PAGE_CONTRACT.md#contract-test). A documented exception goes in
-`allowedClasses()` with a note in `docs/TEMPLATES.md`.
+`allowedClasses()` with a note in `docs/TEMPLATES.md` (not for the `modal_shell` structure classes, allowed since 2.1).
+
+**FormKit and translation keys.** With FormKit's automatic placeholder / help convention every field resolves keys
+such as `<form>.<field>.placeholder` and `<form>.<field>.help`; the contract test flags each one that is missing from
+the bundle catalogues (and any `*.label|placeholder|help|title` key printed raw). Either ship a translation for every
+field the convention touches, set `convention_requires_translation: true` in the FormKit profile (the convention only
+applies when a translation exists), or opt fields out explicitly (`help: false`, `placeholder: false`). Run the test
+with the bundle's real FormKit theme (`formThemes()` hook) so it sees the same keys as production.
+
+**Collections.** Pages with `CollectionType` fields (`prototype: true`) need UiKit 2.1+: earlier versions did not
+reset `vars.prototype` between the contract test's renders, so the second render lost `data-prototype` or threw
+"already rendered".
+
+**Header actions with a `FormView`.** Since 2.1 the stub host's `page_header` override renders `actions` itself (like
+most host overrides) and a seventh test checks that every rendered form of a `FormView`-backed `Action` keeps its
+hidden fields (CSRF token) exactly once. Render actions through `nowo_ui_partial('action')`, never with your own
+`form_start` / `form_end` on a FormView the scaffold may already have rendered.
 
 ## 8. docs/TEMPLATES.md
 
