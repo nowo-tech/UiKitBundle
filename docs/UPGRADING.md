@@ -167,6 +167,10 @@ Changes to markup, inputs and cascade a host or a bundle may depend on (REQ-UI-0
   in table mode the buttons sit at the cell end, under the header).
 - **Card-mode CSS:** direct children of card cells get `justify-self: start` (badges no longer stretch);
   `nowo-ui-table-wrap--flush` is new.
+- **List pagination variables:** the list scaffold passes `route`, `route_params`, `query`, `page_param` and
+  `per_page_param` to the `pagination` partial. `query` is the current request query (minus the page / per-page
+  parameters) merged with `Pagination::query` (which wins per key), so page links now keep the active filters and
+  sort by default; a list that must not carry them overrides the `pagination` partial (`theme.bundles.<B>.partials`).
 - **Row confirm dialog ids** are derived from the target, the CSRF token, the whole `Confirm` content and the row
   key (`ListPage::rowActions()` returns `Action::withConfirmScope(key)` copies), so the `confirm_id` / dialog ids of
   list rows change value (still `nowo-ui-confirm-<12 hex>`). Tests or scripts that computed

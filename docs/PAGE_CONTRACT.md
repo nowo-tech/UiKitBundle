@@ -348,7 +348,7 @@ scaffold macros (`page/_scaffold`) are internal.
 | Partial | 1.x input passed by the scaffolds | 2.0 input passed too |
 | --- | --- | --- |
 | `page_header` | `title`, `intro` (translated strings), `toolbar` (the header actions — and FormPage secondary actions — pre-rendered through the `action` partial) | `header` (`PageHeader`), `actions` (`list<Action>` of the toolbar), `header_actions_rendered: true` |
-| `pagination` | `pagination` = `Pagination::toArray()` (`page`, `per_page`, `total`, `total_pages`, `route`, `query`, `route_params`, `page_param`, `per_page_param`), `item_count` | `pagination_model` (`Pagination`) |
+| `pagination` | `pagination` = `Pagination::toArray()` (`page`, `per_page`, `total`, `total_pages`, `route`, `query`, `route_params`, `page_param`, `per_page_param`), `item_count`, and the top-level `route` (`Pagination::route`, else the current route), `route_params` (`Pagination::routeParams`, else the current ones) and `query` (current request query without the page / per-page parameters, merged with `Pagination::query`) — so an untouched 1.x override keeps filters and sort across pages | `pagination_model` (`Pagination`), `page_param`, `per_page_param` |
 | `row_actions` | `actions` = 1.x hashes: `kind`, `label` (translated), `href` (route resolved), `method` (`POST` for any non-GET), `csrf_token` / `csrf_field` (also taken from a CSRF `FormView`), `confirm_id`, `icon`, `variant`, `attr`, `modal_id`, `disabled`, `visible` | each hash's `view` (`Action`); `confirm_external: true` |
 | `empty` | `message` (translated) | `empty` (`EmptyState`) |
 | `flashes` / `toasts` | `bundle` only (flashes from `app.flashes`) | — |

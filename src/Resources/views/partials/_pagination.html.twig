@@ -17,6 +17,9 @@
     - framework: css_framework override for macros
     - region: data-nowo-ui-region on the root (scaffolds pass `pagination`)
     - pagination_model (scaffolds): the View\Pagination when `pagination` is its 1.x array (toArray())
+    - page_param / per_page_param: query parameter names (default from `pagination`, else page / per_page)
+  The list scaffold also passes the 1.x top-level route, route_params and query (current request query without the
+  page parameters, merged with Pagination::query), so a 1.x override keeps the filters across pages.
     - bundle: per-bundle theme exceptions (slots pagination, pagination_link, pagination_active, pagination_info
       add host classes; slot pagination attributes on the root)
 #}
@@ -35,8 +38,8 @@
 {% set nav_trans_domain = nav_trans_domain|default(trans_domain) %}
 {% set route = route|default(pagination.route|default(app.request.attributes.get('_route'))) %}
 {% set route_params = route_params|default(pagination.route_params|default(app.request.attributes.get('_route_params')|default({}))) %}
-{% set page_param = pagination.page_param|default('page') %}
-{% set per_page_param = pagination.per_page_param|default('per_page') %}
+{% set page_param = page_param|default(pagination.page_param|default('page')) %}
+{% set per_page_param = per_page_param|default(pagination.per_page_param|default('per_page')) %}
 {% set _info_extra = _t ? _t.extraClasses('pagination_info', bundle, _pt) : '' %}
 {% set _link_class = _t ? _t.macroClasses('pagination_link', 'page-link nowo-ui-pagination__link', bundle, _pt) : 'page-link nowo-ui-pagination__link' %}
 {% set _disabled_class = _t ? _t.macroClasses('pagination_link', 'page-link nowo-ui-pagination__link is-disabled', bundle, _pt) : 'page-link nowo-ui-pagination__link is-disabled' %}

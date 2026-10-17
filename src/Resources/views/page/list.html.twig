@@ -122,8 +122,25 @@
                 </div>
             {% endif %}
             {% if page.pagination %}
-                {#- 1.x array shape (+ the object as pagination_model) so host overrides of _pagination keep working -#}
-                {{ include(nowo_ui_partial('pagination', _b), {pagination: page.pagination.toArray(), pagination_model: page.pagination, item_count: page.rows|length, region: 'pagination', bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
+                {#- 1.x array shape (+ the object as pagination_model) and the 1.x top-level route / route_params / query
+                    (query = the current request query without the page parameters, then Pagination::query), so an
+                    untouched 1.x _pagination override keeps filters and sort across pages -#}
+                {% set _pager = page.pagination %}
+                {% set _request_query = app is defined and app ? app.request.query.all : {} %}
+                {% set _pager_query = _request_query|filter((v, k) => k not in [_pager.pageParam, _pager.perPageParam])|merge(_pager.query) %}
+                {{ include(nowo_ui_partial('pagination', _b), {
+                    pagination: _pager.toArray(),
+                    pagination_model: _pager,
+                    item_count: page.rows|length,
+                    route: _pager.route ?? (app is defined and app ? app.request.attributes.get('_route') : null),
+                    route_params: _pager.routeParams ?? (app is defined and app ? app.request.attributes.get('_route_params')|default({}) : {}),
+                    query: _pager_query,
+                    page_param: _pager.pageParam,
+                    per_page_param: _pager.perPageParam,
+                    region: 'pagination',
+                    bundle: _b,
+                    nowo_ui_page_type: nowo_ui_page_type,
+                }, false) }}
             {% endif %}
         {% else %}
             {% set _empty = page.empty ?? null %}
