@@ -14,6 +14,13 @@
       aria-label / title + a visually-hidden copy)
     - align: end (default; panel aligned to the toggle's end edge) | start
     - open (bool), id, attr (root attributes, no on*), toggle_attr, bundle, nowo_ui_page_type
+    - confirm_external (2.4): passed to the `action` partial (the confirm dialogs are rendered elsewhere)
+    - popover (2.4, bool; default theme.popover_menus, false): the panel becomes a native [popover] in the browser top
+      layer (never clipped by a table scroller / card) opened by a <button popovertarget> toggle instead of
+      <details>/<summary>; nowo-ui-popover.js places it under the toggle (flips above without room), closes it on
+      scroll / resize / item click, and Escape closes it before a surrounding dialog. Root
+      [data-nowo-ui-popover-menu], toggle [data-nowo-ui-popover-trigger] (aria-expanded), panel
+      [data-nowo-ui-popover-panel] (id = "<id>-panel", or a random one without `id`). `open` is ignored.
 #}
 {% set _b = bundle|default(null) %}
 {% set _pt = nowo_ui_page_type|default(null) %}
@@ -25,8 +32,15 @@
 {% endif %}
 {% set _align = align|default('end') == 'start' ? 'start' : 'end' %}
 {% set _content = content|default(null) %}
-<details class="{{ nowo_ui_class('menu', _b) }} nowo-ui-menu--{{ _align }}" data-nowo-ui-menu{% if id|default(null) %} id="{{ id }}"{% endif %}{% if open|default(false) %} open{% endif %}{{ nowo_ui_attrs('menu', _b) }}{{ nowo_ui_html_attrs(attr|default({})) }}>
-    <summary class="{{ nowo_ui_class('menu_toggle', _b) }}{{ _display == 'icon' ? ' nowo-ui-menu__toggle--icon' }}"{% if _display == 'icon' %} aria-label="{{ _label }}" title="{{ _label }}"{% endif %}{{ nowo_ui_attrs('menu_toggle', _b) }}{{ nowo_ui_html_attrs(toggle_attr|default({})) }}>
+{% set _t = nowo_ui_theme|default(null) %}
+{% set _popover = popover ?? (_t ? _t.popoverMenus() : false) %}
+{% if _popover %}
+    {% set _panel_id = (id|default(null) ?: 'nowo-ui-menu-' ~ random()) ~ '-panel' %}
+    {% set _panel_attrs = ' id="' ~ _panel_id ~ '" popover data-nowo-ui-popover-panel' %}
+{% else %}
+    {% set _panel_attrs = '' %}
+{% endif %}
+{% set _toggle_inner %}
         {%- if _display != 'text' -%}
             {{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _icon, label: _label}, false)|trim|raw }}
         {%- endif -%}
@@ -35,11 +49,13 @@
         {%- else -%}
             <span class="nowo-ui-menu__label">{{ _label }}</span>
         {%- endif -%}
-    </summary>
-    {% if _content is not null %}
-        <div class="{{ nowo_ui_class('popover', _b) }}"{{ nowo_ui_attrs('popover', _b) }}>{{ _content|raw }}</div>
+{% endset %}
+{% set _toggle_class = nowo_ui_class('menu_toggle', _b) ~ (_display == 'icon' ? ' nowo-ui-menu__toggle--icon') %}
+{% set _panel %}
+{% if _content is not null %}
+        <div class="{{ nowo_ui_class('popover', _b) }}"{{ _panel_attrs|raw }}{{ nowo_ui_attrs('popover', _b) }}>{{ _content|raw }}</div>
     {% else %}
-        <ul class="{{ nowo_ui_class('menu_panel', _b) }}"{{ nowo_ui_attrs('menu_panel', _b) }}>
+        <ul class="{{ nowo_ui_class('menu_panel', _b) }}"{{ _panel_attrs|raw }}{{ nowo_ui_attrs('menu_panel', _b) }}>
             {% for item in items|default([]) %}
                 {% if item.visible is defined and item.kind is defined %}
                     {# View\Action #}
@@ -49,7 +65,7 @@
                             {% set _danger = item.resolvedVariant() == 'danger' %}
                             <li><a class="{{ nowo_ui_class('menu_item', _b) }}{{ _danger ? ' nowo-ui-menu__item--danger' }}" href="{{ _href }}"{{ nowo_ui_attrs('menu_item', _b) }}{{ nowo_ui_html_attrs(item.attributes) }}>{{ item.label is not null ? item.label|nowo_ui_trans : ('action.' ~ item.kind)|trans({}, 'NowoUiKitBundle') }}</a></li>
                         {% else %}
-                            <li class="nowo-ui-menu__entry">{{ include(nowo_ui_partial('action', _b), {action: item, context: 'toolbar', display: 'text', bundle: _b, nowo_ui_page_type: _pt}, false) }}</li>
+                            <li class="nowo-ui-menu__entry">{{ include(nowo_ui_partial('action', _b), {action: item, context: 'toolbar', display: 'text', bundle: _b, confirm_external: confirm_external|default(false), nowo_ui_page_type: _pt}, false) }}</li>
                         {% endif %}
                     {% endif %}
                 {% else %}
@@ -61,4 +77,15 @@
             {% endfor %}
         </ul>
     {% endif %}
+{% endset %}
+{% if _popover %}
+<div class="{{ nowo_ui_class('menu', _b) }} nowo-ui-menu--{{ _align }} nowo-ui-menu--popover" data-nowo-ui-menu data-nowo-ui-popover-menu{% if id|default(null) %} id="{{ id }}"{% endif %}{{ nowo_ui_attrs('menu', _b) }}{{ nowo_ui_html_attrs(attr|default({})) }}>
+    <button type="button" class="{{ _toggle_class }}" popovertarget="{{ _panel_id }}" aria-haspopup="menu" aria-expanded="false" data-nowo-ui-popover-trigger{% if _display == 'icon' %} aria-label="{{ _label }}" title="{{ _label }}"{% endif %}{{ nowo_ui_attrs('menu_toggle', _b) }}{{ nowo_ui_html_attrs(toggle_attr|default({})) }}>{{ _toggle_inner }}</button>
+    {{ _panel }}
+</div>
+{% else %}
+<details class="{{ nowo_ui_class('menu', _b) }} nowo-ui-menu--{{ _align }}" data-nowo-ui-menu{% if id|default(null) %} id="{{ id }}"{% endif %}{% if open|default(false) %} open{% endif %}{{ nowo_ui_attrs('menu', _b) }}{{ nowo_ui_html_attrs(attr|default({})) }}>
+    <summary class="{{ _toggle_class }}"{% if _display == 'icon' %} aria-label="{{ _label }}" title="{{ _label }}"{% endif %}{{ nowo_ui_attrs('menu_toggle', _b) }}{{ nowo_ui_html_attrs(toggle_attr|default({})) }}>{{ _toggle_inner }}</summary>
+    {{ _panel }}
 </details>
+{% endif %}

@@ -18,7 +18,9 @@ type Entry =
   | 'tabs'
   | 'release'
   | 'open-modal'
-  | 'dialog';
+  | 'dialog'
+  | 'popover'
+  | 'segmented';
 
 const entry = process.env.VITE_ENTRY as Entry | undefined;
 
@@ -212,6 +214,36 @@ const configs: Record<Entry, { build: object }> = {
         output: {
           format: 'iife' as const,
           entryFileNames: 'js/nowo-ui-dialog.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  popover: {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-popover.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-popover.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  segmented: {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-segmented.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-segmented.js',
         },
       },
       minify: true,

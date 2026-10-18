@@ -57,6 +57,16 @@
 
 ## Unreleased
 
+Additive (minor release); nothing to change. Optional:
+
+- Replace a copied `PagePagination::fromTotal($total, $page, $perPage)` with
+  `Pagination::fromTotal($total, $page, $perPage)` (same page, per_page, total, total_pages; `offset()` instead of
+  `['offset']`, which still works through `ArrayAccess`) and pass the object straight to the pagination partial.
+- Row / overflow menus inside table scrollers: `popover: true` on `menu` / `_kebab`, `menu: true, popover: true` on
+  `row_actions`, or `nowo_ui_kit.theme.popover_menus: true`; drop a local popover-menu Stimulus controller.
+- A host layout that lists UiKit scripts by hand (instead of `{{ include(nowo_ui_partial('scripts')) }}`) adds
+  `js/nowo-ui-popover.js` and `js/nowo-ui-segmented.js` when it uses these partials.
+
 ## To 2.3.1
 
 From **2.3.0**:

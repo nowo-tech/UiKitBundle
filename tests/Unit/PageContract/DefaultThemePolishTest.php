@@ -236,7 +236,7 @@ final class DefaultThemePolishTest extends TestCase
 
         $scripts = $twig->render('@NowoUiKit/page/auth.html.twig', ['page' => new AuthPage('Sign in')]);
         self::assertStringContainsString('<script src="/bundles/nowouikit/js/nowo-ui-theme-boot.js" data-nowo-ui-theme-boot></script>', $scripts);
-        foreach (['modal', 'confirm', 'dialog', 'toast', 'tabs', 'theme'] as $name) {
+        foreach (['modal', 'confirm', 'dialog', 'toast', 'tabs', 'theme', 'popover', 'segmented'] as $name) {
             self::assertStringContainsString('<script src="/bundles/nowouikit/js/nowo-ui-'.$name.'.js" defer></script>', $scripts);
         }
 
@@ -250,7 +250,7 @@ final class DefaultThemePolishTest extends TestCase
         $request = new \Symfony\Component\HttpFoundation\Request([], [], ['csp_nonce' => 'n0']);
         $twig = PageContractTwig::create(['t' => "{{ include(nowo_ui_partial('scripts')) }}", 'only' => "{{ include(nowo_ui_partial('scripts'), {script_names: ['dialog'], nonce: 'x'}) }}"], request: $request);
 
-        self::assertSame(6, substr_count($twig->render('t'), 'nonce="n0"'));
+        self::assertSame(8, substr_count($twig->render('t'), 'nonce="n0"'));
         self::assertSame('<script src="/bundles/nowouikit/js/nowo-ui-dialog.js" defer nonce="x"></script>', trim($twig->render('only')));
     }
 

@@ -198,6 +198,8 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `menu_panel` | `nowo-ui-menu__panel` | — | — | — | — |
 | `menu_item` | `nowo-ui-menu__item` | — | — | — | — |
 | `popover` | `nowo-ui-popover` | — | — | — | — |
+| `segmented` | `nowo-ui-segmented` | — | — | — | — |
+| `segmented_option` | `nowo-ui-segmented__option` | — | — | — | — |
 | `modal` | `nowo-ui-modal` | — | — | — | — |
 | `modal_panel` | `nowo-ui-modal__panel` | — | — | — | — |
 | `modal_header` | `nowo-ui-modal__header` | — | — | — | — |
@@ -372,13 +374,14 @@ as the UiKit partial (documented in the header comment of each template) and sho
 | `filters` | `partials/_filters.html.twig` | `action`, `method`, `q`, `placeholder`, `actions`, `clear_href`, `collapsible` | bundle filter bars |
 | `flashes` | `partials/_flashes.html.twig` | `flash_messages` (2.2, default `app.flashes`), `flashes` (deprecated: ignored inside page scaffolds), `trans_domain`, `bundle` | layouts (`nowo_ui_flashes`) |
 | `list_filters` | `page/_list_filters.html.twig` | `page` (`View\ListPage`, `page.filters` FormView), `region`, `bundle` | list scaffold |
-| `menu` *(2.3)* | `partials/_menu.html.twig` | `items` (`View\Link` / `View\Action` / `{label, href, attr, current, danger}`) or `content` (HTML, `popover` panel), `label`, `icon`, `display`, `align` (`end` \| `start`), `open`, `attr`, `bundle` | dropdown / overflow menus, popovers (native `<details>`, no JS required; light dismiss by `nowo-ui-dialog.js`) |
+| `menu` *(2.3)* | `partials/_menu.html.twig` | `items` (`View\Link` / `View\Action` / `{label, href, attr, current, danger}`) or `content` (HTML, `popover` panel), `label`, `icon`, `display`, `align` (`end` \| `start`), `popover` *(2.4; default `theme.popover_menus`)*: native `[popover]` panel in the top layer (never clipped by table scrollers), placed by `nowo-ui-popover.js`, `confirm_external` *(2.4)*, `open`, `attr`, `bundle` | dropdown / overflow menus, popovers (native `<details>`, no JS required; light dismiss by `nowo-ui-dialog.js`) |
 | `modal_shell` | `partials/_modal_shell.html.twig` | `id`, `title`, `body`, `footer` | modals |
 | `page_header` | `partials/_page_header.html.twig` | scaffolds pass **both** `header` (`View\PageHeader`) + `actions` (toolbar `View\Action`s) **and** the 1.x `title` / `intro` (translated) / `toolbar` (pre-rendered actions) with `header_actions_rendered: true`; `region`, `bundle` | every scaffold (`nowo_ui_page_header`) |
-| `pagination` | `partials/_pagination.html.twig` | scaffolds pass the 1.x array (`pagination.toArray()`) + `pagination_model` (`View\Pagination`), `item_count`, the 1.x top-level `route` / `route_params` / `query` (request query + `Pagination::query`), `page_param`, `per_page_param`, `region`, `bundle`; also accepts the object | list scaffold |
+| `pagination` | `partials/_pagination.html.twig` | scaffolds pass the 1.x array (`pagination.toArray()`) + `pagination_model` (`View\Pagination`), `item_count`, `per_page_choices` / `per_page_selector` *(2.4: per-page links; the selector uses `Pagination::fromTotal()`'s allowed values)*, the 1.x top-level `route` / `route_params` / `query` (request query + `Pagination::query`), `page_param`, `per_page_param`, `region`, `bundle`; also accepts the object | list scaffold |
 | `progress` *(2.2)* | `partials/_progress.html.twig` | `percent` (0–100, null = indeterminate), `indeterminate`, `label` (`Label` or string; default `progress.label`), `show_value`, `id`, `attr`, `bundle`; slots `progress`, `progress_meter` (native `<progress>`) | wizard / backup / restore progress |
-| `row_actions` | `partials/_row_actions.html.twig` | scaffolds pass 1.x hashes (translated `label`, resolved `href`, `method` POST/GET, `csrf_token` / `csrf_field` also from a CSRF `FormView`, `confirm_id`…) with the `View\Action` as `view`, and `confirm_external: true`; also accepts `View\Action` objects; `bundle` | list scaffold |
-| `scripts` *(2.2)* | `partials/_scripts.html.twig` | `script_names` (default `nowo_ui_script_names()`: `modal`, `confirm`, `dialog`, `toast`, `tabs`, `theme`), `nonce` | document layout; host layouts with their own script list (`{{ include(nowo_ui_partial('scripts')) }}`) |
+| `row_actions` | `partials/_row_actions.html.twig` | scaffolds pass 1.x hashes (translated `label`, resolved `href`, `method` POST/GET, `csrf_token` / `csrf_field` also from a CSRF `FormView`, `confirm_id`…) with the `View\Action` as `view`, and `confirm_external: true`; also accepts `View\Action` objects; `bundle` | list scaffold |; `menu` *(2.4: the actions in one overflow `menu`, `menu_label`)*, `popover` *(2.4)*
+| `scripts` *(2.2)* | `partials/_scripts.html.twig` | `script_names` (default `nowo_ui_script_names()`: `modal`, `confirm`, `dialog`, `toast`, `tabs`, `theme`, 2.4: `popover`, `segmented`), `nonce` | document layout; host layouts with their own script list (`{{ include(nowo_ui_partial('scripts')) }}`) |
+| `segmented` *(2.4)* | `partials/_segmented.html.twig` | `options` (two `{label, checked, title?, attr?}`), `field` (checkbox `FormView`) or `name` / `checked` / `value` / `id`, `label` or `labelled_by`, `input_attr` (e.g. Live Component `data-model`), `attr`, `bundle`; slots `segmented`, `segmented_option` | two-option choice backed by one checkbox (radiogroup; `nowo-ui-segmented.js` syncs the checkbox and dispatches `change`) |
 | `section_form` | `page/_section_form.html.twig` | `form` (FormView), `submit_label`, `actions` (2.2: `View\Action`s after the submit button), `extra_actions`, `bundle` | settings scaffold |
 | `shell` | `partials/_shell.html.twig` | `brand_html`, `aside_items`, `main`, `root_class`, `header_class`, `attr`, `burger_root_class`, `bundle` | host shells |
 | `table` *(2.2)* | `partials/_table.html.twig` | `table` (`View\Table`: columns, rows, rowActions, caption, sort, actions column, responsive), `route`, `head_html` / `rows_html` (pre-rendered cells), `bundle`; blocks `nowo_ui_table_head` / `nowo_ui_table_row` through `{% embed %}`; slots `table_wrap`, `table`, `table_caption`, `table_head*`, `table_row`, `table_cell*`, `table_actions_*` | list scaffold (`ListPage::$table`); show pages and bundle pages (`nowo_ui_show_after`) |
@@ -495,6 +498,7 @@ nowo_ui_kit:
     tokens:       { <token>: '<css value>' }
     tokens_dark:  { <token>: '<css value>' }
     confirm_message_in_header: false   # true = confirm dialogs / page print the message under the title (Confirm::messageInHeader wins)
+    popover_menus: false               # 2.4: true = menu / kebab / row-action menus open as native [popover] panels (top layer)
     bundles:
       <BundleShortName>:
         { framework_defaults: bool, classes: …, attributes: …, partials: …, tokens: …, tokens_dark: … }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit;
 
+use Nowo\UiKitBundle\Theme\Theme;
+use Nowo\UiKitBundle\Twig\ThemeExtension;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bridge\Twig\Extension\TranslationExtension;
 use Symfony\Component\Form\FormView;
@@ -295,9 +297,11 @@ final class HostChromePartialsTest extends TestCase
         $twig->addGlobal('nowo_ui_kit_icon_set', 'bootstrap-icons');
         $twig->addGlobal('nowo_ui_kit_row_actions_display', 'icon');
         $twig->addGlobal('app', ['request' => new Request([], [], ['_route' => 'nowo_ui_kit_kitchen_sink']), 'flashes' => []]);
+        // The demo app registers the bundle: the 2.x partials (menu, segmented) read the theme functions.
+        $twig->addExtension(new ThemeExtension(new Theme()));
 
         $html = $twig->render('@NowoUiKitBundle/demo/kitchen_sink.html.twig');
-        foreach (['id="host-chrome"', 'data-controller="filters-collapse"', 'data-controller="responsive-table"', 'aria-labelledby="kitchen-sink-rt-title"',
+        foreach (['data-nowo-ui-popover-menu', 'popovertarget="demo-kebab-popover"', 'data-nowo-ui-segmented', 'js/nowo-ui-popover.js', 'js/nowo-ui-segmented.js', 'id="host-chrome"', 'data-controller="filters-collapse"', 'data-controller="responsive-table"', 'aria-labelledby="kitchen-sink-rt-title"',
             'nowo-ui-row-detail-cell', 'nowo-ui-corner-tab', 'nowo-ui-disclosure-icon', 'nowo-ui-edge-tab__link', 'bi bi-x-circle'] as $needle) {
             self::assertStringContainsString($needle, $html);
         }

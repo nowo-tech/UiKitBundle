@@ -98,6 +98,21 @@
             </div>
         </section>
 
+        {# 2.4: segmented control — two options backed by one checkbox (the form field; nowo-ui-segmented.js syncs it). #}
+        <section id="segmented" class="nowo-ui-body" data-demo-segmented>
+            <p class="{{ ui.muted() }}" id="demo-segmented-label">Notify me about</p>
+            {% include '@NowoUiKitBundle/partials/_segmented.html.twig' with {
+                name: 'involved_only',
+                id: 'demo-involved-only',
+                checked: false,
+                labelled_by: 'demo-segmented-label',
+                options: [
+                    { label: 'All issues', checked: false, title: 'Every issue of the project' },
+                    { label: 'Involved only', checked: true, title: 'Issues you created, are assigned to or commented on' }
+                ]
+            } %}
+        </section>
+
         {% set card_body %}
             <p class="{{ ui.muted() }}">Card / panel building block for admin surfaces.</p>
         {% endset %}
@@ -159,6 +174,30 @@
                                 } %}
                             </td>
                         </tr>
+                        <tr data-demo-popover-row>
+                            <td>4</td>
+                            <td>Delta (2.4: overflow menu as a native popover — never clipped by the table scroller)</td>
+                            <td>
+                                {% include '@NowoUiKitBundle/partials/_row_actions.html.twig' with {
+                                    menu: true,
+                                    popover: true,
+                                    menu_label: 'Actions',
+                                    actions: [
+                                        { kind: 'view', href: '#table' },
+                                        { kind: 'edit', href: '#table' },
+                                        { kind: 'delete', label: 'Archive', href: '#table' }
+                                    ]
+                                } %}
+                                {% include '@NowoUiKitBundle/partials/_kebab.html.twig' with {
+                                    id: 'demo-kebab-popover',
+                                    popover: true,
+                                    items: [
+                                        { label: 'Duplicate', href: '#table' },
+                                        { label: 'Delete', href: '#table', danger: true }
+                                    ]
+                                } %}
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -169,7 +208,8 @@
                     item_count: item_count|default(2),
                     route: route|default('nowo_ui_kit_kitchen_sink'),
                     route_params: route_params|default({}),
-                    query: query|default({})
+                    query: query|default({}),
+                    per_page_choices: [10, 25, 50]
                 } %}
             {% endif %}
         </section>
@@ -348,4 +388,6 @@
     <script src="{{ asset('js/nowo-ui-page-loader.js', 'nowo_ui_kit') }}" defer></script>
     <script src="{{ asset('js/nowo-ui-theme.js', 'nowo_ui_kit') }}" defer></script>
     <script src="{{ asset('js/nowo-ui-orb.js', 'nowo_ui_kit') }}" defer></script>
+    <script src="{{ asset('js/nowo-ui-popover.js', 'nowo_ui_kit') }}" defer></script>
+    <script src="{{ asset('js/nowo-ui-segmented.js', 'nowo_ui_kit') }}" defer></script>
 {% endblock %}

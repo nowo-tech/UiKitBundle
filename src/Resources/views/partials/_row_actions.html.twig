@@ -15,6 +15,11 @@
       action_danger | action_neutral (by resolved variant: delete = danger, create / save = primary, other kinds
       neutral, explicit variants as given): host classes; row_action_disabled (disabled actions): host classes
       on 1.x hashes, semantic + host classes on objects; row_actions attributes)
+    - menu (2.4, bool, default false): the actions go into one overflow menu (the `menu` partial, toggle label
+      menu_label, default "More actions") instead of a button cluster. View\Action objects (and hashes with `view`)
+      keep their POST / confirm / dialog behaviour; 1.x hashes become GET links (POST hashes need a View\Action).
+    - popover (2.4, bool; default theme.popover_menus): with `menu`, the panel is a native [popover] (top layer, never
+      clipped by the table scroller)
 
   Each action:
     kind          edit|delete|view|copy|create|save|cancel|restore|share|config|export|filter|prev|next|close
@@ -44,6 +49,21 @@
 {% set _t = nowo_ui_theme|default(null) %}
 {% set _pt = nowo_ui_page_type|default(null) %}
 {% set _root = ui.row_actions(framework) ~ ' nowo-ui-row-actions--' ~ display|replace({_: '-'}) %}
+{% if menu|default(false) %}
+    {% set _menu_items = [] %}
+    {% for action in actions %}
+        {% if action is not iterable %}
+            {% set _menu_items = _menu_items|merge([action]) %}
+        {% elseif action.view is defined and action.view %}
+            {% set _menu_items = _menu_items|merge([action.view]) %}
+        {% elseif (action.visible is not defined or action.visible) and action.href|default(null) and (action.method|default('GET'))|upper == 'GET' %}
+            {% set _menu_items = _menu_items|merge([{label: action.label|default(('action.' ~ action.kind|default('edit'))|trans({}, 'NowoUiKitBundle')), href: action.href, danger: action.kind|default('') == 'delete', attr: action.attr|default({})}]) %}
+        {% endif %}
+    {% endfor %}
+<div class="{{ _t ? _t.macroClasses('row_actions', _root ~ ' nowo-ui-row-actions--menu', bundle, _pt) : _root ~ ' nowo-ui-row-actions--menu' }}"{{ _t ? _t.renderAttributes('row_actions', bundle, {}, _pt)|raw }}>
+    {{ include(_t ? _t.partial('menu', bundle) : '@NowoUiKitBundle/partials/_menu.html.twig', {items: _menu_items, label: menu_label|default(null), align: 'end', popover: popover ?? null, confirm_external: confirm_external|default(false), bundle: bundle, nowo_ui_page_type: _pt}, false) }}
+</div>
+{% else %}
 <div class="{{ _t ? _t.macroClasses('row_actions', _root, bundle, _pt) : _root }}"{{ _t ? _t.renderAttributes('row_actions', bundle, {}, _pt)|raw }}>
     {% for action in actions %}
         {% if action is not iterable or (action.view is defined and action.view) %}
@@ -159,3 +179,4 @@
         {% endif %}
     {% endfor %}
 </div>
+{% endif %}

@@ -295,6 +295,10 @@ final class Configuration implements ConfigurationInterface
             ->booleanNode('confirm_message_in_header')
                 ->defaultFalse()
                 ->info('Confirm dialogs and the full-page confirm render the message inside the header, under the title (hosts whose dialog header is title + message). View\\Confirm::messageInHeader wins when set.')
+            ->end()
+            ->booleanNode('popover_menus')
+                ->defaultFalse()
+                ->info('2.4: menu / kebab / row-action menus render their panel as a native [popover] (browser top layer: never clipped by table scrollers or cards; nowo-ui-popover.js places it). The partial option `popover` wins.')
             ->end();
         $bundles = $children
             ->arrayNode('bundles')

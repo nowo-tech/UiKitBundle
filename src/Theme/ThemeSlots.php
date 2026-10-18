@@ -362,6 +362,9 @@ final class ThemeSlots
         'menu_panel' => ['nowo-ui-menu__panel', []],
         'menu_item' => ['nowo-ui-menu__item', []],
         'popover' => ['nowo-ui-popover', []],
+        // Segmented control (2.4, partial `segmented`): radiogroup root and its option buttons (one checkbox behind)
+        'segmented' => ['nowo-ui-segmented', []],
+        'segmented_option' => ['nowo-ui-segmented__option', []],
         'modal' => ['nowo-ui-modal', []],
         // _modal_shell internals (1.x markup: the Bootstrap structure classes modal-content / modal-header /
         // modal-body / modal-footer stay; the theme adds host classes and attributes)
@@ -435,7 +438,7 @@ final class ThemeSlots
      *
      * @var list<string>
      */
-    public const SCRIPTS = ['modal', 'confirm', 'dialog', 'toast', 'tabs', 'theme'];
+    public const SCRIPTS = ['modal', 'confirm', 'dialog', 'toast', 'tabs', 'theme', 'popover', 'segmented'];
 
     /**
      * Partial name => default template (replaceable through `theme.partials`).
@@ -461,6 +464,7 @@ final class ThemeSlots
         'progress' => '@NowoUiKitBundle/partials/_progress.html.twig',
         'row_actions' => '@NowoUiKitBundle/partials/_row_actions.html.twig',
         'scripts' => '@NowoUiKitBundle/partials/_scripts.html.twig',
+        'segmented' => '@NowoUiKitBundle/partials/_segmented.html.twig',
         'section_form' => '@NowoUiKitBundle/page/_section_form.html.twig',
         'shell' => '@NowoUiKitBundle/partials/_shell.html.twig',
         'table' => '@NowoUiKitBundle/partials/_table.html.twig',

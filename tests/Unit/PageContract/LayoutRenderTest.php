@@ -20,7 +20,7 @@ final class LayoutRenderTest extends TestCase
         self::assertStringContainsString('<title>Doc</title>', $html);
         self::assertStringContainsString('<meta name="x" content="head">', $html);
         self::assertMatchesRegularExpression('#<link rel="stylesheet" href="/bundles/nowouikit/css/nowo-ui.css">\s*<link rel="stylesheet" href="/app.css">#', $html);
-        self::assertMatchesRegularExpression('#nowo-ui-theme.js" defer></script>\s*<script src="/app.js" defer></script>#', $html);
+        self::assertMatchesRegularExpression('#nowo-ui-segmented.js" defer></script>\s*<script src="/app.js" defer></script>#', $html);
         self::assertStringContainsString('<script src="/bundles/nowouikit/js/nowo-ui-theme-boot.js" data-nowo-ui-theme-boot></script>', $html);
         self::assertStringContainsString('class="nowo-ui-page nowo-ui-page--admin"', $html);
         self::assertStringContainsString('<nav>NAV</nav>', $html);

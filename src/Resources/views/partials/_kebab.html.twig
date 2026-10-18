@@ -7,14 +7,14 @@
   Optional:
     - label: aria-label
     - framework
+    - popover (2.4, bool; default theme.popover_menus, false): <button popovertarget> + a native [popover] menu in the
+      browser top layer (never clipped by table scrollers); nowo-ui-popover.js places it under the button. id: the
+      menu id (default random).
 #}
 {% set label = label|default('action.more'|trans({}, 'NowoUiKitBundle')) %}
-<div class="nowo-ui-kebab" data-nowo-ui-kebab>
-    <details class="nowo-ui-kebab__details">
-        <summary class="nowo-ui-kebab__summary" aria-label="{{ label }}">
-            <span class="nowo-ui-kebab__dots" aria-hidden="true">⋮</span>
-        </summary>
-        <div class="nowo-ui-kebab__menu" role="menu">
+{% set _t = nowo_ui_theme|default(null) %}
+{% set _popover = popover ?? (_t ? _t.popoverMenus() : false) %}
+{% set _items %}
             {% for item in items|default([]) %}
                 {% set is_current = item.current|default(false) %}
                 <a
@@ -27,6 +27,26 @@
                     {% endif %}
                 >{{ item.label }}</a>
             {% endfor %}
+{% endset %}
+{% if _popover %}
+{% set _menu_id = id|default(null) ?: 'nowo-ui-kebab-' ~ random() %}
+<div class="nowo-ui-kebab" data-nowo-ui-kebab data-nowo-ui-popover-menu>
+    <button type="button" class="nowo-ui-kebab__summary" popovertarget="{{ _menu_id }}" aria-haspopup="menu" aria-expanded="false" aria-label="{{ label }}" data-nowo-ui-popover-trigger>
+        <span class="nowo-ui-kebab__dots" aria-hidden="true">⋮</span>
+    </button>
+    <div class="nowo-ui-kebab__menu" id="{{ _menu_id }}" role="menu" popover data-nowo-ui-popover-panel>
+        {{ _items }}
+    </div>
+</div>
+{% else %}
+<div class="nowo-ui-kebab" data-nowo-ui-kebab>
+    <details class="nowo-ui-kebab__details">
+        <summary class="nowo-ui-kebab__summary" aria-label="{{ label }}">
+            <span class="nowo-ui-kebab__dots" aria-hidden="true">⋮</span>
+        </summary>
+        <div class="nowo-ui-kebab__menu" role="menu">
+            {{ _items }}
         </div>
     </details>
 </div>
+{% endif %}

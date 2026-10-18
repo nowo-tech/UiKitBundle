@@ -294,7 +294,7 @@ or a plain string printed escaped. Never pre-render HTML into a view model.
 | `Confirm` | `(title, message = null, confirmLabel = null, variant = 'danger', cancelLabel = null, id = null, expectedValue = null, expectedLabel = null, messageInHeader = null)`, `Confirm::delete(message = null)`, `expectedPattern()` |
 | `Crumb` | `(label, href = null)` |
 | `Link` | `(label, href, attributes = [])` |
-| `Pagination` | `(page, perPage, total, totalPages = null, route = null, query = [], routeParams = null, pageParam = 'page', perPageParam = 'per_page')`; `fromArray()`, `fromPagerfanta()`, `fromKnp()` (duck typed); `from()`, `to()`, `hasPrevious()`, `hasNext()`, `toArray()` — the **only** pagination shape |
+| `Pagination` | `(page, perPage, total, totalPages = null, route = null, query = [], routeParams = null, pageParam = 'page', perPageParam = 'per_page')`; `fromArray()`, `fromPagerfanta()`, `fromKnp()` (duck typed); 2.4: `fromTotal(total, page, perPage, allowedPerPage = [10, 25, 50, 100], defaultPerPage = null, route, query, …)` (clamps page to 1..totalPages, an unknown per-page falls back to 25 or the first allowed value — same results as the apps' `PagePagination::fromTotal()`), `fromRequest(request, total, defaultPerPage = 25, allowedPerPage, route, pageParam, perPageParam)`, `offset()` / `limit()` (also `$pagination['offset']` / `['limit']`), `allowedPerPage` (per-page links with `per_page_selector: true` on the pagination partial); `from()`, `to()`, `hasPrevious()`, `hasNext()`, `toArray()` — the **only** pagination shape |
 | `Column` | `(key, label = null, sortable = false, align = 'start', class = null, required = false, priority = null)` — `priority` 1–3 for responsive tables |
 | `FilterField` | `(name, placeholder = null, width = null, class = null, rowClass = null, attributes = [], rowAttributes = [])` — `width`: `xs`, `sm`, `md`, `lg`, `full` |
 | `EmptyState` | `(title = null, message = null, action = null)` |
@@ -381,6 +381,37 @@ slots; `Label` title / intro, `actions`, `id`, `attr`, `cards` grid), `_paginati
 (`trans_domain`, slot hooks), `_shell` / `_burger` (`root_class`, `label_attr_names`, `attr`, `header_class`,
 `main_class`, `burger_*`). All accept `bundle`. Bundles include them through `nowo_ui_partial('<name>')` so a host
 override applies everywhere — never a local copy. Names: [`THEME_SLOTS.md#partials`](THEME_SLOTS.md#partials).
+
+New in 2.4 (all opt-in, defaults unchanged):
+
+- **Popover menus.** `popover: true` on the `menu` partial, on `_kebab` and (with `menu: true`) on `row_actions` — or
+  `nowo_ui_kit.theme.popover_menus: true` for every menu — renders the panel as a native `[popover]` opened by a
+  `<button popovertarget>`: it lives in the browser top layer, so a table scroller (`overflow: auto`) or a card never
+  clips it. `nowo-ui-popover.js` (in the `scripts` partial) places it under the toggle, end edges aligned, flipped
+  above when there is no room below and kept inside the viewport; keeps `aria-expanded` in sync; closes it on scroll
+  / resize and after an item is chosen; and Escape closes the menu before a surrounding `<dialog>` (a confirm dialog
+  opened from the menu still closes first). Without the script the browser still opens / light-dismisses it.
+  `row_actions` with `menu: true` (toggle `menu_label`) puts the actions in one overflow menu: `View\Action`s keep
+  their POST / confirm behaviour, 1.x hashes become GET links.
+- **Segmented control.** The `segmented` partial: two options backed by one checkbox, shown as a radio group
+  (`options`, `field` FormView or `name` / `checked`, `label` / `labelled_by`, `input_attr` for a Live Component
+  `data-model`). `nowo-ui-segmented.js` syncs the checkbox (bubbling `change`) on click, arrow keys, Home / End.
+  Slots `segmented`, `segmented_option`.
+- **Pagination from a total.** `Pagination::fromTotal()` / `fromRequest()` clamp the page and per-page and give the
+  query `offset()` / `limit()`; `per_page_selector: true` (or `per_page_choices: [...]`) on the pagination partial
+  links the per-page values.
+
+```twig
+{{ include(nowo_ui_partial('row_actions', bundle), {actions: actions, menu: true, popover: true}, false) }}
+{{ include(nowo_ui_partial('segmented', bundle), {field: form.involved, labelled_by: 'scope-label', options: [
+    {label: 'All issues', checked: false}, {label: 'Involved only', checked: true},
+], input_attr: {'data-model': 'on(change)|involved'}}, false) }}
+```
+
+```php
+$pagination = Pagination::fromRequest($request, $repository->count($criteria));
+$rows = $repository->findBy($criteria, ['id' => 'DESC'], $pagination->limit(), $pagination->offset());
+```
 
 ## Template contract
 

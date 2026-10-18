@@ -52,6 +52,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **`Pagination::fromTotal()` / `fromRequest()`**: a clamped pagination from a row count and the requested page /
+  per-page — page clamped to 1..totalPages (an empty list has one page), per-page restricted to `$allowedPerPage`
+  (default `[10, 25, 50, 100]`; an unknown value falls back to `$defaultPerPage`, default 25, or the first allowed
+  value) — plus `offset()` / `limit()` for the query (`$pagination['offset']` / `['limit']` too) and
+  `allowedPerPage`. Same results as the `PagePagination::fromTotal()` helper the apps copy, so they can switch. The
+  constructor and the other factories are unchanged (new optional last argument `allowedPerPage`).
+- **Per-page links** in the `pagination` partial: `per_page_choices: [...]`, or `per_page_selector: true` with a
+  `fromTotal()` pagination (`pagination.per_page` translated in every locale). Off by default.
+- **Popover menus**: `popover: true` on the `menu` partial and `_kebab`, `menu: true` (+ `menu_label`, `popover`) on
+  `row_actions`, or `theme.popover_menus: true` (default `false`): the panel is a native `[popover]` in the browser top
+  layer, so table scrollers and cards never clip it. New runtime `nowo-ui-popover.js` (ported from symfony-beacon's
+  `popover_menu` controller): places the panel under the toggle (flips above without room, stays in the viewport),
+  `aria-expanded`, closes on scroll / resize / item choice, Escape closes the menu before a surrounding dialog.
+  `Theme::popoverMenus()`; `menu` passes `confirm_external` to its actions.
+- **`segmented` partial** (slots `segmented`, `segmented_option`): a two-option radio group backed by one checkbox
+  (FormView or plain input; Live Component `data-model` friendly). New runtime `nowo-ui-segmented.js` (ported from
+  symfony-beacon's `checkbox_segment` controller): click, arrow keys, Home / End select and sync the checkbox with a
+  bubbling `change`.
+- The `scripts` partial (`ThemeSlots::SCRIPTS`) also loads `popover` and `segmented` (small, delegated, idle until
+  their markup is on the page). The kitchen sink demo shows a popover row menu, a popover kebab, the segmented control
+  and per-page links.
+
+### Changed
+
+- Dev dependencies `symfony/dom-crawler` and `symfony/css-selector` (tests only).
+
 ## [2.3.1] - 2026-10-18
 
 State-hide rules win over unlayered host CSS; nowo_ui_kit.breadcrumbs.enabled drops the page-header trail. See [UPGRADING](UPGRADING.md#to-231).

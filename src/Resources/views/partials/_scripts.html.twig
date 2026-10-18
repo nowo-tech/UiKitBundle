@@ -1,6 +1,6 @@
 {#
   UiKit runtime scripts (2.2, theme partial `scripts`): one deferred <script> per UiKit runtime (modal, confirm, dialog,
-  toast, tabs, theme), from UiKit's own asset package (never a CDN). Printed by the UiKit document layout; host
+  toast, tabs, theme; 2.4: popover, segmented), from UiKit's own asset package (never a CDN). Printed by the UiKit document layout; host
   layouts with their own script list include this partial instead of copying the list, so a runtime added by a later
   UiKit minor (like `dialog` in 2.1) is loaded without touching the host:
       {{ include(nowo_ui_partial('scripts')) }}
@@ -8,7 +8,7 @@
   partials on it (stateless: no per-request registry).
 
   Optional:
-    - script_names: list of runtime names (default nowo_ui_script_names(): modal, confirm, dialog, toast, tabs, theme)
+    - script_names: list of runtime names (default nowo_ui_script_names(): modal, confirm, dialog, toast, tabs, theme, popover, segmented)
     - nonce: CSP nonce (default the request attribute csp_nonce)
 #}
 {% set _request = app is defined and app ? app.request : null %}

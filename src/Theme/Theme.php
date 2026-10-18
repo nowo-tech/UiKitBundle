@@ -52,6 +52,7 @@ final readonly class Theme
      * @param bool                                                     $frameworkDefaults      false = semantic + host classes only, for every slot
      * @param array<string, array<string, mixed>>                      $pages                  page type ({@see ThemeSlots::PAGE_TYPES}) => {classes, framework_defaults, attributes}; `list` also takes `header_actions_in_filters` (bool)
      * @param bool                                                     $confirmMessageInHeader confirm dialogs / page render the message inside the header (`Confirm::$messageInHeader` wins when set)
+     * @param bool                                                     $popoverMenus           2.4: menu / kebab partials render their panel as a native [popover] (top layer) by default
      */
     public function __construct(
         private string $framework = 'bootstrap5',
@@ -64,6 +65,7 @@ final readonly class Theme
         private bool $frameworkDefaults = true,
         array $pages = [],
         private bool $confirmMessageInHeader = false,
+        private bool $popoverMenus = false,
     ) {
         $this->classes = $this->normalizeClasses($classes, 'classes');
         $this->pages = $this->normalizePages($pages, 'pages');
@@ -146,7 +148,7 @@ final readonly class Theme
         /** @var array<string, array<string, mixed>> $pages */
         $pages = $theme['pages'] ?? [];
 
-        return new self($framework, $classes, $attributes, $partials, $tokens, $tokensDark, $bundles, false !== ($theme['framework_defaults'] ?? true), $pages, true === ($theme['confirm_message_in_header'] ?? false));
+        return new self($framework, $classes, $attributes, $partials, $tokens, $tokensDark, $bundles, false !== ($theme['framework_defaults'] ?? true), $pages, true === ($theme['confirm_message_in_header'] ?? false), true === ($theme['popover_menus'] ?? false));
     }
 
     public function framework(): string
@@ -498,6 +500,15 @@ final readonly class Theme
     public function confirmMessageInHeader(): bool
     {
         return $this->confirmMessageInHeader;
+    }
+
+    /**
+     * Whether the menu / kebab partials render their panel as a native `[popover]` in the browser top layer when the
+     * caller does not pass `popover` (`theme.popover_menus`, 2.4; default false: `<details>` disclosure).
+     */
+    public function popoverMenus(): bool
+    {
+        return $this->popoverMenus;
     }
 
     /**
