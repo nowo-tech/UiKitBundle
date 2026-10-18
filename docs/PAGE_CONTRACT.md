@@ -262,11 +262,12 @@ their `href`), "Step n of m", one card with the current step.
 ### Auth
 
 `page/auth.html.twig` · `page: AuthPage` (`title`, `form`, `intro`, `brand`, `error`, `submitLabel`, `links:
-list<Link>`, 2.3: `formThemes`, `formAttributes`, `documentTitle`) on the **guest** layout; panel in the `auth_panel`
+list<Link>`, 2.3: `formThemes`, `formAttributes`, `documentTitle`, `rootErrors`) on the **guest** layout; panel in the `auth_panel`
 slot (centred, at most `--nowo-ui-auth-panel-width` 28rem, full-width fields), footer `auth_footer`, link list
 `auth_links`. 2.3: the root form errors (`form_errors(form)`: CSRF, global errors) render right after `<form>` in the
-`form_errors` slot (`role="alert"`, only with errors) — a bundle that printed them in its own `nowo_ui_auth_fields`
-override drops that call. Every form function lives in `page/_auth_form.html.twig`, included only with a form: an
+`form_errors` slot (`role="alert"`, only with errors) — a bundle that prints `form_errors(form)` itself drops that call
+or skips the scaffold's: `rootErrors: false`, or `{% set nowo_ui_auth_root_errors = false %}` in its template extending
+`page/auth`. Every form function lives in `page/_auth_form.html.twig`, included only with a form: an
 `AuthPage` without `form` renders without symfony/form.
 
 | Data block | Default | Context |
@@ -307,7 +308,7 @@ or a plain string printed escaped. Never pre-render HTML into a view model.
 | `DashboardPage` | `(header, kpis = [], bundle = null, layout = null, attributes = [])` |
 | `ConfirmPage` | `(header, confirm, action (non-GET), cancelHref = null, bundle = null, layout = null, attributes = [])` |
 | `WizardPage` | `(header, steps, current, form = null, backHref = null, nextLabel = null, backLabel = null, bundle = null, layout = null, attributes = [])` |
-| `AuthPage` | `(title, form = null, intro = null, brand = null, error = null, submitLabel = null, links = [], bundle = null, layout = null, attributes = [], scripts = true, formThemes = [], formAttributes = [], documentTitle = null)` — 2.3: `formThemes` (`form_theme` on `form`), `formAttributes` (extra `<form>` attributes, `class` appended), `documentTitle` (`<title>`, default `title`) |
+| `AuthPage` | `(title, form = null, intro = null, brand = null, error = null, submitLabel = null, links = [], bundle = null, layout = null, attributes = [], scripts = true, formThemes = [], formAttributes = [], documentTitle = null, rootErrors = true)` — 2.3: `rootErrors` (false: no root form errors box, the bundle prints them), `formThemes` (`form_theme` on `form`), `formAttributes` (extra `<form>` attributes, `class` appended), `documentTitle` (`<title>`, default `title`) |
 
 `bundle` selects the per-bundle theme exception (`theme.bundles.<bundle>`); `layout` is the bundle's
 `web_ui.layout_template` override (null = `nowo_ui_layout.admin`, `.guest` for `AuthPage`); `attributes` (no `on*`)
@@ -758,13 +759,13 @@ tests per fixture:
 | `testPageHasNoForbiddenMarkup` | `<html>` / `<head>` / `<body>` / doctype, CDN `<script src>` / `<link rel=stylesheet\|preload>`, inline `on*=`, `confirm(`, `javascript:` URLs |
 | `testPageUsesFrameworkClassesOnlyThroughThemeSlots` | a Bootstrap / Tabler / Tailwind / Foundation class that is not a slot default of the rendered `css_framework` (rendered with every framework of `cssFrameworks()`, default `none`, `bootstrap5`, `tailwind`) |
 | `testPageReflectsTheStubTheme` | no `pc-*` slot class or `data-pc-*` slot attribute in `nowo_ui_content`, or a page header that bypasses `nowo_ui_partial('page_header')` |
-| `testPageHasNoRawTranslationKeys` | any message the translator could not find (2.3; 2.2: dotted ids only) — a text translated twice (an already translated label handed to a form theme that translates it again: use `translation_domain: false` or `\|nowo_ui_translatable`), a literal piped through `\|trans`, a humanized label of a form without `translation_domain` — or a `*.label\|placeholder\|help\|title` key in the output |
+| `testPageHasNoRawTranslationKeys` | a dotted id the translator could not find; with `strictMissingTranslations()` (2.3 opt-in, default in 3.0) any missing message — a text translated twice (an already translated label handed to a form theme that translates it again: use `translation_domain: false` or `\|nowo_ui_translatable`), a literal piped through `\|trans`, a humanized label of a form without `translation_domain` — or a `*.label\|placeholder\|help\|title` key in the output |
 | `testPageActionFormsKeepTheirHiddenFields` | a rendered `<form name="…">` of a `FormView`-backed `Action` found in the fixture context lacks a hidden field of that `FormView` (the CSRF token), or carries it more than once (e.g. a template that calls `form_start` / `form_end` on an already rendered `FormView` instead of the `action` partial) |
 
 Hooks: `templatePaths()`, `inlineTemplates()`, `translationDirs()`, `templatesDocument()`, `cssFrameworks()`,
 `allowedClasses()` (documented exceptions), `ignoredMissingTranslations()` (2.3: accepted missing messages,
 `domain:id`, `id` or a `/regex/` on `domain:id`; document why in `docs/TEMPLATES.md`), `strictMissingTranslations()`
-(2.3: false keeps the 2.2 dotted-id rule while migrating), `formThemes()` (null disables the Form extension; add your FormKit
+(2.3, opt-in, the default from 3.0: true fails on every missing message; the default false keeps the dotted-id rule), `formThemes()` (null disables the Form extension; add your FormKit
 theme), `locale()`, `configureTwig(Environment)` (register the bundle's Twig extensions; functions added there
 override the stubs). The assertion helpers (`assertExtendsScaffoldOrUnique()`, `assertCanonicalBlocksFilled()`,
 `assertNoForbiddenMarkup()`, `assertNoFrameworkUtilityClasses()`, `assertStubThemeReflected()`,

@@ -41,8 +41,8 @@ use Twig\RuntimeLoader\FactoryRuntimeLoader;
  *    `javascript:` URLs;
  * 4. no framework utility classes outside the theme slots, for every framework of {@see self::cssFrameworks()};
  * 5. the stub theme is reflected: marker class + attribute in the content, page header through the partial;
- * 6. no missing translations (2.3: every message the translator could not find, so double translations are caught;
- *    {@see self::ignoredMissingTranslations()} / {@see self::strictMissingTranslations()}) and no
+ * 6. no missing translation keys (dotted ids; with {@see self::strictMissingTranslations()}, opt-in in 2.3 and the
+ *    default from 3.0, every missing message, so double translations are caught; {@see self::ignoredMissingTranslations()}) and no
  *    `*.label|placeholder|help|title` keys in the output;
  * 7. every rendered form of a FormView-backed {@see Action} (`Action::$form`, e.g. a CSRF-only form) carries each
  *    hidden field of that FormView (the CSRF token) exactly once, however often the page renders the action (the
@@ -200,14 +200,14 @@ abstract class PageContractTestCase extends TestCase
     }
 
     /**
-     * 2.3: every message the translator could not find fails {@see self::testPageHasNoRawTranslationKeys()} — not
-     * only key-looking ids — so text translated twice (an already translated label piped through a form theme's
-     * `|trans` again) and literals sent through `|trans` are caught. Return false to keep the 2.2 rule (dotted ids
-     * only) while a bundle migrates.
+     * Strict missing-message rule (2.3, opt-in; the default from 3.0): return true and every message the translator
+     * could not find fails {@see self::testPageHasNoRawTranslationKeys()} — not only key-looking ids — so text
+     * translated twice (an already translated label piped through a form theme's `|trans` again) and literals sent
+     * through `|trans` are caught. The default (false) keeps the 2.2 rule: dotted ids only. Bundles should opt in now.
      */
     protected static function strictMissingTranslations(): bool
     {
-        return true;
+        return false;
     }
 
     /**
@@ -364,8 +364,8 @@ abstract class PageContractTestCase extends TestCase
     }
 
     /**
-     * No message is missing from the catalogues (2.3: any id; without {@see self::strictMissingTranslations()} only
-     * ids that look like keys), and no `*.label|placeholder|help|title` key is printed.
+     * No id that looks like a key is missing from the catalogues (with {@see self::strictMissingTranslations()}: no
+     * message at all), and no `*.label|placeholder|help|title` key is printed.
      */
     protected function assertNoRawTranslationKeys(RenderedPage $page): void
     {

@@ -33,4 +33,9 @@ final class AuthWithoutFormContractTest extends PageContractTestCase
     {
         return null;
     }
+
+    protected static function strictMissingTranslations(): bool
+    {
+        return true;
+    }
 }

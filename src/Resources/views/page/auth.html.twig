@@ -10,7 +10,9 @@
   (JS-free guest pages, e.g. a public 503): sets nowo_ui_scripts_enabled for the document layout.
   2.3: page.formThemes (form_theme), page.formAttributes (extra <form> attributes, class appended to the form slot),
   page.documentTitle (<title>, default page.title); the root form errors (CSRF, global errors: form_errors(form))
-  render above the fields in the `form_errors` slot. Every form function lives in page/_auth_form.html.twig, included
+  render above the fields in the `form_errors` slot — skipped with page.rootErrors = false or
+  `{% set nowo_ui_auth_root_errors = false %}` in a template extending this one (a bundle that prints
+  form_errors(form) itself). Every form function lives in page/_auth_form.html.twig, included
   only with a form: without page.form the scaffold renders without symfony/form.
 #}
 {% extends page.layout ?? nowo_ui_layout.guest %}
@@ -32,7 +34,7 @@
             {% if page.error %}<div class="{{ nowo_ui_class('flash_error', _b) }}" role="alert">{{ page.error|nowo_ui_trans }}</div>{% endif %}
             {% block nowo_ui_auth_body %}
                 {% if form %}
-                    {{ include(_auth_form, {part: 'start', page: page, form: form, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
+                    {{ include(_auth_form, {part: 'start', page: page, form: form, root_errors: page.rootErrors and (nowo_ui_auth_root_errors ?? true), bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
                         {% block nowo_ui_auth_fields %}
                             {{ include(_auth_form, {part: 'fields', page: page, form: form, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
                         {% endblock %}

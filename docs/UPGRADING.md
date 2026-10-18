@@ -66,14 +66,15 @@ are trailing and optional. Changes hosts and bundles may notice:
   again in the field's domain: a missing message per render). A **string** placeholder is now printed as given (2.2
   translated it in the field's domain); pass a `Label` to translate it. Fields rendered with
   `translation_domain: false` (or with `attr_translation_parameters`) get the pre-translated text as before.
-- **Contract test, missing messages**: `testPageHasNoRawTranslationKeys` now fails on **every** message the translator
-  could not find (2.2: dotted ids only), which catches double translations and literals piped through `|trans` (e.g.
-  humanized form labels of a form without `translation_domain`). Opt out per message with
-  `ignoredMissingTranslations()` (`domain:id`, `id` or a `/regex/` on `domain:id`) or, while migrating, return false
-  from `strictMissingTranslations()` for the 2.2 rule.
+- **Contract test, missing messages (opt-in)**: the default is unchanged (dotted ids only). Return true from the new
+  `PageContractTestCase::strictMissingTranslations()` and `testPageHasNoRawTranslationKeys` fails on **every** message
+  the translator could not find, which catches double translations and literals piped through `|trans` (e.g.
+  humanized form labels of a form without `translation_domain`). **Strict becomes the default in 3.0: opt in now.**
+  Accepted exceptions go in `ignoredMissingTranslations()` (`domain:id`, `id` or a `/regex/` on `domain:id`).
 - **Auth scaffold**: the root form errors (`form_errors(form)`: CSRF, global errors) now render right after `<form>`
-  in the new `form_errors` slot; a bundle that printed them in its `nowo_ui_auth_fields` override removes that call
-  (or overrides `nowo_ui_auth_body`). The form functions moved to `page/_auth_form.html.twig` (the scaffold compiles
+  in the new `form_errors` slot. A bundle that prints `form_errors(form)` itself shows them twice until it either drops
+  its call or skips the scaffold's: `AuthPage(rootErrors: false)`, or `{% set nowo_ui_auth_root_errors = false %}` in
+  the template extending `page/auth` (no view-model change). The form functions moved to `page/_auth_form.html.twig` (the scaffold compiles
   without symfony/form); the default `nowo_ui_auth_fields` content is the same child loop. The panel is centred at
   `min(28rem, 100%)` (`--nowo-ui-auth-panel-width`) in any guest layout and its fields are full width (Tailwind's
   `max-w-xs` from the `input` slot still caps them: set the slot per page type, `theme.pages.auth`). The footer link

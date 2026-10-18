@@ -67,4 +67,9 @@ final class PageContractTest extends PageContractTestCase
     {
         return [FilesystemLoader::MAIN_NAMESPACE => \dirname(__DIR__).'/templates'];
     }
+
+    protected static function strictMissingTranslations(): bool
+    {
+        return true;
+    }
 }

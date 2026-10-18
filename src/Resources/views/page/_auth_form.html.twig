@@ -7,6 +7,7 @@
     - page: View\AuthPage, form: its FormView
   Optional:
     - bundle, nowo_ui_page_type
+    - root_errors (default true): false skips the root form errors (AuthPage::rootErrors / nowo_ui_auth_root_errors)
 
   start: page.formThemes (form_theme), form_start (slot `form` + page.formAttributes; `class` appended) and the
   root form errors (CSRF, global errors) in the `form_errors` slot (role="alert"; nothing without errors).
@@ -21,7 +22,7 @@
     {% set _fa = page.formAttributes|filter(v => v is not null) %}
     {% set _class = (nowo_ui_class('form', _b) ~ ' ' ~ (_fa.class ?? ''))|trim %}
     {{ form_start(form, {attr: {class: _class, 'data-nowo-ui-region': 'form'}|merge(nowo_ui_theme.attributesFor('form', _b, {}, _pt))|merge(_fa|filter((v, k) => k != 'class'))}) }}
-    {% if form.vars.errors|length > 0 %}
+    {% if (root_errors ?? true) and form.vars.errors|length > 0 %}
         <div class="{{ nowo_ui_class('form_errors', _b) }}" role="alert" data-nowo-ui-region="form-errors"{{ nowo_ui_attrs('form_errors', _b) }}>{{ form_errors(form) }}</div>
     {% endif %}
 {% elseif part == 'fields' %}

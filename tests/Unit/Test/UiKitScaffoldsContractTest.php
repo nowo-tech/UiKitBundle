@@ -26,4 +26,9 @@ final class UiKitScaffoldsContractTest extends PageContractTestCase
     {
         return ['none', 'custom', 'bootstrap', 'bootstrap5', 'bootstrap4', 'tabler', 'tailwind', 'foundation'];
     }
+
+    protected static function strictMissingTranslations(): bool
+    {
+        return true;
+    }
 }

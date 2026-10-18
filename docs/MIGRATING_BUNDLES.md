@@ -305,7 +305,8 @@ final class PageContractTest extends PageContractTestCase
 One fixture per page (and per significant state: empty list, form with errors). The test renders each page against a
 stub host layout and a stub theme and fails on: no scaffold / undeclared unique page, missing canonical blocks,
 `<html>` / CDN / `on*=` / `confirm(`, framework classes outside slots (frameworks `none`, `bootstrap5`, `tailwind` by
-default), stub theme not reflected, raw keys or any missing message (2.3: also text translated twice — pass already translated
+default), stub theme not reflected, raw or missing translation keys (opt in now to the 2.3 strict rule, the default in
+3.0, with `strictMissingTranslations(): true`: any missing message, also text translated twice — pass already translated
 text to `form_widget()` / `form_row()` with `translation_domain: false`, or the untranslated `Label` through
 `|nowo_ui_translatable`; choice labels with `choice_translation_domain: false`). Details and hooks:
 [`PAGE_CONTRACT.md#contract-test`](PAGE_CONTRACT.md#contract-test). A documented exception goes in

@@ -224,4 +224,9 @@ final class BundlePageContractTest extends PageContractTestCase
     {
         $twig->addFunction(new TwigFunction('fixture_status', static fn (): string => 'ok'));
     }
+
+    protected static function strictMissingTranslations(): bool
+    {
+        return true;
+    }
 }

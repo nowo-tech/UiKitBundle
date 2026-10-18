@@ -15,7 +15,8 @@ use Symfony\Component\Form\FormView;
  *
  * 2.3: `formThemes` (applied to `form` with `form_theme`), `formAttributes` (extra `<form>` attributes, `class`
  * appended to the `form` slot), `documentTitle` (`<title>` when it differs from the panel heading); the root form
- * errors (CSRF, global errors) render above the fields in the `form_errors` slot; data blocks `nowo_ui_auth_body`
+ * errors (CSRF, global errors) render above the fields in the `form_errors` slot (`rootErrors: false`, or
+ * `{% set nowo_ui_auth_root_errors = false %}` in a template extending the scaffold, skips them); data blocks `nowo_ui_auth_body`
  * (the whole form region) and `nowo_ui_auth_after_form`. Without a form the scaffold needs no symfony/form.
  */
 final readonly class AuthPage
@@ -32,6 +33,7 @@ final readonly class AuthPage
      * @param iterable<string>                          $formThemes     form theme templates applied to `form` (2.3)
      * @param array<string, string|int|float|bool|null> $formAttributes extra `<form>` attributes (2.3; `class` is appended, no on* handlers)
      * @param Label|string|null                         $documentTitle  document `<title>` (2.3; default: `title`)
+     * @param bool                                      $rootErrors     render the root form errors above the fields (2.3; false when the bundle prints `form_errors(form)` itself)
      */
     public function __construct(
         public Label|string $title,
@@ -48,6 +50,7 @@ final readonly class AuthPage
         iterable $formThemes = [],
         public array $formAttributes = [],
         public Label|string|null $documentTitle = null,
+        public bool $rootErrors = true,
     ) {
         Action::assertAttributes($attributes);
         Action::assertAttributes($formAttributes);

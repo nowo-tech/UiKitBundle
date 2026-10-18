@@ -48,6 +48,30 @@ final class AuthScaffoldTest extends TestCase
         self::assertStringContainsString('<form name="login2" method="post" class="nowo-ui-form" data-nowo-ui-region="form">', $clean);
     }
 
+    public function testRootErrorsCanBeSkipped(): void
+    {
+        // A bundle base template that prints the root errors itself (AuthKit 1.27.0)
+        $own = '{% block nowo_ui_auth_fields %}<div data-own>{{ form_errors(form) }}</div>{{ parent() }}{% endblock %}';
+        $twig = PageContractTwig::create([
+            'auth/own.html.twig' => "{% extends '@NowoUiKit/page/auth.html.twig' %}".$own,
+            'auth/own_var.html.twig' => "{% extends '@NowoUiKit/page/auth.html.twig' %}{% set nowo_ui_auth_root_errors = false %}".$own,
+        ], [], 'none');
+
+        // 2.3 default: printed by the scaffold and by the bundle — twice
+        self::assertSame(2, substr_count($twig->render('auth/own.html.twig', ['page' => new AuthPage('Sign in', $this->form('a', true))]), 'The CSRF token is invalid.'));
+
+        // AuthPage::rootErrors = false
+        $flag = $twig->render('auth/own.html.twig', ['page' => new AuthPage('Sign in', $this->form('b', true), rootErrors: false)]);
+        self::assertSame(1, substr_count($flag, 'The CSRF token is invalid.'));
+        self::assertStringNotContainsString('nowo-ui-form-errors', $flag);
+        self::assertStringContainsString('<div data-own><ul><li', $flag);
+
+        // nowo_ui_auth_root_errors = false in the extending template (no view-model change)
+        $var = $twig->render('auth/own_var.html.twig', ['page' => new AuthPage('Sign in', $this->form('c', true))]);
+        self::assertSame(1, substr_count($var, 'The CSRF token is invalid.'));
+        self::assertStringNotContainsString('nowo-ui-form-errors', $var);
+    }
+
     public function testBodyAndAfterFormBlocks(): void
     {
         $twig = PageContractTwig::create([

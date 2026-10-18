@@ -77,4 +77,9 @@ final class MenuContractTest extends PageContractTestCase
             ],
         ];
     }
+
+    protected static function strictMissingTranslations(): bool
+    {
+        return true;
+    }
 }

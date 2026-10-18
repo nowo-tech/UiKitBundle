@@ -58,10 +58,12 @@ UiKit 2.3: the backlog of the phase-2 migrations (Pwa, ChatKit, SearchKit, AuthK
 - `|nowo_ui_translatable(params = {})` and `Twig\TranslatableText`: a `Label` (or literal) handed to a form theme that
   pipes it through `|trans` (`attr.placeholder`, choice `placeholder`) is translated exactly once in its own domain.
 - `PageContractTestCase::ignoredMissingTranslations()` (accepted missing messages: `domain:id`, `id`, `/regex/`) and
-  `strictMissingTranslations()` (false = the 2.2 dotted-id rule).
+  `strictMissingTranslations()` (opt-in strict rule: every missing message fails, catching double translations;
+  default false = the 2.2 dotted-id rule; strict becomes the default in 3.0).
 - `AuthPage::$formThemes`, `$formAttributes`, `$documentTitle`; `FormPage::$formAttributes` (extra `<form>`
   attributes, `class` appended to the `form` slot).
-- Auth scaffold: root form errors in the new `form_errors` slot; data blocks `nowo_ui_auth_body` and
+- Auth scaffold: root form errors in the new `form_errors` slot (skippable: `AuthPage::$rootErrors = false` or
+  `nowo_ui_auth_root_errors = false` in the extending template); data blocks `nowo_ui_auth_body` and
   `nowo_ui_auth_after_form`.
 - Slots `form_error`, `form_errors`, `input_invalid`; the UiKit form theme marks invalid widgets and renders field
   errors in `form_error`; PasswordToggle bridge (`input` slot on `toggle_password_widget`'s input).
