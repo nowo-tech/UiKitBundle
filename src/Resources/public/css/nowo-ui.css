@@ -1183,7 +1183,7 @@ a.nowo-ui-pagination__link:hover {
 
   .nowo-ui-shell.is-aside-rail .nowo-ui-aside__label,
   .nowo-ui-shell.is-aside-rail .nowo-ui-aside__chevron {
-    display: none;
+    display: none !important;
   }
 
   .nowo-ui-shell.is-aside-rail :is(.nowo-ui-aside__link, .nowo-ui-aside__group-toggle) {
@@ -1270,14 +1270,14 @@ a.nowo-ui-pagination__link:hover {
 }
 
 .nowo-ui-aside__group-panel {
-  display: none;
+  display: none !important;
   flex-direction: column;
   gap: 0.1rem;
   padding-left: 0.5rem;
 }
 
 .nowo-ui-aside__group.is-open .nowo-ui-aside__group-panel {
-  display: flex;
+  display: flex !important;
 }
 
 /* --- Toasts --- */
@@ -1429,7 +1429,7 @@ a.nowo-ui-pagination__link:hover {
 }
 
 .nowo-ui-dialog:not([open]) {
-  display: none;
+  display: none !important;
 }
 
 .nowo-ui-dialog::backdrop {
@@ -2284,15 +2284,15 @@ table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr:hover > td {
 }
 
 .nowo-ui-theme-toggle__icon--moon {
-  display: none;
+  display: none !important;
 }
 
 [data-theme="dark"] .nowo-ui-theme-toggle__icon--sun {
-  display: none;
+  display: none !important;
 }
 
 [data-theme="dark"] .nowo-ui-theme-toggle__icon--moon {
-  display: block;
+  display: block !important;
 }
 
 /* --- Main width toggle (full / content) --- */
@@ -2315,15 +2315,15 @@ table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr:hover > td {
 }
 
 .nowo-ui-width-toggle__icon--content {
-  display: none;
+  display: none !important;
 }
 
 .nowo-ui-shell.is-main-content .nowo-ui-width-toggle__icon--full {
-  display: none;
+  display: none !important;
 }
 
 .nowo-ui-shell.is-main-content .nowo-ui-width-toggle__icon--content {
-  display: block;
+  display: block !important;
 }
 
 /* --- Locale switcher --- */
@@ -2920,11 +2920,11 @@ table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr:hover > td {
 .nowo-ui-responsive-table[data-table-mode='responsive'] .nowo-ui-responsive-table__toggle .nowo-ui-responsive-table__icon--scroll,
 .nowo-ui-responsive-table__toggle.is-morph-ready .nowo-ui-responsive-table__icon,
 .nowo-ui-responsive-table__toggle:not(.is-morph-ready) .nowo-ui-responsive-table__morph {
-  display: none;
+  display: none !important;
 }
 
 .nowo-ui-responsive-table[data-table-mode='responsive'] .nowo-ui-responsive-table__toggle:not(.is-morph-ready) .nowo-ui-responsive-table__icon--responsive {
-  display: inline-flex;
+  display: inline-flex !important;
 }
 
 .nowo-ui-row-detail-col,
@@ -3034,7 +3034,7 @@ table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr:hover > td {
 }
 
 .nowo-ui-row-detail-btn[hidden] {
-  display: none;
+  display: none !important;
 }
 
 /* Row detail dialog: the confirm dialog chrome, wider, scrollable content. */
@@ -3132,11 +3132,11 @@ form:has(> .nowo-ui-filters-collapse) {
 .nowo-ui-filters-collapse.is-collapsed .nowo-ui-filters-collapse__toggle .nowo-ui-filters-collapse__icon--expanded,
 .nowo-ui-filters-collapse__toggle.is-morph-ready .nowo-ui-filters-collapse__icon,
 .nowo-ui-filters-collapse__toggle:not(.is-morph-ready) .nowo-ui-filters-collapse__morph {
-  display: none;
+  display: none !important;
 }
 
 .nowo-ui-filters-collapse.is-collapsed .nowo-ui-filters-collapse__toggle:not(.is-morph-ready) .nowo-ui-filters-collapse__icon--collapsed {
-  display: inline-flex;
+  display: inline-flex !important;
 }
 
 .nowo-ui-filters-collapse__summary {
@@ -3148,12 +3148,14 @@ form:has(> .nowo-ui-filters-collapse) {
 }
 
 .nowo-ui-filters-collapse__summary[hidden] {
-  display: none;
+  display: none !important;
 }
 
-/* Folded: only the tab and the summary line stay visible (the fields keep their values and still submit). */
+/* Folded: only the tab and the summary line stay visible (the fields keep their values and still submit).
+ * State-hide rules are !important (2.3.1): inside the nowo-ui cascade layer a normal declaration loses to any unlayered host
+ * rule or utility class (.d-flex, .grid, .flex…) on the hidden element; an important layered one wins. */
 form:has(> .nowo-ui-filters-collapse.is-collapsed) > :not(.nowo-ui-filters-collapse) {
-  display: none;
+  display: none !important;
 }
 
 form:has(> .nowo-ui-filters-collapse.is-collapsed) {
@@ -3187,12 +3189,12 @@ form:has(> .nowo-ui-filters-collapse.is-collapsed) {
 details:not([open]) > summary > .nowo-ui-disclosure-icon .nowo-ui-disclosure-icon__static--open,
 .is-morph-ready > .nowo-ui-disclosure-icon .nowo-ui-disclosure-icon__static,
 :not(.is-morph-ready) > .nowo-ui-disclosure-icon .nowo-ui-disclosure-icon__morph {
-  display: none;
+  display: none !important;
 }
 
 [aria-expanded='false']:not(.is-morph-ready) > .nowo-ui-disclosure-icon .nowo-ui-disclosure-icon__static--closed,
 details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .nowo-ui-disclosure-icon__static--closed {
-  display: inline-flex;
+  display: inline-flex !important;
 }
 
 /* --- Page-edge tab (partials/_edge_tab.html.twig) --- */
