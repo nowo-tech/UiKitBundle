@@ -615,7 +615,7 @@ The demo (`demo/symfony8`, `/page-contract`) is a complete host integration: bri
 
 | Host theme | Default theme |
 | --- | --- |
-| ![Orders list with the host theme](images/demo/page-contract-list.webp) | ![Orders list with UiKit's default theme](images/demo/page-contract-default-list.webp) |
+| ![Orders list with the host theme](images/demo/page-contract-list.webp) | ![Orders list with UiKit's default theme and the delete confirm dialog open](images/demo/page-contract-default-list.webp) |
 
 Every scaffold with the host theme: [overview](images/demo/page-contract-overview.webp) ·
 [list](images/demo/page-contract-list.webp) · [show](images/demo/page-contract-show.webp) ·

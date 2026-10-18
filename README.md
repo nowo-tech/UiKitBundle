@@ -12,6 +12,23 @@ Canonical **admin UI kit** for Nowo Symfony bundles and host apps: Twig macros, 
 
 This bundle is **FrankenPHP worker mode friendly** (including when the kernel is **not** reset between requests). See [docs/FRANKENPHP-WORKER-AUDIT.md](docs/FRANKENPHP-WORKER-AUDIT.md).
 
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <img src="docs/images/demo/page-contract-list.webp" alt="Orders list scaffold re-skinned by a host theme: Acme sidebar, filters card, zebra table with status badges and row actions, pagination, Symfony profiler toolbar" />
+      <br /><sub>List scaffold — host theme (tokens + class map + partial override)</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/images/demo/page-contract-dashboard.webp" alt="Dashboard scaffold with the host theme: KPI tiles, recent orders and low-stock cards, section tabs" />
+      <br /><sub>Dashboard scaffold — KPI tiles and cards grid</sub>
+    </td>
+    <td align="center" width="33%">
+      <img src="docs/images/demo/page-contract-default-list.webp" alt="The same orders list with UiKit's default theme and the row delete confirm dialog open" />
+      <br /><sub>Same list, UiKit default theme — row delete confirm dialog</sub>
+    </td>
+  </tr>
+</table>
+
 ## Table of contents
 
 - [What this is / is not](#what-this-is--is-not)
@@ -95,9 +112,7 @@ See [docs/USAGE.md](docs/USAGE.md) and [docs/CONFIGURATION.md](docs/CONFIGURATIO
 (`Nowo\UiKitBundle\View\*`) and one global theme (`nowo_ui_kit.theme`: slot classes, attributes, partial overrides,
 `--nowo-ui-*` tokens, per-bundle exceptions). A host themes each view type once; bundles fill data blocks only.
 
-| Host theme (tokens + class map + partial override) | UiKit default theme |
-| --- | --- |
-| ![Orders list rendered by the list scaffold with a host theme](docs/images/demo/page-contract-list.webp) | ![The same list with UiKit's default theme](docs/images/demo/page-contract-default-list.webp) |
+Screenshots of every scaffold (host theme and default theme): [docs/PAGE_CONTRACT.md](docs/PAGE_CONTRACT.md#example-host-integration).
 
 - [Page contract](docs/PAGE_CONTRACT.md) — concepts, layouts, scaffolds and data blocks, view models, bundle and host examples
 - [Theme slots](docs/THEME_SLOTS.md) — slot vocabulary with defaults per `css_framework`, partials, tokens, per-bundle exceptions
