@@ -294,11 +294,11 @@ only set what they want to change.
 | `--nowo-ui-table-head-transform` | `uppercase` (`none` for sentence case) | idem |
 | `--nowo-ui-table-head-border` | `var(--nowo-ui-border-strong)` | idem, bottom border |
 | `--nowo-ui-table-head-border-width` | `2px` | idem |
-| `--nowo-ui-filters-field-min` | `14rem` | list filters grid: minimum field width (`auto-fit`) |
+| `--nowo-ui-filters-field-min` | `12rem` | list filters grid: minimum field width (`auto-fit`) |
 | `--nowo-ui-filters-gap` | `0.75rem 1rem` | list filters grid gap |
 | `--nowo-ui-filters-actions-span` | `1` (`2` with header actions in the filter row, ≥ 48rem) | columns of the filter actions cell |
-| `--nowo-ui-kpi-accent-width` | `var(--nowo-ui-border-width, 1px)` | KPI top border (an accent follows the tile radius) |
-| `--nowo-ui-kpi-accent` | `var(--nowo-ui-border)` | KPI top border colour (e.g. `var(--nowo-ui-primary)`) |
+| `--nowo-ui-kpi-accent-width` | `0` | KPI top accent (inset shadow: follows the tile radius), e.g. `4px` |
+| `--nowo-ui-kpi-accent` | `var(--nowo-ui-primary)` | KPI top accent colour |
 | `--nowo-ui-kpi-radius` | `var(--nowo-ui-radius)` | KPI tile radius |
 | `--nowo-ui-help-text` | `var(--nowo-ui-muted)` | form help text (`.help-text`, `.form-text`, `#…_help`) |
 | `--nowo-ui-form-row-gap` | `1rem` | space between stacked form rows (scaffold forms, dialogs) |

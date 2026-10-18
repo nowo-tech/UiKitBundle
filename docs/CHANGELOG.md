@@ -68,7 +68,7 @@ UiKit 2.2: default-theme polish and the backlog found after phase 1 of the page-
 - **Breadcrumbs**: `PageHeader::$breadcrumbsMode` (`auto` | `kit` | `own`).
 - **Filters**: "Any" placeholder (`filters.any`, 7 locales) for optional single selects without one; text widgets get
   the `input` slot classes.
-- **Badges**: slot `badge_primary`.
+- **Badges**: slot `badge_primary`; `DetailItem::$badge` (show values such as a status printed as a badge).
 - **Forms / wizards / progress**: `FormPage` body-only mode (`form: null` / `formTag: false`), `WizardPage::$guest`,
   `progress` partial + slots `progress` / `progress_meter` (`progress.label`, 7 locales).
 - **Actions**: `Action::$title` (translatable tooltip, kept on disabled actions through `nowo-ui-action__tip`).
@@ -90,8 +90,8 @@ UiKit 2.2: default-theme polish and the backlog found after phase 1 of the page-
   solid destructive confirm button (dialog and full-page confirm); table header row hierarchy (small uppercase
   semibold muted labels, stronger bottom border), numeric / end-aligned header cells follow `Column::align`, zebra rows
   painted on the cells (also under Bootstrap), styled caption, spacing around the pagination; list filters on a
-  responsive grid with the actions bottom-aligned after the last field; pagination ellipsis like the pills; KPI top
-  border follows the radius (`--nowo-ui-kpi-accent*`); form help text muted with top spacing and regular spacing
+  responsive grid with the actions bottom-aligned after the last field; pagination ellipsis like the pills; optional KPI
+  top accent drawn as an inset shadow that follows the radius (`--nowo-ui-kpi-accent*`); form help text muted with top spacing and regular spacing
   between stacked fields (also in dialogs); plain links, `info` / `primary` badges and the second tab level derive
   from the primary token; wizard step links without underline.
 - **Slot defaults** (template contract): badges are one subtle set without margin utilities (Bootstrap

@@ -12,6 +12,9 @@ use Nowo\UiKitBundle\View\Column;
 use Nowo\UiKitBundle\View\Confirm;
 use Nowo\UiKitBundle\View\ConfirmPage;
 use Nowo\UiKitBundle\View\Crumb;
+use Nowo\UiKitBundle\View\DetailItem;
+use Nowo\UiKitBundle\View\DetailSection;
+use Nowo\UiKitBundle\View\ShowPage;
 use Nowo\UiKitBundle\View\FormPage;
 use Nowo\UiKitBundle\View\ListPage;
 use Nowo\UiKitBundle\View\PageHeader;
@@ -344,5 +347,17 @@ final class DefaultThemePolishTest extends TestCase
         $filters = PageContractTwig::forms()->createNamedBuilder('f', FormType::class, null, ['method' => 'GET'])->add('q', TextType::class, ['required' => false])->getForm()->createView();
         $list = $none->render('@NowoUiKit/page/list.html.twig', ['page' => new ListPage(new PageHeader('L'), filters: $filters, filtersSubmit: new Action('filter', 'Go', icon: 'filter'))]);
         self::assertMatchesRegularExpression('#nowo-ui-filters__submit">Go</button>#', $list);
+    }
+
+    public function testDetailItemBadge(): void
+    {
+        $page = new ShowPage(new PageHeader('Order'), [new DetailSection('Payment', [new DetailItem('Status', 'Paid', badge: 'success'), new DetailItem('Gift', null, badge: 'info')])]);
+        $html = PageContractTwig::create()->render('@NowoUiKit/page/show.html.twig', ['page' => $page]);
+        self::assertStringContainsString('<span class="nowo-ui-badge nowo-ui-badge--success badge bg-success-subtle text-success-emphasis border border-success-subtle">Paid</span>', $html);
+        self::assertStringContainsString('<span class="nowo-ui-muted text-muted">—</span>', $html);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid DetailItem badge "green"');
+        new DetailItem('Status', 'Paid', badge: 'green');
     }
 }

@@ -1,6 +1,6 @@
 {#
   Definition list of View\DetailItem (show sections, audit meta; theme partial `detail_list`). Values are printed
-  escaped.
+  escaped. DetailItem::badge (2.2) prints the value inside the badge_<tone> slot.
 
   Required:
     - items: list<View\DetailItem>
@@ -20,7 +20,7 @@
             <dd class="{{ nowo_ui_class('detail_value', bundle) }}">
                 {%- set _blank = item.value is same as(false) or item.value is null or item.value is same as('') -%}
                 {%- set _value = item.value is same as(true) ? '✓' : (_blank ? '—' : item.value|nowo_ui_trans) -%}
-                {%- if _blank %}{% set _value %}<span class="{{ nowo_ui_class('muted', bundle) }}">—</span>{% endset %}{% endif -%}
+                {%- if _blank %}{% set _value %}<span class="{{ nowo_ui_class('muted', bundle) }}">—</span>{% endset %}{% elseif item.badge ?? null %}{% set _value %}<span class="{{ nowo_ui_class('badge_' ~ item.badge, bundle) }}"{{ nowo_ui_attrs('badge_' ~ item.badge, bundle) }}>{{ _value }}</span>{% endset %}{% endif -%}
                 {%- if item.href -%}<a href="{{ item.href }}">{{ _value }}</a>{%- else -%}{{ _value }}{%- endif -%}
             </dd>
         </div>

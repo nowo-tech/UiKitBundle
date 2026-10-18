@@ -1973,10 +1973,10 @@ a.nowo-ui-pagination__link:hover {
 
 /* List-scaffold filters (2.2): fields on a regular responsive grid, the actions bottom-aligned with the inputs
    right after the last field (no empty gap); FilterField::width spans columns (lg = 2, full = the whole row).
-   Tokens: --nowo-ui-filters-field-min (14rem), --nowo-ui-filters-gap. */
+   Tokens: --nowo-ui-filters-field-min (12rem), --nowo-ui-filters-gap. */
 form.nowo-ui-filters[data-nowo-ui-region] {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--nowo-ui-filters-field-min, 14rem)), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--nowo-ui-filters-field-min, 12rem)), 1fr));
   align-items: end;
   gap: var(--nowo-ui-filters-gap, 0.75rem 1rem);
 }
@@ -3432,9 +3432,10 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
 .nowo-ui-kpi {
   padding: 0.75rem 1rem;
   border: var(--nowo-ui-border-width, 1px) solid var(--nowo-ui-border);
-  /* Optional top accent (2.2): a border, so it follows the tile radius (--nowo-ui-kpi-accent-width, default 0) */
-  border-top: var(--nowo-ui-kpi-accent-width, var(--nowo-ui-border-width, 1px)) solid var(--nowo-ui-kpi-accent, var(--nowo-ui-border));
   border-radius: var(--nowo-ui-kpi-radius, var(--nowo-ui-radius));
+  /* Optional top accent (2.2): an inset shadow, clipped by the tile radius (a thick border-top tapers at rounded
+     corners); --nowo-ui-kpi-accent-width (default 0) + --nowo-ui-kpi-accent */
+  box-shadow: inset 0 var(--nowo-ui-kpi-accent-width, 0) 0 0 var(--nowo-ui-kpi-accent, var(--nowo-ui-primary));
   background: var(--nowo-ui-surface);
 }
 
@@ -3783,8 +3784,9 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
   color: inherit;
 }
 
-/* Zebra rows on every stack: the cells are painted too (Bootstrap paints cells, not rows) */
-.nowo-ui-table--striped > tbody > tr:nth-child(even) > td {
+/* Zebra rows on the kit-painted stacks: the cells are painted too, so a cell background never hides the stripe
+   (Bootstrap stripes through its own table-striped, added by the table slot) */
+.nowo-ui-table--striped:not(.table) > tbody > tr:nth-child(even) > td {
   background-color: var(--nowo-ui-table-stripe-bg, var(--nowo-ui-surface-muted));
 }
 
