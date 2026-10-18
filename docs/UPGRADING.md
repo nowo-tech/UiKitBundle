@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.3.0](#to-230)
   - [Template contract (2.3)](#template-contract-23)
 - [To 2.2.0](#to-220)
   - [Template contract (2.2)](#template-contract-22)
@@ -54,6 +55,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.3.0
+
+From **2.2.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 Target **2.3.0** (`composer require nowo-tech/ui-kit-bundle:^2.3`). No PHP API is removed; new constructor arguments
 are trailing and optional. Changes hosts and bundles may notice:

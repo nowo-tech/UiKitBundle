@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.3.0] - 2026-10-18](#230---2026-10-18)
 - [[2.2.0] - 2026-10-18](#220---2026-10-18)
 - [[2.1.0] - 2026-10-18](#210---2026-10-18)
 - [[2.0.1] - 2026-10-18](#201---2026-10-18)
@@ -49,6 +50,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [2.3.0] - 2026-10-18
+
+Filters translate each text once, opt-in strict missing-message contract test, auth scaffold form themes/attributes/root errors/body blocks, form error slots, menu partial, public page-header include, content padding and link/code token fixes. See [UPGRADING](UPGRADING.md#to-230).
 
 UiKit 2.3: the backlog of the phase-2 migrations (Pwa, ChatKit, SearchKit, AuthKit). See
 [UPGRADING](UPGRADING.md#template-contract-23).
@@ -99,6 +104,8 @@ UiKit 2.3: the backlog of the phase-2 migrations (Pwa, ChatKit, SearchKit, AuthK
   against an unlayered Bootstrap reboot.
 - List filters: `FilterField::$placeholder` labels and the "Any" option (`filters.any`) were translated twice (by
   `nowo_ui_trans` / `|trans`, then by the form theme in the field's domain).
+
+[2.3.0]: https://github.com/nowo-tech/UiKitBundle/compare/v2.2.0...v2.3.0
 
 ## [2.2.0] - 2026-10-18
 
@@ -760,7 +767,7 @@ Supersedes 1.17.3: same runtime code and CSS, release gate hardened so the tagge
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.2.0...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.3.0...HEAD
 [1.10.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.4...v1.10.0
 [1.8.4]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.3...v1.8.4
 [1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0
