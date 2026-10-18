@@ -351,6 +351,17 @@ final class ThemeSlots
             'tailwind' => 'flex flex-wrap gap-2 mb-3',
             'foundation' => 'menu',
         ]],
+        // Floating widgets (2.3, partial `menu`): native <details> disclosure root, its <summary> toggle, the item
+        // list panel and one item (link / button); `popover` is the panel of a menu with free content
+        'menu' => ['nowo-ui-menu', []],
+        'menu_toggle' => ['nowo-ui-menu__toggle', [
+            'bootstrap' => 'btn btn-outline-secondary btn-sm',
+            'tailwind' => 'inline-flex items-center gap-1 font-medium px-2 py-1 text-sm border',
+            'foundation' => 'button secondary tiny',
+        ]],
+        'menu_panel' => ['nowo-ui-menu__panel', []],
+        'menu_item' => ['nowo-ui-menu__item', []],
+        'popover' => ['nowo-ui-popover', []],
         'modal' => ['nowo-ui-modal', []],
         // _modal_shell internals (1.x markup: the Bootstrap structure classes modal-content / modal-header /
         // modal-body / modal-footer stay; the theme adds host classes and attributes)
@@ -443,6 +454,7 @@ final class ThemeSlots
         'filters' => '@NowoUiKitBundle/partials/_filters.html.twig',
         'flashes' => '@NowoUiKitBundle/partials/_flashes.html.twig',
         'list_filters' => '@NowoUiKitBundle/page/_list_filters.html.twig',
+        'menu' => '@NowoUiKitBundle/partials/_menu.html.twig',
         'modal_shell' => '@NowoUiKitBundle/partials/_modal_shell.html.twig',
         'page_header' => '@NowoUiKitBundle/partials/_page_header.html.twig',
         'pagination' => '@NowoUiKitBundle/partials/_pagination.html.twig',

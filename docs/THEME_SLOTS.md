@@ -27,7 +27,8 @@ Adding a slot or partial name is a **minor** change; renaming or removing one is
 <table class="{{ nowo_ui_class('table', page.bundle) }}"{{ nowo_ui_attrs('table', page.bundle) }}>
 ```
 
-`nowo_ui_class(slot, bundle = null, framework = null, page = null)` returns, de-duplicated and in this order:
+`nowo_ui_class(slot, bundle = null, framework = null, page = null, defaults = true)` returns, de-duplicated and in this
+order (`defaults: false`, 2.3: without step 2 — host-only mode):
 
 1. the **semantic** class(es) of the slot (`nowo-ui-*`, always present — `nowo-ui.css` styles them from tokens);
 2. the **UiKit framework defaults** for `nowo_ui_kit.css_framework` (or the `framework` argument): `bootstrap5`,
@@ -192,6 +193,11 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `tab` | `nowo-ui-tabs__item` | `nav-link` | `nav-link` | `px-3 py-2 text-sm no-underline` | `tabs-title` |
 | `tab_active` | `nowo-ui-tabs__item nowo-ui-tabs__item--active` | `nav-link active` | `nav-link active` | `px-3 py-2 text-sm no-underline border-b-2` | `tabs-title is-active` |
 | `tabs_secondary` | `nowo-ui-tabs nowo-ui-tabs--secondary` | `nav nav-pills mb-3` | `nav nav-pills mb-3` | `flex flex-wrap gap-2 mb-3` | `menu` |
+| `menu` | `nowo-ui-menu` | — | — | — | — |
+| `menu_toggle` | `nowo-ui-menu__toggle` | `btn btn-outline-secondary btn-sm` | `btn btn-outline-secondary btn-sm` | `inline-flex items-center gap-1 font-medium px-2 py-1 text-sm border` | `button secondary tiny` |
+| `menu_panel` | `nowo-ui-menu__panel` | — | — | — | — |
+| `menu_item` | `nowo-ui-menu__item` | — | — | — | — |
+| `popover` | `nowo-ui-popover` | — | — | — | — |
 | `modal` | `nowo-ui-modal` | — | — | — | — |
 | `modal_panel` | `nowo-ui-modal__panel` | — | — | — | — |
 | `modal_header` | `nowo-ui-modal__header` | — | — | — | — |
@@ -262,6 +268,19 @@ print their own `alert` instead). **PasswordToggle bridge**: the `<input>` of no
 `toggle_password_widget` gets the `input` (+ `input_invalid`) slot when the UiKit form theme is in the form's theme
 chain (its `widget_attributes` adds them for the `toggle_password` block prefix only); a theme above it that redefines
 `widget_attributes` (e.g. `bootstrap_5_layout`) keeps its own classes — set the field's `attr.class` there.
+
+Floating widgets (2.3): the `menu` partial renders a native `<details data-nowo-ui-menu>` disclosure (CSP-safe, no
+script needed; `nowo-ui-dialog.js` closes open menus on an outside click or Escape) with the slots `menu` (root),
+`menu_toggle` (`<summary>`; Bootstrap `btn btn-outline-secondary btn-sm`), `menu_panel` (item list) and `menu_item`
+(each item), or `popover` (the panel of a menu with free `content`). Host-only classes: `nowo_ui_class('menu_toggle',
+bundle, defaults: false)` returns the semantic and host / bundle classes without the UiKit framework defaults — for a
+compact control inside a host widget that must not get `btn …`.
+
+```twig
+{{ include(nowo_ui_partial('menu', bundle), {label: 'Export'|trans, icon: 'export', items: [
+    link_csv, link_json, action_purge
+], bundle: bundle}, false) }}
+```
 
 Minor hooks for kit class maps: `btn_link` (toolbar `Action` with `variant: 'link'`; same classes as
 `ui.btn('link')`); `muted` (same classes as `ui.muted()`; UiKit prints it on the `—` placeholder of empty detail-list
@@ -353,6 +372,7 @@ as the UiKit partial (documented in the header comment of each template) and sho
 | `filters` | `partials/_filters.html.twig` | `action`, `method`, `q`, `placeholder`, `actions`, `clear_href`, `collapsible` | bundle filter bars |
 | `flashes` | `partials/_flashes.html.twig` | `flash_messages` (2.2, default `app.flashes`), `flashes` (deprecated: ignored inside page scaffolds), `trans_domain`, `bundle` | layouts (`nowo_ui_flashes`) |
 | `list_filters` | `page/_list_filters.html.twig` | `page` (`View\ListPage`, `page.filters` FormView), `region`, `bundle` | list scaffold |
+| `menu` *(2.3)* | `partials/_menu.html.twig` | `items` (`View\Link` / `View\Action` / `{label, href, attr, current, danger}`) or `content` (HTML, `popover` panel), `label`, `icon`, `display`, `align` (`end` \| `start`), `open`, `attr`, `bundle` | dropdown / overflow menus, popovers (native `<details>`, no JS required; light dismiss by `nowo-ui-dialog.js`) |
 | `modal_shell` | `partials/_modal_shell.html.twig` | `id`, `title`, `body`, `footer` | modals |
 | `page_header` | `partials/_page_header.html.twig` | scaffolds pass **both** `header` (`View\PageHeader`) + `actions` (toolbar `View\Action`s) **and** the 1.x `title` / `intro` (translated) / `toolbar` (pre-rendered actions) with `header_actions_rendered: true`; `region`, `bundle` | every scaffold (`nowo_ui_page_header`) |
 | `pagination` | `partials/_pagination.html.twig` | scaffolds pass the 1.x array (`pagination.toArray()`) + `pagination_model` (`View\Pagination`), `item_count`, the 1.x top-level `route` / `route_params` / `query` (request query + `Pagination::query`), `page_param`, `per_page_param`, `region`, `bundle`; also accepts the object | list scaffold |

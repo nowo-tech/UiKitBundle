@@ -93,6 +93,9 @@ are trailing and optional. Changes hosts and bundles may notice:
   the Bootstrap 4 `code` slot default is `text-body`.
 - **Unique pages**: `nowo_ui_page_header(header)` (or `page/_page_header.html.twig`) renders the scaffolds' page
   header; the private scaffold macro now delegates to it (same output).
+- **Menus**: new `menu` partial and slots `menu`, `menu_toggle`, `menu_panel`, `menu_item`, `popover`;
+  `nowo-ui-dialog.js` now also closes open `<details data-nowo-ui-menu>` on an outside click / Escape (no effect on
+  other `<details>`). `nowo_ui_class()` / `Theme::classFor()` take a trailing `defaults` argument (host-only mode).
 - **UiKit form theme**: fields with errors get the `input_invalid` slot (Bootstrap `is-invalid`) and their messages
   the `form_error` slot (Bootstrap `invalid-feedback d-block`) instead of a bare `<ul>`; PasswordToggle inputs get the
   `input` slot.

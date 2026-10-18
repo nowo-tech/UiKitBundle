@@ -304,6 +304,9 @@ only set what they want to change.
 | `--nowo-ui-form-row-gap` | `1rem` | space between stacked form rows (scaffold forms, dialogs) |
 | `--nowo-ui-content-padding-block` *(2.3)* | `1rem` | vertical padding of the content region (slot `content`; was on `<body>` before 2.3; `0` inside the 1.x shell main) |
 | `--nowo-ui-auth-panel-width` *(2.3)* | `28rem` | auth scaffold panel: max width (centred, `min(token, 100%)`) |
+| `--nowo-ui-menu-z-index` *(2.3)* | `1050` | `menu` partial: stacking of the floating panel / popover |
+| `--nowo-ui-menu-min-width` *(2.3)* | `12rem` | `menu` partial: minimum panel width |
+| `--nowo-ui-menu-max-width` *(2.3)* | `22rem` | `menu` partial: maximum panel width (capped to the viewport) |
 | `--nowo-ui-tabs-secondary-gap` | `0.35rem` | second tab level (slot `tabs_secondary`) |
 | `--nowo-ui-tab-pill-radius` | `999px` | idem, pill radius |
 | `--nowo-ui-tab-pill-hover-bg` | `var(--nowo-ui-surface-muted)` | idem, hover |

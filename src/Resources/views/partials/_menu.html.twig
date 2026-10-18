@@ -1,0 +1,64 @@
+{#
+  Menu / popover (2.3, theme partial `menu`): a native <details> disclosure — CSP-safe, works without JS; the dialog
+  runtime (nowo-ui-dialog.js, 2.3) adds light dismiss (outside click, Escape). Slots: menu (root), menu_toggle
+  (<summary>), menu_panel (item list) / popover (free content), menu_item (each link / button).
+
+  One of:
+    - items: list of View\Link, View\Action or hashes {label, href, attr?, current?, danger?}. Plain GET actions
+      and links render as <a class="menu_item">; other actions (POST / form / confirm / dialog) through the `action`
+      partial (toolbar context, text display) — their button classes, inside the panel.
+    - content: pre-rendered HTML (escaped by the caller) — the panel is the `popover` slot
+  Optional:
+    - label (View\Label|string; default "More actions" — action.more), icon (toggle icon name),
+      display: icon | text | icon_text (default: icon_text with an icon, else text; icon-only keeps the label as
+      aria-label / title + a visually-hidden copy)
+    - align: end (default; panel aligned to the toggle's end edge) | start
+    - open (bool), id, attr (root attributes, no on*), toggle_attr, bundle, nowo_ui_page_type
+#}
+{% set _b = bundle|default(null) %}
+{% set _pt = nowo_ui_page_type|default(null) %}
+{% set _label = label|default(null) is null ? 'action.more'|trans({}, 'NowoUiKitBundle') : label|nowo_ui_trans %}
+{% set _icon = icon|default(null) %}
+{% set _display = display|default(_icon ? 'icon_text' : 'text') %}
+{% if not _icon or nowo_ui_kit_icon_set|default('bootstrap-icons') == 'none' %}
+    {% set _display = 'text' %}
+{% endif %}
+{% set _align = align|default('end') == 'start' ? 'start' : 'end' %}
+{% set _content = content|default(null) %}
+<details class="{{ nowo_ui_class('menu', _b) }} nowo-ui-menu--{{ _align }}" data-nowo-ui-menu{% if id|default(null) %} id="{{ id }}"{% endif %}{% if open|default(false) %} open{% endif %}{{ nowo_ui_attrs('menu', _b) }}{{ nowo_ui_html_attrs(attr|default({})) }}>
+    <summary class="{{ nowo_ui_class('menu_toggle', _b) }}{{ _display == 'icon' ? ' nowo-ui-menu__toggle--icon' }}"{% if _display == 'icon' %} aria-label="{{ _label }}" title="{{ _label }}"{% endif %}{{ nowo_ui_attrs('menu_toggle', _b) }}{{ nowo_ui_html_attrs(toggle_attr|default({})) }}>
+        {%- if _display != 'text' -%}
+            {{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _icon, label: _label}, false)|trim|raw }}
+        {%- endif -%}
+        {%- if _display == 'icon' -%}
+            <span class="visually-hidden">{{ _label }}</span>
+        {%- else -%}
+            <span class="nowo-ui-menu__label">{{ _label }}</span>
+        {%- endif -%}
+    </summary>
+    {% if _content is not null %}
+        <div class="{{ nowo_ui_class('popover', _b) }}"{{ nowo_ui_attrs('popover', _b) }}>{{ _content|raw }}</div>
+    {% else %}
+        <ul class="{{ nowo_ui_class('menu_panel', _b) }}"{{ nowo_ui_attrs('menu_panel', _b) }}>
+            {% for item in items|default([]) %}
+                {% if item.visible is defined and item.kind is defined %}
+                    {# View\Action #}
+                    {% if item.visible %}
+                        {% set _href = item.href ?? (item.route ? path(item.route, item.params) : null) %}
+                        {% if _href and not item.isPost() and not item.confirm and not item.dialogId and not item.modalId and not item.disabled %}
+                            {% set _danger = item.resolvedVariant() == 'danger' %}
+                            <li><a class="{{ nowo_ui_class('menu_item', _b) }}{{ _danger ? ' nowo-ui-menu__item--danger' }}" href="{{ _href }}"{{ nowo_ui_attrs('menu_item', _b) }}{{ nowo_ui_html_attrs(item.attributes) }}>{{ item.label is not null ? item.label|nowo_ui_trans : ('action.' ~ item.kind)|trans({}, 'NowoUiKitBundle') }}</a></li>
+                        {% else %}
+                            <li class="nowo-ui-menu__entry">{{ include(nowo_ui_partial('action', _b), {action: item, context: 'toolbar', display: 'text', bundle: _b, nowo_ui_page_type: _pt}, false) }}</li>
+                        {% endif %}
+                    {% endif %}
+                {% else %}
+                    {# View\Link or hash #}
+                    {% set _current = item.current|default(false) %}
+                    {% set _attrs = item.attributes ?? item.attr ?? {} %}
+                    <li><a class="{{ nowo_ui_class('menu_item', _b) }}{{ item.danger|default(false) ? ' nowo-ui-menu__item--danger' }}{{ _current ? ' is-current' }}" href="{{ item.href }}"{% if _current %} aria-current="page"{% endif %}{{ nowo_ui_attrs('menu_item', _b) }}{{ nowo_ui_html_attrs(_attrs) }}>{{ item.label|nowo_ui_trans }}</a></li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    {% endif %}
+</details>

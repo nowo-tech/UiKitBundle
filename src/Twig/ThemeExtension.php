@@ -21,8 +21,9 @@ use Twig\TwigFunction;
 /**
  * Page contract Twig API (REQ-UI-003):
  *
- * - `nowo_ui_class(slot, bundle = null, framework = null, page = null)` — semantic + framework default + host
- *   classes of a theme slot; `page` (page type) defaults to the `nowo_ui_page_type` variable the scaffolds set
+ * - `nowo_ui_class(slot, bundle = null, framework = null, page = null, defaults = true)` — semantic + framework
+ *   default + host classes of a theme slot; `page` (page type) defaults to the `nowo_ui_page_type` variable the
+ *   scaffolds set; `defaults: false` (2.3, host-only mode) leaves the UiKit framework defaults out
  * - `nowo_ui_attrs(slot, bundle = null, extra = {}, page = null)` — escaped attribute string of a slot
  * - `nowo_ui_html_attrs(attributes)` — escaped attribute string of a plain map (page model `attributes`)
  * - `nowo_ui_partial(name, bundle = null)` — template of a (possibly host-replaced) UiKit partial
@@ -97,13 +98,14 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
     }
 
     /**
-     * `nowo_ui_class()`: the page type defaults to `nowo_ui_page_type` from the template context.
+     * `nowo_ui_class()`: the page type defaults to `nowo_ui_page_type` from the template context; `defaults: false`
+     * (2.3) drops the UiKit framework defaults (semantic + host / bundle classes only).
      *
      * @param array<string, mixed> $context
      */
-    public function slotClass(array $context, string $slot, ?string $bundle = null, ?string $framework = null, ?string $page = null): string
+    public function slotClass(array $context, string $slot, ?string $bundle = null, ?string $framework = null, ?string $page = null, bool $defaults = true): string
     {
-        return $this->theme->classFor($slot, $bundle, $framework, $page ?? $this->pageType($context));
+        return $this->theme->classFor($slot, $bundle, $framework, $page ?? $this->pageType($context), $defaults);
     }
 
     /**

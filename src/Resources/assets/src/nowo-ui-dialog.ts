@@ -11,6 +11,9 @@
  * .nowo-ui-dialog__body; aria-busy while loading) and dispatches `nowo-ui:dialog-loaded` (detail {url}) on the
  * dialog. The fetched HTML is inserted as markup only (scripts do not run: CSP-safe); behaviour comes from delegated
  * listeners / Stimulus. On a failed request the opener's href (the no-JS fallback) is followed.
+ * Menus (2.3, partial `menu`): light dismiss for the native <details data-nowo-ui-menu> disclosures — a click outside
+ * an open menu or Escape closes it (Escape returns focus to its <summary>). Without this script the menu still works
+ * (it closes when its toggle is activated again).
  */
 
 declare global {
@@ -21,6 +24,7 @@ declare global {
 }
 
 const DIALOG = 'dialog[data-nowo-ui-dialog]';
+const MENU = 'details[data-nowo-ui-menu]';
 const openers = new WeakMap<HTMLDialogElement, Element>();
 
 export function resolveDialog(id: string | HTMLDialogElement | null): HTMLDialogElement | null {
@@ -139,11 +143,38 @@ export function isBackdropClick(dialog: HTMLDialogElement, x: number, y: number)
   return x < rect.left || x > rect.right || y < rect.top || y > rect.bottom;
 }
 
+/**
+ * Closes every open menu that does not contain `inside` (all of them when null); returns the closed menus.
+ */
+export function closeMenus(inside: Element | null = null): HTMLDetailsElement[] {
+  const closed: HTMLDetailsElement[] = [];
+  document.querySelectorAll<HTMLDetailsElement>(`${MENU}[open]`).forEach((menu) => {
+    if (inside === null || !menu.contains(inside)) {
+      menu.removeAttribute('open');
+      closed.push(menu);
+    }
+  });
+  return closed;
+}
+
+function onDocumentKeydown(event: KeyboardEvent): void {
+  if (event.key !== 'Escape') {
+    return;
+  }
+  const closed = closeMenus();
+  const active = document.activeElement;
+  const summary = closed.find((menu) => active instanceof Element && menu.contains(active))?.querySelector('summary');
+  if (summary instanceof HTMLElement) {
+    summary.focus();
+  }
+}
+
 function onDocumentClick(event: MouseEvent): void {
   const target = event.target;
   if (!(target instanceof Element)) {
     return;
   }
+  closeMenus(target);
 
   const openBtn = target.closest('[data-nowo-ui-dialog-open]');
   if (openBtn) {
@@ -191,6 +222,7 @@ export function bindNowoUiDialog(): void {
   }
   dialogBound = true;
   document.addEventListener('click', onDocumentClick);
+  document.addEventListener('keydown', onDocumentKeydown);
   // `close` does not bubble: listen in the capture phase.
   document.addEventListener('close', onDialogClose, true);
   window.nowoUiOpenDialog = openDialog;

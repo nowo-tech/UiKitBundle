@@ -3582,6 +3582,108 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
   margin: 0 !important;
 }
 
+/* Menu / popover (2.3, partial `menu`): native <details> disclosure; the panel floats under the toggle */
+.nowo-ui-menu {
+  position: relative;
+  display: inline-block;
+}
+
+.nowo-ui-menu > summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.nowo-ui-menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.nowo-ui-menu__toggle:not(.btn, .button) {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--nowo-ui-border-strong);
+  border-radius: var(--nowo-ui-radius);
+  background: var(--nowo-ui-surface);
+  color: var(--nowo-ui-text);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.nowo-ui-menu__toggle:focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline-offset: 2px;
+}
+
+.nowo-ui-menu__panel,
+.nowo-ui-popover {
+  position: absolute;
+  z-index: var(--nowo-ui-menu-z-index, 1050);
+  top: calc(100% + 0.25rem);
+  inset-inline-start: 0;
+  box-sizing: border-box;
+  min-width: var(--nowo-ui-menu-min-width, 12rem);
+  max-width: min(var(--nowo-ui-menu-max-width, 22rem), calc(100vw - 2rem));
+  margin: 0 !important;
+  padding: 0.25rem !important;
+  list-style: none !important;
+  border: var(--nowo-ui-border-width, 1px) solid var(--nowo-ui-border);
+  border-radius: var(--nowo-ui-radius);
+  background: var(--nowo-ui-surface);
+  color: var(--nowo-ui-text);
+  box-shadow: 0 0.5rem 1.5rem rgb(var(--nowo-ui-shadow-rgb, 15 23 42) / 0.12);
+}
+
+.nowo-ui-popover {
+  padding: 0.75rem !important;
+}
+
+.nowo-ui-menu--end > :is(.nowo-ui-menu__panel, .nowo-ui-popover) {
+  inset-inline-start: auto;
+  inset-inline-end: 0;
+}
+
+.nowo-ui-menu__panel > li {
+  margin: 0;
+}
+
+.nowo-ui-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.4rem 0.65rem;
+  border: 0;
+  border-radius: calc(var(--nowo-ui-radius) * 0.75);
+  background: none;
+  color: var(--nowo-ui-text);
+  font: inherit;
+  font-size: 0.875rem;
+  text-align: start;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.nowo-ui-menu__item:hover,
+.nowo-ui-menu__item:focus-visible {
+  background: var(--nowo-ui-surface-muted);
+  color: var(--nowo-ui-text);
+}
+
+.nowo-ui-menu__item.is-current {
+  font-weight: 600;
+}
+
+.nowo-ui-menu__item--danger,
+.nowo-ui-menu__item--danger:hover {
+  color: var(--nowo-ui-danger-text);
+}
+
+.nowo-ui-menu__entry {
+  padding: 0.25rem;
+}
+
 /* Form errors (2.3, slots form_error / form_errors / input_invalid; UiKit form theme and the auth scaffold) */
 .nowo-ui-form-error {
   margin: 0.25rem 0 0;

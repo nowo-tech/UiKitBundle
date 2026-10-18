@@ -69,6 +69,12 @@ UiKit 2.3: the backlog of the phase-2 migrations (Pwa, ChatKit, SearchKit, AuthK
 - `nowo_ui_page_header(header, bundle, extra_actions, header_actions)` and the public include
   `page/_page_header.html.twig` (`ThemeExtension::PAGE_HEADER_TEMPLATE`): the scaffolds' page header for unique pages.
 - Token `--nowo-ui-content-padding-block`; `--nowo-ui-link` declared next to the primary.
+- Floating widgets: `menu` partial (native `<details>` disclosure, CSP-safe; items `Link` / `Action` / hashes, or
+  free `content` in a `popover` panel), slots `menu`, `menu_toggle`, `menu_panel`, `menu_item`, `popover`, tokens
+  `--nowo-ui-menu-z-index`, `--nowo-ui-menu-min-width`, `--nowo-ui-menu-max-width`; light dismiss (outside click,
+  Escape) in `nowo-ui-dialog.js`.
+- `nowo_ui_class(slot, bundle, defaults: false)` / `Theme::classFor(…, defaults: false)`: host-only mode (semantic +
+  host / bundle classes, never the UiKit framework defaults).
 
 ### Changed
 

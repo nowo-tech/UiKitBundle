@@ -160,11 +160,13 @@ final readonly class Theme
      *
      * @param string|null $framework css_framework override (partials that accept `framework`)
      * @param string|null $page      page type of the scaffold rendering the slot ({@see ThemeSlots::PAGE_TYPES})
+     * @param bool        $defaults  false (2.3, host-only mode): never the UiKit framework defaults, only the semantic
+     *                               and host / bundle classes (e.g. a compact control inside a host widget)
      */
-    public function classFor(string $slot, ?string $bundle = null, ?string $framework = null, ?string $page = null): string
+    public function classFor(string $slot, ?string $bundle = null, ?string $framework = null, ?string $page = null, bool $defaults = true): string
     {
         $framework = null !== $framework && '' !== trim($framework) ? trim($framework) : $this->framework;
-        $defaults = $this->frameworkDefaults($slot, $bundle, $page) ? ThemeSlots::defaults($slot, $framework) : '';
+        $defaults = $defaults && $this->frameworkDefaults($slot, $bundle, $page) ? ThemeSlots::defaults($slot, $framework) : '';
 
         return $this->merge(ThemeSlots::semantic($slot), $defaults, $this->extraClasses($slot, $bundle, $page));
     }

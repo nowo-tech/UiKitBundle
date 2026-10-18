@@ -221,4 +221,37 @@ describe('nowo-ui-dialog remote content', () => {
     expect(spy).toHaveBeenCalledWith('/next');
     Object.defineProperty(window, 'location', { configurable: true, value: original });
   });
+
+  it('closes open menus on an outside click and on Escape (focus back to the toggle)', () => {
+    document.body.innerHTML = `
+      <details id="m1" data-nowo-ui-menu open><summary id="t1">Menu</summary><ul><li><a id="i1" href="#a">A</a></li></ul></details>
+      <details id="m2" data-nowo-ui-menu open><summary id="t2">More</summary><ul><li><a id="i2" href="#b">B</a></li></ul></details>
+      <details id="plain" open><summary>Plain</summary></details>
+      <p id="outside">x</p>
+    `;
+    const m1 = document.getElementById('m1') as HTMLDetailsElement;
+    const m2 = document.getElementById('m2') as HTMLDetailsElement;
+
+    click(document.getElementById('i1')!);
+    expect(m1.hasAttribute('open')).toBe(true);
+    expect(m2.hasAttribute('open')).toBe(false);
+
+    click(document.getElementById('outside')!);
+    expect(m1.hasAttribute('open')).toBe(false);
+    expect(document.getElementById('plain')!.hasAttribute('open')).toBe(true);
+
+    m2.setAttribute('open', '');
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+    expect(m2.hasAttribute('open')).toBe(true);
+    (document.getElementById('i2') as HTMLElement).focus();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(m2.hasAttribute('open')).toBe(false);
+    expect(document.activeElement?.id).toBe('t2');
+
+    m1.setAttribute('open', '');
+    (document.getElementById('outside') as HTMLElement).focus();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(m1.hasAttribute('open')).toBe(false);
+    expect(mod.closeMenus()).toEqual([]);
+  });
 });

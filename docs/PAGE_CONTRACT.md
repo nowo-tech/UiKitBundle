@@ -104,7 +104,7 @@ any printable character (`"`, `'`, `<`, `>`, `&` included), so Tailwind arbitrar
 
 | Function / filter / global | Result |
 | --- | --- |
-| `nowo_ui_class(slot, bundle = null, framework = null, page = null)` | semantic `nowo-ui-*` + framework defaults (`css_framework`, or `framework`; unless `framework_defaults` drops them) + host classes (or the page type's / bundle's exception); `page` defaults to `nowo_ui_page_type` (set by every scaffold) |
+| `nowo_ui_class(slot, bundle = null, framework = null, page = null, defaults = true)` | semantic `nowo-ui-*` + framework defaults (`css_framework`, or `framework`; unless `framework_defaults` drops them) + host classes (or the page type's / bundle's exception); `page` defaults to `nowo_ui_page_type` (set by every scaffold); `defaults: false` (2.3, host-only mode) never adds the framework defaults |
 | `nowo_ui_attrs(slot, bundle = null, extra = {}, page = null)` | escaped attribute string with leading spaces (`true` = bare attribute, `false`/`null` = omitted): host → page type → bundle → `extra` |
 | `nowo_ui_html_attrs(attributes)` | escaped attribute string of a plain map (page model `attributes`; same rules, no `on*`) |
 | `nowo_ui_partial(name, bundle = null)` | template name of a UiKit partial (bundle > host > UiKit default) |
@@ -113,6 +113,8 @@ any printable character (`"`, `'`, `<`, `>`, `&` included), so Tailwind arbitrar
 | `nowo_ui_tokens(nonce = null)` | every token stylesheet in precedence order: `nowo_ui_theme_tokens()` (host defaults), then `nowo_ui_appearance_style()` (user choice) when the appearance SPI is enabled |
 | `nowo_ui_breadcrumb_kit(collection = null)` / `nowo_ui_breadcrumb_kit_available()` | BreadcrumbKit bridge used by the page header |
 | `value\|nowo_ui_trans(params = {})` | translates a `View\Label` (or `{key, domain, params}`); plain strings pass through (escaped by Twig) |
+| `value\|nowo_ui_translatable(params = {})` *(2.3)* | a `TranslatableText` for a form theme that pipes the value through `\|trans` again (`attr.placeholder`, choice `placeholder`): a `Label` is translated exactly once in its own domain, a string printed as given |
+| `nowo_ui_page_header(header, bundle = null, extra_actions = [], header_actions = true)` *(2.3)* | the scaffolds' page header (`page/_page_header.html.twig`) for unique pages |
 | global `nowo_ui_layout` | `{admin, guest}` — the configured layouts |
 | global `nowo_ui_theme` | the `Theme\Theme` object (used by the 1.x partials: `macroClasses()`, `extraClasses()`, `frameworkDefaults()`, `renderAttributes()`, `partial()`, `hasTokens()`) |
 | global `nowo_ui_breadcrumbs` | `{breadcrumb_kit, collection}` |
