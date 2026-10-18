@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.4.0](#to-240)
 - [To 2.3.1](#to-231)
 - [To 2.3.0](#to-230)
   - [Template contract (2.3)](#template-contract-23)
@@ -56,6 +57,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.4.0
+
+From **2.3.1**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 Additive (minor release); nothing to change. Optional:
 
