@@ -41,7 +41,9 @@ use Twig\RuntimeLoader\FactoryRuntimeLoader;
  *    `javascript:` URLs;
  * 4. no framework utility classes outside the theme slots, for every framework of {@see self::cssFrameworks()};
  * 5. the stub theme is reflected: marker class + attribute in the content, page header through the partial;
- * 6. no raw translation keys (missing catalogue ids or `*.label|placeholder|help|title` keys in the output);
+ * 6. no missing translations (2.3: every message the translator could not find, so double translations are caught;
+ *    {@see self::ignoredMissingTranslations()} / {@see self::strictMissingTranslations()}) and no
+ *    `*.label|placeholder|help|title` keys in the output;
  * 7. every rendered form of a FormView-backed {@see Action} (`Action::$form`, e.g. a CSRF-only form) carries each
  *    hidden field of that FormView (the CSRF token) exactly once, however often the page renders the action (the
  *    stub `page_header` override renders the header `actions` itself, after the scaffold pre-rendered `toolbar`).
@@ -60,7 +62,7 @@ abstract class PageContractTestCase extends TestCase
     /** Raw key suffixes that must never reach the output. */
     public const RAW_KEY_PATTERN = '/^[a-z0-9_-]+(\.[a-z0-9_-]+)*\.(label|placeholder|help|title)$/i';
 
-    /** Translation ids that look like keys (dotted, no spaces). */
+    /** Translation ids that look like keys (dotted, no spaces): the missing-message rule without strict mode. */
     public const KEY_PATTERN = '/^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)+$/';
 
     /**
@@ -197,6 +199,29 @@ abstract class PageContractTestCase extends TestCase
         return ['form_div_layout.html.twig'];
     }
 
+    /**
+     * 2.3: every message the translator could not find fails {@see self::testPageHasNoRawTranslationKeys()} — not
+     * only key-looking ids — so text translated twice (an already translated label piped through a form theme's
+     * `|trans` again) and literals sent through `|trans` are caught. Return false to keep the 2.2 rule (dotted ids
+     * only) while a bundle migrates.
+     */
+    protected static function strictMissingTranslations(): bool
+    {
+        return true;
+    }
+
+    /**
+     * Missing messages a bundle accepts (2.3; document why in `docs/TEMPLATES.md`): `domain:id` or `id` (any domain),
+     * matched exactly, or a regular expression delimited by `/` matched against `domain:id`, e.g. user data a host
+     * form theme translates (`'/^messages:Acme /'`).
+     *
+     * @return list<string>
+     */
+    protected static function ignoredMissingTranslations(): array
+    {
+        return [];
+    }
+
     protected static function locale(): string
     {
         return 'en';
@@ -229,9 +254,19 @@ abstract class PageContractTestCase extends TestCase
         self::prepareFormViews($fixture->context, $seen, $actionForms);
         $html = $twig->render($fixture->template, $fixture->context);
         $missing = [];
+        $strict = static::strictMissingTranslations();
+        $ignored = static::ignoredMissingTranslations();
         foreach ($translator->getCollectedMessages() as $message) {
-            if (DataCollectorTranslator::MESSAGE_MISSING === $message['state'] && 1 === preg_match(self::KEY_PATTERN, (string) $message['id'])) {
-                $missing[] = $message['domain'].':'.$message['id'];
+            $id = (string) $message['id'];
+            if (DataCollectorTranslator::MESSAGE_MISSING !== $message['state'] || '' === trim($id)) {
+                continue;
+            }
+            if (!$strict && 1 !== preg_match(self::KEY_PATTERN, $id)) {
+                continue;
+            }
+            $entry = $message['domain'].':'.$id;
+            if (!$this->isIgnoredMissingTranslation($entry, $id, $ignored)) {
+                $missing[] = $entry;
             }
         }
 
@@ -329,8 +364,8 @@ abstract class PageContractTestCase extends TestCase
     }
 
     /**
-     * No translation id that looks like a key is missing from the catalogues, and no `*.label|placeholder|help|
-     * title` key is printed.
+     * No message is missing from the catalogues (2.3: any id; without {@see self::strictMissingTranslations()} only
+     * ids that look like keys), and no `*.label|placeholder|help|title` key is printed.
      */
     protected function assertNoRawTranslationKeys(RenderedPage $page): void
     {
@@ -430,6 +465,20 @@ abstract class PageContractTestCase extends TestCase
             }
         }
         self::prepareFormViews(get_object_vars($value), $seen, $actionForms);
+    }
+
+    /**
+     * @param list<string> $ignored {@see self::ignoredMissingTranslations()}
+     */
+    private function isIgnoredMissingTranslation(string $entry, string $id, array $ignored): bool
+    {
+        foreach ($ignored as $rule) {
+            if ($rule === $entry || $rule === $id || (\strlen($rule) > 2 && str_starts_with($rule, '/') && 1 === @preg_match($rule, $entry))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function isDeclaredUnique(string $template): bool

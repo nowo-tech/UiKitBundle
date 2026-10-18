@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+  - [Template contract (2.3)](#template-contract-23)
 - [To 2.2.0](#to-220)
   - [Template contract (2.2)](#template-contract-22)
 - [To 2.1.0](#to-210)
@@ -53,6 +54,23 @@
   - [Install](#install)
 
 ## Unreleased
+
+Target **2.3.0** (`composer require nowo-tech/ui-kit-bundle:^2.3`). No PHP API is removed; new constructor arguments
+are trailing and optional. Changes hosts and bundles may notice:
+
+### Template contract (2.3)
+
+- **List filters translate each text once**: a `FilterField::$placeholder` `Label` and the default "Any" option
+  (`filters.any`) are handed to the form theme untranslated (`|nowo_ui_translatable`), so the theme's `|trans`
+  translates them exactly once in their own domain (2.2 translated them and then the form theme translated the result
+  again in the field's domain: a missing message per render). A **string** placeholder is now printed as given (2.2
+  translated it in the field's domain); pass a `Label` to translate it. Fields rendered with
+  `translation_domain: false` (or with `attr_translation_parameters`) get the pre-translated text as before.
+- **Contract test, missing messages**: `testPageHasNoRawTranslationKeys` now fails on **every** message the translator
+  could not find (2.2: dotted ids only), which catches double translations and literals piped through `|trans` (e.g.
+  humanized form labels of a form without `translation_domain`). Opt out per message with
+  `ignoredMissingTranslations()` (`domain:id`, `id` or a `/regex/` on `domain:id`) or, while migrating, return false
+  from `strictMissingTranslations()` for the 2.2 rule.
 
 ## To 2.2.0
 

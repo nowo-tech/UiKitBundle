@@ -31,6 +31,8 @@ use Twig\TwigFunction;
  * - `nowo_ui_breadcrumb_kit(collection = null)` — BreadcrumbKit's `breadcrumb_render()` output ('' when absent)
  * - `nowo_ui_breadcrumb_kit_available()` — whether BreadcrumbKit is installed and enabled for page headers
  * - `|nowo_ui_trans(params = {})` — translates a {@see Label}; strings pass through (escaped by Twig)
+ * - `|nowo_ui_translatable(params = {})` (2.3) — a {@see TranslatableText} for values a form theme translates again
+ *   (`attr.placeholder`, choice `placeholder`): a Label is translated exactly once, a string printed as given
  * - globals `nowo_ui_layout` ({admin, guest}), `nowo_ui_theme` ({@see Theme}), `nowo_ui_breadcrumbs`
  */
 final class ThemeExtension extends AbstractExtension implements GlobalsInterface
@@ -68,6 +70,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
     {
         return [
             new TwigFilter('nowo_ui_trans', $this->trans(...)),
+            new TwigFilter('nowo_ui_translatable', $this->translatable(...)),
         ];
     }
 
@@ -158,6 +161,31 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
         }
 
         throw new \InvalidArgumentException(\sprintf('nowo_ui_trans expects a Label, a string or a number, %s given.', get_debug_type($value)));
+    }
+
+    /**
+     * Wraps a {@see Label} (or a `{key, domain, params}` hash) or a literal for a form theme that pipes the value
+     * through `|trans` (`form_row(child, {attr: {placeholder: x|nowo_ui_translatable}})`): the label is translated
+     * once in its own domain, a literal is printed as given. Render with `translation_domain: false` instead when
+     * the value is already translated.
+     *
+     * @param array<string, mixed> $params merged over the label's own parameters
+     */
+    public function translatable(mixed $value, array $params = []): TranslatableText
+    {
+        if ($value instanceof TranslatableText) {
+            return [] === $params ? $value : new TranslatableText($value->text, $value->domain, array_merge($value->params, $params));
+        }
+        if (\is_array($value) && isset($value['key']) && \is_string($value['key'])) {
+            $domain = $value['domain'] ?? 'messages';
+            $labelParams = $value['params'] ?? [];
+            $value = new Label($value['key'], \is_string($domain) ? $domain : 'messages', \is_array($labelParams) ? $labelParams : []);
+        }
+        if ($value instanceof Label) {
+            return new TranslatableText($value->key, $value->domain, array_merge($value->params, $params));
+        }
+
+        return new TranslatableText($this->trans($value), null, $params);
     }
 
     public function breadcrumbKitAvailable(Environment $env): bool

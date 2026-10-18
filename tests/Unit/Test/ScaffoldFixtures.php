@@ -135,7 +135,8 @@ final class ScaffoldFixtures
      */
     public static function form(string $name, array $fields, string $method = 'POST'): FormView
     {
-        $builder = Forms::createFormFactoryBuilder()->getFormFactory()->createNamedBuilder($name, FormType::class, null, ['method' => $method]);
+        // Literal (humanized) labels: not catalogue messages, so the strict missing-message rule (2.3) ignores them
+        $builder = Forms::createFormFactoryBuilder()->getFormFactory()->createNamedBuilder($name, FormType::class, null, ['method' => $method, 'translation_domain' => false]);
         foreach ($fields as $field => $type) {
             $builder->add($field, $type, ['required' => false]);
         }

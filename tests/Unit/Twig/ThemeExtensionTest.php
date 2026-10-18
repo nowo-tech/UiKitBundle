@@ -8,6 +8,7 @@ use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Twig\ThemeExtension;
 use Nowo\UiKitBundle\View\Label;
 use PHPUnit\Framework\TestCase;
+use Symfony\Bridge\Twig\Extension\TranslationExtension;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Translation\Loader\ArrayLoader as TranslationArrayLoader;
@@ -103,6 +104,36 @@ final class ThemeExtensionTest extends TestCase
 
         $this->expectException(\InvalidArgumentException::class);
         $extension->trans(new \stdClass());
+    }
+
+    public function testTranslatable(): void
+    {
+        $translator = new Translator('en');
+        $translator->addLoader('array', new TranslationArrayLoader());
+        $translator->addResource('array', ['items.title' => 'Items of %owner%'], 'en', 'admin');
+        $extension = new ThemeExtension(new Theme(), translator: $translator);
+
+        $label = $extension->translatable(new Label('items.title', 'admin', ['%owner%' => 'Ann']), ['%owner%' => 'Bob']);
+        self::assertSame(['items.title', 'admin', ['%owner%' => 'Bob']], [$label->text, $label->domain, $label->params]);
+        self::assertSame('Items of Bob', $label->trans($translator));
+        self::assertSame('items.title', (string) $label);
+        $hash = $extension->translatable(['key' => 'items.title', 'domain' => 5, 'params' => 'x']);
+        self::assertSame(['items.title', 'messages', []], [$hash->text, $hash->domain, $hash->params]);
+        self::assertSame('Items of Cy', $extension->translatable(['key' => 'items.title', 'domain' => 'admin'], ['%owner%' => 'Cy'])->trans($translator));
+
+        $literal = $extension->translatable('Hello %who%', ['%who%' => 'Ann', '%x%' => []]);
+        self::assertNull($literal->domain);
+        self::assertSame('Hello Ann', $literal->trans($translator));
+        self::assertSame('Hello Ann', (string) $literal);
+        self::assertSame($literal, $extension->translatable($literal));
+        self::assertSame('Hello Bo', (string) $extension->translatable($literal, ['%who%' => 'Bo']));
+        self::assertSame('', (string) $extension->translatable(null));
+
+        // Through a form-theme-like |trans: translated once, in the label's own domain
+        $twig = $this->twig($extension, "{{ v|nowo_ui_translatable|trans({}, 'other') }}");
+        $twig->addExtension(new TranslationExtension($translator));
+        self::assertSame('Items of Ann', $twig->render('t', ['v' => new Label('items.title', 'admin', ['%owner%' => 'Ann'])]));
+        self::assertSame('Literal &lt;b&gt;', $twig->render('t', ['v' => 'Literal <b>']));
     }
 
     public function testTransFilterEscapesStrings(): void

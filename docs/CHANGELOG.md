@@ -50,6 +50,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+UiKit 2.3: the backlog of the phase-2 migrations (Pwa, ChatKit, SearchKit, AuthKit). See
+[UPGRADING](UPGRADING.md#template-contract-23).
+
+### Added
+
+- `|nowo_ui_translatable(params = {})` and `Twig\TranslatableText`: a `Label` (or literal) handed to a form theme that
+  pipes it through `|trans` (`attr.placeholder`, choice `placeholder`) is translated exactly once in its own domain.
+- `PageContractTestCase::ignoredMissingTranslations()` (accepted missing messages: `domain:id`, `id`, `/regex/`) and
+  `strictMissingTranslations()` (false = the 2.2 dotted-id rule).
+
+### Changed
+
+- `PageContractTestCase` collects **all** missing messages through the `DataCollectorTranslator` and fails on any.
+
+### Fixed
+
+- List filters: `FilterField::$placeholder` labels and the "Any" option (`filters.any`) were translated twice (by
+  `nowo_ui_trans` / `|trans`, then by the form theme in the field's domain).
+
 ## [2.2.0] - 2026-10-18
 
 Default-theme polish (confirm dialog, tables, filters grid, badges, tabs levels, one primary colour) and the page-contract backlog from the phase-1/2 migrations (scripts partial, table partial, status layout, remote dialogs, progress, form theme, breadcrumbs modes, section actions). See [UPGRADING](UPGRADING.md#to-220).

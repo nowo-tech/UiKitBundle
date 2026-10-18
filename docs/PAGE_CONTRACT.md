@@ -739,11 +739,13 @@ tests per fixture:
 | `testPageHasNoForbiddenMarkup` | `<html>` / `<head>` / `<body>` / doctype, CDN `<script src>` / `<link rel=stylesheet\|preload>`, inline `on*=`, `confirm(`, `javascript:` URLs |
 | `testPageUsesFrameworkClassesOnlyThroughThemeSlots` | a Bootstrap / Tabler / Tailwind / Foundation class that is not a slot default of the rendered `css_framework` (rendered with every framework of `cssFrameworks()`, default `none`, `bootstrap5`, `tailwind`) |
 | `testPageReflectsTheStubTheme` | no `pc-*` slot class or `data-pc-*` slot attribute in `nowo_ui_content`, or a page header that bypasses `nowo_ui_partial('page_header')` |
-| `testPageHasNoRawTranslationKeys` | a dotted id the translator could not find, or a `*.label\|placeholder\|help\|title` key in the output |
+| `testPageHasNoRawTranslationKeys` | any message the translator could not find (2.3; 2.2: dotted ids only) — a text translated twice (an already translated label handed to a form theme that translates it again: use `translation_domain: false` or `\|nowo_ui_translatable`), a literal piped through `\|trans`, a humanized label of a form without `translation_domain` — or a `*.label\|placeholder\|help\|title` key in the output |
 | `testPageActionFormsKeepTheirHiddenFields` | a rendered `<form name="…">` of a `FormView`-backed `Action` found in the fixture context lacks a hidden field of that `FormView` (the CSRF token), or carries it more than once (e.g. a template that calls `form_start` / `form_end` on an already rendered `FormView` instead of the `action` partial) |
 
 Hooks: `templatePaths()`, `inlineTemplates()`, `translationDirs()`, `templatesDocument()`, `cssFrameworks()`,
-`allowedClasses()` (documented exceptions), `formThemes()` (null disables the Form extension; add your FormKit
+`allowedClasses()` (documented exceptions), `ignoredMissingTranslations()` (2.3: accepted missing messages,
+`domain:id`, `id` or a `/regex/` on `domain:id`; document why in `docs/TEMPLATES.md`), `strictMissingTranslations()`
+(2.3: false keeps the 2.2 dotted-id rule while migrating), `formThemes()` (null disables the Form extension; add your FormKit
 theme), `locale()`, `configureTwig(Environment)` (register the bundle's Twig extensions; functions added there
 override the stubs). The assertion helpers (`assertExtendsScaffoldOrUnique()`, `assertCanonicalBlocksFilled()`,
 `assertNoForbiddenMarkup()`, `assertNoFrameworkUtilityClasses()`, `assertStubThemeReflected()`,

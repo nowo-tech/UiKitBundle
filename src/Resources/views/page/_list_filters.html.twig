@@ -8,7 +8,8 @@
     - region (data-nowo-ui-region, default filters), bundle (default page.bundle), nowo_ui_page_type
     - header_actions: page-header actions rendered last in the actions row (list scaffold, headerActionsInFilters)
 
-  Per field (page.filterFields[child name], View\FilterField): placeholder (translated), widget class / attributes,
+  Per field (page.filterFields[child name], View\FilterField): placeholder (a Label is translated exactly once in its
+  domain, a string printed as given — 2.3), widget class / attributes,
   row class / attributes and width (`nowo-ui-filters__field--<width>`); every row gets the `filters_field` slot.
   2.2: text-like widgets get the `input` slot classes (choice widgets its semantic + host classes only: the form
   theme gives them their framework select class); checkboxes / radios keep the form theme's. An optional,
@@ -37,13 +38,18 @@
                 {% set _input_class = _choice ? ('nowo-ui-input ' ~ nowo_ui_theme.extraClasses('input', _b, _pt))|trim : nowo_ui_class('input', _b) %}
                 {% set _attr = _attr|merge({class: ((_attr.class ?? '') ~ ' ' ~ _input_class)|trim}) %}
             {% endif %}
+            {# 2.3: texts the form theme translates again (attr.placeholder, the choice placeholder) are handed over
+               untranslated (|nowo_ui_translatable: translated once, in their own domain) or, for a field rendered
+               with translation_domain false, already translated — never twice #}
+            {% set _pretranslated = child.vars.translation_domain is same as(false) or child.vars.attr_translation_parameters|default([]) is not empty %}
             {% if _choice and not child.vars.multiple and not child.vars.expanded and not child.vars.required and child.vars.placeholder is same as('') %}
-                {% set _row_vars = {placeholder: 'filters.any'|trans({}, 'NowoUiKitBundle')} %}
+                {% set _any = {key: 'filters.any', domain: 'NowoUiKitBundle'} %}
+                {% set _row_vars = {placeholder: child.vars.translation_domain is same as(false) ? _any|nowo_ui_trans : _any|nowo_ui_translatable} %}
             {% endif %}
             {% if _field %}
                 {% set _attr = _attr|merge(_field.attributes) %}
                 {% if _field.placeholder is not null %}
-                    {% set _attr = _attr|merge({placeholder: _field.placeholder|nowo_ui_trans}) %}
+                    {% set _attr = _attr|merge({placeholder: _pretranslated ? _field.placeholder|nowo_ui_trans : _field.placeholder|nowo_ui_translatable}) %}
                 {% endif %}
                 {% if _field.class %}
                     {% set _attr = _attr|merge({class: ((_attr.class ?? '') ~ ' ' ~ _field.class)|trim}) %}
