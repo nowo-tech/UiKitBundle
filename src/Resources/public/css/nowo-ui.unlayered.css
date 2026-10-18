@@ -3510,9 +3510,20 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
 }
 
 .nowo-ui-auth-panel {
+  box-sizing: border-box;
+  /* 2.3: centred, at most 28rem, in any guest layout (host layouts without .nowo-ui-page--guest too) */
+  width: min(var(--nowo-ui-auth-panel-width, 28rem), 100%);
+  margin-inline: auto;
   border: var(--nowo-ui-border-width, 1px) solid var(--nowo-ui-border);
   border-radius: var(--nowo-ui-radius);
   background: var(--nowo-ui-surface);
+}
+
+/* 2.3: full-width fields inside the auth panel (the `input` slot caps inputs at 20rem elsewhere) */
+.nowo-ui-auth-panel :is(.nowo-ui-input, input:not([type="checkbox"], [type="radio"], [type="hidden"], [type="submit"], [type="button"], [type="reset"], [type="image"], [type="range"], [type="color"]), select, textarea) {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
 }
 
 .nowo-ui-auth-panel__brand {
@@ -3526,13 +3537,47 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
   font-size: 0.875rem;
 }
 
+/* List reset with !important (2.3): an unlayered Bootstrap reboot (`ul { padding-left: 2rem; margin-bottom: 1rem }`)
+   beats normal declarations of the nowo-ui layer, never a layered !important. */
 .nowo-ui-auth-panel__links {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-  margin: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+}
+
+.nowo-ui-auth-panel__links > li {
+  margin: 0 !important;
+}
+
+/* Form errors (2.3, slots form_error / form_errors / input_invalid; UiKit form theme and the auth scaffold) */
+.nowo-ui-form-error {
+  margin: 0.25rem 0 0;
   padding: 0;
   list-style: none;
+  color: var(--nowo-ui-danger-text);
+  font-size: 0.8125rem;
+}
+
+.nowo-ui-form-errors {
+  margin: 0 0 1rem;
+}
+
+.nowo-ui-form-errors > ul {
+  margin: 0;
+  padding: 0.6rem 0.85rem;
+  list-style: none;
+  border: var(--nowo-ui-border-width, 1px) solid var(--nowo-ui-danger-border);
+  border-radius: var(--nowo-ui-radius);
+  background: var(--nowo-ui-danger-bg);
+  color: var(--nowo-ui-danger-text);
+  font-size: 0.875rem;
+}
+
+.nowo-ui-input--invalid:not(.form-control) {
+  border-color: var(--nowo-ui-danger);
 }
 
 .nowo-ui-danger-zone {

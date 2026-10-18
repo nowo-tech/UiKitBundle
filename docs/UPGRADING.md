@@ -71,6 +71,16 @@ are trailing and optional. Changes hosts and bundles may notice:
   humanized form labels of a form without `translation_domain`). Opt out per message with
   `ignoredMissingTranslations()` (`domain:id`, `id` or a `/regex/` on `domain:id`) or, while migrating, return false
   from `strictMissingTranslations()` for the 2.2 rule.
+- **Auth scaffold**: the root form errors (`form_errors(form)`: CSRF, global errors) now render right after `<form>`
+  in the new `form_errors` slot; a bundle that printed them in its `nowo_ui_auth_fields` override removes that call
+  (or overrides `nowo_ui_auth_body`). The form functions moved to `page/_auth_form.html.twig` (the scaffold compiles
+  without symfony/form); the default `nowo_ui_auth_fields` content is the same child loop. The panel is centred at
+  `min(28rem, 100%)` (`--nowo-ui-auth-panel-width`) in any guest layout and its fields are full width (Tailwind's
+  `max-w-xs` from the `input` slot still caps them: set the slot per page type, `theme.pages.auth`). The footer link
+  list reset uses `!important` (wins over an unlayered Bootstrap reboot).
+- **UiKit form theme**: fields with errors get the `input_invalid` slot (Bootstrap `is-invalid`) and their messages
+  the `form_error` slot (Bootstrap `invalid-feedback d-block`) instead of a bare `<ul>`; PasswordToggle inputs get the
+  `input` slot.
 
 ## To 2.2.0
 

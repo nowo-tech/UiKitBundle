@@ -59,6 +59,13 @@ UiKit 2.3: the backlog of the phase-2 migrations (Pwa, ChatKit, SearchKit, AuthK
   pipes it through `|trans` (`attr.placeholder`, choice `placeholder`) is translated exactly once in its own domain.
 - `PageContractTestCase::ignoredMissingTranslations()` (accepted missing messages: `domain:id`, `id`, `/regex/`) and
   `strictMissingTranslations()` (false = the 2.2 dotted-id rule).
+- `AuthPage::$formThemes`, `$formAttributes`, `$documentTitle`; `FormPage::$formAttributes` (extra `<form>`
+  attributes, `class` appended to the `form` slot).
+- Auth scaffold: root form errors in the new `form_errors` slot; data blocks `nowo_ui_auth_body` and
+  `nowo_ui_auth_after_form`.
+- Slots `form_error`, `form_errors`, `input_invalid`; the UiKit form theme marks invalid widgets and renders field
+  errors in `form_error`; PasswordToggle bridge (`input` slot on `toggle_password_widget`'s input).
+- Token `--nowo-ui-auth-panel-width`.
 
 ### Changed
 
@@ -66,6 +73,10 @@ UiKit 2.3: the backlog of the phase-2 migrations (Pwa, ChatKit, SearchKit, AuthK
 
 ### Fixed
 
+- `page/auth` called `form_start()` (symfony/form) even without a form: the form functions moved to
+  `page/_auth_form.html.twig`, included only with `page.form`.
+- Auth panel: centred `min(28rem, 100%)` in host guest layouts, full-width fields, footer link list reset hardened
+  against an unlayered Bootstrap reboot.
 - List filters: `FilterField::$placeholder` labels and the "Any" option (`filters.any`) were translated twice (by
   `nowo_ui_trans` / `|trans`, then by the form theme in the field's domain).
 

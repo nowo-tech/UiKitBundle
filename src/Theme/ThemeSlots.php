@@ -211,6 +211,17 @@ final class ThemeSlots
         'check_input' => ['nowo-ui-check__input', [
             'bootstrap' => 'form-check-input',
         ]],
+        // Invalid field (2.3, UiKit form theme): added to the widget classes of a field with errors (+ aria-invalid)
+        'input_invalid' => ['nowo-ui-input--invalid', [
+            'bootstrap' => 'is-invalid',
+        ]],
+        // Field error messages (2.3, UiKit form theme `form_errors` of a field) and the root form errors box (CSRF,
+        // global errors: auth scaffold, above the fields)
+        'form_error' => ['nowo-ui-form-error', [
+            'bootstrap' => 'invalid-feedback d-block',
+            'tailwind' => 'text-sm mt-1',
+        ]],
+        'form_errors' => ['nowo-ui-form-errors', []],
         'input_wide' => ['nowo-ui-input nowo-ui-input--wide', [
             'bootstrap' => 'form-control',
             'tailwind' => 'block w-full max-w-xl border px-3 py-1.5 text-sm',

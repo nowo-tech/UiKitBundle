@@ -17,6 +17,8 @@ use Symfony\Component\Form\FormView;
  * the scaffold renders it (e.g. the bundle's FormKit theme), so bundles need not override `nowo_ui_content`.
  * Body-only mode (2.2): `form` null, or `formTag: false`, renders only the `nowo_ui_form_body` block inside the form
  * panel — no `<form>`, no submit / cancel row — for a component that renders its own form (e.g. a Live component).
+ * `formAttributes` (2.3): extra `<form>` attributes (`novalidate`, `data-turbo`…; `class` is appended to the `form`
+ * slot).
  */
 final readonly class FormPage
 {
@@ -30,6 +32,7 @@ final readonly class FormPage
      * @param iterable<Action>                          $secondaryActions
      * @param array<string, string|int|float|bool|null> $attributes       extra attributes of the scaffold root (data-testid…; no on* handlers)
      * @param iterable<string>                          $formThemes       form theme templates applied to `form` (`form_theme`)
+     * @param array<string, string|int|float|bool|null> $formAttributes   extra `<form>` attributes (2.3; `class` is appended, no on* handlers)
      */
     public function __construct(
         public PageHeader $header,
@@ -47,8 +50,10 @@ final readonly class FormPage
         public Label|string|null $dangerZoneIntro = null,
         iterable $formThemes = [],
         public bool $formTag = true,
+        public array $formAttributes = [],
     ) {
         Action::assertAttributes($attributes);
+        Action::assertAttributes($formAttributes);
         $this->formThemes = self::themes($formThemes, 'FormPage formThemes');
         $this->secondaryActions = ViewList::of($secondaryActions, Action::class, 'FormPage secondaryActions');
     }

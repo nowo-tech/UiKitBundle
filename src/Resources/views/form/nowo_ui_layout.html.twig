@@ -6,25 +6,59 @@
   Text-like widgets, textareas and selects get the `input` slot classes; checkboxes / radios render inside a
   `<label>` with the `check` slot (input: `check_input`), label text after the box; help text keeps `help-text`
   (muted by nowo-ui.css). FormKit hosts point their profile's form theme here or keep their own.
+  2.3: a field with errors gets the `input_invalid` slot on its widget (Bootstrap `is-invalid`) + aria-invalid, and
+  its messages render in the `form_error` slot (Bootstrap `invalid-feedback d-block`; root errors: a plain list, the
+  auth scaffold wraps it in the `form_errors` slot). PasswordToggle bridge: the <input> of `toggle_password_widget`
+  (nowo-tech/password-toggle-bundle) gets the `input` slot when this theme is in the form's theme chain.
 #}
 {% use 'form_div_layout.html.twig' %}
 
 {%- block form_widget_simple -%}
     {%- if type is not defined or type not in ['hidden', 'checkbox', 'radio', 'range', 'color', 'file'] -%}
         {%- set attr = attr|merge({class: (attr.class|default('') ~ ' ' ~ nowo_ui_class('input'))|trim}) -%}
+        {%- set attr = errors|default([])|length > 0 ? attr|merge({class: (attr.class|default('') ~ ' ' ~ nowo_ui_class('input_invalid'))|trim, 'aria-invalid': 'true'}) : attr -%}
     {%- endif -%}
     {{- parent() -}}
 {%- endblock form_widget_simple -%}
 
 {%- block textarea_widget -%}
     {%- set attr = attr|merge({class: (attr.class|default('') ~ ' ' ~ nowo_ui_class('input_full'))|trim}) -%}
+    {%- set attr = errors|default([])|length > 0 ? attr|merge({class: (attr.class|default('') ~ ' ' ~ nowo_ui_class('input_invalid'))|trim, 'aria-invalid': 'true'}) : attr -%}
     {{- parent() -}}
 {%- endblock textarea_widget -%}
 
 {%- block choice_widget_collapsed -%}
     {%- set attr = attr|merge({class: (attr.class|default('') ~ ' ' ~ nowo_ui_class('input'))|trim}) -%}
+    {%- set attr = errors|default([])|length > 0 ? attr|merge({class: (attr.class|default('') ~ ' ' ~ nowo_ui_class('input_invalid'))|trim, 'aria-invalid': 'true'}) : attr -%}
     {{- parent() -}}
 {%- endblock choice_widget_collapsed -%}
+
+{%- block form_errors -%}
+    {%- if errors|length > 0 -%}
+        {%- if form is rootform -%}
+            <ul class="nowo-ui-form-errors__list">
+                {%- for error in errors -%}<li id="{{ id ~ '_error' ~ loop.index }}">{{ error.message }}</li>{%- endfor -%}
+            </ul>
+        {%- else -%}
+            <ul class="{{ nowo_ui_class('form_error') }}"{{ nowo_ui_attrs('form_error') }}>
+                {%- for error in errors -%}<li id="{{ id ~ '_error' ~ loop.index }}">{{ error.message }}</li>{%- endfor -%}
+            </ul>
+        {%- endif -%}
+    {%- endif -%}
+{%- endblock form_errors -%}
+
+{#- PasswordToggle bridge (2.3): nowo-tech/password-toggle-bundle's `toggle_password_widget` prints its <input> with
+    block('widget_attributes'), which the form renderer resolves through the form's theme chain: with this theme in
+    the chain (form_theme tag, FormPage::formThemes, twig.form_themes) and no theme above it redefining
+    widget_attributes (bootstrap_5_layout does), the input gets the `input` slot (+ `input_invalid`). Other widgets
+    are untouched here. -#}
+{%- block widget_attributes -%}
+    {%- if 'toggle_password' in block_prefixes|default([]) and 'nowo-ui-input' not in attr.class|default('')|split(' ') -%}
+        {%- set attr = attr|merge({class: (attr.class|default('') ~ ' ' ~ nowo_ui_class('input'))|trim}) -%}
+        {%- set attr = errors|default([])|length > 0 ? attr|merge({class: (attr.class|default('') ~ ' ' ~ nowo_ui_class('input_invalid'))|trim, 'aria-invalid': 'true'}) : attr -%}
+    {%- endif -%}
+    {{- parent() -}}
+{%- endblock widget_attributes -%}
 
 {%- block checkbox_widget -%}
     {%- set attr = attr|merge({class: (attr.class|default('') ~ ' ' ~ nowo_ui_class('check_input'))|trim}) -%}

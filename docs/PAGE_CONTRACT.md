@@ -260,12 +260,19 @@ their `href`), "Step n of m", one card with the current step.
 ### Auth
 
 `page/auth.html.twig` · `page: AuthPage` (`title`, `form`, `intro`, `brand`, `error`, `submitLabel`, `links:
-list<Link>`) on the **guest** layout; panel in the `auth_panel` slot, footer `auth_footer`, link list `auth_links`.
+list<Link>`, 2.3: `formThemes`, `formAttributes`, `documentTitle`) on the **guest** layout; panel in the `auth_panel`
+slot (centred, at most `--nowo-ui-auth-panel-width` 28rem, full-width fields), footer `auth_footer`, link list
+`auth_links`. 2.3: the root form errors (`form_errors(form)`: CSRF, global errors) render right after `<form>` in the
+`form_errors` slot (`role="alert"`, only with errors) — a bundle that printed them in its own `nowo_ui_auth_fields`
+override drops that call. Every form function lives in `page/_auth_form.html.twig`, included only with a form: an
+`AuthPage` without `form` renders without symfony/form.
 
 | Data block | Default | Context |
 | --- | --- | --- |
+| `nowo_ui_auth_body` *(2.3)* | the form region: root errors, `nowo_ui_auth_fields`, `nowo_ui_auth_actions` (nothing without `page.form`) | `form`, `page` |
 | `nowo_ui_auth_fields` | child loop of `page.form` | `form`, `page` |
 | `nowo_ui_auth_actions` | submit button (`page.submitLabel`) | `form`, `page` |
+| `nowo_ui_auth_after_form` *(2.3)* | empty — after the form, inside the panel body (passkey button, "or" divider) | `form`, `page` |
 | `nowo_ui_auth_footer` | `page.links` | `page` |
 
 ## View models
@@ -293,12 +300,12 @@ or a plain string printed escaped. Never pre-render HTML into a view model.
 | `WizardStep` | `(id, label, href = null)` |
 | `ListPage` | `(header, columns = [], rows = [], filters = null, rowActions = [] \| callable(row, key), pagination = null, empty = null, filtersClearHref = null, sort = null, direction = 'asc', caption = null, bundle = null, layout = null, attributes = [], actionsLabel = null, actionsLabelVisible = false, filterFields = [], filtersSubmit = null, filtersClear = null, filterActions = [], responsive = 'cards', filtersDisplay = null, headerActionsInFilters = null)`; `rowActions(row, key)`, `confirmDialogs(actions)` |
 | `ShowPage` | `(header, sections = [], meta = [], bundle = null, layout = null, attributes = [])` |
-| `FormPage` | `(header, form, submitLabel = null, cancelHref = null, cancelLabel = null, secondaryActions = [], deleteAction = null, bundle = null, layout = null, attributes = [], secondaryActionsInHeader = true, dangerZoneTitle = null, dangerZoneIntro = null, formThemes = [])` — `formThemes` (2.1): form theme templates (e.g. the bundle's FormKit theme) applied to `form` with `form_theme` before it renders, so the bundle does not override `nowo_ui_content` |
+| `FormPage` | `(header, form, submitLabel = null, cancelHref = null, cancelLabel = null, secondaryActions = [], deleteAction = null, bundle = null, layout = null, attributes = [], secondaryActionsInHeader = true, dangerZoneTitle = null, dangerZoneIntro = null, formThemes = [], formTag = true, formAttributes = [])` — `formAttributes` (2.3): extra `<form>` attributes (`novalidate`, `data-turbo`…; `class` appended to the `form` slot, no `on*`); `formThemes` (2.1): form theme templates (e.g. the bundle's FormKit theme) applied to `form` with `form_theme` before it renders, so the bundle does not override `nowo_ui_content` |
 | `SettingsPage` | `(header, sections = [], current = null, bundle = null, layout = null, attributes = [])` |
 | `DashboardPage` | `(header, kpis = [], bundle = null, layout = null, attributes = [])` |
 | `ConfirmPage` | `(header, confirm, action (non-GET), cancelHref = null, bundle = null, layout = null, attributes = [])` |
 | `WizardPage` | `(header, steps, current, form = null, backHref = null, nextLabel = null, backLabel = null, bundle = null, layout = null, attributes = [])` |
-| `AuthPage` | `(title, form = null, intro = null, brand = null, error = null, submitLabel = null, links = [], bundle = null, layout = null, attributes = [])` |
+| `AuthPage` | `(title, form = null, intro = null, brand = null, error = null, submitLabel = null, links = [], bundle = null, layout = null, attributes = [], scripts = true, formThemes = [], formAttributes = [], documentTitle = null)` — 2.3: `formThemes` (`form_theme` on `form`), `formAttributes` (extra `<form>` attributes, `class` appended), `documentTitle` (`<title>`, default `title`) |
 
 `bundle` selects the per-bundle theme exception (`theme.bundles.<bundle>`); `layout` is the bundle's
 `web_ui.layout_template` override (null = `nowo_ui_layout.admin`, `.guest` for `AuthPage`); `attributes` (no `on*`)

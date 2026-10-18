@@ -6,7 +6,8 @@
   submit + cancel, secondary actions below the form (secondaryActionsInHeader: false), delete zone
   (page.deleteAction through the confirm contract; `danger_zone`, `danger_zone_title`, `danger_zone_intro` slots).
   Data blocks: nowo_ui_form_body (default: REQ-TWIG-003 child loop), nowo_ui_form_aside (side column).
-  page.formThemes (2.1): form_theme applied to page.form before it renders.
+  page.formThemes (2.1): form_theme applied to page.form before it renders. page.formAttributes (2.3): extra <form>
+  attributes (class appended to the `form` slot).
   Body-only mode (2.2, page.form null or page.formTag false): the form panel holds only nowo_ui_form_body — no
   form_start / form_end, no submit / cancel row (a component rendering its own form, e.g. a Live component).
 #}
@@ -32,7 +33,8 @@
         <div class="nowo-ui-form-page__main">
             <div class="{{ nowo_ui_class('form_panel', _b) }}"{{ nowo_ui_attrs('form_panel', _b) }}>
                 {% if _form_tag %}
-                {{ form_start(form, {attr: {class: nowo_ui_class('form', _b), 'data-nowo-ui-region': 'form'}|merge(nowo_ui_theme.attributesFor('form', _b, {}, nowo_ui_page_type))}) }}
+                {% set _fa = page.formAttributes|filter(v => v is not null) %}
+                {{ form_start(form, {attr: {class: (nowo_ui_class('form', _b) ~ ' ' ~ (_fa.class ?? ''))|trim, 'data-nowo-ui-region': 'form'}|merge(nowo_ui_theme.attributesFor('form', _b, {}, nowo_ui_page_type))|merge(_fa|filter((v, k) => k != 'class'))}) }}
                 {% endif %}
                     {% block nowo_ui_form_body %}
                         {% if form is not null %}

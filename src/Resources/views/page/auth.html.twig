@@ -2,43 +2,49 @@
   REQ-UI-003 auth scaffold (guest layout). Variable: page (View\AuthPage).
 
   Regions: brand, panel heading + intro, error, form, footer links (slots auth_panel, auth_footer, auth_links).
-  Data blocks: nowo_ui_auth_fields (default: REQ-TWIG-003 child loop of page.form), nowo_ui_auth_actions (default:
-  submit button), nowo_ui_auth_footer (default: page.links). The <footer> renders only when the block has content
-  (2.2). page.scripts = false (2.2) drops every UiKit script and the theme boot (JS-free guest pages, e.g. a public
-  503): sets nowo_ui_scripts_enabled for the document layout.
+  Data blocks: nowo_ui_auth_body (2.3: the whole form region — root form errors, fields, actions — e.g. a "check
+  your inbox" message instead of a form), nowo_ui_auth_fields (default: REQ-TWIG-003 child loop of page.form),
+  nowo_ui_auth_actions (default: submit button), nowo_ui_auth_after_form (2.3: after the form, inside the panel
+  body; e.g. a passkey button or an "or" divider), nowo_ui_auth_footer (default: page.links). The <footer> renders
+  only when the block has content (2.2). page.scripts = false (2.2) drops every UiKit script and the theme boot
+  (JS-free guest pages, e.g. a public 503): sets nowo_ui_scripts_enabled for the document layout.
+  2.3: page.formThemes (form_theme), page.formAttributes (extra <form> attributes, class appended to the form slot),
+  page.documentTitle (<title>, default page.title); the root form errors (CSRF, global errors: form_errors(form))
+  render above the fields in the `form_errors` slot. Every form function lives in page/_auth_form.html.twig, included
+  only with a form: without page.form the scaffold renders without symfony/form.
 #}
 {% extends page.layout ?? nowo_ui_layout.guest %}
 {% set nowo_ui_bundle = page.bundle %}
 {% set nowo_ui_page_type = 'auth' %}
 {% set nowo_ui_scripts_enabled = page.scripts %}
 
-{% block nowo_ui_document_title %}{{ page.title|nowo_ui_trans }}{% endblock %}
+{% block nowo_ui_document_title %}{{ (page.documentTitle ?? page.title)|nowo_ui_trans }}{% endblock %}
 
 {% block nowo_ui_content %}
     {% set _b = page.bundle %}
     {% set form = page.form %}
+    {% set _auth_form = '@NowoUiKitBundle/page/_auth_form.html.twig' %}
     <section class="{{ nowo_ui_class('auth_panel', _b) }}" data-nowo-ui-page="auth" data-nowo-ui-region="panel"{{ nowo_ui_attrs('auth_panel', _b) }}{{ nowo_ui_html_attrs(page.attributes) }}>
         <div class="{{ nowo_ui_class('card_body', _b) }}">
             {% if page.brand %}<p class="nowo-ui-auth-panel__brand">{{ page.brand|nowo_ui_trans }}</p>{% endif %}
             <h1 class="{{ nowo_ui_class('page_title', _b) }}">{{ page.title|nowo_ui_trans }}</h1>
             {% if page.intro %}<p class="{{ nowo_ui_class('page_intro', _b) }}">{{ page.intro|nowo_ui_trans }}</p>{% endif %}
             {% if page.error %}<div class="{{ nowo_ui_class('flash_error', _b) }}" role="alert">{{ page.error|nowo_ui_trans }}</div>{% endif %}
-            {% if form %}
-                {{ form_start(form, {attr: {class: nowo_ui_class('form', _b), 'data-nowo-ui-region': 'form'}|merge(nowo_ui_theme.attributesFor('form', _b, {}, nowo_ui_page_type))}) }}
-                    {% block nowo_ui_auth_fields %}
-                        {% for child in form %}
-                            {% if not child.rendered %}
-                                {{ form_row(child) }}
-                            {% endif %}
-                        {% endfor %}
-                    {% endblock %}
-                    <div class="{{ nowo_ui_class('form_actions', _b) }}"{{ nowo_ui_attrs('form_actions', _b) }}>
-                        {% block nowo_ui_auth_actions %}
-                            <button type="submit" class="{{ nowo_ui_class('btn_primary', _b) }}">{{ page.submitLabel is null ? 'action.submit'|trans({}, 'NowoUiKitBundle') : page.submitLabel|nowo_ui_trans }}</button>
+            {% block nowo_ui_auth_body %}
+                {% if form %}
+                    {{ include(_auth_form, {part: 'start', page: page, form: form, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
+                        {% block nowo_ui_auth_fields %}
+                            {{ include(_auth_form, {part: 'fields', page: page, form: form, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
                         {% endblock %}
-                    </div>
-                {{ form_end(form) }}
-            {% endif %}
+                        <div class="{{ nowo_ui_class('form_actions', _b) }}"{{ nowo_ui_attrs('form_actions', _b) }}>
+                            {% block nowo_ui_auth_actions %}
+                                <button type="submit" class="{{ nowo_ui_class('btn_primary', _b) }}">{{ page.submitLabel is null ? 'action.submit'|trans({}, 'NowoUiKitBundle') : page.submitLabel|nowo_ui_trans }}</button>
+                            {% endblock %}
+                        </div>
+                    {{ include(_auth_form, {part: 'end', page: page, form: form, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
+                {% endif %}
+            {% endblock %}
+            {% block nowo_ui_auth_after_form %}{% endblock %}
         </div>
         {% set _footer %}
             {% block nowo_ui_auth_footer %}

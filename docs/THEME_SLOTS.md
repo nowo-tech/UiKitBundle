@@ -147,6 +147,9 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `input` | `nowo-ui-input` | `form-control` | `form-control` | `block w-full max-w-xs border px-3 py-1.5 text-sm` | — |
 | `check` | `nowo-ui-check` | `form-check` | `form-check` | `inline-flex items-center gap-2` | — |
 | `check_input` | `nowo-ui-check__input` | `form-check-input` | `form-check-input` | — | — |
+| `input_invalid` | `nowo-ui-input--invalid` | `is-invalid` | `is-invalid` | — | — |
+| `form_error` | `nowo-ui-form-error` | `invalid-feedback d-block` | `invalid-feedback d-block` | `text-sm mt-1` | — |
+| `form_errors` | `nowo-ui-form-errors` | — | — | — | — |
 | `input_wide` | `nowo-ui-input nowo-ui-input--wide` | `form-control` | `form-control` | `block w-full max-w-xl border px-3 py-1.5 text-sm` | — |
 | `input_full` | `nowo-ui-input nowo-ui-input--full` | `form-control` | `form-control` | `block w-full border px-3 py-1.5 text-sm` | — |
 | `pagination` | `nowo-ui-pagination` | `d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3` | `d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3` | `flex flex-wrap items-center justify-between gap-2 mt-3` | — |
@@ -250,6 +253,15 @@ variants; the semantic modifiers `nowo-ui-input--wide` / `nowo-ui-input--full` w
 dialog text: `dialog_body_muted` (the `dialog` partial's `body_muted: true`) and the `nowo-ui-confirm__body--muted`
 modifier (e.g. on the full-page confirm through the `confirm_body` classes) paint `--nowo-ui-muted` without relying on
 Bootstrap's `text-muted`; for inline text use the `muted` slot.
+
+Form errors (2.3, UiKit form theme `@NowoUiKit/form/nowo_ui_layout.html.twig`): a field with errors gets
+`input_invalid` on its widget (Bootstrap `is-invalid`; `aria-invalid="true"`) and its messages render as a list in the
+`form_error` slot (Bootstrap `invalid-feedback d-block`); root errors render as a plain `nowo-ui-form-errors__list`,
+which the auth scaffold wraps in the `form_errors` slot (a danger box painted by nowo-ui.css; Bootstrap form themes
+print their own `alert` instead). **PasswordToggle bridge**: the `<input>` of nowo-tech/password-toggle-bundle's
+`toggle_password_widget` gets the `input` (+ `input_invalid`) slot when the UiKit form theme is in the form's theme
+chain (its `widget_attributes` adds them for the `toggle_password` block prefix only); a theme above it that redefines
+`widget_attributes` (e.g. `bootstrap_5_layout`) keeps its own classes — set the field's `attr.class` there.
 
 Minor hooks for kit class maps: `btn_link` (toolbar `Action` with `variant: 'link'`; same classes as
 `ui.btn('link')`); `muted` (same classes as `ui.muted()`; UiKit prints it on the `—` placeholder of empty detail-list
