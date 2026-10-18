@@ -10,6 +10,8 @@
 {% block title %}{% block nowo_ui_document_title %}{% endblock %} · Acme Admin{% endblock %}
 
 {% block stylesheets %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="{{ asset('css/nowo-ui.css', 'nowo_ui_kit') }}">
     {{ nowo_ui_tokens() }}
     <link rel="stylesheet" href="{{ asset('css/acme-theme.css') }}">
@@ -38,8 +40,7 @@
 {% endblock %}
 
 {% block javascripts %}
-    {% for _script in ['nowo-ui-modal', 'nowo-ui-confirm', 'nowo-ui-dialog', 'nowo-ui-toast', 'nowo-ui-tabs'] %}
-        <script src="{{ asset('js/' ~ _script ~ '.js', 'nowo_ui_kit') }}" defer></script>
-    {% endfor %}
+    {#- UiKit runtimes through the `scripts` partial (2.2): no copied script list to keep in sync with UiKit -#}
+    {{ include(nowo_ui_partial('scripts')) }}
     {% block nowo_ui_scripts %}{% endblock %}
 {% endblock %}

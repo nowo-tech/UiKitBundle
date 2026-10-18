@@ -53,7 +53,8 @@ test.describe('page contract — host theme', () => {
     await page.locator('tbody tr').first().locator('.nowo-ui-action--delete').click();
     const dialog = page.locator('dialog[open]');
     await expect(dialog).toBeVisible();
-    await expect(dialog).toContainText('Order #1042 of Lucía Fernández will be deleted.');
+    await expect(dialog).toContainText('Delete order #1042?');
+    await expect(dialog).toContainText('The order of Lucía Fernández (249.90 €) will be deleted.');
   });
 
   test('list: filters submit with GET', async ({ page }) => {
@@ -188,7 +189,7 @@ test.describe('page contract — validation round 3 (REQ-UI-003)', () => {
     expect(new Set(ids).size).toBe(5);
     await page.locator('tbody tr').nth(1).locator('.nowo-ui-action--delete').click();
     const dialog = page.locator('dialog[open]');
-    await expect(dialog).toContainText('Order #1041 of Marco Rossi will be deleted.');
+    await expect(dialog).toContainText('The order of Marco Rossi (89.00 €) will be deleted.');
   });
 
   test('list: pagination links keep the active filters; actions column aligned to the end', async ({ page }) => {
@@ -264,12 +265,41 @@ test.describe('page contract — validation round 3 (REQ-UI-003)', () => {
     test(`dashboard (${view}): area navigation under the page title`, async ({ page }) => {
       await page.goto(path);
       const nav = page.locator('nav[data-nowo-ui-region="area-nav"]');
-      await expect(nav).toHaveAttribute('aria-label', 'Shop');
+      await expect(nav).toHaveAttribute('aria-label', 'Reports');
       await expect(nav).toHaveAttribute('data-turbo', 'false');
-      await expect(nav.locator('a')).toHaveText(['Dashboard', 'Orders', 'Settings']);
-      await expect(nav.locator('a[aria-current="page"]')).toHaveText('Dashboard');
+      await expect(nav.locator('a')).toHaveText(['Sales', 'Stock', 'Customers']);
+      await expect(nav.locator('a[aria-current="page"]')).toHaveText('Sales');
+      // Recent orders through the table partial: header row, end-aligned amounts
+      const recent = page.locator('table', { has: page.locator('caption', { hasText: 'Last four orders' }) });
+      await expect(recent.locator('thead th')).toHaveText(['#', 'Customer', 'Total'], { ignoreCase: true });
+      expect(await recent.locator('thead th').last().evaluate((el) => getComputedStyle(el).textAlign)).toBe('end');
     });
   }
+
+  test('UiKit 2.2 default theme: masthead, confirm close button, solid delete, aligned headers', async ({ page }) => {
+    await page.goto('/page-contract/default/orders');
+    await expect(page.locator('.demo-masthead a[aria-current="page"]')).toHaveText('Orders');
+    const total = page.locator('thead th', { hasText: 'Total' });
+    expect(await total.evaluate((el) => getComputedStyle(el).textAlign)).toBe('end');
+    await expect(page.locator('thead th.nowo-ui-table__actions')).toHaveText('Actions');
+    await page.locator('td.nowo-ui-table__actions button[data-nowo-confirm-open]').first().click();
+    const dialog = page.locator('dialog[data-nowo-ui-confirm][open]');
+    await expect(dialog.locator('h2')).toHaveText('Delete order #1042?');
+    await expect(dialog.locator('.nowo-ui-confirm__submit')).toHaveClass(/btn-danger/);
+    const box = await dialog.boundingBox();
+    expect(Math.round(box!.width)).toBeLessThanOrEqual(448);
+    await dialog.getByRole('button', { name: 'Close' }).click();
+    await expect(dialog).toHaveCount(0);
+  });
+
+  test('UiKit 2.2: settings section actions sit next to the submit button', async ({ page }) => {
+    await page.goto('/page-contract/settings');
+    const row = page.locator('.nowo-ui-form__actions').first();
+    await expect(row.getByRole('button', { name: 'Save notifications' })).toBeVisible();
+    await expect(row.getByRole('link', { name: 'Send a test email' })).toBeVisible();
+    const [save, extra] = [await row.getByRole('button', { name: 'Save notifications' }).boundingBox(), await row.getByRole('link', { name: 'Send a test email' }).boundingBox()];
+    expect(Math.abs(save!.y - extra!.y)).toBeLessThan(4);
+  });
 
   test('dashboard: generic native dialog opens, closes and returns focus', async ({ page }) => {
     await page.goto('/page-contract/dashboard');
@@ -314,12 +344,14 @@ test.describe('page contract — default theme view', () => {
     expect(primary).toBe('#2563eb');
   });
 
-  test('badges keep a readable text / background pair (Bootstrap text-bg-*)', async ({ page }) => {
+  test('badges: one subtle set, readable text / background pair (UiKit 2.2, Bootstrap *-subtle / *-emphasis)', async ({ page }) => {
     await page.goto('/page-contract/default/orders');
     const paid = page.locator('.nowo-ui-badge--success').first();
-    await expect(paid).toHaveClass(/\btext-bg-success\b/);
+    await expect(paid).toHaveClass(/\bbg-success-subtle\b/);
+    await expect(paid).toHaveClass(/\btext-success-emphasis\b/);
+    await expect(paid).not.toHaveClass(/\bms-2\b/);
     const [color, background] = await paid.evaluate((el) => [getComputedStyle(el).color, getComputedStyle(el).backgroundColor]);
-    expect(color).toBe('rgb(255, 255, 255)');
+    expect(color).not.toBe('rgb(255, 255, 255)');
     expect(background).not.toBe(color);
   });
 });

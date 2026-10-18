@@ -15,6 +15,7 @@ use Nowo\UiKitBundle\View\ListPage;
 use Nowo\UiKitBundle\View\PageHeader;
 use Nowo\UiKitBundle\View\Pagination;
 use Nowo\UiKitBundle\View\ShowPage;
+use Nowo\UiKitBundle\View\Table;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\SearchType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -38,7 +39,7 @@ final class PageContractTest extends PageContractTestCase
         ]);
         yield 'dashboard' => new PageFixture('page_contract/dashboard.html.twig', [
             'page' => new DashboardPage(new PageHeader('Dashboard'), [new KpiTile('Revenue', '48,210 €')]),
-            'recent' => [$order],
+            'recent' => new Table([new Column('id', '#'), new Column('customer', 'Customer'), new Column('total', 'Total', align: 'end')], [$order]),
             'stock' => [['product' => 'Linen tote bag', 'left' => 3], ['product' => 'Mug', 'left' => 8]],
         ]);
         yield 'orders' => new PageFixture('page_contract/orders/index.html.twig', ['page' => new ListPage(

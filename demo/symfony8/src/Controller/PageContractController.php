@@ -26,6 +26,7 @@ use Nowo\UiKitBundle\View\Pagination;
 use Nowo\UiKitBundle\View\SettingsPage;
 use Nowo\UiKitBundle\View\SettingsSection;
 use Nowo\UiKitBundle\View\ShowPage;
+use Nowo\UiKitBundle\View\Table;
 use Nowo\UiKitBundle\View\WizardPage;
 use Nowo\UiKitBundle\View\WizardStep;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -61,6 +62,9 @@ final class PageContractController extends AbstractController
         ['id' => 1038, 'customer' => 'Sofia Almeida', 'email' => 'sofia@example.com', 'total' => '412.75', 'status' => 'paid', 'placed' => '2026-10-15 11:58'],
     ];
 
+    /** Badge tone of each order status (DetailItem::badge, 2.2; the list page maps the same tones in Twig). */
+    private const STATUS_BADGES = ['paid' => 'success', 'pending' => 'warning', 'shipped' => 'info', 'refunded' => 'neutral'];
+
     #[Route('', name: 'page_contract_index')]
     #[Route('/{theme}', name: 'page_contract_default_index')]
     public function index(?string $theme = null): Response
@@ -87,12 +91,13 @@ final class PageContractController extends AbstractController
         return $this->render('page_contract/dashboard.html.twig', [
             'page' => new DashboardPage(
                 $this->header($theme, 'Dashboard', 'Sales of the last 30 days.', 'Dashboard', [new Action('export', 'Export report', '#', icon: 'export')])
-                    // Area navigation (PageHeader::tabs, 2.1): the sections of the shop area under the title
+                    // Area navigation (PageHeader::tabs, 2.1): the views of the dashboard area under the title (the
+                    // sidebar is the main navigation; the area nav switches between reports of this area)
                     ->withTabs(new AreaNav([
-                        new AreaNavItem('Dashboard', $this->generateUrl($this->route('page_contract_dashboard', $theme), $this->params($theme)), true),
-                        new AreaNavItem('Orders', $this->generateUrl($this->route('page_contract_orders', $theme), $this->params($theme))),
-                        new AreaNavItem('Settings', $this->generateUrl($this->route('page_contract_settings', $theme), $this->params($theme))),
-                    ], 'Shop', ['data-turbo' => 'false'])),
+                        new AreaNavItem('Sales', $this->generateUrl($this->route('page_contract_dashboard', $theme), $this->params($theme)), true),
+                        new AreaNavItem('Stock', $this->generateUrl($this->route('page_contract_dashboard', $theme), $this->params($theme, ['report' => 'stock']))),
+                        new AreaNavItem('Customers', $this->generateUrl($this->route('page_contract_dashboard', $theme), $this->params($theme, ['report' => 'customers']))),
+                    ], 'Reports', ['data-turbo' => 'false'])),
                 [
                     new KpiTile('Revenue', '48,210 €', '+12% vs previous 30 days', null, 'success'),
                     new KpiTile('Orders', '1,284', '42 today', $this->generateUrl($this->route('page_contract_orders', $theme), $this->params($theme)), linkTile: true),
@@ -102,7 +107,15 @@ final class PageContractController extends AbstractController
                 $this->bundle($theme),
                 $this->layout($theme),
             ),
-            'recent' => \array_slice(self::ORDERS, 0, 4),
+            // Recent orders through the reusable `table` partial (View\Table, 2.2): header row, end-aligned amounts
+            'recent' => new Table(
+                [new Column('id', '#'), new Column('customer', 'Customer'), new Column('total', 'Total', align: 'end')],
+                array_map(static fn (array $o): array => ['id' => '#'.$o['id'], 'customer' => $o['customer'], 'total' => $o['total'].' €'], \array_slice(self::ORDERS, 0, 4)),
+                caption: 'Last four orders',
+                captionVisible: false,
+                responsive: 'scroll',
+                bundle: $this->bundle($theme),
+            ),
             'stock' => [['product' => 'Linen tote bag', 'left' => 3], ['product' => 'Ceramic mug (sand)', 'left' => 5], ['product' => 'Notebook A5 dotted', 'left' => 8]],
         ]);
     }
@@ -130,7 +143,8 @@ final class PageContractController extends AbstractController
             fn (array $row): array => [
                 Action::view($this->generateUrl($this->route('page_contract_order', $theme), $this->params($theme, ['id' => $row['id']]))),
                 Action::edit($this->generateUrl($this->route('page_contract_order_edit', $theme), $this->params($theme, ['id' => $row['id']]))),
-                Action::delete('#', 'demo-token', Confirm::delete(\sprintf('Order #%d of %s will be deleted.', $row['id'], $row['customer']))),
+                // The confirm title names the item (Confirm::delete($message, $title), 2.2)
+                Action::delete('#', 'demo-token', Confirm::delete(\sprintf('The order of %s (%s €) will be deleted.', $row['customer'], $row['total']), \sprintf('Delete order #%d?', $row['id']))),
             ],
             new Pagination(1, 5, 42, route: $this->route('page_contract_orders', $theme), routeParams: $this->params($theme)),
             new EmptyState('No orders match', 'Try another customer name.'),
@@ -160,11 +174,11 @@ final class PageContractController extends AbstractController
                 // POST action backed by a CSRF-only FormView: the host page_header override renders it again after
                 // the scaffold pre-rendered the 1.x toolbar, and the form keeps its token.
                 new Action('restore', 'Reopen', '#', method: 'POST', form: $this->container->get('form.factory')->createNamedBuilder('reopen_order')->add('_token', HiddenType::class, ['data' => 'demo-token'])->getForm()->createView()),
-                Action::delete('#', 'demo-token', Confirm::delete('The order and its invoice will be deleted.')),
+                Action::delete('#', 'demo-token', Confirm::delete('The order and its invoice will be deleted.', \sprintf('Delete order #%d?', $order['id']))),
             ]),
             [
                 new DetailSection('Customer', [new DetailItem('Name', $order['customer']), new DetailItem('Email', $order['email'], 'mailto:'.$order['email']), new DetailItem('Newsletter', true)], 'customer'),
-                new DetailSection('Payment', [new DetailItem('Total', $order['total'].' €'), new DetailItem('Status', ucfirst($order['status'])), new DetailItem('Gift wrap', false)], 'payment'),
+                new DetailSection('Payment', [new DetailItem('Total', $order['total'].' €'), new DetailItem('Status', ucfirst($order['status']), badge: self::STATUS_BADGES[$order['status']]), new DetailItem('Gift wrap', false)], 'payment'),
             ],
             [new DetailItem('Created', $order['placed']), new DetailItem('Updated', '2026-10-16 10:30')],
             $this->bundle($theme),
@@ -210,6 +224,8 @@ final class PageContractController extends AbstractController
                 $id === $section ? $this->notificationsForm() : null,
                 $id === $section ? 'Who hears about new orders, refunds and low stock.' : null,
                 'Save notifications',
+                // Extra actions inline after the submit button (SettingsSection::actions, 2.2)
+                actions: $id === $section ? [new Action('custom', 'Send a test email', '#', icon: 'share', variant: 'secondary')] : [],
             );
         }
 

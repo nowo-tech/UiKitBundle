@@ -9,6 +9,8 @@
 {% block title %}{% block nowo_ui_document_title %}{% endblock %} · Acme Admin{% endblock %}
 
 {% block stylesheets %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="{{ asset('css/nowo-ui.css', 'nowo_ui_kit') }}">
     {{ nowo_ui_tokens() }}
     <link rel="stylesheet" href="{{ asset('css/acme-theme.css') }}">
