@@ -1368,7 +1368,8 @@ a.nowo-ui-pagination__link:hover {
   overflow-wrap: anywhere;
 }
 
-.nowo-ui-confirm__message {
+/* The dialog body pads the message (the full-page confirm keeps the paragraph margin before the expect input) */
+.nowo-ui-confirm .nowo-ui-confirm__message {
   margin: 0;
 }
 
