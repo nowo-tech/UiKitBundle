@@ -40,6 +40,7 @@ orb.shaping: Mise en forme…
 filters.search_placeholder: Rechercher…
 filters.apply: Appliquer
 filters.clear: Effacer
+filters.any: Tous
 theme.light: Clair
 theme.dark: Sombre
 theme.switch_to_light: Passer au thème clair
@@ -121,3 +122,4 @@ wizard.steps: "Étapes"
 wizard.step_of: "Étape %current% sur %total%"
 form.danger_zone: "Zone de danger"
 confirm.type_to_confirm: "Saisissez %value% pour confirmer"
+progress.label: Progression

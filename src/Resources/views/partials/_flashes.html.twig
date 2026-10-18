@@ -3,7 +3,10 @@
 
   Optional:
     - framework: css_framework override
-    - flashes (2.0): override app.flashes (tests / embedding)
+    - flash_messages (2.2): override app.flashes ({type: [messages]}; tests / embedding) — preferred input
+    - flashes (2.0, deprecated in 2.2): same override, honoured only outside page scaffolds (no nowo_ui_page_type in
+      the context): a page that keeps a 1.x `flashes` variable must not stop the layout from consuming the session
+      flashes
     - trans_domain (2.0): translate string messages (and structured title / message) with this domain;
       default null = print as given (1.x behaviour)
     - bundle (2.0): per-bundle theme exceptions (slots flash_<type> add host classes; slot `flashes` attributes /
@@ -15,7 +18,13 @@
 {% set trans_domain = trans_domain|default(null) %}
 {% set _t = nowo_ui_theme|default(null) %}
 {% set _pt = nowo_ui_page_type|default(null) %}
-{% set _messages = flashes is defined and flashes is not null ? flashes : app.flashes %}
+{% if flash_messages is defined and flash_messages is not null %}
+    {% set _messages = flash_messages %}
+{% elseif flashes is defined and flashes is not null and _pt is null %}
+    {% set _messages = flashes %}
+{% else %}
+    {% set _messages = app.flashes %}
+{% endif %}
 {% set _wrap_extra = _t ? _t.extraClasses('flashes', bundle, _pt) : '' %}
 {% set _wrap_attrs = _t ? _t.renderAttributes('flashes', bundle, {}, _pt) : '' %}
 {% if _wrap_extra or _wrap_attrs %}<div class="nowo-ui-flashes {{ _wrap_extra }}"{{ _wrap_attrs|raw }}>{% endif %}

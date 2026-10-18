@@ -10,6 +10,8 @@ use Symfony\Component\Form\FormView;
  * View model of `@NowoUiKit/page/auth.html.twig` (guest layout): brand, panel heading, form, footer links.
  * Bundles may override `nowo_ui_auth_fields` (default: REQ-TWIG-003 child loop), `nowo_ui_auth_actions` and
  * `nowo_ui_auth_footer`.
+ * `scripts` (2.2): false renders the page without any UiKit script nor the theme boot (JS-free guest pages such as
+ * a public 503; the UiKit document layout reads `nowo_ui_scripts_enabled`).
  */
 final readonly class AuthPage
 {
@@ -31,6 +33,7 @@ final readonly class AuthPage
         public ?string $bundle = null,
         public ?string $layout = null,
         public array $attributes = [],
+        public bool $scripts = true,
     ) {
         Action::assertAttributes($attributes);
         $this->links = ViewList::of($links, Link::class, 'AuthPage links');

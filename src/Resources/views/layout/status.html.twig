@@ -1,0 +1,46 @@
+{#
+  Self-contained status layout (2.2): a complete HTML document that depends on nothing but this template — no host
+  layout, no stylesheet or script request, no session flashes. For pages served while the application itself is
+  unavailable (maintenance, a restore in progress, a public 503): the critical CSS is inline (with the request CSP
+  nonce when there is one) and reads the --nowo-ui-* tokens, so nowo_ui_tokens() (theme tokens) still brands it.
+  Use it as the `layout` of a guest-type page model, e.g. new AuthPage('Back soon', layout: '@NowoUiKit/layout/status.html.twig', scripts: false).
+
+  Blocks: nowo_ui_document_title, nowo_ui_head, nowo_ui_page_header, nowo_ui_flashes (empty by default),
+  nowo_ui_content, nowo_ui_modals (same canonical blocks as the guest layout; no nowo_ui_styles / nowo_ui_scripts).
+  Optional variables: nowo_ui_bundle, nowo_ui_document_title.
+#}
+{% set _request = app is defined and app ? app.request : null %}
+{% set _nonce = _request ? _request.attributes.get('csp_nonce') : null %}
+{% set _bundle = nowo_ui_bundle|default(null) %}
+<!DOCTYPE html>
+<html lang="{{ _request ? _request.locale : 'en' }}"{% if nowo_ui_theme.hasTokens() %} data-nowo-ui-host-tokens{% endif %}>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex">
+    <title>{% block nowo_ui_document_title %}{{ nowo_ui_document_title|default('') }}{% endblock %}</title>
+    <style{% if _nonce %} nonce="{{ _nonce }}"{% endif %} data-nowo-ui-status-css>
+        :root { color-scheme: light dark; }
+        *, *::before, *::after { box-sizing: border-box; }
+        body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 2rem 1rem; font: 1rem/1.5 var(--nowo-ui-font-sans, system-ui, -apple-system, "Segoe UI", sans-serif); color: var(--nowo-ui-text, CanvasText); background: var(--nowo-ui-surface-muted, Canvas); }
+        .nowo-ui-status { width: 100%; max-width: 32rem; }
+        .nowo-ui-status :is(.nowo-ui-auth-panel, .nowo-ui-card) { padding: 1.5rem; border: 1px solid var(--nowo-ui-border, GrayText); border-radius: var(--nowo-ui-radius, 0.5rem); background: var(--nowo-ui-surface, Canvas); }
+        .nowo-ui-status h1 { margin: 0 0 0.5rem; font-size: 1.5rem; line-height: 1.25; }
+        .nowo-ui-status p { margin: 0 0 0.75rem; }
+        .nowo-ui-status :is(.nowo-ui-muted, .nowo-ui-page-header__intro, .nowo-ui-auth-panel__brand) { color: var(--nowo-ui-muted, GrayText); }
+        .nowo-ui-status a { color: var(--nowo-ui-link, var(--nowo-ui-primary, LinkText)); }
+        .nowo-ui-status .nowo-ui-progress-meter { width: 100%; accent-color: var(--nowo-ui-primary, AccentColor); }
+        .nowo-ui-status .nowo-ui-auth-panel__links { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 0; padding: 0; list-style: none; }
+    </style>
+    {{ nowo_ui_tokens(_nonce) }}
+    {% block nowo_ui_head %}{% endblock %}
+</head>
+<body class="nowo-ui-body nowo-ui-body--status">
+    <main class="nowo-ui-status" id="nowo-ui-content"{% if _bundle %} data-nowo-ui-bundle="{{ _bundle }}"{% endif %}>
+        {% block nowo_ui_page_header %}{% endblock %}
+        {% block nowo_ui_flashes %}{% endblock %}
+        {% block nowo_ui_content %}{% endblock %}
+    </main>
+    {% block nowo_ui_modals %}{% endblock %}
+</body>
+</html>

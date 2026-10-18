@@ -3,11 +3,14 @@
 
   Regions: brand, panel heading + intro, error, form, footer links (slots auth_panel, auth_footer, auth_links).
   Data blocks: nowo_ui_auth_fields (default: REQ-TWIG-003 child loop of page.form), nowo_ui_auth_actions (default:
-  submit button), nowo_ui_auth_footer (default: page.links).
+  submit button), nowo_ui_auth_footer (default: page.links). The <footer> renders only when the block has content
+  (2.2). page.scripts = false (2.2) drops every UiKit script and the theme boot (JS-free guest pages, e.g. a public
+  503): sets nowo_ui_scripts_enabled for the document layout.
 #}
 {% extends page.layout ?? nowo_ui_layout.guest %}
 {% set nowo_ui_bundle = page.bundle %}
 {% set nowo_ui_page_type = 'auth' %}
+{% set nowo_ui_scripts_enabled = page.scripts %}
 
 {% block nowo_ui_document_title %}{{ page.title|nowo_ui_trans }}{% endblock %}
 
@@ -37,7 +40,7 @@
                 {{ form_end(form) }}
             {% endif %}
         </div>
-        <footer class="{{ nowo_ui_class('auth_footer', _b) }}">
+        {% set _footer %}
             {% block nowo_ui_auth_footer %}
                 {% if page.links is not empty %}
                     <ul class="{{ nowo_ui_class('auth_links', _b) }}">
@@ -47,6 +50,9 @@
                     </ul>
                 {% endif %}
             {% endblock %}
-        </footer>
+        {% endset %}
+        {% if _footer|trim is not empty %}
+            <footer class="{{ nowo_ui_class('auth_footer', _b) }}">{{ _footer }}</footer>
+        {% endif %}
     </section>
 {% endblock %}

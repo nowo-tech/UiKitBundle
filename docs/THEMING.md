@@ -21,6 +21,7 @@ two token blocks of `nowo-ui.css`. A host theme is a short `:root` block.
 - [Lists](#lists)
 - [Cards, navigation, progress](#cards-navigation-progress)
 - [Corner tabs, edge tabs, scrollbars (1.17)](#corner-tabs-edge-tabs-scrollbars-117)
+- [Default-theme polish tokens (2.2)](#default-theme-polish-tokens-22)
 - [Layout and metrics tokens](#layout-and-metrics-tokens)
 - [CSS framework notes](#css-framework-notes)
 - [Example: generic brand](#example-generic-brand)
@@ -268,6 +269,56 @@ Opt-in chrome ([USAGE.md — Host chrome](USAGE.md#host-chrome-117-opt-in)); not
 
 The row detail dialog uses the confirm dialog chrome (`--nowo-ui-modal-radius`, `--nowo-ui-shadow-dialog`,
 `--nowo-ui-overlay`); its detail list labels use `--nowo-ui-muted`.
+
+## Default-theme polish tokens (2.2)
+
+UiKit 2.2 polishes the default theme of the page scaffolds. Every new rule reads a token with a fallback, so hosts
+only set what they want to change.
+
+| Token | Default | Used by |
+|-------|---------|---------|
+| `--nowo-ui-danger-solid` | light `#b91c1c`, dark `#ef4444` (token blocks) | solid destructive button |
+| `--nowo-ui-danger-contrast` | light `#ffffff`, dark `#0b1220` (token blocks) | text on the solid destructive button |
+| `--nowo-ui-btn-danger-solid-bg` | `var(--nowo-ui-danger-solid)` | slot `btn_danger_solid` (confirm button of a danger `Confirm`) |
+| `--nowo-ui-btn-danger-solid-text` | `var(--nowo-ui-danger-contrast)` | idem |
+| `--nowo-ui-btn-danger-solid-hover-bg` | `color-mix(in srgb, var(--nowo-ui-danger-solid) 85%, var(--nowo-ui-text))` | idem, hover (kit-painted stacks) |
+| `--nowo-ui-confirm-width` | `min(28rem, calc(100vw - 2rem))` (`--sm` 22rem, `--lg` 40rem) | confirm `<dialog>` width (`Confirm::$size`) |
+| `--nowo-ui-confirm-text` | `var(--nowo-ui-text)` | confirm message (≥ 4.5:1 on the surface) |
+| `--nowo-ui-badge-offset` | `0.35rem` (`0` when the badge starts a cell, value, KPI, card header or list item) | badge left margin (1.x inline badges) |
+| `--nowo-ui-badge-primary-bg` | `color-mix(in srgb, var(--nowo-ui-primary) 12%, var(--nowo-ui-surface))` | `badge_info`, `badge_primary` |
+| `--nowo-ui-badge-primary-border` | `color-mix(in srgb, var(--nowo-ui-primary) 35%, var(--nowo-ui-surface))` | idem |
+| `--nowo-ui-badge-primary-text` | `color-mix(in srgb, var(--nowo-ui-primary) 75%, var(--nowo-ui-text))` | idem |
+| `--nowo-ui-table-head-size` | `0.75rem` | scaffold table header cells (`table_head_cell`) |
+| `--nowo-ui-table-head-weight` | `600` | idem |
+| `--nowo-ui-table-head-tracking` | `0.04em` | idem |
+| `--nowo-ui-table-head-transform` | `uppercase` (`none` for sentence case) | idem |
+| `--nowo-ui-table-head-border` | `var(--nowo-ui-border-strong)` | idem, bottom border |
+| `--nowo-ui-table-head-border-width` | `2px` | idem |
+| `--nowo-ui-filters-field-min` | `14rem` | list filters grid: minimum field width (`auto-fit`) |
+| `--nowo-ui-filters-gap` | `0.75rem 1rem` | list filters grid gap |
+| `--nowo-ui-filters-actions-span` | `1` (`2` with header actions in the filter row, ≥ 48rem) | columns of the filter actions cell |
+| `--nowo-ui-kpi-accent-width` | `var(--nowo-ui-border-width, 1px)` | KPI top border (an accent follows the tile radius) |
+| `--nowo-ui-kpi-accent` | `var(--nowo-ui-border)` | KPI top border colour (e.g. `var(--nowo-ui-primary)`) |
+| `--nowo-ui-kpi-radius` | `var(--nowo-ui-radius)` | KPI tile radius |
+| `--nowo-ui-help-text` | `var(--nowo-ui-muted)` | form help text (`.help-text`, `.form-text`, `#…_help`) |
+| `--nowo-ui-form-row-gap` | `1rem` | space between stacked form rows (scaffold forms, dialogs) |
+| `--nowo-ui-tabs-secondary-gap` | `0.35rem` | second tab level (slot `tabs_secondary`) |
+| `--nowo-ui-tab-pill-radius` | `999px` | idem, pill radius |
+| `--nowo-ui-tab-pill-hover-bg` | `var(--nowo-ui-surface-muted)` | idem, hover |
+| `--nowo-ui-tab-pill-active-bg` | `color-mix(in srgb, var(--nowo-ui-primary) 12%, var(--nowo-ui-surface))` | idem, current section |
+| `--nowo-ui-tab-pill-active-border` | `color-mix(in srgb, var(--nowo-ui-primary) 35%, var(--nowo-ui-surface))` | idem |
+| `--nowo-ui-tab-pill-active-text` | `color-mix(in srgb, var(--nowo-ui-primary) 75%, var(--nowo-ui-text))` | idem |
+| `--nowo-ui-progress-height` | `0.5rem` | `progress` partial (native `<progress>`, slot `progress_meter`; track / bar: `--nowo-ui-progress-track` / `--nowo-ui-progress-bar`) |
+
+**One primary colour.** Links inside UiKit regions (`--nowo-ui-link`), the `info` / `primary` badges, the second tab
+level, focus rings and the active pagination link all derive from `--nowo-ui-primary`. Third-party widgets follow
+with an optional stylesheet: `css/nowo-ui-tom-select.css` paints Tom Select chips, the active option and the focus
+ring from the same token (load it after Tom Select's CSS; overrides `--nowo-ui-chip-bg`, `--nowo-ui-chip-border`,
+`--nowo-ui-chip-text`, `--nowo-ui-chip-radius`):
+
+```twig
+<link rel="stylesheet" href="{{ asset('css/nowo-ui-tom-select.css', 'nowo_ui_kit') }}">
+```
 
 ## Layout and metrics tokens
 

@@ -87,7 +87,7 @@ final class ConfirmPageSlotsTest extends TestCase
     public function testMessageInHeader(): void
     {
         $dialog = static fn (array $theme, ?bool $inHeader): string => PageContractTwig::create([], $theme)->render('@NowoUiKitBundle/partials/_confirm.html.twig', ['confirm' => new Confirm('Delete?', 'Gone.', messageInHeader: $inHeader), 'id' => 'c3']);
-        $inHeader = '#<header class="nowo-ui-confirm__header">\s*<h2 class="nowo-ui-confirm__title" id="c3-title">Delete\?</h2>\s*<p class="nowo-ui-confirm__message">Gone.</p>\s*</header>#';
+        $inHeader = '#<header class="nowo-ui-confirm__header">\s*<h2 class="nowo-ui-confirm__title" id="c3-title">Delete\?</h2>\s*<p class="nowo-ui-confirm__message">Gone.</p>\s*<button type="button" class="nowo-ui-confirm__close" data-nowo-confirm-close[^>]*>.*?</button>\s*</header>#s';
 
         self::assertMatchesRegularExpression($inHeader, $dialog([], true));
         self::assertStringNotContainsString('nowo-ui-confirm__body', $dialog([], true));

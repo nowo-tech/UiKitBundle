@@ -25,15 +25,7 @@ final class ThemeSlotsTest extends TestCase
         'muted' => 'ui.muted()',
         'burger' => 'ui.burger()',
         'table_wrap' => 'ui.table_wrap()',
-        'table' => 'ui.table()',
         'row_actions' => 'ui.row_actions()',
-        'badge' => 'ui.badge()',
-        'badge_success' => "ui.badge('success')",
-        'badge_warning' => "ui.badge('warning')",
-        'badge_danger' => "ui.badge('danger')",
-        'badge_info' => "ui.badge('info')",
-        'badge_neutral' => "ui.badge('neutral')",
-        'filters' => 'ui.filters()',
         'input' => 'ui.input()',
         'pagination' => 'ui.pagination_wrap()',
         'empty' => 'ui.empty()',
@@ -49,6 +41,8 @@ final class ThemeSlotsTest extends TestCase
         'tab' => 'ui.tab_item(false)',
         'tab_active' => 'ui.tab_item(true)',
         'shell' => 'ui.shell()',
+        // 2.2: table (striped on Bootstrap), badge* (one subtle set, no margin utilities) and filters (grid) slot
+        // defaults diverge on purpose from the 1.x macros, which keep their 1.x output
     ];
 
     /**
@@ -90,22 +84,26 @@ final class ThemeSlotsTest extends TestCase
         self::assertNull(ThemeSlots::family('custom'));
         self::assertSame('', ThemeSlots::defaults('table', 'none'));
         self::assertSame('table-responsive', ThemeSlots::defaults('table_wrap', 'bootstrap4'));
-        self::assertSame('badge badge-success ml-2', ThemeSlots::defaults('badge_success', 'bootstrap4'));
+        self::assertSame('badge badge-success', ThemeSlots::defaults('badge_success', 'bootstrap4'));
         self::assertSame('', ThemeSlots::defaults('table_head', 'bootstrap4'));
     }
 
     /**
-     * Contrast: a Bootstrap badge variant sets text and background together (`text-bg-*`, 5.2+), never a bare
-     * `bg-*` whose text colour would come from the semantic nowo-ui-badge--* palette (dark text on a solid fill).
+     * 2.2 badges: one subtle set on Bootstrap — every variant pairs a subtle background with its emphasis text and a
+     * subtle border (never a bare solid `bg-*` / `text-bg-*` mixed with the semantic palette), no margin utilities;
+     * info and primary follow the primary colour.
      */
-    public function testBootstrapBadgeVariantsPairTextAndBackground(): void
+    public function testBootstrapBadgesAreOneSubtleSet(): void
     {
-        foreach (['badge', 'badge_success', 'badge_warning', 'badge_danger', 'badge_info', 'badge_neutral'] as $slot) {
-            $defaults = ThemeSlots::defaults($slot, 'bootstrap5');
-            self::assertMatchesRegularExpression('/(^| )text-bg-(success|warning|danger|info|light)( |$)/', $defaults, $slot);
-            self::assertDoesNotMatchRegularExpression('/(^| )bg-/', $defaults, $slot);
+        foreach (['badge_primary' => 'primary', 'badge_success' => 'success', 'badge_warning' => 'warning', 'badge_danger' => 'danger', 'badge_info' => 'primary'] as $slot => $tone) {
+            self::assertSame('badge bg-'.$tone.'-subtle text-'.$tone.'-emphasis border border-'.$tone.'-subtle', ThemeSlots::defaults($slot, 'bootstrap5'), $slot);
         }
-        self::assertSame('badge text-bg-success ms-2', ThemeSlots::defaults('badge_success', 'tabler'));
+        foreach (['badge', 'badge_primary', 'badge_success', 'badge_warning', 'badge_danger', 'badge_info', 'badge_neutral'] as $slot) {
+            foreach (['bootstrap5', 'bootstrap4', 'tailwind'] as $fw) {
+                self::assertDoesNotMatchRegularExpression('/(^| )(ms|ml)-2( |$)|text-bg-/', ThemeSlots::defaults($slot, $fw), $slot.' / '.$fw);
+            }
+        }
+        self::assertSame('badge bg-success-subtle text-success-emphasis border border-success-subtle', ThemeSlots::defaults('badge_success', 'tabler'));
         self::assertSame('nowo-ui-card__footer card-footer', ThemeSlots::semantic('card_footer').' '.ThemeSlots::defaults('card_footer', 'bootstrap4'));
     }
 

@@ -4,16 +4,32 @@
   Required:
     - form: FormView
   Optional:
-    - submit_label (View\Label|string; default action.save), bundle, extra_actions (pre-rendered HTML)
+    - submit_label (View\Label|string; default action.save), bundle, extra_actions (pre-rendered HTML, after the
+      submit button)
+    - actions (2.2): list of View\Action rendered inline right after the submit button (`action` partial, toolbar
+      context; SettingsSection::actions). With actions, the actions row is printed right after the </form> (an
+      Action may be a POST form or open a confirm dialog: forms cannot nest) and the submit button joins the form
+      through form="<form id>" (the form's attr.id, else "<form id>-form", else "nowo-ui-section-form").
 #}
 {% set bundle = bundle|default(null) %}
-{{ form_start(form, {attr: {class: nowo_ui_class('form', bundle), 'data-nowo-ui-region': 'form'}|merge(nowo_ui_theme.attributesFor('form', bundle, {}, nowo_ui_page_type|default(null)))}) }}
+{% set _pt = nowo_ui_page_type|default(null) %}
+{% set _actions = actions|default([]) %}
+{% set _form_id = _actions is empty ? null : (form.vars.attr.id ?? (form.vars.id ? form.vars.id ~ '-form' : 'nowo-ui-section-form')) %}
+{% set _row %}
+    <div class="{{ nowo_ui_class('form_actions', bundle) }}"{{ nowo_ui_attrs('form_actions', bundle) }}>
+        <button type="submit" class="{{ nowo_ui_class('btn_primary', bundle) }}"{% if _form_id %} form="{{ _form_id }}"{% endif %}>{{ submit_label|default(null) is null ? 'action.save'|trans({}, 'NowoUiKitBundle') : submit_label|nowo_ui_trans }}</button>
+        {% for action in _actions %}
+            {{ include(nowo_ui_partial('action', bundle), {action: action, context: 'toolbar', bundle: bundle, nowo_ui_page_type: _pt}, false) }}
+        {% endfor %}
+        {{ extra_actions|default('')|raw }}
+    </div>
+{% endset %}
+{{ form_start(form, {attr: {class: nowo_ui_class('form', bundle), 'data-nowo-ui-region': 'form'}|merge(_form_id ? {id: _form_id} : {})|merge(nowo_ui_theme.attributesFor('form', bundle, {}, _pt))}) }}
     {% for child in form %}
         {% if not child.rendered %}
             {{ form_row(child) }}
         {% endif %}
     {% endfor %}
-    <div class="{{ nowo_ui_class('form_actions', bundle) }}"{{ nowo_ui_attrs('form_actions', bundle) }}>
-        <button type="submit" class="{{ nowo_ui_class('btn_primary', bundle) }}">{{ submit_label|default(null) is null ? 'action.save'|trans({}, 'NowoUiKitBundle') : submit_label|nowo_ui_trans }}</button>
-    </div>
+    {% if _form_id is null %}{{ _row }}{% endif %}
 {{ form_end(form) }}
+{% if _form_id %}{{ _row }}{% endif %}

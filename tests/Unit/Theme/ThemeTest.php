@@ -22,11 +22,11 @@ final class ThemeTest extends TestCase
         self::assertSame('bootstrap5', $theme->framework());
         // semantic + framework default + host, de-duplicated (btn appears once)
         self::assertSame('nowo-ui-btn nowo-ui-btn--primary btn btn-primary btn-moss', $theme->classFor('btn_primary'));
-        self::assertSame('nowo-ui-table nowo-ui-table--striped table table-hover align-middle data-table', $theme->classFor('table'));
+        self::assertSame('nowo-ui-table nowo-ui-table--striped table table-striped table-hover align-middle data-table', $theme->classFor('table'));
         // bundle exception replaces the host classes of that slot
-        self::assertSame('nowo-ui-table nowo-ui-table--striped table table-hover align-middle data-table data-table--dense', $theme->classFor('table', 'NowoHttpLogBundle'));
+        self::assertSame('nowo-ui-table nowo-ui-table--striped table table-striped table-hover align-middle data-table data-table--dense', $theme->classFor('table', 'NowoHttpLogBundle'));
         // other bundles / slots fall back to host / defaults
-        self::assertSame('nowo-ui-table nowo-ui-table--striped table table-hover align-middle data-table', $theme->classFor('table', 'OtherBundle'));
+        self::assertSame('nowo-ui-table nowo-ui-table--striped table table-striped table-hover align-middle data-table', $theme->classFor('table', 'OtherBundle'));
         self::assertSame('nowo-ui-table__row', $theme->classFor('table_row'));
         // framework override (partials with `framework`)
         self::assertSame('nowo-ui-table-wrap overflow-x-auto', $theme->classFor('table_wrap', null, 'tailwind'));
@@ -57,14 +57,14 @@ final class ThemeTest extends TestCase
         self::assertSame('nowo-ui-table nowo-ui-table--striped', $theme->classFor('table', 'NowoAllOffBundle'));
         self::assertSame('nowo-ui-btn nowo-ui-btn--primary acme-btn acme-btn--primary', $theme->classFor('btn_primary', 'NowoAllOffBundle'));
         self::assertSame('nowo-ui-btn nowo-ui-btn--primary btn btn-primary x-btn', $theme->classFor('btn_primary', 'NowoSlotOnBundle'));
-        self::assertSame('nowo-ui-badge nowo-ui-badge--success badge text-bg-success ms-2 x-badge', $theme->classFor('badge_success', 'NowoBadgeOnBundle'));
+        self::assertSame('nowo-ui-badge nowo-ui-badge--success badge bg-success-subtle text-success-emphasis border border-success-subtle x-badge', $theme->classFor('badge_success', 'NowoBadgeOnBundle'));
         // unknown bundle: host rules
         self::assertSame('nowo-ui-badge nowo-ui-badge--success acme-badge', $theme->classFor('badge_success', 'OtherBundle'));
 
         // global switch, re-enabled per slot
         $off = new Theme('bootstrap5', classes: ['table' => ['value' => 'x', 'framework_defaults' => true]], frameworkDefaults: false);
         self::assertSame('nowo-ui-btn nowo-ui-btn--primary', $off->classFor('btn_primary'));
-        self::assertSame('nowo-ui-table nowo-ui-table--striped table table-hover align-middle x', $off->classFor('table'));
+        self::assertSame('nowo-ui-table nowo-ui-table--striped table table-striped table-hover align-middle x', $off->classFor('table'));
         self::assertFalse(Theme::fromConfig('bootstrap5', ['framework_defaults' => false])->frameworkDefaults('btn'));
         self::assertTrue(Theme::fromConfig('bootstrap5', [])->frameworkDefaults('btn'));
     }

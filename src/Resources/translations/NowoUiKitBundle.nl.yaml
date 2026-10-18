@@ -40,6 +40,7 @@ orb.shaping: Vormgeven…
 filters.search_placeholder: Zoeken…
 filters.apply: Toepassen
 filters.clear: Wissen
+filters.any: Alle
 theme.light: Licht
 theme.dark: Donker
 theme.switch_to_light: Overschakelen naar licht thema
@@ -121,3 +122,4 @@ wizard.steps: "Stappen"
 wizard.step_of: "Stap %current% van %total%"
 form.danger_zone: "Gevarenzone"
 confirm.type_to_confirm: "Typ %value% om te bevestigen"
+progress.label: Voortgang

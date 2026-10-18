@@ -1,0 +1,114 @@
+{#
+  Data table (2.2, theme partial `table`; View\Table): table wrap (region `table`, responsive cards), caption, header
+  cells (sort links), rows, the row-actions column and the confirm dialogs of row actions (region `confirms`, after the
+  table). The list scaffold renders its table through this partial; other scaffolds and bundle pages include it
+  instead of copying the markup, e.g. from nowo_ui_show_after:
+      {{ include(nowo_ui_partial('table', page.bundle), {table: orders_table}, false) }}
+
+  Required:
+    - table: View\Table
+  Optional:
+    - bundle (default table.bundle), nowo_ui_page_type
+    - route: route of the sort links (default the current request route)
+    - head_html / rows_html: pre-rendered header cells / row cells keyed 'k' ~ row_key (the list scaffold passes its
+      nowo_ui_list_head / nowo_ui_list_row blocks this way)
+  Blocks (through {% embed %}): nowo_ui_table_head (header cells), nowo_ui_table_row (cells of one row: `row`,
+  `row_key`, `loop`, `table` in context).
+  Slots: table_wrap, table, table_caption, table_head, table_head_row, table_head_cell, sortable_header, sort_link,
+  table_actions_head, table_row, table_cell, table_cell_muted, table_actions_cell (+ the row_actions / confirm partials).
+#}
+{% set _b = bundle|default(table.bundle) %}
+{% set nowo_ui_page_type = nowo_ui_page_type|default(null) %}
+{% set _route = route|default(app is defined and app ? app.request.attributes.get('_route') : null) %}
+{% set _route_params = (app is defined and app ? app.request.attributes.get('_route_params') : {})|default({})|merge(app is defined and app ? app.request.query.all : {}) %}
+{% set _confirms = [] %}
+{% set _cards = table.responsive == 'cards' %}
+<div class="{{ nowo_ui_class('table_wrap', _b) }}" data-nowo-ui-region="table"{% if _cards %} data-nowo-ui-responsive="cards"{% endif %}{{ nowo_ui_attrs('table_wrap', _b) }}>
+    <table class="{{ nowo_ui_class('table', _b) }}{{ _cards ? ' nowo-ui-table--cards' }}"{{ nowo_ui_attrs('table', _b) }}{{ nowo_ui_html_attrs(table.attributes) }}>
+        {% if table.caption %}<caption class="{{ nowo_ui_class('table_caption', _b) }}{{ table.captionVisible ? '' : ' visually-hidden' }}"{{ nowo_ui_attrs('table_caption', _b) }}>{{ table.caption|nowo_ui_trans }}</caption>{% endif %}
+        <thead class="{{ nowo_ui_class('table_head', _b) }}"{{ nowo_ui_attrs('table_head', _b) }}>
+            <tr class="{{ nowo_ui_class('table_head_row', _b) }}"{{ nowo_ui_attrs('table_head_row', _b) }}>
+                {% set _actions_end = table.hasRowActions() and table.actionsPosition != 'start' %}
+                {% set _actions_head %}
+                    {%- if table.hasRowActions() -%}
+                    {% set _actions_label = table.actionsLabel is null ? 'table.actions'|trans({}, 'NowoUiKitBundle') : table.actionsLabel|nowo_ui_trans %}
+                    <th scope="col" class="{{ nowo_ui_class('table_head_cell', _b) }} {{ nowo_ui_class('table_actions_head', _b) }} nowo-ui-cell--{{ table.actionsAlign }}"{{ nowo_ui_attrs('table_actions_head', _b) }}>
+                        {%- if table.actionsLabelVisible -%}
+                            {{ _actions_label }}
+                        {%- else -%}
+                            <span class="visually-hidden">{{ _actions_label }}</span>
+                        {%- endif -%}
+                    </th>
+                    {%- endif -%}
+                {% endset %}
+                {% if table.hasRowActions() and not _actions_end %}{{ _actions_head }}{% endif %}
+                {% block nowo_ui_table_head %}{% if head_html is defined and head_html is not null %}{{ head_html }}{% else %}
+                    {% for column in table.columns %}
+                        {%- set _sortable = column.sortable and _route %}
+                        <th scope="col" class="{{ nowo_ui_class('table_head_cell', _b) }}{{ _sortable ? ' ' ~ nowo_ui_class('sortable_header', _b) }} nowo-ui-cell--{{ column.align }}{{ column.class ? ' ' ~ column.class }}"{% if column.required %} data-required="1"{% elseif column.priority and column.priority > 1 %} data-nowo-ui-priority="{{ column.priority }}"{% endif %}{% if table.sort == column.key %} aria-sort="{{ table.direction == 'asc' ? 'ascending' : 'descending' }}"{% endif %}{{ nowo_ui_attrs('table_head_cell', _b) }}>
+                            {%- set _label = column.label is null ? column.key : column.label|nowo_ui_trans -%}
+                            {%- if _sortable -%}
+                                <a class="{{ nowo_ui_class('sort_link', _b) }}{{ table.sort == column.key ? ' nowo-ui-sort--' ~ table.direction }}" href="{{ path(_route, _route_params|merge({sort: column.key, direction: table.nextDirection(column.key)})) }}"{{ nowo_ui_attrs('sort_link', _b) }}>{{ _label }}</a>
+                            {%- else -%}
+                                {{ _label }}
+                            {%- endif -%}
+                        </th>
+                    {% endfor %}
+                {% endif %}{% endblock %}
+                {% if _actions_end %}{{ _actions_head }}{% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row_key, row in table.rows %}
+                <tr class="{{ nowo_ui_class('table_row', _b) }}">
+                    {% set _actions_cell %}{% if table.hasRowActions() %}
+                        {#- 1.x hashes (label translated, href resolved, CSRF token) + the View\Action as `view`: the
+                            default partial renders the object, 1.x overrides read the hash; confirm
+                            dialogs render once after the table (confirm_external) -#}
+                        {% set _row_actions = [] %}
+                        {% for _action in table.rowActions(row, row_key) %}
+                            {% set _token = _action.form and _action.form._token is defined ? _action.form._token.vars : null %}
+                            {% set _row_actions = _row_actions|merge([_action.toArray()|merge({
+                                label: _action.label is null ? ('action.' ~ _action.kind)|trans({}, 'NowoUiKitBundle') : _action.label|nowo_ui_trans,
+                                href: _action.href ?? (_action.route ? path(_action.route, _action.params) : null),
+                                method: _action.isPost() ? 'POST' : 'GET',
+                                csrf_token: _token ? _token.value : _action.csrfToken,
+                                csrf_field: _token ? _token.full_name : _action.csrfField,
+                                view: _action,
+                            })]) %}
+                            {% if _action.confirm and _action.visible %}
+                                {% set _confirms = _confirms|merge([_action]) %}
+                            {% endif %}
+                        {% endfor %}
+                        <td class="{{ nowo_ui_class('table_cell', _b) }} {{ nowo_ui_class('table_actions_cell', _b) }} nowo-ui-cell--{{ table.actionsAlign }}"{{ nowo_ui_attrs('table_actions_cell', _b) }}>
+                            {{ include(nowo_ui_partial('row_actions', _b), {actions: _row_actions, confirm_external: true, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
+                        </td>
+                    {% endif %}{% endset %}
+                    {% if not _actions_end %}{{ _actions_cell }}{% endif %}
+                    {% block nowo_ui_table_row %}{% if rows_html is defined and rows_html['k' ~ row_key] is defined %}{{ rows_html['k' ~ row_key] }}{% else %}
+                        {% for column in table.columns %}
+                            {%- set _value = row is iterable ? row[column.key]|default(null) : attribute(row, column.key) %}
+                            {%- set _blank = _value is null or _value is same as('') or _value is same as(false) %}
+                            <td class="{{ nowo_ui_class('table_cell', _b) }}{{ _blank ? ' ' ~ nowo_ui_class('table_cell_muted', _b) }} nowo-ui-cell--{{ column.align }}{{ column.class ? ' ' ~ column.class }}" data-label="{{ column.label is null ? column.key : column.label|nowo_ui_trans }}"{% if not column.required and column.priority and column.priority > 1 %} data-nowo-ui-priority="{{ column.priority }}"{% endif %}>{{ _blank ? '—' : _value }}</td>
+                        {% endfor %}
+                    {% endif %}{% endblock %}
+                    {% if _actions_end %}{{ _actions_cell }}{% endif %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% if _confirms is not empty %}
+    <div class="nowo-ui-list-page__confirms" data-nowo-ui-region="confirms">
+        {% for _action in table.confirmDialogs(_confirms) %}
+            {{ include(nowo_ui_partial('confirm', _b), {
+                id: _action.confirmId(),
+                confirm: _action.confirm,
+                action: _action,
+                action_href: _action.href ?? (_action.route ? path(_action.route, _action.params) : null),
+                bundle: _b,
+                nowo_ui_page_type: nowo_ui_page_type,
+            }, false) }}
+        {% endfor %}
+    </div>
+{% endif %}

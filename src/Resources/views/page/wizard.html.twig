@@ -5,7 +5,8 @@
   Data block: nowo_ui_wizard_step (`step` = current View\WizardStep in context; default: page.form with the
   REQ-TWIG-003 child loop, back link and next button).
 #}
-{% extends page.layout ?? nowo_ui_layout.admin %}
+{#- page.guest (2.2): the guest layout (setup / restore wizards before sign-in); page.layout wins -#}
+{% extends page.layout ?? (page.guest ? nowo_ui_layout.guest : nowo_ui_layout.admin) %}
 {% set nowo_ui_bundle = page.bundle %}
 {% set nowo_ui_page_type = 'wizard' %}
 

@@ -81,17 +81,17 @@ final class ScaffoldRenderTest extends TestCase
         self::assertStringContainsString('class="nowo-ui-page-header d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3 app-header"', $html);
         self::assertStringContainsString('<a class="nowo-ui-breadcrumbs__link" href="/">Home</a>', $html);
         self::assertStringContainsString('<a class="nowo-ui-btn nowo-ui-btn--primary btn btn-primary btn-moss nowo-ui-action--create" href="/items/new">', $html);
-        self::assertStringContainsString('class="nowo-ui-filters nowo-ui-search d-flex flex-wrap gap-2 mb-3" role="search"', $html);
+        self::assertStringContainsString('class="nowo-ui-filters nowo-ui-search d-grid gap-3 mb-3" role="search"', $html);
         self::assertStringContainsString('<a class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary" href="/items">Clear</a>', $html);
         // bundle exception replaces the host table class; attributes from the theme
-        self::assertStringContainsString('<table class="nowo-ui-table nowo-ui-table--striped table table-hover align-middle data-table data-table--dense nowo-ui-table--cards" data-controller="table">', $html);
+        self::assertStringContainsString('<table class="nowo-ui-table nowo-ui-table--striped table table-striped table-hover align-middle data-table data-table--dense nowo-ui-table--cards" data-controller="table">', $html);
         self::assertStringContainsString('<caption class="nowo-ui-table__caption">All items</caption>', $html);
         self::assertStringContainsString('aria-sort="ascending"', $html);
         self::assertStringContainsString('<a class="nowo-ui-sort nowo-ui-sort--asc" href="/items_index?sort=name&amp;direction=desc">Name</a>', $html);
         self::assertStringContainsString('data-required="1"', $html);
         self::assertStringContainsString('<tr class="nowo-ui-table__row row-hover">', $html);
         self::assertStringContainsString('>Beta &lt;b&gt;</td>', $html);
-        self::assertStringContainsString('<span class="visually-hidden">Actions</span>', $html);
+        self::assertStringContainsString('>Actions</th>', $html);
         self::assertStringContainsString('href="/items/1/edit"', $html);
         self::assertStringContainsString('data-nowo-confirm-open data-nowo-confirm-target="nowo-ui-confirm-', $html);
         self::assertStringContainsString('<p class="nowo-ui-confirm__message">This action cannot be undone.</p>', $html);
@@ -178,7 +178,7 @@ final class ScaffoldRenderTest extends TestCase
         self::assertStringContainsString('<a class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary" href="/items">Cancel</a>', $html);
         self::assertStringContainsString('class="nowo-ui-btn nowo-ui-btn--link btn btn-link nowo-ui-action--custom" href="/dup"', $html);
         self::assertStringContainsString('<h2 class="nowo-ui-danger-zone__title">Danger zone</h2>', $html);
-        self::assertMatchesRegularExpression('#<form name="csrf" method="post" action="/items/1" class="nowo-ui-action__form">\s*<button type="submit" class="nowo-ui-btn nowo-ui-btn--danger btn btn-outline-danger nowo-ui-confirm__submit">Delete</button>#', $html);
+        self::assertMatchesRegularExpression('#<form name="csrf" method="post" action="/items/1" class="nowo-ui-action__form">\s*<button type="submit" class="nowo-ui-btn nowo-ui-btn--danger nowo-ui-btn--solid btn btn-danger nowo-ui-confirm__submit">Delete</button>#', $html);
         $this->assertContract($html);
 
         $child = "{% extends '@NowoUiKit/page/form.html.twig' %}{% block nowo_ui_form_body %}{{ form_row(form.name) }}<p>CUSTOM</p>{{ parent() }}{% endblock %}{% block nowo_ui_form_aside %}<aside>ASIDE</aside>{% endblock %}";
@@ -244,7 +244,7 @@ final class ScaffoldRenderTest extends TestCase
         self::assertStringContainsString('<h2 class="nowo-ui-confirm__title">Delete &quot;Alpha&quot;?</h2>', $html);
         self::assertStringContainsString('<a class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary" href="/items">Keep it</a>', $html);
         self::assertStringContainsString('<input type="hidden" name="_method" value="DELETE">', $html);
-        self::assertStringContainsString('class="nowo-ui-btn nowo-ui-btn--danger btn btn-outline-danger nowo-ui-confirm__submit">Yes, delete</button>', $html);
+        self::assertStringContainsString('class="nowo-ui-btn nowo-ui-btn--danger nowo-ui-btn--solid btn btn-danger nowo-ui-confirm__submit">Yes, delete</button>', $html);
         $this->assertContract($html);
 
         $route = new ConfirmPage(new PageHeader('Purge'), new Confirm('Purge?', variant: 'primary'), new Action('custom', 'Purge', route: 'purge', params: ['id' => 3], method: 'POST'));
@@ -334,7 +334,7 @@ final class ScaffoldRenderTest extends TestCase
     {
         $views = PageContractTwig::root().'/src/Resources/views';
         $files = array_merge(glob($views.'/layout/*.twig') ?: [], glob($views.'/page/*.twig') ?: [], glob($views.'/partials/_action*.twig') ?: [], [$views.'/partials/_breadcrumbs.html.twig']);
-        self::assertCount(21, $files);
+        self::assertCount(22, $files);
         foreach ($files as $file) {
             $code = (string) preg_replace('/\{#.*?#\}/s', '', (string) file_get_contents($file));
             self::assertSame(0, preg_match('/(?:bg|text|border)-(?:slate|gray|zinc|red|blue|green|white|black)|rounded|\bon[a-z]+=|confirm\(|https?:\/\//', $code, $m), basename($file).': '.($m[0] ?? ''));

@@ -79,7 +79,8 @@ final class DialogPartialTest extends TestCase
         self::assertSame('<dialog data-host-dialog id="x"></dialog>', trim($twig->render('t')));
 
         $layout = (string) file_get_contents(PageContractTwig::root().'/src/Resources/views/layout/document.html.twig');
-        self::assertStringContainsString("'nowo-ui-dialog'", $layout);
+        self::assertStringContainsString("nowo_ui_partial('scripts'", $layout);
+        self::assertContains('dialog', \Nowo\UiKitBundle\Theme\ThemeSlots::SCRIPTS);
         self::assertFileExists(PageContractTwig::root().'/src/Resources/public/js/nowo-ui-dialog.js');
     }
 }

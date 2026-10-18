@@ -29,6 +29,13 @@ use Symfony\Component\Form\FormView;
  *
  * `fallbackHref` (2.1): no-JS fallback of an action with a Confirm — a `<noscript>` link to that URL (usually a
  * `page/confirm` page of the same action) is printed next to the dialog toggle, in toolbars and row actions alike.
+ * `dialogId` (2.2): the action opens the UiKit `dialog` partial with that id — a `<button type="button">` with
+ * `data-nowo-ui-dialog-open`, `aria-haspopup="dialog"` and `aria-controls` (nowo-ui-dialog.js). Add
+ * `data-nowo-ui-dialog-replace` to `attributes` when the button sits inside another dialog it should replace. With
+ * an `href` as well, the opener is a link (no-JS fallback) whose URL is fetched into the dialog body
+ * (`data-nowo-ui-dialog-src`, same origin only).
+ * `title` (2.2): translatable tooltip (`title` attribute; the accessible name stays the label), also shown on
+ * disabled actions (wrapped in a `<span title>`).
  *
  * @implements \ArrayAccess<array-key, mixed>
  */
@@ -71,7 +78,12 @@ final readonly class Action implements \ArrayAccess
         public ?string $display = null,
         public ?string $confirmScope = null,
         public ?string $fallbackHref = null,
+        public ?string $dialogId = null,
+        public Label|string|null $title = null,
     ) {
+        if (null !== $dialogId && 1 !== preg_match('/^[A-Za-z][A-Za-z0-9_:.-]*$/', $dialogId)) {
+            throw new \InvalidArgumentException(\sprintf('Invalid Action dialogId "%s".', $dialogId));
+        }
         if (!\in_array($kind, self::KINDS, true)) {
             throw new \InvalidArgumentException(\sprintf('Invalid Action kind "%s" (%s).', $kind, implode('|', self::KINDS)));
         }
@@ -202,7 +214,7 @@ final readonly class Action implements \ArrayAccess
             $this->kind, $this->label, $this->href, $this->route, $this->params, $this->method, $this->csrfToken,
             $this->confirm, $this->icon, $this->variant, $this->attributes, $this->form, $this->csrfField,
             $this->modalId, $this->disabled, $this->visible, $this->display, null === $scope ? null : (string) $scope,
-            $this->fallbackHref,
+            $this->fallbackHref, $this->dialogId, $this->title,
         );
     }
 
@@ -230,6 +242,8 @@ final readonly class Action implements \ArrayAccess
             'disabled' => $this->disabled,
             'visible' => $this->visible,
             'fallback_href' => $this->fallbackHref,
+            'dialog_id' => $this->dialogId,
+            'title' => $this->title,
         ];
     }
 

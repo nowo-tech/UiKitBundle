@@ -7,18 +7,23 @@
   Optional variables:
     - nowo_ui_document_title: <title> text when the block is not overridden
     - nowo_ui_theme_boot: false skips the pre-paint theme boot script (default true)
+    - nowo_ui_scripts_enabled (2.2): false renders no UiKit <script> at all — neither the theme boot nor the runtime
+      scripts (JS-free pages; AuthPage::scripts = false sets it). The nowo_ui_scripts block stays for page scripts.
+  Runtime scripts print through the `scripts` theme partial (2.2, partials/_scripts.html.twig): host layouts with
+  their own script list include that partial instead of copying the list.
     - nowo_ui_bundle: bundle name for per-bundle theme exceptions (also set by the scaffolds from page.bundle)
 #}
 {% set _request = app is defined and app ? app.request : null %}
 {% set _nonce = _request ? _request.attributes.get('csp_nonce') : null %}
 {% set _bundle = nowo_ui_bundle|default(null) %}
+{% set _scripts_enabled = nowo_ui_scripts_enabled ?? true %}
 <!DOCTYPE html>
 <html lang="{{ _request ? _request.locale : 'en' }}"{% if nowo_ui_theme.hasTokens() %} data-nowo-ui-host-tokens{% endif %}{{ nowo_ui_attrs('document', _bundle) }}>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block nowo_ui_document_title %}{{ nowo_ui_document_title|default('') }}{% endblock %}</title>
-    {% if nowo_ui_theme_boot is not defined or nowo_ui_theme_boot %}
+    {% if _scripts_enabled and (nowo_ui_theme_boot is not defined or nowo_ui_theme_boot) %}
         {{ include('@NowoUiKitBundle/partials/_theme_boot.html.twig', {inline: _nonce ? true : false, nonce: _nonce}, false) }}
     {% endif %}
     {% block nowo_ui_head %}{% endblock %}
@@ -31,9 +36,9 @@
 <body class="{{ nowo_ui_class('body', _bundle) }}"{{ nowo_ui_attrs('body', _bundle) }}>
     {% block nowo_ui_body %}{% endblock %}
     {% block nowo_ui_scripts %}
-        {% for _script in ['nowo-ui-modal', 'nowo-ui-confirm', 'nowo-ui-dialog', 'nowo-ui-toast', 'nowo-ui-tabs', 'nowo-ui-theme'] %}
-            <script src="{{ asset('js/' ~ _script ~ '.js', 'nowo_ui_kit') }}" defer{% if _nonce %} nonce="{{ _nonce }}"{% endif %}></script>
-        {% endfor %}
+        {% if _scripts_enabled %}
+            {{ include(nowo_ui_partial('scripts', _bundle), {nonce: _nonce}, false) }}
+        {% endif %}
     {% endblock %}
 </body>
 </html>

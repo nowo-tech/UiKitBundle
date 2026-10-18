@@ -4,7 +4,8 @@
   Slots: confirm_page + card (root; the dialog root slot `confirm` is never printed here, so host dialog CSS such as
   `.confirm-dialog:not([open]) { display: none }` cannot reach the page), card_body + confirm_panel, confirm_header,
   confirm_title, confirm_body, confirm_message, confirm_expect, confirm_expect_label, form_actions + confirm_footer
-  (confirm_panel / header / body / footer add host classes only). The message renders under the title inside the
+  (confirm_panel / header / body / footer add host classes only). The confirm button of a danger Confirm reads
+  btn_danger_solid (2.2), other variants btn_<variant>. The message renders under the title inside the
   header with page.confirm.messageInHeader (null = theme.confirm_message_in_header).
 #}
 {% extends page.layout ?? nowo_ui_layout.admin %}
@@ -54,7 +55,7 @@
                 {{ include('@NowoUiKitBundle/partials/_action_post.html.twig', {
                     action: page.action,
                     action_href: _href,
-                    button_class: nowo_ui_class('btn_' ~ _confirm.variant, _b) ~ ' nowo-ui-confirm__submit',
+                    button_class: nowo_ui_class(_confirm.variant == 'danger' ? 'btn_danger_solid' : 'btn_' ~ _confirm.variant, _b) ~ ' nowo-ui-confirm__submit',
                     button_attrs: _confirm.expectedValue is null ? {} : {'data-nowo-confirm-submit': true},
                     form_id: _confirm.expectedValue is null ? null : 'nowo-ui-confirm-page-form',
                     button_html: _confirm.confirmLabel is null ? 'action.confirm'|trans({}, 'NowoUiKitBundle') : _confirm.confirmLabel|nowo_ui_trans,

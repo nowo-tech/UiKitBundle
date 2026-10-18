@@ -55,7 +55,7 @@ attribute (`"`, `'`, `<`, `>` and `&` become entities), so a value cannot leave 
 ### Dropping the framework defaults
 
 A host whose design system already styles a slot can drop UiKit's framework defaults for it, so no Bootstrap /
-Tailwind / Foundation class (e.g. `badge text-bg-success`, `btn btn-primary`, `card`) fights the host classes. The
+Tailwind / Foundation class (e.g. `badge bg-success-subtle`, `btn btn-primary`, `card`) fights the host classes. The
 semantic `nowo-ui-*` class always stays.
 
 ```yaml
@@ -77,8 +77,8 @@ The most specific setting wins: bundle slot entry > bundle `framework_defaults` 
 
 | Config | `nowo_ui_class('badge_success')` |
 | --- | --- |
-| none | `nowo-ui-badge nowo-ui-badge--success badge text-bg-success ms-2` |
-| `classes.badge_success: 'acme-badge'` | `nowo-ui-badge nowo-ui-badge--success badge text-bg-success ms-2 acme-badge` |
+| none | `nowo-ui-badge nowo-ui-badge--success badge bg-success-subtle text-success-emphasis border border-success-subtle` |
+| `classes.badge_success: 'acme-badge'` | `nowo-ui-badge nowo-ui-badge--success badge bg-success-subtle text-success-emphasis border border-success-subtle acme-badge` |
 | `classes.badge_success: { value: 'acme-badge', framework_defaults: false }` | `nowo-ui-badge nowo-ui-badge--success acme-badge` |
 | `framework_defaults: false` | `nowo-ui-badge nowo-ui-badge--success` |
 
@@ -111,10 +111,12 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `btn_secondary` | `nowo-ui-btn nowo-ui-btn--secondary` | `btn btn-outline-secondary` | `btn btn-outline-secondary` | `inline-flex items-center gap-1 font-medium px-3 py-1.5 text-sm border` | `button secondary` |
 | `btn_danger` | `nowo-ui-btn nowo-ui-btn--danger` | `btn btn-outline-danger` | `btn btn-outline-danger` | `inline-flex items-center gap-1 font-medium px-3 py-1.5 text-sm border` | `button alert` |
 | `btn_link` | `nowo-ui-btn nowo-ui-btn--link` | `btn btn-link` | `btn btn-link` | `inline-flex items-center gap-1 font-medium px-3 py-1.5 text-sm underline-offset-2 px-0` | `button secondary` |
+| `btn_danger_solid` | `nowo-ui-btn nowo-ui-btn--danger nowo-ui-btn--solid` | `btn btn-danger` | `btn btn-danger` | `inline-flex items-center gap-1 font-medium px-3 py-1.5 text-sm` | `button alert` |
 | `btn_sm` | `nowo-ui-btn--sm` | `btn-sm` | `btn-sm` | — | `tiny` |
 | `btn_icon` | `nowo-ui-btn--icon` | — | — | — | — |
 | `table_wrap` | `nowo-ui-table-wrap` | `table-responsive` | `table-responsive` | `overflow-x-auto` | — |
-| `table` | `nowo-ui-table nowo-ui-table--striped` | `table table-hover align-middle` | `table table-hover align-middle` | `min-w-full text-sm text-left` | `stack table` |
+| `table` | `nowo-ui-table nowo-ui-table--striped` | `table table-striped table-hover align-middle` | `table table-striped table-hover align-middle` | `min-w-full text-sm text-left` | `stack table` |
+| `table_caption` | `nowo-ui-table__caption` | — | — | — | — |
 | `table_head` | `nowo-ui-table__head` | — | — | — | — |
 | `table_head_row` | `nowo-ui-table__head-row` | — | — | — | — |
 | `table_head_cell` | `nowo-ui-table__head-cell` | — | — | — | — |
@@ -132,13 +134,14 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `action_secondary` | `nowo-ui-btn--secondary` | — | — | — | — |
 | `action_danger` | `nowo-ui-btn--danger` | — | — | — | — |
 | `action_neutral` | `nowo-ui-btn--secondary` | — | — | — | — |
-| `badge` | `nowo-ui-badge` | `badge text-bg-light border ms-2` | `badge badge-light border ml-2` | `ml-2 inline-flex border px-2 py-0.5 text-xs` | `badge secondary` |
-| `badge_success` | `nowo-ui-badge nowo-ui-badge--success` | `badge text-bg-success ms-2` | `badge badge-success ml-2` | `ml-2 inline-flex border px-2 py-0.5 text-xs` | `badge success` |
-| `badge_warning` | `nowo-ui-badge nowo-ui-badge--warning` | `badge text-bg-warning ms-2` | `badge badge-warning ml-2` | `ml-2 inline-flex border px-2 py-0.5 text-xs` | `badge warning` |
-| `badge_danger` | `nowo-ui-badge nowo-ui-badge--danger` | `badge text-bg-danger ms-2` | `badge badge-danger ml-2` | `ml-2 inline-flex border px-2 py-0.5 text-xs` | `badge alert` |
-| `badge_info` | `nowo-ui-badge nowo-ui-badge--info` | `badge text-bg-info ms-2` | `badge badge-info ml-2` | `ml-2 inline-flex border px-2 py-0.5 text-xs` | `badge secondary` |
-| `badge_neutral` | `nowo-ui-badge nowo-ui-badge--neutral` | `badge text-bg-light border ms-2` | `badge badge-light border ml-2` | `ml-2 inline-flex border px-2 py-0.5 text-xs` | `badge secondary` |
-| `filters` | `nowo-ui-filters nowo-ui-search` | `d-flex flex-wrap gap-2 mb-3` | `d-flex flex-wrap gap-2 mb-3` | `flex flex-wrap gap-2 mb-4` | `grid-x grid-margin-x mb-3` |
+| `badge` | `nowo-ui-badge` | `badge bg-body-tertiary text-body-emphasis border` | `badge badge-light border` | `inline-flex border px-2 py-0.5 text-xs` | `badge secondary` |
+| `badge_primary` | `nowo-ui-badge nowo-ui-badge--primary` | `badge bg-primary-subtle text-primary-emphasis border border-primary-subtle` | `badge badge-primary` | `inline-flex border px-2 py-0.5 text-xs` | `badge primary` |
+| `badge_success` | `nowo-ui-badge nowo-ui-badge--success` | `badge bg-success-subtle text-success-emphasis border border-success-subtle` | `badge badge-success` | `inline-flex border px-2 py-0.5 text-xs` | `badge success` |
+| `badge_warning` | `nowo-ui-badge nowo-ui-badge--warning` | `badge bg-warning-subtle text-warning-emphasis border border-warning-subtle` | `badge badge-warning` | `inline-flex border px-2 py-0.5 text-xs` | `badge warning` |
+| `badge_danger` | `nowo-ui-badge nowo-ui-badge--danger` | `badge bg-danger-subtle text-danger-emphasis border border-danger-subtle` | `badge badge-danger` | `inline-flex border px-2 py-0.5 text-xs` | `badge alert` |
+| `badge_info` | `nowo-ui-badge nowo-ui-badge--info` | `badge bg-primary-subtle text-primary-emphasis border border-primary-subtle` | `badge badge-info` | `inline-flex border px-2 py-0.5 text-xs` | `badge primary` |
+| `badge_neutral` | `nowo-ui-badge nowo-ui-badge--neutral` | `badge bg-body-tertiary text-body-secondary border` | `badge badge-light border` | `inline-flex border px-2 py-0.5 text-xs` | `badge secondary` |
+| `filters` | `nowo-ui-filters nowo-ui-search` | `d-grid gap-3 mb-3` | `d-grid gap-3 mb-3` | `grid gap-3 mb-4` | — |
 | `filters_actions` | `nowo-ui-filters__actions` | `d-flex flex-wrap align-items-end gap-2` | `d-flex flex-wrap align-items-end gap-2` | `flex flex-wrap items-end gap-2` | — |
 | `filters_field` | `nowo-ui-filters__field` | — | — | — | — |
 | `input` | `nowo-ui-input` | `form-control` | `form-control` | `block w-full max-w-xs border px-3 py-1.5 text-sm` | — |
@@ -159,6 +162,8 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `flash_warning` | `nowo-ui-flash nowo-ui-flash--warning` | `alert alert-warning` | `alert alert-warning` | `px-4 py-3 text-sm mb-2 border` | `callout warning` |
 | `flash_info` | `nowo-ui-flash nowo-ui-flash--info` | `alert alert-info` | `alert alert-info` | `px-4 py-3 text-sm mb-2 border` | `callout alert` |
 | `toasts` | `nowo-ui-toast-stack` | — | — | — | — |
+| `progress` | `nowo-ui-progress-field` | — | — | — | — |
+| `progress_meter` | `nowo-ui-progress-meter` | — | — | — | — |
 | `card` | `nowo-ui-card` | `card` | `card` | `border` | `callout` |
 | `card_header` | `nowo-ui-card__header` | `card-header d-flex flex-wrap align-items-start justify-content-between gap-2` | `card-header d-flex flex-wrap align-items-start justify-content-between gap-2` | `flex flex-wrap items-start justify-between gap-2 border-b px-4 py-3` | — |
 | `card_body` | `nowo-ui-card__body` | `card-body` | `card-body` | `px-4 py-3` | — |
@@ -181,6 +186,7 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `tabs` | `nowo-ui-tabs` | `nav nav-tabs mb-3` | `nav nav-tabs mb-3` | `flex flex-wrap gap-2 border-b mb-3` | `tabs` |
 | `tab` | `nowo-ui-tabs__item` | `nav-link` | `nav-link` | `px-3 py-2 text-sm no-underline` | `tabs-title` |
 | `tab_active` | `nowo-ui-tabs__item nowo-ui-tabs__item--active` | `nav-link active` | `nav-link active` | `px-3 py-2 text-sm no-underline border-b-2` | `tabs-title is-active` |
+| `tabs_secondary` | `nowo-ui-tabs nowo-ui-tabs--secondary` | `nav nav-pills mb-3` | `nav nav-pills mb-3` | `flex flex-wrap gap-2 mb-3` | `menu` |
 | `modal` | `nowo-ui-modal` | — | — | — | — |
 | `modal_panel` | `nowo-ui-modal__panel` | — | — | — | — |
 | `modal_header` | `nowo-ui-modal__header` | — | — | — | — |
@@ -197,6 +203,7 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `confirm_panel` | `nowo-ui-confirm__panel` | — | — | — | — |
 | `confirm_header` | `nowo-ui-confirm__header` | — | — | — | — |
 | `confirm_title` | `nowo-ui-confirm__title` | — | — | — | — |
+| `confirm_close` | `nowo-ui-confirm__close` | — | — | — | — |
 | `confirm_body` | `nowo-ui-confirm__body` | — | — | — | — |
 | `confirm_message` | `nowo-ui-confirm__message` | — | — | — | — |
 | `confirm_expect` | `nowo-ui-confirm__expect` | — | — | — | — |
@@ -271,6 +278,32 @@ attributes for that slot; `theme.confirm_message_in_header` / `Confirm::messageI
 title inside the header); `kpi_link` (only on a whole-tile KPI `<a>`; the
 kit rule `:where(a.nowo-ui-kpi--link)` has zero specificity, so host link colours and hover win).
 
+### Badges
+
+Since 2.2 the badge slots form **one subtle set** on every stack (tinted background, emphasis text, tinted border; no
+margin utilities, so badges sit flush in cells and lists): Bootstrap 5.3 `bg-<tone>-subtle text-<tone>-emphasis border
+border-<tone>-subtle` (on 5.0–5.2 the semantic `nowo-ui-badge--*` palette paints them), Bootstrap 4 its badge colours,
+Tailwind / custom / none the semantic palette. `badge_info` and `badge_primary` follow the primary colour. The 1.x
+`ui.badge()` macro keeps its 1.x (solid) output. A host that prefers **solid** badges sets the slots, e.g.:
+
+```yaml
+nowo_ui_kit:
+  theme:
+    classes:
+      badge_success: { value: 'badge text-bg-success', framework_defaults: false }
+      badge_danger: { value: 'badge text-bg-danger', framework_defaults: false }
+```
+
+### 2.2 slots
+
+`btn_danger_solid` (solid destructive button: the confirm button of a danger `Confirm`, dialog and full page);
+`table_caption` (list table `<caption>`: left, muted, small; `ListPage::captionVisible = false` hides it visually);
+`tabs_secondary` (second tab level: section tabs under an area nav, pills / sub-nav; the settings scaffold uses it when
+`PageHeader::tabs` is set, the `tabs` partial with `level: 'secondary'`); `confirm_close` (✕ of a 2.0 confirm dialog);
+`badge_primary`. The `table` slot adds Bootstrap's `table-striped` (zebra rows, as its semantic `nowo-ui-table--striped`
+promises) and the `filters` slot became a grid (`d-grid gap-3 mb-3` / `grid gap-3 mb-4`; the fields auto-fit, the actions
+are bottom-aligned right after the last field).
+
 ## Attributes
 
 `theme.attributes.<slot>` adds attributes on the slot root, printed by `nowo_ui_attrs(slot, bundle, extra = {})`
@@ -296,23 +329,26 @@ as the UiKit partial (documented in the header comment of each template) and sho
 | Name | Default template | Main inputs (2.0) | Used by |
 | --- | --- | --- | --- |
 | `action` | `@NowoUiKitBundle/partials/_action.html.twig` | `action` (`View\Action`), `context` (`toolbar` \| `row`), `display`, `bundle` | header / form / empty-state actions |
-| `breadcrumbs` | `partials/_breadcrumbs.html.twig` | `header` (`PageHeader`), `bundle` | page header |
+| `breadcrumbs` | `partials/_breadcrumbs.html.twig` | `header` (`PageHeader`; 2.2 `breadcrumbsMode` `auto` \| `kit` \| `own`: an empty BreadcrumbKit trail falls back to `header.breadcrumbs`; the kit's output is wrapped in a plain `<div class="nowo-ui-breadcrumbs" data-nowo-ui-breadcrumbs="kit">` without the slot's host classes), `bundle` | page header |
 | `burger` | `partials/_burger.html.twig` | `controls`, `expanded`, `label`, `root_class`, `label_attr_names`, `attr`, `bundle` | shell |
 | `card` | `partials/_card.html.twig` | `title` / `intro` (`Label` or string), `body`, `footer`, `toolbar`, `actions` (list of `View\Action`), `id`, `attr`, `cards` (list of card hashes → `cards` grid), `bundle`; slots `card`, `card_header`, `card_body`, `card_footer`, `cards` | bundle cards, dashboard cards |
-| `confirm` | `partials/_confirm.html.twig` | `id`, `confirm` (`View\Confirm`), `action`, `action_href`, `bundle` | actions with a `Confirm`; list scaffold (once per row action, after the table) |
+| `confirm` | `partials/_confirm.html.twig` | `id`, `confirm` (`View\Confirm`), `action`, `action_href`, `bundle`; 2.2: `dismissible` (✕ in the header, slot `confirm_close`; default on with `confirm`), `close_label`, `size` (`sm` \| `md` \| `lg`, default `confirm.size`); the button of a danger `Confirm` reads `btn_danger_solid` | actions with a `Confirm`; list scaffold (once per row action, after the table) |
 | `detail_list` | `page/_detail_list.html.twig` | `items` (list of `View\DetailItem`), `modifier`, `bundle` | show scaffold (sections, meta) |
-| `dialog` *(2.1)* | `partials/_dialog.html.twig` | `id`, `title` (string or `Label`), `body` / `footer` (HTML), `size` (`sm` \| `md` \| `lg` \| `xl`), `body_muted`, `dismissible`, `backdrop_close`, `close_label`, `attr`, `bundle`; block `nowo_ui_dialog_body`; slots `dialog`, `dialog_header`, `dialog_title`, `dialog_body`, `dialog_footer` | framework-free native `<dialog>` (opener `data-nowo-ui-dialog-open="<id>"`, `js/nowo-ui-dialog.js`) — preferred over `modal_shell` in page-contract bundles |
+| `dialog` *(2.1)* | `partials/_dialog.html.twig` | `id`, `title` (string or `Label`), `body` / `footer` (HTML), `size` (`sm` \| `md` \| `lg` \| `xl`), `body_muted`, `dismissible`, `backdrop_close`, `close_label`, `attr`, `bundle`, 2.2: `title_html` (rich title, raw), `title_attr` / `body_attr` (attributes of the title / body); block `nowo_ui_dialog_body`; slots `dialog`, `dialog_header`, `dialog_title`, `dialog_body`, `dialog_footer` | framework-free native `<dialog>` (opener `data-nowo-ui-dialog-open="<id>"`, `js/nowo-ui-dialog.js`) — preferred over `modal_shell` in page-contract bundles |
 | `empty` | `partials/_empty.html.twig` | `empty` (`View\EmptyState`) **and** `message` (translated), `region`, `bundle` | list scaffold |
 | `filters` | `partials/_filters.html.twig` | `action`, `method`, `q`, `placeholder`, `actions`, `clear_href`, `collapsible` | bundle filter bars |
-| `flashes` | `partials/_flashes.html.twig` | `flashes` (default `app.flashes`), `trans_domain`, `bundle` | layouts (`nowo_ui_flashes`) |
+| `flashes` | `partials/_flashes.html.twig` | `flash_messages` (2.2, default `app.flashes`), `flashes` (deprecated: ignored inside page scaffolds), `trans_domain`, `bundle` | layouts (`nowo_ui_flashes`) |
 | `list_filters` | `page/_list_filters.html.twig` | `page` (`View\ListPage`, `page.filters` FormView), `region`, `bundle` | list scaffold |
 | `modal_shell` | `partials/_modal_shell.html.twig` | `id`, `title`, `body`, `footer` | modals |
 | `page_header` | `partials/_page_header.html.twig` | scaffolds pass **both** `header` (`View\PageHeader`) + `actions` (toolbar `View\Action`s) **and** the 1.x `title` / `intro` (translated) / `toolbar` (pre-rendered actions) with `header_actions_rendered: true`; `region`, `bundle` | every scaffold (`nowo_ui_page_header`) |
 | `pagination` | `partials/_pagination.html.twig` | scaffolds pass the 1.x array (`pagination.toArray()`) + `pagination_model` (`View\Pagination`), `item_count`, the 1.x top-level `route` / `route_params` / `query` (request query + `Pagination::query`), `page_param`, `per_page_param`, `region`, `bundle`; also accepts the object | list scaffold |
+| `progress` *(2.2)* | `partials/_progress.html.twig` | `percent` (0–100, null = indeterminate), `indeterminate`, `label` (`Label` or string; default `progress.label`), `show_value`, `id`, `attr`, `bundle`; slots `progress`, `progress_meter` (native `<progress>`) | wizard / backup / restore progress |
 | `row_actions` | `partials/_row_actions.html.twig` | scaffolds pass 1.x hashes (translated `label`, resolved `href`, `method` POST/GET, `csrf_token` / `csrf_field` also from a CSRF `FormView`, `confirm_id`…) with the `View\Action` as `view`, and `confirm_external: true`; also accepts `View\Action` objects; `bundle` | list scaffold |
-| `section_form` | `page/_section_form.html.twig` | `form` (FormView), `submit_label`, `bundle` | settings scaffold |
+| `scripts` *(2.2)* | `partials/_scripts.html.twig` | `script_names` (default `nowo_ui_script_names()`: `modal`, `confirm`, `dialog`, `toast`, `tabs`, `theme`), `nonce` | document layout; host layouts with their own script list (`{{ include(nowo_ui_partial('scripts')) }}`) |
+| `section_form` | `page/_section_form.html.twig` | `form` (FormView), `submit_label`, `actions` (2.2: `View\Action`s after the submit button), `extra_actions`, `bundle` | settings scaffold |
 | `shell` | `partials/_shell.html.twig` | `brand_html`, `aside_items`, `main`, `root_class`, `header_class`, `attr`, `burger_root_class`, `bundle` | host shells |
-| `tabs` | `partials/_tabs.html.twig` | `items` (`{label, href, current, attr}`, label also a `Label`), `aria_label`, `region`, `bundle`, `attr` (2.1: `<nav>` attributes such as `data-turbo: 'false'`, merged over the `tabs` slot attributes); slots `tabs`, `tab`, `tab_active` | settings scaffold, bundle tab bars |
+| `table` *(2.2)* | `partials/_table.html.twig` | `table` (`View\Table`: columns, rows, rowActions, caption, sort, actions column, responsive), `route`, `head_html` / `rows_html` (pre-rendered cells), `bundle`; blocks `nowo_ui_table_head` / `nowo_ui_table_row` through `{% embed %}`; slots `table_wrap`, `table`, `table_caption`, `table_head*`, `table_row`, `table_cell*`, `table_actions_*` | list scaffold (`ListPage::$table`); show pages and bundle pages (`nowo_ui_show_after`) |
+| `tabs` | `partials/_tabs.html.twig` | `items` (`{label, href, current, attr}`, label also a `Label`), `aria_label`, `region`, `bundle`, `attr` (2.1: `<nav>` attributes such as `data-turbo: 'false'`, merged over the `tabs` slot attributes), `level` (2.2: `primary` \| `secondary` → slot `tabs_secondary`); slots `tabs` / `tabs_secondary`, `tab`, `tab_active` | settings scaffold, bundle tab bars |
 | `toasts` | `partials/_toasts.html.twig` | `flashes`, `trans_domain`, `bundle` | layouts / hosts |
 | `wizard_form` | `page/_wizard_form.html.twig` | `page` (`View\WizardPage`), `bundle` | wizard scaffold |
 

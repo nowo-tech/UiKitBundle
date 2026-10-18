@@ -23,18 +23,19 @@ final class ConfirmAndRowActionThemeTest extends TestCase
         $twig = PageContractTwig::create([], ['classes' => [
             'btn_secondary' => ['value' => 'app-btn', 'framework_defaults' => false],
             'btn_danger' => 'app-btn app-btn--danger',
+            'btn_danger_solid' => 'app-btn app-btn--danger-solid',
         ]]);
         $html = $twig->render('@NowoUiKitBundle/partials/_confirm.html.twig', ['confirm' => Confirm::delete(), 'id' => 'c1', 'action' => Action::delete('/items/1', 'tok')]);
 
         self::assertStringContainsString('<button type="button" class="nowo-ui-btn nowo-ui-btn--secondary app-btn" data-nowo-confirm-close>', $html);
-        self::assertStringContainsString('class="nowo-ui-btn nowo-ui-btn--danger btn btn-outline-danger app-btn app-btn--danger nowo-ui-confirm__submit"', $html);
+        self::assertStringContainsString('class="nowo-ui-btn nowo-ui-btn--danger nowo-ui-btn--solid btn btn-danger app-btn app-btn--danger-solid nowo-ui-confirm__submit"', $html);
         self::assertStringNotContainsString('data-nowo-confirm-submit', $html);
         self::assertStringNotContainsString(' id="c1-form"', $html);
 
-        // no host classes: identical to the ui.btn() output of 1.x
+        // 2.2: the confirm button of a danger Confirm is the solid destructive button (btn_danger_solid)
         $plain = PageContractTwig::create()->render('@NowoUiKitBundle/partials/_confirm.html.twig', ['confirm' => Confirm::delete(), 'id' => 'c1', 'action' => Action::delete('/x')]);
         self::assertStringContainsString('<button type="button" class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary" data-nowo-confirm-close>', $plain);
-        self::assertStringContainsString('class="nowo-ui-btn nowo-ui-btn--danger btn btn-outline-danger nowo-ui-confirm__submit"', $plain);
+        self::assertStringContainsString('class="nowo-ui-btn nowo-ui-btn--danger nowo-ui-btn--solid btn btn-danger nowo-ui-confirm__submit"', $plain);
     }
 
     public function testTypeToConfirmDialog(): void

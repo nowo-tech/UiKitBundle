@@ -1,7 +1,8 @@
 {#
   REQ-UI-003 settings scaffold. Variable: page (View\SettingsPage).
 
-  Regions: page header, section tabs (sections with hrefs), one card + form per visible section.
+  Regions: page header, section tabs (sections with hrefs; level secondary — slot tabs_secondary, pills — when the
+  page header has an area nav, 2.2), one card + form per visible section (section.actions after the submit, 2.2).
   Data block: nowo_ui_settings_section (`section` in context; default: the section's form with the REQ-TWIG-003
   child loop and a submit button). section.formThemes (2.1): form_theme applied to section.form before the block.
 #}
@@ -24,7 +25,7 @@
             {% for section in page.sections %}
                 {% set _tabs = _tabs|merge([{label: section.label|nowo_ui_trans, href: section.href, current: section.id == page.current}]) %}
             {% endfor %}
-            {{ include(nowo_ui_partial('tabs', _b), {items: _tabs, region: 'tabs', bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
+            {{ include(nowo_ui_partial('tabs', _b), {items: _tabs, region: 'tabs', level: page.header.tabs and not page.header.tabs.isEmpty() ? 'secondary' : 'primary', bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
         {% endif %}
         {% for section in page.visibleSections() %}
             <section class="{{ nowo_ui_class('section', _b) }} {{ nowo_ui_class('card', _b) }}" id="nowo-ui-settings-{{ section.id }}" data-nowo-ui-region="section"{{ nowo_ui_attrs('section', _b) }}>
@@ -40,7 +41,7 @@
                     {% endif %}
                     {% block nowo_ui_settings_section %}
                         {% if section.form %}
-                            {{ include(nowo_ui_partial('section_form', _b), {form: section.form, submit_label: section.submitLabel, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
+                            {{ include(nowo_ui_partial('section_form', _b), {form: section.form, submit_label: section.submitLabel, actions: section.actions, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
                         {% endif %}
                     {% endblock %}
                 </div>

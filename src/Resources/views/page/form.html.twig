@@ -7,6 +7,8 @@
   (page.deleteAction through the confirm contract; `danger_zone`, `danger_zone_title`, `danger_zone_intro` slots).
   Data blocks: nowo_ui_form_body (default: REQ-TWIG-003 child loop), nowo_ui_form_aside (side column).
   page.formThemes (2.1): form_theme applied to page.form before it renders.
+  Body-only mode (2.2, page.form null or page.formTag false): the form panel holds only nowo_ui_form_body — no
+  form_start / form_end, no submit / cancel row (a component rendering its own form, e.g. a Live component).
 #}
 {% extends page.layout ?? nowo_ui_layout.admin %}
 {% set nowo_ui_bundle = page.bundle %}
@@ -22,20 +24,26 @@
 {% block nowo_ui_content %}
     {% set _b = page.bundle %}
     {% set form = page.form %}
-    {% if page.formThemes is not empty %}
+    {% set _form_tag = form is not null and page.formTag %}
+    {% if form is not null and page.formThemes is not empty %}
         {% form_theme form with page.formThemes %}
     {% endif %}
     <div class="nowo-ui-form-page" data-nowo-ui-page="form"{{ nowo_ui_html_attrs(page.attributes) }}>
         <div class="nowo-ui-form-page__main">
             <div class="{{ nowo_ui_class('form_panel', _b) }}"{{ nowo_ui_attrs('form_panel', _b) }}>
+                {% if _form_tag %}
                 {{ form_start(form, {attr: {class: nowo_ui_class('form', _b), 'data-nowo-ui-region': 'form'}|merge(nowo_ui_theme.attributesFor('form', _b, {}, nowo_ui_page_type))}) }}
+                {% endif %}
                     {% block nowo_ui_form_body %}
+                        {% if form is not null %}
                         {% for child in form %}
                             {% if not child.rendered %}
                                 {{ form_row(child) }}
                             {% endif %}
                         {% endfor %}
+                        {% endif %}
                     {% endblock %}
+                {% if _form_tag %}
                     <div class="{{ nowo_ui_class('form_actions', _b) }}"{{ nowo_ui_attrs('form_actions', _b) }}>
                         <button type="submit" class="{{ nowo_ui_class('btn_primary', _b) }}">{{ page.submitLabel is null ? 'action.save'|trans({}, 'NowoUiKitBundle') : page.submitLabel|nowo_ui_trans }}</button>
                         {% if page.cancelHref %}
@@ -43,6 +51,7 @@
                         {% endif %}
                     </div>
                 {{ form_end(form) }}
+                {% endif %}
             </div>
             {% if page.secondaryActions is not empty and not page.secondaryActionsInHeader %}
                 <div class="{{ nowo_ui_class('toolbar', _b) }} nowo-ui-form-page__secondary" data-nowo-ui-region="secondary-actions">

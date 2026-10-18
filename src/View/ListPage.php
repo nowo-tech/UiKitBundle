@@ -12,7 +12,9 @@ use Symfony\Component\Form\FormView;
  * in context) and `nowo_ui_list_after`.
  *
  * `rowActions`: a callable `fn (mixed $row, int|string $key): iterable<Action>` or one static list for every row.
- * `actionsLabel` / `actionsLabelVisible`: header of the row-actions column (default `table.actions`, visually hidden);
+ * `actionsLabel` / `actionsLabelVisible`: header of the row-actions column (default `table.actions`; visible by
+ * default since 2.2, `actionsLabelVisible: false` keeps it for assistive tech only); `actionsPosition` (2.2,
+ * `start` | `end`, default `end`): the row-actions column first or last;
  * `actionsAlign` (`start` | `center` | `end`, default `end`): alignment of that header and its cells (slots
  * `table_actions_head` / `table_actions_cell`).
  * Filters: `filterFields` (per-field placeholder / width / classes), `filtersSubmit` (label / icon / variant of the
@@ -22,11 +24,15 @@ use Symfony\Component\Form\FormView;
  * at the end of the filter row instead of the page header, when there are filters; null = the theme option
  * `theme.pages.list.header_actions_in_filters`, default false). `responsive`: `cards` (default; the table turns into labelled cards on narrow
  * containers and hides `Column::priority` columns first) or `scroll` (horizontal scroll only).
+ * `caption` / `captionVisible` (2.2): the table `<caption>` (slot `table_caption`), visually hidden when false.
  */
 final readonly class ListPage
 {
     /** Responsive behaviour of the table: `cards` (card mode on narrow containers), `scroll` (horizontal scroll only). */
     public const RESPONSIVE = ['cards', 'scroll'];
+
+    /** Position of the row-actions column (2.2). */
+    public const ACTIONS_POSITIONS = ['start', 'end'];
 
     /** @var list<Column> */
     public array $columns;
@@ -34,16 +40,14 @@ final readonly class ListPage
     /** @var array<int|string, mixed> */
     public array $rows;
 
-    /** @var list<Action> */
-    private array $staticRowActions;
+    /** The table of the page (2.2): rendered by the `table` partial; built from the table arguments below. */
+    public Table $table;
 
     /** @var array<string, FilterField> filter field options keyed by form child name */
     public array $filterFields;
 
     /** @var list<Action> */
     public array $filterActions;
-
-    private ?\Closure $rowActionsFactory;
 
     /**
      * @param iterable<Column>                                                 $columns
@@ -69,7 +73,7 @@ final readonly class ListPage
         public ?string $layout = null,
         public array $attributes = [],
         public Label|string|null $actionsLabel = null,
-        public bool $actionsLabelVisible = false,
+        public bool $actionsLabelVisible = true,
         iterable $filterFields = [],
         public ?Action $filtersSubmit = null,
         public ?Action $filtersClear = null,
@@ -78,7 +82,12 @@ final readonly class ListPage
         public ?string $filtersDisplay = null,
         public ?bool $headerActionsInFilters = null,
         public string $actionsAlign = 'end',
+        public string $actionsPosition = 'end',
+        public bool $captionVisible = true,
     ) {
+        if (!\in_array($actionsPosition, self::ACTIONS_POSITIONS, true)) {
+            throw new \InvalidArgumentException(\sprintf('Invalid ListPage actionsPosition "%s" (%s).', $actionsPosition, implode('|', self::ACTIONS_POSITIONS)));
+        }
         if (!\in_array($actionsAlign, Column::ALIGNS, true)) {
             throw new \InvalidArgumentException(\sprintf('Invalid ListPage actionsAlign "%s" (%s).', $actionsAlign, implode('|', Column::ALIGNS)));
         }
@@ -97,45 +106,32 @@ final readonly class ListPage
         }
         $this->columns = ViewList::of($columns, Column::class, 'ListPage columns');
         $this->rows = \is_array($rows) ? $rows : iterator_to_array($rows, false);
-        if (\is_callable($rowActions)) {
-            $this->rowActionsFactory = $rowActions(...);
-            $this->staticRowActions = [];
-        } else {
-            $this->rowActionsFactory = null;
-            $this->staticRowActions = ViewList::of($rowActions, Action::class, 'ListPage rowActions');
+        if (!\is_callable($rowActions)) {
+            $rowActions = ViewList::of($rowActions, Action::class, 'ListPage rowActions');
         }
         if (!\in_array($direction, ['asc', 'desc'], true)) {
             throw new \InvalidArgumentException(\sprintf('Invalid ListPage direction "%s" (asc|desc).', $direction));
         }
+        $this->table = new Table($this->columns, $this->rows, $rowActions, $caption, $captionVisible, $sort, $direction, $actionsLabel, $actionsLabelVisible, $actionsAlign, $actionsPosition, $responsive, $bundle);
     }
 
     public function hasRowActions(): bool
     {
-        return null !== $this->rowActionsFactory || [] !== $this->staticRowActions;
+        return $this->table->hasRowActions();
     }
 
     /**
-     * Actions of one row. Actions with a {@see Confirm} and no {@see Action::$confirmScope} are scoped by the row key,
-     * so their derived confirm dialog id is unique per row.
+     * Actions of one row ({@see Table::rowActions()}: confirm actions are scoped by the row key).
      *
      * @return list<Action>
      */
     public function rowActions(mixed $row, int|string $key = 0): array
     {
-        if (null === $this->rowActionsFactory) {
-            $actions = $this->staticRowActions;
-        } else {
-            $actions = ($this->rowActionsFactory)($row, $key);
-            $actions = ViewList::of(is_iterable($actions) ? $actions : [], Action::class, 'ListPage rowActions()');
-        }
-
-        return array_map(static fn (Action $action): Action => $action->confirm instanceof Confirm && null === $action->confirmScope ? $action->withConfirmScope($key) : $action, $actions);
+        return $this->table->rowActions($row, $key);
     }
 
     /**
-     * Confirm dialogs to render after the table: one per {@see Action::confirmId()} (an identical action + Confirm
-     * repeated — same id and {@see Action::confirmKey()} — renders once). Two actions with the same explicit
-     * {@see Confirm::$id} but different content would print duplicate DOM ids: that is rejected.
+     * Confirm dialogs to render after the table ({@see Table::confirmDialogs()}).
      *
      * @param iterable<Action> $actions
      *
@@ -143,22 +139,7 @@ final readonly class ListPage
      */
     public function confirmDialogs(iterable $actions): array
     {
-        $dialogs = [];
-        foreach ($actions as $action) {
-            $id = $action->confirmId();
-            if (null === $id) {
-                continue;
-            }
-            if (isset($dialogs[$id])) {
-                if ($dialogs[$id]->confirmKey() !== $action->confirmKey()) {
-                    throw new \LogicException(\sprintf('Confirm id "%s" is used by row actions with different content (target, token or confirm text): give each Confirm its own id, or omit it to derive one per row.', $id));
-                }
-                continue;
-            }
-            $dialogs[$id] = $action;
-        }
-
-        return array_values($dialogs);
+        return $this->table->confirmDialogs($actions);
     }
 
     /**
@@ -166,6 +147,6 @@ final readonly class ListPage
      */
     public function nextDirection(string $column): string
     {
-        return $this->sort === $column && 'asc' === $this->direction ? 'desc' : 'asc';
+        return $this->table->nextDirection($column);
     }
 }

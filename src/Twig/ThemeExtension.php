@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\UiKitBundle\Twig;
 
 use Nowo\UiKitBundle\Theme\Theme;
+use Nowo\UiKitBundle\Theme\ThemeSlots;
 use Nowo\UiKitBundle\View\Label;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Translation\TranslatorInterface;
@@ -22,6 +23,7 @@ use Twig\TwigFunction;
  * - `nowo_ui_attrs(slot, bundle = null, extra = {}, page = null)` — escaped attribute string of a slot
  * - `nowo_ui_html_attrs(attributes)` — escaped attribute string of a plain map (page model `attributes`)
  * - `nowo_ui_partial(name, bundle = null)` — template of a (possibly host-replaced) UiKit partial
+ * - `nowo_ui_script_names()` — the UiKit runtime scripts the `scripts` partial prints (2.2)
  * - `nowo_ui_theme_tokens(nonce = null)` — `<style data-nowo-ui-theme-tokens>` with the host tokens ('' without)
  * - `nowo_ui_tokens(nonce = null)` — every token stylesheet in precedence order: the theme tokens (host defaults),
  *   then the appearance SPI style (user choice, `nowo_ui_appearance_style()`) when the appearance is enabled
@@ -53,6 +55,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             new TwigFunction('nowo_ui_attrs', $this->slotAttributes(...), ['needs_context' => true, 'is_safe' => ['html']]),
             new TwigFunction('nowo_ui_html_attrs', $this->theme->renderAttributeMap(...), ['is_safe' => ['html']]),
             new TwigFunction('nowo_ui_partial', $this->theme->partial(...)),
+            new TwigFunction('nowo_ui_script_names', static fn (): array => ThemeSlots::SCRIPTS),
             new TwigFunction('nowo_ui_theme_tokens', $this->tokens(...), ['is_safe' => ['html']]),
             new TwigFunction('nowo_ui_theme_css', $this->theme->tokensCss(...)),
             new TwigFunction('nowo_ui_tokens', $this->allTokens(...), ['is_safe' => ['html'], 'needs_environment' => true]),

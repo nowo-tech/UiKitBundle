@@ -16,6 +16,12 @@
     - bundle: per-bundle theme exceptions (slot `confirm` classes / attributes; host classes of confirm_panel,
       confirm_header, confirm_title, confirm_body, confirm_message, confirm_expect, confirm_expect_label,
       confirm_footer)
+    - dismissible (2.2): close button (✕, slot confirm_close, accessible name close_label / action.close) in the
+      header; default true with the 2.0 `confirm` input, false with the 1.x inputs (1.x markup unchanged)
+    - close_label (2.2): accessible name of the close button
+    - size (2.2): sm | md (default) | lg → nowo-ui-confirm--<size>; default confirm.size with the 2.0 input
+  The confirm button of a danger View\Confirm reads the slot btn_danger_solid (2.2, solid destructive button); other
+  variants read btn_<variant>.
   Message placement: in the body (default) or under the title inside the header with confirm.messageInHeader
   (null = theme.confirm_message_in_header). A 1.x `body` is wrapped in a <div> carrying the confirm_message slot only
   when the theme gives that slot host classes or attributes (1.x markup unchanged with an empty theme).
@@ -44,11 +50,13 @@
     {% set _confirm_label = _confirm.confirmLabel is null ? 'action.confirm'|trans({}, 'NowoUiKitBundle') : (_confirm.confirmLabel.key is defined ? _confirm.confirmLabel.key|trans(_confirm.confirmLabel.params, _confirm.confirmLabel.domain) : _confirm.confirmLabel) %}
 {% endif %}
 {% set cancel_label = cancel_label|default('action.cancel'|trans({}, 'NowoUiKitBundle')) %}
+{% set _dismissible = dismissible ?? (_confirm is not null) %}
+{% set _size = size|default(_confirm ? _confirm.size : 'md') %}
 {% set _message_in_header = _message is not null and (_confirm.messageInHeader ?? (_t ? _t.confirmMessageInHeader() : false)) %}
 {% set _message_class = _t ? _t.macroClasses('confirm_message', 'nowo-ui-confirm__message', bundle, _pt) : 'nowo-ui-confirm__message' %}
 <dialog
     id="{{ id }}"
-    class="nowo-ui-confirm{{ _extra ? ' ' ~ _extra }}"
+    class="nowo-ui-confirm{{ _size in ['sm', 'lg'] ? ' nowo-ui-confirm--' ~ _size }}{{ _extra ? ' ' ~ _extra }}"
     data-nowo-ui-confirm
     aria-labelledby="{{ id }}-title"
     {{- _t ? _t.renderAttributes('confirm', bundle, {}, _pt)|raw }}
@@ -58,6 +66,10 @@
             <h2 class="{{ _t ? _t.macroClasses('confirm_title', 'nowo-ui-confirm__title', bundle, _pt) : 'nowo-ui-confirm__title' }}" id="{{ id }}-title">{{ title }}</h2>
             {% if _message_in_header %}
             <p class="{{ _message_class }}"{{ _t ? _t.renderAttributes('confirm_message', bundle, {}, _pt)|raw }}>{{ _message }}</p>
+            {% endif %}
+            {% if _dismissible %}
+                {% set _close_label = close_label|default('action.close'|trans({}, 'NowoUiKitBundle')) %}
+                <button type="button" class="{{ _t ? _t.macroClasses('confirm_close', 'nowo-ui-confirm__close', bundle, _pt) : 'nowo-ui-confirm__close' }}" data-nowo-confirm-close aria-label="{{ _close_label }}" title="{{ _close_label }}"{{ _t ? _t.renderAttributes('confirm_close', bundle, {}, _pt)|raw }}><span aria-hidden="true">&times;</span></button>
             {% endif %}
         </header>
         {% if _message is not null and not _message_in_header %}
@@ -88,7 +100,9 @@
                     {{ include('@NowoUiKitBundle/partials/_action_post.html.twig', {
                         action: action,
                         action_href: action_href|default(action.href),
-                        button_class: (_t ? _t.macroClasses('btn_' ~ _confirm.variant, ui.btn(_confirm.variant, null, framework), bundle, _pt) : ui.btn(_confirm.variant, null, framework)) ~ ' nowo-ui-confirm__submit',
+                        button_class: (_confirm.variant == 'danger'
+                            ? (_t ? _t.classFor('btn_danger_solid', bundle, framework, _pt) : ui.btn('danger', null, framework) ~ ' nowo-ui-btn--solid')
+                            : (_t ? _t.macroClasses('btn_' ~ _confirm.variant, ui.btn(_confirm.variant, null, framework), bundle, _pt) : ui.btn(_confirm.variant, null, framework))) ~ ' nowo-ui-confirm__submit',
                         button_attrs: _expected is null ? {} : {'data-nowo-confirm-submit': true, disabled: not action.disabled},
                         button_html: _confirm_label,
                         form_id: _expected is null ? null : id ~ '-form',

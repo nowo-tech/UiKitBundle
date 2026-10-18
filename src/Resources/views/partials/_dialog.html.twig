@@ -7,7 +7,7 @@
 
   Required:
     - id
-    - title: string or View\Label (translated)
+    - title: string or View\Label (translated), or title_html
 
   Optional:
     - body: HTML string (raw), or override the `nowo_ui_dialog_body` block through embed
@@ -18,6 +18,13 @@
     - backdrop_close: false keeps the dialog open on a backdrop click (default true)
     - close_label: accessible name of the close button (default action.close)
     - attr: extra attributes of the <dialog>, merged over the `dialog` slot attributes
+    - title_html (2.2): rich title, printed raw (the caller escapes / builds it, e.g. a name in <code>); wins over
+      title. A Twig Markup `title` (e.g. a `{% set %}` capture) also prints unescaped
+    - title_attr / body_attr (2.2): extra attributes of the title <h2> / the body <div>, merged over the
+      dialog_title / dialog_body slot attributes (true = bare attribute, false / null = omitted, no on* handlers)
+  Replace one dialog by another (2.2): an opener inside an open dialog with data-nowo-ui-dialog-replace closes the
+  enclosing dialog first and hands its focus-return target over (focus goes back to the element that opened the
+  first dialog).
     - bundle: per-bundle theme exceptions
   Slots: dialog (root), dialog_header, dialog_title, dialog_body (+ dialog_body_muted), dialog_footer (classes +
   attributes).
@@ -25,18 +32,19 @@
 {% set bundle = bundle|default(null) %}
 {% set _pt = nowo_ui_page_type|default(null) %}
 {% set _size = size|default('md') %}
+{% set title = title|default(null) %}
 {% set _title = title.key is defined ? title.key|trans(title.params, title.domain) : title %}
 {% set _close_label = close_label|default('action.close'|trans({}, 'NowoUiKitBundle')) %}
 <dialog id="{{ id }}" class="{{ nowo_ui_class('dialog', bundle) }}{{ _size in ['sm', 'lg', 'xl'] ? ' nowo-ui-dialog--' ~ _size }}" data-nowo-ui-dialog aria-labelledby="{{ id }}-title"
     {{- (backdrop_close ?? true) ? ' data-nowo-ui-dialog-backdrop-close' }}
     {{- nowo_ui_theme.renderAttributes('dialog', bundle, attr|default({}), _pt)|raw }}>
     <header class="{{ nowo_ui_class('dialog_header', bundle) }}"{{ nowo_ui_attrs('dialog_header', bundle) }}>
-        <h2 class="{{ nowo_ui_class('dialog_title', bundle) }}" id="{{ id }}-title"{{ nowo_ui_attrs('dialog_title', bundle) }}>{{ _title }}</h2>
+        <h2 class="{{ nowo_ui_class('dialog_title', bundle) }}" id="{{ id }}-title"{{ nowo_ui_attrs('dialog_title', bundle, title_attr|default({})) }}>{% if title_html|default(null) %}{{ title_html|raw }}{% else %}{{ _title }}{% endif %}</h2>
         {% if dismissible ?? true %}
             <button type="button" class="nowo-ui-dialog__close" data-nowo-ui-dialog-close aria-label="{{ _close_label }}" title="{{ _close_label }}"><span aria-hidden="true">&times;</span></button>
         {% endif %}
     </header>
-    <div class="{{ nowo_ui_class('dialog_body', bundle) }}{{ body_muted|default(false) ? ' ' ~ nowo_ui_class('dialog_body_muted', bundle) }}"{{ nowo_ui_attrs('dialog_body', bundle) }}>
+    <div class="{{ nowo_ui_class('dialog_body', bundle) }}{{ body_muted|default(false) ? ' ' ~ nowo_ui_class('dialog_body_muted', bundle) }}"{{ nowo_ui_attrs('dialog_body', bundle, body_attr|default({})) }}>
         {%- block nowo_ui_dialog_body %}{{ body|default('')|raw }}{% endblock -%}
     </div>
     {% if footer|default(null) %}

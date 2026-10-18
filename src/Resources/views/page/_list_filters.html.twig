@@ -10,6 +10,10 @@
 
   Per field (page.filterFields[child name], View\FilterField): placeholder (translated), widget class / attributes,
   row class / attributes and width (`nowo-ui-filters__field--<width>`); every row gets the `filters_field` slot.
+  2.2: text-like widgets get the `input` slot classes (choice widgets its semantic + host classes only: the form
+  theme gives them their framework select class); checkboxes / radios keep the form theme's. An optional,
+  single, collapsed choice without a placeholder of its own shows "Any" (filters.any) as its empty option.
+  The fields sit on a responsive grid (nowo-ui.css), the actions bottom-aligned right after the last field.
   Actions (slot `filters_actions`): the apply button (page.filtersSubmit: label, icon through the icon partial,
   variant; default `filters.apply`, btn_primary), the clear link (page.filtersClear through the `action` partial, or a
   plain link to page.filtersClearHref) and page.filterActions (through the `action` partial). page.filtersDisplay
@@ -26,6 +30,16 @@
             {% set _attr = child.vars.attr %}
             {% set _row_attr = child.vars.row_attr %}
             {% set _row_class = [_row_attr.class ?? null, _field_class] %}
+            {% set _prefixes = child.vars.block_prefixes %}
+            {% set _choice = 'choice' in _prefixes %}
+            {% set _row_vars = {} %}
+            {% if 'checkbox' not in _prefixes and 'radio' not in _prefixes and not (_choice and child.vars.expanded) and 'hidden' not in _prefixes %}
+                {% set _input_class = _choice ? ('nowo-ui-input ' ~ nowo_ui_theme.extraClasses('input', _b, _pt))|trim : nowo_ui_class('input', _b) %}
+                {% set _attr = _attr|merge({class: ((_attr.class ?? '') ~ ' ' ~ _input_class)|trim}) %}
+            {% endif %}
+            {% if _choice and not child.vars.multiple and not child.vars.expanded and not child.vars.required and child.vars.placeholder is same as('') %}
+                {% set _row_vars = {placeholder: 'filters.any'|trans({}, 'NowoUiKitBundle')} %}
+            {% endif %}
             {% if _field %}
                 {% set _attr = _attr|merge(_field.attributes) %}
                 {% if _field.placeholder is not null %}
@@ -37,13 +51,16 @@
                 {% set _row_attr = _row_attr|merge(_field.rowAttributes) %}
                 {% set _row_class = _row_class|merge([_field.width ? 'nowo-ui-filters__field--' ~ _field.width : null, _field.rowClass]) %}
             {% endif %}
-            {{ form_row(child, {attr: _attr, row_attr: _row_attr|merge({class: _row_class|filter(c => c)|join(' ')})}) }}
+            {{ form_row(child, _row_vars|merge({attr: _attr, row_attr: _row_attr|merge({class: _row_class|filter(c => c)|join(' ')})})) }}
         {% endif %}
     {% endfor %}
     <div class="{{ nowo_ui_class('filters_actions', _b) }}"{{ nowo_ui_attrs('filters_actions', _b) }}>
         {% set _submit = page.filtersSubmit %}
         {% set _submit_label = _submit and _submit.label is not null ? _submit.label|nowo_ui_trans : 'filters.apply'|trans({}, 'NowoUiKitBundle') %}
         {% set _submit_display = _submit and _submit.display ? _submit.display : (page.filtersDisplay ?? (_submit and _submit.icon ? 'icon_text' : 'text')) %}
+        {% if _submit_display == 'icon_text' and nowo_ui_kit_icon_set|default('bootstrap-icons') == 'none' %}
+            {% set _submit_display = 'text' %}
+        {% endif %}
         {% set _submit_attrs = (_submit ? _submit.attributes : {})|merge(_submit_display == 'icon' ? {title: _submit_label, 'aria-label': _submit_label} : {}) %}
         <button type="submit" class="{{ nowo_ui_class('btn_' ~ (_submit and _submit.variant in ['primary', 'secondary', 'danger', 'neutral'] ? (_submit.variant == 'neutral' ? 'secondary' : _submit.variant) : 'primary'), _b) }} nowo-ui-filters__submit{{ _submit_display == 'icon' ? ' ' ~ nowo_ui_class('btn_icon', _b) }}"{{ nowo_ui_html_attrs(_submit_attrs) }}>
             {%- if _submit_display == 'icon' -%}

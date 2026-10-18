@@ -9,6 +9,8 @@ use Symfony\Component\Form\FormView;
 /**
  * View model of `@NowoUiKit/page/wizard.html.twig`: steps indicator, the current step's form, back / next.
  * Bundles may override `nowo_ui_wizard_step` (default: REQ-TWIG-003 child loop of `form`).
+ * `guest` (2.2): true renders the wizard in the guest layout (`nowo_ui_kit.layouts.guest`: setup / install /
+ * restore wizards before sign-in); `layout` still wins. Default false (admin layout, as in 2.0 / 2.1).
  */
 final readonly class WizardPage
 {
@@ -30,6 +32,7 @@ final readonly class WizardPage
         public ?string $bundle = null,
         public ?string $layout = null,
         public array $attributes = [],
+        public bool $guest = false,
     ) {
         Action::assertAttributes($attributes);
         $this->steps = ViewList::of($steps, WizardStep::class, 'WizardPage steps');

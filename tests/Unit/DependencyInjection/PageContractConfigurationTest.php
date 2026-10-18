@@ -83,7 +83,7 @@ final class PageContractConfigurationTest extends TestCase
         $theme = Theme::fromConfig('bootstrap5', $config['theme']);
         self::assertSame('nowo-ui-badge nowo-ui-badge--success acme-badge acme-badge--ok', $theme->classFor('badge_success'));
         self::assertSame('nowo-ui-btn nowo-ui-btn--primary acme-btn acme-btn--primary', $theme->classFor('btn_primary'));
-        self::assertSame('nowo-ui-table nowo-ui-table--striped table table-hover align-middle', $theme->classFor('table'));
+        self::assertSame('nowo-ui-table nowo-ui-table--striped table table-striped table-hover align-middle', $theme->classFor('table'));
         self::assertSame('nowo-ui-table nowo-ui-table--striped dense', $theme->classFor('table', 'NowoHttpLogBundle'));
         self::assertSame('nowo-ui-card card acme-card', $theme->classFor('card', 'NowoHttpLogBundle'));
         self::assertSame('nowo-ui-card acme-card', $theme->classFor('card', 'NowoXBundle'));
@@ -113,9 +113,9 @@ final class PageContractConfigurationTest extends TestCase
         self::assertArrayNotHasKey('tokens', $config['theme']['pages']['list']);
 
         $theme = Theme::fromConfig('bootstrap5', $config['theme']);
-        self::assertSame('nowo-ui-table nowo-ui-table--striped table table-hover align-middle host-table', $theme->classFor('table'));
-        self::assertSame('nowo-ui-table nowo-ui-table--striped table table-hover align-middle list-table', $theme->classFor('table', null, null, 'list'));
-        self::assertSame('nowo-ui-table nowo-ui-table--striped table table-hover align-middle x-table', $theme->classFor('table', 'NowoXBundle', null, 'list'));
+        self::assertSame('nowo-ui-table nowo-ui-table--striped table table-striped table-hover align-middle host-table', $theme->classFor('table'));
+        self::assertSame('nowo-ui-table nowo-ui-table--striped table table-striped table-hover align-middle list-table', $theme->classFor('table', null, null, 'list'));
+        self::assertSame('nowo-ui-table nowo-ui-table--striped table table-striped table-hover align-middle x-table', $theme->classFor('table', 'NowoXBundle', null, 'list'));
         self::assertSame('nowo-ui-card list-card', $theme->classFor('card', null, null, 'list'));
         self::assertSame('nowo-ui-card host-card', $theme->classFor('card', null, null, 'dashboard'));
         self::assertSame(' data-host="1" data-page="list"', $theme->renderAttributes('table', null, [], 'list'));
@@ -146,11 +146,11 @@ final class PageContractConfigurationTest extends TestCase
 
         // classes: bundle page slot > bundle slot > page-type slot > host slot
         self::assertSame('nowo-ui-table nowo-ui-table--striped x-list-table', $theme->classFor('table', 'NowoXBundle', null, 'list'));
-        self::assertSame('nowo-ui-table nowo-ui-table--striped table table-hover align-middle x-table', $theme->classFor('table', 'NowoXBundle', null, 'show'));
-        self::assertSame('nowo-ui-table nowo-ui-table--striped table table-hover align-middle x-table', $theme->classFor('table', 'NowoXBundle'));
-        self::assertSame('nowo-ui-table nowo-ui-table--striped table table-hover align-middle list-table', $theme->classFor('table', 'NowoYBundle', null, 'list'));
+        self::assertSame('nowo-ui-table nowo-ui-table--striped table table-striped table-hover align-middle x-table', $theme->classFor('table', 'NowoXBundle', null, 'show'));
+        self::assertSame('nowo-ui-table nowo-ui-table--striped table table-striped table-hover align-middle x-table', $theme->classFor('table', 'NowoXBundle'));
+        self::assertSame('nowo-ui-table nowo-ui-table--striped table table-striped table-hover align-middle list-table', $theme->classFor('table', 'NowoYBundle', null, 'list'));
         // framework defaults: bundle page slot (true) > bundle page (false) > bundle (true); card falls back to the page-type class
-        self::assertSame('nowo-ui-badge badge text-bg-light border ms-2 x-list-badge', $theme->classFor('badge', 'NowoXBundle', null, 'list'));
+        self::assertSame('nowo-ui-badge badge bg-body-tertiary text-body-emphasis border x-list-badge', $theme->classFor('badge', 'NowoXBundle', null, 'list'));
         self::assertSame('nowo-ui-card list-card', $theme->classFor('card', 'NowoXBundle', null, 'list'));
         self::assertSame('nowo-ui-card card host-card', $theme->classFor('card', 'NowoXBundle', null, 'show'));
         self::assertTrue($theme->frameworkDefaults('card', 'NowoXBundle', 'show'));

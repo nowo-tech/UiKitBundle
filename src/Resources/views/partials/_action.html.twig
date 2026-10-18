@@ -20,7 +20,12 @@
 
   Non-GET actions submit a POST form (CSRF-only FormView when given, else csrf token field); actions with a
   Confirm open the UiKit confirm <dialog>, whose confirm button submits. Action::fallbackHref (2.1) adds a
-  <noscript> link to that URL (e.g. a page/confirm page) next to the dialog toggle. No inline on* handlers.
+  <noscript> link to that URL (e.g. a page/confirm page) next to the dialog toggle. Action::dialogId (2.2) renders a
+  <button type="button" data-nowo-ui-dialog-open aria-haspopup="dialog" aria-controls> opening the `dialog` partial
+  with that id; with an href too it is an <a href> (no-JS fallback) that also loads that URL into the dialog body
+  (data-nowo-ui-dialog-src). Action::title (2.2): translated tooltip (`title`; the accessible name stays the label);
+  a disabled action with a title is wrapped in <span class="nowo-ui-action__tip" title> so the tooltip still shows.
+  With icon_set none, icon_text renders as text (no duplicated label). No inline on* handlers.
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 {% set context = context|default('toolbar') %}
@@ -34,6 +39,9 @@
 {% endif %}
 {% if action.visible %}
     {% set display = action.display ?? (context == 'row' ? display : (_context_display ?? (action.icon ? 'icon_text' : 'text'))) %}
+    {% if display == 'icon_text' and nowo_ui_kit_icon_set|default('bootstrap-icons') == 'none' %}
+        {% set display = 'text' %}
+    {% endif %}
     {% set label = action.label is not null ? action.label|nowo_ui_trans : ('action.' ~ action.kind)|trans({}, 'NowoUiKitBundle') %}
     {% set href = action.href ?? (action.route ? path(action.route, action.params) : null) %}
     {% set variant = action.resolvedVariant() %}
@@ -59,7 +67,10 @@
             <span class="nowo-ui-action__label">{{ label }}</span>
         {%- endif -%}
     {% endset %}
-    {% set attrs = action.attributes|merge(context == 'row' or display == 'icon' ? {title: label, 'aria-label': label} : {}) %}
+    {% set _tip = action.title is null ? null : action.title|nowo_ui_trans %}
+    {% set attrs = action.attributes|merge(context == 'row' or display == 'icon' ? {title: label, 'aria-label': label} : {})|merge(_tip is null ? {} : {title: _tip}) %}
+    {% set _wrap_tip = _tip is not null and action.disabled %}
+    {% if _wrap_tip %}<span class="nowo-ui-action__tip" title="{{ _tip }}">{% endif %}
     {% set confirm_id = action.confirmId() %}
     {% if confirm_id %}
         <button type="button" class="{{ class }}"{% for name, value in attrs %}{% if value is same as(true) %} {{ name }}{% elseif value is not null and value is not same as(false) %} {{ name }}="{{ value }}"{% endif %}{% endfor %}{% if action.disabled %} disabled{% endif %} {{ ui.confirm_toggle_attrs() }} {{ ui.confirm_target_attr(confirm_id) }}>{{ inner }}</button>
@@ -85,9 +96,14 @@
             button_attrs: attrs,
             button_html: inner,
         }, false) }}
+    {% elseif action.dialogId and href and not action.disabled %}
+        <a class="{{ class }}" href="{{ href }}"{% for name, value in attrs %}{% if value is same as(true) %} {{ name }}{% elseif value is not null and value is not same as(false) %} {{ name }}="{{ value }}"{% endif %}{% endfor %} data-nowo-ui-dialog-open="{{ action.dialogId }}" data-nowo-ui-dialog-src="{{ href }}" aria-haspopup="dialog" aria-controls="{{ action.dialogId }}">{{ inner }}</a>
+    {% elseif action.dialogId %}
+        <button type="button" class="{{ class }}"{% for name, value in attrs %}{% if value is same as(true) %} {{ name }}{% elseif value is not null and value is not same as(false) %} {{ name }}="{{ value }}"{% endif %}{% endfor %}{% if action.disabled %} disabled{% endif %} data-nowo-ui-dialog-open="{{ action.dialogId }}" aria-haspopup="dialog" aria-controls="{{ action.dialogId }}">{{ inner }}</button>
     {% elseif action.modalId %}
         <button type="button" class="{{ class }}"{% for name, value in attrs %}{% if value is same as(true) %} {{ name }}{% elseif value is not null and value is not same as(false) %} {{ name }}="{{ value }}"{% endif %}{% endfor %}{% if action.disabled %} disabled{% endif %} {{ ui.modal_toggle_attrs(framework) }} {{ ui.modal_target_attr(action.modalId, framework) }}>{{ inner }}</button>
     {% else %}
         <a class="{{ class }}{% if action.disabled %} is-disabled{% endif %}" href="{{ href ?? '#' }}"{% for name, value in attrs %}{% if value is same as(true) %} {{ name }}{% elseif value is not null and value is not same as(false) %} {{ name }}="{{ value }}"{% endif %}{% endfor %}{% if action.disabled %} aria-disabled="true" tabindex="-1"{% endif %}>{{ inner }}</a>
     {% endif %}
+{% if _wrap_tip %}</span>{% endif %}
 {% endif %}

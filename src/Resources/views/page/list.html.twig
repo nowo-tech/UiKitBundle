@@ -16,6 +16,8 @@
   table_actions_cell (alignment of the actions column: page.actionsAlign → nowo-ui-cell--<align>), sortable_header +
   sort_link (sortable columns), table_cell_muted (default cells without a value print a muted "—"). Inside a bordered
   panel, add `nowo-ui-table-wrap--flush` to the table_wrap slot: card-mode rows then drop their own border.
+  2.2: caption through the table_caption slot (page.captionVisible = false: visually hidden); the row-actions column
+  header is visible by default (page.actionsLabelVisible) and the column sits first or last (page.actionsPosition).
 #}
 {% extends page.layout ?? nowo_ui_layout.admin %}
 {% set nowo_ui_bundle = page.bundle %}
@@ -41,13 +43,9 @@
         {% if page.rows is not empty %}
             {% set _route = page.pagination and page.pagination.route ? page.pagination.route : (app is defined and app ? app.request.attributes.get('_route') : null) %}
             {% set _route_params = (app is defined and app ? app.request.attributes.get('_route_params') : {})|default({})|merge(app is defined and app ? app.request.query.all : {}) %}
-            {% set _confirms = [] %}
-            {% set _cards = page.responsive == 'cards' %}
-            <div class="{{ nowo_ui_class('table_wrap', _b) }}" data-nowo-ui-region="table"{% if _cards %} data-nowo-ui-responsive="cards"{% endif %}{{ nowo_ui_attrs('table_wrap', _b) }}>
-                <table class="{{ nowo_ui_class('table', _b) }}{{ _cards ? ' nowo-ui-table--cards' }}"{{ nowo_ui_attrs('table', _b) }}>
-                    {% if page.caption %}<caption class="nowo-ui-table__caption">{{ page.caption|nowo_ui_trans }}</caption>{% endif %}
-                    <thead class="{{ nowo_ui_class('table_head', _b) }}"{{ nowo_ui_attrs('table_head', _b) }}>
-                        <tr class="{{ nowo_ui_class('table_head_row', _b) }}"{{ nowo_ui_attrs('table_head_row', _b) }}>
+            {#- the table renders through the `table` partial (2.2); the list data blocks are pre-rendered here so child
+                templates keep overriding nowo_ui_list_head / nowo_ui_list_row -#}
+            {% set _head_html %}
                             {% block nowo_ui_list_head %}
                                 {% for column in page.columns %}
                                     {%- set _sortable = column.sortable and _route %}
@@ -61,21 +59,10 @@
                                     </th>
                                 {% endfor %}
                             {% endblock %}
-                            {% if page.hasRowActions() %}
-                                {% set _actions_label = page.actionsLabel is null ? 'table.actions'|trans({}, 'NowoUiKitBundle') : page.actionsLabel|nowo_ui_trans %}
-                                <th scope="col" class="{{ nowo_ui_class('table_head_cell', _b) }} {{ nowo_ui_class('table_actions_head', _b) }} nowo-ui-cell--{{ page.actionsAlign }}"{{ nowo_ui_attrs('table_actions_head', _b) }}>
-                                    {%- if page.actionsLabelVisible -%}
-                                        {{ _actions_label }}
-                                    {%- else -%}
-                                        <span class="visually-hidden">{{ _actions_label }}</span>
-                                    {%- endif -%}
-                                </th>
-                            {% endif %}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for row_key, row in page.rows %}
-                            <tr class="{{ nowo_ui_class('table_row', _b) }}">
+            {% endset %}
+            {% set _rows_html = {} %}
+            {% for row_key, row in page.rows %}
+                {% set _cells %}
                                 {% block nowo_ui_list_row %}
                                     {% for column in page.columns %}
                                         {%- set _value = row is iterable ? row[column.key]|default(null) : attribute(row, column.key) %}
@@ -83,48 +70,10 @@
                                         <td class="{{ nowo_ui_class('table_cell', _b) }}{{ _blank ? ' ' ~ nowo_ui_class('table_cell_muted', _b) }} nowo-ui-cell--{{ column.align }}{{ column.class ? ' ' ~ column.class }}" data-label="{{ column.label is null ? column.key : column.label|nowo_ui_trans }}"{% if not column.required and column.priority and column.priority > 1 %} data-nowo-ui-priority="{{ column.priority }}"{% endif %}>{{ _blank ? '—' : _value }}</td>
                                     {% endfor %}
                                 {% endblock %}
-                                {% if page.hasRowActions() %}
-                                    {#- 1.x hashes (label translated, href resolved, CSRF token) + the View\Action as `view`: the
-                                        default partial renders the object, 1.x overrides read the hash; confirm
-                                        dialogs render once after the table (confirm_external) -#}
-                                    {% set _row_actions = [] %}
-                                    {% for _action in page.rowActions(row, row_key) %}
-                                        {% set _token = _action.form and _action.form._token is defined ? _action.form._token.vars : null %}
-                                        {% set _row_actions = _row_actions|merge([_action.toArray()|merge({
-                                            label: _action.label is null ? ('action.' ~ _action.kind)|trans({}, 'NowoUiKitBundle') : _action.label|nowo_ui_trans,
-                                            href: _action.href ?? (_action.route ? path(_action.route, _action.params) : null),
-                                            method: _action.isPost() ? 'POST' : 'GET',
-                                            csrf_token: _token ? _token.value : _action.csrfToken,
-                                            csrf_field: _token ? _token.full_name : _action.csrfField,
-                                            view: _action,
-                                        })]) %}
-                                        {% if _action.confirm and _action.visible %}
-                                            {% set _confirms = _confirms|merge([_action]) %}
-                                        {% endif %}
-                                    {% endfor %}
-                                    <td class="{{ nowo_ui_class('table_cell', _b) }} {{ nowo_ui_class('table_actions_cell', _b) }} nowo-ui-cell--{{ page.actionsAlign }}"{{ nowo_ui_attrs('table_actions_cell', _b) }}>
-                                        {{ include(nowo_ui_partial('row_actions', _b), {actions: _row_actions, confirm_external: true, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
-                                    </td>
-                                {% endif %}
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% if _confirms is not empty %}
-                <div class="nowo-ui-list-page__confirms" data-nowo-ui-region="confirms">
-                    {% for _action in page.confirmDialogs(_confirms) %}
-                        {{ include(nowo_ui_partial('confirm', _b), {
-                            id: _action.confirmId(),
-                            confirm: _action.confirm,
-                            action: _action,
-                            action_href: _action.href ?? (_action.route ? path(_action.route, _action.params) : null),
-                            bundle: _b,
-                            nowo_ui_page_type: nowo_ui_page_type,
-                        }, false) }}
-                    {% endfor %}
-                </div>
-            {% endif %}
+                {% endset %}
+                {% set _rows_html = _rows_html|merge({('k' ~ row_key): _cells}) %}
+            {% endfor %}
+            {{ include(nowo_ui_partial('table', _b), {table: page.table, route: _route, head_html: _head_html, rows_html: _rows_html, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
             {% if page.pagination %}
                 {#- 1.x array shape (+ the object as pagination_model) and the 1.x top-level route / route_params / query
                     (query = the current request query without the page parameters, then Pagination::query), so an

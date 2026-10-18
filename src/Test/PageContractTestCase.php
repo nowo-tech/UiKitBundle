@@ -136,7 +136,8 @@ abstract class PageContractTestCase extends TestCase
     }
 
     /**
-     * In-memory templates (name => source), resolved before the filesystem.
+     * In-memory templates (name => source), resolved before the filesystem. A template named like a stub host
+     * template ({@see StubHost::templates()}: the stub layouts, the stub `page_header` override) replaces it (2.2).
      *
      * @return array<string, string>
      */
@@ -479,7 +480,7 @@ abstract class PageContractTestCase extends TestCase
         }
 
         $twig = new Environment(
-            new ChainLoader([new ArrayLoader(StubHost::templates() + static::inlineTemplates()), $filesystem]),
+            new ChainLoader([new ArrayLoader(static::inlineTemplates() + StubHost::templates()), $filesystem]),
             ['strict_variables' => true, 'autoescape' => 'html', 'cache' => false],
         );
 

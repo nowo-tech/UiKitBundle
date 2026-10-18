@@ -7,9 +7,13 @@ namespace Nowo\UiKitBundle\View;
 /**
  * Page header: title, intro, toolbar actions, breadcrumbs (plain trail, or BreadcrumbKit when installed) and an
  * optional area navigation ({@see AreaNav}, rendered under the title through the `tabs` partial).
+ * `breadcrumbsMode` (2.2): `auto` (default: BreadcrumbKit's trail when installed and not empty, else
+ * {@see self::$breadcrumbs}), `kit` (BreadcrumbKit only) or `own` (always {@see self::$breadcrumbs}).
  */
 final readonly class PageHeader
 {
+    public const BREADCRUMBS_MODES = ['auto', 'kit', 'own'];
+
     /** @var list<Action> */
     public array $actions;
 
@@ -29,7 +33,11 @@ final readonly class PageHeader
         iterable $breadcrumbs = [],
         public ?string $breadcrumbCollection = null,
         public ?AreaNav $tabs = null,
+        public string $breadcrumbsMode = 'auto',
     ) {
+        if (!\in_array($breadcrumbsMode, self::BREADCRUMBS_MODES, true)) {
+            throw new \InvalidArgumentException(\sprintf('Invalid PageHeader breadcrumbsMode "%s" (%s).', $breadcrumbsMode, implode('|', self::BREADCRUMBS_MODES)));
+        }
         $this->actions = ViewList::of($actions, Action::class, 'PageHeader actions');
         $this->breadcrumbs = ViewList::of($breadcrumbs, Crumb::class, 'PageHeader breadcrumbs');
     }
@@ -44,7 +52,7 @@ final readonly class PageHeader
      */
     public function withActions(iterable $actions): self
     {
-        return new self($this->title, $this->intro, $actions, $this->breadcrumbs, $this->breadcrumbCollection, $this->tabs);
+        return new self($this->title, $this->intro, $actions, $this->breadcrumbs, $this->breadcrumbCollection, $this->tabs, $this->breadcrumbsMode);
     }
 
     /**
@@ -54,6 +62,6 @@ final readonly class PageHeader
      */
     public function withTabs(?AreaNav $tabs): self
     {
-        return new self($this->title, $this->intro, $this->actions, $this->breadcrumbs, $this->breadcrumbCollection, $tabs);
+        return new self($this->title, $this->intro, $this->actions, $this->breadcrumbs, $this->breadcrumbCollection, $tabs, $this->breadcrumbsMode);
     }
 }

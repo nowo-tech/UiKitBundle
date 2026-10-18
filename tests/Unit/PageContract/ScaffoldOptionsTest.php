@@ -60,8 +60,10 @@ final class ScaffoldOptionsTest extends TestCase
 
         self::assertStringContainsString('<div data-row="q" class="nowo-ui-filters__field app-field nowo-ui-filters__field--lg app-row">', $html);
         self::assertStringContainsString('placeholder="Search orders"', $html);
-        self::assertStringContainsString('<input type="search" id="filters_q" name="filters[q]" data-x="1" placeholder="Search orders" class="app-search" />', $html);
+        self::assertStringContainsString('<input type="search" id="filters_q" name="filters[q]" class="nowo-ui-input form-control app-search" data-x="1" placeholder="Search orders" />', $html);
         self::assertStringContainsString('nowo-ui-filters__field app-field nowo-ui-filters__field--sm"', $html);
+        // 2.2: optional single select without its own placeholder → "Any"; the input slot on text widgets
+        self::assertStringContainsString('<select id="filters_status" name="filters[status]" class="nowo-ui-input"><option value="">Any</option>', $html);
         self::assertStringContainsString('<div class="nowo-ui-filters__actions d-flex flex-wrap align-items-end gap-2 app-filter-actions">', $html);
         self::assertMatchesRegularExpression('#<button type="submit" class="nowo-ui-btn nowo-ui-btn--primary btn btn-primary nowo-ui-filters__submit" data-testid="apply"><i class="bi bi-funnel[^"]*"[^>]*></i>\s*<span class="nowo-ui-action__label">Go</span></button>#', $html);
         self::assertMatchesRegularExpression('#<a class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary nowo-ui-action--close" href="/orders">\s*<i [^>]*></i>\s*<span class="nowo-ui-action__label">Reset</span></a>#', $html);
@@ -105,7 +107,10 @@ final class ScaffoldOptionsTest extends TestCase
         $scroll = PageContractTwig::create()->render('@NowoUiKit/page/list.html.twig', ['page' => new ListPage(new PageHeader('Orders'), [new Column('name')], [['name' => 'A']], rowActions: [Action::view('/v')], responsive: 'scroll')]);
         self::assertStringNotContainsString('data-nowo-ui-responsive', $scroll);
         self::assertStringNotContainsString('nowo-ui-table--cards', $scroll);
-        self::assertStringContainsString('<span class="visually-hidden">Actions</span>', $scroll);
+        // 2.2: the actions header is visible by default; actionsLabelVisible: false keeps it for assistive tech only
+        self::assertMatchesRegularExpression('#nowo-ui-table__actions nowo-ui-cell--end">Actions</th>#', $scroll);
+        $hidden = PageContractTwig::create()->render('@NowoUiKit/page/list.html.twig', ['page' => new ListPage(new PageHeader('Orders'), [new Column('name')], [['name' => 'A']], rowActions: [Action::view('/v')], actionsLabelVisible: false)]);
+        self::assertStringContainsString('<span class="visually-hidden">Actions</span>', $hidden);
     }
 
     public function testKpiSlotsAndLinkTile(): void

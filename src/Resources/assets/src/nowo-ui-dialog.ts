@@ -4,6 +4,13 @@
  * Close: [data-nowo-ui-dialog-close] inside the dialog (or [data-nowo-ui-dialog-close="<id>"] anywhere), Escape
  * (native), a <form method="dialog">, or a click on the backdrop when the dialog has data-nowo-ui-dialog-backdrop-close.
  * Focus returns to the opener on close. No inline handlers (CSP).
+ * Replace (2.2): an opener with [data-nowo-ui-dialog-replace] inside an open dialog closes that dialog first and
+ * hands its focus-return target over to the new one (focus goes back to whatever opened the first dialog).
+ * Remote content (2.2): an opener with [data-nowo-ui-dialog-src="<url>"] fetches that URL (same origin only,
+ * credentials same-origin, header X-Requested-With) into the dialog body ([data-nowo-ui-dialog-body] or
+ * .nowo-ui-dialog__body; aria-busy while loading) and dispatches `nowo-ui:dialog-loaded` (detail {url}) on the
+ * dialog. The fetched HTML is inserted as markup only (scripts do not run: CSP-safe); behaviour comes from delegated
+ * listeners / Stimulus. On a failed request the opener's href (the no-JS fallback) is followed.
  */
 
 declare global {
@@ -52,6 +59,68 @@ export function closeDialog(id: string | HTMLDialogElement | null): void {
   }
 }
 
+/**
+ * Opens `id` in place of the open dialog enclosing `opener`: the enclosing dialog closes without restoring focus and
+ * its focus-return target is handed over to the new dialog (falls back to a plain open outside a dialog).
+ */
+export function replaceDialog(id: string | HTMLDialogElement | null, opener: Element): boolean {
+  const next = resolveDialog(id);
+  const current = opener.closest('dialog[open]');
+  if (!next || !(current instanceof HTMLDialogElement) || current === next) {
+    return openDialog(next, opener);
+  }
+  const handover = openers.get(current) ?? null;
+  openers.delete(current);
+  closeDialog(current);
+  return openDialog(next, handover);
+}
+
+/** Same-origin absolute URL of a dialog source, null for another origin or an invalid URL. */
+export function sameOriginUrl(src: string): string | null {
+  try {
+    const url = new URL(src, window.location.href);
+    return url.origin === window.location.origin ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Follows a URL (separate function so tests can observe it). */
+export const navigation = {
+  assign(url: string): void {
+    window.location.assign(url);
+  },
+};
+
+/**
+ * Fetches `src` into the body of `dialog` (see the module comment). Resolves true when the content was inserted.
+ */
+export async function loadDialogContent(dialog: HTMLDialogElement, src: string, fallbackHref: string | null = null): Promise<boolean> {
+  const url = sameOriginUrl(src);
+  const body = dialog.querySelector('[data-nowo-ui-dialog-body]') ?? dialog.querySelector('.nowo-ui-dialog__body');
+  if (!url || !body) {
+    return false;
+  }
+  body.setAttribute('aria-busy', 'true');
+  try {
+    const response = await fetch(url, { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'text/html' } });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    body.innerHTML = await response.text();
+    body.removeAttribute('aria-busy');
+    dialog.dispatchEvent(new CustomEvent('nowo-ui:dialog-loaded', { bubbles: true, detail: { url } }));
+    return true;
+  } catch {
+    body.removeAttribute('aria-busy');
+    if (fallbackHref) {
+      closeDialog(dialog);
+      navigation.assign(fallbackHref);
+    }
+    return false;
+  }
+}
+
 /** Returns focus to the element that opened the dialog (native `close` event). */
 export function restoreFocus(dialog: HTMLDialogElement): void {
   const opener = openers.get(dialog);
@@ -78,7 +147,14 @@ function onDocumentClick(event: MouseEvent): void {
 
   const openBtn = target.closest('[data-nowo-ui-dialog-open]');
   if (openBtn) {
-    if (openDialog(openBtn.getAttribute('data-nowo-ui-dialog-open'), openBtn)) {
+    const targetId = openBtn.getAttribute('data-nowo-ui-dialog-open');
+    const opened = openBtn.hasAttribute('data-nowo-ui-dialog-replace') ? replaceDialog(targetId, openBtn) : openDialog(targetId, openBtn);
+    const src = openBtn.getAttribute('data-nowo-ui-dialog-src');
+    const dialog = resolveDialog(targetId);
+    if (opened && src && dialog) {
+      void loadDialogContent(dialog, src, openBtn.getAttribute('href'));
+    }
+    if (opened) {
       event.preventDefault();
     }
     return;

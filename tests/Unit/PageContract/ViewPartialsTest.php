@@ -50,7 +50,7 @@ final class ViewPartialsTest extends TestCase
         $twig->addFunction(new TwigFunction('breadcrumb_render', static fn (Environment $env, ?string $c = null): string => '<ol data-kit="'.$c.'"></ol>', ['is_safe' => ['html'], 'needs_environment' => true]));
         $html = $twig->render('t', ['header' => new PageHeader('T', breadcrumbs: [new Crumb('Ignored')], breadcrumbCollection: 'admin')]);
 
-        self::assertStringContainsString('<div class="nowo-ui-breadcrumbs"><ol data-kit="admin"></ol></div>', $html);
+        self::assertStringContainsString('<div class="nowo-ui-breadcrumbs" data-nowo-ui-breadcrumbs="kit"><ol data-kit="admin"></ol></div>', $html);
         self::assertStringNotContainsString('Ignored', $html);
 
         $off = PageContractTwig::create(['t' => "{% include '@NowoUiKitBundle/partials/_page_header.html.twig' with {header: header} only %}"], breadcrumbKit: false);

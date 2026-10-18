@@ -1,0 +1,24 @@
+{#
+  Progress (2.2, theme partial `progress`): a label, a native <progress> meter and the percentage — wizard steps,
+  backup / restore progress. Framework-free (no inline style; the meter is painted by nowo-ui.css from the
+  --nowo-ui-progress-* tokens). Indeterminate (busy, unknown amount): no `value` attribute.
+
+  Optional:
+    - percent: 0–100 (clamped); null = indeterminate
+    - indeterminate: true forces the indeterminate state
+    - label: string or View\Label (translated); default progress.label
+    - show_value: false hides the "40 %" text (default true when determinate)
+    - id: id of the <progress> (default nowo-ui-progress: pass one per meter when a page shows several); attr: extra attributes of the wrapper
+    - bundle
+  Slots: progress (wrapper), progress_meter (<progress>).
+#}
+{% set bundle = bundle|default(null) %}
+{% set _indeterminate = indeterminate|default(false) or percent|default(null) is null %}
+{% set _value = _indeterminate ? null : max(0, min(100, percent)) %}
+{% set _label = label|default(null) is null ? 'progress.label'|trans({}, 'NowoUiKitBundle') : label|nowo_ui_trans %}
+{% set _id = id|default('nowo-ui-progress') %}
+<div class="{{ nowo_ui_class('progress', bundle) }}{{ _indeterminate ? ' nowo-ui-progress-field--indeterminate' }}"{{ nowo_ui_attrs('progress', bundle, attr|default({})) }}>
+    <label class="nowo-ui-progress-field__label" for="{{ _id }}">{{ _label }}</label>
+    <progress id="{{ _id }}" class="{{ nowo_ui_class('progress_meter', bundle) }}" max="100"{% if not _indeterminate %} value="{{ _value }}"{% endif %}{{ nowo_ui_attrs('progress_meter', bundle) }}>{{ _indeterminate ? _label : _value ~ ' %' }}</progress>
+    {% if not _indeterminate and show_value ?? true %}<span class="nowo-ui-progress-field__value" aria-hidden="true">{{ _value }} %</span>{% endif %}
+</div>

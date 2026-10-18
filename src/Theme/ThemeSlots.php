@@ -84,6 +84,12 @@ final class ThemeSlots
             'tailwind' => 'inline-flex items-center gap-1 font-medium px-3 py-1.5 text-sm underline-offset-2 px-0',
             'foundation' => 'button secondary',
         ]],
+        // Solid destructive button (2.2): the confirm button of a danger Confirm (dialog and full page)
+        'btn_danger_solid' => ['nowo-ui-btn nowo-ui-btn--danger nowo-ui-btn--solid', [
+            'bootstrap' => 'btn btn-danger',
+            'tailwind' => 'inline-flex items-center gap-1 font-medium px-3 py-1.5 text-sm',
+            'foundation' => 'button alert',
+        ]],
         'btn_sm' => ['nowo-ui-btn--sm', [
             'bootstrap' => 'btn-sm',
             'foundation' => 'tiny',
@@ -96,10 +102,12 @@ final class ThemeSlots
             'tailwind' => 'overflow-x-auto',
         ]],
         'table' => ['nowo-ui-table nowo-ui-table--striped', [
-            'bootstrap' => 'table table-hover align-middle',
+            'bootstrap' => 'table table-striped table-hover align-middle',
             'tailwind' => 'min-w-full text-sm text-left',
             'foundation' => 'stack table',
         ]],
+        // <caption> of a list table (ListPage::caption; visually hidden with ListPage::captionVisible = false)
+        'table_caption' => ['nowo-ui-table__caption', []],
         'table_head' => ['nowo-ui-table__head', []],
         'table_head_row' => ['nowo-ui-table__head-row', []],
         'table_head_cell' => ['nowo-ui-table__head-cell', []],
@@ -132,49 +140,57 @@ final class ThemeSlots
         'action_secondary' => ['nowo-ui-btn--secondary', []],
         'action_danger' => ['nowo-ui-btn--danger', []],
         'action_neutral' => ['nowo-ui-btn--secondary', []],
-        // Badges (Bootstrap: `text-bg-*` (5.2+) sets text and background together, so the colour pair never mixes
-        // with the semantic nowo-ui-badge--* palette; on 5.0 / 5.1 the semantic palette paints the badge)
+        // Badges (2.2): one subtle set (tinted background, emphasis text, tinted border) on every stack — Bootstrap
+        // 5.3 `bg-*-subtle text-*-emphasis border-*-subtle` (on 5.0–5.2 the semantic nowo-ui-badge--* palette paints
+        // it), Bootstrap 4 its badge colours; no margin utilities (badges sit flush in cells and lists). `info` and
+        // `primary` follow the primary colour. Hosts wanting solid badges set the slots (docs/THEME_SLOTS.md#badges).
         'badge' => ['nowo-ui-badge', [
-            'bootstrap' => 'badge text-bg-light border ms-2',
-            'bootstrap4' => 'badge badge-light border ml-2',
-            'tailwind' => 'ml-2 inline-flex border px-2 py-0.5 text-xs',
+            'bootstrap' => 'badge bg-body-tertiary text-body-emphasis border',
+            'bootstrap4' => 'badge badge-light border',
+            'tailwind' => 'inline-flex border px-2 py-0.5 text-xs',
             'foundation' => 'badge secondary',
         ]],
+        'badge_primary' => ['nowo-ui-badge nowo-ui-badge--primary', [
+            'bootstrap' => 'badge bg-primary-subtle text-primary-emphasis border border-primary-subtle',
+            'bootstrap4' => 'badge badge-primary',
+            'tailwind' => 'inline-flex border px-2 py-0.5 text-xs',
+            'foundation' => 'badge primary',
+        ]],
         'badge_success' => ['nowo-ui-badge nowo-ui-badge--success', [
-            'bootstrap' => 'badge text-bg-success ms-2',
-            'bootstrap4' => 'badge badge-success ml-2',
-            'tailwind' => 'ml-2 inline-flex border px-2 py-0.5 text-xs',
+            'bootstrap' => 'badge bg-success-subtle text-success-emphasis border border-success-subtle',
+            'bootstrap4' => 'badge badge-success',
+            'tailwind' => 'inline-flex border px-2 py-0.5 text-xs',
             'foundation' => 'badge success',
         ]],
         'badge_warning' => ['nowo-ui-badge nowo-ui-badge--warning', [
-            'bootstrap' => 'badge text-bg-warning ms-2',
-            'bootstrap4' => 'badge badge-warning ml-2',
-            'tailwind' => 'ml-2 inline-flex border px-2 py-0.5 text-xs',
+            'bootstrap' => 'badge bg-warning-subtle text-warning-emphasis border border-warning-subtle',
+            'bootstrap4' => 'badge badge-warning',
+            'tailwind' => 'inline-flex border px-2 py-0.5 text-xs',
             'foundation' => 'badge warning',
         ]],
         'badge_danger' => ['nowo-ui-badge nowo-ui-badge--danger', [
-            'bootstrap' => 'badge text-bg-danger ms-2',
-            'bootstrap4' => 'badge badge-danger ml-2',
-            'tailwind' => 'ml-2 inline-flex border px-2 py-0.5 text-xs',
+            'bootstrap' => 'badge bg-danger-subtle text-danger-emphasis border border-danger-subtle',
+            'bootstrap4' => 'badge badge-danger',
+            'tailwind' => 'inline-flex border px-2 py-0.5 text-xs',
             'foundation' => 'badge alert',
         ]],
         'badge_info' => ['nowo-ui-badge nowo-ui-badge--info', [
-            'bootstrap' => 'badge text-bg-info ms-2',
-            'bootstrap4' => 'badge badge-info ml-2',
-            'tailwind' => 'ml-2 inline-flex border px-2 py-0.5 text-xs',
-            'foundation' => 'badge secondary',
+            'bootstrap' => 'badge bg-primary-subtle text-primary-emphasis border border-primary-subtle',
+            'bootstrap4' => 'badge badge-info',
+            'tailwind' => 'inline-flex border px-2 py-0.5 text-xs',
+            'foundation' => 'badge primary',
         ]],
         'badge_neutral' => ['nowo-ui-badge nowo-ui-badge--neutral', [
-            'bootstrap' => 'badge text-bg-light border ms-2',
-            'bootstrap4' => 'badge badge-light border ml-2',
-            'tailwind' => 'ml-2 inline-flex border px-2 py-0.5 text-xs',
+            'bootstrap' => 'badge bg-body-tertiary text-body-secondary border',
+            'bootstrap4' => 'badge badge-light border',
+            'tailwind' => 'inline-flex border px-2 py-0.5 text-xs',
             'foundation' => 'badge secondary',
         ]],
         // Filters / inputs
+        // List filters form (2.2: a responsive grid painted by nowo-ui.css — fields auto-fit, actions bottom-aligned)
         'filters' => ['nowo-ui-filters nowo-ui-search', [
-            'bootstrap' => 'd-flex flex-wrap gap-2 mb-3',
-            'tailwind' => 'flex flex-wrap gap-2 mb-4',
-            'foundation' => 'grid-x grid-margin-x mb-3',
+            'bootstrap' => 'd-grid gap-3 mb-3',
+            'tailwind' => 'grid gap-3 mb-4',
         ]],
         'filters_actions' => ['nowo-ui-filters__actions', [
             'bootstrap' => 'd-flex flex-wrap align-items-end gap-2',
@@ -244,6 +260,9 @@ final class ThemeSlots
             'foundation' => 'callout alert',
         ]],
         'toasts' => ['nowo-ui-toast-stack', []],
+        // Progress (2.2, partial `progress`): wrapper (label + value) and the native <progress> meter
+        'progress' => ['nowo-ui-progress-field', []],
+        'progress_meter' => ['nowo-ui-progress-meter', []],
         // Surfaces
         'card' => ['nowo-ui-card', [
             'bootstrap' => 'card',
@@ -302,6 +321,13 @@ final class ThemeSlots
             'tailwind' => 'px-3 py-2 text-sm no-underline border-b-2',
             'foundation' => 'tabs-title is-active',
         ]],
+        // Second tab level (2.2): section tabs under an area nav (PageHeader::tabs), e.g. the settings sections —
+        // pills / sub-nav instead of underlined tabs. The `tabs` partial uses it with `level: 'secondary'`.
+        'tabs_secondary' => ['nowo-ui-tabs nowo-ui-tabs--secondary', [
+            'bootstrap' => 'nav nav-pills mb-3',
+            'tailwind' => 'flex flex-wrap gap-2 mb-3',
+            'foundation' => 'menu',
+        ]],
         'modal' => ['nowo-ui-modal', []],
         // _modal_shell internals (1.x markup: the Bootstrap structure classes modal-content / modal-header /
         // modal-body / modal-footer stay; the theme adds host classes and attributes)
@@ -327,6 +353,8 @@ final class ThemeSlots
         'confirm_panel' => ['nowo-ui-confirm__panel', []],
         'confirm_header' => ['nowo-ui-confirm__header', []],
         'confirm_title' => ['nowo-ui-confirm__title', []],
+        // Close button (✕) of a 2.0 confirm dialog header (2.2; `dismissible`, default on for View\Confirm input)
+        'confirm_close' => ['nowo-ui-confirm__close', []],
         'confirm_body' => ['nowo-ui-confirm__body', []],
         'confirm_message' => ['nowo-ui-confirm__message', []],
         // Type-to-confirm wrapper (label + input; Confirm::expectedValue)
@@ -368,6 +396,14 @@ final class ThemeSlots
     public const PAGE_TYPES = ['list', 'show', 'form', 'settings', 'dashboard', 'confirm', 'wizard', 'auth'];
 
     /**
+     * UiKit runtime scripts printed by the `scripts` partial (`js/nowo-ui-<name>.js`, 2.2): what the document layout
+     * loads, and what a host layout with its own script list must load ({{ include(nowo_ui_partial('scripts')) }}).
+     *
+     * @var list<string>
+     */
+    public const SCRIPTS = ['modal', 'confirm', 'dialog', 'toast', 'tabs', 'theme'];
+
+    /**
      * Partial name => default template (replaceable through `theme.partials`).
      *
      * @var array<string, string>
@@ -387,9 +423,12 @@ final class ThemeSlots
         'modal_shell' => '@NowoUiKitBundle/partials/_modal_shell.html.twig',
         'page_header' => '@NowoUiKitBundle/partials/_page_header.html.twig',
         'pagination' => '@NowoUiKitBundle/partials/_pagination.html.twig',
+        'progress' => '@NowoUiKitBundle/partials/_progress.html.twig',
         'row_actions' => '@NowoUiKitBundle/partials/_row_actions.html.twig',
+        'scripts' => '@NowoUiKitBundle/partials/_scripts.html.twig',
         'section_form' => '@NowoUiKitBundle/page/_section_form.html.twig',
         'shell' => '@NowoUiKitBundle/partials/_shell.html.twig',
+        'table' => '@NowoUiKitBundle/partials/_table.html.twig',
         'tabs' => '@NowoUiKitBundle/partials/_tabs.html.twig',
         'toasts' => '@NowoUiKitBundle/partials/_toasts.html.twig',
         'wizard_form' => '@NowoUiKitBundle/page/_wizard_form.html.twig',

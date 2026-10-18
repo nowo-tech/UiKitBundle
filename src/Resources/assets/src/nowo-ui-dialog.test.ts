@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as mod from './nowo-ui-dialog';
 
 function polyfill(dialog: HTMLDialogElement): void {
@@ -123,5 +123,102 @@ describe('nowo-ui-dialog', () => {
   it('a close event from another dialog is ignored', () => {
     const plain = document.getElementById('plain') as HTMLDialogElement;
     plain.dispatchEvent(new Event('close'));
+  });
+
+  it('replaces the enclosing dialog and hands the focus-return target over', () => {
+    const opener = document.getElementById('opener') as HTMLElement;
+    const d1 = document.getElementById('d1') as HTMLDialogElement;
+    const d2 = document.getElementById('d2') as HTMLDialogElement;
+    d1.insertAdjacentHTML('beforeend', '<button type="button" id="swap" data-nowo-ui-dialog-open="d2" data-nowo-ui-dialog-replace>Next</button>');
+    click(opener);
+    expect(d1.open).toBe(true);
+    const event = click(document.getElementById('swap')!);
+    expect(event.defaultPrevented).toBe(true);
+    expect(d1.open).toBe(false);
+    expect(d2.open).toBe(true);
+    mod.closeDialog(d2);
+    expect(document.activeElement).toBe(opener);
+  });
+
+  it('replace falls back to a plain open outside a dialog, for the same dialog, and without a handover', () => {
+    document.body.insertAdjacentHTML('beforeend', '<button type="button" id="lonely" data-nowo-ui-dialog-open="d2" data-nowo-ui-dialog-replace>x</button>');
+    const lonely = document.getElementById('lonely') as HTMLElement;
+    click(lonely);
+    const d2 = document.getElementById('d2') as HTMLDialogElement;
+    expect(d2.open).toBe(true);
+    mod.closeDialog(d2);
+    expect(document.activeElement).toBe(lonely);
+
+    const d1 = document.getElementById('d1') as HTMLDialogElement;
+    d1.insertAdjacentHTML('beforeend', '<button type="button" id="self" data-nowo-ui-dialog-open="d1" data-nowo-ui-dialog-replace>x</button>');
+    mod.openDialog(d1);
+    expect(mod.replaceDialog('d1', document.getElementById('self')!)).toBe(true);
+    expect(d1.open).toBe(true);
+    expect(mod.replaceDialog('d2', document.getElementById('self')!)).toBe(true);
+    expect(d1.open).toBe(false);
+    expect(d2.open).toBe(true);
+    expect(mod.replaceDialog('nope', document.getElementById('self')!)).toBe(false);
+  });
+
+  it('ignores clicks whose target is not an element', () => {
+    const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+    document.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+  });
+});
+
+describe('nowo-ui-dialog remote content', () => {
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <a href="/items/7/edit" id="remote" data-nowo-ui-dialog-open="r1" data-nowo-ui-dialog-src="/items/7/edit?modal=1">Edit</a>
+      <dialog id="r1" data-nowo-ui-dialog><div class="nowo-ui-dialog__body"></div></dialog>
+      <dialog id="r2" data-nowo-ui-dialog><p>no body</p></dialog>
+    `;
+    document.querySelectorAll('dialog').forEach((d) => polyfill(d as HTMLDialogElement));
+    mod.bindNowoUiDialog();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+    document.body.innerHTML = '';
+  });
+
+  it('fetches same-origin HTML into the body and dispatches nowo-ui:dialog-loaded', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, text: () => Promise.resolve('<form id="loaded"></form>') });
+    vi.stubGlobal('fetch', fetchMock);
+    const dialog = document.getElementById('r1') as HTMLDialogElement;
+    const loaded = new Promise<CustomEvent>((resolve) => dialog.addEventListener('nowo-ui:dialog-loaded', (e) => resolve(e as CustomEvent)));
+    const event = click(document.getElementById('remote')!);
+    expect(event.defaultPrevented).toBe(true);
+    const detail = (await loaded).detail as { url: string };
+    expect(detail.url).toBe(`${window.location.origin}/items/7/edit?modal=1`);
+    expect(dialog.querySelector('#loaded')).not.toBeNull();
+    expect(dialog.querySelector('.nowo-ui-dialog__body')?.hasAttribute('aria-busy')).toBe(false);
+    expect(fetchMock.mock.calls[0][1]).toMatchObject({ credentials: 'same-origin' });
+  });
+
+  it('follows the fallback href when the request fails, and refuses other origins or missing bodies', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 500, text: () => Promise.resolve('') }));
+    const assign = vi.spyOn(mod.navigation, 'assign').mockImplementation(() => undefined);
+    const dialog = document.getElementById('r1') as HTMLDialogElement;
+    mod.openDialog(dialog);
+    expect(await mod.loadDialogContent(dialog, '/x', '/items/7/edit')).toBe(false);
+    expect(assign).toHaveBeenCalledWith('/items/7/edit');
+    expect(dialog.open).toBe(false);
+
+    expect(await mod.loadDialogContent(dialog, '/x')).toBe(false);
+    expect(await mod.loadDialogContent(dialog, 'https://evil.example/x')).toBe(false);
+    expect(await mod.loadDialogContent(document.getElementById('r2') as HTMLDialogElement, '/x')).toBe(false);
+    expect(mod.sameOriginUrl('http://[bad')).toBeNull();
+  });
+
+  it('navigation.assign follows the URL', () => {
+    const spy = vi.fn();
+    const original = window.location;
+    Object.defineProperty(window, 'location', { configurable: true, value: { ...original, assign: spy, href: original.href, origin: original.origin } });
+    mod.navigation.assign('/next');
+    expect(spy).toHaveBeenCalledWith('/next');
+    Object.defineProperty(window, 'location', { configurable: true, value: original });
   });
 });

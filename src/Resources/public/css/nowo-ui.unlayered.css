@@ -23,6 +23,8 @@
   --nowo-ui-danger-bg: #fef2f2;
   --nowo-ui-danger-border: #fecaca;
   --nowo-ui-danger-text-strong: #991b1b;
+  --nowo-ui-danger-solid: #b91c1c;
+  --nowo-ui-danger-contrast: #ffffff;
   --nowo-ui-success-bg: #ecfdf5;
   --nowo-ui-success-border: #a7f3d0;
   --nowo-ui-success-text: #065f46;
@@ -377,7 +379,7 @@
   border: 1px solid var(--nowo-ui-border);
   border-radius: var(--nowo-ui-badge-radius, 999px);
   font-size: 0.75rem;
-  margin-left: 0.35rem;
+  margin-left: var(--nowo-ui-badge-offset, 0.35rem);
   background: var(--nowo-ui-surface-muted);
   color: var(--nowo-ui-text);
 }
@@ -401,10 +403,11 @@
   color: var(--nowo-ui-danger-text-strong);
 }
 
-.nowo-ui-badge--info {
-  background: var(--nowo-ui-info-bg);
-  border-color: var(--nowo-ui-info-border);
-  color: var(--nowo-ui-info-text);
+.nowo-ui-badge--info,
+.nowo-ui-badge--primary {
+  background: var(--nowo-ui-badge-primary-bg, color-mix(in srgb, var(--nowo-ui-primary) 12%, var(--nowo-ui-surface)));
+  border-color: var(--nowo-ui-badge-primary-border, color-mix(in srgb, var(--nowo-ui-primary) 35%, var(--nowo-ui-surface)));
+  color: var(--nowo-ui-badge-primary-text, color-mix(in srgb, var(--nowo-ui-primary) 75%, var(--nowo-ui-text)));
 }
 
 .nowo-ui-badge--neutral {
@@ -656,6 +659,21 @@ a.nowo-ui-pagination__link:hover {
 .nowo-ui-pagination__ellipsis {
   padding: 0 0.35rem;
   color: var(--nowo-ui-muted);
+}
+
+/* The ellipsis item of the pagination list sits like a pill (same box as the links, no border / fill) (2.2) */
+.nowo-ui-pagination__link.nowo-ui-pagination__ellipsis,
+.nowo-ui-pagination__nav .page-link.nowo-ui-pagination__ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  padding: 0.25rem 0.5rem;
+  border-color: transparent;
+  border-radius: var(--nowo-ui-pagination-radius, var(--nowo-ui-radius));
+  background: transparent;
+  color: var(--nowo-ui-muted);
+  opacity: 1;
 }
 
 /* --- Tabs --- */
@@ -1293,7 +1311,10 @@ a.nowo-ui-pagination__link:hover {
 
 /* --- Confirm dialog --- */
 .nowo-ui-confirm {
-  /* Centred whatever the host reset does to <dialog> (Tailwind preflight sets margin: 0). */
+  /* Centred whatever the host reset does to <dialog> (Tailwind preflight sets margin: 0); a fixed width (2.2) so a
+     long message wraps instead of widening the dialog off-centre. */
+  box-sizing: border-box;
+  width: var(--nowo-ui-confirm-width, min(28rem, calc(100vw - 2rem)));
   margin: auto;
   border: 0;
   padding: 0;
@@ -1302,12 +1323,22 @@ a.nowo-ui-pagination__link:hover {
   max-height: calc(100dvh - 2rem);
 }
 
+.nowo-ui-confirm--sm {
+  --nowo-ui-confirm-width: min(22rem, calc(100vw - 2rem));
+}
+
+.nowo-ui-confirm--lg {
+  --nowo-ui-confirm-width: min(40rem, calc(100vw - 2rem));
+}
+
 .nowo-ui-confirm::backdrop {
   background: var(--nowo-ui-overlay, rgba(15, 23, 42, 0.45));
 }
 
 .nowo-ui-confirm__panel {
-  width: min(28rem, 100%);
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
   background: var(--nowo-ui-surface);
   color: var(--nowo-ui-text);
   border: 1px solid var(--nowo-ui-border);
@@ -1330,7 +1361,24 @@ a.nowo-ui-pagination__link:hover {
 .nowo-ui-confirm__body {
   padding: 0.5rem 1.25rem 1rem;
   font-size: 0.925rem;
-  color: var(--nowo-ui-muted);
+  /* Body text in the text colour (2.2): the muted token is for secondary text and can fall under 4.5:1 */
+  color: var(--nowo-ui-confirm-text, var(--nowo-ui-text));
+  overflow-wrap: anywhere;
+}
+
+.nowo-ui-confirm__message {
+  margin: 0;
+}
+
+/* Close button of a 2.0 confirm (2.2, slot confirm_close): top-right of the panel, the header keeps room for it */
+.nowo-ui-confirm__header:has(> .nowo-ui-confirm__close) {
+  padding-inline-end: 3rem;
+}
+
+.nowo-ui-confirm__close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
 }
 
 /* Generic native dialog (partial `dialog`, 2.1): framework-free, the <dialog> is the panel */
@@ -1383,7 +1431,8 @@ a.nowo-ui-pagination__link:hover {
   font-weight: 600;
 }
 
-.nowo-ui-dialog__close {
+.nowo-ui-dialog__close,
+.nowo-ui-confirm__close {
   flex: none;
   margin: -0.25rem -0.5rem 0 0;
   padding: 0.125rem 0.5rem;
@@ -1396,11 +1445,13 @@ a.nowo-ui-pagination__link:hover {
   cursor: pointer;
 }
 
-.nowo-ui-dialog__close:hover {
+.nowo-ui-dialog__close:hover,
+.nowo-ui-confirm__close:hover {
   color: var(--nowo-ui-text);
 }
 
-.nowo-ui-dialog__close:focus-visible {
+.nowo-ui-dialog__close:focus-visible,
+.nowo-ui-confirm__close:focus-visible {
   outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
   outline-offset: 2px;
 }
@@ -1429,7 +1480,7 @@ a.nowo-ui-pagination__link:hover {
 :is(.nowo-ui-confirm__header, .nowo-ui-confirm-page__header) > .nowo-ui-confirm__message {
   margin: 0.25rem 0 0;
   font-size: 0.925rem;
-  color: var(--nowo-ui-muted);
+  color: var(--nowo-ui-confirm-text, var(--nowo-ui-text));
 }
 
 /* Type-to-confirm (2.0, View\Confirm::expectedValue) */
@@ -1918,6 +1969,52 @@ a.nowo-ui-pagination__link:hover {
   flex-wrap: wrap;
   gap: 0.35rem;
   margin-left: auto;
+}
+
+/* List-scaffold filters (2.2): fields on a regular responsive grid, the actions bottom-aligned with the inputs
+   right after the last field (no empty gap); FilterField::width spans columns (lg = 2, full = the whole row).
+   Tokens: --nowo-ui-filters-field-min (14rem), --nowo-ui-filters-gap. */
+form.nowo-ui-filters[data-nowo-ui-region] {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--nowo-ui-filters-field-min, 14rem)), 1fr));
+  align-items: end;
+  gap: var(--nowo-ui-filters-gap, 0.75rem 1rem);
+}
+
+form.nowo-ui-filters[data-nowo-ui-region] > .nowo-ui-filters__field {
+  min-width: 0;
+  margin: 0;
+}
+
+form.nowo-ui-filters[data-nowo-ui-region] > .nowo-ui-filters__field :is(input, select, textarea):not([type='checkbox'], [type='radio']) {
+  width: 100%;
+  max-width: none;
+}
+
+form.nowo-ui-filters[data-nowo-ui-region] > .nowo-ui-filters__actions {
+  grid-column: span var(--nowo-ui-filters-actions-span, 1);
+  align-self: end;
+  justify-content: flex-start;
+  margin-left: 0;
+}
+
+form.nowo-ui-filters[data-nowo-ui-region] > :is(.nowo-ui-filters__field--xs, .nowo-ui-filters__field--sm, .nowo-ui-filters__field--md) {
+  grid-column: span 1;
+}
+
+/* Two-column spans only where two columns surely fit (an implicit column would overflow a narrow form) */
+@media (min-width: 48rem) {
+  form.nowo-ui-filters[data-nowo-ui-region]:has(.nowo-ui-filters__header-actions) > .nowo-ui-filters__actions {
+    --nowo-ui-filters-actions-span: 2;
+  }
+
+  form.nowo-ui-filters[data-nowo-ui-region] > .nowo-ui-filters__field--lg {
+    grid-column: span 2;
+  }
+}
+
+form.nowo-ui-filters[data-nowo-ui-region] > .nowo-ui-filters__field--full {
+  grid-column: 1 / -1;
 }
 
 /* --- Filter bar (opt-in, 1.12) ---
@@ -2647,6 +2744,8 @@ table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr:hover > td {
   --nowo-ui-danger-bg: #3f1d1d;
   --nowo-ui-danger-border: #7f1d1d;
   --nowo-ui-danger-text-strong: #fecaca;
+  --nowo-ui-danger-solid: #ef4444;
+  --nowo-ui-danger-contrast: #0b1220;
   --nowo-ui-success-bg: #052e1f;
   --nowo-ui-success-border: #065f46;
   --nowo-ui-success-text: #6ee7b7;
@@ -3226,12 +3325,19 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
   color: inherit;
 }
 
-.nowo-ui-cell--center {
+.nowo-ui-cell--center,
+.nowo-ui-table :is(th, td).nowo-ui-cell--center {
   text-align: center;
 }
 
-.nowo-ui-cell--end {
+.nowo-ui-cell--end,
+.nowo-ui-table :is(th, td).nowo-ui-cell--end {
   text-align: end;
+}
+
+/* Numeric / end-aligned cells line up their digits (2.2) */
+.nowo-ui-table td.nowo-ui-cell--end {
+  font-variant-numeric: tabular-nums;
 }
 
 /* Row actions follow the actions column alignment (ListPage::actionsAlign) */
@@ -3326,7 +3432,9 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
 .nowo-ui-kpi {
   padding: 0.75rem 1rem;
   border: var(--nowo-ui-border-width, 1px) solid var(--nowo-ui-border);
-  border-radius: var(--nowo-ui-radius);
+  /* Optional top accent (2.2): a border, so it follows the tile radius (--nowo-ui-kpi-accent-width, default 0) */
+  border-top: var(--nowo-ui-kpi-accent-width, var(--nowo-ui-border-width, 1px)) solid var(--nowo-ui-kpi-accent, var(--nowo-ui-border));
+  border-radius: var(--nowo-ui-kpi-radius, var(--nowo-ui-radius));
   background: var(--nowo-ui-surface);
 }
 
@@ -3619,4 +3727,195 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
 
 .nowo-ui-empty__action {
   margin-top: 0.75rem;
+}
+
+/* =============================================================================================
+ * 2.2 — default-theme polish (semantic classes, tokens with fallbacks; no markup needed beyond the 2.x slots).
+ * ============================================================================================= */
+
+/* Solid destructive button (slot btn_danger_solid: the confirm button of a danger Confirm) */
+.nowo-ui-btn--danger.nowo-ui-btn--solid {
+  background: var(--nowo-ui-btn-danger-solid-bg, var(--nowo-ui-danger-solid));
+  border-color: var(--nowo-ui-btn-danger-solid-bg, var(--nowo-ui-danger-solid));
+  color: var(--nowo-ui-btn-danger-solid-text, var(--nowo-ui-danger-contrast));
+}
+
+.nowo-ui-btn--danger.nowo-ui-btn--solid:not(.btn):hover {
+  background: var(--nowo-ui-btn-danger-solid-hover-bg, color-mix(in srgb, var(--nowo-ui-danger-solid) 85%, var(--nowo-ui-text)));
+  border-color: var(--nowo-ui-btn-danger-solid-hover-bg, color-mix(in srgb, var(--nowo-ui-danger-solid) 85%, var(--nowo-ui-text)));
+  color: var(--nowo-ui-btn-danger-solid-text, var(--nowo-ui-danger-contrast));
+}
+
+.nowo-ui-btn--danger.nowo-ui-btn--solid:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* One primary colour: plain links inside UiKit regions follow --nowo-ui-link / --nowo-ui-primary (zero specificity:
+   any host link rule wins) */
+:where(.nowo-ui-content, .nowo-ui-card, .nowo-ui-dialog, .nowo-ui-confirm, .nowo-ui-detail-list) :where(a:not([class])) {
+  color: var(--nowo-ui-link, var(--nowo-ui-primary));
+  text-underline-offset: 2px;
+}
+
+:where(.nowo-ui-content, .nowo-ui-card, .nowo-ui-dialog, .nowo-ui-confirm, .nowo-ui-detail-list) :where(a:not([class])):hover {
+  color: var(--nowo-ui-link-hover, var(--nowo-ui-link, var(--nowo-ui-primary)));
+}
+
+/* Badges sit flush at the start of cells, values and lists (the 1.x offset after inline text stays) */
+:is(.nowo-ui-table td, .nowo-ui-detail-list__value, .nowo-ui-kpi, .nowo-ui-card__header, li) > .nowo-ui-badge:first-child {
+  margin-left: 0;
+}
+
+/* List tables: header row hierarchy (scaffold head cells, slot table_head_cell) */
+.nowo-ui-table > thead > tr > th.nowo-ui-table__head-cell {
+  font-size: var(--nowo-ui-table-head-size, 0.75rem);
+  font-weight: var(--nowo-ui-table-head-weight, 600);
+  letter-spacing: var(--nowo-ui-table-head-tracking, 0.04em);
+  text-transform: var(--nowo-ui-table-head-transform, uppercase);
+  color: var(--nowo-ui-table-head-text, var(--nowo-ui-muted));
+  border-bottom: var(--nowo-ui-table-head-border-width, 2px) solid var(--nowo-ui-table-head-border, var(--nowo-ui-border-strong));
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+
+.nowo-ui-table__head-cell .nowo-ui-sort {
+  color: inherit;
+}
+
+/* Zebra rows on every stack: the cells are painted too (Bootstrap paints cells, not rows) */
+.nowo-ui-table--striped > tbody > tr:nth-child(even) > td {
+  background-color: var(--nowo-ui-table-stripe-bg, var(--nowo-ui-surface-muted));
+}
+
+.nowo-ui-table:not(.table) > tbody > tr:hover > td {
+  background-color: var(--nowo-ui-table-hover-bg, color-mix(in srgb, var(--nowo-ui-primary) 5%, var(--nowo-ui-surface)));
+}
+
+/* <caption> (slot table_caption): left, muted, small, above the table; ListPage::captionVisible = false hides it
+   visually (kept for assistive tech) */
+.nowo-ui-table__caption {
+  caption-side: top;
+  padding: 0 0 0.5rem;
+  text-align: start;
+  color: var(--nowo-ui-muted);
+  font-size: 0.8125rem;
+}
+
+/* Vertical rhythm of the list scaffold: filters, table, pagination summary and what follows */
+.nowo-ui-list-page {
+  margin-bottom: 1.5rem;
+}
+
+.nowo-ui-list-page > .nowo-ui-pagination {
+  margin-top: 1rem;
+}
+
+.nowo-ui-list-page > .nowo-ui-table-wrap + .nowo-ui-pagination,
+.nowo-ui-list-page > .nowo-ui-table-wrap + .nowo-ui-list-page__confirms + .nowo-ui-pagination {
+  margin-top: 1rem;
+}
+
+/* Forms: help text muted under its field, regular spacing between stacked rows (pages, cards and dialogs) */
+:where(.nowo-ui-form, .nowo-ui-filters, .nowo-ui-dialog__body, .nowo-ui-confirm__body) :where(.help-text, .form-text, [id$='_help']) {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--nowo-ui-help-text, var(--nowo-ui-muted));
+  font-size: 0.8125rem;
+}
+
+:where(form.nowo-ui-form, .nowo-ui-dialog__body form, .nowo-ui-dialog__body) > :where(div, fieldset) + :where(div, fieldset) {
+  margin-top: var(--nowo-ui-form-row-gap, 1rem);
+}
+
+/* Second tab level (slot tabs_secondary): pills / sub-nav, visibly below the area nav */
+.nowo-ui-tabs--secondary {
+  gap: var(--nowo-ui-tabs-secondary-gap, 0.35rem);
+  border-bottom: 0;
+}
+
+.nowo-ui-tabs--secondary > .nowo-ui-tabs__item {
+  margin-bottom: 0;
+  padding: 0.35rem 0.85rem;
+  border: 1px solid transparent;
+  border-radius: var(--nowo-ui-tab-pill-radius, 999px);
+  font-size: 0.875rem;
+}
+
+.nowo-ui-tabs--secondary > .nowo-ui-tabs__item:not(.nowo-ui-tabs__item--active):not(.is-active):hover {
+  background: var(--nowo-ui-tab-pill-hover-bg, var(--nowo-ui-surface-muted));
+}
+
+.nowo-ui-tabs--secondary > :is(.nowo-ui-tabs__item--active, .nowo-ui-tabs__item.is-active) {
+  border-color: var(--nowo-ui-tab-pill-active-border, color-mix(in srgb, var(--nowo-ui-primary) 35%, var(--nowo-ui-surface)));
+  background: var(--nowo-ui-tab-pill-active-bg, color-mix(in srgb, var(--nowo-ui-primary) 12%, var(--nowo-ui-surface)));
+  color: var(--nowo-ui-tab-pill-active-text, color-mix(in srgb, var(--nowo-ui-primary) 75%, var(--nowo-ui-text)));
+}
+
+/* Wizard step links (done steps): the step pill is the affordance, no underlined link inside it */
+.nowo-ui-wizard-steps__item > a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.nowo-ui-wizard-steps__item > a:hover {
+  color: var(--nowo-ui-link, var(--nowo-ui-primary));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Tooltip wrapper of a disabled action with Action::title (a disabled control shows no tooltip of its own) */
+.nowo-ui-action__tip {
+  display: inline-flex;
+  cursor: not-allowed;
+}
+
+/* Progress (partial `progress`, slots progress / progress_meter): label, native <progress>, value */
+.nowo-ui-progress-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
+  margin: 0 0 1rem;
+}
+
+.nowo-ui-progress-field__label {
+  grid-column: 1 / -1;
+  color: var(--nowo-ui-muted);
+  font-size: 0.875rem;
+}
+
+.nowo-ui-progress-field__value {
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--nowo-ui-muted);
+}
+
+.nowo-ui-progress-meter {
+  width: 100%;
+  height: var(--nowo-ui-progress-height, 0.5rem);
+  border: 0;
+  border-radius: 999px;
+  overflow: hidden;
+  appearance: none;
+  background: var(--nowo-ui-progress-track, var(--nowo-ui-surface-muted));
+  accent-color: var(--nowo-ui-progress-bar, var(--nowo-ui-primary));
+}
+
+.nowo-ui-progress-meter::-webkit-progress-bar {
+  background: var(--nowo-ui-progress-track, var(--nowo-ui-surface-muted));
+}
+
+.nowo-ui-progress-meter::-webkit-progress-value {
+  background: var(--nowo-ui-progress-bar, var(--nowo-ui-primary));
+  border-radius: 999px;
+}
+
+.nowo-ui-progress-meter::-moz-progress-bar {
+  background: var(--nowo-ui-progress-bar, var(--nowo-ui-primary));
+  border-radius: 999px;
+}
+
+.nowo-ui-progress-field--indeterminate .nowo-ui-progress-meter {
+  grid-column: 1 / -1;
 }

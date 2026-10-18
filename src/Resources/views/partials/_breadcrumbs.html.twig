@@ -1,6 +1,10 @@
 {#
   Breadcrumbs of a View\PageHeader (REQ-UI-003): BreadcrumbKit's breadcrumb_render() when installed and enabled
   (nowo_ui_kit.breadcrumbs.breadcrumb_kit), else the plain trail from header.breadcrumbs.
+  header.breadcrumbsMode (2.2): auto (BreadcrumbKit's trail, or header.breadcrumbs when the kit renders nothing),
+  kit (BreadcrumbKit only), own (header.breadcrumbs only). BreadcrumbKit's output is wrapped in a plain
+  <div class="nowo-ui-breadcrumbs" data-nowo-ui-breadcrumbs="kit"> without the slot's host classes / attributes
+  (2.2: the kit's own <nav> already carries them).
 
   Required:
     - header: View\PageHeader
@@ -11,9 +15,11 @@
   first, aria-hidden; host overrides without it keep the CSS separator).
 #}
 {% set bundle = bundle|default(null) %}
-{% if nowo_ui_breadcrumb_kit_available() %}
-    <div class="{{ nowo_ui_class('breadcrumbs', bundle) }}"{{ nowo_ui_attrs('breadcrumbs', bundle) }}>{{ nowo_ui_breadcrumb_kit(header.breadcrumbCollection) }}</div>
-{% elseif header.breadcrumbs is not empty %}
+{% set _mode = header.breadcrumbsMode ?? 'auto' %}
+{% set _kit = _mode != 'own' and nowo_ui_breadcrumb_kit_available() ? nowo_ui_breadcrumb_kit(header.breadcrumbCollection)|trim : '' %}
+{% if _kit is not same as('') %}
+    <div class="nowo-ui-breadcrumbs" data-nowo-ui-breadcrumbs="kit">{{ _kit|raw }}</div>
+{% elseif _mode != 'kit' and header.breadcrumbs is not empty %}
     <nav class="{{ nowo_ui_class('breadcrumbs', bundle) }}" aria-label="{{ 'breadcrumbs.nav'|trans({}, 'NowoUiKitBundle') }}"{{ nowo_ui_attrs('breadcrumbs', bundle) }}>
         <ol class="nowo-ui-breadcrumbs__list">
             {% for crumb in header.breadcrumbs %}

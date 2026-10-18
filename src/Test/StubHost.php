@@ -12,6 +12,9 @@ use Nowo\UiKitBundle\Theme\ThemeSlots;
  * (`data-pc-<slot>`) for every slot, one token and one partial override (`page_header`). The override renders the
  * 2.0 `actions` input itself through the `action` partial (like a typical host override), after the scaffold has
  * pre-rendered the 1.x `toolbar`: FormView-backed header actions render twice and must keep their hidden fields.
+ * The override also renders the area nav (`header.tabs`, 2.2) through the `tabs` partial, so pages with an
+ * {@see \Nowo\UiKitBundle\View\AreaNav} reflect the stub theme's tab slots. A bundle replaces any stub template
+ * through {@see PageContractTestCase::inlineTemplates()} (same template name; inline templates win since 2.2).
  */
 final class StubHost
 {
@@ -86,6 +89,13 @@ final class StubHost
                     {% for action in actions|default(header is defined and header ? header.actions : []) %}
                         {{ include(nowo_ui_partial('action', _bundle), {action: action, context: 'toolbar', bundle: _bundle, nowo_ui_page_type: nowo_ui_page_type|default(null)}, false) }}
                     {% endfor %}
+                    {% if header is defined and header and header.tabs is defined and header.tabs and not header.tabs.isEmpty() %}
+                        {% set _items = [] %}
+                        {% for item in header.tabs.items %}
+                            {% set _items = _items|merge([{label: item.label|nowo_ui_trans, href: item.href, current: item.active, attr: item.attributes}]) %}
+                        {% endfor %}
+                        {{ include(nowo_ui_partial('tabs', _bundle), {items: _items, aria_label: header.tabs.label is null ? null : header.tabs.label|nowo_ui_trans, attr: header.tabs.attributes, region: 'area-nav', bundle: _bundle, nowo_ui_page_type: nowo_ui_page_type|default(null)}, false) }}
+                    {% endif %}
                 </header>
                 TWIG,
         ];

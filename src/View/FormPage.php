@@ -15,6 +15,8 @@ use Symfony\Component\Form\FormView;
  * header actions; false keeps them in a toolbar below the form. `dangerZoneTitle` / `dangerZoneIntro` label the
  * delete zone (default title `form.danger_zone`). `formThemes` (2.1) are applied to the form with `form_theme` before
  * the scaffold renders it (e.g. the bundle's FormKit theme), so bundles need not override `nowo_ui_content`.
+ * Body-only mode (2.2): `form` null, or `formTag: false`, renders only the `nowo_ui_form_body` block inside the form
+ * panel — no `<form>`, no submit / cancel row — for a component that renders its own form (e.g. a Live component).
  */
 final readonly class FormPage
 {
@@ -31,7 +33,7 @@ final readonly class FormPage
      */
     public function __construct(
         public PageHeader $header,
-        public FormView $form,
+        public ?FormView $form,
         public Label|string|null $submitLabel = null,
         public ?string $cancelHref = null,
         public Label|string|null $cancelLabel = null,
@@ -44,6 +46,7 @@ final readonly class FormPage
         public Label|string|null $dangerZoneTitle = null,
         public Label|string|null $dangerZoneIntro = null,
         iterable $formThemes = [],
+        public bool $formTag = true,
     ) {
         Action::assertAttributes($attributes);
         $this->formThemes = self::themes($formThemes, 'FormPage formThemes');
