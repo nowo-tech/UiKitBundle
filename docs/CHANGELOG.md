@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.3.1] - 2026-10-18](#231---2026-10-18)
 - [[2.3.0] - 2026-10-18](#230---2026-10-18)
 - [[2.2.0] - 2026-10-18](#220---2026-10-18)
 - [[2.1.0] - 2026-10-18](#210---2026-10-18)
@@ -51,6 +52,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [2.3.1] - 2026-10-18
+
+State-hide rules win over unlayered host CSS; nowo_ui_kit.breadcrumbs.enabled drops the page-header trail. See [UPGRADING](UPGRADING.md#to-231).
+
 ### Fixed
 
 - **State-hide rules win over host CSS**: `nowo-ui.css` ships inside `@layer nowo-ui`, so a hiding rule such as the
@@ -68,6 +73,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - `nowo_ui_kit.breadcrumbs.enabled` (default `true`): `false` drops the breadcrumb trail (BreadcrumbKit and
   `PageHeader::breadcrumbs`) from every page header — hosts no longer need an empty `breadcrumbs` partial. Exposed in
   the `nowo_ui_breadcrumbs` global. Purely additive (default unchanged), hence a patch release.
+
+[2.3.1]: https://github.com/nowo-tech/UiKitBundle/compare/v2.3.0...v2.3.1
 
 ## [2.3.0] - 2026-10-18
 
@@ -785,7 +792,7 @@ Supersedes 1.17.3: same runtime code and CSS, release gate hardened so the tagge
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.3.0...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.3.1...HEAD
 [1.10.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.4...v1.10.0
 [1.8.4]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.3...v1.8.4
 [1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0

@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.3.1](#to-231)
 - [To 2.3.0](#to-230)
   - [Template contract (2.3)](#template-contract-23)
 - [To 2.2.0](#to-220)
@@ -55,6 +56,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.3.1
+
+From **2.3.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 - **State-hide rules are `!important`** (see [PAGE_CONTRACT — Cascade layers](PAGE_CONTRACT.md#cascade-layers)): if
   your CSS deliberately showed an element the kit hides in a state (e.g. a field of folded filters, a closed
