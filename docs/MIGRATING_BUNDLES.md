@@ -89,6 +89,14 @@ return $this->render('@NowoXxx/admin/index.html.twig', ['page' => new ListPage(
 Rules: view models are plain data (no services, no request objects — worker safe); never pre-render HTML into
 them; destructive actions are non-GET `Action`s with a `Confirm` (CSRF-only `FormView` preferred).
 
+**POST actions backed by a form: name it.** Symfony treats a form as *submitted* only when its name is in the
+request (`$form->isSubmitted()`). An **unnamed** form (`createNamedBuilder('')` / `createFormBuilder()` with no
+name) whose only field is the CSRF token posts `_token` at the top level, but nothing tells the form it was submitted
+— `isSubmitted()` stays false and the delete silently does nothing. Use a named form
+(`createNamedBuilder('delete_item')`, the token posts as `delete_item[_token]`) or add a hidden marker field
+(`->add('confirm', HiddenType::class, ['data' => '1'])`; since 2.2 hidden fields always print their `value`, even an
+empty one), and assert `isSubmitted() && isValid()` in a functional test of the delete route.
+
 ## 3. Template → scaffold + data blocks
 
 Before — the bundle owns the whole page:

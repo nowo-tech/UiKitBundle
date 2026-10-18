@@ -26,6 +26,7 @@ Normative spec: REQ-UI-003 in `BUNDLES_FULL_SPECS_DETAILS.md` · design and migr
 - [View models](#view-models)
 - [Partials](#partials)
 - [Template contract](#template-contract)
+  - [UiKit 2.2 additions](#uikit-22-additions)
 - [Tokens and CSS](#tokens-and-css)
   - [Token precedence](#token-precedence)
   - [Cascade layers](#cascade-layers)
@@ -413,6 +414,78 @@ keep the `confirm` contract (`View\Confirm`).
 <button type="button" class="{{ nowo_ui_class('btn_secondary', bundle) }}" data-nowo-ui-dialog-open="payload-42">Payload</button>
 {{ include(nowo_ui_partial('dialog', bundle), {id: 'payload-42', title: 'Payload', size: 'lg', body: payload_html, bundle: bundle}) }}
 ```
+
+### UiKit 2.2 additions
+
+**Dialogs.** `title_html` (rich title, printed raw — escape what you interpolate) and `title_attr` / `body_attr`
+(attributes of the title / body, merged over the `dialog_title` / `dialog_body` slot attributes). `Action::$dialogId`
+renders a `<button type="button" data-nowo-ui-dialog-open="<id>" aria-haspopup="dialog" aria-controls="<id>">`; with an
+`href` as well it renders a link whose URL is **fetched into the dialog body** (`data-nowo-ui-dialog-src`, same origin
+only, `X-Requested-With: XMLHttpRequest`) — the link is the no-JS fallback and is followed when the request fails;
+the dialog then dispatches `nowo-ui:dialog-loaded` (`detail.url`). Fetched HTML is inserted as markup (scripts do not
+run): wire behaviour through delegated listeners or Stimulus. **Swap** one dialog for another with
+`data-nowo-ui-dialog-replace` on an opener inside the open dialog: the first dialog closes and hands its focus-return
+target to the second (Escape on the second returns focus to whatever opened the first).
+
+```php
+new Action('edit', $t('transition.edit'), $this->generateUrl('transition_edit', ['id' => $id]), dialogId: 'transition-dialog');
+new Action('custom', $t('transition.next'), dialogId: 'next-dialog', attributes: ['data-nowo-ui-dialog-replace' => true]);
+```
+
+**Third-party dropdowns inside a dialog (Tom Select…).** A modal `<dialog>` opened with `showModal()` lives in the
+browser *top layer*: anything appended to `<body>` (Tom Select's `dropdownParent: 'body'`, Choices, Flatpickr…) renders
+**under** the dialog and its backdrop, unclickable. Keep the dropdown inside the dialog: Tom Select's default
+`dropdownParent: null` (the dropdown is a sibling of the control) works; when a page sets `dropdownParent: 'body'`
+globally, pass the dialog instead (`dropdownParent: control.closest('dialog') ?? 'body'`). The dialog body scrolls
+(`overflow: auto`), so a long dropdown may need `max-height` on `.ts-dropdown-content`. Chip colours follow the
+primary token with `css/nowo-ui-tom-select.css` (docs/THEMING.md).
+
+**Confirm dialogs.** A 2.0 `confirm` (with `View\Confirm`) gets a close ✕ in the header (slot `confirm_close`;
+`dismissible: false` removes it), a fixed width (`min(28rem, 100vw - 2rem)`, `Confirm::$size` `sm` / `lg`) and a
+**solid** destructive button (slot `btn_danger_solid`). Name the item in the title:
+`Confirm::delete(new Label('order.delete_message', 'app', ['%id%' => $id]), new Label('order.delete_title', 'app', ['%id%' => $id]))`
+→ "Delete order #1042?".
+
+**Tables.** The `table` partial (`View\Table`) is the list scaffold's table, reusable from any page
+(`{{ include(nowo_ui_partial('table', bundle), {table: lines}, false) }}`, or `{% embed %}` it and override
+`nowo_ui_table_row`). The actions column header is visible by default (`actionsLabelVisible: false` hides it
+visually), `actionsPosition: 'start'` puts the column first, `captionVisible: false` hides the caption visually,
+`Column::align` applies to the header cell too.
+
+**Breadcrumbs.** `PageHeader::$breadcrumbsMode`: `auto` (BreadcrumbKit when it renders a trail, else the page's
+crumbs), `kit`, `own`.
+
+**Section tabs.** On a settings page whose header has an area nav (`PageHeader::tabs`) the section tabs render as the
+second tab level (slot `tabs_secondary`: pills); `SettingsSection::$actions` adds actions next to the section's
+submit button.
+
+**Scripts.** UiKit runtime scripts print through the `scripts` partial (`nowo_ui_script_names()`: `modal`, `confirm`,
+`dialog`, `toast`, `tabs`, `theme`). A host layout with its own script list includes the partial instead of copying
+the list, so runtimes added by later minors load without touching the host:
+
+```twig
+{% block javascripts %}
+    {{ include(nowo_ui_partial('scripts')) }}   {# nonce: the request csp_nonce #}
+    {{ parent() }}
+{% endblock %}
+```
+
+The set is printed once per page (each runtime is small, idempotent and binds by delegation), so partials do not
+register scripts (no per-request state). **JS-free pages:** `AuthPage::$scripts = false` (or the template variable
+`nowo_ui_scripts_enabled: false`) renders the document without any UiKit script nor the theme boot.
+
+**Status layout.** `@NowoUiKit/layout/status.html.twig` is a self-contained document (inline critical CSS with the
+CSP nonce, theme tokens, no stylesheet / script requests, no session flashes) for pages served while the application
+is unavailable (maintenance, restore in progress):
+`new AuthPage($t('status.title'), intro: $t('status.intro'), layout: '@NowoUiKit/layout/status.html.twig', scripts: false)`.
+
+**Forms and wizards.** `FormPage` accepts `form: null` / `formTag: false` (body-only: the form panel holds only
+`nowo_ui_form_body`, e.g. a Live component that renders its own form). `WizardPage::$guest` renders a wizard in the
+guest layout. The `progress` partial shows a native `<progress>` (percent or indeterminate) with its label.
+
+**Flashes.** Pass `flash_messages` to the `flashes` partial to override `app.flashes`; the 2.0 `flashes` input is
+ignored inside page scaffolds, so a page variable named `flashes` no longer stops the layout from consuming the
+session flashes.
 
 ### Area navigation
 

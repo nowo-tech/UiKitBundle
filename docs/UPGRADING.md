@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+  - [Template contract (2.2)](#template-contract-22)
 - [To 2.1.0](#to-210)
 - [To 2.0.1](#to-201)
 - [To 2.0.0](#to-200)
@@ -51,6 +52,47 @@
   - [Install](#install)
 
 ## Unreleased
+
+Target **2.2.0**. From **2.1.x**: `composer require nowo-tech/ui-kit-bundle:^2.2`. No PHP API is removed; new
+constructor arguments are trailing and optional. Visual changes of the default theme are listed below so hosts can
+review their screenshots.
+
+### Template contract (2.2)
+
+- **Confirm** (`_confirm` with a `View\Confirm`, and `page/confirm`): the confirm button of a **danger** `Confirm` now
+  reads the slot **`btn_danger_solid`** (Bootstrap `btn btn-danger`) instead of `btn_danger`; a host that styled the
+  confirm button through `btn_danger` sets `btn_danger_solid` too. 2.0 confirms get a **close button** in the header
+  (`<button class="nowo-ui-confirm__close" data-nowo-confirm-close aria-label>`; `dismissible: false` removes it) and the
+  class `nowo-ui-confirm--<size>` for `sm` / `lg`. 1.x inputs (`id` / `title` / `body`) render as before.
+- **Badges**: the badge slot defaults changed to one subtle set and lost `ms-2` / `ml-2` (`badge` →
+  `badge bg-body-tertiary text-body-emphasis border`, `badge_success` → `badge bg-success-subtle text-success-emphasis
+  border border-success-subtle`, …, `badge_info` → primary subtle). Hosts that relied on the solid look or on the
+  margin set the slots (THEME_SLOTS "Badges"). The `ui.badge()` macro is unchanged.
+- **Tables**: the `table` slot adds `table-striped` on Bootstrap. The list scaffold renders its table through the new
+  **`table` partial** (same markup; the `nowo_ui_list_head` / `nowo_ui_list_row` blocks still override the cells). The
+  actions column header is **visible** by default — pass `actionsLabelVisible: false` to keep the 2.1 visually-hidden
+  label. Header cells keep their `nowo-ui-cell--<align>` class and now honour it (CSS specificity fix).
+- **Filters**: the `filters` slot defaults are a grid (`d-grid gap-3 mb-3` / `grid gap-3 mb-4`; Foundation lost
+  `grid-x grid-margin-x mb-3`); text widgets get the `input` slot classes, choice widgets `nowo-ui-input` + host
+  `input` classes; optional single selects without a placeholder show "Any" (`filters.any`). A host `filters` class map
+  written for the flex row may need a review.
+- **Settings**: with an area nav in the header (`PageHeader::tabs`), the section tabs use **`tabs_secondary`**
+  (Bootstrap `nav nav-pills mb-3`). Sections with `actions` print the actions row right after `</form>` (submit button
+  with `form="<id>"`, the form gets an `id`); without actions the markup is unchanged.
+- **Breadcrumbs**: with BreadcrumbKit, the wrapper is `<div class="nowo-ui-breadcrumbs" data-nowo-ui-breadcrumbs="kit">`
+  without the `breadcrumbs` slot host classes / attributes (they were printed twice with BreadcrumbKit ≥ its UiKit
+  migration).
+- **Scripts**: the document layout prints its scripts through the new `scripts` partial (same tags). Host layouts with
+  their own script list should replace it by `{{ include(nowo_ui_partial('scripts')) }}`.
+- **Flashes**: the `flashes` input of the `flashes` partial is deprecated in favour of `flash_messages` and is ignored
+  inside page scaffolds (`nowo_ui_page_type` set).
+- **Auth**: no empty `<footer>` without links / footer content.
+- **Hidden fields** of FormView-backed actions always carry `value=""`.
+- **Contract test**: the stub `page_header` renders `header.tabs` (pages with an `AreaNav` now render the stub theme's
+  `tabs` slots); a bundle's `inlineTemplates()` entry with a stub template name replaces the stub template.
+- New slots: `btn_danger_solid`, `table_caption`, `tabs_secondary`, `confirm_close`, `badge_primary`, `progress`,
+  `progress_meter`; new partials: `scripts`, `table`, `progress`. Host class maps keep working; contract-test
+  allow-lists need no change (slot defaults are allowed automatically).
 
 ## To 2.1.0
 

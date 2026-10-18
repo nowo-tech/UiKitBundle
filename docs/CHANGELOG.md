@@ -49,6 +49,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+UiKit 2.2: default-theme polish and the backlog found after phase 1 of the page-contract migration (REQ-UI-003).
+
+### Added
+
+- **Confirm dialogs**: close ✕ in the header of 2.0 confirms (slot `confirm_close`, `dismissible`, `close_label`),
+  `Confirm::$size` (`sm` | `md` | `lg`) and the `size` partial input, `Confirm::delete($message, $title)` to name the
+  item in the title; slot `btn_danger_solid` (solid destructive button).
+- **Dialogs**: `dialog` partial `title_html` (rich title), `title_attr` / `body_attr`; `Action::$dialogId` (opener
+  button with `aria-haspopup="dialog"`; with an `href`, remote content fetched into the dialog body through
+  `data-nowo-ui-dialog-src`, same origin, `nowo-ui:dialog-loaded` event, href fallback); `data-nowo-ui-dialog-replace`
+  (swap dialogs, focus-return target handed over).
+- **Tables**: `View\Table` + `table` partial (the list scaffold's table, reusable; blocks `nowo_ui_table_head` /
+  `nowo_ui_table_row` through embed), `ListPage::$table`, `ListPage::$actionsPosition` (`start` | `end`),
+  `ListPage::$captionVisible`, slot `table_caption`.
+- **Tabs**: slot `tabs_secondary` and `tabs` partial `level: 'secondary'` (section tabs under an area nav).
+- **Settings**: `SettingsSection::$actions` (inline after the section submit button).
+- **Breadcrumbs**: `PageHeader::$breadcrumbsMode` (`auto` | `kit` | `own`).
+- **Filters**: "Any" placeholder (`filters.any`, 7 locales) for optional single selects without one; text widgets get
+  the `input` slot classes.
+- **Badges**: slot `badge_primary`.
+- **Forms / wizards / progress**: `FormPage` body-only mode (`form: null` / `formTag: false`), `WizardPage::$guest`,
+  `progress` partial + slots `progress` / `progress_meter` (`progress.label`, 7 locales).
+- **Actions**: `Action::$title` (translatable tooltip, kept on disabled actions through `nowo-ui-action__tip`).
+- **Scripts**: `scripts` partial + `nowo_ui_script_names()` / `ThemeSlots::SCRIPTS` (hosts with their own script
+  list include the partial); `AuthPage::$scripts` / `nowo_ui_scripts_enabled` for JS-free pages (no runtime script,
+  no theme boot).
+- **Layouts**: `layout/status.html.twig`, a self-contained status document (inline critical CSS with the CSP nonce).
+- **Flashes**: `flash_messages` input of the `flashes` partial.
+- **CSS**: `css/nowo-ui-tom-select.css` (Tom Select chips / focus from the primary token, optional); tokens listed in
+  docs/THEMING.md "Default-theme polish tokens (2.2)".
+- **Contract test**: the stub `page_header` override renders `header.tabs`; `inlineTemplates()` can replace stub
+  templates.
+- Docs: PAGE_CONTRACT "UiKit 2.2 additions" (scripts, JS-free pages, status layout, remote / swapped dialogs, Tom Select
+  inside a modal `<dialog>`), MIGRATING_BUNDLES (name the form of a POST action), THEME_SLOTS "Badges".
+
+### Changed
+
+- **Default theme**: confirm dialog with a fixed width (centred with long messages), body text in the text colour,
+  solid destructive confirm button (dialog and full-page confirm); table header row hierarchy (small uppercase
+  semibold muted labels, stronger bottom border), numeric / end-aligned header cells follow `Column::align`, zebra rows
+  painted on the cells (also under Bootstrap), styled caption, spacing around the pagination; list filters on a
+  responsive grid with the actions bottom-aligned after the last field; pagination ellipsis like the pills; KPI top
+  border follows the radius (`--nowo-ui-kpi-accent*`); form help text muted with top spacing and regular spacing
+  between stacked fields (also in dialogs); plain links, `info` / `primary` badges and the second tab level derive
+  from the primary token; wizard step links without underline.
+- **Slot defaults** (template contract): badges are one subtle set without margin utilities (Bootstrap
+  `bg-*-subtle text-*-emphasis border border-*-subtle`; `badge_info` follows the primary colour); `table` adds
+  `table-striped` on Bootstrap; `filters` is a grid (`d-grid gap-3 mb-3` / `grid gap-3 mb-4`; Foundation: semantic
+  only).
+- The row-actions column header is visible by default (`ListPage::$actionsLabelVisible` defaults to true).
+- The `section_form` partial prints `extra_actions` (documented but not rendered before).
+- `_breadcrumbs`: BreadcrumbKit's output is wrapped without the `breadcrumbs` slot host classes / attributes (the
+  kit's own `<nav>` carries them); an empty kit trail falls back to `PageHeader::$breadcrumbs`.
+- The UiKit document layout prints its scripts through the `scripts` partial (same tags).
+
+### Fixed
+
+- `_action_form_view` always prints `value` on hidden fields (empty values included).
+- `flashes` partial: a 1.x `flashes` page variable no longer replaces the session flashes inside page scaffolds.
+- The auth scaffold prints its `<footer>` only when it has content.
+- With `icon_set: none`, `icon_text` actions (toolbar, row, filter submit) printed their label twice.
+
 ## [2.1.0] - 2026-10-18
 
 Page-contract follow-ups from migrating HttpLog, Workflow, CookieConsent and RoutingKit (REQ-UI-003 phase 1). Additive; see [UPGRADING](UPGRADING.md#to-210).
