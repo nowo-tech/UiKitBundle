@@ -2,6 +2,7 @@ pagination.nav: Paginering
 pagination.showing: '%from%–%to% van %total% weergegeven'
 pagination.previous: Vorige
 pagination.next: Volgende
+pagination.per_page: Per pagina
 action.edit: Bewerken
 action.delete: Verwijderen
 action.view: Bekijken

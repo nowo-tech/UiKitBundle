@@ -18,6 +18,9 @@
     - region: data-nowo-ui-region on the root (scaffolds pass `pagination`)
     - pagination_model (scaffolds): the View\Pagination when `pagination` is its 1.x array (toArray())
     - page_param / per_page_param: query parameter names (default from `pagination`, else page / per_page)
+    - per_page_choices (2.4): list of per-page values linked after the info line ("Per page: 10 25 50 100"; choosing
+      one goes back to page 1); per_page_selector: true uses the View\Pagination's allowedPerPage
+      (Pagination::fromTotal()). Default: none (unchanged output).
   The list scaffold also passes the 1.x top-level route, route_params and query (current request query without the
   page parameters, merged with Pagination::query), so a 1.x override keeps the filters across pages.
     - bundle: per-bundle theme exceptions (slots pagination, pagination_link, pagination_active, pagination_info
@@ -27,6 +30,7 @@
 {% set bundle = bundle|default(null) %}
 {% set _t = nowo_ui_theme|default(null) %}
 {% set _pt = nowo_ui_page_type|default(null) %}
+{% set per_page_choices = per_page_choices|default(per_page_selector|default(false) and pagination is not iterable ? pagination.allowedPerPage : []) %}
 {% if pagination is not iterable %}
     {% set item_count = item_count|default(pagination.to() - pagination.from() + 1) %}
     {% set pagination = pagination.toArray() %}
@@ -59,6 +63,18 @@
         <p class="nowo-ui-pagination__info{{ _info_extra ? ' ' ~ _info_extra }}">
             {{ 'pagination.showing'|trans({'%from%': from, '%to%': to, '%total%': total}, trans_domain) }}
         </p>
+        {% if per_page_choices is not empty %}
+            <p class="nowo-ui-pagination__per-page" data-nowo-ui-region="per-page">
+                <span class="nowo-ui-pagination__per-page-label">{{ 'pagination.per_page'|trans({}, trans_domain) }}</span>
+                {% for _choice in per_page_choices %}
+                    {% if _choice == per_page %}
+                        <span class="{{ _active_class }}" aria-current="true">{{ _choice }}</span>
+                    {% else %}
+                        <a class="{{ _link_class }}" href="{{ path(route, base_params|merge({(per_page_param): _choice, (page_param): 1})) }}">{{ _choice }}</a>
+                    {% endif %}
+                {% endfor %}
+            </p>
+        {% endif %}
         {% if total_pages > 1 %}
             <nav class="nowo-ui-pagination__nav" aria-label="{{ nav_label|trans({}, nav_trans_domain) }}">
                 <ul class="pagination">

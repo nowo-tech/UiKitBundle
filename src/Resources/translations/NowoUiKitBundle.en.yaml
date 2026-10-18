@@ -2,6 +2,7 @@ pagination.nav: Pagination
 pagination.showing: Showing %from%–%to% of %total%
 pagination.previous: Previous
 pagination.next: Next
+pagination.per_page: Per page
 action.edit: Edit
 action.delete: Delete
 action.view: View

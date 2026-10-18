@@ -6,6 +6,7 @@ namespace Nowo\UiKitBundle\Tests\Unit\View;
 
 use Nowo\UiKitBundle\View\Pagination;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpFoundation\Request;
 
 final class PaginationTest extends TestCase
 {
@@ -144,5 +145,51 @@ final class PaginationTest extends TestCase
 
         $this->expectException(\InvalidArgumentException::class);
         Pagination::fromKnp(new \stdClass());
+    }
+
+    /**
+     * Same results as the apps' PagePagination::fromTotal() (symfony-beacon and six other apps) with the defaults.
+     */
+    public function testFromTotalClampsLikePagePagination(): void
+    {
+        $p = Pagination::fromTotal(55, 99, 7);
+        self::assertSame([3, 25, 55, 3, 50, 25], [$p->page, $p->perPage, $p->total, $p->totalPages, $p->offset(), $p->limit()]);
+        self::assertSame(50, $p['offset']);
+        self::assertSame(25, $p['limit']);
+        self::assertSame(25, $p['per_page']);
+        self::assertSame([10, 25, 50, 100], $p->allowedPerPage);
+
+        $empty = Pagination::fromTotal(-4, 0, 25);
+        self::assertSame([1, 25, 0, 1, 0], [$empty->page, $empty->perPage, $empty->total, $empty->totalPages, $empty->offset()]);
+
+        $second = Pagination::fromTotal(25, 2, 10, route: 'items', query: ['q' => 'x'], routeParams: ['id' => 1], pageParam: 'p', perPageParam: 'n');
+        self::assertSame([2, 10, 3, 10], [$second->page, $second->perPage, $second->totalPages, $second->offset()]);
+        self::assertSame(['items', ['q' => 'x'], ['id' => 1], 'p', 'n'], [$second->route, $second->query, $second->routeParams, $second->pageParam, $second->perPageParam]);
+        self::assertSame([0, 10], [(new Pagination(1, 10, 5))->offset(), (new Pagination(1, 10, 5))->limit()]);
+        self::assertNull((new Pagination(1, 10, 5))[3]);
+    }
+
+    public function testFromTotalFallsBackToTheDefaultOrTheFirstAllowedValue(): void
+    {
+        self::assertSame(40, Pagination::fromTotal(100, 1, 7, [20, 40], 40)->perPage);
+        self::assertSame(20, Pagination::fromTotal(100, 1, 7, [20, 40])->perPage, 'default 25 not allowed: first allowed value');
+        self::assertSame([20, 40], Pagination::fromTotal(100, 1, 40, [20, 20, 40, 0, -5])->allowedPerPage);
+        self::assertSame(40, Pagination::fromTotal(100, 1, 40, [20, 40])->perPage);
+
+        $this->expectException(\InvalidArgumentException::class);
+        Pagination::fromTotal(10, 1, 10, [0]);
+    }
+
+    public function testFromRequestReadsTheQueryAndKeepsTheOtherParameters(): void
+    {
+        $request = Request::create('/list', 'GET', ['page' => '2', 'per_page' => '10', 'q' => 'abc']);
+        $p = Pagination::fromRequest($request, 25);
+        self::assertSame([2, 10, 10, 3, ['q' => 'abc']], [$p->page, $p->perPage, $p->offset(), $p->totalPages, $p->query]);
+
+        $custom = Pagination::fromRequest(Request::create('/list', 'GET', ['p' => '9', 'n' => '7']), 30, 10, [10, 20], 'items', 'p', 'n');
+        self::assertSame([3, 10, 'items', 'p', 'n', []], [$custom->page, $custom->perPage, $custom->route, $custom->pageParam, $custom->perPageParam, $custom->query]);
+
+        $defaults = Pagination::fromRequest(Request::create('/list'), 0);
+        self::assertSame([1, 25, 0], [$defaults->page, $defaults->perPage, $defaults->offset()]);
     }
 }

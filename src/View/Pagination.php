@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\View;
 
+use Symfony\Component\HttpFoundation\Request;
+
 /**
  * The only pagination shape of the page contract (REQ-UI-003). `route` null = current request route.
  * Factories normalise the shapes found in bundles (`fromArray`), Pagerfanta (`fromPagerfanta`) and
@@ -12,10 +14,20 @@ namespace Nowo\UiKitBundle\View;
  * Implements `ArrayAccess` with the 1.x snake_case keys of {@see self::toArray()} (read-only), so host overrides of
  * `_pagination` written for 1.x read `pagination.per_page` / `pagination.total_pages` from the object too.
  *
+ * 2.4: {@see self::fromTotal()} / {@see self::fromRequest()} build a clamped pagination from a row count and the
+ * requested page / per-page (the `PagePagination::fromTotal()` helper copied across the apps), with
+ * {@see self::offset()} / {@see self::limit()} for the query; `$pagination['offset']` and `['limit']` read them too.
+ *
  * @implements \ArrayAccess<array-key, mixed>
  */
 final readonly class Pagination implements \ArrayAccess
 {
+    /** Per-page values {@see self::fromTotal()} accepts by default. */
+    public const ALLOWED_PER_PAGE = [10, 25, 50, 100];
+
+    /** Per-page value {@see self::fromTotal()} falls back to (when allowed, else the first allowed value). */
+    public const DEFAULT_PER_PAGE = 25;
+
     public int $page;
 
     public int $perPage;
@@ -25,8 +37,9 @@ final readonly class Pagination implements \ArrayAccess
     public int $totalPages;
 
     /**
-     * @param array<string, mixed>      $query       extra query parameters kept across pages (filters, sort)
-     * @param array<string, mixed>|null $routeParams route parameters (null: the current request's)
+     * @param array<string, mixed>      $query          extra query parameters kept across pages (filters, sort)
+     * @param array<string, mixed>|null $routeParams    route parameters (null: the current request's)
+     * @param list<int>                 $allowedPerPage per-page choices (2.4; `_pagination` with `per_page_selector: true` links them)
      */
     public function __construct(
         int $page,
@@ -38,6 +51,7 @@ final readonly class Pagination implements \ArrayAccess
         public ?array $routeParams = null,
         public string $pageParam = 'page',
         public string $perPageParam = 'per_page',
+        public array $allowedPerPage = [],
     ) {
         $this->perPage = max(1, $perPage);
         $this->total = max(0, $total);
@@ -76,6 +90,78 @@ final readonly class Pagination implements \ArrayAccess
             isset($data['route']) && \is_string($data['route']) && '' !== $data['route'] ? $data['route'] : null,
             \is_array($query) ? $query : [],
             \is_array($routeParams) ? $routeParams : null,
+        );
+    }
+
+    /**
+     * Pagination of `$total` rows for the requested page / per-page (2.4): `$perPage` not in `$allowedPerPage` falls
+     * back to `$defaultPerPage` (default {@see self::DEFAULT_PER_PAGE}; the first allowed value when that is not
+     * allowed), the page is clamped to 1..totalPages (an empty list has one page). Same results as the apps'
+     * `PagePagination::fromTotal()` (page, per_page, total, total_pages, offset) with the default arguments.
+     *
+     * @param list<int>                 $allowedPerPage
+     * @param array<string, mixed>      $query
+     * @param array<string, mixed>|null $routeParams
+     *
+     * @return self Fluent interface
+     */
+    public static function fromTotal(
+        int $total,
+        int $page,
+        int $perPage,
+        array $allowedPerPage = self::ALLOWED_PER_PAGE,
+        ?int $defaultPerPage = null,
+        ?string $route = null,
+        array $query = [],
+        ?array $routeParams = null,
+        string $pageParam = 'page',
+        string $perPageParam = 'per_page',
+    ): self {
+        $allowed = array_values(array_unique(array_filter($allowedPerPage, static fn (int $value): bool => $value > 0)));
+        if ([] === $allowed) {
+            throw new \InvalidArgumentException('Pagination::fromTotal() needs at least one positive allowed per-page value.');
+        }
+        if (!\in_array($perPage, $allowed, true)) {
+            $default = $defaultPerPage ?? self::DEFAULT_PER_PAGE;
+            $perPage = \in_array($default, $allowed, true) ? $default : $allowed[0];
+        }
+        $total = max(0, $total);
+        $totalPages = max(1, (int) ceil($total / $perPage));
+
+        return new self(max(1, min($page, $totalPages)), $perPage, $total, $totalPages, $route, $query, $routeParams, $pageParam, $perPageParam, $allowed);
+    }
+
+    /**
+     * {@see self::fromTotal()} with the page / per-page read from the request query (`page` / `per_page`, or the
+     * given parameter names); the other query parameters are kept across pages.
+     *
+     * @param list<int> $allowedPerPage
+     *
+     * @return self Fluent interface
+     */
+    public static function fromRequest(
+        Request $request,
+        int $total,
+        int $defaultPerPage = self::DEFAULT_PER_PAGE,
+        array $allowedPerPage = self::ALLOWED_PER_PAGE,
+        ?string $route = null,
+        string $pageParam = 'page',
+        string $perPageParam = 'per_page',
+    ): self {
+        $query = $request->query->all();
+        unset($query[$pageParam], $query[$perPageParam]);
+
+        return self::fromTotal(
+            $total,
+            $request->query->getInt($pageParam, 1),
+            $request->query->getInt($perPageParam, $defaultPerPage),
+            $allowedPerPage,
+            $defaultPerPage,
+            $route,
+            $query,
+            null,
+            $pageParam,
+            $perPageParam,
         );
     }
 
@@ -142,6 +228,22 @@ final readonly class Pagination implements \ArrayAccess
         return ($this->page - 1) * $this->perPage + $count;
     }
 
+    /**
+     * Zero-based index of the first row of this page, for the query (`OFFSET`, `setFirstResult()`).
+     */
+    public function offset(): int
+    {
+        return ($this->page - 1) * $this->perPage;
+    }
+
+    /**
+     * Rows per page, for the query (`LIMIT`, `setMaxResults()`).
+     */
+    public function limit(): int
+    {
+        return $this->perPage;
+    }
+
     public function hasPrevious(): bool
     {
         return $this->page > 1;
@@ -193,11 +295,16 @@ final readonly class Pagination implements \ArrayAccess
     }
 
     /**
-     * Value of a 1.x key ({@see self::toArray()}), null when unknown.
+     * Value of a 1.x key ({@see self::toArray()}), `offset` / `limit` (2.4, the `PagePagination` array keys for the
+     * query), null when unknown.
      */
     public function offsetGet(mixed $offset): mixed
     {
-        return \is_string($offset) ? ($this->toArray()[$offset] ?? null) : null;
+        return match ($offset) {
+            'offset' => $this->offset(),
+            'limit' => $this->limit(),
+            default => \is_string($offset) ? ($this->toArray()[$offset] ?? null) : null,
+        };
     }
 
     public function offsetSet(mixed $offset, mixed $value): never
