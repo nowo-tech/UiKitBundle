@@ -26,6 +26,8 @@ async function open(page: Page, path: string): Promise<void> {
   await page.goto(path);
   const toolbar = page.locator('.sf-toolbar .sf-toolbarreset');
   await expect(toolbar).toBeVisible({ timeout: 15_000 });
+  // the toolbar first renders a "Loading…" stub: wait for the real panels
+  await expect(page.locator('.sf-toolbar').first()).not.toContainText('Loading', { timeout: 15_000 });
   const toolbarHeight = Math.ceil((await toolbar.boundingBox())?.height ?? 36);
   const contentBottom = await page.evaluate((sel) => Math.max(...[...document.querySelectorAll(sel)]
     .filter((el) => !el.closest('.sf-toolbar, dialog'))
