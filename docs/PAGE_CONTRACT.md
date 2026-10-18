@@ -483,6 +483,12 @@ is unavailable (maintenance, restore in progress):
 `nowo_ui_form_body`, e.g. a Live component that renders its own form). `WizardPage::$guest` renders a wizard in the
 guest layout. The `progress` partial shows a native `<progress>` (percent or indeterminate) with its label.
 
+**Form theme.** `@NowoUiKit/form/nowo_ui_layout.html.twig` extends `form_div_layout` with the UiKit slots: text
+widgets, textareas and selects get the `input` / `input_full` slots; checkboxes and radios render inside
+`<label class="nowo-ui-check">` (slots `check` / `check_input`), label after the box, help text muted. Use it on
+css_framework none / custom / tailwind (`FormPage(formThemes: ['@NowoUiKit/form/nowo_ui_layout.html.twig'])`);
+Bootstrap hosts keep `bootstrap_5_layout`, FormKit hosts point their profile here or keep theirs.
+
 **Flashes.** Pass `flash_messages` to the `flashes` partial to override `app.flashes`; the 2.0 `flashes` input is
 ignored inside page scaffolds, so a page variable named `flashes` no longer stops the layout from consuming the
 session flashes.

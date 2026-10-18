@@ -73,7 +73,7 @@
                 {% endset %}
                 {% set _rows_html = _rows_html|merge({('k' ~ row_key): _cells}) %}
             {% endfor %}
-            {{ include(nowo_ui_partial('table', _b), {table: page.table, route: _route, head_html: _head_html, rows_html: _rows_html, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
+            {{ include(nowo_ui_partial('table', _b), {table: page.table, label: page.header.title, route: _route, head_html: _head_html, rows_html: _rows_html, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
             {% if page.pagination %}
                 {#- 1.x array shape (+ the object as pagination_model) and the 1.x top-level route / route_params / query
                     (query = the current request query without the page parameters, then Pagination::query), so an

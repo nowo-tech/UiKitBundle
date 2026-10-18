@@ -1,0 +1,67 @@
+{#
+  UiKit form theme (2.2) for page-contract bundles on css_framework none / custom / tailwind (Bootstrap hosts keep
+  bootstrap_5_layout): form_div_layout plus the UiKit slots, so bundles do not ship their own checkbox theme.
+      FormPage(formThemes: ['@NowoUiKit/form/nowo_ui_layout.html.twig']), SettingsSection(formThemes: […]) or
+      {% form_theme form '@NowoUiKit/form/nowo_ui_layout.html.twig' %}
+  Text-like widgets, textareas and selects get the `input` slot classes; checkboxes / radios render inside a
+  `<label>` with the `check` slot (input: `check_input`), label text after the box; help text keeps `help-text`
+  (muted by nowo-ui.css). FormKit hosts point their profile's form theme here or keep their own.
+#}
+{% use 'form_div_layout.html.twig' %}
+
+{%- block form_widget_simple -%}
+    {%- if type is not defined or type not in ['hidden', 'checkbox', 'radio', 'range', 'color', 'file'] -%}
+        {%- set attr = attr|merge({class: (attr.class|default('') ~ ' ' ~ nowo_ui_class('input'))|trim}) -%}
+    {%- endif -%}
+    {{- parent() -}}
+{%- endblock form_widget_simple -%}
+
+{%- block textarea_widget -%}
+    {%- set attr = attr|merge({class: (attr.class|default('') ~ ' ' ~ nowo_ui_class('input_full'))|trim}) -%}
+    {{- parent() -}}
+{%- endblock textarea_widget -%}
+
+{%- block choice_widget_collapsed -%}
+    {%- set attr = attr|merge({class: (attr.class|default('') ~ ' ' ~ nowo_ui_class('input'))|trim}) -%}
+    {{- parent() -}}
+{%- endblock choice_widget_collapsed -%}
+
+{%- block checkbox_widget -%}
+    {%- set attr = attr|merge({class: (attr.class|default('') ~ ' ' ~ nowo_ui_class('check_input'))|trim}) -%}
+    {{- parent() -}}
+{%- endblock checkbox_widget -%}
+
+{%- block radio_widget -%}
+    {%- set attr = attr|merge({class: (attr.class|default('') ~ ' ' ~ nowo_ui_class('check_input'))|trim}) -%}
+    {{- parent() -}}
+{%- endblock radio_widget -%}
+
+{%- block checkbox_row -%}
+    {%- set widget_attr = {} -%}
+    {%- if help is not empty -%}
+        {%- set widget_attr = {attr: {'aria-describedby': id ~ '_help'}} -%}
+    {%- endif -%}
+    <div{% with {attr: row_attr|merge({class: (row_attr.class|default('') ~ ' nowo-ui-form-row nowo-ui-form-row--check')|trim})} %}{{ block('attributes') }}{% endwith %}>
+        <label class="{{ nowo_ui_class('check') }}"{{ nowo_ui_attrs('check') }}>
+            {{- form_widget(form, widget_attr) -}}
+            <span class="nowo-ui-check__label">{{ label is same as(false) ? '' : (label is empty ? name|humanize : (translation_domain is same as(false) ? label : label|trans(label_translation_parameters, translation_domain))) }}</span>
+        </label>
+        {{- form_help(form) -}}
+        {{- form_errors(form) -}}
+    </div>
+{%- endblock checkbox_row -%}
+
+{%- block radio_row -%}
+    {{- block('checkbox_row') -}}
+{%- endblock radio_row -%}
+
+{%- block choice_widget_expanded -%}
+    <div {{ block('widget_container_attributes') }}>
+        {%- for child in form %}
+            <label class="{{ nowo_ui_class('check') }}"{{ nowo_ui_attrs('check') }}>
+                {{- form_widget(child) -}}
+                <span class="nowo-ui-check__label">{{ child.vars.label is same as(false) ? '' : (choice_translation_domain is same as(false) ? child.vars.label : child.vars.label|trans(child.vars.label_translation_parameters, choice_translation_domain)) }}</span>
+            </label>
+        {% endfor -%}
+    </div>
+{%- endblock choice_widget_expanded -%}

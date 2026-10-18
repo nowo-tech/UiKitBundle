@@ -579,11 +579,13 @@ body.nowo-modal-open {
   font-family: var(--nowo-ui-font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace);
   font-size: 0.875em;
   color: var(--nowo-ui-code-text, var(--nowo-ui-text));
-  background: var(--nowo-ui-code-bg, var(--nowo-ui-surface-muted));
+  /* Own tint (2.2): visible on the surface and on the page background, whatever the stack */
+  background: var(--nowo-ui-code-bg, color-mix(in srgb, var(--nowo-ui-text) 7%, var(--nowo-ui-surface)));
 }
 
 .nowo-ui-code {
   padding: 0.1em 0.35em;
+  box-shadow: inset 0 0 0 1px var(--nowo-ui-code-border, var(--nowo-ui-border));
   border-radius: var(--nowo-ui-code-radius, var(--nowo-ui-radius));
   overflow-wrap: anywhere;
 }
@@ -3935,5 +3937,15 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
 
 .nowo-ui-progress-field--indeterminate .nowo-ui-progress-meter {
   grid-column: 1 / -1;
+}
+
+/* Row-actions column: as narrow as its buttons and never stacked (cells shrink to min-content otherwise) */
+.nowo-ui-table :is(th, td).nowo-ui-table__actions {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.nowo-ui-table td.nowo-ui-table__actions > .nowo-ui-row-actions {
+  flex-wrap: nowrap;
 }
 }

@@ -202,6 +202,15 @@ final class ThemeSlots
             'tailwind' => 'block w-full max-w-xs border px-3 py-1.5 text-sm',
         ]],
         // Wide / full-width inputs (2.1): complete input class lists (use instead of `input`, like the btn variants)
+        // Checkbox / radio (2.2): the <label> wrapping box + text (form theme @NowoUiKit/form/nowo_ui_layout.html.twig)
+        // and the <input> itself
+        'check' => ['nowo-ui-check', [
+            'bootstrap' => 'form-check',
+            'tailwind' => 'inline-flex items-center gap-2',
+        ]],
+        'check_input' => ['nowo-ui-check__input', [
+            'bootstrap' => 'form-check-input',
+        ]],
         'input_wide' => ['nowo-ui-input nowo-ui-input--wide', [
             'bootstrap' => 'form-control',
             'tailwind' => 'block w-full max-w-xl border px-3 py-1.5 text-sm',

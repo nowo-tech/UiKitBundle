@@ -25,7 +25,7 @@
   with that id; with an href too it is an <a href> (no-JS fallback) that also loads that URL into the dialog body
   (data-nowo-ui-dialog-src). Action::title (2.2): translated tooltip (`title`; the accessible name stays the label);
   a disabled action with a title is wrapped in <span class="nowo-ui-action__tip" title> so the tooltip still shows.
-  With icon_set none, icon_text renders as text (no duplicated label). No inline on* handlers.
+  With icon_set none every action renders text-only (label once; the accessible name is unchanged). No inline on* handlers.
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 {% set context = context|default('toolbar') %}
@@ -39,7 +39,9 @@
 {% endif %}
 {% if action.visible %}
     {% set display = action.display ?? (context == 'row' ? display : (_context_display ?? (action.icon ? 'icon_text' : 'text'))) %}
-    {% if display == 'icon_text' and nowo_ui_kit_icon_set|default('bootstrap-icons') == 'none' %}
+    {#- icon_set none: no icon to show, so every action is text-only (an icon-only action would print its label as the
+        "icon" next to the visually-hidden one, icon_text the label twice) -#}
+    {% if nowo_ui_kit_icon_set|default('bootstrap-icons') == 'none' %}
         {% set display = 'text' %}
     {% endif %}
     {% set label = action.label is not null ? action.label|nowo_ui_trans : ('action.' ~ action.kind)|trans({}, 'NowoUiKitBundle') %}

@@ -71,6 +71,11 @@ UiKit 2.2: default-theme polish and the backlog found after phase 1 of the page-
 - **Badges**: slot `badge_primary`; `DetailItem::$badge` (show values such as a status printed as a badge).
 - **Forms / wizards / progress**: `FormPage` body-only mode (`form: null` / `formTag: false`), `WizardPage::$guest`,
   `progress` partial + slots `progress` / `progress_meter` (`progress.label`, 7 locales).
+- **Forms**: UiKit form theme `@NowoUiKit/form/nowo_ui_layout.html.twig` (form_div_layout + `input` slot on widgets,
+  checkboxes / radios inside a `<label>` with the new `check` / `check_input` slots) for bundles on
+  css_framework none / custom / tailwind, so bundles stop shipping their own checkbox theme.
+- **Tables**: accessible name — the caption, else `aria-label` from `Table::$label` (the list scaffold passes the page
+  title).
 - **Actions**: `Action::$title` (translatable tooltip, kept on disabled actions through `nowo-ui-action__tip`).
 - **Scripts**: `scripts` partial + `nowo_ui_script_names()` / `ThemeSlots::SCRIPTS` (hosts with their own script
   list include the partial); `AuthPage::$scripts` / `nowo_ui_scripts_enabled` for JS-free pages (no runtime script,
@@ -109,7 +114,13 @@ UiKit 2.2: default-theme polish and the backlog found after phase 1 of the page-
 - `_action_form_view` always prints `value` on hidden fields (empty values included).
 - `flashes` partial: a 1.x `flashes` page variable no longer replaces the session flashes inside page scaffolds.
 - The auth scaffold prints its `<footer>` only when it has content.
-- With `icon_set: none`, `icon_text` actions (toolbar, row, filter submit) printed their label twice.
+- With `icon_set: none`, `icon_text` actions (toolbar, row, filter submit) printed their label twice; icon-only actions
+  printed the label as the "icon": every action is text-only without an icon set.
+- `.nowo-ui-cell--end` / `--center` lost to `.nowo-ui-table th, td { text-align: left }` (header and numeric cells).
+- Row actions stacked in narrow cells: the actions column is `width: 1%; white-space: nowrap` and its row actions
+  no longer wrap.
+- With css_framework none, inline `code` had the surface colour: own tint (`--nowo-ui-code-bg` default
+  `color-mix(text 7%, surface)`) plus a 1px inset border (`--nowo-ui-code-border`).
 
 ## [2.1.0] - 2026-10-18
 

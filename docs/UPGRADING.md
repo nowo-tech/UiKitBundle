@@ -90,7 +90,12 @@ review their screenshots.
 - **Hidden fields** of FormView-backed actions always carry `value=""`.
 - **Contract test**: the stub `page_header` renders `header.tabs` (pages with an `AreaNav` now render the stub theme's
   `tabs` slots); a bundle's `inlineTemplates()` entry with a stub template name replaces the stub template.
-- New slots: `btn_danger_solid`, `table_caption`, `tabs_secondary`, `confirm_close`, `badge_primary`, `progress`,
+- **Tables** without a caption get `aria-label` (list scaffold: the page title). The row-actions column is
+  `width: 1%; white-space: nowrap` (row actions no longer wrap).
+- **`icon_set: none`**: actions render text-only (no icon-only / icon + text variants without icons).
+- **Code**: `--nowo-ui-code-bg` defaults to a text-tinted surface and inline code gets a 1px inset border; set the
+  token to restore the 2.1 look (`var(--nowo-ui-surface-muted)`).
+- New slots: `check`, `check_input` (UiKit form theme `@NowoUiKit/form/nowo_ui_layout.html.twig`), `btn_danger_solid`, `table_caption`, `tabs_secondary`, `confirm_close`, `badge_primary`, `progress`,
   `progress_meter`; new partials: `scripts`, `table`, `progress`. Host class maps keep working; contract-test
   allow-lists need no change (slot defaults are allowed automatically).
 

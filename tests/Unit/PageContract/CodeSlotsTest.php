@@ -69,6 +69,6 @@ final class CodeSlotsTest extends TestCase
         self::assertSame(1, preg_match('/\.nowo-ui-code-block \{[^}]*max-height: var\(--nowo-ui-code-block-max-height, 32rem\);[^}]*overflow: auto;[^}]*white-space: pre;/', $css));
         self::assertSame(1, preg_match('/\.nowo-ui-code-block--wrap \{[^}]*white-space: pre-wrap;/', $css));
         self::assertSame(1, preg_match('/\.nowo-ui-code-block > code \{[^}]*font: inherit;/', $css));
-        self::assertStringContainsString('background: var(--nowo-ui-code-bg, var(--nowo-ui-surface-muted));', $css);
+        self::assertStringContainsString('background: var(--nowo-ui-code-bg, color-mix(in srgb, var(--nowo-ui-text) 7%, var(--nowo-ui-surface)));', $css);
     }
 }

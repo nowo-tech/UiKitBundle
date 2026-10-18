@@ -14,18 +14,21 @@ use Nowo\UiKitBundle\View\ConfirmPage;
 use Nowo\UiKitBundle\View\Crumb;
 use Nowo\UiKitBundle\View\DetailItem;
 use Nowo\UiKitBundle\View\DetailSection;
-use Nowo\UiKitBundle\View\ShowPage;
 use Nowo\UiKitBundle\View\FormPage;
 use Nowo\UiKitBundle\View\ListPage;
 use Nowo\UiKitBundle\View\PageHeader;
 use Nowo\UiKitBundle\View\SettingsPage;
 use Nowo\UiKitBundle\View\SettingsSection;
+use Nowo\UiKitBundle\View\ShowPage;
 use Nowo\UiKitBundle\View\Table;
 use Nowo\UiKitBundle\View\WizardPage;
 use Nowo\UiKitBundle\View\WizardStep;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Twig\Environment;
 use Twig\TwigFunction;
@@ -359,5 +362,62 @@ final class DefaultThemePolishTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid DetailItem badge "green"');
         new DetailItem('Status', 'Paid', badge: 'green');
+    }
+
+    public function testTableAccessibleName(): void
+    {
+        $html = PageContractTwig::create()->render('@NowoUiKit/page/list.html.twig', ['page' => new ListPage(new PageHeader('Orders'), [new Column('id')], [['id' => 1]])]);
+        self::assertMatchesRegularExpression('#<table class="[^"]*" aria-label="Orders">#', $html);
+        $captioned = PageContractTwig::create()->render('@NowoUiKit/page/list.html.twig', ['page' => new ListPage(new PageHeader('Orders'), [new Column('id')], [['id' => 1]], caption: 'All orders')]);
+        self::assertStringNotContainsString('aria-label="Orders"', $captioned);
+        $own = PageContractTwig::create(['t' => "{{ include(nowo_ui_partial('table'), {table: table}, false) }}"])->render('t', ['table' => new Table([new Column('id')], [['id' => 1]], label: 'Lines')]);
+        self::assertStringContainsString('aria-label="Lines"', $own);
+    }
+
+    public function testIconSetNoneRendersTextOnlyActions(): void
+    {
+        $none = PageContractTwig::create();
+        $none->addGlobal('nowo_ui_kit_icon_set', 'none');
+        $row = $none->render('@NowoUiKitBundle/partials/_action.html.twig', ['action' => Action::edit('/e'), 'context' => 'row']);
+        self::assertStringContainsString('<span class="nowo-ui-action__label">Edit</span>', $row);
+        self::assertStringNotContainsString('visually-hidden', $row);
+        self::assertStringNotContainsString('nowo-ui-icon--text', $row);
+        $iconOnly = $none->render('@NowoUiKitBundle/partials/_action.html.twig', ['action' => new Action('export', 'Export', '/x', display: 'icon')]);
+        self::assertSame(1, substr_count($iconOnly, 'Export</span>'));
+        self::assertStringNotContainsString('nowo-ui-btn--icon', $iconOnly);
+    }
+
+    public function testFormThemeChecksAndInputs(): void
+    {
+        $form = PageContractTwig::forms()->createNamedBuilder('prefs', FormType::class)
+            ->add('name', TextType::class, ['help' => 'Shown publicly.'])
+            ->add('bio', TextareaType::class, ['required' => false])
+            ->add('plan', ChoiceType::class, ['choices' => ['Free' => 'free', 'Pro' => 'pro']])
+            ->add('mode', ChoiceType::class, ['choices' => ['Light' => 'l', 'Dark' => 'd'], 'expanded' => true])
+            ->add('news', CheckboxType::class, ['required' => false, 'help' => 'Monthly.'])
+            ->add('quiet', CheckboxType::class, ['required' => false, 'label' => false])
+            ->add('raw', CheckboxType::class, ['required' => false, 'label' => 'Raw', 'translation_domain' => false])
+            ->getForm()->createView();
+        $twig = PageContractTwig::create(['t' => "{% form_theme form '@NowoUiKit/form/nowo_ui_layout.html.twig' %}{{ form_widget(form) }}"], ['classes' => ['check' => 'app-check']], 'none');
+        $html = $twig->render('t', ['form' => $form]);
+
+        self::assertStringContainsString('class="nowo-ui-input"', $html);
+        self::assertStringContainsString('<textarea id="prefs_bio" name="prefs[bio]" class="nowo-ui-input nowo-ui-input--full">', $html);
+        self::assertStringContainsString('<select id="prefs_plan" name="prefs[plan]" class="nowo-ui-input">', $html);
+        self::assertMatchesRegularExpression('#<label class="nowo-ui-check app-check"><input type="checkbox" id="prefs_news" name="prefs\[news\]" aria-describedby="prefs_news_help" class="nowo-ui-check__input" value="1" /><span class="nowo-ui-check__label">News</span>\s*</label>#', $html);
+        self::assertMatchesRegularExpression('#<label class="nowo-ui-check app-check"><input type="radio" id="prefs_mode_0" name="prefs\[mode\]" required="required" class="nowo-ui-check__input" value="l" /><span class="nowo-ui-check__label">Light</span>#', $html);
+        self::assertStringContainsString('<span class="nowo-ui-check__label"></span>', $html);
+        self::assertStringContainsString('<span class="nowo-ui-check__label">Raw</span>', $html);
+        self::assertStringContainsString('id="prefs_news_help" class="help-text"', $html);
+        self::assertSame('form-check-input', \Nowo\UiKitBundle\Theme\ThemeSlots::defaults('check_input', 'bootstrap5'));
+    }
+
+    public function testCssAlignsHeaderCellsAndPaintsCode(): void
+    {
+        $css = (string) file_get_contents(PageContractTwig::root().'/src/Resources/public/css/nowo-ui.unlayered.css');
+        // the alignment helpers must beat `.nowo-ui-table th, .nowo-ui-table td { text-align: left }` (0,1,1)
+        self::assertMatchesRegularExpression('/\.nowo-ui-table :is\(th, td\)\.nowo-ui-cell--end \{\s*text-align: end;/', $css);
+        self::assertMatchesRegularExpression('/\.nowo-ui-table :is\(th, td\)\.nowo-ui-cell--center \{\s*text-align: center;/', $css);
+        self::assertStringContainsString('background: var(--nowo-ui-code-bg, color-mix(in srgb, var(--nowo-ui-text) 7%, var(--nowo-ui-surface)));', $css);
     }
 }

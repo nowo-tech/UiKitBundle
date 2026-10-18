@@ -18,6 +18,8 @@ namespace Nowo\UiKitBundle\View;
  * `sort` / `direction`: the sorted column and its direction (sortable columns link to `sort` / `direction` query
  * parameters of the current route). `actionsLabel` / `actionsLabelVisible` / `actionsAlign` / `actionsPosition`:
  * the row-actions column (header visible by default, `end` aligned, last). `responsive`: `cards` | `scroll`.
+ * Accessible name: the caption when there is one (visible or visually hidden), else `label` as `aria-label` (the list
+ * scaffold passes the page title).
  */
 final readonly class Table
 {
@@ -57,6 +59,7 @@ final readonly class Table
         public string $responsive = 'cards',
         public ?string $bundle = null,
         public array $attributes = [],
+        public Label|string|null $label = null,
     ) {
         if (!\in_array($actionsAlign, Column::ALIGNS, true)) {
             throw new \InvalidArgumentException(\sprintf('Invalid Table actionsAlign "%s" (%s).', $actionsAlign, implode('|', Column::ALIGNS)));

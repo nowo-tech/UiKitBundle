@@ -9,8 +9,9 @@ namespace Nowo\UiKitBundle\View;
  * applied by the `list_filters` partial through `form_row()` (`attr` / `row_attr`); the row also gets the
  * `filters_field` slot.
  *
- * `width`: `xs` | `sm` | `md` | `lg` | `full` (class `nowo-ui-filters__field--<width>` on the row, sized by
- * nowo-ui.css; null = the form theme's width).
+ * `width`: `xs` | `sm` | `md` | `lg` | `full` (class `nowo-ui-filters__field--<width>` on the row). In the list
+ * scaffold's filter grid (2.2) every field stretches to its grid cell: `xs` / `sm` / `md` / null span one column
+ * (min `--nowo-ui-filters-field-min`, 12rem), `lg` spans two (from 48rem of viewport), `full` the whole row.
  */
 final readonly class FilterField
 {

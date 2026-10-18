@@ -2,8 +2,10 @@
   Inner markup for one row/toolbar action (icon + label by display mode).
   Used by _row_actions.html.twig — not meant as a public include.
 #}
-{#- icon_set none prints the label as the "icon": icon_text would show it twice (2.2) -#}
-{% if display != 'text' and not (display == 'icon_text' and nowo_ui_kit_icon_set|default('bootstrap-icons') == 'none') %}
+{#- icon_set none prints the label as the "icon" (2.2): icon_text shows only that, icon-only only that plus the hidden
+    label for assistive tech -#}
+{% set _no_icons = nowo_ui_kit_icon_set|default('bootstrap-icons') == 'none' %}
+{% if display != 'text' and not (display == 'icon_text' and _no_icons) %}
     {{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: icon_name, label: label}, false) }}
 {% endif %}
 {% if display == 'icon' %}

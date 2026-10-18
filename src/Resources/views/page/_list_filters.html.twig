@@ -58,7 +58,7 @@
         {% set _submit = page.filtersSubmit %}
         {% set _submit_label = _submit and _submit.label is not null ? _submit.label|nowo_ui_trans : 'filters.apply'|trans({}, 'NowoUiKitBundle') %}
         {% set _submit_display = _submit and _submit.display ? _submit.display : (page.filtersDisplay ?? (_submit and _submit.icon ? 'icon_text' : 'text')) %}
-        {% if _submit_display == 'icon_text' and nowo_ui_kit_icon_set|default('bootstrap-icons') == 'none' %}
+        {% if nowo_ui_kit_icon_set|default('bootstrap-icons') == 'none' %}
             {% set _submit_display = 'text' %}
         {% endif %}
         {% set _submit_attrs = (_submit ? _submit.attributes : {})|merge(_submit_display == 'icon' ? {title: _submit_label, 'aria-label': _submit_label} : {}) %}

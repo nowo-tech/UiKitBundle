@@ -10,6 +10,8 @@
   Optional:
     - bundle (default table.bundle), nowo_ui_page_type
     - route: route of the sort links (default the current request route)
+    - label: accessible name (aria-label) when the table has no caption (default table.label; the list scaffold passes
+      the page title)
     - head_html / rows_html: pre-rendered header cells / row cells keyed 'k' ~ row_key (the list scaffold passes its
       nowo_ui_list_head / nowo_ui_list_row blocks this way)
   Blocks (through {% embed %}): nowo_ui_table_head (header cells), nowo_ui_table_row (cells of one row: `row`,
@@ -24,7 +26,8 @@
 {% set _confirms = [] %}
 {% set _cards = table.responsive == 'cards' %}
 <div class="{{ nowo_ui_class('table_wrap', _b) }}" data-nowo-ui-region="table"{% if _cards %} data-nowo-ui-responsive="cards"{% endif %}{{ nowo_ui_attrs('table_wrap', _b) }}>
-    <table class="{{ nowo_ui_class('table', _b) }}{{ _cards ? ' nowo-ui-table--cards' }}"{{ nowo_ui_attrs('table', _b) }}{{ nowo_ui_html_attrs(table.attributes) }}>
+    <table class="{{ nowo_ui_class('table', _b) }}{{ _cards ? ' nowo-ui-table--cards' }}"{{ nowo_ui_attrs('table', _b) }}{{ nowo_ui_html_attrs(table.attributes) }}
+        {%- set _label = table.label ?? label|default(null) %}{% if not table.caption and _label %} aria-label="{{ _label|nowo_ui_trans }}"{% endif %}>
         {% if table.caption %}<caption class="{{ nowo_ui_class('table_caption', _b) }}{{ table.captionVisible ? '' : ' visually-hidden' }}"{{ nowo_ui_attrs('table_caption', _b) }}>{{ table.caption|nowo_ui_trans }}</caption>{% endif %}
         <thead class="{{ nowo_ui_class('table_head', _b) }}"{{ nowo_ui_attrs('table_head', _b) }}>
             <tr class="{{ nowo_ui_class('table_head_row', _b) }}"{{ nowo_ui_attrs('table_head_row', _b) }}>
