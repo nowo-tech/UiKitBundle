@@ -56,6 +56,8 @@
   --nowo-ui-text: #0f172a;
   --nowo-ui-muted: #64748b;
   --nowo-ui-radius: 0.375rem;
+  /* 2.3: defined (follows the primary on the same element), so host / bundle CSS can read var(--nowo-ui-link) */
+  --nowo-ui-link: var(--nowo-ui-primary);
 }
 
 .nowo-ui-page-header,
@@ -553,8 +555,18 @@ body.nowo-modal-open {
   overflow: hidden;
 }
 
-.nowo-ui-body {
+/* 2.3: the vertical padding sits on the content region (slot `content`), not on <body>: no band above a host navbar.
+   A non-body .nowo-ui-body wrapper (1.x markup) keeps it. Inside the 1.x shell (.nowo-ui-main pads itself) none. */
+.nowo-ui-body:not(body) {
   padding: 1rem 0;
+}
+
+:where(.nowo-ui-content) {
+  padding-block: var(--nowo-ui-content-padding-block, 1rem);
+}
+
+:where(.nowo-ui-main .nowo-ui-content) {
+  padding-block: 0;
 }
 
 /* --- Pagination --- */
@@ -579,6 +591,8 @@ body.nowo-modal-open {
   font-family: var(--nowo-ui-font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace);
   font-size: 0.875em;
   color: var(--nowo-ui-code-text, var(--nowo-ui-text));
+  /* 2.3: Bootstrap's unlayered `code { color: var(--bs-code-color) }` (pink) reads this element-level value */
+  --bs-code-color: var(--nowo-ui-code-text, var(--nowo-ui-text));
   /* Own tint (2.2): visible on the surface and on the page background, whatever the stack */
   background: var(--nowo-ui-code-bg, color-mix(in srgb, var(--nowo-ui-text) 7%, var(--nowo-ui-surface)));
 }
@@ -2779,6 +2793,7 @@ table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr:hover > td {
   --nowo-ui-border-strong: #475569;
   --nowo-ui-text: #e2e8f0;
   --nowo-ui-muted: #94a3b8;
+  --nowo-ui-link: var(--nowo-ui-primary);
 }
 
 

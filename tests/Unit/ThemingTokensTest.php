@@ -178,8 +178,11 @@ final class ThemingTokensTest extends TestCase
         ] as $needle) {
             self::assertStringContainsString($needle, $css);
         }
-        // Component tokens are optional: never declared, so scoped base-token remaps keep cascading.
-        self::assertSame(0, preg_match('/^\s*--nowo-ui-(?:btn-|input-|tab-|tabs-|pagination-|list-|link|focus-|font-|accent|shadow-|overlay|card-|modal-|badge-|nav-|progress-|primary-hover|heading-|table-(?:border|head-bg|head-text|stripe-bg|hover-bg))[a-z-]*\s*:/m', $css, $m), 'Declared component token: '.($m[0] ?? ''));
+        // Component tokens are optional: never declared, so scoped base-token remaps keep cascading. Exception (2.3):
+        // --nowo-ui-link is declared next to the primary in the light / dark palette blocks (hosts read it without a
+        // fallback; a scoped primary remap sets it too).
+        self::assertSame(2, preg_match_all('/^\s*--nowo-ui-link: var\(--nowo-ui-primary\);$/m', $css));
+        self::assertSame(0, preg_match('/^\s*--nowo-ui-(?:btn-|input-|tab-|tabs-|pagination-|list-|link-|focus-|font-|accent|shadow-|overlay|card-|modal-|badge-|nav-|progress-|primary-hover|heading-|table-(?:border|head-bg|head-text|stripe-bg|hover-bg))[a-z-]*\s*:/m', $css, $m), 'Declared component token: '.($m[0] ?? ''));
     }
 
     public function testBootstrapBridgeIsOptIn(): void

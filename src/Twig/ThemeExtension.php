@@ -6,7 +6,10 @@ namespace Nowo\UiKitBundle\Twig;
 
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Theme\ThemeSlots;
+use Nowo\UiKitBundle\View\Action;
 use Nowo\UiKitBundle\View\Label;
+use Nowo\UiKitBundle\View\PageHeader;
+use Nowo\UiKitBundle\View\ViewList;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Twig\Environment;
@@ -30,6 +33,9 @@ use Twig\TwigFunction;
  * - `nowo_ui_theme_css()` — the token stylesheet text
  * - `nowo_ui_breadcrumb_kit(collection = null)` — BreadcrumbKit's `breadcrumb_render()` output ('' when absent)
  * - `nowo_ui_breadcrumb_kit_available()` — whether BreadcrumbKit is installed and enabled for page headers
+ * - `nowo_ui_page_header(header, bundle = null, extra_actions = [], header_actions = true)` (2.3) — the scaffold page
+ *   header (`page/_page_header.html.twig`: the `page_header` partial with the 2.0 and 1.x inputs) for unique pages;
+ *   bundle and page type default to `nowo_ui_bundle` / `nowo_ui_page_type` of the context
  * - `|nowo_ui_trans(params = {})` — translates a {@see Label}; strings pass through (escaped by Twig)
  * - `|nowo_ui_translatable(params = {})` (2.3) — a {@see TranslatableText} for values a form theme translates again
  *   (`attr.placeholder`, choice `placeholder`): a Label is translated exactly once, a string printed as given
@@ -37,6 +43,9 @@ use Twig\TwigFunction;
  */
 final class ThemeExtension extends AbstractExtension implements GlobalsInterface
 {
+    /** Public page-header contract (2.3): what the scaffolds render in `nowo_ui_page_header`. */
+    public const PAGE_HEADER_TEMPLATE = '@NowoUiKitBundle/page/_page_header.html.twig';
+
     /**
      * @param array{admin: string, guest: string}                  $layouts
      * @param array{breadcrumb_kit: bool, collection: string|null} $breadcrumbs
@@ -63,6 +72,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             new TwigFunction('nowo_ui_tokens', $this->allTokens(...), ['is_safe' => ['html'], 'needs_environment' => true]),
             new TwigFunction('nowo_ui_breadcrumb_kit', $this->breadcrumbKit(...), ['is_safe' => ['html'], 'needs_environment' => true]),
             new TwigFunction('nowo_ui_breadcrumb_kit_available', $this->breadcrumbKitAvailable(...), ['needs_environment' => true]),
+            new TwigFunction('nowo_ui_page_header', $this->pageHeader(...), ['needs_environment' => true, 'needs_context' => true, 'is_safe' => ['html']]),
         ];
     }
 
@@ -186,6 +196,25 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
         }
 
         return new TranslatableText($this->trans($value), null, $params);
+    }
+
+    /**
+     * `nowo_ui_page_header()`: renders `page/_page_header.html.twig` (the scaffolds' page header) for a unique page.
+     *
+     * @param array<string, mixed> $context
+     * @param iterable<Action>     $extraActions rendered after the header actions
+     */
+    public function pageHeader(Environment $env, array $context, PageHeader $header, ?string $bundle = null, iterable $extraActions = [], bool $headerActions = true): string
+    {
+        $contextBundle = $context['nowo_ui_bundle'] ?? null;
+
+        return $env->render(self::PAGE_HEADER_TEMPLATE, [
+            'header' => $header,
+            'bundle' => $bundle ?? (\is_string($contextBundle) && '' !== $contextBundle ? $contextBundle : null),
+            'nowo_ui_page_type' => $this->pageType($context),
+            'extra_actions' => ViewList::of($extraActions, Action::class, 'nowo_ui_page_header() extra actions'),
+            'header_actions' => $headerActions,
+        ]);
     }
 
     public function breadcrumbKitAvailable(Environment $env): bool

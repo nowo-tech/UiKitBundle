@@ -66,6 +66,9 @@ UiKit 2.3: the backlog of the phase-2 migrations (Pwa, ChatKit, SearchKit, AuthK
 - Slots `form_error`, `form_errors`, `input_invalid`; the UiKit form theme marks invalid widgets and renders field
   errors in `form_error`; PasswordToggle bridge (`input` slot on `toggle_password_widget`'s input).
 - Token `--nowo-ui-auth-panel-width`.
+- `nowo_ui_page_header(header, bundle, extra_actions, header_actions)` and the public include
+  `page/_page_header.html.twig` (`ThemeExtension::PAGE_HEADER_TEMPLATE`): the scaffolds' page header for unique pages.
+- Token `--nowo-ui-content-padding-block`; `--nowo-ui-link` declared next to the primary.
 
 ### Changed
 
@@ -73,6 +76,11 @@ UiKit 2.3: the backlog of the phase-2 migrations (Pwa, ChatKit, SearchKit, AuthK
 
 ### Fixed
 
+- 1.x `page_header` partial: the title uses the full `page_title` resolution (Bootstrap `h3 mb-1`), not only the host
+  classes, so Bootstrap hosts do not get a full-size `<h1>`.
+- No padding band above host navbars: the vertical padding moved from `<body class="nowo-ui-body">` to the content
+  region.
+- Inline `code` pink under Bootstrap (`--bs-code-color` follows the code text token; Bootstrap 4 `text-body`).
 - `page/auth` called `form_start()` (symfony/form) even without a form: the form functions moved to
   `page/_auth_form.html.twig`, included only with `page.form`.
 - Auth panel: centred `min(28rem, 100%)` in host guest layouts, full-width fields, footer link list reset hardened

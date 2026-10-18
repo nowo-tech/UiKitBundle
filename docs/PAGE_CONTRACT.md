@@ -643,9 +643,17 @@ A unique page (kanban board, canvas) extends the layout directly and still fills
 {% extends nowo_ui_layout.admin %}
 {% set nowo_ui_bundle = 'NowoTaskBoardBundle' %}
 {% block nowo_ui_document_title %}{{ 'board.title'|trans({}, 'NowoTaskBoardBundle') }}{% endblock %}
-{% block nowo_ui_page_header %}{{ include(nowo_ui_partial('page_header', nowo_ui_bundle), {header: header, bundle: nowo_ui_bundle}) }}{% endblock %}
+{% block nowo_ui_page_header %}{{ nowo_ui_page_header(header) }}{% endblock %}
 {% block nowo_ui_content %}<div class="{{ nowo_ui_class('cards', nowo_ui_bundle) }} nowo-task-board">…</div>{% endblock %}
 ```
+
+**Page header of a unique page (2.3).** `nowo_ui_page_header(header, bundle = null, extra_actions = [],
+header_actions = true)` renders exactly what the scaffolds render in `nowo_ui_page_header`: the `page_header` theme
+partial with the 2.0 input (`header`, `actions`) and the 1.x input (`title` / `intro` translated, `toolbar` with the
+actions pre-rendered through the `action` partial), so host overrides written for either contract work and no bundle
+copies the scaffold macro. `bundle` and the page type default to `nowo_ui_bundle` / `nowo_ui_page_type` of the
+template. Same contract as an include: `{{ include('@NowoUiKit/page/_page_header.html.twig', {header: header, bundle:
+'NowoTaskBoardBundle'}, false) }}` (`ThemeExtension::PAGE_HEADER_TEMPLATE`).
 
 ## Example: host integration
 

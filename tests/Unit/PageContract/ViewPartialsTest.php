@@ -30,7 +30,7 @@ final class ViewPartialsTest extends TestCase
         ]);
 
         self::assertStringContainsString('class="nowo-ui-page-header d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3" data-x="h"', $html);
-        self::assertStringContainsString('<h1 class="nowo-ui-page-header__title app-title">Pagination</h1>', $html);
+        self::assertStringContainsString('<h1 class="nowo-ui-page-header__title h3 mb-1 app-title">Pagination</h1>', $html);
         self::assertStringContainsString('<p class="nowo-ui-page-header__intro app-intro">No items found.</p>', $html);
         self::assertStringContainsString('<a class="nowo-ui-breadcrumbs__link" href="/s">Sections</a>', $html);
         self::assertStringContainsString('<span class="nowo-ui-breadcrumbs__current" aria-current="page">Here</span>', $html);

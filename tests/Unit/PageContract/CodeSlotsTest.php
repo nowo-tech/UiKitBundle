@@ -23,7 +23,7 @@ final class CodeSlotsTest extends TestCase
     {
         yield 'none' => ['none', 'nowo-ui-code', 'nowo-ui-code-block'];
         yield 'bootstrap5' => ['bootstrap5', 'nowo-ui-code', 'nowo-ui-code-block border p-3'];
-        yield 'bootstrap4' => ['bootstrap4', 'nowo-ui-code', 'nowo-ui-code-block border p-3'];
+        yield 'bootstrap4' => ['bootstrap4', 'nowo-ui-code text-body', 'nowo-ui-code-block border p-3'];
         yield 'tailwind' => ['tailwind', 'nowo-ui-code font-mono text-sm', 'nowo-ui-code-block font-mono text-sm p-3 border'];
         yield 'foundation' => ['foundation', 'nowo-ui-code', 'nowo-ui-code-block'];
     }

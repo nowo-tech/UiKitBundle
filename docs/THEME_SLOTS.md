@@ -156,7 +156,7 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `pagination_link` | `nowo-ui-pagination__link` | `page-link` | `page-link` | — | — |
 | `pagination_active` | `nowo-ui-pagination__link is-active` | `page-link` | `page-link` | — | — |
 | `pagination_info` | `nowo-ui-pagination__info` | — | — | — | — |
-| `code` | `nowo-ui-code` | — | — | `font-mono text-sm` | — |
+| `code` | `nowo-ui-code` | — | `text-body` | `font-mono text-sm` | — |
 | `code_block` | `nowo-ui-code-block` | `border p-3` | `border p-3` | `font-mono text-sm p-3 border` | — |
 | `muted` | `nowo-ui-muted` | `text-muted` | `text-muted` | — | `text-secondary` |
 | `empty` | `nowo-ui-empty nowo-ui-muted` | `text-muted` | `text-muted` | — | `text-secondary` |

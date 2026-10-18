@@ -78,6 +78,21 @@ are trailing and optional. Changes hosts and bundles may notice:
   `min(28rem, 100%)` (`--nowo-ui-auth-panel-width`) in any guest layout and its fields are full width (Tailwind's
   `max-w-xs` from the `input` slot still caps them: set the slot per page type, `theme.pages.auth`). The footer link
   list reset uses `!important` (wins over an unlayered Bootstrap reboot).
+- **1.x `page_header` partial**: with the ThemeExtension the title gets the full `page_title` slot resolution (semantic
+  + framework defaults + host classes, e.g. Bootstrap `h3 mb-1`) instead of the semantic + host classes only — Bootstrap
+  hosts no longer get a full-size `<h1>`. A host that relied on the bare title sets `framework_defaults: false` on the
+  `page_title` slot. Rendered without the ThemeExtension the partial is unchanged.
+- **Content padding**: `.nowo-ui-body { padding: 1rem 0 }` no longer applies to `<body>` (it drew a band above host
+  navbars); the content region (slot `content`, `<main class="nowo-ui-content">`) gets
+  `padding-block: var(--nowo-ui-content-padding-block, 1rem)` (zero specificity; 0 inside the 1.x shell's
+  `.nowo-ui-main`). Non-body `.nowo-ui-body` wrappers (1.x) keep their padding.
+- **`--nowo-ui-link`** is now declared next to the primary (`var(--nowo-ui-primary)`, light and dark palettes), so CSS
+  can read it without a fallback. A host that remaps `--nowo-ui-primary` on a **scope** (not `:root`) remaps
+  `--nowo-ui-link` there too.
+- **Code**: inline `code` no longer turns pink under Bootstrap 5 (`--bs-code-color` follows `--nowo-ui-code-text`);
+  the Bootstrap 4 `code` slot default is `text-body`.
+- **Unique pages**: `nowo_ui_page_header(header)` (or `page/_page_header.html.twig`) renders the scaffolds' page
+  header; the private scaffold macro now delegates to it (same output).
 - **UiKit form theme**: fields with errors get the `input_invalid` slot (Bootstrap `is-invalid`) and their messages
   the `form_error` slot (Bootstrap `invalid-feedback d-block`) instead of a bare `<ul>`; PasswordToggle inputs get the
   `input` slot.

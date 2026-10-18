@@ -334,7 +334,7 @@ final class ScaffoldRenderTest extends TestCase
     {
         $views = PageContractTwig::root().'/src/Resources/views';
         $files = array_merge(glob($views.'/layout/*.twig') ?: [], glob($views.'/page/*.twig') ?: [], glob($views.'/partials/_action*.twig') ?: [], [$views.'/partials/_breadcrumbs.html.twig']);
-        self::assertCount(23, $files);
+        self::assertCount(24, $files);
         foreach ($files as $file) {
             $code = (string) preg_replace('/\{#.*?#\}/s', '', (string) file_get_contents($file));
             self::assertSame(0, preg_match('/(?:bg|text|border)-(?:slate|gray|zinc|red|blue|green|white|black)|rounded|\bon[a-z]+=|confirm\(|https?:\/\//', $code, $m), basename($file).': '.($m[0] ?? ''));

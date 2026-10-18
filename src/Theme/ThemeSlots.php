@@ -240,7 +240,10 @@ final class ThemeSlots
         'pagination_info' => ['nowo-ui-pagination__info', []],
         // Code: inline <code> (identifiers, short values) and <pre> blocks (payloads, JSON, logs). Monospace,
         // muted surface, scrollable block (max height) — tokens --nowo-ui-font-mono, --nowo-ui-code-*
+        // Bootstrap 5 paints <code> pink through --bs-code-color, which nowo-ui.css points at --nowo-ui-code-text
+        // (2.3); Bootstrap 4 has a literal colour: `text-body` (2.3)
         'code' => ['nowo-ui-code', [
+            'bootstrap4' => 'text-body',
             'tailwind' => 'font-mono text-sm',
         ]],
         'code_block' => ['nowo-ui-code-block', [

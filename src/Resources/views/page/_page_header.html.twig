@@ -1,0 +1,36 @@
+{#
+  Public page-header contract (2.3) — what the scaffolds render in nowo_ui_page_header, for unique pages too:
+      {% block nowo_ui_page_header %}{{ nowo_ui_page_header(header) }}{% endblock %}
+      {{ include('@NowoUiKit/page/_page_header.html.twig', {header: header, bundle: 'AcmeFooBundle'}, false) }}
+  Includes the `page_header` theme partial with both the 2.0 input (`header`, `actions`) and the 1.x input (`title`,
+  `intro` translated, `toolbar` = the header actions + extra_actions pre-rendered through the `action` partial,
+  `header_actions_rendered: true`), so host overrides written for either contract render the same header.
+
+  Required:
+    - header: View\PageHeader
+  Optional:
+    - bundle (default nowo_ui_bundle), nowo_ui_page_type (slot resolution; default the context's)
+    - extra_actions: list of View\Action rendered after the header actions (FormPage secondary actions)
+    - header_actions (default true): false leaves header.actions out of `actions` / `toolbar` and passes `header`
+      without them (PageHeader::withActions([])) — the list scaffold renders them in the filter row
+#}
+{% set _b = bundle|default(nowo_ui_bundle|default(null)) %}
+{% set _pt = nowo_ui_page_type|default(null) %}
+{% set _with_header_actions = header_actions is defined ? header_actions : true %}
+{% set _actions = (_with_header_actions ? header.actions : [])|merge(extra_actions|default([])) %}
+{% set _toolbar -%}
+    {%- for action in _actions -%}
+        {{ include(nowo_ui_partial('action', _b), {action: action, context: 'toolbar', bundle: _b, nowo_ui_page_type: _pt}, false) }}
+    {%- endfor -%}
+{%- endset %}
+{{ include(nowo_ui_partial('page_header', _b), {
+    header: _with_header_actions ? header : header.withActions([]),
+    actions: _actions,
+    title: header.title|nowo_ui_trans,
+    intro: header.intro is null ? null : header.intro|nowo_ui_trans,
+    toolbar: _actions is empty ? null : _toolbar|trim,
+    header_actions_rendered: true,
+    region: 'header',
+    bundle: _b,
+    nowo_ui_page_type: _pt,
+}, false) }}

@@ -4,7 +4,8 @@
 {% block nowo_ui_document_title %}{{ 'fixture.board'|trans({}, 'NowoContractFixtureBundle') }}{% endblock %}
 
 {% block nowo_ui_page_header %}
-    {{ include(nowo_ui_partial('page_header'), {header: header}, false) }}
+    {# 2.3: the scaffolds' page header (page_header partial with the 2.0 and 1.x inputs) #}
+    {{ nowo_ui_page_header(header) }}
 {% endblock %}
 
 {% block nowo_ui_content %}

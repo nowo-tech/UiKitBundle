@@ -83,6 +83,10 @@ final class LegacyPartialsBcTest extends TestCase
             $twig = $this->twig($framework, $withTheme);
             $legacy = $this->normalize($twig->render('@Legacy/'.$partial.'.html.twig', $vars));
             $current = $this->normalize($twig->render('@NowoUiKitBundle/partials/'.$partial.'.html.twig', $vars));
+            if ($withTheme && '_page_header' === $partial) {
+                // 2.3: the title gets the full `page_title` slot resolution (framework defaults) with the ThemeExtension
+                $legacy = str_replace('<h1 class="nowo-ui-page-header__title">', '<h1 class="'.(new Theme($framework))->classFor('page_title').'">', $legacy);
+            }
             self::assertSame($legacy, $current, $partial.($withTheme ? ' (ThemeExtension)' : ' (bare)'));
         }
     }

@@ -148,7 +148,8 @@ After — only the data the scaffold cannot know:
   render the custom rows first and finish with `{{ parent() }}` (REQ-TWIG-003 loop for the rest).
 - Stack assets with `{% block nowo_ui_scripts %}{{ parent() }}…{% endblock %}`; never a CDN, never inline `on*=`.
 - Unique pages extend `nowo_ui_layout.admin` (or `page.layout ?? nowo_ui_layout.admin`), set `nowo_ui_bundle`, fill
-  `nowo_ui_document_title`, `nowo_ui_page_header` (through `nowo_ui_partial('page_header')`) and `nowo_ui_content`.
+  `nowo_ui_document_title`, `nowo_ui_page_header` (2.3: `{{ nowo_ui_page_header(header) }}` — the scaffolds' header;
+  do not copy the private scaffold macro) and `nowo_ui_content`.
 - Do not add a layout Twig global of your own; `web_ui.layout_template` reaches the scaffold through the view
   model's `layout`.
 - Form themes (2.1): pass the bundle's form theme(s) as `FormPage::formThemes` / `SettingsSection::formThemes`
