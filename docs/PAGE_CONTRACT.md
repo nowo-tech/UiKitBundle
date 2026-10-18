@@ -77,6 +77,7 @@ nowo_ui_kit:
   breadcrumbs:
     breadcrumb_kit: true              # render PageHeader trails with BreadcrumbKit's breadcrumb_render() when installed
     collection: null                  # BreadcrumbKit collection (PageHeader::breadcrumbCollection overrides)
+    enabled: true                     # 2.3.1: false = no breadcrumb trail in any page header (host layout renders its own)
   theme:
     framework_defaults: true                                           # false = no UiKit framework classes on any slot
     classes:    { btn_primary: 'btn-moss', table: 'data-table' }        # slot => classes (string or list)
@@ -117,7 +118,7 @@ any printable character (`"`, `'`, `<`, `>`, `&` included), so Tailwind arbitrar
 | `nowo_ui_page_header(header, bundle = null, extra_actions = [], header_actions = true)` *(2.3)* | the scaffolds' page header (`page/_page_header.html.twig`) for unique pages |
 | global `nowo_ui_layout` | `{admin, guest}` — the configured layouts |
 | global `nowo_ui_theme` | the `Theme\Theme` object (used by the 1.x partials: `macroClasses()`, `extraClasses()`, `frameworkDefaults()`, `renderAttributes()`, `partial()`, `hasTokens()`) |
-| global `nowo_ui_breadcrumbs` | `{breadcrumb_kit, collection}` |
+| global `nowo_ui_breadcrumbs` | `{breadcrumb_kit, collection, enabled}` (`enabled` 2.3.1) |
 
 ## Layouts
 
@@ -597,6 +598,14 @@ overrides the theme tokens**: both blocks use the same selectors' specificity (`
     Tailwind v3 / the Tailwind play CDN, whose output (preflight included) is unlayered. The UiKit kitchen sink
     (`demo/kitchen_sink.html.twig`) links it for that reason.
 
+- **State-hide rules are `!important`** (2.3.1): a normal declaration in the `nowo-ui` layer loses to any unlayered
+  host rule or utility class (`.d-flex`, `.grid`, `.flex`…) on the same element, and an important layered declaration
+  beats unlayered ones. So the rules that hide an element because of a state — folded filters
+  (`form:has(> .nowo-ui-filters-collapse.is-collapsed) > …`), `[hidden]` summary / row-detail button, closed
+  `.nowo-ui-dialog:not([open])`, closed aside groups, rail-mode aside labels, theme / width toggle and morph / disclosure
+  icons — use `display: none !important` (and the state rule showing the paired element `!important` too). A host
+  that wants such an element visible in that state needs its own `!important` rule. Same in both stylesheets.
+
 `nowo-ui.css` is generated from `nowo-ui.unlayered.css` (`pnpm run build:css`); token fallbacks on `:root` and the
 `data-nowo-ui-host-tokens` zero-specificity palette work the same in both files.
 
@@ -790,6 +799,7 @@ prototypes — `vars.prototype` of a `CollectionType` with `prototype: true`).
 - `Action` POSTs prefer a CSRF-only `FormView` (`form`, REQ-TWIG-005); the `csrfToken` fallback renders a small
   `<form>` inside UiKit's own partial (as `_row_actions` already did).
 - BreadcrumbKit renders its own configured trail (it cannot take `PageHeader::breadcrumbs`); it is used when
-  installed and `breadcrumbs.breadcrumb_kit` is true, otherwise the plain trail.
+  installed and `breadcrumbs.breadcrumb_kit` is true, otherwise the plain trail. `breadcrumbs.enabled: false` (2.3.1)
+  drops the trail (both kinds) from every page header — no empty `breadcrumbs` partial override needed.
 - The 1.x pagination list markup (`ul.pagination > li.page-item > .page-link`) stays for every framework (BC); the
   contract test allows these three classes.

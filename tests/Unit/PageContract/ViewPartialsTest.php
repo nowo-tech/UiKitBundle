@@ -58,6 +58,29 @@ final class ViewPartialsTest extends TestCase
         self::assertStringContainsString('Ignored', $off->render('t', ['header' => new PageHeader('T', breadcrumbs: [new Crumb('Ignored')])]));
     }
 
+    /**
+     * nowo_ui_kit.breadcrumbs.enabled: false (2.3.1) drops the trail — plain and BreadcrumbKit — from every page header;
+     * title, intro and actions stay.
+     */
+    public function testBreadcrumbsCanBeDisabled(): void
+    {
+        $template = ['t' => "{% include '@NowoUiKitBundle/partials/_page_header.html.twig' with {header: header} only %}"];
+        $header = new PageHeader('Title', 'Intro', [Action::create('/new')], [new Crumb('Home', '/'), new Crumb('Here')]);
+
+        $off = PageContractTwig::create($template, breadcrumbs: false);
+        $off->addFunction(new TwigFunction('breadcrumb_render', static fn (): string => '<ol data-kit></ol>', ['is_safe' => ['html']]));
+        $html = $off->render('t', ['header' => $header]);
+        self::assertStringNotContainsString('nowo-ui-breadcrumbs', $html);
+        self::assertStringNotContainsString('data-kit', $html);
+        self::assertStringNotContainsString('Home', $html);
+        self::assertStringContainsString('>Title</h1>', $html);
+        self::assertStringContainsString('>Intro</p>', $html);
+        self::assertStringContainsString('href="/new"', $html);
+
+        $on = PageContractTwig::create($template, breadcrumbKit: false);
+        self::assertStringContainsString('<a class="nowo-ui-breadcrumbs__link" href="/">Home</a>', $on->render('t', ['header' => $header]));
+    }
+
     public function testPaginationWithViewModelAndSlotHooks(): void
     {
         $pagination = new Pagination(2, 10, 35, route: 'logs', query: ['level' => 'error'], routeParams: ['org' => 1], pageParam: 'p', perPageParam: 'size');

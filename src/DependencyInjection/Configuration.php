@@ -276,6 +276,7 @@ final class Configuration implements ConfigurationInterface
                     ->children()
                         ->booleanNode('breadcrumb_kit')->defaultTrue()->info('Use BreadcrumbKit when its breadcrumb_render() Twig function exists.')->end()
                         ->scalarNode('collection')->defaultNull()->info('BreadcrumbKit collection code (null = its default collection). PageHeader::breadcrumbCollection overrides it.')->end()
+                        ->booleanNode('enabled')->defaultTrue()->info('2.3.1: false drops the breadcrumb trail (BreadcrumbKit and PageHeader::breadcrumbs) from every page header, e.g. when the host layout renders its own.')->end()
                     ->end()
                 ->end()
                 ->append($this->themeNode())

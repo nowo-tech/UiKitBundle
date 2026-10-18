@@ -48,8 +48,8 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
     public const PAGE_HEADER_TEMPLATE = '@NowoUiKitBundle/page/_page_header.html.twig';
 
     /**
-     * @param array{admin: string, guest: string}                  $layouts
-     * @param array{breadcrumb_kit: bool, collection: string|null} $breadcrumbs
+     * @param array{admin: string, guest: string}                                  $layouts
+     * @param array{breadcrumb_kit: bool, collection: string|null, enabled?: bool} $breadcrumbs `enabled` (2.3.1, default true): false = no breadcrumb trail in page headers
      */
     public function __construct(
         private readonly Theme $theme,

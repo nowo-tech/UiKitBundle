@@ -21,7 +21,7 @@ final class PageContractConfigurationTest extends TestCase
         $config = $this->process([]);
 
         self::assertSame(['admin' => '@NowoUiKit/layout/admin.html.twig', 'guest' => '@NowoUiKit/layout/guest.html.twig'], $config['layouts']);
-        self::assertSame(['breadcrumb_kit' => true, 'collection' => null], $config['breadcrumbs']);
+        self::assertSame(['breadcrumb_kit' => true, 'collection' => null, 'enabled' => true], $config['breadcrumbs']);
         self::assertSame(['framework_defaults' => true, 'classes' => [], 'attributes' => [], 'partials' => [], 'tokens' => [], 'tokens_dark' => [], 'confirm_message_in_header' => false, 'bundles' => [], 'pages' => []], $config['theme']);
     }
 
@@ -29,7 +29,7 @@ final class PageContractConfigurationTest extends TestCase
     {
         $config = $this->process([
             'layouts' => ['admin' => 'layouts/admin.html.twig', 'guest' => 'layouts/guest.html.twig'],
-            'breadcrumbs' => ['breadcrumb_kit' => false, 'collection' => 'admin'],
+            'breadcrumbs' => ['breadcrumb_kit' => false, 'collection' => 'admin', 'enabled' => false],
             'theme' => [
                 'classes' => ['page_header' => 'app-page-header', 'btn_primary' => ['btn', 'btn-moss'], 'badge_success' => 'badge badge--ok'],
                 'attributes' => ['toasts' => ['data-controller' => 'toast-stack', 'data-flag' => true]],
@@ -44,6 +44,7 @@ final class PageContractConfigurationTest extends TestCase
 
         self::assertSame('layouts/admin.html.twig', $config['layouts']['admin']);
         self::assertFalse($config['breadcrumbs']['breadcrumb_kit']);
+        self::assertFalse($config['breadcrumbs']['enabled']);
         self::assertSame('btn btn-moss', $config['theme']['classes']['btn_primary']);
         self::assertSame(['data-controller' => 'toast-stack', 'data-flag' => true], $config['theme']['attributes']['toasts']);
         self::assertSame('4', $config['theme']['tokens']['radius']);
@@ -254,7 +255,7 @@ final class PageContractConfigurationTest extends TestCase
         $twig = $container->getDefinition('nowo_ui_kit.theme_twig_extension');
         self::assertSame(ThemeExtension::class, $twig->getClass());
         self::assertTrue($twig->hasTag('twig.extension'));
-        self::assertSame(['breadcrumb_kit' => true, 'collection' => null], $twig->getArgument(2));
+        self::assertSame(['breadcrumb_kit' => true, 'collection' => null, 'enabled' => true], $twig->getArgument(2));
 
         $container->register('translator', \stdClass::class);
         $container->getDefinition('nowo_ui_kit.theme')->setPublic(true);

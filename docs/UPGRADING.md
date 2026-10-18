@@ -56,6 +56,18 @@
 
 ## Unreleased
 
+- **State-hide rules are `!important`** (see [PAGE_CONTRACT — Cascade layers](PAGE_CONTRACT.md#cascade-layers)): if
+  your CSS deliberately showed an element the kit hides in a state (e.g. a field of folded filters, a closed
+  `.nowo-ui-dialog`), that rule now needs `!important` as well. Nothing to do otherwise.
+- **Optional**: replace an empty `templates/bundles/NowoUiKitBundle/partials/_breadcrumbs.html.twig` (or a
+  `theme.partials.breadcrumbs` pointing at an empty template) with
+
+  ```yaml
+  nowo_ui_kit:
+      breadcrumbs:
+          enabled: false
+  ```
+
 ## To 2.3.0
 
 From **2.2.0**:

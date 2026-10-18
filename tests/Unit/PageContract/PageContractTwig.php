@@ -48,6 +48,7 @@ final class PageContractTwig
         ?Request $request = null,
         bool $breadcrumbKit = true,
         string $locale = 'en',
+        bool $breadcrumbs = true,
     ): Environment {
         $views = self::root().'/src/Resources/views';
         $fs = new FilesystemLoader();
@@ -76,7 +77,7 @@ final class PageContractTwig
         $twig->addExtension(new ThemeExtension(
             Theme::fromConfig($framework, $theme),
             $layouts + ['admin' => '@NowoUiKit/layout/admin.html.twig', 'guest' => '@NowoUiKit/layout/guest.html.twig'],
-            ['breadcrumb_kit' => $breadcrumbKit, 'collection' => null],
+            ['breadcrumb_kit' => $breadcrumbKit, 'collection' => null, 'enabled' => $breadcrumbs],
             $translator,
             $requestStack,
         ));

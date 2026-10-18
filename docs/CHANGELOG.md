@@ -51,6 +51,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **State-hide rules win over host CSS**: `nowo-ui.css` ships inside `@layer nowo-ui`, so a hiding rule such as the
+  folded filters (`form:has(> .nowo-ui-filters-collapse.is-collapsed) > :not(.nowo-ui-filters-collapse)`) lost to any
+  unlayered host rule or utility class (`.d-flex`, `.grid`…) on the hidden element, which stayed visible. Every
+  state-dependent hide is now `display: none !important` — folded filters, `[hidden]` filters summary and row-detail
+  button, `.nowo-ui-dialog:not([open])`, closed aside groups, rail-mode aside labels / chevrons, theme and width toggle
+  icons, morph / disclosure / fold icons — and the state rules that show the paired element are `!important` too, so
+  the kit's own state switches keep their order. `nowo-ui.unlayered.css` and the generated `nowo-ui.css` carry the
+  same rules. `StateHideCssTest` checks each rule in both files and fails on any new state-hide rule without
+  `!important`.
+
+### Added
+
+- `nowo_ui_kit.breadcrumbs.enabled` (default `true`): `false` drops the breadcrumb trail (BreadcrumbKit and
+  `PageHeader::breadcrumbs`) from every page header — hosts no longer need an empty `breadcrumbs` partial. Exposed in
+  the `nowo_ui_breadcrumbs` global. Purely additive (default unchanged), hence a patch release.
+
 ## [2.3.0] - 2026-10-18
 
 Filters translate each text once, opt-in strict missing-message contract test, auth scaffold form themes/attributes/root errors/body blocks, form error slots, menu partial, public page-header include, content padding and link/code token fixes. See [UPGRADING](UPGRADING.md#to-230).

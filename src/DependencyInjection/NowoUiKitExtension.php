@@ -152,7 +152,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
     {
         /** @var array{admin: string, guest: string} $layouts */
         $layouts = $config['layouts'];
-        /** @var array{breadcrumb_kit: bool, collection: string|null} $breadcrumbs */
+        /** @var array{breadcrumb_kit: bool, collection: string|null, enabled: bool} $breadcrumbs */
         $breadcrumbs = $config['breadcrumbs'];
         /** @var array<string, mixed> $theme */
         $theme = $config['theme'];
