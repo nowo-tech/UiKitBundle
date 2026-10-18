@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.2.0] - 2026-10-18](#220---2026-10-18)
 - [[2.1.0] - 2026-10-18](#210---2026-10-18)
 - [[2.0.1] - 2026-10-18](#201---2026-10-18)
 - [[2.0.0] - 2026-10-17](#200---2026-10-17)
@@ -48,6 +49,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [2.2.0] - 2026-10-18
+
+Default-theme polish (confirm dialog, tables, filters grid, badges, tabs levels, one primary colour) and the page-contract backlog from the phase-1/2 migrations (scripts partial, table partial, status layout, remote dialogs, progress, form theme, breadcrumbs modes, section actions). See [UPGRADING](UPGRADING.md#to-220).
 
 UiKit 2.2: default-theme polish and the backlog found after phase 1 of the page-contract migration (REQ-UI-003).
 
@@ -121,6 +126,8 @@ UiKit 2.2: default-theme polish and the backlog found after phase 1 of the page-
   no longer wrap.
 - With css_framework none, inline `code` had the surface colour: own tint (`--nowo-ui-code-bg` default
   `color-mix(text 7%, surface)`) plus a 1px inset border (`--nowo-ui-code-border`).
+
+[2.2.0]: https://github.com/nowo-tech/UiKitBundle/compare/v2.1.0...v2.2.0
 
 ## [2.1.0] - 2026-10-18
 
@@ -703,7 +710,7 @@ Supersedes 1.17.3: same runtime code and CSS, release gate hardened so the tagge
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.2.0...HEAD
 [1.10.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.4...v1.10.0
 [1.8.4]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.3...v1.8.4
 [1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0

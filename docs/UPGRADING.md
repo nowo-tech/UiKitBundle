@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.2.0](#to-220)
   - [Template contract (2.2)](#template-contract-22)
 - [To 2.1.0](#to-210)
 - [To 2.0.1](#to-201)
@@ -52,6 +53,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.2.0
+
+From **2.1.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 Target **2.2.0**. From **2.1.x**: `composer require nowo-tech/ui-kit-bundle:^2.2`. No PHP API is removed; new
 constructor arguments are trailing and optional. Visual changes of the default theme are listed below so hosts can
