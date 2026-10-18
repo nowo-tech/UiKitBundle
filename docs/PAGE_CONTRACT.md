@@ -717,7 +717,9 @@ Every scaffold with the host theme: [overview](images/demo/page-contract-overvie
 [list](images/demo/page-contract-list.webp) · [show](images/demo/page-contract-show.webp) ·
 [form](images/demo/page-contract-form.webp) · [settings](images/demo/page-contract-settings.webp) ·
 [dashboard](images/demo/page-contract-dashboard.webp) · [confirm](images/demo/page-contract-confirm.webp) ·
-[wizard](images/demo/page-contract-wizard.webp) · [auth](images/demo/page-contract-auth.webp).
+[wizard](images/demo/page-contract-wizard.webp) · [auth](images/demo/page-contract-auth.webp). 2.3:
+[export menu](images/demo/page-contract-menu.webp) (`menu` partial on the dashboard) ·
+[sign-in with root form errors](images/demo/page-contract-auth-errors.webp) (default theme, `form_errors` slot).
 
 ## Contract test
 

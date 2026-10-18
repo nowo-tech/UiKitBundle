@@ -78,6 +78,10 @@ UiKit 2.3: the backlog of the phase-2 migrations (Pwa, ChatKit, SearchKit, AuthK
 
 ### Changed
 
+- Demo (REQ-DEMO-013): export menu on the dashboard (host `menu_toggle` class), sign-in with root form errors
+  (`?failed=1`), document title and form attributes; e2e for 2.3; screenshots `page-contract-menu`,
+  `page-contract-auth-errors`, re-captured `page-contract-dashboard` and `page-contract-default-list` (no band above
+  the navbar).
 - `PageContractTestCase` collects **all** missing messages through the `DataCollectorTranslator` and fails on any.
 
 ### Fixed

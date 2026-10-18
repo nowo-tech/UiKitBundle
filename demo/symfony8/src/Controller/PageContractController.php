@@ -39,6 +39,7 @@ use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\SearchType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -278,13 +279,17 @@ final class PageContractController extends AbstractController
 
     #[Route('/sign-in', name: 'page_contract_auth')]
     #[Route('/{theme}/sign-in', name: 'page_contract_default_auth')]
-    public function auth(?string $theme = null): Response
+    public function auth(Request $request, ?string $theme = null): Response
     {
         $form = $this->container->get('form.factory')->createNamedBuilder('login')
             ->add('email', EmailType::class, ['label' => 'Email', 'attr' => ['placeholder' => 'you@acme.test']])
             ->add('password', PasswordType::class, ['label' => 'Password'])
             ->add('remember', CheckboxType::class, ['label' => 'Keep me signed in', 'required' => false])
             ->getForm();
+        if ($request->query->has('failed')) {
+            // Root form errors (CSRF, bad credentials) render above the fields in the form_errors slot (2.3)
+            $form->addError(new FormError('The email or password is incorrect.'));
+        }
 
         return $this->render('@NowoUiKit/page/auth.html.twig', ['page' => new AuthPage(
             'Sign in to Acme Admin',
@@ -296,6 +301,9 @@ final class PageContractController extends AbstractController
             [new Link('Forgot your password?', '#'), new Link('Request an account', '#')],
             $this->bundle($theme),
             null !== $theme ? 'page_contract/default_guest_layout.html.twig' : null,
+            // 2.3: <title> apart from the panel heading, extra <form> attributes
+            documentTitle: 'Sign in',
+            formAttributes: ['data-turbo' => 'false', 'data-testid' => 'login-form'],
         )]);
     }
 

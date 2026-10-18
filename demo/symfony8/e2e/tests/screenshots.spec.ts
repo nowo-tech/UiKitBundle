@@ -70,6 +70,7 @@ const gallery: Array<{ file: string; path: string; ready: string }> = [
   { file: 'page-contract-confirm', path: '/page-contract/orders/1041/delete', ready: '[data-nowo-ui-page="confirm"]' },
   { file: 'page-contract-wizard', path: '/page-contract/onboarding', ready: '[data-nowo-ui-page="wizard"]' },
   { file: 'page-contract-auth', path: '/page-contract/sign-in', ready: '[data-nowo-ui-page="auth"]' },
+  { file: 'page-contract-auth-errors', path: '/page-contract/default/sign-in?failed=1', ready: '[data-nowo-ui-region="form-errors"]' },
 ];
 
 test.describe('page contract screenshots — README', () => {
@@ -99,6 +100,13 @@ test.describe('page contract screenshots — PAGE_CONTRACT.md gallery', () => {
     await open(page, '/page-contract');
     await expect(page.locator('[data-nowo-ui-page="dashboard"]')).toBeVisible();
     await shoot(page, 'page-contract-overview');
+  });
+
+  test('page-contract-menu — export menu open on the host-theme dashboard (2.3)', async ({ page }) => {
+    await open(page, '/page-contract/dashboard');
+    await page.getByTestId('export-menu').locator('summary').click();
+    await expect(page.getByTestId('export-menu').locator('.nowo-ui-menu__panel')).toBeVisible();
+    await shoot(page, 'page-contract-menu');
   });
 
   for (const shot of gallery) {

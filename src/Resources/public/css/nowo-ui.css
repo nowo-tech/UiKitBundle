@@ -3597,10 +3597,14 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
   display: none;
 }
 
+/* Icon + label spacing as a margin (a Bootstrap .btn toggle keeps its unlayered display: inline-block) */
+.nowo-ui-menu__toggle > .nowo-ui-menu__label:not(:first-child) {
+  margin-inline-start: 0.35rem;
+}
+
 .nowo-ui-menu__toggle:not(.btn, .button) {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
   padding: 0.25rem 0.6rem;
   border: 1px solid var(--nowo-ui-border-strong);
   border-radius: var(--nowo-ui-radius);

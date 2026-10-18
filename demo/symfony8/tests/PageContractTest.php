@@ -31,6 +31,9 @@ final class PageContractTest extends PageContractTestCase
     public static function pageFixtures(): iterable
     {
         $forms = Forms::createFormFactoryBuilder()->getFormFactory();
+        // Literal labels (the demo has no catalogue): translation_domain false, or the strict missing-message rule
+        // of the contract test (UiKit 2.3) flags the humanized labels
+        $literal = ['translation_domain' => false];
         $order = ['id' => 1042, 'customer' => 'Lucía Fernández', 'email' => 'lucia@example.com', 'total' => '249.90', 'status' => 'paid', 'placed' => '2026-10-16 09:12'];
 
         yield 'overview' => new PageFixture('page_contract/index.html.twig', [
@@ -46,7 +49,7 @@ final class PageContractTest extends PageContractTestCase
             new PageHeader('Orders', null, [Action::create('/orders/new', 'New order')]),
             [new Column('id', '#'), new Column('customer', 'Customer'), new Column('placed', 'Placed'), new Column('status', 'Status'), new Column('total', 'Total')],
             [$order],
-            $forms->createNamedBuilder('filters', options: ['method' => 'GET'])->add('q', SearchType::class, ['required' => false])->getForm()->createView(),
+            $forms->createNamedBuilder('filters', options: ['method' => 'GET'] + $literal)->add('q', SearchType::class, ['required' => false])->getForm()->createView(),
             [Action::view('/orders/1042')],
             new Pagination(1, 5, 1),
         )]);
@@ -56,7 +59,7 @@ final class PageContractTest extends PageContractTestCase
         )]);
         yield 'order_edit' => new PageFixture('page_contract/orders/edit.html.twig', ['page' => new FormPage(
             new PageHeader('Edit order #1042'),
-            $forms->createNamedBuilder('order')->add('customer', TextType::class)->getForm()->createView(),
+            $forms->createNamedBuilder('order', options: $literal)->add('customer', TextType::class)->getForm()->createView(),
         )]);
     }
 

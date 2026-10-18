@@ -58,6 +58,8 @@ nowo_ui_kit:
             confirm: 'acme-dialog'
             confirm_page: 'acme-confirm-page'
             detail_list_meta: 'acme-meta'
+            # Menu toggle (2.3): the host's own button look, without UiKit's btn btn-outline-secondary btn-sm
+            menu_toggle: { value: 'acme-btn', framework_defaults: false }
             # Tailwind-style arbitrary / child variants are allowed in class lists (printed escaped)
             sort_link: "acme-sort [&>span]:underline"
         attributes:

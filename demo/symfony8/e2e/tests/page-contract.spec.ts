@@ -355,3 +355,58 @@ test.describe('page contract — default theme view', () => {
     expect(background).not.toBe(color);
   });
 });
+
+test.describe('page contract — UiKit 2.3', () => {
+  for (const view of ['', '/default']) {
+    test(`dashboard${view}: export menu (native disclosure) opens and closes on outside click / Escape`, async ({ page }) => {
+      await page.goto(`/page-contract${view}/dashboard`);
+      const menu = page.getByTestId('export-menu');
+      const toggle = menu.locator('summary');
+      const panel = menu.locator('.nowo-ui-menu__panel');
+      await expect(panel).toBeHidden();
+      await toggle.click();
+      await expect(panel).toBeVisible();
+      await expect(panel.getByRole('link', { name: 'JSON' })).toBeVisible();
+      // the panel floats (does not push the card content) and stays inside the viewport
+      expect(await panel.evaluate((el) => getComputedStyle(el).position)).toBe('absolute');
+      const box = await panel.boundingBox();
+      expect(box!.x + box!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
+      await page.mouse.click(5, 5);
+      await expect(panel).toBeHidden();
+      await toggle.click();
+      await expect(panel).toBeVisible();
+      await panel.getByRole('link', { name: 'CSV' }).focus();
+      await page.keyboard.press('Escape');
+      await expect(panel).toBeHidden();
+      await expect(toggle).toBeFocused();
+    });
+  }
+
+  test('sign-in: root form errors above the fields, document title, form attributes, full-width fields', async ({ page }) => {
+    await page.goto('/page-contract/default/sign-in?failed=1');
+    const errors = page.locator('[data-nowo-ui-region="form-errors"]');
+    await expect(errors).toHaveAttribute('role', 'alert');
+    await expect(errors).toContainText('The email or password is incorrect.');
+    await expect(page).toHaveTitle(/^Sign in/);
+    const form = page.getByTestId('login-form');
+    await expect(form).toHaveAttribute('data-turbo', 'false');
+    // errors first, then the fields
+    expect(await form.evaluate((el) => el.firstElementChild?.getAttribute('data-nowo-ui-region'))).toBe('form-errors');
+    const panel = await page.locator('.nowo-ui-auth-panel').boundingBox();
+    const email = await page.locator('#login_email').boundingBox();
+    expect(panel!.width).toBeLessThanOrEqual(28 * 16 + 1);
+    expect(email!.width).toBeGreaterThan(panel!.width - 64);
+    // the footer link list has no reboot padding (unlayered Bootstrap ul { padding-left: 2rem })
+    expect(await page.locator('.nowo-ui-auth-panel__links').evaluate((el) => getComputedStyle(el).paddingLeft)).toBe('0px');
+    await page.goto('/page-contract/default/sign-in');
+    await expect(page.locator('[data-nowo-ui-region="form-errors"]')).toHaveCount(0);
+  });
+
+  test('list: filter placeholder printed once (no double translation); 1.x title classes; no band above the navbar', async ({ page }) => {
+    await page.goto('/page-contract/default/orders');
+    await expect(page.locator('#filters_q')).toHaveAttribute('placeholder', 'Search customers…');
+    await expect(page.locator('#filters_status option').first()).toHaveText('Any status');
+    // the content region carries the vertical padding, not <body>
+    expect(await page.evaluate(() => getComputedStyle(document.body).paddingTop)).toBe('0px');
+  });
+});

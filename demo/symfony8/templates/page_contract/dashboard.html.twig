@@ -4,7 +4,15 @@
 {% block nowo_ui_dashboard_cards %}
     {% set _b = page.bundle %}
     <section class="{{ nowo_ui_class('card', _b) }}"{{ nowo_ui_attrs('card', _b) }}>
-        <header class="{{ nowo_ui_class('card_header', _b) }}"><h2 class="nowo-ui-card__title">Recent orders</h2></header>
+        <header class="{{ nowo_ui_class('card_header', _b) }}">
+            <h2 class="nowo-ui-card__title">Recent orders</h2>
+            {# The menu partial (2.3): a native <details> disclosure (no JS needed; light dismiss by nowo-ui-dialog.js) #}
+            {{ include(nowo_ui_partial('menu', _b), {label: 'Export', icon: 'export', items: [
+                {label: 'CSV', href: '#export-csv'},
+                {label: 'JSON', href: '#export-json'},
+                {label: 'Spreadsheet (.xlsx)', href: '#export-xlsx'},
+            ], attr: {'data-testid': 'export-menu'}, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
+        </header>
         {# The reusable table partial (View\Table, 2.2): same markup and slots as the list scaffold's table #}
         {{ include(nowo_ui_partial('table', _b), {table: recent, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
     </section>
