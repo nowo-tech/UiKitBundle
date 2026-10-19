@@ -30,7 +30,7 @@
   "devDependencies": {
     "@hotwired/stimulus": "^3.2.2",
     "@vitest/coverage-v8": "^4.1.11",
-    "datatables.net-dt": "2.3.8",
+    "datatables.net-dt": "3.1.4",
     "datatables.net-responsive-dt": "3.0.8",
     "happy-dom": "^20.14.6",
     "lucide": "1.56.0",
