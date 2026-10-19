@@ -303,7 +303,11 @@ only set what they want to change.
 | `--nowo-ui-kpi-accent` | `var(--nowo-ui-primary)` | KPI top accent colour |
 | `--nowo-ui-kpi-radius` | `var(--nowo-ui-radius)` | KPI tile radius |
 | `--nowo-ui-help-text` | `var(--nowo-ui-muted)` | form help text (`.help-text`, `.form-text`, `#…_help`) |
-| `--nowo-ui-form-row-gap` | `1rem` | space between stacked form rows (scaffold forms, dialogs) |
+| `--nowo-ui-form-row-gap` | `1rem` | space between stacked form rows (scaffold forms, dialogs): the `gap` of the `form` slot's flex column (2.5; was a sibling margin) |
+| `--nowo-ui-form-actions-gap` *(2.5)* | `1rem` | space between the last form row and the `form_actions` row |
+| `--nowo-ui-form-label-gap` *(2.5)* | `0.5rem` | label → control (`.form-label`, `.nowo-ui-form__label` inside UiKit forms) |
+| `--nowo-ui-form-column-gap` *(2.5)* | `1rem` | between side-by-side fields (slot `form_columns`) |
+| `--nowo-ui-form-column-min` *(2.5)* | `12rem` | minimum column width of `form_columns` (auto-fit grid) |
 | `--nowo-ui-content-padding-block` *(2.3)* | `1rem` | vertical padding of the content region (slot `content`; was on `<body>` before 2.3; `0` inside the 1.x shell main) |
 | `--nowo-ui-auth-panel-width` *(2.3)* | `28rem` | auth scaffold panel: max width (centred, `min(token, 100%)`) |
 | `--nowo-ui-menu-z-index` *(2.3)* | `1050` | `menu` partial: stacking of the floating panel / popover |

@@ -66,6 +66,13 @@ Notes:
   `data-nowo-ui-tabs`).
 - Triggers with `role="tab"` get a roving `tabindex` (only the selected tab is in the Tab order) and arrow keys, per
   the WAI-ARIA tabs pattern. Triggers without `role="tab"` behave as before.
+- **Form spacing**: `form.nowo-ui-form` is now a flex column with `gap: var(--nowo-ui-form-row-gap)` (no sibling
+  `margin-top`), and the `form_actions` slot lost its `mt-3` / `mt-4`. Hosts that relied on the margin, or that put
+  their own gap / margin utilities on the `form` slot (e.g. `flex flex-col gap-4`) to compensate, should drop those
+  and set the tokens instead: `--nowo-ui-form-row-gap`, `--nowo-ui-form-actions-gap`, `--nowo-ui-form-label-gap`,
+  `--nowo-ui-form-column-gap`. Rows of the Symfony Bootstrap form theme keep their own `mb-3`: on those stacks the
+  actions row now sits as far below the last row as the rows sit from each other (it got one extra `mt-3` before).
+  Template overrides that rendered actions with `mt-3` in the class keep working.
 - Optional: replace per-bundle locale tab markup (own `_locale_tabs` templates, Bootstrap `nav-tabs` + CDN JS, radio
   hacks, `locale-tabs:changed` hooks) with the `locale_tabs` partial and `nowo-ui:tabs:change` — see
   [USAGE](USAGE.md#migrating-your-locale-ui). A host layout listing UiKit scripts by hand keeps `js/nowo-ui-tabs.js`.

@@ -80,7 +80,7 @@ final class InternalSlotsTest extends TestCase
         $html = $twig->render('@NowoUiKit/page/confirm.html.twig', ['page' => $page]);
         self::assertMatchesRegularExpression('#<div class="nowo-ui-card__body card-body nowo-ui-confirm-page__panel app-confirm-panel">\s*<header class="nowo-ui-confirm-page__header app-confirm-header">\s*<h2 class="nowo-ui-confirm__title app-confirm-title">Delete Ann\?</h2>\s*</header>\s*<div class="nowo-ui-confirm-page__body app-confirm-body"><p class="nowo-ui-confirm__message app-confirm-message">Really.</p></div>#', $html);
         self::assertStringContainsString('<label class="nowo-ui-confirm__expect-label app-expect-label" for="nowo-ui-confirm-page-expected">', $html);
-        self::assertStringContainsString('<div class="nowo-ui-form__actions d-flex flex-wrap gap-2 mt-3 app-confirm-footer">', $html);
+        self::assertStringContainsString('<div class="nowo-ui-form__actions d-flex flex-wrap gap-2 app-confirm-footer">', $html);
         // the dialog-box classes stay off the page
         self::assertStringNotContainsString('nowo-ui-confirm__panel', $html);
 

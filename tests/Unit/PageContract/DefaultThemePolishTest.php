@@ -145,7 +145,7 @@ final class DefaultThemePolishTest extends TestCase
         self::assertStringContainsString('<nav class="nowo-ui-tabs nowo-ui-tabs--secondary nav nav-pills mb-3" aria-label="Sections" data-nowo-ui-region="tabs">', $html);
         self::assertStringContainsString('<nav class="nowo-ui-tabs nav nav-tabs mb-3" aria-label="Sections" data-nowo-ui-region="area-nav">', $html);
         self::assertStringContainsString('<form name="mail" method="post" class="nowo-ui-form" data-nowo-ui-region="form" id="mail-form">', $html);
-        self::assertMatchesRegularExpression('#</form>\s*<div class="nowo-ui-form__actions d-flex flex-wrap gap-2 mt-3">\s*<button type="submit" class="nowo-ui-btn nowo-ui-btn--primary btn btn-primary" form="mail-form">Save</button>\s*<a class="[^"]*nowo-ui-action--custom" href="/s/test">#', $html);
+        self::assertMatchesRegularExpression('#</form>\s*<div class="nowo-ui-form__actions d-flex flex-wrap gap-2">\s*<button type="submit" class="nowo-ui-btn nowo-ui-btn--primary btn btn-primary" form="mail-form">Save</button>\s*<a class="[^"]*nowo-ui-action--custom" href="/s/test">#', $html);
         self::assertStringContainsString('data-nowo-confirm-open', $html);
 
         // without an area nav the section tabs stay primary; without actions the row stays inside the form

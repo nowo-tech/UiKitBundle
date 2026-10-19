@@ -403,10 +403,13 @@ final class ThemeSlots
         // Forms
         'form' => ['nowo-ui-form', []],
         'form_panel' => ['nowo-ui-form-panel', []],
+        // Actions row (2.5: no margin utility — the space above is --nowo-ui-form-actions-gap)
         'form_actions' => ['nowo-ui-form__actions', [
-            'bootstrap' => 'd-flex flex-wrap gap-2 mt-3',
-            'tailwind' => 'flex flex-wrap gap-2 mt-4',
+            'bootstrap' => 'd-flex flex-wrap gap-2',
+            'tailwind' => 'flex flex-wrap gap-2',
         ]],
+        // Side-by-side fields (2.5): a grid whose column gap is --nowo-ui-form-column-gap
+        'form_columns' => ['nowo-ui-form__columns', []],
         'danger_zone' => ['nowo-ui-danger-zone', [
             'bootstrap' => 'mt-4',
             'tailwind' => 'mt-6',

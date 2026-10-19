@@ -75,6 +75,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   DOM morphs (Live Component re-render, Turbo morph, inserted content) that keeps the tab the user chose. The peer
   gains the `list` target and the same behaviour standalone, and delegates to the script when both are present.
 - Kitchen sink demo: a locale tabs form (server error on one locale, required locales, an RTL panel).
+- **Form spacing tokens**: `--nowo-ui-form-actions-gap` (last row → actions row), `--nowo-ui-form-label-gap`
+  (`.form-label` / `.nowo-ui-form__label` → control), `--nowo-ui-form-column-gap` / `--nowo-ui-form-column-min` and the
+  new **`form_columns`** slot (`nowo-ui-form__columns`: side-by-side fields on an auto-fit grid).
+
+### Changed
+
+- **Form rows use one gap**: `form.nowo-ui-form` (and forms in dialog bodies) is a flex column with
+  `gap: var(--nowo-ui-form-row-gap)` instead of a `margin-top` between sibling rows, so a gap the host puts on the
+  `form` slot replaces the kit spacing instead of adding to it (Beacon login: 32px between fields but 16px before the
+  button). Bare buttons / links directly in the form keep their width (`align-self: flex-start`). Inside
+  `@layer nowo-ui` and in `nowo-ui.unlayered.css`.
+- The `form_actions` slot dropped its `mt-3` (Bootstrap) / `mt-4` (Tailwind) default: the space above the actions row is
+  `--nowo-ui-form-actions-gap` (default `1rem`), also for an actions row rendered after `</form>`.
 
 ### Fixed
 

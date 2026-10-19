@@ -4095,8 +4095,44 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
   font-size: 0.8125rem;
 }
 
-:where(form.nowo-ui-form, .nowo-ui-dialog__body form, .nowo-ui-dialog__body) > :where(div, fieldset) + :where(div, fieldset) {
+/* 2.5: one spacing system for every form row. The form is a flex column whose gap is the row gap (no sibling
+   margins, so a host gap on the `form` slot replaces it instead of adding to it); the actions row sits
+   --nowo-ui-form-actions-gap below the last row; labels (.form-label / .nowo-ui-form__label) sit
+   --nowo-ui-form-label-gap above their control; side-by-side fields (slot form_columns) use
+   --nowo-ui-form-column-gap between columns. */
+:where(form.nowo-ui-form, .nowo-ui-dialog__body form) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nowo-ui-form-row-gap, 1rem);
+}
+
+/* A bare button / link directly in the form keeps its own width (flex items stretch otherwise) */
+:where(form.nowo-ui-form, .nowo-ui-dialog__body form) > :where(button, a, input[type="submit"], input[type="button"]) {
+  align-self: flex-start;
+}
+
+/* Dialog bodies without a form element: stacked rows as before */
+.nowo-ui-dialog__body > :where(div, fieldset) + :where(div, fieldset) {
   margin-top: var(--nowo-ui-form-row-gap, 1rem);
+}
+
+:where(* + .nowo-ui-form__actions) {
+  margin-top: var(--nowo-ui-form-actions-gap, 1rem);
+}
+
+:where(form.nowo-ui-form, .nowo-ui-dialog__body form) > .nowo-ui-form__actions {
+  margin-top: calc(var(--nowo-ui-form-actions-gap, 1rem) - var(--nowo-ui-form-row-gap, 1rem));
+}
+
+:where(form.nowo-ui-form, .nowo-ui-dialog__body form) :where(.form-label, .nowo-ui-form__label) {
+  display: inline-block;
+  margin-bottom: var(--nowo-ui-form-label-gap, 0.5rem);
+}
+
+.nowo-ui-form__columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(var(--nowo-ui-form-column-min, 12rem), 100%), 1fr));
+  gap: var(--nowo-ui-form-row-gap, 1rem) var(--nowo-ui-form-column-gap, 1rem);
 }
 
 /* Second tab level (slot tabs_secondary): pills / sub-nav, visibly below the area nav */

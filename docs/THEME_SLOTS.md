@@ -225,7 +225,8 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `confirm_footer` | `nowo-ui-confirm__footer` | — | — | — | — |
 | `form` | `nowo-ui-form` | — | — | — | — |
 | `form_panel` | `nowo-ui-form-panel` | — | — | — | — |
-| `form_actions` | `nowo-ui-form__actions` | `d-flex flex-wrap gap-2 mt-3` | `d-flex flex-wrap gap-2 mt-3` | `flex flex-wrap gap-2 mt-4` | — |
+| `form_actions` | `nowo-ui-form__actions` | `d-flex flex-wrap gap-2` | `d-flex flex-wrap gap-2` | `flex flex-wrap gap-2` | — |
+| `form_columns` | `nowo-ui-form__columns` | — | — | — | — |
 | `danger_zone` | `nowo-ui-danger-zone` | `mt-4` | `mt-4` | `mt-6` | — |
 | `danger_zone_title` | `nowo-ui-danger-zone__title` | — | — | — | — |
 | `danger_zone_intro` | `nowo-ui-danger-zone__intro` | — | — | — | — |
@@ -331,6 +332,14 @@ nowo_ui_kit:
 ```
 
 ### 2.5 slots
+
+**Form spacing.** Every form row is spaced by tokens, not by margin utilities: the `form` slot (`<form class="nowo-ui-form">`)
+is a flex column with `gap: var(--nowo-ui-form-row-gap)` (no sibling margins any more, so a gap the host puts on the
+slot replaces it instead of adding to it); `form_actions` lost its `mt-3` / `mt-4` default and sits
+`--nowo-ui-form-actions-gap` below the last row (also when rendered after the `</form>`); new `form_columns` slot
+(`nowo-ui-form__columns`): side-by-side fields on an auto-fit grid, `--nowo-ui-form-column-gap` between columns
+(`--nowo-ui-form-column-min` per column); `.form-label` / `.nowo-ui-form__label` sit `--nowo-ui-form-label-gap` above
+their control. Tokens in [THEMING](THEMING.md#default-theme-polish-tokens-22).
 
 `tab_panel` (each in-page panel of the `locale_tabs` partial, next to the `tabs` list whose `tab` / `tab_active`
 buttons `nowo-ui-tabs.js` swaps on selection: the partial passes both class sets as `data-nowo-ui-tabs-tab-class` /
