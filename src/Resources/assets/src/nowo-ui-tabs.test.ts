@@ -362,8 +362,8 @@ describe('nowo-ui-tabs 2.5', () => {
 
     // A morph that resets the legend is hidden again on the next sync.
     const es = $('#lg-v-es');
-    es.removeAttribute('style');
-    es.removeAttribute('class');
+    es.style.cssText = '';
+    es.className = 'nowo-ui-locale-tabs__legend';
     es.removeAttribute('data-nowo-ui-visually-hidden');
     $('#v').setAttribute('data-nowo-ui-tabs-active', 'v-en');
     await flush();

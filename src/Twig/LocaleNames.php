@@ -22,9 +22,9 @@ final class LocaleNames
     private readonly \Closure $displayName;
 
     /**
-     * @param bool|null                              $intl        null: `extension_loaded('intl')`
+     * @param bool|null                               $intl        null: `extension_loaded('intl')`
      * @param (\Closure(string, string): string)|null $displayName display-name resolver `(locale, displayLocale)`;
-     *                                                            null: `\Locale::getDisplayName()`
+     *                                                             null: `\Locale::getDisplayName()`
      */
     public function __construct(?bool $intl = null, ?\Closure $displayName = null)
     {
