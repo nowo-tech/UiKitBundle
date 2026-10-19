@@ -6,6 +6,7 @@ namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 
 use Nowo\UiKitBundle\Theme\ThemeSlots;
 use Nowo\UiKitBundle\View\Label;
+use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,6 +26,7 @@ final class LocaleTabsPartialTest extends TestCase
         self::assertContains('tabs', ThemeSlots::SCRIPTS);
     }
 
+    #[RequiresPhpExtension('intl')] // language names ("English")
     public function testProgressiveMarkupRendersStackedFieldsetsWithAHiddenTabList(): void
     {
         $c = $this->crawl(['id' => 'lt', 'panels' => $this->panels(), 'default_locale' => 'en']);
@@ -78,6 +80,7 @@ final class LocaleTabsPartialTest extends TestCase
         self::assertDoesNotMatchRegularExpression('/\son[a-z]+=/i', $html);
     }
 
+    #[RequiresPhpExtension('intl')] // language names ("English")
     public function testErrorsRequiredMarkersAndActivation(): void
     {
         $panels = $this->panels();
