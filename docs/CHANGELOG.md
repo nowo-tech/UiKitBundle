@@ -54,6 +54,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- `locale_tabs` partial: no twig/twig 3.15 deprecation ("`??` infix operator will change its precedence"); the first
+  invalid panel is still found the same way.
+
 ## [2.5.0] - 2026-10-19
 
 Locale tabs partial and accessible tabs runtime, one gap for form rows with form spacing tokens. See [UPGRADING](UPGRADING.md#to-250).

@@ -59,6 +59,8 @@
 
 ## Unreleased
 
+Patch release; nothing to change.
+
 ## To 2.5.0
 
 From **2.4.0**:

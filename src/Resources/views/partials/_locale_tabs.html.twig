@@ -47,7 +47,7 @@
     {%- set _active = _request_locale in _locales ? _request_locale : _default -%}
 {%- endif -%}
 {%- if (activate_invalid ?? true) and (_panels|filter(p => p.locale == _active and (p.invalid ?? false)))|length == 0 -%}
-    {%- set _invalid = _panels|filter(p => p.invalid ?? false) -%}
+    {%- set _invalid = _panels|filter(p => (p.invalid ?? false)) -%}
     {%- if _invalid|length > 0 -%}
         {%- set _active = (_invalid|first).locale -%}
     {%- endif -%}
