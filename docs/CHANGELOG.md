@@ -84,8 +84,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Form rows use one gap**: `form.nowo-ui-form` (and forms in dialog bodies) is a flex column with
   `gap: var(--nowo-ui-form-row-gap)` instead of a `margin-top` between sibling rows, so a gap the host puts on the
   `form` slot replaces the kit spacing instead of adding to it (Beacon login: 32px between fields but 16px before the
-  button). Bare buttons / links directly in the form keep their width (`align-self: flex-start`). Inside
-  `@layer nowo-ui` and in `nowo-ui.unlayered.css`.
+  button). Bare buttons / links directly in the form keep their width (`align-self: flex-start`); rows of the
+  Bootstrap form theme (`mb-3`) do not add to the gap; the last descendants' bottom margins that used to collapse
+  into the row margin are trimmed, so the scaffolds keep the 2.4 look at default tokens. Inside `@layer nowo-ui` and in
+  `nowo-ui.unlayered.css`.
 - The `form_actions` slot dropped its `mt-3` (Bootstrap) / `mt-4` (Tailwind) default: the space above the actions row is
   `--nowo-ui-form-actions-gap` (default `1rem`), also for an actions row rendered after `</form>`.
 

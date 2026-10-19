@@ -70,9 +70,10 @@ Notes:
   `margin-top`), and the `form_actions` slot lost its `mt-3` / `mt-4`. Hosts that relied on the margin, or that put
   their own gap / margin utilities on the `form` slot (e.g. `flex flex-col gap-4`) to compensate, should drop those
   and set the tokens instead: `--nowo-ui-form-row-gap`, `--nowo-ui-form-actions-gap`, `--nowo-ui-form-label-gap`,
-  `--nowo-ui-form-column-gap`. Rows of the Symfony Bootstrap form theme keep their own `mb-3`: on those stacks the
-  actions row now sits as far below the last row as the rows sit from each other (it got one extra `mt-3` before).
-  Template overrides that rendered actions with `mt-3` in the class keep working.
+  `--nowo-ui-form-column-gap`. At default tokens the scaffolds look the same as in 2.4 (checked pixel for pixel on
+  the page-contract demo: form, settings, wizard, auth, confirm): rows of the Symfony Bootstrap form theme keep their
+  `mb-3` and the gap gives that rem back, and the bottom margin of a row's last descendants is trimmed where it used
+  to collapse into the row margin. Template overrides that render actions with `mt-3` in the class keep working.
 - Optional: replace per-bundle locale tab markup (own `_locale_tabs` templates, Bootstrap `nav-tabs` + CDN JS, radio
   hacks, `locale-tabs:changed` hooks) with the `locale_tabs` partial and `nowo-ui:tabs:change` — see
   [USAGE](USAGE.md#migrating-your-locale-ui). A host layout listing UiKit scripts by hand keeps `js/nowo-ui-tabs.js`.

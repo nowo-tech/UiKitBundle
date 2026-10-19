@@ -4120,6 +4120,25 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
   margin-top: var(--nowo-ui-form-actions-gap, 1rem);
 }
 
+/* Bootstrap's form theme puts `mb-3` (1rem, `!important`) on every row and flex items do not collapse margins: the
+   gap gives that rem back instead of adding to it, so the space between rows stays --nowo-ui-form-row-gap */
+:where(form.nowo-ui-form, .nowo-ui-dialog__body form):has(> .mb-3) {
+  gap: max(0px, calc(var(--nowo-ui-form-row-gap, 1rem) - 1rem));
+}
+
+/* …and the `mb-3` of a last row no longer collapses through the form's bottom into what follows (e.g. the actions row
+   of a settings section rendered after `</form>`): give it back */
+:where(form.nowo-ui-form, .nowo-ui-dialog__body form):has(> .mb-3:nth-last-child(1 of :not([type="hidden"]))) {
+  margin-bottom: -1rem;
+}
+
+/* A flex item does not let the bottom margin of its last descendants collapse through it (it did in the 2.4 block
+   flow, inside the row margin, e.g. Bootstrap's `.form-check` 0.125rem): trim it so a row is as tall as before */
+:where(form.nowo-ui-form, .nowo-ui-dialog__body form) > :where(:not(fieldset)) > :where(:last-child),
+:where(form.nowo-ui-form, .nowo-ui-dialog__body form) > :where(:not(fieldset)) > :where(:last-child) > :where(:last-child) {
+  margin-bottom: 0;
+}
+
 :where(form.nowo-ui-form, .nowo-ui-dialog__body form) > .nowo-ui-form__actions {
   margin-top: calc(var(--nowo-ui-form-actions-gap, 1rem) - var(--nowo-ui-form-row-gap, 1rem));
 }
