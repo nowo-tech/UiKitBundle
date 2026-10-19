@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.5.2] - 2026-10-19](#252---2026-10-19)
 - [[2.5.1] - 2026-10-19](#251---2026-10-19)
 - [[2.5.0] - 2026-10-19](#250---2026-10-19)
 - [[2.4.0] - 2026-10-18](#240---2026-10-18)
@@ -55,6 +56,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [2.5.2] - 2026-10-19
+
+Language names with polyfill-intl-icu (no ext-intl) and locale tabs legends hidden by the tabs runtime itself. See [UPGRADING](UPGRADING.md#to-252).
+
 ### Fixed
 
 - **`nowo_ui_locale_name()` / `locale_tabs` partial with `symfony/polyfill-intl-icu`**: `LocaleNames` now checks
@@ -68,6 +73,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the markup) — so hosts that load the tabs runtime without the UiKit CSS no longer show large "English EN★" legends.
   They stay in the accessibility tree (no `hidden` / `aria-hidden`). Non-progressive partials render the legend with
   `visually-hidden` server-side.
+
+[2.5.2]: https://github.com/nowo-tech/UiKitBundle/compare/v2.5.1...v2.5.2
 
 ## [2.5.1] - 2026-10-19
 
@@ -903,7 +910,7 @@ Supersedes 1.17.3: same runtime code and CSS, release gate hardened so the tagge
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.5.1...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.5.2...HEAD
 [1.10.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.4...v1.10.0
 [1.8.4]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.3...v1.8.4
 [1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0
