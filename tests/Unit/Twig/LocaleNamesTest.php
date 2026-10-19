@@ -33,6 +33,36 @@ final class LocaleNamesTest extends TestCase
         self::assertSame('PT_BR', (new LocaleNames(false))->name('pt_BR', 'en'));
     }
 
+    public function testDefaultGateIsTheIntlExtension(): void
+    {
+        $names = new LocaleNames(displayName: static fn (string $locale, string $display): string => 'Resolved');
+        self::assertSame(\extension_loaded('intl') ? 'Resolved' : 'ES', $names->name('es', 'en'));
+    }
+
+    public function testPolyfillResolverThatThrowsFallsBackToTheCode(): void
+    {
+        // symfony/polyfill-intl-icu: \Locale exists but getDisplayName() throws MethodNotImplementedException.
+        $names = new LocaleNames(true, static function (string $locale, string $display): string {
+            throw new \RuntimeException('Symfony\Polyfill\Intl\Icu\Locale::getDisplayName() is not implemented. Please install the "intl" extension.');
+        });
+        self::assertSame('ES', $names->name('es', 'en'));
+        self::assertSame('PT_BR', $names->name('pt_BR'));
+    }
+
+    public function testResolverResultIsCapitalisedAndUnknownIsTheCode(): void
+    {
+        $names = new LocaleNames(true, static fn (string $locale, string $display): string => ['es' => 'español', 'xx' => 'xx', 'yy' => ''][$locale]);
+        self::assertSame('Español', $names->name('es', 'es'));
+        self::assertSame('XX', $names->name('xx', 'es'));
+        self::assertSame('YY', $names->name('yy', 'es'));
+    }
+
+    public function testResolverIsNotCalledWithoutIntl(): void
+    {
+        $names = new LocaleNames(false, static fn (): string => throw new \LogicException('must not be called'));
+        self::assertSame('FR', $names->name('fr', 'en'));
+    }
+
     public function testDirection(): void
     {
         $names = new LocaleNames();

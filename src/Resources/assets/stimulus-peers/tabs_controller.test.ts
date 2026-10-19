@@ -163,6 +163,25 @@ describe('tabs peer 2.5 (standalone)', () => {
     expect(b.getAttribute('aria-selected')).toBe('true');
     expect(b.hasAttribute('data-active')).toBe(true);
   });
+  it('2.5.2: hides the legends of its own panels visually (no nowo-ui.css needed)', async () => {
+    document.body.innerHTML = markup('g')
+      .replace('<input required>', '<fieldset><legend id="lg-a" class="nowo-ui-locale-tabs__legend">Español <span>ES</span></legend><input required></fieldset>')
+      .replace('<div id="p-g-c" data-tabs-target="tab" data-tab-id="g-c"></div>', `<div id="p-g-c" data-tabs-target="tab" data-tab-id="g-c"><fieldset><legend id="lg-c" data-nowo-ui-tabs-legend>C</legend></fieldset>${markup('h').replace('<input required>', '<legend id="lg-plain">Plain</legend>')}</div>`);
+    await tick();
+    for (const id of ['#lg-a', '#lg-c']) {
+      const el = $(id);
+      expect(el.classList.contains('visually-hidden')).toBe(true);
+      expect(el.hasAttribute('data-nowo-ui-visually-hidden')).toBe(true);
+      expect(el.hasAttribute('hidden')).toBe(false);
+      expect(el.style.getPropertyValue('position')).toBe('absolute');
+      expect(el.style.getPropertyPriority('clip')).toBe('important');
+    }
+    expect($('#lg-plain').hasAttribute('data-nowo-ui-visually-hidden')).toBe(false);
+    const css = $('#lg-a').style.cssText;
+    $('#t-g-b').click();
+    await tick();
+    expect($('#lg-a').style.cssText).toBe(css);
+  });
 });
 
 describe('tabs peer 2.5 (delegated to nowo-ui-tabs.js)', () => {

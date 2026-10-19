@@ -60,6 +60,10 @@
 
 ## Unreleased
 
+Patch release. Run `php bin/console assets:install` (or your asset pipeline) for the new `nowo-ui-tabs.js`; hosts
+that registered the Stimulus `tabs` peer from the bundle get the legend fix on their next asset build. Nothing else
+changes; ext-intl is still recommended for language names (without it the tabs show the locale code).
+
 ## To 2.5.1
 
 From **2.5.0**:

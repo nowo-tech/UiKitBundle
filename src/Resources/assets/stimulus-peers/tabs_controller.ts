@@ -16,11 +16,39 @@
  * {tabId, previousTabId, trigger, panel, reason}) after each change; a progressive root (`data-nowo-ui-tabs-upgrade`)
  * shows its `list` target and gets `data-nowo-ui-tabs-ready`; the state is re-applied when a morph resets it.
  * Nested `tabs` controllers only see their own targets (Stimulus scoping).
+ * 2.5.2: the legends of its panels (`legend.nowo-ui-locale-tabs__legend`, [data-nowo-ui-tabs-legend]) are made visually
+ * hidden by the peer itself (class `visually-hidden`, data-nowo-ui-visually-hidden, CSSOM properties — strict-CSP
+ * safe), so hosts without nowo-ui.css do not show them; screen readers still read them.
  */
 
 import { Controller } from '@hotwired/stimulus';
 
 const CHANGE_EVENT = 'nowo-ui:tabs:change';
+const LEGEND = 'legend.nowo-ui-locale-tabs__legend, [data-nowo-ui-tabs-legend]';
+const VISUALLY_HIDDEN: Readonly<Record<string, string>> = {
+  position: 'absolute',
+  width: '1px',
+  height: '1px',
+  margin: '-1px',
+  padding: '0px',
+  overflow: 'hidden',
+  clip: 'rect(0px, 0px, 0px, 0px)',
+  'white-space': 'nowrap',
+  border: '0px',
+};
+
+/** Visually hidden, still read by screen readers; CSSOM writes (no inline style markup), only what differs. */
+function hideVisually(el: HTMLElement): void {
+  if (!el.classList.contains('visually-hidden')) {
+    el.classList.add('visually-hidden');
+  }
+  toggleAttr(el, 'data-nowo-ui-visually-hidden', true);
+  Object.entries(VISUALLY_HIDDEN).forEach(([name, value]) => {
+    if (el.style.getPropertyValue(name) !== value || el.style.getPropertyPriority(name) !== 'important') {
+      el.style.setProperty(name, value, 'important');
+    }
+  });
+}
 
 function setAttr(el: Element, name: string, value: string): void {
   if (el.getAttribute(name) !== value) {
@@ -121,6 +149,14 @@ export default class extends Controller {
       });
       toggleAttr(this.element, 'data-nowo-ui-tabs-ready', true);
     }
+    this.tabTargets.forEach((panel) => {
+      panel.querySelectorAll<HTMLElement>(LEGEND).forEach((legend) => {
+        // Only this panel's own legends (a nested tab set's panels hide theirs).
+        if (legend.closest('[data-nowo-ui-tabs-panel], [data-nowo-ui-tab-id], [data-tab-id]') === panel) {
+          hideVisually(legend);
+        }
+      });
+    });
 
     this.triggerTargets.forEach((trigger) => {
       const isActive = this.idOf(trigger) === tabId;

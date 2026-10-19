@@ -15,6 +15,10 @@
  * - progressive roots ([data-nowo-ui-tabs-upgrade]) render every panel visible (stacked fieldsets) until this script
  *   upgrades them: it shows the [data-nowo-ui-tabs-list] tab list, gives the panels role="tabpanel" and sets
  *   data-nowo-ui-tabs-ready;
+ * - 2.5.2: the panel legends of a tab set (`legend.nowo-ui-locale-tabs__legend`, [data-nowo-ui-tabs-legend]) are made
+ *   visually hidden by the runtime itself (class `visually-hidden`, data-nowo-ui-visually-hidden and CSSOM properties,
+ *   which strict CSP allows), so hosts that load this script without nowo-ui.css do not show them; they stay in the
+ *   accessibility tree;
  * - active / inactive trigger classes from data-nowo-ui-tabs-tab-active-class / data-nowo-ui-tabs-tab-class on the
  *   root (theme slots tab_active / tab);
  * - re-sync after a DOM morph (Live Component re-render, Turbo morph, remote dialog content): the tab the user chose
@@ -45,7 +49,38 @@ const ROOT = '[data-nowo-ui-tabs]';
 const TRIGGER = '[data-nowo-ui-tabs-trigger]';
 const PANEL = '[data-nowo-ui-tabs-panel]';
 const LIST = '[data-nowo-ui-tabs-list]';
+const LEGEND = 'legend.nowo-ui-locale-tabs__legend, [data-nowo-ui-tabs-legend]';
 const OBSERVED = ['data-nowo-ui-tabs-active', 'hidden', 'aria-selected', 'data-active'];
+
+/** Visually-hidden properties (kept for assistive tech), same as `.visually-hidden` in nowo-ui.css. */
+export const VISUALLY_HIDDEN: Readonly<Record<string, string>> = {
+  position: 'absolute',
+  width: '1px',
+  height: '1px',
+  margin: '-1px',
+  padding: '0px',
+  overflow: 'hidden',
+  clip: 'rect(0px, 0px, 0px, 0px)',
+  'white-space': 'nowrap',
+  border: '0px',
+};
+
+/**
+ * Hides an element visually but not from screen readers, without nowo-ui.css: class `visually-hidden` (Bootstrap /
+ * UiKit), data-nowo-ui-visually-hidden and CSSOM properties (not an inline style attribute in the markup, so strict
+ * CSP allows it). Writes only what differs (idempotent after morphs).
+ */
+export function hideVisually(el: HTMLElement): void {
+  if (!el.classList.contains('visually-hidden')) {
+    el.classList.add('visually-hidden');
+  }
+  toggleAttr(el, 'data-nowo-ui-visually-hidden', true);
+  Object.entries(VISUALLY_HIDDEN).forEach(([name, value]) => {
+    if (el.style.getPropertyValue(name) !== value || el.style.getPropertyPriority(name) !== 'important') {
+      el.style.setProperty(name, value, 'important');
+    }
+  });
+}
 
 /** Tab chosen per root (click, keys, invalid, API): restored when a morph resets the server-rendered state. */
 const chosen = new WeakMap<HTMLElement, string>();
@@ -67,6 +102,13 @@ function owned(root: HTMLElement, selector: string): HTMLElement[] {
 
 function tabIdOf(el: Element): string {
   return el.getAttribute('data-nowo-ui-tab-id') ?? '';
+}
+
+/** Legends of the root's own panels (not of nested tab sets). */
+function ownedLegends(root: HTMLElement, panels: HTMLElement[]): HTMLElement[] {
+  return panels.flatMap((panel) =>
+    Array.from(panel.querySelectorAll<HTMLElement>(LEGEND)).filter((legend) => legend.closest(PANEL) === panel && legend.closest(ROOT) === root),
+  );
 }
 
 function setAttr(el: Element, name: string, value: string): void {
@@ -110,6 +152,7 @@ function apply(root: HTMLElement, tabId: string): void {
   if (root.hasAttribute('data-nowo-ui-tabs-upgrade')) {
     upgrade(root, triggers, panels);
   }
+  ownedLegends(root, panels).forEach(hideVisually);
   const activeClasses = tokens(root.getAttribute('data-nowo-ui-tabs-tab-active-class'));
   const inactiveClasses = tokens(root.getAttribute('data-nowo-ui-tabs-tab-class'));
 

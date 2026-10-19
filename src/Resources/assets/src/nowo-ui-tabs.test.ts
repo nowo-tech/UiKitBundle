@@ -327,4 +327,57 @@ describe('nowo-ui-tabs 2.5', () => {
     document.documentElement.style.direction = '';
     expect(mod.isRtl($('#c'))).toBe(false);
   });
+  it('2.5.2: hides its own panel legends visually without nowo-ui.css (still in the accessibility tree)', async () => {
+    const legend = (id: string, extra = ''): string =>
+      `<fieldset><legend class="nowo-ui-locale-tabs__legend" id="lg-${id}"${extra}>English <span>EN</span></legend><input></fieldset>`;
+    document.body.innerHTML = `
+      <div id="v" data-nowo-ui-tabs data-nowo-ui-tabs-upgrade data-nowo-ui-tabs-active="v-es">
+        <div role="tablist" data-nowo-ui-tabs-list hidden>
+          <button type="button" role="tab" id="tab-v-es" data-nowo-ui-tabs-trigger data-nowo-ui-tab-id="v-es">ES</button>
+          <button type="button" role="tab" id="tab-v-en" data-nowo-ui-tabs-trigger data-nowo-ui-tab-id="v-en">EN</button>
+        </div>
+        <div id="tab-v-es-panel" data-nowo-ui-tabs-panel data-nowo-ui-tab-id="v-es">${legend('v-es')}
+          <div id="w" data-nowo-ui-tabs data-nowo-ui-tabs-upgrade data-nowo-ui-tabs-active="w-a" hidden-root>
+            <div data-nowo-ui-tabs-panel data-nowo-ui-tab-id="w-a"><fieldset><legend id="lg-plain">Plain legend</legend></fieldset></div>
+          </div>
+        </div>
+        <div id="tab-v-en-panel" data-nowo-ui-tabs-panel data-nowo-ui-tab-id="v-en"><fieldset><legend id="lg-v-en" data-nowo-ui-tabs-legend>English</legend></fieldset></div>
+      </div>
+      <fieldset><legend class="nowo-ui-locale-tabs__legend" id="lg-outside">Outside</legend></fieldset>`;
+    mod.bindNowoUiTabs();
+    for (const id of ['#lg-v-es', '#lg-v-en']) {
+      const el = $(id);
+      expect(el.classList.contains('visually-hidden')).toBe(true);
+      expect(el.hasAttribute('data-nowo-ui-visually-hidden')).toBe(true);
+      expect(el.hasAttribute('hidden')).toBe(false);
+      expect(el.getAttribute('aria-hidden')).toBeNull();
+      Object.entries(mod.VISUALLY_HIDDEN).forEach(([name, value]) => {
+        expect(el.style.getPropertyValue(name)).toBe(value);
+        expect(el.style.getPropertyPriority(name)).toBe('important');
+      });
+    }
+    // Plain legends of other markup and legends outside a tab set are left alone.
+    expect($('#lg-plain').hasAttribute('data-nowo-ui-visually-hidden')).toBe(false);
+    expect($('#lg-outside').hasAttribute('data-nowo-ui-visually-hidden')).toBe(false);
+
+    // A morph that resets the legend is hidden again on the next sync.
+    const es = $('#lg-v-es');
+    es.removeAttribute('style');
+    es.removeAttribute('class');
+    es.removeAttribute('data-nowo-ui-visually-hidden');
+    $('#v').setAttribute('data-nowo-ui-tabs-active', 'v-en');
+    await flush();
+    expect(es.classList.contains('visually-hidden')).toBe(true);
+    expect(es.style.getPropertyValue('position')).toBe('absolute');
+  });
+
+  it('2.5.2: hideVisually is idempotent and keeps existing classes', () => {
+    document.body.innerHTML = '<legend id="h" class="x"></legend>';
+    const el = $('#h');
+    mod.hideVisually(el);
+    const css = el.style.cssText;
+    mod.hideVisually(el);
+    expect(el.style.cssText).toBe(css);
+    expect(el.className).toBe('x visually-hidden');
+  });
 });

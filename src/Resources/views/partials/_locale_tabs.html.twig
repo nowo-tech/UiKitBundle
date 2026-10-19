@@ -28,7 +28,8 @@
     - active_locale: initially open panel (default: the request locale when listed, else default_locale)
     - activate_invalid: open the first invalid panel when the active one has no errors (default true)
     - mark_default (default true), default_marker ('★'), required_marker ('*'), error_marker ('!')
-    - legend: render each panel's <legend> (default true; visually hidden once upgraded to tabs)
+    - legend: render each panel's <legend> (default true; visually hidden once upgraded to tabs — 2.5.2: the runtime /
+      Stimulus peer hide it themselves, so hosts without nowo-ui.css do not show it; still read by screen readers)
     - progressive: false = tab list visible and inactive panels `hidden` server-side (needs JS to switch)
     - stimulus: Stimulus identifier for the `tabs` peer attributes (default false: kit attributes only)
     - attr: root attributes (no on*), bundle, nowo_ui_page_type
@@ -102,7 +103,7 @@
         {%- if _s %} data-{{ _s }}-target="tab" data-tab-id="{{ _tab_id }}"{% endif %}{{ nowo_ui_attrs('tab_panel', _b) }}{{ nowo_ui_html_attrs(_p.attr|default({})) }}>
         <fieldset class="nowo-ui-locale-tabs__fieldset">
             {%- if _legend %}
-            <legend class="nowo-ui-locale-tabs__legend">{{ _name }}{% if _name != _p.locale|upper %} <span class="nowo-ui-locale-tabs__code">{{ _p.locale|upper }}</span>{% endif %}
+            <legend class="nowo-ui-locale-tabs__legend{% if not _progressive %} visually-hidden{% endif %}" data-nowo-ui-tabs-legend>{{ _name }}{% if _name != _p.locale|upper %} <span class="nowo-ui-locale-tabs__code">{{ _p.locale|upper }}</span>{% endif %}
                 {{- _self.markers(_is_default, _is_required, _is_invalid, _m) -}}
                 {%- set _sr = (_is_default ? [_t_default] : [])|merge(_is_required ? [_t_required] : [])|merge(_is_invalid ? [_t_invalid] : []) %}
                 {%- if _sr|length > 0 %}<span class="visually-hidden"> ({{ _sr|join(', ') }})</span>{% endif -%}

@@ -55,6 +55,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **`nowo_ui_locale_name()` / `locale_tabs` partial with `symfony/polyfill-intl-icu`**: `LocaleNames` now checks
+  `extension_loaded('intl')` instead of `class_exists(\Locale::class)` (true with the polyfill, whose
+  `Locale::getDisplayName()` throws) and falls back to the upper-cased code when the display-name lookup throws.
+  Hosts without ext-intl but with the polyfill no longer crash. The constructor takes an optional display-name
+  resolver (tests, custom names).
+- **Locale tabs legends without `nowo-ui.css`**: `nowo-ui-tabs.js` and the Stimulus `tabs` peer make the panel legends
+  (`legend.nowo-ui-locale-tabs__legend`, new `[data-nowo-ui-tabs-legend]`) visually hidden themselves — class
+  `visually-hidden`, `data-nowo-ui-visually-hidden` and CSSOM properties (allowed by strict CSP; no style attribute in
+  the markup) — so hosts that load the tabs runtime without the UiKit CSS no longer show large "English EN★" legends.
+  They stay in the accessibility tree (no `hidden` / `aria-hidden`). Non-progressive partials render the legend with
+  `visually-hidden` server-side.
+
 ## [2.5.1] - 2026-10-19
 
 Locale tabs partial without the twig 3.15 ?? precedence deprecation. See [UPGRADING](UPGRADING.md#to-251).
