@@ -34,7 +34,7 @@
     "datatables.net-responsive-dt": "3.0.8",
     "happy-dom": "^20.14.6",
     "lucide": "1.56.0",
-    "morphicons": "1.7.1",
+    "morphicons": "2.0.0",
     "sass": "1.93.2",
     "typescript": "~7.0.2",
     "vite": "^8.3.4",
