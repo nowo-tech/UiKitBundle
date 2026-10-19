@@ -193,6 +193,7 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `tab` | `nowo-ui-tabs__item` | `nav-link` | `nav-link` | `px-3 py-2 text-sm no-underline` | `tabs-title` |
 | `tab_active` | `nowo-ui-tabs__item nowo-ui-tabs__item--active` | `nav-link active` | `nav-link active` | `px-3 py-2 text-sm no-underline border-b-2` | `tabs-title is-active` |
 | `tabs_secondary` | `nowo-ui-tabs nowo-ui-tabs--secondary` | `nav nav-pills mb-3` | `nav nav-pills mb-3` | `flex flex-wrap gap-2 mb-3` | `menu` |
+| `tab_panel` | `nowo-ui-tabs__panel` | — | — | — | — |
 | `menu` | `nowo-ui-menu` | — | — | — | — |
 | `menu_toggle` | `nowo-ui-menu__toggle` | `btn btn-outline-secondary btn-sm` | `btn btn-outline-secondary btn-sm` | `inline-flex items-center gap-1 font-medium px-2 py-1 text-sm border` | `button secondary tiny` |
 | `menu_panel` | `nowo-ui-menu__panel` | — | — | — | — |
@@ -329,6 +330,12 @@ nowo_ui_kit:
       badge_danger: { value: 'badge text-bg-danger', framework_defaults: false }
 ```
 
+### 2.5 slots
+
+`tab_panel` (each in-page panel of the `locale_tabs` partial, next to the `tabs` list whose `tab` / `tab_active`
+buttons `nowo-ui-tabs.js` swaps on selection: the partial passes both class sets as `data-nowo-ui-tabs-tab-class` /
+`data-nowo-ui-tabs-tab-active-class`).
+
 ### 2.2 slots
 
 `btn_danger_solid` (solid destructive button: the confirm button of a danger `Confirm`, dialog and full page);
@@ -373,6 +380,7 @@ as the UiKit partial (documented in the header comment of each template) and sho
 | `empty` | `partials/_empty.html.twig` | `empty` (`View\EmptyState`) **and** `message` (translated), `region`, `bundle` | list scaffold |
 | `filters` | `partials/_filters.html.twig` | `action`, `method`, `q`, `placeholder`, `actions`, `clear_href`, `collapsible` | bundle filter bars |
 | `flashes` | `partials/_flashes.html.twig` | `flash_messages` (2.2, default `app.flashes`), `flashes` (deprecated: ignored inside page scaffolds), `trans_domain`, `bundle` | layouts (`nowo_ui_flashes`) |
+| `locale_tabs` *(2.5)* | `partials/_locale_tabs.html.twig` | `panels` (list of `{locale, content (HTML Markup; plain strings escaped), label?, name?, invalid?, required?, dir?, attr?}`), `id`, `label` (tab list `aria-label`, default `locale_tabs.label`), `default_locale` (★, listed first unless `default_first: false`), `required_locales` (*), `active_locale`, `activate_invalid`, `mark_default`, `default_marker` / `required_marker` / `error_marker`, `legend`, `progressive` (default true: stacked fieldsets until `nowo-ui-tabs.js` upgrades the root), `stimulus` (peer identifier), `attr`, `bundle`; slots `tabs`, `tab`, `tab_active`, `tab_panel` | one in-page panel per locale (FormKit `locale_tabs`, per-locale CRUD fields); see [USAGE](USAGE.md#locale-tabs-25) |
 | `list_filters` | `page/_list_filters.html.twig` | `page` (`View\ListPage`, `page.filters` FormView), `region`, `bundle` | list scaffold |
 | `menu` *(2.3)* | `partials/_menu.html.twig` | `items` (`View\Link` / `View\Action` / `{label, href, attr, current, danger}`) or `content` (HTML, `popover` panel), `label`, `icon`, `display`, `align` (`end` \| `start`), `popover` *(2.4; default `theme.popover_menus`)*: native `[popover]` panel in the top layer (never clipped by table scrollers), placed by `nowo-ui-popover.js`, `confirm_external` *(2.4)*, `open`, `attr`, `bundle` | dropdown / overflow menus, popovers (native `<details>`, no JS required; light dismiss by `nowo-ui-dialog.js`) |
 | `modal_shell` | `partials/_modal_shell.html.twig` | `id`, `title`, `body`, `footer` | modals |

@@ -204,6 +204,8 @@ Metrics (1.12): `--nowo-ui-table-head-py`, `--nowo-ui-table-cell-py`, `--nowo-ui
 | `--nowo-ui-tab-active-bg` | `var(--nowo-ui-tab-bg)` |
 | `--nowo-ui-tab-active-border` | `var(--nowo-ui-primary)` (2px bottom border) |
 | `--nowo-ui-tab-active-weight` | `600` |
+| `--nowo-ui-locale-tabs-gap` *(2.5)* | `0.75rem` (between the tab list and the panel of the `locale_tabs` partial) |
+| `--nowo-ui-locale-tabs-default` *(2.5)* | `var(--nowo-ui-primary)` (the default-language ★ marker) |
 
 ## Pagination
 

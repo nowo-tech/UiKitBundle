@@ -124,3 +124,7 @@ wizard.step_of: "Étape %current% sur %total%"
 form.danger_zone: "Zone de danger"
 confirm.type_to_confirm: "Saisissez %value% pour confirmer"
 progress.label: Progression
+locale_tabs.label: "Langues"
+locale_tabs.default: "langue par défaut"
+locale_tabs.required: "obligatoire"
+locale_tabs.invalid: "contient des erreurs"

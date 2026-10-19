@@ -301,7 +301,7 @@ final class HostChromePartialsTest extends TestCase
         $twig->addExtension(new ThemeExtension(new Theme()));
 
         $html = $twig->render('@NowoUiKitBundle/demo/kitchen_sink.html.twig');
-        foreach (['data-nowo-ui-popover-menu', 'popovertarget="demo-kebab-popover"', 'data-nowo-ui-segmented', 'js/nowo-ui-popover.js', 'js/nowo-ui-segmented.js', 'id="host-chrome"', 'data-controller="filters-collapse"', 'data-controller="responsive-table"', 'aria-labelledby="kitchen-sink-rt-title"',
+        foreach (['data-nowo-ui-popover-menu', 'popovertarget="demo-kebab-popover"', 'data-nowo-ui-segmented', 'js/nowo-ui-popover.js', 'js/nowo-ui-segmented.js', 'js/nowo-ui-tabs.js', 'id="demo-locale-tabs"', 'id="tab-demo-locale-tabs-en"', 'id="host-chrome"', 'data-controller="filters-collapse"', 'data-controller="responsive-table"', 'aria-labelledby="kitchen-sink-rt-title"',
             'nowo-ui-row-detail-cell', 'nowo-ui-corner-tab', 'nowo-ui-disclosure-icon', 'nowo-ui-edge-tab__link', 'bi bi-x-circle'] as $needle) {
             self::assertStringContainsString($needle, $html);
         }

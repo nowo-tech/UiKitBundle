@@ -53,6 +53,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **`locale_tabs` partial** (`partials/_locale_tabs.html.twig`): one in-page panel per locale behind a WAI-ARIA tab
+  list — the shared building block for per-locale CRUD fields (FormKit 2.13 renders its `locale_tabs` option and
+  `TranslatableMapType` through it). `panels: [{locale, content, label?, name?, invalid?, required?, dir?, attr?}]`,
+  `id`, `label`, `default_locale` (★, listed first), `required_locales` (*), `active_locale` (default: the request
+  locale), `activate_invalid`, markers, `legend`, `progressive`, `stimulus`, `attr`, `bundle`. Without JavaScript every
+  panel is a visible stacked `<fieldset><legend>`; `lang` / `dir` per panel; errors as `!` plus screen-reader text in
+  the tab name; no inline script / style. Translations `locale_tabs.*` in every shipped locale.
+- Theme slot **`tab_panel`** (`nowo-ui-tabs__panel`); tokens `--nowo-ui-locale-tabs-gap`,
+  `--nowo-ui-locale-tabs-default`.
+- Twig functions **`nowo_ui_locale_name(locale, display_locale = null)`** (ext-intl display name in the request
+  locale, else the upper-cased code) and **`nowo_ui_locale_dir(locale)`** (`rtl` / `ltr`); `Twig\LocaleNames`.
+- **`nowo-ui-tabs.js` / Stimulus `tabs` peer**: WAI-ARIA keyboard support for `role="tab"` triggers (roving
+  `tabindex`, `ArrowLeft` / `ArrowRight` mirrored in RTL, `ArrowUp` / `ArrowDown` for vertical lists, `Home` /
+  `End`); an `invalid` control in a hidden panel opens it (and its parent panels) so browser validation can focus it;
+  the bubbling **`nowo-ui:tabs:change`** event (`detail: {tabId, previousTabId, trigger, panel, reason}`) for editors
+  that mount on a visible panel; progressive roots (`data-nowo-ui-tabs-upgrade`, `data-nowo-ui-tabs-list`,
+  `data-nowo-ui-tabs-ready`); trigger class swap (`data-nowo-ui-tabs-tab-class` / `-tab-active-class`); re-sync after
+  DOM morphs (Live Component re-render, Turbo morph, inserted content) that keeps the tab the user chose. The peer
+  gains the `list` target and the same behaviour standalone, and delegates to the script when both are present.
+- Kitchen sink demo: a locale tabs form (server error on one locale, required locales, an RTL panel).
+
+### Fixed
+
+- `nowo-ui-tabs.js` drove every trigger / panel under a root, including those of a nested tab set: each root now only
+  drives its own (the nearest `[data-nowo-ui-tabs]`).
+
 ## [2.4.0] - 2026-10-18
 
 Pagination::fromTotal(), popover row / overflow menus, segmented partial. See [UPGRADING](UPGRADING.md#to-240).

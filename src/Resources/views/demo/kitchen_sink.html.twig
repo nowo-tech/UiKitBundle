@@ -33,6 +33,7 @@
         {% include '@NowoUiKitBundle/partials/_tabs.html.twig' with {
             items: [
                 { label: 'Buttons', href: '#buttons', current: true },
+                { label: 'Locale tabs', href: '#locale-tabs', current: false },
                 { label: 'Table', href: '#table', current: false },
                 { label: 'Host chrome', href: '#host-chrome', current: false },
                 { label: 'Feedback', href: '#feedback', current: false },
@@ -111,6 +112,33 @@
                     { label: 'Involved only', checked: true, title: 'Issues you created, are assigned to or commented on' }
                 ]
             } %}
+        </section>
+
+        {# 2.5: locale tabs — one panel per locale; stacked fieldsets without JS, WAI-ARIA tabs once nowo-ui-tabs.js runs.
+           The English panel carries a server error (marker + screen-reader text, opened first); the required inputs
+           show the browser validation opening a hidden panel. #}
+        <section id="locale-tabs" class="nowo-ui-body" data-demo-locale-tabs>
+            <form action="#locale-tabs" method="get" class="nowo-ui-form">
+                {% set _demo_panels = [] %}
+                {% for _l in [{locale: 'es', title: 'Bienvenida', body: 'Hola y bienvenido.'}, {locale: 'en', title: '', body: 'Hello and welcome.', error: 'This value should not be blank.'}, {locale: 'ar', title: 'مرحبا', body: ''}] %}
+                    {% set _demo_html %}
+                        <p>
+                            <label for="demo-lt-title-{{ _l.locale }}">Title</label>
+                            <input type="text" id="demo-lt-title-{{ _l.locale }}" name="title[{{ _l.locale }}]" value="{{ _l.title }}" class="{{ nowo_ui_class('input') }}"{% if _l.locale != 'ar' %} required{% endif %}{% if _l.error is defined %} aria-invalid="true" aria-describedby="demo-lt-error-{{ _l.locale }}"{% endif %}>
+                        </p>
+                        {% if _l.error is defined %}<p id="demo-lt-error-{{ _l.locale }}" class="{{ nowo_ui_class('form_error') }}">{{ _l.error }}</p>{% endif %}
+                        <p>
+                            <label for="demo-lt-body-{{ _l.locale }}">Body</label>
+                            <textarea id="demo-lt-body-{{ _l.locale }}" name="body[{{ _l.locale }}]" rows="2" class="{{ nowo_ui_class('input') }}">{{ _l.body }}</textarea>
+                        </p>
+                    {% endset %}
+                    {% set _demo_panels = _demo_panels|merge([{locale: _l.locale, content: _demo_html, invalid: _l.error is defined}]) %}
+                {% endfor %}
+                {{ include(nowo_ui_partial('locale_tabs'), {id: 'demo-locale-tabs', panels: _demo_panels, default_locale: 'es', required_locales: ['es', 'en'], activate_invalid: false}, false) }}
+                <div class="{{ nowo_ui_class('form_actions') }}">
+                    <button type="submit" class="{{ ui.btn('primary', 'sm') }}">Validate</button>
+                </div>
+            </form>
         </section>
 
         {% set card_body %}
@@ -390,4 +418,5 @@
     <script src="{{ asset('js/nowo-ui-orb.js', 'nowo_ui_kit') }}" defer></script>
     <script src="{{ asset('js/nowo-ui-popover.js', 'nowo_ui_kit') }}" defer></script>
     <script src="{{ asset('js/nowo-ui-segmented.js', 'nowo_ui_kit') }}" defer></script>
+    <script src="{{ asset('js/nowo-ui-tabs.js', 'nowo_ui_kit') }}" defer></script>
 {% endblock %}

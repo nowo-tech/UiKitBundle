@@ -5,6 +5,8 @@
 - [Import macros](#import-macros)
 - [Partials](#partials)
 - [Assets](#assets)
+- [Locale tabs (2.5)](#locale-tabs-25)
+  - [Migrating your locale UI](#migrating-your-locale-ui)
 - [Page loader and page transitions](#page-loader-and-page-transitions)
 - [Open a modal on load (deep link)](#open-a-modal-on-load-deep-link)
 - [Filter bar and data table (opt-in)](#filter-bar-and-data-table-opt-in)
@@ -180,13 +182,123 @@ Run `php bin/console assets:install` after install/update.
 
 `nowo-ui-shell.js` toggles the left aside via `data-nowo-ui-burger`, nested groups via `data-nowo-ui-nav-group-toggle`, and main width via `data-nowo-ui-width-toggle`.
 
-`nowo-ui-clipboard.js` copies via `data-nowo-ui-clipboard*` (text or same-origin URL). `nowo-ui-tabs.js` switches in-page panels via `data-nowo-ui-tabs*` (Twig `_tabs` remains link navigation).
+`nowo-ui-clipboard.js` copies via `data-nowo-ui-clipboard*` (text or same-origin URL). `nowo-ui-tabs.js` switches in-page panels via `data-nowo-ui-tabs*` (Twig `_tabs` remains link navigation); 2.5: keyboard, `invalid`, `nowo-ui:tabs:change`, nesting and morph re-sync — see [Locale tabs](#locale-tabs-25).
 
 `nowo-ui-release.js` lazily fetches the release-status JSON the first time a `dialog[data-nowo-ui-release]` opens (`_release_version.html.twig`).
 
 Optional Stimulus peers: `src/Resources/assets/stimulus-peers/` — see [STIMULUS.md](STIMULUS.md).
 
 `nowo-ui-orb.js` mounts Thinking Orbs on `canvas[data-nowo-ui-orb]` (local MIT canvas engine; no CDN). Use `_thinking_orb.html.twig` or `_page_loader.html.twig` with `visual: 'orb'`.
+
+## Locale tabs (2.5)
+
+One panel per locale behind a WAI-ARIA tab list: the shared building block for every per-locale CRUD field (title /
+body / slug / SEO text per language). FormKit 2.13+ renders its `locale_tabs` option and `TranslatableMapType` through
+this partial when UiKit is installed; hosts and bundles with their own markup call it directly.
+
+```twig
+{% set panels = [] %}
+{% for locale in ['es', 'en', 'fr'] %}
+    {% set html %}
+        {{ form_row(form['name_' ~ locale]) }}
+        {{ form_row(form['description_' ~ locale]) }}
+    {% endset %}
+    {% set panels = panels|merge([{
+        locale: locale,
+        content: html,
+        invalid: not form['name_' ~ locale].vars.valid or not form['description_' ~ locale].vars.valid,
+    }]) %}
+{% endfor %}
+{{ include(nowo_ui_partial('locale_tabs'), {
+    id: 'permission-i18n',
+    panels: panels,
+    default_locale: 'es',
+    required_locales: ['es'],
+}, false) }}
+```
+
+Load `js/nowo-ui-tabs.js` (the `scripts` partial and the UiKit layouts already do) and `css/nowo-ui.css`.
+
+| Parameter | Default | Notes |
+|---|---|---|
+| `panels` | — (required) | list of `{locale, content, label?, name?, invalid?, required?, dir?, attr?}`. `content` is the panel HTML: a Twig `Markup` (a `{% set %}…{% endset %}` capture) prints as is, a plain string is escaped. `label` = tab text (default `ES`), `name` = language name for the legend and screen readers (default `nowo_ui_locale_name(locale)`), `dir` default `nowo_ui_locale_dir(locale)` |
+| `id` | random | DOM prefix: tab ids `<id>-<locale>`, buttons `tab-<id>-<locale>`, panels `tab-<id>-<locale>-panel` |
+| `label` | `locale_tabs.label` ("Languages") | `aria-label` of the tab list (`Label` or string) |
+| `default_locale` | first panel | ★ marker + "default language" for screen readers; listed first (`default_first: false` keeps the given order) |
+| `required_locales` | `[]` | `*` marker + "required" (a panel's own `required` wins) |
+| `active_locale` | request locale when listed, else `default_locale` | initially open panel |
+| `activate_invalid` | `true` | open the first invalid panel when the active one has no errors |
+| `mark_default`, `default_marker`, `required_marker`, `error_marker` | `true`, `★`, `*`, `!` | visible markers (always `aria-hidden`, the meaning is in the screen-reader text) |
+| `legend` | `true` | `<legend>` per panel (the heading of the no-JS view, visually hidden once tabs are active) |
+| `progressive` | `true` | `false`: tab list visible and inactive panels `hidden` server-side (needs JS to switch, like the 1.x tabs) |
+| `stimulus` | `false` | Stimulus identifier (e.g. `'tabs'`) to also emit the peer attributes (`data-controller`, targets `trigger` / `tab` / `list`, `click->tabs#open`) |
+| `attr`, `bundle` | | root attributes (no `on*`); per-bundle theme exceptions |
+
+Behaviour:
+
+- **No JavaScript**: every panel is visible as a stacked `<fieldset>` with its `<legend>` ("Spanish ES ★ *"); the
+  tab list is `hidden`. `nowo-ui-tabs.js` upgrades the root (`data-nowo-ui-tabs-upgrade` → `data-nowo-ui-tabs-ready`):
+  shows the tab list, gives the panels `role="tabpanel"` / `aria-labelledby`, hides the inactive ones.
+- **Keyboard** (role `tab` triggers): `ArrowRight` / `ArrowLeft` next / previous with wrap-around (mirrored when the
+  tab list is right-to-left), `Home` / `End`, roving `tabindex` (only the selected tab is in the Tab order).
+- **Errors**: `invalid: true` marks the tab (`data-invalid`, `!`, "contains errors" in the accessible name) and the
+  panel (`data-invalid`). Put `aria-invalid="true"` on the invalid controls themselves (FormKit does it).
+- **Browser validation**: when a submit finds an invalid control in a hidden panel, the runtime opens that panel (and
+  its parent panels) inside the `invalid` event, so the browser can focus the control and show its message.
+- **`nowo-ui:tabs:change`** (bubbling `CustomEvent` on the root): `detail = {tabId, previousTabId, trigger, panel,
+  reason}` with `reason` `click` | `keyboard` | `invalid` | `api`. Mount editors that need a visible container there:
+
+  ```js
+  document.addEventListener('nowo-ui:tabs:change', (event) => {
+    event.detail.panel?.querySelectorAll('[data-editor]:not([data-mounted])').forEach(mountEditor);
+  });
+  ```
+
+- **Nesting**: each root drives only its own triggers and panels (the nearest `[data-nowo-ui-tabs]`).
+- **Live Component / Turbo morph**: a re-render that writes the server attributes back keeps the tab the user chose
+  (and re-upgrades the root); new roots inserted later (remote dialogs) are upgraded too.
+- **Strict CSP**: no inline script / style / `on*`. `lang` and `dir` are set on each panel (Arabic, Hebrew, Persian,
+  Urdu… panels get `dir="rtl"`).
+- Theme slots `tabs` (list), `tab` / `tab_active` (buttons; the runtime swaps both class sets, passed as
+  `data-nowo-ui-tabs-tab-class` / `data-nowo-ui-tabs-tab-active-class`), `tab_panel` (panels); tokens
+  `--nowo-ui-locale-tabs-gap`, `--nowo-ui-locale-tabs-default`.
+
+`window.nowoUiActivateTab(root | id | selector, tabId)` selects a tab from code (reason `api`).
+
+### Migrating your locale UI
+
+Per-bundle tab markup (own `_locale_tabs.html.twig`, Bootstrap `nav-tabs` + CDN JS, `.as-locale-tab` scripts, radio
+hacks, stacked fieldsets) becomes one include. Before:
+
+```twig
+<ul class="nav nav-tabs" role="tablist">
+  {% for locale in locales %}
+    <li class="nav-item"><button class="nav-link{{ loop.first ? ' active' }}" data-bs-toggle="tab"
+        data-bs-target="#t-{{ locale }}" type="button">{{ locale|upper }}</button></li>
+  {% endfor %}
+</ul>
+<div class="tab-content">
+  {% for locale in locales %}
+    <div class="tab-pane{{ loop.first ? ' active' }}" id="t-{{ locale }}">{{ form_row(form['title_' ~ locale]) }}</div>
+  {% endfor %}
+</div>
+```
+
+After (no Bootstrap JS, works without JS, keyboard and error states included):
+
+```twig
+{% set panels = [] %}
+{% for locale in locales %}
+    {% set html %}{{ form_row(form['title_' ~ locale]) }}{% endset %}
+    {% set panels = panels|merge([{locale: locale, content: html, invalid: not form['title_' ~ locale].vars.valid}]) %}
+{% endfor %}
+{{ include(nowo_ui_partial('locale_tabs', 'NowoBlogKitBundle'), {id: 'article-title', panels: panels, default_locale: default_locale, bundle: 'NowoBlogKitBundle'}, false) }}
+```
+
+With FormKit installed, prefer its `locale_tabs` option / `TranslatableMapType` (they build the panels for the three
+usual shapes: a list of translation entities, `field_<locale>` groups and a JSON `{locale: text}` map) — see
+FormKit's [USAGE](https://github.com/nowo-tech/FormKitBundle/blob/main/docs/USAGE.md#locale-tabs). Replace a
+`locale-tabs:changed` editor hook with `nowo-ui:tabs:change`.
 
 ## Page loader and page transitions
 

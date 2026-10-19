@@ -351,6 +351,8 @@ final class ThemeSlots
             'tailwind' => 'flex flex-wrap gap-2 mb-3',
             'foundation' => 'menu',
         ]],
+        // In-page tab panel (2.5, partial `locale_tabs`): each panel next to the `tabs` list of `tab` / `tab_active` buttons
+        'tab_panel' => ['nowo-ui-tabs__panel', []],
         // Floating widgets (2.3, partial `menu`): native <details> disclosure root, its <summary> toggle, the item
         // list panel and one item (link / button); `popover` is the panel of a menu with free content
         'menu' => ['nowo-ui-menu', []],
@@ -457,6 +459,7 @@ final class ThemeSlots
         'filters' => '@NowoUiKitBundle/partials/_filters.html.twig',
         'flashes' => '@NowoUiKitBundle/partials/_flashes.html.twig',
         'list_filters' => '@NowoUiKitBundle/page/_list_filters.html.twig',
+        'locale_tabs' => '@NowoUiKitBundle/partials/_locale_tabs.html.twig',
         'menu' => '@NowoUiKitBundle/partials/_menu.html.twig',
         'modal_shell' => '@NowoUiKitBundle/partials/_modal_shell.html.twig',
         'page_header' => '@NowoUiKitBundle/partials/_page_header.html.twig',

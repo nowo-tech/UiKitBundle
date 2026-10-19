@@ -413,6 +413,17 @@ $pagination = Pagination::fromRequest($request, $repository->count($criteria));
 $rows = $repository->findBy($criteria, ['id' => 'DESC'], $pagination->limit(), $pagination->offset());
 ```
 
+**Locale tabs (2.5).** Per-locale form fields (one value per language) use the `locale_tabs` partial — one panel per
+locale behind a WAI-ARIA tab list, stacked fieldsets without JavaScript, error / required / default markers with
+screen-reader text, keyboard, browser validation opening the hidden panel, `nowo-ui:tabs:change` for editors, Live
+Component safe (slots `tabs`, `tab`, `tab_active`, `tab_panel`). Bundles do not ship their own locale tab markup;
+with FormKit they set the `locale_tabs` option or use `TranslatableMapType`, which render through this partial. See
+[USAGE](USAGE.md#locale-tabs-25).
+
+```twig
+{{ include(nowo_ui_partial('locale_tabs', bundle), {id: 'item-i18n', panels: panels, default_locale: 'es', required_locales: ['es'], bundle: bundle}, false) }}
+```
+
 ## Template contract
 
 What a host override or a bundle data block can rely on. Changing any of it is a breaking change documented under

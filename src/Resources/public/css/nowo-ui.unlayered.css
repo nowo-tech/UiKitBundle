@@ -4200,3 +4200,95 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
 .nowo-ui-table td.nowo-ui-table__actions > .nowo-ui-row-actions {
   flex-wrap: nowrap;
 }
+
+/* Locale tabs (2.5, partial `locale_tabs`): stacked fieldsets without JS, tabs once nowo-ui-tabs.js upgrades the root */
+.nowo-ui-locale-tabs {
+  display: grid;
+  gap: var(--nowo-ui-locale-tabs-gap, 0.75rem);
+  min-width: 0;
+}
+
+.nowo-ui-locale-tabs > .nowo-ui-locale-tabs__nav {
+  margin-bottom: 0;
+}
+
+.nowo-ui-locale-tabs > [data-nowo-ui-tabs-list][hidden],
+.nowo-ui-locale-tabs > [data-nowo-ui-tabs-panel][hidden] {
+  display: none !important;
+}
+
+.nowo-ui-locale-tabs__nav > [role="tab"] {
+  align-items: center;
+  gap: 0.25rem;
+  border-width: 0 0 2px;
+  border-style: solid;
+  border-color: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.nowo-ui-locale-tabs__nav > [role="tab"].nowo-ui-tabs__item {
+  background: var(--nowo-ui-tab-bg, transparent);
+}
+
+.nowo-ui-locale-tabs__nav > [role="tab"][aria-selected="true"].nowo-ui-tabs__item {
+  border-bottom-color: var(--nowo-ui-tab-active-border, var(--nowo-ui-primary));
+}
+
+.nowo-ui-locale-tabs__nav > [role="tab"][data-invalid],
+.nowo-ui-locale-tabs__marker--invalid {
+  color: var(--nowo-ui-danger);
+}
+
+.nowo-ui-locale-tabs__marker {
+  font-size: 0.8em;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.nowo-ui-locale-tabs__marker--default {
+  color: var(--nowo-ui-locale-tabs-default, var(--nowo-ui-primary));
+}
+
+.nowo-ui-locale-tabs__fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.nowo-ui-locale-tabs:not([data-nowo-ui-tabs-ready])[data-nowo-ui-tabs-upgrade] > .nowo-ui-locale-tabs__panel > .nowo-ui-locale-tabs__fieldset {
+  padding: 0.75rem 1rem;
+  border: var(--nowo-ui-border-width, 1px) solid var(--nowo-ui-border);
+  border-radius: var(--nowo-ui-radius);
+}
+
+.nowo-ui-locale-tabs__legend {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  float: none;
+  width: auto;
+  margin: 0 0 0.5rem;
+  padding: 0 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.nowo-ui-locale-tabs__legend > .nowo-ui-locale-tabs__code {
+  color: var(--nowo-ui-muted);
+  font-weight: 500;
+}
+
+.nowo-ui-locale-tabs[data-nowo-ui-tabs-ready] > .nowo-ui-locale-tabs__panel > .nowo-ui-locale-tabs__fieldset > .nowo-ui-locale-tabs__legend,
+.nowo-ui-locale-tabs:not([data-nowo-ui-tabs-upgrade]) > .nowo-ui-locale-tabs__panel > .nowo-ui-locale-tabs__fieldset > .nowo-ui-locale-tabs__legend {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}

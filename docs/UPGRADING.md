@@ -58,6 +58,18 @@
 
 ## Unreleased
 
+Additive (minor release); run `php bin/console assets:install` for the new `nowo-ui-tabs.js` and `nowo-ui.css`.
+Notes:
+
+- `nowo-ui-tabs.js` now only drives the triggers / panels of the nearest `[data-nowo-ui-tabs]` root. Markup that relied
+  on an outer root switching the panels of a nested root must give the nested set its own root (or drop the inner
+  `data-nowo-ui-tabs`).
+- Triggers with `role="tab"` get a roving `tabindex` (only the selected tab is in the Tab order) and arrow keys, per
+  the WAI-ARIA tabs pattern. Triggers without `role="tab"` behave as before.
+- Optional: replace per-bundle locale tab markup (own `_locale_tabs` templates, Bootstrap `nav-tabs` + CDN JS, radio
+  hacks, `locale-tabs:changed` hooks) with the `locale_tabs` partial and `nowo-ui:tabs:change` — see
+  [USAGE](USAGE.md#migrating-your-locale-ui). A host layout listing UiKit scripts by hand keeps `js/nowo-ui-tabs.js`.
+
 ## To 2.4.0
 
 From **2.3.1**:

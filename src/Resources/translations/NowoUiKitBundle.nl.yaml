@@ -124,3 +124,7 @@ wizard.step_of: "Stap %current% van %total%"
 form.danger_zone: "Gevarenzone"
 confirm.type_to_confirm: "Typ %value% om te bevestigen"
 progress.label: Voortgang
+locale_tabs.label: "Talen"
+locale_tabs.default: "standaardtaal"
+locale_tabs.required: "verplicht"
+locale_tabs.invalid: "bevat fouten"

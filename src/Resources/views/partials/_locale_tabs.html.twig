@@ -1,0 +1,115 @@
+{#
+  Locale tabs (2.5, theme partial `locale_tabs`): one in-page panel per locale behind a WAI-ARIA tab list — the shared
+  building block for per-locale CRUD fields (FormKit `locale_tabs` renders through it when UiKit is installed).
+
+  No-JS first (`progressive`, default): every panel renders visible as a stacked <fieldset><legend>; nowo-ui-tabs.js
+  (or the Stimulus `tabs` peer) upgrades the root: shows the tab list, gives the panels role="tabpanel", hides the
+  inactive ones and sets data-nowo-ui-tabs-ready (legends become visually hidden). Keys: ArrowLeft / ArrowRight
+  (mirrored in RTL), Home / End, roving tabindex. An `invalid` control in a hidden panel opens it; every change
+  dispatches `nowo-ui:tabs:change` on the root (mount editors there). No inline script / style / on* (strict CSP).
+  Slots: tabs (the tab list), tab / tab_active (each tab button; the runtime swaps them), tab_panel (each panel).
+
+  Required:
+    - panels: list of hashes, one per locale:
+        locale    string               e.g. 'es', 'pt_BR'
+        content   string|Markup        panel HTML: a Twig Markup (e.g. a `{% set html %}…{% endset %}` capture of
+                                       form rows) prints as is, a plain string is escaped
+        label?    View\Label|string    tab text (default: the upper-cased locale, "ES")
+        name?     View\Label|string    language name for the legend / screen readers (default nowo_ui_locale_name())
+        invalid?  bool                 the panel has errors: error marker, screen-reader text, data-invalid
+        required? bool                 required marker (default: locale in required_locales)
+        dir?      'ltr'|'rtl'          writing direction of the panel (default nowo_ui_locale_dir(locale))
+        attr?     map                  extra panel attributes (no on*)
+  Optional:
+    - id: DOM prefix (default random); tab ids `<id>-<locale>`, buttons `tab-<id>-<locale>`, panels `…-panel`
+    - label: aria-label of the tab list (View\Label|string; default `locale_tabs.label` "Languages")
+    - default_locale: marked as the default language (default: the first panel); listed first (default_first: true)
+    - required_locales: list of locales marked required (marker distinct from the default one)
+    - active_locale: initially open panel (default: the request locale when listed, else default_locale)
+    - activate_invalid: open the first invalid panel when the active one has no errors (default true)
+    - mark_default (default true), default_marker ('★'), required_marker ('*'), error_marker ('!')
+    - legend: render each panel's <legend> (default true; visually hidden once upgraded to tabs)
+    - progressive: false = tab list visible and inactive panels `hidden` server-side (needs JS to switch)
+    - stimulus: Stimulus identifier for the `tabs` peer attributes (default false: kit attributes only)
+    - attr: root attributes (no on*), bundle, nowo_ui_page_type
+#}
+{%- set _b = bundle|default(null) -%}
+{%- set _panels = panels|default([]) -%}
+{%- set _locales = _panels|map(p => p.locale) -%}
+{%- set _default = default_locale|default(_locales|first) -%}
+{%- if default_first ?? true -%}
+    {%- set _panels = _panels|filter(p => p.locale == _default)|merge(_panels|filter(p => p.locale != _default)) -%}
+{%- endif -%}
+{%- set _required = required_locales|default([]) -%}
+{%- set _request_locale = app is defined and app and app.request ? app.request.locale : null -%}
+{%- set _active = active_locale|default(null) -%}
+{%- if _active is null or _active not in _locales -%}
+    {%- set _active = _request_locale in _locales ? _request_locale : _default -%}
+{%- endif -%}
+{%- if (activate_invalid ?? true) and (_panels|filter(p => p.locale == _active and (p.invalid ?? false)))|length == 0 -%}
+    {%- set _invalid = _panels|filter(p => p.invalid ?? false) -%}
+    {%- if _invalid|length > 0 -%}
+        {%- set _active = (_invalid|first).locale -%}
+    {%- endif -%}
+{%- endif -%}
+{%- set _id = id|default('nowo-ui-locale-tabs-' ~ random()) -%}
+{%- set _progressive = progressive ?? true -%}
+{%- set _legend = legend ?? true -%}
+{%- set _s = stimulus|default(false) -%}
+{%- set _mark_default = mark_default ?? true -%}
+{%- set _tab_class = nowo_ui_class('tab', _b) -%}
+{%- set _tab_active_class = nowo_ui_class('tab_active', _b) -%}
+{%- set _t_default = 'locale_tabs.default'|trans({}, 'NowoUiKitBundle') -%}
+{%- set _t_required = 'locale_tabs.required'|trans({}, 'NowoUiKitBundle') -%}
+{%- set _t_invalid = 'locale_tabs.invalid'|trans({}, 'NowoUiKitBundle') -%}
+{%- macro markers(is_default, is_required, is_invalid, m) -%}
+    {%- if is_default %}<span class="nowo-ui-locale-tabs__marker nowo-ui-locale-tabs__marker--default" aria-hidden="true">{{ m.default }}</span>{% endif -%}
+    {%- if is_required %}<span class="nowo-ui-locale-tabs__marker nowo-ui-locale-tabs__marker--required" aria-hidden="true">{{ m.required }}</span>{% endif -%}
+    {%- if is_invalid %}<span class="nowo-ui-locale-tabs__marker nowo-ui-locale-tabs__marker--invalid" aria-hidden="true">{{ m.invalid }}</span>{% endif -%}
+{%- endmacro -%}
+{%- set _m = {default: default_marker ?? '★', required: required_marker ?? '*', invalid: error_marker ?? '!'} -%}
+<div id="{{ _id }}" class="nowo-ui-locale-tabs" data-nowo-ui-locale-tabs data-nowo-ui-tabs{% if _progressive %} data-nowo-ui-tabs-upgrade{% endif %} data-nowo-ui-tabs-active="{{ _id ~ '-' ~ _active }}" data-nowo-ui-tabs-tab-class="{{ _tab_class }}" data-nowo-ui-tabs-tab-active-class="{{ _tab_active_class }}"
+    {%- if _s %} data-controller="{{ _s }}" data-{{ _s }}-active-tab-value="{{ _id ~ '-' ~ _active }}"{% endif %}{{ nowo_ui_html_attrs(attr|default({})) }}>
+    <div role="tablist" aria-label="{{ label is defined and label is not null ? label|nowo_ui_trans : 'locale_tabs.label'|trans({}, 'NowoUiKitBundle') }}" class="{{ nowo_ui_class('tabs', _b) }} nowo-ui-locale-tabs__nav" data-nowo-ui-tabs-list{% if _s %} data-{{ _s }}-target="list"{% endif %}{% if _progressive %} hidden{% endif %}{{ nowo_ui_attrs('tabs', _b) }}>
+        {%- for _p in _panels %}
+            {%- set _tab_id = _id ~ '-' ~ _p.locale %}
+            {%- set _open = _p.locale == _active %}
+            {%- set _is_default = _mark_default and _p.locale == _default %}
+            {%- set _is_required = _p.required ?? (_p.locale in _required) %}
+            {%- set _is_invalid = _p.invalid ?? false %}
+            {%- set _text = _p.label is defined and _p.label is not null ? _p.label|nowo_ui_trans : _p.locale|upper %}
+            {%- set _name = _p.name is defined and _p.name is not null ? _p.name|nowo_ui_trans : nowo_ui_locale_name(_p.locale) %}
+            {%- set _sr = (_name != _text ? [_name] : [])|merge(_is_default ? [_t_default] : [])|merge(_is_required ? [_t_required] : [])|merge(_is_invalid ? [_t_invalid] : []) %}
+        <button type="button" role="tab" id="tab-{{ _tab_id }}" aria-controls="tab-{{ _tab_id }}-panel" aria-selected="{{ _open ? 'true' : 'false' }}" tabindex="{{ _open ? '0' : '-1' }}" class="{{ _open ? _tab_active_class : _tab_class }}" data-locale="{{ _p.locale }}" data-nowo-ui-tabs-trigger data-nowo-ui-tab-id="{{ _tab_id }}"
+            {%- if _open %} data-active{% endif %}{% if _is_invalid %} data-invalid{% endif %}{% if _is_required %} data-required{% endif %}{% if _is_default %} data-default{% endif %}
+            {%- if _s %} data-action="click->{{ _s }}#open" data-{{ _s }}-target="trigger" data-tab-id="{{ _tab_id }}"{% endif %}{{ nowo_ui_attrs(_open ? 'tab_active' : 'tab', _b) }}>
+            {{- '' -}}<span class="nowo-ui-locale-tabs__code">{{ _text }}</span>
+            {{- _self.markers(_is_default, _is_required, _is_invalid, _m) -}}
+            {%- if _sr|length > 0 %}<span class="visually-hidden"> ({{ _sr|join(', ') }})</span>{% endif -%}
+        {{- '' -}}</button>
+        {%- endfor %}
+    </div>
+    {%- for _p in _panels %}
+        {%- set _tab_id = _id ~ '-' ~ _p.locale %}
+        {%- set _open = _p.locale == _active %}
+        {%- set _is_default = _mark_default and _p.locale == _default %}
+        {%- set _is_required = _p.required ?? (_p.locale in _required) %}
+        {%- set _is_invalid = _p.invalid ?? false %}
+        {%- set _name = _p.name is defined and _p.name is not null ? _p.name|nowo_ui_trans : nowo_ui_locale_name(_p.locale) %}
+    <div id="tab-{{ _tab_id }}-panel" class="{{ nowo_ui_class('tab_panel', _b) }} nowo-ui-locale-tabs__panel" lang="{{ _p.locale|replace({_: '-'}) }}" dir="{{ _p.dir ?? nowo_ui_locale_dir(_p.locale) }}" data-locale="{{ _p.locale }}" data-state="{{ _open or _progressive ? 'active' : 'inactive' }}" data-nowo-ui-tabs-panel data-nowo-ui-tab-id="{{ _tab_id }}"
+        {%- if not _progressive %} role="tabpanel" aria-labelledby="tab-{{ _tab_id }}"{% if not _open %} hidden{% endif %}{% endif %}
+        {%- if _open %} data-active{% endif %}{% if _is_invalid %} data-invalid{% endif %}
+        {%- if _s %} data-{{ _s }}-target="tab" data-tab-id="{{ _tab_id }}"{% endif %}{{ nowo_ui_attrs('tab_panel', _b) }}{{ nowo_ui_html_attrs(_p.attr|default({})) }}>
+        <fieldset class="nowo-ui-locale-tabs__fieldset">
+            {%- if _legend %}
+            <legend class="nowo-ui-locale-tabs__legend">{{ _name }}{% if _name != _p.locale|upper %} <span class="nowo-ui-locale-tabs__code">{{ _p.locale|upper }}</span>{% endif %}
+                {{- _self.markers(_is_default, _is_required, _is_invalid, _m) -}}
+                {%- set _sr = (_is_default ? [_t_default] : [])|merge(_is_required ? [_t_required] : [])|merge(_is_invalid ? [_t_invalid] : []) %}
+                {%- if _sr|length > 0 %}<span class="visually-hidden"> ({{ _sr|join(', ') }})</span>{% endif -%}
+            </legend>
+            {%- endif %}
+            {{ _p.content|default('') }}
+        </fieldset>
+    </div>
+    {%- endfor %}
+</div>

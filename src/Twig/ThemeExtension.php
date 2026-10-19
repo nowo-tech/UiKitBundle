@@ -37,6 +37,8 @@ use Twig\TwigFunction;
  * - `nowo_ui_page_header(header, bundle = null, extra_actions = [], header_actions = true)` (2.3) — the scaffold page
  *   header (`page/_page_header.html.twig`: the `page_header` partial with the 2.0 and 1.x inputs) for unique pages;
  *   bundle and page type default to `nowo_ui_bundle` / `nowo_ui_page_type` of the context
+ * - `nowo_ui_locale_name(locale, display_locale = null)` (2.5) — human name of a locale in the display locale (default
+ *   the request locale; ext-intl, else the upper-cased code), `nowo_ui_locale_dir(locale)` — `rtl` / `ltr`
  * - `|nowo_ui_trans(params = {})` — translates a {@see Label}; strings pass through (escaped by Twig)
  * - `|nowo_ui_translatable(params = {})` (2.3) — a {@see TranslatableText} for values a form theme translates again
  *   (`attr.placeholder`, choice `placeholder`): a Label is translated exactly once, a string printed as given
@@ -57,6 +59,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
         private readonly array $breadcrumbs = ['breadcrumb_kit' => true, 'collection' => null],
         private readonly ?TranslatorInterface $translator = null,
         private readonly ?RequestStack $requestStack = null,
+        private readonly LocaleNames $localeNames = new LocaleNames(),
     ) {
     }
 
@@ -73,6 +76,8 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             new TwigFunction('nowo_ui_tokens', $this->allTokens(...), ['is_safe' => ['html'], 'needs_environment' => true]),
             new TwigFunction('nowo_ui_breadcrumb_kit', $this->breadcrumbKit(...), ['is_safe' => ['html'], 'needs_environment' => true]),
             new TwigFunction('nowo_ui_breadcrumb_kit_available', $this->breadcrumbKitAvailable(...), ['needs_environment' => true]),
+            new TwigFunction('nowo_ui_locale_name', fn (string $locale, ?string $displayLocale = null): string => $this->localeNames->name($locale, $displayLocale ?? $this->requestStack?->getCurrentRequest()?->getLocale())),
+            new TwigFunction('nowo_ui_locale_dir', $this->localeNames->dir(...)),
             new TwigFunction('nowo_ui_page_header', $this->pageHeader(...), ['needs_environment' => true, 'needs_context' => true, 'is_safe' => ['html']]),
         ];
     }

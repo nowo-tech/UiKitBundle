@@ -68,9 +68,24 @@ Two patterns:
 | `data-nowo-ui-tabs-panel` | Panel |
 | `data-nowo-ui-tab-id` | Shared id on trigger + panel |
 
+| `data-nowo-ui-tabs-list` *(2.5)* | Tab list of a progressive root (`hidden` until upgraded) |
+| `data-nowo-ui-tabs-upgrade` *(2.5)* | Root: progressive (panels visible without JS); the runtime sets `data-nowo-ui-tabs-ready` |
+| `data-nowo-ui-tabs-tab-class` / `data-nowo-ui-tabs-tab-active-class` *(2.5)* | Root: classes swapped on the triggers (slots `tab` / `tab_active`) |
+
 Script: `js/nowo-ui-tabs.js` → `window.nowoUiActivateTab(root, tabId)`.
 
-Stimulus peer: identifier `tabs` (`tabs_controller.ts`). Legacy Beacon `data-tab-id` is still read as a fallback.
+2.5 (both the script and the peer): each root drives only its own triggers / panels (nested sets); triggers with
+`role="tab"` get a roving `tabindex` and `ArrowLeft` / `ArrowRight` (mirrored in RTL; `ArrowUp` / `ArrowDown` with
+`aria-orientation="vertical"` in the script), `Home` / `End`; an `invalid` control inside a hidden panel opens it;
+`nowo-ui:tabs:change` (bubbling `CustomEvent` on the root, `detail = {tabId, previousTabId, trigger, panel, reason}`,
+reason `click` | `keyboard` | `invalid` | `api`) after every change; the state is re-applied after a DOM morph (Live
+Component re-render, Turbo morph): the tab the user chose stays open. The `locale_tabs` partial emits this markup —
+see [USAGE](USAGE.md#locale-tabs-25).
+
+Stimulus peer: identifier `tabs` (`tabs_controller.ts`; targets `trigger`, `tab`, 2.5: `list`; value `activeTab`;
+action `click->tabs#open`). Legacy Beacon `data-tab-id` is still read as a fallback. When the element is also a kit
+root (`data-nowo-ui-tabs`) and `nowo-ui-tabs.js` is loaded, the peer hands every value to `window.nowoUiActivateTab`
+and leaves keys / `invalid` / morphs to the script (no double handling).
 
 ## Toast stack
 
