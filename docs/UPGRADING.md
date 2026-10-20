@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.5.3](#to-253)
 - [To 2.5.2](#to-252)
 - [To 2.5.1](#to-251)
 - [To 2.5.0](#to-250)
@@ -60,6 +61,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.5.3
+
+From **2.5.2**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 Patch release. Run `php bin/console assets:install` (or your asset pipeline) for the new `nowo-ui.css` /
 `nowo-ui.unlayered.css`.
