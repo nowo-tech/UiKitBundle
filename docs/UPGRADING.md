@@ -61,6 +61,17 @@
 
 ## Unreleased
 
+Patch release. Run `php bin/console assets:install` (or your asset pipeline) for the new `nowo-ui.css` /
+`nowo-ui.unlayered.css`.
+
+- The `locale_tabs` tab list now uses the theme slot **`locale_tabs_nav`** instead of `tabs`. A host override of
+  `tabs` (classes or attributes) no longer reaches the locale tab list; set `locale_tabs_nav` for it if you styled the
+  locale tabs through `tabs`. Drop host CSS that cancelled the `tabs` margin under the locale tabs
+  (`.nowo-ui-locale-tabs__nav { margin-bottom: 0 !important }` and similar); tune the space with
+  `--nowo-ui-locale-tabs-gap` (default `0.75rem`).
+- `button.nowo-ui-kebab__item` gets the item font size and hover background without host CSS; drop host fixes such
+  as `button.nowo-ui-kebab__item { font-size: … }`.
+
 ## To 2.5.2
 
 From **2.5.1**:

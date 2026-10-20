@@ -23,6 +23,10 @@ final class LocaleTabsPartialTest extends TestCase
     {
         self::assertSame('@NowoUiKitBundle/partials/_locale_tabs.html.twig', ThemeSlots::PARTIALS['locale_tabs']);
         self::assertSame('nowo-ui-tabs__panel', ThemeSlots::semantic('tab_panel'));
+        self::assertSame('nowo-ui-tabs nowo-ui-locale-tabs__nav', ThemeSlots::semantic('locale_tabs_nav'));
+        foreach (['bootstrap5', 'bootstrap4', 'tailwind', 'foundation'] as $framework) {
+            self::assertDoesNotMatchRegularExpression('/(^|\s)m[by]?-\d/', ThemeSlots::defaults('locale_tabs_nav', $framework), $framework.': no margin utility on the locale tab list');
+        }
         self::assertContains('tabs', ThemeSlots::SCRIPTS);
     }
 
@@ -42,7 +46,7 @@ final class LocaleTabsPartialTest extends TestCase
         self::assertNull($root->attr('data-controller'));
 
         $list = $c->filter('[role="tablist"]');
-        self::assertSame(['Languages', 'nowo-ui-tabs nav nav-tabs mb-3 nowo-ui-locale-tabs__nav'], [$list->attr('aria-label'), $list->attr('class')]);
+        self::assertSame(['Languages', 'nowo-ui-tabs nowo-ui-locale-tabs__nav nav nav-tabs'], [$list->attr('aria-label'), $list->attr('class')]);
         self::assertNotNull($list->attr('hidden'));
         self::assertNotNull($list->attr('data-nowo-ui-tabs-list'));
 
@@ -136,7 +140,7 @@ final class LocaleTabsPartialTest extends TestCase
             ['locale' => 'pt_BR', 'content' => 'Olá'],
         ];
         $html = PageContractTwig::create(['t' => self::TPL], [
-            'classes' => ['tab_panel' => 'app-panel', 'tabs' => 'app-tabs'],
+            'classes' => ['tab_panel' => 'app-panel', 'locale_tabs_nav' => 'app-tabs', 'tabs' => 'mb-6'],
             'attributes' => ['tab_panel' => ['data-x' => 'y']],
         ])->render('t', ['vars' => [
             'id' => 's', 'panels' => $panels, 'progressive' => false, 'legend' => false, 'default_first' => false,
@@ -152,6 +156,8 @@ final class LocaleTabsPartialTest extends TestCase
         self::assertNull($list->attr('hidden'));
         self::assertSame('list', $list->attr('data-tabs-target'));
         self::assertStringContainsString('app-tabs', (string) $list->attr('class'));
+        self::assertStringContainsString('nowo-ui-locale-tabs__nav', (string) $list->attr('class'));
+        self::assertStringNotContainsString('mb-6', (string) $list->attr('class'), 'The page-level `tabs` margin never reaches the locale tab list');
         self::assertSame('Languages', $list->attr('aria-label'));
 
         $tabs = $c->filter('[role="tab"]');

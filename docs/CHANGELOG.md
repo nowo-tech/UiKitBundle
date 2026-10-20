@@ -56,6 +56,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Space under the locale tab strip**: the `locale_tabs` partial printed its tab list with the `tabs` slot, so the
+  page-level tabs margin (`mb-3` by default, `mb-6` and similar in host themes; Bootstrap's `mb-3` is `!important`)
+  added to `--nowo-ui-locale-tabs-gap`. The list now uses the new slot **`locale_tabs_nav`**
+  (`nowo-ui-tabs nowo-ui-locale-tabs__nav`; Bootstrap `nav nav-tabs`, Tailwind `flex flex-wrap gap-2 border-b`,
+  Foundation `tabs`): the `tabs` look without the margin, spaced by the gap token only.
+- **Kebab `<button>` items**: a POST action rendered as `button.nowo-ui-kebab__item` lost the item font size (the
+  popover rule's `font: inherit`, Tailwind preflight and the UA button font) and, in popover menus, its hover
+  background. `button.nowo-ui-kebab__item` now sets `font: inherit` then `font-size: 0.875rem` in the `nowo-ui` layer
+  (above Tailwind `base`), plus the hover / current background, in both menu modes.
+
+### Changed
+
+- `.php-cs-fixer.dist.php`: `new ParallelConfig(2)` (REQ-CS-001).
+
 ## [2.5.2] - 2026-10-19
 
 Language names with polyfill-intl-icu (no ext-intl) and locale tabs legends hidden by the tabs runtime itself. See [UPGRADING](UPGRADING.md#to-252).

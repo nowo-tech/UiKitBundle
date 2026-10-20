@@ -259,7 +259,7 @@ Behaviour:
   (and re-upgrades the root); new roots inserted later (remote dialogs) are upgraded too.
 - **Strict CSP**: no inline script / style / `on*`. `lang` and `dir` are set on each panel (Arabic, Hebrew, Persian,
   Urdu… panels get `dir="rtl"`).
-- Theme slots `tabs` (list), `tab` / `tab_active` (buttons; the runtime swaps both class sets, passed as
+- Theme slots `locale_tabs_nav` (list: the `tabs` look without its bottom margin, 2.5.3), `tab` / `tab_active` (buttons; the runtime swaps both class sets, passed as
   `data-nowo-ui-tabs-tab-class` / `data-nowo-ui-tabs-tab-active-class`), `tab_panel` (panels); tokens
   `--nowo-ui-locale-tabs-gap`, `--nowo-ui-locale-tabs-default`.
 

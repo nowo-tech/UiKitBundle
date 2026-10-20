@@ -2482,6 +2482,25 @@ table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr:hover > td {
   color: var(--nowo-ui-danger-text);
 }
 
+/* <button> items (a POST action in a <form> inside the menu) keep the item look: Tailwind preflight (layer `base`)
+   and the UA stylesheet set `font` / `font-size` on buttons; this rule re-applies the item size after `font: inherit`
+   and, in nowo-ui.css, wins from the `nowo-ui` layer above `base` (2.5.3). */
+button.nowo-ui-kebab__item {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 0.875rem;
+  line-height: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+button.nowo-ui-kebab__item:hover,
+button.nowo-ui-kebab__item.is-current {
+  background: var(--nowo-ui-surface-muted);
+}
+
 /* --- Progress / spinner --- */
 .nowo-ui-progress {
   display: block;
@@ -3734,15 +3753,6 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
 
 .nowo-ui-kebab__menu[popover] :is(form) {
   margin: 0;
-}
-
-.nowo-ui-kebab__menu[popover] button.nowo-ui-kebab__item {
-  width: 100%;
-  border: 0;
-  background: transparent;
-  font: inherit;
-  text-align: start;
-  cursor: pointer;
 }
 
 /* Segmented control (2.4, partial `segmented`): two options of one checkbox as a radio group */

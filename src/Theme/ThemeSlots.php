@@ -351,6 +351,13 @@ final class ThemeSlots
             'tailwind' => 'flex flex-wrap gap-2 mb-3',
             'foundation' => 'menu',
         ]],
+        // Tab list of the `locale_tabs` partial (2.5.3): the `tabs` look without its bottom margin — the partial spaces
+        // the list from the panels with --nowo-ui-locale-tabs-gap, so a page-level `tabs` margin never applies here
+        'locale_tabs_nav' => ['nowo-ui-tabs nowo-ui-locale-tabs__nav', [
+            'bootstrap' => 'nav nav-tabs',
+            'tailwind' => 'flex flex-wrap gap-2 border-b',
+            'foundation' => 'tabs',
+        ]],
         // In-page tab panel (2.5, partial `locale_tabs`): each panel next to the `tabs` list of `tab` / `tab_active` buttons
         'tab_panel' => ['nowo-ui-tabs__panel', []],
         // Floating widgets (2.3, partial `menu`): native <details> disclosure root, its <summary> toggle, the item

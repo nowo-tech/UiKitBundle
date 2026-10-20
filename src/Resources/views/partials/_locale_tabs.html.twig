@@ -7,7 +7,7 @@
   inactive ones and sets data-nowo-ui-tabs-ready (legends become visually hidden). Keys: ArrowLeft / ArrowRight
   (mirrored in RTL), Home / End, roving tabindex. An `invalid` control in a hidden panel opens it; every change
   dispatches `nowo-ui:tabs:change` on the root (mount editors there). No inline script / style / on* (strict CSP).
-  Slots: tabs (the tab list), tab / tab_active (each tab button; the runtime swaps them), tab_panel (each panel).
+  Slots: locale_tabs_nav (the tab list: the tabs look without the page-level tabs margin, 2.5.3), tab / tab_active (each tab button; the runtime swaps them), tab_panel (each panel).
 
   Required:
     - panels: list of hashes, one per locale:
@@ -71,7 +71,7 @@
 {%- set _m = {default: default_marker ?? '★', required: required_marker ?? '*', invalid: error_marker ?? '!'} -%}
 <div id="{{ _id }}" class="nowo-ui-locale-tabs" data-nowo-ui-locale-tabs data-nowo-ui-tabs{% if _progressive %} data-nowo-ui-tabs-upgrade{% endif %} data-nowo-ui-tabs-active="{{ _id ~ '-' ~ _active }}" data-nowo-ui-tabs-tab-class="{{ _tab_class }}" data-nowo-ui-tabs-tab-active-class="{{ _tab_active_class }}"
     {%- if _s %} data-controller="{{ _s }}" data-{{ _s }}-active-tab-value="{{ _id ~ '-' ~ _active }}"{% endif %}{{ nowo_ui_html_attrs(attr|default({})) }}>
-    <div role="tablist" aria-label="{{ label is defined and label is not null ? label|nowo_ui_trans : 'locale_tabs.label'|trans({}, 'NowoUiKitBundle') }}" class="{{ nowo_ui_class('tabs', _b) }} nowo-ui-locale-tabs__nav" data-nowo-ui-tabs-list{% if _s %} data-{{ _s }}-target="list"{% endif %}{% if _progressive %} hidden{% endif %}{{ nowo_ui_attrs('tabs', _b) }}>
+    <div role="tablist" aria-label="{{ label is defined and label is not null ? label|nowo_ui_trans : 'locale_tabs.label'|trans({}, 'NowoUiKitBundle') }}" class="{{ nowo_ui_class('locale_tabs_nav', _b) }}" data-nowo-ui-tabs-list{% if _s %} data-{{ _s }}-target="list"{% endif %}{% if _progressive %} hidden{% endif %}{{ nowo_ui_attrs('locale_tabs_nav', _b) }}>
         {%- for _p in _panels %}
             {%- set _tab_id = _id ~ '-' ~ _p.locale %}
             {%- set _open = _p.locale == _active %}
