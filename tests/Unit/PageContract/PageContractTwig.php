@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 
 use Nowo\UiKitBundle\Theme\Theme;
+use Nowo\UiKitBundle\Twig\ErrorPageExtension;
 use Nowo\UiKitBundle\Twig\ThemeExtension;
 use Symfony\Bridge\Twig\Extension\FormExtension;
 use Symfony\Bridge\Twig\Extension\TranslationExtension;
@@ -14,6 +15,7 @@ use Symfony\Component\Form\FormRenderer;
 use Symfony\Component\Form\Forms;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Translation\Loader\ArrayLoader as TranslationArrayLoader;
 use Symfony\Component\Translation\Loader\YamlFileLoader;
 use Symfony\Component\Translation\Translator;
 use Twig\Environment;
@@ -36,9 +38,12 @@ final class PageContractTwig
     }
 
     /**
-     * @param array<string, string>                 $templates extra in-memory templates
-     * @param array<string, mixed>                  $theme     processed nowo_ui_kit.theme config
+     * @param array<string, string>                 $templates  extra in-memory templates
+     * @param array<string, mixed>                  $theme      processed nowo_ui_kit.theme config
      * @param array{admin?: string, guest?: string} $layouts
+     * @param array<string, mixed>                  $errorPages processed nowo_ui_kit.error_pages (2.6)
+     * @param array<string, array<string, string>>  $messages   extra catalogues: domain => [id => text] (locale $locale)
+     * @param array<string, mixed>|null             $shell      nowo_ui_kit_shell global (2.6; null = not defined)
      */
     public static function create(
         array $templates = [],
@@ -49,6 +54,9 @@ final class PageContractTwig
         bool $breadcrumbKit = true,
         string $locale = 'en',
         bool $breadcrumbs = true,
+        array $errorPages = [],
+        array $messages = [],
+        ?array $shell = null,
     ): Environment {
         $views = self::root().'/src/Resources/views';
         $fs = new FilesystemLoader();
@@ -63,6 +71,10 @@ final class PageContractTwig
         $translator->addLoader('yaml', new YamlFileLoader());
         foreach (glob(self::root().'/src/Resources/translations/NowoUiKitBundle.*.yaml') ?: [] as $file) {
             $translator->addResource('yaml', $file, explode('.', basename($file))[1], 'NowoUiKitBundle');
+        }
+        $translator->addLoader('array', new TranslationArrayLoader());
+        foreach ($messages as $domain => $catalogue) {
+            $translator->addResource('array', $catalogue, $locale, $domain);
         }
         $twig->addExtension(new TranslationExtension($translator));
 
@@ -81,6 +93,10 @@ final class PageContractTwig
             $translator,
             $requestStack,
         ));
+        $twig->addExtension(new ErrorPageExtension($errorPages, $translator, $requestStack));
+        if (null !== $shell) {
+            $twig->addGlobal('nowo_ui_kit_shell', $shell);
+        }
         $twig->addFunction(new TwigFunction('asset', static fn (string $path, ?string $package = null): string => '/bundles/nowouikit/'.$path));
         $twig->addFunction(new TwigFunction('path', static fn (string $name, array $params = []): string => '/'.$name.([] === $params ? '' : '?'.http_build_query($params))));
         $twig->addGlobal('nowo_ui_kit_css_framework', $framework);

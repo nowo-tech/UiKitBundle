@@ -4372,4 +4372,201 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
   white-space: nowrap !important;
   border: 0 !important;
 }
+
+/* --------------------------------------------------------------------------------------------------------------------
+ * 2.6 — skip link, kit error pages, confirm dialog wrapper, app shell burger glyphs, compact pagination
+ * ------------------------------------------------------------------------------------------------------------------ */
+
+/* Skip link (REQ-A11Y-002): off-screen until focused, then a visible pill in the top-left corner. */
+.nowo-ui-skip-link {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 1000;
+  padding: 0.5rem 0.875rem;
+  border-radius: var(--nowo-ui-radius);
+  background: var(--nowo-ui-surface);
+  color: var(--nowo-ui-text);
+  box-shadow: var(--nowo-ui-shadow-dialog, 0 8px 24px rgba(15, 23, 42, 0.18));
+  transform: translateY(calc(-100% - 1rem));
+  transition: transform 0.15s ease;
+}
+
+.nowo-ui-skip-link:focus,
+.nowo-ui-skip-link:focus-visible {
+  transform: none;
+  outline: 2px solid var(--nowo-ui-focus-ring-color, var(--nowo-ui-primary));
+  outline-offset: 2px;
+}
+
+/* Error pages (@NowoUiKit/error/*): one centred card, the code large and muted, illustration on top. */
+.nowo-ui-error-page {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  font-family: system-ui, sans-serif;
+  color: var(--nowo-ui-text);
+  background: var(--nowo-ui-surface-muted);
+}
+
+.nowo-ui-error-page__top {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem 0;
+}
+
+.nowo-ui-error-page__main {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.nowo-ui-error-page__main:focus {
+  outline: none;
+}
+
+.nowo-ui-error-page__card {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 36rem;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  background: var(--nowo-ui-surface);
+  border: 1px solid var(--nowo-ui-border);
+  border-radius: var(--nowo-ui-radius);
+}
+
+.nowo-ui-error-page__figure {
+  margin: 0 0 1rem;
+}
+
+.nowo-ui-error-page__img {
+  display: block;
+  width: 100%;
+  max-width: 28rem;
+  height: auto;
+  margin: 0 auto;
+}
+
+.nowo-ui-error-page__code {
+  margin: 0;
+  font-size: clamp(2.5rem, 8vw, 4rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--nowo-ui-muted);
+}
+
+.nowo-ui-error-page__title {
+  margin: 0.5rem 0;
+  font-family: var(--nowo-ui-font-display, inherit);
+  font-size: 1.5rem;
+  line-height: 1.25;
+}
+
+.nowo-ui-error-page__lead {
+  margin: 0 0 0.75rem;
+}
+
+.nowo-ui-error-page__hint {
+  margin: 0 0 0.75rem;
+  font-size: 0.9375rem;
+  color: var(--nowo-ui-muted);
+}
+
+.nowo-ui-error-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+}
+
+/* Confirm dialog wrapper (partial `confirm_dialog`): the native <dialog> box of the kit dialogs. */
+.nowo-ui-confirm-dialog {
+  box-sizing: border-box;
+  width: min(32rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+  padding: 1.25rem;
+  overflow: auto;
+  background: var(--nowo-ui-surface);
+  color: var(--nowo-ui-text);
+  border: 1px solid var(--nowo-ui-border);
+  border-radius: var(--nowo-ui-modal-radius, var(--nowo-ui-radius));
+  box-shadow: var(--nowo-ui-shadow-dialog, 0 16px 40px rgba(15, 23, 42, 0.2));
+}
+
+.nowo-ui-confirm-dialog:not([open]) {
+  display: none !important;
+}
+
+.nowo-ui-confirm-dialog::backdrop {
+  background: var(--nowo-ui-overlay, rgba(15, 23, 42, 0.45));
+}
+
+.nowo-ui-confirm-dialog--sm {
+  width: min(22rem, calc(100vw - 2rem));
+}
+
+.nowo-ui-confirm-dialog--lg {
+  width: min(48rem, calc(100vw - 2rem));
+}
+
+.nowo-ui-confirm-dialog--xl {
+  width: min(64rem, calc(100vw - 2rem));
+}
+
+/* App shell burger (@NowoUiKit/shell/_burger, icon: morph): the static glyph of the state paints before JS (menu when
+ * the aside is hidden, X when it is shown), the <morph-icon> replaces it once hydrated (.is-morph-ready). */
+.nowo-ui-app-shell__burger.is-morph-ready .nowo-ui-burger__icon,
+.nowo-ui-app-shell__burger:not(.is-morph-ready) .nowo-ui-burger__morph,
+.nowo-ui-app-shell__burger[aria-expanded='true']:has(.nowo-ui-burger__icon--close):not(.is-morph-ready) .nowo-ui-burger__icon--open,
+.nowo-ui-app-shell__burger[aria-expanded='false']:not(.is-morph-ready) .nowo-ui-burger__icon--close {
+  display: none !important;
+}
+
+.nowo-ui-burger__morph {
+  display: inline-flex;
+}
+
+/* Compact pagination (View\Pagination variant `compact`): « Page n of m » + per-page select. */
+.nowo-ui-pagination--compact .nowo-ui-pagination__nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nowo-ui-pagination__page {
+  font-size: 0.875rem;
+  color: var(--nowo-ui-muted);
+  white-space: nowrap;
+}
+
+.nowo-ui-pagination__per-page-form {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.nowo-ui-pagination__per-page-form .nowo-ui-pagination__info {
+  margin: 0;
+}
+
+.nowo-ui-pagination__select {
+  width: auto;
+  min-height: 2rem;
+  padding: 0.25rem 1.75rem 0.25rem 0.5rem;
+  font: inherit;
+  font-size: 0.875rem;
+  color: var(--nowo-ui-text);
+  background-color: var(--nowo-ui-surface);
+  border: 1px solid var(--nowo-ui-border-strong, var(--nowo-ui-border));
+  border-radius: var(--nowo-ui-radius);
+}
 }

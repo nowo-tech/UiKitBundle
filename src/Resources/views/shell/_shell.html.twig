@@ -1,0 +1,25 @@
+{#
+  Signed-in app shell (2.6, theme partial `app_shell`): `app_shell_open` + main + `app_shell_close`, with blocks.
+  Include it with the same options as the halves (main: HTML of the main region), or embed it and fill the blocks:
+
+      {% embed nowo_ui_partial('app_shell') with {aside_label: 'Admin'} %}
+          {% block nowo_ui_shell_brand %}<a href="/">Acme</a>{% endblock %}
+          {% block nowo_ui_shell_header_actions %}{{ include(nowo_ui_partial('theme_toggle')) }}{% endblock %}
+          {% block nowo_ui_shell_aside %}<nav>…</nav>{% endblock %}
+          {% block nowo_ui_shell_main %}<main id="main-content" tabindex="-1">…</main>{% endblock %}
+      {% endembed %}
+
+  Blocks (defaults: the brand_html / brand, header_end, aside_html, main and footer_html options):
+    nowo_ui_shell_brand, nowo_ui_shell_header_actions, nowo_ui_shell_aside (empty = aside_items + aside_label),
+    nowo_ui_shell_main, nowo_ui_shell_footer (empty = the UiKit footer partial).
+  A base layout whose page {% block body %} must stay uncaptured includes the two halves instead.
+#}
+{% set bundle = bundle|default(null) %}
+{% set _brand %}{% block nowo_ui_shell_brand %}{{ brand_html|default('')|raw }}{% endblock %}{% endset %}
+{% set _header_end %}{% block nowo_ui_shell_header_actions %}{{ header_end|default('')|raw }}{% endblock %}{% endset %}
+{% set _aside %}{% block nowo_ui_shell_aside %}{{ aside_html|default('')|raw }}{% endblock %}{% endset %}
+{% set _main %}{% block nowo_ui_shell_main %}{{ main|default('')|raw }}{% endblock %}{% endset %}
+{% set _footer %}{% block nowo_ui_shell_footer %}{{ footer_html|default('')|raw }}{% endblock %}{% endset %}
+{{ include(nowo_ui_partial('app_shell_open', bundle), {brand_html: _brand|trim, header_end: _header_end|trim, aside_html: _aside|trim}) }}
+{{ _main }}
+{{ include(nowo_ui_partial('app_shell_close', bundle), {footer_html: _footer|trim}) }}

@@ -1,0 +1,119 @@
+{#
+  Signed-in app shell, opening half (2.6, theme partial `app_shell_open`): root, header (burger, brand, header actions),
+  aside (navigation) and the opening of the main region. A base layout includes the two halves around its own blocks,
+  so {% block body %} is never captured (Twig allows one definition per block):
+
+      {{ include(nowo_ui_partial('app_shell_open'), {brand_html: brand_html, header_end: header_end, aside_html: aside_html, aside_label: 'Admin'}) }}
+          <main id="main-content" tabindex="-1">{% block body %}{% endblock %}</main>
+      {{ include(nowo_ui_partial('app_shell_close'), {footer_html: footer_html}) }}
+
+  `app_shell` (shell/_shell.html.twig) composes both halves with blocks instead.
+
+  Options:
+    - brand_html (HTML) / brand (text): header brand (slot app_brand for the text)
+    - header_end (HTML): header actions — global search, theme toggle, locale switcher, user menu…
+    - show_user_menu + name, email, initials, avatar_src, user_links, logout_href, logout_path, logout_csrf: the UiKit
+      user menu at the end of the header (default: when name or initials are given)
+    - aside_html (HTML): the whole aside content, or aside_items ({label, href, current, children…}) + aside_label
+    - aside_id (default nowo-ui-aside), aside_label (aria-label; default nav.aside)
+    - collapsed / rail: the server-rendered desktop aside state; when not passed they come from the cookie
+      nowo_ui_kit.shell.sidebar_cookie (= sidebar_hidden_value → collapsed, = sidebar_rail_value → rail)
+    - rail_mode: true = three-mode aside (expanded / icons-only rail / hidden): burger rail labels, and with kit styles
+      data-nowo-ui-sidebar-rail + storage / cookie attributes for nowo-ui-shell.js
+    - content_width: full → is-full-width, anything else → is-content-width
+    - attr / shell_attr: extra root attributes (no on*), after the `app_shell` slot attributes
+    - kit_styles: override nowo_ui_kit.shell.kit_styles (true adds nowo-ui-shell / -header / -aside / -main classes)
+    - burger_attr, burger_label_attr_names, burger_icon (svg | morph | none), burger_static_icons, burger_label,
+      burger_label_expand / burger_label_rail / burger_label_hide: forwarded to the `app_shell_burger` partial
+    - bundle: per-bundle theme exceptions
+  Root state classes: is-sidebar-collapsed, is-sidebar-rail, is-full-width / is-content-width (+ is-aside-collapsed /
+  is-aside-rail with kit styles, the classes nowo-ui-shell.js toggles). Hooks: data-nowo-ui-shell, data-nowo-ui-aside,
+  data-nowo-ui-burger, data-nowo-ui-aside-backdrop.
+  Slots: app_shell, app_header, app_header_start, app_header_end, app_brand, app_aside, app_aside_inner,
+  app_aside_label, app_aside_nav, app_main (+ app_burger… in the burger, app_backdrop in the closing half).
+#}
+{% set bundle = bundle|default(null) %}
+{% set _cfg = nowo_ui_kit_shell|default({}) %}
+{% set _kit = kit_styles ?? (_cfg.kit_styles ?? true) %}
+{% set _request = app is defined and app ? app.request : null %}
+{% set _cookie = _cfg.sidebar_cookie|default(null) and _request ? _request.cookies.get(_cfg.sidebar_cookie) : null %}
+{% set aside_id = aside_id|default('nowo-ui-aside') %}
+{% set _collapsed = collapsed ?? (_cookie is not null and _cookie == (_cfg.sidebar_hidden_value ?? 'collapsed')) %}
+{% set _rail = not _collapsed and (rail ?? (_cookie is not null and _cookie == (_cfg.sidebar_rail_value ?? 'rail'))) %}
+{% set _rail_mode = rail_mode|default(false) %}
+{% set _full = content_width|default('content') == 'full' %}
+{% set _state = (_full ? 'is-full-width' : 'is-content-width')
+    ~ (_collapsed ? ' is-sidebar-collapsed' ~ (_kit ? ' is-aside-collapsed') : '')
+    ~ (_rail ? ' is-sidebar-rail' ~ (_kit ? ' is-aside-rail') : '') %}
+{% set _root_attr = {}|merge(attr|default({}))|merge(shell_attr|default({})) %}
+{% if _kit and _rail_mode %}
+    {% set _root_attr = {
+        'data-nowo-ui-sidebar-rail': true,
+        'data-nowo-ui-sidebar-storage': _cfg.sidebar_storage|default(null),
+        'data-nowo-ui-sidebar-cookie': _cfg.sidebar_cookie|default(null),
+        'data-nowo-ui-sidebar-hidden-value': _cfg.sidebar_cookie|default(null) ? (_cfg.sidebar_hidden_value ?? 'collapsed') : null,
+        'data-nowo-ui-sidebar-mode': _collapsed ? 'hidden' : (_rail ? 'rail' : 'expanded'),
+    }|merge(_root_attr) %}
+{% endif %}
+{% set aside_label = aside_label|default('nav.aside'|trans({}, 'NowoUiKitBundle')) %}
+<div class="{{ nowo_ui_class('app_shell', bundle) }}{{ _kit ? ' nowo-ui-shell' }} {{ _state }}" data-nowo-ui-shell{{ nowo_ui_attrs('app_shell', bundle, _root_attr) }}>
+    <header class="{{ nowo_ui_class('app_header', bundle) }}{{ _kit ? ' nowo-ui-header' }}"{{ nowo_ui_attrs('app_header', bundle) }}>
+        <div class="{{ nowo_ui_class('app_header_start', bundle) }}{{ _kit ? ' nowo-ui-header__start' }}"{{ nowo_ui_attrs('app_header_start', bundle) }}>
+            {{ include(nowo_ui_partial('app_shell_burger', bundle), {
+                controls: aside_id,
+                expanded: not _collapsed,
+                rail: _rail,
+                rail_mode: _rail_mode,
+                kit_styles: _kit,
+                label: burger_label|default(null),
+                label_expand: burger_label_expand|default(null),
+                label_rail: burger_label_rail|default(null),
+                label_hide: burger_label_hide|default(null),
+                label_attr_names: burger_label_attr_names|default({}),
+                attr: burger_attr|default({}),
+                icon: burger_icon|default('svg'),
+                static_icons: burger_static_icons|default(['open', 'close']),
+                bundle: bundle,
+            }, false) }}
+            {% if brand_html is defined and brand_html %}
+                {{ brand_html|raw }}
+            {% elseif brand is defined and brand %}
+                <strong class="{{ nowo_ui_class('app_brand', bundle) }}{{ _kit ? ' nowo-ui-header__brand' }}"{{ nowo_ui_attrs('app_brand', bundle) }}>{{ brand }}</strong>
+            {% endif %}
+        </div>
+        <div class="{{ nowo_ui_class('app_header_end', bundle) }}{{ _kit ? ' nowo-ui-header__end' }}"{{ nowo_ui_attrs('app_header_end', bundle) }}>
+            {% if header_end is defined and header_end %}
+                {{ header_end|raw }}
+            {% endif %}
+            {% if show_user_menu|default(name is defined or initials is defined) %}
+                {{ include('@NowoUiKitBundle/partials/_user_menu.html.twig', {
+                    name: name|default(null),
+                    email: email|default(null),
+                    initials: initials|default(null),
+                    avatar_src: avatar_src|default(null),
+                    links: user_links|default([]),
+                    logout_href: logout_href|default(null),
+                    logout_path: logout_path|default(null),
+                    logout_csrf: logout_csrf|default(null),
+                    framework: framework|default(null),
+                }, false) }}
+            {% endif %}
+        </div>
+    </header>
+
+    <aside id="{{ aside_id }}" class="{{ nowo_ui_class('app_aside', bundle) }}{{ _kit ? ' nowo-ui-aside' }}" data-nowo-ui-aside aria-label="{{ aside_label }}"{{ nowo_ui_attrs('app_aside', bundle) }}>
+        {% if aside_html is defined and aside_html %}
+            {{ aside_html|raw }}
+        {% else %}
+            <div class="{{ nowo_ui_class('app_aside_inner', bundle) }}{{ _kit ? ' nowo-ui-aside__inner' }}"{{ nowo_ui_attrs('app_aside_inner', bundle) }}>
+                {% if aside_label %}
+                    <p class="{{ nowo_ui_class('app_aside_label', bundle) }}{{ _kit ? ' nowo-ui-aside__label' }}"{{ nowo_ui_attrs('app_aside_label', bundle) }}>{{ aside_label }}</p>
+                {% endif %}
+                <nav class="{{ nowo_ui_class('app_aside_nav', bundle) }}{{ _kit ? ' nowo-ui-aside__nav' }}"{{ nowo_ui_attrs('app_aside_nav', bundle) }}>
+                    {{ include('@NowoUiKitBundle/partials/_aside_nav_items.html.twig', {items: aside_items|default([]), prefix: aside_id}, false) }}
+                </nav>
+            </div>
+        {% endif %}
+    </aside>
+
+    <div class="{{ nowo_ui_class('app_main', bundle) }}{{ _kit ? ' nowo-ui-main' }}"{{ nowo_ui_attrs('app_main', bundle) }}>

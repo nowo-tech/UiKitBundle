@@ -192,4 +192,26 @@ final class PaginationTest extends TestCase
         $defaults = Pagination::fromRequest(Request::create('/list'), 0);
         self::assertSame([1, 25, 0], [$defaults->page, $defaults->perPage, $defaults->offset()]);
     }
+
+    public function testCompactVariant(): void
+    {
+        $full = new Pagination(2, 10, 45, allowedPerPage: [10, 25]);
+        self::assertSame('full', $full->variant);
+        self::assertFalse($full->isCompact());
+
+        $compact = $full->withVariant(Pagination::VARIANT_COMPACT);
+        self::assertTrue($compact->isCompact());
+        self::assertSame([2, 10, 45, 5, [10, 25]], [$compact->page, $compact->perPage, $compact->total, $compact->totalPages, $compact->allowedPerPage]);
+        self::assertSame(['compact', [10, 25]], [$compact['variant'], $compact['allowed_per_page']]);
+        self::assertArrayNotHasKey('variant', $compact->toArray(), '1.x hash unchanged');
+
+        self::assertTrue(Pagination::fromArray(['page' => 1, 'total' => 3, 'variant' => 'compact'])->isCompact());
+        self::assertFalse(Pagination::fromArray(['variant' => 3])->isCompact());
+        self::assertTrue(Pagination::fromTotal(30, 1, 10, variant: 'compact')->isCompact());
+        self::assertTrue(Pagination::fromRequest(Request::create('/list'), 30, variant: 'compact')->isCompact());
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Unknown pagination variant "tiny"');
+        $full->withVariant('tiny');
+    }
 }

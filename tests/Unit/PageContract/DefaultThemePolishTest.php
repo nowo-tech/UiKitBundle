@@ -250,7 +250,7 @@ final class DefaultThemePolishTest extends TestCase
         $request = new \Symfony\Component\HttpFoundation\Request([], [], ['csp_nonce' => 'n0']);
         $twig = PageContractTwig::create(['t' => "{{ include(nowo_ui_partial('scripts')) }}", 'only' => "{{ include(nowo_ui_partial('scripts'), {script_names: ['dialog'], nonce: 'x'}) }}"], request: $request);
 
-        self::assertSame(8, substr_count($twig->render('t'), 'nonce="n0"'));
+        self::assertSame(\count(\Nowo\UiKitBundle\Theme\ThemeSlots::SCRIPTS), substr_count($twig->render('t'), 'nonce="n0"'));
         self::assertSame('<script src="/bundles/nowouikit/js/nowo-ui-dialog.js" defer nonce="x"></script>', trim($twig->render('only')));
     }
 

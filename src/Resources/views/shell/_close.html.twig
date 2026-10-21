@@ -1,0 +1,24 @@
+{#
+  Signed-in app shell, closing half (2.6, theme partial `app_shell_close`): ends the main region, renders the footer
+  (footer_html, else the UiKit footer partial with footer_brand / footer_links / footer_copyright) and the mobile aside
+  backdrop (slot app_backdrop, hook data-nowo-ui-aside-backdrop), then closes the shell root opened by `app_shell_open`.
+
+  Options: footer_html (HTML; false = no footer), footer_brand, footer_links, footer_copyright, kit_styles, bundle.
+#}
+{% set bundle = bundle|default(null) %}
+{% set _kit = kit_styles ?? ((nowo_ui_kit_shell|default({})).kit_styles ?? true) %}
+    </div>
+
+    {% if footer_html is defined and footer_html is not same as(false) and footer_html %}
+        {{ footer_html|raw }}
+    {% elseif footer_html is not defined or footer_html is not same as(false) %}
+        {{ include('@NowoUiKitBundle/partials/_footer.html.twig', {
+            brand: footer_brand|default(null),
+            links: footer_links|default([]),
+            copyright: footer_copyright|default(null),
+            framework: framework|default(null),
+        }, false) }}
+    {% endif %}
+
+    <div class="{{ nowo_ui_class('app_backdrop', bundle) }}{{ _kit ? ' nowo-ui-aside-backdrop' }}" data-nowo-ui-aside-backdrop{{ nowo_ui_attrs('app_backdrop', bundle) }}></div>
+</div>

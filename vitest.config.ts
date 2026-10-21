@@ -16,6 +16,7 @@ export default defineConfig({
         'src/Resources/assets/stimulus-peers/collapse_panel_controller.ts',
         'src/Resources/assets/stimulus-peers/datatable_controller.ts',
         'src/Resources/assets/stimulus-peers/disclosure_icon_controller.ts',
+        'src/Resources/assets/stimulus-peers/error_retry_countdown_controller.ts',
         'src/Resources/assets/stimulus-peers/filters_collapse_controller.ts',
         'src/Resources/assets/stimulus-peers/icon_state.ts',
         'src/Resources/assets/stimulus-peers/responsive_table_controller.ts',

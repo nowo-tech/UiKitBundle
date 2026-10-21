@@ -1,0 +1,45 @@
+{#
+  App shell sidebar toggle (2.6, theme partial `app_shell_burger`). The label names the next action (expand when the
+  aside is hidden, hide — or with rail_mode the icons-only rail first — when it is shown); the next-action labels are
+  printed as data attributes for the shell script (nowo-ui-shell.js, or the host's) to keep them in sync.
+
+  Options:
+    - controls: aside id (default nowo-ui-aside); expanded: aside shown (default true); rail: currently the icons rail
+    - rail_mode: three-mode labels (expand / rail / hide); two-mode prints expand / hide only
+    - label: aria-label + title (default: the next action); label_expand / label_rail / label_hide (defaults
+      nav.sidebar_expand / nav.sidebar_rail / nav.sidebar_hide)
+    - label_attr_names: attribute names {expand, rail, hide} (default data-label-expand / data-label-rail /
+      data-label-hide — e.g. {hide: 'data-label-collapse'} for a host script)
+    - icon: svg (default, the UiKit menu glyph) | morph (static menu / X glyphs painting the state before JS + an empty
+      <morph-icon data-sidebar-morph> that morphicons' syncSidebarMorph() hydrates; CSS swaps them on .is-morph-ready)
+      | none; static_icons: which static glyphs the morph mode prints (default ['open', 'close'])
+    - attr: extra attributes (no on*), after the `app_burger` slot attributes; kit_styles; bundle
+  Slots: app_burger (+ nowo-ui-burger and the burger button look with kit styles), app_burger_icon, app_burger_morph.
+#}
+{% set bundle = bundle|default(null) %}
+{% set _kit = kit_styles ?? ((nowo_ui_kit_shell|default({})).kit_styles ?? true) %}
+{% set controls = controls|default('nowo-ui-aside') %}
+{% set _expanded = expanded ?? true %}
+{% set _rail = (rail ?? false) and _expanded %}
+{% set _rail_mode = rail_mode|default(false) %}
+{% set _names = {expand: 'data-label-expand', rail: 'data-label-rail', hide: 'data-label-hide'}|merge(label_attr_names|default({})) %}
+{% set _label_expand = label_expand|default('nav.sidebar_expand'|trans({}, 'NowoUiKitBundle')) %}
+{% set _label_rail = label_rail|default('nav.sidebar_rail'|trans({}, 'NowoUiKitBundle')) %}
+{% set _label_hide = label_hide|default('nav.sidebar_hide'|trans({}, 'NowoUiKitBundle')) %}
+{% set _label = label|default(not _expanded ? _label_expand : (_rail_mode and not _rail ? _label_rail : _label_hide)) %}
+{% set _labels = {(_names.expand): _label_expand}|merge(_rail_mode ? {(_names.rail): _label_rail} : {})|merge({(_names.hide): _label_hide}) %}
+{% set _icon = icon|default('svg') %}
+{% set _icon_class = nowo_ui_class('app_burger_icon', bundle) %}
+<button type="button" class="{{ nowo_ui_class('app_burger', bundle) }}{{ _kit ? ' nowo-ui-burger nowo-ui-btn nowo-ui-btn--secondary nowo-ui-btn--sm' }}" data-nowo-ui-burger aria-controls="{{ controls }}" aria-expanded="{{ _expanded ? 'true' : 'false' }}" aria-label="{{ _label }}" title="{{ _label }}"{{ nowo_ui_html_attrs(_labels) }}{{ nowo_ui_attrs('app_burger', bundle, attr|default({})) }}>
+    {% if _icon == 'morph' %}
+        {% if 'open' in static_icons|default(['open', 'close']) %}
+            <svg class="{{ _icon_class }} nowo-ui-burger__icon--open" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg>
+        {% endif %}
+        {% if 'close' in static_icons|default(['open', 'close']) %}
+            <svg class="{{ _icon_class }} nowo-ui-burger__icon--close" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18 6 6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg>
+        {% endif %}
+        <morph-icon class="{{ nowo_ui_class('app_burger_morph', bundle) }}"{{ nowo_ui_attrs('app_burger_morph', bundle) }} data-sidebar-morph size="18" stroke-width="1.75" aria-hidden="true"></morph-icon>
+    {% elseif _icon == 'svg' %}
+        <svg class="{{ _icon_class }}" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></svg>
+    {% endif %}
+</button>

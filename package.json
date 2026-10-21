@@ -4,7 +4,7 @@
   "type": "module",
   "packageManager": "pnpm@9.15.0",
   "scripts": {
-    "build": "VITE_ENTRY=modal vite build && VITE_ENTRY=shell vite build && VITE_ENTRY=toast vite build && VITE_ENTRY=confirm vite build && VITE_ENTRY=page-loader vite build && VITE_ENTRY=theme vite build && pnpm run build:theme-boot && VITE_ENTRY=orb vite build && VITE_ENTRY=clipboard vite build && VITE_ENTRY=tabs vite build && VITE_ENTRY=release vite build && VITE_ENTRY=open-modal vite build && VITE_ENTRY=dialog vite build && VITE_ENTRY=popover vite build && VITE_ENTRY=segmented vite build && pnpm run build:css",
+    "build": "VITE_ENTRY=modal vite build && VITE_ENTRY=shell vite build && VITE_ENTRY=toast vite build && VITE_ENTRY=confirm vite build && VITE_ENTRY=page-loader vite build && VITE_ENTRY=theme vite build && pnpm run build:theme-boot && VITE_ENTRY=orb vite build && VITE_ENTRY=clipboard vite build && VITE_ENTRY=tabs vite build && VITE_ENTRY=release vite build && VITE_ENTRY=open-modal vite build && VITE_ENTRY=dialog vite build && VITE_ENTRY=popover vite build && VITE_ENTRY=segmented vite build && VITE_ENTRY=autosubmit vite build && VITE_ENTRY=error-retry vite build && pnpm run build:css",
     "build:css": "node .scripts/build-layered-css.mjs",
     "build:modal": "VITE_ENTRY=modal vite build",
     "build:shell": "VITE_ENTRY=shell vite build",
@@ -21,6 +21,8 @@
     "build:dialog": "VITE_ENTRY=dialog vite build",
     "build:popover": "VITE_ENTRY=popover vite build",
     "build:segmented": "VITE_ENTRY=segmented vite build",
+    "build:autosubmit": "VITE_ENTRY=autosubmit vite build",
+    "build:error-retry": "VITE_ENTRY=error-retry vite build",
     "watch": "VITE_ENTRY=modal vite build --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

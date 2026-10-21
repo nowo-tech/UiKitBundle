@@ -66,10 +66,24 @@ final class ClassEscapingTest extends TestCase
             '_modal_shell' => ['id' => 'm1', 'title' => 'Modal', 'body' => '<p>b</p>', 'footer' => '<p>f</p>'],
             '_breadcrumbs' => ['header' => new \Nowo\UiKitBundle\View\PageHeader('T', breadcrumbs: [new \Nowo\UiKitBundle\View\Crumb('Home', '/'), new \Nowo\UiKitBundle\View\Crumb('T')])],
             '_shell' => ['brand' => 'Acme', 'name' => 'Ann', 'initials' => 'A', 'aside_items' => [], 'main' => '<p>main</p>'],
+            // 2.6
+            '_confirm_dialog' => ['trigger_label' => 'Open', 'dialog_id' => 'd1'],
+            '_pagination_compact' => ['pagination' => \Nowo\UiKitBundle\View\Pagination::fromTotal(95, 2, 10, route: 'items', variant: 'compact')],
         ];
         foreach ($partials as $partial => $vars) {
             yield 'host partial '.$partial => ['host', '@NowoUiKitBundle/partials/'.$partial.'.html.twig', $vars];
             yield 'bundle partial '.$partial => ['bundle', '@NowoUiKitBundle/partials/'.$partial.'.html.twig', $vars + ['bundle' => 'NowoXBundle']];
+        }
+        // 2.6: app shell and error pages
+        $kit = [
+            'app shell' => ['@NowoUiKitBundle/shell/_shell.html.twig', ['brand' => 'Acme', 'name' => 'Ann', 'initials' => 'A', 'aside_items' => [['label' => 'A', 'href' => '/a']], 'main' => '<p>main</p>', 'burger_icon' => 'morph']],
+            'error page' => ['@NowoUiKit/error/status.html.twig', ['status_code' => 500]],
+        ];
+        foreach ($kit as $name => [$template, $vars]) {
+            yield 'host '.$name => ['host', $template, $vars];
+            if ('app shell' === $name) {
+                yield 'bundle '.$name => ['bundle', $template, $vars + ['bundle' => 'NowoXBundle']];
+            }
         }
     }
 

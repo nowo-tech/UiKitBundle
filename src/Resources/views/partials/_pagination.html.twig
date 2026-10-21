@@ -25,9 +25,15 @@
   page parameters, merged with Pagination::query), so a 1.x override keeps the filters across pages.
     - bundle: per-bundle theme exceptions (slots pagination, pagination_link, pagination_active, pagination_info
       add host classes; slot pagination attributes on the root)
+    - variant (2.6): `compact` (default: the View\Pagination's variant, else `full`) renders the `pagination_compact`
+      partial with the same input instead (previous / "Page n of m" / next + per-page select)
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 {% set bundle = bundle|default(null) %}
+{% set _variant = variant|default(pagination_model is defined and pagination_model ? pagination_model.variant : (pagination is iterable ? pagination.variant|default('full') : pagination.variant)) %}
+{% if _variant == 'compact' %}
+    {{ include(nowo_ui_theme is defined and nowo_ui_theme ? nowo_ui_theme.partial('pagination_compact', bundle) : '@NowoUiKitBundle/partials/_pagination_compact.html.twig', {pagination: pagination_model is defined and pagination_model ? pagination_model : pagination}) }}
+{% else %}
 {% set _t = nowo_ui_theme|default(null) %}
 {% set _pt = nowo_ui_page_type|default(null) %}
 {% set per_page_choices = per_page_choices|default(per_page_selector|default(false) and pagination is not iterable ? pagination.allowedPerPage : []) %}
@@ -113,4 +119,5 @@
             </nav>
         {% endif %}
     </div>
+{% endif %}
 {% endif %}

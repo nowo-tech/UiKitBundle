@@ -1,0 +1,52 @@
+{#
+  Confirm dialog wrapper (2.6, theme partial `confirm_dialog`): a Stimulus `confirm-dialog` root (stimulus-peers/
+  confirm_dialog_controller.ts: open / close, type-to-confirm, body portal, open on connect), an optional trigger
+  button and a native <dialog> whose body is the `form` block — the apps' shared/_confirm_dialog.html.twig, same
+  options and blocks. Embed it:
+
+      {% embed nowo_ui_partial('confirm_dialog') with {trigger_label: 'Revoke', dialog_modifier: 'nowo-ui-confirm-dialog--lg'} %}
+          {% block form %}{{ form_start(form) }}…<button type="button" data-confirm-dialog-close>Cancel</button>{{ form_end(form) }}{% endblock %}
+      {% endembed %}
+
+  Modes:
+    - full (default): wrapper (data-controller="confirm-dialog") + trigger + dialog
+    - only_dialog: true — the dialog only (controller and trigger live in the parent template); wrapper: false — the
+      same, kept for the apps' copies
+
+  Options:
+    - trigger_label (the default trigger renders only with it), trigger_class (default the `confirm_dialog_trigger`
+      slot), trigger_title, trigger_aria_label, trigger_testid, trigger_disabled
+    - expected_value: type-to-confirm value (data-confirm-dialog-expected-value; the input is the confirmInput target)
+    - open_on_connect: true opens the dialog when the controller connects (only an explicit true / 1 / 'true')
+    - dialog_id: id of the <dialog> (e.g. the `?new=1` target of partials/_open_modal_on_load.html.twig). With an id the
+      dialog also works without Stimulus through js/nowo-ui-confirm.js: the trigger gets data-nowo-confirm-open /
+      data-nowo-confirm-target and [data-nowo-confirm-close] closes it
+    - dialog_testid, aria_labelledby
+    - dialog_modifier: extra classes on the <dialog> (e.g. confirm-dialog--xl), after the `confirm_dialog` slot
+    - attr / dialog_attr: extra attributes of the wrapper / the dialog (no on*)
+    - bundle: per-bundle theme exceptions
+  Blocks: trigger (the default button), form (the dialog body: a Symfony form_start / form_end or any panel).
+  Close: [data-confirm-dialog-close] (Stimulus) or [data-nowo-confirm-close] (kit runtime), Escape.
+  Slots: confirm_dialog_root, confirm_dialog, confirm_dialog_trigger.
+#}
+{% set bundle = bundle|default(null) %}
+{% set _only_dialog = only_dialog|default(false) or not (wrapper ?? true) %}
+{% set _dialog_id = dialog_id|default(null) %}
+{% set _open_on_connect = open_on_connect|default(false) in [true, 1, '1', 'true', 'TRUE'] %}
+{% set _expected = expected_value ?? null %}
+{% set _dialog_class = (nowo_ui_class('confirm_dialog', bundle) ~ ' ' ~ dialog_modifier|default(''))|trim %}
+
+{% if not _only_dialog %}
+<div class="{{ nowo_ui_class('confirm_dialog_root', bundle) }}" data-controller="confirm-dialog"{% if _expected is not null %} data-confirm-dialog-expected-value="{{ _expected }}"{% endif %}{% if _open_on_connect %} data-confirm-dialog-open-on-connect-value="true"{% endif %}{{ nowo_ui_attrs('confirm_dialog_root', bundle, attr|default({})) }}>
+    {% block trigger %}
+        {% if trigger_label is defined %}
+            <button type="button" class="{{ trigger_class|default(nowo_ui_class('confirm_dialog_trigger', bundle)) }}" data-action="confirm-dialog#open"{% if _dialog_id %} data-nowo-confirm-open data-nowo-confirm-target="{{ _dialog_id }}" aria-haspopup="dialog" aria-controls="{{ _dialog_id }}"{% endif %}{% if trigger_title is defined %} title="{{ trigger_title }}"{% endif %}{% if trigger_aria_label is defined %} aria-label="{{ trigger_aria_label }}"{% endif %}{% if trigger_testid is defined %} data-testid="{{ trigger_testid }}"{% endif %}{% if trigger_disabled|default(false) %} disabled{% endif %}{{ nowo_ui_attrs('confirm_dialog_trigger', bundle) }}>{{ trigger_label }}</button>
+        {% endif %}
+    {% endblock %}
+{% endif %}
+<dialog class="{{ _dialog_class }}" data-confirm-dialog-target="dialog"{% if _dialog_id %} id="{{ _dialog_id }}" data-nowo-ui-confirm{% endif %}{% if dialog_testid|default(null) %} data-testid="{{ dialog_testid }}"{% endif %}{% if aria_labelledby is defined and aria_labelledby %} aria-labelledby="{{ aria_labelledby }}"{% endif %}{{ nowo_ui_attrs('confirm_dialog', bundle, dialog_attr|default({})) }}>
+    {% block form %}{% endblock %}
+</dialog>
+{% if not _only_dialog %}
+</div>
+{% endif %}

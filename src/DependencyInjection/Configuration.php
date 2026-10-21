@@ -280,7 +280,155 @@ final class Configuration implements ConfigurationInterface
                     ->end()
                 ->end()
                 ->append($this->themeNode())
+                ->append($this->errorPagesNode())
+                ->append($this->shellNode())
             ->end();
+    }
+
+    /**
+     * Kit error pages (2.6): `@NowoUiKit/error/status.html.twig` on `layout_template`, texts from a host domain / key
+     * prefix with UiKit's catalogue as fallback, per-code illustrations, retry / back / Retry-After / self-reload.
+     */
+    private function errorPagesNode(): ArrayNodeDefinition
+    {
+        $node = new ArrayNodeDefinition('error_pages');
+        $node
+            ->info('Kit error pages (2.6): templates/bundles/TwigBundle/Exception/error.html.twig = {% extends \'@NowoUiKit/error/status.html.twig\' %}.')
+            ->addDefaultsIfNotSet()
+            ->children()
+                ->scalarNode('layout_template')
+                    ->defaultValue('@NowoUiKit/error/layout.html.twig')
+                    ->cannotBeEmpty()
+                    ->info('Document the status template extends: the kit layout, or a host template extending it (own <head> assets, brand, chat dock…).')
+                ->end()
+                ->scalarNode('translation_domain')
+                    ->defaultValue('NowoUiKitBundle')
+                    ->cannotBeEmpty()
+                    ->info('Domain of the page texts (e.g. messages). Keys missing there fall back to UiKit\'s own NowoUiKitBundle error.* texts.')
+                ->end()
+                ->scalarNode('translation_prefix')
+                    ->defaultValue('error')
+                    ->info('Key prefix: <prefix>.<code>.title|lead|hint|image_alt, <prefix>.generic.*, <prefix>.home|retry|back|retry_after|auto_retry|skip_to_content.')
+                ->end()
+                ->scalarNode('home_path')
+                    ->defaultValue('/')
+                    ->cannotBeEmpty()
+                    ->info('Href of the "Back to home" button.')
+                ->end()
+                ->arrayNode('illustrations')
+                    ->info('Status code (or "default") => asset path without extension (e.g. illustrations/error-404 → <picture> with error-404.webp + error-404.png), or {path, width, height, webp, extension}.')
+                    ->useAttributeAsKey('code')
+                    ->normalizeKeys(false)
+                    ->arrayPrototype()
+                        ->beforeNormalization()
+                            ->ifString()
+                            ->then(static fn (string $path): array => ['path' => $path])
+                        ->end()
+                        ->children()
+                            ->scalarNode('path')->isRequired()->cannotBeEmpty()->end()
+                            ->integerNode('width')->defaultNull()->min(1)->end()
+                            ->integerNode('height')->defaultNull()->min(1)->end()
+                            ->booleanNode('webp')->defaultNull()->end()
+                            ->scalarNode('extension')->defaultNull()->end()
+                        ->end()
+                    ->end()
+                    ->defaultValue([])
+                    ->validate()
+                        ->always(static function (array $map): array {
+                            foreach (array_keys($map) as $code) {
+                                $key = (string) $code;
+                                if ('default' !== $key && !(ctype_digit($key) && (int) $key >= 400 && (int) $key <= 599)) {
+                                    throw new InvalidConfigurationException(\sprintf('Invalid nowo_ui_kit.error_pages.illustrations key "%s": an HTTP error status code (400-599) or "default".', $code));
+                                }
+                            }
+
+                            return $map;
+                        })
+                    ->end()
+                ->end()
+                ->integerNode('illustration_width')->defaultValue(1024)->min(1)->info('Default intrinsic width of the illustrations.')->end()
+                ->integerNode('illustration_height')->defaultValue(683)->min(1)->info('Default intrinsic height of the illustrations.')->end()
+                ->booleanNode('webp')->defaultTrue()->info('Illustrations ship a .webp next to the fallback image (<source type="image/webp">).')->end()
+                ->arrayNode('retry_statuses')
+                    ->info('Statuses besides every 5xx that show "Try again" on GET.')
+                    ->integerPrototype()->end()
+                    ->defaultValue([408])
+                ->end()
+                ->arrayNode('back_link_statuses')
+                    ->info('Statuses that show "Go back" when the referer is same-site.')
+                    ->integerPrototype()->end()
+                    ->defaultValue([404])
+                ->end()
+                ->integerNode('auto_retry_seconds')
+                    ->defaultValue(600)
+                    ->min(0)
+                    ->info('A 5xx on GET reloads itself after this many seconds (REQ-ERROR-001 item 10; 0 = never). Never on POST.')
+                ->end()
+                ->scalarNode('theme_storage')
+                    ->defaultValue('nowo-ui-theme')
+                    ->cannotBeEmpty()
+                    ->info('localStorage key of the theme (data-nowo-ui-theme-storage on <html> and the toggle), e.g. the host\'s beacon-theme.')
+                ->end()
+                ->booleanNode('theme_toggle')->defaultTrue()->info('Render the light / dark toggle in the top controls.')->end()
+                ->arrayNode('html_attributes')
+                    ->info('Extra <html> attributes (e.g. data-csp-strict-nonce: true); no on* handlers.')
+                    ->useAttributeAsKey('attribute')
+                    ->normalizeKeys(false)
+                    ->variablePrototype()->end()
+                    ->defaultValue([])
+                    ->validate()
+                        ->always(static function (array $attributes): array {
+                            self::assertAttributeMap('error_pages.html_attributes', $attributes);
+
+                            return $attributes;
+                        })
+                    ->end()
+                ->end()
+            ->end();
+
+        return $node;
+    }
+
+    /**
+     * Signed-in app shell (2.6, `@NowoUiKit/shell/*`): server-rendered aside state and the kit look.
+     */
+    private function shellNode(): ArrayNodeDefinition
+    {
+        $node = new ArrayNodeDefinition('shell');
+        $node
+            ->info('Signed-in app shell (2.6, @NowoUiKit/shell/_open|_close|_shell|_burger.html.twig; Twig global nowo_ui_kit_shell).')
+            ->addDefaultsIfNotSet()
+            ->children()
+                ->booleanNode('kit_styles')
+                    ->defaultTrue()
+                    ->info('Add the kit shell classes (nowo-ui-shell, nowo-ui-header, nowo-ui-aside…) painted by nowo-ui.css and driven by nowo-ui-shell.js. false: only the app_* slot classes (host shell CSS / JS).')
+                ->end()
+                ->scalarNode('sidebar_cookie')
+                    ->defaultNull()
+                    ->info('Cookie holding the desktop aside mode (e.g. beacon_sidebar), read server-side so the first paint is already collapsed / rail; null = expanded unless the template passes collapsed.')
+                ->end()
+                ->scalarNode('sidebar_hidden_value')->defaultValue('collapsed')->cannotBeEmpty()->info('Cookie value of the hidden aside.')->end()
+                ->scalarNode('sidebar_rail_value')->defaultValue('rail')->cannotBeEmpty()->info('Cookie value of the icons-only rail.')->end()
+                ->scalarNode('sidebar_storage')->defaultNull()->info('localStorage key of the aside mode (data-nowo-ui-sidebar-storage on the shell root; kit_styles + rail only).')->end()
+            ->end();
+
+        return $node;
+    }
+
+    /**
+     * @param array<mixed> $attributes
+     */
+    private static function assertAttributeMap(string $path, array $attributes): void
+    {
+        foreach ($attributes as $attr => $value) {
+            $error = Theme::attributeNameError((string) $attr);
+            if (null !== $error) {
+                throw new InvalidConfigurationException(\sprintf('Invalid nowo_ui_kit.%s: %s', $path, $error));
+            }
+            if (null !== $value && !\is_scalar($value)) {
+                throw new InvalidConfigurationException(\sprintf('Invalid nowo_ui_kit.%s.%s: values are strings, numbers, booleans or null.', $path, $attr));
+            }
+        }
     }
 
     private function themeNode(): ArrayNodeDefinition

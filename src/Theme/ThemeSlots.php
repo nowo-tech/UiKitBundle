@@ -238,6 +238,18 @@ final class ThemeSlots
         'pagination_link' => ['nowo-ui-pagination__link', ['bootstrap' => 'page-link']],
         'pagination_active' => ['nowo-ui-pagination__link is-active', ['bootstrap' => 'page-link']],
         'pagination_info' => ['nowo-ui-pagination__info', []],
+        // Compact pagination (2.6, View\Pagination variant `compact`): root, the "Page n of m" text, the per-page GET
+        // form and its <select> (auto-submitted by nowo-ui-autosubmit.js, a submit button without JavaScript)
+        'pagination_compact' => ['nowo-ui-pagination nowo-ui-pagination--compact', [
+            'bootstrap' => 'd-flex flex-wrap align-items-center justify-content-between gap-2 mt-3',
+            'tailwind' => 'flex flex-wrap items-center justify-between gap-2 mt-3',
+        ]],
+        'pagination_page' => ['nowo-ui-pagination__page', []],
+        'pagination_per_page' => ['nowo-ui-pagination__per-page-form', []],
+        'pagination_select' => ['nowo-ui-pagination__select', [
+            'bootstrap' => 'form-select form-select-sm',
+            'tailwind' => 'border px-2 py-1 text-sm',
+        ]],
         // Code: inline <code> (identifiers, short values) and <pre> blocks (payloads, JSON, logs). Monospace,
         // muted surface, scrollable block (max height) — tokens --nowo-ui-font-mono, --nowo-ui-code-*
         // Bootstrap 5 paints <code> pink through --bs-code-color, which nowo-ui.css points at --nowo-ui-code-text
@@ -434,6 +446,62 @@ final class ThemeSlots
         ]],
         'auth_footer' => ['nowo-ui-auth-panel__footer', []],
         'auth_links' => ['nowo-ui-auth-panel__links', []],
+        // Skip link (2.6, REQ-A11Y-002): first focusable element of the error layout (and host shells), to #main-content
+        'skip_link' => ['nowo-ui-skip-link', []],
+        // Error pages (2.6, @NowoUiKit/error/status.html.twig on @NowoUiKit/error/layout.html.twig): <body>, top controls
+        // (theme toggle), <main>, the card and its parts; error_home / error_action are the "Back to home" button and the
+        // secondary actions (retry, go back) — complete button classes like btn_primary / btn_secondary
+        'error_page' => ['nowo-ui-error-page', []],
+        'error_top' => ['nowo-ui-error-page__top', []],
+        'error_main' => ['nowo-ui-error-page__main', []],
+        'error_card' => ['nowo-ui-error-page__card', []],
+        'error_figure' => ['nowo-ui-error-page__figure', []],
+        'error_image' => ['nowo-ui-error-page__img', []],
+        'error_code' => ['nowo-ui-error-page__code', []],
+        'error_title' => ['nowo-ui-error-page__title', []],
+        'error_lead' => ['nowo-ui-error-page__lead', []],
+        'error_hint' => ['nowo-ui-error-page__hint', []],
+        'error_actions' => ['nowo-ui-error-page__actions', [
+            'bootstrap' => 'd-flex flex-wrap gap-2',
+            'tailwind' => 'flex flex-wrap gap-2',
+        ]],
+        'error_home' => ['nowo-ui-btn nowo-ui-btn--primary', [
+            'bootstrap' => 'btn btn-primary',
+            'tailwind' => 'inline-flex items-center gap-1 font-medium px-3 py-1.5 text-sm',
+            'foundation' => 'button primary',
+        ]],
+        'error_action' => ['nowo-ui-btn nowo-ui-btn--secondary', [
+            'bootstrap' => 'btn btn-outline-secondary',
+            'tailwind' => 'inline-flex items-center gap-1 font-medium px-3 py-1.5 text-sm border',
+            'foundation' => 'button secondary',
+        ]],
+        // Confirm dialog wrapper (2.6, partial `confirm_dialog`: Stimulus `confirm-dialog` root, the <dialog> and the
+        // default trigger button; `dialog_modifier` is appended to confirm_dialog)
+        'confirm_dialog_root' => ['nowo-ui-confirm-dialog-root', []],
+        'confirm_dialog' => ['nowo-ui-confirm-dialog', []],
+        'confirm_dialog_trigger' => ['nowo-ui-btn nowo-ui-btn--secondary', [
+            'bootstrap' => 'btn btn-outline-secondary',
+            'tailwind' => 'inline-flex items-center gap-1 font-medium px-3 py-1.5 text-sm border',
+            'foundation' => 'button secondary',
+        ]],
+        // Signed-in app shell (2.6, @NowoUiKit/shell/*: open / close halves, shell, burger). The semantic classes carry
+        // no CSS: with `kit_styles` (default) the templates add the kit shell classes (nowo-ui-shell, nowo-ui-header,
+        // nowo-ui-aside…) painted by nowo-ui.css; a host shell sets kit_styles: false and its own classes here
+        'app_shell' => ['nowo-ui-app-shell', []],
+        'app_header' => ['nowo-ui-app-shell__header', []],
+        'app_header_start' => ['nowo-ui-app-shell__header-start', []],
+        'app_header_end' => ['nowo-ui-app-shell__header-end', []],
+        'app_brand' => ['nowo-ui-app-shell__brand', []],
+        'app_burger' => ['nowo-ui-app-shell__burger', []],
+        // Burger glyphs (svg / morph mode static icons, + --open / --close) and the <morph-icon data-sidebar-morph>
+        'app_burger_icon' => ['nowo-ui-burger__icon', []],
+        'app_burger_morph' => ['nowo-ui-burger__morph', []],
+        'app_aside' => ['nowo-ui-app-shell__aside', []],
+        'app_aside_inner' => ['nowo-ui-app-shell__aside-inner', []],
+        'app_aside_label' => ['nowo-ui-app-shell__aside-label', []],
+        'app_aside_nav' => ['nowo-ui-app-shell__aside-nav', []],
+        'app_main' => ['nowo-ui-app-shell__main', []],
+        'app_backdrop' => ['nowo-ui-app-shell__backdrop', []],
     ];
 
     /**
@@ -450,7 +518,7 @@ final class ThemeSlots
      *
      * @var list<string>
      */
-    public const SCRIPTS = ['modal', 'confirm', 'dialog', 'toast', 'tabs', 'theme', 'popover', 'segmented'];
+    public const SCRIPTS = ['modal', 'confirm', 'dialog', 'toast', 'tabs', 'theme', 'popover', 'segmented', 'autosubmit'];
 
     /**
      * Partial name => default template (replaceable through `theme.partials`).
@@ -459,10 +527,15 @@ final class ThemeSlots
      */
     public const PARTIALS = [
         'action' => '@NowoUiKitBundle/partials/_action.html.twig',
+        'app_shell' => '@NowoUiKitBundle/shell/_shell.html.twig',
+        'app_shell_burger' => '@NowoUiKitBundle/shell/_burger.html.twig',
+        'app_shell_close' => '@NowoUiKitBundle/shell/_close.html.twig',
+        'app_shell_open' => '@NowoUiKitBundle/shell/_open.html.twig',
         'breadcrumbs' => '@NowoUiKitBundle/partials/_breadcrumbs.html.twig',
         'burger' => '@NowoUiKitBundle/partials/_burger.html.twig',
         'card' => '@NowoUiKitBundle/partials/_card.html.twig',
         'confirm' => '@NowoUiKitBundle/partials/_confirm.html.twig',
+        'confirm_dialog' => '@NowoUiKitBundle/partials/_confirm_dialog.html.twig',
         'detail_list' => '@NowoUiKitBundle/page/_detail_list.html.twig',
         'dialog' => '@NowoUiKitBundle/partials/_dialog.html.twig',
         'empty' => '@NowoUiKitBundle/partials/_empty.html.twig',
@@ -474,6 +547,7 @@ final class ThemeSlots
         'modal_shell' => '@NowoUiKitBundle/partials/_modal_shell.html.twig',
         'page_header' => '@NowoUiKitBundle/partials/_page_header.html.twig',
         'pagination' => '@NowoUiKitBundle/partials/_pagination.html.twig',
+        'pagination_compact' => '@NowoUiKitBundle/partials/_pagination_compact.html.twig',
         'progress' => '@NowoUiKitBundle/partials/_progress.html.twig',
         'row_actions' => '@NowoUiKitBundle/partials/_row_actions.html.twig',
         'scripts' => '@NowoUiKitBundle/partials/_scripts.html.twig',

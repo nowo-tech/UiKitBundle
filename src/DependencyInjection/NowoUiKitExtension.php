@@ -23,6 +23,7 @@ use Nowo\UiKitBundle\Routing\PanelPathRewritingLoader;
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Twig\AppearanceExtension;
 use Nowo\UiKitBundle\Twig\AreaNavExtension;
+use Nowo\UiKitBundle\Twig\ErrorPageExtension;
 use Nowo\UiKitBundle\Twig\RouteLinkExtension;
 use Nowo\UiKitBundle\Twig\ThemeExtension;
 use Symfony\Component\Asset\Package;
@@ -91,6 +92,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
                     'enabled' => $config['release_check']['enabled'],
                     'current_version' => $config['release_check']['current_version'],
                 ],
+                'nowo_ui_kit_shell' => $config['shell'],
             ],
         ]);
     }
@@ -172,6 +174,17 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
         $container->setAlias(AreaNavRegistry::class, 'nowo_ui_kit.area_nav_registry');
         $container->register('nowo_ui_kit.area_nav_twig_extension', AreaNavExtension::class)
             ->setArguments([new Reference('nowo_ui_kit.area_nav_registry')])
+            ->addTag('twig.extension');
+
+        /** @var array<string, mixed> $errorPages */
+        $errorPages = $config['error_pages'];
+        $container->setParameter('nowo_ui_kit.error_pages', $errorPages);
+        $container->register('nowo_ui_kit.error_page_twig_extension', ErrorPageExtension::class)
+            ->setArguments([
+                $errorPages,
+                new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                new Reference('request_stack', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+            ])
             ->addTag('twig.extension');
 
         $container->register('nowo_ui_kit.theme_twig_extension', ThemeExtension::class)

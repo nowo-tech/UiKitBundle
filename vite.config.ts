@@ -20,7 +20,9 @@ type Entry =
   | 'open-modal'
   | 'dialog'
   | 'popover'
-  | 'segmented';
+  | 'segmented'
+  | 'autosubmit'
+  | 'error-retry';
 
 const entry = process.env.VITE_ENTRY as Entry | undefined;
 
@@ -244,6 +246,36 @@ const configs: Record<Entry, { build: object }> = {
         output: {
           format: 'iife' as const,
           entryFileNames: 'js/nowo-ui-segmented.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  autosubmit: {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-autosubmit.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-autosubmit.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  'error-retry': {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-error-retry.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-error-retry.js',
         },
       },
       minify: true,

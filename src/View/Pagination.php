@@ -18,6 +18,9 @@ use Symfony\Component\HttpFoundation\Request;
  * requested page / per-page (the `PagePagination::fromTotal()` helper copied across the apps), with
  * {@see self::offset()} / {@see self::limit()} for the query; `$pagination['offset']` and `['limit']` read them too.
  *
+ * 2.6: {@see self::$variant} `compact` renders the `pagination_compact` partial (previous / "Page n of m" / next and,
+ * with {@see self::$allowedPerPage}, a per-page `<select>`) instead of the numbered pills.
+ *
  * @implements \ArrayAccess<array-key, mixed>
  */
 final readonly class Pagination implements \ArrayAccess
@@ -27,6 +30,15 @@ final readonly class Pagination implements \ArrayAccess
 
     /** Per-page value {@see self::fromTotal()} falls back to (when allowed, else the first allowed value). */
     public const DEFAULT_PER_PAGE = 25;
+
+    /** Numbered pills with the "Showing x–y of z" line (default, 1.x markup). */
+    public const VARIANT_FULL = 'full';
+
+    /** Previous / "Page n of m" / next (+ per-page select), 2.6. */
+    public const VARIANT_COMPACT = 'compact';
+
+    /** @var list<string> */
+    public const VARIANTS = [self::VARIANT_FULL, self::VARIANT_COMPACT];
 
     public int $page;
 
@@ -40,6 +52,7 @@ final readonly class Pagination implements \ArrayAccess
      * @param array<string, mixed>      $query          extra query parameters kept across pages (filters, sort)
      * @param array<string, mixed>|null $routeParams    route parameters (null: the current request's)
      * @param list<int>                 $allowedPerPage per-page choices (2.4; `_pagination` with `per_page_selector: true` links them)
+     * @param string                    $variant        `full` (default) or `compact` (2.6)
      */
     public function __construct(
         int $page,
@@ -52,7 +65,11 @@ final readonly class Pagination implements \ArrayAccess
         public string $pageParam = 'page',
         public string $perPageParam = 'per_page',
         public array $allowedPerPage = [],
+        public string $variant = self::VARIANT_FULL,
     ) {
+        if (!\in_array($variant, self::VARIANTS, true)) {
+            throw new \InvalidArgumentException(\sprintf('Unknown pagination variant "%s" (known: %s).', $variant, implode(', ', self::VARIANTS)));
+        }
         $this->perPage = max(1, $perPage);
         $this->total = max(0, $total);
         $this->totalPages = max(1, $totalPages ?? (int) ceil($this->total / $this->perPage));
@@ -62,7 +79,7 @@ final readonly class Pagination implements \ArrayAccess
     /**
      * Accepts the 1.x `_pagination` shape and the bundle variants: page|current_page|currentPage,
      * per_page|perPage|page_size|limit, total|total_items|totalItems|count, total_pages|totalPages|pages|last_page,
-     * plus route, query, route_params.
+     * plus route, query, route_params and (2.6) variant.
      *
      * @param array<string, mixed> $data
      *
@@ -90,6 +107,7 @@ final readonly class Pagination implements \ArrayAccess
             isset($data['route']) && \is_string($data['route']) && '' !== $data['route'] ? $data['route'] : null,
             \is_array($query) ? $query : [],
             \is_array($routeParams) ? $routeParams : null,
+            variant: isset($data['variant']) && \is_string($data['variant']) ? $data['variant'] : self::VARIANT_FULL,
         );
     }
 
@@ -116,6 +134,7 @@ final readonly class Pagination implements \ArrayAccess
         ?array $routeParams = null,
         string $pageParam = 'page',
         string $perPageParam = 'per_page',
+        string $variant = self::VARIANT_FULL,
     ): self {
         $allowed = array_values(array_unique(array_filter($allowedPerPage, static fn (int $value): bool => $value > 0)));
         if ([] === $allowed) {
@@ -128,7 +147,7 @@ final readonly class Pagination implements \ArrayAccess
         $total = max(0, $total);
         $totalPages = max(1, (int) ceil($total / $perPage));
 
-        return new self(max(1, min($page, $totalPages)), $perPage, $total, $totalPages, $route, $query, $routeParams, $pageParam, $perPageParam, $allowed);
+        return new self(max(1, min($page, $totalPages)), $perPage, $total, $totalPages, $route, $query, $routeParams, $pageParam, $perPageParam, $allowed, $variant);
     }
 
     /**
@@ -147,6 +166,7 @@ final readonly class Pagination implements \ArrayAccess
         ?string $route = null,
         string $pageParam = 'page',
         string $perPageParam = 'per_page',
+        string $variant = self::VARIANT_FULL,
     ): self {
         $query = $request->query->all();
         unset($query[$pageParam], $query[$perPageParam]);
@@ -162,6 +182,7 @@ final readonly class Pagination implements \ArrayAccess
             null,
             $pageParam,
             $perPageParam,
+            $variant,
         );
     }
 
@@ -244,6 +265,24 @@ final readonly class Pagination implements \ArrayAccess
         return $this->perPage;
     }
 
+    /**
+     * Same pagination with another variant (2.6): `full` or `compact`.
+     *
+     * @return self Fluent interface
+     */
+    public function withVariant(string $variant): self
+    {
+        return new self($this->page, $this->perPage, $this->total, $this->totalPages, $this->route, $this->query, $this->routeParams, $this->pageParam, $this->perPageParam, $this->allowedPerPage, $variant);
+    }
+
+    /**
+     * Whether the `compact` variant renders (2.6).
+     */
+    public function isCompact(): bool
+    {
+        return self::VARIANT_COMPACT === $this->variant;
+    }
+
     public function hasPrevious(): bool
     {
         return $this->page > 1;
@@ -296,13 +335,15 @@ final readonly class Pagination implements \ArrayAccess
 
     /**
      * Value of a 1.x key ({@see self::toArray()}), `offset` / `limit` (2.4, the `PagePagination` array keys for the
-     * query), null when unknown.
+     * query), `variant` / `allowed_per_page` (2.6), null when unknown.
      */
     public function offsetGet(mixed $offset): mixed
     {
         return match ($offset) {
             'offset' => $this->offset(),
             'limit' => $this->limit(),
+            'variant' => $this->variant,
+            'allowed_per_page' => $this->allowedPerPage,
             default => \is_string($offset) ? ($this->toArray()[$offset] ?? null) : null,
         };
     }

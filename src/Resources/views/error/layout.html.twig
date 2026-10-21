@@ -1,0 +1,68 @@
+{#
+  Kit error document (2.6, nowo_ui_kit.error_pages.layout_template default): the chrome of the branded HTTP error pages
+  rendered by @NowoUiKit/error/status.html.twig. Self-sufficient — no session, no host layout, no flashes — so it renders
+  even when the application is half broken: skip link (REQ-A11Y-002), pre-paint theme boot (inline, CSP nonce), top
+  controls with the light / dark toggle, <main id="main-content">, UiKit's stylesheet + tokens and two deferred
+  runtimes (theme toggle, error self-reload countdown), every <script> / <style> with the request `csp_nonce`.
+
+  Host chrome: point error_pages.layout_template at a template that extends this one and overrides the blocks below
+  (e.g. nowo_ui_error_head with the app's Vite tags and icons, nowo_ui_error_body_end with a chat dock).
+
+  Blocks:
+    - title (wraps nowo_ui_document_title): <title>
+    - nowo_ui_error_theme_boot: the pre-paint theme boot
+    - nowo_ui_error_head: extra <head> content (icons, fonts, app CSS / JS) — empty
+    - nowo_ui_error_styles: nowo-ui.css + nowo_ui_tokens() (call {{ parent() }} to keep them)
+    - nowo_ui_error_skip_link: the skip link to #main-content (slot skip_link; text error.skip_to_content)
+    - nowo_ui_error_before: after the skip link (page loader…) — empty
+    - nowo_ui_error_top: the top controls (slot error_top) with the theme toggle (error_pages.theme_toggle)
+    - nowo_ui_error_content: the page inside <main> (the status template fills it)
+    - nowo_ui_error_body_end: before the scripts (chat dock, consent banner…) — empty
+    - nowo_ui_error_scripts: js/nowo-ui-theme.js + js/nowo-ui-error-retry.js (call {{ parent() }} to keep them)
+  Slots: document (<html> attributes), error_page (<body>), skip_link, error_top, error_main.
+  <html> attributes: data-nowo-ui-theme-storage (error_pages.theme_storage), error_pages.html_attributes.
+#}
+{% set _request = app is defined and app ? app.request : null %}
+{% set _nonce = _request ? _request.attributes.get('csp_nonce') : null %}
+{% set _error_cfg = nowo_ui_error_pages|default({}) %}
+{% set _theme_storage = _error_cfg.theme_storage|default('nowo-ui-theme') %}
+{% set _error_status = status_code|default(0) %}
+<!DOCTYPE html>
+<html lang="{{ _request ? _request.locale : 'en' }}" data-nowo-ui-theme-storage="{{ _theme_storage }}"{% if nowo_ui_theme.hasTokens() %} data-nowo-ui-host-tokens{% endif %}{{ nowo_ui_html_attrs(_error_cfg.html_attributes|default({})) }}{{ nowo_ui_attrs('document') }}>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="robots" content="noindex">
+    {% block nowo_ui_error_theme_boot %}
+        {{ include('@NowoUiKitBundle/partials/_theme_boot.html.twig', {inline: true, nonce: _nonce}, false) }}
+    {% endblock %}
+    <title>{% block title %}{% block nowo_ui_document_title %}{{ nowo_ui_document_title|default(_error_status ?: '') }}{% endblock %}{% endblock %}</title>
+    {% block nowo_ui_error_head %}{% endblock %}
+    {% block nowo_ui_error_styles %}
+        <link rel="stylesheet" href="{{ asset('css/nowo-ui.css', 'nowo_ui_kit') }}">
+        {{ nowo_ui_tokens(_nonce) }}
+    {% endblock %}
+</head>
+<body class="{{ nowo_ui_class('error_page') }}"{{ nowo_ui_attrs('error_page') }} data-error-status="{{ _error_status ?: '' }}">
+    {% block nowo_ui_error_skip_link %}
+        <a class="{{ nowo_ui_class('skip_link') }}" href="#main-content"{{ nowo_ui_attrs('skip_link') }}>{{ nowo_ui_error_text('skip_to_content') }}</a>
+    {% endblock %}
+    {% block nowo_ui_error_before %}{% endblock %}
+    {% block nowo_ui_error_top %}
+        {% if _error_cfg.theme_toggle ?? true %}
+            <div class="{{ nowo_ui_class('error_top') }}"{{ nowo_ui_attrs('error_top') }}>
+                {{ include('@NowoUiKitBundle/partials/_theme_toggle.html.twig', {storage_key: _theme_storage}, false) }}
+            </div>
+        {% endif %}
+    {% endblock %}
+    <main id="main-content" tabindex="-1" class="{{ nowo_ui_class('error_main') }}"{{ nowo_ui_attrs('error_main') }}>
+        {% block nowo_ui_error_content %}{% endblock %}
+    </main>
+    {% block nowo_ui_error_body_end %}{% endblock %}
+    {% block nowo_ui_error_scripts %}
+        {% for _script in ['theme', 'error-retry'] %}
+            <script src="{{ asset('js/nowo-ui-' ~ _script ~ '.js', 'nowo_ui_kit') }}" defer{% if _nonce %} nonce="{{ _nonce }}"{% endif %}></script>
+        {% endfor %}
+    {% endblock %}
+</body>
+</html>

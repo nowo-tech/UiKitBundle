@@ -50,7 +50,7 @@ final class StateHideCssTest extends TestCase
     public function testStateRuleIsImportantInBothStylesheets(string $selector, string $declaration): void
     {
         foreach (['nowo-ui.unlayered.css', 'nowo-ui.css'] as $file) {
-            $bodies = array_values(array_filter(self::rules($file), static fn (array $rule): bool => \in_array($selector, $rule[0], true)));
+            $bodies = array_values(array_filter($this->rules($file), static fn (array $rule): bool => \in_array($selector, $rule[0], true)));
 
             self::assertCount(1, $bodies, $file.': one rule for '.$selector);
             self::assertStringContainsString($declaration, $bodies[0][1], $file.': '.$selector);
@@ -63,7 +63,7 @@ final class StateHideCssTest extends TestCase
     public function testEveryStateHideRuleIsImportant(): void
     {
         $offenders = [];
-        foreach (self::rules('nowo-ui.unlayered.css') as [$selectors, $body]) {
+        foreach ($this->rules('nowo-ui.unlayered.css') as [$selectors, $body]) {
             if (1 !== preg_match('/(?<![-\w])display:\s*none\s*;/', $body)) {
                 continue;
             }
@@ -84,7 +84,7 @@ final class StateHideCssTest extends TestCase
     /**
      * @return list<array{list<string>, string}> [selectors, declarations] of every innermost rule
      */
-    private static function rules(string $file): array
+    private function rules(string $file): array
     {
         $css = (string) preg_replace('#/\*.*?\*/#s', '', (string) file_get_contents(self::DIR.'/'.$file));
         preg_match_all('/([^{}]+)\{([^{}]*)\}/', $css, $matches, \PREG_SET_ORDER);

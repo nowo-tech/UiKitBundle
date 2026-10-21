@@ -1,0 +1,76 @@
+{#
+  Kit HTTP error page (2.6): one template for every status code (400 / 401 / 403 / 404 / 408 / 429 / 5xx…). The host
+  keeps ONE file, templates/bundles/TwigBundle/Exception/error.html.twig:
+
+      {% extends '@NowoUiKit/error/status.html.twig' %}
+
+  Variables (TwigBundle's error renderer): status_code, exception (FlattenException; its Retry-After header is read).
+  The page model is nowo_ui_error_page(status_code, exception) (View\ErrorPage): illustration, retryAfter (429),
+  retryHref ("Try again": 408 / 5xx on GET), backHref ("Go back": same-site referer, 404), autoRetrySeconds (a 5xx on
+  GET reloads itself after 10 minutes — REQ-ERROR-001 item 10 — never on POST; the ticking counter is no live region).
+  Texts: nowo_ui_error_text(field, code) from nowo_ui_kit.error_pages.translation_domain / translation_prefix
+  (<prefix>.<code>.title|lead|hint|image_alt), falling back to UiKit's error.* texts.
+
+  Blocks (per-code templates error404.html.twig… may extend this one and override them):
+    - title: <title> ("404 — Page not found")
+    - error_illustration: the <picture> (WebP <source> + PNG <img>, width / height) of error_pages.illustrations
+    - error_title / error_lead / error_hint: the texts (an empty hint renders no paragraph)
+    - error_actions: the action row content (home, retry, back, then error_extra_actions); {{ parent() }} keeps them
+    - error_extra_actions: more buttons at the end of the row ("Report this problem"…) — empty
+    - error_extra: after the action row, inside the card — empty
+  Slots: error_card, error_figure, error_image, error_code, error_title, error_lead, error_hint, error_actions,
+  error_home, error_action (+ the layout's). data-testid hooks: error-retry-after, error-auto-retry, error-retry,
+  error-back.
+#}
+{% extends nowo_ui_error_pages.layout_template|default('@NowoUiKit/error/layout.html.twig') %}
+{% set error = nowo_ui_error_page(status_code|default(0), exception|default(null)) %}
+{% set error_code = error.statusCode %}
+
+{% block title %}{{ error_code ? error_code ~ ' — ' }}{{ nowo_ui_error_text('title', error_code) }}{% endblock %}
+
+{% block nowo_ui_error_content %}
+    <div class="{{ nowo_ui_class('error_card') }}"{{ nowo_ui_attrs('error_card') }} data-nowo-ui-region="error">
+        {% block error_illustration %}
+            {% if error.illustration %}
+                <figure class="{{ nowo_ui_class('error_figure') }}"{{ nowo_ui_attrs('error_figure') }}>
+                    <picture>
+                        {% if error.illustration.webp %}
+                            <source type="image/webp" srcset="{{ asset(error.illustration.webpSrc()) }}">
+                        {% endif %}
+                        <img class="{{ nowo_ui_class('error_image') }}"{{ nowo_ui_attrs('error_image') }} src="{{ asset(error.illustration.fallbackSrc()) }}" width="{{ error.illustration.width }}" height="{{ error.illustration.height }}" alt="{{ nowo_ui_error_text('image_alt', error_code) }}" decoding="async" fetchpriority="high">
+                    </picture>
+                </figure>
+            {% endif %}
+        {% endblock %}
+        {% if error_code %}
+            <p class="{{ nowo_ui_class('error_code') }}"{{ nowo_ui_attrs('error_code') }} aria-hidden="true">{{ error_code }}</p>
+        {% endif %}
+        <h1 class="{{ nowo_ui_class('error_title') }}"{{ nowo_ui_attrs('error_title') }}>{% block error_title %}{{ nowo_ui_error_text('title', error_code) }}{% endblock %}</h1>
+        <p class="{{ nowo_ui_class('error_lead') }}"{{ nowo_ui_attrs('error_lead') }}>{% block error_lead %}{{ nowo_ui_error_text('lead', error_code) }}{% endblock %}</p>
+        {% set _error_hint %}{% block error_hint %}{{ nowo_ui_error_text('hint', error_code) }}{% endblock %}{% endset %}
+        {% if _error_hint|trim is not empty %}
+            <p class="{{ nowo_ui_class('error_hint') }}"{{ nowo_ui_attrs('error_hint') }}>{{ _error_hint }}</p>
+        {% endif %}
+        {% if error.retryAfter is not null %}
+            <p class="{{ nowo_ui_class('error_hint') }}"{{ nowo_ui_attrs('error_hint') }} data-testid="error-retry-after">{{ nowo_ui_error_text('retry_after', error_code, {'%seconds%': error.retryAfter}) }}</p>
+        {% endif %}
+        {% if error.autoRetries() %}
+            <p class="{{ nowo_ui_class('error_hint') }}"{{ nowo_ui_attrs('error_hint') }} data-testid="error-auto-retry" data-nowo-ui-error-retry data-nowo-ui-error-retry-url="{{ error.retryHref }}" data-nowo-ui-error-retry-seconds="{{ error.autoRetrySeconds }}">
+                {{ nowo_ui_error_text('auto_retry', error_code) }} <span data-nowo-ui-error-retry-remaining>{{ error.autoRetryClock() }}</span>
+            </p>
+        {% endif %}
+        <div class="{{ nowo_ui_class('error_actions') }}"{{ nowo_ui_attrs('error_actions') }}>
+            {% block error_actions %}
+                <a class="{{ nowo_ui_class('error_home') }}"{{ nowo_ui_attrs('error_home') }} href="{{ error.homeHref }}" data-testid="error-home">{{ nowo_ui_error_text('home', error_code) }}</a>
+                {% if error.retryHref %}
+                    <a class="{{ nowo_ui_class('error_action') }}"{{ nowo_ui_attrs('error_action') }} href="{{ error.retryHref }}" data-testid="error-retry">{{ nowo_ui_error_text('retry', error_code) }}</a>
+                {% endif %}
+                {% if error.backHref %}
+                    <a class="{{ nowo_ui_class('error_action') }}"{{ nowo_ui_attrs('error_action') }} href="{{ error.backHref }}" data-testid="error-back">{{ nowo_ui_error_text('back', error_code) }}</a>
+                {% endif %}
+                {% block error_extra_actions %}{% endblock %}
+            {% endblock %}
+        </div>
+        {% block error_extra %}{% endblock %}
+    </div>
+{% endblock %}

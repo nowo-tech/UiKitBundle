@@ -1,0 +1,75 @@
+{#
+  Compact server-side pagination (2.6, theme partial `pagination_compact`; View\Pagination variant `compact`, or
+  `variant: 'compact'` on the `pagination` partial): previous / "Page n of m" / next, and a per-page <select> in a GET
+  form that keeps the other query parameters (filters, sort) and goes back to page 1. The select submits itself on
+  change through js/nowo-ui-autosubmit.js (delegated listener on [data-nowo-ui-autosubmit], no inline handler: CSP);
+  without JavaScript a <noscript> submit button applies it.
+
+  Input: same as the `pagination` partial — pagination (View\Pagination or the 1.x hash), route, route_params, query,
+  page_param, per_page_param, trans_domain, nav_label, nav_trans_domain, region, bundle — plus:
+    - per_page_choices: per-page values of the select (default: the View\Pagination's allowedPerPage, e.g. from
+      Pagination::fromTotal(); none = no select); per_page_selector: false hides it
+    - id: id prefix of the select (default nowo-ui-pagination)
+  Renders nothing without rows; the nav only with more than one page.
+  Slots: pagination_compact (root), pagination_link (previous / next), pagination_page ("Page n of m"),
+  pagination_per_page (the form), pagination_info (its label), pagination_select, btn_secondary + btn_sm (no-JS button).
+#}
+{% macro hidden(name, value) %}
+    {%- import _self as _hidden -%}
+    {%- if value is iterable -%}
+        {%- for key, item in value -%}{{ _hidden.hidden(name ~ '[' ~ key ~ ']', item) }}{%- endfor -%}
+    {%- elseif value is not null and value is not same as(false) -%}
+        <input type="hidden" name="{{ name }}" value="{{ value is same as(true) ? 1 : value }}">
+    {%- endif -%}
+{% endmacro %}
+{% import _self as _m %}
+{% set bundle = bundle|default(null) %}
+{% set _model = pagination is not iterable ? pagination : null %}
+{% set _p = _model ? _model.toArray() : pagination %}
+{% set page_param = page_param|default(_p.page_param|default('page')) %}
+{% set per_page_param = per_page_param|default(_p.per_page_param|default('per_page')) %}
+{% set route = route|default(_p.route|default(app.request.attributes.get('_route'))) %}
+{% set route_params = route_params|default(_p.route_params|default(app.request.attributes.get('_route_params')|default({}))) %}
+{% set query = (query|default(_p.query|default({})))|filter((v, k) => k not in [page_param, per_page_param]) %}
+{% set trans_domain = trans_domain|default('NowoUiKitBundle') %}
+{% set nav_trans_domain = nav_trans_domain|default(trans_domain) %}
+{% set nav_label = nav_label|default('pagination.nav') %}
+{% set page = _p.page|default(1) %}
+{% set per_page = _p.per_page|default(25) %}
+{% set total = _p.total|default(0) %}
+{% set total_pages = max(1, _p.total_pages|default(1)) %}
+{% set _choices = (per_page_selector ?? true) ? per_page_choices|default(_model ? _model.allowedPerPage : (pagination.allowed_per_page|default([]))) : [] %}
+{% set _choices = _choices is not empty and total > min(_choices) ? _choices : [] %}
+{% set _base = route_params|merge(query)|merge({(per_page_param): per_page}) %}
+{% set _id = (id|default('nowo-ui-pagination')) ~ '-per-page' %}
+{% if total > 0 and (total_pages > 1 or _choices is not empty) %}
+    <div class="{{ nowo_ui_class('pagination_compact', bundle) }}" data-nowo-ui-pagination="compact"{{ nowo_ui_attrs('pagination_compact', bundle) }}{% if region|default(null) %} data-nowo-ui-region="{{ region }}"{% endif %}>
+        {% if total_pages > 1 %}
+            <nav class="nowo-ui-pagination__nav" aria-label="{{ nav_label|trans({}, nav_trans_domain) }}">
+                {% if page > 1 %}
+                    <a class="{{ nowo_ui_class('pagination_link', bundle) }}" href="{{ path(route, _base|merge({(page_param): page - 1})) }}" rel="prev" aria-label="{{ 'pagination.previous'|trans({}, trans_domain) }}">«</a>
+                {% else %}
+                    <span class="{{ nowo_ui_class('pagination_link', bundle) }} is-disabled" aria-disabled="true" aria-label="{{ 'pagination.previous'|trans({}, trans_domain) }}">«</span>
+                {% endif %}
+                <span class="{{ nowo_ui_class('pagination_page', bundle) }}" aria-current="page">{{ 'pagination.page'|trans({'%page%': page, '%total%': total_pages}, trans_domain) }}</span>
+                {% if page < total_pages %}
+                    <a class="{{ nowo_ui_class('pagination_link', bundle) }}" href="{{ path(route, _base|merge({(page_param): page + 1})) }}" rel="next" aria-label="{{ 'pagination.next'|trans({}, trans_domain) }}">»</a>
+                {% else %}
+                    <span class="{{ nowo_ui_class('pagination_link', bundle) }} is-disabled" aria-disabled="true" aria-label="{{ 'pagination.next'|trans({}, trans_domain) }}">»</span>
+                {% endif %}
+            </nav>
+        {% endif %}
+        {% if _choices is not empty %}
+            <form class="{{ nowo_ui_class('pagination_per_page', bundle) }}" method="get" action="{{ path(route, route_params) }}" data-nowo-ui-region="per-page"{{ nowo_ui_attrs('pagination_per_page', bundle) }}>
+                {% for _name, _value in query %}{{ _m.hidden(_name, _value) }}{% endfor %}
+                <label class="{{ nowo_ui_class('pagination_info', bundle) }}" for="{{ _id }}">{{ 'pagination.per_page'|trans({}, trans_domain) }}</label>
+                <select id="{{ _id }}" name="{{ per_page_param }}" class="{{ nowo_ui_class('pagination_select', bundle) }}" data-nowo-ui-autosubmit{{ nowo_ui_attrs('pagination_select', bundle) }}>
+                    {% for _choice in _choices %}
+                        <option value="{{ _choice }}"{% if _choice == per_page %} selected{% endif %}>{{ _choice }}</option>
+                    {% endfor %}
+                </select>
+                <noscript><button type="submit" class="{{ nowo_ui_class('btn_secondary', bundle) }} {{ nowo_ui_class('btn_sm', bundle) }}">{{ 'pagination.apply'|trans({}, trans_domain) }}</button></noscript>
+            </form>
+        {% endif %}
+    </div>
+{% endif %}
