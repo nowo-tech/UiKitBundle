@@ -4,11 +4,12 @@
 
 - [Unreleased](#unreleased)
 - [To 2.6.0](#to-260)
-  - [Error pages](#error-pages-26)
-  - [Confirm dialog](#confirm-dialog-26)
-  - [App shell](#app-shell-26)
-  - [Pagination](#pagination-26)
-  - [Responsive table](#responsive-table-26)
+- [To 2.6.0](#to-260-1)
+  - [Error pages](#error-pages)
+  - [Confirm dialog](#confirm-dialog)
+  - [App shell](#app-shell)
+  - [Pagination](#pagination)
+  - [Responsive table](#responsive-table)
 - [To 2.5.3](#to-253)
 - [To 2.5.2](#to-252)
 - [To 2.5.1](#to-251)
@@ -67,6 +68,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.6.0
+
+From **2.5.3**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 ## To 2.6.0
 

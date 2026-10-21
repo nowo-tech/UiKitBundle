@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.6.0] - 2026-10-21](#260---2026-10-21)
 - [[2.5.3] - 2026-10-20](#253---2026-10-20)
 - [[2.5.2] - 2026-10-19](#252---2026-10-19)
 - [[2.5.1] - 2026-10-19](#251---2026-10-19)
@@ -56,6 +57,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [2.6.0] - 2026-10-21
+
+Kit error pages, confirm dialog partial, app shell scaffold and compact pagination (hosts drop their copies); responsive table measures with the detail buttons shown. See [UPGRADING](UPGRADING.md#to-260).
 
 Kit templates that replace the apps' near-identical copies: branded HTTP error pages, the confirm dialog wrapper, the
 signed-in app shell and a compact pagination variant; the responsive table no longer ends one button too wide. See
@@ -123,6 +128,8 @@ signed-in app shell and a compact pagination variant; the responsive table no lo
   them, so the table ended one button wider than its scroller (19px at 390px in WebKit / Firefox). The buttons are now
   shown before the phase-2 measurement (their final layout); hosts can drop stand-in CSS such as a 2rem
   `::before` box during `data-rt-measuring`.
+
+[2.6.0]: https://github.com/nowo-tech/UiKitBundle/compare/v2.5.3...v2.6.0
 
 ## [2.5.3] - 2026-10-20
 
@@ -1000,7 +1007,7 @@ Supersedes 1.17.3: same runtime code and CSS, release gate hardened so the tagge
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.5.3...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.6.0...HEAD
 [1.10.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.4...v1.10.0
 [1.8.4]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.3...v1.8.4
 [1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0
