@@ -40,7 +40,9 @@
 {% set total_pages = max(1, _p.total_pages|default(1)) %}
 {% set _choices = (per_page_selector ?? true) ? per_page_choices|default(_model ? _model.allowedPerPage : (pagination.allowed_per_page|default([]))) : [] %}
 {% set _choices = _choices is not empty and total > min(_choices) ? _choices : [] %}
-{% set _base = route_params|merge(query)|merge({(per_page_param): per_page}) %}
+{# per_page only travels when the select is shown or the request already chose one (2.6.1): no stray ?per_page=n #}
+{% set _keep_per_page = _choices is not empty or (app.request is not null and app.request.query.has(per_page_param)) %}
+{% set _base = route_params|merge(query)|merge(_keep_per_page ? {(per_page_param): per_page} : {}) %}
 {% set _id = (id|default('nowo-ui-pagination')) ~ '-per-page' %}
 {% if total > 0 and (total_pages > 1 or _choices is not empty) %}
     <div class="{{ nowo_ui_class('pagination_compact', bundle) }}" data-nowo-ui-pagination="compact"{{ nowo_ui_attrs('pagination_compact', bundle) }}{% if region|default(null) %} data-nowo-ui-region="{{ region }}"{% endif %}>

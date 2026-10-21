@@ -22,7 +22,8 @@
       dialog also works without Stimulus through js/nowo-ui-confirm.js: the trigger gets data-nowo-confirm-open /
       data-nowo-confirm-target and [data-nowo-confirm-close] closes it
     - dialog_testid, aria_labelledby
-    - dialog_modifier: extra classes on the <dialog> (e.g. confirm-dialog--xl), after the `confirm_dialog` slot
+    - dialog_modifier: extra classes on the <dialog> (e.g. confirm-dialog--xl), after the `confirm_dialog` slot;
+      `nowo-ui-confirm-dialog--plain` drops the kit box (background, border, shadow, padding, size) — 2.6.1
     - attr / dialog_attr: extra attributes of the wrapper / the dialog (no on*)
     - bundle: per-bundle theme exceptions
   Blocks: trigger (the default button), form (the dialog body: a Symfony form_start / form_end or any panel).

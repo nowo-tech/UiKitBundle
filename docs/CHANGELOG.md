@@ -58,6 +58,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **App shell burger before morph-icon loads:** the static X was chosen from `aria-expanded`, which is also `true` in the
+  icons rail and on the (initially closed) phone drawer, so the menu glyph disappeared there; the layered `!important`
+  could not be undone from host CSS. The burger now renders `data-nowo-ui-burger-glyph="close|open"` server side (close
+  only for a fully expanded aside), the X shows only on desktop (≥ 901px) and phones start with the menu glyph.
+- **`pagination_compact`:** links no longer append `per_page=<n>` when no per-page select is shown; it is kept when the
+  select is shown or the request already chose a page size.
+- Static burger glyphs and the burger `<morph-icon>` use `stroke-width="2"` (Tabler's), was 1.75.
+
+### Added
+
+- `nowo-ui-confirm-dialog--plain` modifier (pass it as `dialog_modifier`): drops the kit dialog box (background, border,
+  radius, shadow, padding, size, overflow) for hosts whose `<dialog>` is a transparent frame around their own panel.
+
 ## [2.6.0] - 2026-10-21
 
 Kit error pages, confirm dialog partial, app shell scaffold and compact pagination (hosts drop their copies); responsive table measures with the detail buttons shown. See [UPGRADING](UPGRADING.md#to-260).

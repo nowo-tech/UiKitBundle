@@ -70,6 +70,18 @@ final class CompactPaginationTest extends TestCase
         self::assertSame('compact', $pagination['variant']);
     }
 
+    public function testPerPageOnlyTravelsWithTheSelectOrAnExplicitChoice(): void
+    {
+        $twig = PageContractTwig::create();
+        $html = $twig->render('@NowoUiKit/partials/_pagination_compact.html.twig', ['pagination' => ['page' => 2, 'per_page' => 25, 'total' => 60, 'total_pages' => 3], 'route' => 'r']);
+        self::assertStringNotContainsString('per_page', $html, 'no select, no explicit choice: no stray per_page in the links (2.6.1)');
+        self::assertStringContainsString('page=3', $html);
+
+        $request = new Request(['per_page' => '25']);
+        $chosen = PageContractTwig::create(request: $request)->render('@NowoUiKit/partials/_pagination_compact.html.twig', ['pagination' => ['page' => 2, 'per_page' => 25, 'total' => 60, 'total_pages' => 3], 'route' => 'r']);
+        self::assertStringContainsString('per_page=25', $chosen, 'an explicit per_page in the request is kept');
+    }
+
     public function testListScaffoldRendersTheCompactVariant(): void
     {
         $request = new Request(['status' => 'open', 'page' => '2'], [], ['_route' => 'items_index', '_route_params' => []]);

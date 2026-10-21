@@ -4509,6 +4509,20 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
   background: var(--nowo-ui-overlay, rgba(15, 23, 42, 0.45));
 }
 
+/* Opt-out of the kit box (2.6.1): `dialog_modifier: 'nowo-ui-confirm-dialog--plain'` for hosts whose <dialog> is a
+ * transparent frame around their own panel. Keeps the closed-state hide and the backdrop. */
+.nowo-ui-confirm-dialog.nowo-ui-confirm-dialog--plain {
+  width: auto;
+  max-width: none;
+  max-height: none;
+  padding: 0;
+  overflow: visible;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
 .nowo-ui-confirm-dialog--sm {
   width: min(22rem, calc(100vw - 2rem));
 }
@@ -4525,9 +4539,22 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
  * the aside is hidden, X when it is shown), the <morph-icon> replaces it once hydrated (.is-morph-ready). */
 .nowo-ui-app-shell__burger.is-morph-ready .nowo-ui-burger__icon,
 .nowo-ui-app-shell__burger:not(.is-morph-ready) .nowo-ui-burger__morph,
-.nowo-ui-app-shell__burger[aria-expanded='true']:has(.nowo-ui-burger__icon--close):not(.is-morph-ready) .nowo-ui-burger__icon--open,
-.nowo-ui-app-shell__burger[aria-expanded='false']:not(.is-morph-ready) .nowo-ui-burger__icon--close {
+.nowo-ui-app-shell__burger:not(.is-morph-ready):not([data-nowo-ui-burger-glyph='close']) .nowo-ui-burger__icon--close {
   display: none !important;
+}
+
+/* The X only stands for a fully expanded aside (data-nowo-ui-burger-glyph="close", rendered server side): never in the
+ * icons rail, and never on phones, where the drawer starts closed whatever the desktop state is (2.6.1). */
+@media (min-width: 901px) {
+  .nowo-ui-app-shell__burger[data-nowo-ui-burger-glyph='close']:has(.nowo-ui-burger__icon--close):not(.is-morph-ready) .nowo-ui-burger__icon--open {
+    display: none !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .nowo-ui-app-shell__burger:not(.is-morph-ready) .nowo-ui-burger__icon--close {
+    display: none !important;
+  }
 }
 
 .nowo-ui-burger__morph {

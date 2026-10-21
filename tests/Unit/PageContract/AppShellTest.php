@@ -31,7 +31,7 @@ TWIG;
         self::assertStringContainsString('<div class="nowo-ui-app-shell nowo-ui-shell is-content-width" data-nowo-ui-shell>', $html);
         self::assertStringContainsString('<header class="nowo-ui-app-shell__header nowo-ui-header">', $html);
         self::assertStringContainsString('<div class="nowo-ui-app-shell__header-start nowo-ui-header__start">', $html);
-        self::assertStringContainsString('<button type="button" class="nowo-ui-app-shell__burger nowo-ui-burger nowo-ui-btn nowo-ui-btn--secondary nowo-ui-btn--sm" data-nowo-ui-burger aria-controls="nowo-ui-aside" aria-expanded="true" aria-label="Hide navigation" title="Hide navigation" data-label-expand="Expand navigation" data-label-hide="Hide navigation">', $html);
+        self::assertStringContainsString('<button type="button" class="nowo-ui-app-shell__burger nowo-ui-burger nowo-ui-btn nowo-ui-btn--secondary nowo-ui-btn--sm" data-nowo-ui-burger aria-controls="nowo-ui-aside" aria-expanded="true" data-nowo-ui-burger-glyph="close" aria-label="Hide navigation" title="Hide navigation" data-label-expand="Expand navigation" data-label-hide="Hide navigation">', $html);
         self::assertStringContainsString('<svg class="nowo-ui-burger__icon" viewBox="0 0 24 24"', $html);
         self::assertStringContainsString('<strong class="nowo-ui-app-shell__brand nowo-ui-header__brand">Acme</strong>', $html);
         self::assertStringContainsString('<a href="/search">Search</a>', $html);
@@ -69,11 +69,11 @@ TWIG;
         ], 'close' => ['footer_html' => '<footer>Legal</footer>']]);
 
         self::assertStringContainsString('<div class="nowo-ui-app-shell app-shell is-full-width is-sidebar-collapsed" data-nowo-ui-shell data-app-shell data-content-width="full">', $html);
-        self::assertStringContainsString('aria-controls="app-sidebar" aria-expanded="false" aria-label="Expand navigation" title="Expand navigation" data-label-expand="Expand navigation" data-label-hide="Hide navigation" data-sidebar-toggle>', $html);
+        self::assertStringContainsString('aria-controls="app-sidebar" aria-expanded="false" data-nowo-ui-burger-glyph="open" aria-label="Expand navigation" title="Expand navigation" data-label-expand="Expand navigation" data-label-hide="Hide navigation" data-sidebar-toggle>', $html);
         self::assertStringContainsString('class="nowo-ui-app-shell__burger app-sidebar-toggle"', $html);
         self::assertStringContainsString('<svg class="nowo-ui-burger__icon nowo-ui-burger__icon--open"', $html);
         self::assertStringContainsString('<svg class="nowo-ui-burger__icon nowo-ui-burger__icon--close"', $html);
-        self::assertStringContainsString('<morph-icon class="nowo-ui-burger__morph" data-sidebar-morph size="18" stroke-width="1.75" aria-hidden="true"></morph-icon>', $html);
+        self::assertStringContainsString('<morph-icon class="nowo-ui-burger__morph" data-sidebar-morph size="18" stroke-width="2" aria-hidden="true"></morph-icon>', $html);
         self::assertStringContainsString('<a class="brand" href="/">SMS Bridge</a>', $html);
         self::assertStringContainsString('<aside id="app-sidebar" class="nowo-ui-app-shell__aside app-sidebar" data-nowo-ui-aside aria-label="Admin" data-tour="sidebar">', $html);
         self::assertStringContainsString('<div class="app-sidebar__inner">NAV</div>', $html);
@@ -102,7 +102,7 @@ TWIG;
         ]]);
 
         self::assertStringContainsString('<div class="nowo-ui-app-shell nowo-ui-shell is-content-width is-sidebar-rail is-aside-rail" data-nowo-ui-shell data-nowo-ui-sidebar-rail data-nowo-ui-sidebar-storage="beacon-sidebar" data-nowo-ui-sidebar-cookie="beacon_sidebar" data-nowo-ui-sidebar-hidden-value="collapsed" data-nowo-ui-sidebar-mode="rail">', $html);
-        self::assertStringContainsString('aria-expanded="true" aria-label="Hide navigation" title="Hide navigation" data-label-expand="Expand navigation" data-label-rail="Show icons only" data-label-collapse="Hide navigation">', $html);
+        self::assertStringContainsString('aria-expanded="true" data-nowo-ui-burger-glyph="open" aria-label="Hide navigation" title="Hide navigation" data-label-expand="Expand navigation" data-label-rail="Show icons only" data-label-collapse="Hide navigation">', $html, 'icons rail: the menu glyph, not the X (2.6.1)');
         self::assertStringContainsString('nowo-ui-burger__icon--open', $html);
         self::assertStringNotContainsString('nowo-ui-burger__icon--close', $html);
 
