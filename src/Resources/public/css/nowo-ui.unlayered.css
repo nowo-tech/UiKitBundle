@@ -4373,7 +4373,7 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
   background: var(--nowo-ui-surface);
   color: var(--nowo-ui-text);
   box-shadow: var(--nowo-ui-shadow-dialog, 0 8px 24px rgba(15, 23, 42, 0.18));
-  transform: translateY(calc(-100% - 1rem));
+  transform: translateY(calc(-100% - 3rem));
   transition: transform 0.15s ease;
 }
 
