@@ -21,6 +21,8 @@ Optional **Stimulus peer** TypeScript sources live under `src/Resources/assets/s
 - [Responsive table (Stimulus peer only)](#responsive-table-stimulus-peer-only)
 - [Filters collapse (Stimulus peer only)](#filters-collapse-stimulus-peer-only)
 - [Disclosure icon (Stimulus peer only)](#disclosure-icon-stimulus-peer-only)
+- [Error retry countdown (2.6)](#error-retry-countdown-26)
+- [Auto-submit (2.6)](#auto-submit-26)
 - [Icon state bridge and morphicons](#icon-state-bridge-and-morphicons)
 - [Open modal on load](#open-modal-on-load)
 - [Thinking orb](#thinking-orb)
@@ -317,6 +319,28 @@ No kit IIFE (1.17). `data-controller="disclosure-icon"` on a toggle that contain
 on a `<summary>` it follows its `<details>` (`toggle` event), on any other element its `aria-expanded` (e.g. a
 `collapse-panel` button). It only reports the state (`disclosure` / `open` | `closed`) to the icon state bridge —
 the static chevrons follow the state through CSS without it. Peer: `disclosure_icon_controller.ts`.
+
+## Error retry countdown (2.6)
+
+Self-reload of a 5xx error page on GET (REQ-ERROR-001 item 10). Kit IIFE `js/nowo-ui-error-retry.js` (loaded by
+`@NowoUiKit/error/layout.html.twig`):
+
+| Attribute | Role |
+| --- | --- |
+| `data-nowo-ui-error-retry` | Root (bound once: `data-nowo-ui-error-retry-bound`) |
+| `data-nowo-ui-error-retry-url` | URL loaded at zero (default the current location) |
+| `data-nowo-ui-error-retry-seconds` | Countdown (default 600) |
+| `[data-nowo-ui-error-retry-remaining]` | Child receiving `m:ss` every second — no live region |
+
+`window`-free API for tests: `bindNowoUiErrorRetry(root, navigate)`. Stimulus peer for host markup:
+`stimulus-peers/error_retry_countdown_controller.ts`, identifier **`error-retry-countdown`**, values `url`, `seconds`
+(default 600), target `remaining` — the controller the apps copied, on the same core (`nowo-ui-error-retry-core.ts`).
+
+## Auto-submit (2.6)
+
+`js/nowo-ui-autosubmit.js` (in the `scripts` partial): a `<select>` / `<input>` with **`data-nowo-ui-autosubmit`**
+submits its form on `change` (`requestSubmit()`, else `submit()`), through one delegated document listener — the
+compact pagination's per-page select; keep a `<noscript>` submit button for no-JS.
 
 ## Icon state bridge and morphicons
 

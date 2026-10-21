@@ -7,6 +7,8 @@
 - [Release check](#release-check)
 - [Appearance](#appearance)
 - [Route links](#route-links)
+- [Error pages](#error-pages)
+- [App shell](#app-shell)
 - [Examples](#examples)
 
 ## Root keys
@@ -22,6 +24,8 @@ Alias: **`nowo_ui_kit`**
 | `release_check` | map | `enabled: false` | Optional GitHub release-version checker (footer dialog + JSON endpoint). See [Release check](#release-check) |
 | `appearance` | map | `enabled: false` | Optional site appearance SPI: presets, `--nowo-ui-*` token emitter, Twig functions, optional form (since 1.16.0). See [Appearance](#appearance) |
 | `route_links` | map | `routes: {}` | Route (prefix) → link map for `nowo_ui_route_link()`, e.g. the page-edge manual tab (since 1.17.0). See [Route links](#route-links) |
+| `error_pages` | map | kit layout + texts | Kit HTTP error pages (since 2.6.0). See [Error pages](#error-pages) |
+| `shell` | map | `kit_styles: true` | Signed-in app shell templates (since 2.6.0). See [App shell](#app-shell) |
 
 Parameters / Twig globals:
 
@@ -32,6 +36,8 @@ Parameters / Twig globals:
 - `%nowo_ui_kit.appearance.enabled%` (no Twig global; use the `nowo_ui_appearance*()` functions)
 - `%nowo_ui_kit.route_links%` (no Twig global; use `nowo_ui_route_link()`)
 - `%nowo_ui_kit.release_check.enabled%`, `%nowo_ui_kit.release_check.github_repo%`, `%nowo_ui_kit.release_check.current_version%` → Twig global `nowo_ui_kit_release_check` (`{enabled, current_version}`)
+- `%nowo_ui_kit.error_pages%` → Twig global `nowo_ui_error_pages` (`{layout_template, theme_storage, theme_toggle, html_attributes, translation_domain, translation_prefix}`) and the functions `nowo_ui_error_page()` / `nowo_ui_error_text()` (2.6)
+- `nowo_ui_kit.shell` → Twig global `nowo_ui_kit_shell` (the whole map, 2.6)
 
 Asset package (always prepended): `nowo_ui_kit` → `/bundles/nowouikit`.
 
@@ -205,6 +211,78 @@ nowo_ui_kit:
 | `base_url` | `''` | Prefix of relative paths |
 | `default_testid` | `null` | `testid` returned when an entry has none |
 | `routes` | `{}` | Route / prefix → path string, or `{path, testid}` (`path` required, non-empty) |
+
+## Error pages
+
+Since **2.6.0**. `@NowoUiKit/error/status.html.twig` renders every HTTP error code on `layout_template`; the host keeps
+one file, `templates/bundles/TwigBundle/Exception/error.html.twig`:
+
+```twig
+{% extends '@NowoUiKit/error/status.html.twig' %}
+```
+
+```yaml
+nowo_ui_kit:
+    error_pages:
+        layout_template: '@NowoUiKit/error/layout.html.twig'   # or a host template extending it (head assets, chat dock…)
+        translation_domain: NowoUiKitBundle                    # e.g. messages: the app's own error.* texts
+        translation_prefix: error                              # <prefix>.<code>.title|lead|hint|image_alt
+        home_path: /
+        illustrations:                                         # status code (or default) => asset path without extension
+            404: illustrations/error-404                       # <picture>: error-404.webp <source> + error-404.png <img>
+            503: { path: illustrations/error-503, width: 1536, height: 1024, webp: false, extension: png }
+        illustration_width: 1024
+        illustration_height: 683
+        webp: true
+        retry_statuses: [408]                                  # + every 5xx: "Try again" on GET
+        back_link_statuses: [404]                              # "Go back" for a same-site referer
+        auto_retry_seconds: 600                                # 5xx on GET reloads itself (0 = never; never on POST)
+        theme_storage: nowo-ui-theme                           # data-nowo-ui-theme-storage on <html> and the toggle
+        theme_toggle: true
+        html_attributes: {}                                    # e.g. { data-csp-strict-nonce: true } — no on*
+```
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `layout_template` | `@NowoUiKit/error/layout.html.twig` | Document the status template extends (Twig global `nowo_ui_error_pages.layout_template`) |
+| `translation_domain` | `NowoUiKitBundle` | Domain of the texts; a key missing there falls back to UiKit's `NowoUiKitBundle` `error.*` |
+| `translation_prefix` | `error` | Key prefix: `<prefix>.<code>.title\|lead\|hint\|image_alt`, `<prefix>.generic.*`, `<prefix>.home\|retry\|back\|retry_after\|auto_retry\|skip_to_content` |
+| `home_path` | `/` | Href of "Back to home" |
+| `illustrations` | `{}` | Code (400–599) or `default` → path string or `{path, width, height, webp, extension}` |
+| `illustration_width` / `illustration_height` | `1024` / `683` | Default intrinsic size of the `<img>` |
+| `webp` | `true` | Print the `<source type="image/webp">` (`<path>.webp`) |
+| `retry_statuses` | `[408]` | Statuses besides 5xx with "Try again" (GET only) |
+| `back_link_statuses` | `[404]` | Statuses with "Go back" (same-site referer only) |
+| `auto_retry_seconds` | `600` | Self-reload countdown of a 5xx on GET (`js/nowo-ui-error-retry.js`; 0 disables) |
+| `theme_storage` | `nowo-ui-theme` | localStorage key of the light / dark theme |
+| `theme_toggle` | `true` | Theme toggle in the top controls |
+| `html_attributes` | `{}` | Extra `<html>` attributes (validated: no `on*`, scalar values) |
+
+Texts (`nowo_ui_error_text(field, code)`): per-code fields of a code nobody translates use `<prefix>.generic.*`; a known
+code without its own `title` / `lead` / `image_alt` uses the generic one, without `hint` none. Blocks, slots and the
+host migration: [USAGE.md](USAGE.md#error-pages-26), [UPGRADING.md](UPGRADING.md#to-260).
+
+## App shell
+
+Since **2.6.0**. Options of the signed-in app shell templates (`@NowoUiKit/shell/*`, partials `app_shell_open`,
+`app_shell_close`, `app_shell`, `app_shell_burger`); Twig global `nowo_ui_kit_shell`.
+
+```yaml
+nowo_ui_kit:
+    shell:
+        kit_styles: true             # false: only the app_* slot classes (host shell CSS / JS)
+        sidebar_cookie: null         # e.g. beacon_sidebar: the aside state is rendered from it on the first paint
+        sidebar_hidden_value: collapsed
+        sidebar_rail_value: rail
+        sidebar_storage: null        # localStorage key for nowo-ui-shell.js (kit_styles + rail_mode)
+```
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `kit_styles` | `true` | Add the kit shell classes (`nowo-ui-shell`, `nowo-ui-header`, `nowo-ui-aside`, `nowo-ui-main`, `nowo-ui-burger`…) painted by `nowo-ui.css` and driven by `nowo-ui-shell.js`, plus `is-aside-collapsed` / `is-aside-rail` |
+| `sidebar_cookie` | `null` | Cookie read server-side when the template passes no `collapsed` / `rail` |
+| `sidebar_hidden_value` / `sidebar_rail_value` | `collapsed` / `rail` | Cookie values of the hidden aside and the icons-only rail |
+| `sidebar_storage` | `null` | `data-nowo-ui-sidebar-storage` of a three-mode (`rail_mode`) kit-styled shell |
 
 ## Examples
 

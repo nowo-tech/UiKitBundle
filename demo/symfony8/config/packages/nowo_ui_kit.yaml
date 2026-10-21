@@ -116,3 +116,20 @@ nowo_ui_kit:
                     table: { data-acme-table: false, data-acme-page: false }   # attributes merge; false removes the host / page-type attribute
                 partials:
                     page_header: '@NowoUiKitBundle/partials/_page_header.html.twig'
+
+    # UiKit 2.6 kit error pages (templates/bundles/TwigBundle/Exception/error.html.twig is the one-line include;
+    # previews: /kit/errors/{code}). Illustrations: public/illustrations/error-<code>.webp + .png.
+    error_pages:
+        illustrations:
+            404: 'illustrations/error-404'
+            500: 'illustrations/error-500'
+            503: 'illustrations/error-500'
+        illustration_width: 960
+        illustration_height: 640
+        theme_storage: 'uikit-demo-theme'
+        html_attributes:
+            data-nowo-ui-thin-scrollbars: true
+
+    # UiKit 2.6 signed-in app shell (/kit/shell): the aside state is rendered from this cookie on the first paint.
+    shell:
+        sidebar_cookie: 'uikit_demo_sidebar'

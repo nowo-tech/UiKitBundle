@@ -1,0 +1,58 @@
+{#
+  UiKit 2.6 demo: the signed-in app shell (@NowoUiKit/shell/_open + _close around the page body), the compact
+  pagination with its per-page select (nowo-ui-autosubmit.js) and the confirm dialog wrapper (partial confirm_dialog,
+  opened by js/nowo-ui-confirm.js without Stimulus thanks to its dialog_id).
+#}
+{% extends '@NowoUiKit/layout/document.html.twig' %}
+{% set nowo_ui_document_title = 'App shell · UiKit 2.6' %}
+
+{% block nowo_ui_body %}
+    <a class="{{ nowo_ui_class('skip_link') }}" href="#main-content">Skip to main content</a>
+    {% set brand_html %}<a class="nowo-ui-header__brand kit-demo-brand" href="{{ path('kit_shell') }}">Acme Billing</a>{% endset %}
+    {% set header_end %}{{ include('@NowoUiKitBundle/partials/_theme_toggle.html.twig', {compact: true}) }}{% endset %}
+    {{ include(nowo_ui_partial('app_shell_open'), {
+        brand_html: brand_html,
+        header_end: header_end,
+        aside_label: 'Billing',
+        aside_items: [
+            {label: 'Invoices', href: path('kit_shell'), current: true},
+            {label: 'Error pages', href: path('kit_error_preview', {code: 404})},
+            {label: 'Page contract', href: path('page_contract_index')},
+        ],
+        name: 'Ada Lovelace',
+        initials: 'AL',
+        email: 'ada@example.com',
+        burger_icon: 'morph',
+    }) }}
+        <main id="main-content" tabindex="-1" class="nowo-ui-content" data-testid="kit-shell-main">
+            <section class="{{ nowo_ui_class('card') }}">
+                <div class="{{ nowo_ui_class('card_header') }}">
+                    <h1 class="{{ nowo_ui_class('card_title') }}">Invoices</h1>
+                    {% embed nowo_ui_partial('confirm_dialog') with {trigger_label: 'Void invoice #1042', dialog_id: 'void-1042', aria_labelledby: 'void-1042-title', trigger_testid: 'void-trigger'} %}
+                        {% block form %}
+                            <form method="post" action="{{ path('kit_shell') }}">
+                                <h2 id="void-1042-title" class="{{ nowo_ui_class('confirm_title') }}">Void invoice #1042?</h2>
+                                <p>The invoice stays in the ledger, marked void. This cannot be undone.</p>
+                                <div class="{{ nowo_ui_class('form_actions') }}">
+                                    <button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-nowo-confirm-close data-confirm-dialog-close>Cancel</button>
+                                    <button type="submit" class="{{ nowo_ui_class('btn_danger_solid') }}">Void invoice</button>
+                                </div>
+                            </form>
+                        {% endblock %}
+                    {% endembed %}
+                </div>
+                <div class="{{ nowo_ui_class('card_body') }}">
+                    <ul class="kit-demo-rows" data-testid="kit-rows">
+                        {% for row in rows %}<li>{{ row }}</li>{% endfor %}
+                    </ul>
+                    {{ include(nowo_ui_partial('pagination'), {pagination: pagination}) }}
+                </div>
+            </section>
+        </main>
+    {{ include(nowo_ui_partial('app_shell_close'), {footer_copyright: '© Acme'}) }}
+{% endblock %}
+
+{% block nowo_ui_scripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/nowo-ui-shell.js', 'nowo_ui_kit') }}" defer></script>
+{% endblock %}

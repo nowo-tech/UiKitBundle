@@ -157,6 +157,10 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `pagination_link` | `nowo-ui-pagination__link` | `page-link` | `page-link` | — | — |
 | `pagination_active` | `nowo-ui-pagination__link is-active` | `page-link` | `page-link` | — | — |
 | `pagination_info` | `nowo-ui-pagination__info` | — | — | — | — |
+| `pagination_compact` | `nowo-ui-pagination nowo-ui-pagination--compact` | `d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3` | `d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3` | `flex flex-wrap items-center justify-between gap-2 mt-3` | — |
+| `pagination_page` | `nowo-ui-pagination__page` | — | — | — | — |
+| `pagination_per_page` | `nowo-ui-pagination__per-page-form` | — | — | — | — |
+| `pagination_select` | `nowo-ui-pagination__select` | `form-select form-select-sm` | `form-select form-select-sm` | `border px-2 py-1 text-sm` | — |
 | `code` | `nowo-ui-code` | — | `text-body` | `font-mono text-sm` | — |
 | `code_block` | `nowo-ui-code-block` | `border p-3` | `border p-3` | `font-mono text-sm p-3 border` | — |
 | `muted` | `nowo-ui-muted` | `text-muted` | `text-muted` | — | `text-secondary` |
@@ -237,13 +241,47 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `auth_panel` | `nowo-ui-auth-panel` | `card` | `card` | `border` | `callout` |
 | `auth_footer` | `nowo-ui-auth-panel__footer` | — | — | — | — |
 | `auth_links` | `nowo-ui-auth-panel__links` | — | — | — | — |
+| `skip_link` | `nowo-ui-skip-link` | — | — | — | — |
+| `error_page` | `nowo-ui-error-page` | — | — | — | — |
+| `error_top` | `nowo-ui-error-page__top` | — | — | — | — |
+| `error_main` | `nowo-ui-error-page__main` | — | — | — | — |
+| `error_card` | `nowo-ui-error-page__card` | — | — | — | — |
+| `error_figure` | `nowo-ui-error-page__figure` | — | — | — | — |
+| `error_image` | `nowo-ui-error-page__img` | — | — | — | — |
+| `error_code` | `nowo-ui-error-page__code` | — | — | — | — |
+| `error_title` | `nowo-ui-error-page__title` | — | — | — | — |
+| `error_lead` | `nowo-ui-error-page__lead` | — | — | — | — |
+| `error_hint` | `nowo-ui-error-page__hint` | — | — | — | — |
+| `error_actions` | `nowo-ui-error-page__actions` | `d-flex flex-wrap gap-2` | `d-flex flex-wrap gap-2` | `flex flex-wrap gap-2` | — |
+| `error_home` | `nowo-ui-btn nowo-ui-btn--primary` | `btn btn-primary` | `btn btn-primary` | `inline-flex items-center gap-1 font-medium px-3 py-1.5 text-sm` | `button primary` |
+| `error_action` | `nowo-ui-btn nowo-ui-btn--secondary` | `btn btn-outline-secondary` | `btn btn-outline-secondary` | `inline-flex items-center gap-1 font-medium px-3 py-1.5 text-sm border` | `button secondary` |
+| `confirm_dialog_root` | `nowo-ui-confirm-dialog-root` | — | — | — | — |
+| `confirm_dialog` | `nowo-ui-confirm-dialog` | — | — | — | — |
+| `confirm_dialog_trigger` | `nowo-ui-btn nowo-ui-btn--secondary` | `btn btn-outline-secondary` | `btn btn-outline-secondary` | `inline-flex items-center gap-1 font-medium px-3 py-1.5 text-sm border` | `button secondary` |
+| `app_shell` | `nowo-ui-app-shell` | — | — | — | — |
+| `app_header` | `nowo-ui-app-shell__header` | — | — | — | — |
+| `app_header_start` | `nowo-ui-app-shell__header-start` | — | — | — | — |
+| `app_header_end` | `nowo-ui-app-shell__header-end` | — | — | — | — |
+| `app_brand` | `nowo-ui-app-shell__brand` | — | — | — | — |
+| `app_burger` | `nowo-ui-app-shell__burger` | — | — | — | — |
+| `app_burger_icon` | `nowo-ui-burger__icon` | — | — | — | — |
+| `app_burger_morph` | `nowo-ui-burger__morph` | — | — | — | — |
+| `app_aside` | `nowo-ui-app-shell__aside` | — | — | — | — |
+| `app_aside_inner` | `nowo-ui-app-shell__aside-inner` | — | — | — | — |
+| `app_aside_label` | `nowo-ui-app-shell__aside-label` | — | — | — | — |
+| `app_aside_nav` | `nowo-ui-app-shell__aside-nav` | — | — | — | — |
+| `app_main` | `nowo-ui-app-shell__main` | — | — | — | — |
+| `app_backdrop` | `nowo-ui-app-shell__backdrop` | — | — | — | — |
 
 Slot groups: document / layout (`document` … `breadcrumb_separator`), page header (`page_header` … `toolbar`), buttons (`btn`
 … `btn_icon`; variants are complete button classes — `btn_link` included —, `btn_sm` a size modifier, `btn_icon` the icon-only modifier), tables (`table_wrap` … `row_action_disabled`),
 badges (Bootstrap variants use `text-bg-*`, Bootstrap 5.2+, which sets text and background together so the colour
 pair never mixes with the semantic `nowo-ui-badge--*` palette; on 5.0 / 5.1 the semantic palette paints the badge;
 Bootstrap 4 / Foundation variant classes set both colours too), filters / inputs, pagination, code (`code`, `code_block`), feedback (`muted`, `empty`, flashes, `toasts`), surfaces (`card` … `modal_footer`, `dialog` … `dialog_footer`,
-`confirm` … `confirm_footer`), forms (`form`, `form_actions`, `danger_zone`), wizard / auth (`auth_panel` … `auth_links`).
+`confirm` … `confirm_footer`), forms (`form`, `form_actions`, `danger_zone`), wizard / auth (`auth_panel` … `auth_links`);
+2.6: `skip_link`, error pages (`error_page` … `error_action`), confirm dialog wrapper (`confirm_dialog_root` …
+`confirm_dialog_trigger`), app shell (`app_shell` … `app_backdrop`; the semantic classes carry no layout CSS — only the burger glyph swap — the kit shell look comes
+from `nowo_ui_kit.shell.kit_styles`), compact pagination (`pagination_compact` … `pagination_select`).
 
 Code: `code` for inline `<code>` (identifiers, keys, short values) and `code_block` for a `<pre>` holding a payload,
 JSON or a log excerpt. UiKit's CSS sets a monospace font (`--nowo-ui-font-mono`), the muted surface
@@ -383,10 +421,15 @@ as the UiKit partial (documented in the header comment of each template) and sho
 | Name | Default template | Main inputs (2.0) | Used by |
 | --- | --- | --- | --- |
 | `action` | `@NowoUiKitBundle/partials/_action.html.twig` | `action` (`View\Action`), `context` (`toolbar` \| `row`), `display`, `bundle` | header / form / empty-state actions |
+| `app_shell` *(2.6)* | `shell/_shell.html.twig` | the options of `app_shell_open` / `app_shell_close` + `main`; blocks `nowo_ui_shell_brand`, `nowo_ui_shell_header_actions`, `nowo_ui_shell_aside`, `nowo_ui_shell_main`, `nowo_ui_shell_footer` (`{% embed %}`) | signed-in app shell in one template |
+| `app_shell_burger` *(2.6)* | `shell/_burger.html.twig` | `controls`, `expanded`, `rail`, `rail_mode`, `label`, `label_expand` / `label_rail` / `label_hide`, `label_attr_names`, `icon` (`svg` \| `morph` \| `none`), `static_icons`, `attr`, `kit_styles`, `bundle`; slots `app_burger`, `app_burger_icon`, `app_burger_morph` | app shell header |
+| `app_shell_close` *(2.6)* | `shell/_close.html.twig` | `footer_html` (`false` = none) or `footer_brand` / `footer_links` / `footer_copyright`, `kit_styles`, `bundle`; slot `app_backdrop` | base layouts (closing half) |
+| `app_shell_open` *(2.6)* | `shell/_open.html.twig` | `brand_html` / `brand`, `header_end`, `aside_html` or `aside_items` + `aside_label`, `aside_id`, `collapsed` / `rail` (default: `nowo_ui_kit.shell.sidebar_cookie`), `rail_mode`, `content_width`, `show_user_menu` + user fields, `attr` / `shell_attr`, `kit_styles`, `burger_*`, `bundle`; slots `app_shell`, `app_header*`, `app_brand`, `app_aside*`, `app_main` | base layouts (opening half; the page `{% block body %}` stays uncaptured) |
 | `breadcrumbs` | `partials/_breadcrumbs.html.twig` | `header` (`PageHeader`; 2.2 `breadcrumbsMode` `auto` \| `kit` \| `own`: an empty BreadcrumbKit trail falls back to `header.breadcrumbs`; the kit's output is wrapped in a plain `<div class="nowo-ui-breadcrumbs" data-nowo-ui-breadcrumbs="kit">` without the slot's host classes), `bundle` | page header |
 | `burger` | `partials/_burger.html.twig` | `controls`, `expanded`, `label`, `root_class`, `label_attr_names`, `attr`, `bundle` | shell |
 | `card` | `partials/_card.html.twig` | `title` / `intro` (`Label` or string), `body`, `footer`, `toolbar`, `actions` (list of `View\Action`), `id`, `attr`, `cards` (list of card hashes → `cards` grid), `bundle`; slots `card`, `card_header`, `card_body`, `card_footer`, `cards` | bundle cards, dashboard cards |
 | `confirm` | `partials/_confirm.html.twig` | `id`, `confirm` (`View\Confirm`), `action`, `action_href`, `bundle`; 2.2: `dismissible` (✕ in the header, slot `confirm_close`; default on with `confirm`), `close_label`, `size` (`sm` \| `md` \| `lg`, default `confirm.size`); the button of a danger `Confirm` reads `btn_danger_solid` | actions with a `Confirm`; list scaffold (once per row action, after the table) |
+| `confirm_dialog` *(2.6)* | `partials/_confirm_dialog.html.twig` | `only_dialog`, `wrapper`, `trigger_label` / `trigger_class` / `trigger_title` / `trigger_aria_label` / `trigger_testid` / `trigger_disabled`, `expected_value`, `open_on_connect`, `dialog_id`, `dialog_testid`, `aria_labelledby`, `dialog_modifier`, `attr`, `dialog_attr`, `bundle`; blocks `trigger`, `form` (`{% embed %}`); slots `confirm_dialog_root`, `confirm_dialog`, `confirm_dialog_trigger` | Stimulus `confirm-dialog` wrapper around a form dialog |
 | `detail_list` | `page/_detail_list.html.twig` | `items` (list of `View\DetailItem`), `modifier`, `bundle` | show scaffold (sections, meta) |
 | `dialog` *(2.1)* | `partials/_dialog.html.twig` | `id`, `title` (string or `Label`), `body` / `footer` (HTML), `size` (`sm` \| `md` \| `lg` \| `xl`), `body_muted`, `dismissible`, `backdrop_close`, `close_label`, `attr`, `bundle`, 2.2: `title_html` (rich title, raw), `title_attr` / `body_attr` (attributes of the title / body); block `nowo_ui_dialog_body`; slots `dialog`, `dialog_header`, `dialog_title`, `dialog_body`, `dialog_footer` | framework-free native `<dialog>` (opener `data-nowo-ui-dialog-open="<id>"`, `js/nowo-ui-dialog.js`) — preferred over `modal_shell` in page-contract bundles |
 | `empty` | `partials/_empty.html.twig` | `empty` (`View\EmptyState`) **and** `message` (translated), `region`, `bundle` | list scaffold |
@@ -398,9 +441,10 @@ as the UiKit partial (documented in the header comment of each template) and sho
 | `modal_shell` | `partials/_modal_shell.html.twig` | `id`, `title`, `body`, `footer` | modals |
 | `page_header` | `partials/_page_header.html.twig` | scaffolds pass **both** `header` (`View\PageHeader`) + `actions` (toolbar `View\Action`s) **and** the 1.x `title` / `intro` (translated) / `toolbar` (pre-rendered actions) with `header_actions_rendered: true`; `region`, `bundle` | every scaffold (`nowo_ui_page_header`) |
 | `pagination` | `partials/_pagination.html.twig` | scaffolds pass the 1.x array (`pagination.toArray()`) + `pagination_model` (`View\Pagination`), `item_count`, `per_page_choices` / `per_page_selector` *(2.4: per-page links; the selector uses `Pagination::fromTotal()`'s allowed values)*, the 1.x top-level `route` / `route_params` / `query` (request query + `Pagination::query`), `page_param`, `per_page_param`, `region`, `bundle`; also accepts the object | list scaffold |
+| `pagination_compact` *(2.6)* | `partials/_pagination_compact.html.twig` | the `pagination` input (`View\Pagination` or hash), `per_page_choices` (default `allowedPerPage`), `per_page_selector`, `id`; slots `pagination_compact`, `pagination_link`, `pagination_page`, `pagination_per_page`, `pagination_info`, `pagination_select` | `pagination` partial for a compact model / `variant: 'compact'` |
 | `progress` *(2.2)* | `partials/_progress.html.twig` | `percent` (0–100, null = indeterminate), `indeterminate`, `label` (`Label` or string; default `progress.label`), `show_value`, `id`, `attr`, `bundle`; slots `progress`, `progress_meter` (native `<progress>`) | wizard / backup / restore progress |
 | `row_actions` | `partials/_row_actions.html.twig` | scaffolds pass 1.x hashes (translated `label`, resolved `href`, `method` POST/GET, `csrf_token` / `csrf_field` also from a CSRF `FormView`, `confirm_id`…) with the `View\Action` as `view`, and `confirm_external: true`; also accepts `View\Action` objects; `bundle` | list scaffold |; `menu` *(2.4: the actions in one overflow `menu`, `menu_label`)*, `popover` *(2.4)*
-| `scripts` *(2.2)* | `partials/_scripts.html.twig` | `script_names` (default `nowo_ui_script_names()`: `modal`, `confirm`, `dialog`, `toast`, `tabs`, `theme`, 2.4: `popover`, `segmented`), `nonce` | document layout; host layouts with their own script list (`{{ include(nowo_ui_partial('scripts')) }}`) |
+| `scripts` *(2.2)* | `partials/_scripts.html.twig` | `script_names` (default `nowo_ui_script_names()`: `modal`, `confirm`, `dialog`, `toast`, `tabs`, `theme`, 2.4: `popover`, `segmented`, 2.6: `autosubmit`), `nonce` | document layout; host layouts with their own script list (`{{ include(nowo_ui_partial('scripts')) }}`) |
 | `segmented` *(2.4)* | `partials/_segmented.html.twig` | `options` (two `{label, checked, title?, attr?}`), `field` (checkbox `FormView`) or `name` / `checked` / `value` / `id`, `label` or `labelled_by`, `input_attr` (e.g. Live Component `data-model`), `attr`, `bundle`; slots `segmented`, `segmented_option` | two-option choice backed by one checkbox (radiogroup; `nowo-ui-segmented.js` syncs the checkbox and dispatches `change`) |
 | `section_form` | `page/_section_form.html.twig` | `form` (FormView), `submit_label`, `actions` (2.2: `View\Action`s after the submit button), `extra_actions`, `bundle` | settings scaffold |
 | `shell` | `partials/_shell.html.twig` | `brand_html`, `aside_items`, `main`, `root_class`, `header_class`, `attr`, `burger_root_class`, `bundle` | host shells |

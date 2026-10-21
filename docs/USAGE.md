@@ -18,6 +18,11 @@
   - [Page-edge tab and route links](#page-edge-tab-and-route-links)
   - [Thin scrollbars](#thin-scrollbars)
   - [Morphicons (animated icons)](#morphicons-animated-icons)
+- [Kit templates (2.6)](#kit-templates-26)
+  - [Error pages](#error-pages-26)
+  - [Confirm dialog](#confirm-dialog-26)
+  - [App shell](#app-shell-26)
+  - [Compact pagination](#compact-pagination-26)
 - [Pre-paint theme boot](#pre-paint-theme-boot)
 - [App chrome](#app-chrome-aside-avatar-user-menu-footer)
 - [Sidebar rail (opt-in)](#sidebar-rail-opt-in)
@@ -629,6 +634,151 @@ animate, size)`, icon sets (`themeIcons`, `passwordIcons`, `contentWidthIcons`, 
 `[data-table-mode-morph]`, `[data-filters-collapse-morph]`, `[data-disclosure-morph]`, `[data-search-morph]`,
 `[data-support-morph]`). `morphiconsIconStateHandler` / `installMorphiconPeers()` plug it into
 `stimulus-peers/icon_state.ts`.
+
+## Kit templates (2.6)
+
+Templates that replace the copies apps kept of the same chrome. Host migration (files to delete, lines to add):
+[UPGRADING.md](UPGRADING.md#to-260). Live demo: `demo/symfony8` → `/kit/shell`, `/kit/errors/404`, `/kit/errors/500`.
+
+| Error page (404, demo illustration) | App shell + compact pagination |
+| --- | --- |
+| ![Kit 404 error page](images/demo/kit-error-404.webp) | ![Kit app shell with the compact pagination](images/demo/kit-app-shell.webp) |
+
+More: [500 with the self-reload countdown](images/demo/kit-error-500.webp) ·
+[confirm dialog wrapper open](images/demo/kit-confirm-dialog.webp).
+
+<a id="error-pages-26"></a>
+### Error pages
+
+`templates/bundles/TwigBundle/Exception/error.html.twig` — the only error template the host keeps:
+
+```twig
+{% extends '@NowoUiKit/error/status.html.twig' %}
+```
+
+One template for every status: the code (`aria-hidden`), title, lead, optional hint, the illustration of
+`error_pages.illustrations` (`<picture>`: WebP `<source>` + PNG `<img>` with `width` / `height`), "Back to home",
+"Try again" (408 and 5xx on GET: the same URL), "Go back" (404 with a same-site `Referer`), the 429 `Retry-After` wait
+("Try again in 30 seconds.", numeric header only) and, for a 5xx on GET, a self-reload after 10 minutes
+(`js/nowo-ui-error-retry.js`; never on POST — no resubmission; the ticking `m:ss` is no live region). The page model is
+`nowo_ui_error_page(status_code, exception)` (`View\ErrorPage`: `statusCode`, `illustration`, `retryAfter`, `retryHref`,
+`backHref`, `autoRetrySeconds`, `homeHref`), available as `error` in the blocks.
+
+**Layout** (`@NowoUiKit/error/layout.html.twig`): a complete document that needs no session nor host layout — skip
+link to `#main-content` (REQ-A11Y-002), inline pre-paint theme boot, top controls with the light / dark toggle,
+`<main id="main-content" tabindex="-1">`, `nowo-ui.css` + `nowo_ui_tokens()`, `js/nowo-ui-theme.js` and
+`js/nowo-ui-error-retry.js`; every `<script>` / `<style>` carries the request `csp_nonce`, no inline handler. Host
+chrome: `error_pages.layout_template` → a template that `{% extends '@NowoUiKit/error/layout.html.twig' %}` and fills
+`nowo_ui_error_head` (icons, Vite tags), `nowo_ui_error_styles`, `nowo_ui_error_theme_boot`, `nowo_ui_error_skip_link`,
+`nowo_ui_error_before` (page loader), `nowo_ui_error_top`, `nowo_ui_error_body_end` (chat dock), `nowo_ui_error_scripts`.
+
+**Status blocks**: `title`, `error_illustration`, `error_title`, `error_lead`, `error_hint`, `error_actions` (the whole
+row; `{{ parent() }}` keeps home / retry / back), `error_extra_actions` (more buttons at the end of the row) and
+`error_extra` (after the row). Per-code tweaks: an `error404.html.twig` extending the status template.
+
+**Texts** (`nowo_ui_error_text(field, code, params)`): `<prefix>.<code>.title|lead|hint|image_alt`,
+`<prefix>.generic.*`, `<prefix>.home|retry|back|retry_after|auto_retry|skip_to_content` in
+`error_pages.translation_domain`; each key missing there falls back to UiKit's neutral `error.*` (7 locales; title +
+lead for 400, 401, 403, 404, 405, 408, 410, 413, 422, 429, 500, 502, 503, 504). A host keeps its branded copy in
+`messages` with `translation_domain: messages`.
+
+**Slots**: `document` (`<html>`), `error_page` (`<body>`), `skip_link`, `error_top`, `error_main`, `error_card`,
+`error_figure`, `error_image`, `error_code`, `error_title`, `error_lead`, `error_hint`, `error_actions`, `error_home`,
+`error_action`. Test hooks: `data-testid` `error-home`, `error-retry`, `error-back`, `error-retry-after`,
+`error-auto-retry`; `data-nowo-ui-region="error"` on the card.
+
+Preview a code in development without throwing: render `@NowoUiKit/error/status.html.twig` with `status_code` (and
+`exception: {'Retry-After': '30'}` for 429), as the demo's `/kit/errors/{code}` does.
+
+<a id="confirm-dialog-26"></a>
+### Confirm dialog
+
+`nowo_ui_partial('confirm_dialog')` — a Stimulus `confirm-dialog` wrapper (`stimulus-peers/confirm_dialog_controller.ts`:
+open / close, type-to-confirm, body portal, open on connect) with an optional trigger and a native `<dialog>` whose body
+is the `form` block:
+
+```twig
+{% embed nowo_ui_partial('confirm_dialog') with {
+    trigger_label: 'Revoke'|trans, trigger_testid: 'revoke-key', dialog_modifier: 'nowo-ui-confirm-dialog--lg',
+    aria_labelledby: 'revoke-title', expected_value: key.name,
+} %}
+    {% block form %}
+        {{ form_start(form) }}
+            <h2 id="revoke-title">{{ 'Revoke this key?'|trans }}</h2>
+            {{ form_row(form.confirm, {attr: {'data-confirm-dialog-target': 'confirmInput'}}) }}
+            <button type="button" data-confirm-dialog-close>{{ 'Cancel'|trans }}</button>
+            <button type="submit" data-confirm-dialog-target="submit">{{ 'Revoke'|trans }}</button>
+        {{ form_end(form) }}
+    {% endblock %}
+{% endembed %}
+```
+
+Options: `only_dialog` (dialog only; controller and trigger in the parent), `wrapper: false` (same), `trigger_label`,
+`trigger_class`, `trigger_title`, `trigger_aria_label`, `trigger_testid`, `trigger_disabled`, `expected_value`,
+`open_on_connect` (explicit `true` only), `dialog_id` (a deep-link target for `_open_modal_on_load`; with an id the
+dialog also opens **without Stimulus** through `nowo-ui-confirm.js` — `[data-nowo-confirm-close]` closes it),
+`dialog_testid`, `aria_labelledby`, `dialog_modifier`, `attr` / `dialog_attr`, `bundle`. Blocks `trigger`, `form`.
+Slots `confirm_dialog_root`, `confirm_dialog`, `confirm_dialog_trigger`. For an `Action` with a `View\Confirm` keep the
+`confirm` contract (`partials/_confirm.html.twig`); this wrapper is for dialogs whose body is a whole form.
+
+<a id="app-shell-26"></a>
+### App shell
+
+The signed-in shell — header (burger, brand, header actions), aside navigation, main region, footer, mobile backdrop —
+in two halves, so a base layout keeps its page `{% block body %}` uncaptured:
+
+```twig
+{# templates/base.html.twig #}
+{% set header_end %}{{ include('@NowoSearchKitBundle/search.html.twig') }}{% include '_theme_toggle.html.twig' %}{% endset %}
+{{ include(nowo_ui_partial('app_shell_open'), {brand_html: brand_html, header_end: header_end, aside_html: aside_html,
+    aside_label: 'Admin', aside_id: 'app-sidebar', show_user_menu: false, burger_icon: 'morph'}) }}
+    <main id="main-content" tabindex="-1">{% block body %}{% endblock %}</main>
+{{ include(nowo_ui_partial('app_shell_close'), {footer_html: footer_html}) }}
+```
+
+or `{% embed nowo_ui_partial('app_shell') %}` with the blocks `nowo_ui_shell_brand`, `nowo_ui_shell_header_actions`,
+`nowo_ui_shell_aside`, `nowo_ui_shell_main`, `nowo_ui_shell_footer`.
+
+Options of the opening half: `brand_html` / `brand`, `header_end`, `show_user_menu` + `name`, `email`, `initials`,
+`avatar_src`, `user_links`, `logout_*` (UiKit user menu), `aside_html` or `aside_items` + `aside_label`, `aside_id`,
+`collapsed` / `rail` (server-rendered state; default from the `nowo_ui_kit.shell.sidebar_cookie` cookie),
+`rail_mode` (three-mode expanded / rail / hidden), `content_width` (`full` → `is-full-width`), `attr` / `shell_attr`,
+`kit_styles`, `burger_*` (forwarded to the burger). Closing half: `footer_html` (`false` = none) or `footer_brand`,
+`footer_links`, `footer_copyright`.
+
+The burger (`app_shell_burger`) names the next action (`aria-label` + `title`) and prints the next-action labels as
+`data-label-expand` / `data-label-rail` / `data-label-hide` (rename them with `label_attr_names`, e.g. `{hide:
+'data-label-collapse'}`); `icon: 'morph'` paints the static menu / X glyph of the state before JavaScript and an empty
+`<morph-icon data-sidebar-morph>` for morphicons' `syncSidebarMorph()`; UiKit CSS swaps them on `.is-morph-ready`.
+
+With `nowo_ui_kit.shell.kit_styles: true` (default) the templates add the kit shell classes, so `nowo-ui.css` paints
+the shell and `nowo-ui-shell.js` drives it (load it next to the `scripts` partial). A host with its own shell CSS and
+script sets `kit_styles: false` and maps its classes / hooks on the slots `app_shell`, `app_header`,
+`app_header_start`, `app_header_end`, `app_brand`, `app_burger`, `app_burger_icon`, `app_burger_morph`, `app_aside`,
+`app_aside_inner`, `app_aside_label`, `app_aside_nav`, `app_main`, `app_backdrop` (classes and attributes, e.g.
+`attributes.app_burger: {data-sidebar-toggle: true}`). Root state classes: `is-sidebar-collapsed`, `is-sidebar-rail`,
+`is-full-width` / `is-content-width` (+ `is-aside-collapsed` / `is-aside-rail` with kit styles).
+
+<a id="compact-pagination-26"></a>
+### Compact pagination
+
+```php
+$pagination = Pagination::fromRequest($request, $total, 25, [10, 25, 50], variant: Pagination::VARIANT_COMPACT);
+// or $pagination->withVariant('compact')
+```
+
+The `pagination` partial (and the list scaffold) render the `pagination_compact` partial for a compact model, or with
+`variant: 'compact'` on the include: « previous · "Page 2 of 7" · next » and, when the model has `allowedPerPage`
+(`fromTotal()` / `fromRequest()`) or `per_page_choices` is given, a per-page `<select>` in a GET form. The form keeps
+the other query parameters (filters, sort; nested arrays as `name[key]`) as hidden fields and drops the page, so a new
+per-page value starts at page 1. The select carries `data-nowo-ui-autosubmit`: `js/nowo-ui-autosubmit.js` (in the
+`scripts` partial) submits the form on change — no inline handler; without JavaScript a `<noscript>` "Apply" button
+does. `per_page_selector: false` hides the select, `id` prefixes its id. Slots `pagination_compact`, `pagination_link`,
+`pagination_page`, `pagination_per_page`, `pagination_info` (label), `pagination_select`.
+
+```twig
+{{ include(nowo_ui_partial('pagination_compact'), {pagination: {page: 2, per_page: 25, total: 160, total_pages: 7}, route: 'device_index'}) }}
+```
 
 ## Pre-paint theme boot
 

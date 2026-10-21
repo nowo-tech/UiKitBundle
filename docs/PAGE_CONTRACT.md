@@ -294,7 +294,7 @@ or a plain string printed escaped. Never pre-render HTML into a view model.
 | `Confirm` | `(title, message = null, confirmLabel = null, variant = 'danger', cancelLabel = null, id = null, expectedValue = null, expectedLabel = null, messageInHeader = null)`, `Confirm::delete(message = null)`, `expectedPattern()` |
 | `Crumb` | `(label, href = null)` |
 | `Link` | `(label, href, attributes = [])` |
-| `Pagination` | `(page, perPage, total, totalPages = null, route = null, query = [], routeParams = null, pageParam = 'page', perPageParam = 'per_page')`; `fromArray()`, `fromPagerfanta()`, `fromKnp()` (duck typed); 2.4: `fromTotal(total, page, perPage, allowedPerPage = [10, 25, 50, 100], defaultPerPage = null, route, query, …)` (clamps page to 1..totalPages, an unknown per-page falls back to 25 or the first allowed value — same results as the apps' `PagePagination::fromTotal()`), `fromRequest(request, total, defaultPerPage = 25, allowedPerPage, route, pageParam, perPageParam)`, `offset()` / `limit()` (also `$pagination['offset']` / `['limit']`), `allowedPerPage` (per-page links with `per_page_selector: true` on the pagination partial); `from()`, `to()`, `hasPrevious()`, `hasNext()`, `toArray()` — the **only** pagination shape |
+| `Pagination` | `(page, perPage, total, totalPages = null, route = null, query = [], routeParams = null, pageParam = 'page', perPageParam = 'per_page')`; `fromArray()`, `fromPagerfanta()`, `fromKnp()` (duck typed); 2.4: `fromTotal(total, page, perPage, allowedPerPage = [10, 25, 50, 100], defaultPerPage = null, route, query, …)` (clamps page to 1..totalPages, an unknown per-page falls back to 25 or the first allowed value — same results as the apps' `PagePagination::fromTotal()`), `fromRequest(request, total, defaultPerPage = 25, allowedPerPage, route, pageParam, perPageParam)`, `offset()` / `limit()` (also `$pagination['offset']` / `['limit']`), `allowedPerPage` (per-page links with `per_page_selector: true` on the pagination partial); 2.6: `variant` (`full` \| `compact`: previous / "Page n of m" / next + per-page select, partial `pagination_compact`), `withVariant()`, `isCompact()`; `from()`, `to()`, `hasPrevious()`, `hasNext()`, `toArray()` — the **only** pagination shape |
 | `Column` | `(key, label = null, sortable = false, align = 'start', class = null, required = false, priority = null)` — `priority` 1–3 for responsive tables |
 | `FilterField` | `(name, placeholder = null, width = null, class = null, rowClass = null, attributes = [], rowAttributes = [])` — `width`: `xs`, `sm`, `md`, `lg`, `full` |
 | `EmptyState` | `(title = null, message = null, action = null)` |
@@ -412,6 +412,13 @@ New in 2.4 (all opt-in, defaults unchanged):
 $pagination = Pagination::fromRequest($request, $repository->count($criteria));
 $rows = $repository->findBy($criteria, ['id' => 'DESC'], $pagination->limit(), $pagination->offset());
 ```
+
+**Kit templates (2.6).** Hosts delete their copies of the shared chrome: `@NowoUiKit/error/status.html.twig` on
+`@NowoUiKit/error/layout.html.twig` (every HTTP error code; `nowo_ui_kit.error_pages`), the `confirm_dialog` partial
+(Stimulus `confirm-dialog` wrapper, blocks `trigger` / `form`), the signed-in app shell (`app_shell_open` /
+`app_shell_close` / `app_shell` / `app_shell_burger`, `nowo_ui_kit.shell`) and the compact pagination
+(`Pagination::$variant`, partial `pagination_compact`, `js/nowo-ui-autosubmit.js`). See
+[USAGE](USAGE.md#kit-templates-26) and [UPGRADING](UPGRADING.md#to-260).
 
 **Locale tabs (2.5).** Per-locale form fields (one value per language) use the `locale_tabs` partial — one panel per
 locale behind a WAI-ARIA tab list, stacked fieldsets without JavaScript, error / required / default markers with

@@ -57,6 +57,73 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Kit templates that replace the apps' near-identical copies: branded HTTP error pages, the confirm dialog wrapper, the
+signed-in app shell and a compact pagination variant; the responsive table no longer ends one button too wide. See
+[UPGRADING](UPGRADING.md#to-260).
+
+### Added
+
+- **Error pages** (`@NowoUiKit/error/layout.html.twig` + `@NowoUiKit/error/status.html.twig`, REQ-ERROR-001 item 10):
+  one template for every status code — the host keeps a one-line `templates/bundles/TwigBundle/Exception/error.html.twig`
+  (`{% extends '@NowoUiKit/error/status.html.twig' %}`). Code, title, lead, hint, illustration (`<picture>` with a
+  WebP `<source>` and a PNG fallback, intrinsic width / height), "Back to home", "Try again" on 408 / 5xx GET, "Go back"
+  for a same-site referer (404), the 429 `Retry-After` wait and the 10-minute self-reload of a 5xx on GET (never on
+  POST; no live region on the ticking counter). Self-sufficient document: skip link to `#main-content` (REQ-A11Y-002),
+  pre-paint theme boot and the light / dark toggle, UiKit CSS + tokens, every `<script>` / `<style>` with the request
+  `csp_nonce`, no inline handlers. Blocks `title`, `error_illustration`, `error_title`, `error_lead`, `error_hint`,
+  `error_actions`, `error_extra_actions`, `error_extra`; layout blocks `nowo_ui_error_head`, `nowo_ui_error_styles`,
+  `nowo_ui_error_skip_link`, `nowo_ui_error_before`, `nowo_ui_error_top`, `nowo_ui_error_content`,
+  `nowo_ui_error_body_end`, `nowo_ui_error_scripts`. Twig: `nowo_ui_error_page(status_code, exception)`
+  (`View\ErrorPage`, `View\ErrorIllustration`), `nowo_ui_error_text(field, code, params)` (host domain / key prefix,
+  falling back to UiKit's `error.*` texts), global `nowo_ui_error_pages`.
+- **`nowo_ui_kit.error_pages`** config: `layout_template` (host chrome: a template extending the kit layout),
+  `translation_domain` / `translation_prefix` (`<prefix>.<code>.title|lead|hint|image_alt`), `illustrations`
+  (`{404: 'illustrations/error-404'}` or `{path, width, height, webp, extension}`, plus `default`),
+  `illustration_width` / `illustration_height`, `webp`, `home_path`, `retry_statuses`, `back_link_statuses`,
+  `auto_retry_seconds` (600), `theme_storage`, `theme_toggle`, `html_attributes`.
+- **Error texts** in `NowoUiKitBundle` (en, es, fr, de, it, nl, pt): `error.skip_to_content|home|retry|back|retry_after|auto_retry`,
+  `error.generic.*` and title + lead for 400, 401, 403, 404, 405, 408, 410, 413, 422, 429, 500, 502, 503, 504.
+- **`nowo-ui-error-retry.js`** runtime (`[data-nowo-ui-error-retry]`, loaded by the error layout) and the Stimulus peer
+  **`error_retry_countdown`** (`error-retry-countdown`, the apps' controller), both on `nowo-ui-error-retry-core.ts`.
+- **`confirm_dialog` partial** (`partials/_confirm_dialog.html.twig`): the apps' `shared/_confirm_dialog.html.twig`
+  (Stimulus `confirm-dialog` wrapper, blocks `trigger` / `form`, options `only_dialog`, `wrapper`, `dialog_modifier`,
+  `open_on_connect`, `expected_value`, `dialog_id`, `dialog_testid`, `aria_labelledby`, `trigger_*`, `attr`,
+  `dialog_attr`). With a `dialog_id` it also opens without Stimulus through `nowo-ui-confirm.js`. Slots
+  `confirm_dialog_root`, `confirm_dialog`, `confirm_dialog_trigger`; `.nowo-ui-confirm-dialog` (+ `--sm|--lg|--xl`)
+  paints a native dialog box.
+- **Signed-in app shell** (`@NowoUiKit/shell/_open.html.twig`, `_close.html.twig`, `_shell.html.twig`,
+  `_burger.html.twig`; partials `app_shell_open`, `app_shell_close`, `app_shell`, `app_shell_burger`): the apps'
+  `layouts/shell/*` — halves that keep the page `{% block body %}` uncaptured, or one template with the blocks
+  `nowo_ui_shell_brand`, `nowo_ui_shell_header_actions`, `nowo_ui_shell_aside`, `nowo_ui_shell_main`,
+  `nowo_ui_shell_footer`. Brand, header actions (search, toggles, user menu), aside HTML or items, the aside state
+  rendered server-side from a cookie (`collapsed` / `rail`), two- or three-mode burger with next-action labels
+  (`label_attr_names` for host scripts), `svg` or `morph` glyphs (`<morph-icon data-sidebar-morph>` + static menu / X).
+  Slots `app_shell`, `app_header`, `app_header_start`, `app_header_end`, `app_brand`, `app_burger`, `app_burger_icon`,
+  `app_burger_morph`, `app_aside`, `app_aside_inner`, `app_aside_label`, `app_aside_nav`, `app_main`, `app_backdrop`.
+- **`nowo_ui_kit.shell`** config (Twig global `nowo_ui_kit_shell`): `kit_styles` (true: the kit shell classes and
+  `nowo-ui-shell.js` hooks; false: host shell CSS / JS only), `sidebar_cookie`, `sidebar_hidden_value`,
+  `sidebar_rail_value`, `sidebar_storage`.
+- **Compact pagination**: `View\Pagination::$variant` (`full` | `compact`; `withVariant()`, `isCompact()`,
+  `fromTotal()` / `fromRequest()` / `fromArray()` take it) and the `pagination_compact` partial — previous /
+  "Page n of m" / next and a per-page `<select>` in a GET form that keeps the filters and goes back to page 1. The
+  `pagination` partial (and the list scaffold) switch to it for a compact model or `variant: 'compact'`. Slots
+  `pagination_compact`, `pagination_page`, `pagination_per_page`, `pagination_select`; texts `pagination.page`,
+  `pagination.apply`.
+- **`nowo-ui-autosubmit.js`** runtime (in the `scripts` partial): a control with `data-nowo-ui-autosubmit` submits its
+  form on change (delegated listener, CSP-safe; a `<noscript>` button without JavaScript).
+- **`skip_link` slot** (`nowo-ui-skip-link`): off-screen until focused.
+- Demo: `/kit/shell` (app shell, confirm dialog, compact pagination), `/kit/errors/{code}` previews, the one-line
+  `templates/bundles/TwigBundle/Exception/error.html.twig`, WebP screenshots `kit-error-404`, `kit-error-500`,
+  `kit-app-shell`, `kit-confirm-dialog`.
+
+### Fixed
+
+- **Responsive table one button too wide** (`responsive_table` Stimulus peer): phase 2 of `fit()` measured the row
+  detail column while its buttons were still `hidden` (layered `display: none !important`), then `markRows()` showed
+  them, so the table ended one button wider than its scroller (19px at 390px in WebKit / Firefox). The buttons are now
+  shown before the phase-2 measurement (their final layout); hosts can drop stand-in CSS such as a 2rem
+  `::before` box during `data-rt-measuring`.
+
 ## [2.5.3] - 2026-10-20
 
 Locale tab strip without the page tabs margin (new theme slot locale_tabs_nav), kebab button items keep the item font size and hover background, php-cs-fixer ParallelConfig(2). See [UPGRADING](UPGRADING.md#to-253).

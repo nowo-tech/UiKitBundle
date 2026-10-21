@@ -3,6 +3,12 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.6.0](#to-260)
+  - [Error pages](#error-pages-26)
+  - [Confirm dialog](#confirm-dialog-26)
+  - [App shell](#app-shell-26)
+  - [Pagination](#pagination-26)
+  - [Responsive table](#responsive-table-26)
 - [To 2.5.3](#to-253)
 - [To 2.5.2](#to-252)
 - [To 2.5.1](#to-251)
@@ -61,6 +67,213 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.6.0
+
+From **2.5.x**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+php bin/console assets:install   # new js/nowo-ui-error-retry.js, js/nowo-ui-autosubmit.js, nowo-ui.css
+```
+
+Minor release, everything is opt-in: no existing template, slot, partial or config key changes. The `scripts` partial
+(`nowo_ui_script_names()`) now also prints `js/nowo-ui-autosubmit.js`. What follows is the migration that lets a host
+**delete** its copies of the error pages, the confirm dialog wrapper, the shell halves and the pagination partials
+(symfony-beacon, sms-bridge; the same applies to any app that copied them).
+
+<a id="error-pages-26"></a>
+### Error pages
+
+**Delete** `templates/bundles/TwigBundle/Exception/error400.html.twig` … `error503.html.twig` (every per-code file),
+`assets/controllers/error_retry_countdown_controller.ts` and its `.test.ts` (the kit layout loads
+`js/nowo-ui-error-retry.js`; a host that keeps its own Stimulus markup registers the kit peer
+`stimulus-peers/error_retry_countdown_controller.ts` instead). **Replace** `templates/bundles/TwigBundle/Exception/error.html.twig` with:
+
+```twig
+{% extends '@NowoUiKit/error/status.html.twig' %}
+```
+
+Beacon keeps its "Report this problem" action there:
+
+```twig
+{% extends '@NowoUiKit/error/status.html.twig' %}
+{% block error_extra_actions %}
+    {% if app.user %}
+        <a class="{{ nowo_ui_class('error_action') }}" href="#" data-testid="error-report-problem" data-nowo-chat-open="support"
+           data-nowo-chat-context-url="{{ app.request.requestUri }}"
+           data-nowo-chat-context-label="{{ error.statusCode ? error.statusCode ~ ' · ' }}{{ app.request.pathInfo|u.truncate(80, '…') }}">{{ 'support_inbox.report'|trans }}</a>
+    {% endif %}
+{% endblock %}
+```
+
+**Replace** `templates/error/layout.html.twig` (the host chrome: icons, app CSS / JS, theme boot / toggle, loader, chat
+dock) with a template extending the kit layout:
+
+```twig
+{% extends '@NowoUiKit/error/layout.html.twig' %}
+{% block nowo_ui_error_theme_boot %}{% include '_theme_boot.html.twig' %}{% endblock %}
+{% block nowo_ui_error_head %}
+    <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
+    <link rel="icon" href="{{ asset('brand/mark.svg') }}" type="image/svg+xml">  {# Beacon: brand/beacon-mark.svg + beacon_font_preload_tags() #}
+    {{ vite_entry_link_tags('app') }}
+    {{ vite_entry_script_tags('app') }}
+{% endblock %}
+{% block nowo_ui_error_styles %}{{ nowo_ui_tokens() }}{% endblock %}   {# the app CSS only (drop the block to add nowo-ui.css) #}
+{% block nowo_ui_error_before %}{% include '_page_loader.html.twig' %}{% endblock %}
+{% block nowo_ui_error_top %}<div class="top-controls">{% include '_theme_toggle.html.twig' %}</div>{% endblock %}
+{# Beacon only: {% block nowo_ui_error_body_end %}{% if app.user %}{% include '@NowoChatKitBundle/dock.html.twig' %}{% endif %}{% endblock %} #}
+{# sms-bridge only: {% block nowo_ui_error_scripts %}{{ parent() }}<script src="{{ asset('js/nowo-ui-orb.js', 'nowo_ui_kit') }}" nonce="{{ csp_nonce() }}" defer></script>{% endblock %} #}
+```
+
+**Add** to `config/packages/nowo_ui_kit.yaml` (texts stay in `translations/messages.*.yaml` under `error.*`: the same
+keys — `error.<code>.title|lead|hint|image_alt`, `error.generic.*`, `error.home|retry|back|retry_after|auto_retry` —
+anything missing there falls back to UiKit's neutral texts):
+
+```yaml
+nowo_ui_kit:
+    error_pages:
+        layout_template: 'error/layout.html.twig'
+        translation_domain: messages
+        translation_prefix: error
+        theme_storage: beacon-theme                 # sms-bridge: sms-bridge-theme
+        html_attributes: { data-csp-strict-nonce: true }
+        illustration_width: 896                     # sms-bridge: 1024
+        illustration_height: 597                    # sms-bridge: 682
+        webp: true                                  # sms-bridge: false (PNG only)
+        illustrations:
+            400: 'illustrations/error-400'
+            401: 'illustrations/error-401'
+            403: 'illustrations/error-403'
+            404: 'illustrations/error-404'
+            408: 'illustrations/error-408'
+            429: 'illustrations/error-429'
+            500: 'illustrations/error-500'
+            502: 'illustrations/error-502'
+            503: 'illustrations/error-503'          # sms-bridge: { path: 'illustrations/error-503', width: 1536, height: 1024 }
+    theme:
+        classes:                                    # keep the app's error CSS (assets/styles/_errors.scss …)
+            error_page: 'page-shell error-page'
+            error_main: 'error-page__main'
+            error_card: 'error-page__card'
+            error_figure: 'error-page__figure'
+            error_image: 'error-page__img'
+            error_code: 'error-page__code'
+            error_title: 'error-page__title'
+            error_lead: 'error-page__lead'
+            error_hint: 'error-page__hint'
+            error_actions: { value: 'error-page__actions', framework_defaults: false }
+            error_home: { value: 'btn btn-primary', framework_defaults: false }     # sms-bridge: 'btn-primary'
+            error_action: { value: 'btn btn-ghost', framework_defaults: false }     # sms-bridge: 'btn-ghost'
+            skip_link: 'skip-link'
+```
+
+Markup differences to update in the apps' tests (`tests/Integration/HttpErrorPagesTest.php`): render
+`@Twig/Exception/error.html.twig` with `status_code` (the per-code files are gone); the self-reload paragraph carries
+`data-nowo-ui-error-retry`, `data-nowo-ui-error-retry-url`, `data-nowo-ui-error-retry-seconds` and
+`<span data-nowo-ui-error-retry-remaining>` instead of the `error-retry-countdown` Stimulus attributes (same
+`data-testid`s: `error-auto-retry`, `error-retry`, `error-back`, `error-retry-after`, new `error-home`); the card
+carries `data-nowo-ui-region="error"`; the skip link text is `error.skip_to_content` (UiKit: "Skip to main content";
+add the key to `messages` to keep `common.skip_to_content`'s text). The `/admin/ui-kit/public/errors` gallery pages
+render `@NowoUiKit/error/status.html.twig` with a `status_code`.
+
+<a id="confirm-dialog-26"></a>
+### Confirm dialog
+
+**Delete** `templates/shared/_confirm_dialog.html.twig`; **replace** every
+`{% embed 'shared/_confirm_dialog.html.twig' with {…} %}` with `{% embed nowo_ui_partial('confirm_dialog') with {…} %}`
+(same options and `trigger` / `form` blocks; `assets/controllers/confirm_dialog_controller.ts` keeps re-exporting the
+kit peer). Keep the app's dialog CSS with:
+
+```yaml
+nowo_ui_kit:
+    theme:
+        classes:
+            confirm_dialog: 'confirm-dialog'
+            confirm_dialog_trigger: { value: 'btn-ghost', framework_defaults: false }
+```
+
+The wrapper now has the class `nowo-ui-confirm-dialog-root`; with a `dialog_id` the dialog also gets
+`data-nowo-ui-confirm` and the trigger `data-nowo-confirm-open` (kit runtime, no Stimulus needed).
+`.nowo-ui-confirm-dialog` paints a dialog box in the `nowo-ui` layer (width, padding, border, radius, shadow); an
+unlayered host `.confirm-dialog` rule wins property by property.
+
+<a id="app-shell-26"></a>
+### App shell
+
+**Delete** `templates/layouts/shell/_open.html.twig`, `_close.html.twig`, `_shell.html.twig`, `_burger.html.twig` and
+the `theme.partials.shell` / `theme.partials.burger` entries pointing at them (or point them at
+`@NowoUiKitBundle/shell/_shell.html.twig` / `@NowoUiKitBundle/shell/_burger.html.twig`). In `templates/base.html.twig`:
+
+```twig
+{{ include(nowo_ui_partial('app_shell_open'), {
+    brand_html: brand_html, header_end: header_end, aside_html: aside_html,
+    aside_label: app_section.current.labelKey|trans, aside_id: 'app-sidebar', show_user_menu: false,
+    burger_icon: 'morph',
+    burger_label_expand: 'nav.sidebar_expand'|trans, burger_label_hide: 'nav.sidebar_collapse'|trans,
+    {# Beacon: rail_mode: true, collapsed: sidebar_mode == 'collapsed', rail: sidebar_mode == 'rail',
+       burger_static_icons: ['open'], burger_label_rail: 'nav.sidebar_rail'|trans,
+       burger_label_attr_names: {hide: 'data-label-collapse'}, content_width: app.user.preferredContentWidth,
+       shell_attr: {…the data-*-sync attributes…} #}
+}) }}
+    <main id="main-content" tabindex="-1" class="app-main__inner">{% block body %}{% endblock %}</main>
+{{ include(nowo_ui_partial('app_shell_close'), {footer_html: footer_html}) }}
+```
+
+sms-bridge drops the `collapsed:` line: the cookie is read by the kit.
+
+```yaml
+nowo_ui_kit:
+    shell:
+        kit_styles: false                         # the app's app-shell CSS and assets/lib/sidebar.ts drive the shell
+        sidebar_cookie: sms_bridge_sidebar        # Beacon: beacon_sidebar (or keep passing collapsed / rail)
+    theme:
+        classes:
+            app_shell: 'app-shell'
+            app_header: 'app-header'
+            app_header_start: 'app-header__start'
+            app_header_end: 'app-header__end'
+            app_brand: 'app-header__brand'
+            app_burger: 'app-sidebar-toggle'
+            app_aside: 'app-sidebar'
+            app_aside_inner: 'app-sidebar__inner'
+            app_aside_label: 'app-sidebar__label'
+            app_aside_nav: 'app-sidebar__nav'
+            app_main: 'app-main'
+            app_backdrop: 'app-sidebar-backdrop'
+        attributes:
+            app_shell: { data-app-shell: true }
+            app_aside: { data-app-sidebar: true, data-tour: sidebar }
+            app_burger: { data-sidebar-toggle: true }       # Beacon: + data-tour: sidebar-toggle
+            app_backdrop: { data-sidebar-backdrop: true }
+```
+
+CSS renames: the burger glyphs are `.nowo-ui-burger__icon--open` / `--close` (sms-bridge
+`.app-sidebar-toggle__icon--open|--close`, Beacon `.nowo-ui-burger__icon--static`) and the morph icon
+`.nowo-ui-burger__morph` (sms-bridge `.app-sidebar-toggle__morph`); UiKit hides the static glyph of the other state
+and swaps glyph / morph icon on `.is-morph-ready`, so the app's rules for that can go. Root state classes are the
+apps' own (`is-sidebar-collapsed`, `is-sidebar-rail`, `is-full-width` / `is-content-width`).
+
+<a id="pagination-26"></a>
+### Pagination
+
+- `templates/shared/_pagination.html.twig` (« / Page n of m / ») — **delete**; render the compact variant:
+  `{{ include(nowo_ui_partial('pagination_compact'), {pagination: {page: page.page, per_page: page.pageSize, total: page.total, total_pages: page.totalPages}, route: route, route_params: route_params|default({})}) }}`,
+  or build `View\Pagination::fromRequest($request, $total, variant: Pagination::VARIANT_COMPACT)` in the controller
+  (adds the per-page select). Text: `pagination.page` ("Page %page% of %total%", NowoUiKitBundle).
+- `templates/layouts/partials/_pagination.html.twig` — the kit `pagination` partial plus `table-pagination*` classes:
+  **delete** it and `theme.partials.pagination`, set `theme.classes: {pagination: 'table-pagination',
+  pagination_link: 'table-pagination__link', pagination_active: 'table-pagination__link', pagination_info:
+  'table-pagination__info'}` and point the CSS for the nav / ellipsis at `.nowo-ui-pagination__nav` /
+  `.nowo-ui-pagination__ellipsis`. `shared/_table_pagination.html.twig` then includes `nowo_ui_partial('pagination')`
+  with `nav_trans_domain: 'messages'` (Beacon: `trans_domain: 'messages'`).
+
+<a id="responsive-table-26"></a>
+### Responsive table
+
+The `responsive_table` peer measures the detail column with its buttons shown: drop host stand-ins such as
+sms-bridge's `.nowo-ui-responsive-table[data-rt-measuring][data-rt-has-hidden] .nowo-ui-row-detail-cell:has(> .nowo-ui-row-detail-btn[hidden])::before`
+rule in `assets/styles/ui-chrome.css` (rebuild the app assets that import the peer).
 
 ## To 2.5.3
 

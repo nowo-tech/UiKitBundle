@@ -71,6 +71,10 @@ const gallery: Array<{ file: string; path: string; ready: string }> = [
   { file: 'page-contract-wizard', path: '/page-contract/onboarding', ready: '[data-nowo-ui-page="wizard"]' },
   { file: 'page-contract-auth', path: '/page-contract/sign-in', ready: '[data-nowo-ui-page="auth"]' },
   { file: 'page-contract-auth-errors', path: '/page-contract/default/sign-in?failed=1', ready: '[data-nowo-ui-region="form-errors"]' },
+  // 2.6 kit templates
+  { file: 'kit-error-404', path: '/kit/errors/404', ready: '[data-nowo-ui-region="error"]' },
+  { file: 'kit-error-500', path: '/kit/errors/500', ready: '[data-testid="error-auto-retry"]' },
+  { file: 'kit-app-shell', path: '/kit/shell', ready: '[data-nowo-ui-pagination="compact"]' },
 ];
 
 test.describe('page contract screenshots — README', () => {
@@ -107,6 +111,14 @@ test.describe('page contract screenshots — PAGE_CONTRACT.md gallery', () => {
     await page.getByTestId('export-menu').locator('summary').click();
     await expect(page.getByTestId('export-menu').locator('.nowo-ui-menu__panel')).toBeVisible();
     await shoot(page, 'page-contract-menu');
+  });
+
+  test('kit-confirm-dialog — confirm dialog wrapper open in the app shell (2.6)', async ({ page }) => {
+    await open(page, '/kit/shell');
+    await page.getByTestId('void-trigger').click();
+    await expect(page.locator('dialog#void-1042[open]')).toBeVisible();
+    await page.waitForTimeout(300);
+    await shoot(page, 'kit-confirm-dialog');
   });
 
   for (const shot of gallery) {
