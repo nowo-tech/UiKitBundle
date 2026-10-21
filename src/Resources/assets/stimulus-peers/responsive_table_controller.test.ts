@@ -13,6 +13,8 @@ let coarse = false;
 let phone = false;
 /** Simulates `overflow-wrap: anywhere` on the cells: outside the measuring state the table can always shrink. */
 let breakWords = false;
+/** The detail column is only as wide as an empty cell while its buttons are hidden (2.6 regression). */
+let buttonSizedDetail = false;
 
 function setMatchMedia(): void {
   window.matchMedia = vi.fn().mockImplementation((query: string) => ({
@@ -70,7 +72,10 @@ function tableWidth(): number {
       continue;
     }
     if (th.hasAttribute('data-responsive-detail')) {
-      total += th.closest('[data-rt-has-hidden]') ? 44 : 0;
+      // the detail column takes room only with data-rt-has-hidden; its width is the button's when one is shown (the
+      // kit hides a [hidden] button with display: none !important, leaving an empty 12px cell)
+      const shown = table?.querySelector<HTMLButtonElement>('tbody [data-responsive-detail] button:not([hidden])');
+      total += th.closest('[data-rt-has-hidden]') ? (buttonSizedDetail && !shown ? 12 : 44) : 0;
       continue;
     }
     total += widths[th.dataset.column ?? ''] ?? 0;
@@ -88,6 +93,7 @@ beforeEach(() => {
   coarse = false;
   phone = false;
   breakWords = false;
+  buttonSizedDetail = false;
   iconCalls.length = 0;
   setIconStateHandler((kind, _host, state, animate) => iconCalls.push([kind, state, animate]));
   setMatchMedia();
@@ -171,6 +177,25 @@ describe('responsive-table peer', () => {
     const narrow = mount('responsive');
     await tick();
     expect([...narrow.querySelectorAll('thead [data-rt-hidden]')].map((th) => (th as HTMLElement).dataset.column)).toEqual(['project', 'detail']);
+  });
+
+  it('measures the detail column with its buttons shown, so the fitted table never ends a button wider (2.6)', async () => {
+    // Before 2.6 phase 2 measured the detail column while its buttons were still hidden (an empty 12px cell), then
+    // markRows() showed them: at 620px the table "fit" at 612px and ended at 644px, wider than its scroller.
+    buttonSizedDetail = true;
+    width = 620;
+    const root = mount('responsive');
+    await tick();
+    expect([...root.querySelectorAll('thead [data-rt-hidden]')].map((th) => (th as HTMLElement).dataset.column)).toEqual(['project', 'detail']);
+    expect(root.querySelectorAll('tbody [data-responsive-detail] button:not([hidden])')).toHaveLength(2);
+    expect(tableWidth()).toBeLessThanOrEqual(width);
+
+    // Wide enough again: no column hidden, the buttons are hidden again and the detail column takes no room.
+    width = 1200;
+    const wide = mount('responsive');
+    await tick();
+    expect(wide.querySelectorAll('thead [data-rt-hidden]')).toHaveLength(0);
+    expect(wide.querySelectorAll('tbody [data-responsive-detail] button[hidden]')).toHaveLength(2);
   });
 
   it('measures with unbreakable words, so word breaking can never hide the overflow (1.17.5 regression)', async () => {

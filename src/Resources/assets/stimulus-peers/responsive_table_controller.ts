@@ -8,7 +8,8 @@
  * `partials/_row_detail_head.html.twig`.
  *
  * Fit: in Responsive mode every column is shown, then the last non-required ones (document order) are hidden until
- * the table fits its scroller — first measured without the detail column, then with it. Recomputed on resize.
+ * the table fits its scroller — first measured without the detail column, then with it (2.6: with its buttons shown,
+ * their final layout). Recomputed on resize.
  * The detail dialog MOVES the row's cell contents (forms, ids and listeners intact) and puts them back on close.
  *
  * Persistence is host-owned: with a `url` the toggle sends `{"mode": "scroll"|"responsive"}` (JSON, `X-CSRF-TOKEN`
@@ -209,6 +210,11 @@ export default class ResponsiveTableController extends Controller<HTMLElement> {
     this.element.removeAttribute('data-rt-has-hidden');
     if ('responsive' === this.mode() && !this.fits()) {
       this.element.setAttribute('data-rt-has-hidden', '');
+      // 2.6: measure the detail column with its final layout — buttons shown (markRows() shows them afterwards; a
+      // still-hidden button measured as an empty cell left the table one button wider than its scroller).
+      this.detailButtons().forEach((button) => {
+        button.hidden = false;
+      });
       const candidates = headers.filter((header) => '1' !== header.dataset.required).reverse();
       for (const header of candidates) {
         if (this.fits()) {
@@ -231,6 +237,11 @@ export default class ResponsiveTableController extends Controller<HTMLElement> {
     return [...this.tableTarget.querySelectorAll<HTMLTableCellElement>('thead th[data-column]')];
   }
 
+  /** The row detail buttons (one per row). */
+  private detailButtons(): HTMLButtonElement[] {
+    return [...this.tableTarget.querySelectorAll<HTMLButtonElement>('tbody [data-responsive-detail] button')];
+  }
+
   /** Hides or shows a header and the row cells of its column. */
   private setHidden(header: HTMLTableCellElement, hidden: boolean): void {
     const key = header.dataset.column ?? '';
@@ -245,7 +256,7 @@ export default class ResponsiveTableController extends Controller<HTMLElement> {
     const anyHidden = this.headers().some((header) => header.hasAttribute('data-rt-hidden'));
     this.element.toggleAttribute('data-rt-has-hidden', anyHidden);
     const details = this.messagesValue.details ?? '';
-    this.tableTarget.querySelectorAll<HTMLButtonElement>('tbody [data-responsive-detail] button').forEach((button) => {
+    this.detailButtons().forEach((button) => {
       button.hidden = !anyHidden;
       const row = button.closest('tr');
       const title = row ? this.rowTitle(row) : '';
