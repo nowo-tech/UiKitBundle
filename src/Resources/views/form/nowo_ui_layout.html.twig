@@ -10,7 +10,8 @@
   its messages render in the `form_error` slot (Bootstrap `invalid-feedback d-block`; root errors: a plain list, the
   auth scaffold wraps it in the `form_errors` slot). PasswordToggle bridge: the <input> of `toggle_password_widget`
   (nowo-tech/password-toggle-bundle) gets the `input` slot when this theme is in the form's theme chain.
-  2.10: rows take the `form_row` slot classes and labels the `form_label` slot (both empty by default);
+  2.10: rows take the `form_row` slot classes (2.10.1: checkbox / radio rows `form_row_check`) and labels the
+  `form_label` slot (all empty by default);
   theme.form_errors_after_widget prints a field's errors after its widget (and, on a checkbox row, before the help).
 #}
 {% use 'form_div_layout.html.twig' %}
@@ -108,9 +109,10 @@
         {%- set widget_attr = {attr: {'aria-describedby': id ~ '_help'}} -%}
     {%- endif -%}
     {%- set _row_attr = row_attr|merge({class: (row_attr.class|default('') ~ ' nowo-ui-form-row nowo-ui-form-row--check')|trim}) -%}
-    {#- the `form_row` slot classes, skipping one the row already has (a bundle may pass the same in row_attr) -#}
+    {#- the `form_row_check` slot classes (2.10.1: not `form_row`, whose column layout would centre a checkbox row),
+        skipping one the row already has -#}
     {%- set _classes = (_row_attr.class|default(''))|split(' ')|filter(c => c != '') -%}
-    {%- for _c in nowo_ui_class('form_row')|split(' ')|filter(c => c != '') -%}
+    {%- for _c in nowo_ui_class('form_row_check')|split(' ')|filter(c => c != '') -%}
         {%- if _c not in _classes -%}{%- set _classes = _classes|merge([_c]) -%}{%- endif -%}
     {%- endfor -%}
     {%- if _classes is not empty -%}{%- set _row_attr = _row_attr|merge({class: _classes|join(' ')}) -%}{%- endif -%}

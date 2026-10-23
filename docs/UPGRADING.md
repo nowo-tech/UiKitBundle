@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.10.1](#to-2101)
 - [To 2.10.0](#to-2100)
 - [To 2.9.0](#to-290)
 - [To 2.8.0](#to-280)
@@ -73,6 +74,10 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.10.1
+
+If you set the `form_row` slot for checkbox rows too, copy the classes they need to the new `form_row_check` slot.
 
 ## To 2.10.0
 

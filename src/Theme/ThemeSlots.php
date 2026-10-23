@@ -231,6 +231,8 @@ final class ThemeSlots
         // Form rows and labels (2.10, UiKit form theme `form_row` / `checkbox_row` and `form_label`): no class of
         // their own, so a host adds its row spacing / label style without a form theme
         'form_row' => ['', []],
+        // 2.10.1: checkbox / radio rows (`checkbox_row`); separate from form_row, whose column utilities centre them
+        'form_row_check' => ['', []],
         'form_label' => ['', []],
         'input_wide' => ['nowo-ui-input nowo-ui-input--wide', [
             'bootstrap' => 'form-control',

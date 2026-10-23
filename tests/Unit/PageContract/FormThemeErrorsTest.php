@@ -65,9 +65,9 @@ final class FormThemeErrorsTest extends TestCase
         self::assertMatchesRegularExpression('#<div class="nowo-ui-form-row nowo-ui-form-row--check">.*</label><div id="item_agree_help"[^>]*>Read it</div><ul[^>]*><li id="item_agree_error1">Tick it</li></ul></div>#s', $html);
 
         // Host slots + theme.form_errors_after_widget: row / label classes, errors right after the widget.
-        $html = PageContractTwig::create($template, ['classes' => ['form_row' => 'field', 'form_label' => 'field__label'], 'form_errors_after_widget' => true], 'none')->render('t', ['form' => $form->createView()]);
+        $html = PageContractTwig::create($template, ['classes' => ['form_row' => 'field', 'form_row_check' => 'field-check', 'form_label' => 'field__label'], 'form_errors_after_widget' => true], 'none')->render('t', ['form' => $form->createView()]);
         self::assertMatchesRegularExpression('#<div class="field"><label class="field__label" for="item_name">Name</label><input type="text"[^>]*/><ul[^>]*><li id="item_name_error1">Bad name</li></ul><div id="item_name_help"#', $html);
-        self::assertMatchesRegularExpression('#<div class="nowo-ui-form-row nowo-ui-form-row--check field">.*</label><ul[^>]*><li id="item_agree_error1">Tick it</li></ul><div id="item_agree_help"#s', $html);
+        self::assertMatchesRegularExpression('#<div class="nowo-ui-form-row nowo-ui-form-row--check field-check">.*</label><ul[^>]*><li id="item_agree_error1">Tick it</li></ul><div id="item_agree_help"#s', $html);
         // A class the row already has is not added twice.
         self::assertStringContainsString('<div class="extra field"><label class="field__label" for="item_dup">', $html);
     }

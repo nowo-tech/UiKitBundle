@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.10.1] - 2026-10-23](#2101---2026-10-23)
 - [[2.10.0] - 2026-10-23](#2100---2026-10-23)
 - [[2.9.0] - 2026-10-23](#290---2026-10-23)
 - [[2.8.0] - 2026-10-23](#280---2026-10-23)
@@ -62,6 +63,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [2.10.1] - 2026-10-23
+
+### Fixed
+
+- Checkbox / radio rows of the UiKit form theme take the new `form_row_check` slot instead of `form_row`: a host whose
+  `form_row` classes stack a column (`flex flex-col`) centred its checkbox rows (Symfony Beacon's *Remember me*).
 
 ## [2.10.0] - 2026-10-23
 
