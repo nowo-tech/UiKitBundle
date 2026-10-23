@@ -171,4 +171,32 @@ describe('nowo-ui-shell', () => {
     expect(document.querySelector('[data-nowo-ui-shell]')?.classList.contains('is-main-content')).toBe(true);
     window.localStorage.removeItem('nowo-ui-main-width');
   });
+
+  it('keeps the page #fragment on a locale switcher link or form (2.8)', () => {
+    mod.bindNowoUiShell();
+    document.body.innerHTML = `
+      <div data-nowo-ui-locale-switcher>
+        <a id="lk" href="/es/login#x"><span id="in">ES</span></a>
+        <form id="fm" action="/locale/es" method="post"></form>
+      </div>
+      <a id="out" href="/elsewhere">out</a>`;
+    document.getElementById('lk')!.addEventListener('click', (e) => e.preventDefault());
+    document.getElementById('out')!.addEventListener('click', (e) => e.preventDefault());
+    document.getElementById('fm')!.addEventListener('submit', (e) => e.preventDefault());
+
+    window.history.replaceState(null, '', '/manual/03-account');
+    document.getElementById('in')!.click();
+    expect(document.getElementById('lk')!.getAttribute('href')).toBe('/es/login#x');
+
+    window.history.replaceState(null, '', '/manual/03-account#tours');
+    document.getElementById('in')!.click();
+    expect((document.getElementById('lk') as HTMLAnchorElement).href).toMatch(/\/es\/login#tours$/);
+    document.getElementById('fm')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    expect((document.getElementById('fm') as HTMLFormElement).action).toMatch(/\/locale\/es#tours$/);
+    document.getElementById('out')!.click();
+    expect(document.getElementById('out')!.getAttribute('href')).toBe('/elsewhere');
+    mod.keepLocaleHash(new Event('click'));
+    document.querySelector('[data-nowo-ui-locale-switcher]')!.dispatchEvent(new Event('click', { bubbles: true }));
+    window.history.replaceState(null, '', '/');
+  });
 });

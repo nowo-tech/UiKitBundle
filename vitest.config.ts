@@ -12,8 +12,10 @@ export default defineConfig({
       // Stimulus peers are gated one by one as they reach full coverage.
       include: [
         'src/Resources/assets/src/*.ts',
+        'src/Resources/assets/stimulus-peers/ask_confirm.ts',
         'src/Resources/assets/stimulus-peers/auto_refresh_controller.ts',
         'src/Resources/assets/stimulus-peers/collapse_panel_controller.ts',
+        'src/Resources/assets/stimulus-peers/confirm_submit_controller.ts',
         'src/Resources/assets/stimulus-peers/datatable_controller.ts',
         'src/Resources/assets/stimulus-peers/disclosure_icon_controller.ts',
         'src/Resources/assets/stimulus-peers/error_retry_countdown_controller.ts',

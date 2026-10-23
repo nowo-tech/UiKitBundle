@@ -7,7 +7,8 @@ They are **not** built into the kit IIFEs. Prefer the no-build scripts under `sr
 |------|---------------------|--------------------|
 | `clipboard_copy_controller.ts` | `clipboard-copy` | `nowo-ui-clipboard.js` |
 | `confirm_dialog_controller.ts` | `confirm-dialog` | `nowo-ui-confirm.js` |
-| `confirm_submit_controller.ts` | `confirm-submit` | — (peer only; form `submit` or button `click`) |
+| `confirm_submit_controller.ts` | `confirm-submit` | — (peer only; form `submit` or button `click`; 2.8 `dialog` mode and `createConfirmSubmitController()`) |
+| `ask_confirm.ts` | — (module: `askConfirm()`, `pageConfirmLabels()`, 2.8) | — |
 | `page_loader_controller.ts` | `page-loader` | `nowo-ui-page-loader.js` |
 | `toast_stack_controller.ts` | `toast-stack` | `nowo-ui-toast.js` |
 | `tabs_controller.ts` | `tabs` | `nowo-ui-tabs.js` |

@@ -118,13 +118,15 @@ Stimulus peer: identifier `confirm-dialog` (`confirm_dialog_controller.ts`) — 
 
 ## Confirm submit (Stimulus peer only)
 
-No kit IIFE (uses `window.confirm`).
+No kit IIFE. Two modes (2.8): `native` (default, `window.confirm`) and `dialog` (the kit `<dialog>`, see below).
 
 | Stimulus | Role |
 |----------|------|
 | `data-controller="confirm-submit"` | Form root **or** a single submit button |
 | `data-confirm-submit-message-value` | Confirm message (trimmed; empty → no prompt, event passes) |
 | `data-confirm-submit-blocked-value` | When true, always block submit |
+| `data-confirm-submit-mode-value` | `native` or `dialog` for this element (default: the factory's `mode`, else `native`) — 2.8 |
+| `data-confirm-submit-danger-value` | Dialog mode: `false` paints Confirm as the primary button instead of the danger one (default `true`) — 2.8 |
 | `data-action="submit->confirm-submit#confirm"` | Hook on the form (every submit) |
 | `data-action="click->confirm-submit#confirm"` | Hook on one button (e.g. “Reset” next to “Save”; other buttons submit without prompt) |
 
@@ -139,6 +141,31 @@ Peer: `confirm_submit_controller.ts`. Replaces inline `onsubmit="return confirm(
         data-confirm-submit-message-value="{{ 'Reset?'|e('html_attr') }}"
         data-action="click->confirm-submit#confirm">Reset</button>
 ```
+
+**Dialog mode (2.8).** The event is held, the question opens in a native `<dialog>` (focus on Cancel, Escape and the
+backdrop cancel, `danger` paints Confirm red) and, on Confirm, the same submit — with its submitter — or click is
+replayed once. Labels come from `<html data-confirm-ok="…" data-confirm-cancel="…">` (e.g. the kit's `action.confirm`
+/ `action.cancel`), English otherwise. Turn it on for the whole app with the factory, and pass your classes if your
+dialog is not the kit one:
+
+```ts
+// assets/controllers/confirm_submit_controller.ts
+import { createConfirmSubmitController } from '…/stimulus-peers/confirm_submit_controller';
+
+export default createConfirmSubmitController({
+  mode: 'dialog',
+  classes: { dialog: 'confirm-dialog', panel: 'confirm-dialog__panel', confirm: 'btn-primary', danger: 'btn-danger' },
+});
+```
+
+```twig
+<html data-confirm-ok="{{ 'action.confirm'|trans({}, 'NowoUiKitBundle') }}"
+      data-confirm-cancel="{{ 'action.cancel'|trans({}, 'NowoUiKitBundle') }}">
+```
+
+The same dialog is available to your own code: `askConfirm(message, { danger, title, confirm, cancel, classes })`
+from `stimulus-peers/ask_confirm.ts` returns a `Promise<boolean>`; `KIT_CONFIRM_CLASSES` lists the default classes
+(`nowo-ui-confirm*`, `nowo-ui-btn*`).
 
 ## Page loader
 

@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.8.0](#to-280)
 - [To 2.7.0](#to-270)
 - [To 2.6.1](#to-261)
 - [To 2.6.0](#to-260)
@@ -70,6 +71,12 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.8.0
+
+No change needed: `confirm-submit` keeps `window.confirm()` by default. An app with its own dialog-based
+`confirm-submit` can switch to the kit one: `export default createConfirmSubmitController({ mode: 'dialog', classes })`
+and print `data-confirm-ok` / `data-confirm-cancel` on `<html>` (STIMULUS.md).
 
 ## To 2.7.0
 

@@ -294,6 +294,27 @@ function onViewportChange(): void {
   });
 }
 
+/**
+ * Locale switcher (2.8): the page `#fragment` never reaches the server, so a language change would lose the section
+ * being read. Inside `[data-nowo-ui-locale-switcher]`, a clicked link or a submitted form gets the current fragment
+ * (after the POST, a redirect without a fragment of its own keeps the form action's one).
+ */
+export function keepLocaleHash(event: Event): void {
+  const hash = window.location.hash;
+  const target = event.target;
+  if (hash === '' || !(target instanceof Element) || !target.closest('[data-nowo-ui-locale-switcher]')) {
+    return;
+  }
+  if (target instanceof HTMLFormElement) {
+    target.action = target.action.split('#')[0] + hash;
+    return;
+  }
+  const link = target.closest<HTMLAnchorElement>('a[href]');
+  if (link) {
+    link.href = link.href.split('#')[0] + hash;
+  }
+}
+
 let shellBound = false;
 
 export function bindNowoUiShell(): void {
@@ -301,6 +322,8 @@ export function bindNowoUiShell(): void {
     shellBound = true;
     document.addEventListener('click', onDocumentClick);
     document.addEventListener('keydown', onDocumentKeydown);
+    document.addEventListener('click', keepLocaleHash);
+    document.addEventListener('submit', keepLocaleHash);
     window.nowoUiToggleAside = toggleAside;
     window.nowoUiSetMainWidth = (width, shell) => setMainWidth(width, shell ?? null);
     window.nowoUiToggleMainWidth = (shell) => toggleMainWidth(shell ?? null);

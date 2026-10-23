@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.8.0] - 2026-10-23](#280---2026-10-23)
 - [[2.7.0] - 2026-10-23](#270---2026-10-23)
 - [[2.6.1] - 2026-10-21](#261---2026-10-21)
 - [[2.6.0] - 2026-10-21](#260---2026-10-21)
@@ -59,6 +60,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [2.8.0] - 2026-10-23
+
+### Added
+
+- **Confirm in the kit dialog** (re-audit OVR-03 from Symfony Beacon): the `confirm-submit` peer gains a `dialog` mode
+  (`data-confirm-submit-mode-value="dialog"` or `createConfirmSubmitController({ mode: 'dialog' })`) that asks in a
+  native `<dialog>` instead of `window.confirm()` — focus on Cancel, Escape / backdrop cancel, `danger` value for a
+  destructive Confirm — and replays the held submit with its submitter (or the click) on Confirm. New module
+  `stimulus-peers/ask_confirm.ts`: `askConfirm()` (Promise), `pageConfirmLabels()` (`<html data-confirm-ok /
+  data-confirm-cancel>`), `KIT_CONFIRM_CLASSES`; host classes through the factory's `classes`. `native` stays the
+  default. See [STIMULUS](STIMULUS.md#confirm-submit-stimulus-peer-only).
+- **The locale switcher keeps the page `#fragment`** (`nowo-ui-shell.js`, `keepLocaleHash()`): a link or a form inside
+  `[data-nowo-ui-locale-switcher]` (partials/_locale_switcher.html.twig) gets the current fragment, so a language
+  change reopens the same section (e.g. a manual chapter anchor).
 
 ## [2.7.0] - 2026-10-23
 
