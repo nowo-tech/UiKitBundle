@@ -69,7 +69,7 @@ Twig globals (from config):
 | `partials/_pagination.html.twig` | Server-side pagination |
 | `partials/_empty.html.twig` | Empty state |
 | `partials/_flashes.html.twig` | Inline Symfony flashes |
-| `partials/_toasts.html.twig` | Fixed toast stack from flashes (string or `{title, message}`) |
+| `partials/_toasts.html.twig` | Fixed toast stack from flashes (string or `{title, message}`). 2.9: `toast_roles`, `timeouts`, `toast_classes`, `toast_type_classes` and the blocks `toast_attributes` / `toast_text` / `toast_dismiss_attributes` — see [Toasts in a host](#toasts-in-a-host) |
 | `partials/_row_actions.html.twig` | Edit / delete / view / copy cluster (`display`: `icon` \| `text` \| `icon_text`) |
 | `partials/_page_header.html.twig` | Title + intro + toolbar HTML |
 | `partials/_tabs.html.twig` | Tab **link** nav (no JS). In-page panels: `nowo-ui-tabs.js` / Stimulus `tabs` peer |
@@ -952,3 +952,24 @@ Render `@NowoUiKitBundle/demo/kitchen_sink.html.twig` from a host controller (se
 - [STIMULUS.md](STIMULUS.md) — data-attribute contracts / Stimulus peers
 - [ADOPTION.md](ADOPTION.md) — consolidating Beacon + feature bundles
 - [ROADMAP.md](ROADMAP.md) — phase status
+
+## Toasts in a host
+
+A host that needs its own wiring extends the partial instead of copying it (2.9) and registers the template as the
+`toasts` theme partial:
+
+```twig
+{# templates/_toasts.html.twig — nowo_ui_kit.theme.partials.toasts #}
+{% extends '@NowoUiKitBundle/partials/_toasts.html.twig' %}
+{% set toast_roles = false %}                {# the stack is the live region: no double announcement #}
+{% set timeouts = {error: 0, warning: 0} %}  {# errors stay until dismissed (WCAG 2.2.1) #}
+{% set toast_classes = {toast: 'flash', message: 'flash__message'} %}
+{% set toast_type_classes = {error: 'flash-error', warning: 'flash-warning', info: 'flash-info', default: 'flash-success'} %}
+{% set toast_flash_slots = false %}         {# the flash_<type> slots style inline flashes only #}
+{% block toast_attributes %} data-toast-stack-target="toast"{% endblock %}
+{% block toast_text %}{{ message|trans }}{% endblock %}
+{% block toast_dismiss_attributes %} data-action="toast-stack#dismiss"{% endblock %}
+```
+
+The stack root takes the `toasts` slot classes and attributes (e.g. `data-controller: toast-stack`). Defaults keep
+the 1.x markup: a role per toast, 8 s for errors and warnings, 5 s otherwise.

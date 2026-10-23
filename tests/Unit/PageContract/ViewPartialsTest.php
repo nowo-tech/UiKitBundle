@@ -314,10 +314,50 @@ final class ViewPartialsTest extends TestCase
         self::assertStringContainsString('class="nowo-ui-burger nowo-ui-btn nowo-ui-btn--secondary nowo-ui-btn--sm app-burger"', $burger);
     }
 
-    /**
-     * @param array<string, mixed> $vars
-     * @param array<string, mixed> $theme
-     */
+    public function testToastsRolesTimeoutsClassesAndBlocks(): void
+    {
+        $flashes = ['error' => ['Broken'], 'warning' => [['title' => 'Careful', 'message' => 'Soon']], 'notice' => ['FYI'], 'custom' => ['Raw']];
+
+        $default = $this->render("{% include '@NowoUiKitBundle/partials/_toasts.html.twig' with {flashes: flashes} only %}", ['flashes' => $flashes]);
+        self::assertStringContainsString('role="alert"', $default);
+        self::assertStringContainsString('data-timeout="8000"', $default);
+        self::assertStringContainsString('data-timeout="5000"', $default);
+
+        $host = <<<'TWIG'
+            {% extends '@NowoUiKitBundle/partials/_toasts.html.twig' %}
+            {% set toast_roles = false %}
+            {% set timeouts = {error: 0, warning: 0} %}
+            {% set toast_classes = {toast: 'flash', content: 'flash__content', title: 'flash__title', message: 'flash__message', dismiss: 'flash__dismiss'} %}
+            {% set toast_type_classes = {error: 'flash-error', info: 'flash-info', default: 'flash-success'} %}
+            {% block toast_attributes %} data-toast-stack-target="toast"{% if structured %} data-testid="flash-structured"{% endif %}{% endblock %}
+            {% block toast_text %}[{{ message }}]{% endblock %}
+            {% block toast_dismiss_attributes %} data-action="toast-stack#dismiss"{% endblock %}
+            TWIG;
+        $toasts = $this->render($host, ['flashes' => $flashes]);
+
+        self::assertStringNotContainsString('role=', $toasts);
+        self::assertSame(2, substr_count($toasts, 'data-timeout="0"'));
+        self::assertSame(2, substr_count($toasts, 'data-timeout="5000"'));
+        self::assertMatchesRegularExpression('/class="nowo-ui-toast [^"]*nowo-ui-flash--error[^"]* flash flash-error"/', $toasts);
+        self::assertMatchesRegularExpression('/class="nowo-ui-toast [^"]*nowo-ui-flash--warning[^"]* flash flash-success"/', $toasts);
+        self::assertMatchesRegularExpression('/nowo-ui-flash--info[^"]* flash flash-info"/', $toasts);
+        self::assertMatchesRegularExpression('/nowo-ui-flash--custom[^"]* flash flash-success"/', $toasts);
+        self::assertStringContainsString('<p class="nowo-ui-toast__message flash__message">[Broken]</p>', $toasts);
+        self::assertStringContainsString('<p class="nowo-ui-toast__title flash__title">Careful</p>', $toasts);
+        self::assertStringContainsString('<div class="nowo-ui-toast__content flash__content">', $toasts);
+        self::assertSame(1, substr_count($toasts, 'data-testid="flash-structured"'));
+        self::assertSame(4, substr_count($toasts, 'data-toast-stack-target="toast"'));
+        self::assertSame(4, substr_count($toasts, 'class="nowo-ui-toast__dismiss flash__dismiss"'));
+        self::assertSame(4, substr_count($toasts, 'data-action="toast-stack#dismiss"'));
+
+        $theme = ['classes' => ['flash_error' => 'inline-flash-only']];
+        $slotted = $this->render("{% include '@NowoUiKitBundle/partials/_toasts.html.twig' with {flashes: {error: ['x']}} only %}", [], $theme);
+        self::assertStringContainsString('inline-flash-only', $slotted);
+        $plain = $this->render("{% include '@NowoUiKitBundle/partials/_toasts.html.twig' with {flashes: {error: ['x']}, toast_flash_slots: false} only %}", [], $theme);
+        self::assertStringNotContainsString('inline-flash-only', $plain);
+        self::assertStringContainsString('nowo-ui-flash--error', $plain);
+    }
+
     private function render(string $template, array $vars = [], array $theme = []): string
     {
         return PageContractTwig::create(['t' => $template], $theme)->render('t', $vars);

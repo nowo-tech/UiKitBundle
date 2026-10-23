@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.9.0] - 2026-10-23](#290---2026-10-23)
 - [[2.8.0] - 2026-10-23](#280---2026-10-23)
 - [[2.7.0] - 2026-10-23](#270---2026-10-23)
 - [[2.6.1] - 2026-10-21](#261---2026-10-21)
@@ -60,6 +61,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [2.9.0] - 2026-10-23
+
+### Added
+
+- **Toasts a host can extend** (re-audit OVR-02 from Symfony Beacon): `partials/_toasts.html.twig` options
+  `toast_roles` (false: no role per toast — the stack is the live region, no double announcement), `timeouts` (merged
+  over `{error: 8000, warning: 8000, default: 5000}`; 0 keeps a toast until dismissed), `toast_classes` (`toast`,
+  `content`, `title`, `message`, `dismiss`), `toast_type_classes` (per flash type, `default`) and
+  `toast_flash_slots` (false: the `flash_<type>` slots stay on inline flashes only), and the blocks
+  `toast_attributes`, `toast_text` and `toast_dismiss_attributes`. Defaults render as before. See
+  [USAGE](USAGE.md#toasts-in-a-host).
 
 ## [2.8.0] - 2026-10-23
 

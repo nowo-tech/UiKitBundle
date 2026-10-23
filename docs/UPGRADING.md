@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.9.0](#to-290)
 - [To 2.8.0](#to-280)
 - [To 2.7.0](#to-270)
 - [To 2.6.1](#to-261)
@@ -71,6 +72,11 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.9.0
+
+No change needed. A host copy of `_toasts.html.twig` can become a template that extends the kit one (USAGE, *Toasts in
+a host*).
 
 ## To 2.8.0
 
