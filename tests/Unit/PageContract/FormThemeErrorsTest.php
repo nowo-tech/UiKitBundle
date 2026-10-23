@@ -48,6 +48,30 @@ final class FormThemeErrorsTest extends TestCase
         }
     }
 
+    public function testRowAndLabelSlotsAndErrorsAfterWidget(): void
+    {
+        $form = PageContractTwig::forms()->createNamedBuilder('item', FormType::class)
+            ->add('name', TextType::class, ['required' => false, 'help' => 'Short'])
+            ->add('agree', \Symfony\Component\Form\Extension\Core\Type\CheckboxType::class, ['required' => false, 'help' => 'Read it'])
+            ->add('dup', TextType::class, ['required' => false, 'row_attr' => ['class' => 'extra field']])
+            ->getForm();
+        $form->get('name')->addError(new FormError('Bad name'));
+        $form->get('agree')->addError(new FormError('Tick it'));
+        $template = ['t' => "{% form_theme form '".self::THEME."' %}{{ form_row(form.name) }}{{ form_row(form.agree) }}{{ form_row(form.dup) }}"];
+
+        // Defaults: Symfony's row markup and order (label, errors, widget, help); check rows keep help, errors.
+        $html = PageContractTwig::create($template, [], 'none')->render('t', ['form' => $form->createView()]);
+        self::assertMatchesRegularExpression('#<div><label for="item_name">Name</label><ul[^>]*><li id="item_name_error1">Bad name</li></ul><input type="text"[^>]*aria-describedby="item_name_help[^>]*/><div id="item_name_help" class="help-text">Short</div></div>#', $html);
+        self::assertMatchesRegularExpression('#<div class="nowo-ui-form-row nowo-ui-form-row--check">.*</label><div id="item_agree_help"[^>]*>Read it</div><ul[^>]*><li id="item_agree_error1">Tick it</li></ul></div>#s', $html);
+
+        // Host slots + theme.form_errors_after_widget: row / label classes, errors right after the widget.
+        $html = PageContractTwig::create($template, ['classes' => ['form_row' => 'field', 'form_label' => 'field__label'], 'form_errors_after_widget' => true], 'none')->render('t', ['form' => $form->createView()]);
+        self::assertMatchesRegularExpression('#<div class="field"><label class="field__label" for="item_name">Name</label><input type="text"[^>]*/><ul[^>]*><li id="item_name_error1">Bad name</li></ul><div id="item_name_help"#', $html);
+        self::assertMatchesRegularExpression('#<div class="nowo-ui-form-row nowo-ui-form-row--check field">.*</label><ul[^>]*><li id="item_agree_error1">Tick it</li></ul><div id="item_agree_help"#s', $html);
+        // A class the row already has is not added twice.
+        self::assertStringContainsString('<div class="extra field"><label class="field__label" for="item_dup">', $html);
+    }
+
     public function testPasswordToggleBridge(): void
     {
         $toggle = new class extends AbstractType {

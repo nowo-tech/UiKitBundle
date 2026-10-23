@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.10.0] - 2026-10-23](#2100---2026-10-23)
 - [[2.9.0] - 2026-10-23](#290---2026-10-23)
 - [[2.8.0] - 2026-10-23](#280---2026-10-23)
 - [[2.7.0] - 2026-10-23](#270---2026-10-23)
@@ -61,6 +62,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [2.10.0] - 2026-10-23
+
+### Added
+
+- **Form rows and labels from the theme** (re-audit OVR-06 from Symfony Beacon): the UiKit form theme
+  (`form/nowo_ui_layout.html.twig`) gives rows the `form_row` slot classes (also on checkbox rows; a class already in
+  `row_attr` is not repeated) and labels the `form_label` slot (both empty by default), and the new
+  `theme.form_errors_after_widget` option prints a field's errors after its widget (before the help on checkbox rows)
+  instead of Symfony's order. Only `form_row_render` is themed, so Symfony's `aria-describedby` / `aria-invalid` stay.
+  An app can style its AuthKit pages (whose default form theme is this one) without a form theme of its own. See
+  [PAGE_CONTRACT](PAGE_CONTRACT.md) (*Form theme*) and [THEME_SLOTS](THEME_SLOTS.md).
 
 ## [2.9.0] - 2026-10-23
 

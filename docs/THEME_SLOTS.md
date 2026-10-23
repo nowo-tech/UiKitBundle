@@ -152,6 +152,8 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `input_invalid` | `nowo-ui-input--invalid` | `is-invalid` | `is-invalid` | — | — |
 | `form_error` | `nowo-ui-form-error` | `invalid-feedback d-block` | `invalid-feedback d-block` | `text-sm mt-1` | — |
 | `form_errors` | `nowo-ui-form-errors` | — | — | — | — |
+| `form_row` | `` | — | — | — | — |
+| `form_label` | `` | — | — | — | — |
 | `input_wide` | `nowo-ui-input nowo-ui-input--wide` | `form-control` | `form-control` | `block w-full max-w-xl border px-3 py-1.5 text-sm` | — |
 | `input_full` | `nowo-ui-input nowo-ui-input--full` | `form-control` | `form-control` | `block w-full border px-3 py-1.5 text-sm` | — |
 | `pagination` | `nowo-ui-pagination` | `d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3` | `d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3` | `flex flex-wrap items-center justify-between gap-2 mt-3` | — |

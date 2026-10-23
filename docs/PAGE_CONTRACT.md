@@ -548,6 +548,21 @@ widgets, textareas and selects get the `input` / `input_full` slots; checkboxes 
 `<label class="nowo-ui-check">` (slots `check` / `check_input`), label after the box, help text muted. Use it on
 css_framework none / custom / tailwind (`FormPage(formThemes: ['@NowoUiKit/form/nowo_ui_layout.html.twig'])`);
 Bootstrap hosts keep `bootstrap_5_layout`, FormKit hosts point their profile here or keep theirs.
+2.10: rows and labels take the `form_row` / `form_label` slots (empty by default; a class the row already has in
+`row_attr` is not repeated), and `theme.form_errors_after_widget: true` prints a field's errors under its control
+(before the help on checkbox rows) — so an app styles every kit form (AuthKit pages included) from its theme, without a
+form theme of its own:
+
+```yaml
+nowo_ui_kit:
+    theme:
+        form_errors_after_widget: true
+        classes:
+            form_row: 'form-field'
+            form_label: 'form-label'
+            form_error: 'form-errors'
+            check: 'checkbox-label'
+```
 
 **Flashes.** Pass `flash_messages` to the `flashes` partial to override `app.flashes`; the 2.0 `flashes` input is
 ignored inside page scaffolds, so a page variable named `flashes` no longer stops the layout from consuming the

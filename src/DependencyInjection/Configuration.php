@@ -447,6 +447,10 @@ final class Configuration implements ConfigurationInterface
             ->booleanNode('popover_menus')
                 ->defaultFalse()
                 ->info('2.4: menu / kebab / row-action menus render their panel as a native [popover] (browser top layer: never clipped by table scrollers or cards; nowo-ui-popover.js places it). The partial option `popover` wins.')
+            ->end()
+            ->booleanNode('form_errors_after_widget')
+                ->defaultFalse()
+                ->info('2.10: the UiKit form theme (form/nowo_ui_layout.html.twig) prints a field\'s errors after its widget (and before the help), instead of Symfony\'s order (label, errors, widget, help).')
             ->end();
         $bundles = $children
             ->arrayNode('bundles')

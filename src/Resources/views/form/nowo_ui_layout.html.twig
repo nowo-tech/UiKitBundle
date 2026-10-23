@@ -10,8 +10,40 @@
   its messages render in the `form_error` slot (Bootstrap `invalid-feedback d-block`; root errors: a plain list, the
   auth scaffold wraps it in the `form_errors` slot). PasswordToggle bridge: the <input> of `toggle_password_widget`
   (nowo-tech/password-toggle-bundle) gets the `input` slot when this theme is in the form's theme chain.
+  2.10: rows take the `form_row` slot classes and labels the `form_label` slot (both empty by default);
+  theme.form_errors_after_widget prints a field's errors after its widget (and, on a checkbox row, before the help).
 #}
 {% use 'form_div_layout.html.twig' %}
+
+{#- 2.10: form_row (Symfony) builds the widget's aria attributes; only the markup is themed here. -#}
+{%- block form_row_render -%}
+    {%- set _row_attr = row_attr -%}
+    {#- the `form_row` slot classes, skipping one the row already has (a bundle may pass the same in row_attr) -#}
+    {%- set _classes = (_row_attr.class|default(''))|split(' ')|filter(c => c != '') -%}
+    {%- for _c in nowo_ui_class('form_row')|split(' ')|filter(c => c != '') -%}
+        {%- if _c not in _classes -%}{%- set _classes = _classes|merge([_c]) -%}{%- endif -%}
+    {%- endfor -%}
+    {%- if _classes is not empty -%}{%- set _row_attr = _row_attr|merge({class: _classes|join(' ')}) -%}{%- endif -%}
+    <div{% with {attr: _row_attr} %}{{ block('attributes') }}{% endwith %}>
+        {{- form_label(form) -}}
+        {%- if nowo_ui_theme is defined and nowo_ui_theme and nowo_ui_theme.formErrorsAfterWidget -%}
+            {{- form_widget(form, widget_attr) -}}
+            {{- form_errors(form) -}}
+        {%- else -%}
+            {{- form_errors(form) -}}
+            {{- form_widget(form, widget_attr) -}}
+        {%- endif -%}
+        {{- form_help(form) -}}
+    </div>
+{%- endblock form_row_render -%}
+
+{%- block form_label -%}
+    {%- set _label_class = nowo_ui_class('form_label') -%}
+    {%- if _label_class and label is not same as(false) -%}
+        {%- set label_attr = label_attr|merge({class: (label_attr.class|default('') ~ ' ' ~ _label_class)|trim}) -%}
+    {%- endif -%}
+    {{- parent() -}}
+{%- endblock form_label -%}
 
 {%- block form_widget_simple -%}
     {%- if type is not defined or type not in ['hidden', 'checkbox', 'radio', 'range', 'color', 'file'] -%}
@@ -75,13 +107,25 @@
     {%- if help is not empty -%}
         {%- set widget_attr = {attr: {'aria-describedby': id ~ '_help'}} -%}
     {%- endif -%}
-    <div{% with {attr: row_attr|merge({class: (row_attr.class|default('') ~ ' nowo-ui-form-row nowo-ui-form-row--check')|trim})} %}{{ block('attributes') }}{% endwith %}>
+    {%- set _row_attr = row_attr|merge({class: (row_attr.class|default('') ~ ' nowo-ui-form-row nowo-ui-form-row--check')|trim}) -%}
+    {#- the `form_row` slot classes, skipping one the row already has (a bundle may pass the same in row_attr) -#}
+    {%- set _classes = (_row_attr.class|default(''))|split(' ')|filter(c => c != '') -%}
+    {%- for _c in nowo_ui_class('form_row')|split(' ')|filter(c => c != '') -%}
+        {%- if _c not in _classes -%}{%- set _classes = _classes|merge([_c]) -%}{%- endif -%}
+    {%- endfor -%}
+    {%- if _classes is not empty -%}{%- set _row_attr = _row_attr|merge({class: _classes|join(' ')}) -%}{%- endif -%}
+    <div{% with {attr: _row_attr} %}{{ block('attributes') }}{% endwith %}>
         <label class="{{ nowo_ui_class('check') }}"{{ nowo_ui_attrs('check') }}>
             {{- form_widget(form, widget_attr) -}}
             <span class="nowo-ui-check__label">{{ label is same as(false) ? '' : (label is empty ? name|humanize : (translation_domain is same as(false) ? label : label|trans(label_translation_parameters, translation_domain))) }}</span>
         </label>
-        {{- form_help(form) -}}
-        {{- form_errors(form) -}}
+        {%- if nowo_ui_theme is defined and nowo_ui_theme and nowo_ui_theme.formErrorsAfterWidget -%}
+            {{- form_errors(form) -}}
+            {{- form_help(form) -}}
+        {%- else -%}
+            {{- form_help(form) -}}
+            {{- form_errors(form) -}}
+        {%- endif -%}
     </div>
 {%- endblock checkbox_row -%}
 

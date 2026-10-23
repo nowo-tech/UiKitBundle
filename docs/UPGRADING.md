@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.10.0](#to-2100)
 - [To 2.9.0](#to-290)
 - [To 2.8.0](#to-280)
 - [To 2.7.0](#to-270)
@@ -72,6 +73,12 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.10.0
+
+No change needed: the new `form_row` / `form_label` slots are empty and `theme.form_errors_after_widget` is off. A host
+form theme that only set row / label / error classes on top of this theme can become theme configuration
+(PAGE_CONTRACT, *Form theme*).
 
 ## To 2.9.0
 

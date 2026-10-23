@@ -228,6 +228,10 @@ final class ThemeSlots
             'tailwind' => 'text-sm mt-1',
         ]],
         'form_errors' => ['nowo-ui-form-errors', []],
+        // Form rows and labels (2.10, UiKit form theme `form_row` / `checkbox_row` and `form_label`): no class of
+        // their own, so a host adds its row spacing / label style without a form theme
+        'form_row' => ['', []],
+        'form_label' => ['', []],
         'input_wide' => ['nowo-ui-input nowo-ui-input--wide', [
             'bootstrap' => 'form-control',
             'tailwind' => 'block w-full max-w-xl border px-3 py-1.5 text-sm',

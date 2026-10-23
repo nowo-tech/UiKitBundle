@@ -53,6 +53,7 @@ final readonly class Theme
      * @param array<string, array<string, mixed>>                      $pages                  page type ({@see ThemeSlots::PAGE_TYPES}) => {classes, framework_defaults, attributes}; `list` also takes `header_actions_in_filters` (bool)
      * @param bool                                                     $confirmMessageInHeader confirm dialogs / page render the message inside the header (`Confirm::$messageInHeader` wins when set)
      * @param bool                                                     $popoverMenus           2.4: menu / kebab partials render their panel as a native [popover] (top layer) by default
+     * @param bool                                                     $formErrorsAfterWidget  2.10: the UiKit form theme prints a field's errors after its widget (default: Symfony's order, before)
      */
     public function __construct(
         private string $framework = 'bootstrap5',
@@ -66,6 +67,7 @@ final readonly class Theme
         array $pages = [],
         private bool $confirmMessageInHeader = false,
         private bool $popoverMenus = false,
+        private bool $formErrorsAfterWidget = false,
     ) {
         $this->classes = $this->normalizeClasses($classes, 'classes');
         $this->pages = $this->normalizePages($pages, 'pages');
@@ -148,7 +150,7 @@ final readonly class Theme
         /** @var array<string, array<string, mixed>> $pages */
         $pages = $theme['pages'] ?? [];
 
-        return new self($framework, $classes, $attributes, $partials, $tokens, $tokensDark, $bundles, false !== ($theme['framework_defaults'] ?? true), $pages, true === ($theme['confirm_message_in_header'] ?? false), true === ($theme['popover_menus'] ?? false));
+        return new self($framework, $classes, $attributes, $partials, $tokens, $tokensDark, $bundles, false !== ($theme['framework_defaults'] ?? true), $pages, true === ($theme['confirm_message_in_header'] ?? false), true === ($theme['popover_menus'] ?? false), true === ($theme['form_errors_after_widget'] ?? false));
     }
 
     public function framework(): string
@@ -509,6 +511,15 @@ final readonly class Theme
     public function popoverMenus(): bool
     {
         return $this->popoverMenus;
+    }
+
+    /**
+     * Whether the UiKit form theme (`form/nowo_ui_layout.html.twig`) prints a field's errors right after its widget
+     * instead of between the label and the widget (`theme.form_errors_after_widget`, 2.10; default false).
+     */
+    public function formErrorsAfterWidget(): bool
+    {
+        return $this->formErrorsAfterWidget;
     }
 
     /**
