@@ -9,8 +9,8 @@
     - toolbar: HTML string (pre-rendered) OR use block via embed
     - framework
     - header (2.0 contract): View\PageHeader — title / intro (labels translated), breadcrumbs (BreadcrumbKit or
-      plain trail), actions (toolbar buttons through _action); theme slots page_header, page_title, page_intro,
-      toolbar
+      plain trail), actions (toolbar buttons through _action), back (2.7, `back_link` partial above the title);
+      theme slots page_header, page_title, page_intro, toolbar
     - bundle: per-bundle theme exceptions
     - header_actions_rendered (scaffolds): true when `toolbar` already holds the rendered header actions (the
       scaffolds pre-render them, plus FormPage secondary actions, so 1.x overrides that print `toolbar` show them);
@@ -34,6 +34,9 @@
         {#- nowo_ui_kit.breadcrumbs.enabled (2.3.1): false drops the trail from every page header. -#}
         {% if header is defined and header and ((nowo_ui_breadcrumbs ?? {}).enabled ?? true) %}
             {{ include(_t ? _t.partial('breadcrumbs', bundle) : '@NowoUiKitBundle/partials/_breadcrumbs.html.twig', {header: header, bundle: bundle, nowo_ui_page_type: _pt}, false) }}
+        {% endif %}
+        {% if header is defined and header and header.back %}
+            {{ include(_t ? _t.partial('back_link', bundle) : '@NowoUiKitBundle/partials/_back_link.html.twig', {href: header.back.href, label: header.back.label, testid: header.back.testid, bundle: bundle}, false) }}
         {% endif %}
         {# 2.3: full slot resolution (semantic + framework defaults + host classes), so Bootstrap hosts get the `h3`
            type scale instead of a full-size h1 #}

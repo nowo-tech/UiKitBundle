@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.7.0](#to-270)
 - [To 2.6.1](#to-261)
 - [To 2.6.0](#to-260)
 - [To 2.6.0](#to-260-1)
@@ -69,6 +70,13 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.7.0
+
+From **2.6.1**: `composer update nowo-tech/ui-kit-bundle`. Optional: replace a host "back" partial with
+`PageHeader(..., back: new BackLink($href, $label))` or `{{ include(nowo_ui_partial('back_link'), {href: …, label: …}) }}`;
+put the host's classes in `nowo_ui_kit.theme.classes.back_link`. Overrides of `partials/_page_header.html.twig` that
+should show the control render `header.back` through the `back_link` partial.
 
 ## To 2.6.1
 

@@ -9,6 +9,7 @@ namespace Nowo\UiKitBundle\View;
  * optional area navigation ({@see AreaNav}, rendered under the title through the `tabs` partial).
  * `breadcrumbsMode` (2.2): `auto` (default: BreadcrumbKit's trail when installed and not empty, else
  * {@see self::$breadcrumbs}), `kit` (BreadcrumbKit only) or `own` (always {@see self::$breadcrumbs}).
+ * `back` (2.7): a {@see BackLink} rendered above the title through the `back_link` partial.
  */
 final readonly class PageHeader
 {
@@ -25,6 +26,7 @@ final readonly class PageHeader
      * @param iterable<Crumb>  $breadcrumbs
      * @param string|null      $breadcrumbCollection BreadcrumbKit collection code (overrides the config default)
      * @param AreaNav|null     $tabs                 area navigation (tab bar between the sections of the area)
+     * @param BackLink|null    $back                 "back" control above the title (2.7)
      */
     public function __construct(
         public Label|string $title,
@@ -34,6 +36,7 @@ final readonly class PageHeader
         public ?string $breadcrumbCollection = null,
         public ?AreaNav $tabs = null,
         public string $breadcrumbsMode = 'auto',
+        public ?BackLink $back = null,
     ) {
         if (!\in_array($breadcrumbsMode, self::BREADCRUMBS_MODES, true)) {
             throw new \InvalidArgumentException(\sprintf('Invalid PageHeader breadcrumbsMode "%s" (%s).', $breadcrumbsMode, implode('|', self::BREADCRUMBS_MODES)));
@@ -52,7 +55,7 @@ final readonly class PageHeader
      */
     public function withActions(iterable $actions): self
     {
-        return new self($this->title, $this->intro, $actions, $this->breadcrumbs, $this->breadcrumbCollection, $this->tabs, $this->breadcrumbsMode);
+        return new self($this->title, $this->intro, $actions, $this->breadcrumbs, $this->breadcrumbCollection, $this->tabs, $this->breadcrumbsMode, $this->back);
     }
 
     /**
@@ -62,6 +65,6 @@ final readonly class PageHeader
      */
     public function withTabs(?AreaNav $tabs): self
     {
-        return new self($this->title, $this->intro, $this->actions, $this->breadcrumbs, $this->breadcrumbCollection, $tabs, $this->breadcrumbsMode);
+        return new self($this->title, $this->intro, $this->actions, $this->breadcrumbs, $this->breadcrumbCollection, $tabs, $this->breadcrumbsMode, $this->back);
     }
 }

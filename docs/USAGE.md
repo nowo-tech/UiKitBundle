@@ -15,6 +15,7 @@
   - [Foldable filter card](#foldable-filter-card)
   - [Card corner tab](#card-corner-tab)
   - [Disclosure chevron](#disclosure-chevron)
+  - [Back link](#back-link)
   - [Page-edge tab and route links](#page-edge-tab-and-route-links)
   - [Thin scrollbars](#thin-scrollbars)
   - [Morphicons (animated icons)](#morphicons-animated-icons)
@@ -570,6 +571,14 @@ from the toggle's `aria-expanded` or the `<details open>` around its `<summary>`
     …
 </details>
 ```
+
+### Back link
+
+A "Back to <list or parent>" control above the page title: `new PageHeader('Project', back: new BackLink(path('app_projects'),
+new Label('project.back')))`, or `{{ include(nowo_ui_partial('back_link'), {href: path('app_projects'), label:
+'project.back'|trans, testid: 'project-back'}) }}` on pages without a `PageHeader`. The icon defaults to `prev` (any name
+of the configured icon set, e.g. `tabler:arrow-left` with `ux_icon`); classes come from the theme slot `back_link`.
+Form footers keep "Cancel" for abandoning a form.
 
 ### Page-edge tab and route links
 

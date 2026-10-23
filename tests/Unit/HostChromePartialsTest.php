@@ -201,6 +201,20 @@ final class HostChromePartialsTest extends TestCase
         self::assertSame('<a class="nowo-ui-corner-tab nowo-ui-corner-tab--under x" href="/help" aria-label="Help" title="Help"><span class="visually-hidden">Help</span></a>', $link);
     }
 
+    public function testBackLink(): void
+    {
+        $link = $this->render("{% include '@NowoUiKitBundle/partials/_back_link.html.twig' with {href: '/projects', label: 'Back to projects', testid: 'back'} only %}");
+        self::assertSame(
+            '<a href="/projects" class="nowo-ui-back-link" data-testid="back">'."\n".'    <span class="nowo-ui-back-link__icon" aria-hidden="true"><i class="bi bi-chevron-left" aria-hidden="true"></i></span>'."\n".'    <span>Back to projects</span>'."\n".'</a>',
+            $link,
+        );
+
+        $custom = $this->render("{% include '@NowoUiKitBundle/partials/_back_link.html.twig' with {href: '/x', label: label, icon: 'close', class: 'mine'} only %}", ['label' => new \Nowo\UiKitBundle\View\Label('back.key')]);
+        self::assertStringContainsString('<a href="/x" class="nowo-ui-back-link mine">', $custom);
+        self::assertStringContainsString('bi-x-lg', $custom);
+        self::assertStringContainsString('<span>back.key</span>', $custom);
+    }
+
     public function testEdgeTab(): void
     {
         $tab = $this->render("{% include '@NowoUiKitBundle/partials/_edge_tab.html.twig' with {href: 'https://docs/x.md'} only %}");

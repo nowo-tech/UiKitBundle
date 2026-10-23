@@ -1,0 +1,17 @@
+{#
+  "Back" control (2.7): a compact link with the `prev` icon, the first element of a page header, directly above the
+  title. Text rule: "Back to <list or parent>". Form footers keep "Cancel" for abandoning a form.
+  Rendered by the page header for View\PageHeader::back; hosts include it directly too:
+      {{ include(nowo_ui_partial('back_link'), {href: path('app_projects'), label: 'Back to projects'|trans}) }}
+
+  Required: href, label (translated string or View\Label).
+  Optional: icon (default `prev`; any name of the configured icon set, e.g. `tabler:arrow-left` with ux_icon), class,
+  testid, bundle (per-bundle theme exceptions). Theme slot `back_link`.
+#}
+{% set _t = nowo_ui_theme|default(null) %}
+{% set _label = label.key is defined ? label.key|trans(label.params, label.domain) : label %}
+{% set _class = (_t ? _t.classFor('back_link', bundle|default(null)) : 'nowo-ui-back-link') ~ (class|default('') ? ' ' ~ class : '') %}
+<a href="{{ href }}" class="{{ _class }}"{% if testid|default('') %} data-testid="{{ testid }}"{% endif %}>
+    <span class="nowo-ui-back-link__icon" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: icon|default('prev'), label: _label}, false)|trim|raw }}</span>
+    <span>{{ _label }}</span>
+</a>

@@ -11,6 +11,7 @@ use Nowo\UiKitBundle\Twig\AreaNavExtension;
 use Nowo\UiKitBundle\View\Action;
 use Nowo\UiKitBundle\View\AreaNav;
 use Nowo\UiKitBundle\View\AreaNavItem;
+use Nowo\UiKitBundle\View\BackLink;
 use Nowo\UiKitBundle\View\Label;
 use Nowo\UiKitBundle\View\PageHeader;
 use Nowo\UiKitBundle\View\ShowPage;
@@ -40,6 +41,19 @@ final class AreaNavTest extends TestCase
         self::assertStringContainsString('data-x="1"', $html);
         // the area nav sits after the toolbar, inside the header root
         self::assertLessThan(strpos($html, 'nowo-ui-page-header__nav'), strpos($html, 'nowo-ui-action--create'));
+    }
+
+    public function testPageHeaderRendersTheBackLinkAboveTheTitleAndKeepsItOnCopies(): void
+    {
+        $twig = PageContractTwig::create([], ['classes' => ['back_link' => 'app-back']]);
+        $header = new PageHeader('Project', null, [Action::create('/new')], back: new BackLink('/projects', 'Back to projects', 'project-back'));
+
+        $html = $twig->render('@NowoUiKit/page/show.html.twig', ['page' => new ShowPage($header, [])]);
+
+        self::assertMatchesRegularExpression('#<a href="/projects" class="nowo-ui-back-link [^"]*app-back" data-testid="project-back">#', $html);
+        self::assertLessThan(strpos($html, '<h1'), strpos($html, 'nowo-ui-back-link'));
+        self::assertSame($header->back, $header->withActions([])->back);
+        self::assertSame($header->back, $header->withTabs(null)->back);
     }
 
     public function testDefaultAriaLabelLabelObjectsAndPartialOverride(): void

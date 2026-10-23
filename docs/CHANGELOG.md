@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.7.0] - 2026-10-23](#270---2026-10-23)
 - [[2.6.1] - 2026-10-21](#261---2026-10-21)
 - [[2.6.0] - 2026-10-21](#260---2026-10-21)
 - [[2.5.3] - 2026-10-20](#253---2026-10-20)
@@ -58,6 +59,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [2.7.0] - 2026-10-23
+
+"Back to …" control for page headers. See [UPGRADING](UPGRADING.md#to-270).
+
+### Added
+
+- `View\BackLink` and `PageHeader::$back` (last constructor argument, kept by `withActions()` / `withTabs()`): a compact
+  "Back to …" link with the `prev` icon above the title.
+- Theme partial `back_link` (`partials/_back_link.html.twig`: `href`, `label`, `icon`, `class`, `testid`) for pages that
+  do not build a `PageHeader`, and theme slot `back_link` (`.nowo-ui-back-link`, framework defaults for Bootstrap,
+  Tailwind and Foundation).
 
 ## [2.6.1] - 2026-10-21
 

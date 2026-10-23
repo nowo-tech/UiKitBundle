@@ -94,6 +94,12 @@ final class ThemeSlots
             'bootstrap' => 'btn-sm',
             'foundation' => 'tiny',
         ]],
+        // "Back to …" control above a page title (2.7, View\BackLink / partials/_back_link.html.twig)
+        'back_link' => ['nowo-ui-back-link', [
+            'bootstrap' => 'btn btn-link btn-sm px-0 text-decoration-none',
+            'tailwind' => 'inline-flex items-center gap-1 text-sm font-medium',
+            'foundation' => 'button clear tiny',
+        ]],
         // Icon-only toolbar button modifier (Action::display = icon; label visually hidden + aria-label)
         'btn_icon' => ['nowo-ui-btn--icon', []],
         // Tables / lists
@@ -531,6 +537,7 @@ final class ThemeSlots
         'app_shell_burger' => '@NowoUiKitBundle/shell/_burger.html.twig',
         'app_shell_close' => '@NowoUiKitBundle/shell/_close.html.twig',
         'app_shell_open' => '@NowoUiKitBundle/shell/_open.html.twig',
+        'back_link' => '@NowoUiKitBundle/partials/_back_link.html.twig',
         'breadcrumbs' => '@NowoUiKitBundle/partials/_breadcrumbs.html.twig',
         'burger' => '@NowoUiKitBundle/partials/_burger.html.twig',
         'card' => '@NowoUiKitBundle/partials/_card.html.twig',
