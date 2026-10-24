@@ -76,6 +76,8 @@
 
 ## Unreleased
 
+No change needed. New optional `placement` (`end` / `start`) on the `dialog` partial for side panels; existing dialogs stay centred. Hosts that restyle `.nowo-ui-dialog` with fixed widths should check the new `.nowo-ui-dialog--end` / `--start` rules.
+
 ## To 2.11.0
 
 If you set `--nowo-ui-control-height` (it fed the filter rows), buttons and inputs now take that minimum height too;

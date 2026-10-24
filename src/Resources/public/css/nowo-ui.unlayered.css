@@ -1501,6 +1501,76 @@ a.nowo-ui-pagination__link:hover {
   width: min(64rem, calc(100vw - 2rem));
 }
 
+/* Side panel (dialog placement end / start, 2.12): full height, stuck to that edge, slides in; the size sets the width */
+.nowo-ui-dialog--end,
+.nowo-ui-dialog--start {
+  width: min(32rem, 100vw);
+  height: 100dvh;
+  max-width: 100vw;
+  max-height: 100dvh;
+  margin: 0;
+  border-radius: 0;
+  border-block: 0;
+  transition: transform 0.2s ease, overlay 0.2s allow-discrete, display 0.2s allow-discrete;
+}
+
+.nowo-ui-dialog--end {
+  margin-inline-start: auto;
+  border-inline-end: 0;
+  transform: translateX(100%);
+}
+
+.nowo-ui-dialog--start {
+  margin-inline-end: auto;
+  border-inline-start: 0;
+  transform: translateX(-100%);
+}
+
+.nowo-ui-dialog--end[open],
+.nowo-ui-dialog--start[open] {
+  display: flex;
+  flex-direction: column;
+  transform: none;
+}
+
+@starting-style {
+  .nowo-ui-dialog--end[open] {
+    transform: translateX(100%);
+  }
+
+  .nowo-ui-dialog--start[open] {
+    transform: translateX(-100%);
+  }
+}
+
+.nowo-ui-dialog--end.nowo-ui-dialog--sm,
+.nowo-ui-dialog--start.nowo-ui-dialog--sm {
+  width: min(22rem, 100vw);
+}
+
+.nowo-ui-dialog--end.nowo-ui-dialog--lg,
+.nowo-ui-dialog--start.nowo-ui-dialog--lg {
+  width: min(48rem, 100vw);
+}
+
+.nowo-ui-dialog--end.nowo-ui-dialog--xl,
+.nowo-ui-dialog--start.nowo-ui-dialog--xl {
+  width: min(64rem, 100vw);
+}
+
+.nowo-ui-dialog--end > .nowo-ui-dialog__body,
+.nowo-ui-dialog--start > .nowo-ui-dialog__body {
+  flex: 1;
+  overflow: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nowo-ui-dialog--end,
+  .nowo-ui-dialog--start {
+    transition: none;
+  }
+}
+
 .nowo-ui-dialog__header {
   display: flex;
   align-items: flex-start;

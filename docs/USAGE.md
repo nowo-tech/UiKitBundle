@@ -78,7 +78,7 @@ Twig globals (from config):
 | `partials/_open_modal_on_load.html.twig` | CSP-safe JSON island that opens a modal on load (`?new=1` deep link). See [Open a modal on load](#open-a-modal-on-load-deep-link) |
 | `partials/_card.html.twig` | Card / panel (header/body/footer) |
 | `partials/_modal_shell.html.twig` | Modal shell (Bootstrap-JS structure, kept for BC) |
-| `partials/_dialog.html.twig` | Generic native `<dialog>` (2.1, framework-free; `data-nowo-ui-dialog-open="<id>"`, `js/nowo-ui-dialog.js`) — preferred in page-contract bundles |
+| `partials/_dialog.html.twig` | Generic native `<dialog>` (2.1, framework-free; `data-nowo-ui-dialog-open="<id>"`, `js/nowo-ui-dialog.js`) — preferred in page-contract bundles. `placement: 'end'` / `'start'` (2.12) turns it into a full-height **side panel** sliding in from that edge; with `data-nowo-ui-dialog-src="<url>"` on the opener it loads the panel content on demand (help, manuals, customizers) while the opener's `href` stays the no-JS fallback |
 | `partials/_confirm.html.twig` | Confirm `<dialog>` (host owns POST+CSRF) |
 | `partials/_page_loader.html.twig` | Page loader: veil (`visual: spinner\|orb`) or minimal indicator (`bar`, `bar_loop`, `bar_spinner`, `corner_spinner`, `dots`, `glow`, `corner_mark`). See [Page loader and page transitions](#page-loader-and-page-transitions) |
 | `partials/_page_transition.html.twig` | Cross-document page transitions (View Transitions, `<head>`, no JS) |

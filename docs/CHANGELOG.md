@@ -65,6 +65,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Dialog `placement: 'end' | 'start'` (`partials/_dialog.html.twig`): a full-height side panel stuck to that edge that slides in (`@starting-style`, none with `prefers-reduced-motion`); `size` sets its width (sm 22 rem, md 32 rem, lg 48 rem, xl 64 rem, capped at the viewport) and the body scrolls. Combined with the opener's `data-nowo-ui-dialog-src` it is the side-panel pattern for help, manuals and customizers. Unknown placements keep the centred dialog. See [UPGRADING](UPGRADING.md#unreleased).
+
 ## [2.11.0] - 2026-10-24
 
 ### Added

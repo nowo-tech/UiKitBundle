@@ -63,6 +63,20 @@ final class DialogPartialTest extends TestCase
         self::assertStringNotContainsString('backdrop-close', $html);
     }
 
+    public function testSidePanelPlacement(): void
+    {
+        $render = static fn (array $context): string => PageContractTwig::create()->render('@NowoUiKitBundle/partials/_dialog.html.twig', ['id' => 'p', 'title' => 'T'] + $context);
+
+        self::assertStringContainsString('<dialog id="p" class="nowo-ui-dialog nowo-ui-dialog--end" data-nowo-ui-dialog', $render(['placement' => 'end']));
+        self::assertStringContainsString('<dialog id="p" class="nowo-ui-dialog nowo-ui-dialog--lg nowo-ui-dialog--start" data-nowo-ui-dialog', $render(['placement' => 'start', 'size' => 'lg']));
+        self::assertStringContainsString('<dialog id="p" class="nowo-ui-dialog" data-nowo-ui-dialog', $render(['placement' => 'bottom']), 'unknown placement: centred');
+
+        $css = (string) file_get_contents(\dirname(__DIR__, 3).'/src/Resources/public/css/nowo-ui.unlayered.css');
+        foreach (['.nowo-ui-dialog--end', '.nowo-ui-dialog--start', '@starting-style', 'prefers-reduced-motion'] as $needle) {
+            self::assertStringContainsString($needle, $css, $needle);
+        }
+    }
+
     public function testUnknownSizeFallsBackToMediumAndBodyBlockCanBeEmbedded(): void
     {
         $twig = PageContractTwig::create(['t' => "{% embed '@NowoUiKitBundle/partials/_dialog.html.twig' with {id: 'd3', title: 'T', size: 'huge', close_label: 'Dismiss'} %}{% block nowo_ui_dialog_body %}<form method=\"dialog\"><button>Done</button></form>{% endblock %}{% endembed %}"]);

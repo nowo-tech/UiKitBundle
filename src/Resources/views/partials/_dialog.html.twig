@@ -13,6 +13,9 @@
     - body: HTML string (raw), or override the `nowo_ui_dialog_body` block through embed
     - footer: HTML string (raw)
     - size: sm | md (default) | lg | xl → nowo-ui-dialog--<size>
+    - placement (2.12): center (default) | end | start — end / start make a full-height side panel that slides in from
+      that edge (nowo-ui-dialog--end / --start; the size sets its width); with the remote content of the script
+      (data-nowo-ui-dialog-src on the opener) it is the "side panel" pattern (help, manuals, customizers)
     - body_muted: true = muted body text (slot dialog_body_muted, nowo-ui-dialog__body--muted; no framework CSS needed)
     - dismissible: false hides the header close button (default true)
     - backdrop_close: false keeps the dialog open on a backdrop click (default true)
@@ -32,10 +35,11 @@
 {% set bundle = bundle|default(null) %}
 {% set _pt = nowo_ui_page_type|default(null) %}
 {% set _size = size|default('md') %}
+{% set _placement = placement|default('center') %}
 {% set title = title|default(null) %}
 {% set _title = title.key is defined ? title.key|trans(title.params, title.domain) : title %}
 {% set _close_label = close_label|default('action.close'|trans({}, 'NowoUiKitBundle')) %}
-<dialog id="{{ id }}" class="{{ nowo_ui_class('dialog', bundle) }}{{ _size in ['sm', 'lg', 'xl'] ? ' nowo-ui-dialog--' ~ _size }}" data-nowo-ui-dialog aria-labelledby="{{ id }}-title"
+<dialog id="{{ id }}" class="{{ nowo_ui_class('dialog', bundle) }}{{ _size in ['sm', 'lg', 'xl'] ? ' nowo-ui-dialog--' ~ _size }}{{ _placement in ['end', 'start'] ? ' nowo-ui-dialog--' ~ _placement }}" data-nowo-ui-dialog aria-labelledby="{{ id }}-title"
     {{- (backdrop_close ?? true) ? ' data-nowo-ui-dialog-backdrop-close' }}
     {{- nowo_ui_theme.renderAttributes('dialog', bundle, attr|default({}), _pt)|raw }}>
     <header class="{{ nowo_ui_class('dialog_header', bundle) }}"{{ nowo_ui_attrs('dialog_header', bundle) }}>
