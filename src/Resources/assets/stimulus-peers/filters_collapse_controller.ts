@@ -57,9 +57,9 @@ export function activeFilterCount(form: HTMLFormElement | null): number {
 }
 
 export default class FiltersCollapseController extends Controller<HTMLElement> {
-  static targets = ['toggle', 'summary'];
+  static override targets = ['toggle', 'summary'];
 
-  static values = {
+  static override values = {
     key: { type: String, default: '' },
     cookie: { type: String, default: FILTERS_COLLAPSE_COOKIE },
     cookiePath: { type: String, default: '/' },
@@ -76,7 +76,7 @@ export default class FiltersCollapseController extends Controller<HTMLElement> {
   declare readonly maxAgeValue: number;
   declare readonly messagesValue: Messages;
 
-  connect(): void {
+  override connect(): void {
     // Server-rendered state: only paint the icon (no visual change).
     syncIconState('filters-collapse', this.toggleTarget, this.isCollapsed() ? 'collapsed' : 'expanded', false);
   }

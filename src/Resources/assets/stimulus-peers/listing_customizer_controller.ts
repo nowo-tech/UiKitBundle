@@ -64,7 +64,8 @@ export function moveItem<T>(items: T[], from: number, to: number): T[] {
     return items;
   }
   const next = items.slice();
-  const [moved] = next.splice(from, 1);
+  // `from` is in range: splice removes exactly one item.
+  const [moved] = next.splice(from, 1) as [T];
   next.splice(to, 0, moved);
 
   return next;
@@ -83,9 +84,9 @@ export function toPayload(items: ListingItem[], mergeable = true): ListingPayloa
 }
 
 export default class ListingCustomizerController extends Controller<HTMLElement> {
-  static targets = ['dialog', 'toggle', 'tabButton', 'panel', 'list', 'status', 'resetButton', 'applyButton'];
+  static override targets = ['dialog', 'toggle', 'tabButton', 'panel', 'list', 'status', 'resetButton', 'applyButton'];
 
-  static values = {
+  static override values = {
     state: { type: Object, default: {} },
     cookie: { type: String, default: '' },
     cookiePath: { type: String, default: '/' },
@@ -128,7 +129,7 @@ export default class ListingCustomizerController extends Controller<HTMLElement>
   private dragging: { kind: Kind; index: number } | null = null;
   private busy = false;
 
-  connect(): void {
+  override connect(): void {
     this.working = {
       columns: (this.stateValue.columns ?? []).map((item) => ({ ...item })),
       filters: (this.stateValue.filters ?? []).map((item) => ({ ...item })),
@@ -179,7 +180,8 @@ export default class ListingCustomizerController extends Controller<HTMLElement>
     event.preventDefault();
     const tabs = this.tabButtonTargets;
     const index = tabs.indexOf(event.currentTarget as HTMLButtonElement);
-    const next = tabs[(index + ('ArrowRight' === event.key ? 1 : -1) + tabs.length) % tabs.length];
+    // The key came from one of the tab buttons, so the list is not empty.
+    const next = tabs[(index + ('ArrowRight' === event.key ? 1 : -1) + tabs.length) % tabs.length]!;
     this.activateTab(next.dataset.panel ?? 'columns', true);
   }
 
@@ -477,7 +479,7 @@ export default class ListingCustomizerController extends Controller<HTMLElement>
     (button && !button.disabled ? button : fallback)?.focus();
     this.refresh();
     this.setStatus(
-      formatMessage(this.messagesValue.moved ?? '', { label: next[to].label, position: to + 1, count: next.length }),
+      formatMessage(this.messagesValue.moved ?? '', { label: next[to]!.label, position: to + 1, count: next.length }),
       false,
     );
   }

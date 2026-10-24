@@ -30,9 +30,9 @@ export function maskSecret(value: string): string {
  * Actions: `temporary-reveal#toggle`, `#reveal`, `#hide`.
  */
 export default class extends Controller {
-  static targets = ['display', 'toggle'];
+  static override targets = ['display', 'toggle'];
 
-  static values = {
+  static override values = {
     secret: { type: String, default: '' },
     duration: { type: Number, default: 30_000 },
     showLabel: { type: String, default: 'Show' },
@@ -57,7 +57,7 @@ export default class extends Controller {
   private revealed = false;
   private cleared = false;
 
-  connect(): void {
+  override connect(): void {
     if (this.startRevealedValue) {
       this.reveal();
       return;
@@ -65,7 +65,7 @@ export default class extends Controller {
     this.applyMasked();
   }
 
-  disconnect(): void {
+  override disconnect(): void {
     this.clearTimer();
   }
 

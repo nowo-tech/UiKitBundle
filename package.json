@@ -24,7 +24,7 @@
     "build:autosubmit": "VITE_ENTRY=autosubmit vite build",
     "build:error-retry": "VITE_ENTRY=error-retry vite build",
     "watch": "VITE_ENTRY=modal vite build --watch",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.strict-host.json",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest"
@@ -34,7 +34,7 @@
     "@vitest/coverage-v8": "^4.1.11",
     "datatables.net-dt": "3.1.4",
     "datatables.net-responsive-dt": "4.1.1",
-    "driver.js": "1.8.0",
+    "driver.js": "1.10.2",
     "happy-dom": "^20.14.6",
     "lucide": "1.56.0",
     "morphicons": "2.0.0",

@@ -28,9 +28,9 @@ import {
 } from '../src/nowo-ui-release-core';
 
 export default class extends Controller {
-  static targets = ['loading', 'content', 'error', 'summary', 'detail', 'meta', 'compare', 'release'];
+  static override targets = ['loading', 'content', 'error', 'summary', 'detail', 'meta', 'compare', 'release'];
 
-  static values = {
+  static override values = {
     url: String,
     messages: Object,
   };
@@ -43,7 +43,7 @@ export default class extends Controller {
   private loaded = false;
   private inflight: Promise<void> | null = null;
 
-  connect(): void {
+  override connect(): void {
     // Start idle — only "checking" after the dialog actually opens.
     showReleaseIdle(this.parts());
   }

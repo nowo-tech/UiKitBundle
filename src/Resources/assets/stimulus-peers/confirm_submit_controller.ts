@@ -42,7 +42,7 @@ export interface ConfirmSubmitOptions {
 
 export function createConfirmSubmitController(options: ConfirmSubmitOptions = {}) {
   return class extends Controller {
-    static values = {
+    static override values = {
       message: String,
       /** When true, always prevent submit (e.g. last owner cannot be removed). */
       blocked: { type: Boolean, default: false },

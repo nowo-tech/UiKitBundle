@@ -5,14 +5,15 @@
  * "Tour this page" tab (`product-tour#start`). Steps are `{element?, popover: {title, description, side?, align?}}`;
  * a step whose `element` selector matches nothing on the page is skipped, one without `element` is centred.
  *
- * driver.js (`driver.js` ^1.3, host dependency) is imported on demand, the first time a tour starts; the host loads
- * its stylesheet (`import 'driver.js/dist/driver.css'`). Reduced motion (`prefers-reduced-motion: reduce` or
+ * driver.js (`driver.js` ^1.3, host dependency; checked against 1.8 and 1.10) is imported on demand, the first time a
+ * tour starts; the host loads its stylesheet (`import 'driver.js/dist/driver.css'`). Reduced motion (`prefers-reduced-motion: reduce` or
  * `[data-motion="reduce"]` on <html>) turns driver.js animation off. A step inside a closed <details> (a user menu)
  * opens it while highlighted; the tour closes what it opened when it ends.
  *
  * "Seen" state lives in the browser: localStorage `storageKey` (default `nowo-ui-tour-seen`) holds a JSON map
  * `{"<tour key>": <timestamp>}`. The tour starts on connect when `autoStart` is on and its key is not in the map (or
- * always with `force`); finishing or closing it writes the key. Storage errors (private mode, quota) are ignored:
+ * always with `force`); finishing or closing it writes the key — also when it is closed during driver.js's opening
+ * animation (driver.js then never calls `onDestroyed`, so the peer does not rely on it). Storage errors (private mode, quota) are ignored:
  * the tour then simply auto-starts again next time. With a `seenUrl` the peer also sends `{"key": "…"}` once (JSON,
  * `X-CSRF-TOKEN` header, `seenMethod` default POST, keepalive); a 403 refreshes the token once from `seenTokenUrl`
  * (`{"token": "…"}`) — hosts that keep the state server-side (and decide `autoStart` themselves) use it.
@@ -64,6 +65,13 @@ const ALIGNS: readonly string[] = ['start', 'center', 'end'];
 /** Loads driver.js on demand (overridable in tests / by a subclass). */
 export type DriverFactory = (config: Config) => Driver;
 
+/** One running tour: its driver, the user "close" (counts as seen) and the idempotent end. */
+type TourSession = {
+  driver: Driver;
+  close: () => void;
+  end: (seen: boolean) => void;
+};
+
 /** Keys of the seen map in `storageKey` (an empty map when storage is unavailable or holds garbage). */
 export function seenTours(storageKey: string = PRODUCT_TOUR_STORAGE_KEY): Record<string, number> {
   try {
@@ -97,9 +105,9 @@ const escapeHtml = (text: string): string =>
   text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
 export default class ProductTourController extends Controller<HTMLElement> {
-  static targets = ['tab'];
+  static override targets = ['tab'];
 
-  static values = {
+  static override values = {
     key: { type: String, default: '' },
     steps: { type: Array, default: [] },
     autoStart: { type: Boolean, default: true },
@@ -129,7 +137,7 @@ export default class ProductTourController extends Controller<HTMLElement> {
   declare readonly htmlValue: boolean;
   declare readonly popoverClassValue: string;
 
-  private active: Driver | null = null;
+  private active: TourSession | null = null;
   private starting: Promise<void> | null = null;
   private frame = 0;
   /** The server was told already (one request per page). */
@@ -139,7 +147,7 @@ export default class ProductTourController extends Controller<HTMLElement> {
   /** disconnect() tears the tour down: not a user "close", nothing is marked seen. */
   private tearingDown = false;
 
-  connect(): void {
+  override connect(): void {
     if (this.forceValue || (this.autoStartValue && !this.isSeen())) {
       this.frame = requestAnimationFrame(() => {
         void this.start();
@@ -147,12 +155,13 @@ export default class ProductTourController extends Controller<HTMLElement> {
     }
   }
 
-  disconnect(): void {
+  override disconnect(): void {
     cancelAnimationFrame(this.frame);
     const active = this.active;
     if (active) {
       this.tearingDown = true;
-      active.destroy();
+      active.driver.destroy();
+      active.end(false);
       this.tearingDown = false;
     }
     this.finish();
@@ -165,7 +174,7 @@ export default class ProductTourController extends Controller<HTMLElement> {
 
   /** Starts (or replays) the tour; no-op while it runs. Resolves once driver.js is showing the first step. */
   start(): Promise<void> {
-    if (this.active?.isActive()) {
+    if (this.active?.driver.isActive()) {
       return Promise.resolve();
     }
     this.starting ??= this.run().finally(() => {
@@ -177,7 +186,7 @@ export default class ProductTourController extends Controller<HTMLElement> {
 
   /** Closes a running tour (as the close button does: it counts as seen). */
   stop(): void {
-    this.active?.destroy();
+    this.active?.close();
   }
 
   /** The steps with an element on the page (or none: centred), normalised for driver.js. */
@@ -234,11 +243,43 @@ export default class ProductTourController extends Controller<HTMLElement> {
 
       return;
     }
-    if (!this.element.isConnected || this.active?.isActive()) {
+    if (!this.element.isConnected || this.active?.driver.isActive()) {
       return;
     }
     const labels = this.labelsValue ?? {};
     let completed = false;
+    let closing = false;
+    let ended = false;
+    // Ends the tour once, whichever comes first: our own close() or driver.js's onDestroyed. driver.js (1.8 to 1.10)
+    // skips onDestroyed when the tour is destroyed before its first highlight settled (closed during the opening
+    // animation), so a close never depends on it.
+    const end = (seen: boolean): void => {
+      if (ended) {
+        return;
+      }
+      ended = true;
+      if (this.active === session) {
+        this.active = null;
+      }
+      this.finish();
+      if (this.tearingDown || !seen) {
+        return;
+      }
+      this.markSeen();
+      this.clearForceParam();
+      this.dispatch('ended', { detail: { key: this.keyValue, completed } });
+    };
+    // A user close (button, Esc, overlay, Done, stop()): destroy without hooks (driver.destroy() never re-runs
+    // onDestroyStarted; the guard covers a driver that would), then end as seen.
+    const close = (instance: Driver): void => {
+      if (closing || ended) {
+        return;
+      }
+      closing = true;
+      completed = !instance.hasNextStep();
+      instance.destroy();
+      end(true);
+    };
     const config: Config = {
       steps,
       animate: !this.reducedMotion(),
@@ -258,24 +299,16 @@ export default class ProductTourController extends Controller<HTMLElement> {
         }
       },
       onHighlightStarted: (element) => this.reveal(element),
-      onDestroyStarted: (_element, _step, { driver }) => {
-        completed = !driver.hasNextStep();
-        driver.destroy();
-      },
-      onDestroyed: () => {
-        this.active = null;
-        this.finish();
-        if (this.tearingDown) {
-          return;
-        }
-        this.markSeen();
-        this.clearForceParam();
-        this.dispatch('ended', { detail: { key: this.keyValue, completed } });
-      },
+      onDestroyStarted: (_element, _step, { driver }) => close(driver),
+      // Reached without onDestroyStarted only when driver.js destroys the tour itself; 1.9+ does that when another
+      // driver instance starts (1.10 reason "replaced": not a user close, not seen).
+      onDestroyed: (_element, _step, options) => end('replaced' !== (options as { reason?: unknown }).reason),
     };
-    this.active = factory(config);
+    const driver = factory(config);
+    const session: TourSession = { driver, close: () => close(driver), end };
+    this.active = session;
     this.element.setAttribute('data-tour-active', '');
-    this.active.drive();
+    driver.drive();
     this.dispatch('started', { detail: { key: this.keyValue, steps } });
   }
 

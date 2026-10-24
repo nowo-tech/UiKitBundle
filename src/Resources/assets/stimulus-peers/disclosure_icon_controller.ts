@@ -18,7 +18,7 @@ export default class DisclosureIconController extends Controller<HTMLElement> {
   private details: HTMLDetailsElement | null = null;
   private readonly onToggle = (): void => this.sync(true);
 
-  connect(): void {
+  override connect(): void {
     const parent = this.element.parentElement;
     if ('SUMMARY' === this.element.tagName && parent instanceof HTMLDetailsElement) {
       this.details = parent;
@@ -30,7 +30,7 @@ export default class DisclosureIconController extends Controller<HTMLElement> {
     this.sync(false);
   }
 
-  disconnect(): void {
+  override disconnect(): void {
     this.details?.removeEventListener('toggle', this.onToggle);
     this.details = null;
     this.observer?.disconnect();

@@ -21,9 +21,9 @@ type PanelStateMap = Record<string, boolean>;
 export const COLLAPSE_PANEL_STORAGE_DEFAULT = 'nowo-ui.collapse-panels';
 
 export default class extends Controller<HTMLElement> {
-  static targets = ['body', 'button', 'icon'];
+  static override targets = ['body', 'button', 'icon'];
 
-  static values = {
+  static override values = {
     id: { type: String, default: '' },
     storageKey: { type: String, default: COLLAPSE_PANEL_STORAGE_DEFAULT },
     collapsed: { type: Boolean, default: false },
@@ -42,7 +42,7 @@ export default class extends Controller<HTMLElement> {
   declare readonly openIconValue: string;
   declare readonly closedIconValue: string;
 
-  connect(): void {
+  override connect(): void {
     this.apply(this.resolveOpen(), false);
   }
 

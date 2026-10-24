@@ -71,8 +71,8 @@ function rtl(el: Element): boolean {
 }
 
 export default class extends Controller {
-  static targets = ['trigger', 'tab', 'list'];
-  static values = { activeTab: String };
+  static override targets = ['trigger', 'tab', 'list'];
+  static override values = { activeTab: String };
 
   declare readonly triggerTargets: HTMLElement[];
   declare readonly tabTargets: HTMLElement[];
@@ -86,7 +86,7 @@ export default class extends Controller {
   private readonly onKeydown = (event: KeyboardEvent): void => this.key(event);
   private readonly onInvalid = (event: Event): void => this.invalid(event);
 
-  connect(): void {
+  override connect(): void {
     if (this.delegated()) {
       return;
     }
@@ -103,7 +103,7 @@ export default class extends Controller {
     this.render();
   }
 
-  disconnect(): void {
+  override disconnect(): void {
     this.element.removeEventListener('keydown', this.onKeydown as EventListener);
     this.element.removeEventListener('invalid', this.onInvalid, true);
     this.observer?.disconnect();
@@ -213,7 +213,7 @@ export default class extends Controller {
       return;
     }
     event.preventDefault();
-    const next = tabs[keys[event.key]];
+    const next = tabs[keys[event.key]!]!;
     this.reason = 'keyboard';
     this.activeTabValue = this.idOf(next);
     next.focus();

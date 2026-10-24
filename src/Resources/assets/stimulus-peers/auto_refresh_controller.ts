@@ -18,12 +18,12 @@ import { Controller } from '@hotwired/stimulus';
 export const AUTO_REFRESH_MIN_INTERVAL_MS = 2_000;
 
 export default class extends Controller<HTMLElement> {
-  static values = {
+  static override values = {
     interval: { type: Number, default: 10_000 },
     url: { type: String, default: '' },
   };
 
-  static targets = ['toggle', 'status'];
+  static override targets = ['toggle', 'status'];
 
   declare readonly intervalValue: number;
   declare readonly urlValue: string;
@@ -36,7 +36,7 @@ export default class extends Controller<HTMLElement> {
   private paused = false;
   private inFlight = false;
 
-  connect(): void {
+  override connect(): void {
     this.timer = setInterval(
       () => {
         void this.refresh();
@@ -46,7 +46,7 @@ export default class extends Controller<HTMLElement> {
     this.syncToggle();
   }
 
-  disconnect(): void {
+  override disconnect(): void {
     if (null !== this.timer) {
       clearInterval(this.timer);
       this.timer = null;

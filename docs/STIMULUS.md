@@ -404,8 +404,10 @@ No kit IIFE (2.13). Guided per-page tour on [driver.js](https://driverjs.com) (o
 Events: `product-tour:started` (`detail.key`, `detail.steps`), `product-tour:ended` (`detail.key`, `detail.completed`),
 `product-tour:save-failed` (`detail.key`), `product-tour:unavailable` (`detail.key`, `detail.error`). Reduced motion
 (`prefers-reduced-motion` or `[data-motion="reduce"]`) sets `animate: false`. A highlighted element inside closed
-`<details>` opens them until the tour ends. Disconnecting (Turbo navigation) tears the tour down without marking it
-seen. Peer: `product_tour_controller.ts` (exports `PRODUCT_TOUR_STORAGE_KEY`, `seenTours(storageKey?)`,
+`<details>` opens them until the tour ends. Any close (button, Esc, overlay, Done, `#stop`) marks the tour seen, also
+during driver.js's opening animation (the peer does not depend on driver.js's `onDestroyed`, which is skipped then;
+driver.js 1.8 to 1.10). Disconnecting (Turbo navigation) tears the tour down without marking it seen, as does
+another driver.js instance replacing it (1.10 reason `replaced`). Peer: `product_tour_controller.ts` (exports `PRODUCT_TOUR_STORAGE_KEY`, `seenTours(storageKey?)`,
 `markTourSeen(key, seen?, storageKey?)`; subclasses may override the protected `driverFactory()`).
 
 ## Error retry countdown (2.6)
@@ -514,7 +516,10 @@ No kit JS required (`<details>` menus).
 
 ## Stimulus peers — import examples
 
-Vendor path after Composer install (adjust for AssetMapper vs Vite):
+Vendor path after Composer install (adjust for AssetMapper vs Vite). The peers' TypeScript sources type-check
+under a strict host `tsconfig` (`strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`,
+`noImplicitOverride`, `verbatimModuleSyntax`; see `tsconfig.strict-host.json`), so a host can include them in its own
+`tsc` run.
 
 ```text
 vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/

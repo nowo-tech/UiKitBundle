@@ -53,9 +53,9 @@ type Messages = {
 };
 
 export default class ResponsiveTableController extends Controller<HTMLElement> {
-  static targets = ['scroller', 'table', 'toggle', 'dialog', 'dialogTitle', 'dialogBody'];
+  static override targets = ['scroller', 'table', 'toggle', 'dialog', 'dialogTitle', 'dialogBody'];
 
-  static values = {
+  static override values = {
     mode: { type: String, default: '' },
     url: { type: String, default: '' },
     token: { type: String, default: '' },
@@ -102,7 +102,7 @@ export default class ResponsiveTableController extends Controller<HTMLElement> {
     }
   };
 
-  connect(): void {
+  override connect(): void {
     this.apply(false);
     this.tableTarget.addEventListener('click', this.onRowClick);
     this.dialogTarget.addEventListener('close', this.onDialogClose);
@@ -120,7 +120,7 @@ export default class ResponsiveTableController extends Controller<HTMLElement> {
     }
   }
 
-  disconnect(): void {
+  override disconnect(): void {
     this.observer?.disconnect();
     this.observer = null;
     cancelAnimationFrame(this.frame);

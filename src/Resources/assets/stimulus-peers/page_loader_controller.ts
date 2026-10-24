@@ -11,9 +11,9 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-  static targets = ['overlay'];
+  static override targets = ['overlay'];
 
-  static values = {
+  static override values = {
     minVisible: { type: Number, default: 720 },
     linkDelay: { type: Number, default: 90 },
     enterMs: { type: Number, default: 700 },
@@ -33,7 +33,7 @@ export default class extends Controller {
   private showGeneration = 0;
   private navigating = false;
 
-  connect(): void {
+  override connect(): void {
     this.shownAt = performance.now();
     this.show(false);
 
@@ -47,7 +47,7 @@ export default class extends Controller {
     window.addEventListener('pageshow', this.onPageShow);
   }
 
-  disconnect(): void {
+  override disconnect(): void {
     window.removeEventListener('load', this.onLoad);
     document.removeEventListener('click', this.onClick, true);
     window.removeEventListener('pageshow', this.onPageShow);

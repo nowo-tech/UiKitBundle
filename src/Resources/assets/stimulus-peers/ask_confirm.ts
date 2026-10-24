@@ -20,12 +20,12 @@ export interface ConfirmClasses {
 }
 
 export interface ConfirmOptions {
-  confirm?: string;
-  cancel?: string;
+  confirm?: string | undefined;
+  cancel?: string | undefined;
   /** Short heading; the message then becomes the body text. */
-  title?: string;
-  danger?: boolean;
-  classes?: Partial<ConfirmClasses>;
+  title?: string | undefined;
+  danger?: boolean | undefined;
+  classes?: Partial<ConfirmClasses> | undefined;
 }
 
 export const KIT_CONFIRM_CLASSES: ConfirmClasses = {

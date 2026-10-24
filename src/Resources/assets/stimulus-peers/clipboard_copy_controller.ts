@@ -13,7 +13,7 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-  static values = {
+  static override values = {
     text: String,
     url: String,
     label: { type: String, default: 'Copy' },
@@ -137,7 +137,7 @@ export default class extends Controller {
     area.remove();
   }
 
-  disconnect(): void {
+  override disconnect(): void {
     if (this.resetTimer !== null) {
       window.clearTimeout(this.resetTimer);
       this.resetTimer = null;

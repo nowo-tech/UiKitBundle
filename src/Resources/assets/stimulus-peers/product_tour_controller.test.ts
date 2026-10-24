@@ -9,6 +9,10 @@ type FakeDriver = {
   config: Config;
   index: number;
   activeFlag: boolean;
+  /** The first highlight settled (driver.js only calls onDestroyed after that). */
+  settled: boolean;
+  /** Why the tour is being destroyed (driver.js 1.10 passes it to the hooks as `reason`). */
+  reason: string | undefined;
   drive: () => void;
   isActive: () => boolean;
   hasNextStep: () => boolean;
@@ -16,20 +20,37 @@ type FakeDriver = {
   /** What the popover's close button / Esc does: the onDestroyStarted hook decides. */
   close: () => void;
   next: () => void;
+  /** The opening animation ends (first highlight settled). */
+  settle: () => void;
+  /** driver.js 1.9+: another driver instance starts and destroys this one without onDestroyStarted. */
+  replace: () => void;
 };
+
+/**
+ * How the fake behaves, after the driver.js versions in the peer range:
+ * - `1.8`: hook options `{config, state, driver}`; `destroy()` runs no onDestroyStarted.
+ * - `1.10`: the same, plus `reason` ("close", "done", "api", "replaced"…) in the hook options.
+ * - `reentrant`: a (hypothetical) driver whose `destroy()` re-runs onDestroyStarted.
+ * `opening`: drive() leaves the first highlight animating (not settled), as with `animate: true`.
+ */
+const mode: { version: '1.8' | '1.10' | 'reentrant'; opening: boolean } = { version: '1.8', opening: false };
 
 const drivers: FakeDriver[] = [];
 
 /** driver.js hook options (`config`, `state`, `driver`, …) as the fake passes them. */
-const hookOpts = (config: Config, driver: FakeDriver): never => ({ config, state: {}, driver }) as never;
+const hookOpts = (config: Config, driver: FakeDriver): never =>
+  ({ config, state: {}, driver, ...(mode.version === '1.10' && driver.reason ? { reason: driver.reason } : {}) }) as never;
 
 function fakeDriver(config: Config): FakeDriver {
   const fake: FakeDriver = {
     config,
     index: 0,
     activeFlag: false,
+    settled: false,
+    reason: undefined,
     drive() {
       fake.activeFlag = true;
+      fake.settled = !mode.opening;
       const step = config.steps?.[0];
       const element = step?.element ? document.querySelector(step.element as string) ?? undefined : undefined;
       config.onHighlightStarted?.(element, step ?? {}, hookOpts(config, fake));
@@ -41,10 +62,20 @@ function fakeDriver(config: Config): FakeDriver {
     isActive: () => fake.activeFlag,
     hasNextStep: () => fake.index < (config.steps?.length ?? 0) - 1,
     destroy() {
+      if (!fake.activeFlag) {
+        return;
+      }
+      if (mode.version === 'reentrant' && config.onDestroyStarted) {
+        config.onDestroyStarted(undefined, {}, hookOpts(config, fake));
+      }
+      fake.reason ??= 'api';
       fake.activeFlag = false;
-      config.onDestroyed?.(undefined, {}, hookOpts(config, fake));
+      if (fake.settled) {
+        config.onDestroyed?.(undefined, {}, hookOpts(config, fake));
+      }
     },
     close() {
+      fake.reason = fake.hasNextStep() ? 'close' : 'done';
       if (config.onDestroyStarted) {
         config.onDestroyStarted(undefined, {}, hookOpts(config, fake));
       } else {
@@ -53,6 +84,13 @@ function fakeDriver(config: Config): FakeDriver {
     },
     next() {
       fake.index += 1;
+    },
+    settle() {
+      fake.settled = true;
+    },
+    replace() {
+      fake.reason = 'replaced';
+      fake.destroy();
     },
   };
   drivers.push(fake);
@@ -99,6 +137,8 @@ function controller(): ProductTourController {
 
 beforeEach(() => {
   drivers.length = 0;
+  mode.version = '1.8';
+  mode.opening = false;
   reduced = false;
   window.localStorage.clear();
   window.matchMedia = vi.fn().mockImplementation((query: string) => ({ matches: query === '(prefers-reduced-motion: reduce)' && reduced, media: query })) as unknown as typeof window.matchMedia;
@@ -267,6 +307,109 @@ describe('product-tour peer', () => {
     expect(drivers[0].isActive()).toBe(false);
     expect(ended).not.toHaveBeenCalled();
     expect(seenTours()).toEqual({});
+  });
+
+  describe.each(['1.8', '1.10'] as const)('with driver.js %s hooks', (version) => {
+    beforeEach(() => {
+      mode.version = version;
+    });
+
+    it('records a close and a finished tour as seen', async () => {
+      const root = mount();
+      const events: string[] = [];
+      root.addEventListener('product-tour:ended', (e) => events.push(`ended:${(e as CustomEvent).detail.completed}`));
+      await frame();
+      await tick();
+      drivers[0].close();
+      expect(drivers[0].isActive()).toBe(false);
+      expect(events).toEqual(['ended:false']);
+      expect(controller().isSeen()).toBe(true);
+
+      window.localStorage.clear();
+      await controller().start();
+      drivers[1].next();
+      drivers[1].next();
+      drivers[1].close();
+      expect(events).toEqual(['ended:false', 'ended:true']);
+      expect(controller().isSeen()).toBe(true);
+    });
+
+    it('records a tour closed during its opening animation as seen', async () => {
+      mode.opening = true;
+      const root = mount();
+      const events: string[] = [];
+      root.addEventListener('product-tour:ended', (e) => events.push(`ended:${(e as CustomEvent).detail.completed}`));
+      await frame();
+      await tick();
+      drivers[0].config.onHighlightStarted?.(document.querySelector('[data-tour="menu-item"]')!, {}, hookOpts(drivers[0].config, drivers[0]));
+      drivers[0].close();
+      expect(drivers[0].isActive()).toBe(false);
+      expect(events).toEqual(['ended:false']);
+      expect(controller().isSeen()).toBe(true);
+      expect(root.hasAttribute('data-tour-active')).toBe(false);
+      expect((document.getElementById('outer') as HTMLDetailsElement).open).toBe(false);
+
+      // A late onDestroyed (none in driver.js, but harmless) does not end it twice; a replay starts a new tour.
+      drivers[0].config.onDestroyed?.(undefined, {}, hookOpts(drivers[0].config, drivers[0]));
+      expect(events).toEqual(['ended:false']);
+      await controller().start();
+      expect(drivers).toHaveLength(2);
+
+      // stop() during the opening animation counts as a close too.
+      window.localStorage.clear();
+      controller().stop();
+      expect(drivers[1].isActive()).toBe(false);
+      expect(events).toEqual(['ended:false', 'ended:false']);
+      expect(controller().isSeen()).toBe(true);
+    });
+
+    it('tears a tour down during its opening animation without marking it seen', async () => {
+      mode.opening = true;
+      const root = mount();
+      const ended = vi.fn();
+      root.addEventListener('product-tour:ended', ended);
+      await frame();
+      await tick();
+      root.remove();
+      await tick();
+      expect(drivers[0].isActive()).toBe(false);
+      expect(root.hasAttribute('data-tour-active')).toBe(false);
+      expect(ended).not.toHaveBeenCalled();
+      expect(seenTours()).toEqual({});
+    });
+  });
+
+  it('ends once as seen with a driver whose destroy() re-runs onDestroyStarted', async () => {
+    mode.version = 'reentrant';
+    const root = mount();
+    const ended = vi.fn();
+    root.addEventListener('product-tour:ended', ended);
+    await frame();
+    await tick();
+    drivers[0].close();
+    expect(drivers[0].isActive()).toBe(false);
+    expect(ended).toHaveBeenCalledTimes(1);
+    expect(controller().isSeen()).toBe(true);
+  });
+
+  it('cleans up without marking seen when another driver replaces the tour (driver.js 1.10)', async () => {
+    mode.version = '1.10';
+    const root = mount();
+    const ended = vi.fn();
+    root.addEventListener('product-tour:ended', ended);
+    await frame();
+    await tick();
+    drivers[0].replace();
+    expect(root.hasAttribute('data-tour-active')).toBe(false);
+    expect(ended).not.toHaveBeenCalled();
+    expect(seenTours()).toEqual({});
+
+    // driver.js 1.8 / 1.9 give no reason: the tour destroyed itself, it counts as seen.
+    mode.version = '1.8';
+    await controller().start();
+    drivers[1].replace();
+    expect(ended).toHaveBeenCalledTimes(1);
+    expect(controller().isSeen()).toBe(true);
   });
 
   it('ignores a driver that resolves after the root left the page', async () => {

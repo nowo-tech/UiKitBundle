@@ -68,6 +68,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Stimulus peers type-check under a stricter host `tsconfig`: `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`,
+  `noImplicitOverride`, `noImplicitReturns`, `noFallthroughCasesInSwitch`, `isolatedModules` and
+  `verbatimModuleSyntax` (ES2022 target). Lifecycle methods and static `targets` / `values` carry `override`;
+  `ConfirmOptions` (`ask_confirm.ts`) accepts explicit `undefined` values; index reads in `listing_customizer_controller.ts`
+  and `tabs_controller.ts` are typed. New `tsconfig.strict-host.json`, checked by `pnpm run typecheck` (CI), keeps the
+  peers' sources on those options. Hosts no longer need to hide the peers from `tsc` behind a declaration file.
+- Product tour (`product-tour` peer): closing a tour (close button, Esc, overlay, Done, `product-tour#stop`) records it
+  as seen and dispatches `product-tour:ended` itself, instead of waiting for driver.js's `onDestroyed`. driver.js
+  (1.8 to 1.10) never calls `onDestroyed` for a tour destroyed before its first highlight settled, so a tour closed
+  during its opening animation stayed unseen (it auto-started again on every visit) and kept `data-tour-active`. The
+  end runs once whichever path comes first; a disconnect still tears down without marking seen, and a tour destroyed
+  because another driver.js instance started (driver.js 1.10 reason `replaced`) is cleaned up without being marked
+  seen. Checked against driver.js 1.8 and 1.10 hook semantics (unit tests with both, plus a browser probe of
+  1.8.0 / 1.9.0 / 1.10.2); dev dependency `driver.js` 1.10.2.
+
 ## [2.13.0] - 2026-10-24
 
 Listing customizer (cookie preferences) and guided product tour, ported from Symfony Beacon. See [UPGRADING](UPGRADING.md#to-2130).

@@ -13,9 +13,9 @@ import { Controller } from '@hotwired/stimulus';
 import { DEFAULT_SECONDS, RetryCountdown, parseSeconds } from '../src/nowo-ui-error-retry-core';
 
 export default class ErrorRetryCountdownController extends Controller<HTMLElement> {
-  static values = { url: String, seconds: { type: Number, default: DEFAULT_SECONDS } };
+  static override values = { url: String, seconds: { type: Number, default: DEFAULT_SECONDS } };
 
-  static targets = ['remaining'];
+  static override targets = ['remaining'];
 
   declare readonly urlValue: string;
 
@@ -27,7 +27,7 @@ export default class ErrorRetryCountdownController extends Controller<HTMLElemen
 
   private countdown: RetryCountdown | null = null;
 
-  connect(): void {
+  override connect(): void {
     this.countdown = new RetryCountdown({
       url: this.urlValue,
       seconds: parseSeconds(this.secondsValue),
@@ -41,7 +41,7 @@ export default class ErrorRetryCountdownController extends Controller<HTMLElemen
     this.countdown.start();
   }
 
-  disconnect(): void {
+  override disconnect(): void {
     this.countdown?.stop();
     this.countdown = null;
   }

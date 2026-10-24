@@ -12,9 +12,9 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-  static targets = ['dialog', 'confirmInput', 'submit'];
+  static override targets = ['dialog', 'confirmInput', 'submit'];
 
-  static values = {
+  static override values = {
     expected: String,
     openOnConnect: Boolean,
   };
@@ -39,14 +39,14 @@ export default class extends Controller {
   private readonly onDialogClick = (event: MouseEvent): void => this.handleDialogClick(event);
   private readonly onConfirmInput = (): void => this.syncSubmit();
 
-  connect(): void {
+  override connect(): void {
     this.cacheElements();
     if (this.openOnConnectValue) {
       this.open();
     }
   }
 
-  disconnect(): void {
+  override disconnect(): void {
     this.teardownPortaledListeners();
     const dialog = this.resolveDialog();
     if (dialog?.open) {

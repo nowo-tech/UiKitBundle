@@ -48,9 +48,9 @@ interface DataTableInstance {
 }
 
 export default class extends Controller<HTMLElement> {
-  static targets = ['table'];
+  static override targets = ['table'];
 
-  static values = {
+  static override values = {
     options: { type: Object, default: {} },
   };
 
@@ -61,14 +61,14 @@ export default class extends Controller<HTMLElement> {
   private table: DataTableInstance | null = null;
   private mountFrame: number | null = null;
 
-  connect(): void {
+  override connect(): void {
     this.mountFrame = window.requestAnimationFrame(() => {
       this.mountFrame = null;
       this.mount();
     });
   }
 
-  disconnect(): void {
+  override disconnect(): void {
     if (this.mountFrame !== null) {
       window.cancelAnimationFrame(this.mountFrame);
       this.mountFrame = null;

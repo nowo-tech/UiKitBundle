@@ -79,6 +79,15 @@
 
 ## Unreleased
 
+- **driver.js**: the `product-tour` peer works with every driver.js 1.x from the peer range `^1.3.0` (checked
+  against 1.8 and 1.10, latest 1.10.2). Hosts that pinned `driver.js` 1.8.0 because closed tours were not marked
+  seen can move to `^1.10`; a tour closed during its opening animation is now marked seen too. No markup or API
+  change; `product-tour:ended` now also fires for a tour closed during that animation.
+- **Strict host tsconfig**: the Stimulus peers now compile with `noUncheckedIndexedAccess`,
+  `exactOptionalPropertyTypes`, `noImplicitOverride` (and `verbatimModuleSyntax`, `isolatedModules`). A host that
+  pointed `tsc` at a declaration file instead of the peers' sources (a `paths` alias) can type-check them directly.
+  `ConfirmOptions` properties accept `undefined` explicitly (source-compatible).
+
 ## To 2.13.0
 
 From **2.12.1**:

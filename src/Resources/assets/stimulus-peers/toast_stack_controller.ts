@@ -12,7 +12,7 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-  static targets = ['toast'];
+  static override targets = ['toast'];
 
   declare readonly toastTargets: HTMLElement[];
 
