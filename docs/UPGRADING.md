@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.13.1](#to-2131)
 - [To 2.13.0](#to-2130)
 - [To 2.12.1](#to-2121)
 - [To 2.12.0](#to-2120)
@@ -78,6 +79,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.13.1
+
+From **2.13.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 - **driver.js**: the `product-tour` peer works with every driver.js 1.x from the peer range `^1.3.0` (checked
   against 1.8 and 1.10, latest 1.10.2). Hosts that pinned `driver.js` 1.8.0 because closed tours were not marked
