@@ -1,0 +1,40 @@
+{#
+  Listing row cells from a resolved listing layout: one <td> per column group — a stacked column renders inside the
+  cell of the previous visible column, one `[data-cell-part]` line each — then the row detail cell of the responsive
+  table (`detail`, default true: its button opens the row in a dialog when the responsive mode hides columns).
+  Include it WITH context, so the cell blocks see the row variables:
+
+      <tr>{% include nowo_ui_partial('listing_cells') with {listing_layout: listing.layout, cells_template: 'invoice/_cells.html.twig'} %}</tr>
+
+  Required:
+    - listing_layout (Listing\ListingLayout) or listing (Listing\ListingCustomizerView)
+    - cells_template: template with one `cell_<key>` block per column key, rendered in the row context
+  Optional:
+    - td_class: extra classes of every cell
+    - detail (default true), detail_icon (default `view`), detail_label: row detail cell
+      (partials/_row_detail_cell.html.twig)
+    - testids (default false): data-testid `row-detail` on the detail button
+    - bundle
+  Slot: table_cell. Cells carry data-column (lead column) and data-priority (host CSS).
+#}
+{% set _layout = listing_layout is defined ? listing_layout : listing.layout %}
+{% set _bundle = bundle|default(null) %}
+{% for group in _layout.visibleColumnGroups %}
+    {% set lead = group|first %}
+    {% if group|length == 1 %}
+        <td class="{{ nowo_ui_class('table_cell', _bundle) }}{{ td_class|default('') ? ' ' ~ td_class }}{{ lead.cellClass ? ' ' ~ lead.cellClass }}" data-column="{{ lead.key }}" data-priority="{{ lead.priority }}">
+            {{- block('cell_' ~ lead.key, cells_template) -}}
+        </td>
+    {% else %}
+        <td class="{{ nowo_ui_class('table_cell', _bundle) }}{{ td_class|default('') ? ' ' ~ td_class }}{{ lead.cellClass ? ' ' ~ lead.cellClass }} nowo-ui-listing-cell--stacked" data-column="{{ lead.key }}" data-priority="{{ lead.priority }}">
+            {%- for column in group -%}
+                <div class="nowo-ui-listing-cell__part{{ column.cellClass and not loop.first ? ' ' ~ column.cellClass }}" data-cell-part="{{ column.key }}">
+                    {{- block('cell_' ~ column.key, cells_template) -}}
+                </div>
+            {%- endfor -%}
+        </td>
+    {% endif %}
+{% endfor %}
+{% if detail ?? true %}
+    {% include '@NowoUiKitBundle/partials/_row_detail_cell.html.twig' with {td_class: td_class|default(''), icon: detail_icon|default('view'), testids: testids|default(false)}|merge(detail_label is defined ? {label: detail_label} : {}) only %}
+{% endif %}

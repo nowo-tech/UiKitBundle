@@ -3427,6 +3427,181 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
   }
 }
 
+/* --- Listing customizer (partials/_listing_customizer.html.twig, _listing_head / _listing_cells) --- */
+button.nowo-ui-edge-tab__link {
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.nowo-ui-listing-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border: var(--nowo-ui-border-width, 1px) solid var(--nowo-ui-border);
+  border-radius: var(--nowo-ui-radius);
+  background: var(--nowo-ui-surface-muted, var(--nowo-ui-surface));
+  color: var(--nowo-ui-text);
+  font-size: 0.875rem;
+}
+
+.nowo-ui-listing-customizer__tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+  border-bottom: var(--nowo-ui-border-width, 1px) solid var(--nowo-ui-border);
+}
+
+.nowo-ui-listing-customizer__tab {
+  margin-bottom: calc(-1 * var(--nowo-ui-border-width, 1px));
+  padding: 0.375rem 0.75rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--nowo-ui-muted);
+  font: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.nowo-ui-listing-customizer__tab[aria-selected='true'] {
+  border-bottom-color: var(--nowo-ui-primary);
+  color: var(--nowo-ui-text);
+  font-weight: 600;
+}
+
+.nowo-ui-listing-customizer__tab:focus-visible,
+.nowo-ui-listing-customizer__move:focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline-offset: 1px;
+}
+
+.nowo-ui-listing-customizer__panel > p {
+  margin: 0 0 0.5rem;
+  font-size: 0.8125rem;
+}
+
+.nowo-ui-listing-customizer__list {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nowo-ui-listing-customizer__item {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.375rem;
+  border: var(--nowo-ui-border-width, 1px) solid var(--nowo-ui-border);
+  border-radius: var(--nowo-ui-radius);
+  background: var(--nowo-ui-surface);
+}
+
+.nowo-ui-listing-customizer__item.is-hidden .nowo-ui-listing-customizer__label {
+  color: var(--nowo-ui-muted);
+}
+
+.nowo-ui-listing-customizer__item.is-stacked {
+  margin-left: 1.25rem;
+  border-style: dashed;
+}
+
+.nowo-ui-listing-customizer__item.is-dragging {
+  opacity: 0.5;
+}
+
+.nowo-ui-listing-customizer__item.is-drop-target {
+  border-color: var(--nowo-ui-primary);
+}
+
+.nowo-ui-listing-customizer__handle {
+  display: inline-flex;
+  color: var(--nowo-ui-muted);
+  cursor: grab;
+}
+
+.nowo-ui-listing-customizer__label {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.nowo-ui-listing-customizer__required {
+  color: var(--nowo-ui-muted);
+  font-size: 0.75rem;
+}
+
+.nowo-ui-listing-customizer__move {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: var(--nowo-ui-border-width, 1px) solid transparent;
+  border-radius: var(--nowo-ui-radius);
+  background: none;
+  color: var(--nowo-ui-text);
+  cursor: pointer;
+}
+
+.nowo-ui-listing-customizer__move:hover:not(:disabled) {
+  border-color: var(--nowo-ui-border);
+}
+
+.nowo-ui-listing-customizer__move:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.nowo-ui-listing-customizer__stack[aria-pressed='true'] {
+  border-color: var(--nowo-ui-primary);
+  color: var(--nowo-ui-primary);
+}
+
+.nowo-ui-listing-customizer__status {
+  flex: 1 1 100%;
+  min-height: 1.25rem;
+  margin: 0;
+  color: var(--nowo-ui-muted);
+  font-size: 0.8125rem;
+}
+
+.nowo-ui-listing-customizer__status.is-error {
+  color: var(--nowo-ui-danger-text, var(--nowo-ui-danger));
+}
+
+.nowo-ui-listing-customizer__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.nowo-ui-listing-cell__part + .nowo-ui-listing-cell__part {
+  margin-top: 0.25rem;
+}
+
+th > .nowo-ui-listing-cell__part {
+  display: block;
+}
+
+@media print {
+  .nowo-ui-listing-customizer {
+    display: none;
+  }
+}
+
 /* --- Back link (2.7): "Back to …" above a page title (partials/_back_link.html.twig) --- */
 .nowo-ui-back-link {
   display: inline-flex;

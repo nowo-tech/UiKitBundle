@@ -23,6 +23,8 @@
     - save_url: persistence endpoint (JSON {"mode": …}, X-CSRF-TOKEN header); empty = client-side only
     - save_token / save_token_url: CSRF token and a GET URL answering {"token": "…"} (refreshed once on 403)
     - save_method: HTTP method of the save (default PUT)
+    - save_cookie: without save_url, keep the mode in this listing cookie (`mode` member of the JSON the
+      `listing-customizer` peer writes; Listing\ListingCustomizerView::tableOptions() passes it with table_mode)
     - phone_query: media query of the default responsive mode (default `(max-width: 767px)`)
     - part_selector: stacked header parts joined in the dialog labels (default `[data-cell-part]`)
     - mode_toggle (default true): render the mode toggle
@@ -59,6 +61,7 @@
     {%- if save_token|default('') %} data-responsive-table-token-value="{{ save_token }}"{% endif %}
     {%- if save_token_url|default('') %} data-responsive-table-token-url-value="{{ save_token_url }}"{% endif %}
     {%- if save_method|default('') %} data-responsive-table-method-value="{{ save_method }}"{% endif %}
+    {%- if save_cookie|default('') %} data-responsive-table-cookie-value="{{ save_cookie }}"{% endif %}
     {%- if phone_query|default('') %} data-responsive-table-phone-query-value="{{ phone_query }}"{% endif %}
     {%- if part_selector|default('') %} data-responsive-table-part-selector-value="{{ part_selector }}"{% endif %}
     data-responsive-table-messages-value="{{ {toResponsive: _labels.to_responsive, toScroll: _labels.to_scroll, details: _labels.details, saveError: _labels.save_error}|json_encode }}"

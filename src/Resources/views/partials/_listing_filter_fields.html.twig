@@ -1,0 +1,24 @@
+{#
+  Filter rows from a resolved listing layout: the visible filters in the viewer's order; hidden ones are marked
+  rendered so `form_rest()` / a generic field loop never paints them (they are not applied either, see
+  Listing\ListingLayout::filterRequest()). Form fields the definition does not list (sort / page inputs, per-page
+  choice, buttons) are left to the caller.
+
+  Required:
+    - form: the filter FormView
+    - listing_layout (Listing\ListingLayout) or listing (Listing\ListingCustomizerView)
+  Optional:
+    - row_options: field name => form_row() options
+#}
+{% set _layout = listing_layout is defined ? listing_layout : listing.layout %}
+{% set _row_options = row_options|default({}) %}
+{% for key in _layout.visibleFilterKeys %}
+    {% if form.children[key] is defined and not form.children[key].rendered %}
+        {{ form_row(form.children[key], _row_options[key]|default({})) }}
+    {% endif %}
+{% endfor %}
+{% for key in _layout.hiddenFilterKeys %}
+    {% if form.children[key] is defined %}
+        {% do form.children[key].setRendered %}
+    {% endif %}
+{% endfor %}

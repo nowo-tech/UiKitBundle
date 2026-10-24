@@ -2,6 +2,7 @@ import { Application } from '@hotwired/stimulus';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { setIconStateHandler } from './icon_state';
+import { readListingCookie } from './listing_cookie';
 import ResponsiveTableController, { RESPONSIVE_TABLE_PHONE_QUERY } from './responsive_table_controller';
 
 const MESSAGES = { toResponsive: 'To responsive', toScroll: 'To scroll', details: 'Details', saveError: 'Not saved' };
@@ -497,5 +498,29 @@ describe('responsive-table peer', () => {
     await tick();
     await tick();
     expect(seen).toEqual(['scroll->responsive']);
+  });
+  it('keeps the mode in the listing cookie without a URL, and switches back when the cookie is full', async () => {
+    const fetchFn = vi.fn();
+    vi.stubGlobal('fetch', fetchFn);
+    document.cookie = `nowo_ui_listing_items=${encodeURIComponent('{"v":1,"columns":[]}')}; path=/`;
+    const root = mount('', '');
+    root.setAttribute('data-responsive-table-cookie-value', 'nowo_ui_listing_items');
+    await tick();
+    const toggle = root.querySelector('[data-responsive-table-target="toggle"]') as HTMLButtonElement;
+    toggle.click();
+    await tick();
+    expect(readListingCookie('nowo_ui_listing_items')).toEqual({ v: 1, columns: [], mode: 'responsive' });
+    expect(root.dataset.tableMode).toBe('responsive');
+    expect(fetchFn).not.toHaveBeenCalled();
+
+    document.cookie = `nowo_ui_listing_items=${encodeURIComponent(JSON.stringify({ x: 'y'.repeat(3990) }))}; path=/`;
+    const failed = vi.fn();
+    root.addEventListener('responsive-table:save-failed', failed);
+    toggle.click();
+    await tick();
+    await tick();
+    expect(failed).toHaveBeenCalledTimes(1);
+    expect(root.dataset.tableMode).toBe('responsive');
+    document.cookie = 'nowo_ui_listing_items=; path=/; max-age=0';
   });
 });

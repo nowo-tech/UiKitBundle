@@ -517,6 +517,17 @@ final class ThemeSlots
         'app_aside_nav' => ['nowo-ui-app-shell__aside-nav', []],
         'app_main' => ['nowo-ui-app-shell__main', []],
         'app_backdrop' => ['nowo-ui-app-shell__backdrop', []],
+        // Listing customizer (partial `listing_customizer`): Stimulus `listing-customizer` root, its opener (page-edge
+        // tab or button), the Columns / Filters tab list and tabs, the panels, the editable lists, the actions row
+        // (reset / apply); listing_notice is the "hidden filters are ignored" notice above the filters
+        'listing_customizer' => ['nowo-ui-listing-customizer', []],
+        'listing_customizer_toggle' => ['nowo-ui-listing-customizer__toggle', []],
+        'listing_customizer_tabs' => ['nowo-ui-listing-customizer__tabs', []],
+        'listing_customizer_tab' => ['nowo-ui-listing-customizer__tab', []],
+        'listing_customizer_panel' => ['nowo-ui-listing-customizer__panel', []],
+        'listing_customizer_list' => ['nowo-ui-listing-customizer__list', []],
+        'listing_customizer_actions' => ['nowo-ui-listing-customizer__actions', []],
+        'listing_notice' => ['nowo-ui-listing-notice', []],
     ];
 
     /**
@@ -558,6 +569,10 @@ final class ThemeSlots
         'filters' => '@NowoUiKitBundle/partials/_filters.html.twig',
         'flashes' => '@NowoUiKitBundle/partials/_flashes.html.twig',
         'list_filters' => '@NowoUiKitBundle/page/_list_filters.html.twig',
+        'listing_cells' => '@NowoUiKitBundle/partials/_listing_cells.html.twig',
+        'listing_customizer' => '@NowoUiKitBundle/partials/_listing_customizer.html.twig',
+        'listing_filter_fields' => '@NowoUiKitBundle/partials/_listing_filter_fields.html.twig',
+        'listing_head' => '@NowoUiKitBundle/partials/_listing_head.html.twig',
         'locale_tabs' => '@NowoUiKitBundle/partials/_locale_tabs.html.twig',
         'menu' => '@NowoUiKitBundle/partials/_menu.html.twig',
         'modal_shell' => '@NowoUiKitBundle/partials/_modal_shell.html.twig',

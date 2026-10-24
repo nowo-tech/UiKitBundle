@@ -78,6 +78,20 @@
 
 ## Unreleased
 
+No change needed. New, opt-in: the [listing customizer](USAGE.md#listing-customizer) (`Nowo\UiKitBundle\Listing\*`,
+partials `listing_customizer`, `listing_head`, `listing_cells`, `listing_filter_fields`, Stimulus peer
+`listing-customizer`). Its preferences live in a browser cookie per listing (`nowo_ui_listing_<key>`); hosts that
+keep listing preferences in a database alias `Nowo\UiKitBundle\Listing\ListingPreferenceStoreInterface` to their store
+and pass `save_url` to the partial. The bundle now autoconfigures `ListingDefinitionInterface` services (tag
+`nowo_ui_kit.listing_definition`) and registers `nowo_ui_kit.listing.*` services.
+
+Porting an app customizer (symfony-beacon spec 135 style): the definition loses `isProjectScoped()` (scopes are the
+store's business: a server store reads the project / user from the request), `ListingDefinition::TAG` becomes
+`ListingDefinitionInterface::TAG`, labels are `View\Label`s or plain strings (printed as is), `forRequest()` returns
+`['view' => …, 'filteredRequest' => …]`, and stacked header / cell parts carry `data-cell-part` (the responsive table
+default `part_selector`) instead of `.listing-cell__part`. The responsive table accepts `save_cookie` to keep its mode in
+the same cookie; hosts that pass `save_url` keep their endpoint.
+
 ## To 2.12.1
 
 From **2.12.0**:

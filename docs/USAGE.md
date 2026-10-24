@@ -19,6 +19,9 @@
   - [Page-edge tab and route links](#page-edge-tab-and-route-links)
   - [Thin scrollbars](#thin-scrollbars)
   - [Morphicons (animated icons)](#morphicons-animated-icons)
+- [Listing customizer](#listing-customizer)
+  - [Host example](#host-example)
+  - [Server-side store](#server-side-store)
 - [Kit templates (2.6)](#kit-templates-26)
   - [Error pages](#error-pages-26)
   - [Confirm dialog](#confirm-dialog-26)
@@ -499,7 +502,8 @@ Stimulus peer `responsive-table` ([STIMULUS.md](STIMULUS.md#responsive-table-sti
 </div>
 ```
 
-Options of `_responsive_table`: `table_mode`, `save_url`, `save_token`, `save_token_url`, `save_method`,
+Options of `_responsive_table`: `table_mode`, `save_url`, `save_token`, `save_token_url`, `save_method`, `save_cookie`
+(without `save_url`: keep the mode in that [listing cookie](#listing-customizer)),
 `phone_query`, `part_selector` (stacked header parts joined with " · " in the dialog labels, default
 `[data-cell-part]`), `mode_toggle` (default true), `corner` (default true: the toggle is a [corner tab](#card-corner-tab)
 of the nearest `.nowo-ui-corner-host` / `.nowo-ui-card`; false: a small bar above the table), `morph`, `icons`
@@ -643,6 +647,198 @@ animate, size)`, icon sets (`themeIcons`, `passwordIcons`, `contentWidthIcons`, 
 `[data-table-mode-morph]`, `[data-filters-collapse-morph]`, `[data-disclosure-morph]`, `[data-search-morph]`,
 `[data-support-morph]`). `morphiconsIconStateHandler` / `installMorphiconPeers()` plug it into
 `stimulus-peers/icon_state.ts`.
+
+## Listing customizer
+
+Lets the viewer choose, reorder, hide and stack the columns of a listing table and show / hide / reorder its
+filters, with a reset to the defaults. The preferences live **in the browser** (one cookie per listing, no database
+table in the host); the server reads the cookie, so the chosen columns render on first paint. A host that wants
+server-side preferences plugs its own store (see [Server-side store](#server-side-store)).
+
+Pieces:
+
+| Piece | What |
+| --- | --- |
+| `Nowo\UiKitBundle\Listing\ListingDefinitionInterface` | One service per listing: `key()`, `columns()`, `filters()` (lists of `ListingField`). Autoconfigured with the tag `nowo_ui_kit.listing_definition`. |
+| `ListingField` | `key`, `label` (`View\Label` or string), `required` (always shown), `defaultVisible`, `priority` (`data-priority`), `headClass`, `cellClass` (columns). |
+| `ListingCustomizerViewBuilder` | `forRequest(key, Request)` → `['view' => ListingCustomizerView, 'filteredRequest' => Request]`; `build(key, Request)`. |
+| `ListingCustomizerView` | `layout` (`ListingLayout`), `tableMode`, `tableOptions()`, `ignoredFilters`, `cookieName`, `dialogId()`, `clientState()`, `withLayout()`. |
+| `ListingLayout` | `visibleColumnGroups()` (stacked columns share a cell), `visibleColumnKeys()`, `visibleFilterKeys()`, `hiddenFilterKeys()`, `isColumnVisible()`, `filterRequest()`, `ignoredFilters()`, `withoutColumns()`, `stored`. |
+| `ListingLayoutMerger` | `merge()` (lenient: stored layouts survive added / removed fields), `normalize()` / `normalizeLayout()` (strict, for a host save endpoint). |
+| `ListingPreferenceStoreInterface` | Port: `load(key, Request)`, `cookieName(key)`. Default `CookieListingPreferenceStore`. |
+| `ListingRegistry`, `ListingTableMode` | Definitions by key; `scroll` / `responsive`. |
+| Partials | `listing_customizer`, `listing_head`, `listing_cells`, `listing_filter_fields` ([THEME_SLOTS](THEME_SLOTS.md#partials)). |
+| Stimulus peer | `listing-customizer` (`stimulus-peers/listing_customizer_controller.ts`), with `responsive-table` for the table mode. |
+
+**Behaviour.** The customizer is a page-edge tab (`sliders` icon) that opens a side panel (the `dialog` partial with
+`placement: 'end'`) with *Columns* and *Filters* tabs: a checkbox per field (required ones checked and disabled), a
+drag handle, up / down buttons (keyboard: Tab to a button, Enter; or Alt+ArrowUp / Alt+ArrowDown on a row — focus
+stays on the moved row and the move is announced), and on columns a *Stack under the previous column* toggle (the
+column renders inside the previous visible column's cell, one line each). *Apply* (enabled once something changed)
+writes the cookie and reloads; *Reset to default* (enabled when a layout is stored) asks first, then removes it.
+Hidden filters are not applied: `filteredRequest` drops them (and a sort on a hidden column), and the customizer shows
+a notice ("Hidden filters are not applied: …") with a shortcut to the Filters tab when the URL still carries one.
+
+**Cookie.** `nowo_ui_listing_<key>` (every character outside `[A-Za-z0-9_-]` becomes `_`), URI-encoded JSON
+`{"v":1,"columns":[{"key":"total","visible":true,"merged":true}],"filters":[{"key":"q","visible":false}],"mode":"responsive"}`,
+path `/`, SameSite=Lax, one year, `Secure` on https. The responsive table stores its mode in the same cookie
+(`save_cookie`). Writes over 4000 encoded bytes are refused (the panel shows "too large"); the server ignores values
+over 4096 bytes and anything malformed (definition defaults apply).
+
+### Host example
+
+Definition:
+
+```php
+namespace App\Invoice\Listing;
+
+use Nowo\UiKitBundle\Listing\ListingDefinitionInterface;
+use Nowo\UiKitBundle\Listing\ListingField;
+use Nowo\UiKitBundle\View\Label;
+
+final class InvoiceIndexListing implements ListingDefinitionInterface
+{
+    public const KEY = 'invoices.index';
+
+    public function key(): string
+    {
+        return self::KEY;
+    }
+
+    public function columns(): array
+    {
+        return [
+            new ListingField('number', new Label('invoice.col.number'), required: true, priority: 1),
+            new ListingField('customer', new Label('invoice.col.customer'), priority: 2),
+            new ListingField('total', new Label('invoice.col.total'), priority: 3, headClass: 'is-numeric', cellClass: 'is-numeric'),
+            new ListingField('due_at', new Label('invoice.col.due_at'), priority: 4),
+            new ListingField('notes', new Label('invoice.col.notes'), defaultVisible: false),
+        ];
+    }
+
+    public function filters(): array
+    {
+        return [
+            new ListingField('q', new Label('invoice.filter.q')),
+            new ListingField('status', new Label('invoice.filter.status')),
+            new ListingField('customer', new Label('invoice.filter.customer'), defaultVisible: false),
+        ];
+    }
+}
+```
+
+With `autoconfigure: true` nothing else is needed (the interface carries the tag). Controller:
+
+```php
+use Nowo\UiKitBundle\Listing\ListingCustomizerViewBuilder;
+
+#[Route('/invoices', name: 'invoice_index')]
+public function index(Request $request, ListingCustomizerViewBuilder $listings, InvoiceRepository $invoices): Response
+{
+    ['view' => $listing, 'filteredRequest' => $filtered] = $listings->forRequest(InvoiceIndexListing::KEY, $request);
+
+    // Filter with $filtered: hidden filters and a sort on a hidden column are gone.
+    $form = $this->createForm(InvoiceFilterType::class, null, ['method' => 'GET'])->handleRequest($filtered);
+
+    return $this->render('invoice/index.html.twig', [
+        'listing' => $listing,
+        'filters' => $form->createView(),
+        'invoices' => $invoices->search($form->getData() ?? [], $filtered->query->getString('sort'), $filtered->query->getString('dir')),
+    ]);
+}
+```
+
+Template (`invoice/index.html.twig`):
+
+```twig
+{# Edge tab + side panel (drawer); hidden-filters notice when the URL still carries one. #}
+{% include nowo_ui_partial('listing_customizer') with {listing: listing} only %}
+
+{{ form_start(filters) }}
+    {# The viewer's visible filters, in their order; hidden ones are never painted. #}
+    {% include nowo_ui_partial('listing_filter_fields') with {form: filters, listing: listing} only %}
+    <button type="submit">{{ 'action.filter'|trans({}, 'NowoUiKitBundle') }}</button>
+{{ form_end(filters) }}
+
+<div class="nowo-ui-card">
+    {# tableOptions = {table_mode, save_cookie}: the mode toggle keeps its choice in the listing cookie. #}
+    {% embed '@NowoUiKitBundle/partials/_responsive_table.html.twig' with listing.tableOptions|merge({dialog_id: 'rt-invoices'}) %}
+        {% block table %}
+            <table class="nowo-ui-data-table" data-responsive-table-target="table">
+                <thead><tr>
+                    {% include nowo_ui_partial('listing_head') with {listing: listing, heads_template: 'invoice/_heads.html.twig'} only %}
+                </tr></thead>
+                <tbody>
+                {% for invoice in invoices %}
+                    {# WITH context: the cell blocks see `invoice`. #}
+                    <tr>{% include nowo_ui_partial('listing_cells') with {listing: listing, cells_template: 'invoice/_cells.html.twig'} %}</tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% endblock %}
+    {% endembed %}
+</div>
+```
+
+Cells (`invoice/_cells.html.twig`, one `cell_<key>` block per column key) and optional header blocks
+(`invoice/_heads.html.twig`, `head_<key>`, e.g. sort links; columns without a block print their label):
+
+```twig
+{% block cell_number %}<a href="{{ path('invoice_show', {id: invoice.id}) }}">{{ invoice.number }}</a>{% endblock %}
+{% block cell_customer %}{{ invoice.customer.name }}{% endblock %}
+{% block cell_total %}{{ invoice.total|format_currency('EUR') }}{% endblock %}
+{% block cell_due_at %}{{ invoice.dueAt|date('Y-m-d') }}{% endblock %}
+{% block cell_notes %}{{ invoice.notes }}{% endblock %}
+```
+
+```twig
+{% block head_total %}<a href="?{{ app.request.query.all|merge({sort: 'total'})|url_encode }}">{{ column.label|nowo_ui_trans }}</a>{% endblock %}
+```
+
+Assets: register the Stimulus peers `listing-customizer` and `responsive-table` (see [STIMULUS.md](STIMULUS.md));
+`js/nowo-ui-dialog.js` (loaded by the UiKit document layout, or the `scripts` partial) opens the side panel. Without
+the dialog script the peer opens it itself (`showModal()`).
+
+Options of `listing_customizer`: `toggle` (`edge` default, `button` — a button in the flow — or `none`: put
+`data-nowo-ui-dialog-open="{{ listing.dialogId }}"` on your own opener), `slot` (edge tab stack 0–3, when the page
+has other [edge tabs](#page-edge-tab-and-route-links)), `size` (`sm` default), `dialog_id`, `labels`, `icons`
+(`open`, `grip`, `up`, `down`, `stack`; canonical icon kinds `sliders`, `grip`, `stack` are new), `attr`, `testids`,
+`bundle`, and the server-store options below. `listing_head`: `th_class`, `heads_template`, `detail` (default true:
+the row detail header of the responsive table), `detail_label`. `listing_cells`: `td_class`, `detail`, `detail_icon`,
+`detail_label`, `testids`. `listing_filter_fields`: `row_options` (field ⇒ `form_row` options). Each accepts
+`listing` (the view) or `listing_layout` (a `ListingLayout`, e.g. `listing.layout.withoutColumns(['total'])`).
+Stacked cells: the lead `<td data-column>` holds one `<div class="nowo-ui-listing-cell__part" data-cell-part="<key>">`
+per column; the header joins the labels (`[data-cell-part]`), which the row detail dialog shows as "Total · Customer".
+
+Events: `listing-customizer:saved` (`detail.layout`, cancelable — `preventDefault()` skips the reload, e.g. to
+re-render with Turbo), `listing-customizer:save-failed` (`detail.message`). The root carries `data-listing-dirty`
+while edits are unapplied.
+
+### Server-side store
+
+The bundle keeps one personal layout per listing and browser. To store layouts per user, per project or per tenant,
+implement the port and alias it:
+
+```yaml
+# config/services.yaml
+Nowo\UiKitBundle\Listing\ListingPreferenceStoreInterface: '@App\Listing\DoctrineListingPreferenceStore'
+```
+
+`load(string $listingKey, Request $request): ?array` returns `{columns, filters, mode}` (raw lists, merged leniently)
+for whatever scope the request implies (the current user, the project in the route…); `cookieName()` returns null.
+Then pass the save endpoint to the partials:
+
+```twig
+{% include nowo_ui_partial('listing_customizer') with {
+    listing: listing,
+    save_url: path('app_listing_preferences', {key: listing.listingKey}),   {# PUT {columns, filters}; DELETE = reset #}
+    save_token: csrf_token('listing_preferences'),
+    save_token_url: path('app_listing_preferences_token'),                   {# optional: {"token": "…"} on a 403 #}
+} only %}
+```
+
+The endpoint validates the body with `ListingLayoutMerger::normalizeLayout($registry->get($key), $payload)` (null =
+400) and stores the result; the responsive table takes its own `save_url` for the mode as before.
 
 ## Kit templates (2.6)
 

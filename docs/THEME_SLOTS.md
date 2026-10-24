@@ -278,6 +278,14 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `app_aside_nav` | `nowo-ui-app-shell__aside-nav` | — | — | — | — |
 | `app_main` | `nowo-ui-app-shell__main` | — | — | — | — |
 | `app_backdrop` | `nowo-ui-app-shell__backdrop` | — | — | — | — |
+| `listing_customizer` | `nowo-ui-listing-customizer` | — | — | — | — |
+| `listing_customizer_toggle` | `nowo-ui-listing-customizer__toggle` | — | — | — | — |
+| `listing_customizer_tabs` | `nowo-ui-listing-customizer__tabs` | — | — | — | — |
+| `listing_customizer_tab` | `nowo-ui-listing-customizer__tab` | — | — | — | — |
+| `listing_customizer_panel` | `nowo-ui-listing-customizer__panel` | — | — | — | — |
+| `listing_customizer_list` | `nowo-ui-listing-customizer__list` | — | — | — | — |
+| `listing_customizer_actions` | `nowo-ui-listing-customizer__actions` | — | — | — | — |
+| `listing_notice` | `nowo-ui-listing-notice` | — | — | — | — |
 
 Slot groups: document / layout (`document` … `breadcrumb_separator`), page header (`page_header` … `toolbar`), buttons (`btn`
 … `btn_icon`; variants are complete button classes — `btn_link` included —, `btn_sm` a size modifier, `btn_icon` the icon-only modifier), tables (`table_wrap` … `row_action_disabled`),
@@ -287,7 +295,8 @@ Bootstrap 4 / Foundation variant classes set both colours too), filters / inputs
 `confirm` … `confirm_footer`), forms (`form`, `form_actions`, `danger_zone`), wizard / auth (`auth_panel` … `auth_links`);
 2.6: `skip_link`, error pages (`error_page` … `error_action`), confirm dialog wrapper (`confirm_dialog_root` …
 `confirm_dialog_trigger`), app shell (`app_shell` … `app_backdrop`; the semantic classes carry no layout CSS — only the burger glyph swap — the kit shell look comes
-from `nowo_ui_kit.shell.kit_styles`), compact pagination (`pagination_compact` … `pagination_select`).
+from `nowo_ui_kit.shell.kit_styles`), compact pagination (`pagination_compact` … `pagination_select`); listing customizer
+(`listing_customizer` … `listing_notice`, see [USAGE](USAGE.md#listing-customizer)).
 
 Code: `code` for inline `<code>` (identifiers, keys, short values) and `code_block` for a `<pre>` holding a payload,
 JSON or a log excerpt. UiKit's CSS sets a monospace font (`--nowo-ui-font-mono`), the muted surface
@@ -444,6 +453,10 @@ as the UiKit partial (documented in the header comment of each template) and sho
 | `flashes` | `partials/_flashes.html.twig` | `flash_messages` (2.2, default `app.flashes`), `flashes` (deprecated: ignored inside page scaffolds), `trans_domain`, `bundle` | layouts (`nowo_ui_flashes`) |
 | `locale_tabs` *(2.5)* | `partials/_locale_tabs.html.twig` | `panels` (list of `{locale, content (HTML Markup; plain strings escaped), label?, name?, invalid?, required?, dir?, attr?}`), `id`, `label` (tab list `aria-label`, default `locale_tabs.label`), `default_locale` (★, listed first unless `default_first: false`), `required_locales` (*), `active_locale`, `activate_invalid`, `mark_default`, `default_marker` / `required_marker` / `error_marker`, `legend`, `progressive` (default true: stacked fieldsets until `nowo-ui-tabs.js` upgrades the root), `stimulus` (peer identifier), `attr`, `bundle`; slots `locale_tabs_nav`, `tab`, `tab_active`, `tab_panel` | one in-page panel per locale (FormKit `locale_tabs`, per-locale CRUD fields); see [USAGE](USAGE.md#locale-tabs-25) |
 | `list_filters` | `page/_list_filters.html.twig` | `page` (`View\ListPage`, `page.filters` FormView), `region`, `bundle` | list scaffold |
+| `listing_cells` | `partials/_listing_cells.html.twig` | `listing_layout` (`Listing\ListingLayout`) or `listing` (`ListingCustomizerView`), `cells_template` (one `cell_<key>` block per column, rendered in the row context: include **with** context), `td_class`, `detail` (default true: row detail cell), `detail_icon`, `detail_label`, `testids`, `bundle`; slot `table_cell` | listing rows (one `<td>` per column group; stacked columns share a cell) |
+| `listing_customizer` | `partials/_listing_customizer.html.twig` | `listing` (`ListingCustomizerView`), `toggle` (`edge` \| `button` \| `none`), `slot` (edge tab stack 0–3), `save_url` / `save_token` / `save_token_url` / `save_method` / `reset_method` (server store; default: the cookie), `dialog_id`, `size`, `labels`, `icons`, `attr`, `testids`, `bundle`; the `dialog` partial (`placement: end`); slots `listing_customizer*`, `listing_notice`, `btn_primary`, `btn_secondary`, `btn_link`, `muted` | listing pages (Stimulus `listing-customizer`) |
+| `listing_filter_fields` | `partials/_listing_filter_fields.html.twig` | `form` (filter `FormView`), `listing_layout` or `listing`, `row_options` (field => `form_row` options) | filter forms of customizable listings (visible filters in the viewer's order; hidden ones marked rendered) |
+| `listing_head` | `partials/_listing_head.html.twig` | `listing_layout` or `listing`, `heads_template` (optional `head_<key>` blocks, e.g. sort links), `th_class`, `detail` (default true), `bundle`; slot `table_head_cell` | listing table header |
 | `menu` *(2.3)* | `partials/_menu.html.twig` | `items` (`View\Link` / `View\Action` / `{label, href, attr, current, danger}`) or `content` (HTML, `popover` panel), `label`, `icon`, `display`, `align` (`end` \| `start`), `popover` *(2.4; default `theme.popover_menus`)*: native `[popover]` panel in the top layer (never clipped by table scrollers), placed by `nowo-ui-popover.js`, `confirm_external` *(2.4)*, `open`, `attr`, `bundle` | dropdown / overflow menus, popovers (native `<details>`, no JS required; light dismiss by `nowo-ui-dialog.js`) |
 | `modal_shell` | `partials/_modal_shell.html.twig` | `id`, `title`, `body`, `footer` | modals |
 | `page_header` | `partials/_page_header.html.twig` | scaffolds pass **both** `header` (`View\PageHeader`) + `actions` (toolbar `View\Action`s) **and** the 1.x `title` / `intro` (translated) / `toolbar` (pre-rendered actions) with `header_actions_rendered: true`; `region`, `bundle` | every scaffold (`nowo_ui_page_header`) |

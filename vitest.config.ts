@@ -21,6 +21,8 @@ export default defineConfig({
         'src/Resources/assets/stimulus-peers/error_retry_countdown_controller.ts',
         'src/Resources/assets/stimulus-peers/filters_collapse_controller.ts',
         'src/Resources/assets/stimulus-peers/icon_state.ts',
+        'src/Resources/assets/stimulus-peers/listing_cookie.ts',
+        'src/Resources/assets/stimulus-peers/listing_customizer_controller.ts',
         'src/Resources/assets/stimulus-peers/responsive_table_controller.ts',
         'src/Resources/assets/stimulus-peers/tabs_controller.ts',
         'src/Resources/assets/morphicons/index.ts',

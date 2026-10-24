@@ -14,6 +14,11 @@ use Nowo\UiKitBundle\Enum\CssFramework;
 use Nowo\UiKitBundle\EventSubscriber\LegacyPanelPathRedirectSubscriber;
 use Nowo\UiKitBundle\Form\AppearancePaletteType;
 use Nowo\UiKitBundle\Form\AppearanceType;
+use Nowo\UiKitBundle\Listing\CookieListingPreferenceStore;
+use Nowo\UiKitBundle\Listing\ListingCustomizerViewBuilder;
+use Nowo\UiKitBundle\Listing\ListingDefinitionInterface;
+use Nowo\UiKitBundle\Listing\ListingPreferenceStoreInterface;
+use Nowo\UiKitBundle\Listing\ListingRegistry;
 use Nowo\UiKitBundle\Navigation\AreaNavProviderInterface;
 use Nowo\UiKitBundle\Navigation\AreaNavRegistry;
 use Nowo\UiKitBundle\Release\ReleaseStatusController;
@@ -139,6 +144,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
             ->addTag('twig.extension');
 
         $this->registerPageContract($container, $fw, $config);
+        $this->registerListingCustomizer($container);
 
         $loader = new YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.yaml');
@@ -196,6 +202,32 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
                 new Reference('request_stack', ContainerInterface::NULL_ON_INVALID_REFERENCE),
             ])
             ->addTag('twig.extension');
+    }
+
+    /**
+     * Listing customizer: autoconfigured definitions (tag `nowo_ui_kit.listing_definition`), their registry, the
+     * default cookie preference store behind the {@see ListingPreferenceStoreInterface} port (a host re-aliases the
+     * interface to its own store) and the view builder.
+     */
+    private function registerListingCustomizer(ContainerBuilder $container): void
+    {
+        $container->registerForAutoconfiguration(ListingDefinitionInterface::class)
+            ->addTag(ListingDefinitionInterface::TAG);
+        $container->register('nowo_ui_kit.listing.registry', ListingRegistry::class)
+            ->setArguments([new TaggedIteratorArgument(ListingDefinitionInterface::TAG)]);
+        $container->setAlias(ListingRegistry::class, 'nowo_ui_kit.listing.registry');
+
+        $container->register('nowo_ui_kit.listing.cookie_store', CookieListingPreferenceStore::class);
+        $container->setAlias(CookieListingPreferenceStore::class, 'nowo_ui_kit.listing.cookie_store');
+        $container->setAlias(ListingPreferenceStoreInterface::class, 'nowo_ui_kit.listing.cookie_store');
+
+        $container->register('nowo_ui_kit.listing.view_builder', ListingCustomizerViewBuilder::class)
+            ->setArguments([
+                new Reference('nowo_ui_kit.listing.registry'),
+                new Reference(ListingPreferenceStoreInterface::class),
+                new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+            ]);
+        $container->setAlias(ListingCustomizerViewBuilder::class, 'nowo_ui_kit.listing.view_builder');
     }
 
     /**

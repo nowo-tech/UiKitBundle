@@ -1,0 +1,140 @@
+{#
+  Listing customizer: an opener (page-edge tab by default) and a side panel (`dialog` partial, `placement: end`) with
+  Columns / Filters tabs where the viewer shows, hides and reorders the columns (drag and drop, or the up / down
+  buttons from the keyboard), stacks a column under the previous one, shows / hides / reorders the filters, and
+  resets the listing to its defaults. Stimulus peer `listing-customizer` (stimulus-peers/listing_customizer_controller.ts);
+  the dialog opens through `js/nowo-ui-dialog.js` (data-nowo-ui-dialog-open) or the peer. No inline handlers (CSP).
+
+  Persistence: by default the peer writes the listing cookie (`listing.cookieName`, path `/`, SameSite=Lax, one
+  year) and reloads the page, so the server renders the new layout on first paint. With `save_url` (a host store,
+  see Listing\ListingPreferenceStoreInterface) it sends `{"columns": […], "filters": […]}` there instead (JSON,
+  X-CSRF-TOKEN header; Reset sends `reset_method` without a body).
+
+  Required:
+    - listing: Listing\ListingCustomizerView (ListingCustomizerViewBuilder::forRequest())
+
+  Optional:
+    - toggle: edge (default: fixed tab on the right edge) | button (a button in the flow) | none (the host opener
+      carries data-nowo-ui-dialog-open="{{ listing.dialogId }}")
+    - slot (0–3, default 0): edge tab stack position when the page has other edge tabs
+    - save_url, save_token, save_token_url (GET answering {"token": "…"}, refreshed once on 403), save_method
+      (default PUT), reset_method (default DELETE)
+    - dialog_id (default listing.dialogId), size (dialog width: sm (default) | md | lg)
+    - labels: {open, title, tab_columns, tab_filters, hint_columns, hint_stack, hint_filters, apply, reset,
+      ignored_filters_action} — override the NowoUiKitBundle translations
+    - icons: {open, grip, up, down, stack} — names for components/_icon.html.twig
+    - attr: extra attributes of the root element
+    - testids (default false): data-testid `listing-customizer`, `listing-customizer-toggle`,
+      `listing-customizer-apply`, `listing-customizer-reset`, `listing-ignored-filters`
+    - bundle: per-bundle theme exceptions
+  Slots: listing_customizer (root), listing_customizer_toggle, listing_customizer_tabs, listing_customizer_tab,
+  listing_customizer_panel, listing_customizer_list, listing_customizer_actions, listing_notice, btn_primary,
+  btn_secondary, btn_link, muted; the dialog slots.
+#}
+{% set bundle = bundle|default(null) %}
+{% set _id = dialog_id|default(listing.dialogId) %}
+{% set _testids = testids|default(false) %}
+{% set _toggle = toggle|default('edge') %}
+{% set _labels = {
+    open: 'listing.open'|trans({}, 'NowoUiKitBundle'),
+    title: 'listing.title'|trans({}, 'NowoUiKitBundle'),
+    tab_columns: 'listing.tab_columns'|trans({}, 'NowoUiKitBundle'),
+    tab_filters: 'listing.tab_filters'|trans({}, 'NowoUiKitBundle'),
+    hint_columns: 'listing.hint_columns'|trans({}, 'NowoUiKitBundle'),
+    hint_stack: 'listing.hint_stack'|trans({}, 'NowoUiKitBundle'),
+    hint_filters: 'listing.hint_filters'|trans({}, 'NowoUiKitBundle'),
+    apply: 'listing.apply'|trans({}, 'NowoUiKitBundle'),
+    reset: 'listing.reset'|trans({}, 'NowoUiKitBundle'),
+    ignored_filters_action: 'listing.ignored_filters_action'|trans({}, 'NowoUiKitBundle'),
+}|merge(labels|default({})) %}
+{% set _icons = {open: 'sliders', grip: 'grip', up: 'chevron_up', down: 'chevron_down', stack: 'stack'}|merge(icons|default({})) %}
+{% set _messages = {
+    required: 'listing.required'|trans({}, 'NowoUiKitBundle'),
+    moveUp: 'listing.move_up'|trans({}, 'NowoUiKitBundle'),
+    moveDown: 'listing.move_down'|trans({}, 'NowoUiKitBundle'),
+    stack: 'listing.stack'|trans({}, 'NowoUiKitBundle'),
+    dragHandle: 'listing.drag_handle'|trans({}, 'NowoUiKitBundle'),
+    moved: 'listing.moved'|trans({}, 'NowoUiKitBundle'),
+    unsaved: 'listing.unsaved'|trans({}, 'NowoUiKitBundle'),
+    saving: 'listing.saving'|trans({}, 'NowoUiKitBundle'),
+    saveError: 'listing.save_error'|trans({}, 'NowoUiKitBundle'),
+    tooLarge: 'listing.too_large'|trans({}, 'NowoUiKitBundle'),
+    sessionExpired: 'listing.session_expired'|trans({}, 'NowoUiKitBundle'),
+    resetConfirm: 'listing.reset_confirm'|trans({}, 'NowoUiKitBundle'),
+    confirmOk: 'listing.reset'|trans({}, 'NowoUiKitBundle'),
+    cancel: 'action.cancel'|trans({}, 'NowoUiKitBundle'),
+} %}
+{% set _both = listing.hasColumns and listing.hasFilters %}
+<div class="{{ nowo_ui_class('listing_customizer', bundle) }}" data-controller="listing-customizer"
+    {{- ' ' }}data-listing-customizer-state-value="{{ listing.clientState|json_encode }}"
+    {%- if save_url|default('') %} data-listing-customizer-url-value="{{ save_url }}"{% elseif listing.cookieName %} data-listing-customizer-cookie-value="{{ listing.cookieName }}"{% endif %}
+    {%- if save_token|default('') %} data-listing-customizer-token-value="{{ save_token }}"{% endif %}
+    {%- if save_token_url|default('') %} data-listing-customizer-token-url-value="{{ save_token_url }}"{% endif %}
+    {%- if save_method|default('') %} data-listing-customizer-method-value="{{ save_method }}"{% endif %}
+    {%- if reset_method|default('') %} data-listing-customizer-reset-method-value="{{ reset_method }}"{% endif %}
+    {{- ' ' }}data-listing-customizer-messages-value="{{ _messages|json_encode }}"
+    {%- if _testids %} data-testid="listing-customizer"{% endif %}
+    {{- nowo_ui_attrs('listing_customizer', bundle, attr|default({})) }}>
+    {% if listing.ignoredFilters is not empty %}
+        <div class="{{ nowo_ui_class('listing_notice', bundle) }}" role="status"{% if _testids %} data-testid="listing-ignored-filters"{% endif %}{{ nowo_ui_attrs('listing_notice', bundle) }}>
+            <span>{{ 'listing.ignored_filters'|trans({'%filters%': listing.ignoredFilters|map(f => f.label|nowo_ui_trans)|join(', ')}, 'NowoUiKitBundle') }}</span>
+            {% if listing.hasFilters %}
+                <button type="button" class="{{ nowo_ui_class('btn_link', bundle) }}" data-action="listing-customizer#openFilters">{{ _labels.ignored_filters_action }}</button>
+            {% endif %}
+        </div>
+    {% endif %}
+    {% if _toggle == 'edge' %}
+        <div class="nowo-ui-edge-tab" data-nowo-ui-edge-tab-slot="{{ slot|default(0) }}">
+            <button type="button" class="nowo-ui-edge-tab__link {{ nowo_ui_class('listing_customizer_toggle', bundle) }}" data-nowo-ui-dialog-open="{{ _id }}" data-listing-customizer-target="toggle" data-action="listing-customizer#open" aria-haspopup="dialog" aria-controls="{{ _id }}" title="{{ _labels.open }}" aria-label="{{ _labels.open }}"{% if _testids %} data-testid="listing-customizer-toggle"{% endif %}{{ nowo_ui_attrs('listing_customizer_toggle', bundle) }}>
+                <span class="nowo-ui-edge-tab__icon" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _icons.open, label: _labels.open}, false)|trim|raw }}</span>
+            </button>
+        </div>
+    {% elseif _toggle == 'button' %}
+        <button type="button" class="{{ nowo_ui_class('btn_secondary', bundle) }} {{ nowo_ui_class('listing_customizer_toggle', bundle) }}" data-nowo-ui-dialog-open="{{ _id }}" data-listing-customizer-target="toggle" data-action="listing-customizer#open" aria-haspopup="dialog" aria-controls="{{ _id }}"{% if _testids %} data-testid="listing-customizer-toggle"{% endif %}{{ nowo_ui_attrs('listing_customizer_toggle', bundle) }}>
+            <span aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _icons.open, label: _labels.open}, false)|trim|raw }}</span>
+            <span>{{ _labels.open }}</span>
+        </button>
+    {% endif %}
+    {% set _footer %}
+        <p class="nowo-ui-listing-customizer__status" role="status" aria-live="polite" data-listing-customizer-target="status"></p>
+        <div class="{{ nowo_ui_class('listing_customizer_actions', bundle) }}"{{ nowo_ui_attrs('listing_customizer_actions', bundle) }}>
+            <button type="button" class="{{ nowo_ui_class('btn_secondary', bundle) }}" data-listing-customizer-target="resetButton" data-action="listing-customizer#reset"{% if not listing.layout.stored %} disabled{% endif %}{% if _testids %} data-testid="listing-customizer-reset"{% endif %}>{{ _labels.reset }}</button>
+            <button type="button" class="{{ nowo_ui_class('btn_primary', bundle) }}" data-listing-customizer-target="applyButton" data-action="listing-customizer#apply" disabled{% if _testids %} data-testid="listing-customizer-apply"{% endif %}>{{ _labels.apply }}</button>
+        </div>
+    {% endset %}
+    {% embed nowo_ui_partial('dialog', bundle) with {
+        id: _id,
+        title: _labels.title,
+        placement: 'end',
+        size: size|default('sm'),
+        footer: _footer,
+        bundle: bundle,
+        attr: {'data-listing-customizer-target': 'dialog'},
+        _lc: {listing: listing, id: _id, labels: _labels, icons: _icons, both: _both},
+    } only %}
+        {% block nowo_ui_dialog_body %}
+            {% if _lc.both %}
+                <div class="{{ nowo_ui_class('listing_customizer_tabs', bundle) }}" role="tablist" aria-label="{{ _lc.labels.title }}"{{ nowo_ui_attrs('listing_customizer_tabs', bundle) }}>
+                    {% for _panel in ['columns', 'filters'] %}
+                        <button type="button" role="tab" id="{{ _lc.id }}-tab-{{ _panel }}" class="{{ nowo_ui_class('listing_customizer_tab', bundle) }}" aria-selected="{{ loop.first ? 'true' : 'false' }}"{% if not loop.first %} tabindex="-1"{% endif %} aria-controls="{{ _lc.id }}-panel-{{ _panel }}" data-panel="{{ _panel }}" data-listing-customizer-target="tabButton" data-action="listing-customizer#selectTab keydown->listing-customizer#tabKeydown">{{ _lc.labels['tab_' ~ _panel] }}</button>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            {% for _panel in ['columns', 'filters'] %}
+                {% if _panel == 'columns' ? _lc.listing.hasColumns : _lc.listing.hasFilters %}
+                    <section id="{{ _lc.id }}-panel-{{ _panel }}" class="{{ nowo_ui_class('listing_customizer_panel', bundle) }}"{% if _lc.both %} role="tabpanel" aria-labelledby="{{ _lc.id }}-tab-{{ _panel }}"{% if _panel == 'filters' %} hidden{% endif %}{% else %} aria-label="{{ _lc.labels['tab_' ~ _panel] }}"{% endif %} data-panel="{{ _panel }}" data-listing-customizer-target="panel"{{ nowo_ui_attrs('listing_customizer_panel', bundle) }}>
+                        <p class="{{ nowo_ui_class('muted', bundle) }}">{{ _lc.labels['hint_' ~ _panel] }}</p>
+                        {% if _panel == 'columns' %}
+                            <p class="{{ nowo_ui_class('muted', bundle) }}">{{ _lc.labels.hint_stack }}</p>
+                        {% endif %}
+                        <ul class="{{ nowo_ui_class('listing_customizer_list', bundle) }}" data-kind="{{ _panel }}" data-listing-customizer-target="list" aria-label="{{ _lc.labels['tab_' ~ _panel] }}"{{ nowo_ui_attrs('listing_customizer_list', bundle) }}></ul>
+                    </section>
+                {% endif %}
+            {% endfor %}
+            {#- Row control icons: the peer clones them into each column / filter row. -#}
+            {% for _name in ['grip', 'up', 'down', 'stack'] %}
+                <template data-listing-customizer-icon="{{ _name }}">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _lc.icons[_name]}, false)|trim|raw }}</template>
+            {% endfor %}
+        {% endblock %}
+    {% endembed %}
+</div>

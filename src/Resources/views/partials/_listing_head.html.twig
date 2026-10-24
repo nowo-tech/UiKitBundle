@@ -1,0 +1,41 @@
+{#
+  Listing table header cells from a resolved listing layout: one <th> per column group (a stacked column shares the
+  header of the previous one: its label is a `[data-cell-part]` line, joined in the row detail dialog), then the row
+  detail column of the responsive table (`detail`, default true; hidden in scroll mode).
+
+  Required: listing_layout (Listing\ListingLayout) or listing (Listing\ListingCustomizerView)
+  Optional:
+    - heads_template: template with `head_<key>` blocks (e.g. sort links) rendered in this context (`column`,
+      `group`); columns without a block print their label
+    - th_class: extra classes of every header cell
+    - detail (default true), detail_label: row detail header cell (partials/_row_detail_head.html.twig)
+    - bundle
+  Slot: table_head_cell. Cells carry data-column (lead column), data-columns (every key of the group),
+  data-required="1" (required lead column: the responsive table never hides it) and data-priority.
+#}
+{% set bundle = bundle|default(null) %}
+{% set _layout = listing_layout is defined ? listing_layout : listing.layout %}
+{% set _heads = heads_template|default(null) %}
+{% for group in _layout.visibleColumnGroups %}
+    {% set lead = group|first %}
+    {% set _stacked = group|length > 1 %}
+    <th class="{{ nowo_ui_class('table_head_cell', bundle) }}{{ th_class|default('') ? ' ' ~ th_class }}{{ lead.headClass ? ' ' ~ lead.headClass }}{{ _stacked ? ' nowo-ui-listing-cell--stacked' }}" scope="col" data-column="{{ lead.key }}" data-columns="{{ group|map(c => c.key)|join(' ') }}"{% if lead.required %} data-required="1"{% endif %} data-priority="{{ lead.priority }}">
+        {%- for column in group -%}
+            {%- set _content -%}
+                {%- if _heads and block('head_' ~ column.key, _heads) is defined -%}
+                    {{- block('head_' ~ column.key, _heads) -}}
+                {%- else -%}
+                    {{- column.label|nowo_ui_trans -}}
+                {%- endif -%}
+            {%- endset -%}
+            {%- if _stacked -%}
+                <span class="nowo-ui-listing-cell__part" data-cell-part>{{ _content }}</span>
+            {%- else -%}
+                {{- _content -}}
+            {%- endif -%}
+        {%- endfor -%}
+    </th>
+{% endfor %}
+{% if detail ?? true %}
+    {% include '@NowoUiKitBundle/partials/_row_detail_head.html.twig' with {th_class: th_class|default('')}|merge(detail_label is defined ? {label: detail_label} : {}) only %}
+{% endif %}

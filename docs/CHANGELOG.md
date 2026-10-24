@@ -67,6 +67,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Listing customizer (ported from symfony-beacon): the viewer chooses, reorders, hides and stacks the columns of a listing table and shows / hides / reorders its filters, with a reset to the defaults. PHP API under `Nowo\UiKitBundle\Listing`: `ListingDefinitionInterface` (autoconfigured tag `nowo_ui_kit.listing_definition`), `ListingField`, `ListingFieldState`, `ListingLayout` (stacked column groups, `filterRequest()` drops hidden filters and a sort on a hidden column, `ignoredFilters()`, `withoutColumns()`), `ListingLayoutMerger` (lenient merge of stored layouts, strict `normalize()` / `normalizeLayout()` of submitted ones), `ListingRegistry`, `ListingTableMode`, `ListingCustomizerView` and `ListingCustomizerViewBuilder::forRequest()` (services `nowo_ui_kit.listing.registry`, `nowo_ui_kit.listing.view_builder`). Preferences live in the browser: port `ListingPreferenceStoreInterface` with the default `CookieListingPreferenceStore` (cookie `nowo_ui_listing_<key>`, JSON, size-guarded, lenient parse) so the server renders the chosen columns on first paint; a host aliases the port to a server store and passes `save_url`. See [USAGE](USAGE.md#listing-customizer).
+- Partials `listing_customizer` (page-edge tab + `dialog` side panel with Columns / Filters tabs, drag and keyboard reorder, visibility toggles, "stack under the previous column", reset; hidden-filters notice), `listing_head`, `listing_cells` (`cell_<key>` blocks, stacked cells as `[data-cell-part]` lines, row detail cell), `listing_filter_fields`; theme slots `listing_customizer`, `listing_customizer_toggle`, `listing_customizer_tabs`, `listing_customizer_tab`, `listing_customizer_panel`, `listing_customizer_list`, `listing_customizer_actions`, `listing_notice`; canonical icon kinds `sliders`, `grip`, `stack`; `listing.*` translations in every shipped locale.
+- Stimulus peer `listing-customizer` (`stimulus-peers/listing_customizer_controller.ts`) and the cookie helpers `stimulus-peers/listing_cookie.ts`: Apply writes the cookie (path `/`, SameSite=Lax, one year) and reloads; with a `url` value it sends the layout to the host instead (CSRF, token refresh on 403); events `listing-customizer:saved` / `listing-customizer:save-failed`.
+- Responsive table `save_cookie` option (peer value `cookie`): without `save_url`, the table mode toggle keeps its choice in the listing cookie (`ListingCustomizerView::tableOptions()` passes it with `table_mode`). Hosts passing `save_url` are unchanged.
+
 ## [2.12.1] - 2026-10-24
 
 Edge tab attr option (open a page in the side panel). See [UPGRADING](UPGRADING.md#to-2121).

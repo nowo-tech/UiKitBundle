@@ -19,6 +19,7 @@ Optional **Stimulus peer** TypeScript sources live under `src/Resources/assets/s
 - [Collapse panel (Stimulus peer only)](#collapse-panel-stimulus-peer-only)
 - [Data table (Stimulus peer only)](#data-table-stimulus-peer-only)
 - [Responsive table (Stimulus peer only)](#responsive-table-stimulus-peer-only)
+- [Listing customizer (Stimulus peer only)](#listing-customizer-stimulus-peer-only)
 - [Filters collapse (Stimulus peer only)](#filters-collapse-stimulus-peer-only)
 - [Disclosure icon (Stimulus peer only)](#disclosure-icon-stimulus-peer-only)
 - [Error retry countdown (2.6)](#error-retry-countdown-26)
@@ -309,6 +310,7 @@ No kit IIFE (1.17). *Scroll* ↔ *Responsive* table with a row detail dialog —
 | `data-responsive-table-url-value` | Save endpoint (JSON `{"mode": …}`, `X-CSRF-TOKEN` header); empty = client-side only |
 | `data-responsive-table-token-value` / `-token-url-value` | CSRF token / GET URL answering `{"token": "…"}` (one refresh on 403) |
 | `data-responsive-table-method-value` | HTTP method of the save (default `PUT`) |
+| `data-responsive-table-cookie-value` / `-cookie-path-value` | Without a URL: listing cookie that keeps the mode (`mode` member, [listing customizer](#listing-customizer-stimulus-peer-only)) / its path (default `/`) |
 | `data-responsive-table-phone-query-value` | Default-responsive media query (default `(max-width: 767px)`) |
 | `data-responsive-table-part-selector-value` | Stacked header parts joined in dialog labels (default `[data-cell-part]`) |
 | `data-responsive-table-messages-value` | `{toResponsive, toScroll, details, saveError}` (toggle name / title, detail button prefix, save error text — 1.17.1) |
@@ -322,6 +324,34 @@ Events: `responsive-table:changed` (`detail.mode`, optimistic), `responsive-tabl
 Hosts show their toast from a listener, or subclass the peer and override the protected `saveFailed(mode, previous)`. Peer: `responsive_table_controller.ts` (exports
 `RESPONSIVE_TABLE_PHONE_QUERY`, type `TableMode`). No inline styles (CSP); ResizeObserver + rAF; everything undone on
 disconnect (an open dialog is closed and its cells put back).
+
+## Listing customizer (Stimulus peer only)
+
+No kit IIFE. Column / filter editor of a customizable listing — markup from `partials/_listing_customizer.html.twig`
+([USAGE.md](USAGE.md#listing-customizer)).
+
+| Stimulus | Role |
+|----------|------|
+| `data-controller="listing-customizer"` | Root (gets `data-listing-dirty` while edits are unapplied) |
+| `data-listing-customizer-state-value` | `ListingCustomizerView::clientState()`: `{listingKey, stored, mode, columns: [{key, label, required, visible, merged}], filters: [{key, label, required, visible}]}` |
+| `data-listing-customizer-cookie-value` / `-cookie-path-value` / `-cookie-max-age-value` | Listing cookie written on Apply / Reset (default path `/`, one year; SameSite=Lax, Secure on https) |
+| `data-listing-customizer-url-value` | Host store instead of the cookie: Apply sends `{"columns": […], "filters": […]}` (JSON, `X-CSRF-TOKEN`), Reset sends `reset-method` without a body |
+| `data-listing-customizer-token-value` / `-token-url-value` | CSRF token / GET URL answering `{"token": "…"}` (one refresh on 403) |
+| `data-listing-customizer-method-value` / `-reset-method-value` | HTTP methods (default `PUT` / `DELETE`) |
+| `data-listing-customizer-messages-value` | `{required, moveUp, moveDown, stack, dragHandle, moved, unsaved, saving, saveError, tooLarge, sessionExpired, resetConfirm, confirmOk, cancel}` (`moved` gets `%label%`, `%position%`, `%count%`) |
+| targets `dialog`, `toggle` (optional), `tabButton` (`data-panel`), `panel` (`data-panel`), `list` (`data-kind="columns\|filters"`), `status`, `resetButton`, `applyButton` | |
+| `<template data-listing-customizer-icon="grip\|up\|down\|stack">` | Icons cloned into every editor row |
+| `data-action="listing-customizer#open"` / `#openFilters` / `#close` / `#selectTab` / `keydown->listing-customizer#tabKeydown` / `#apply` / `#reset` | |
+
+Rows are rendered by the peer: checkbox (required: checked, disabled), drag handle (HTML5 drag and drop within one
+list), *stack under previous* toggle (columns, `aria-pressed`), up / down buttons; Alt+ArrowUp / Alt+ArrowDown on a
+row moves it; focus stays on the moved row and the live `status` announces "<label> moved to position n of m".
+Reset asks first (`askConfirm`). After a save the page reloads (protected `reload()`); events
+`listing-customizer:saved` (`detail.layout`, cancelable: `preventDefault()` skips the reload) and
+`listing-customizer:save-failed` (`detail.message`). Peer: `listing_customizer_controller.ts` (exports `formatMessage`,
+`moveItem`, `toPayload`, types `ListingItem`, `ListingClientState`); cookie helpers in `listing_cookie.ts`
+(`readListingCookie`, `writeListingCookie`, `patchListingCookie`, `deleteListingCookie`, `LISTING_COOKIE_MAX_BYTES`).
+No inline styles or handlers (CSP).
 
 ## Filters collapse (Stimulus peer only)
 

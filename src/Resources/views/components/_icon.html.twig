@@ -42,6 +42,9 @@
         chevron_down: 'bi:chevron-down',
         chevron_right: 'bi:chevron-right',
         book: 'bi:book',
+        sliders: 'bi:sliders',
+        grip: 'bi:grip-vertical',
+        stack: 'bi:arrow-90deg-up',
     } %}
     {{ include('@NowoUiKitBundle/components/_icon_ux.html.twig', {name: ux_map[name]|default(name)}, false) }}
 {% elseif icon_set == 'tabler-icons' %}
@@ -68,6 +71,9 @@
         chevron_down: 'ti ti-chevron-down',
         chevron_right: 'ti ti-chevron-right',
         book: 'ti ti-book',
+        sliders: 'ti ti-adjustments',
+        grip: 'ti ti-grip-vertical',
+        stack: 'ti ti-corner-left-up',
     } %}
     <i class="{{ map[name]|default('ti ti-' ~ name) }}" aria-hidden="true"></i>
 {% elseif icon_set == 'svg_inline' %}
@@ -94,6 +100,9 @@
         chevron_down: 'M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z',
         chevron_right: 'M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z',
         book: 'M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z',
+        sliders: 'M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z',
+        grip: 'M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z',
+        stack: 'M11 9l1.42 1.42L8.83 14H18V4h2v12H8.83l3.59 3.58L11 21l-6-6 6-6z',
     } %}
     <svg class="nowo-ui-icon" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
         <path fill="currentColor" d="{{ paths[name]|default(paths.view) }}"/>
@@ -123,6 +132,9 @@
         chevron_down: 'bi bi-chevron-down',
         chevron_right: 'bi bi-chevron-right',
         book: 'bi bi-book',
+        sliders: 'bi bi-sliders',
+        grip: 'bi bi-grip-vertical',
+        stack: 'bi bi-arrow-90deg-up',
     } %}
     <i class="{{ map[name]|default('bi bi-' ~ name) }}" aria-hidden="true"></i>
 {% endif %}

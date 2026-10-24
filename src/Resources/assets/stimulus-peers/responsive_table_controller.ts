@@ -13,12 +13,15 @@
  * The detail dialog MOVES the row's cell contents (forms, ids and listeners intact) and puts them back on close.
  *
  * Persistence is host-owned: with a `url` the toggle sends `{"mode": "scroll"|"responsive"}` (JSON, `X-CSRF-TOKEN`
- * header, `method` default PUT); a 403 refreshes the token once from `tokenUrl` (`{"token": "…"}`). Without a
- * `url` the mode only lives on the page. A failed save switches back and dispatches `responsive-table:save-failed`.
+ * header, `method` default PUT); a 403 refreshes the token once from `tokenUrl` (`{"token": "…"}`). Without a `url`
+ * but with a `cookie` (listing customizer: the listing cookie name) the mode is merged into that cookie (`mode`
+ * member, `listing_cookie.ts`), read by the server on the next render. Without either the mode only lives on the
+ * page. A failed save switches back and dispatches `responsive-table:save-failed`.
  *
  * Identifier: `responsive-table`
  * Targets: `scroller`, `table`, `toggle` (optional), `dialog`, `dialogTitle`, `dialogBody`.
  * Values: `mode` (`scroll` | `responsive` | empty = default), `url`, `token`, `tokenUrl`, `method` (default `PUT`),
+ *         `cookie` (listing cookie name, used without `url`), `cookiePath` (default `/`),
  *         `phoneQuery` (default `(max-width: 767px)`: no stored mode → responsive there, scroll elsewhere),
  *         `partSelector` (stacked header parts joined in the dialog labels, default `[data-cell-part]`),
  *         `messages` (`{toResponsive, toScroll, details, saveError}`; `saveError` since 1.17.1).
@@ -32,6 +35,7 @@
 import { Controller } from '@hotwired/stimulus';
 
 import { syncIconState } from './icon_state';
+import { patchListingCookie } from './listing_cookie';
 
 export type TableMode = 'scroll' | 'responsive';
 
@@ -57,6 +61,8 @@ export default class ResponsiveTableController extends Controller<HTMLElement> {
     token: { type: String, default: '' },
     tokenUrl: { type: String, default: '' },
     method: { type: String, default: 'PUT' },
+    cookie: { type: String, default: '' },
+    cookiePath: { type: String, default: '/' },
     phoneQuery: { type: String, default: RESPONSIVE_TABLE_PHONE_QUERY },
     partSelector: { type: String, default: '[data-cell-part]' },
     messages: { type: Object, default: {} },
@@ -74,6 +80,8 @@ export default class ResponsiveTableController extends Controller<HTMLElement> {
   declare tokenValue: string;
   declare readonly tokenUrlValue: string;
   declare readonly methodValue: string;
+  declare readonly cookieValue: string;
+  declare readonly cookiePathValue: string;
   declare readonly phoneQueryValue: string;
   declare readonly partSelectorValue: string;
   declare readonly messagesValue: Messages;
@@ -343,10 +351,13 @@ export default class ResponsiveTableController extends Controller<HTMLElement> {
     return title.length > 120 ? `${title.slice(0, 119)}…` : title;
   }
 
-  /** Saves the mode; a stale CSRF token is refreshed once. Without a URL the mode stays client-side. */
+  /**
+   * Saves the mode; a stale CSRF token is refreshed once. Without a URL the mode goes to the listing cookie when one
+   * is set, else it stays client-side.
+   */
   private async save(mode: TableMode): Promise<boolean> {
     if ('' === this.urlValue) {
-      return true;
+      return '' === this.cookieValue || patchListingCookie(this.cookieValue, { mode }, { path: this.cookiePathValue });
     }
     try {
       let response = await this.send(mode);

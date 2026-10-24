@@ -2,6 +2,7 @@ import { Application } from '@hotwired/stimulus';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import ConfirmSubmitController from './confirm_submit_controller';
+import ListingCustomizerController from './listing_customizer_controller';
 import ReleaseStatusController from './release_status_controller';
 import TabsController from './tabs_controller';
 
@@ -19,6 +20,7 @@ beforeEach(() => {
   app.register('confirm-submit', ConfirmSubmitController);
   app.register('tabs', TabsController);
   app.register('release-status', ReleaseStatusController);
+  app.register('listing-customizer', ListingCustomizerController);
 });
 
 afterEach(() => {
@@ -170,5 +172,17 @@ describe('release-status peer', () => {
 
     await controllerFor('n').load();
     expect((document.querySelector('#n [data-nowo-ui-release-part="error"]') as HTMLElement).hidden).toBe(false);
+  });
+});
+
+describe('listing-customizer peer', () => {
+  it('connects and renders the editor rows from its state value', async () => {
+    const state = { listingKey: 'items', stored: false, mode: null, columns: [{ key: 'name', label: 'Name', required: true, visible: true }], filters: [] };
+    document.body.innerHTML = `
+      <div data-controller="listing-customizer" data-listing-customizer-state-value='${JSON.stringify(state)}'>
+        <ul data-kind="columns" data-listing-customizer-target="list"></ul>
+      </div>`;
+    await tick();
+    expect(document.querySelector('li[data-key="name"]')?.textContent).toContain('Name');
   });
 });
