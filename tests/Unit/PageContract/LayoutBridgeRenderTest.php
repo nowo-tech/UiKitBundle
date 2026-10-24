@@ -44,10 +44,10 @@ final class LayoutBridgeRenderTest extends TestCase
         self::assertMatchesRegularExpression('#<div class="nowo-ui-host-page app-page nowo-ui-host-page--page">\s*<nav>NAV</nav>\s*<h1>HEAD</h1>\s*<div class="nowo-ui-flash[^"]*"[^>]*>Saved.</div>\s*<p>CONTENT</p>\s*</div>#', $html);
         self::assertMatchesRegularExpression('#</div>\s*<dialog></dialog>\s*<script src="/p.js"></script>\s*</body>#', $html);
 
-        $auth = $twig->render('page', ['nowo_ui_page_type' => 'auth', 'nowo_ui_bundle' => 'NowoXBundle', 'nowo_ui_document_title_separator' => '|', 'suffix' => 'B']);
+        $auth = $twig->render('page', ['nowo_ui_page_type' => 'auth', 'nowo_ui_bundle' => 'NowoXBundle', 'nowo_ui_document_title_separator' => '|', 'suffix' => 'B', 'nowo_ui_host_page_class' => 'panel']);
         self::assertStringContainsString('<title>Doc | B</title>', $auth);
         self::assertStringContainsString('<div class="nowo-ui-page-width max-w-md">', $auth);
-        self::assertStringContainsString('<div class="nowo-ui-host-page x-page nowo-ui-host-page--auth" data-nowo-ui-bundle="NowoXBundle">', $auth);
+        self::assertStringContainsString('<div class="nowo-ui-host-page x-page nowo-ui-host-page--auth panel" data-nowo-ui-bundle="NowoXBundle">', $auth);
     }
 
     public function testFlashesCanLiveInTheShellAndTheTitleHasNoSuffixByDefault(): void

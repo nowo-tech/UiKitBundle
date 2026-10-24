@@ -4059,6 +4059,8 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
     display: block;
     min-height: 1.5rem;
     padding-inline-start: calc(40% + 0.75rem) !important;
+    /* A right-aligned (numeric) column keeps its value and label at the start in a card */
+    text-align: start;
   }
 
   .nowo-ui-table--cards > tbody > tr > td[data-label]:not(.nowo-ui-table__actions)::before {

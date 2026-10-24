@@ -784,8 +784,8 @@ template. Same contract as an include: `{{ include('@NowoUiKit/page/_page_header
    {% block javascripts %}{{ parent() }}{{ block('nowo_ui_bridge_end') }}{% endblock %}
    ```
 
-   `nowo_ui_bridge_body` is the `host_page` slot wrapper (`nowo-ui-host-page nowo-ui-host-page--<page type>`,
-   `data-nowo-ui-bundle`) with navigation, page header, flashes and content; set `nowo_ui_bridge_flashes_inside` to
+   `nowo_ui_bridge_body` is the `host_page` slot wrapper (`nowo-ui-host-page nowo-ui-host-page--<page type>`, the
+   classes of `nowo_ui_host_page_class` for a layout-only look, `data-nowo-ui-bundle`) with navigation, page header, flashes and content; set `nowo_ui_bridge_flashes_inside` to
    false and print `{{ block('nowo_ui_bridge_flashes') }}` where your shell's flash region is. Your own definition of
    a canonical block wins over the used one (e.g. `nowo_ui_flashes` with your toast stack). The `page_width` slot gives
    a container its width per page type (`theme.pages.auth.classes.page_width: 'max-w-md'`).

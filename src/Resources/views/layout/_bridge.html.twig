@@ -17,7 +17,8 @@
     - nowo_ui_bridge_title: nowo_ui_document_title, then " — <suffix>" when nowo_ui_document_title_suffix is set
       (separator: nowo_ui_document_title_separator, default "—");
     - nowo_ui_bridge_assets: nowo_ui_head + nowo_ui_styles;
-    - nowo_ui_bridge_body: the `host_page` slot wrapper (+ `nowo-ui-host-page--<page type>`, data-nowo-ui-bundle) with
+    - nowo_ui_bridge_body: the `host_page` slot wrapper (+ `nowo-ui-host-page--<page type>`, the classes of
+      nowo_ui_host_page_class — e.g. a layout-only panel look —, data-nowo-ui-bundle) with
       navigation, page header, flashes (nowo_ui_bridge_flashes, unless nowo_ui_bridge_flashes_inside is false — the
       shell then prints {{ block('nowo_ui_bridge_flashes') }} where its own flash region is) and content;
     - nowo_ui_bridge_flashes: nowo_ui_flashes (default: the `flashes` partial);
@@ -38,7 +39,7 @@
 {% block nowo_ui_bridge_body %}
     {% set _bundle = nowo_ui_bundle|default(null) %}
     {% set _page_type = nowo_ui_page_type|default('') %}
-    <div class="{{ nowo_ui_class('host_page', _bundle) }} nowo-ui-host-page--{{ _page_type ?: 'page' }}"{% if _bundle %} data-nowo-ui-bundle="{{ _bundle }}"{% endif %}{{ nowo_ui_attrs('host_page', _bundle) }}>
+    <div class="{{ nowo_ui_class('host_page', _bundle) }} nowo-ui-host-page--{{ _page_type ?: 'page' }}{% if nowo_ui_host_page_class|default('') is not same as('') %} {{ nowo_ui_host_page_class }}{% endif %}"{% if _bundle %} data-nowo-ui-bundle="{{ _bundle }}"{% endif %}{{ nowo_ui_attrs('host_page', _bundle) }}>
         {% block nowo_ui_navigation %}{% endblock %}
         {% block nowo_ui_page_header %}{% endblock %}
         {% if nowo_ui_bridge_flashes_inside ?? true %}{{ block('nowo_ui_bridge_flashes') }}{% endif %}
