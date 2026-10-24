@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.12.0](#to-2120)
 - [To 2.11.0](#to-2110)
 - [To 2.10.1](#to-2101)
 - [To 2.10.0](#to-2100)
@@ -75,6 +76,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.12.0
+
+From **2.11.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 No change needed. New optional `placement` (`end` / `start`) on the `dialog` partial for side panels; existing dialogs stay centred. Hosts that restyle `.nowo-ui-dialog` with fixed widths should check the new `.nowo-ui-dialog--end` / `--start` rules.
 

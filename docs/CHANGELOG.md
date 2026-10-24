@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.12.0] - 2026-10-24](#2120---2026-10-24)
 - [[2.11.0] - 2026-10-24](#2110---2026-10-24)
 - [[2.10.1] - 2026-10-23](#2101---2026-10-23)
 - [[2.10.0] - 2026-10-23](#2100---2026-10-23)
@@ -65,9 +66,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [2.12.0] - 2026-10-24
+
+Side-panel placement for the native dialog. See [UPGRADING](UPGRADING.md#to-2120).
+
 ### Added
 
-- Dialog `placement: 'end' | 'start'` (`partials/_dialog.html.twig`): a full-height side panel stuck to that edge that slides in (`@starting-style`, none with `prefers-reduced-motion`); `size` sets its width (sm 22 rem, md 32 rem, lg 48 rem, xl 64 rem, capped at the viewport) and the body scrolls. Combined with the opener's `data-nowo-ui-dialog-src` it is the side-panel pattern for help, manuals and customizers. Unknown placements keep the centred dialog. See [UPGRADING](UPGRADING.md#unreleased).
+- Dialog `placement: 'end' | 'start'` (`partials/_dialog.html.twig`): a full-height side panel stuck to that edge that slides in (`@starting-style`, none with `prefers-reduced-motion`); `size` sets its width (sm 22 rem, md 32 rem, lg 48 rem, xl 64 rem, capped at the viewport) and the body scrolls. Combined with the opener's `data-nowo-ui-dialog-src` it is the side-panel pattern for help, manuals and customizers. Unknown placements keep the centred dialog. 
 
 ## [2.11.0] - 2026-10-24
 
@@ -1122,7 +1127,7 @@ Supersedes 1.17.3: same runtime code and CSS, release gate hardened so the tagge
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.6.1...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.12.0...HEAD
 [1.10.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.4...v1.10.0
 [1.8.4]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.3...v1.8.4
 [1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0
