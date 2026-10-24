@@ -64,6 +64,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Host layout bridge blocks** (re-audit OVR-09 from Symfony Beacon): `layout/_bridge.html.twig`, for `{% use %}` in a
+  host layout that extends the host's own shell — `nowo_ui_bridge_title` (document title + optional
+  `nowo_ui_document_title_suffix`), `nowo_ui_bridge_assets`, `nowo_ui_bridge_body` (the new `host_page` slot wrapper,
+  `nowo-ui-host-page--<page type>`, `data-nowo-ui-bundle`, with navigation, page header, flashes and content),
+  `nowo_ui_bridge_flashes` and `nowo_ui_bridge_end`; pages keep overriding the canonical blocks. New `page_width` slot:
+  a container's width per page type through `theme.pages`. See [PAGE_CONTRACT](PAGE_CONTRACT.md#example-host-integration).
+- **Density tokens** (re-audit OVR-11): button, compact button (square icon buttons), input, badge (with per-tone
+  colours), table head, pagination and tab metrics as optional `--nowo-ui-*` tokens, and the `nowo-ui-tabs--pill`
+  modifier. Unset, every component keeps its metrics. See [THEMING](THEMING.md#density-tokens-211).
+
+### Changed
+
+- `--nowo-ui-control-height` now also sets the minimum height of `.nowo-ui-btn` and `.nowo-ui-input`, and the table
+  cell tokens also apply to `.nowo-ui-table`.
+
+### Fixed
+
+- Responsive tables in card mode (phones): the actions cell keeps the full width and its actions wrap (they collapsed
+  into a narrow column drawn over the previous cell), and a labelled cell with several children no longer spills into
+  the label column (the label is positioned; an inline indentation, e.g. DashboardMenu's tree depth, is overridden).
+
 ## [2.10.1] - 2026-10-23
 
 ### Fixed

@@ -28,6 +28,9 @@ final class ThemeSlots
         'page' => ['nowo-ui-page', []],
         'navigation' => ['nowo-ui-navigation', []],
         'content' => ['nowo-ui-content', []],
+        // Host layout bridges (2.11, layout/_bridge.html.twig): the page wrapper and the content width per page type
+        'host_page' => ['nowo-ui-host-page', []],
+        'page_width' => ['nowo-ui-page-width', []],
         'shell' => ['nowo-ui-shell', []],
         'burger' => ['nowo-ui-burger nowo-ui-btn nowo-ui-btn--secondary nowo-ui-btn--sm', [
             'bootstrap' => 'btn btn-outline-secondary btn-sm',

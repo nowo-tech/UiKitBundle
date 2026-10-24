@@ -101,14 +101,18 @@
 .nowo-ui-btn {
   display: inline-flex;
   align-items: center;
+  /* Density tokens (2.11, re-audit OVR-11): unset ones keep these values; a var() without fallback is "unset". */
+  justify-content: var(--nowo-ui-btn-justify);
   gap: 0.25rem;
-  padding: 0.35rem 0.75rem;
+  min-height: var(--nowo-ui-control-height, auto);
+  padding: var(--nowo-ui-btn-py, 0.35rem) var(--nowo-ui-btn-px, 0.75rem);
   border: 1px solid var(--nowo-ui-btn-border, var(--nowo-ui-border-strong));
   border-radius: var(--nowo-ui-btn-radius, var(--nowo-ui-radius));
   background: var(--nowo-ui-btn-bg, var(--nowo-ui-surface));
   color: var(--nowo-ui-btn-text, var(--nowo-ui-text));
   font: inherit;
-  font-size: 0.875rem;
+  font-size: var(--nowo-ui-btn-font-size, 0.875rem);
+  font-weight: var(--nowo-ui-btn-font-weight);
   line-height: 1.25;
   text-decoration: none;
   cursor: pointer;
@@ -127,8 +131,9 @@
 }
 
 .nowo-ui-btn--sm {
-  padding: 0.2rem 0.5rem;
-  font-size: 0.8125rem;
+  min-height: var(--nowo-ui-btn-sm-size, auto);
+  padding: var(--nowo-ui-btn-sm-py, 0.2rem) var(--nowo-ui-btn-sm-px, 0.5rem);
+  font-size: var(--nowo-ui-btn-sm-font-size, 0.8125rem);
 }
 
 /* Icon-only toolbar button (View\Action::display = icon; slot btn_icon): square padding, label visually hidden */
@@ -136,6 +141,13 @@
   justify-content: center;
   gap: 0;
   padding-inline: 0.5rem;
+}
+
+/* Compact icon-only buttons are squares of --nowo-ui-btn-sm-size when a host sets it (2.11) */
+.nowo-ui-btn--sm.nowo-ui-btn--icon {
+  inline-size: var(--nowo-ui-btn-sm-size, auto);
+  min-inline-size: var(--nowo-ui-btn-sm-size, auto);
+  block-size: var(--nowo-ui-btn-sm-size, auto);
 }
 
 .nowo-ui-btn--primary {
@@ -210,10 +222,12 @@
 
 .nowo-ui-input {
   max-width: 20rem;
-  padding: 0.35rem 0.6rem;
+  min-height: var(--nowo-ui-control-height, auto);
+  padding: var(--nowo-ui-input-py, 0.35rem) var(--nowo-ui-input-px, 0.6rem);
   border: 1px solid var(--nowo-ui-input-border, var(--nowo-ui-border-strong));
   border-radius: var(--nowo-ui-input-radius, var(--nowo-ui-radius));
   font: inherit;
+  font-size: var(--nowo-ui-input-font-size);
   accent-color: var(--nowo-ui-accent, var(--nowo-ui-primary));
 }
 
@@ -305,10 +319,19 @@
 
 .nowo-ui-table th,
 .nowo-ui-table td {
-  padding: 0.5rem 0.75rem;
+  padding: var(--nowo-ui-table-cell-py, 0.5rem) var(--nowo-ui-table-cell-px, 0.75rem);
+  font-size: var(--nowo-ui-table-font-size);
   border-bottom: 1px solid var(--nowo-ui-table-border, var(--nowo-ui-border));
   text-align: left;
   vertical-align: middle;
+}
+
+/* Head type (2.11): unset tokens keep the browser's bold, untransformed header */
+.nowo-ui-table > thead > tr > th {
+  font-size: var(--nowo-ui-table-head-font-size);
+  font-weight: var(--nowo-ui-table-head-font-weight, bold);
+  letter-spacing: var(--nowo-ui-table-head-letter-spacing);
+  text-transform: var(--nowo-ui-table-head-transform);
 }
 
 /* Head + hover paint for the kit-painted stacks; Bootstrap `.table` keeps --bs-table-* (see .nowo-ui-bs-tokens). */
@@ -392,32 +415,36 @@
 .nowo-ui-badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.1rem 0.45rem;
-  border: 1px solid var(--nowo-ui-border);
+  min-height: var(--nowo-ui-badge-min-height, auto);
+  padding: var(--nowo-ui-badge-py, 0.1rem) var(--nowo-ui-badge-px, 0.45rem);
+  border: 1px solid var(--nowo-ui-badge-border, var(--nowo-ui-border));
   border-radius: var(--nowo-ui-badge-radius, 999px);
-  font-size: 0.75rem;
+  font-size: var(--nowo-ui-badge-font-size, 0.75rem);
+  font-weight: var(--nowo-ui-badge-font-weight);
+  letter-spacing: var(--nowo-ui-badge-letter-spacing);
   margin-left: var(--nowo-ui-badge-offset, 0.35rem);
-  background: var(--nowo-ui-surface-muted);
-  color: var(--nowo-ui-text);
+  background: var(--nowo-ui-badge-bg, var(--nowo-ui-surface-muted));
+  color: var(--nowo-ui-badge-text, var(--nowo-ui-text));
 }
 
+/* Per-tone badge colours (2.11): --nowo-ui-badge-<tone>-bg / -border / -text, else the semantic palette */
 .nowo-ui-badge--success {
-  background: var(--nowo-ui-success-bg);
-  border-color: var(--nowo-ui-success-border);
-  color: var(--nowo-ui-success-text);
+  background: var(--nowo-ui-badge-success-bg, var(--nowo-ui-success-bg));
+  border-color: var(--nowo-ui-badge-success-border, var(--nowo-ui-success-border));
+  color: var(--nowo-ui-badge-success-text, var(--nowo-ui-success-text));
 }
 
 .nowo-ui-badge--warning {
-  background: var(--nowo-ui-warning-bg);
-  border-color: var(--nowo-ui-warning-border);
-  color: var(--nowo-ui-warning-text);
+  background: var(--nowo-ui-badge-warning-bg, var(--nowo-ui-warning-bg));
+  border-color: var(--nowo-ui-badge-warning-border, var(--nowo-ui-warning-border));
+  color: var(--nowo-ui-badge-warning-text, var(--nowo-ui-warning-text));
 }
 
 .nowo-ui-badge--danger,
 .nowo-ui-badge--error {
-  background: var(--nowo-ui-danger-bg);
-  border-color: var(--nowo-ui-danger-border);
-  color: var(--nowo-ui-danger-text-strong);
+  background: var(--nowo-ui-badge-danger-bg, var(--nowo-ui-danger-bg));
+  border-color: var(--nowo-ui-badge-danger-border, var(--nowo-ui-danger-border));
+  color: var(--nowo-ui-badge-danger-text, var(--nowo-ui-danger-text-strong));
 }
 
 .nowo-ui-badge--info,
@@ -669,14 +696,17 @@ body.nowo-modal-open {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 2rem;
-  padding: 0.25rem 0.5rem;
+  min-width: var(--nowo-ui-pagination-size, 2rem);
+  min-height: var(--nowo-ui-pagination-size, auto);
+  padding: var(--nowo-ui-pagination-py, 0.25rem) var(--nowo-ui-pagination-px, 0.5rem);
   border: 1px solid var(--nowo-ui-pagination-border, var(--nowo-ui-border-strong));
   border-radius: var(--nowo-ui-pagination-radius, var(--nowo-ui-radius));
   background: var(--nowo-ui-pagination-bg, var(--nowo-ui-surface));
   color: var(--nowo-ui-pagination-text, var(--nowo-ui-text));
   text-decoration: none;
-  font-size: 0.875rem;
+  font-size: var(--nowo-ui-pagination-font-size, 0.875rem);
+  font-weight: var(--nowo-ui-pagination-font-weight);
+  line-height: var(--nowo-ui-pagination-line-height);
 }
 
 a.nowo-ui-pagination__link:hover {
@@ -733,7 +763,10 @@ a.nowo-ui-pagination__link:hover {
 
 .nowo-ui-tabs__item {
   display: inline-flex;
-  padding: 0.5rem 0.75rem;
+  min-height: var(--nowo-ui-tab-min-height, auto);
+  padding: var(--nowo-ui-tab-py, 0.5rem) var(--nowo-ui-tab-px, 0.75rem);
+  font-size: var(--nowo-ui-tab-font-size);
+  font-weight: var(--nowo-ui-tab-font-weight);
   color: var(--nowo-ui-tab-text, var(--nowo-ui-muted));
   background: var(--nowo-ui-tab-bg, transparent);
   text-decoration: none;
@@ -758,6 +791,26 @@ a.nowo-ui-pagination__link:hover {
   background: var(--nowo-ui-tab-active-bg, var(--nowo-ui-tab-bg, transparent));
   border-bottom-color: var(--nowo-ui-tab-active-border, var(--nowo-ui-primary));
   font-weight: var(--nowo-ui-tab-active-weight, 600);
+}
+
+/* Pill tabs (2.11, `tabs` slot class nowo-ui-tabs--pill): a bordered pill per tab instead of the underline */
+.nowo-ui-tabs--pill {
+  align-items: stretch;
+  border-bottom: 0;
+}
+
+.nowo-ui-tabs--pill > .nowo-ui-tabs__item {
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0;
+  border: var(--nowo-ui-border-width, 1px) solid transparent;
+  border-radius: var(--nowo-ui-tab-radius, var(--nowo-ui-radius));
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.nowo-ui-tabs--pill > :is(.nowo-ui-tabs__item--active, .nowo-ui-tabs__item.is-active, .nowo-ui-tabs__item[aria-current='page']) {
+  border-color: var(--nowo-ui-tab-active-border, var(--nowo-ui-primary));
+  font-weight: var(--nowo-ui-tab-active-weight, var(--nowo-ui-tab-font-weight, 600));
 }
 
 .nowo-ui-page-header__title {
@@ -4000,6 +4053,33 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
 
   .nowo-ui-table--cards > tbody > tr > td.nowo-ui-table__actions:not(.nowo-ui-cell--start, .nowo-ui-cell--center) .nowo-ui-row-actions {
     justify-content: flex-end;
+  }
+
+  /* 2.11 (re-audit OVR-11): the actions column loses its `width: 1%; white-space: nowrap` (the row actions collapsed
+   * into a narrow column drawn over the previous cell) and its actions wrap. */
+  .nowo-ui-table--cards > tbody > tr > td.nowo-ui-table__actions {
+    width: 100%;
+    white-space: normal;
+  }
+
+  .nowo-ui-table--cards > tbody > tr > td.nowo-ui-table__actions > .nowo-ui-row-actions {
+    flex-wrap: wrap;
+  }
+
+  /* 2.11: a labelled cell with several children (icon + text, value + badges) or bare text spilled into the label
+   * column of the label | value grid: the label is positioned instead and the value flows in the remaining width.
+   * !important beats an inline indentation (DashboardMenu indents tree cells with an inline padding). */
+  .nowo-ui-table--cards > tbody > tr > td[data-label]:not(.nowo-ui-table__actions) {
+    position: relative;
+    display: block;
+    min-height: 1.5rem;
+    padding-inline-start: calc(40% + 0.75rem) !important;
+  }
+
+  .nowo-ui-table--cards > tbody > tr > td[data-label]:not(.nowo-ui-table__actions)::before {
+    position: absolute;
+    inset-inline-start: 0;
+    width: 40%;
   }
 
   /* Inline content (badges, links, icons) keeps its own width inside the label | value grid */

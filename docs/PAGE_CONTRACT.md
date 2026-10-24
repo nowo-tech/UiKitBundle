@@ -771,6 +771,25 @@ template. Same contract as an include: `{{ include('@NowoUiKit/page/_page_header
    {% endblock %}
    ```
 
+   **Bridge blocks (2.11).** Instead of re-typing the canonical blocks, `{% use '@NowoUiKit/layout/_bridge.html.twig' %}`
+   in the host layout and print its pieces inside your shell's blocks; pages keep overriding the canonical blocks:
+
+   ```twig
+   {% extends 'base.html.twig' %}
+   {% use '@NowoUiKit/layout/_bridge.html.twig' %}
+   {% set nowo_ui_document_title_suffix = 'Acme' %}  {# "<title> — Acme"; separator: nowo_ui_document_title_separator #}
+   {% block title %}{{ block('nowo_ui_bridge_title') }}{% endblock %}
+   {% block stylesheets %}{{ parent() }}{{ block('nowo_ui_bridge_assets') }}{% endblock %}
+   {% block body %}{{ block('nowo_ui_bridge_body') }}{% endblock %}
+   {% block javascripts %}{{ parent() }}{{ block('nowo_ui_bridge_end') }}{% endblock %}
+   ```
+
+   `nowo_ui_bridge_body` is the `host_page` slot wrapper (`nowo-ui-host-page nowo-ui-host-page--<page type>`,
+   `data-nowo-ui-bundle`) with navigation, page header, flashes and content; set `nowo_ui_bridge_flashes_inside` to
+   false and print `{{ block('nowo_ui_bridge_flashes') }}` where your shell's flash region is. Your own definition of
+   a canonical block wins over the used one (e.g. `nowo_ui_flashes` with your toast stack). The `page_width` slot gives
+   a container its width per page type (`theme.pages.auth.classes.page_width: 'max-w-md'`).
+
 2. **Theme — once.** `nowo_ui_kit.theme.tokens` (~15–20 tokens) + `theme.classes` for the slots your design system
    restyles, optionally `theme.partials` for a structural change (e.g. your page header). See
    [`THEME_SLOTS.md`](THEME_SLOTS.md).

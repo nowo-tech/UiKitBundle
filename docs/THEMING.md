@@ -339,8 +339,51 @@ rail width, default `3.75rem`)*, `--nowo-ui-aside-duration`,
 `--nowo-ui-control-height`, `--nowo-ui-control-height-compact`, `--nowo-ui-filter-control-height`,
 `--nowo-ui-orb-size`, `--nowo-ui-page-loader-corner-bottom`, `--nowo-ui-page-loader-corner-left`.
 
-Control heights, paddings and font sizes are deliberately **not** themed per component: they are product
-layout. Hosts that need a different density keep a few metric rules (or use the compact modifiers).
+Since 2.11 `--nowo-ui-control-height` also sets the minimum height of `.nowo-ui-btn` and `.nowo-ui-input` (it used
+to feed the filter rows only). See [Density tokens](#density-tokens-211) for the per-component metrics.
+
+<a id="density-tokens-211"></a>
+
+## Density tokens (2.11)
+
+Re-audit OVR-11 from Symfony Beacon: component metrics a host used to restate in its own CSS. Every token is optional:
+unset, the component keeps its 2.10 metrics (a token listed as *unset* is read without a fallback, so it changes nothing
+until set).
+
+| Token | Default | Used by |
+|-------|---------|---------|
+| `--nowo-ui-btn-py` / `--nowo-ui-btn-px` | `0.35rem` / `0.75rem` | `.nowo-ui-btn` padding |
+| `--nowo-ui-btn-font-size` | `0.875rem` | `.nowo-ui-btn` |
+| `--nowo-ui-btn-font-weight` | *unset* (inherited) | `.nowo-ui-btn` |
+| `--nowo-ui-btn-justify` | *unset* | `.nowo-ui-btn` content alignment (e.g. `center`) |
+| `--nowo-ui-btn-sm-size` | `auto` | `.nowo-ui-btn--sm` min height; squares `.nowo-ui-btn--sm.nowo-ui-btn--icon` |
+| `--nowo-ui-btn-sm-py` / `--nowo-ui-btn-sm-px` | `0.2rem` / `0.5rem` | `.nowo-ui-btn--sm` padding |
+| `--nowo-ui-btn-sm-font-size` | `0.8125rem` | `.nowo-ui-btn--sm` |
+| `--nowo-ui-input-py` / `--nowo-ui-input-px` | `0.35rem` / `0.6rem` | `.nowo-ui-input` padding |
+| `--nowo-ui-input-font-size` | *unset* (inherited) | `.nowo-ui-input` |
+| `--nowo-ui-badge-py` / `--nowo-ui-badge-px` | `0.1rem` / `0.45rem` | `.nowo-ui-badge` padding |
+| `--nowo-ui-badge-min-height` | `auto` | `.nowo-ui-badge` |
+| `--nowo-ui-badge-font-size` | `0.75rem` | `.nowo-ui-badge` |
+| `--nowo-ui-badge-font-weight` / `--nowo-ui-badge-letter-spacing` | *unset* | `.nowo-ui-badge` |
+| `--nowo-ui-badge-bg` / `--nowo-ui-badge-border` / `--nowo-ui-badge-text` | `var(--nowo-ui-surface-muted)` / `var(--nowo-ui-border)` / `var(--nowo-ui-text)` | neutral badge |
+| `--nowo-ui-badge-success-bg` / `--nowo-ui-badge-success-border` / `--nowo-ui-badge-success-text` | the `--nowo-ui-success-*` palette | `.nowo-ui-badge--success` |
+| `--nowo-ui-badge-warning-bg` / `--nowo-ui-badge-warning-border` / `--nowo-ui-badge-warning-text` | the `--nowo-ui-warning-*` palette | `.nowo-ui-badge--warning` |
+| `--nowo-ui-badge-danger-bg` / `--nowo-ui-badge-danger-border` / `--nowo-ui-badge-danger-text` | the `--nowo-ui-danger-*` palette | `.nowo-ui-badge--danger`, `--error` |
+| `--nowo-ui-table-head-font-weight` | `bold` | `.nowo-ui-table > thead > tr > th` |
+| `--nowo-ui-table-head-letter-spacing` | *unset* | `.nowo-ui-table` header (with `--nowo-ui-table-head-transform`, `--nowo-ui-table-head-font-size`) |
+| `--nowo-ui-pagination-size` | `2rem` wide, `auto` tall | `.nowo-ui-pagination__link` min width / height |
+| `--nowo-ui-pagination-py` / `--nowo-ui-pagination-px` | `0.25rem` / `0.5rem` | `.nowo-ui-pagination__link` padding |
+| `--nowo-ui-pagination-font-size` | `0.875rem` | `.nowo-ui-pagination__link` |
+| `--nowo-ui-pagination-font-weight` / `--nowo-ui-pagination-line-height` | *unset* | `.nowo-ui-pagination__link` |
+| `--nowo-ui-tab-py` / `--nowo-ui-tab-px` | `0.5rem` / `0.75rem` | `.nowo-ui-tabs__item` padding |
+| `--nowo-ui-tab-min-height` | `auto` | `.nowo-ui-tabs__item` |
+| `--nowo-ui-tab-font-size` / `--nowo-ui-tab-font-weight` | *unset* | `.nowo-ui-tabs__item` |
+
+The table cell metrics (`--nowo-ui-table-cell-py`, `--nowo-ui-table-cell-px`, `--nowo-ui-table-font-size`) now also
+apply to `.nowo-ui-table` (they were read by `.nowo-ui-data-table` only).
+
+**Pill tabs.** Add `nowo-ui-tabs--pill` to the `tabs` slot (`theme.classes.tabs`): each tab is a bordered pill
+(`--nowo-ui-tab-radius`, active border `--nowo-ui-tab-active-border`) instead of the underline.
 
 ## CSS framework notes
 

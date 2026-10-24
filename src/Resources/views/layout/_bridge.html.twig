@@ -1,0 +1,59 @@
+{#
+  2.11 host layout bridge (re-audit OVR-09 from Symfony Beacon): the canonical REQ-UI-003 block plumbing for a host
+  layout that extends the host's own shell instead of @NowoUiKit/layout/document.html.twig. `{% use %}` this file in
+  the host layout and print the pieces inside the shell's own blocks; pages keep overriding the canonical blocks
+  (nowo_ui_document_title, nowo_ui_head, nowo_ui_styles, nowo_ui_navigation, nowo_ui_page_header, nowo_ui_flashes,
+  nowo_ui_content, nowo_ui_modals, nowo_ui_scripts):
+
+      {% extends 'base.html.twig' %}
+      {% use '@NowoUiKit/layout/_bridge.html.twig' %}
+      {% set nowo_ui_document_title_suffix = 'My app' %}
+      {% block title %}{{ block('nowo_ui_bridge_title') }}{% endblock %}
+      {% block stylesheets %}{{ parent() }}{{ block('nowo_ui_bridge_assets') }}{% endblock %}
+      {% block body %}{{ block('nowo_ui_bridge_body') }}{% endblock %}
+      {% block body_end %}{{ block('nowo_ui_bridge_end') }}{% endblock %}
+
+  Blocks:
+    - nowo_ui_bridge_title: nowo_ui_document_title, then " — <suffix>" when nowo_ui_document_title_suffix is set
+      (separator: nowo_ui_document_title_separator, default "—");
+    - nowo_ui_bridge_assets: nowo_ui_head + nowo_ui_styles;
+    - nowo_ui_bridge_body: the `host_page` slot wrapper (+ `nowo-ui-host-page--<page type>`, data-nowo-ui-bundle) with
+      navigation, page header, flashes (nowo_ui_bridge_flashes, unless nowo_ui_bridge_flashes_inside is false — the
+      shell then prints {{ block('nowo_ui_bridge_flashes') }} where its own flash region is) and content;
+    - nowo_ui_bridge_flashes: nowo_ui_flashes (default: the `flashes` partial);
+    - nowo_ui_bridge_end: nowo_ui_modals + nowo_ui_scripts.
+  Width per page type: the `page_width` slot (theme.pages.<type>.classes.page_width), e.g. in the shell's container.
+  A host layout may override any canonical block itself (its own definition wins over the used one).
+#}
+{% block nowo_ui_bridge_title -%}
+    {% block nowo_ui_document_title %}{{ nowo_ui_document_title|default('') }}{% endblock %}
+    {%- if nowo_ui_document_title_suffix|default('') is not same as('') %} {{ nowo_ui_document_title_separator|default('—') }} {{ nowo_ui_document_title_suffix }}{% endif %}
+{%- endblock %}
+
+{% block nowo_ui_bridge_assets %}
+    {% block nowo_ui_head %}{% endblock %}
+    {% block nowo_ui_styles %}{% endblock %}
+{% endblock %}
+
+{% block nowo_ui_bridge_body %}
+    {% set _bundle = nowo_ui_bundle|default(null) %}
+    {% set _page_type = nowo_ui_page_type|default('') %}
+    <div class="{{ nowo_ui_class('host_page', _bundle) }} nowo-ui-host-page--{{ _page_type ?: 'page' }}"{% if _bundle %} data-nowo-ui-bundle="{{ _bundle }}"{% endif %}{{ nowo_ui_attrs('host_page', _bundle) }}>
+        {% block nowo_ui_navigation %}{% endblock %}
+        {% block nowo_ui_page_header %}{% endblock %}
+        {% if nowo_ui_bridge_flashes_inside ?? true %}{{ block('nowo_ui_bridge_flashes') }}{% endif %}
+        {% block nowo_ui_content %}{% endblock %}
+    </div>
+{% endblock %}
+
+{% block nowo_ui_bridge_flashes %}
+    {% block nowo_ui_flashes %}
+        {% set _bundle = nowo_ui_bundle|default(null) %}
+        {{ include(nowo_ui_partial('flashes', _bundle), {bundle: _bundle}) }}
+    {% endblock %}
+{% endblock %}
+
+{% block nowo_ui_bridge_end %}
+    {% block nowo_ui_modals %}{% endblock %}
+    {% block nowo_ui_scripts %}{% endblock %}
+{% endblock %}

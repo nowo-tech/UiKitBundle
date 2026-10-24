@@ -98,6 +98,8 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `page` | `nowo-ui-page` | — | — | — | — |
 | `navigation` | `nowo-ui-navigation` | — | — | — | — |
 | `content` | `nowo-ui-content` | — | — | — | — |
+| `host_page` | `nowo-ui-host-page` | — | — | — | — |
+| `page_width` | `nowo-ui-page-width` | — | — | — | — |
 | `shell` | `nowo-ui-shell` | — | — | — | — |
 | `burger` | `nowo-ui-burger nowo-ui-btn nowo-ui-btn--secondary nowo-ui-btn--sm` | `btn btn-outline-secondary btn-sm` | `btn btn-outline-secondary btn-sm` | `inline-flex items-center gap-1 font-medium px-2 py-1 text-sm border` | `button secondary tiny` |
 | `breadcrumbs` | `nowo-ui-breadcrumbs` | — | — | — | — |

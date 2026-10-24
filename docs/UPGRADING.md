@@ -75,6 +75,11 @@
 
 ## Unreleased
 
+If you set `--nowo-ui-control-height` (it fed the filter rows), buttons and inputs now take that minimum height too;
+unset it or set the new per-component tokens. Responsive card tables position the cell label: a host rule that relied
+on the label | value grid of a labelled cell may need a look. Everything else is opt-in (bridge blocks, `host_page` /
+`page_width` slots, density tokens, `nowo-ui-tabs--pill`).
+
 ## To 2.10.1
 
 If you set the `form_row` slot for checkbox rows too, copy the classes they need to the new `form_row_check` slot.
