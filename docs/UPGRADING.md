@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.13.0](#to-2130)
 - [To 2.12.1](#to-2121)
 - [To 2.12.0](#to-2120)
 - [To 2.11.0](#to-2110)
@@ -77,6 +78,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.13.0
+
+From **2.12.1**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 No change needed. New, opt-in: the [listing customizer](USAGE.md#listing-customizer) (`Nowo\UiKitBundle\Listing\*`,
 partials `listing_customizer`, `listing_head`, `listing_cells`, `listing_filter_fields`, Stimulus peer
