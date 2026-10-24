@@ -66,6 +66,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Edge tab `attr` option (`partials/_edge_tab.html.twig`): extra attributes on the tab link (bare `true`, omitted `false` / `null`, `on*` handlers dropped), e.g. `data-nowo-ui-dialog-open` + `data-nowo-ui-dialog-src` to open the linked page in a side panel (dialog `placement: 'end'`, 2.12) with `href` as the no-JS fallback.
+
 ## [2.12.0] - 2026-10-24
 
 Side-panel placement for the native dialog. See [UPGRADING](UPGRADING.md#to-2120).

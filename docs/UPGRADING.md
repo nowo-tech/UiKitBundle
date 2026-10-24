@@ -77,6 +77,8 @@
 
 ## Unreleased
 
+No change needed: new optional `attr` on the edge tab partial.
+
 ## To 2.12.0
 
 From **2.11.0**:

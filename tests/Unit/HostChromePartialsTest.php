@@ -226,6 +226,10 @@ final class HostChromePartialsTest extends TestCase
         self::assertStringContainsString('<div class="nowo-ui-edge-tab mine" data-nowo-ui-edge-tab-slot="2" data-testid="manual-link-admin">', $custom);
         self::assertStringContainsString('<a class="nowo-ui-edge-tab__link" href="/h" title="Help" aria-label="Help">', $custom);
 
+        $panel = $this->render("{% include '@NowoUiKitBundle/partials/_edge_tab.html.twig' with {href: '/m', new_tab: false, attr: {'data-nowo-ui-dialog-open': 'help', 'data-nowo-ui-dialog-src': '/m?panel=1', 'onclick': 'x()', 'data-off': false}} only %}");
+        self::assertStringContainsString('<a class="nowo-ui-edge-tab__link" href="/m" title="edge_tab.manual" aria-label="edge_tab.manual" data-nowo-ui-dialog-open="help" data-nowo-ui-dialog-src="/m?panel=1">', $panel);
+        self::assertStringNotContainsString('onclick', $panel, 'no inline handlers (CSP)');
+
         $inline = $this->render("{% include '@NowoUiKitBundle/partials/_edge_tab.html.twig' with {href: '/h', inline: true, testid: 't'} only %}");
         self::assertStringContainsString('<p class="nowo-ui-edge-link" data-testid="t">', $inline);
         self::assertStringContainsString('<a href="/h" target="_blank" rel="noopener noreferrer">edge_tab.manual</a>', $inline);

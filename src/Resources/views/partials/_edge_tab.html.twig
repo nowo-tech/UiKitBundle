@@ -10,6 +10,9 @@
     - slot (0–3, default 0): stack position when the page has other edge tabs (each slot is one tab lower)
     - inline (default false): a plain text link in the flow instead of the tab
     - class, testid
+    - attr (2.12.1): extra attributes of the tab link (hash; true = bare attribute, false / null = omitted, on* handlers
+      dropped), e.g. {'data-nowo-ui-dialog-open': 'help', 'data-nowo-ui-dialog-src': url} to open the page in a side
+      panel (dialog placement end) while href stays the no-JS fallback
 #}
 {% set _label = label|default('edge_tab.manual'|trans({}, 'NowoUiKitBundle')) %}
 {% set _new_tab = new_tab ?? true %}
@@ -19,7 +22,8 @@
     </p>
 {% else %}
     <div class="nowo-ui-edge-tab{{ class|default('') ? ' ' ~ class : '' }}" data-nowo-ui-edge-tab-slot="{{ slot|default(0) }}"{% if testid|default('') %} data-testid="{{ testid }}"{% endif %}>
-        <a class="nowo-ui-edge-tab__link" href="{{ href }}"{% if _new_tab %} target="_blank" rel="noopener noreferrer"{% endif %} title="{{ _label }}" aria-label="{{ _label }}">
+        <a class="nowo-ui-edge-tab__link" href="{{ href }}"{% if _new_tab %} target="_blank" rel="noopener noreferrer"{% endif %} title="{{ _label }}" aria-label="{{ _label }}"
+            {%- for _name, _value in attr|default({}) %}{% if _value is not same as(false) and _value is not null and not (_name|lower starts with 'on') %} {{ _name|e('html_attr') }}{% if _value is not same as(true) %}="{{ _value }}"{% endif %}{% endif %}{% endfor %}>
             <span class="nowo-ui-edge-tab__icon" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: icon|default('book'), label: _label}, false)|trim|raw }}</span>
         </a>
     </div>
