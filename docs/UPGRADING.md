@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.11.0](#to-2110)
 - [To 2.10.1](#to-2101)
 - [To 2.10.0](#to-2100)
 - [To 2.9.0](#to-290)
@@ -74,6 +75,8 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.11.0
 
 If you set `--nowo-ui-control-height` (it fed the filter rows), buttons and inputs now take that minimum height too;
 unset it or set the new per-component tokens. Responsive card tables position the cell label: a host rule that relied
