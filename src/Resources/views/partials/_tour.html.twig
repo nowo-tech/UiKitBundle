@@ -1,0 +1,86 @@
+{#
+  Guided product tour (2.13): a right-edge "Tour this page" tab plus the steps of the Stimulus peer `product-tour`
+  (stimulus-peers/product_tour_controller.ts, driver.js loaded on demand). Hosts build the steps (permissions are
+  theirs), anchor them with `data-tour="…"` attributes and include the partial once per page:
+
+      {{ include(nowo_ui_partial('tour'), {tour: tour}) }}
+
+  with `tour` a `Nowo\UiKitBundle\Tour\Tour` (see TourBuilder) or a hash
+  {key, steps: [{selector (null = centred), title, description, side, align}], auto_start}; titles and descriptions
+  are a `View\Label` (or `{key, domain, params}` hash) or a string. Renders nothing without steps.
+
+  "Seen" state: the browser (localStorage map `storage_key`, default `nowo-ui-tour-seen`, one entry per tour key).
+  The tour auto-starts once while its key is not in the map; finishing or closing it adds the key. The tab replays it.
+  Optional server persistence: with `seen_url` the peer also sends {"key": "…"} (JSON, X-CSRF-TOKEN header).
+
+  Optional (prefixed where a page variable could leak in — the include inherits the page context):
+    - auto_start (default `tour.autoStart`, else true): start once when the key is not seen yet
+    - force (default false): start on load even when seen (e.g. `app.request.query.getBoolean('tour')`)
+    - force_param (default ''): query parameter dropped from the URL (history.replaceState) once the tour ends
+    - storage_key (default `nowo-ui-tour-seen`): localStorage key of the seen map
+    - seen_url / seen_token / seen_token_url / seen_method (default POST): server "seen" endpoint, CSRF token, a GET
+      URL answering {"token": "…"} (refreshed once on 403), HTTP method
+    - labels: {tab, next, previous, done, close, progress} — override the NowoUiKitBundle `tour.*` translations
+      (`progress` keeps driver.js placeholders `{{current}}` / `{{total}}`)
+    - html_content (default false): titles / descriptions are trusted HTML (default: shown as text)
+    - popover_class (default `nowo-ui-tour-popover`): class of the driver.js popover
+    - show_tab (default true): render the edge tab; without it start the tour from any element inside the root
+      (`data-action="product-tour#start"`) or anywhere with `window.dispatchEvent(new Event('nowo-ui-tour:start'))`
+    - tab_slot (0–3, default 0), tab_inline (default false), tab_icon (default `tour`), tab_class: edge tab options
+      (`slot`, `inline`, `icon`, `class` of partials/_edge_tab.html.twig)
+    - attr: extra attributes on the root element (hash)
+    - testids (default false): data-testid `tour` (root) and `tour-tab`
+#}
+{% set _tour = tour %}
+{% set _labels = {
+    tab: 'tour.tab'|trans({}, 'NowoUiKitBundle'),
+    next: 'tour.next'|trans({}, 'NowoUiKitBundle'),
+    previous: 'tour.previous'|trans({}, 'NowoUiKitBundle'),
+    done: 'tour.done'|trans({}, 'NowoUiKitBundle'),
+    close: 'tour.close'|trans({}, 'NowoUiKitBundle'),
+    progress: 'tour.progress'|trans({}, 'NowoUiKitBundle'),
+}|merge(labels|default({})) %}
+{% set _steps = [] %}
+{% for _step in _tour.steps|default([]) %}
+    {% set _popover = {title: _step.title|nowo_ui_trans, description: (_step.description ?? '')|nowo_ui_trans} %}
+    {% if _step.side ?? null %}{% set _popover = _popover|merge({side: _step.side}) %}{% endif %}
+    {% if _step.align ?? null %}{% set _popover = _popover|merge({align: _step.align}) %}{% endif %}
+    {% set _steps = _steps|merge([(_step.selector ?? null) ? {element: _step.selector, popover: _popover} : {popover: _popover}]) %}
+{% endfor %}
+{% set _auto_start = auto_start ?? _tour.autoStart ?? _tour.auto_start ?? true %}
+{% set _testids = testids|default(false) %}
+{% if _steps is not empty %}
+<div
+    class="nowo-ui-tour"
+    data-controller="product-tour"
+    data-action="nowo-ui-tour:start@window->product-tour#start"
+    data-product-tour-key-value="{{ _tour.key }}"
+    data-product-tour-steps-value="{{ _steps|json_encode }}"
+    data-product-tour-auto-start-value="{{ _auto_start ? 'true' : 'false' }}"
+    {%- if force|default(false) %} data-product-tour-force-value="true"{% endif %}
+    {%- if force_param|default('') %} data-product-tour-force-param-value="{{ force_param }}"{% endif %}
+    {%- if storage_key|default('') %} data-product-tour-storage-key-value="{{ storage_key }}"{% endif %}
+    {%- if seen_url|default('') %} data-product-tour-seen-url-value="{{ seen_url }}"{% endif %}
+    {%- if seen_token|default('') %} data-product-tour-seen-token-value="{{ seen_token }}"{% endif %}
+    {%- if seen_token_url|default('') %} data-product-tour-seen-token-url-value="{{ seen_token_url }}"{% endif %}
+    {%- if seen_method|default('') %} data-product-tour-seen-method-value="{{ seen_method }}"{% endif %}
+    {%- if html_content|default(false) %} data-product-tour-html-value="true"{% endif %}
+    {%- if popover_class|default('') %} data-product-tour-popover-class-value="{{ popover_class }}"{% endif %}
+    data-product-tour-labels-value="{{ {next: _labels.next, previous: _labels.previous, done: _labels.done, close: _labels.close, progress: _labels.progress}|json_encode }}"
+    {%- if _testids %} data-testid="tour"{% endif %}
+    {%- for _name, _value in attr|default({}) %} {{ _name|e('html_attr') }}="{{ _value }}"{% endfor %}
+>
+    {%- if show_tab ?? true %}
+    {{ include('@NowoUiKitBundle/partials/_edge_tab.html.twig', {
+        button: true,
+        label: _labels.tab,
+        icon: tab_icon|default('tour'),
+        slot: tab_slot|default(0),
+        inline: tab_inline|default(false),
+        class: tab_class|default(''),
+        testid: _testids ? 'tour-tab' : '',
+        attr: {'data-action': 'product-tour#start', 'data-product-tour-target': 'tab'},
+    }, false) }}
+    {%- endif %}
+</div>
+{% endif %}

@@ -588,6 +588,7 @@ final class ThemeSlots
         'table' => '@NowoUiKitBundle/partials/_table.html.twig',
         'tabs' => '@NowoUiKitBundle/partials/_tabs.html.twig',
         'toasts' => '@NowoUiKitBundle/partials/_toasts.html.twig',
+        'tour' => '@NowoUiKitBundle/partials/_tour.html.twig',
         'wizard_form' => '@NowoUiKitBundle/page/_wizard_form.html.twig',
     ];
 

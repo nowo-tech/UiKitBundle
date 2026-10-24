@@ -22,6 +22,7 @@ Optional **Stimulus peer** TypeScript sources live under `src/Resources/assets/s
 - [Listing customizer (Stimulus peer only)](#listing-customizer-stimulus-peer-only)
 - [Filters collapse (Stimulus peer only)](#filters-collapse-stimulus-peer-only)
 - [Disclosure icon (Stimulus peer only)](#disclosure-icon-stimulus-peer-only)
+- [Product tour (Stimulus peer only)](#product-tour-stimulus-peer-only)
 - [Error retry countdown (2.6)](#error-retry-countdown-26)
 - [Auto-submit (2.6)](#auto-submit-26)
 - [Icon state bridge and morphicons](#icon-state-bridge-and-morphicons)
@@ -376,6 +377,36 @@ No kit IIFE (1.17). `data-controller="disclosure-icon"` on a toggle that contain
 on a `<summary>` it follows its `<details>` (`toggle` event), on any other element its `aria-expanded` (e.g. a
 `collapse-panel` button). It only reports the state (`disclosure` / `open` | `closed`) to the icon state bridge —
 the static chevrons follow the state through CSS without it. Peer: `disclosure_icon_controller.ts`.
+
+## Product tour (Stimulus peer only)
+
+No kit IIFE (2.13). Guided per-page tour on [driver.js](https://driverjs.com) (optional host dependency `driver.js`
+^1.3, imported on demand; the host loads `driver.js/dist/driver.css`). Markup from `partials/_tour.html.twig`
+(`nowo_ui_partial('tour')`, [USAGE.md](USAGE.md#guided-tour)).
+
+| Stimulus | Role |
+|----------|------|
+| `data-controller="product-tour"` | Root (gets `data-tour-active` while a tour runs) |
+| `data-product-tour-key-value` | Tour key (one entry of the seen map) |
+| `data-product-tour-steps-value` | `[{element?, popover: {title, description, side?, align?}}]`; missing elements are skipped, no `element` = centred |
+| `data-product-tour-auto-start-value` | Start once on connect while the key is not seen (default true) |
+| `data-product-tour-force-value` / `-force-param-value` | Start even when seen / query parameter removed from the URL when the tour ends |
+| `data-product-tour-storage-key-value` | localStorage key of the seen map `{key: timestamp}` (default `nowo-ui-tour-seen`) |
+| `data-product-tour-seen-url-value` | Optional server endpoint: `{"key": …}` (JSON, `X-CSRF-TOKEN`, keepalive) once per page |
+| `data-product-tour-seen-token-value` / `-seen-token-url-value` / `-seen-method-value` | CSRF token / GET URL answering `{"token": "…"}` (one refresh on 403) / method (default `POST`) |
+| `data-product-tour-labels-value` | `{next, previous, done, close, progress}` (`progress` with `{{current}}` / `{{total}}`) |
+| `data-product-tour-html-value` | Titles / descriptions are trusted HTML (default: escaped text) |
+| `data-product-tour-popover-class-value` | driver.js `popoverClass` (default `nowo-ui-tour-popover`) |
+| target `tab` | The "Tour this page" edge tab (optional) |
+| `data-action="product-tour#start"` / `#stop` | Start or replay (no-op while running) / close |
+| `nowo-ui-tour:start@window->product-tour#start` | Set by the partial: `window.dispatchEvent(new Event('nowo-ui-tour:start'))` starts it from anywhere |
+
+Events: `product-tour:started` (`detail.key`, `detail.steps`), `product-tour:ended` (`detail.key`, `detail.completed`),
+`product-tour:save-failed` (`detail.key`), `product-tour:unavailable` (`detail.key`, `detail.error`). Reduced motion
+(`prefers-reduced-motion` or `[data-motion="reduce"]`) sets `animate: false`. A highlighted element inside closed
+`<details>` opens them until the tour ends. Disconnecting (Turbo navigation) tears the tour down without marking it
+seen. Peer: `product_tour_controller.ts` (exports `PRODUCT_TOUR_STORAGE_KEY`, `seenTours(storageKey?)`,
+`markTourSeen(key, seen?, storageKey?)`; subclasses may override the protected `driverFactory()`).
 
 ## Error retry countdown (2.6)
 

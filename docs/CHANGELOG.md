@@ -73,6 +73,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Partials `listing_customizer` (page-edge tab + `dialog` side panel with Columns / Filters tabs, drag and keyboard reorder, visibility toggles, "stack under the previous column", reset; hidden-filters notice), `listing_head`, `listing_cells` (`cell_<key>` blocks, stacked cells as `[data-cell-part]` lines, row detail cell), `listing_filter_fields`; theme slots `listing_customizer`, `listing_customizer_toggle`, `listing_customizer_tabs`, `listing_customizer_tab`, `listing_customizer_panel`, `listing_customizer_list`, `listing_customizer_actions`, `listing_notice`; canonical icon kinds `sliders`, `grip`, `stack`; `listing.*` translations in every shipped locale.
 - Stimulus peer `listing-customizer` (`stimulus-peers/listing_customizer_controller.ts`) and the cookie helpers `stimulus-peers/listing_cookie.ts`: Apply writes the cookie (path `/`, SameSite=Lax, one year) and reloads; with a `url` value it sends the layout to the host instead (CSRF, token refresh on 403); events `listing-customizer:saved` / `listing-customizer:save-failed`.
 - Responsive table `save_cookie` option (peer value `cookie`): without `save_url`, the table mode toggle keeps its choice in the listing cookie (`ListingCustomizerView::tableOptions()` passes it with `table_mode`). Hosts passing `save_url` are unchanged.
+- **Guided tour** (D-055, ported from Symfony Beacon's per-screen tours): `Nowo\UiKitBundle\Tour\Tour`,
+  `TourStep` (selector or centred, `Label` or string title / description, side / align, `TourStep::anchor()` for
+  `[data-tour="…"]`) and the immutable `TourBuilder` (`welcome()`, `step()`, `add()`, `build()`); the `tour` partial
+  (`partials/_tour.html.twig`, `nowo_ui_partial('tour')`): a "Tour this page" page-edge tab plus the steps as a
+  Stimulus value (no inline script, CSP-safe); the Stimulus peer `product-tour`
+  (`stimulus-peers/product_tour_controller.ts`): driver.js imported on demand, steps without their anchor skipped,
+  reduced motion honoured, closed `<details>` opened for a highlight. The "seen" state is kept in the browser
+  (localStorage `nowo-ui-tour-seen`, D-056): auto-start once per tour key, replay from the tab; an optional
+  `seen_url` also posts `{"key": …}` with the CSRF header for hosts that persist it server-side. `tour.*`
+  translations in every locale, the `tour` icon in every icon set, `driver.js` as an optional peer dependency. See
+  [USAGE](USAGE.md#guided-tour) and [STIMULUS](STIMULUS.md#product-tour-stimulus-peer-only).
+- **Page-edge tab** `button: true` (a `<button>` instead of the link); the 2.12.1 `attr` option also applies to the
+  inline link and the button.
 
 ## [2.12.1] - 2026-10-24
 

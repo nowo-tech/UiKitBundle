@@ -3,27 +3,41 @@
   the manual"), so page help never pushes the content down. Pair it with nowo_ui_route_link() to pick the link from
   the current route (config `nowo_ui_kit.route_links`).
 
-  Required: href.
+  Required: href (unless `button`).
   Optional:
     - label (default `edge_tab.manual`), icon (default `book`)
     - new_tab (default true: target="_blank" rel="noopener noreferrer")
     - slot (0–3, default 0): stack position when the page has other edge tabs (each slot is one tab lower)
     - inline (default false): a plain text link in the flow instead of the tab
+    - button (2.13, default false): a <button type="button"> instead of a link (`href` / `new_tab` ignored), e.g. the
+      "Tour this page" tab of the `tour` partial; wire it through `attr` (e.g. {'data-action': 'product-tour#start'})
     - class, testid
-    - attr (2.12.1): extra attributes of the tab link (hash; true = bare attribute, false / null = omitted, on* handlers
-      dropped), e.g. {'data-nowo-ui-dialog-open': 'help', 'data-nowo-ui-dialog-src': url} to open the page in a side
-      panel (dialog placement end) while href stays the no-JS fallback
+    - attr (2.12.1; 2.13: also on the inline link and the button): extra attributes of the tab link (hash; true = bare
+      attribute, false / null = omitted, on* handlers dropped), e.g. {'data-nowo-ui-dialog-open': 'help',
+      'data-nowo-ui-dialog-src': url} to open the page in a side panel (dialog placement end) while href stays the
+      no-JS fallback
 #}
 {% set _label = label|default('edge_tab.manual'|trans({}, 'NowoUiKitBundle')) %}
 {% set _new_tab = new_tab ?? true %}
+{% set _button = button|default(false) %}
+{% set _attr %}{% for _name, _value in attr|default({}) %}{% if _value is not same as(false) and _value is not null and not (_name|lower starts with 'on') %} {{ _name|e('html_attr') }}{% if _value is not same as(true) %}="{{ _value }}"{% endif %}{% endif %}{% endfor %}{% endset %}
 {% if inline|default(false) %}
     <p class="nowo-ui-edge-link{{ class|default('') ? ' ' ~ class : '' }}"{% if testid|default('') %} data-testid="{{ testid }}"{% endif %}>
-        <a href="{{ href }}"{% if _new_tab %} target="_blank" rel="noopener noreferrer"{% endif %}>{{ _label }}</a>
+        {% if _button -%}
+        <button type="button" class="nowo-ui-edge-link__button"{{ _attr }}>{{ _label }}</button>
+        {%- else -%}
+        <a href="{{ href }}"{% if _new_tab %} target="_blank" rel="noopener noreferrer"{% endif %}{{ _attr }}>{{ _label }}</a>
+        {%- endif %}
     </p>
+{% elseif _button %}
+    <div class="nowo-ui-edge-tab{{ class|default('') ? ' ' ~ class : '' }}" data-nowo-ui-edge-tab-slot="{{ slot|default(0) }}"{% if testid|default('') %} data-testid="{{ testid }}"{% endif %}>
+        <button type="button" class="nowo-ui-edge-tab__link" title="{{ _label }}" aria-label="{{ _label }}"{{ _attr }}>
+            <span class="nowo-ui-edge-tab__icon" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: icon|default('book'), label: _label}, false)|trim|raw }}</span>
+        </button>
+    </div>
 {% else %}
     <div class="nowo-ui-edge-tab{{ class|default('') ? ' ' ~ class : '' }}" data-nowo-ui-edge-tab-slot="{{ slot|default(0) }}"{% if testid|default('') %} data-testid="{{ testid }}"{% endif %}>
-        <a class="nowo-ui-edge-tab__link" href="{{ href }}"{% if _new_tab %} target="_blank" rel="noopener noreferrer"{% endif %} title="{{ _label }}" aria-label="{{ _label }}"
-            {%- for _name, _value in attr|default({}) %}{% if _value is not same as(false) and _value is not null and not (_name|lower starts with 'on') %} {{ _name|e('html_attr') }}{% if _value is not same as(true) %}="{{ _value }}"{% endif %}{% endif %}{% endfor %}>
+        <a class="nowo-ui-edge-tab__link" href="{{ href }}"{% if _new_tab %} target="_blank" rel="noopener noreferrer"{% endif %} title="{{ _label }}" aria-label="{{ _label }}"{{ _attr }}>
             <span class="nowo-ui-edge-tab__icon" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: icon|default('book'), label: _label}, false)|trim|raw }}</span>
         </a>
     </div>

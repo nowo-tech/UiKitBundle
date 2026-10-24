@@ -92,6 +92,13 @@ store's business: a server store reads the project / user from the request), `Li
 default `part_selector`) instead of `.listing-cell__part`. The responsive table accepts `save_cookie` to keep its mode in
 the same cookie; hosts that pass `save_url` keep their endpoint.
 
+No BC break. The guided tour is opt-in: build a `Nowo\UiKitBundle\Tour\Tour` (`TourBuilder`), include
+`nowo_ui_partial('tour')`, register the `product-tour` Stimulus peer and install `driver.js` (+ its stylesheet) in the
+host; see [USAGE](USAGE.md#guided-tour). Hosts migrating a server-side "tour seen" flag keep it by passing
+`auto_start` and `seen_url` / `seen_token` (the peer posts `{"key": "<tour key>"}`). A host override of
+`partials/_edge_tab.html.twig` keeps working; it only lacks the new `button` mode the `tour` partial uses (replace
+the `tour` partial too, or add it).
+
 ## To 2.12.1
 
 From **2.12.0**:

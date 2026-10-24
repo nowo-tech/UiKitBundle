@@ -22,6 +22,7 @@
 - [Listing customizer](#listing-customizer)
   - [Host example](#host-example)
   - [Server-side store](#server-side-store)
+- [Guided tour](#guided-tour)
 - [Kit templates (2.6)](#kit-templates-26)
   - [Error pages](#error-pages-26)
   - [Confirm dialog](#confirm-dialog-26)
@@ -99,6 +100,7 @@ Twig globals (from config):
 | `partials/_user_menu.html.twig` | Avatar dropdown + links + logout |
 | `partials/_footer.html.twig` | Site footer |
 | `partials/_shell.html.twig` | Composed chrome |
+| `partials/_tour.html.twig` | Guided page tour (2.13): edge tab + Stimulus peer `product-tour` (driver.js). See [Guided tour](#guided-tour) |
 | `components/_icon.html.twig` | Icon by `icon_set` |
 | `macros/ui.html.twig` | Class macros |
 | `demo/kitchen_sink.html.twig` | Full component showcase |
@@ -590,7 +592,9 @@ Form footers keep "Cancel" for abandoning a form.
 chapter in the manual"), so page help never pushes the content down. Options: `href` (required), `label` (default
 `edge_tab.manual`), `icon` (default `book`), `new_tab` (default true), `slot` (0–3: one tab lower per slot when the
 page has other edge tabs; or set `--nowo-ui-edge-tab-top` / `--nowo-ui-edge-tab-step`), `inline` (a text link in the
-flow instead), `class`, `testid`.
+flow instead), `class`, `testid`; 2.12.1: `attr` (extra attributes: `true` bare, `false` / `null` omitted, `on*` dropped);
+2.13: `button` (a `<button type="button">` instead of the link, `href` not needed — the [guided tour](#guided-tour)
+tab; `attr` then wires it, e.g. `{'data-action': …}`).
 
 `nowo_ui_route_link(route = current route)` returns `{url, path, testid, prefix}` (or `null`) from the
 `nowo_ui_kit.route_links` map ([CONFIGURATION.md](CONFIGURATION.md#route-links)): a key matches the route itself or
@@ -839,6 +843,93 @@ Then pass the save endpoint to the partials:
 
 The endpoint validates the body with `ListingLayoutMerger::normalizeLayout($registry->get($key), $payload)` (null =
 400) and stores the result; the responsive table takes its own `save_url` for the mode as before.
+## Guided tour
+
+A per-screen product tour (2.13, opt-in, ported from Symfony Beacon): a right-edge "Tour this page" tab and
+[driver.js](https://driverjs.com) popovers over `data-tour` anchors. It starts once on a viewer's first visit and the
+tab replays it. The host builds the steps (which steps a viewer gets — roles, feature flags — is the host's call);
+UiKit renders them and runs them. A step whose anchor is not on the page is skipped, so markup hidden by a
+permission check needs no matching rule in the step list.
+
+**1. Anchors** in the host templates:
+
+```twig
+<aside data-tour="sidebar">…</aside>
+<a href="{{ path('app_project_new') }}" data-tour="new-project">New project</a>
+```
+
+**2. Steps** in the controller — `Nowo\UiKitBundle\Tour\TourBuilder` turns a step key `k` into the labels
+`<prefix>k.title` / `<prefix>k.description` (`View\Label`, translated by the partial); `welcome()` is a centred step:
+
+```php
+use Nowo\UiKitBundle\Tour\TourBuilder;
+use Nowo\UiKitBundle\Tour\TourStep;
+
+$tour = TourBuilder::create('dashboard', prefix: 'tour.steps.dashboard.')
+    ->welcome('welcome', ['%name%' => $user->getName()])
+    ->step(TourStep::anchor('sidebar'), 'sidebar', 'right', 'start');
+if ($this->isGranted('ROLE_PROJECT_CREATE')) {
+    $tour = $tour->step(TourStep::anchor('new-project'), 'new_project', 'bottom', 'end');
+}
+
+return $this->render('dashboard/index.html.twig', ['tour' => $tour->build()]);
+```
+
+`TourStep(selector, title, description, side, align)` takes own labels or plain strings (`->add(new TourStep(…))`);
+`side` is `top` | `right` | `bottom` | `left`, `align` `start` | `center` | `end`. The builder is immutable (worker
+safe). `TourBuilder::create($key, $domain = 'messages', $prefix = '', $autoStart = true)`. A Twig hash works too:
+`{key: 'dashboard', steps: [{selector: null, title: …, description: …}], auto_start: true}`.
+
+**3. Partial** once per page (replaceable: `theme.partials.tour`):
+
+```twig
+{{ include(nowo_ui_partial('tour'), {tour: tour, force: app.request.query.getBoolean('tour'), force_param: 'tour'}) }}
+```
+
+It renders nothing without steps. Options (see the partial's docblock): `auto_start`, `force` / `force_param`,
+`storage_key`, `seen_url` / `seen_token` / `seen_token_url` / `seen_method`, `labels` (`tab`, `next`, `previous`,
+`done`, `close`, `progress` — default the `tour.*` translations), `html_content` (trusted HTML in titles /
+descriptions; default: shown as text), `popover_class` (default `nowo-ui-tour-popover`), `show_tab`, `tab_slot`
+(edge tab stack position, like the manual tab's `slot`), `tab_inline`, `tab_icon` (default `tour`), `tab_class`,
+`attr`, `testids`. The tab is the page-edge tab in its 2.13 `button: true` mode. No inline script or style: the steps
+travel as a Stimulus value (JSON in an escaped attribute), so CSP needs no nonce.
+
+**4. Stimulus + driver.js** (host build: AssetMapper / Vite / Encore):
+
+```bash
+pnpm add driver.js   # or: php bin/console importmap:require driver.js driver.js/dist/driver.css
+```
+
+```ts
+import 'driver.js/dist/driver.css';
+import ProductTourController from '…/vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/product_tour_controller';
+
+app.register('product-tour', ProductTourController);
+```
+
+driver.js is imported on demand (dynamic `import('driver.js')`) the first time a tour starts; pages without a tour
+never load it. Reduced motion (`prefers-reduced-motion` or `[data-motion="reduce"]`) disables its animation. A step
+inside a closed `<details>` (a user menu) opens it during the highlight. Start the tour from elsewhere (a "Replay
+tour" menu item) with `window.dispatchEvent(new Event('nowo-ui-tour:start'))`.
+
+**Storage.** The "seen" state lives in the browser: localStorage `nowo-ui-tour-seen` (`storage_key`) holds
+`{"<tour key>": <timestamp>}`. Finishing or closing a tour adds its key; it then only runs from the tab (or with
+`force`). Storage errors are ignored (the tour auto-starts again next visit). The peer exports `seenTours()` and
+`markTourSeen(key, seen = true)` for a "reset tours" preference.
+
+**Optional server persistence.** With `seen_url` the peer also sends `{"key": "dashboard"}` once per page (JSON,
+`X-CSRF-TOKEN: <seen_token>`, `seen_method` default POST, `keepalive`; a 403 refreshes the token once from
+`seen_token_url`, which answers `{"token": "…"}`) — for hosts that keep the state per user and decide `auto_start`
+themselves:
+
+```twig
+{{ include(nowo_ui_partial('tour'), {tour: tour, auto_start: not app.user.hasSeenTour(tour.key),
+    seen_url: path('app_account_tour_seen'), seen_token: csrf_token('tour_seen')}) }}
+```
+
+Events on the root: `product-tour:started` (`detail.key`, `detail.steps`), `product-tour:ended` (`detail.key`,
+`detail.completed`), `product-tour:save-failed`, `product-tour:unavailable` (driver.js could not be loaded). See
+[STIMULUS.md](STIMULUS.md#product-tour-stimulus-peer-only).
 
 ## Kit templates (2.6)
 
