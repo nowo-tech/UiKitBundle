@@ -70,6 +70,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Multi-select filter field** (upstream note U-007-2 from core-nowo-v2): a `ChoiceType` with `multiple: true`
+  shown as chips with a remove button and a search inside the control, keyboard accessible, as core-nowo's
+  autocomplete multi-selects (policy status, policy type). Progressive: without JavaScript the native
+  `<select multiple>` stays and submits the same GET query (`status[]=…`).
+  - ChoiceType option `nowo_ui_multi_select` (`Nowo\UiKitBundle\Form\MultiSelectTypeExtension`, registered when
+    symfony/form is installed; EntityType / EnumType inherit it): `true` or `{controller, options, labels,
+    dropdown_parent}`; writes the class `nowo-ui-multi-select`, `data-controller` and the peer's values with the new
+    `multi_select.remove` / `multi_select.no_results` translations (every shipped locale). Expanded choices are
+    left alone.
+  - Stimulus peer `multi-select` (`stimulus-peers/multi_select_controller.ts`): Tom Select imported on demand
+    (`tom-select` ^2.3 as an optional peer dependency, checked against 2.6.2), `remove_button`, the select's own
+    classes kept off the wrapper, the dropdown attached to `<body>` (not clipped by a card with `overflow: hidden`;
+    inline inside a `<dialog>`), destroy on disconnect keeping the chosen values; events `multi-select:ready` /
+    `multi-select:unavailable`.
+  - Standalone skin `css/nowo-ui-multi-select.css` (no Tom Select stylesheet needed): input height when collapsed
+    (filter-bar control height), wrapping chips, kit tokens for light / dark, focus ring, invalid state, reduced
+    motion; `nowo-ui.css` keeps the native fallback of a filter multi-select to about four rows.
+  See [USAGE](USAGE.md#multi-select-filter-214) and [STIMULUS](STIMULUS.md#multi-select-stimulus-peer-only).
+
+### Fixed
+
+- `filters_collapse`: the server-side active filter count (`filter_form`) now counts a multiple choice, as the
+  `filters-collapse` peer does: a multi-select once when anything is chosen, a checkbox list once per checked box
+  (arrays were ignored, so a folded card read "No active filters" with chosen statuses).
+
 ## [2.13.2] - 2026-10-25
 
 Page-edge tabs stack in eight slots (0–7). See [UPGRADING](UPGRADING.md#to-2132).

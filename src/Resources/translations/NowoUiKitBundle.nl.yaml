@@ -42,6 +42,8 @@ filters.search_placeholder: Zoeken…
 filters.apply: Toepassen
 filters.clear: Wissen
 filters.any: Alle
+multi_select.remove: Verwijderen
+multi_select.no_results: Geen resultaten
 theme.light: Licht
 theme.dark: Donker
 theme.switch_to_light: Overschakelen naar licht thema

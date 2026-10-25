@@ -14,6 +14,7 @@ use Nowo\UiKitBundle\Enum\CssFramework;
 use Nowo\UiKitBundle\EventSubscriber\LegacyPanelPathRedirectSubscriber;
 use Nowo\UiKitBundle\Form\AppearancePaletteType;
 use Nowo\UiKitBundle\Form\AppearanceType;
+use Nowo\UiKitBundle\Form\MultiSelectTypeExtension;
 use Nowo\UiKitBundle\Listing\CookieListingPreferenceStore;
 use Nowo\UiKitBundle\Listing\ListingCustomizerViewBuilder;
 use Nowo\UiKitBundle\Listing\ListingDefinitionInterface;
@@ -130,6 +131,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
         $appearance = $config['appearance'];
         $container->setParameter('nowo_ui_kit.appearance.enabled', $appearance['enabled']);
         $this->registerAppearance($container, $appearance);
+        $this->registerMultiSelect($container);
 
         /** @var array{base_url: string, default_testid: ?string, routes: array<string, array{path: string, testid: ?string}>} $routeLinks */
         $routeLinks = $config['route_links'];
@@ -202,6 +204,20 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
                 new Reference('request_stack', ContainerInterface::NULL_ON_INVALID_REFERENCE),
             ])
             ->addTag('twig.extension');
+    }
+
+    /**
+     * ChoiceType option `nowo_ui_multi_select` (2.14, markup of the `multi-select` Stimulus peer); only with
+     * symfony/form.
+     */
+    private function registerMultiSelect(ContainerBuilder $container): void
+    {
+        if (!class_exists(AbstractType::class)) {
+            return;
+        }
+        $container->register('nowo_ui_kit.form.multi_select_extension', MultiSelectTypeExtension::class)
+            ->setArguments([new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE)])
+            ->addTag('form.type_extension');
     }
 
     /**

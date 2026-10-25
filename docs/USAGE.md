@@ -22,6 +22,7 @@
 - [Listing customizer](#listing-customizer)
   - [Host example](#host-example)
   - [Server-side store](#server-side-store)
+  - [Multi-select filter (2.14)](#multi-select-filter-214)
 - [Guided tour](#guided-tour)
 - [Kit templates (2.6)](#kit-templates-26)
   - [Error pages](#error-pages-26)
@@ -843,6 +844,61 @@ Then pass the save endpoint to the partials:
 
 The endpoint validates the body with `ListingLayoutMerger::normalizeLayout($registry->get($key), $payload)` (null =
 400) and stores the result; the responsive table takes its own `save_url` for the mode as before.
+### Multi-select filter (2.14)
+
+A filter that takes several values (policy status, policy type…) as **chips** with a remove button and a search
+inside the control, keyboard accessible (Tab into it, type to search, ArrowUp / ArrowDown + Enter to add, Escape to
+close; ArrowLeft / ArrowRight then Backspace / Delete remove a chip). It is a plain Symfony `ChoiceType` with
+`multiple: true` progressively enhanced by the `multi-select` Stimulus peer (Tom Select, imported on demand): without
+JavaScript, or when Tom Select fails to load, the native `<select multiple>` stays and submits the same GET query
+(`status[]=active&status[]=pending`).
+
+```php
+use Nowo\UiKitBundle\Form\MultiSelectTypeExtension;
+
+$builder->add('status', ChoiceType::class, [
+    'choices' => $statusChoices,
+    'multiple' => true,
+    'required' => false,
+    'attr' => ['placeholder' => 'policy.filter.status_placeholder'],     // text of the empty control (translated)
+    MultiSelectTypeExtension::OPTION => true,                             // 'nowo_ui_multi_select'
+]);
+```
+
+`nowo_ui_multi_select` (a ChoiceType extension registered when symfony/form is installed; EntityType / EnumType
+inherit it): `false` (default) | `true` | `['controller' => 'multi-select', 'options' => [...Tom Select settings, e.g.
+'maxItems' => 3], 'labels' => ['remove' => …, 'noResults' => …], 'dropdown_parent' => 'auto' | 'body' | 'inline']`.
+It adds the class `nowo-ui-multi-select`, the controller to `data-controller` (merged with the field's own) and the
+peer's values: the *Remove* / *No results* labels translated from `multi_select.*` (NowoUiKitBundle domain). Expanded
+choices (checkbox lists) are left alone; a single collapsed choice becomes a searchable select. Without the form
+extension, write the same attributes by hand (`data-controller="multi-select"` + `data-multi-select-labels-value`).
+
+Rendering needs nothing new: `listing_filter_fields`, `list_filters` (the `page/list` scaffold) and `form_row()` render
+the field as any other (keep the attributes: pass `row_attr` in `row_options`, not `attr`, which replaces them). The
+listing customizer shows / hides it like any filter (a hidden one is not rendered nor applied, also with several
+values) and `filters_collapse` counts it once when anything is chosen.
+
+Host side (once):
+
+```ts
+// Stimulus app (tom-select ^2.3 in package.json; the peer imports it the first time a multi-select connects)
+import MultiSelectController from '…/vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/multi_select_controller';
+app.register('multi-select', MultiSelectController);
+// or lazily (vite-plugin-symfony): app.register('multi-select', createLazyController(() => import('…/multi_select_controller')));
+```
+
+```twig
+<link rel="stylesheet" href="{{ asset('css/nowo-ui-multi-select.css', 'nowo_ui_kit') }}">
+```
+
+`css/nowo-ui-multi-select.css` is a standalone skin (Tom Select's own stylesheet is not needed; load it after Tom
+Select's if a host has both). Collapsed, the control is as tall as the other inputs (`--nowo-ui-filter-control-height`
+in a `.nowo-ui-filter-bar`, else `--nowo-ui-control-height`), chips wrap onto more lines, colours follow the kit
+tokens (light / dark), and it fills its grid cell down to 390 px. The dropdown is attached to `<body>` and positioned
+under the control, so a filter card with `overflow: hidden` does not clip it (inside a `<dialog>` it stays inline).
+Tokens: `--nowo-ui-multi-select-max-height`, `--nowo-ui-multi-select-z`, `--nowo-ui-multi-select-shadow`,
+`--nowo-ui-chip-*`. Peer reference: [STIMULUS](STIMULUS.md#multi-select-stimulus-peer-only).
+
 ## Guided tour
 
 A per-screen product tour (2.13, opt-in, ported from Symfony Beacon): a right-edge "Tour this page" tab and

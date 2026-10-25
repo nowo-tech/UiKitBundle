@@ -23,6 +23,7 @@ Optional **Stimulus peer** TypeScript sources live under `src/Resources/assets/s
 - [Filters collapse (Stimulus peer only)](#filters-collapse-stimulus-peer-only)
 - [Disclosure icon (Stimulus peer only)](#disclosure-icon-stimulus-peer-only)
 - [Product tour (Stimulus peer only)](#product-tour-stimulus-peer-only)
+- [Multi-select (Stimulus peer only)](#multi-select-stimulus-peer-only)
 - [Error retry countdown (2.6)](#error-retry-countdown-26)
 - [Auto-submit (2.6)](#auto-submit-26)
 - [Icon state bridge and morphicons](#icon-state-bridge-and-morphicons)
@@ -410,6 +411,30 @@ driver.js 1.8 to 1.10). Disconnecting (Turbo navigation) tears the tour down wit
 another driver.js instance replacing it (1.10 reason `replaced`). Peer: `product_tour_controller.ts` (exports `PRODUCT_TOUR_STORAGE_KEY`, `seenTours(storageKey?)`,
 `markTourSeen(key, seen?, storageKey?)`; subclasses may override the protected `driverFactory()`).
 
+## Multi-select (Stimulus peer only)
+
+No kit IIFE (2.14). Progressive multi-select on [Tom Select](https://tom-select.js.org) (optional host dependency
+`tom-select` ^2.3, checked against 2.6; imported on demand the first time a select connects): chips with a remove
+button, search inside the control, keyboard navigation. Without JavaScript or Tom Select the native select stays.
+Markup: any `<select>` (typically `multiple`), written by the ChoiceType option `nowo_ui_multi_select`
+([USAGE](USAGE.md#multi-select-filter-214)). Skin: `css/nowo-ui-multi-select.css` (standalone).
+
+| Stimulus | Role |
+|----------|------|
+| `data-controller="multi-select"` | The `<select>` (any other element: no-op) |
+| `data-multi-select-labels-value` | `{remove, noResults}` (default English `Remove` / `No results`; the form option writes the `multi_select.*` translations) |
+| `data-multi-select-options-value` | Tom Select settings merged over the peer's defaults (`{"maxItems": 3}`, `{"plugins": …}`) |
+| `data-multi-select-dropdown-parent-value` | `auto` (default: `<body>`, inline inside `<dialog>` / `[popover]`), `body`, `inline` |
+| `placeholder` / `data-placeholder` (select) | Text of the empty control |
+
+Defaults: `remove_button` plugin, `create: false`, `persist: false`, `maxOptions: null`, `hideSelected` and
+`closeAfterSelect: false` for a multiple select (`maxItems: 1` and close after select for a single one). The wrapper
+gets `ts-wrapper nowo-ui-multi-select` (+ `--invalid` with `aria-invalid="true"` on the select); the select's own
+classes stay on the hidden select. Events: `multi-select:ready` (`detail.instance`), `multi-select:unavailable`
+(`detail.error`). Disconnecting (Turbo navigation, morph) destroys Tom Select and keeps the chosen values on the
+native select. Peer: `multi_select_controller.ts` (getter `tomSelect`; subclasses may override the protected
+`tomSelectFactory()`; types `TomSelectInstance`, `TomSelectConstructor`).
+
 ## Error retry countdown (2.6)
 
 Self-reload of a 5xx error page on GET (REQ-ERROR-001 item 10). Kit IIFE `js/nowo-ui-error-retry.js` (loaded by
@@ -582,7 +607,7 @@ Or lazy-load from `assets/controllers.json` pointing at the same paths.
 export { default } from '../../vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/clipboard_copy_controller';
 ```
 
-Repeat for `confirm_dialog`, `confirm_submit`, `page_loader`, `toast_stack`, `tabs`, `release_status`, `auto_refresh`, `temporary_reveal`, `collapse_panel`, `responsive_table`, `filters_collapse`, `disclosure_icon`, `datatable` (the last one needs the optional DataTables packages).
+Repeat for `confirm_dialog`, `confirm_submit`, `page_loader`, `toast_stack`, `tabs`, `release_status`, `auto_refresh`, `temporary_reveal`, `collapse_panel`, `responsive_table`, `filters_collapse`, `disclosure_icon`, `datatable` (needs the optional DataTables packages), `multi_select` (2.14, needs the optional `tom-select`).
 
 Or register directly in the host Stimulus bootstrap (Vite + pnpm):
 

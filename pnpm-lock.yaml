@@ -35,6 +35,9 @@ importers:
       sass:
         specifier: 1.93.2
         version: 1.93.2
+      tom-select:
+        specifier: 2.6.2
+        version: 2.6.2
       typescript:
         specifier: ~7.0.2
         version: 7.0.2
@@ -236,6 +239,12 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
+
+  '@orchidjs/sifter@1.1.0':
+    resolution: {integrity: sha512-mYwHCfr736cIWWdhhSZvDbf90AKt2xyrJspKFC3qyIJG1LtrJeJunYEqCGG4Aq2ijENbc4WkOjszcvNaIAS/pQ==}
+
+  '@orchidjs/unicode-variants@1.2.2':
+    resolution: {integrity: sha512-Tfdm/fa2NN+75KwtkjpdOvUeaBOgZlyo08Ngb3m6UXe4ACPcKlgnX32vAI5lp39tlLdv2tXiRW0PPdbWyM5ieA==}
 
   '@oxc-project/types@0.153.0':
     resolution: {integrity: sha512-jSNrRIyvPVLL5E1z/tS5zLAprosGz/FuI1PWwEOz59j3E4TTTzSpqKb/RDGqJhhW0QHYISGXxq582wGx6T11Tw==}
@@ -879,6 +888,9 @@ packages:
     resolution: {integrity: sha512-LgO3D9yZJjApUiuUfl9iFAwrtaX4+lok3wJIqttGoKCHlWUqHqbQpnxCf82L8FjgKsh4iGo78hqJwgL8F6To2A==}
     engines: {node: '>=14.0.0'}
 
+  tom-select@2.6.2:
+    resolution: {integrity: sha512-eiXIkk82XzzUTOVQDFpy+ZGejuqdTvMukyUyeZBQaKnqW42UoTiTZnrod/eX0rkqJEc4rZY9DZ3zdjV07i29wQ==}
+
   typescript@7.0.2:
     resolution: {integrity: sha512-8FYau96o3NKOhbjKi/qNvG/W5jhzxkbdm5sj9AbZ/5T5sWqn3hJgLfGx27sRKZWTvyzCP8dLRBTf5tBTSRVUNA==}
     engines: {node: '>=16.20.0'}
@@ -1097,6 +1109,12 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
+
+  '@orchidjs/sifter@1.1.0':
+    dependencies:
+      '@orchidjs/unicode-variants': 1.2.2
+
+  '@orchidjs/unicode-variants@1.2.2': {}
 
   '@oxc-project/types@0.153.0': {}
 
@@ -1609,6 +1627,11 @@ snapshots:
       picomatch: 4.0.7
 
   tinyrainbow@3.2.0: {}
+
+  tom-select@2.6.2:
+    dependencies:
+      '@orchidjs/sifter': 1.1.0
+      '@orchidjs/unicode-variants': 1.2.2
 
   typescript@7.0.2:
     optionalDependencies:

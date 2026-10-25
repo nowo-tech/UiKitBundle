@@ -81,6 +81,18 @@
 
 ## Unreleased
 
+No change needed. New, opt-in: the [multi-select filter field](USAGE.md#multi-select-filter-214).
+
+- **Form**: add `'nowo_ui_multi_select' => true` (`MultiSelectTypeExtension::OPTION`) to a `ChoiceType` with
+  `multiple: true` (no other change to the form, the query or the reader: GET `name[]=…` as before).
+- **JavaScript**: add `tom-select` (^2.3) to the host's `package.json` and register the peer
+  `stimulus-peers/multi_select_controller.ts` as `multi-select` (lazily, it is a separate chunk with Tom Select).
+- **CSS**: load `{{ asset('css/nowo-ui-multi-select.css', 'nowo_ui_kit') }}` after `nowo-ui.css` (and after Tom
+  Select's stylesheet if the host already loads it, e.g. Symfony UX Autocomplete's autoimport).
+- A host that styled `.ts-wrapper` itself can scope its rules out with `:not(.nowo-ui-multi-select)`.
+- `filters_collapse`'s server-side count (`filter_form`) now includes multiple choices; a page that passed
+  `active_count` to work around it can drop it.
+
 ## To 2.13.2
 
 From **2.13.1**:

@@ -42,6 +42,8 @@ filters.search_placeholder: Search…
 filters.apply: Apply
 filters.clear: Clear
 filters.any: Any
+multi_select.remove: Remove
+multi_select.no_results: No results
 theme.light: Light
 theme.dark: Dark
 theme.switch_to_light: Switch to light theme

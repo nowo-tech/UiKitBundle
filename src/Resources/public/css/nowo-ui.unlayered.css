@@ -2228,6 +2228,16 @@ form.nowo-ui-filters[data-nowo-ui-region] > .nowo-ui-filters__field--full {
   line-height: 1.25;
 }
 
+/* Native multi-select (2.14): the no-JS / not-yet-enhanced fallback of the `multi-select` peer stays a short
+   scrollable list (about four options) instead of the browser's tall default; enhanced, the peer's skin
+   (nowo-ui-multi-select.css) takes over. */
+.nowo-ui-filter-bar select[multiple]:not(.ts-hidden-accessible),
+form.nowo-ui-filters select[multiple]:not(.ts-hidden-accessible) {
+  box-sizing: border-box;
+  min-height: var(--nowo-ui-filter-control-height, var(--nowo-ui-control-height, 2.375rem));
+  max-height: 6.5rem;
+}
+
 /* Per-field help stays for assistive tech only (aria-describedby); the placeholder names the filter. */
 .nowo-ui-filter-bar__help {
   position: absolute;

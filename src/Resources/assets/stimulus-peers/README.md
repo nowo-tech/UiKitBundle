@@ -26,6 +26,7 @@ They are **not** built into the kit IIFEs. Prefer the no-build scripts under `sr
 `deleteListingCookie()`) reads and writes the listing preference cookie shared by `listing-customizer` and
 `responsive-table` (`cookie` value).
 | `product_tour_controller.ts` | `product-tour` | — (peer only, 2.13; `partials/_tour.html.twig`; needs the optional `driver.js`, imported on demand) |
+| `multi_select_controller.ts` | `multi-select` | — (peer only, 2.14; ChoiceType option `nowo_ui_multi_select`, skin `css/nowo-ui-multi-select.css`; needs the optional `tom-select`, imported on demand) |
 
 `icon_state.ts` (1.17) is the icon bridge of the last three peers; `../morphicons/index.ts` (optional `morphicons` +
 `lucide`) animates them with `installMorphiconPeers()`.

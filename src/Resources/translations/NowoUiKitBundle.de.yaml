@@ -42,6 +42,8 @@ filters.search_placeholder: Suchen…
 filters.apply: Anwenden
 filters.clear: Zurücksetzen
 filters.any: Alle
+multi_select.remove: Entfernen
+multi_select.no_results: Keine Ergebnisse
 theme.light: Hell
 theme.dark: Dunkel
 theme.switch_to_light: Zum hellen Design wechseln
