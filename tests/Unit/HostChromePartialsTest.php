@@ -134,8 +134,14 @@ final class HostChromePartialsTest extends TestCase
         self::assertStringContainsString('<i class="bi bi-chevron-up" aria-hidden="true"></i>', $html);
         self::assertStringContainsString('<i class="bi bi-chevron-down" aria-hidden="true"></i>', $html);
         self::assertStringContainsString('<morph-icon class="nowo-ui-filters-collapse__morph" data-filters-collapse-morph', $html);
-        // q + unread = 2 (empty, iterable, unchecked, per_page and hidden fields do not count).
+        // q + tags + unread = 3 (empty, unchecked, per_page and hidden fields do not count).
         self::assertStringContainsString('data-testid="filters-collapse-summary">filters_collapse.many</p>', $html);
+
+        // 2.14: a multi-select counts once when anything is chosen, a checkbox list once per checked box.
+        $count = fn (array $fields): string => $this->render("{% include '@NowoUiKitBundle/partials/_filters_collapse.html.twig' with {filter_form: f, testids: true} only %}", ['f' => $this->formView($fields)], new Request([], [], ['_route' => 'items_index']));
+        self::assertStringContainsString('>filters_collapse.one</p>', $count([['name' => 'status', 'value' => ['active', 'pending'], 'prefixes' => ['form', 'choice']]]));
+        self::assertStringContainsString('>filters_collapse.none</p>', $count([['name' => 'status', 'value' => ['', null], 'prefixes' => ['form', 'choice']]]));
+        self::assertStringContainsString('>filters_collapse.many</p>', $count([['name' => 'kinds', 'value' => ['a', 'b'], 'expanded' => true, 'prefixes' => ['form', 'choice']]]));
 
         $open = $this->render("{% include '@NowoUiKitBundle/partials/_filters_collapse.html.twig' only %}", [], new Request([], [], ['_route' => 'items_index']));
         self::assertStringContainsString('<div class="nowo-ui-filters-collapse" data-controller="filters-collapse"', $open);
@@ -331,7 +337,7 @@ final class HostChromePartialsTest extends TestCase
     }
 
     /**
-     * @param list<array{name: string, value: mixed, prefixes: list<string>, checked?: bool}> $fields
+     * @param list<array{name: string, value: mixed, prefixes: list<string>, checked?: bool, expanded?: bool}> $fields
      */
     private function formView(array $fields): FormView
     {
@@ -343,6 +349,9 @@ final class HostChromePartialsTest extends TestCase
             $child->vars['block_prefixes'] = $field['prefixes'];
             if (isset($field['checked'])) {
                 $child->vars['checked'] = $field['checked'];
+            }
+            if (isset($field['expanded'])) {
+                $child->vars['expanded'] = $field['expanded'];
             }
             $view->children[$field['name']] = $child;
         }

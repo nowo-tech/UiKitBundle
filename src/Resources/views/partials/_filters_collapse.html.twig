@@ -11,7 +11,8 @@
     - fold_key: page key the state is remembered for (default: the current route; empty = not remembered)
     - fold_cookie: cookie name (default `nowo_ui_filters_collapsed`)
     - folded: force the initial state (default: from the cookie)
-    - filter_form: Symfony FormView of the filters, used to count the active ones (non-empty / checked fields;
+    - filter_form: Symfony FormView of the filters, used to count the active ones (non-empty / checked fields; 2.14:
+      a multi-select once when anything is chosen, a checkbox list once per checked box, as the peer counts them;
       page, per_page, _token, sort, dir and hidden fields excluded)
     - active_count: the count when there is no FormView (wins over filter_form)
     - morph (default false): add `<morph-icon data-filters-collapse-morph>` (assets/morphicons)
@@ -35,7 +36,12 @@
         {% if _field.vars.name not in ['page', 'per_page', '_token', 'sort', 'dir'] and 'hidden' not in _field.vars.block_prefixes %}
             {% if 'checkbox' in _field.vars.block_prefixes or 'radio' in _field.vars.block_prefixes %}
                 {% set _count = _count + (_field.vars.checked|default(false) ? 1 : 0) %}
-            {% elseif _field.vars.value is not iterable and _field.vars.value|default('')|trim != '' %}
+            {% elseif _field.vars.value is iterable %}
+                {#- 2.14, as the filters-collapse peer counts the form: a multi-select once when anything is chosen, a
+                    checkbox list (expanded) once per checked box -#}
+                {% set _chosen = _field.vars.value|filter(v => v is not iterable and v|default('')|trim != '')|length %}
+                {% set _count = _count + (_field.vars.expanded|default(false) ? _chosen : (_chosen > 0 ? 1 : 0)) %}
+            {% elseif _field.vars.value|default('')|trim != '' %}
                 {% set _count = _count + 1 %}
             {% endif %}
         {% endif %}
