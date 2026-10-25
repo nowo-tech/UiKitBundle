@@ -230,6 +230,11 @@ final class HostChromePartialsTest extends TestCase
         self::assertStringContainsString('<a class="nowo-ui-edge-tab__link" href="/m" title="edge_tab.manual" aria-label="edge_tab.manual" data-nowo-ui-dialog-open="help" data-nowo-ui-dialog-src="/m?panel=1">', $panel);
         self::assertStringNotContainsString('onclick', $panel, 'no inline handlers (CSP)');
 
+        $css = (string) file_get_contents(\dirname(__DIR__, 2).'/src/Resources/public/css/nowo-ui.unlayered.css');
+        foreach (range(1, 7) as $slot) {
+            self::assertStringContainsString(\sprintf("[data-nowo-ui-edge-tab-slot='%d'] .nowo-ui-edge-tab__link {\n  --nowo-ui-edge-tab-slot: %d;", $slot, $slot), $css, 'slot '.$slot);
+        }
+
         $inline = $this->render("{% include '@NowoUiKitBundle/partials/_edge_tab.html.twig' with {href: '/h', inline: true, testid: 't'} only %}");
         self::assertStringContainsString('<p class="nowo-ui-edge-link" data-testid="t">', $inline);
         self::assertStringContainsString('<a href="/h" target="_blank" rel="noopener noreferrer">edge_tab.manual</a>', $inline);

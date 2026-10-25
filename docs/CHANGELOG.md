@@ -69,6 +69,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- Page-edge tabs stack in **8 slots (0–7)** instead of 4: a listing with its customizer, tour and several manual tabs no longer needs host CSS for the fifth tab (`edge_tab` `slot`, `listing_customizer` `slot`, `tour` `tab_slot`).
+
 ## [2.13.1] - 2026-10-25
 
 Peers type-check under strict host tsconfigs; product tour records seen on every close (driver.js 1.8–1.10). See [UPGRADING](UPGRADING.md#to-2131).

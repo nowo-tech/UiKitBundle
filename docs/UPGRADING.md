@@ -80,6 +80,8 @@
 
 ## Unreleased
 
+No change needed. Edge tabs accept slots 0–7; hosts that added CSS for slots 4+ can drop it.
+
 ## To 2.13.1
 
 From **2.13.0**:

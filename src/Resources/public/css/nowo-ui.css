@@ -3393,6 +3393,22 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
   --nowo-ui-edge-tab-slot: 3;
 }
 
+.nowo-ui-edge-tab[data-nowo-ui-edge-tab-slot='4'] .nowo-ui-edge-tab__link {
+  --nowo-ui-edge-tab-slot: 4;
+}
+
+.nowo-ui-edge-tab[data-nowo-ui-edge-tab-slot='5'] .nowo-ui-edge-tab__link {
+  --nowo-ui-edge-tab-slot: 5;
+}
+
+.nowo-ui-edge-tab[data-nowo-ui-edge-tab-slot='6'] .nowo-ui-edge-tab__link {
+  --nowo-ui-edge-tab-slot: 6;
+}
+
+.nowo-ui-edge-tab[data-nowo-ui-edge-tab-slot='7'] .nowo-ui-edge-tab__link {
+  --nowo-ui-edge-tab-slot: 7;
+}
+
 .nowo-ui-edge-tab__link:hover {
   width: 2.6rem;
   color: var(--nowo-ui-primary);

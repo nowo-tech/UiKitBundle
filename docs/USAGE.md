@@ -590,7 +590,7 @@ Form footers keep "Cancel" for abandoning a form.
 
 `partials/_edge_tab.html.twig`: a fixed tab on the right edge of the viewport under the header (e.g. "Read this
 chapter in the manual"), so page help never pushes the content down. Options: `href` (required), `label` (default
-`edge_tab.manual`), `icon` (default `book`), `new_tab` (default true), `slot` (0–3: one tab lower per slot when the
+`edge_tab.manual`), `icon` (default `book`), `new_tab` (default true), `slot` (0–7: one tab lower per slot when the
 page has other edge tabs; or set `--nowo-ui-edge-tab-top` / `--nowo-ui-edge-tab-step`), `inline` (a text link in the
 flow instead), `class`, `testid`; 2.12.1: `attr` (extra attributes: `true` bare, `false` / `null` omitted, `on*` dropped);
 2.13: `button` (a `<button type="button">` instead of the link, `href` not needed — the [guided tour](#guided-tour)
@@ -804,7 +804,7 @@ Assets: register the Stimulus peers `listing-customizer` and `responsive-table` 
 the dialog script the peer opens it itself (`showModal()`).
 
 Options of `listing_customizer`: `toggle` (`edge` default, `button` — a button in the flow — or `none`: put
-`data-nowo-ui-dialog-open="{{ listing.dialogId }}"` on your own opener), `slot` (edge tab stack 0–3, when the page
+`data-nowo-ui-dialog-open="{{ listing.dialogId }}"` on your own opener), `slot` (edge tab stack 0–7, when the page
 has other [edge tabs](#page-edge-tab-and-route-links)), `size` (`sm` default), `dialog_id`, `labels`, `icons`
 (`open`, `grip`, `up`, `down`, `stack`; canonical icon kinds `sliders`, `grip`, `stack` are new), `attr`, `testids`,
 `bundle`, and the server-store options below. `listing_head`: `th_class`, `heads_template`, `detail` (default true:
