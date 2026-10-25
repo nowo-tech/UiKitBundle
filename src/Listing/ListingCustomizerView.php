@@ -41,7 +41,7 @@ final readonly class ListingCustomizerView
      */
     public function dialogId(): string
     {
-        return 'nowo-ui-listing-'.(string) preg_replace('/[^A-Za-z0-9_-]/', '-', $this->listingKey);
+        return 'nowo-ui-listing-'.preg_replace('/[^A-Za-z0-9_-]/', '-', $this->listingKey);
     }
 
     /**

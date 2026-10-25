@@ -16,7 +16,7 @@ final class ListingLayoutTest extends TestCase
      * @param list<mixed>|null $columns
      * @param list<mixed>|null $filters
      */
-    private static function layout(?array $columns = null, ?array $filters = null): ListingLayout
+    private function layout(?array $columns = null, ?array $filters = null): ListingLayout
     {
         $definition = new InvoiceListing();
 
@@ -25,7 +25,7 @@ final class ListingLayoutTest extends TestCase
 
     public function testDefaults(): void
     {
-        $layout = self::layout();
+        $layout = $this->layout();
 
         self::assertFalse($layout->stored);
         self::assertSame([['number'], ['customer'], ['total']], array_map(static fn (array $g): array => array_map(static fn (ListingField $f): string => $f->key, $g), $layout->visibleColumnGroups()));
@@ -44,7 +44,7 @@ final class ListingLayoutTest extends TestCase
 
     public function testStackedGroups(): void
     {
-        $layout = self::layout([
+        $layout = $this->layout([
             ['key' => 'customer', 'visible' => true, 'merged' => true],
             ['key' => 'number', 'visible' => true],
             ['key' => 'notes', 'visible' => false, 'merged' => true],
@@ -58,7 +58,7 @@ final class ListingLayoutTest extends TestCase
 
     public function testFilterRequestStripsHiddenFiltersAndHiddenSort(): void
     {
-        $layout = self::layout([['key' => 'total', 'visible' => false]], [['key' => 'status', 'visible' => false], ['key' => 'tag', 'visible' => true]]);
+        $layout = $this->layout([['key' => 'total', 'visible' => false]], [['key' => 'status', 'visible' => false], ['key' => 'tag', 'visible' => true]]);
         $request = Request::create('/invoices', 'GET', ['q' => 'acme', 'status' => 'paid', 'tag' => 'x', 'sort' => 'total', 'dir' => 'asc', 'page' => '2']);
 
         $filtered = $layout->filterRequest($request);
@@ -73,7 +73,7 @@ final class ListingLayoutTest extends TestCase
 
     public function testFilterRequestKeepsVisibleAndUnknownSorts(): void
     {
-        $layout = self::layout();
+        $layout = $this->layout();
         $request = Request::create('/invoices', 'GET', ['q' => 'acme', 'sort' => 'total', 'dir' => 'asc']);
         self::assertSame($request, $layout->filterRequest($request));
 
@@ -86,7 +86,7 @@ final class ListingLayoutTest extends TestCase
 
     public function testIgnoredFiltersOnlyCountValues(): void
     {
-        $layout = self::layout(null, [['key' => 'q', 'visible' => false], ['key' => 'status', 'visible' => false], ['key' => 'tag', 'visible' => false]]);
+        $layout = $this->layout(null, [['key' => 'q', 'visible' => false], ['key' => 'status', 'visible' => false], ['key' => 'tag', 'visible' => false]]);
 
         self::assertSame([], $layout->ignoredFilters(Request::create('/', 'GET', ['q' => '', 'status' => ['', ['']]])));
         self::assertSame(['status', 'tag'], array_map(static fn (ListingField $f): string => $f->key, $layout->ignoredFilters(Request::create('/', 'GET', ['status' => ['', 'paid'], 'tag' => '0']))));
@@ -94,7 +94,7 @@ final class ListingLayoutTest extends TestCase
 
     public function testWithoutColumns(): void
     {
-        $layout = self::layout([['key' => 'total', 'visible' => true, 'merged' => true]]);
+        $layout = $this->layout([['key' => 'total', 'visible' => true, 'merged' => true]]);
         $copy = $layout->withoutColumns(['total', 'customer']);
 
         self::assertSame(['number'], $copy->visibleColumnKeys());

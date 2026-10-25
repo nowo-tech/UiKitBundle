@@ -60,6 +60,6 @@ final readonly class CookieListingPreferenceStore implements ListingPreferenceSt
 
     public static function name(string $listingKey): string
     {
-        return self::PREFIX.(string) preg_replace('/[^A-Za-z0-9_-]/', '_', $listingKey);
+        return self::PREFIX.preg_replace('/[^A-Za-z0-9_-]/', '_', $listingKey);
     }
 }

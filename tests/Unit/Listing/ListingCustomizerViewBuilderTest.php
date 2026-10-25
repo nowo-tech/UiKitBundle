@@ -18,7 +18,7 @@ use Symfony\Component\Translation\Translator;
 
 final class ListingCustomizerViewBuilderTest extends TestCase
 {
-    private static function builder(?ListingPreferenceStoreInterface $store = null, bool $translator = true): ListingCustomizerViewBuilder
+    private function builder(?ListingPreferenceStoreInterface $store = null, bool $translator = true): ListingCustomizerViewBuilder
     {
         $trans = null;
         if ($translator) {
@@ -31,14 +31,14 @@ final class ListingCustomizerViewBuilderTest extends TestCase
         return new ListingCustomizerViewBuilder(new ListingRegistry([new InvoiceListing()]), $store ?? new CookieListingPreferenceStore(), $trans);
     }
 
-    private static function request(?string $cookie = null, array $query = []): Request
+    private function request(?string $cookie = null, array $query = []): Request
     {
         return new Request($query, [], [], null === $cookie ? [] : ['nowo_ui_listing_invoices_index' => $cookie]);
     }
 
     public function testDefaultsWithoutCookie(): void
     {
-        $view = self::builder()->build(InvoiceListing::KEY, self::request());
+        $view = $this->builder()->build(InvoiceListing::KEY, $this->request());
 
         self::assertSame(InvoiceListing::KEY, $view->listingKey);
         self::assertFalse($view->layout->stored);
@@ -71,9 +71,9 @@ final class ListingCustomizerViewBuilderTest extends TestCase
     public function testStoredCookieAndForRequest(): void
     {
         $cookie = '{"v":1,"columns":[{"key":"total","visible":true},{"key":"customer","visible":true,"merged":true}],"filters":[{"key":"status","visible":false}],"mode":"responsive"}';
-        $request = self::request($cookie, ['status' => 'paid', 'q' => 'acme']);
+        $request = $this->request($cookie, ['status' => 'paid', 'q' => 'acme']);
 
-        ['view' => $view, 'filteredRequest' => $filtered] = self::builder(null, false)->forRequest(InvoiceListing::KEY, $request);
+        ['view' => $view, 'filteredRequest' => $filtered] = $this->builder(null, false)->forRequest(InvoiceListing::KEY, $request);
 
         self::assertTrue($view->layout->stored);
         self::assertSame(ListingTableMode::Responsive, $view->tableMode);
@@ -91,14 +91,14 @@ final class ListingCustomizerViewBuilderTest extends TestCase
         self::assertSame($view->clientState(), $narrow->clientState());
         self::assertSame($view->ignoredFilters, $narrow->ignoredFilters);
 
-        $same = self::builder()->forRequest(InvoiceListing::KEY, $plain = self::request(null, ['q' => 'x']), 'order', 'direction');
+        $same = $this->builder()->forRequest(InvoiceListing::KEY, $plain = $this->request(null, ['q' => 'x']), 'order', 'direction');
         self::assertSame($plain, $same['filteredRequest']);
     }
 
     public function testServerSideStore(): void
     {
         $store = new class implements ListingPreferenceStoreInterface {
-            public function load(string $listingKey, Request $request): ?array
+            public function load(string $listingKey, Request $request): array
             {
                 return ['columns' => null, 'filters' => [['key' => 'tag', 'visible' => true]], 'mode' => 'bogus'];
             }
@@ -109,7 +109,7 @@ final class ListingCustomizerViewBuilderTest extends TestCase
             }
         };
 
-        $view = self::builder($store)->build(InvoiceListing::KEY, self::request());
+        $view = $this->builder($store)->build(InvoiceListing::KEY, $this->request());
 
         self::assertNull($view->cookieName);
         self::assertNull($view->tableMode);

@@ -59,7 +59,7 @@ final readonly class ListingLayout
      */
     public function visibleColumns(): array
     {
-        return self::visible($this->columns);
+        return $this->visible($this->columns);
     }
 
     /**
@@ -67,7 +67,7 @@ final readonly class ListingLayout
      */
     public function visibleColumnKeys(): array
     {
-        return self::keys(self::visible($this->columns));
+        return $this->keys($this->visible($this->columns));
     }
 
     /**
@@ -75,7 +75,7 @@ final readonly class ListingLayout
      */
     public function visibleFilters(): array
     {
-        return self::visible($this->filters);
+        return $this->visible($this->filters);
     }
 
     /**
@@ -83,7 +83,7 @@ final readonly class ListingLayout
      */
     public function visibleFilterKeys(): array
     {
-        return self::keys(self::visible($this->filters));
+        return $this->keys($this->visible($this->filters));
     }
 
     /**
@@ -186,7 +186,7 @@ final readonly class ListingLayout
      *
      * @return list<ListingField>
      */
-    private static function visible(array $states): array
+    private function visible(array $states): array
     {
         $fields = [];
         foreach ($states as $state) {
@@ -203,7 +203,7 @@ final readonly class ListingLayout
      *
      * @return list<string>
      */
-    private static function keys(array $fields): array
+    private function keys(array $fields): array
     {
         return array_map(static fn (ListingField $field): string => $field->key, $fields);
     }

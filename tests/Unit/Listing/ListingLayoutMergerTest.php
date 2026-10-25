@@ -16,14 +16,14 @@ final class ListingLayoutMergerTest extends TestCase
      *
      * @return list<string>
      */
-    private static function summary(array $states): array
+    private function summary(array $states): array
     {
         return array_map(static fn (ListingFieldState $s): string => $s->field->key.($s->visible ? '+' : '-').($s->merged ? '^' : ''), $states);
     }
 
     public function testNullYieldsDefinitionDefaults(): void
     {
-        self::assertSame(['number+', 'customer+', 'total+', 'notes-'], self::summary(ListingLayoutMerger::merge((new InvoiceListing())->columns(), null)));
+        self::assertSame(['number+', 'customer+', 'total+', 'notes-'], $this->summary(ListingLayoutMerger::merge((new InvoiceListing())->columns(), null)));
     }
 
     public function testMergeIsLenient(): void
@@ -41,7 +41,7 @@ final class ListingLayoutMergerTest extends TestCase
 
         // order kept, duplicate / unknown / malformed dropped, required forced visible, non-bool flags false,
         // missing field (customer) appended with its default
-        self::assertSame(['total+^', 'number+', 'notes-', 'customer+'], self::summary(ListingLayoutMerger::merge((new InvoiceListing())->columns(), $stored)));
+        self::assertSame(['total+^', 'number+', 'notes-', 'customer+'], $this->summary(ListingLayoutMerger::merge((new InvoiceListing())->columns(), $stored)));
     }
 
     public function testNormalizeAcceptsValidLists(): void

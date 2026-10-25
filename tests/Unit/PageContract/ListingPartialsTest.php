@@ -35,7 +35,7 @@ final class ListingPartialsTest extends TestCase
         {% block cell_notes %}{{ row.notes }}{% endblock %}
         TWIG;
 
-    private static function view(?string $cookie = null, array $query = []): ListingCustomizerView
+    private function view(?string $cookie = null, array $query = []): ListingCustomizerView
     {
         $builder = new ListingCustomizerViewBuilder(new ListingRegistry([new InvoiceListing()]), new CookieListingPreferenceStore());
         $request = new Request($query, [], [], null === $cookie ? [] : [CookieListingPreferenceStore::name(InvoiceListing::KEY) => $cookie]);
@@ -47,7 +47,7 @@ final class ListingPartialsTest extends TestCase
      * @param array<string, mixed> $context
      * @param array<string, mixed> $theme
      */
-    private static function render(string $template, array $context, array $theme = [], string $framework = 'bootstrap5'): string
+    private function render(string $template, array $context, array $theme = [], string $framework = 'bootstrap5'): string
     {
         return PageContractTwig::create(['page.html.twig' => $template, 'cells.html.twig' => self::CELLS, 'custom.html.twig' => 'custom {{ listing.listingKey }}', 'heads.html.twig' => '{% block head_total %}<a href="/sort/total">{{ column.label }}</a>{% endblock %}'], $theme, $framework)->render('page.html.twig', $context);
     }
@@ -57,13 +57,13 @@ final class ListingPartialsTest extends TestCase
         foreach (['listing_cells', 'listing_customizer', 'listing_filter_fields', 'listing_head'] as $name) {
             self::assertSame('@NowoUiKitBundle/partials/_'.$name.'.html.twig', ThemeSlots::PARTIALS[$name]);
         }
-        $html = self::render("{% include nowo_ui_partial('listing_customizer') with {listing: listing} only %}", ['listing' => self::view()], ['partials' => ['listing_customizer' => 'custom.html.twig']]);
+        $html = $this->render("{% include nowo_ui_partial('listing_customizer') with {listing: listing} only %}", ['listing' => $this->view()], ['partials' => ['listing_customizer' => 'custom.html.twig']]);
         self::assertSame('custom invoices.index', $html, 'a host can replace the partial');
     }
 
     public function testCustomizerDefaultMarkup(): void
     {
-        $html = self::render("{% include nowo_ui_partial('listing_customizer') with {listing: listing} only %}", ['listing' => self::view()]);
+        $html = $this->render("{% include nowo_ui_partial('listing_customizer') with {listing: listing} only %}", ['listing' => $this->view()]);
 
         self::assertStringContainsString('<div class="nowo-ui-listing-customizer" data-controller="listing-customizer" data-listing-customizer-state-value="{&quot;listingKey&quot;:&quot;invoices.index&quot;,&quot;stored&quot;:false,&quot;mode&quot;:null,&quot;columns&quot;:[{&quot;key&quot;:&quot;number&quot;', $html);
         self::assertStringContainsString(' data-listing-customizer-cookie-value="nowo_ui_listing_invoices_index"', $html);
@@ -95,9 +95,9 @@ final class ListingPartialsTest extends TestCase
 
     public function testCustomizerHasNoFrameworkClasses(): void
     {
-        $view = self::view(self::STACKED, ['status' => 'paid']);
+        $view = $this->view(self::STACKED, ['status' => 'paid']);
         foreach (['bootstrap5', 'tailwind', 'foundation', 'none'] as $framework) {
-            $html = self::render("{% include nowo_ui_partial('listing_customizer') with {listing: listing, toggle: 'button'} only %}", ['listing' => $view], [], $framework);
+            $html = $this->render("{% include nowo_ui_partial('listing_customizer') with {listing: listing, toggle: 'button'} only %}", ['listing' => $view], [], $framework);
             preg_match_all('/class="([^"]*)"/', $html, $m);
             self::assertSame([], FrameworkClasses::violations(preg_split('/\s+/', implode(' ', $m[1])) ?: [], $framework), $framework);
         }
@@ -106,11 +106,7 @@ final class ListingPartialsTest extends TestCase
     public function testCustomizerOptionsThemeAndNotice(): void
     {
         $theme = ['classes' => ['listing_customizer' => 'app-lc', 'listing_notice' => 'app-notice', 'listing_customizer_toggle' => 'app-toggle'], 'attributes' => ['listing_customizer' => ['data-host' => '1']]];
-        $html = self::render(
-            "{% include nowo_ui_partial('listing_customizer') with {listing: listing, toggle: 'button', save_url: '/prefs/invoices', save_token: 'tok', save_token_url: '/prefs/token', save_method: 'POST', reset_method: 'POST', testids: true, size: 'md', dialog_id: 'lc', labels: {open: 'Columns…', apply: 'Save'}, icons: {open: 'config'}, attr: {'data-turbo': 'false'}} only %}",
-            ['listing' => self::view(self::STACKED, ['status' => 'paid', 'tag' => ''])],
-            $theme,
-        );
+        $html = $this->render("{% include nowo_ui_partial('listing_customizer') with {listing: listing, toggle: 'button', save_url: '/prefs/invoices', save_token: 'tok', save_token_url: '/prefs/token', save_method: 'POST', reset_method: 'POST', testids: true, size: 'md', dialog_id: 'lc', labels: {open: 'Columns…', apply: 'Save'}, icons: {open: 'config'}, attr: {'data-turbo': 'false'}} only %}", ['listing' => $this->view(self::STACKED, ['status' => 'paid', 'tag' => ''])], $theme);
 
         self::assertStringContainsString('<div class="nowo-ui-listing-customizer app-lc" data-controller="listing-customizer"', $html);
         self::assertStringContainsString('&quot;stored&quot;:true', $html);
@@ -128,10 +124,10 @@ final class ListingPartialsTest extends TestCase
         self::assertStringContainsString('data-action="listing-customizer#reset" data-testid="listing-customizer-reset">Reset to default</button>', $html);
         self::assertStringContainsString('data-action="listing-customizer#apply" disabled data-testid="listing-customizer-apply">Save</button>', $html);
 
-        $none = self::render("{% include nowo_ui_partial('listing_customizer') with {listing: listing, toggle: 'none', slot: 2} only %}", ['listing' => self::view()]);
+        $none = $this->render("{% include nowo_ui_partial('listing_customizer') with {listing: listing, toggle: 'none', slot: 2} only %}", ['listing' => $this->view()]);
         self::assertStringNotContainsString('data-listing-customizer-target="toggle"', $none);
 
-        $slot = self::render("{% include nowo_ui_partial('listing_customizer') with {listing: listing, slot: 2, testids: true} only %}", ['listing' => self::view()]);
+        $slot = $this->render("{% include nowo_ui_partial('listing_customizer') with {listing: listing, slot: 2, testids: true} only %}", ['listing' => $this->view()]);
         self::assertStringContainsString('data-nowo-ui-edge-tab-slot="2"', $slot);
         self::assertStringContainsString('data-testid="listing-customizer-toggle"', $slot);
     }
@@ -155,7 +151,7 @@ final class ListingPartialsTest extends TestCase
             }
         };
         $view = (new ListingCustomizerViewBuilder(new ListingRegistry([$definition]), new ServerListingStore()))->build('audit', new Request());
-        $html = self::render("{% include nowo_ui_partial('listing_customizer') with {listing: listing} only %}", ['listing' => $view]);
+        $html = $this->render("{% include nowo_ui_partial('listing_customizer') with {listing: listing} only %}", ['listing' => $view]);
 
         self::assertStringNotContainsString('cookie-value', $html);
         self::assertStringNotContainsString('url-value', $html);
@@ -181,7 +177,7 @@ final class ListingPartialsTest extends TestCase
         };
         $builder = new ListingCustomizerViewBuilder(new ListingRegistry([$filtersOnly]), new CookieListingPreferenceStore());
         $view = $builder->forRequest('search', new Request(['q' => 'x']))['view'];
-        $html = self::render("{% include nowo_ui_partial('listing_customizer') with {listing: listing} only %}", ['listing' => $view]);
+        $html = $this->render("{% include nowo_ui_partial('listing_customizer') with {listing: listing} only %}", ['listing' => $view]);
         self::assertStringContainsString('<section id="nowo-ui-listing-search-panel-filters" class="nowo-ui-listing-customizer__panel" aria-label="Filters" data-panel="filters"', $html);
         self::assertStringNotContainsString('hint_stack', $html);
         self::assertStringContainsString('Hidden filters are not applied: Search.', $html);
@@ -189,26 +185,26 @@ final class ListingPartialsTest extends TestCase
 
     public function testHead(): void
     {
-        $html = self::render("<tr>{% include nowo_ui_partial('listing_head') with {listing: listing, th_class: 'px-2'} only %}</tr>", ['listing' => self::view(self::STACKED)], ['classes' => ['table_head_cell' => 'app-th']]);
+        $html = $this->render("<tr>{% include nowo_ui_partial('listing_head') with {listing: listing, th_class: 'px-2'} only %}</tr>", ['listing' => $this->view(self::STACKED)], ['classes' => ['table_head_cell' => 'app-th']]);
 
         self::assertStringContainsString('<th class="nowo-ui-table__head-cell app-th px-2 h-total nowo-ui-listing-cell--stacked" scope="col" data-column="total" data-columns="total customer" data-priority="3"><span class="nowo-ui-listing-cell__part" data-cell-part>Total</span><span class="nowo-ui-listing-cell__part" data-cell-part>Customer</span></th>', $html);
         self::assertStringContainsString('<th class="nowo-ui-table__head-cell app-th px-2" scope="col" data-column="number" data-columns="number" data-required="1" data-priority="1">invoice.number</th>', $html);
         self::assertStringNotContainsString('data-column="notes"', $html);
         self::assertStringContainsString('<th class="nowo-ui-row-detail-col px-2" data-responsive-detail><span class="visually-hidden">Details</span></th>', $html);
 
-        $sorted = self::render("{% include nowo_ui_partial('listing_head') with {listing_layout: listing.layout, heads_template: 'heads.html.twig', detail: false} only %}", ['listing' => self::view()]);
+        $sorted = $this->render("{% include nowo_ui_partial('listing_head') with {listing_layout: listing.layout, heads_template: 'heads.html.twig', detail: false} only %}", ['listing' => $this->view()]);
         self::assertStringContainsString('data-column="total" data-columns="total" data-priority="3"><a href="/sort/total">Total</a></th>', $sorted);
         self::assertStringContainsString('data-column="customer" data-columns="customer" data-priority="2">Customer</th>', $sorted);
         self::assertStringNotContainsString('data-responsive-detail', $sorted);
 
-        $labelled = self::render("{% include nowo_ui_partial('listing_head') with {listing: listing, detail_label: 'More'} only %}", ['listing' => self::view()]);
+        $labelled = $this->render("{% include nowo_ui_partial('listing_head') with {listing: listing, detail_label: 'More'} only %}", ['listing' => $this->view()]);
         self::assertStringContainsString('<span class="visually-hidden">More</span>', $labelled);
     }
 
     public function testCells(): void
     {
         $row = ['number' => 'F-1', 'customer' => 'Acme <b>', 'total' => '10', 'notes' => 'n'];
-        $html = self::render("{% for row in rows %}<tr>{% include nowo_ui_partial('listing_cells') with {listing: listing, cells_template: 'cells.html.twig', td_class: 'px-2', testids: true} %}</tr>{% endfor %}", ['listing' => self::view(self::STACKED), 'rows' => [$row]]);
+        $html = $this->render("{% for row in rows %}<tr>{% include nowo_ui_partial('listing_cells') with {listing: listing, cells_template: 'cells.html.twig', td_class: 'px-2', testids: true} %}</tr>{% endfor %}", ['listing' => $this->view(self::STACKED), 'rows' => [$row]]);
 
         self::assertStringContainsString('<td class="nowo-ui-table__cell px-2 c-total nowo-ui-listing-cell--stacked" data-column="total" data-priority="3"><div class="nowo-ui-listing-cell__part" data-cell-part="total">10 €</div><div class="nowo-ui-listing-cell__part" data-cell-part="customer">Acme &lt;b&gt;</div></td>', $html);
         self::assertStringContainsString('<td class="nowo-ui-table__cell px-2 num" data-column="number" data-priority="1">#F-1</td>', $html);
@@ -216,11 +212,11 @@ final class ListingPartialsTest extends TestCase
         self::assertStringContainsString('<td class="nowo-ui-row-detail-cell px-2" data-responsive-detail>', $html);
         self::assertStringContainsString('data-testid="row-detail" hidden><i class="bi bi-eye"', $html);
 
-        $plain = self::render("<tr>{% include nowo_ui_partial('listing_cells') with {listing_layout: listing.layout, cells_template: 'cells.html.twig', detail: false} %}</tr>", ['listing' => self::view('{"columns":[{"key":"notes","visible":true,"merged":true},{"key":"total","visible":true,"merged":true}]}'), 'row' => $row]);
+        $plain = $this->render("<tr>{% include nowo_ui_partial('listing_cells') with {listing_layout: listing.layout, cells_template: 'cells.html.twig', detail: false} %}</tr>", ['listing' => $this->view('{"columns":[{"key":"notes","visible":true,"merged":true},{"key":"total","visible":true,"merged":true}]}'), 'row' => $row]);
         self::assertStringContainsString('<td class="nowo-ui-table__cell nowo-ui-listing-cell--stacked" data-column="notes" data-priority="0"><div class="nowo-ui-listing-cell__part" data-cell-part="notes">n</div><div class="nowo-ui-listing-cell__part c-total" data-cell-part="total">10 €</div></td>', $plain);
         self::assertStringNotContainsString('data-responsive-detail', $plain);
 
-        $labelled = self::render("<tr>{% include nowo_ui_partial('listing_cells') with {listing: listing, cells_template: 'cells.html.twig', detail_label: 'Open', detail_icon: 'book'} %}</tr>", ['listing' => self::view(), 'row' => $row]);
+        $labelled = $this->render("<tr>{% include nowo_ui_partial('listing_cells') with {listing: listing, cells_template: 'cells.html.twig', detail_label: 'Open', detail_icon: 'book'} %}</tr>", ['listing' => $this->view(), 'row' => $row]);
         self::assertStringContainsString('aria-label="Open" title="Open" hidden><i class="bi bi-book"', $labelled);
     }
 
@@ -233,21 +229,21 @@ final class ListingPartialsTest extends TestCase
             ->add('per_page', TextType::class)
             ->getForm()
             ->createView();
-        $view = self::view('{"filters":[{"key":"tag","visible":true},{"key":"q","visible":true},{"key":"status","visible":false}]}');
-        $html = self::render("{% include nowo_ui_partial('listing_filter_fields') with {form: form, listing: listing, row_options: {q: {label: 'Find'}}} only %}{{ form_rest(form) }}", ['form' => $form, 'listing' => $view]);
+        $view = $this->view('{"filters":[{"key":"tag","visible":true},{"key":"q","visible":true},{"key":"status","visible":false}]}');
+        $html = $this->render("{% include nowo_ui_partial('listing_filter_fields') with {form: form, listing: listing, row_options: {q: {label: 'Find'}}} only %}{{ form_rest(form) }}", ['form' => $form, 'listing' => $view]);
 
         self::assertStringContainsString('<label for="f_q" class="required">Find</label>', $html);
         self::assertLessThan(strpos($html, 'id="f_q"'), strpos($html, 'id="f_tag"'), 'viewer order');
         self::assertStringNotContainsString('id="f_status"', $html, 'hidden filters are never painted');
         self::assertStringContainsString('id="f_per_page"', $html, 'fields outside the definition are left to the caller');
 
-        $layoutOnly = self::render("{% include nowo_ui_partial('listing_filter_fields') with {form: form, listing_layout: listing.layout} only %}", ['form' => PageContractTwig::forms()->createNamedBuilder('g', FormType::class)->add('q', TextType::class)->getForm()->createView(), 'listing' => self::view()]);
+        $layoutOnly = $this->render("{% include nowo_ui_partial('listing_filter_fields') with {form: form, listing_layout: listing.layout} only %}", ['form' => PageContractTwig::forms()->createNamedBuilder('g', FormType::class)->add('q', TextType::class)->getForm()->createView(), 'listing' => $this->view()]);
         self::assertStringContainsString('id="g_q"', $layoutOnly);
     }
 
     public function testResponsiveTableCookieOption(): void
     {
-        $html = self::render("{% embed '@NowoUiKitBundle/partials/_responsive_table.html.twig' with listing.tableOptions %}{% block table %}<table></table>{% endblock %}{% endembed %}", ['listing' => self::view('{"mode":"responsive"}')]);
+        $html = $this->render("{% embed '@NowoUiKitBundle/partials/_responsive_table.html.twig' with listing.tableOptions %}{% block table %}<table></table>{% endblock %}{% endembed %}", ['listing' => $this->view('{"mode":"responsive"}')]);
 
         self::assertStringContainsString('data-responsive-table-mode-value="responsive"', $html);
         self::assertStringContainsString(' data-responsive-table-cookie-value="nowo_ui_listing_invoices_index"', $html);

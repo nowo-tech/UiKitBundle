@@ -87,6 +87,6 @@ final readonly class ListingCustomizerViewBuilder
             return $label;
         }
 
-        return null !== $this->translator ? $this->translator->trans($label->key, $label->params, $label->domain) : $label->key;
+        return $this->translator?->trans($label->key, $label->params, $label->domain) ?? $label->key;
     }
 }

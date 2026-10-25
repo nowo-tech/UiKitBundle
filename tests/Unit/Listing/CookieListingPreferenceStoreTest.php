@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 final class CookieListingPreferenceStoreTest extends TestCase
 {
-    private static function request(mixed $value, string $name = 'nowo_ui_listing_invoices_index'): Request
+    private function request(mixed $value, string $name = 'nowo_ui_listing_invoices_index'): Request
     {
         return new Request([], [], [], [$name => $value]);
     }
@@ -30,7 +30,7 @@ final class CookieListingPreferenceStoreTest extends TestCase
 
         self::assertSame(
             ['columns' => [['key' => 'total', 'visible' => true]], 'filters' => [], 'mode' => 'responsive'],
-            (new CookieListingPreferenceStore())->load('invoices.index', self::request($json)),
+            (new CookieListingPreferenceStore())->load('invoices.index', $this->request($json)),
         );
     }
 
@@ -38,8 +38,8 @@ final class CookieListingPreferenceStoreTest extends TestCase
     {
         $store = new CookieListingPreferenceStore();
 
-        self::assertSame(['columns' => null, 'filters' => null, 'mode' => 'scroll'], $store->load('invoices.index', self::request('{"mode":"scroll","columns":{"a":1},"filters":"x"}')));
-        self::assertSame(['columns' => [1], 'filters' => null, 'mode' => null], $store->load('invoices.index', self::request('{"columns":[1],"mode":"cards"}')));
+        self::assertSame(['columns' => null, 'filters' => null, 'mode' => 'scroll'], $store->load('invoices.index', $this->request('{"mode":"scroll","columns":{"a":1},"filters":"x"}')));
+        self::assertSame(['columns' => [1], 'filters' => null, 'mode' => null], $store->load('invoices.index', $this->request('{"columns":[1],"mode":"cards"}')));
     }
 
     /**
@@ -60,11 +60,11 @@ final class CookieListingPreferenceStoreTest extends TestCase
     #[DataProvider('unusable')]
     public function testUnusableCookieYieldsNull(mixed $value): void
     {
-        self::assertNull((new CookieListingPreferenceStore())->load('invoices.index', self::request($value)));
+        self::assertNull((new CookieListingPreferenceStore())->load('invoices.index', $this->request($value)));
     }
 
     public function testOtherListingCookieIsIgnored(): void
     {
-        self::assertNull((new CookieListingPreferenceStore())->load('invoices.index', self::request('{"mode":"scroll"}', 'nowo_ui_listing_other')));
+        self::assertNull((new CookieListingPreferenceStore())->load('invoices.index', $this->request('{"mode":"scroll"}', 'nowo_ui_listing_other')));
     }
 }
