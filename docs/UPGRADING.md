@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.15.3](#to-2153)
 - [To 2.15.2](#to-2152)
 - [To 2.15.1](#to-2151)
 - [To 2.15.0](#to-2150)
@@ -84,6 +85,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.15.3
+
+From **2.15.2**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 ## To 2.15.2
 
