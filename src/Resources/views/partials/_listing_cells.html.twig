@@ -36,5 +36,5 @@
     {% endif %}
 {% endfor %}
 {% if detail ?? true %}
-    {% include '@NowoUiKitBundle/partials/_row_detail_cell.html.twig' with {td_class: td_class|default(''), icon: detail_icon|default('view'), testids: testids|default(false)}|merge(detail_label is defined ? {label: detail_label} : {}) only %}
+    {{ include('@NowoUiKitBundle/partials/_row_detail_cell.html.twig', {td_class: td_class|default(''), icon: detail_icon|default('view'), testids: testids|default(false)}|merge(detail_label is defined ? {label: detail_label} : {}), false) }}
 {% endif %}

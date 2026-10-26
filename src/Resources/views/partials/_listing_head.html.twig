@@ -37,5 +37,5 @@
     </th>
 {% endfor %}
 {% if detail ?? true %}
-    {% include '@NowoUiKitBundle/partials/_row_detail_head.html.twig' with {th_class: th_class|default('')}|merge(detail_label is defined ? {label: detail_label} : {}) only %}
+    {{ include('@NowoUiKitBundle/partials/_row_detail_head.html.twig', {th_class: th_class|default('')}|merge(detail_label is defined ? {label: detail_label} : {}), false) }}
 {% endif %}
