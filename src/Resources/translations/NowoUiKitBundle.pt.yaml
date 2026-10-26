@@ -44,6 +44,12 @@ filters.clear: Limpar
 filters.any: Qualquer
 multi_select.remove: Remover
 multi_select.no_results: Sem resultados
+date_range.from: De
+date_range.to: Até
+date_range.clear: Limpar
+date_range.previous: Mês anterior
+date_range.next: Mês seguinte
+date_range.done: Concluído
 theme.light: Claro
 theme.dark: Escuro
 theme.switch_to_light: Mudar para tema claro

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\UiKitBundle\Tests\Unit\Listing;
 
 use Nowo\UiKitBundle\Listing\ListingField;
+use Nowo\UiKitBundle\Listing\ListingFieldState;
 use Nowo\UiKitBundle\Listing\ListingLayout;
 use Nowo\UiKitBundle\Listing\ListingLayoutMerger;
 use PHPUnit\Framework\TestCase;
@@ -90,6 +91,18 @@ final class ListingLayoutTest extends TestCase
 
         self::assertSame([], $layout->ignoredFilters(Request::create('/', 'GET', ['q' => '', 'status' => ['', ['']]])));
         self::assertSame(['status', 'tag'], array_map(static fn (ListingField $f): string => $f->key, $layout->ignoredFilters(Request::create('/', 'GET', ['status' => ['', 'paid'], 'tag' => '0']))));
+    }
+
+    public function testHiddenDateRangeDropsBothQueryKeys(): void
+    {
+        $range = new ListingField('created', 'Created', queryKeys: ['created_from', 'created_to']);
+        $layout = new ListingLayout('items', [], [new ListingFieldState(new ListingField('q', 'Search'), true), new ListingFieldState($range, false)]);
+        $request = Request::create('/items', 'GET', ['q' => 'acme', 'created_from' => '2026-01-01', 'created_to' => '', 'created' => 'kept']);
+
+        self::assertSame(['q' => 'acme', 'created' => 'kept'], $layout->filterRequest($request)->query->all());
+        self::assertSame([$range], $layout->ignoredFilters($request));
+        self::assertSame([], $layout->ignoredFilters(Request::create('/items', 'GET', ['created_to' => ''])));
+        self::assertSame(['created'], $layout->hiddenFilterKeys());
     }
 
     public function testWithoutColumns(): void

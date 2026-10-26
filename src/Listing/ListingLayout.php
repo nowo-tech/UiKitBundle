@@ -130,9 +130,16 @@ final readonly class ListingLayout
     public function ignoredFilters(Request $request): array
     {
         $fields = [];
+        $query = $request->query->all();
         foreach ($this->filters as $state) {
-            if (!$state->visible && self::hasValue($request->query->all()[$state->field->key] ?? null)) {
-                $fields[] = $state->field;
+            if ($state->visible) {
+                continue;
+            }
+            foreach ($state->field->queryKeys() as $key) {
+                if (self::hasValue($query[$key] ?? null)) {
+                    $fields[] = $state->field;
+                    break;
+                }
             }
         }
 
@@ -148,8 +155,12 @@ final readonly class ListingLayout
     {
         $original = $request->query->all();
         $query = $original;
-        foreach ($this->hiddenFilterKeys() as $key) {
-            unset($query[$key]);
+        foreach ($this->filters as $state) {
+            if (!$state->visible) {
+                foreach ($state->field->queryKeys() as $key) {
+                    unset($query[$key]);
+                }
+            }
         }
 
         $sort = $query[$sortParam] ?? null;

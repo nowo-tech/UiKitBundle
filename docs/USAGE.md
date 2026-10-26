@@ -23,6 +23,7 @@
   - [Host example](#host-example)
   - [Server-side store](#server-side-store)
   - [Multi-select filter (2.14)](#multi-select-filter-214)
+  - [Date-range filter (2.15)](#date-range-filter-215)
 - [Guided tour](#guided-tour)
 - [Kit templates (2.6)](#kit-templates-26)
   - [Error pages](#error-pages-26)
@@ -898,6 +899,74 @@ tokens (light / dark), and it fills its grid cell down to 390 px. The dropdown i
 under the control, so a filter card with `overflow: hidden` does not clip it (inside a `<dialog>` it stays inline).
 Tokens: `--nowo-ui-multi-select-max-height`, `--nowo-ui-multi-select-z`, `--nowo-ui-multi-select-shadow`,
 `--nowo-ui-chip-*`. Peer reference: [STIMULUS](STIMULUS.md#multi-select-stimulus-peer-only).
+
+### Date-range filter (2.15)
+
+One labelled filter field for a from / to pair of days ("Collection date"), in one cell of the filter grid and as
+tall as the other controls. It opens a range calendar, shows the chosen range in the viewer's locale
+(`01/02/2026 – 15/02/2026`, `From 01/02/2026`) and has a clear button. Without JavaScript it is two native
+`<input type="date">` with visible short labels ("From" / "To"). Either way it submits **two plain query parameters
+whose names the host chooses**, so the URLs and readers that already use them keep working.
+
+```php
+use Nowo\UiKitBundle\Form\DateRangeType;
+
+$builder->add('collection_date', DateRangeType::class, [
+    'from_name' => 'min_collection_date',          // default: collection_date_from
+    'to_name' => 'max_collection_date',            // default: collection_date_to
+    'placeholder' => 'receipt.filter.collection_date', // empty-control text + accessible name (translated in the field's domain)
+]);
+// GET /receipts?min_collection_date=2026-02-01&max_collection_date=2026-02-15
+// $form->get('collection_date')->getData() === ['from' => '2026-02-01', 'to' => '2026-02-15']
+```
+
+`DateRangeType` (block prefix `nowo_ui_date_range`, registered with symfony/form) is a compound of two `DateType`
+fields (`single_text`, `input: 'string'`, `Y-m-d`). Its two days are named as siblings of the field (rootless GET
+filter form: `min_collection_date`; under a `filter` root: `filter[min_collection_date]`); `DateRangeSubmitExtension`
+puts them back on the field when the parent is submitted (a nested `collection_date[from]` works too, a flat value
+wins). An invalid day is an error of the range field.
+
+| Option | Default | |
+|--------|---------|---|
+| `from_name` / `to_name` | `<name>_from` / `<name>_to` | Submitted names (letters, digits, `_ - . :`; different) |
+| `placeholder` | `attr.placeholder`, else the label, else the humanized name | Text of the empty control and the group's accessible name (translated with `translation_domain`) |
+| `from_label` / `to_label` | `date_range.from` / `date_range.to` (NowoUiKitBundle) | Visible short labels (already translated) |
+| `from_options` / `to_options` | `[]` | Extra `DateType` options of each day (`attr`, `constraints`…) |
+| `picker` | `true` | `false`: two native inputs only (no peer markup); or `['controller' => 'date-range', 'months' => 0 (auto) \| 1–3, 'first_day_of_week' => 1, 'locale' => null (request locale), 'labels' => ['clear' => …, 'previous' => …, 'next' => …, 'done' => …]]` |
+
+Rendering needs nothing new: the bundle prepends `@NowoUiKit/form/nowo_ui_date_range.html.twig` (only the
+`nowo_ui_date_range_*` blocks) to `twig.form_themes` and `form/nowo_ui_layout.html.twig` uses it, so `form_row()`,
+`listing_filter_fields` and `list_filters` render the field in any theme. Markup: `<div role="group"
+aria-label="Collection date" data-nowo-ui-filter-group class="nowo-ui-date-range" data-controller="date-range" …>`
+with two `<label>` (visible "From" / "To") around the inputs, whose accessible names are "Collection date: From" /
+"…: To". `filters_collapse` counts a range once (server side: its array value; the peer: `[data-nowo-ui-filter-group]`).
+
+**Listing customizer:** declare the pair as **one** filter, with its two query keys, so hiding it drops both
+parameters (`ListingLayout::filterRequest()`) and the hidden-filters notice sees them (`ignoredFilters()`):
+
+```php
+new ListingField('collection_date', new Label('receipt.filter.collection_date'), queryKeys: ['min_collection_date', 'max_collection_date']),
+```
+
+Host side (once):
+
+```ts
+// Stimulus app (cally ^0.9 in package.json; the peer imports it the first time a panel opens)
+import DateRangeController from '…/vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/date_range_controller';
+app.register('date-range', DateRangeController);
+// or lazily (vite-plugin-symfony): app.register('date-range', createLazyController(() => import('…/date_range_controller')));
+```
+
+No extra stylesheet: the field, the panel and the calendar parts (`calendar-month::part(…)`) are styled in
+`nowo-ui.css` from the kit tokens (light / dark), the panel fits a 390 px viewport (one month below 40rem, two above
+with `months: 0`). The panel is a `popover="auto"` element positioned by the peer (top layer: a card with
+`overflow: hidden` does not clip it); without the Popover API it opens inline. Tokens: `--nowo-ui-date-range-z`,
+`--nowo-ui-date-range-shadow`, `--nowo-ui-date-range-day-size`, `--nowo-ui-date-range-range-bg`. Peer reference:
+[STIMULUS](STIMULUS.md#date-range-stimulus-peer-only).
+
+**Why Cally:** a small (≈ 9 kB min+gzip), maintained, MIT set of web components (`<calendar-range>`,
+`<calendar-month>`) built for keyboard and screen-reader use (a labelled grid, arrow / Page / Home / End keys, live
+month heading), localised by `Intl` (no locale files) and styled through CSS parts, so it inherits the kit's tokens.
 
 ## Guided tour
 

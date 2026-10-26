@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.15.0](#to-2150)
 - [To 2.14.0](#to-2140)
 - [To 2.13.2](#to-2132)
 - [To 2.13.1](#to-2131)
@@ -81,6 +82,30 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.15.0
+
+From **2.14.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+No change needed. New, opt-in: the [date-range filter field](USAGE.md#date-range-filter-215).
+
+- **Form**: replace a from / to pair of date filters by one `DateRangeType` field, passing the old query names as
+  `from_name` / `to_name` (the URL and the reader do not change).
+- **Listing customizer**: declare the pair as one filter (`new ListingField('collection_date', …, queryKeys:
+  ['min_collection_date', 'max_collection_date'])`) instead of two; a layout stored with the two old keys falls back to
+  the definition's defaults for the new key (unknown keys are dropped).
+- **JavaScript**: add `cally` (^0.9) to the host's `package.json` and register the peer
+  `stimulus-peers/date_range_controller.ts` as `date-range` (lazily: Cally is a separate chunk, imported when a panel
+  first opens).
+- **CSS**: nothing to load: the field's styles are in `nowo-ui.css`.
+- **Form themes**: the bundle prepends `@NowoUiKit/form/nowo_ui_date_range.html.twig` to `twig.form_themes` (it only
+  defines `nowo_ui_date_range_*` blocks). A host that sets its form themes elsewhere keeps working through
+  `form/nowo_ui_layout.html.twig`, which uses it.
+- `filters-collapse`: fields inside a `[data-nowo-ui-filter-group]` element count once.
 
 ## To 2.14.0
 

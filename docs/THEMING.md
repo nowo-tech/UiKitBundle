@@ -320,6 +320,10 @@ only set what they want to change.
 | `--nowo-ui-tab-pill-active-border` | `color-mix(in srgb, var(--nowo-ui-primary) 35%, var(--nowo-ui-surface))` | idem |
 | `--nowo-ui-tab-pill-active-text` | `color-mix(in srgb, var(--nowo-ui-primary) 75%, var(--nowo-ui-text))` | idem |
 | `--nowo-ui-progress-height` | `0.5rem` | `progress` partial (native `<progress>`, slot `progress_meter`; track / bar: `--nowo-ui-progress-track` / `--nowo-ui-progress-bar`) |
+| `--nowo-ui-date-range-z` *(2.15)* | `1080` | date-range field: stacking of the calendar panel (inline fallback without the Popover API) |
+| `--nowo-ui-date-range-shadow` *(2.15)* | `var(--nowo-ui-shadow-popover)` | date-range field: calendar panel shadow |
+| `--nowo-ui-date-range-day-size` *(2.15)* | `2.25rem` (`2.1rem` below 30rem) | date-range field: day cell size of the calendar |
+| `--nowo-ui-date-range-range-bg` *(2.15)* | `color-mix(in srgb, var(--nowo-ui-primary) 18%, var(--nowo-ui-surface))` | date-range field: days between the two ends of the range |
 
 **One primary colour.** Links inside UiKit regions (`--nowo-ui-link`), the `info` / `primary` badges, the second tab
 level, focus rings and the active pagination link all derive from `--nowo-ui-primary`. Third-party widgets follow

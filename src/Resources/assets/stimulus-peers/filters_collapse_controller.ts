@@ -33,12 +33,16 @@ export function foldedKeys(cookie: string = FILTERS_COLLAPSE_COOKIE): string[] {
   return decodeURIComponent(raw).split(',').filter((key) => '' !== key);
 }
 
-/** Number of fields of a form that filter the list (non-empty, checked; paging / CSRF / sort / hidden excluded). */
+/**
+ * Number of fields of a form that filter the list (non-empty, checked; paging / CSRF / sort / hidden excluded). 2.15:
+ * the fields inside one `[data-nowo-ui-filter-group]` element (a date range's from / to) count once together.
+ */
 export function activeFilterCount(form: HTMLFormElement | null): number {
   if (!form) {
     return 0;
   }
   let count = 0;
+  const groups = new Set<Element>();
   for (const field of [...form.elements]) {
     if (!(field instanceof HTMLInputElement || field instanceof HTMLSelectElement || field instanceof HTMLTextAreaElement)) {
       continue;
@@ -46,11 +50,18 @@ export function activeFilterCount(form: HTMLFormElement | null): number {
     if ('' === field.name || IGNORED.test(field.name) || field.disabled || (field instanceof HTMLInputElement && 'hidden' === field.type)) {
       continue;
     }
-    if (field instanceof HTMLInputElement && ('checkbox' === field.type || 'radio' === field.type)) {
-      count += field.checked ? 1 : 0;
+    const active = field instanceof HTMLInputElement && ('checkbox' === field.type || 'radio' === field.type) ? field.checked : '' !== field.value.trim();
+    if (!active) {
       continue;
     }
-    count += '' !== field.value.trim() ? 1 : 0;
+    const group = field.closest('[data-nowo-ui-filter-group]');
+    if (group) {
+      if (groups.has(group)) {
+        continue;
+      }
+      groups.add(group);
+    }
+    count += 1;
   }
 
   return count;

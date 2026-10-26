@@ -71,6 +71,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Date-range filter field** (`Form\DateRangeType`, block prefix `nowo_ui_date_range`): one labelled field per from /
+  to pair of days. Its two days are submitted as two plain parameters whose names the host chooses (`from_name` /
+  `to_name`, default `<name>_from` / `<name>_to`, siblings of the field), so existing query names keep working; data
+  `['from' => ?string, 'to' => ?string]` (`Y-m-d`). Options `placeholder`, `from_label` / `to_label`,
+  `from_options` / `to_options`, `picker` (`controller`, `months`, `first_day_of_week`, `locale`, `labels`; `false`
+  for two native inputs only). `Form\DateRangeSubmitExtension` maps the two parameters onto the field on submit.
+- Form theme `form/nowo_ui_date_range.html.twig` (only `nowo_ui_date_range_*` blocks), prepended to
+  `twig.form_themes` and used by `form/nowo_ui_layout.html.twig`: a `role="group"` named by the placeholder with two
+  labelled native `<input type="date">` ("From" / "To" visible) — the whole control without JavaScript.
+- Stimulus peer `date-range` (`stimulus-peers/date_range_controller.ts`): one control as tall as the other filter
+  cells showing the range in the viewer's locale (`Intl.DateTimeFormat`), a clear button and a range calendar in a
+  popover (Popover API, positioned inside the viewport; inline without it). Calendar: [Cally](https://wicky.nillia.ms/cally/)
+  web components (optional peer dependency `cally` ^0.9, MIT, imported the first time a panel opens). The native
+  inputs move into the panel (typed entry) and keep their names. Keyboard and screen reader: trigger button with
+  `aria-haspopup="dialog"` / `aria-expanded`, ArrowDown opens, Escape closes and returns the focus, Cally's grid
+  keyboard. Events `date-range:change`, `date-range:ready`, `date-range:unavailable`.
+- `date_range.*` translations (`from`, `to`, `clear`, `previous`, `next`, `done`) in every shipped locale; theming
+  tokens `--nowo-ui-date-range-z`, `--nowo-ui-date-range-shadow`, `--nowo-ui-date-range-day-size`,
+  `--nowo-ui-date-range-range-bg`.
+- `Listing\ListingField::$queryKeys` / `queryKeys()`: the query parameters of a filter that are not just its key (a
+  date range's two days); a hidden filter drops all of them (`ListingLayout::filterRequest()`) and is reported by
+  `ignoredFilters()` when any carries a value.
+
+### Changed
+
+- `filters-collapse` counts the fields inside one `[data-nowo-ui-filter-group]` element once (a date range's two days
+  are one active filter); the server-side count of `_filters_collapse.html.twig` already counted the range's array
+  value once.
+
+### Fixed
+
+- Multi-select: with chips, the search input's minimum width drops from 4rem to 1.5rem, so the chips and the input
+  stay on one line longer.
+
 ## [2.14.0] - 2026-10-25
 
 Multi-select filter field (Tom Select chips, progressive enhancement) for listings; the folded filter summary counts multiple choices.

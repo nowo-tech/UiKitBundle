@@ -1,0 +1,40 @@
+{#
+  Date-range filter field (2.15): the widget of Nowo\UiKitBundle\Form\DateRangeType. Prepended to twig.form_themes by
+  the bundle (and used by form/nowo_ui_layout.html.twig), so form_row() / form_widget() and the listing_filter_fields
+  partial render it in any host theme; it defines only `nowo_ui_date_range_*` blocks.
+
+  Markup: a group named by the field's placeholder (role=group, aria-label) holding two labelled native date inputs
+  (`<label>` with the visible short label "From" / "To"; each input's accessible name is "<name>: From"). That is the
+  whole control without JavaScript. With the `date-range` Stimulus peer (data-controller written by the type) the
+  group becomes one control of the filter grid with a range calendar; the inputs keep their names and submit the
+  same query. `data-nowo-ui-filter-group` makes the filters-collapse count it once.
+#}
+{%- block nowo_ui_date_range_widget -%}
+    {%- set _dr = nowo_ui_date_range -%}
+    {%- set _text = _dr.translate and translation_domain is not same as(false) ? _dr.placeholder|trans({}, translation_domain) : _dr.placeholder -%}
+    {%- set _c = _dr.controller -%}
+    {%- set attr = attr|merge({role: 'group', 'aria-label': _text, 'data-nowo-ui-filter-group': ''}) -%}
+    {%- if _c is not null -%}
+        {%- set attr = attr|merge({('data-' ~ _c ~ '-placeholder-value'): _text}) -%}
+        {%- if attr['data-' ~ _c ~ '-locale-value'] is not defined and app is defined and app.request|default(null) -%}
+            {%- set attr = attr|merge({('data-' ~ _c ~ '-locale-value'): app.request.locale}) -%}
+        {%- endif -%}
+    {%- endif -%}
+    {#- Attributes printed here (not with form_div_layout's blocks: this theme must not `use` it, or its copies of
+        every block would shadow the themes listed before it). -#}
+    <div id="{{ id }}"{% for _k, _v in attr %}{% if _v is same as(true) %} {{ _k }}{% elseif _v is not same as(false) and _v is not null %} {{ _k }}="{{ _v }}"{% endif %}{% endfor %}>
+        <div class="nowo-ui-date-range__parts"{% if _c is not null %} data-{{ _c }}-target="parts"{% endif %}>
+            {%- for _part in ['from', 'to'] -%}
+                {%- set _child = form[_part] -%}
+                {%- set _child_attr = _child.vars.attr|merge({'aria-label': _text ~ ': ' ~ _dr.labels[_part]}) -%}
+                {%- if _c is not null -%}
+                    {%- set _child_attr = _child_attr|merge({('data-' ~ _c ~ '-target'): _part}) -%}
+                {%- endif -%}
+                <label class="nowo-ui-date-range__part nowo-ui-date-range__part--{{ _part }}" for="{{ _child.vars.id }}">
+                    <span class="nowo-ui-date-range__short">{{ _dr.labels[_part] }}</span>
+                    {{- form_widget(_child, {attr: _child_attr}) -}}
+                </label>
+            {%- endfor -%}
+        </div>
+    </div>
+{%- endblock nowo_ui_date_range_widget -%}

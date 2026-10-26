@@ -35,4 +35,16 @@ final class ListingFieldTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         new ListingField(' ', 'A');
     }
+
+    public function testQueryKeysDefaultToTheKey(): void
+    {
+        self::assertSame(['a'], (new ListingField('a', 'A'))->queryKeys());
+        self::assertSame(['created_from', 'created_to'], (new ListingField('created', 'Created', queryKeys: ['created_from', 'created_to']))->queryKeys());
+    }
+
+    public function testEmptyQueryKeyIsRejected(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        new ListingField('created', 'Created', queryKeys: ['created_from', '']);
+    }
 }

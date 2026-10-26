@@ -2238,6 +2238,263 @@ form.nowo-ui-filters select[multiple]:not(.ts-hidden-accessible) {
   max-height: 6.5rem;
 }
 
+/* Date-range field (2.15, DateRangeType + `date-range` peer).
+   Without JavaScript: two labelled native date inputs side by side, wrapping under each other in a narrow cell.
+   Enhanced (`.is-enhanced`): one control as tall as the other inputs (trigger button + clear button) and a range
+   calendar in a popover (top layer, positioned by the peer; inline under the field without the Popover API). Colours
+   are the kit tokens, so light / dark follow the theme. Tokens: --nowo-ui-date-range-z, --nowo-ui-date-range-shadow,
+   --nowo-ui-date-range-day-size, --nowo-ui-date-range-range-bg. */
+.nowo-ui-date-range {
+  position: relative;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.nowo-ui-date-range__parts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.5rem;
+  min-width: 0;
+}
+
+.nowo-ui-date-range__part {
+  display: flex;
+  flex: 1 1 9rem;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  margin: 0;
+}
+
+.nowo-ui-date-range__short {
+  flex: none;
+  color: var(--nowo-ui-muted);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.nowo-ui-date-range__part input {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+}
+
+.nowo-ui-date-range.is-enhanced > .nowo-ui-date-range__parts {
+  display: none;
+}
+
+.nowo-ui-date-range__trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  min-height: var(--nowo-ui-filter-control-height, var(--nowo-ui-control-height, 2.375rem));
+  padding-inline-end: 2.1rem;
+  overflow: hidden;
+  text-align: start;
+  cursor: pointer;
+}
+
+.nowo-ui-filter-bar .nowo-ui-date-range__trigger {
+  height: var(--nowo-ui-filter-control-height);
+}
+
+.nowo-ui-date-range__value {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nowo-ui-date-range.is-empty .nowo-ui-date-range__value {
+  color: var(--nowo-ui-input-placeholder, var(--nowo-ui-muted));
+}
+
+.nowo-ui-date-range__icon,
+.nowo-ui-date-range__clear {
+  position: absolute;
+  top: 50%;
+  inset-inline-end: 0.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  transform: translateY(-50%);
+  color: var(--nowo-ui-muted);
+}
+
+.nowo-ui-date-range__icon {
+  pointer-events: none;
+}
+
+.nowo-ui-date-range__clear {
+  padding: 0;
+  border: 0;
+  border-radius: var(--nowo-ui-radius, 0.375rem);
+  background: transparent;
+  font: inherit;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.nowo-ui-date-range__clear:hover {
+  color: var(--nowo-ui-text);
+  background: color-mix(in srgb, var(--nowo-ui-text) 8%, transparent);
+}
+
+.nowo-ui-date-range__clear:focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline-offset: 1px;
+}
+
+.nowo-ui-date-range:not(.is-empty) .nowo-ui-date-range__icon,
+.nowo-ui-date-range.is-empty .nowo-ui-date-range__clear {
+  display: none;
+}
+
+.nowo-ui-date-range__panel {
+  --nowo-ui-date-range-day-size: 2.25rem;
+  position: fixed;
+  inset: auto;
+  z-index: var(--nowo-ui-date-range-z, 1080);
+  box-sizing: border-box;
+  max-width: calc(100vw - 1rem);
+  max-height: calc(100vh - 1rem);
+  margin: 0;
+  padding: 0.75rem;
+  overflow: auto;
+  border: 1px solid var(--nowo-ui-border);
+  border-radius: var(--nowo-ui-radius);
+  background: var(--nowo-ui-surface);
+  color: var(--nowo-ui-text);
+  box-shadow: var(--nowo-ui-date-range-shadow, var(--nowo-ui-shadow-popover, 0 10px 28px rgba(15, 23, 42, 0.12)));
+}
+
+/* Without the Popover API the panel opens inline, under the field. */
+.nowo-ui-date-range__panel:not([popover]) {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  inset-inline-start: 0;
+}
+
+.nowo-ui-date-range__panel[hidden] {
+  display: none !important;
+}
+
+.nowo-ui-date-range__panel .nowo-ui-date-range__parts {
+  margin-top: 0.75rem;
+}
+
+.nowo-ui-date-range__panel calendar-range {
+  display: block;
+  inline-size: auto;
+}
+
+.nowo-ui-date-range__panel calendar-range::part(container) {
+  gap: 0.5rem;
+}
+
+.nowo-ui-date-range__panel calendar-range::part(heading) {
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.nowo-ui-date-range__panel calendar-range::part(button) {
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: var(--nowo-ui-radius, 0.375rem);
+  background: transparent;
+  color: var(--nowo-ui-text);
+  cursor: pointer;
+}
+
+.nowo-ui-date-range__panel calendar-range::part(button):hover {
+  background: color-mix(in srgb, var(--nowo-ui-text) 8%, transparent);
+}
+
+.nowo-ui-date-range__months {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.nowo-ui-date-range__panel calendar-month {
+  --color-accent: var(--nowo-ui-primary);
+  --color-text-on-accent: var(--nowo-ui-primary-contrast);
+  color: var(--nowo-ui-text);
+}
+
+.nowo-ui-date-range__panel calendar-month::part(th) {
+  inline-size: var(--nowo-ui-date-range-day-size);
+  block-size: 1.75rem;
+  color: var(--nowo-ui-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.nowo-ui-date-range__panel calendar-month::part(day) {
+  inline-size: var(--nowo-ui-date-range-day-size);
+  block-size: var(--nowo-ui-date-range-day-size);
+  border-radius: var(--nowo-ui-radius, 0.375rem);
+  cursor: pointer;
+}
+
+.nowo-ui-date-range__panel calendar-month::part(today) {
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.nowo-ui-date-range__panel calendar-month::part(range-inner) {
+  border-radius: 0;
+  background: var(--nowo-ui-date-range-range-bg, color-mix(in srgb, var(--nowo-ui-primary) 18%, var(--nowo-ui-surface)));
+  color: var(--nowo-ui-text);
+}
+
+.nowo-ui-date-range__panel calendar-month::part(range-start) {
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+}
+
+.nowo-ui-date-range__panel calendar-month::part(range-end) {
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+}
+
+.nowo-ui-date-range__panel calendar-month::part(range-start range-end) {
+  border-radius: var(--nowo-ui-radius, 0.375rem);
+}
+
+.nowo-ui-date-range__nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nowo-ui-date-range__footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 0.75rem;
+}
+
+@media (max-width: 30rem) {
+  .nowo-ui-date-range__panel {
+    --nowo-ui-date-range-day-size: 2.1rem;
+    padding: 0.6rem;
+  }
+}
+
 /* Per-field help stays for assistive tech only (aria-describedby); the placeholder names the filter. */
 .nowo-ui-filter-bar__help {
   position: absolute;

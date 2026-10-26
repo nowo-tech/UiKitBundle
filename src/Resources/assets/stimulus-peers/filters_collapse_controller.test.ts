@@ -119,6 +119,18 @@ describe('filters-collapse peer', () => {
     expect(foldedKeys()).toEqual([]);
   });
 
+  it('counts the fields of one filter group (a date range) once', () => {
+    const form = mount(`
+      <div role="group" data-nowo-ui-filter-group>
+        <input type="date" name="created_from" value="2026-02-01"><input type="date" name="created_to" value="2026-02-15">
+      </div>
+      <div data-nowo-ui-filter-group><input type="date" name="paid_from" value=""><input type="date" name="paid_to" value="2026-03-01"></div>
+      <div data-nowo-ui-filter-group><input type="date" name="due_from"><input type="date" name="due_to"></div>
+      <input name="q" value="acme">`);
+
+    expect(activeFilterCount(form)).toBe(3);
+  });
+
   it('counts nothing outside a form', async () => {
     document.body.innerHTML = `<div data-controller="filters-collapse" data-filters-collapse-key-value="x" data-filters-collapse-messages-value='${JSON.stringify(MESSAGES)}'>
       <button type="button" data-filters-collapse-target="toggle" data-action="filters-collapse#toggle"></button><p data-filters-collapse-target="summary"></p></div>`;

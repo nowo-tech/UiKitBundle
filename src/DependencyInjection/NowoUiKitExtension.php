@@ -14,6 +14,8 @@ use Nowo\UiKitBundle\Enum\CssFramework;
 use Nowo\UiKitBundle\EventSubscriber\LegacyPanelPathRedirectSubscriber;
 use Nowo\UiKitBundle\Form\AppearancePaletteType;
 use Nowo\UiKitBundle\Form\AppearanceType;
+use Nowo\UiKitBundle\Form\DateRangeSubmitExtension;
+use Nowo\UiKitBundle\Form\DateRangeType;
 use Nowo\UiKitBundle\Form\MultiSelectTypeExtension;
 use Nowo\UiKitBundle\Listing\CookieListingPreferenceStore;
 use Nowo\UiKitBundle\Listing\ListingCustomizerViewBuilder;
@@ -48,6 +50,9 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 final class NowoUiKitExtension extends Extension implements PrependExtensionInterface
 {
+    /** Form theme with the date-range field's blocks (2.15), prepended to `twig.form_themes`. */
+    public const DATE_RANGE_FORM_THEME = '@NowoUiKit/form/nowo_ui_date_range.html.twig';
+
     /** @var \Closure(): bool */
     private readonly \Closure $httpClientAvailable;
 
@@ -89,7 +94,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
         $config = $this->processConfiguration(new Configuration(), $container->getExtensionConfig($this->getAlias()));
         $fw = CssFramework::from($config['css_framework'])->normalized()->value;
 
-        $container->prependExtensionConfig('twig', [
+        $twig = [
             'globals' => [
                 'nowo_ui_kit_css_framework' => $fw,
                 'nowo_ui_kit_icon_set' => $config['icon_set'],
@@ -100,7 +105,12 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
                 ],
                 'nowo_ui_kit_shell' => $config['shell'],
             ],
-        ]);
+        ];
+        // 2.15: the date-range field's blocks (only `nowo_ui_date_range_*`) in every form, whatever the host theme.
+        if (class_exists(AbstractType::class)) {
+            $twig['form_themes'] = [self::DATE_RANGE_FORM_THEME];
+        }
+        $container->prependExtensionConfig('twig', $twig);
     }
 
     /**
@@ -132,6 +142,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
         $container->setParameter('nowo_ui_kit.appearance.enabled', $appearance['enabled']);
         $this->registerAppearance($container, $appearance);
         $this->registerMultiSelect($container);
+        $this->registerDateRange($container);
 
         /** @var array{base_url: string, default_testid: ?string, routes: array<string, array{path: string, testid: ?string}>} $routeLinks */
         $routeLinks = $config['route_links'];
@@ -217,6 +228,22 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
         }
         $container->register('nowo_ui_kit.form.multi_select_extension', MultiSelectTypeExtension::class)
             ->setArguments([new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE)])
+            ->addTag('form.type_extension');
+    }
+
+    /**
+     * Date-range filter field (2.15): `DateRangeType` (form type, translated short labels) and the submit extension
+     * that maps its two host-named parameters onto it; only with symfony/form.
+     */
+    private function registerDateRange(ContainerBuilder $container): void
+    {
+        if (!class_exists(AbstractType::class)) {
+            return;
+        }
+        $container->register('nowo_ui_kit.form.date_range_type', DateRangeType::class)
+            ->setArguments([new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE)])
+            ->addTag('form.type');
+        $container->register('nowo_ui_kit.form.date_range_submit_extension', DateRangeSubmitExtension::class)
             ->addTag('form.type_extension');
     }
 

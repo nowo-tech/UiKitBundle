@@ -24,6 +24,7 @@ Optional **Stimulus peer** TypeScript sources live under `src/Resources/assets/s
 - [Disclosure icon (Stimulus peer only)](#disclosure-icon-stimulus-peer-only)
 - [Product tour (Stimulus peer only)](#product-tour-stimulus-peer-only)
 - [Multi-select (Stimulus peer only)](#multi-select-stimulus-peer-only)
+- [Date range (Stimulus peer only)](#date-range-stimulus-peer-only)
 - [Error retry countdown (2.6)](#error-retry-countdown-26)
 - [Auto-submit (2.6)](#auto-submit-26)
 - [Icon state bridge and morphicons](#icon-state-bridge-and-morphicons)
@@ -434,6 +435,37 @@ classes stay on the hidden select. Events: `multi-select:ready` (`detail.instanc
 (`detail.error`). Disconnecting (Turbo navigation, morph) destroys Tom Select and keeps the chosen values on the
 native select. Peer: `multi_select_controller.ts` (getter `tomSelect`; subclasses may override the protected
 `tomSelectFactory()`; types `TomSelectInstance`, `TomSelectConstructor`).
+
+## Date range (Stimulus peer only)
+
+No kit IIFE (2.15). Enhances the two native date inputs of a `DateRangeType` field
+([USAGE](USAGE.md#date-range-filter-215)) into one filter control: the chosen range in the viewer's locale
+(`Intl.DateTimeFormat`: `01/02/2026 – 15/02/2026`, `From 01/02/2026`, or the placeholder when empty), a clear button
+and a range calendar in a popover. Calendar: [Cally](https://wicky.nillia.ms/cally/) (`<calendar-range>` /
+`<calendar-month>`, optional host dependency `cally` ^0.9, checked against 0.9.2; imported the first time a panel
+opens). Without JavaScript, or when Cally cannot be loaded, the native inputs do the job (in the panel once enhanced).
+
+| Stimulus | Role |
+|----------|------|
+| `data-controller="date-range"` | The field's group (`role="group"`, `aria-label`) |
+| `data-date-range-target="parts"` / `"from"` / `"to"` | The labelled inputs' wrapper and the two `<input type="date">` (moved into the panel; names unchanged) |
+| `data-date-range-placeholder-value` | Text of the empty control and its accessible name |
+| `data-date-range-labels-value` | `{from, to, clear, previous, next, done}` (default English; the form type writes the `date_range.*` translations) |
+| `data-date-range-locale-value` | BCP 47 or Symfony locale of the dates and the calendar (default `<html lang>`; the form theme writes the request locale) |
+| `data-date-range-months-value` | Months shown: `0` auto (two from 40rem, else one), `1`–`3` |
+| `data-date-range-first-day-of-week-value` | `0` Sunday … `6` (default `1`, Monday) |
+
+Behaviour: the trigger is a `<button aria-haspopup="dialog" aria-expanded>` with the input's classes (same height as
+the other filter controls) and the invoker of a `popover="auto"` panel (`role="dialog"`): click / Enter / Space or
+ArrowDown open it, Escape, a click outside or *Done* close it and return the focus to the trigger; the panel is
+positioned under the control (above when there is no room) inside the viewport, and follows scroll / resize. Without
+the Popover API the panel opens inline under the field and a pointer down outside closes it. Picking the second day of
+the range fills both inputs (`input` + `change` events, so auto-submit peers react) and closes the panel; typing in an
+input updates the calendar. The clear buttons (on the control and in the panel) empty both days. Root classes
+`is-enhanced`, `is-empty`, `is-open`. Events: `date-range:change` (`detail.from`, `detail.to`), `date-range:ready`
+(`detail.calendar`), `date-range:unavailable` (`detail.error`). Disconnecting restores the native markup. Peer:
+`date_range_controller.ts` (exports `parseDay()`, `toLanguageTag()`, `formatRange()`; getter `range`, methods
+`open()`, `close()`, `toggle()`, `clear()`; subclasses may override the protected `calendarFactory()`).
 
 ## Error retry countdown (2.6)
 

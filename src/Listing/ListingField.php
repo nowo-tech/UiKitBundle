@@ -15,6 +15,9 @@ use Nowo\UiKitBundle\View\Label;
  * - `defaultVisible`: visibility before the viewer customizes the listing
  * - `priority`, `headClass`, `cellClass` (columns only): `data-priority` of the cells (host CSS), extra `<th>` /
  *   `<td>` classes
+ * - `queryKeys` (filters only, 2.15): the query parameters the filter submits when they are not just its key, e.g. a
+ *   date range `collection_date` sending `collection_date_from` / `collection_date_to`; a hidden filter drops them
+ *   all from the request ({@see ListingLayout::filterRequest()})
  */
 final readonly class ListingField
 {
@@ -26,10 +29,27 @@ final readonly class ListingField
         public int $priority = 0,
         public string $headClass = '',
         public string $cellClass = '',
+        /** @var list<string> */
+        public array $queryKeys = [],
     ) {
         if ('' === trim($key)) {
             throw new \InvalidArgumentException('A ListingField needs a non-empty key.');
         }
+        foreach ($queryKeys as $queryKey) {
+            if ('' === trim($queryKey)) {
+                throw new \InvalidArgumentException(\sprintf('The query keys of the ListingField "%s" must be non-empty strings.', $key));
+            }
+        }
+    }
+
+    /**
+     * Query parameters of the filter: its `queryKeys`, else its key.
+     *
+     * @return list<string>
+     */
+    public function queryKeys(): array
+    {
+        return [] === $this->queryKeys ? [$this->key] : $this->queryKeys;
     }
 
     public function isVisibleByDefault(): bool

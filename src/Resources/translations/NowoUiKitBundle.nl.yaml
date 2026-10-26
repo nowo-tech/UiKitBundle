@@ -44,6 +44,12 @@ filters.clear: Wissen
 filters.any: Alle
 multi_select.remove: Verwijderen
 multi_select.no_results: Geen resultaten
+date_range.from: Van
+date_range.to: Tot
+date_range.clear: Wissen
+date_range.previous: Vorige maand
+date_range.next: Volgende maand
+date_range.done: Klaar
 theme.light: Licht
 theme.dark: Donker
 theme.switch_to_light: Overschakelen naar licht thema

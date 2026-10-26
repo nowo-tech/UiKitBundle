@@ -13,8 +13,11 @@
   2.10: rows take the `form_row` slot classes (2.10.1: checkbox / radio rows `form_row_check`) and labels the
   `form_label` slot (all empty by default);
   theme.form_errors_after_widget prints a field's errors after its widget (and, on a checkbox row, before the help).
+  2.15: the `nowo_ui_date_range_*` blocks of DateRangeType (form/nowo_ui_date_range.html.twig).
 #}
 {% use 'form_div_layout.html.twig' %}
+{#- 2.15: the date-range filter field (DateRangeType) -#}
+{% use '@NowoUiKit/form/nowo_ui_date_range.html.twig' %}
 
 {#- 2.10: form_row (Symfony) builds the widget's aria attributes; only the markup is themed here. -#}
 {%- block form_row_render -%}
