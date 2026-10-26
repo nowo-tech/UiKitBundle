@@ -14,6 +14,7 @@ use Nowo\UiKitBundle\Enum\CssFramework;
 use Nowo\UiKitBundle\EventSubscriber\LegacyPanelPathRedirectSubscriber;
 use Nowo\UiKitBundle\Form\AppearancePaletteType;
 use Nowo\UiKitBundle\Form\AppearanceType;
+use Nowo\UiKitBundle\Form\DateRangeRequestHandler;
 use Nowo\UiKitBundle\Form\DateRangeSubmitExtension;
 use Nowo\UiKitBundle\Form\DateRangeType;
 use Nowo\UiKitBundle\Form\MultiSelectTypeExtension;
@@ -232,8 +233,9 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
     }
 
     /**
-     * Date-range filter field (2.15): `DateRangeType` (form type, translated short labels) and the submit extension
-     * that maps its two host-named parameters onto it; only with symfony/form.
+     * Date-range filter field (2.15): `DateRangeType` (form type, translated short labels), the submit extension
+     * that maps its two host-named parameters onto it and the request-handler decorator that lets those parameters
+     * submit a nameless form (2.15.1); only with symfony/form.
      */
     private function registerDateRange(ContainerBuilder $container): void
     {
@@ -245,6 +247,11 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
             ->addTag('form.type');
         $container->register('nowo_ui_kit.form.date_range_submit_extension', DateRangeSubmitExtension::class)
             ->addTag('form.type_extension');
+        // A nameless form counts a range's from / to parameter as a present child (2.15.1); no-op without the
+        // FrameworkBundle's HttpFoundation request handler.
+        $container->register('nowo_ui_kit.form.date_range_request_handler', DateRangeRequestHandler::class)
+            ->setArguments([new Reference('nowo_ui_kit.form.date_range_request_handler.inner')])
+            ->setDecoratedService('form.type_extension.form.request_handler', null, 0, ContainerInterface::IGNORE_ON_INVALID_REFERENCE);
     }
 
     /**

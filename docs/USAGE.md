@@ -924,7 +924,9 @@ $builder->add('collection_date', DateRangeType::class, [
 fields (`single_text`, `input: 'string'`, `Y-m-d`). Its two days are named as siblings of the field (rootless GET
 filter form: `min_collection_date`; under a `filter` root: `filter[min_collection_date]`); `DateRangeSubmitExtension`
 puts them back on the field when the parent is submitted (a nested `collection_date[from]` works too, a flat value
-wins). An invalid day is an error of the range field.
+wins). An invalid day is an error of the range field. In a form without a root name, a range's parameters count as a
+present field (2.15.1, `DateRangeRequestHandler` decorating the request handler): `?min_collection_date=2026-02-01`
+alone submits the form and the field shows the range.
 
 | Option | Default | |
 |--------|---------|---|
