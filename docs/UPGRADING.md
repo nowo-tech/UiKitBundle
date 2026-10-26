@@ -4,7 +4,6 @@
 
 - [Unreleased](#unreleased)
 - [To 2.15.0](#to-2150)
-- [To 2.15.0](#to-2150-1)
 - [To 2.14.0](#to-2140)
 - [To 2.13.2](#to-2132)
 - [To 2.13.1](#to-2131)
@@ -84,13 +83,17 @@
 
 ## Unreleased
 
-## To 2.15.0
+No change needed (bug fixes).
 
-From **2.14.0**:
-
-```bash
-composer update nowo-tech/ui-kit-bundle
-```
+- **Date range in a nameless GET form**: a URL that carries only a range's parameters (`?min_receipt_issue_date=…`)
+  now submits the filter form, so the field shows the range that filters the list. The bundle decorates the
+  FrameworkBundle request handler (`form.type_extension.form.request_handler`) with
+  `Form\DateRangeRequestHandler`; a host that pre-filled the range from the query as initial data (because the form
+  was not submitted) can drop that workaround. A host that builds its form factory by hand (`Forms::
+  createFormFactoryBuilder()`) registers the handler itself: `->addTypeExtension(new
+  FormTypeHttpFoundationExtension(new DateRangeRequestHandler(new HttpFoundationRequestHandler())))`.
+- A nameless form whose request carries only a range parameter now reports `isSubmitted() === true` (as with any other
+  present field); a controller that treated "not submitted" as "no filters" must read the form's data instead.
 
 ## To 2.15.0
 

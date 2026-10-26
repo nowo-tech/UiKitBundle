@@ -72,6 +72,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Date range in a nameless GET form** (2.15.0): Symfony only submits a form without a root name (FormKit's GET
+  filter forms, `getBlockPrefix() === ''`) when one of its children's names is in the request, and a
+  `DateRangeType` field is submitted under the host's `from_name` / `to_name`, not its own name. A URL carrying only
+  a range (`?min_receipt_issue_date=2026-01-01`) filtered the host's list while the form stayed unsubmitted and the
+  field rendered empty. New `Form\DateRangeRequestHandler` decorates the FrameworkBundle request handler
+  (`form.type_extension.form.request_handler`): for a nameless form whose request carries a range's from / to
+  parameter and no other child, it hands the inner handler a copy of the request with an empty entry under the
+  range's name, so the form is submitted as for any present field and `DateRangeSubmitExtension` maps the two days
+  onto the range. Named forms, other methods and other requests are passed through unchanged.
+- `partials/_listing_head.html.twig` / `_listing_cells.html.twig`: the row-detail head / cell use the `include()`
+  function instead of the `include` tag (twig-cs-fixer); same output.
+- `.scripts/check-no-cursor-coauthor.sh` accepts a git worktree (`.git` file).
+
+### Changed
+
+- Dev dependencies lucide 1.61.0, sass 1.106.1 and happy-dom 21.0.4: the shipped assets (`src/Resources/public`,
+  `views/inline/nowo-ui-theme-boot.js`) rebuild byte-identical, sass prints no deprecation and the Vitest suite
+  passes unchanged.
+
 ## [2.15.0] - 2026-10-26
 
 Date-range filter field (one labelled control, lazy Cally range calendar, native fallback); multi-select keeps chips and input on one line longer.
@@ -191,7 +212,7 @@ Listing customizer (cookie preferences) and guided product tour, ported from Sym
   reduced motion honoured, closed `<details>` opened for a highlight. The "seen" state is kept in the browser
   (localStorage `nowo-ui-tour-seen`, D-056): auto-start once per tour key, replay from the tab; an optional
   `seen_url` also posts `{"key": …}` with the CSRF header for hosts that persist it server-side. `tour.*`
-  translations in every locale, the `tour` icon in every icon set, `driver.js` as an optional peer dependency. See
+  translations in every locale, the `tour` icon in every icon set, `driver.js` as an optional peer dependency.
   [USAGE](USAGE.md#guided-tour) and [STIMULUS](STIMULUS.md#product-tour-stimulus-peer-only).
 - **Page-edge tab** `button: true` (a `<button>` instead of the link); the 2.12.1 `attr` option also applies to the
   inline link and the button.
@@ -253,7 +274,7 @@ Side-panel placement for the native dialog. See [UPGRADING](UPGRADING.md#to-2120
   `row_attr` is not repeated) and labels the `form_label` slot (both empty by default), and the new
   `theme.form_errors_after_widget` option prints a field's errors after its widget (before the help on checkbox rows)
   instead of Symfony's order. Only `form_row_render` is themed, so Symfony's `aria-describedby` / `aria-invalid` stay.
-  An app can style its AuthKit pages (whose default form theme is this one) without a form theme of its own. See
+  An app can style its AuthKit pages (whose default form theme is this one) without a form theme of its own.
   [PAGE_CONTRACT](PAGE_CONTRACT.md) (*Form theme*) and [THEME_SLOTS](THEME_SLOTS.md).
 
 ## [2.9.0] - 2026-10-23
@@ -265,7 +286,7 @@ Side-panel placement for the native dialog. See [UPGRADING](UPGRADING.md#to-2120
   over `{error: 8000, warning: 8000, default: 5000}`; 0 keeps a toast until dismissed), `toast_classes` (`toast`,
   `content`, `title`, `message`, `dismiss`), `toast_type_classes` (per flash type, `default`) and
   `toast_flash_slots` (false: the `flash_<type>` slots stay on inline flashes only), and the blocks
-  `toast_attributes`, `toast_text` and `toast_dismiss_attributes`. Defaults render as before. See
+  `toast_attributes`, `toast_text` and `toast_dismiss_attributes`. Defaults render as before.
   [USAGE](USAGE.md#toasts-in-a-host).
 
 ## [2.8.0] - 2026-10-23
@@ -321,7 +342,7 @@ Burger keeps the menu glyph in the icons rail and on phones before morph-icon lo
 Kit error pages, confirm dialog partial, app shell scaffold and compact pagination (hosts drop their copies); responsive table measures with the detail buttons shown. See [UPGRADING](UPGRADING.md#to-260).
 
 Kit templates that replace the apps' near-identical copies: branded HTTP error pages, the confirm dialog wrapper, the
-signed-in app shell and a compact pagination variant; the responsive table no longer ends one button too wide. See
+signed-in app shell and a compact pagination variant; the responsive table no longer ends one button too wide.
 [UPGRADING](UPGRADING.md#to-260).
 
 ### Added
@@ -553,7 +574,7 @@ State-hide rules win over unlayered host CSS; nowo_ui_kit.breadcrumbs.enabled dr
 
 Filters translate each text once, opt-in strict missing-message contract test, auth scaffold form themes/attributes/root errors/body blocks, form error slots, menu partial, public page-header include, content padding and link/code token fixes. See [UPGRADING](UPGRADING.md#to-230).
 
-UiKit 2.3: the backlog of the phase-2 migrations (Pwa, ChatKit, SearchKit, AuthKit). See
+UiKit 2.3: the backlog of the phase-2 migrations (Pwa, ChatKit, SearchKit, AuthKit).
 [UPGRADING](UPGRADING.md#template-contract-23).
 
 ### Added
