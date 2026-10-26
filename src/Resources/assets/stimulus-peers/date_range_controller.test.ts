@@ -392,3 +392,74 @@ describe('date-range peer', () => {
     vi.unstubAllGlobals();
   });
 });
+
+describe('date-range panel position', () => {
+  const margin = 8;
+  const gap = 4;
+
+  /** Opens a popover panel of the given size under a trigger at the given box, in a viewport of the given size. */
+  async function place(box: { top: number; left: number; height?: number; width?: number }, size: { width: number; height: number }, viewport: { width: number; height: number }): Promise<{ top: number; left: number; maxHeight: number }> {
+    stubPopover();
+    document.body.innerHTML = field('date-range', 'data-date-range-months-value="2"');
+    await settle();
+    const height = box.height ?? 38;
+    const width = box.width ?? 240;
+    vi.spyOn(trigger(), 'getBoundingClientRect').mockReturnValue({ top: box.top, bottom: box.top + height, left: box.left, right: box.left + width, width, height, x: box.left, y: box.top, toJSON: () => ({}) });
+    Object.defineProperty(panel(), 'offsetHeight', { value: size.height, configurable: true });
+    Object.defineProperty(panel(), 'offsetWidth', { value: size.width, configurable: true });
+    Object.defineProperty(document.documentElement, 'clientWidth', { value: viewport.width, configurable: true });
+    vi.stubGlobal('innerHeight', viewport.height);
+    vi.stubGlobal('innerWidth', viewport.width);
+    controller().open();
+    await settle();
+    return {
+      top: Number.parseInt(panel().style.top, 10),
+      left: Number.parseInt(panel().style.left, 10),
+      maxHeight: Number.parseInt(panel().style.maxHeight, 10),
+    };
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    delete (document.documentElement as unknown as { clientWidth?: number }).clientWidth;
+  });
+
+  it('opens below the control when it fits there', async () => {
+    const pos = await place({ top: 100, left: 40 }, { width: 600, height: 380 }, { width: 1280, height: 720 });
+    expect(pos.top).toBe(100 + 38 + gap);
+    expect(pos.left).toBe(40);
+    expect(pos.maxHeight).toBe(720 - 2 * margin);
+  });
+
+  it('opens above the control when only the room above fits', async () => {
+    const pos = await place({ top: 600, left: 40 }, { width: 600, height: 380 }, { width: 1280, height: 720 });
+    expect(pos.top).toBe(600 - gap - 380);
+  });
+
+  it('keeps the whole panel inside the viewport when it fits neither below nor above (overlapping the control)', async () => {
+    // 1280×720, field in the 4th row of a filter grid: 300 px above, 382 px below, a 460 px two-month panel.
+    const pos = await place({ top: 300, left: 900 }, { width: 600, height: 460 }, { width: 1280, height: 720 });
+    expect(pos.top).toBe(720 - margin - 460);
+    expect(pos.top).toBeGreaterThanOrEqual(margin);
+    expect(pos.top + 460).toBeLessThanOrEqual(720 - margin);
+    expect(pos.left).toBe(1280 - margin - 600);
+    expect(pos.left + 600).toBeLessThanOrEqual(1280 - margin);
+  });
+
+  it('pins a panel taller than the viewport to the top margin, its height capped so it scrolls inside', async () => {
+    const pos = await place({ top: 200, left: 10 }, { width: 300, height: 900 }, { width: 1280, height: 400 });
+    expect(pos.top).toBe(margin);
+    expect(pos.maxHeight).toBe(400 - 2 * margin);
+  });
+
+  it('keeps the panel inside a narrow viewport at the right edge', async () => {
+    const right = await place({ top: 100, left: 300 }, { width: 330, height: 380 }, { width: 390, height: 844 });
+    expect(right.left).toBe(390 - margin - 330);
+    expect(right.left + 330).toBeLessThanOrEqual(390 - margin);
+  });
+
+  it('keeps the left margin when the panel is as wide as a narrow viewport', async () => {
+    const wide = await place({ top: 100, left: 2 }, { width: 500, height: 380 }, { width: 390, height: 844 });
+    expect(wide.left).toBe(margin);
+  });
+});

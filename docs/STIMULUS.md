@@ -458,7 +458,8 @@ opens). Without JavaScript, or when Cally cannot be loaded, the native inputs do
 Behaviour: the trigger is a `<button aria-haspopup="dialog" aria-expanded>` with the input's classes (same height as
 the other filter controls) and the invoker of a `popover="auto"` panel (`role="dialog"`): click / Enter / Space or
 ArrowDown open it, Escape, a click outside or *Done* close it and return the focus to the trigger; the panel is
-positioned under the control (above when there is no room) inside the viewport, and follows scroll / resize. Without
+positioned under the control (above when only the room above fits; when neither fits, moved up until it is whole in
+the viewport, over the control), its height capped to the viewport (it scrolls inside), and follows scroll / resize. Without
 the Popover API the panel opens inline under the field and a pointer down outside closes it. Picking the second day of
 the range fills both inputs (`input` + `change` events, so auto-submit peers react) and closes the panel; typing in an
 input updates the calendar. The clear buttons (on the control and in the panel) empty both days. Root classes

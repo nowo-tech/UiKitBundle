@@ -73,6 +73,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Date-range panel out of the viewport** (2.15.0, `date-range` peer): when the popover fitted neither below nor
+  above the control it was placed below and its bottom overflowed the viewport (e.g. a two-month calendar at
+  1280×720 with the field in the 4th row of a filter grid), so the lower days could not be reached with the pointer.
+  The panel is now moved up until it is whole inside the viewport (it may cover the control); its height is capped
+  to the viewport minus the margins (inline `max-height`, so a taller panel scrolls inside), and the left edge is
+  clamped between both margins. Placement below / above and keyboard behaviour are unchanged.
+
 ## [2.15.1] - 2026-10-26
 
 Date-range filters submit a nameless form whose request carries only a range; dev dependency bumps (assets unchanged); twig include fixes; worktree-friendly co-author check.

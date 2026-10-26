@@ -9,7 +9,8 @@
  * Calendar: Cally (`cally` ^0.9, host dependency, MIT, web components `<calendar-range>` / `<calendar-month>`;
  * keyboard: arrows, PageUp / PageDown, Home / End, Enter), imported the first time a popover opens. Popover: the
  * Popover API (`popover="auto"`: top layer, light dismiss, Escape), positioned under (or above) the control and kept
- * inside the viewport; without it, the panel opens inline under the field.
+ * whole inside the viewport (over the control when neither side has room); without it, the panel opens inline under
+ * the field.
  *
  * Markup: the `nowo_ui_date_range_widget` block (`form/nowo_ui_date_range.html.twig`) — a `role="group"` element with
  * `data-controller="date-range"`, an `aria-label`, and the targets `parts` (the two labelled inputs), `from`, `to`.
@@ -366,7 +367,11 @@ export default class DateRangeController extends Controller<HTMLElement> {
     this.position();
   };
 
-  /** Fixed position under the control (above when there is no room below), inside the viewport. */
+  /**
+   * Fixed position under the control, above it when only the room above fits; when neither side fits, the panel is
+   * moved up until it is whole inside the viewport (it may cover the control). Its height is capped to the viewport
+   * (minus the margins) so a panel taller than that scrolls inside; horizontally it is kept between the margins.
+   */
   private position(): void {
     const panel = this.panel;
     const trigger = this.trigger;
@@ -375,16 +380,20 @@ export default class DateRangeController extends Controller<HTMLElement> {
     }
     const gap = 4;
     const margin = 8;
-    const box = trigger.getBoundingClientRect();
-    const width = panel.offsetWidth;
-    const height = panel.offsetHeight;
     const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
     const viewportHeight = window.innerHeight;
-    const left = Math.max(margin, Math.min(box.left, viewportWidth - width - margin));
+    panel.style.maxHeight = `${Math.max(0, viewportHeight - 2 * margin)}px`;
+    const box = trigger.getBoundingClientRect();
+    const width = panel.offsetWidth;
+    const height = Math.min(panel.offsetHeight, viewportHeight - 2 * margin);
     const below = box.bottom + gap;
-    const top = below + height <= viewportHeight - margin || box.top - gap - height < margin ? below : box.top - gap - height;
-    panel.style.left = `${Math.round(left)}px`;
-    panel.style.top = `${Math.round(Math.max(margin, top))}px`;
+    const above = box.top - gap - height;
+    let top = below;
+    if (below + height > viewportHeight - margin) {
+      top = above >= margin ? above : viewportHeight - margin - height;
+    }
+    panel.style.left = `${Math.round(clamp(box.left, margin, viewportWidth - margin - width))}px`;
+    panel.style.top = `${Math.round(clamp(top, margin, viewportHeight - margin - height))}px`;
   }
 
   private async loadCalendar(): Promise<void> {
@@ -555,4 +564,9 @@ export default class DateRangeController extends Controller<HTMLElement> {
       }
     }
   }
+}
+
+/** `value` kept between `min` and `max`; `min` wins when the range is empty (a box larger than the room). */
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(value, max));
 }
