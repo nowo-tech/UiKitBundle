@@ -109,6 +109,13 @@ select.ts-hidden-accessible {
   outline: 0;
 }
 
+/* 2.15: with chips the search input only needs room for the caret, so chips and input share the line longer
+   (it still grows into the free space of the line). */
+.ts-wrapper.nowo-ui-multi-select.has-items .ts-control > input {
+  flex-basis: 1.5rem;
+  min-width: 1.5rem;
+}
+
 .ts-wrapper.nowo-ui-multi-select .ts-control > input::placeholder {
   color: var(--nowo-ui-input-placeholder, var(--nowo-ui-muted, #64748b));
   opacity: 1;
