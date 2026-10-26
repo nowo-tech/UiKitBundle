@@ -139,6 +139,8 @@ export default class DateRangeController extends Controller<HTMLElement> {
   private calendarHost: HTMLElement | null = null;
   private calendar: CalendarRangeElement | null = null;
   private loading: Promise<void> | null = null;
+  /** Repositions the open panel when its size changes (Cally renders its months after the first measure). */
+  private sizeObserver: ResizeObserver | null = null;
   private readonly cleanups: Array<() => void> = [];
 
   override connect(): void {
@@ -249,6 +251,8 @@ export default class DateRangeController extends Controller<HTMLElement> {
     while (this.cleanups.length > 0) {
       this.cleanups.pop()?.();
     }
+    this.sizeObserver?.disconnect();
+    this.sizeObserver = null;
     if (!this.trigger) {
       return;
     }
@@ -295,6 +299,10 @@ export default class DateRangeController extends Controller<HTMLElement> {
     this.position();
     this.listen(window, 'resize', this.reposition);
     this.listen(window, 'scroll', this.reposition, true);
+    if (this.panel && typeof ResizeObserver !== 'undefined') {
+      this.sizeObserver ??= new ResizeObserver(this.reposition);
+      this.sizeObserver.observe(this.panel);
+    }
     this.loading ??= this.loadCalendar().finally(() => {
       this.loading = null;
     });
@@ -351,6 +359,7 @@ export default class DateRangeController extends Controller<HTMLElement> {
     this.trigger?.setAttribute('aria-expanded', 'false');
     this.unlisten(this.reposition);
     this.unlisten(this.outside);
+    this.sizeObserver?.disconnect();
     if (focusTrigger) {
       this.trigger?.focus();
     }

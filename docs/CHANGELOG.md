@@ -74,6 +74,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **date-range**: the open panel is repositioned whenever its size changes (`ResizeObserver`). Cally renders its months after the panel is first measured, so 2.15.2 placed a still-short panel below the control and the grown calendar overflowed the viewport again.
+
 ## [2.15.2] - 2026-10-26
 
 The date-range popover always stays whole inside the viewport

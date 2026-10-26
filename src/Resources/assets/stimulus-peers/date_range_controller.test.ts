@@ -458,6 +458,36 @@ describe('date-range panel position', () => {
     expect(right.left + 330).toBeLessThanOrEqual(390 - margin);
   });
 
+  it('repositions when the panel grows after opening (Cally renders its months late) and stops observing on close', async () => {
+    const observed: ResizeObserverCallback[] = [];
+    const observe = vi.fn();
+    const disconnect = vi.fn();
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor(callback: ResizeObserverCallback) {
+          observed.push(callback);
+        }
+        observe = observe;
+        disconnect = disconnect;
+      },
+    );
+    // Measured short under the 4th filter row, then the two months render: 460 px fit neither below nor above.
+    const short = await place({ top: 300, left: 40 }, { width: 600, height: 120 }, { width: 1280, height: 720 });
+    expect(short.top).toBe(300 + 38 + gap);
+    expect(observe).toHaveBeenCalledWith(panel());
+    Object.defineProperty(panel(), 'offsetHeight', { value: 460, configurable: true });
+    observed[0]?.([], {} as ResizeObserver);
+    expect(Number.parseInt(panel().style.top, 10)).toBe(720 - margin - 460);
+
+    controller().close();
+    expect(disconnect).toHaveBeenCalled();
+    disconnect.mockClear();
+    document.body.innerHTML = '';
+    await settle();
+    expect(disconnect).toHaveBeenCalled();
+  });
+
   it('keeps the left margin when the panel is as wide as a narrow viewport', async () => {
     const wide = await place({ top: 100, left: 2 }, { width: 500, height: 380 }, { width: 390, height: 844 });
     expect(wide.left).toBe(margin);
