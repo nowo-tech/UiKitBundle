@@ -7,7 +7,7 @@ set -eu
 sh "$(dirname "$0")/check-no-claude-coauthor.sh" "${1:-HEAD}"
 REF="${1:-HEAD}"
 
-if [ ! -d .git ]; then
+if [ ! -e .git ]; then  # a directory, or a file in a git worktree
   echo "ERROR: .git not found — run from the bundle repository root (REQ-GIT-001)." >&2
   echo "GitLab-only copies synced without .git must be cloned or re-synced with git history." >&2
   exit 1
