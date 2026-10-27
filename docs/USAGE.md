@@ -1211,7 +1211,7 @@ paint and sets the attributes the kit and host CSS read on `<html>`:
 
 | Input on `<html>` (optional) | Output on `<html>` |
 |------------------------------|--------------------|
-| `data-nowo-ui-pref-theme` = `light` / `dark` (anything else: stored theme → OS) | `data-theme` |
+| `data-nowo-ui-pref-theme` = `light` / `dark` (anything else: stored theme → OS) | `data-theme` and `data-bs-theme` (2.15.4) |
 | `data-nowo-ui-pref-density` = `compact` | `data-ui-density` (`comfortable` / `compact`) |
 | `data-nowo-ui-pref-motion` = `reduce` / `full` | `data-motion` (`system` / `reduce` / `full`) |
 | `data-nowo-ui-pref-font-scale` = `sm` / `lg` | `data-font-scale` (`sm` / `md` / `lg`) |
@@ -1230,6 +1230,14 @@ toggle), so the toggle and the boot never disagree:
 
 The resolved values are mirrored to `window.nowoUiPrefs` (`theme`, `density`, `motion`, `fontScale`, `contrast`,
 `sidebar`); `window.nowoUiThemeBoot()` re-runs the boot.
+
+**Bootstrap colour modes (2.15.4).** Wherever the kit applies the theme (this boot, the `nowo-ui-theme.js` toggle and,
+while the page follows the OS, `prefers-color-scheme` changes) it sets `data-bs-theme` to the same value as
+`data-theme`, so Bootstrap 5.3 components (`.form-control`, `.table`, `.dropdown-menu`, …) follow the kit theme. It is
+set on every `css_framework`: Bootstrap 5.3+ is the only stack that reads it, so elsewhere it is inert, and it never
+disagrees with `data-theme`. A host that manages `data-bs-theme` itself opts out with
+`<html data-nowo-ui-bs-theme="off">`. The toggle follows OS changes only while no theme is stored (cookie /
+localStorage) and no `data-nowo-ui-pref-theme` is set; a click stores the choice and stops following the OS.
 
 ```twig
 <html lang="{{ app.request.locale }}"

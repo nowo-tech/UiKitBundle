@@ -1,6 +1,6 @@
 {#
   Pre-paint theme boot (1.15) — include in <head> before any stylesheet. Runs synchronously and sets
-  data-theme / data-ui-density / data-motion / data-font-scale / data-contrast on <html> from the
+  data-theme (+ data-bs-theme, 2.15.4; <html data-nowo-ui-bs-theme="off"> opts out) / data-ui-density / data-motion / data-font-scale / data-contrast on <html> from the
   preference attributes the host prints on <html> (data-nowo-ui-pref-theme, -density, -motion,
   -font-scale, -contrast, -sidebar), falling back to the stored theme (data-nowo-ui-theme-cookie, then
   data-nowo-ui-theme-storage localStorage key) and the OS. See docs/USAGE.md#pre-paint-theme-boot.

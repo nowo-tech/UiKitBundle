@@ -67,6 +67,19 @@ export function prefersMatch(query: string): boolean {
   return typeof window.matchMedia === 'function' && window.matchMedia(query).matches;
 }
 
+/**
+ * Write the resolved theme on <html> (2.15.4): `data-theme` (UiKit tokens) and `data-bs-theme` (Bootstrap 5.3 colour
+ * modes), so Bootstrap components follow the kit theme. Setting `data-bs-theme` is harmless off Bootstrap (no other
+ * stack reads it) and always mirrors `data-theme`; a host that manages it itself opts out with
+ * `<html data-nowo-ui-bs-theme="off">`.
+ */
+export function applyTheme(theme: Theme, root: HTMLElement = document.documentElement): void {
+  root.setAttribute('data-theme', theme);
+  if (root.getAttribute('data-nowo-ui-bs-theme') !== 'off') {
+    root.setAttribute('data-bs-theme', theme);
+  }
+}
+
 /** Stored theme: cookie first (server-visible), then localStorage. */
 export function readStoredTheme(el: Element | null = null): Theme | null {
   const fromCookie = readCookie(document.cookie, themeCookieName(el));

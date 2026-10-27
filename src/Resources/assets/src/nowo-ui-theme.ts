@@ -1,5 +1,6 @@
 /**
- * Theme toggle peer: toggles data-theme on <html> and optional localStorage key.
+ * Theme toggle peer: toggles data-theme (and data-bs-theme, 2.15.4) on <html> and optional localStorage key.
+ * While no theme is stored or server-preferred, it follows OS `prefers-color-scheme` changes live (2.15.4).
  * Host may sync preference via Stimulus using the same data attributes.
  *
  * Markup: [data-nowo-ui-theme-toggle]
@@ -8,7 +9,7 @@
  *           data-aria-to-light / data-aria-to-dark
  */
 
-import { isTheme, persistTheme, prefersMatch } from './nowo-ui-theme-core';
+import { applyTheme, isTheme, persistTheme, prefersMatch, readPref, readStoredTheme } from './nowo-ui-theme-core';
 
 declare global {
   interface Window {
@@ -44,13 +45,41 @@ function syncToggleUi(theme: 'light' | 'dark'): void {
 }
 
 export function setTheme(theme: 'light' | 'dark', btn: Element | null = null): void {
-  document.documentElement.setAttribute('data-theme', theme);
+  applyTheme(theme);
   persistTheme(theme, btn instanceof HTMLElement ? btn : null);
   syncToggleUi(theme);
 }
 
 export function toggleTheme(btn: Element | null = null): void {
   setTheme(currentTheme() === 'dark' ? 'light' : 'dark', btn);
+}
+
+/**
+ * OS colour-scheme change: applied only while the page follows the OS (no server preference, nothing stored);
+ * not persisted, so the page keeps following the OS.
+ */
+export function onSystemThemeChange(event: { matches: boolean }): void {
+  const root = document.documentElement;
+  try {
+    if (isTheme(readPref(root, 'theme')) || readStoredTheme(root) !== null) {
+      return;
+    }
+  } catch {
+    return;
+  }
+  const theme = event.matches ? 'dark' : 'light';
+  applyTheme(theme, root);
+  syncToggleUi(theme);
+}
+
+/** Subscribe to `prefers-color-scheme` changes; false when the media query list cannot be observed. */
+export function watchSystemTheme(mq: MediaQueryList | null): boolean {
+  if (mq === null || typeof mq.addEventListener !== 'function') {
+    return false;
+  }
+  mq.addEventListener('change', onSystemThemeChange);
+
+  return true;
 }
 
 function onDocumentClick(event: MouseEvent): void {
@@ -74,6 +103,7 @@ export function bindNowoUiTheme(): void {
     document.addEventListener('click', onDocumentClick);
     window.nowoUiSetTheme = (theme) => setTheme(theme);
     window.nowoUiToggleTheme = () => toggleTheme();
+    watchSystemTheme(typeof window.matchMedia === 'function' ? window.matchMedia('(prefers-color-scheme: dark)') : null);
   }
   syncToggleUi(currentTheme());
 }

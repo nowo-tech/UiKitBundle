@@ -17,12 +17,14 @@
  *   data-nowo-ui-theme-cookie     optional cookie name read as a fallback and written with the theme
  *   data-nowo-ui-sidebar-storage / -cookie / -hidden-value   opt-in sidebar sync (see sidebar core)
  *
- * Outputs on <html>: data-theme, data-ui-density, data-motion, data-font-scale, data-contrast; resolved
+ * Outputs on <html>: data-theme (+ data-bs-theme for Bootstrap 5.3, 2.15.4; `data-nowo-ui-bs-theme="off"` opts out),
+ * data-ui-density, data-motion, data-font-scale, data-contrast; resolved
  * values are mirrored to `window.nowoUiPrefs` for later scripts.
  */
 
 import { sidebarOptionsFrom, syncSidebarStorageFromCookie } from './nowo-ui-sidebar-core';
 import {
+  applyTheme,
   isTheme,
   persistTheme,
   prefersMatch,
@@ -76,7 +78,7 @@ export function applyThemeBoot(root: HTMLElement = document.documentElement): No
     prefs = { theme: 'light', density: 'comfortable', motion: 'system', fontScale: 'md', contrast: 'system', sidebar: '' };
   }
 
-  root.setAttribute('data-theme', prefs.theme);
+  applyTheme(prefs.theme, root);
   root.setAttribute('data-ui-density', prefs.density);
   root.setAttribute('data-motion', prefs.motion);
   root.setAttribute('data-font-scale', prefs.fontScale);

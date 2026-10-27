@@ -157,6 +157,46 @@ describe('nowo-ui-theme-boot', () => {
     expect(document.documentElement.getAttribute('data-theme')).toBe('light');
   });
 
+  it('mirrors the theme to data-bs-theme for Bootstrap 5.3 (2.15.4)', () => {
+    const root = document.documentElement;
+    root.setAttribute('data-nowo-ui-pref-theme', 'dark');
+    applyThemeBoot();
+    expect(root.getAttribute('data-theme')).toBe('dark');
+    expect(root.getAttribute('data-bs-theme')).toBe('dark');
+
+    root.setAttribute('data-nowo-ui-pref-theme', 'light');
+    applyThemeBoot();
+    expect(root.getAttribute('data-bs-theme')).toBe('light');
+  });
+
+  it('also mirrors data-bs-theme on the safe-default path', () => {
+    const original = Object.getOwnPropertyDescriptor(window, 'localStorage');
+    Object.defineProperty(window, 'localStorage', {
+      configurable: true,
+      get: () => {
+        throw new Error('blocked');
+      },
+    });
+    try {
+      applyThemeBoot();
+    } finally {
+      if (original) {
+        Object.defineProperty(window, 'localStorage', original);
+      }
+    }
+    expect(document.documentElement.getAttribute('data-bs-theme')).toBe('light');
+  });
+
+  it('leaves data-bs-theme alone when the host opts out', () => {
+    const root = document.documentElement;
+    root.setAttribute('data-nowo-ui-bs-theme', 'off');
+    root.setAttribute('data-bs-theme', 'light');
+    root.setAttribute('data-nowo-ui-pref-theme', 'dark');
+    applyThemeBoot();
+    expect(root.getAttribute('data-theme')).toBe('dark');
+    expect(root.getAttribute('data-bs-theme')).toBe('light');
+  });
+
   it('exposes the shared key helpers', () => {
     const btn = document.createElement('button');
     expect(themeStorageKey(btn)).toBe('nowo-ui-theme');
