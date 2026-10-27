@@ -75,6 +75,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **back_link**: with `icon_set: none` the label is printed once. That set renders an icon as its label text, so the
+  partial printed "Dashboard Dashboard"; it now prints no icon span at all.
+- **Bootstrap form rows**: the `form_row` and `form_row_check` slots default to `mb-3` on Bootstrap (`bootstrap`,
+  `bootstrap5`, `bootstrap4`, `tabler`), so text rows of the UiKit form theme are spaced like checkbox rows and like
+  `bootstrap_5_layout`. A class the row already has (`row_attr`, FormKit's `mb-3` fallback) is not added twice, the
+  form flex gap of `nowo-ui.css` already gives that rem back, and list filter grid fields drop the margin (the grid gap
+  spaces them). Tailwind / Foundation / none keep no row class (the form flex gap spaces rows there).
+- **File inputs**: the UiKit form theme gives `<input type="file">` the `input` slot (Bootstrap `form-control`, plus
+  `input_invalid` on errors); it was skipped.
+- **Bootstrap dark mode**: the theme boot, the theme toggle and OS colour-scheme changes set `data-bs-theme` together
+  with `data-theme`, so Bootstrap 5.3 components follow the kit theme. It is set on every stack (no other stack reads
+  it); `<html data-nowo-ui-bs-theme="off">` leaves it to the host. The toggle peer now also follows OS
+  `prefers-color-scheme` changes live while no theme is stored or server-preferred.
+- **`theme.tokens` without `tokens_dark`**: host / bundle `tokens` for a palette token that has a UiKit dark default
+  (`text`, `surface`, `border`, `primary`, `muted`, the status colours, …: `Theme::LIGHT_ONLY_TOKENS`) are emitted
+  for light mode only (`:root:where(:not([data-theme=dark]))`, same specificity as `:root`). Under
+  `data-nowo-ui-host-tokens` the UiKit dark defaults have zero specificity, so a plain `:root` value also won in dark
+  mode (dark text on a white surface). Dark mode now keeps the UiKit dark defaults unless `tokens_dark` sets the token;
+  other tokens (radii, fonts, metrics, component tokens) still apply in both modes. See
+  [UPGRADING](UPGRADING.md#unreleased).
+
 ## [2.15.3] - 2026-10-26
 
 The date-range panel is repositioned when its size changes

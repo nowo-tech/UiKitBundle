@@ -86,6 +86,31 @@
 
 ## Unreleased
 
+From **2.15.3**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+Visible changes (all fixes; no configuration is required):
+
+- **Light palette tokens no longer apply in dark mode.** A `theme.tokens` (or `bundles.<Bundle>.tokens`) entry for a
+  palette token with a UiKit dark default (`Nowo\UiKitBundle\Theme\Theme::LIGHT_ONLY_TOKENS`: `primary`,
+  `primary-contrast`, `surface`, `surface-muted`, `border`, `border-strong`, `text`, `muted`, `link` and the
+  `danger-*` / `success-*` / `warning-*` / `info-*` colours) is printed for light mode only. Dark mode uses the UiKit
+  dark defaults for it unless `tokens_dark` sets it. To keep a value in both modes (e.g. a brand `primary`), repeat
+  it in `tokens_dark`. Other tokens (radii, fonts, metrics, component tokens such as `btn-*` / `input-*`) are
+  unchanged and still apply in both modes. Tests that compare `nowo_ui_tokens()` output see the new
+  `:root:where(:not([data-theme=dark]))` block.
+- **`data-bs-theme` on `<html>`.** The theme boot and the toggle set `data-bs-theme` (same value as `data-theme`),
+  and the toggle follows OS colour-scheme changes while no theme is stored or server-preferred. Remove any host script
+  that mirrored `data-theme` to `data-bs-theme`. If the host manages `data-bs-theme` itself, add
+  `data-nowo-ui-bs-theme="off"` to `<html>`.
+- **Bootstrap form rows get `mb-3`** (`form_row`, `form_row_check` slots) and file inputs get the `input` slot
+  (`form-control`). Host CSS that added row spacing or styled file inputs to work around this can go; to keep rows
+  without a margin, set `theme.classes.form_row: {value: '', framework_defaults: false}` (same for `form_row_check`).
+- **`back_link` with `icon_set: none`** prints no icon span (the label once).
+
 ## To 2.15.3
 
 From **2.15.2**:
