@@ -134,7 +134,7 @@ final class ThemeTest extends TestCase
 
         self::assertTrue($theme->hasTokens());
         self::assertSame(<<<'CSS'
-            :root {
+            :root:where(:not([data-theme=dark])) {
               --nowo-ui-primary: var(--color-moss);
               --nowo-ui-surface: #fff;
             }
@@ -152,6 +152,55 @@ final class ThemeTest extends TestCase
         self::assertTrue((new Theme(tokensDark: ['primary' => 'red']))->hasTokens());
         self::assertTrue((new Theme(bundles: ['NowoXBundle' => ['tokens_dark' => ['primary' => 'red']]]))->hasTokens());
         self::assertFalse((new Theme(bundles: ['NowoXBundle' => ['classes' => ['btn' => 'x']]]))->hasTokens());
+    }
+
+    /**
+     * 2.15.4: palette tokens that have a bundle dark default are light-only, so `tokens` without `tokens_dark` no
+     * longer paint light colours in dark mode (the dark defaults apply); other tokens apply in both modes.
+     */
+    public function testLightPaletteTokensDoNotLeakIntoDarkMode(): void
+    {
+        $theme = new Theme(tokens: ['text' => '#111', '--nowo-ui-surface' => '#fff', 'radius' => '4px', 'btn-radius' => '2px'], bundles: [
+            'NowoXBundle' => ['tokens' => ['border' => '#ddd', 'font-family' => 'serif']],
+        ]);
+
+        self::assertSame(<<<'CSS'
+            :root {
+              --nowo-ui-radius: 4px;
+              --nowo-ui-btn-radius: 2px;
+            }
+            :root:where(:not([data-theme=dark])) {
+              --nowo-ui-text: #111;
+              --nowo-ui-surface: #fff;
+            }
+            [data-nowo-ui-bundle="NowoXBundle"] {
+              --nowo-ui-font-family: serif;
+            }
+            [data-nowo-ui-bundle="NowoXBundle"]:where(:not([data-theme=dark], [data-theme=dark] *)) {
+              --nowo-ui-border: #ddd;
+            }
+            CSS, $theme->tokensCss());
+
+        self::assertTrue(Theme::isLightOnlyToken('text'));
+        self::assertTrue(Theme::isLightOnlyToken('--nowo-ui-primary'));
+        self::assertFalse(Theme::isLightOnlyToken('radius'));
+        self::assertFalse(Theme::isLightOnlyToken('input-bg'));
+    }
+
+    /** The light-only list is exactly the token set of the dark defaults block of nowo-ui.css. */
+    public function testLightOnlyTokensMatchTheStylesheetDarkDefaults(): void
+    {
+        $css = (string) file_get_contents(\dirname(__DIR__, 3).'/src/Resources/public/css/nowo-ui.unlayered.css');
+        $start = strpos($css, '/* --- Dark theme token defaults');
+        self::assertNotFalse($start);
+        $block = substr($css, $start, (int) strpos($css, '}', $start) - $start);
+        preg_match_all('/^\s*--nowo-ui-([a-z0-9-]+):/m', $block, $m);
+
+        $names = $m[1];
+        sort($names);
+        $expected = Theme::LIGHT_ONLY_TOKENS;
+        sort($expected);
+        self::assertSame($names, $expected);
     }
 
     public function testFromConfig(): void

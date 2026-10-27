@@ -531,7 +531,10 @@ palette, so admin input can never break out of the `<style>` element.
 `tokens_dark` are the **host defaults**, the appearance is the **user's choice** and overrides them. Both are printed
 with the same specificity (`:root` / `[data-theme="dark"]`), so the order decides: print the theme tokens first and
 the appearance last — `{{ nowo_ui_tokens() }}` does exactly that (the UiKit document layout uses it). With custom
-`selectors` of higher specificity the appearance wins regardless of order.
+`selectors` of higher specificity the appearance wins regardless of order. Since 2.15.4 the palette entries of
+`theme.tokens` (those with a UiKit dark default) are printed on `:root:where(:not([data-theme=dark]))` — still the
+specificity of `:root` — so they apply in light mode only and dark mode keeps the UiKit dark defaults unless
+`tokens_dark` sets them ([THEME_SLOTS](THEME_SLOTS.md#tokens)).
 
 ### Emitted tokens
 

@@ -13,6 +13,8 @@
  * 2.0 (REQ-UI-003): when the host sets nowo_ui_kit.theme.tokens, the UiKit document layout marks <html> with
  * data-nowo-ui-host-tokens and these palette defaults drop to zero specificity (:where), so any host
  * declaration wins whatever the load order — no !important remaps. Without the attribute nothing changes.
+ * 2.15.4: host `tokens` for the tokens of the dark defaults block (end of file) are printed for light mode only
+ * (Theme::LIGHT_ONLY_TOKENS, kept equal to that block by ThemeTest), so these dark defaults still apply in dark mode.
  */
 :root:where(:not([data-nowo-ui-host-tokens])),
 :where(:root[data-nowo-ui-host-tokens]) {

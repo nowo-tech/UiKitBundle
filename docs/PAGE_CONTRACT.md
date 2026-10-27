@@ -84,8 +84,8 @@ nowo_ui_kit:
     #           badge_success: { value: 'acme-badge', framework_defaults: false }   # per slot: drop btn/badge/card… defaults
     attributes: { toasts: { data-controller: toast-stack } }           # slot => attributes (no on*)
     partials:   { pagination: 'kit/_pagination.html.twig' }            # partial name => template
-    tokens:      { primary: 'var(--color-moss)', radius: '0.75rem' }   # --nowo-ui-<name> on :root
-    tokens_dark: { primary: '#9c9' }                                   # on [data-theme="dark"]
+    tokens:      { primary: 'var(--color-moss)', radius: '0.75rem' }   # --nowo-ui-<name> on :root (palette tokens: light only, 2.15.4)
+    tokens_dark: { primary: '#9c9' }                                   # on [data-theme="dark"] (unset: UiKit dark defaults)
     bundles:
       NowoHttpLogBundle: { classes: { table: 'data-table data-table--dense' } }
     pages:                                                             # per page type (scaffold)

@@ -18,12 +18,36 @@ namespace Nowo\UiKitBundle\Theme;
  * then page type, then bundle, then bundle page type merged over them.
  * Partials: bundle > host > UiKit default.
  * Tokens: host tokens on `:root` (dark ones on `[data-theme="dark"]`); bundle tokens scoped to
- * `[data-nowo-ui-bundle="<Bundle>"]`.
+ * `[data-nowo-ui-bundle="<Bundle>"]`. 2.15.4: a `tokens` entry for a palette token with a UiKit dark default
+ * ({@see self::LIGHT_ONLY_TOKENS}) applies in light mode only, so dark mode keeps the UiKit dark defaults unless
+ * `tokens_dark` sets it.
  */
 final readonly class Theme
 {
     /** Attribute value: string/number, true = bare attribute, false/null = omitted. */
     private const ATTRIBUTE_NAME = '/^[a-zA-Z_:][a-zA-Z0-9_:.-]*$/';
+
+    /**
+     * Palette tokens with a UiKit dark default (the `[data-theme="dark"]` token block of nowo-ui.css, kept in sync by
+     * ThemeTest). A host / bundle `tokens` value for one of them is printed for light mode only (2.15.4): with
+     * `data-nowo-ui-host-tokens` the UiKit dark defaults have zero specificity, so a plain `:root` value would win in
+     * dark mode too (dark text on a light surface). Every other token (radii, fonts, metrics, component tokens)
+     * applies in both modes.
+     */
+    public const LIGHT_ONLY_TOKENS = [
+        'primary', 'primary-contrast',
+        'danger', 'danger-text', 'danger-bg', 'danger-border', 'danger-text-strong', 'danger-solid', 'danger-contrast',
+        'success-bg', 'success-border', 'success-text',
+        'warning-bg', 'warning-border', 'warning-text',
+        'info-bg', 'info-border', 'info-text',
+        'surface', 'surface-muted', 'border', 'border-strong', 'text', 'muted', 'link',
+    ];
+
+    /**
+     * Light mode on the document root (same specificity as `:root`, so the appearance SPI printed later wins). The
+     * attribute value is unquoted so the text survives HTML escaping (`{{ nowo_ui_theme_css() }}` without `|raw`).
+     */
+    private const LIGHT_ROOT = ':root:where(:not([data-theme=dark]))';
 
     /** Keys of the map form of a class entry. */
     private const CLASS_ENTRY_KEYS = ['value', 'framework_defaults'];
@@ -299,23 +323,35 @@ final readonly class Theme
     }
 
     /**
-     * Token stylesheet text ('' without tokens): host `:root` + `[data-theme="dark"]` blocks, then the bundle
-     * scopes. Values are validated at construction (no `{`, `}`, `;`, `<`, `>`). The host blocks have the same
+     * Token stylesheet text ('' without tokens): host `:root` (+ light-only `:root:where(:not([data-theme=dark]))`
+     * for {@see self::LIGHT_ONLY_TOKENS}, 2.15.4) + `[data-theme="dark"]` blocks, then the bundle scopes. Values are validated at construction (no `{`, `}`, `;`, `<`, `>`). The host blocks have the same
      * specificity as the appearance SPI blocks (`:root` / `[data-theme="dark"]`), so the appearance printed after
      * them (`nowo_ui_tokens()`) overrides the host defaults.
      */
     public function tokensCss(): string
     {
         $blocks = [];
-        $blocks[] = $this->block(':root', $this->tokens);
+        [$shared, $light] = self::splitLightOnly($this->tokens);
+        $blocks[] = $this->block(':root', $shared);
+        $blocks[] = $this->block(self::LIGHT_ROOT, $light);
         $blocks[] = $this->block('[data-theme="dark"]', $this->tokensDark);
         foreach ($this->bundles as $bundle => $data) {
             $scope = '[data-nowo-ui-bundle="'.$bundle.'"]';
-            $blocks[] = $this->block($scope, $data['tokens']);
+            [$shared, $light] = self::splitLightOnly($data['tokens']);
+            $blocks[] = $this->block($scope, $shared);
+            $blocks[] = $this->block($scope.':where(:not([data-theme=dark], [data-theme=dark] *))', $light);
             $blocks[] = $this->block('[data-theme="dark"] '.$scope, $data['tokens_dark']);
         }
 
         return implode("\n", array_filter($blocks, static fn (string $b): bool => '' !== $b));
+    }
+
+    /**
+     * Whether a `tokens` entry applies in light mode only (2.15.4, {@see self::LIGHT_ONLY_TOKENS}).
+     */
+    public static function isLightOnlyToken(string $name): bool
+    {
+        return \in_array(self::normalizeTokenName($name), self::LIGHT_ONLY_TOKENS, true);
     }
 
     /**
@@ -414,6 +450,26 @@ final readonly class Theme
         }
 
         return null;
+    }
+
+    /**
+     * @param array<string, string> $tokens
+     *
+     * @return array{0: array<string, string>, 1: array<string, string>} [both modes, light only]
+     */
+    private static function splitLightOnly(array $tokens): array
+    {
+        $shared = [];
+        $light = [];
+        foreach ($tokens as $name => $value) {
+            if (self::isLightOnlyToken((string) $name)) {
+                $light[$name] = $value;
+            } else {
+                $shared[$name] = $value;
+            }
+        }
+
+        return [$shared, $light];
     }
 
     /**

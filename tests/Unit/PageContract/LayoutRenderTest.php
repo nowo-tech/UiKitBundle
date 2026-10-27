@@ -55,7 +55,7 @@ final class LayoutRenderTest extends TestCase
 
         self::assertStringContainsString('<html lang="es" data-nowo-ui-host-tokens data-app="beacon">', $html);
         self::assertStringContainsString('<script nonce="abc" data-nowo-ui-theme-boot>', $html);
-        self::assertStringContainsString("<style nonce=\"abc\" data-nowo-ui-theme-tokens>\n:root {\n  --nowo-ui-primary: var(--moss);\n}\n</style>", $html);
+        self::assertStringContainsString("<style nonce=\"abc\" data-nowo-ui-theme-tokens>\n:root:where(:not([data-theme=dark])) {\n  --nowo-ui-primary: var(--moss);\n}\n</style>", $html);
         self::assertStringContainsString('<body class="nowo-ui-body app-body">', $html);
         self::assertStringContainsString('class="nowo-ui-page app-page nowo-ui-page--admin"', $html);
         self::assertStringContainsString('<main class="nowo-ui-content x-content" id="nowo-ui-content" data-nowo-ui-bundle="NowoXBundle" data-turbo="false">', $html);

@@ -482,7 +482,11 @@ Every partial also receives `nowo_ui_page_type` from the scaffolds. Internal tem
 
 `theme.tokens` (light, on `:root`) and `theme.tokens_dark` (on `[data-theme="dark"]`) are emitted by
 `nowo_ui_theme_tokens()` (or `nowo_ui_tokens()`, below) as `--nowo-ui-<name>`. Keys are written without the prefix (`primary`) or with it
-(`--nowo-ui-primary`); names are `[a-z0-9-]`, values may not contain `{ } ; < >`. Base tokens:
+(`--nowo-ui-primary`); names are `[a-z0-9-]`, values may not contain `{ } ; < >`. Since 2.15.4 a `tokens` entry for a palette token with a UiKit dark default (`Theme::LIGHT_ONLY_TOKENS`: the base
+colour tokens below) is printed on `:root:where(:not([data-theme=dark]))`, so it applies in light mode only and
+dark mode keeps the UiKit dark default unless `tokens_dark` sets it (repeat a value in `tokens_dark` to keep it in
+both modes). Other tokens (radii, fonts, metrics, component tokens) apply in both modes. Bundle `tokens` follow the
+same rule inside their `[data-nowo-ui-bundle]` scope. Base tokens:
 
 | Token | Purpose |
 | --- | --- |

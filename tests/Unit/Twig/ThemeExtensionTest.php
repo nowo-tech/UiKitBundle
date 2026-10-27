@@ -54,18 +54,18 @@ final class ThemeExtensionTest extends TestCase
         $stack->push($request);
 
         $extension = new ThemeExtension($theme, requestStack: $stack);
-        self::assertSame("<style nonce=\"n0nce\" data-nowo-ui-theme-tokens>\n:root {\n  --nowo-ui-primary: var(--moss);\n}\n</style>", $extension->tokens());
+        self::assertSame("<style nonce=\"n0nce\" data-nowo-ui-theme-tokens>\n:root:where(:not([data-theme=dark])) {\n  --nowo-ui-primary: var(--moss);\n}\n</style>", $extension->tokens());
         self::assertStringStartsWith('<style nonce="x&quot;" ', $extension->tokens('x"'));
         self::assertStringStartsWith('<style data-nowo-ui-theme-tokens>', (new ThemeExtension($theme))->tokens());
         self::assertStringStartsWith('<style data-nowo-ui-theme-tokens>', $extension->tokens(''));
         self::assertSame('', (new ThemeExtension(new Theme()))->tokens('n'));
-        self::assertSame(":root {\n  --nowo-ui-primary: var(--moss);\n}", $this->twig($extension, '{{ nowo_ui_theme_css() }}')->render('t'));
+        self::assertSame(":root:where(:not([data-theme=dark])) {\n  --nowo-ui-primary: var(--moss);\n}", $this->twig($extension, '{{ nowo_ui_theme_css() }}')->render('t'));
     }
 
     public function testAllTokensPrintTheThemeThenTheAppearance(): void
     {
         $extension = new ThemeExtension(new Theme(tokens: ['primary' => 'red']));
-        self::assertSame("<style nonce=\"n\" data-nowo-ui-theme-tokens>\n:root {\n  --nowo-ui-primary: red;\n}\n</style>", $this->twig($extension, '{{ nowo_ui_tokens("n") }}')->render('t'));
+        self::assertSame("<style nonce=\"n\" data-nowo-ui-theme-tokens>\n:root:where(:not([data-theme=dark])) {\n  --nowo-ui-primary: red;\n}\n</style>", $this->twig($extension, '{{ nowo_ui_tokens("n") }}')->render('t'));
 
         $appearance = static fn (?string $nonce = null): string => '<style nonce="'.$nonce.'" data-nowo-ui-appearance>:root { --nowo-ui-primary: blue; }</style>';
         $html = $this->twig($extension, '{{ nowo_ui_tokens("n") }}', $appearance)->render('t');
