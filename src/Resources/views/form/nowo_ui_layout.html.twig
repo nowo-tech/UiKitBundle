@@ -11,7 +11,8 @@
   auth scaffold wraps it in the `form_errors` slot). PasswordToggle bridge: the <input> of `toggle_password_widget`
   (nowo-tech/password-toggle-bundle) gets the `input` slot when this theme is in the form's theme chain.
   2.10: rows take the `form_row` slot classes (2.10.1: checkbox / radio rows `form_row_check`) and labels the
-  `form_label` slot (all empty by default);
+  `form_label` slot (all empty by default; 2.15.4: Bootstrap rows `mb-3`, never added twice);
+  2.15.4: file inputs get the `input` slot (Bootstrap `form-control`);
   theme.form_errors_after_widget prints a field's errors after its widget (and, on a checkbox row, before the help).
   2.15: the `nowo_ui_date_range_*` blocks of DateRangeType (form/nowo_ui_date_range.html.twig).
 #}
@@ -50,7 +51,8 @@
 {%- endblock form_label -%}
 
 {%- block form_widget_simple -%}
-    {%- if type is not defined or type not in ['hidden', 'checkbox', 'radio', 'range', 'color', 'file'] -%}
+    {#- 2.15.4: file inputs take the `input` slot too (Bootstrap `form-control` styles them) -#}
+    {%- if type is not defined or type not in ['hidden', 'checkbox', 'radio', 'range', 'color'] -%}
         {%- set attr = attr|merge({class: (attr.class|default('') ~ ' ' ~ nowo_ui_class('input'))|trim}) -%}
         {%- set attr = errors|default([])|length > 0 ? attr|merge({class: (attr.class|default('') ~ ' ' ~ nowo_ui_class('input_invalid'))|trim, 'aria-invalid': 'true'}) : attr -%}
     {%- endif -%}

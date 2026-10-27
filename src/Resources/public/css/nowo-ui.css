@@ -2156,6 +2156,12 @@ form.nowo-ui-filters[data-nowo-ui-region] > .nowo-ui-filters__field {
   margin: 0;
 }
 
+/* 2.15.4: the Bootstrap `mb-3` of the form_row / form_row_check slots (and of bootstrap_5_layout rows) does not space
+   grid fields: the grid gap does. `!important` beats the Bootstrap utility (layered or not). */
+form.nowo-ui-filters[data-nowo-ui-region] > .nowo-ui-filters__field.mb-3 {
+  margin-bottom: 0 !important;
+}
+
 form.nowo-ui-filters[data-nowo-ui-region] > .nowo-ui-filters__field :is(input, select, textarea):not([type='checkbox'], [type='radio']) {
   width: 100%;
   max-width: none;
