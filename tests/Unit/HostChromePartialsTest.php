@@ -221,6 +221,20 @@ final class HostChromePartialsTest extends TestCase
         self::assertStringContainsString('<span>back.key</span>', $custom);
     }
 
+    /** 2.15.4: with `icon_set: none` the label is printed once (no text "icon" repeating it). */
+    public function testBackLinkWithoutIconSet(): void
+    {
+        $fs = new FilesystemLoader();
+        $fs->addPath(\dirname(__DIR__, 2).'/src/Resources/views', 'NowoUiKitBundle');
+        $twig = new Environment(new ChainLoader([new ArrayLoader(['t.twig' => "{% include '@NowoUiKitBundle/partials/_back_link.html.twig' with {href: '/', label: 'Dashboard'} only %}"]), $fs]));
+        $twig->addExtension(new TranslationExtension(new IdentityTranslator()));
+        $twig->addGlobal('nowo_ui_kit_icon_set', 'none');
+
+        $link = trim($twig->render('t.twig'));
+        self::assertSame('<a href="/" class="nowo-ui-back-link">'."\n".'    <span>Dashboard</span>'."\n".'</a>', $link);
+        self::assertSame(1, substr_count($link, 'Dashboard'));
+    }
+
     public function testEdgeTab(): void
     {
         $tab = $this->render("{% include '@NowoUiKitBundle/partials/_edge_tab.html.twig' with {href: 'https://docs/x.md'} only %}");

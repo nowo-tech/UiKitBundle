@@ -6,12 +6,13 @@
 
   Required: href, label (translated string or View\Label).
   Optional: icon (default `prev`; any name of the configured icon set, e.g. `tabler:arrow-left` with ux_icon), class,
-  testid, bundle (per-bundle theme exceptions). Theme slot `back_link`.
+  testid, bundle (per-bundle theme exceptions). Theme slot `back_link`. With `icon_set: none` (2.15.4) no icon is
+  printed: that set renders an icon as its label text, which would repeat the label.
 #}
 {% set _t = nowo_ui_theme|default(null) %}
 {% set _label = label.key is defined ? label.key|trans(label.params, label.domain) : label %}
 {% set _class = (_t ? _t.classFor('back_link', bundle|default(null)) : 'nowo-ui-back-link') ~ (class|default('') ? ' ' ~ class : '') %}
 <a href="{{ href }}" class="{{ _class }}"{% if testid|default('') %} data-testid="{{ testid }}"{% endif %}>
-    <span class="nowo-ui-back-link__icon" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: icon|default('prev'), label: _label}, false)|trim|raw }}</span>
-    <span>{{ _label }}</span>
+    {% if nowo_ui_kit_icon_set|default('bootstrap-icons') != 'none' %}<span class="nowo-ui-back-link__icon" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: icon|default('prev'), label: _label}, false)|trim|raw }}</span>
+    {% endif %}<span>{{ _label }}</span>
 </a>
