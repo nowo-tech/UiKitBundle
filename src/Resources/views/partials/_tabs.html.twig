@@ -37,7 +37,15 @@
     {% for item in items %}
         {% set is_current = item.current|default(false) %}
         {% set _label = item.label.key is defined ? item.label.key|trans(item.label.params|default({}), item.label.domain|default('messages')) : item.label %}
-        {% set _icon = item.icon|default(null) and nowo_ui_kit_icon_set|default('bootstrap-icons') != 'none' ? item.icon : null %}
+        {# 2.17.1: a prefixed name (`tabler:bug`, `bi:bug`) renders only with an icon set that has it — ux_icon, or the
+           matching font set without its prefix; any other set shows the label only (no broken `bi bi-tabler:bug`). #}
+        {% set _set = nowo_ui_kit_icon_set|default('bootstrap-icons') %}
+        {% set _icon = item.icon|default(null) %}
+        {% if _icon and ':' in _icon and _set != 'ux_icon' %}
+            {% set _prefix = _icon|split(':')|first %}
+            {% set _icon = (_set == 'tabler-icons' and _prefix == 'tabler') or (_set == 'bootstrap-icons' and _prefix == 'bi') ? _icon|split(':', 2)|last : null %}
+        {% endif %}
+        {% set _icon = _icon and _set != 'none' ? _icon : null %}
         <a
             class="{{ _t ? _t.macroClasses(is_current ? 'tab_active' : 'tab', ui.tab_item(is_current, framework), bundle, _pt) : ui.tab_item(is_current, framework) }}"
             href="{{ item.href }}"

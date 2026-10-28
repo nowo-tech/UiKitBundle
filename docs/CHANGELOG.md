@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.17.1] - 2026-10-28](#2171---2026-10-28)
 - [[2.17.0] - 2026-10-28](#2170---2026-10-28)
 - [[2.16.1] - 2026-10-28](#2161---2026-10-28)
 - [[2.16.0] - 2026-10-28](#2160---2026-10-28)
@@ -78,6 +79,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [2.17.1] - 2026-10-28
+
+### Fixed
+
+- **Tab icons with a prefixed name** (`tabler:bug`, `bi:gear`) render only with an icon set that has them: `ux_icon`,
+  or the matching font set (`tabler-icons` / `bootstrap-icons`) without the prefix. With any other set the tab shows
+  its label only, instead of a broken `bi bi-tabler:bug` class (bundles pass Tabler names to every host).
 
 ## [2.17.0] - 2026-10-28
 

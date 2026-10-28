@@ -70,4 +70,21 @@ final class TabIconsTest extends TestCase
         self::assertStringContainsString('<span class="nowo-ui-tabs__label">General</span>', $html);
         self::assertStringNotContainsString('data-rail-label="Mail"', $html);
     }
+
+    /** 2.17.1: a prefixed icon renders only with a set that has it; others keep the label only. */
+    public function testPrefixedIconsFollowTheIconSet(): void
+    {
+        $items = ['items' => [['label' => 'Issues', 'href' => '/i', 'icon' => 'tabler:bug'], ['label' => 'Gear', 'href' => '/g', 'icon' => 'bi:gear']]];
+
+        $html = PageContractTwig::create()->render('@NowoUiKitBundle/partials/_tabs.html.twig', $items);
+        self::assertStringNotContainsString('tabler', $html);
+        self::assertMatchesRegularExpression('#href="/i"\s*>Issues</a>#', $html);
+        self::assertStringContainsString('<i class="bi bi-gear" aria-hidden="true"></i>', $html);
+
+        $twig = PageContractTwig::create();
+        $twig->addGlobal('nowo_ui_kit_icon_set', 'tabler-icons');
+        $html = $twig->render('@NowoUiKitBundle/partials/_tabs.html.twig', $items);
+        self::assertStringContainsString('<i class="ti ti-bug" aria-hidden="true"></i>', $html);
+        self::assertMatchesRegularExpression('#href="/g"\s*>Gear</a>#', $html);
+    }
 }
