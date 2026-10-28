@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.17.2](#to-2172)
 - [To 2.17.1](#to-2171)
 - [To 2.17.0](#to-2170)
 - [To 2.16.1](#to-2161)
@@ -90,6 +91,10 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.17.2
+
+From **2.17.1**: no change needed (development dependencies updated).
 
 ## To 2.17.1
 

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.17.2] - 2026-10-28](#2172---2026-10-28)
 - [[2.17.1] - 2026-10-28](#2171---2026-10-28)
 - [[2.17.0] - 2026-10-28](#2170---2026-10-28)
 - [[2.16.1] - 2026-10-28](#2161---2026-10-28)
@@ -79,6 +80,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [2.17.2] - 2026-10-28
+
+Dependency update
+
+### Changed
+
+- **Dependencies updated** within their constraints: Symfony 8.1.9 patch releases, PHPStan 2.3.3, Rector 2.8.1 (development); Vite 8.3.5 and Vitest 4.1.12 (asset build). No change in the bundle's behaviour or configuration.
 
 ## [2.17.1] - 2026-10-28
 
