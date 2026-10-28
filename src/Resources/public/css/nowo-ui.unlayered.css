@@ -826,7 +826,7 @@ a.nowo-ui-pagination__link:hover {
   left: 50%;
   z-index: 30;
   padding: 0.25rem 0.5rem;
-  border-radius: var(--nowo-ui-radius-sm, 0.375rem);
+  border-radius: var(--nowo-ui-radius, 0.375rem);
   background: var(--nowo-ui-tooltip-bg, var(--nowo-ui-text));
   color: var(--nowo-ui-tooltip-text, var(--nowo-ui-surface));
   font-size: 0.75rem;

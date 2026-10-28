@@ -382,6 +382,7 @@ until set).
 | `--nowo-ui-tab-py` / `--nowo-ui-tab-px` | `0.5rem` / `0.75rem` | `.nowo-ui-tabs__item` padding |
 | `--nowo-ui-tab-min-height` | `auto` | `.nowo-ui-tabs__item` |
 | `--nowo-ui-tab-font-size` / `--nowo-ui-tab-font-weight` | *unset* | `.nowo-ui-tabs__item` |
+| `--nowo-ui-tooltip-bg` / `--nowo-ui-tooltip-text` | `var(--nowo-ui-text)` / `var(--nowo-ui-surface)` | tab label tooltip with `data-tab-style="icon"` (2.16) |
 
 The table cell metrics (`--nowo-ui-table-cell-py`, `--nowo-ui-table-cell-px`, `--nowo-ui-table-font-size`) now also
 apply to `.nowo-ui-table` (they were read by `.nowo-ui-data-table` only).
