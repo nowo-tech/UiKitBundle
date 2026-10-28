@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.17.0](#to-2170)
 - [To 2.16.1](#to-2161)
 - [To 2.16.0](#to-2160)
 - [To 2.15.4](#to-2154)
@@ -88,6 +89,11 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.17.0
+
+From **2.16.1**: no change needed. Bundles can pass `icon:` (named argument) to `AreaNavItem` and `SettingsSection` so
+their tabs show icons when the host's tab style asks for them.
 
 ## To 2.16.1
 

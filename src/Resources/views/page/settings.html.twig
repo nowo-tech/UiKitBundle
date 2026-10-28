@@ -23,7 +23,7 @@
         {% if page.hasTabs() %}
             {% set _tabs = [] %}
             {% for section in page.sections %}
-                {% set _tabs = _tabs|merge([{label: section.label|nowo_ui_trans, href: section.href, current: section.id == page.current}]) %}
+                {% set _tabs = _tabs|merge([{label: section.label|nowo_ui_trans, href: section.href, current: section.id == page.current, icon: section.icon}]) %}
             {% endfor %}
             {{ include(nowo_ui_partial('tabs', _b), {items: _tabs, region: 'tabs', level: page.header.tabs and not page.header.tabs.isEmpty() ? 'secondary' : 'primary', bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
         {% endif %}

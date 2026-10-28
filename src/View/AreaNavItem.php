@@ -6,6 +6,7 @@ namespace Nowo\UiKitBundle\View;
 
 /**
  * One link of an {@see AreaNav}: label, target and whether it is the current section (`aria-current="page"`).
+ * `icon` (2.17): the tab's icon (canonical kind or icon name, see components/_icon), shown per the host's tab style.
  */
 final readonly class AreaNavItem
 {
@@ -17,6 +18,7 @@ final readonly class AreaNavItem
         public string $href,
         public bool $active = false,
         public array $attributes = [],
+        public ?string $icon = null,
     ) {
         Action::assertAttributes($attributes);
     }
@@ -28,6 +30,6 @@ final readonly class AreaNavItem
      */
     public function withActive(bool $active): self
     {
-        return new self($this->label, $this->href, $active, $this->attributes);
+        return new self($this->label, $this->href, $active, $this->attributes, $this->icon);
     }
 }

@@ -10,6 +10,7 @@ use Symfony\Component\Form\FormView;
  * One section (tab) of a {@see SettingsPage}: its own form, or bundle markup in `nowo_ui_settings_section`.
  * `formThemes` (2.1) are applied to the section form with `form_theme` before the scaffold renders it.
  * `actions` (2.2): extra {@see Action}s rendered inline right after the submit button of the section form.
+ * `icon` (2.17): the section tab's icon (canonical kind or icon name), shown per the host's tab style.
  */
 final readonly class SettingsSection
 {
@@ -32,6 +33,7 @@ final readonly class SettingsSection
         public Label|string|null $submitLabel = null,
         iterable $formThemes = [],
         iterable $actions = [],
+        public ?string $icon = null,
     ) {
         $this->actions = ViewList::of($actions, Action::class, 'SettingsSection actions');
         $this->formThemes = FormPage::themes($formThemes, 'SettingsSection formThemes');

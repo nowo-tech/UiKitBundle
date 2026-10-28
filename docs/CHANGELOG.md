@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.17.0] - 2026-10-28](#2170---2026-10-28)
 - [[2.16.1] - 2026-10-28](#2161---2026-10-28)
 - [[2.16.0] - 2026-10-28](#2160---2026-10-28)
 - [[2.15.4] - 2026-10-27](#2154---2026-10-27)
@@ -77,6 +78,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [2.17.0] - 2026-10-28
+
+Icons on area navigation and settings section tabs
+
+### Added
+
+- **`AreaNavItem::$icon`** and **`SettingsSection::$icon`** (optional, last constructor argument): the page header's
+  area navigation and the settings scaffold's section tabs pass them to the tabs partial, so a bundle's own tabs
+  follow the host's tab style (`data-tab-style`, 2.16) like any other tab row. Without an icon nothing changes.
 
 ## [2.16.1] - 2026-10-28
 
