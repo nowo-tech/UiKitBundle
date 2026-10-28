@@ -16,6 +16,11 @@
       over the `tabs` slot attributes; true = bare attribute, false / null = omitted, no on* handlers
     - level (2.2): primary (default; slot `tabs`) | secondary (slot `tabs_secondary`: pills / sub-nav for section tabs
       under an area nav — the settings scaffold passes it when PageHeader::tabs is set)
+    - icon (2.16): per item, a canonical icon kind or an icon name (`tabler:bug`, see components/_icon). The item then
+      renders `<span class="nowo-ui-tabs__icon">` + `<span class="nowo-ui-tabs__label">` and `data-rail-label`; which
+      of the two shows is the host's tab style, `data-tab-style` on any ancestor (usually <html>): absent or `text`
+      (label only, as before), `icon-text`, `icon` (label visually hidden except on the current tab, shown as a tooltip
+      on hover / focus). Items without an icon always show their label.
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 {% set framework = framework|default(null) %}
@@ -32,13 +37,15 @@
     {% for item in items %}
         {% set is_current = item.current|default(false) %}
         {% set _label = item.label.key is defined ? item.label.key|trans(item.label.params|default({}), item.label.domain|default('messages')) : item.label %}
+        {% set _icon = item.icon|default(null) and nowo_ui_kit_icon_set|default('bootstrap-icons') != 'none' ? item.icon : null %}
         <a
             class="{{ _t ? _t.macroClasses(is_current ? 'tab_active' : 'tab', ui.tab_item(is_current, framework), bundle, _pt) : ui.tab_item(is_current, framework) }}"
             href="{{ item.href }}"
             {% if is_current %}aria-current="page"{% endif %}
+            {% if _icon %}data-rail-label="{{ _label }}"{% endif %}
             {% if item.attr is defined %}
                 {% for name, value in item.attr %}{{ name }}="{{ value }}" {% endfor %}
             {% endif %}
-        >{{ _label }}</a>
+        >{% if _icon %}<span class="nowo-ui-tabs__icon" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _icon, label: _label}, false)|trim|raw }}</span><span class="nowo-ui-tabs__label">{{ _label }}</span>{% else %}{{ _label }}{% endif %}</a>
     {% endfor %}
 </nav>

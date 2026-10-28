@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.16.0](#to-2160)
 - [To 2.15.4](#to-2154)
 - [To 2.15.3](#to-2153)
 - [To 2.15.2](#to-2152)
@@ -86,6 +87,12 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.16.0
+
+From **2.15.4**: no change needed. To offer icon tabs, pass `icon` on the items of `partials/_tabs.html.twig` and set
+`data-tab-style="icon-text"` or `"icon"` on `<html>` (for example from a user preference); without the attribute the
+tabs look as before.
 
 ## To 2.15.4
 

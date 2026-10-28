@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.16.0] - 2026-10-28](#2160---2026-10-28)
 - [[2.15.4] - 2026-10-27](#2154---2026-10-27)
 - [[2.15.3] - 2026-10-26](#2153---2026-10-26)
 - [[2.15.2] - 2026-10-26](#2152---2026-10-26)
@@ -75,6 +76,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [2.16.0] - 2026-10-28
+
+Tab icons and the host's tab style (text, icon + text, icon only)
+
+### Added
+
+- **Tab icons** (`partials/_tabs.html.twig`): an item may carry `icon` (a canonical kind or an icon name such as
+  `tabler:bug`, rendered by `components/_icon`). It then renders `<span class="nowo-ui-tabs__icon">` and
+  `<span class="nowo-ui-tabs__label">`, and `data-rail-label` with the label. Items without an icon, and every item
+  with `icon_set: none`, render exactly as before.
+- **Tab style** (`data-tab-style` on any ancestor, usually `<html>`): absent or `text` shows the label only (the
+  default, no visual change); `icon-text` shows icon and label; `icon` shows the icon, keeps the label as the
+  accessible name (visually hidden) and visible on the current tab, and shows it as a tooltip on hover and keyboard
+  focus. Under 30rem, `icon-text` rows of five or more tabs behave like `icon`, so they stay on one line.
 
 ## [2.15.4] - 2026-10-27
 
