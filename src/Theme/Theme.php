@@ -331,13 +331,13 @@ final readonly class Theme
     public function tokensCss(): string
     {
         $blocks = [];
-        [$shared, $light] = self::splitLightOnly($this->tokens);
+        [$shared, $light] = $this->splitLightOnly($this->tokens);
         $blocks[] = $this->block(':root', $shared);
         $blocks[] = $this->block(self::LIGHT_ROOT, $light);
         $blocks[] = $this->block('[data-theme="dark"]', $this->tokensDark);
         foreach ($this->bundles as $bundle => $data) {
             $scope = '[data-nowo-ui-bundle="'.$bundle.'"]';
-            [$shared, $light] = self::splitLightOnly($data['tokens']);
+            [$shared, $light] = $this->splitLightOnly($data['tokens']);
             $blocks[] = $this->block($scope, $shared);
             $blocks[] = $this->block($scope.':where(:not([data-theme=dark], [data-theme=dark] *))', $light);
             $blocks[] = $this->block('[data-theme="dark"] '.$scope, $data['tokens_dark']);
@@ -457,7 +457,7 @@ final readonly class Theme
      *
      * @return array{0: array<string, string>, 1: array<string, string>} [both modes, light only]
      */
-    private static function splitLightOnly(array $tokens): array
+    private function splitLightOnly(array $tokens): array
     {
         $shared = [];
         $light = [];
