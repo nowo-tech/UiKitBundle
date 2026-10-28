@@ -837,12 +837,13 @@ a.nowo-ui-pagination__link:hover {
   transform: translateX(-50%);
 }
 
-[data-tab-style='icon'] .nowo-ui-tabs__item[data-rail-label]:first-child::after {
+/* The first / last tab of a row anchor the tooltip to their outer edge (same specificity as the rule above, later). */
+[data-tab-style='icon'] .nowo-ui-tabs__item[data-rail-label]:first-child:not(.nowo-ui-tabs__item--active, .is-active, [aria-current='page']):is(:hover, :focus-visible)::after {
   left: 0;
   transform: none;
 }
 
-[data-tab-style='icon'] .nowo-ui-tabs__item[data-rail-label]:last-child:not(:first-child)::after {
+[data-tab-style='icon'] .nowo-ui-tabs__item[data-rail-label]:last-child:not(:first-child, .nowo-ui-tabs__item--active, .is-active, [aria-current='page']):is(:hover, :focus-visible)::after {
   right: 0;
   left: auto;
   transform: none;

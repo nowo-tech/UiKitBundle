@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.16.1] - 2026-10-28](#2161---2026-10-28)
 - [[2.16.0] - 2026-10-28](#2160---2026-10-28)
 - [[2.15.4] - 2026-10-27](#2154---2026-10-27)
 - [[2.15.3] - 2026-10-26](#2153---2026-10-26)
@@ -76,6 +77,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [2.16.1] - 2026-10-28
+
+### Fixed
+
+- **Icon-only tabs**: the tooltip of the first (and last) tab of a row starts at the tab's outer edge, so it no longer
+  runs off the left (right) side of the page; the edge rules were less specific than the centring rule.
 
 ## [2.16.0] - 2026-10-28
 

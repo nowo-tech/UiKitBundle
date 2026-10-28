@@ -43,6 +43,7 @@ final class TabIconsTest extends TestCase
             self::assertStringContainsString(":is([data-tab-style='icon-text'], [data-tab-style='icon']) .nowo-ui-tabs__icon", $css, $file);
             self::assertStringContainsString("[data-tab-style='icon'] .nowo-ui-tabs__item[data-rail-label]", $css, $file);
             self::assertStringContainsString('content: attr(data-rail-label);', $css, $file);
+            self::assertStringContainsString("[data-tab-style='icon'] .nowo-ui-tabs__item[data-rail-label]:first-child:not(.nowo-ui-tabs__item--active, .is-active, [aria-current='page']):is(:hover, :focus-visible)::after", $css, $file);
         }
     }
 }
