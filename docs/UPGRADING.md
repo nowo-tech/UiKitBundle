@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.17.3](#to-2173)
 - [To 2.17.2](#to-2172)
 - [To 2.17.1](#to-2171)
 - [To 2.17.0](#to-2170)
@@ -91,6 +92,11 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.17.3
+
+From **2.17.2**: `composer update nowo-tech/ui-kit-bundle`, then `php bin/console assets:install`. A host rule that
+forced a width on the burger in a phone header can go; one that sets a smaller `min-width` still wins (unlayered CSS).
 
 ## To 2.17.2
 

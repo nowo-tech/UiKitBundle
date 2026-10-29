@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.17.3] - 2026-10-29](#2173---2026-10-29)
 - [[2.17.2] - 2026-10-28](#2172---2026-10-28)
 - [[2.17.1] - 2026-10-28](#2171---2026-10-28)
 - [[2.17.0] - 2026-10-28](#2170---2026-10-28)
@@ -80,6 +81,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [2.17.3] - 2026-10-29
+
+Burger tap target on phones
+
+### Fixed
+
+- **Burger** (`.nowo-ui-burger`, app shell and `_burger` partials): `flex-shrink: 0` and a 32×32px minimum, so a
+  crowded phone header (a flex row with `min-width: 0`) no longer squeezes it to its 20px glyph. A regression test also
+  pins the skip link to the theme's surface / text pair, which keeps it readable in dark themes.
 
 ## [2.17.2] - 2026-10-28
 

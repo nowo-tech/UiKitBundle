@@ -1080,12 +1080,16 @@ a.nowo-ui-pagination__link:hover {
   pointer-events: auto;
 }
 
+/* 2.17.3: never narrower than a 32px tap target — in a crowded phone header the flex row shrank it to its glyph. */
 .nowo-ui-burger {
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
   width: 2.25rem;
   height: 2.25rem;
+  min-width: 2rem;
+  min-height: 2rem;
   padding: 0;
 }
 
