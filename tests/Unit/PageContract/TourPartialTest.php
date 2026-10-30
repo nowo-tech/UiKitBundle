@@ -47,6 +47,9 @@ final class TourPartialTest extends TestCase
         $root = (new Crawler($html))->filter('div.nowo-ui-tour');
 
         self::assertSame('product-tour', $root->attr('data-controller'));
+        // 2.17.5: out of the flow until the peer connects (no layout shift before the stylesheet applies), CSP-proof.
+        self::assertSame('', $root->attr('hidden'));
+        self::assertMatchesRegularExpression('/<div\s+class="nowo-ui-tour"\s+hidden\s/', $html);
         self::assertSame('nowo-ui-tour:start@window->product-tour#start', $root->attr('data-action'));
         self::assertSame('dashboard', $root->attr('data-product-tour-key-value'));
         self::assertSame('true', $root->attr('data-product-tour-auto-start-value'));

@@ -30,6 +30,11 @@
       (`slot`, `inline`, `icon`, `class` of partials/_edge_tab.html.twig)
     - attr: extra attributes on the root element (hash)
     - testids (default false): data-testid `tour` (root) and `tour-tab`
+
+  2.17.5: the root is rendered `hidden` and the peer shows it on connect, so the tab never sits in the page flow
+  (pushing the title down, then jumping back once the stylesheet makes it `position: fixed`). CSP-proof: an HTML
+  attribute, no `style=`. Without JavaScript (or without the peer registered) the tour stays hidden — it cannot run
+  there anyway.
 #}
 {% set _tour = tour %}
 {% set _labels = {
@@ -52,6 +57,7 @@
 {% if _steps is not empty %}
 <div
     class="nowo-ui-tour"
+    hidden
     data-controller="product-tour"
     data-action="nowo-ui-tour:start@window->product-tour#start"
     data-product-tour-key-value="{{ _tour.key }}"

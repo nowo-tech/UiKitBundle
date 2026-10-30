@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.17.5](#to-2175)
 - [To 2.17.4](#to-2174)
 - [To 2.17.3](#to-2173)
 - [To 2.17.2](#to-2172)
@@ -93,6 +94,17 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.17.5
+
+From **2.17.4**: `composer update nowo-tech/ui-kit-bundle`. The `tour` partial now renders its root `hidden` and the
+`product-tour` peer shows it on connect (no layout shift before the stylesheet applies). Two cases need a look:
+
+- A host that **overrides** `_tour.html.twig` keeps working as before; add `hidden` to its root element to get the
+  fix.
+- A host that registers its **own** `product-tour` controller (a subclass whose `connect()` does not call
+  `super.connect()`, or a copy of the peer) must remove the root's `hidden` attribute itself
+  (`this.element.removeAttribute('hidden')`), or the tab stays hidden.
 
 ## To 2.17.4
 
