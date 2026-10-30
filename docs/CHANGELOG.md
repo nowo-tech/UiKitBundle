@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.18.0] - 2026-10-30](#2180---2026-10-30)
 - [[2.17.5] - 2026-10-30](#2175---2026-10-30)
 - [[2.17.4] - 2026-10-30](#2174---2026-10-30)
 - [[2.17.3] - 2026-10-29](#2173---2026-10-29)
@@ -83,6 +84,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [2.18.0] - 2026-10-30
+
+POST actions without a raw `<form>` (REQ-TWIG-005)
+
+### Changed
+
+- **Actions** (`partials/_action_post.html.twig`): a POST `View\Action` that carries a `csrfToken` instead of a
+  `form` no longer renders a hand-written `<form>` / `<input>`. UiKit builds a nameless CSRF-only form for it
+  (`Form\ActionCsrfType`: one hidden field named `csrfField`, default `_token`, holding the token; the form's own CSRF
+  protection is off, so there is no second token) and renders it through `form_start` / `form_end`
+  (`_action_form_view`), like an action with a `form`. The request is unchanged: same URL, `method="post"`, same
+  `_token` (or custom `csrfField`) name and value, `_method` for PUT / PATCH / DELETE, same button markup, classes,
+  `data-*` / `disabled` attributes, `class="nowo-ui-action__form"` and `id` (type-to-confirm). Only the order inside
+  the form differs: the token now follows the button and `_method` is printed by `form_start` (`<input … />`). Used by
+  toolbar actions, row actions, the confirm dialog and the `page/confirm` scaffold.
+
+### Added
+
+- `nowo_ui_action_form(action)` (Twig, `ThemeExtension`): the `FormView` a POST action renders — its `form`, else the
+  CSRF-only form of its `csrfToken`; null for GET actions.
+- `Form\ActionCsrfType` (CSRF-only Form Type, `ActionCsrfType::createActionView()`), built on a standalone form
+  factory (core types only: host type extensions do not change the action forms), service
+  `nowo_ui_kit.action_form_factory` (registered only with symfony/form).
+
+### Deprecated
+
+- The raw `<form>` fallback (`partials/_action_post_legacy.html.twig`) for a POST action without a `form` when
+  symfony/form or its Twig extension (`form_start`) is missing, or when `csrfField` is not a valid form field name
+  (for example `token[x]`). It triggers a deprecation and will be removed in 3.0: install symfony/form, or pass a
+  CSRF-only `FormView` as `Action::$form`.
 
 ## [2.17.5] - 2026-10-30
 

@@ -256,13 +256,18 @@ final class PageContractConfigurationTest extends TestCase
         self::assertSame(ThemeExtension::class, $twig->getClass());
         self::assertTrue($twig->hasTag('twig.extension'));
         self::assertSame(['breadcrumb_kit' => true, 'collection' => null, 'enabled' => true], $twig->getArgument(2));
+        // 2.18: the standalone factory of the CSRF-only action forms (symfony/form is installed here).
+        self::assertSame('nowo_ui_kit.action_form_factory', (string) $twig->getArgument('$actionForms'));
+        self::assertSame([\Symfony\Component\Form\Forms::class, 'createFormFactory'], $container->getDefinition('nowo_ui_kit.action_form_factory')->getFactory());
 
         $container->register('translator', \stdClass::class);
         $container->getDefinition('nowo_ui_kit.theme')->setPublic(true);
+        $container->getDefinition('nowo_ui_kit.action_form_factory')->setPublic(true);
         $container->compile();
         $built = $container->get('nowo_ui_kit.theme');
         self::assertInstanceOf(Theme::class, $built);
         self::assertSame('tailwind', $built->framework());
+        self::assertInstanceOf(\Symfony\Component\Form\FormFactoryInterface::class, $container->get('nowo_ui_kit.action_form_factory'));
     }
 
     /**

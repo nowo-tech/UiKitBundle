@@ -46,6 +46,8 @@ use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\FormFactoryInterface;
+use Symfony\Component\Form\Forms;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -207,6 +209,13 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
             ])
             ->addTag('twig.extension');
 
+        // 2.18: standalone factory (core types only) of the CSRF-only forms of POST actions with a csrfToken.
+        $actionForms = null;
+        if (class_exists(Forms::class)) {
+            $container->register('nowo_ui_kit.action_form_factory', FormFactoryInterface::class)
+                ->setFactory([Forms::class, 'createFormFactory']);
+            $actionForms = new Reference('nowo_ui_kit.action_form_factory');
+        }
         $container->register('nowo_ui_kit.theme_twig_extension', ThemeExtension::class)
             ->setArguments([
                 new Reference('nowo_ui_kit.theme'),
@@ -215,6 +224,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
                 new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE),
                 new Reference('request_stack', ContainerInterface::NULL_ON_INVALID_REFERENCE),
             ])
+            ->setArgument('$actionForms', $actionForms)
             ->addTag('twig.extension');
     }
 

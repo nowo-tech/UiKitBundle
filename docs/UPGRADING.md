@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.18.0](#to-2180)
 - [To 2.17.5](#to-2175)
 - [To 2.17.4](#to-2174)
 - [To 2.17.3](#to-2173)
@@ -94,6 +95,24 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.18.0
+
+From **2.17.5**: `composer update nowo-tech/ui-kit-bundle`. A POST `Action` with a `csrfToken` (and no `form`) now
+renders through `form_start` / `form_end` with a CSRF-only Form Type (REQ-TWIG-005) instead of a hand-written `<form>`.
+Controllers need no change: the form posts to the same URL with the same `_token` (or `csrfField`) name and value and
+the same `_method`, so `isCsrfTokenValid('delete'.$id, $request->request->get('_token'))` keeps working. Check:
+
+- **Exact-markup assertions** (tests, e2e): the token now follows the button, and `_method` is printed by
+  `form_start` as `<input type="hidden" name="_method" value="DELETE" />`. Assert on names / values, not on the order.
+- **Form theme**: the action form goes through the host's form theme `form_start` block (as `form` actions already
+  did). A theme that adds markup or attributes to every `<form>` now adds it to these actions too.
+- **Without symfony/form** (or with the Twig form extension off): the 2.17 raw form still renders, with a deprecation
+  (`Since nowo-tech/ui-kit-bundle 2.18 …`); it will be removed in 3.0. Require `symfony/form`, or build a CSRF-only
+  `FormView` and pass it as `Action::$form`. Same for a `csrfField` that is not a valid form field name (for example
+  `token[x]`): use a plain name such as `_token`.
+- **A bare Twig environment** (tests without UiKit's `ThemeExtension`) that renders `_confirm` with an `action` needs
+  the `nowo_ui_action_form` function (register the `ThemeExtension`, or a stub returning `null`).
 
 ## To 2.17.5
 

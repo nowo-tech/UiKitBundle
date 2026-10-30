@@ -1,0 +1,15 @@
+{#
+  DEPRECATED since 2.18, removed in 3.0 — raw POST form of _action_post, only rendered when nowo_ui_action_form()
+  returns null: symfony/form or its Twig extension (form_start) is missing, or action.csrfField is not a valid form
+  field name (a deprecation is triggered). Documented REQ-TWIG-005 transition exception (docs/UPGRADING.md "To 2.18.0"):
+  install symfony/form, or pass a CSRF-only FormView as Action::$form. Not a public include.
+#}
+<form method="post" action="{{ action_href ?? '#' }}" class="nowo-ui-action__form"{% if form_id|default(null) %} id="{{ form_id }}"{% endif %}>
+    {% if action.method != 'POST' %}
+        <input type="hidden" name="_method" value="{{ action.method }}">
+    {% endif %}
+    {% if action.csrfToken %}
+        <input type="hidden" name="{{ action.csrfField }}" value="{{ action.csrfToken }}">
+    {% endif %}
+    <button type="submit" class="{{ button_class }}"{% for name, value in button_attrs %}{% if value is same as(true) %} {{ name }}{% elseif value is not null and value is not same as(false) %} {{ name }}="{{ value }}"{% endif %}{% endfor %}{% if action.disabled %} disabled{% endif %}>{{ button_html }}</button>
+</form>
