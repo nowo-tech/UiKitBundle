@@ -27,6 +27,7 @@ use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Forms;
 use Twig\Environment;
+use Twig\Error\RuntimeError;
 use Twig\TwigFunction;
 
 /**
@@ -124,6 +125,60 @@ final class BundlePageContractTest extends PageContractTestCase
             $page = $this->renderPage($fixture, $framework);
             self::assertStringContainsString('data-prototype=', $page->html);
             self::assertStringContainsString('team[members][__name__]', $page->html);
+        }
+    }
+
+    /**
+     * The inheritance chain goes through public Twig APIs only: no `Environment::mergeGlobals()` (deprecated since
+     * Twig 3.14) and no `TemplateWrapper::unwrap()` without arguments (deprecated since Twig 3.30), so a bundle can
+     * run its contract test with `failOnDeprecation` and without `ignoreIndirectDeprecations`.
+     */
+    public function testInheritanceChainTriggersNoDeprecation(): void
+    {
+        $deprecations = [];
+        set_error_handler(static function (int $level, string $message, string $file, int $line) use (&$deprecations): bool {
+            $deprecations[] = $message.' ('.$file.':'.$line.')';
+
+            return true;
+        }, \E_DEPRECATED | \E_USER_DEPRECATED);
+        try {
+            foreach (self::pageFixtures() as $fixture) {
+                $this->assertExtendsScaffoldOrUnique($fixture);
+            }
+        } finally {
+            restore_error_handler();
+        }
+
+        self::assertSame([], $deprecations);
+    }
+
+    public function testInheritanceChainSurvivesABlockErrorAndTopLevelCaptures(): void
+    {
+        $page = ['page' => new DashboardPage(new PageHeader('Chain'), [new KpiTile('Items', '1')])];
+        $fixture = new PageFixture('@NowoContractFixture/chain/block_error.html.twig', $page);
+        self::$extraTemplates = [
+            $fixture->template => "{% extends '@NowoContractFixture/chain/middle.html.twig' %}{% set captured %}{% include '@NowoContractFixture/chain/partial.html.twig' %}{% endset %}{% block nowo_ui_dashboard_cards %}{{ undefined_variable }}{% endblock %}",
+            '@NowoContractFixture/chain/middle.html.twig' => "{% extends page.layout ?? '@NowoUiKit/page/dashboard.html.twig' %}",
+            '@NowoContractFixture/chain/partial.html.twig' => 'partial',
+        ];
+        try {
+            $this->assertExtendsScaffoldOrUnique($fixture);
+        } finally {
+            self::$extraTemplates = [];
+        }
+    }
+
+    public function testInheritanceChainRethrowsAnUnresolvableParent(): void
+    {
+        $fixture = new PageFixture('@NowoContractFixture/chain/missing_parent.html.twig');
+        self::$extraTemplates = [$fixture->template => '{% extends missing_layout %}'];
+
+        $this->expectException(RuntimeError::class);
+        $this->expectExceptionMessage('missing_layout');
+        try {
+            $this->assertExtendsScaffoldOrUnique($fixture);
+        } finally {
+            self::$extraTemplates = [];
         }
     }
 
