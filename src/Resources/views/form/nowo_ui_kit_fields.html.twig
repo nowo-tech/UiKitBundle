@@ -1,0 +1,15 @@
+{#
+  Form theme of the forms UiKit builds for its own partials (2.19, REQ-TWIG-005, Form\UiFormViews::THEMES, on top
+  of form_div_layout.html.twig only): hidden fields print the 2.x markup (name + value, no id: one partial renders
+  many times per page, e.g. a locale form per locale or a CSRF form per row) and nested hidden groups (`filter[status]`)
+  print their fields without a wrapper or label. Form-theme file: it implements Symfony form blocks.
+#}
+{%- block hidden_widget -%}
+    <input type="hidden" name="{{ full_name }}" value="{{ value }}">
+{%- endblock hidden_widget -%}
+
+{%- block nowo_ui_hidden_fields_row -%}
+    {%- for child in form -%}
+        {%- if not child.rendered -%}{{- form_row(child) -}}{%- endif -%}
+    {%- endfor -%}
+{%- endblock nowo_ui_hidden_fields_row -%}

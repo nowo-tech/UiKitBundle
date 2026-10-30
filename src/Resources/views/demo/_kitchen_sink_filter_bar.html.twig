@@ -1,0 +1,23 @@
+{#
+  Kitchen sink host-chrome filter bar (1.17; REQ-TWIG-005): the `?q=` search of the demo's HostChromeFilterType
+  FormView `form`, with the foldable corner tab and the filter actions.
+#}
+{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
+{% form_theme form with ['form_div_layout.html.twig'] only %}
+{{ form_start(form, {action: '#host-chrome', attr: {class: 'nowo-ui-filter-bar nowo-ui-card'}}) }}
+    {% include '@NowoUiKitBundle/partials/_filters_collapse.html.twig' with {fold_key: 'kitchen_sink', active_count: 1} only %}
+    <div class="nowo-ui-filter-bar__field nowo-ui-filter-bar__field--search">
+        {{ form_widget(form.q, {attr: form.q.vars.attr|merge({class: ui.search_input() ~ ''})}) }}
+    </div>
+    {% for child in form %}
+        {% if not child.rendered %}
+            {{ form_row(child) }}
+        {% endif %}
+    {% endfor %}
+    {% include '@NowoUiKitBundle/partials/_filter_actions.html.twig' with {
+        clear_href: '#host-chrome',
+        submit_icon: 'filter',
+        clear_icon: 'filter_off',
+        icon_only: true,
+    } only %}
+{{ form_end(form) }}

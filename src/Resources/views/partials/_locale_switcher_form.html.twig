@@ -1,0 +1,17 @@
+{#
+  Form branch of one `locale_switcher` entry with form_action (2.19, REQ-TWIG-005; separate file: form_start /
+  form_end need symfony/form). ui_form: nameless hidden-field FormView (csrf_token in csrf_field, redirect). Same
+  request as 2.x: POST to form_action with the same fields. Not a public include.
+#}
+{{ form_start(ui_form, {action: locale.form_action, method: 'POST', attr: {class: 'nowo-ui-locale-switcher__form'}}) }}
+    {%- for child in ui_form -%}{%- if not child.rendered -%}{{- form_row(child) -}}{%- endif -%}{%- endfor %}
+    <button
+        type="submit"
+        class="nowo-ui-locale-switcher__option{{ is_current ? ' is-active' : '' }}"
+        hreflang="{{ locale.code }}"
+        lang="{{ locale.code }}"
+    >
+        <span class="nowo-ui-locale-switcher__code">{{ locale.code|upper }}</span>
+        <span>{{ locale.label }}</span>
+    </button>
+{{ form_end(ui_form) }}

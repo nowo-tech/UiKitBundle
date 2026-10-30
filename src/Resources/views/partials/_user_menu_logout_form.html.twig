@@ -1,0 +1,11 @@
+{#
+  Logout form of the `user_menu` partial (2.19, REQ-TWIG-005; separate file: form_start / form_end need
+  symfony/form). ui_form: nameless hidden-field FormView (_csrf_token = logout_csrf). Same request as 2.x: POST to
+  logout_path with _csrf_token. Not a public include.
+#}
+{{ form_start(ui_form, {action: logout_path, method: 'POST', attr: {class: 'nowo-ui-user-menu__logout-form'}}) }}
+    {%- for child in ui_form -%}{%- if not child.rendered -%}{{- form_row(child) -}}{%- endif -%}{%- endfor %}
+    <button type="submit" class="nowo-ui-user-menu__link nowo-ui-user-menu__link--danger" role="menuitem" style="width:100%;text-align:left;border:0;background:transparent;cursor:pointer;font:inherit;">
+        {{ logout_label }}
+    </button>
+{{ form_end(ui_form) }}

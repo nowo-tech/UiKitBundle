@@ -9,7 +9,8 @@
   Optional:
     - links: [{ label, href, current?: bool }]
     - logout_href: GET logout URL
-    - logout_path + logout_csrf: POST form logout (preferred when both set)
+    - logout_path + logout_csrf: POST form logout (preferred when both set; 2.19: form_start / form_end, field
+      _csrf_token — the raw form is a deprecated fallback without symfony/form)
     - logout_label
     - account_label: summary aria-label
     - framework
@@ -59,14 +60,13 @@
 
             {% if logout_path is defined and logout_path %}
                 <div class="nowo-ui-user-menu__footer">
-                    <form method="post" action="{{ logout_path }}" class="nowo-ui-user-menu__logout-form">
-                        {% if logout_csrf is defined and logout_csrf %}
-                            <input type="hidden" name="_csrf_token" value="{{ logout_csrf }}">
-                        {% endif %}
-                        <button type="submit" class="nowo-ui-user-menu__link nowo-ui-user-menu__link--danger" role="menuitem" style="width:100%;text-align:left;border:0;background:transparent;cursor:pointer;font:inherit;">
-                            {{ logout_label }}
-                        </button>
-                    </form>
+                    {#- 2.19 (REQ-TWIG-005): form_start / form_end of a hidden-field Form Type (_csrf_token = logout_csrf) -#}
+                    {% set _logout_vars = {logout_path: logout_path, logout_csrf: logout_csrf|default(null), logout_label: logout_label} %}
+                    {% if nowo_ui_theme is defined %}
+                        {{ include('@NowoUiKitBundle/partials/_ui_form.html.twig', _logout_vars|merge({ui_form_kind: 'hidden', ui_form_options: {fields: logout_csrf|default(null) ? {_csrf_token: logout_csrf} : {}, partial: 'user_menu'}, ui_form_template: '@NowoUiKitBundle/partials/_user_menu_logout_form.html.twig', ui_form_legacy: '@NowoUiKitBundle/partials/_user_menu_logout_legacy.html.twig'}), false) }}
+                    {% else %}
+                        {{ include('@NowoUiKitBundle/partials/_user_menu_logout_legacy.html.twig', _logout_vars, false) }}
+                    {% endif %}
                 </div>
             {% elseif logout_href is defined and logout_href %}
                 <div class="nowo-ui-user-menu__footer">

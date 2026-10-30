@@ -1,0 +1,26 @@
+{#
+  DEPRECATED since 2.19, removed in 3.0 — raw per-page form of the compact pagination, only rendered when
+  nowo_ui_form() returns null: symfony/form or its Twig extension is missing, or a query parameter name is
+  not a valid form field name (a deprecation is triggered). Documented REQ-TWIG-005 transition exception
+  (docs/UPGRADING.md "To 2.19.0"). A bare Twig environment (no UiKit ThemeExtension) renders it without a
+  deprecation. Not a public include.
+#}
+{% macro hidden(name, value) %}
+    {%- import _self as _hidden -%}
+    {%- if value is iterable -%}
+        {%- for key, item in value -%}{{ _hidden.hidden(name ~ '[' ~ key ~ ']', item) }}{%- endfor -%}
+    {%- elseif value is not null and value is not same as(false) -%}
+        <input type="hidden" name="{{ name }}" value="{{ value is same as(true) ? 1 : value }}">
+    {%- endif -%}
+{% endmacro %}
+{% import _self as _m %}
+<form class="{{ nowo_ui_class('pagination_per_page', bundle) }}" method="get" action="{{ path(route, route_params) }}" data-nowo-ui-region="per-page"{{ nowo_ui_attrs('pagination_per_page', bundle) }}>
+    {% for _name, _value in query %}{{ _m.hidden(_name, _value) }}{% endfor %}
+    <label class="{{ nowo_ui_class('pagination_info', bundle) }}" for="{{ _id }}">{{ 'pagination.per_page'|trans({}, trans_domain) }}</label>
+    <select id="{{ _id }}" name="{{ per_page_param }}" class="{{ nowo_ui_class('pagination_select', bundle) }}" data-nowo-ui-autosubmit{{ nowo_ui_attrs('pagination_select', bundle) }}>
+        {% for _choice in _choices %}
+            <option value="{{ _choice }}"{% if _choice == per_page %} selected{% endif %}>{{ _choice }}</option>
+        {% endfor %}
+    </select>
+    <noscript><button type="submit" class="{{ nowo_ui_class('btn_secondary', bundle) }} {{ nowo_ui_class('btn_sm', bundle) }}">{{ 'pagination.apply'|trans({}, trans_domain) }}</button></noscript>
+</form>

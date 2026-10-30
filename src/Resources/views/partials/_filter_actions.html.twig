@@ -1,6 +1,6 @@
 {#
   Filter bar actions: the optional "N per page" field + Filter + Clear always share one row
-  (`.nowo-ui-filter-bar__actions`, never split). Pair with `.nowo-ui-filter-bar` on the <form>.
+  (`.nowo-ui-filter-bar__actions`, never split). Pair with `.nowo-ui-filter-bar` on the form element.
   No Symfony Form coupling: the host renders the pager row and passes the HTML, e.g.
     pager: form.per_page is defined and not form.per_page.rendered
         ? form_row(form.per_page, {row_attr: {class: 'nowo-ui-filter-bar__pager'}}) : null

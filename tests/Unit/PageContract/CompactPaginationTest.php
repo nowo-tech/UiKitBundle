@@ -27,13 +27,14 @@ final class CompactPaginationTest extends TestCase
         self::assertStringContainsString('<a class="nowo-ui-pagination__link page-link" href="/items_index?q=red&amp;status%5B0%5D=open&amp;status%5B1%5D=late&amp;archived=0&amp;flag=1&amp;per_page=10&amp;page=1" rel="prev" aria-label="Previous">«</a>', $html);
         self::assertStringContainsString('<span class="nowo-ui-pagination__page" aria-current="page">Page 2 of 10</span>', $html);
         self::assertStringContainsString('rel="next" aria-label="Next">»</a>', $html);
-        self::assertStringContainsString('<form class="nowo-ui-pagination__per-page-form" method="get" action="/items_index" data-nowo-ui-region="per-page">', $html);
+        // 2.19 (REQ-TWIG-005): form_start / form_end of Form\PerPageType — same action, names, values and field order.
+        self::assertStringContainsString('<form method="get" action="/items_index" class="nowo-ui-pagination__per-page-form" data-nowo-ui-region="per-page">', $html);
         self::assertStringContainsString('<input type="hidden" name="q" value="red"><input type="hidden" name="status[0]" value="open"><input type="hidden" name="status[1]" value="late"><input type="hidden" name="flag" value="1">', $html);
         self::assertStringNotContainsString('name="page"', $html);
         self::assertStringNotContainsString('name="archived"', $html);
         self::assertStringContainsString('<label class="nowo-ui-pagination__info" for="nowo-ui-pagination-per-page">Per page</label>', $html);
-        self::assertStringContainsString('<select id="nowo-ui-pagination-per-page" name="per_page" class="nowo-ui-pagination__select form-select form-select-sm" data-nowo-ui-autosubmit>', $html);
-        self::assertStringContainsString('<option value="10" selected>10</option>', $html);
+        self::assertStringContainsString('<select id="nowo-ui-pagination-per-page" name="per_page" class="nowo-ui-pagination__select form-select form-select-sm" data-nowo-ui-autosubmit="">', $html);
+        self::assertStringContainsString('<option value="10" selected="selected">10</option>', $html);
         self::assertStringContainsString('<option value="100">100</option>', $html);
         self::assertStringContainsString('<noscript><button type="submit" class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary nowo-ui-btn--sm btn-sm">Apply</button></noscript>', $html);
         self::assertSame(0, preg_match('/\son[a-z]+=/i', $html));

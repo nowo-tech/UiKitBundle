@@ -8,7 +8,7 @@
   (muted by nowo-ui.css). FormKit hosts point their profile's form theme here or keep their own.
   2.3: a field with errors gets the `input_invalid` slot on its widget (Bootstrap `is-invalid`) + aria-invalid, and
   its messages render in the `form_error` slot (Bootstrap `invalid-feedback d-block`; root errors: a plain list, the
-  auth scaffold wraps it in the `form_errors` slot). PasswordToggle bridge: the <input> of `toggle_password_widget`
+  auth scaffold wraps it in the `form_errors` slot). PasswordToggle bridge: the input of `toggle_password_widget`
   (nowo-tech/password-toggle-bundle) gets the `input` slot when this theme is in the form's theme chain.
   2.10: rows take the `form_row` slot classes (2.10.1: checkbox / radio rows `form_row_check`) and labels the
   `form_label` slot (all empty by default; 2.15.4: Bootstrap rows `mb-3`, never added twice);
@@ -85,7 +85,7 @@
     {%- endif -%}
 {%- endblock form_errors -%}
 
-{#- PasswordToggle bridge (2.3): nowo-tech/password-toggle-bundle's `toggle_password_widget` prints its <input> with
+{#- PasswordToggle bridge (2.3): nowo-tech/password-toggle-bundle's `toggle_password_widget` prints its input with
     block('widget_attributes'), which the form renderer resolves through the form's theme chain: with this theme in
     the chain (form_theme tag, FormPage::formThemes, twig.form_themes) and no theme above it redefining
     widget_attributes (bootstrap_5_layout does), the input gets the `input` slot (+ `input_invalid`). Other widgets

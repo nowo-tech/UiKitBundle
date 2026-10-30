@@ -7,7 +7,16 @@ namespace Nowo\UiKitBundle\Tests\Unit;
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Twig\ThemeExtension;
 use PHPUnit\Framework\TestCase;
+use Symfony\Bridge\Twig\Extension\FormExtension;
 use Symfony\Bridge\Twig\Extension\TranslationExtension;
+use Symfony\Bridge\Twig\Form\TwigRendererEngine;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Component\Form\Extension\Core\Type\FormType;
+use Symfony\Component\Form\Extension\Core\Type\SearchType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\FormRenderer;
+use Symfony\Component\Form\Forms;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Translation\IdentityTranslator;
@@ -16,6 +25,7 @@ use Twig\Environment;
 use Twig\Loader\ArrayLoader;
 use Twig\Loader\ChainLoader;
 use Twig\Loader\FilesystemLoader;
+use Twig\RuntimeLoader\FactoryRuntimeLoader;
 
 /**
  * 1.17 host chrome partials: responsive table, row detail cells, foldable filters, disclosure icon, corner tab,
@@ -327,13 +337,42 @@ final class HostChromePartialsTest extends TestCase
 
     public function testKitchenSinkShowsTheHostChrome(): void
     {
+        $twig = $this->kitchenSinkTwig();
+        $html = $twig->render('@NowoUiKitBundle/demo/kitchen_sink.html.twig', ['kitchen_forms' => $this->kitchenForms()]);
+        foreach (['data-nowo-ui-popover-menu', 'popovertarget="demo-kebab-popover"', 'data-nowo-ui-segmented', 'js/nowo-ui-popover.js', 'js/nowo-ui-segmented.js', 'js/nowo-ui-tabs.js', 'id="demo-locale-tabs"', 'id="tab-demo-locale-tabs-en"', 'id="host-chrome"', 'data-controller="filters-collapse"', 'data-controller="responsive-table"', 'aria-labelledby="kitchen-sink-rt-title"',
+            'nowo-ui-row-detail-cell', 'nowo-ui-corner-tab', 'nowo-ui-disclosure-icon', 'nowo-ui-edge-tab__link', 'bi bi-x-circle'] as $needle) {
+            self::assertStringContainsString($needle, $html);
+        }
+        // REQ-TWIG-005: the demo controls are Symfony Forms (form_start / form_widget / form_end), same names as before.
+        self::assertStringContainsString('<form name="swatch" method="get" class="nowo-ui-kitchen-swatch" style="display: contents">', $html);
+        self::assertStringContainsString('<form method="get" action="#locale-tabs" class="nowo-ui-form">', $html);
+        self::assertMatchesRegularExpression('#<input type="text" id="demo-lt-title-en" name="title\[en\]" required="required" class="nowo-ui-input form-control" aria-invalid="true" aria-describedby="demo-lt-error-en" />#', $html);
+        self::assertStringContainsString('<textarea id="demo-lt-body-es" name="body[es]" rows="2" class="nowo-ui-input form-control">Hola y bienvenido.</textarea>', $html);
+        self::assertStringContainsString('<form method="get" action="#host-chrome" class="nowo-ui-filter-bar nowo-ui-card">', $html);
+        self::assertStringContainsString('name="q" aria-label="Search" class="', $html);
+        self::assertStringContainsString('value="beta"', $html);
+        // The plain-name segmented checkbox (2.19) is a CheckboxType view with the demo id.
+        self::assertMatchesRegularExpression('#<input type="checkbox" id="demo-involved-only" name="involved_only" data-nowo-ui-segmented-input="data-nowo-ui-segmented-input" tabindex="-1" value="1" />#', $html);
+
+        // Without the demo forms (a host without symfony/form, e.g. the Tailwind demo) the page renders without them.
+        $bare = $twig->render('@NowoUiKitBundle/demo/kitchen_sink.html.twig');
+        self::assertStringNotContainsString('id="demo-locale-tabs"', $bare);
+        self::assertStringContainsString('id="host-chrome"', $bare);
+    }
+
+    private function kitchenSinkTwig(): Environment
+    {
         $fs = new FilesystemLoader();
         $fs->addPath(\dirname(__DIR__, 2).'/src/Resources/views', 'NowoUiKitBundle');
+        $fs->addPath(\dirname((string) (new \ReflectionClass(FormExtension::class))->getFileName(), 2).'/Resources/views/Form');
         $twig = new Environment(new ChainLoader([
             new ArrayLoader(['base.html.twig' => '{% block stylesheets %}{% endblock %}{% block body %}{% endblock %}{% block javascripts %}{% endblock %}']),
             $fs,
         ]), ['strict_variables' => true]);
         $twig->addExtension(new TranslationExtension(new IdentityTranslator()));
+        $engine = new TwigRendererEngine(['form_div_layout.html.twig'], $twig);
+        $twig->addRuntimeLoader(new FactoryRuntimeLoader([FormRenderer::class => static fn (): FormRenderer => new FormRenderer($engine)]));
+        $twig->addExtension(new FormExtension());
         $twig->addFunction(new \Twig\TwigFunction('asset', static fn (string $path, ?string $package = null): string => '/bundles/nowouikit/'.$path));
         $twig->addFunction(new \Twig\TwigFunction('path', static fn (string $name, array $params = []): string => '/'.$name));
         $twig->addGlobal('nowo_ui_kit_css_framework', 'bootstrap5');
@@ -343,11 +382,39 @@ final class HostChromePartialsTest extends TestCase
         // The demo app registers the bundle: the 2.x partials (menu, segmented) read the theme functions.
         $twig->addExtension(new ThemeExtension(new Theme()));
 
-        $html = $twig->render('@NowoUiKitBundle/demo/kitchen_sink.html.twig');
-        foreach (['data-nowo-ui-popover-menu', 'popovertarget="demo-kebab-popover"', 'data-nowo-ui-segmented', 'js/nowo-ui-popover.js', 'js/nowo-ui-segmented.js', 'js/nowo-ui-tabs.js', 'id="demo-locale-tabs"', 'id="tab-demo-locale-tabs-en"', 'id="host-chrome"', 'data-controller="filters-collapse"', 'data-controller="responsive-table"', 'aria-labelledby="kitchen-sink-rt-title"',
-            'nowo-ui-row-detail-cell', 'nowo-ui-corner-tab', 'nowo-ui-disclosure-icon', 'nowo-ui-edge-tab__link', 'bi bi-x-circle'] as $needle) {
-            self::assertStringContainsString($needle, $html);
+        return $twig;
+    }
+
+    /**
+     * The forms the demo's KitchenSinkController passes (demo/symfony8/src/Form), built with core types.
+     *
+     * @return array<string, FormView>
+     */
+    private function kitchenForms(): array
+    {
+        $forms = Forms::createFormFactory();
+        $get = ['method' => 'GET', 'translation_domain' => false];
+        $swatch = static fn (string $name): FormView => $forms->createNamedBuilder($name, FormType::class, null, $get)
+            ->add('check', CheckboxType::class, ['data' => true, 'required' => false, 'label' => 'Checkbox'])
+            ->add('search', SearchType::class, ['required' => false, 'label' => false, 'attr' => ['placeholder' => 'Input placeholder', 'aria-label' => 'Input']])
+            ->getForm()->createView();
+        $tabs = $forms->createNamedBuilder('', FormType::class, null, $get);
+        $title = $tabs->create('title', FormType::class, ['label' => false]);
+        $body = $tabs->create('body', FormType::class, ['label' => false]);
+        foreach (['es' => ['Bienvenida', 'Hola y bienvenido.'], 'en' => ['', 'Hello and welcome.'], 'ar' => ['مرحبا', '']] as $locale => [$t, $b]) {
+            $title->add($locale, TextType::class, ['data' => $t, 'label' => 'Title', 'required' => 'ar' !== $locale]);
+            $body->add($locale, TextareaType::class, ['data' => $b, 'label' => 'Body', 'required' => false, 'attr' => ['rows' => 2]]);
         }
+        $tabs->add($title)->add($body);
+
+        return [
+            'swatch' => $swatch('swatch'),
+            'swatch_themed' => $swatch('swatch_themed'),
+            'locale_tabs' => $tabs->getForm()->createView(),
+            'host_chrome' => $forms->createNamedBuilder('', FormType::class, null, $get)
+                ->add('q', SearchType::class, ['data' => 'beta', 'required' => false, 'label' => false, 'attr' => ['aria-label' => 'Search']])
+                ->getForm()->createView(),
+        ];
     }
 
     /**

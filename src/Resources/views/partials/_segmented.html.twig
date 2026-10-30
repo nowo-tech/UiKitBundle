@@ -9,7 +9,9 @@
   Required:
     - options: two hashes {label (View\Label|string), checked (bool: the checkbox value this option stands for),
       title?, attr?}, e.g. [{label: 'All', checked: false}, {label: 'Involved', checked: true}]
-    - field (FormView of a CheckboxType) OR name (+ checked, value default "1", id) for a plain checkbox
+    - field (FormView of a CheckboxType) OR name (+ checked, value default "1", id) for a plain checkbox (2.19: built
+      as a CheckboxType FormView too — same name / value / checked; without `id` the input gets the form's
+      generated id; raw input only without symfony/form, deprecated)
   Optional:
     - label (View\Label|string): aria-label of the group, or labelled_by: id of the visible label (aria-labelledby)
     - input_attr: extra checkbox attributes (data-model for Live Components…), attr: root attributes (no on*)
@@ -29,7 +31,14 @@
             {#- separate template: form_widget() exists only with symfony/form (optional) -#}
             {{ include('@NowoUiKitBundle/partials/_segmented_field.html.twig', {field: _field, input_attr: _input_attr}, false) }}
         {%- else -%}
-            <input type="checkbox" name="{{ name }}" value="{{ value|default('1') }}"{% if id|default(null) %} id="{{ id }}"{% endif %}{% if _checked %} checked{% endif %}{{ nowo_ui_html_attrs(_input_attr) }}>
+            {#- 2.19 (REQ-TWIG-005): a plain checkbox (name / checked / value / id) is a CheckboxType FormView too;
+                without symfony/form the deprecated raw input (_segmented_legacy_checkbox) -#}
+            {%- set _plain_vars = {input_attr: _input_attr, name: name, value: (value|default('1')) ~ '', id: id|default(null), checked: _checked ? true : false} -%}
+            {%- if nowo_ui_theme is defined -%}
+                {{ include('@NowoUiKitBundle/partials/_ui_form.html.twig', _plain_vars|merge({ui_form_kind: 'checkbox', ui_form_options: {name: name, checked: _plain_vars.checked, value: _plain_vars.value, id: _plain_vars.id, partial: 'segmented'}, ui_form_template: '@NowoUiKitBundle/partials/_segmented_checkbox_form.html.twig', ui_form_legacy: '@NowoUiKitBundle/partials/_segmented_legacy_checkbox.html.twig'}), false) }}
+            {%- else -%}
+                {{ include('@NowoUiKitBundle/partials/_segmented_legacy_checkbox.html.twig', _plain_vars, false) }}
+            {%- endif -%}
         {%- endif -%}
     </span>
 </div>

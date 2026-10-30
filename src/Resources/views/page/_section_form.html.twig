@@ -9,7 +9,7 @@
     - actions (2.2): list of View\Action rendered inline right after the submit button (`action` partial, toolbar
       context; SettingsSection::actions). With actions, the actions row is printed right after the </form> (an
       Action may be a POST form or open a confirm dialog: forms cannot nest) and the submit button joins the form
-      through form="<form id>" (the form's attr.id, else "<form id>-form", else "nowo-ui-section-form").
+      through form="{form id}" (the form's attr.id, else "{form id}-form", else "nowo-ui-section-form").
 #}
 {% set bundle = bundle|default(null) %}
 {% set _pt = nowo_ui_page_type|default(null) %}

@@ -1,0 +1,8 @@
+{#
+  DEPRECATED since 2.19, removed in 3.0 — raw checkbox of the `segmented` partial (plain name mode), only rendered
+  when nowo_ui_form() returns null: symfony/form or its Twig extension is missing, or name is not a form
+  field name such as `a` / `a[b]` (a deprecation is triggered). Documented REQ-TWIG-005 transition exception
+  (docs/UPGRADING.md "To 2.19.0"). A bare Twig environment (no UiKit ThemeExtension) renders it without a
+  deprecation. Not a public include.
+#}
+<input type="checkbox" name="{{ name }}" value="{{ value }}"{% if id %} id="{{ id }}"{% endif %}{% if checked %} checked{% endif %}{{ nowo_ui_html_attrs(input_attr) }}>

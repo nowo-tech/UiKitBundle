@@ -1,0 +1,35 @@
+{#
+  DEPRECATED since 2.19, removed in 3.0 — raw POST form of a 1.x `row_actions` hash (tag form), only rendered when
+  nowo_ui_form() returns null: symfony/form or its Twig extension is missing, or csrf_field is not a valid form
+  field name (a deprecation is triggered). Documented REQ-TWIG-005 transition exception (docs/UPGRADING.md
+  "To 2.19.0"). A bare Twig environment (no UiKit ThemeExtension) renders it without a
+  deprecation. Not a public include.
+#}
+<form
+    method="post"
+    action="{{ action.href|default('#') }}"
+    class="nowo-ui-row-actions__form"
+    {% if action.confirm_message is defined and action.confirm_message %}
+        onsubmit="return confirm({{ action.confirm_message|json_encode|e('html_attr') }});"
+    {% endif %}
+    {% if action.attr is defined %}
+        {% for name, value in action.attr %}{{ name }}="{{ value }}" {% endfor %}
+    {% endif %}
+>
+    {% if action.csrf_token is defined and action.csrf_token %}
+        <input type="hidden" name="{{ action.csrf_field|default('_token') }}" value="{{ action.csrf_token }}">
+    {% endif %}
+    <button
+        type="submit"
+        class="{{ class }}"
+        title="{{ label }}"
+        aria-label="{{ label }}"
+        {% if disabled %}disabled{% endif %}
+    >
+        {{ include('@NowoUiKitBundle/partials/_action_inner.html.twig', {
+            display: display,
+            icon_name: icon_name,
+            label: label,
+        }, false) }}
+    </button>
+</form>

@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.19.0](#to-2190)
 - [To 2.18.0](#to-2180)
 - [To 2.17.5](#to-2175)
 - [To 2.17.4](#to-2174)
@@ -95,6 +96,30 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.19.0
+
+From **2.18.0**: `composer update nowo-tech/ui-kit-bundle`. The last raw `<form>` / `<input>` / `<select>` of the kit
+views are Form Types now (REQ-TWIG-005): `row_actions` 1.x POST hashes, the `user_menu` logout, `locale_switcher`
+form entries, `filters`, the per-page select of `pagination_compact` and the plain checkbox of `segmented`.
+Controllers need no change: same URLs, methods, field names (`_token`, `_csrf_token`, `redirect`, `q`, `per_page`…),
+values and field order. Check:
+
+- **Exact-markup assertions** (tests, e2e): attributes come in `form_start` / `form_div_layout` order (`<form
+  method="post" action="…" class="…">`), boolean attributes print a value (`data-nowo-ui-filters=""`,
+  `data-nowo-ui-autosubmit=""`, `selected="selected"`, `checked="checked"`) and void inputs end in ` />`. Assert on
+  names / values / selectors.
+- **Segmented plain checkbox without `id`**: the input now has the generated id (`prefs_involved` for
+  `prefs[involved]`); pass `id` to choose it.
+- **Host overrides** of these partials: keep `form_start` / `form_end` (the dispatcher `partials/_ui_form.html.twig`
+  passes the `FormView` as `ui_form`); do not reintroduce raw markup — add `make check-no-raw-html-form` style checks
+  to your own CI.
+- **Without symfony/form** (or with a field name that is not a form field name, e.g. `csrf_field: 'token[x]'`, a query
+  key `filter.status`, `name: 'tags[]'`): the 2.18 raw markup still renders, with a deprecation
+  (`Since nowo-tech/ui-kit-bundle 2.19 …`); it will be removed in 3.0. A bare Twig environment without UiKit's
+  `ThemeExtension` (bundle tests) keeps rendering the raw markup without a deprecation.
+- **Kitchen sink view** (`@NowoUiKitBundle/demo/kitchen_sink.html.twig`): pass `kitchen_forms` (see the symfony8 demo
+  `KitchenSinkController`) to show the form samples; they are skipped otherwise.
 
 ## To 2.18.0
 

@@ -1,0 +1,14 @@
+{#
+  DEPRECATED since 2.19, removed in 3.0 — raw logout form of the `user_menu` partial, only rendered when
+  nowo_ui_form() returns null (symfony/form or its Twig extension is missing; a deprecation is triggered).
+  Documented REQ-TWIG-005 transition exception (docs/UPGRADING.md "To 2.19.0"). A bare Twig environment (no UiKit ThemeExtension) renders it without a
+  deprecation. Not a public include.
+#}
+<form method="post" action="{{ logout_path }}" class="nowo-ui-user-menu__logout-form">
+    {% if logout_csrf is defined and logout_csrf %}
+        <input type="hidden" name="_csrf_token" value="{{ logout_csrf }}">
+    {% endif %}
+    <button type="submit" class="nowo-ui-user-menu__link nowo-ui-user-menu__link--danger" role="menuitem" style="width:100%;text-align:left;border:0;background:transparent;cursor:pointer;font:inherit;">
+        {{ logout_label }}
+    </button>
+</form>

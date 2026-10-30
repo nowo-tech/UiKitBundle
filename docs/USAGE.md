@@ -4,6 +4,7 @@
 
 - [Import macros](#import-macros)
 - [Partials](#partials)
+  - [Forms in the partials (REQ-TWIG-005)](#forms-in-the-partials-req-twig-005)
 - [Assets](#assets)
 - [Locale tabs (2.5)](#locale-tabs-25)
   - [Migrating your locale UI](#migrating-your-locale-ui)
@@ -159,6 +160,31 @@ Confirm trigger:
     footer: confirm_footer_html
 } %}
 ```
+
+### Forms in the partials (REQ-TWIG-005)
+
+UiKit views never print a hand-written `<form>` / `<input>` / `<select>` / `<textarea>`: every form renders through a
+Symfony Form Type with `form_start`, the child loop (`{% for child in form %}{% if not child.rendered %}{{ form_row(child)
+}}{% endif %}{% endfor %}`) and `form_end`. When a partial takes plain values instead of a `FormView`, UiKit builds the
+Form Type itself (Twig `nowo_ui_form(kind, options)`, `Form\UiFormViews`, standalone factory with core types and the
+`form_div_layout` + `form/nowo_ui_kit_fields.html.twig` themes only, so host themes do not change the markup):
+
+| Partial | Form Type (2.19 unless noted) | Request (unchanged) |
+| --- | --- | --- |
+| `action` / `confirm` (POST `View\Action` with `csrfToken`) | `ActionCsrfType` (2.18) | POST, `csrfField` (`_token`), `_method` |
+| `row_actions` (1.x hash, `method: POST`) | `HiddenFieldsType` | POST `href`, `csrf_field` = `csrf_token` |
+| `user_menu` (`logout_path` + `logout_csrf`) | `HiddenFieldsType` | POST, `_csrf_token` |
+| `locale_switcher` (entry with `form_action`) | `HiddenFieldsType` | POST, `csrf_field`, `redirect` |
+| `filters` | `SearchFilterType` | GET (or `method`), `?q=` (`q_name`) |
+| `pagination_compact` (per page) | `PerPageType` | GET, other query parameters + `per_page` |
+| `segmented` (plain `name`) | `CheckboxType` view named `name` (`a` / `a[b]`) | same name and value |
+
+Controllers keep validating with `isCsrfTokenValid()` on the same field. Without symfony/form (or its Twig extension),
+or with a field name that is not a form field name (`token[x]`, `filter.status`, `tags[]`), the partials print their
+2.x raw markup with a deprecation (removed in 3.0). Host overrides and demos must not reintroduce raw form markup:
+`make check-no-raw-html-form` (part of `release-check`) fails on it outside the form themes, the deprecated
+`*_legacy` fallbacks and `{# twig-005-ignore: … #}` controls that are never submitted (the nameless type-to-confirm
+input).
 
 ## Assets
 

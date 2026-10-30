@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.19.0] - 2026-10-30](#2190---2026-10-30)
 - [[2.18.0] - 2026-10-30](#2180---2026-10-30)
 - [[2.17.5] - 2026-10-30](#2175---2026-10-30)
 - [[2.17.4] - 2026-10-30](#2174---2026-10-30)
@@ -84,6 +85,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [2.19.0] - 2026-10-30
+
+Every UiKit form is a Form Type (REQ-TWIG-005)
+
+### Changed
+
+- **No raw form markup left in the kit views.** The partials that still printed a hand-written `<form>` / `<input>` /
+  `<select>` render Form Types through `form_start` / `form_label` / `form_widget` / the child `form_row` loop /
+  `form_end`. The requests are unchanged (URL, method, field names and values, field order, button markup, classes,
+  `data-*` attributes); the markup differs only in attribute order and `form_div_layout` details (`data-x=""`,
+  `selected="selected"`, `checked="checked"`, `/>`):
+  - `row_actions`: a 1.x POST hash (`tag: form`) — `Form\HiddenFieldsType` with `csrf_token` in `csrf_field`; the
+    form keeps `class="nowo-ui-row-actions__form"`, the transitional `confirm_message` handler and `attr` (the kit's
+    `class` / `onsubmit` win, as before).
+  - `user_menu`: the logout form (`logout_path` + `logout_csrf` → `_csrf_token`).
+  - `locale_switcher`: entries with `form_action` (`csrf_field` / `csrf_token`, `redirect`).
+  - `filters`: `Form\SearchFilterType` (GET, `q_name`, input id `nowo-ui-filter-q`, visually hidden label).
+  - `pagination_compact`: the per-page form — `Form\PerPageType` (other query parameters as hidden fields, nested
+    names such as `status[0]` kept, then the select with its id, classes, `data-nowo-ui-autosubmit` and slot
+    attributes).
+  - `segmented`: the plain-checkbox mode (`name`, `checked`, `value`, `id`) is a `CheckboxType` view; without `id`
+    the input gets the generated id (`prefs_involved` for `prefs[involved]`).
+  - `_action_form_view`: the hidden fields of a shared action `FormView` print through `nowo_ui_form_hidden()` (the
+    `hidden_widget` block of `form/nowo_ui_kit_fields.html.twig`, same markup) instead of a hand-written input.
+  - Kitchen sink demo view: its controls are Symfony Forms passed by the demo controller (`kitchen_forms`); without
+    them (a host without symfony/form) those samples are skipped. Demo app shell: the void dialog posts a Form.
+- The type-to-confirm input of `confirm` / `page/confirm` stays a nameless control that is never submitted (browser
+  validation only) — a documented REQ-TWIG-005 exception (`twig-005-ignore`).
+
+### Added
+
+- `make check-no-raw-html-form` (`.scripts/check-no-raw-html-form.sh`), wired into `release-check` and CI: fails on
+  raw `<form` / `<input` / `<textarea` / `<select` in `src/Resources/views` and `demo/*/templates` outside the form
+  themes (`src/Resources/views/form/`), the deprecated `*_legacy` fallbacks and `twig-005-ignore` controls.
+- `Form\HiddenFieldsType`, `Form\SearchFilterType`, `Form\PerPageType` and `Form\UiFormViews`; Twig
+  `nowo_ui_form(kind, options)` (`hidden`, `search`, `per_page`, `checkbox`) and `nowo_ui_form_hidden(field)`;
+  form theme `form/nowo_ui_kit_fields.html.twig`; dispatcher `partials/_ui_form.html.twig` (internal).
+
+### Deprecated
+
+- The raw fallbacks of those partials (`_row_actions_legacy`, `_user_menu_logout_legacy`, `_locale_switcher_legacy`,
+  `_filters_legacy`, `_pagination_per_page_legacy`, `_segmented_legacy_checkbox`): rendered with a deprecation when
+  symfony/form or its Twig extension is missing, or a field name is not a valid form field name. Removed in 3.0.
 
 ## [2.18.0] - 2026-10-30
 

@@ -8,7 +8,7 @@
   body; e.g. a passkey button or an "or" divider), nowo_ui_auth_footer (default: page.links). The <footer> renders
   only when the block has content (2.2). page.scripts = false (2.2) drops every UiKit script and the theme boot
   (JS-free guest pages, e.g. a public 503): sets nowo_ui_scripts_enabled for the document layout.
-  2.3: page.formThemes (form_theme), page.formAttributes (extra <form> attributes, class appended to the form slot),
+  2.3: page.formThemes (form_theme), page.formAttributes (extra form-element attributes, class appended to the form slot),
   page.documentTitle (<title>, default page.title); the root form errors (CSRF, global errors: form_errors(form))
   render above the fields in the `form_errors` slot — skipped with page.rootErrors = false or
   `{% set nowo_ui_auth_root_errors = false %}` in a template extending this one (a bundle that prints

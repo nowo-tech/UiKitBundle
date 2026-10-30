@@ -1,0 +1,24 @@
+{#
+  DEPRECATED since 2.19, removed in 3.0 — raw POST form of one `locale_switcher` entry (form_action), only rendered
+  when nowo_ui_form() returns null: symfony/form or its Twig extension is missing, or csrf_field is not a valid
+  form field name (a deprecation is triggered). Documented REQ-TWIG-005 transition exception (docs/UPGRADING.md
+  "To 2.19.0"). A bare Twig environment (no UiKit ThemeExtension) renders it without a
+  deprecation. Not a public include.
+#}
+<form method="post" action="{{ locale.form_action }}" class="nowo-ui-locale-switcher__form">
+    {% if locale.csrf_token is defined and locale.csrf_token %}
+        <input type="hidden" name="{{ locale.csrf_field|default('_token') }}" value="{{ locale.csrf_token }}">
+    {% endif %}
+    {% if locale.redirect is defined and locale.redirect %}
+        <input type="hidden" name="redirect" value="{{ locale.redirect }}">
+    {% endif %}
+    <button
+        type="submit"
+        class="nowo-ui-locale-switcher__option{{ is_current ? ' is-active' : '' }}"
+        hreflang="{{ locale.code }}"
+        lang="{{ locale.code }}"
+    >
+        <span class="nowo-ui-locale-switcher__code">{{ locale.code|upper }}</span>
+        <span>{{ locale.label }}</span>
+    </button>
+</form>

@@ -12,7 +12,8 @@ export DOCKER_CONFIG := $(BUNDLE_ROOT)/.docker
 .PHONY: help ensure-up up down down-dev build shell install assets assets-test test-ts test test-coverage test-with-db \ check-twig-extra
 	test-coverage-with-db coverage-check cs-check cs-fix rector rector-dry phpstan validate-phpdoc qa release-check \
 	release-check-demos demo-smoke composer-sync clean update validate validate-translations \
-	setup-hooks check-no-cursor-coauthor check-open-prs strip-cursor-coauthor-from-history check-clean-tree
+	setup-hooks check-no-cursor-coauthor check-open-prs strip-cursor-coauthor-from-history check-clean-tree \
+	check-no-raw-html-form
 
 help:
 	@echo "Ui Kit Bundle - Development Commands"
@@ -23,7 +24,7 @@ help:
 	@echo "Dependencies: install assets"
 	@echo "Tests: test test-coverage test-with-db test-coverage-with-db test-ts"
 	@echo "Quality: cs-check cs-fix rector rector-dry phpstan qa validate-translations"
-	@echo "Release: release-check demo-smoke composer-sync"
+	@echo "Release: release-check demo-smoke composer-sync check-no-raw-html-form"
 	@echo "Cleanup: clean"
 	@echo "Composer: update update-deps validate"
 
@@ -109,12 +110,18 @@ check-twig-extra:
 	@chmod +x .scripts/check-twig-extra.sh
 	@./.scripts/check-twig-extra.sh
 
+# REQ-TWIG-005: no raw <form> / <input> / <textarea> / <select> in bundle views or demo templates (form themes,
+# deprecated *_legacy fallbacks and `twig-005-ignore` controls excepted; see the script header).
+check-no-raw-html-form:
+	@chmod +x .scripts/check-no-raw-html-form.sh
+	@./.scripts/check-no-raw-html-form.sh
+
 # Run Igor worker-state audit (REQ-CS-008)
 igor: ensure-up
 	$(COMPOSE) exec -T php composer igor
 # Check-only: no step may rewrite tracked files (cs-check, not cs-fix; validate-phpdoc is read-only). The tree must
 # be clean before and after, so "release-check: OK <sha>" proves exactly the committed tree (REQ-GIT / release rule).
-release-check: check-clean-tree check-no-cursor-coauthor check-open-prs check-twig-extra ensure-up assets composer-sync cs-check rector-dry phpstan igor validate-phpdoc coverage-check test-ts release-check-demos
+release-check: check-clean-tree check-no-cursor-coauthor check-open-prs check-twig-extra check-no-raw-html-form ensure-up assets composer-sync cs-check rector-dry phpstan igor validate-phpdoc coverage-check test-ts release-check-demos
 	@$(MAKE) --no-print-directory check-clean-tree
 
 # Fails when tracked or untracked (non-ignored) files differ from HEAD.

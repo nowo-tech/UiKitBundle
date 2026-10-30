@@ -45,6 +45,7 @@
             {% if _confirm.expectedValue is not null %}
                 <div class="{{ nowo_ui_class('confirm_expect', _b) }}"{{ nowo_ui_attrs('confirm_expect', _b) }}>
                     <label class="{{ nowo_ui_class('confirm_expect_label', _b) }}" for="nowo-ui-confirm-page-expected">{{ _confirm.expectedLabel is null ? 'confirm.type_to_confirm'|trans({'%value%': _confirm.expectedValue}, 'NowoUiKitBundle') : _confirm.expectedLabel|nowo_ui_trans({'%value%': _confirm.expectedValue}) }}</label>
+                    {# twig-005-ignore: type-to-confirm guard — a nameless input, never submitted (browser validation only; REQ-TWIG-005 exception in docs/PAGE_CONTRACT.md) #}
                     <input id="nowo-ui-confirm-page-expected" class="{{ nowo_ui_class('input', _b) }} nowo-ui-confirm__expect-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" required pattern="{{ _confirm.expectedPattern() }}" data-nowo-confirm-expected="{{ _confirm.expectedValue }}" form="nowo-ui-confirm-page-form">
                 </div>
             {% endif %}

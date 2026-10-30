@@ -1,0 +1,25 @@
+{#
+  Form branch of the `filters` partial (2.19, REQ-TWIG-005; separate file: form_start / form_end need symfony/form).
+  ui_form: nameless GET search FormView of nowo_ui_form() (field q_name, id nowo-ui-filter-q, visually
+  hidden label). Same request as 2.x (method, action, ?q=…). Not a public include.
+#}
+{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
+{{ form_start(ui_form, {action: action|default(''), method: method, attr: {class: ui.filters(framework) ~ '', 'data-nowo-ui-filters': '', role: 'search'}}) }}
+    {% if collapsible|default(false) %}
+        {{ include('@NowoUiKitBundle/partials/_filters_collapse.html.twig', {active_count: q|default('')|trim is not empty ? 1 : 0}|merge(collapse|default({})), false) }}
+    {% endif %}
+    {{ form_label(ui_form[q_name]) }}
+    {{ form_widget(ui_form[q_name]) }}
+    {%- for child in ui_form -%}{%- if not child.rendered -%}{{- form_row(child) -}}{%- endif -%}{%- endfor %}
+    <button type="submit" class="{{ ui.btn('primary', 'sm', framework) }}">
+        {{ 'filters.apply'|trans({}, 'NowoUiKitBundle') }}
+    </button>
+    {% if clear_href is defined and clear_href %}
+        <a class="{{ ui.btn('secondary', 'sm', framework) }}" href="{{ clear_href }}">
+            {{ 'filters.clear'|trans({}, 'NowoUiKitBundle') }}
+        </a>
+    {% endif %}
+    {% if actions is defined and actions %}
+        <div class="nowo-ui-filters__actions">{{ actions|raw }}</div>
+    {% endif %}
+{{ form_end(ui_form) }}
