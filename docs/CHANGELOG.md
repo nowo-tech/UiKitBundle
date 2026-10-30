@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.17.4] - 2026-10-30](#2174---2026-10-30)
 - [[2.17.3] - 2026-10-29](#2173---2026-10-29)
 - [[2.17.2] - 2026-10-28](#2172---2026-10-28)
 - [[2.17.1] - 2026-10-28](#2171---2026-10-28)
@@ -81,6 +82,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [2.17.4] - 2026-10-30
+
+Page contract without Twig deprecations
+
+### Fixed
+
+- **Page contract** (`PageContractTestCase::assertExtendsScaffoldOrUnique()`): the inheritance chain no longer calls
+  `Twig\Environment::mergeGlobals()` (deprecated since Twig 3.14) nor `TemplateWrapper::unwrap()` without arguments
+  (deprecated since Twig 3.30). It renders the page with Twig's profiler and reads each parent from its profile, so a
+  bundle can run its contract test with `failOnDeprecation="true"` without `ignoreIndirectDeprecations="true"`. Same
+  verdicts as before: an error inside a block is still ignored, a dynamic `extends` that fails is still thrown. A
+  regression test proves the helper triggers no deprecation.
 
 ## [2.17.3] - 2026-10-29
 

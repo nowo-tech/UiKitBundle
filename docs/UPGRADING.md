@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.17.4](#to-2174)
 - [To 2.17.3](#to-2173)
 - [To 2.17.2](#to-2172)
 - [To 2.17.1](#to-2171)
@@ -92,6 +93,12 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.17.4
+
+From **2.17.3**: `composer update nowo-tech/ui-kit-bundle`. No code change. A bundle that kept
+`ignoreIndirectDeprecations="true"` in `phpunit.xml.dist` only because of the page contract's Twig deprecations can
+drop it.
 
 ## To 2.17.3
 

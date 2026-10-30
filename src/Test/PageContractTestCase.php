@@ -22,10 +22,12 @@ use Symfony\Component\Translation\Loader\XliffFileLoader;
 use Symfony\Component\Translation\Loader\YamlFileLoader;
 use Symfony\Component\Translation\Translator;
 use Twig\Environment;
+use Twig\Extension\ProfilerExtension;
 use Twig\Extra\String\StringExtension;
 use Twig\Loader\ArrayLoader;
 use Twig\Loader\ChainLoader;
 use Twig\Loader\FilesystemLoader;
+use Twig\Profiler\Profile;
 use Twig\RuntimeLoader\FactoryRuntimeLoader;
 
 /**
@@ -493,19 +495,61 @@ abstract class PageContractTestCase extends TestCase
     }
 
     /**
+     * Inheritance chain through public Twig APIs only (no `Environment::mergeGlobals()`, no
+     * `TemplateWrapper::unwrap()` / `Template::getParent()`): the page is rendered with the profiler, every template
+     * that extends another one has its parent as its last direct template profile (a child template outputs nothing
+     * outside blocks, so the profiles before it can only come from top-level `set` captures). A render error after
+     * the chain is resolved (in a block) is ignored, as before; one that stops the chain (a dynamic `extends` that
+     * fails) is rethrown.
+     *
      * @return list<array{0: string, 1: string|false}> template name and real path, child first
      */
     private function inheritanceChain(Environment $twig, PageFixture $fixture): array
     {
-        $context = $twig->mergeGlobals($fixture->context);
-        $template = $twig->load($fixture->template)->unwrap();
-        $chain = [];
-        while (false !== $template) {
-            $chain[] = [$template->getTemplateName(), realpath($template->getSourceContext()->getPath())];
-            $template = $template->getParent($context);
+        $root = new Profile();
+        $twig->addExtension(new ProfilerExtension($root));
+        $seen = [];
+        $actionForms = [];
+        self::prepareFormViews($fixture->context, $seen, $actionForms);
+        $error = null;
+        try {
+            $twig->render($fixture->template, $fixture->context);
+        } catch (\Throwable $e) {
+            $error = $e;
         }
 
-        return $chain;
+        $loader = $twig->getLoader();
+        $chain = [];
+        $name = $fixture->template;
+        $profile = $this->lastTemplateProfile($root, $name);
+        while (true) {
+            $source = $loader->getSourceContext($name);
+            $chain[] = [$name, realpath($source->getPath())];
+            if (!$twig->parse($twig->tokenize($source))->hasNode('parent')) {
+                return $chain;
+            }
+            $profile = $profile instanceof Profile ? $this->lastTemplateProfile($profile) : null;
+            if (!$profile instanceof Profile) {
+                throw $error ?? new \LogicException(\sprintf('The parent of "%s" could not be resolved.', $name));
+            }
+            $name = $profile->getTemplate();
+        }
+    }
+
+    /**
+     * The last direct template profile under `$profile` (named `$name` when given): for a template that extends
+     * another one, its parent.
+     */
+    private function lastTemplateProfile(Profile $profile, ?string $name = null): ?Profile
+    {
+        $found = null;
+        foreach ($profile as $child) {
+            if ($child->isTemplate() && (null === $name || $child->getTemplate() === $name)) {
+                $found = $child;
+            }
+        }
+
+        return $found;
     }
 
     /**
