@@ -322,8 +322,10 @@ from the objects too.
 `share`, `config`, `filter`, `prev`, `next`, `close`; variants `primary`, `secondary`, `danger`, `neutral`, `outline`,
 `link` — `resolvedVariant()`: explicit, else `danger` (delete), `primary` (create / save), `neutral` (any other kind;
 painted like secondary, toolbar `btn_secondary`).
-Non-GET actions render a POST form (CSRF-only `FormView` in `form`, REQ-TWIG-005, or `csrfToken`). A `FormView`
-action prints the hidden leaf fields of its form (the CSRF token) on **every** render, whatever their rendered flag
+Non-GET actions render a POST form through `form_start` / `form_end` (REQ-TWIG-005): the CSRF-only `FormView` in
+`form`, else (2.18) a nameless CSRF-only form that UiKit builds from `csrfToken` / `csrfField` (`Form\ActionCsrfType`,
+Twig `nowo_ui_action_form(action)`; same `_token` name and value). Without symfony/form the 2.17 raw form is a
+deprecated fallback (removed in 3.0). A `FormView` action prints the hidden leaf fields of its form (the CSRF token) on **every** render, whatever their rendered flag
 (other children render through `form_end`, first render only): the scaffolds pre-render the 1.x `toolbar` before a
 host `page_header` override renders `actions` again, and one CSRF `FormView` may back every row. An action with a
 `Confirm` renders a toggle button + UiKit confirm `<dialog>` (`nowo-ui-confirm.js`) — never an inline `confirm()`.
@@ -439,7 +441,7 @@ What a host override or a bundle data block can rely on. Changing any of it is a
 **Every include goes through `nowo_ui_partial()`.** Scaffolds and partials resolve each other through the theme
 (`page_header`, `breadcrumbs`, `action`, `confirm`, `row_actions`, `pagination`, `empty`, `list_filters`,
 `detail_list`, `section_form`, `wizard_form`, `tabs`, `card`), so one `theme.partials` entry replaces a partial on
-every page, including inside other partials. Only `_action_post`, `_action_form_view`, `_action_inner` and the
+every page, including inside other partials. Only `_action_post`, `_action_post_legacy`, `_action_form_view`, `_action_inner` and the
 scaffold macros (`page/_scaffold`) are internal.
 
 **1.x shapes next to the view models.** Host overrides of the partials hosts commonly fork keep working unchanged:
@@ -879,8 +881,9 @@ prototypes — `vars.prototype` of a `CollectionType` with `prototype: true`).
   `@NowoUiKitBundle/…` like the 1.x partials. Both resolve to the same files and host overrides.
 - Token keys are the UiKit token names without the prefix (`primary`, `surface`, `radius`…); the spec example
   `color-primary` would emit `--nowo-ui-color-primary`, which the kit does not read. `tokens_dark` was added.
-- `Action` POSTs prefer a CSRF-only `FormView` (`form`, REQ-TWIG-005); the `csrfToken` fallback renders a small
-  `<form>` inside UiKit's own partial (as `_row_actions` already did).
+- `Action` POSTs prefer a CSRF-only `FormView` (`form`, REQ-TWIG-005); since 2.18 a `csrfToken` is wrapped in a
+  CSRF-only Form Type (`ActionCsrfType`) and rendered through `form_start` / `form_end` too. Only without
+  symfony/form does the deprecated raw `<form>` fallback (`_action_post_legacy`) render.
 - BreadcrumbKit renders its own configured trail (it cannot take `PageHeader::breadcrumbs`); it is used when
   installed and `breadcrumbs.breadcrumb_kit` is true, otherwise the plain trail. `breadcrumbs.enabled: false` (2.3.1)
   drops the trail (both kinds) from every page header — no empty `breadcrumbs` partial override needed.

@@ -10,20 +10,16 @@
     - button_attrs: extra button attributes
     - form_id: id of the <form> (inputs outside it join through form="…", e.g. the type-to-confirm input)
 
-  With action.form (CSRF-only FormView, REQ-TWIG-005) the form renders through form_start / form_end;
-  otherwise action.csrfToken is a hidden field (csrfField). PUT / PATCH / DELETE are spoofed with _method.
+  REQ-TWIG-005: the form always renders through form_start / form_end (_action_form_view). The FormView is
+  action.form (CSRF-only FormView), else (2.18) a nameless CSRF-only form built from action.csrfToken in
+  action.csrfField (nowo_ui_action_form(), Form\ActionCsrfType). PUT / PATCH / DELETE are spoofed with _method by
+  form_start. Without symfony/form (or its Twig extension) the deprecated 2.17 raw form renders instead
+  (_action_post_legacy, removed in 3.0).
 #}
 {% set button_attrs = button_attrs|default({}) %}
-{% if action.form %}
+{% set action_form = nowo_ui_action_form(action) %}
+{% if action_form is not null %}
     {{ include('@NowoUiKitBundle/partials/_action_form_view.html.twig', _context, false) }}
 {% else %}
-    <form method="post" action="{{ action_href ?? '#' }}" class="nowo-ui-action__form"{% if form_id|default(null) %} id="{{ form_id }}"{% endif %}>
-        {% if action.method != 'POST' %}
-            <input type="hidden" name="_method" value="{{ action.method }}">
-        {% endif %}
-        {% if action.csrfToken %}
-            <input type="hidden" name="{{ action.csrfField }}" value="{{ action.csrfToken }}">
-        {% endif %}
-        <button type="submit" class="{{ button_class }}"{% for name, value in button_attrs %}{% if value is same as(true) %} {{ name }}{% elseif value is not null and value is not same as(false) %} {{ name }}="{{ value }}"{% endif %}{% endfor %}{% if action.disabled %} disabled{% endif %}>{{ button_html }}</button>
-    </form>
+    {{ include('@NowoUiKitBundle/partials/_action_post_legacy.html.twig', _context, false) }}
 {% endif %}

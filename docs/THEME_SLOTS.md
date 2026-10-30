@@ -475,8 +475,8 @@ as the UiKit partial (documented in the header comment of each template) and sho
 | `wizard_form` | `page/_wizard_form.html.twig` | `page` (`View\WizardPage`), `bundle` | wizard scaffold |
 
 Every partial also receives `nowo_ui_page_type` from the scaffolds. Internal templates that are not theme partials
-(implementation details, not public includes): `_action_post`, `_action_form_view`, `_action_inner`,
-`page/_scaffold` (scaffold macros).
+(implementation details, not public includes): `_action_post`, `_action_post_legacy` (deprecated),
+`_action_form_view`, `_action_inner`, `page/_scaffold` (scaffold macros).
 
 ## Tokens
 

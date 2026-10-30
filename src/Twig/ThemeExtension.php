@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Twig;
 
+use Nowo\UiKitBundle\Form\ActionCsrfType;
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Theme\ThemeSlots;
 use Nowo\UiKitBundle\View\Action;
 use Nowo\UiKitBundle\View\Label;
 use Nowo\UiKitBundle\View\PageHeader;
 use Nowo\UiKitBundle\View\ViewList;
+use Symfony\Component\Form\FormFactoryInterface;
+use Symfony\Component\Form\Forms;
+use Symfony\Component\Form\FormView;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Twig\Environment;
@@ -39,6 +43,9 @@ use Twig\TwigFunction;
  *   bundle and page type default to `nowo_ui_bundle` / `nowo_ui_page_type` of the context
  * - `nowo_ui_locale_name(locale, display_locale = null)` (2.5) — human name of a locale in the display locale (default
  *   the request locale; ext-intl, else the upper-cased code), `nowo_ui_locale_dir(locale)` — `rtl` / `ltr`
+ * - `nowo_ui_action_form(action)` (2.18) — the `FormView` a POST {@see Action} renders through `form_start` /
+ *   `form_end` (REQ-TWIG-005): its `form`, else a nameless CSRF-only form built from `csrfToken` / `csrfField`
+ *   ({@see ActionCsrfType}); null (deprecated raw fallback) without symfony/form and its Twig extension
  * - `|nowo_ui_trans(params = {})` — translates a {@see Label}; strings pass through (escaped by Twig)
  * - `|nowo_ui_translatable(params = {})` (2.3) — a {@see TranslatableText} for values a form theme translates again
  *   (`attr.placeholder`, choice `placeholder`): a Label is translated exactly once, a string printed as given
@@ -52,6 +59,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
     /**
      * @param array{admin: string, guest: string}                                  $layouts
      * @param array{breadcrumb_kit: bool, collection: string|null, enabled?: bool} $breadcrumbs `enabled` (2.3.1, default true): false = no breadcrumb trail in page headers
+     * @param FormFactoryInterface|null                                            $actionForms standalone factory of the CSRF-only action forms (2.18; core types only, so no host type extension changes them); null = a new one per call
      */
     public function __construct(
         private readonly Theme $theme,
@@ -60,6 +68,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
         private readonly ?TranslatorInterface $translator = null,
         private readonly ?RequestStack $requestStack = null,
         private readonly LocaleNames $localeNames = new LocaleNames(),
+        private readonly ?FormFactoryInterface $actionForms = null,
     ) {
     }
 
@@ -78,6 +87,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             new TwigFunction('nowo_ui_breadcrumb_kit_available', $this->breadcrumbKitAvailable(...), ['needs_environment' => true]),
             new TwigFunction('nowo_ui_locale_name', fn (string $locale, ?string $displayLocale = null): string => $this->localeNames->name($locale, $displayLocale ?? $this->requestStack?->getCurrentRequest()?->getLocale())),
             new TwigFunction('nowo_ui_locale_dir', $this->localeNames->dir(...)),
+            new TwigFunction('nowo_ui_action_form', $this->actionForm(...), ['needs_environment' => true]),
             new TwigFunction('nowo_ui_page_header', $this->pageHeader(...), ['needs_environment' => true, 'needs_context' => true, 'is_safe' => ['html']]),
         ];
     }
@@ -222,6 +232,31 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             'extra_actions' => ViewList::of($extraActions, Action::class, 'nowo_ui_page_header() extra actions'),
             'header_actions' => $headerActions,
         ]);
+    }
+
+    /**
+     * `nowo_ui_action_form()` (2.18): the form a POST action renders through `form_start` / `form_end` — its own
+     * `form`, else a nameless CSRF-only view of `csrfToken` in `csrfField` ({@see ActionCsrfType}). Null for a GET
+     * action; null too (with a deprecation: the partial then prints the 2.17 raw `<form>`, removed in 3.0) when
+     * symfony/form or the Twig `form_start` function is missing, or `csrfField` is not a valid form field name.
+     */
+    public function actionForm(Environment $env, Action $action): ?FormView
+    {
+        if ($action->form instanceof FormView) {
+            return $action->form;
+        }
+        if (!$action->isPost()) {
+            return null;
+        }
+        $view = null;
+        if (class_exists(Forms::class) && $env->getFunction('form_start') instanceof TwigFunction) {
+            $view = ActionCsrfType::createActionView($this->actionForms ?? Forms::createFormFactory(), $action);
+        }
+        if (!$view instanceof FormView) {
+            @trigger_error(\sprintf('Since nowo-tech/ui-kit-bundle 2.18: rendering a POST %s without a "form" needs symfony/form, its Twig extension (form_start) and a valid form field name as "csrfField" (got "%s"); the raw <form> fallback is deprecated and will be removed in 3.0. Install symfony/form or pass a CSRF-only FormView as "form".', Action::class, $action->csrfField), \E_USER_DEPRECATED);
+        }
+
+        return $view;
     }
 
     public function breadcrumbKitAvailable(Environment $env): bool

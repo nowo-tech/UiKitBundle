@@ -30,6 +30,7 @@ use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Symfony\Component\Form\FormView;
 use Twig\Environment;
 use Twig\TwigFunction;
 
@@ -64,6 +65,8 @@ final class DefaultThemePolishTest extends TestCase
         $bare = new Environment(new \Twig\Loader\FilesystemLoader(), ['autoescape' => 'html']);
         $bare->getLoader()->addPath(PageContractTwig::root().'/src/Resources/views', 'NowoUiKitBundle');
         $bare->addFunction(new TwigFunction('path', static fn (string $name): string => '/'.$name));
+        // 2.18: _action_post asks the ThemeExtension for the action's FormView (null = raw fallback).
+        $bare->addFunction(new TwigFunction('nowo_ui_action_form', static fn (): ?FormView => null));
         $bare->addFilter(new \Twig\TwigFilter('trans', static fn (string $key): string => $key));
         $bare->addFilter(new \Twig\TwigFilter('nowo_ui_trans', static fn (mixed $v): string => \is_object($v) ? $v->key : (string) $v));
         $bareHtml = $bare->render('@NowoUiKitBundle/partials/_confirm.html.twig', ['confirm' => new Confirm('Sure?'), 'id' => 'c5', 'action' => Action::delete('/x'), 'framework' => 'custom']);

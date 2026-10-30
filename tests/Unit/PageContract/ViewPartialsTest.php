@@ -150,7 +150,7 @@ final class ViewPartialsTest extends TestCase
         self::assertStringContainsString('href="/items_show?id=3"', $html);
         self::assertStringContainsString('data-x="1" data-flag title="Settings" aria-label="Settings" data-bs-toggle="modal" data-bs-target="#m1"', $html);
         self::assertStringNotContainsString('data-off', $html);
-        self::assertStringContainsString('<input type="hidden" name="_method" value="PATCH">', $html);
+        self::assertStringContainsString('<input type="hidden" name="_method" value="PATCH" />', $html);
         self::assertStringContainsString('<input type="hidden" name="_token" value="t">', $html);
         self::assertMatchesRegularExpression('#<form name="del" method="post" action="/d" class="nowo-ui-action__form">\s*<button type="submit" class="nowo-ui-action nowo-ui-action--delete#', $html);
         self::assertStringContainsString('is-disabled" href="/c" title="Copy" aria-label="Copy" aria-disabled="true" tabindex="-1">', $html);

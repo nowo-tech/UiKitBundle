@@ -243,7 +243,7 @@ final class ScaffoldRenderTest extends TestCase
 
         self::assertStringContainsString('<h2 class="nowo-ui-confirm__title">Delete &quot;Alpha&quot;?</h2>', $html);
         self::assertStringContainsString('<a class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary" href="/items">Keep it</a>', $html);
-        self::assertStringContainsString('<input type="hidden" name="_method" value="DELETE">', $html);
+        self::assertStringContainsString('<input type="hidden" name="_method" value="DELETE" />', $html);
         self::assertStringContainsString('class="nowo-ui-btn nowo-ui-btn--danger nowo-ui-btn--solid btn btn-danger nowo-ui-confirm__submit">Yes, delete</button>', $html);
         $this->assertContract($html);
 
@@ -334,7 +334,7 @@ final class ScaffoldRenderTest extends TestCase
     {
         $views = PageContractTwig::root().'/src/Resources/views';
         $files = array_merge(glob($views.'/layout/*.twig') ?: [], glob($views.'/page/*.twig') ?: [], glob($views.'/partials/_action*.twig') ?: [], [$views.'/partials/_breadcrumbs.html.twig']);
-        self::assertCount(25, $files);
+        self::assertCount(26, $files);
         foreach ($files as $file) {
             $code = (string) preg_replace('/\{#.*?#\}/s', '', (string) file_get_contents($file));
             self::assertSame(0, preg_match('/(?:bg|text|border)-(?:slate|gray|zinc|red|blue|green|white|black)|rounded|\bon[a-z]+=|confirm\(|https?:\/\//', $code, $m), basename($file).': '.($m[0] ?? ''));
