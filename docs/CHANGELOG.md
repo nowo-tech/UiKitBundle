@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.17.5] - 2026-10-30](#2175---2026-10-30)
 - [[2.17.4] - 2026-10-30](#2174---2026-10-30)
 - [[2.17.3] - 2026-10-29](#2173---2026-10-29)
 - [[2.17.2] - 2026-10-28](#2172---2026-10-28)
@@ -82,6 +83,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [2.17.5] - 2026-10-30
+
+Tour tab without layout shift
+
+### Fixed
+
+- **Tour** (`partials/_tour.html.twig`, Stimulus peer `product-tour`): the root is rendered with the `hidden`
+  attribute and the peer removes it on `connect()`. Until then the "Tour this page" edge tab no longer sits in the page
+  flow, where it pushed the page title down until the stylesheet made it `position: fixed` and everything jumped back
+  up (cumulative layout shift). CSP-proof (an HTML attribute, no `style=`) and not overridable by a framework's
+  `[hidden] { display: none !important }` (the tab only appears once the peer runs). Without JavaScript the tour (and
+  its tab) stays hidden — it cannot run there anyway. Regression tests: the partial renders the root `hidden`, the peer
+  shows it on connect.
+- The link mode of `partials/_edge_tab.html.twig` (e.g. "Read this chapter in the manual") is unchanged: it has no
+  script and must keep working without JavaScript, and hiding it with an attribute that a stylesheet reveals would keep
+  it hidden for good under Tailwind v4's preflight (`[hidden] { display: none !important }` in the `base` layer).
 
 ## [2.17.4] - 2026-10-30
 

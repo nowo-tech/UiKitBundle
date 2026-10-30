@@ -124,7 +124,7 @@ function mount(attrs: Record<string, string> = {}, steps: unknown = STEPS): HTML
   document.body.innerHTML = `
     <nav data-tour="nav">Nav</nav>
     <details id="outer"><summary>User</summary><details id="inner"><summary>More</summary><a data-tour="menu-item" href="#">Item</a></details></details>
-    <div id="tour" data-controller="product-tour" data-action="nowo-ui-tour:start@window->product-tour#start" ${attributes}>
+    <div id="tour" hidden data-controller="product-tour" data-action="nowo-ui-tour:start@window->product-tour#start" ${attributes}>
       <button type="button" data-product-tour-target="tab" data-action="product-tour#start">Tour</button>
     </div>`;
 
@@ -178,6 +178,15 @@ describe('seen map helpers', () => {
 });
 
 describe('product-tour peer', () => {
+  it('shows the root the partial renders hidden (no layout shift before the stylesheet)', async () => {
+    markTourSeen('dashboard');
+    const root = mount();
+    expect(root.hidden).toBe(true);
+    await tick();
+    expect(root.hasAttribute('hidden')).toBe(false);
+    expect(drivers).toHaveLength(0);
+  });
+
   it('auto-starts once with the steps on the page, escaped, and marks the key seen on close', async () => {
     const root = mount();
     const events: string[] = [];

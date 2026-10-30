@@ -25,7 +25,8 @@
  *         `labels` (`{next, previous, done, close, progress}`), `html` (titles / descriptions are trusted HTML;
  *         default: escaped text), `popoverClass` (default `nowo-ui-tour-popover`).
  * Actions: `product-tour#start` (the tab; replays a seen tour; no-op while one runs), `product-tour#stop`.
- * Root attributes: `data-tour-active` while a tour runs.
+ * Root attributes: `data-tour-active` while a tour runs; `hidden` (rendered by the partial, 2.17.5) is removed on
+ *         connect, so the tab is never in the page flow before the stylesheet applies.
  * Events: `product-tour:started` (`detail.key`, `detail.steps` = shown steps), `product-tour:ended` (`detail.key`,
  *         `detail.completed`: the last step was reached), `product-tour:save-failed` (`detail.key`),
  *         `product-tour:unavailable` (`detail.key`, `detail.error`: driver.js could not be loaded).
@@ -148,6 +149,9 @@ export default class ProductTourController extends Controller<HTMLElement> {
   private tearingDown = false;
 
   override connect(): void {
+    // The partial renders the root `hidden` (2.17.5) so the tab never takes room in the flow before the stylesheet
+    // makes it fixed (layout shift); the peer is what makes the tour usable, so it shows the root.
+    this.element.removeAttribute('hidden');
     if (this.forceValue || (this.autoStartValue && !this.isSeen())) {
       this.frame = requestAnimationFrame(() => {
         void this.start();
