@@ -20,6 +20,7 @@ Optional **Stimulus peer** TypeScript sources live under `src/Resources/assets/s
 - [Data table (Stimulus peer only)](#data-table-stimulus-peer-only)
 - [Responsive table (Stimulus peer only)](#responsive-table-stimulus-peer-only)
 - [Listing customizer (Stimulus peer only)](#listing-customizer-stimulus-peer-only)
+- [Table sort (2.20)](#table-sort-220)
 - [Filters collapse (Stimulus peer only)](#filters-collapse-stimulus-peer-only)
 - [Disclosure icon (Stimulus peer only)](#disclosure-icon-stimulus-peer-only)
 - [Product tour (Stimulus peer only)](#product-tour-stimulus-peer-only)
@@ -328,6 +329,27 @@ Hosts show their toast from a listener, or subclass the peer and override the pr
 `RESPONSIVE_TABLE_PHONE_QUERY`, type `TableMode`). No inline styles (CSP); ResizeObserver + rAF; everything undone on
 disconnect (an open dialog is closed and its cells put back).
 
+## Table sort (2.20)
+
+No kit IIFE (Stimulus peer only). Client-side sorting of a table rendered whole (never a paginated one: those sort on
+the server, `Listing\SortRequest`) — markup from the `table` partial / list scaffold with `clientSort: true`, from
+`listing_head` with `client_sort: true`, or a host `<th data-sortable>` with the `sort_header` partial
+([USAGE.md](USAGE.md#client-side-tables)).
+
+| Stimulus | Role |
+|----------|------|
+| `data-controller="table-sort"` | On the `<table>` |
+| `th[data-sortable]` + `button[data-action="table-sort#sort"]` | Sortable header and its button (native: Enter / Space) |
+| `aria-sort` on the `<th>` | State (`ascending` / `descending`); CSS shows the matching arrow and hidden hint |
+| `data-sort-type` on the `<th>` | `number`, `date` or `text` (default automatic: numbers when both values are numeric, else natural text in the document language) |
+| `data-sort-first="desc"` on the `<th>` | First click sorts descending |
+| `data-sort-value` on a `<td>` | Value to sort by instead of the cell text |
+| `tr[data-sort-pin]` | Row kept at the end of its `<tbody>` (totals) |
+
+Empty values stay last in both directions; equal values keep their first-rendered order; column spans are counted.
+Event: `table-sort:sorted` (`detail.column`, `detail.direction`). Peer: `table_sort_controller.ts` (also exports
+`compareSortValues()`, `parseSortValue()`). No script-built markup (CSP).
+
 ## Listing customizer (Stimulus peer only)
 
 No kit IIFE. Column / filter editor of a customizable listing — markup from `partials/_listing_customizer.html.twig`
@@ -627,6 +649,9 @@ return [
     'disclosure-icon' => [
         'path' => './vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/disclosure_icon_controller.ts',
     ],
+    'table-sort' => [
+        'path' => './vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/table_sort_controller.ts',
+    ],
     // 'datatable' needs datatables.net-dt + datatables.net-responsive-dt in the host importmap.
 ];
 ```
@@ -640,7 +665,7 @@ Or lazy-load from `assets/controllers.json` pointing at the same paths.
 export { default } from '../../vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/clipboard_copy_controller';
 ```
 
-Repeat for `confirm_dialog`, `confirm_submit`, `page_loader`, `toast_stack`, `tabs`, `release_status`, `auto_refresh`, `temporary_reveal`, `collapse_panel`, `responsive_table`, `filters_collapse`, `disclosure_icon`, `datatable` (needs the optional DataTables packages), `multi_select` (2.14, needs the optional `tom-select`).
+Repeat for `confirm_dialog`, `confirm_submit`, `page_loader`, `toast_stack`, `tabs`, `release_status`, `auto_refresh`, `temporary_reveal`, `collapse_panel`, `responsive_table`, `filters_collapse`, `disclosure_icon`, `table_sort` (2.20), `datatable` (needs the optional DataTables packages), `multi_select` (2.14, needs the optional `tom-select`).
 
 Or register directly in the host Stimulus bootstrap (Vite + pnpm):
 

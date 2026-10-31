@@ -1,0 +1,48 @@
+{#
+  Sortable column header control (2.20, theme partial `sort_header`): the content of a sortable <th> — the column
+  label, the direction arrow (the neutral "sortable" arrows while the column is not the sorted one) and a visually
+  hidden hint naming what a click does. The <th> itself carries `aria-sort` on the sorted column (and, client side,
+  `data-sortable` / `data-sort-type` / `data-sort-first`): the `table` partial, the list scaffold and `listing_head`
+  render it; host tables include it inside their own <th>:
+
+      <th scope="col"{% if sort.isActive('name') %} aria-sort="{{ sort.direction == 'asc' ? 'ascending' : 'descending' }}"{% endif %}>
+          {{ include(nowo_ui_partial('sort_header'), {label: 'Name', href: path('app_items', sort.linkQuery('name', app.request.query.all)), active: sort.isActive('name'), direction: sort.direction, next_direction: sort.nextDirection('name')}, false) }}
+      </th>
+
+  Server side (`href` given): a link to the same list sorted by the column (`Listing\SortRequest::linkQuery()`).
+  Client side (no `href`): a <button data-action="table-sort#sort"> for the Stimulus peer `table-sort` (on the
+  <table>); every arrow and both hints are printed and CSS shows the ones matching the header's `aria-sort` (no
+  script-built markup, CSP friendly).
+
+  Required: label (translated text)
+  Optional:
+    - href: server-side link (null / absent = client-side button)
+    - active (default false), direction ('asc' | 'desc', the current one), next_direction (default: the opposite of
+      direction when active, else 'asc')
+    - icons: {none, asc, desc} — names for components/_icon.html.twig (default sort / sort_asc / sort_desc)
+    - labels: {asc, desc} — override the hints (default table.sort.hint_asc / hint_desc)
+    - attr: extra attributes of the link / button (hash; no on* handlers)
+    - bundle
+  Slots: sort_link (server link, + nowo-ui-sort--asc|desc on the sorted column), sort_button (client button).
+#}
+{%- set _b = bundle|default(null) -%}
+{%- set _active = active|default(false) -%}
+{%- set _direction = direction|default('asc') -%}
+{%- set _next = next_direction|default(_active and _direction == 'asc' ? 'desc' : 'asc') -%}
+{%- set _icons = {none: 'sort', asc: 'sort_asc', desc: 'sort_desc'}|merge(icons|default({})) -%}
+{%- set _labels = {
+    asc: 'table.sort.hint_asc'|trans({}, 'NowoUiKitBundle'),
+    desc: 'table.sort.hint_desc'|trans({}, 'NowoUiKitBundle'),
+}|merge(labels|default({})) -%}
+{%- set _href = href|default(null) -%}
+{%- set _glyphs = {none: '↕', asc: '↑', desc: '↓'} -%}
+{%- if _href is not null -%}
+    {%- set _state = _active ? _direction : 'none' -%}
+    <a class="{{ nowo_ui_class('sort_link', _b) }}{{ _active ? ' nowo-ui-sort--' ~ _direction }}" href="{{ _href }}"{{ nowo_ui_attrs('sort_link', _b) }}{{ nowo_ui_html_attrs(attr|default({})) }}><span class="nowo-ui-sort__label">{{ label }}</span><span class="nowo-ui-sort__icon" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _icons[_state], label: _glyphs[_state]}, false)|trim|raw }}</span><span class="visually-hidden">{{ _labels[_next] }}</span></a>
+{%- else -%}
+    <button type="button" class="{{ nowo_ui_class('sort_button', _b) }}" data-action="table-sort#sort"{{ nowo_ui_attrs('sort_button', _b) }}{{ nowo_ui_html_attrs(attr|default({})) }}><span class="nowo-ui-sort__label">{{ label }}</span>
+        {%- for _state in ['none', 'asc', 'desc'] -%}
+            <span class="nowo-ui-sort__icon nowo-ui-sort__icon--{{ _state }}" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _icons[_state], label: _glyphs[_state]}, false)|trim|raw }}</span>
+        {%- endfor -%}
+        <span class="visually-hidden nowo-ui-sort__hint nowo-ui-sort__hint--asc">{{ _labels.asc }}</span><span class="visually-hidden nowo-ui-sort__hint nowo-ui-sort__hint--desc">{{ _labels.desc }}</span></button>
+{%- endif -%}

@@ -18,6 +18,9 @@ use Nowo\UiKitBundle\View\Label;
  * - `queryKeys` (filters only, 2.15): the query parameters the filter submits when they are not just its key, e.g. a
  *   date range `collection_date` sending `collection_date_from` / `collection_date_to`; a hidden filter drops them
  *   all from the request ({@see ListingLayout::filterRequest()})
+ * - `sortKey` / `sortFirst` (columns only, 2.20): the whitelisted sort key of the column header (null = not sortable)
+ *   and the direction of its first click; `partials/_listing_head.html.twig` renders the sort link / button
+ *   ({@see SortRequest::fieldsOf()} builds the whitelist)
  */
 final readonly class ListingField
 {
@@ -31,7 +34,15 @@ final readonly class ListingField
         public string $cellClass = '',
         /** @var list<string> */
         public array $queryKeys = [],
+        public ?string $sortKey = null,
+        public string $sortFirst = 'asc',
     ) {
+        if (null !== $sortKey && '' === trim($sortKey)) {
+            throw new \InvalidArgumentException(\sprintf('The sortKey of the ListingField "%s" must be non-empty (null: not sortable).', $key));
+        }
+        if (!\in_array($sortFirst, SortRequest::DIRECTIONS, true)) {
+            throw new \InvalidArgumentException(\sprintf('Invalid ListingField sortFirst "%s" (asc|desc).', $sortFirst));
+        }
         if ('' === trim($key)) {
             throw new \InvalidArgumentException('A ListingField needs a non-empty key.');
         }

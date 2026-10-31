@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use Nowo\UiKitBundle\Listing\SortRequest;
 use Nowo\UiKitBundle\View\Action;
 use Nowo\UiKitBundle\View\AreaNav;
 use Nowo\UiKitBundle\View\AreaNavItem;
@@ -110,12 +111,14 @@ final class PageContractController extends AbstractController
             ),
             // Recent orders through the reusable `table` partial (View\Table, 2.2): header row, end-aligned amounts
             'recent' => new Table(
-                [new Column('id', '#'), new Column('customer', 'Customer'), new Column('total', 'Total', align: 'end')],
-                array_map(static fn (array $o): array => ['id' => '#'.$o['id'], 'customer' => $o['customer'], 'total' => $o['total'].' €'], \array_slice(self::ORDERS, 0, 4)),
+                // 2.20: rendered whole, so it sorts in the browser (Stimulus peer `table-sort`); amounts by their value
+                [new Column('id', '#', true, sortType: 'number'), new Column('customer', 'Customer', true), new Column('total', 'Total', true, align: 'end', sortFirst: 'desc', sortType: 'number', sortValueKey: 'amount')],
+                array_map(static fn (array $o): array => ['id' => '#'.$o['id'], 'customer' => $o['customer'], 'total' => $o['total'].' €', 'amount' => str_replace(',', '', $o['total'])], \array_slice(self::ORDERS, 0, 4)),
                 caption: 'Last four orders',
                 captionVisible: false,
                 responsive: 'scroll',
                 bundle: $this->bundle($theme),
+                clientSort: true,
             ),
             'stock' => [['product' => 'Linen tote bag', 'left' => 3], ['product' => 'Ceramic mug (sand)', 'left' => 5], ['product' => 'Notebook A5 dotted', 'left' => 8]],
         ]);
@@ -127,6 +130,10 @@ final class PageContractController extends AbstractController
     {
         $query = (string) $request->query->get('q', '');
         $rows = array_values(array_filter(self::ORDERS, static fn (array $o): bool => '' === $query || false !== stripos($o['customer'], $query)));
+        // 2.20: sortable headers — the whitelist (key => first-click direction) read from ?sort= / ?dir=, newest first
+        // by default; a real list orders its query by $sort->field / $sort->direction, the demo sorts its fixtures.
+        $sort = SortRequest::fromRequest($request, ['id' => 'desc', 'customer' => 'asc', 'placed' => 'desc', 'total' => 'desc'], 'id');
+        $rows = $sort->sortRows($rows, ['total' => static fn (array $o): float => (float) str_replace(',', '', $o['total'])]);
         $filters = $this->container->get('form.factory')->createNamedBuilder('filters', options: ['method' => 'GET'])
             ->add('q', SearchType::class, ['required' => false, 'label' => 'Customer', 'attr' => ['placeholder' => 'Search customers…']])
             ->add('status', ChoiceType::class, ['required' => false, 'label' => 'Status', 'placeholder' => 'Any status', 'choices' => ['Paid' => 'paid', 'Pending' => 'pending', 'Shipped' => 'shipped', 'Refunded' => 'refunded']])
@@ -138,7 +145,7 @@ final class PageContractController extends AbstractController
                 Action::create('#', 'New order'),
                 new Action('export', 'Export CSV', '#', icon: 'export', display: 'icon'),
             ]),
-            [new Column('id', '#', true, required: true), new Column('customer', 'Customer', true, required: true), new Column('placed', 'Placed', priority: 3), new Column('status', 'Status'), new Column('total', 'Total', true, 'end')],
+            [new Column('id', '#', true, required: true, sortFirst: 'desc'), new Column('customer', 'Customer', true, required: true), new Column('placed', 'Placed', true, priority: 3, sortFirst: 'desc'), new Column('status', 'Status'), new Column('total', 'Total', true, 'end', sortFirst: 'desc')],
             $rows,
             $filters->createView(),
             fn (array $row): array => [
@@ -150,8 +157,6 @@ final class PageContractController extends AbstractController
             new Pagination(1, 5, 42, route: $this->route('page_contract_orders', $theme), routeParams: $this->params($theme)),
             new EmptyState('No orders match', 'Try another customer name.'),
             $this->generateUrl($this->route('page_contract_orders', $theme), $this->params($theme)),
-            'id',
-            'desc',
             bundle: $this->bundle($theme),
             layout: $this->layout($theme),
             attributes: ['data-testid' => 'orders-list'],
@@ -160,6 +165,7 @@ final class PageContractController extends AbstractController
             filtersClear: new Action('close', 'Clear filters', $this->generateUrl($this->route('page_contract_orders', $theme), $this->params($theme)), icon: 'close', display: 'icon'),
             // host theme: the primary actions sit at the end of the filter row (default view: page header)
             headerActionsInFilters: null === $theme,
+            sorting: $sort,
         )]);
     }
 

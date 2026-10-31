@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.20.0](#to-2200)
 - [To 2.19.0](#to-2190)
 - [To 2.18.0](#to-2180)
 - [To 2.17.5](#to-2175)
@@ -96,6 +97,32 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.20.0
+
+From **2.19.0**: `composer update nowo-tech/ui-kit-bundle`. Nothing to change: tables without sort information render
+the same markup. Opt in to sortable headers ([USAGE](USAGE.md#sortable-column-headers-220)):
+
+- **Server-side lists** (paginated): mark the columns (`new Column('name', 'Name', sortable: true)`, `sortKey:` for
+  another key, `sortFirst: 'desc'` for dates / counts), read the sort in the controller and pass it to the view:
+
+  ```php
+  $sort = SortRequest::fromRequest($request, SortRequest::fieldsOf($columns), 'created');
+  $rows = $repository->search($filters, $sort->field, $sort->direction, $page); // stable tie-breaker in the query
+  new ListPage($header, $columns, $rows, pagination: $pagination, sorting: $sort);
+  ```
+
+  Keep the order in GET filter forms with hidden `sort` / `dir` fields (`$sort->query()`); the scaffold's pagination
+  already keeps the request query. A `Table` rendered by the `table` partial takes the same `sorting:`.
+- **Client-side tables** (rendered whole, no pagination): `clientSort: true` on the `Table` / `ListPage`
+  (`Column::$sortType`, `$sortValueKey` for formatted values) and register the Stimulus peer `table-sort`
+  ([STIMULUS](STIMULUS.md#table-sort-220)).
+- **Host tables / customizable listings**: include the `sort_header` partial in your `<th>`; `ListingField` takes
+  `sortKey` / `sortFirst` and `listing_head` `sorting` / `client_sort`.
+- **`icon_set: ux_icon`**: commit `bi:arrow-down-up`, `bi:arrow-up`, `bi:arrow-down` (or pass `icons` to the partial).
+- **1.x sortable columns** (`sortable: true` + `sort:` / `direction:`): the link markup changed (label span, arrow icon
+  span, visually hidden hint; the `::after` arrow is gone) and the link drops the `page` parameter. Update exact-markup
+  assertions; the `sort` / `direction` parameters are unchanged. Host CSS on `.nowo-ui-sort--asc::after` can go.
 
 ## To 2.19.0
 

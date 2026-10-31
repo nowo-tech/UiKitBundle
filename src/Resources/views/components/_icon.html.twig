@@ -10,6 +10,7 @@
   1.17 (chrome toggles): filter_off, scroll_horizontal, rows, chevron_up, chevron_down,
     chevron_right, book
   2.13: tour (guided tour tab)
+  2.20: sort, sort_asc, sort_desc (sortable table headers: neutral / ascending / descending arrows)
 
   Optional:
     - label: accessible text (aria-hidden decorative when parent has aria-label)
@@ -47,6 +48,9 @@
         grip: 'bi:grip-vertical',
         stack: 'bi:arrow-90deg-up',
         tour: 'bi:signpost-split',
+        sort: 'bi:arrow-down-up',
+        sort_asc: 'bi:arrow-up',
+        sort_desc: 'bi:arrow-down',
     } %}
     {{ include('@NowoUiKitBundle/components/_icon_ux.html.twig', {name: ux_map[name]|default(name)}, false) }}
 {% elseif icon_set == 'tabler-icons' %}
@@ -77,6 +81,9 @@
         grip: 'ti ti-grip-vertical',
         stack: 'ti ti-corner-left-up',
         tour: 'ti ti-route',
+        sort: 'ti ti-arrows-sort',
+        sort_asc: 'ti ti-arrow-up',
+        sort_desc: 'ti ti-arrow-down',
     } %}
     <i class="{{ map[name]|default('ti ti-' ~ name) }}" aria-hidden="true"></i>
 {% elseif icon_set == 'svg_inline' %}
@@ -107,6 +114,9 @@
         grip: 'M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z',
         stack: 'M11 9l1.42 1.42L8.83 14H18V4h2v12H8.83l3.59 3.58L11 21l-6-6 6-6z',
         tour: 'M21.71 11.29l-9-9a1 1 0 0 0-1.42 0l-9 9a1 1 0 0 0 0 1.42l9 9a1 1 0 0 0 1.42 0l9-9a1 1 0 0 0 0-1.42zM14 14.5V12h-4v3H8v-4a1 1 0 0 1 1-1h5V7.5l3.5 3.5-3.5 3.5z',
+        sort: 'M16 17.01V10h-2v7.01h-3L15 21l4-3.99h-3zM9 3 5 6.99h3V14h2V6.99h3L9 3z',
+        sort_asc: 'M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z',
+        sort_desc: 'M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z',
     } %}
     <svg class="nowo-ui-icon" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
         <path fill="currentColor" d="{{ paths[name]|default(paths.view) }}"/>
@@ -140,6 +150,9 @@
         grip: 'bi bi-grip-vertical',
         stack: 'bi bi-arrow-90deg-up',
         tour: 'bi bi-signpost-split',
+        sort: 'bi bi-arrow-down-up',
+        sort_asc: 'bi bi-arrow-up',
+        sort_desc: 'bi bi-arrow-down',
     } %}
     <i class="{{ map[name]|default('bi bi-' ~ name) }}" aria-hidden="true"></i>
 {% endif %}

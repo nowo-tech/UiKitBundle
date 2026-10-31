@@ -126,6 +126,7 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `table_head_cell` | `nowo-ui-table__head-cell` | — | — | — | — |
 | `sortable_header` | `nowo-ui-table__head-cell--sortable` | — | — | — | — |
 | `sort_link` | `nowo-ui-sort` | — | — | — | — |
+| `sort_button` | `nowo-ui-sort nowo-ui-sort--button` | — | — | — | — |
 | `table_actions_head` | `nowo-ui-table__actions` | — | — | — | — |
 | `table_actions_cell` | `nowo-ui-table__actions` | — | — | — | — |
 | `table_row` | `nowo-ui-table__row` | — | — | — | — |
@@ -344,8 +345,9 @@ Minor hooks for kit class maps: `btn_link` (toolbar `Action` with `variant: 'lin
 `ui.btn('link')`); `muted` (same classes as `ui.muted()`; UiKit prints it on the `—` placeholder of empty detail-list
 values); `breadcrumb_link` / `breadcrumb_separator` (plain trail: crumb links and an `aria-hidden` `/` before every item
 but the first — a host `breadcrumbs` partial without separator elements keeps the CSS `::before` separator);
-`sortable_header` (added to `table_head_cell` on sortable columns) and `sort_link` (the header link, plus
-`nowo-ui-sort--asc|desc` on the active column); `table_cell_muted` (added to `table_cell` when a default list cell has
+`sortable_header` (added to `table_head_cell` on sortable columns), `sort_link` (the server-side header link, plus
+`nowo-ui-sort--asc|desc` on the active column) and `sort_button` (2.20: the client-side header button of
+`Table::$clientSort`, Stimulus peer `table-sort`), both rendered by the `sort_header` partial; `table_cell_muted` (added to `table_cell` when a default list cell has
 no value — `null`, `''`, `false` — and prints a muted `—`); `row_action_disabled` (disabled row actions: semantic +
 host classes on `Action` objects, host classes on 1.x hashes); `modal`, `modal_panel`, `modal_header`, `modal_body`,
 `modal_footer` (the `modal_shell` partial keeps its 1.x structure classes `nowo-ui-modal modal fade` / `modal-content` /
@@ -467,6 +469,7 @@ as the UiKit partial (documented in the header comment of each template) and sho
 | `scripts` *(2.2)* | `partials/_scripts.html.twig` | `script_names` (default `nowo_ui_script_names()`: `modal`, `confirm`, `dialog`, `toast`, `tabs`, `theme`, 2.4: `popover`, `segmented`, 2.6: `autosubmit`), `nonce` | document layout; host layouts with their own script list (`{{ include(nowo_ui_partial('scripts')) }}`) |
 | `segmented` *(2.4)* | `partials/_segmented.html.twig` | `options` (two `{label, checked, title?, attr?}`), `field` (checkbox `FormView`) or `name` / `checked` / `value` / `id`, `label` or `labelled_by`, `input_attr` (e.g. Live Component `data-model`), `attr`, `bundle`; slots `segmented`, `segmented_option` | two-option choice backed by one checkbox (radiogroup; `nowo-ui-segmented.js` syncs the checkbox and dispatches `change`) |
 | `section_form` | `page/_section_form.html.twig` | `form` (FormView), `submit_label`, `actions` (2.2: `View\Action`s after the submit button), `extra_actions`, `bundle` | settings scaffold |
+| `sort_header` *(2.20)* | `partials/_sort_header.html.twig` | `label` (translated), `href` (server-side link; absent = client-side `<button data-action="table-sort#sort">`), `active`, `direction`, `next_direction`, `icons` (`none` / `asc` / `desc`, default `sort` / `sort_asc` / `sort_desc`), `labels` (`asc` / `desc` hints), `attr`, `bundle`; slots `sort_link`, `sort_button` | sortable headers of the `table` partial, the list scaffold and `listing_head`; host `<th>` cells |
 | `shell` | `partials/_shell.html.twig` | `brand_html`, `aside_items`, `main`, `root_class`, `header_class`, `attr`, `burger_root_class`, `bundle` | host shells |
 | `table` *(2.2)* | `partials/_table.html.twig` | `table` (`View\Table`: columns, rows, rowActions, caption, sort, actions column, responsive), `route`, `head_html` / `rows_html` (pre-rendered cells), `bundle`; blocks `nowo_ui_table_head` / `nowo_ui_table_row` through `{% embed %}`; slots `table_wrap`, `table`, `table_caption`, `table_head*`, `table_row`, `table_cell*`, `table_actions_*` | list scaffold (`ListPage::$table`); show pages and bundle pages (`nowo_ui_show_after`) |
 | `tabs` | `partials/_tabs.html.twig` | `items` (`{label, href, current, attr}`, label also a `Label`), `aria_label`, `region`, `bundle`, `attr` (2.1: `<nav>` attributes such as `data-turbo: 'false'`, merged over the `tabs` slot attributes), `level` (2.2: `primary` \| `secondary` → slot `tabs_secondary`); slots `tabs` / `tabs_secondary`, `tab`, `tab_active` | settings scaffold, bundle tab bars |

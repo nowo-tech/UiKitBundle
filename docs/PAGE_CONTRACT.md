@@ -150,7 +150,7 @@ fills `nowo_ui_document_title` with the page title and renders the page header t
 | --- | --- |
 | header + actions + breadcrumbs | `page.header` (`PageHeader`); with `page.headerActionsInFilters` (or `theme.pages.list.header_actions_in_filters`) and filters, the header actions render at the end of the filter row instead (`nowo-ui-filters__header-actions`, region `header-actions`) |
 | filters (GET form, apply / clear, extra actions) | `page.filters` (`FormView`, REQ-TWIG-003 child loop) through the `list_filters` partial; `page.filterFields` (`FilterField`: placeholder, `width` `xs`…`full`, widget / row classes and attributes; every row gets the `filters_field` slot), `page.filtersSubmit` (`Action`: label, icon, variant of the apply button), `page.filtersClear` (`Action`, rendered through the `action` partial; default a plain link to `page.filtersClearHref`), `page.filterActions` — all in the `filters_actions` slot; `page.filtersDisplay` (`icon` / `text` / `icon_text`) for these buttons |
-| table frame, sortable headers (`aria-sort`) | `page.columns` (`Column`), `page.sort`, `page.direction`, `page.caption`; slots `table_wrap`, `table`, `table_head`, `table_head_row`, `table_head_cell`, `table_row`, `table_cell` |
+| table frame, sortable headers (`aria-sort`) | `page.columns` (`Column`), `page.sort`, `page.direction`, 2.20 `page.table.sorting` (`Listing\SortRequest`) / `page.clientSort`, `page.caption`; slots `table_wrap`, `table`, `table_head`, `table_head_row`, `table_head_cell`, `table_row`, `table_cell` |
 | row actions + confirm `<dialog>`s | `page.rowActions` (list of `Action`, or `callable(row, key): list<Action>`); actions column header `table_actions_head` with `page.actionsLabel` (default `table.actions`), visually hidden unless `page.actionsLabelVisible`; body cells `table_actions_cell`; `page.actionsAlign` (`start` / `center` / `end`, default `end`) aligns header, cells and the action cluster (`nowo-ui-cell--<align>`) |
 | pagination | `page.pagination` (`Pagination`) |
 | empty state | `page.empty` (`EmptyState`) when `page.rows` is empty |
@@ -158,7 +158,7 @@ fills `nowo_ui_document_title` with the page title and renders the page header t
 | Data block | Default | Context |
 | --- | --- | --- |
 | `nowo_ui_list_filters` | the `list_filters` partial when `page.filters` is set | `page` |
-| `nowo_ui_list_head` | one `<th>` per column; sortable columns add the `sortable_header` slot and a `sort_link` (`nowo-ui-sort`, `--asc` / `--desc` when active) | `page` |
+| `nowo_ui_list_head` | one `<th>` per column; sortable columns add the `sortable_header` slot and the `sort_header` partial (2.20): a `sort_link` (`nowo-ui-sort`, `--asc` / `--desc` when active; label, arrow icon, visually hidden hint) or, with `clientSort`, a `sort_button` for the Stimulus peer `table-sort` | `page` |
 | `nowo_ui_list_row` | one `<td>` per column: `row[column.key]`; a cell without a value (`null`, `''`, `false`) prints a muted `—` with the `table_cell_muted` slot | `row`, `row_key`, `loop` |
 | `nowo_ui_list_after` | empty (after the table / empty state) | `page` |
 
@@ -295,14 +295,15 @@ or a plain string printed escaped. Never pre-render HTML into a view model.
 | `Crumb` | `(label, href = null)` |
 | `Link` | `(label, href, attributes = [])` |
 | `Pagination` | `(page, perPage, total, totalPages = null, route = null, query = [], routeParams = null, pageParam = 'page', perPageParam = 'per_page')`; `fromArray()`, `fromPagerfanta()`, `fromKnp()` (duck typed); 2.4: `fromTotal(total, page, perPage, allowedPerPage = [10, 25, 50, 100], defaultPerPage = null, route, query, …)` (clamps page to 1..totalPages, an unknown per-page falls back to 25 or the first allowed value — same results as the apps' `PagePagination::fromTotal()`), `fromRequest(request, total, defaultPerPage = 25, allowedPerPage, route, pageParam, perPageParam)`, `offset()` / `limit()` (also `$pagination['offset']` / `['limit']`), `allowedPerPage` (per-page links with `per_page_selector: true` on the pagination partial); 2.6: `variant` (`full` \| `compact`: previous / "Page n of m" / next + per-page select, partial `pagination_compact`), `withVariant()`, `isCompact()`; `from()`, `to()`, `hasPrevious()`, `hasNext()`, `toArray()` — the **only** pagination shape |
-| `Column` | `(key, label = null, sortable = false, align = 'start', class = null, required = false, priority = null)` — `priority` 1–3 for responsive tables |
+| `Column` | `(key, label = null, sortable = false, align = 'start', class = null, required = false, priority = null, sortKey = null, sortFirst = 'asc', sortType = null, sortValueKey = null)` — `priority` 1–3 for responsive tables; 2.20: `sortKey` (whitelisted key the header sends, default `key`; a `sortKey` makes the column sortable), `sortFirst` (first-click direction), `sortType` (`number` \| `date` \| `text`) and `sortValueKey` (row key printed as `data-sort-value`) for client-side tables; `isSortable()`, `sortField()` |
+| `Listing\SortRequest` *(2.20)* | `(field = null, direction = 'asc', fields = [], sortParam = 'sort', directionParam = 'dir', pageParam = 'page')`; `fromRequest(request, fields, defaultField, defaultDirection, …)` / `fromQuery()` (whitelist `key => first-click direction`; unknown key → default, unknown direction → first-click one), `fieldsOf(columns)`, `isActive()`, `nextDirection()`, `query()`, `linkQuery(field, query)` (next sort, page dropped), `withPageParam()`, `sortRows(rows, extractors)` |
 | `FilterField` | `(name, placeholder = null, width = null, class = null, rowClass = null, attributes = [], rowAttributes = [])` — `width`: `xs`, `sm`, `md`, `lg`, `full` |
 | `EmptyState` | `(title = null, message = null, action = null)` |
 | `DetailItem` / `DetailSection` | `(label, value, href = null)` / `(title = null, items = [], id = null)` |
 | `KpiTile` | `(label, value, hint = null, href = null, variant = 'neutral', linkTile = false)` |
 | `SettingsSection` | `(id, label, href = null, form = null, intro = null, submitLabel = null, formThemes = [])` — `formThemes` (2.1) applied to `form` with `form_theme` before the `nowo_ui_settings_section` block |
 | `WizardStep` | `(id, label, href = null)` |
-| `ListPage` | `(header, columns = [], rows = [], filters = null, rowActions = [] \| callable(row, key), pagination = null, empty = null, filtersClearHref = null, sort = null, direction = 'asc', caption = null, bundle = null, layout = null, attributes = [], actionsLabel = null, actionsLabelVisible = false, filterFields = [], filtersSubmit = null, filtersClear = null, filterActions = [], responsive = 'cards', filtersDisplay = null, headerActionsInFilters = null)`; `rowActions(row, key)`, `confirmDialogs(actions)` |
+| `ListPage` | `(header, columns = [], rows = [], filters = null, rowActions = [] \| callable(row, key), pagination = null, empty = null, filtersClearHref = null, sort = null, direction = 'asc', caption = null, bundle = null, layout = null, attributes = [], actionsLabel = null, actionsLabelVisible = false, filterFields = [], filtersSubmit = null, filtersClear = null, filterActions = [], responsive = 'cards', filtersDisplay = null, headerActionsInFilters = null, actionsAlign = 'end', actionsPosition = 'end', captionVisible = true, sorting = null, clientSort = false)`; `rowActions(row, key)`, `confirmDialogs(actions)`, `nextDirection(column)`; 2.20: `sorting` (`Listing\SortRequest`; header links keep the query and drop the pagination's page parameter) replaces `sort` / `direction`; `clientSort` sorts a list without pages in the browser |
 | `ShowPage` | `(header, sections = [], meta = [], bundle = null, layout = null, attributes = [])` |
 | `FormPage` | `(header, form, submitLabel = null, cancelHref = null, cancelLabel = null, secondaryActions = [], deleteAction = null, bundle = null, layout = null, attributes = [], secondaryActionsInHeader = true, dangerZoneTitle = null, dangerZoneIntro = null, formThemes = [], formTag = true, formAttributes = [])` — `formAttributes` (2.3): extra `<form>` attributes (`novalidate`, `data-turbo`…; `class` appended to the `form` slot, no `on*`); `formThemes` (2.1): form theme templates (e.g. the bundle's FormKit theme) applied to `form` with `form_theme` before it renders, so the bundle does not override `nowo_ui_content` |
 | `SettingsPage` | `(header, sections = [], current = null, bundle = null, layout = null, attributes = [])` |
@@ -513,6 +514,13 @@ primary token with `css/nowo-ui-tom-select.css` (docs/THEMING.md).
 `nowo_ui_table_row`). The actions column header is visible by default (`actionsLabelVisible: false` hides it
 visually), `actionsPosition: 'start'` puts the column first, `captionVisible: false` hides the caption visually,
 `Column::align` applies to the header cell too.
+
+**Sortable headers (2.20).** `Table` / `ListPage` take `sorting:` (a `Listing\SortRequest` read in the controller:
+whitelist, `sort` / `dir`) — sortable columns link to the next order with the current query and page 1, the sorted
+`<th>` carries `aria-sort` — or `clientSort: true` for tables rendered whole (buttons for the Stimulus peer
+`table-sort`, `data-sort-value` from `Column::$sortValueKey`). Both render the `sort_header` partial (label, arrow
+icon `sort` / `sort_asc` / `sort_desc`, visually hidden hint). Without sort information the markup is unchanged. See
+[USAGE](USAGE.md#sortable-column-headers-220).
 
 **Breadcrumbs.** `PageHeader::$breadcrumbsMode`: `auto` (BreadcrumbKit when it renders a trail, else the page's
 crumbs), `kit`, `own`.

@@ -87,7 +87,7 @@ final class ScaffoldRenderTest extends TestCase
         self::assertStringContainsString('<table class="nowo-ui-table nowo-ui-table--striped table table-striped table-hover align-middle data-table data-table--dense nowo-ui-table--cards" data-controller="table">', $html);
         self::assertStringContainsString('<caption class="nowo-ui-table__caption">All items</caption>', $html);
         self::assertStringContainsString('aria-sort="ascending"', $html);
-        self::assertStringContainsString('<a class="nowo-ui-sort nowo-ui-sort--asc" href="/items_index?sort=name&amp;direction=desc">Name</a>', $html);
+        self::assertStringContainsString('<a class="nowo-ui-sort nowo-ui-sort--asc" href="/items_index?sort=name&amp;direction=desc"><span class="nowo-ui-sort__label">Name</span><span class="nowo-ui-sort__icon" aria-hidden="true"><i class="bi bi-arrow-up" aria-hidden="true"></i></span><span class="visually-hidden">Sort descending</span></a>', $html);
         self::assertStringContainsString('data-required="1"', $html);
         self::assertStringContainsString('<tr class="nowo-ui-table__row row-hover">', $html);
         self::assertStringContainsString('>Beta &lt;b&gt;</td>', $html);
@@ -135,7 +135,8 @@ final class ScaffoldRenderTest extends TestCase
         $page = new ListPage(new PageHeader('Things'), [new Column('name', 'Name', true)], [['name' => 'A']], sort: 'name', direction: 'desc');
         $html = $this->twig(request: $request)->render('@NowoUiKit/page/list.html.twig', ['page' => $page]);
 
-        self::assertStringContainsString('href="/things?org=7&amp;q=x&amp;page=2&amp;sort=name&amp;direction=asc"', $html);
+        // 2.20: a new order starts on page 1 (the page parameter is dropped, the filters kept)
+        self::assertStringContainsString('href="/things?org=7&amp;q=x&amp;sort=name&amp;direction=asc"', $html);
         self::assertStringContainsString('nowo-ui-sort--desc', $html);
     }
 

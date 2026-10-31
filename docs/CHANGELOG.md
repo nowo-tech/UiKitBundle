@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.20.0] - 2026-10-31](#2200---2026-10-31)
 - [[2.19.0] - 2026-10-30](#2190---2026-10-30)
 - [[2.18.0] - 2026-10-30](#2180---2026-10-30)
 - [[2.17.5] - 2026-10-30](#2175---2026-10-30)
@@ -85,6 +86,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [2.20.0] - 2026-10-31
+
+Sortable column headers in the list scaffold and the `table` partial
+
+### Added
+
+- **`Listing\SortRequest`**: the validated sort of a server-side list — `fromRequest()` / `fromQuery()` check `sort` /
+  `dir` against a whitelist (key => first-click direction; unknown key → the default sort, unknown direction → the
+  key's first-click one, never an error), `fieldsOf()` (whitelist from `Column`s / `ListingField`s / a listing
+  definition), `nextDirection()`, `query()`, `linkQuery()` (current query + next sort, page parameter dropped),
+  `withPageParam()` and `sortRows()` (rows built in PHP: empty values last, stable, natural strings).
+- **Server-side sortable headers**: `ListPage` / `Table` take `sorting:` (a `SortRequest`); sortable columns link to the
+  next order keeping the filters and rows per page and going back to page 1 (the pagination's page parameter); the
+  sorted `<th>` carries `aria-sort`.
+- **Client-side sortable headers**: `clientSort: true` on `Table` / `ListPage` (lists rendered whole; a `ListPage`
+  with more than one page is rejected) — `data-controller="table-sort"` on the `<table>`, `data-sortable` /
+  `data-sort-type` / `data-sort-first` on the headers, `data-sort-value` on default cells — and the Stimulus peer
+  `table-sort` (`stimulus-peers/table_sort_controller.ts`: text / number / date, `data-sort-value`, empty values last,
+  stable, pinned rows, column spans, `table-sort:sorted` event; 100 % statements in Vitest).
+- `Column`: `sortKey` (whitelisted key, default the column key), `sortFirst`, `sortType`, `sortValueKey`,
+  `isSortable()`, `sortField()`. `ListingField`: `sortKey`, `sortFirst`; `listing_head` takes `sorting` (server links)
+  or `client_sort` (buttons). `Table`: `sorting`, `isSortedBy()`, `ariaSort()`, `sortQuery()`.
+- Theme partial **`sort_header`** (`partials/_sort_header.html.twig`): label, direction arrow, visually hidden hint;
+  a link (`href`) or a `table-sort` button; reusable in host `<th>` cells. Slot `sort_button`. Canonical icons `sort`,
+  `sort_asc`, `sort_desc` in every icon set. Strings `table.sort.hint_asc` / `table.sort.hint_desc` in the 7 locales.
+  Tokens `--nowo-ui-sort-hover`, `--nowo-ui-sort-icon-opacity`.
+- Demos: the Orders list sorts on the server (`SortRequest`), the dashboard's recent orders in the browser; the
+  kitchen sink shows both (`kitchen_tables`).
+
+### Changed
+
+- Sortable header links (1.x `sortable` columns with `sort:` / `direction:`) print the label, an arrow icon and a
+  visually hidden hint instead of the CSS `::after` arrow, and drop the page parameter (a new order starts on page 1).
+  The `sort` / `direction` query parameters of those links are unchanged. Tables without sort information render the
+  same markup as 2.19.
 
 ## [2.19.0] - 2026-10-30
 

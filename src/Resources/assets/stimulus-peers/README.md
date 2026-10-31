@@ -21,6 +21,7 @@ They are **not** built into the kit IIFEs. Prefer the no-build scripts under `sr
 | `filters_collapse_controller.ts` | `filters-collapse` | — (peer only, 1.17; `partials/_filters_collapse.html.twig`) |
 | `disclosure_icon_controller.ts` | `disclosure-icon` | — (peer only, 1.17; `partials/_disclosure_icon.html.twig`) |
 | `listing_customizer_controller.ts` | `listing-customizer` | — (peer only; `partials/_listing_customizer.html.twig`, listing preferences cookie via `listing_cookie.ts`) |
+| `table_sort_controller.ts` | `table-sort` | — (peer only, 2.20; client-side sortable headers: `View\Table::$clientSort`, `partials/_sort_header.html.twig`) |
 
 `listing_cookie.ts` (module: `readListingCookie()`, `writeListingCookie()`, `patchListingCookie()`,
 `deleteListingCookie()`) reads and writes the listing preference cookie shared by `listing-customizer` and

@@ -222,6 +222,17 @@
                     per_page_choices: [10, 25, 50]
                 } %}
             {% endif %}
+
+            {#- 2.20 sortable headers (View\Table + Listing\SortRequest): server-side links keep the query and go back to
+                page 1; the second table is rendered whole and sorts in the browser where the Stimulus peer table-sort is
+                registered (docs/STIMULUS.md) -#}
+            {% if kitchen_tables is defined %}
+                <div id="sortable">
+                    {% for _sortable_table in kitchen_tables %}
+                        {{ include(nowo_ui_partial('table'), {table: _sortable_table, route: route|default('nowo_ui_kit_kitchen_sink')}, false) }}
+                    {% endfor %}
+                </div>
+            {% endif %}
         </section>
 
         {# 1.17 host chrome: static markup (no-JS fallback) — the Stimulus peers responsive-table, filters-collapse and

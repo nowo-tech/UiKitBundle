@@ -11,6 +11,10 @@
 - [Page loader and page transitions](#page-loader-and-page-transitions)
 - [Open a modal on load (deep link)](#open-a-modal-on-load-deep-link)
 - [Filter bar and data table (opt-in)](#filter-bar-and-data-table-opt-in)
+- [Sortable column headers (2.20)](#sortable-column-headers-220)
+  - [Server-side lists](#server-side-lists)
+  - [Client-side tables](#client-side-tables)
+  - [Host tables and customizable listings](#host-tables-and-customizable-listings)
 - [Host chrome (1.17, opt-in)](#host-chrome-117-opt-in)
   - [Responsive table](#responsive-table)
   - [Foldable filter card](#foldable-filter-card)
@@ -462,6 +466,104 @@ Recommended icon-only pair (1.17): **Filter** = funnel, **Clear filters** = funn
     icon_only: true,
 } %}
 ```
+
+## Sortable column headers (2.20)
+
+Click-to-sort headers for the list scaffold (`View\ListPage`), the `table` partial (`View\Table`), `listing_head` and
+host-written tables. Opt-in: a table without sort information renders exactly as before.
+
+- **Server side** (paginated lists, the default): the header is a link to the same route with `sort` / `dir`, the
+  current filters and rows per page kept, the page parameter dropped (a new order starts on page 1).
+- **Client side** (tables rendered whole — never a paginated one): the header is a `<button>` and the Stimulus peer
+  `table-sort` reorders the rows without a request.
+
+Both render through the theme partial `sort_header`: the column label, a direction arrow (canonical icons `sort` /
+`sort_asc` / `sort_desc` of `nowo_ui_kit.icon_set`; neutral arrows while the column is not the sorted one) and a
+visually hidden hint ("Sort ascending" / "Sort descending", `table.sort.hint_asc` / `hint_desc` in the 7 locales). The
+sorted `<th>` carries `aria-sort`. No inline styles or scripts (CSP); light / dark through the `--nowo-ui-*` tokens
+(`--nowo-ui-sort-hover`, `--nowo-ui-sort-icon-opacity`); slots `sortable_header`, `sort_link`, `sort_button`.
+
+Columns declare what sorts: `new Column('name', 'Name', sortable: true)` sorts by the column key;
+`sortKey: 'created'` sends another whitelisted key, `sortFirst: 'desc'` makes the first click descending (dates,
+counts). With `icon_set: ux_icon`, commit `bi:arrow-down-up`, `bi:arrow-up` and `bi:arrow-down`
+(`bin/console ux:icons:import bi:arrow-down-up bi:arrow-up bi:arrow-down`) or pass `tabler:` names through the
+partial's `icons` option.
+
+### Server-side lists
+
+`Listing\SortRequest` validates the query against a whitelist (key => first-click direction): an unknown key falls back
+to the default sort (never a 400), an unknown direction to the key's first-click one. Order the query by
+`$sort->field` / `$sort->direction` with a stable tie-breaker:
+
+```php
+use Nowo\UiKitBundle\Listing\SortRequest;
+
+$columns = [
+    new Column('name', 'Name', sortable: true),
+    new Column('created', 'Created', sortable: true, sortFirst: 'desc'),
+    new Column('notes', 'Notes'),
+];
+$sort = SortRequest::fromRequest($request, SortRequest::fieldsOf($columns), 'created');
+// e.g. ->orderBy(['name' => 'i.name', 'created' => 'i.createdAt'][$sort->field], $sort->direction)->addOrderBy('i.id', $sort->direction)
+$items = $repository->search($filters, $sort->field, $sort->direction, $page);
+
+return $this->render('@NowoUiKit/page/list.html.twig', ['page' => new ListPage(
+    new PageHeader('Items'), $columns, $items,
+    pagination: new Pagination($page, 25, $total, route: 'app_items'),
+    sorting: $sort,
+)]);
+```
+
+- `fromRequest($request, $fields, $defaultField = null, $defaultDirection = null, $sortParam = 'sort',
+  $directionParam = 'dir', $pageParam = 'page')`; `fromQuery()` takes raw values; `fieldsOf()` reads the whitelist
+  from `Column`s, `ListingField`s or a `ListingDefinitionInterface`.
+- `query()` (`['sort' => …, 'dir' => …]`) keeps the order elsewhere: the list scaffold's pagination already keeps the
+  request query; a GET filter form keeps it with two hidden fields (e.g. `HiddenType` children `sort` / `dir` filled
+  from `$sort->query()`, or `Form\HiddenFieldsType`).
+- `sortRows($rows, $extractors)` sorts rows built in PHP (before paging): empty values last, stable, natural
+  case-insensitive strings; an extractor is a key / property name or a callable.
+- `ListPage` uses the pagination's `pageParam`; a plain `Table` drops `SortRequest::$pageParam` (`null` keeps it).
+  The `table` partial links to `route` (default the current route).
+- 1.x `sort:` / `direction:` arguments still work (links to `sort` / `direction`, now also back to page 1).
+
+### Client-side tables
+
+```php
+new Table($columns, $allRows, clientSort: true);                 // or ListPage(..., clientSort: true) without pages
+new Column('size', 'Size', sortable: true, sortType: 'number', sortValueKey: 'bytes', sortFirst: 'desc');
+```
+
+The `<table>` gets `data-controller="table-sort"` (merged with a `data-controller` in `attributes`); sortable headers
+get `data-sortable` (+ `data-sort-type`, `data-sort-first`) and a `<button data-action="table-sort#sort">`; default cells
+print `data-sort-value` from `sortValueKey` (a timestamp behind a formatted date, bytes behind "2.4 MB"). Overridden
+cells add `data-sort-value` themselves. A `sort` / `sorting` marks the initial order (rows already in that order).
+`ListPage` rejects `clientSort` with more than one page. Register the peer (see [STIMULUS.md](STIMULUS.md#table-sort-220)):
+
+```js
+import TableSortController from '../vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/table_sort_controller';
+app.register('table-sort', TableSortController);
+```
+
+### Host tables and customizable listings
+
+Hand-written `<th>` (e.g. inside `_responsive_table`): include the partial and set `aria-sort` yourself:
+
+```twig
+<th scope="col"{% if sort.isActive('name') %} aria-sort="{{ sort.direction == 'asc' ? 'ascending' : 'descending' }}"{% endif %}>
+    {{ include(nowo_ui_partial('sort_header'), {
+        label: 'Name',
+        href: path('app_items', sort.linkQuery('name', app.request.query.all)),
+        active: sort.isActive('name'),
+        direction: sort.direction,
+        next_direction: sort.nextDirection('name'),
+    }, false) }}
+</th>
+{# client side: <th data-sortable> + include(nowo_ui_partial('sort_header'), {label: 'Name'}) on a table-sort <table> #}
+```
+
+Customizable listings: `new ListingField('total', 'Total', sortKey: 'total', sortFirst: 'desc')`, then
+`listing_head` with `sorting: sort` (server links; a `head_<key>` block still wins) or `client_sort: true` (buttons on
+single-column headers).
 
 ## Host chrome (1.17, opt-in)
 

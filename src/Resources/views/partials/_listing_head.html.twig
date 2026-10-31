@@ -8,6 +8,12 @@
     - heads_template: template with `head_<key>` blocks (e.g. sort links) rendered in this context (`column`,
       `group`); columns without a block print their label
     - th_class: extra classes of every header cell
+    - sorting (2.20): Listing\SortRequest of a server-side list — columns with a ListingField::$sortKey render a sort
+      link (partial `sort_header`) to `sort_route` (default the current route) with the current query, and the sorted
+      header carries aria-sort; a `head_<key>` block still wins
+    - client_sort (2.20): the rows are all rendered — sortable single-column headers render a `table-sort` button
+      (Stimulus peer `table-sort` on the <table>) with data-sortable / data-sort-first; `sorting` (optional) marks the
+      initial order
     - detail (default true), detail_label: row detail header cell (partials/_row_detail_head.html.twig)
     - bundle
   Slot: table_head_cell. Cells carry data-column (lead column), data-columns (every key of the group),
@@ -16,14 +22,24 @@
 {% set bundle = bundle|default(null) %}
 {% set _layout = listing_layout is defined ? listing_layout : listing.layout %}
 {% set _heads = heads_template|default(null) %}
+{% set _sorting = sorting|default(null) %}
+{% set _client_sort = client_sort|default(false) %}
+{% set _sort_route = sort_route|default(app is defined and app ? app.request.attributes.get('_route') : null) %}
+{% set _sort_params = _sorting and not _client_sort ? (app is defined and app ? app.request.attributes.get('_route_params') : {})|default({})|merge(app is defined and app ? app.request.query.all : {}) : {} %}
 {% for group in _layout.visibleColumnGroups %}
     {% set lead = group|first %}
     {% set _stacked = group|length > 1 %}
-    <th class="{{ nowo_ui_class('table_head_cell', bundle) }}{{ th_class|default('') ? ' ' ~ th_class }}{{ lead.headClass ? ' ' ~ lead.headClass }}{{ _stacked ? ' nowo-ui-listing-cell--stacked' }}" scope="col" data-column="{{ lead.key }}" data-columns="{{ group|map(c => c.key)|join(' ') }}"{% if lead.required %} data-required="1"{% endif %} data-priority="{{ lead.priority }}">
+    {% set _sorted = _sorting ? group|filter(c => c.sortKey is not null and _sorting.isActive(c.sortKey))|first : null %}
+    {% set _client_sortable = _client_sort and not _stacked and lead.sortKey is not null %}
+    <th class="{{ nowo_ui_class('table_head_cell', bundle) }}{{ th_class|default('') ? ' ' ~ th_class }}{{ lead.headClass ? ' ' ~ lead.headClass }}{{ _stacked ? ' nowo-ui-listing-cell--stacked' }}{{ _client_sortable or (_sorting and not _client_sort and _sort_route and group|filter(c => c.sortKey is not null) is not empty) ? ' ' ~ nowo_ui_class('sortable_header', bundle) }}" scope="col" data-column="{{ lead.key }}" data-columns="{{ group|map(c => c.key)|join(' ') }}"{% if lead.required %} data-required="1"{% endif %} data-priority="{{ lead.priority }}"{% if _sorted %} aria-sort="{{ _sorting.direction == 'asc' ? 'ascending' : 'descending' }}"{% endif %}{% if _client_sortable %} data-sortable{% if lead.sortFirst == 'desc' %} data-sort-first="desc"{% endif %}{% endif %}>
         {%- for column in group -%}
             {%- set _content -%}
                 {%- if _heads and block('head_' ~ column.key, _heads) is defined -%}
                     {{- block('head_' ~ column.key, _heads) -}}
+                {%- elseif _client_sortable -%}
+                    {{- include(nowo_ui_partial('sort_header', bundle), {label: column.label|nowo_ui_trans, bundle: bundle}, false) -}}
+                {%- elseif _sorting and not _client_sort and _sort_route and column.sortKey is not null -%}
+                    {{- include(nowo_ui_partial('sort_header', bundle), {label: column.label|nowo_ui_trans, href: path(_sort_route, _sorting.linkQuery(column.sortKey, _sort_params)), active: _sorting.isActive(column.sortKey), direction: _sorting.direction, next_direction: _sorting.nextDirection(column.sortKey), bundle: bundle}, false) -}}
                 {%- else -%}
                     {{- column.label|nowo_ui_trans -}}
                 {%- endif -%}

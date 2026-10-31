@@ -24,9 +24,11 @@
 {% set _route = route|default(app is defined and app ? app.request.attributes.get('_route') : null) %}
 {% set _route_params = (app is defined and app ? app.request.attributes.get('_route_params') : {})|default({})|merge(app is defined and app ? app.request.query.all : {}) %}
 {% set _confirms = [] %}
+{% set _tbl = table %}
+{% set _table_attrs = table.clientSort ? table.attributes|merge({'data-controller': ((table.attributes['data-controller'] ?? '') ~ ' table-sort')|trim}) : table.attributes %}
 {% set _cards = table.responsive == 'cards' %}
 <div class="{{ nowo_ui_class('table_wrap', _b) }}" data-nowo-ui-region="table"{% if _cards %} data-nowo-ui-responsive="cards"{% endif %}{{ nowo_ui_attrs('table_wrap', _b) }}>
-    <table class="{{ nowo_ui_class('table', _b) }}{{ _cards ? ' nowo-ui-table--cards' }}"{{ nowo_ui_attrs('table', _b) }}{{ nowo_ui_html_attrs(table.attributes) }}
+    <table class="{{ nowo_ui_class('table', _b) }}{{ _cards ? ' nowo-ui-table--cards' }}"{{ nowo_ui_attrs('table', _b) }}{{ nowo_ui_html_attrs(_table_attrs) }}
         {%- set _label = table.label ?? label|default(null) %}{% if not table.caption and _label %} aria-label="{{ _label|nowo_ui_trans }}"{% endif %}>
         {% if table.caption %}<caption class="{{ nowo_ui_class('table_caption', _b) }}{{ table.captionVisible ? '' : ' visually-hidden' }}"{{ nowo_ui_attrs('table_caption', _b) }}>{{ table.caption|nowo_ui_trans }}</caption>{% endif %}
         <thead class="{{ nowo_ui_class('table_head', _b) }}"{{ nowo_ui_attrs('table_head', _b) }}>
@@ -47,11 +49,12 @@
                 {% if table.hasRowActions() and not _actions_end %}{{ _actions_head }}{% endif %}
                 {% block nowo_ui_table_head %}{% if head_html is defined and head_html is not null %}{{ head_html }}{% else %}
                     {% for column in table.columns %}
-                        {%- set _sortable = column.sortable and _route %}
-                        <th scope="col" class="{{ nowo_ui_class('table_head_cell', _b) }}{{ _sortable ? ' ' ~ nowo_ui_class('sortable_header', _b) }} nowo-ui-cell--{{ column.align }}{{ column.class ? ' ' ~ column.class }}"{% if column.required %} data-required="1"{% elseif column.priority and column.priority > 1 %} data-nowo-ui-priority="{{ column.priority }}"{% endif %}{% if table.sort == column.key %} aria-sort="{{ table.direction == 'asc' ? 'ascending' : 'descending' }}"{% endif %}{{ nowo_ui_attrs('table_head_cell', _b) }}>
+                        {%- set _sortable = column.isSortable() and (_tbl.clientSort or _route) %}
+                        {%- set _aria_sort = _tbl.ariaSort(column) %}
+                        <th scope="col" class="{{ nowo_ui_class('table_head_cell', _b) }}{{ _sortable ? ' ' ~ nowo_ui_class('sortable_header', _b) }} nowo-ui-cell--{{ column.align }}{{ column.class ? ' ' ~ column.class }}"{% if column.required %} data-required="1"{% elseif column.priority and column.priority > 1 %} data-nowo-ui-priority="{{ column.priority }}"{% endif %}{% if _aria_sort %} aria-sort="{{ _aria_sort }}"{% endif %}{% if _sortable and _tbl.clientSort %} data-sortable{% if column.sortType %} data-sort-type="{{ column.sortType }}"{% endif %}{% if column.sortFirst == 'desc' %} data-sort-first="desc"{% endif %}{% endif %}{{ nowo_ui_attrs('table_head_cell', _b) }}>
                             {%- set _label = column.label is null ? column.key : column.label|nowo_ui_trans -%}
                             {%- if _sortable -%}
-                                <a class="{{ nowo_ui_class('sort_link', _b) }}{{ table.sort == column.key ? ' nowo-ui-sort--' ~ table.direction }}" href="{{ path(_route, _route_params|merge({sort: column.key, direction: table.nextDirection(column.key)})) }}"{{ nowo_ui_attrs('sort_link', _b) }}>{{ _label }}</a>
+                                {{- include(nowo_ui_partial('sort_header', _b), {label: _label, href: _tbl.clientSort ? null : path(_route, _tbl.sortQuery(column, _route_params)), active: _tbl.isSortedBy(column), direction: _tbl.direction, next_direction: _tbl.nextDirection(column), bundle: _b}, false) -}}
                             {%- else -%}
                                 {{ _label }}
                             {%- endif -%}
@@ -92,7 +95,8 @@
                         {% for column in table.columns %}
                             {%- set _value = row is iterable ? row[column.key]|default(null) : attribute(row, column.key) %}
                             {%- set _blank = _value is null or _value is same as('') or _value is same as(false) %}
-                            <td class="{{ nowo_ui_class('table_cell', _b) }}{{ _blank ? ' ' ~ nowo_ui_class('table_cell_muted', _b) }} nowo-ui-cell--{{ column.align }}{{ column.class ? ' ' ~ column.class }}" data-label="{{ column.label is null ? column.key : column.label|nowo_ui_trans }}"{% if not column.required and column.priority and column.priority > 1 %} data-nowo-ui-priority="{{ column.priority }}"{% endif %}>{{ _blank ? '—' : _value }}</td>
+                            {%- set _sort_value = column.sortValueKey ? (row is iterable ? row[column.sortValueKey]|default(null) : attribute(row, column.sortValueKey)) : null %}
+                            <td class="{{ nowo_ui_class('table_cell', _b) }}{{ _blank ? ' ' ~ nowo_ui_class('table_cell_muted', _b) }} nowo-ui-cell--{{ column.align }}{{ column.class ? ' ' ~ column.class }}"{% if _sort_value is not null %} data-sort-value="{{ _sort_value }}"{% endif %} data-label="{{ column.label is null ? column.key : column.label|nowo_ui_trans }}"{% if not column.required and column.priority and column.priority > 1 %} data-nowo-ui-priority="{{ column.priority }}"{% endif %}>{{ _blank ? '—' : _value }}</td>
                         {% endfor %}
                     {% endif %}{% endblock %}
                     {% if _actions_end %}{{ _actions_cell }}{% endif %}
