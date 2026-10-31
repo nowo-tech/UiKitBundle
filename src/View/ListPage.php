@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\View;
 
+use Nowo\UiKitBundle\Listing\SortRequest;
 use Symfony\Component\Form\FormView;
 
 /**
@@ -25,6 +26,10 @@ use Symfony\Component\Form\FormView;
  * `theme.pages.list.header_actions_in_filters`, default false). `responsive`: `cards` (default; the table turns into labelled cards on narrow
  * containers and hides `Column::priority` columns first) or `scroll` (horizontal scroll only).
  * `caption` / `captionVisible` (2.2): the table `<caption>` (slot `table_caption`), visually hidden when false.
+ * Sorting: `sort` / `direction` (1.x: links to `sort` / `direction`), or 2.20 `sorting` — a {@see SortRequest} read in
+ * the controller (whitelist, `sort` / `dir` parameters); header links keep the filters and rows per page and go back to
+ * page 1 (the pagination's page parameter). `clientSort` (2.20): sort the rendered rows in the browser (Stimulus peer
+ * `table-sort`) — only for lists rendered whole (a pagination with more than one page is rejected).
  */
 final readonly class ListPage
 {
@@ -42,6 +47,12 @@ final readonly class ListPage
 
     /** The table of the page (2.2): rendered by the `table` partial; built from the table arguments below. */
     public Table $table;
+
+    /** Sorted column key (`sorting->field`). */
+    public ?string $sort;
+
+    /** `asc` | `desc`. */
+    public string $direction;
 
     /** @var array<string, FilterField> filter field options keyed by form child name */
     public array $filterFields;
@@ -66,8 +77,8 @@ final readonly class ListPage
         public ?Pagination $pagination = null,
         public ?EmptyState $empty = null,
         public ?string $filtersClearHref = null,
-        public ?string $sort = null,
-        public string $direction = 'asc',
+        ?string $sort = null,
+        string $direction = 'asc',
         public Label|string|null $caption = null,
         public ?string $bundle = null,
         public ?string $layout = null,
@@ -84,6 +95,8 @@ final readonly class ListPage
         public string $actionsAlign = 'end',
         public string $actionsPosition = 'end',
         public bool $captionVisible = true,
+        ?SortRequest $sorting = null,
+        public bool $clientSort = false,
     ) {
         if (!\in_array($actionsPosition, self::ACTIONS_POSITIONS, true)) {
             throw new \InvalidArgumentException(\sprintf('Invalid ListPage actionsPosition "%s" (%s).', $actionsPosition, implode('|', self::ACTIONS_POSITIONS)));
@@ -112,7 +125,16 @@ final readonly class ListPage
         if (!\in_array($direction, ['asc', 'desc'], true)) {
             throw new \InvalidArgumentException(\sprintf('Invalid ListPage direction "%s" (asc|desc).', $direction));
         }
-        $this->table = new Table($this->columns, $this->rows, $rowActions, $caption, $captionVisible, $sort, $direction, $actionsLabel, $actionsLabelVisible, $actionsAlign, $actionsPosition, $responsive, $bundle);
+        if ($clientSort && $pagination instanceof Pagination && $pagination->totalPages > 1) {
+            throw new \LogicException('A paginated ListPage cannot sort in the browser (clientSort): it would only reorder the current page. Sort on the server (sorting: SortRequest) instead.');
+        }
+        $sorting ??= new SortRequest($sort, $direction, [], 'sort', 'direction');
+        if ($pagination instanceof Pagination) {
+            $sorting = $sorting->withPageParam($pagination->pageParam);
+        }
+        $this->table = new Table($this->columns, $this->rows, $rowActions, $caption, $captionVisible, null, 'asc', $actionsLabel, $actionsLabelVisible, $actionsAlign, $actionsPosition, $responsive, $bundle, sorting: $sorting, clientSort: $clientSort);
+        $this->sort = $this->table->sort;
+        $this->direction = $this->table->direction;
     }
 
     public function hasRowActions(): bool
@@ -143,9 +165,9 @@ final readonly class ListPage
     }
 
     /**
-     * Direction a sortable column's link toggles to.
+     * Direction a sortable column's header sorts by on click ({@see Table::nextDirection()}).
      */
-    public function nextDirection(string $column): string
+    public function nextDirection(Column|string $column): string
     {
         return $this->table->nextDirection($column);
     }

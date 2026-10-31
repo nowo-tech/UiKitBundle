@@ -187,6 +187,13 @@ The link variant uses `--nowo-ui-link` / `--nowo-ui-link-hover`.
 Metrics (1.12): `--nowo-ui-table-head-py`, `--nowo-ui-table-cell-py`, `--nowo-ui-table-cell-px`,
 `--nowo-ui-table-font-size`, `--nowo-ui-table-head-font-size` (data table only).
 
+Sortable headers (2.20, partial `sort_header`):
+
+| Token | Default |
+|-------|---------|
+| `--nowo-ui-sort-hover` | `var(--nowo-ui-link-hover, var(--nowo-ui-link, var(--nowo-ui-primary)))` (header label on hover) |
+| `--nowo-ui-sort-icon-opacity` | `0.45` (arrow of a column that is not the sorted one) |
+
 ## Tabs
 
 `ui.tab_list()` / `ui.tab_item(active)` and `partials/_tabs.html.twig`.

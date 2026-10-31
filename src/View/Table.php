@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\View;
 
+use Nowo\UiKitBundle\Listing\SortRequest;
+
 /**
  * A data table (2.2) rendered by the `table` theme partial (`partials/_table.html.twig`): columns, rows, row actions
  * (with their confirm dialogs), caption, sort links and the responsive card mode. The list scaffold renders its table
@@ -16,7 +18,11 @@ namespace Nowo\UiKitBundle\View;
  * context) / `nowo_ui_table_head`.
  * `rowActions`: a callable `fn (mixed $row, int|string $key): iterable<Action>` or one static list for every row.
  * `sort` / `direction`: the sorted column and its direction (sortable columns link to `sort` / `direction` query
- * parameters of the current route). `actionsLabel` / `actionsLabelVisible` / `actionsAlign` / `actionsPosition`:
+ * parameters of the current route). 2.20: `sorting` (a {@see SortRequest}) replaces them — its field / direction,
+ * query parameter names (default `sort` / `dir`) and first-click directions; header links keep the current query and
+ * drop its page parameter. `clientSort` (2.20): the table is rendered whole and sorts in the browser (Stimulus peer
+ * `table-sort`, `stimulus-peers/table_sort_controller.ts`): sortable headers are buttons, no request — never on a
+ * paginated table. `actionsLabel` / `actionsLabelVisible` / `actionsAlign` / `actionsPosition`:
  * the row-actions column (header visible by default, `end` aligned, last). `responsive`: `cards` | `scroll`.
  * Accessible name: the caption when there is one (visible or visually hidden), else `label` as `aria-label` (the list
  * scaffold passes the page title).
@@ -32,6 +38,15 @@ final readonly class Table
 
     /** @var array<int|string, mixed> */
     public array $rows;
+
+    /** Sorted column key (`SortRequest::$field`), null when the rows keep their own order. */
+    public ?string $sort;
+
+    /** `asc` | `desc`. */
+    public string $direction;
+
+    /** Sort state of the headers (2.20): the given {@see SortRequest} completed with the columns' first-click directions. */
+    public SortRequest $sorting;
 
     /** @var list<Action> */
     private array $staticRowActions;
@@ -50,8 +65,8 @@ final readonly class Table
         callable|iterable $rowActions = [],
         public Label|string|null $caption = null,
         public bool $captionVisible = true,
-        public ?string $sort = null,
-        public string $direction = 'asc',
+        ?string $sort = null,
+        string $direction = 'asc',
         public Label|string|null $actionsLabel = null,
         public bool $actionsLabelVisible = true,
         public string $actionsAlign = 'end',
@@ -60,6 +75,8 @@ final readonly class Table
         public ?string $bundle = null,
         public array $attributes = [],
         public Label|string|null $label = null,
+        ?SortRequest $sorting = null,
+        public bool $clientSort = false,
     ) {
         if (!\in_array($actionsAlign, Column::ALIGNS, true)) {
             throw new \InvalidArgumentException(\sprintf('Invalid Table actionsAlign "%s" (%s).', $actionsAlign, implode('|', Column::ALIGNS)));
@@ -75,6 +92,10 @@ final readonly class Table
         }
         Action::assertAttributes($attributes);
         $this->columns = ViewList::of($columns, Column::class, 'Table columns');
+        $sorting ??= new SortRequest($sort, $direction, [], 'sort', 'direction');
+        $this->sorting = new SortRequest($sorting->field, $sorting->direction, array_merge(SortRequest::fieldsOf($this->columns), $sorting->fields), $sorting->sortParam, $sorting->directionParam, $sorting->pageParam);
+        $this->sort = $this->sorting->field;
+        $this->direction = $this->sorting->direction;
         $this->rows = \is_array($rows) ? $rows : iterator_to_array($rows, false);
         if (\is_callable($rowActions)) {
             $this->rowActionsFactory = $rowActions(...);
@@ -138,10 +159,40 @@ final readonly class Table
     }
 
     /**
-     * Direction a sortable column's link toggles to.
+     * Direction a sortable column's header sorts by on click: the sorted column toggles, another starts with its
+     * first-click direction (`Column::$sortFirst`, or the {@see SortRequest} whitelist).
      */
-    public function nextDirection(string $column): string
+    public function nextDirection(Column|string $column): string
     {
-        return $this->sort === $column && 'asc' === $this->direction ? 'desc' : 'asc';
+        return $this->sorting->nextDirection($column instanceof Column ? $column->sortField() : $column);
+    }
+
+    /** Whether the rows are sorted by this column. */
+    public function isSortedBy(Column $column): bool
+    {
+        return $this->sorting->isActive($column->sortField());
+    }
+
+    /** `aria-sort` of the column header: `ascending` | `descending` when the rows are sorted by it, else null. */
+    public function ariaSort(Column $column): ?string
+    {
+        if (!$this->isSortedBy($column)) {
+            return null;
+        }
+
+        return SortRequest::ASC === $this->direction ? 'ascending' : 'descending';
+    }
+
+    /**
+     * Query of a server-side header link (2.20): `$query` (the current route parameters + request query) with the
+     * next sort of `$column`, without the page parameter.
+     *
+     * @param array<string, mixed> $query
+     *
+     * @return array<string, mixed>
+     */
+    public function sortQuery(Column $column, array $query = []): array
+    {
+        return $this->sorting->linkQuery($column->sortField(), $query);
     }
 }

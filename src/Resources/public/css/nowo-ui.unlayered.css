@@ -4121,17 +4121,78 @@ button.nowo-ui-edge-tab__link {
   color: var(--nowo-ui-muted);
 }
 
+/* Sortable column headers (2.20, partial `sort_header`): server-side link (`sort_link`) and client-side button
+   (`sort_button`, Stimulus peer `table-sort`) look the same — the label, then the direction arrow (the neutral arrows,
+   faint, while the column is not the sorted one). Positioned so the visually hidden hint never widens a scroller.
+   Tokens: --nowo-ui-sort-hover (label colour on hover), --nowo-ui-sort-icon-opacity (idle arrow). */
 .nowo-ui-sort {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  max-width: 100%;
+  margin: -0.125rem -0.25rem;
+  padding: 0.125rem 0.25rem;
+  border: 0;
+  border-radius: var(--nowo-ui-radius);
+  background: none;
   color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: inherit;
+  text-transform: inherit;
   text-decoration: none;
+  cursor: pointer;
 }
 
-.nowo-ui-sort--asc::after {
-  content: " \2191";
+.nowo-ui-sort:hover {
+  color: var(--nowo-ui-sort-hover, var(--nowo-ui-link-hover, var(--nowo-ui-link, var(--nowo-ui-primary))));
 }
 
-.nowo-ui-sort--desc::after {
-  content: " \2193";
+.nowo-ui-sort:focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline-offset: 1px;
+}
+
+.nowo-ui-sort__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  font-size: 0.875em;
+  line-height: 1;
+  opacity: var(--nowo-ui-sort-icon-opacity, 0.45);
+}
+
+.nowo-ui-sort:hover .nowo-ui-sort__icon,
+.nowo-ui-sort--asc .nowo-ui-sort__icon,
+.nowo-ui-sort--desc .nowo-ui-sort__icon,
+th[aria-sort] > .nowo-ui-sort .nowo-ui-sort__icon {
+  opacity: 1;
+}
+
+.nowo-ui-sort--asc,
+.nowo-ui-sort--desc,
+th[aria-sort] > .nowo-ui-sort--button {
+  font-weight: 600;
+}
+
+/* Client-side headers: the arrow and the hint follow the header's aria-sort (no script-built markup). */
+.nowo-ui-sort__icon--asc,
+.nowo-ui-sort__icon--desc,
+.nowo-ui-sort__hint--desc,
+th[aria-sort] .nowo-ui-sort__icon--none,
+th[aria-sort='ascending'] .nowo-ui-sort__hint--asc,
+th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--asc {
+  display: none;
+}
+
+th[aria-sort='ascending'] .nowo-ui-sort__icon--asc,
+th[aria-sort='descending'] .nowo-ui-sort__icon--desc {
+  display: inline-flex;
+}
+
+th[aria-sort='ascending'] .nowo-ui-sort__hint--desc,
+th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
+  display: inline;
 }
 
 .nowo-ui-form__actions,
@@ -4804,6 +4865,10 @@ button.nowo-ui-edge-tab__link {
 
 .nowo-ui-table__head-cell .nowo-ui-sort {
   color: inherit;
+}
+
+.nowo-ui-table__head-cell .nowo-ui-sort:hover {
+  color: var(--nowo-ui-sort-hover, var(--nowo-ui-link-hover, var(--nowo-ui-link, var(--nowo-ui-primary))));
 }
 
 /* Zebra rows on the kit-painted stacks: the cells are painted too, so a cell background never hides the stripe

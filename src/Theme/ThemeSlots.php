@@ -123,6 +123,8 @@ final class ThemeSlots
         // Header cell of a sortable column (added to table_head_cell) and its sort link (+ nowo-ui-sort--asc|desc)
         'sortable_header' => ['nowo-ui-table__head-cell--sortable', []],
         'sort_link' => ['nowo-ui-sort', []],
+        // Client-side sort button of a sortable header (2.20, Table::$clientSort; Stimulus peer table-sort)
+        'sort_button' => ['nowo-ui-sort nowo-ui-sort--button', []],
         'table_actions_head' => ['nowo-ui-table__actions', []],
         // Row-actions body cell (alignment: ListPage::actionsAlign → nowo-ui-cell--<align> on head and cell)
         'table_actions_cell' => ['nowo-ui-table__actions', []],
@@ -587,6 +589,7 @@ final class ThemeSlots
         'segmented' => '@NowoUiKitBundle/partials/_segmented.html.twig',
         'section_form' => '@NowoUiKitBundle/page/_section_form.html.twig',
         'shell' => '@NowoUiKitBundle/partials/_shell.html.twig',
+        'sort_header' => '@NowoUiKitBundle/partials/_sort_header.html.twig',
         'table' => '@NowoUiKitBundle/partials/_table.html.twig',
         'tabs' => '@NowoUiKitBundle/partials/_tabs.html.twig',
         'toasts' => '@NowoUiKitBundle/partials/_toasts.html.twig',

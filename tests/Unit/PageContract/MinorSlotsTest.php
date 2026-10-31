@@ -99,7 +99,7 @@ final class MinorSlotsTest extends TestCase
 
         self::assertStringContainsString('<th scope="col" class="nowo-ui-table__head-cell nowo-ui-table__head-cell--sortable app-sortable nowo-ui-cell--start" aria-sort="ascending">', $html);
         self::assertStringContainsString('<a class="nowo-ui-sort app-sort nowo-ui-sort--asc" href="', $html);
-        self::assertStringContainsString('data-sort="x">Name</a>', $html);
+        self::assertStringContainsString('data-sort="x"><span class="nowo-ui-sort__label">Name</span>', $html);
         self::assertStringContainsString('<th scope="col" class="nowo-ui-table__head-cell nowo-ui-cell--start">Note</th>', $html);
 
         self::assertSame(2, substr_count($html, '<td class="nowo-ui-table__cell nowo-ui-table__cell--muted text-muted app-cell-muted nowo-ui-cell--start" data-label="Note">—</td>'));
