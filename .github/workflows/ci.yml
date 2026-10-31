@@ -23,6 +23,11 @@ jobs:
           chmod +x .scripts/check-no-cursor-coauthor.sh
           ./.scripts/check-no-cursor-coauthor.sh HEAD
 
+      - name: No raw HTML forms in Twig (REQ-TWIG-005)
+        run: |
+          chmod +x .scripts/check-no-raw-html-form.sh
+          ./.scripts/check-no-raw-html-form.sh
+
   assets:
     name: Vite / TypeScript
     runs-on: ubuntu-latest

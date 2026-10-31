@@ -6,9 +6,10 @@
         code: string,
         label: string,
         href?: string,          # link mode
-        form_action?: string,   # form mode
+        form_action?: string,   # form mode (POST; 2.19: form_start / form_end, raw form only without symfony/form)
         csrf_token?: string,
         csrf_field?: string,    # default _token
+        redirect?: string,      # form mode: hidden `redirect` field
         current?: bool
       }
 
@@ -44,23 +45,12 @@
                 {% set is_current = locale.current|default(locale.code == current_locale) %}
                 <li role="option" aria-selected="{{ is_current ? 'true' : 'false' }}">
                     {% if locale.form_action is defined and locale.form_action %}
-                        <form method="post" action="{{ locale.form_action }}" class="nowo-ui-locale-switcher__form">
-                            {% if locale.csrf_token is defined and locale.csrf_token %}
-                                <input type="hidden" name="{{ locale.csrf_field|default('_token') }}" value="{{ locale.csrf_token }}">
-                            {% endif %}
-                            {% if locale.redirect is defined and locale.redirect %}
-                                <input type="hidden" name="redirect" value="{{ locale.redirect }}">
-                            {% endif %}
-                            <button
-                                type="submit"
-                                class="nowo-ui-locale-switcher__option{{ is_current ? ' is-active' : '' }}"
-                                hreflang="{{ locale.code }}"
-                                lang="{{ locale.code }}"
-                            >
-                                <span class="nowo-ui-locale-switcher__code">{{ locale.code|upper }}</span>
-                                <span>{{ locale.label }}</span>
-                            </button>
-                        </form>
+                        {#- 2.19 (REQ-TWIG-005): form_start / form_end of a hidden-field Form Type (csrf_token in csrf_field, redirect) -#}
+                        {% if nowo_ui_theme is defined %}
+                            {{ include('@NowoUiKitBundle/partials/_ui_form.html.twig', {locale: locale, is_current: is_current, ui_form_kind: 'hidden', ui_form_options: {fields: {(locale.csrf_field|default('_token')): locale.csrf_token|default(null) ?: null, redirect: locale.redirect|default(null) ?: null}, partial: 'locale_switcher'}, ui_form_template: '@NowoUiKitBundle/partials/_locale_switcher_form.html.twig', ui_form_legacy: '@NowoUiKitBundle/partials/_locale_switcher_legacy.html.twig'}, false) }}
+                        {% else %}
+                            {{ include('@NowoUiKitBundle/partials/_locale_switcher_legacy.html.twig', {locale: locale, is_current: is_current}, false) }}
+                        {% endif %}
                     {% else %}
                         <a
                             href="{{ locale.href|default('#') }}"

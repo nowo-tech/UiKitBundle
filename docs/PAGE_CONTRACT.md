@@ -884,6 +884,11 @@ prototypes — `vars.prototype` of a `CollectionType` with `prototype: true`).
 - `Action` POSTs prefer a CSRF-only `FormView` (`form`, REQ-TWIG-005); since 2.18 a `csrfToken` is wrapped in a
   CSRF-only Form Type (`ActionCsrfType`) and rendered through `form_start` / `form_end` too. Only without
   symfony/form does the deprecated raw `<form>` fallback (`_action_post_legacy`) render.
+- REQ-TWIG-005 (2.19): no kit view prints raw form markup. Partials that take plain values build their Form Types
+  through `nowo_ui_form()` (`HiddenFieldsType`, `SearchFilterType`, `PerPageType`, a `CheckboxType` view); see
+  USAGE "Forms in the partials". Documented exceptions: the form themes under `views/form/`, the deprecated
+  `*_legacy` fallbacks (no symfony/form; removed in 3.0) and the nameless type-to-confirm input of `confirm` /
+  `page/confirm` (`twig-005-ignore`: never submitted, it only blocks the submit through browser validation).
 - BreadcrumbKit renders its own configured trail (it cannot take `PageHeader::breadcrumbs`); it is used when
   installed and `breadcrumbs.breadcrumb_kit` is true, otherwise the plain trail. `breadcrumbs.enabled: false` (2.3.1)
   drops the trail (both kinds) from every page header — no empty `breadcrumbs` partial override needed.

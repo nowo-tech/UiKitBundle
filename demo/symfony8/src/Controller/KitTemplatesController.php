@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Form\CsrfOnlyType;
 use Nowo\UiKitBundle\View\Pagination;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -37,6 +38,8 @@ final class KitTemplatesController extends AbstractController
         return $this->render('kit/shell.html.twig', [
             'pagination' => $pagination,
             'rows' => \array_slice(self::ROWS, $pagination->offset(), $pagination->limit()),
+            // REQ-TWIG-005: the confirm dialog's POST is a Form (form_start / form_end), not a hand-written form
+            'void_form' => $this->createForm(CsrfOnlyType::class, null, ['action' => $this->generateUrl('kit_shell')])->createView(),
         ]);
     }
 }

@@ -78,8 +78,8 @@
                 <span class="{{ ui.badge('warning') }}">Warning</span>
                 <span class="{{ ui.badge('info') }}">Info</span>
                 <span class="{{ ui.badge('neutral') }}">Neutral</span>
-                <label class="{{ ui.check() }}"><input type="checkbox" checked> Checkbox</label>
-                <input type="search" class="{{ ui.input() }}" placeholder="Input placeholder" aria-label="Input">
+                {#- REQ-TWIG-005: the control swatches are a Symfony Form (kitchen_forms from the demo controller) -#}
+                {% if kitchen_forms is defined %}{{ include('@NowoUiKitBundle/demo/_kitchen_sink_swatch.html.twig', {form: kitchen_forms.swatch, with_search: true}, false) }}{% endif %}
             </div>
             {# Theming (1.13): a host theme is a short block of --nowo-ui-* tokens; here scoped to one wrapper (docs/THEMING.md). #}
             <div class="nowo-ui-body" style="--nowo-ui-primary: #1f6f54; --nowo-ui-primary-hover: #134736; --nowo-ui-border: #d8e2dc; --nowo-ui-border-strong: #d8e2dc; --nowo-ui-surface-muted: #e7f0eb; --nowo-ui-text: #0f1c18; --nowo-ui-radius: 0.5rem; --nowo-ui-tab-active-weight: 500;">
@@ -90,7 +90,7 @@
                     <button type="button" class="{{ ui.btn('outline') }}">Outline</button>
                     <button type="button" class="{{ ui.btn('link') }}">Link</button>
                     <span class="{{ ui.badge('success') }}">Success</span>
-                    <label class="{{ ui.check() }}"><input type="checkbox" checked> Checkbox</label>
+                    {% if kitchen_forms is defined %}{{ include('@NowoUiKitBundle/demo/_kitchen_sink_swatch.html.twig', {form: kitchen_forms.swatch_themed, with_search: false}, false) }}{% endif %}
                 </div>
                 <nav class="{{ ui.tab_list() }}" aria-label="Themed tabs">
                     <a href="#buttons" class="{{ ui.tab_item(true) }}">Active</a>
@@ -118,27 +118,9 @@
            The English panel carries a server error (marker + screen-reader text, opened first); the required inputs
            show the browser validation opening a hidden panel. #}
         <section id="locale-tabs" class="nowo-ui-body" data-demo-locale-tabs>
-            <form action="#locale-tabs" method="get" class="nowo-ui-form">
-                {% set _demo_panels = [] %}
-                {% for _l in [{locale: 'es', title: 'Bienvenida', body: 'Hola y bienvenido.'}, {locale: 'en', title: '', body: 'Hello and welcome.', error: 'This value should not be blank.'}, {locale: 'ar', title: 'مرحبا', body: ''}] %}
-                    {% set _demo_html %}
-                        <p>
-                            <label for="demo-lt-title-{{ _l.locale }}">Title</label>
-                            <input type="text" id="demo-lt-title-{{ _l.locale }}" name="title[{{ _l.locale }}]" value="{{ _l.title }}" class="{{ nowo_ui_class('input') }}"{% if _l.locale != 'ar' %} required{% endif %}{% if _l.error is defined %} aria-invalid="true" aria-describedby="demo-lt-error-{{ _l.locale }}"{% endif %}>
-                        </p>
-                        {% if _l.error is defined %}<p id="demo-lt-error-{{ _l.locale }}" class="{{ nowo_ui_class('form_error') }}">{{ _l.error }}</p>{% endif %}
-                        <p>
-                            <label for="demo-lt-body-{{ _l.locale }}">Body</label>
-                            <textarea id="demo-lt-body-{{ _l.locale }}" name="body[{{ _l.locale }}]" rows="2" class="{{ nowo_ui_class('input') }}">{{ _l.body }}</textarea>
-                        </p>
-                    {% endset %}
-                    {% set _demo_panels = _demo_panels|merge([{locale: _l.locale, content: _demo_html, invalid: _l.error is defined}]) %}
-                {% endfor %}
-                {{ include(nowo_ui_partial('locale_tabs'), {id: 'demo-locale-tabs', panels: _demo_panels, default_locale: 'es', required_locales: ['es', 'en'], activate_invalid: false}, false) }}
-                <div class="{{ nowo_ui_class('form_actions') }}">
-                    <button type="submit" class="{{ ui.btn('primary', 'sm') }}">Validate</button>
-                </div>
-            </form>
+            {% if kitchen_forms is defined %}
+                {{ include('@NowoUiKitBundle/demo/_kitchen_sink_locale_tabs.html.twig', {form: kitchen_forms.locale_tabs}, false) }}
+            {% endif %}
         </section>
 
         {% set card_body %}
@@ -245,18 +227,9 @@
         {# 1.17 host chrome: static markup (no-JS fallback) — the Stimulus peers responsive-table, filters-collapse and
            disclosure-icon add the behaviour in hosts that register them (docs/STIMULUS.md). #}
         <section id="host-chrome" class="nowo-ui-body">
-            <form method="get" class="nowo-ui-filter-bar nowo-ui-card" action="#host-chrome">
-                {% include '@NowoUiKitBundle/partials/_filters_collapse.html.twig' with {fold_key: 'kitchen_sink', active_count: 1} only %}
-                <div class="nowo-ui-filter-bar__field nowo-ui-filter-bar__field--search">
-                    <input class="{{ ui.search_input() }}" type="search" name="q" value="beta" aria-label="Search">
-                </div>
-                {% include '@NowoUiKitBundle/partials/_filter_actions.html.twig' with {
-                    clear_href: '#host-chrome',
-                    submit_icon: 'filter',
-                    clear_icon: 'filter_off',
-                    icon_only: true,
-                } only %}
-            </form>
+            {% if kitchen_forms is defined %}
+                {{ include('@NowoUiKitBundle/demo/_kitchen_sink_filter_bar.html.twig', {form: kitchen_forms.host_chrome}, false) }}
+            {% endif %}
 
             <div class="nowo-ui-card">
                 {% embed '@NowoUiKitBundle/partials/_responsive_table.html.twig' with {table_mode: 'scroll', dialog_id: 'kitchen-sink-rt'} %}

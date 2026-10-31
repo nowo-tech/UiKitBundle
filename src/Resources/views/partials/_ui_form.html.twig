@@ -1,0 +1,12 @@
+{#
+  Dispatcher of the partials whose forms are Form Types since 2.19 (REQ-TWIG-005): row_actions (1.x POST hashes),
+  user_menu (logout), locale_switcher, filters, pagination_compact (per page) and segmented (plain checkbox).
+  A partial includes it only when UiKit's ThemeExtension is loaded (`nowo_ui_theme` is defined; a bare Twig
+  environment goes straight to the raw markup), with:
+    - ui_form_kind / ui_form_options: arguments of nowo_ui_form() (Form\UiFormViews)
+    - ui_form_template: the form_start / form_end template (needs symfony/form's Twig extension; gets `ui_form`)
+    - ui_form_legacy: the deprecated raw markup, rendered when nowo_ui_form() returns null (removed in 3.0)
+  plus the variables of those templates. Not a public include.
+#}
+{% set ui_form = nowo_ui_form(ui_form_kind, ui_form_options) %}
+{{ include(ui_form is not null ? ui_form_template : ui_form_legacy, _context, false) }}

@@ -1,0 +1,5 @@
+{#
+  Plain-checkbox branch of the `segmented` partial (2.19, REQ-TWIG-005; separate file: form_widget needs symfony/form).
+  ui_form: the CheckboxType FormView of nowo_ui_form('checkbox') (same name / value / checked). Not a public include.
+#}
+{{ include('@NowoUiKitBundle/partials/_segmented_field.html.twig', {field: ui_form, input_attr: input_attr}, false) }}

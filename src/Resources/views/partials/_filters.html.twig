@@ -3,6 +3,8 @@
 
   Optional:
     - action: form action URL
+  2.19 (REQ-TWIG-005): the form renders through form_start / form_end (same method, action, field name q_name,
+  input id nowo-ui-filter-q, classes); the raw form is a deprecated fallback without symfony/form.
     - method: get|post (default get)
     - q: current search value
     - q_name: input name (default q)
@@ -20,35 +22,10 @@
 {% set method = method|default('get') %}
 {% set q_name = q_name|default('q') %}
 {% set placeholder = placeholder|default('filters.search_placeholder'|trans({}, 'NowoUiKitBundle')) %}
-<form
-    class="{{ ui.filters(framework) }}"
-    method="{{ method }}"
-    {% if action is defined and action %}action="{{ action }}"{% endif %}
-    data-nowo-ui-filters
-    role="search"
->
-    {% if collapsible|default(false) %}
-        {{ include('@NowoUiKitBundle/partials/_filters_collapse.html.twig', {active_count: q|default('')|trim is not empty ? 1 : 0}|merge(collapse|default({})), false) }}
-    {% endif %}
-    <label class="visually-hidden" for="nowo-ui-filter-q">{{ placeholder }}</label>
-    <input
-        id="nowo-ui-filter-q"
-        class="{{ ui.search_input(framework) }}"
-        type="search"
-        name="{{ q_name }}"
-        value="{{ q|default('') }}"
-        placeholder="{{ placeholder }}"
-        autocomplete="off"
-    >
-    <button type="submit" class="{{ ui.btn('primary', 'sm', framework) }}">
-        {{ 'filters.apply'|trans({}, 'NowoUiKitBundle') }}
-    </button>
-    {% if clear_href is defined and clear_href %}
-        <a class="{{ ui.btn('secondary', 'sm', framework) }}" href="{{ clear_href }}">
-            {{ 'filters.clear'|trans({}, 'NowoUiKitBundle') }}
-        </a>
-    {% endif %}
-    {% if actions is defined and actions %}
-        <div class="nowo-ui-filters__actions">{{ actions|raw }}</div>
-    {% endif %}
-</form>
+{#- 2.19 (REQ-TWIG-005): form_start / form_end of a GET search Form Type (Form\SearchFilterType, field q_name);
+    without symfony/form the deprecated raw form (_filters_legacy) -#}
+{% if nowo_ui_theme is defined %}
+    {{ include('@NowoUiKitBundle/partials/_ui_form.html.twig', _context|merge({ui_form_kind: 'search', ui_form_options: {q_name: q_name, q: q|default('') ~ '', placeholder: placeholder ~ '', input_class: ui.search_input(framework) ~ '', partial: 'filters'}, ui_form_template: '@NowoUiKitBundle/partials/_filters_form.html.twig', ui_form_legacy: '@NowoUiKitBundle/partials/_filters_legacy.html.twig'}), false) }}
+{% else %}
+    {{ include('@NowoUiKitBundle/partials/_filters_legacy.html.twig', _context, false) }}
+{% endif %}

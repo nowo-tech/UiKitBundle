@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\UiKitBundle\Twig;
 
 use Nowo\UiKitBundle\Form\ActionCsrfType;
+use Nowo\UiKitBundle\Form\UiFormViews;
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Theme\ThemeSlots;
 use Nowo\UiKitBundle\View\Action;
@@ -46,6 +47,10 @@ use Twig\TwigFunction;
  * - `nowo_ui_action_form(action)` (2.18) — the `FormView` a POST {@see Action} renders through `form_start` /
  *   `form_end` (REQ-TWIG-005): its `form`, else a nameless CSRF-only form built from `csrfToken` / `csrfField`
  *   ({@see ActionCsrfType}); null (deprecated raw fallback) without symfony/form and its Twig extension
+ * - `nowo_ui_form(kind, options)` (2.19) — the form view (`hidden`, `search`, `per_page`, `checkbox`) of a partial
+ *   that used to print a raw `<form>` / `<input>` ({@see UiFormViews}; null = deprecated raw fallback), called by
+ *   `partials/_ui_form.html.twig`; `nowo_ui_form_hidden(field)` prints one hidden field whatever its rendered flag
+ *   (shared action FormViews)
  * - `|nowo_ui_trans(params = {})` — translates a {@see Label}; strings pass through (escaped by Twig)
  * - `|nowo_ui_translatable(params = {})` (2.3) — a {@see TranslatableText} for values a form theme translates again
  *   (`attr.placeholder`, choice `placeholder`): a Label is translated exactly once, a string printed as given
@@ -53,6 +58,8 @@ use Twig\TwigFunction;
  */
 final class ThemeExtension extends AbstractExtension implements GlobalsInterface
 {
+    private readonly UiFormViews $uiForms;
+
     /** Public page-header contract (2.3): what the scaffolds render in `nowo_ui_page_header`. */
     public const PAGE_HEADER_TEMPLATE = '@NowoUiKitBundle/page/_page_header.html.twig';
 
@@ -70,6 +77,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
         private readonly LocaleNames $localeNames = new LocaleNames(),
         private readonly ?FormFactoryInterface $actionForms = null,
     ) {
+        $this->uiForms = new UiFormViews($actionForms);
     }
 
     public function getFunctions(): array
@@ -88,6 +96,8 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             new TwigFunction('nowo_ui_locale_name', fn (string $locale, ?string $displayLocale = null): string => $this->localeNames->name($locale, $displayLocale ?? $this->requestStack?->getCurrentRequest()?->getLocale())),
             new TwigFunction('nowo_ui_locale_dir', $this->localeNames->dir(...)),
             new TwigFunction('nowo_ui_action_form', $this->actionForm(...), ['needs_environment' => true]),
+            new TwigFunction('nowo_ui_form', $this->uiForms->create(...), ['needs_environment' => true]),
+            new TwigFunction('nowo_ui_form_hidden', $this->uiForms->renderHidden(...), ['needs_environment' => true, 'is_safe' => ['html']]),
             new TwigFunction('nowo_ui_page_header', $this->pageHeader(...), ['needs_environment' => true, 'needs_context' => true, 'is_safe' => ['html']]),
         ];
     }

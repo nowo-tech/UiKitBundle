@@ -1,0 +1,19 @@
+{#
+  Kitchen sink control swatches (REQ-TWIG-005): a checkbox (and, with with_search, a search input) styled by the UiKit
+  macros, from the demo's KitchenSinkSwatchType FormView `form`; never submitted. The form element is
+  `display: contents`, so the controls stay items of the surrounding toolbar.
+#}
+{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
+{% form_theme form with ['form_div_layout.html.twig'] only %}
+{% if not with_search %}{% do form.search.setRendered() %}{% endif %}
+{{ form_start(form, {attr: {class: 'nowo-ui-kitchen-swatch', style: 'display: contents'}}) }}
+    <label class="{{ ui.check() }}">{{ form_widget(form.check) }} Checkbox</label>
+    {% if with_search %}
+        {{ form_widget(form.search, {attr: form.search.vars.attr|merge({class: ui.input() ~ ''})}) }}
+    {% endif %}
+    {% for child in form %}
+        {% if not child.rendered %}
+            {{ form_row(child) }}
+        {% endif %}
+    {% endfor %}
+{{ form_end(form) }}

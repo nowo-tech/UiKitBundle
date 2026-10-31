@@ -1,0 +1,28 @@
+{#
+  Form branch of a 1.x `row_actions` POST hash (2.19, REQ-TWIG-005; separate file: form_start / form_end need
+  symfony/form). ui_form: the nameless hidden-field FormView of nowo_ui_form() (csrf_token in csrf_field).
+  Same request as 2.x: POST to action.href, same field name and value; the form keeps its class, the transitional
+  confirm_message handler and action.attr (the class / onsubmit of the kit win, as with the raw markup). Not a public
+  include.
+#}
+{% set _attr = {class: 'nowo-ui-row-actions__form'} %}
+{% if action.confirm_message is defined and action.confirm_message %}
+    {% set _attr = _attr|merge({onsubmit: 'return confirm(' ~ action.confirm_message|json_encode ~ ');'}) %}
+{% endif %}
+{% set _attr = _attr|merge((action.attr|default({}))|filter((v, k) => k not in _attr|keys)) %}
+{{ form_start(ui_form, {action: action.href|default('#'), method: 'POST', attr: _attr}) }}
+    {%- for child in ui_form -%}{%- if not child.rendered -%}{{- form_row(child) -}}{%- endif -%}{%- endfor %}
+    <button
+        type="submit"
+        class="{{ class }}"
+        title="{{ label }}"
+        aria-label="{{ label }}"
+        {% if disabled %}disabled{% endif %}
+    >
+        {{ include('@NowoUiKitBundle/partials/_action_inner.html.twig', {
+            display: display,
+            icon_name: icon_name,
+            label: label,
+        }, false) }}
+    </button>
+{{ form_end(ui_form) }}

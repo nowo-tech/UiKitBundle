@@ -7,7 +7,9 @@
   print them only the first time. Other children render through form_end (first render only). Hidden fields always
   carry a value attribute (2.2), also when it is empty (a hidden `confirm` / marker field that makes a named form
   "submitted"). Symfony only treats a form as submitted when its name is in the request: a POST Action form should be
-  named (or carry a hidden field) — see docs/MIGRATING_BUNDLES.md.
+  named (or carry a hidden field) — see docs/MIGRATING_BUNDLES.md. 2.19 (REQ-TWIG-005): those hidden fields print
+  through nowo_ui_form_hidden() — the hidden_widget block of form/nowo_ui_kit_fields.html.twig, same markup — instead
+  of a hand-written input.
 
   The FormView is action_form (2.18, nowo_ui_action_form(): action.form or the CSRF-only form of action.csrfToken),
   else action.form.
@@ -16,7 +18,7 @@
 {{ form_start(_action_form, {action: action_href ?? '#', method: action.method, attr: {class: 'nowo-ui-action__form'}|merge(form_id|default(null) ? {id: form_id} : {})}) }}
     <button type="submit" class="{{ button_class }}"{% for name, value in button_attrs %}{% if value is same as(true) %} {{ name }}{% elseif value is not null and value is not same as(false) %} {{ name }}="{{ value }}"{% endif %}{% endfor %}{% if action.disabled %} disabled{% endif %}>{{ button_html }}</button>
     {%- for _field in _action_form|filter(f => 'hidden' in f.vars.block_prefixes and f.children is empty) -%}
-        <input type="hidden" name="{{ _field.vars.full_name }}" value="{{ _field.vars.value }}">
+        {{- nowo_ui_form_hidden(_field) -}}
         {%- do _field.setRendered() -%}
     {%- endfor %}
 {{ form_end(_action_form) }}

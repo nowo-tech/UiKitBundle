@@ -8,7 +8,7 @@
 
   Optional:
     - button_attrs: extra button attributes
-    - form_id: id of the <form> (inputs outside it join through form="…", e.g. the type-to-confirm input)
+    - form_id: id of the form element (inputs outside it join through form="…", e.g. the type-to-confirm input)
 
   REQ-TWIG-005: the form always renders through form_start / form_end (_action_form_view). The FormView is
   action.form (CSRF-only FormView), else (2.18) a nameless CSRF-only form built from action.csrfToken in

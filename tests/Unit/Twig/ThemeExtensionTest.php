@@ -25,7 +25,7 @@ final class ThemeExtensionTest extends TestCase
         $extension = new ThemeExtension($theme, ['admin' => 'layouts/admin.html.twig', 'guest' => 'layouts/guest.html.twig']);
 
         $names = array_map(static fn (TwigFunction $f): string => $f->getName(), $extension->getFunctions());
-        self::assertSame(['nowo_ui_class', 'nowo_ui_attrs', 'nowo_ui_html_attrs', 'nowo_ui_partial', 'nowo_ui_script_names', 'nowo_ui_theme_tokens', 'nowo_ui_theme_css', 'nowo_ui_tokens', 'nowo_ui_breadcrumb_kit', 'nowo_ui_breadcrumb_kit_available', 'nowo_ui_locale_name', 'nowo_ui_locale_dir', 'nowo_ui_action_form', 'nowo_ui_page_header'], $names);
+        self::assertSame(['nowo_ui_class', 'nowo_ui_attrs', 'nowo_ui_html_attrs', 'nowo_ui_partial', 'nowo_ui_script_names', 'nowo_ui_theme_tokens', 'nowo_ui_theme_css', 'nowo_ui_tokens', 'nowo_ui_breadcrumb_kit', 'nowo_ui_breadcrumb_kit_available', 'nowo_ui_locale_name', 'nowo_ui_locale_dir', 'nowo_ui_action_form', 'nowo_ui_form', 'nowo_ui_form_hidden', 'nowo_ui_page_header'], $names);
         self::assertSame('nowo_ui_trans', $extension->getFilters()[0]->getName());
         self::assertSame(['admin' => 'layouts/admin.html.twig', 'guest' => 'layouts/guest.html.twig'], $extension->getGlobals()['nowo_ui_layout']);
         self::assertSame($theme, $extension->getGlobals()['nowo_ui_theme']);

@@ -1,0 +1,40 @@
+{#
+  DEPRECATED since 2.19, removed in 3.0 — raw search form of the `filters` partial, only rendered when
+  nowo_ui_form() returns null: symfony/form or its Twig extension is missing, or q_name is not a valid form
+  field name (a deprecation is triggered). Documented REQ-TWIG-005 transition exception (docs/UPGRADING.md
+  "To 2.19.0"). A bare Twig environment (no UiKit ThemeExtension) renders it without a
+  deprecation. Not a public include.
+#}
+{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
+<form
+    class="{{ ui.filters(framework) }}"
+    method="{{ method }}"
+    {% if action is defined and action %}action="{{ action }}"{% endif %}
+    data-nowo-ui-filters
+    role="search"
+>
+    {% if collapsible|default(false) %}
+        {{ include('@NowoUiKitBundle/partials/_filters_collapse.html.twig', {active_count: q|default('')|trim is not empty ? 1 : 0}|merge(collapse|default({})), false) }}
+    {% endif %}
+    <label class="visually-hidden" for="nowo-ui-filter-q">{{ placeholder }}</label>
+    <input
+        id="nowo-ui-filter-q"
+        class="{{ ui.search_input(framework) }}"
+        type="search"
+        name="{{ q_name }}"
+        value="{{ q|default('') }}"
+        placeholder="{{ placeholder }}"
+        autocomplete="off"
+    >
+    <button type="submit" class="{{ ui.btn('primary', 'sm', framework) }}">
+        {{ 'filters.apply'|trans({}, 'NowoUiKitBundle') }}
+    </button>
+    {% if clear_href is defined and clear_href %}
+        <a class="{{ ui.btn('secondary', 'sm', framework) }}" href="{{ clear_href }}">
+            {{ 'filters.clear'|trans({}, 'NowoUiKitBundle') }}
+        </a>
+    {% endif %}
+    {% if actions is defined and actions %}
+        <div class="nowo-ui-filters__actions">{{ actions|raw }}</div>
+    {% endif %}
+</form>

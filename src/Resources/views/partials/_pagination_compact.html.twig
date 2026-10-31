@@ -1,9 +1,11 @@
 {#
   Compact server-side pagination (2.6, theme partial `pagination_compact`; View\Pagination variant `compact`, or
-  `variant: 'compact'` on the `pagination` partial): previous / "Page n of m" / next, and a per-page <select> in a GET
+  `variant: 'compact'` on the `pagination` partial): previous / "Page n of m" / next, and a per-page select in a GET
   form that keeps the other query parameters (filters, sort) and goes back to page 1. The select submits itself on
   change through js/nowo-ui-autosubmit.js (delegated listener on [data-nowo-ui-autosubmit], no inline handler: CSP);
-  without JavaScript a <noscript> submit button applies it.
+  without JavaScript a <noscript> submit button applies it. 2.19 (REQ-TWIG-005): that form renders through
+  form_start / form_end (Form\PerPageType; same action, query names and values, select id / name / attributes); the
+  raw form is a deprecated fallback without symfony/form or with a query name that is not a form field name.
 
   Input: same as the `pagination` partial — pagination (View\Pagination or the 1.x hash), route, route_params, query,
   page_param, per_page_param, trans_domain, nav_label, nav_trans_domain, region, bundle — plus:
@@ -14,15 +16,6 @@
   Slots: pagination_compact (root), pagination_link (previous / next), pagination_page ("Page n of m"),
   pagination_per_page (the form), pagination_info (its label), pagination_select, btn_secondary + btn_sm (no-JS button).
 #}
-{% macro hidden(name, value) %}
-    {%- import _self as _hidden -%}
-    {%- if value is iterable -%}
-        {%- for key, item in value -%}{{ _hidden.hidden(name ~ '[' ~ key ~ ']', item) }}{%- endfor -%}
-    {%- elseif value is not null and value is not same as(false) -%}
-        <input type="hidden" name="{{ name }}" value="{{ value is same as(true) ? 1 : value }}">
-    {%- endif -%}
-{% endmacro %}
-{% import _self as _m %}
 {% set bundle = bundle|default(null) %}
 {% set _model = pagination is not iterable ? pagination : null %}
 {% set _p = _model ? _model.toArray() : pagination %}
@@ -62,16 +55,26 @@
             </nav>
         {% endif %}
         {% if _choices is not empty %}
-            <form class="{{ nowo_ui_class('pagination_per_page', bundle) }}" method="get" action="{{ path(route, route_params) }}" data-nowo-ui-region="per-page"{{ nowo_ui_attrs('pagination_per_page', bundle) }}>
-                {% for _name, _value in query %}{{ _m.hidden(_name, _value) }}{% endfor %}
-                <label class="{{ nowo_ui_class('pagination_info', bundle) }}" for="{{ _id }}">{{ 'pagination.per_page'|trans({}, trans_domain) }}</label>
-                <select id="{{ _id }}" name="{{ per_page_param }}" class="{{ nowo_ui_class('pagination_select', bundle) }}" data-nowo-ui-autosubmit{{ nowo_ui_attrs('pagination_select', bundle) }}>
-                    {% for _choice in _choices %}
-                        <option value="{{ _choice }}"{% if _choice == per_page %} selected{% endif %}>{{ _choice }}</option>
-                    {% endfor %}
-                </select>
-                <noscript><button type="submit" class="{{ nowo_ui_class('btn_secondary', bundle) }} {{ nowo_ui_class('btn_sm', bundle) }}">{{ 'pagination.apply'|trans({}, trans_domain) }}</button></noscript>
-            </form>
+            {#- 2.19 (REQ-TWIG-005): form_start / form_end of a GET Form Type (Form\PerPageType: the other query
+                parameters as hidden fields + the per-page select); the raw form is a deprecated fallback -#}
+            {% set _t = nowo_ui_theme|default(null) %}
+            {% set _pt = nowo_ui_page_type|default(null) %}
+            {% set _per_page_options = {
+                fields: query,
+                per_page_param: per_page_param,
+                choices: _choices,
+                per_page: per_page,
+                select_id: _id,
+                select_attr: {class: nowo_ui_class('pagination_select', bundle), 'data-nowo-ui-autosubmit': ''}|merge(_t ? _t.attributesFor('pagination_select', bundle, {}, _pt)|filter(v => v is not null) : {}),
+                select_label: 'pagination.per_page'|trans({}, trans_domain),
+                select_label_class: nowo_ui_class('pagination_info', bundle),
+                partial: 'pagination_compact',
+            } %}
+            {% if nowo_ui_theme is defined %}
+                {{ include('@NowoUiKitBundle/partials/_ui_form.html.twig', _context|merge({ui_form_kind: 'per_page', ui_form_options: _per_page_options, ui_form_template: '@NowoUiKitBundle/partials/_pagination_per_page_form.html.twig', ui_form_legacy: '@NowoUiKitBundle/partials/_pagination_per_page_legacy.html.twig'}), false) }}
+            {% else %}
+                {{ include('@NowoUiKitBundle/partials/_pagination_per_page_legacy.html.twig', _context, false) }}
+            {% endif %}
         {% endif %}
     </div>
 {% endif %}

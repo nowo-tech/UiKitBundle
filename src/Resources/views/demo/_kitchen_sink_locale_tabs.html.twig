@@ -1,0 +1,39 @@
+{#
+  Kitchen sink locale tabs demo (2.5; REQ-TWIG-005): one panel per locale with the `title[<locale>]` / `body[<locale>]`
+  fields of the demo's LocaleTabsDemoType FormView `form` (form_label / form_widget per panel, then the child loop).
+  The English panel carries a server error (marker + screen-reader text, opened first); the required inputs show the
+  browser validation opening a hidden panel.
+#}
+{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
+{% form_theme form with ['form_div_layout.html.twig'] only %}
+{{ form_start(form, {action: '#locale-tabs', attr: {class: 'nowo-ui-form'}}) }}
+    {% set _errors = {en: 'This value should not be blank.'} %}
+    {% set _demo_panels = [] %}
+    {% for _title in form.title %}
+        {% set _locale = _title.vars.name %}
+        {% set _error = _errors[_locale] ?? null %}
+        {% set _demo_html %}
+            <p>
+                {{ form_label(_title, null, {id: 'demo-lt-title-' ~ _locale}) }}
+                {{ form_widget(_title, {id: 'demo-lt-title-' ~ _locale, attr: {class: nowo_ui_class('input')}|merge(_error ? {'aria-invalid': 'true', 'aria-describedby': 'demo-lt-error-' ~ _locale} : {})}) }}
+            </p>
+            {% if _error %}<p id="demo-lt-error-{{ _locale }}" class="{{ nowo_ui_class('form_error') }}">{{ _error }}</p>{% endif %}
+            <p>
+                {{ form_label(form.body[_locale], null, {id: 'demo-lt-body-' ~ _locale}) }}
+                {{ form_widget(form.body[_locale], {id: 'demo-lt-body-' ~ _locale, attr: form.body[_locale].vars.attr|merge({class: nowo_ui_class('input')})}) }}
+            </p>
+        {% endset %}
+        {% set _demo_panels = _demo_panels|merge([{locale: _locale, content: _demo_html, invalid: _error is not null}]) %}
+    {% endfor %}
+    {% do form.title.setRendered() %}
+    {% do form.body.setRendered() %}
+    {% for child in form %}
+        {% if not child.rendered %}
+            {{ form_row(child) }}
+        {% endif %}
+    {% endfor %}
+    {{ include(nowo_ui_partial('locale_tabs'), {id: 'demo-locale-tabs', panels: _demo_panels, default_locale: 'es', required_locales: ['es', 'en'], activate_invalid: false}, false) }}
+    <div class="{{ nowo_ui_class('form_actions') }}">
+        <button type="submit" class="{{ ui.btn('primary', 'sm') }}">Validate</button>
+    </div>
+{{ form_end(form) }}

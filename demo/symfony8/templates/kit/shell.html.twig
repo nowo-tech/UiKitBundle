@@ -30,14 +30,19 @@
                     <h1 class="{{ nowo_ui_class('card_title') }}">Invoices</h1>
                     {% embed nowo_ui_partial('confirm_dialog') with {trigger_label: 'Void invoice #1042', dialog_id: 'void-1042', aria_labelledby: 'void-1042-title', trigger_testid: 'void-trigger'} %}
                         {% block form %}
-                            <form method="post" action="{{ path('kit_shell') }}">
+                            {{ form_start(void_form) }}
                                 <h2 id="void-1042-title" class="{{ nowo_ui_class('confirm_title') }}">Void invoice #1042?</h2>
                                 <p>The invoice stays in the ledger, marked void. This cannot be undone.</p>
                                 <div class="{{ nowo_ui_class('form_actions') }}">
                                     <button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-nowo-confirm-close data-confirm-dialog-close>Cancel</button>
                                     <button type="submit" class="{{ nowo_ui_class('btn_danger_solid') }}">Void invoice</button>
                                 </div>
-                            </form>
+                                {% for child in void_form %}
+                                    {% if not child.rendered %}
+                                        {{ form_row(child) }}
+                                    {% endif %}
+                                {% endfor %}
+                            {{ form_end(void_form) }}
                         {% endblock %}
                     {% endembed %}
                 </div>

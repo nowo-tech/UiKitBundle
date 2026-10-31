@@ -1,0 +1,17 @@
+{#
+  Per-page form of the compact pagination (2.19, REQ-TWIG-005; separate file: form_start / form_end need
+  symfony/form). ui_form: nameless GET FormView of nowo_ui_form() — the other query parameters as hidden
+  fields, then the label + select (rendered first and printed after them: same field order, so the same URL as 2.x).
+  Not a public include.
+#}
+{% set _t = nowo_ui_theme|default(null) %}
+{% set _pt = nowo_ui_page_type|default(null) %}
+{% set _select %}
+    {{- form_label(ui_form[per_page_param]) }}
+    {{ form_widget(ui_form[per_page_param]) -}}
+{% endset %}
+{{ form_start(ui_form, {action: path(route, route_params), method: 'GET', attr: {class: nowo_ui_class('pagination_per_page', bundle), 'data-nowo-ui-region': 'per-page'}|merge(_t ? _t.attributesFor('pagination_per_page', bundle, {}, _pt)|filter(v => v is not null) : {})}) }}
+    {%- for child in ui_form -%}{%- if not child.rendered -%}{{- form_row(child) -}}{%- endif -%}{%- endfor %}
+    {{ _select }}
+    <noscript><button type="submit" class="{{ nowo_ui_class('btn_secondary', bundle) }} {{ nowo_ui_class('btn_sm', bundle) }}">{{ 'pagination.apply'|trans({}, trans_domain) }}</button></noscript>
+{{ form_end(ui_form) }}

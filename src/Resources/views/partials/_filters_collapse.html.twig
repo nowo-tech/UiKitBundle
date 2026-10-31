@@ -1,7 +1,7 @@
 {#
-  Foldable filter card (1.17): corner tab (top-right of the filter <form>, stacked UNDER the fields) + the
+  Foldable filter card (1.17): corner tab (top-right of the filter form, stacked UNDER the fields) + the
   "N active filters" line shown while folded. Stimulus peer `filters-collapse`.
-  Include it as the FIRST child of the filter <form> (CSS: `form:has(> .nowo-ui-filters-collapse)`), e.g. in a
+  Include it as the FIRST child of the filter form (CSS: `form:has(> .nowo-ui-filters-collapse)`), e.g. in a
   `.nowo-ui-filter-bar`, or pass `collapsible: true` to partials/_filters.html.twig.
 
   Folding only hides the fields (their values stay and submit). The state is a cookie of comma-separated page keys

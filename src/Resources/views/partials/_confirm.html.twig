@@ -86,6 +86,7 @@
             {% set _expected_label = _confirm.expectedLabel is null ? 'confirm.type_to_confirm'|trans({'%value%': _expected}, 'NowoUiKitBundle') : (_confirm.expectedLabel.key is defined ? _confirm.expectedLabel.key|trans(_confirm.expectedLabel.params|merge({'%value%': _expected}), _confirm.expectedLabel.domain) : _confirm.expectedLabel) %}
             <div class="{{ _t ? _t.macroClasses('confirm_expect', 'nowo-ui-confirm__expect', bundle, _pt) : 'nowo-ui-confirm__expect' }}"{{ _t ? _t.renderAttributes('confirm_expect', bundle, {}, _pt)|raw }}>
                 <label class="{{ _t ? _t.macroClasses('confirm_expect_label', 'nowo-ui-confirm__expect-label', bundle, _pt) : 'nowo-ui-confirm__expect-label' }}" for="{{ id }}-expected">{{ _expected_label }}</label>
+                {# twig-005-ignore: type-to-confirm guard — a nameless input, never submitted (browser validation only; REQ-TWIG-005 exception in docs/PAGE_CONTRACT.md) #}
                 <input id="{{ id }}-expected" class="{{ _t ? _t.classFor('input', bundle, framework, _pt) : 'nowo-ui-input' }} nowo-ui-confirm__expect-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" required pattern="{{ _confirm.expectedPattern() }}" data-nowo-confirm-expected="{{ _expected }}"{% if action is defined and action %} form="{{ id }}-form"{% endif %}>
             </div>
         {% endif %}
