@@ -16,10 +16,10 @@ use Symfony\Component\HttpKernel\KernelEvents;
  *
  * GET/HEAD requests get a 301; other methods get a 308 so the method and body are preserved.
  */
-final class LegacyPanelPathRedirectSubscriber implements EventSubscriberInterface
+final readonly class LegacyPanelPathRedirectSubscriber implements EventSubscriberInterface
 {
     public function __construct(
-        private readonly PanelPathRewriter $rewriter,
+        private PanelPathRewriter $rewriter,
     ) {
     }
 

@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 
+use InvalidArgumentException;
+use LogicException;
 use Nowo\UiKitBundle\View\Action;
+use Nowo\UiKitBundle\View\AuthPage;
 use Nowo\UiKitBundle\View\Column;
 use Nowo\UiKitBundle\View\Confirm;
 use Nowo\UiKitBundle\View\ConfirmPage;
@@ -14,6 +17,7 @@ use Nowo\UiKitBundle\View\DetailItem;
 use Nowo\UiKitBundle\View\DetailSection;
 use Nowo\UiKitBundle\View\EmptyState;
 use Nowo\UiKitBundle\View\FormPage;
+use Nowo\UiKitBundle\View\KpiTile;
 use Nowo\UiKitBundle\View\Label;
 use Nowo\UiKitBundle\View\ListPage;
 use Nowo\UiKitBundle\View\PageHeader;
@@ -25,6 +29,7 @@ use Nowo\UiKitBundle\View\WizardPage;
 use Nowo\UiKitBundle\View\WizardStep;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
+use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\SearchType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormView;
@@ -159,10 +164,10 @@ final class TemplateContractTest extends TestCase
             'show' => [new ShowPage($header, [new DetailSection('S', [new DetailItem('a', 'b')])], [new DetailItem('c', 'd')], attributes: $attrs), ['header', 'section', 'meta']],
             'form' => [new FormPage($header, $this->entityForm(), secondaryActions: [Action::view('/v')], deleteAction: Action::delete('/d', 't'), attributes: $attrs), ['header', 'form', 'danger-zone']],
             'settings' => [new SettingsPage($header, [new SettingsSection('a', 'A', '/a', $this->entityForm()), new SettingsSection('b', 'B', '/b')], attributes: $attrs), ['header', 'tabs', 'section', 'form']],
-            'dashboard' => [new DashboardPage($header, [new \Nowo\UiKitBundle\View\KpiTile('K', 1)], attributes: $attrs), ['header', 'kpis', 'cards']],
+            'dashboard' => [new DashboardPage($header, [new KpiTile('K', 1)], attributes: $attrs), ['header', 'kpis', 'cards']],
             'confirm' => [new ConfirmPage($header, Confirm::delete(), Action::delete('/d', 't'), attributes: $attrs), ['header', 'confirm']],
             'wizard' => [new WizardPage($header, [new WizardStep('one', 'One')], 'one', $this->entityForm(), attributes: $attrs), ['header', 'steps', 'step', 'form']],
-            'auth' => [new \Nowo\UiKitBundle\View\AuthPage('Sign in', $this->entityForm(), attributes: $attrs), ['panel', 'form']],
+            'auth' => [new AuthPage('Sign in', $this->entityForm(), attributes: $attrs), ['panel', 'form']],
         ];
         foreach ($pages as $type => [$page, $regions]) {
             $html = $twig->render('@NowoUiKit/page/'.$type.'.html.twig', ['page' => $page]);
@@ -206,7 +211,7 @@ final class TemplateContractTest extends TestCase
             try {
                 $write();
                 self::fail('Expected LogicException');
-            } catch (\LogicException $e) {
+            } catch (LogicException $e) {
                 self::assertStringContainsString('is immutable', $e->getMessage());
             }
         }
@@ -214,7 +219,7 @@ final class TemplateContractTest extends TestCase
 
     public function testPageAttributesAreValidated(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('no on* handlers');
         new ListPage(new PageHeader('T'), attributes: ['onclick' => 'x']);
     }
@@ -231,6 +236,6 @@ final class TemplateContractTest extends TestCase
 
     private static function csrfForm(): FormView
     {
-        return PageContractTwig::forms()->createNamedBuilder('csrf', FormType::class)->add('_token', \Symfony\Component\Form\Extension\Core\Type\HiddenType::class, ['data' => 'form-tok'])->getForm()->createView();
+        return PageContractTwig::forms()->createNamedBuilder('csrf', FormType::class)->add('_token', HiddenType::class, ['data' => 'form-tok'])->getForm()->createView();
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\View;
 
+use InvalidArgumentException;
 use Symfony\Component\Form\FormView;
 
 /**
@@ -70,7 +71,7 @@ final readonly class FormPage
         $list = [];
         foreach ($themes as $theme) {
             if (!\is_string($theme) || '' === trim($theme)) {
-                throw new \InvalidArgumentException(\sprintf('%s: expected template names (non-empty strings), got %s.', $what, get_debug_type($theme)));
+                throw new InvalidArgumentException(\sprintf('%s: expected template names (non-empty strings), got %s.', $what, get_debug_type($theme)));
             }
             $list[] = $theme;
         }

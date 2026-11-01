@@ -8,6 +8,7 @@ use Nowo\UiKitBundle\Theme\FontPreload;
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Twig\ErrorPageExtension;
 use Nowo\UiKitBundle\Twig\ThemeExtension;
+use ReflectionClass;
 use Symfony\Bridge\Twig\Extension\FormExtension;
 use Symfony\Bridge\Twig\Extension\TranslationExtension;
 use Symfony\Bridge\Twig\Form\TwigRendererEngine;
@@ -65,7 +66,7 @@ final class PageContractTwig
         $fs = new FilesystemLoader();
         $fs->addPath($views, 'NowoUiKitBundle');
         $fs->addPath($views, 'NowoUiKit');
-        $formViews = \dirname((string) (new \ReflectionClass(FormExtension::class))->getFileName(), 2).'/Resources/views/Form';
+        $formViews = \dirname((string) (new ReflectionClass(FormExtension::class))->getFileName(), 2).'/Resources/views/Form';
         $fs->addPath($formViews);
 
         $twig = new Environment(new ChainLoader([new ArrayLoader($templates), $fs]), ['strict_variables' => true, 'autoescape' => 'html']);

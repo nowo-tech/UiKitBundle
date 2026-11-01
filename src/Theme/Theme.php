@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Theme;
 
+use InvalidArgumentException;
+use Stringable;
+
 /**
  * The host theme (`nowo_ui_kit.theme`, REQ-UI-003): slot classes, slot attributes, partial overrides and
  * `--nowo-ui-*` tokens, with optional per-bundle exceptions. Immutable, request-independent (worker safe).
@@ -101,7 +104,7 @@ final readonly class Theme
             $this->assertBundleName((string) $bundle);
             $defaults = $data['framework_defaults'] ?? null;
             if (null !== $defaults && !\is_bool($defaults)) {
-                throw new \InvalidArgumentException(\sprintf('Invalid UiKit theme bundles.%s.framework_defaults: a boolean is expected.', $bundle));
+                throw new InvalidArgumentException(\sprintf('Invalid UiKit theme bundles.%s.framework_defaults: a boolean is expected.', $bundle));
             }
             /** @var array<string, mixed> $bundleClasses */
             $bundleClasses = $data['classes'] ?? [];
@@ -233,7 +236,7 @@ final readonly class Theme
      * (exactly as 1.x when the framework defaults apply); when they are dropped for the slot, only the `nowo-ui-*`
      * and `is-*` classes of the macro are kept, plus the slot's semantic and host / bundle classes.
      */
-    public function macroClasses(string $slot, string|\Stringable $macroClasses, ?string $bundle = null, ?string $page = null): string
+    public function macroClasses(string $slot, string|Stringable $macroClasses, ?string $bundle = null, ?string $page = null): string
     {
         $extra = $this->extraClasses($slot, $bundle, $page);
         if ($this->frameworkDefaults($slot, $bundle, $page)) {
@@ -286,7 +289,7 @@ final readonly class Theme
                 continue;
             }
             if (!\is_scalar($value)) {
-                throw new \InvalidArgumentException(\sprintf('Invalid UiKit attribute "%s": values are strings, numbers, booleans or null.', $name));
+                throw new InvalidArgumentException(\sprintf('Invalid UiKit attribute "%s": values are strings, numbers, booleans or null.', $name));
             }
             $html .= ' '.$name;
             if (true !== $value) {
@@ -501,7 +504,7 @@ final readonly class Theme
             ThemeSlots::semantic((string) $slot);
             $error = self::classEntryError($entry);
             if (null !== $error) {
-                throw new \InvalidArgumentException(\sprintf('Invalid UiKit theme %s.%s: %s', $path, $slot, $error));
+                throw new InvalidArgumentException(\sprintf('Invalid UiKit theme %s.%s: %s', $path, $slot, $error));
             }
             $normalized[(string) $slot] = self::normalizeClassEntry($entry);
         }
@@ -522,11 +525,11 @@ final readonly class Theme
             $page = (string) $page;
             $error = self::pageTypeError($page);
             if (null !== $error) {
-                throw new \InvalidArgumentException('Invalid UiKit theme '.$path.' key: '.$error);
+                throw new InvalidArgumentException('Invalid UiKit theme '.$path.' key: '.$error);
             }
             $defaults = $data['framework_defaults'] ?? null;
             if (null !== $defaults && !\is_bool($defaults)) {
-                throw new \InvalidArgumentException(\sprintf('Invalid UiKit theme %s.%s.framework_defaults: a boolean is expected.', $path, $page));
+                throw new InvalidArgumentException(\sprintf('Invalid UiKit theme %s.%s.framework_defaults: a boolean is expected.', $path, $page));
             }
             /** @var array<string, mixed> $pageClasses */
             $pageClasses = $data['classes'] ?? [];
@@ -589,7 +592,7 @@ final readonly class Theme
                 continue;
             }
             if ('list' !== (string) $page || !\is_bool($value)) {
-                throw new \InvalidArgumentException(\sprintf('Invalid UiKit theme pages.%s.header_actions_in_filters: a boolean, on the list page type only.', $page));
+                throw new InvalidArgumentException(\sprintf('Invalid UiKit theme pages.%s.header_actions_in_filters: a boolean, on the list page type only.', $page));
             }
         }
 
@@ -642,14 +645,14 @@ final readonly class Theme
     {
         $error = self::attributeNameError($name);
         if (null !== $error) {
-            throw new \InvalidArgumentException('Invalid UiKit theme attribute: '.$error);
+            throw new InvalidArgumentException('Invalid UiKit theme attribute: '.$error);
         }
     }
 
     private function assertPartialName(string $name): void
     {
         if (!isset(ThemeSlots::PARTIALS[$name])) {
-            throw new \InvalidArgumentException(\sprintf('Unknown UiKit theme partial "%s" (known: %s).', $name, implode(', ', ThemeSlots::partialNames())));
+            throw new InvalidArgumentException(\sprintf('Unknown UiKit theme partial "%s" (known: %s).', $name, implode(', ', ThemeSlots::partialNames())));
         }
     }
 
@@ -657,14 +660,14 @@ final readonly class Theme
     {
         $error = self::tokenError($name, $value);
         if (null !== $error) {
-            throw new \InvalidArgumentException('Invalid UiKit theme token: '.$error);
+            throw new InvalidArgumentException('Invalid UiKit theme token: '.$error);
         }
     }
 
     private function assertBundleName(string $bundle): void
     {
         if (1 !== preg_match('/^[A-Za-z][A-Za-z0-9_]*$/', $bundle)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid UiKit theme bundle key "%s" (bundle class short name, e.g. NowoHttpLogBundle).', $bundle));
+            throw new InvalidArgumentException(\sprintf('Invalid UiKit theme bundle key "%s" (bundle class short name, e.g. NowoHttpLogBundle).', $bundle));
         }
     }
 }

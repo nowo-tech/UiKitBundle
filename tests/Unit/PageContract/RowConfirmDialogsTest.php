@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 
+use LogicException;
 use Nowo\UiKitBundle\View\Action;
 use Nowo\UiKitBundle\View\Column;
 use Nowo\UiKitBundle\View\Confirm;
@@ -71,7 +72,7 @@ final class RowConfirmDialogsTest extends TestCase
         $b = Action::delete('/people/2', 'tok', new Confirm('Delete Bob?', id: 'del'));
         self::assertSame([$a], $page->confirmDialogs([$a, Action::edit('/e'), $a]));
 
-        $this->expectException(\LogicException::class);
+        $this->expectException(LogicException::class);
         $this->expectExceptionMessage('Confirm id "del" is used by row actions with different content');
         $page->confirmDialogs([$a, $b]);
     }

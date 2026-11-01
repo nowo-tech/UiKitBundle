@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 
 use Nowo\UiKitBundle\Test\FrameworkClasses;
+use Nowo\UiKitBundle\Theme\ThemeSlots;
 use Nowo\UiKitBundle\View\Label;
 use PHPUnit\Framework\TestCase;
 
@@ -94,7 +95,7 @@ final class DialogPartialTest extends TestCase
 
         $layout = (string) file_get_contents(PageContractTwig::root().'/src/Resources/views/layout/document.html.twig');
         self::assertStringContainsString("nowo_ui_partial('scripts'", $layout);
-        self::assertContains('dialog', \Nowo\UiKitBundle\Theme\ThemeSlots::SCRIPTS);
+        self::assertContains('dialog', ThemeSlots::SCRIPTS);
         self::assertFileExists(PageContractTwig::root().'/src/Resources/public/js/nowo-ui-dialog.js');
     }
 }

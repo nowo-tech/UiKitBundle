@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\View;
 
+use InvalidArgumentException;
+
 /**
  * Status of the record a page shows (2.21, {@see PageHeader::$status}): a badge next to the page title — e.g. "Up",
  * "Paused", "Failing". The label is translated by the host ({@see Label} or a string); `tone` picks the badge slot
@@ -19,7 +21,7 @@ final readonly class PageStatus
         public Label|string|null $title = null,
     ) {
         if (!\in_array($tone, self::TONES, true)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid PageStatus tone "%s" (%s).', $tone, implode('|', self::TONES)));
+            throw new InvalidArgumentException(\sprintf('Invalid PageStatus tone "%s" (%s).', $tone, implode('|', self::TONES)));
         }
     }
 }

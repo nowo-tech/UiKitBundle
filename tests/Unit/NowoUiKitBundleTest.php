@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit;
 
+use Nowo\UiKitBundle\DependencyInjection\Compiler\TwigPathsPass;
 use Nowo\UiKitBundle\DependencyInjection\NowoUiKitExtension;
 use Nowo\UiKitBundle\NowoUiKitBundle;
 use PHPUnit\Framework\TestCase;
@@ -21,7 +22,7 @@ final class NowoUiKitBundleTest extends TestCase
         $passes = $container->getCompilerPassConfig()->getPasses();
         $found = false;
         foreach ($passes as $pass) {
-            if ($pass instanceof \Nowo\UiKitBundle\DependencyInjection\Compiler\TwigPathsPass) {
+            if ($pass instanceof TwigPathsPass) {
                 $found = true;
                 break;
             }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 
+use Closure;
 use Nowo\UiKitBundle\View\Action;
 use Nowo\UiKitBundle\View\Confirm;
 use Nowo\UiKitBundle\View\Crumb;
@@ -45,7 +46,7 @@ final class DetailPagePatternsBcTest extends TestCase
     /**
      * Scenario name => render callback (old API only).
      *
-     * @return array<string, \Closure(): string>
+     * @return array<string, Closure(): string>
      */
     public static function renders(): array
     {

@@ -4,15 +4,19 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\DependencyInjection;
 
+use InvalidArgumentException;
 use Nowo\UiKitBundle\DependencyInjection\Configuration;
 use Nowo\UiKitBundle\DependencyInjection\NowoUiKitExtension;
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Twig\ThemeExtension;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\Form\FormFactoryInterface;
+use Symfony\Component\Form\Forms;
 
 final class PageContractConfigurationTest extends TestCase
 {
@@ -166,19 +170,19 @@ final class PageContractConfigurationTest extends TestCase
         try {
             new Theme('bootstrap5', bundles: ['NowoXBundle' => ['pages' => ['index' => []]]]);
             self::fail('page type');
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             self::assertSame('Invalid UiKit theme bundles.NowoXBundle.pages key: unknown page type "index" (known: list, show, form, settings, dashboard, confirm, wizard, auth).', $e->getMessage());
         }
         try {
             new Theme('bootstrap5', bundles: ['NowoXBundle' => ['pages' => ['list' => ['framework_defaults' => 'no']]]]);
             self::fail('framework_defaults');
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             self::assertSame('Invalid UiKit theme bundles.NowoXBundle.pages.list.framework_defaults: a boolean is expected.', $e->getMessage());
         }
         try {
             new Theme('bootstrap5', bundles: ['NowoXBundle' => ['pages' => ['list' => ['classes' => ['btn' => 3]]]]]);
             self::fail('classes');
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             self::assertStringContainsString('Invalid UiKit theme bundles.NowoXBundle.pages.list.classes.btn', $e->getMessage());
         }
         $this->expectExceptionMessage('Invalid UiKit theme attribute');
@@ -258,16 +262,16 @@ final class PageContractConfigurationTest extends TestCase
         self::assertSame(['breadcrumb_kit' => true, 'collection' => null, 'enabled' => true], $twig->getArgument(2));
         // 2.18: the standalone factory of the CSRF-only action forms (symfony/form is installed here).
         self::assertSame('nowo_ui_kit.action_form_factory', (string) $twig->getArgument('$actionForms'));
-        self::assertSame([\Symfony\Component\Form\Forms::class, 'createFormFactory'], $container->getDefinition('nowo_ui_kit.action_form_factory')->getFactory());
+        self::assertSame([Forms::class, 'createFormFactory'], $container->getDefinition('nowo_ui_kit.action_form_factory')->getFactory());
 
-        $container->register('translator', \stdClass::class);
+        $container->register('translator', stdClass::class);
         $container->getDefinition('nowo_ui_kit.theme')->setPublic(true);
         $container->getDefinition('nowo_ui_kit.action_form_factory')->setPublic(true);
         $container->compile();
         $built = $container->get('nowo_ui_kit.theme');
         self::assertInstanceOf(Theme::class, $built);
         self::assertSame('tailwind', $built->framework());
-        self::assertInstanceOf(\Symfony\Component\Form\FormFactoryInterface::class, $container->get('nowo_ui_kit.action_form_factory'));
+        self::assertInstanceOf(FormFactoryInterface::class, $container->get('nowo_ui_kit.action_form_factory'));
     }
 
     /**

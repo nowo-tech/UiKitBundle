@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\View;
 
+use InvalidArgumentException;
 use Nowo\UiKitBundle\View\Pagination;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 use Symfony\Component\HttpFoundation\Request;
 
 final class PaginationTest extends TestCase
@@ -72,9 +74,9 @@ final class PaginationTest extends TestCase
         $p = Pagination::fromPagerfanta($pager, 'items', ['q' => 'x']);
         self::assertSame([2, 10, 25, 3, 'items', ['q' => 'x']], [$p->page, $p->perPage, $p->total, $p->totalPages, $p->route, $p->query]);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('does not look like a Pagerfanta pager: method getCurrentPage() is missing');
-        Pagination::fromPagerfanta(new \stdClass());
+        Pagination::fromPagerfanta(new stdClass());
     }
 
     public function testFromKnp(): void
@@ -143,8 +145,8 @@ final class PaginationTest extends TestCase
         $p = Pagination::fromKnp($bare);
         self::assertSame([null, []], [$p->route, $p->query]);
 
-        $this->expectException(\InvalidArgumentException::class);
-        Pagination::fromKnp(new \stdClass());
+        $this->expectException(InvalidArgumentException::class);
+        Pagination::fromKnp(new stdClass());
     }
 
     /**
@@ -176,7 +178,7 @@ final class PaginationTest extends TestCase
         self::assertSame([20, 40], Pagination::fromTotal(100, 1, 40, [20, 20, 40, 0, -5])->allowedPerPage);
         self::assertSame(40, Pagination::fromTotal(100, 1, 40, [20, 40])->perPage);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         Pagination::fromTotal(10, 1, 10, [0]);
     }
 
@@ -210,7 +212,7 @@ final class PaginationTest extends TestCase
         self::assertTrue(Pagination::fromTotal(30, 1, 10, variant: 'compact')->isCompact());
         self::assertTrue(Pagination::fromRequest(Request::create('/list'), 30, variant: 'compact')->isCompact());
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Unknown pagination variant "tiny"');
         $full->withVariant('tiny');
     }

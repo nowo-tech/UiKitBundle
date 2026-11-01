@@ -7,6 +7,7 @@ namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 use Nowo\UiKitBundle\Test\FrameworkClasses;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Yaml\Yaml;
 
 /**
  * Kit error pages (2.6): @NowoUiKit/error/status.html.twig on @NowoUiKit/error/layout.html.twig — the union of the
@@ -148,7 +149,7 @@ TWIG;
     public function testEveryShippedCodeHasItsTextsInEveryLocale(): void
     {
         foreach (glob(PageContractTwig::root().'/src/Resources/translations/NowoUiKitBundle.*.yaml') ?: [] as $file) {
-            $catalogue = \Symfony\Component\Yaml\Yaml::parseFile($file);
+            $catalogue = Yaml::parseFile($file);
             self::assertIsArray($catalogue);
             foreach (['skip_to_content', 'home', 'retry', 'back', 'retry_after', 'auto_retry', 'generic.title', 'generic.lead', 'generic.image_alt'] as $key) {
                 self::assertArrayHasKey('error.'.$key, $catalogue, basename($file));

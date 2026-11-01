@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Listing;
 
+use ArrayAccess;
+use InvalidArgumentException;
 use Nowo\UiKitBundle\View\Column;
+use Nowo\UiKitBundle\View\ListPage;
+use Nowo\UiKitBundle\View\Pagination;
+use Nowo\UiKitBundle\View\Table;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -14,8 +19,8 @@ use Symfony\Component\HttpFoundation\Request;
  * keys means `asc` for all). An unknown or missing key falls back to the default sort (`defaultField`, or no sort:
  * the list's own order) — never an error — and an unknown direction to the key's first-click direction. Hosts read it
  * in the controller, order their query by {@see self::$field} / {@see self::$direction} (always with a stable
- * tie-breaker) and pass it to the view ({@see \Nowo\UiKitBundle\View\ListPage::$sorting} /
- * {@see \Nowo\UiKitBundle\View\Table::$sorting}), whose sortable headers link to the next state:
+ * tie-breaker) and pass it to the view ({@see ListPage::$sorting} /
+ * {@see Table::$sorting}), whose sortable headers link to the next state:
  *
  *     $sort = SortRequest::fromRequest($request, ['name' => 'asc', 'createdAt' => 'desc'], 'createdAt');
  *     $rows = $repository->search($filters, $sort->field, $sort->direction);
@@ -49,10 +54,10 @@ final readonly class SortRequest
         public ?string $pageParam = 'page',
     ) {
         if (!\in_array($direction, self::DIRECTIONS, true)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid sort direction "%s" (asc|desc).', $direction));
+            throw new InvalidArgumentException(\sprintf('Invalid sort direction "%s" (asc|desc).', $direction));
         }
         if ('' === trim($sortParam) || '' === trim($directionParam) || $sortParam === $directionParam) {
-            throw new \InvalidArgumentException('A SortRequest needs two distinct, non-empty query parameter names.');
+            throw new InvalidArgumentException('A SortRequest needs two distinct, non-empty query parameter names.');
         }
         $this->fields = self::normalizeFields($fields);
     }
@@ -76,10 +81,10 @@ final readonly class SortRequest
     {
         $fields = self::normalizeFields($fields);
         if (null !== $defaultField && !isset($fields[$defaultField])) {
-            throw new \InvalidArgumentException(\sprintf('The default sort "%s" is not one of the sortable keys (%s).', $defaultField, implode('|', array_keys($fields))));
+            throw new InvalidArgumentException(\sprintf('The default sort "%s" is not one of the sortable keys (%s).', $defaultField, implode('|', array_keys($fields))));
         }
         if (null !== $defaultDirection && !\in_array($defaultDirection, self::DIRECTIONS, true)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid sort direction "%s" (asc|desc).', $defaultDirection));
+            throw new InvalidArgumentException(\sprintf('Invalid sort direction "%s" (asc|desc).', $defaultDirection));
         }
         if (!\is_string($sort) || !isset($fields[$sort])) {
             $direction = $defaultDirection ?? (null === $defaultField ? self::ASC : $fields[$defaultField]);
@@ -157,7 +162,7 @@ final readonly class SortRequest
         return array_merge($current, [$this->sortParam => $field, $this->directionParam => $this->nextDirection($field)]);
     }
 
-    /** Same sort with another page parameter (the list's {@see \Nowo\UiKitBundle\View\Pagination::$pageParam}). */
+    /** Same sort with another page parameter (the list's {@see Pagination::$pageParam}). */
     public function withPageParam(?string $pageParam): self
     {
         return $pageParam === $this->pageParam ? $this : new self($this->field, $this->direction, $this->fields, $this->sortParam, $this->directionParam, $pageParam);
@@ -205,7 +210,7 @@ final readonly class SortRequest
 
     private static function read(mixed $row, string $key): mixed
     {
-        if (\is_array($row) || $row instanceof \ArrayAccess) {
+        if (\is_array($row) || $row instanceof ArrayAccess) {
             return $row[$key] ?? null;
         }
         if (\is_object($row)) {
@@ -226,10 +231,10 @@ final readonly class SortRequest
         foreach ($fields as $key => $value) {
             [$field, $first] = \is_int($key) ? [$value, self::ASC] : [$key, $value];
             if ('' === trim($field)) {
-                throw new \InvalidArgumentException('Sort keys must be non-empty strings.');
+                throw new InvalidArgumentException('Sort keys must be non-empty strings.');
             }
             if (!\in_array($first, self::DIRECTIONS, true)) {
-                throw new \InvalidArgumentException(\sprintf('Invalid first-click direction "%s" of the sort key "%s" (asc|desc).', $first, $field));
+                throw new InvalidArgumentException(\sprintf('Invalid first-click direction "%s" of the sort key "%s" (asc|desc).', $first, $field));
             }
             $normalized[$field] = $first;
         }

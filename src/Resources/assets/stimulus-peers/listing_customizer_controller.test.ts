@@ -555,3 +555,33 @@ describe('listing-customizer peer', () => {
     expect(reload).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('base controller edge cases', () => {
+  it('reloads the page through window.location by default', async () => {
+    const realReload = vi.fn<() => void>();
+    const location = window.location;
+    vi.stubGlobal('location', { ...location, reload: realReload });
+    app.register('base-listing-customizer', ListingCustomizerController);
+    document.body.innerHTML = `<div data-controller="base-listing-customizer"><ul data-kind="columns" data-base-listing-customizer-target="list"></ul></div>`;
+    await tick();
+    const root = document.querySelector('[data-controller]') as HTMLElement;
+    const c = app.getControllerForElementAndIdentifier(root, 'base-listing-customizer') as ListingCustomizerController;
+    await c.apply();
+    expect(realReload).toHaveBeenCalledTimes(1);
+    expect(reload).not.toHaveBeenCalled();
+  });
+
+  it('tracks edits without a status target', async () => {
+    const value = state();
+    document.body.innerHTML = `<div data-controller="listing-customizer" data-listing-customizer-state-value='${JSON.stringify(value)}'
+         data-listing-customizer-messages-value='${JSON.stringify(MESSAGES)}'>
+      <ul data-kind="filters" data-listing-customizer-target="list"></ul></div>`;
+    await tick();
+    const root = document.querySelector('[data-controller]') as HTMLElement;
+    const tag = row('filters', 'tag').querySelector('input') as HTMLInputElement;
+    tag.checked = true;
+    tag.dispatchEvent(new Event('change'));
+    expect(root.hasAttribute('data-listing-dirty')).toBe(true);
+    expect(root.querySelector('[data-listing-customizer-target="status"]')).toBeNull();
+  });
+});

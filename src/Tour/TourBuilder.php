@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\UiKitBundle\Tour;
 
 use Nowo\UiKitBundle\View\Label;
+use Stringable;
 
 /**
  * Immutable builder of a {@see Tour} (2.13) from translation keys: a step key `k` gives the labels `<prefix>k.title`
@@ -46,7 +47,7 @@ final readonly class TourBuilder
     /**
      * A centred step (no highlighted element), e.g. the welcome popover.
      *
-     * @param array<string, string|int|float|\Stringable|null> $params description parameters
+     * @param array<string, string|int|float|Stringable|null> $params description parameters
      *
      * @return self Fluent interface
      */
@@ -58,7 +59,7 @@ final readonly class TourBuilder
     /**
      * A step anchored to `selector` (null = centred).
      *
-     * @param array<string, string|int|float|\Stringable|null> $params description parameters
+     * @param array<string, string|int|float|Stringable|null> $params description parameters
      *
      * @return self Fluent interface
      */

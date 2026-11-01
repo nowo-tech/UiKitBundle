@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\Listing;
 
+use InvalidArgumentException;
 use Nowo\UiKitBundle\Listing\ListingField;
 use Nowo\UiKitBundle\Listing\ListingFieldState;
 use Nowo\UiKitBundle\Listing\ListingTableMode;
@@ -32,7 +33,7 @@ final class ListingFieldTest extends TestCase
 
     public function testEmptyKeyIsRejected(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         new ListingField(' ', 'A');
     }
 
@@ -44,7 +45,7 @@ final class ListingFieldTest extends TestCase
 
     public function testEmptyQueryKeyIsRejected(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         new ListingField('created', 'Created', queryKeys: ['created_from', '']);
     }
 }

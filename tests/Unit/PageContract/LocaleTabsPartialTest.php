@@ -10,6 +10,7 @@ use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\HttpFoundation\Request;
+use Twig\Markup;
 
 /**
  * 2.5: the `locale_tabs` partial (no-JS stacked fieldsets upgraded to WAI-ARIA tabs by nowo-ui-tabs.js) and the
@@ -195,8 +196,8 @@ final class LocaleTabsPartialTest extends TestCase
     private function panels(): array
     {
         return [
-            ['locale' => 'es', 'content' => new \Twig\Markup('<label for="t-es">Título</label><input id="t-es" name="t[es]">', 'UTF-8')],
-            ['locale' => 'en', 'content' => new \Twig\Markup('<input name="t[en]">', 'UTF-8')],
+            ['locale' => 'es', 'content' => new Markup('<label for="t-es">Título</label><input id="t-es" name="t[es]">', 'UTF-8')],
+            ['locale' => 'en', 'content' => new Markup('<input name="t[en]">', 'UTF-8')],
             ['locale' => 'ar', 'content' => '<b>escaped</b>'],
         ];
     }

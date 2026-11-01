@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Test;
 
+use LogicException;
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Twig\ThemeExtension;
 use Nowo\UiKitBundle\View\Action;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use ReflectionProperty;
 use Symfony\Bridge\Twig\AppVariable;
 use Symfony\Bridge\Twig\Extension\FormExtension;
 use Symfony\Bridge\Twig\Extension\TranslationExtension;
@@ -21,6 +24,7 @@ use Symfony\Component\Translation\DataCollectorTranslator;
 use Symfony\Component\Translation\Loader\XliffFileLoader;
 use Symfony\Component\Translation\Loader\YamlFileLoader;
 use Symfony\Component\Translation\Translator;
+use Throwable;
 use Twig\Environment;
 use Twig\Extension\ProfilerExtension;
 use Twig\Extra\String\StringExtension;
@@ -451,7 +455,7 @@ abstract class PageContractTestCase extends TestCase
         $seen[spl_object_id($value)] = true;
         if ($value instanceof FormView) {
             foreach (['rendered', 'methodRendered'] as $property) {
-                (new \ReflectionProperty(FormView::class, $property))->setValue($value, false);
+                (new ReflectionProperty(FormView::class, $property))->setValue($value, false);
             }
             self::prepareFormViews($value->children, $seen, $actionForms);
             // Collection prototypes (CollectionType `prototype`) are FormViews outside `children`
@@ -514,7 +518,7 @@ abstract class PageContractTestCase extends TestCase
         $error = null;
         try {
             $twig->render($fixture->template, $fixture->context);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $error = $e;
         }
 
@@ -530,7 +534,7 @@ abstract class PageContractTestCase extends TestCase
             }
             $profile = $profile instanceof Profile ? $this->lastTemplateProfile($profile) : null;
             if (!$profile instanceof Profile) {
-                throw $error ?? new \LogicException(\sprintf('The parent of "%s" could not be resolved.', $name));
+                throw $error ?? new LogicException(\sprintf('The parent of "%s" could not be resolved.', $name));
             }
             $name = $profile->getTemplate();
         }
@@ -569,7 +573,7 @@ abstract class PageContractTestCase extends TestCase
         $themes = static::formThemes();
         $withForm = null !== $themes && class_exists(FormRenderer::class);
         if ($withForm) {
-            $filesystem->addPath(\dirname((string) (new \ReflectionClass(FormExtension::class))->getFileName(), 2).'/Resources/views/Form');
+            $filesystem->addPath(\dirname((string) (new ReflectionClass(FormExtension::class))->getFileName(), 2).'/Resources/views/Form');
         }
 
         $twig = new Environment(

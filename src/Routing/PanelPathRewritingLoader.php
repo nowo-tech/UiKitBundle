@@ -13,11 +13,11 @@ use Symfony\Component\Routing\RouteCollection;
  *
  * Only registered when the map is non-empty.
  */
-final class PanelPathRewritingLoader implements LoaderInterface
+final readonly class PanelPathRewritingLoader implements LoaderInterface
 {
     public function __construct(
-        private readonly LoaderInterface $inner,
-        private readonly PanelPathRewriter $rewriter,
+        private LoaderInterface $inner,
+        private PanelPathRewriter $rewriter,
     ) {
     }
 

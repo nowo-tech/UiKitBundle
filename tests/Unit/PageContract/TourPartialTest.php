@@ -6,6 +6,7 @@ namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 
 use Nowo\UiKitBundle\Test\FrameworkClasses;
 use Nowo\UiKitBundle\Theme\ThemeSlots;
+use Nowo\UiKitBundle\Tour\Tour;
 use Nowo\UiKitBundle\Tour\TourBuilder;
 use Nowo\UiKitBundle\Tour\TourStep;
 use Nowo\UiKitBundle\View\Label;
@@ -184,7 +185,7 @@ final class TourPartialTest extends TestCase
         return PageContractTwig::create(['t' => self::TPL], messages: self::MESSAGES)->render('t', ['vars' => $vars]);
     }
 
-    private function tour(): \Nowo\UiKitBundle\Tour\Tour
+    private function tour(): Tour
     {
         return TourBuilder::create('dashboard', prefix: 'tour.steps.dashboard.')
             ->welcome('welcome', ['%name%' => 'Ada'])

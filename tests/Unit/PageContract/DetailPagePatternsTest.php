@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 
+use InvalidArgumentException;
 use Nowo\UiKitBundle\View\Action;
 use Nowo\UiKitBundle\View\Confirm;
 use Nowo\UiKitBundle\View\DetailItem;
@@ -37,7 +38,7 @@ final class DetailPagePatternsTest extends TestCase
         self::assertNull($pause->withDisplay(null)->display);
         self::assertSame('7', $pause->withConfirmScope(7)->withDisplay('text')->confirmScope, 'the confirm scope survives');
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $edit->withDisplay('huge');
     }
 
@@ -64,7 +65,7 @@ final class DetailPagePatternsTest extends TestCase
         self::assertSame([], $empty->confirmActions());
         self::assertFalse((new HeaderActions(icons: [$edit]))->isEmpty());
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         HeaderActions::split(['nope']);
     }
 
@@ -100,7 +101,7 @@ final class DetailPagePatternsTest extends TestCase
             try {
                 $invalid();
                 self::fail('case '.$i.' must throw');
-            } catch (\InvalidArgumentException) {
+            } catch (InvalidArgumentException) {
                 self::addToAssertionCount(1);
             }
         }

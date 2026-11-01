@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 
+use InvalidArgumentException;
 use Nowo\UiKitBundle\View\Action;
 use Nowo\UiKitBundle\View\Column;
 use Nowo\UiKitBundle\View\ListPage;
@@ -72,7 +73,7 @@ final class ActionDisplayTest extends TestCase
         try {
             new ListPage(new PageHeader('x'), filtersDisplay: 'big');
             self::fail('filtersDisplay');
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             self::assertStringContainsString('Invalid ListPage filtersDisplay "big"', $e->getMessage());
         }
         self::assertSame('icon', (new Action(display: 'icon'))->withConfirmScope(1)->display);

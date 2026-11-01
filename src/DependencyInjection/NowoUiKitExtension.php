@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\DependencyInjection;
 
+use Closure;
+use LogicException;
 use Nowo\UiKitBundle\Appearance\AppearanceCssEmitter;
 use Nowo\UiKitBundle\Appearance\AppearancePreset;
 use Nowo\UiKitBundle\Appearance\AppearancePresetProviderInterface;
@@ -57,13 +59,13 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
     /** Form theme with the date-range field's blocks (2.15), prepended to `twig.form_themes`. */
     public const DATE_RANGE_FORM_THEME = '@NowoUiKit/form/nowo_ui_date_range.html.twig';
 
-    /** @var \Closure(): bool */
-    private readonly \Closure $httpClientAvailable;
+    /** @var Closure(): bool */
+    private readonly Closure $httpClientAvailable;
 
     /**
-     * @param (\Closure(): bool)|null $httpClientAvailable whether symfony/http-client is installed (overridable in tests)
+     * @param (Closure(): bool)|null $httpClientAvailable whether symfony/http-client is installed (overridable in tests)
      */
-    public function __construct(?\Closure $httpClientAvailable = null)
+    public function __construct(?Closure $httpClientAvailable = null)
     {
         $this->httpClientAvailable = $httpClientAvailable ?? static fn (): bool => interface_exists(HttpClientInterface::class) && class_exists(HttpClient::class);
     }
@@ -134,7 +136,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
         $container->setParameter('nowo_ui_kit.panel_path_rewrites', $rewrites);
         $this->registerPanelPathRewrites($container, $rewrites);
 
-        /** @var array{enabled: bool, github_repo: string, current_version: string, cache_ttl: int, default_branch: string, user_agent: string} $releaseCheck */
+        /** @var array{enabled: bool, github_repo: string, current_version: string, cache_ttl: int, default_branch: string, user_agent: string, timeout: float, releases_timeout: float} $releaseCheck */
         $releaseCheck = $config['release_check'];
         $container->setParameter('nowo_ui_kit.release_check.enabled', $releaseCheck['enabled']);
         $container->setParameter('nowo_ui_kit.release_check.github_repo', $releaseCheck['github_repo']);
@@ -145,8 +147,11 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
         $appearance = $config['appearance'];
         $container->setParameter('nowo_ui_kit.appearance.enabled', $appearance['enabled']);
         $this->registerAppearance($container, $appearance);
-        $this->registerMultiSelect($container);
-        $this->registerDateRange($container);
+        // Form types / extensions below exist only with symfony/form (optional dependency).
+        if (class_exists(AbstractType::class)) {
+            $this->registerMultiSelect($container);
+            $this->registerDateRange($container);
+        }
 
         /** @var array{base_url: string, default_testid: ?string, routes: array<string, array{path: string, testid: ?string}>} $routeLinks */
         $routeLinks = $config['route_links'];
@@ -257,13 +262,10 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
 
     /**
      * ChoiceType option `nowo_ui_multi_select` (2.14, markup of the `multi-select` Stimulus peer); only with
-     * symfony/form.
+     * symfony/form (guarded by the caller).
      */
     private function registerMultiSelect(ContainerBuilder $container): void
     {
-        if (!class_exists(AbstractType::class)) {
-            return;
-        }
         $container->register('nowo_ui_kit.form.multi_select_extension', MultiSelectTypeExtension::class)
             ->setArguments([new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE)])
             ->addTag('form.type_extension');
@@ -272,13 +274,10 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
     /**
      * Date-range filter field (2.15): `DateRangeType` (form type, translated short labels), the submit extension
      * that maps its two host-named parameters onto it and the request-handler decorator that lets those parameters
-     * submit a nameless form (2.15.1); only with symfony/form.
+     * submit a nameless form (2.15.1); only with symfony/form (guarded by the caller).
      */
     private function registerDateRange(ContainerBuilder $container): void
     {
-        if (!class_exists(AbstractType::class)) {
-            return;
-        }
         $container->register('nowo_ui_kit.form.date_range_type', DateRangeType::class)
             ->setArguments([new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE)])
             ->addTag('form.type');
@@ -382,20 +381,22 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
      * The controller is always registered (404 while disabled) so an imported route never breaks;
      * the checker (HTTP client + cache) only when enabled.
      *
-     * @param array{enabled: bool, github_repo: string, current_version: string, cache_ttl: int, default_branch: string, user_agent: string} $releaseCheck
+     * @param array{enabled: bool, github_repo: string, current_version: string, cache_ttl: int, default_branch: string, user_agent: string, timeout: float, releases_timeout: float} $releaseCheck
      */
     private function registerReleaseCheck(ContainerBuilder $container, array $releaseCheck): void
     {
         $controller = $container->register('nowo_ui_kit.release_status_controller', ReleaseStatusController::class)
             ->setPublic(true)
             ->addTag('controller.service_arguments');
+        // The attribute route's _controller is the class name: resolve it to the explicit service (REQ-SF-004).
+        $container->setAlias(ReleaseStatusController::class, 'nowo_ui_kit.release_status_controller')->setPublic(true);
 
         if (!$releaseCheck['enabled']) {
             return;
         }
 
         if (!($this->httpClientAvailable)()) {
-            throw new \LogicException('nowo_ui_kit.release_check.enabled requires symfony/http-client (composer require symfony/http-client).');
+            throw new LogicException('nowo_ui_kit.release_check.enabled requires symfony/http-client (composer require symfony/http-client).');
         }
 
         $container->register('nowo_ui_kit.release_update_checker', ReleaseUpdateChecker::class)
@@ -409,6 +410,8 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
                 $releaseCheck['user_agent'],
                 $releaseCheck['default_branch'],
                 new Reference('logger', ContainerInterface::IGNORE_ON_INVALID_REFERENCE),
+                (float) $releaseCheck['timeout'],
+                (float) $releaseCheck['releases_timeout'],
             ])
             ->setPublic(false);
         $container->setAlias(ReleaseUpdateChecker::class, 'nowo_ui_kit.release_update_checker')->setPublic(false);

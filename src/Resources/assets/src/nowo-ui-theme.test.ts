@@ -146,5 +146,17 @@ describe('nowo-ui-theme', () => {
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
     spy.mockRestore();
   });
-});
 
+  it('skips non-HTML toggles when syncing and ignores non-element click targets', () => {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('data-nowo-ui-theme-toggle', '');
+    document.body.appendChild(svg);
+    mod.setTheme('dark');
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+    expect(svg.hasAttribute('aria-pressed')).toBe(false);
+    expect(document.querySelector('button')?.getAttribute('aria-pressed')).toBe('true');
+
+    document.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
+  });
+});

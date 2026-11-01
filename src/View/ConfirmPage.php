@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\View;
 
+use InvalidArgumentException;
+
 /**
  * View model of `@NowoUiKit/page/confirm.html.twig`: full-page confirm (no-JS fallback of the confirm dialog).
  * `action` is the non-GET action submitted by the confirm button.
@@ -24,7 +26,7 @@ final readonly class ConfirmPage
     ) {
         Action::assertAttributes($attributes);
         if (!$action->isPost()) {
-            throw new \InvalidArgumentException('ConfirmPage needs a non-GET action (it renders the POST form).');
+            throw new InvalidArgumentException('ConfirmPage needs a non-GET action (it renders the POST form).');
         }
     }
 }

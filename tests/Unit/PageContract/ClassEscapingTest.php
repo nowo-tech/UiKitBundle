@@ -4,10 +4,16 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 
+use DOMDocument;
+use DOMElement;
+use DOMXPath;
 use Nowo\UiKitBundle\Tests\Unit\Test\ScaffoldFixtures;
 use Nowo\UiKitBundle\Theme\ThemeSlots;
 use Nowo\UiKitBundle\View\Action;
 use Nowo\UiKitBundle\View\Confirm;
+use Nowo\UiKitBundle\View\Crumb;
+use Nowo\UiKitBundle\View\PageHeader;
+use Nowo\UiKitBundle\View\Pagination;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -64,11 +70,11 @@ final class ClassEscapingTest extends TestCase
             '_empty' => ['message' => 'Nothing'],
             '_burger' => [],
             '_modal_shell' => ['id' => 'm1', 'title' => 'Modal', 'body' => '<p>b</p>', 'footer' => '<p>f</p>'],
-            '_breadcrumbs' => ['header' => new \Nowo\UiKitBundle\View\PageHeader('T', breadcrumbs: [new \Nowo\UiKitBundle\View\Crumb('Home', '/'), new \Nowo\UiKitBundle\View\Crumb('T')])],
+            '_breadcrumbs' => ['header' => new PageHeader('T', breadcrumbs: [new Crumb('Home', '/'), new Crumb('T')])],
             '_shell' => ['brand' => 'Acme', 'name' => 'Ann', 'initials' => 'A', 'aside_items' => [], 'main' => '<p>main</p>'],
             // 2.6
             '_confirm_dialog' => ['trigger_label' => 'Open', 'dialog_id' => 'd1'],
-            '_pagination_compact' => ['pagination' => \Nowo\UiKitBundle\View\Pagination::fromTotal(95, 2, 10, route: 'items', variant: 'compact')],
+            '_pagination_compact' => ['pagination' => Pagination::fromTotal(95, 2, 10, route: 'items', variant: 'compact')],
         ];
         foreach ($partials as $partial => $vars) {
             yield 'host partial '.$partial => ['host', '@NowoUiKitBundle/partials/'.$partial.'.html.twig', $vars];
@@ -99,19 +105,19 @@ final class ClassEscapingTest extends TestCase
             self::assertStringNotContainsString($double, $html, 'double-escaped class list');
         }
 
-        $dom = new \DOMDocument();
+        $dom = new DOMDocument();
         $previous = libxml_use_internal_errors(true);
         $dom->loadHTML('<?xml encoding="UTF-8"><body>'.$html.'</body>');
         libxml_clear_errors();
         libxml_use_internal_errors($previous);
-        $xpath = new \DOMXPath($dom);
+        $xpath = new DOMXPath($dom);
 
         self::assertSame(0, $xpath->query('//img')?->length, 'injected element');
         self::assertSame(0, $xpath->query('//@*[starts-with(name(), "on")]')?->length, 'injected attribute');
 
         $themed = 0;
         foreach ($xpath->query('//*[@class]') ?: [] as $element) {
-            \assert($element instanceof \DOMElement);
+            \assert($element instanceof DOMElement);
             $tokens = preg_split('/\s+/', $element->getAttribute('class')) ?: [];
             if (\in_array('[&>li]:mt-1', $tokens, true)) {
                 ++$themed;

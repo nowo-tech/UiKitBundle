@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\Release;
 
+use DateTimeImmutable;
 use Nowo\UiKitBundle\Release\ReleaseUpdateChecker;
 use Nowo\UiKitBundle\Release\ReleaseUpdateInfo;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
+use ReflectionProperty;
+use RuntimeException;
+use Stringable;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
@@ -81,6 +85,45 @@ final class ReleaseUpdateCheckerTest extends TestCase
         self::assertCount(2, $requests);
         self::assertSame('https://api.github.com/repos/acme/app/releases/latest', $requests[0][0]);
         self::assertContains('User-Agent: my-app', $requests[0][1]['headers']);
+        self::assertSame(ReleaseUpdateChecker::DEFAULT_LATEST_TIMEOUT, $requests[0][1]['timeout']);
+        self::assertSame(ReleaseUpdateChecker::DEFAULT_RELEASES_TIMEOUT, $requests[1][1]['timeout']);
+        self::assertSame(5.0, ReleaseUpdateChecker::DEFAULT_LATEST_TIMEOUT);
+        self::assertSame(8.0, ReleaseUpdateChecker::DEFAULT_RELEASES_TIMEOUT);
+    }
+
+    public function testConfiguredTimeoutsAreSentWithEveryRequest(): void
+    {
+        $timeouts = [];
+        $http = new MockHttpClient(function (string $method, string $url, array $options) use (&$timeouts): ResponseInterface {
+            $timeouts[] = $options['timeout'];
+
+            return str_contains($url, '/releases/latest')
+                ? $this->latestResponse('v1.2.0')
+                : $this->releasesListResponse([['tag_name' => 'v1.2.0', 'draft' => false, 'prerelease' => false]]);
+        });
+
+        $checker = new ReleaseUpdateChecker($http, new ArrayAdapter(), 'v1.0.0', self::REPO, true, 3600, 'ua', 'main', null, 1.5, 2.5);
+        self::assertSame(ReleaseUpdateInfo::STATUS_OK, $checker->check()->status);
+        self::assertSame([1.5, 2.5], $timeouts);
+    }
+
+    public function testIdleTimeoutSoftFailsToError(): void
+    {
+        // An empty chunk makes MockResponse simulate an idle timeout (REQ-RUNTIME-001 timeout path).
+        $http = new MockHttpClient([new MockResponse(['', '{"tag_name":"v9.9.9"}'], ['http_code' => 200])]);
+        $logger = new class extends AbstractLogger {
+            /** @var list<string> */
+            public array $messages = [];
+
+            public function log($level, string|Stringable $message, array $context = []): void
+            {
+                $this->messages[] = (string) $message;
+            }
+        };
+
+        $checker = new ReleaseUpdateChecker($http, new ArrayAdapter(), 'v1.0.0', self::REPO, true, 3600, 'ua', 'main', $logger, 0.1, 0.1);
+        self::assertSame(ReleaseUpdateInfo::STATUS_ERROR, $checker->check()->status);
+        self::assertContains('Release update check HTTP failed.', $logger->messages);
     }
 
     public function testUpToDateComparesAgainstDefaultBranch(): void
@@ -130,7 +173,7 @@ final class ReleaseUpdateCheckerTest extends TestCase
     public function testTransportExceptionSoftFails(): void
     {
         $http = new MockHttpClient(static function (): never {
-            throw new \RuntimeException('network down');
+            throw new RuntimeException('network down');
         });
 
         self::assertSame(ReleaseUpdateInfo::STATUS_ERROR, $this->checker($http, 'v1.0.6')->check()->status);
@@ -170,7 +213,7 @@ final class ReleaseUpdateCheckerTest extends TestCase
             if (str_contains($url, '/releases/latest')) {
                 return $this->latestResponse('v1.1.0');
             }
-            throw new \RuntimeException('list down');
+            throw new RuntimeException('list down');
         });
         $info = $this->checker($http, 'v1.0.6')->check();
         self::assertTrue($info->updateAvailable);
@@ -197,7 +240,7 @@ final class ReleaseUpdateCheckerTest extends TestCase
         self::assertNotNull($second->checkedAt);
         self::assertSame(1, $calls, 'A failed GitHub fetch must not be retried on every request.');
 
-        $expiries = new \ReflectionProperty(ArrayAdapter::class, 'expiries');
+        $expiries = new ReflectionProperty(ArrayAdapter::class, 'expiries');
         /** @var array<string, float> $values */
         $values = $expiries->getValue($cache);
         self::assertCount(1, $values);
@@ -221,14 +264,14 @@ final class ReleaseUpdateCheckerTest extends TestCase
         $checker->check();
 
         /** @var array<string, float> $values */
-        $values = (new \ReflectionProperty(ArrayAdapter::class, 'expiries'))->getValue($cache);
+        $values = (new ReflectionProperty(ArrayAdapter::class, 'expiries'))->getValue($cache);
         self::assertLessThanOrEqual(91, reset($values) - microtime(true));
     }
 
     public function testCacheFailureSoftFails(): void
     {
         $cache = $this->createMock(CacheInterface::class);
-        $cache->method('get')->willThrowException(new \RuntimeException('cache down'));
+        $cache->method('get')->willThrowException(new RuntimeException('cache down'));
 
         self::assertSame(ReleaseUpdateInfo::STATUS_ERROR, $this->checker($this->noHttp(), 'v1.0.6', cache: $cache)->check()->status);
     }
@@ -281,7 +324,7 @@ final class ReleaseUpdateCheckerTest extends TestCase
 
     public function testInfoToArray(): void
     {
-        $info = new ReleaseUpdateInfo(ReleaseUpdateInfo::STATUS_OK, 'v1', 'v2', true, 1, 'r', 'c', new \DateTimeImmutable('2026-10-09T08:00:00+00:00'));
+        $info = new ReleaseUpdateInfo(ReleaseUpdateInfo::STATUS_OK, 'v1', 'v2', true, 1, 'r', 'c', new DateTimeImmutable('2026-10-09T08:00:00+00:00'));
 
         self::assertSame([
             'status' => 'ok',
@@ -341,7 +384,7 @@ final class ReleaseUpdateCheckerTest extends TestCase
             /** @var list<string> */
             public array $records = [];
 
-            public function log($level, string|\Stringable $message, array $context = []): void
+            public function log($level, string|Stringable $message, array $context = []): void
             {
                 $this->records[] = (string) $message;
             }

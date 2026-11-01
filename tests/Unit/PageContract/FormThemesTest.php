@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 
+use ArrayIterator;
+use InvalidArgumentException;
 use Nowo\UiKitBundle\View\FormPage;
 use Nowo\UiKitBundle\View\PageHeader;
 use Nowo\UiKitBundle\View\SettingsPage;
@@ -51,8 +53,8 @@ final class FormThemesTest extends TestCase
 
     public function testThemesAreValidated(): void
     {
-        self::assertSame(['a.html.twig'], (new SettingsSection('s', 'S', formThemes: new \ArrayIterator(['a.html.twig'])))->formThemes);
-        $this->expectException(\InvalidArgumentException::class);
+        self::assertSame(['a.html.twig'], (new SettingsSection('s', 'S', formThemes: new ArrayIterator(['a.html.twig'])))->formThemes);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('FormPage formThemes: expected template names (non-empty strings), got string.');
         new FormPage(new PageHeader('X'), $this->form('x'), formThemes: [' ']);
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 
+use LogicException;
 use Nowo\UiKitBundle\Listing\ListingField;
 use Nowo\UiKitBundle\Listing\ListingFieldState;
 use Nowo\UiKitBundle\Listing\ListingLayout;
@@ -107,7 +108,7 @@ final class SortableHeadersTest extends TestCase
         self::assertStringContainsString('data-controller="table-sort"', $html);
         self::assertStringContainsString('<th scope="col" class="nowo-ui-table__head-cell nowo-ui-table__head-cell--sortable nowo-ui-cell--start" data-sortable><button type="button"', $html);
 
-        $this->expectException(\LogicException::class);
+        $this->expectException(LogicException::class);
         $this->expectExceptionMessage('A paginated ListPage cannot sort in the browser');
         new ListPage(new PageHeader('Files'), [new Column('name', 'Name', true)], pagination: new Pagination(1, 10, 42), clientSort: true);
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Listing;
 
+use JsonException;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -34,7 +35,7 @@ final readonly class CookieListingPreferenceStore implements ListingPreferenceSt
 
         try {
             $data = json_decode($raw, true, 8, \JSON_THROW_ON_ERROR);
-        } catch (\JsonException) {
+        } catch (JsonException) {
             return null;
         }
         if (!\is_array($data)) {

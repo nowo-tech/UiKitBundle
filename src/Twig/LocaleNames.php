@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Twig;
 
+use Closure;
+use Locale;
+use Throwable;
+
 /**
  * Locale display names and writing direction for the `locale_tabs` partial (2.5): `nowo_ui_locale_name()` /
  * `nowo_ui_locale_dir()`. Uses ext-intl when the extension is loaded (`es` → "Spanish" in English, "español" in
@@ -11,25 +15,25 @@ namespace Nowo\UiKitBundle\Twig;
  * `getDisplayName()` throws, so the gate is `extension_loaded('intl')` and any resolver failure falls back to the code
  * (2.5.2). Stateless.
  */
-final class LocaleNames
+final readonly class LocaleNames
 {
     /** Primary language subtags written right to left. */
     public const RTL_LANGUAGES = ['ar', 'arc', 'ckb', 'dv', 'fa', 'he', 'iw', 'khw', 'ks', 'ku', 'ps', 'sd', 'syr', 'ug', 'ur', 'yi'];
 
-    private readonly bool $intl;
+    private bool $intl;
 
-    /** @var \Closure(string, string): string */
-    private readonly \Closure $displayName;
+    /** @var Closure(string, string): string */
+    private Closure $displayName;
 
     /**
-     * @param bool|null                               $intl        null: `extension_loaded('intl')`
-     * @param (\Closure(string, string): string)|null $displayName display-name resolver `(locale, displayLocale)`;
-     *                                                             null: `\Locale::getDisplayName()`
+     * @param bool|null                              $intl        null: `extension_loaded('intl')`
+     * @param (Closure(string, string): string)|null $displayName display-name resolver `(locale, displayLocale)`;
+     *                                                            null: `\Locale::getDisplayName()`
      */
-    public function __construct(?bool $intl = null, ?\Closure $displayName = null)
+    public function __construct(?bool $intl = null, ?Closure $displayName = null)
     {
         $this->intl = $intl ?? \extension_loaded('intl');
-        $this->displayName = $displayName ?? static fn (string $locale, string $displayLocale): string => (string) \Locale::getDisplayName($locale, $displayLocale);
+        $this->displayName = $displayName ?? static fn (string $locale, string $displayLocale): string => (string) Locale::getDisplayName($locale, $displayLocale);
     }
 
     /**
@@ -43,8 +47,8 @@ final class LocaleNames
             return $fallback;
         }
         try {
-            $name = ($this->displayName)($locale, $displayLocale ?? \Locale::getDefault());
-        } catch (\Throwable) {
+            $name = ($this->displayName)($locale, $displayLocale ?? Locale::getDefault());
+        } catch (Throwable) {
             return $fallback;
         }
         if ('' === $name || 0 === strcasecmp(str_replace('-', '_', $name), str_replace('-', '_', $locale))) {

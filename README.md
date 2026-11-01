@@ -138,12 +138,23 @@ make -C demo up-symfony8
 
 ## Documentation
 
-Developer-facing docs are **English only** ([Contributing — Language policy](docs/CONTRIBUTING.md#language-policy)).
-
 - [Installation](docs/INSTALLATION.md)
 - [Configuration](docs/CONFIGURATION.md)
-- [PSR evaluation (REQ-CS-007)](docs/PSR.md)
 - [Usage](docs/USAGE.md)
+- [Contributing](docs/CONTRIBUTING.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Changelog](docs/CHANGELOG.md)
+- [Upgrading](docs/UPGRADING.md)
+- [Release](docs/RELEASE.md)
+- [Security](docs/SECURITY.md)
+- [Engram](docs/ENGRAM.md)
+- [Spec-driven development](docs/SPEC-DRIVEN-DEVELOPMENT.md)
+- [GitHub Spec Kit](docs/SPEC-KIT.md)
+- [Roadmap](docs/ROADMAP.md)
+
+### Additional documentation
+
+- [PSR evaluation (REQ-CS-007)](docs/PSR.md)
 - [Theming (`--nowo-ui-*` tokens)](docs/THEMING.md)
 - [Page contract (REQ-UI-003)](docs/PAGE_CONTRACT.md)
 - [Theme slots](docs/THEME_SLOTS.md)
@@ -151,28 +162,32 @@ Developer-facing docs are **English only** ([Contributing — Language policy](d
 - [Row actions (canonical kinds)](docs/ROW_ACTIONS.md)
 - [Adoption (Beacon + bundles)](docs/ADOPTION.md)
 - [Stimulus / data contracts](docs/STIMULUS.md)
+- [Overriding bundle templates](docs/USAGE.md#overriding-templates-req-twig-001)
 - [Third-party notices](docs/THIRD_PARTY.md)
-- [Roadmap](docs/ROADMAP.md)
 - [Flex recipe](docs/RECIPE.md)
 - [FrankenPHP demos](docs/DEMO-FRANKENPHP.md)
 - [FrankenPHP worker audit](docs/FRANKENPHP-WORKER-AUDIT.md)
-- [Contributing](docs/CONTRIBUTING.md)
-- [Code of Conduct](CODE_OF_CONDUCT.md)
-- [Security](docs/SECURITY.md)
-- [Changelog](docs/CHANGELOG.md)
-- [Upgrading](docs/UPGRADING.md)
-- [Release](docs/RELEASE.md)
 - [Coverage](docs/COVERAGE.md)
 - [GitHub Actions CI](docs/GITHUB_CI.md)
-- [Spec-driven development](docs/SPEC-DRIVEN-DEVELOPMENT.md)
-- [Spec Kit](docs/SPEC-KIT.md)
+
+## Version information
+
+| Version | Status |
+| ------- | ------ |
+| 2.x | Current (`main`) |
+| 1.x | Maintenance (`1.x` branch, fixes only) |
+
+Security support: [.github/SECURITY.md](.github/SECURITY.md).
 
 ## Tests and coverage
 
+Unit tests (`tests/Unit`) and kernel integration tests (`tests/Integration`) run with PHPUnit; the TypeScript runtimes
+and Stimulus peers run with Vitest (happy-dom). Figures below are the CI `Code Coverage` and `Vite / TypeScript` jobs.
+
 | Suite | Coverage |
 |-------|----------|
-| PHP (PHPUnit) | 100% lines (fail under 99% in CI) |
-| TypeScript (Vitest) | ≥90% lines (Vitest thresholds) |
+| PHP (PHPUnit) | 100% lines (3253/3253; CI fails under 99%) |
+| TypeScript (Vitest) | 100% lines (2810/2810), 95.76% branches (gated set, see [COVERAGE.md](docs/COVERAGE.md); thresholds 90% lines / 85% branches) |
 | Python | N/A |
 
 ```bash

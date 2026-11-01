@@ -99,6 +99,8 @@
 
 ## Unreleased
 
+No action needed. Optional: tune `nowo_ui_kit.release_check.timeout` / `releases_timeout` (defaults 5 s / 8 s, as before). Keep importing `@NowoUiKitBundle/Resources/config/routes/release_check.yaml`; it now loads the `#[Route]` of `ReleaseStatusController` with the same name and path. Only code that read the route's `_controller` default (`nowo_ui_kit.release_status_controller`) sees the class name `Nowo\UiKitBundle\Release\ReleaseStatusController` instead; both resolve to the same service.
+
 ## To 2.21.0
 
 From **2.20.0**: `composer update nowo-tech/ui-kit-bundle`. Nothing to change: pages that use none of the new options

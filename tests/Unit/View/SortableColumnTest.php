@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\View;
 
+use Closure;
+use InvalidArgumentException;
 use Nowo\UiKitBundle\Listing\ListingField;
 use Nowo\UiKitBundle\View\Column;
 use Nowo\UiKitBundle\View\ListPage;
@@ -41,7 +43,7 @@ final class SortableColumnTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{\Closure(): mixed, string}>
+     * @return iterable<string, array{Closure(): mixed, string}>
      */
     public static function invalid(): iterable
     {
@@ -53,12 +55,12 @@ final class SortableColumnTest extends TestCase
     }
 
     /**
-     * @param \Closure(): mixed $build
+     * @param Closure(): mixed $build
      */
     #[DataProvider('invalid')]
-    public function testRejectsInvalidSortOptions(\Closure $build, string $message): void
+    public function testRejectsInvalidSortOptions(Closure $build, string $message): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage($message);
         $build();
     }

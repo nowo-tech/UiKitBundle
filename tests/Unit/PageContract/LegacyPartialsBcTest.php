@@ -15,6 +15,7 @@ use Twig\Environment;
 use Twig\Loader\ArrayLoader;
 use Twig\Loader\ChainLoader;
 use Twig\Loader\FilesystemLoader;
+use Twig\TwigFunction;
 
 /**
  * BC: the 2.0 partials render 1.x inputs exactly as UiKit 1.17.4 did (tests/Fixtures/legacy-1.17 are verbatim
@@ -99,7 +100,7 @@ final class LegacyPartialsBcTest extends TestCase
         $fs->addPath($root.'/tests/Fixtures/legacy-1.17', 'Legacy');
         $twig = new Environment(new ChainLoader([new ArrayLoader([]), $fs]), ['strict_variables' => false]);
         $twig->addExtension(new TranslationExtension(new IdentityTranslator()));
-        $twig->addFunction(new \Twig\TwigFunction('path', static fn (string $name, array $params = []): string => '/'.$name.'?'.http_build_query($params)));
+        $twig->addFunction(new TwigFunction('path', static fn (string $name, array $params = []): string => '/'.$name.'?'.http_build_query($params)));
         $twig->addGlobal('nowo_ui_kit_css_framework', $framework);
         $twig->addGlobal('nowo_ui_kit_icon_set', 'bootstrap-icons');
         $twig->addGlobal('app', ['request' => new Request([], [], ['_route' => 'items_index', '_route_params' => []]), 'flashes' => ['success' => ['Saved'], 'danger' => ['Failed'], 'notice' => ['Note']]]);

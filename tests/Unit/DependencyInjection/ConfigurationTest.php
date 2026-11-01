@@ -30,7 +30,27 @@ final class ConfigurationTest extends TestCase
             'cache_ttl' => 43200,
             'default_branch' => 'main',
             'user_agent' => 'nowo-ui-kit-release-check',
+            'timeout' => 5.0,
+            'releases_timeout' => 8.0,
         ], $config['release_check']);
+    }
+
+    public function testReleaseCheckTimeoutsAreConfigurableAndBounded(): void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [[
+            'release_check' => ['timeout' => 2.5, 'releases_timeout' => 3],
+        ]]);
+        self::assertSame(2.5, $config['release_check']['timeout']);
+        self::assertEquals(3.0, $config['release_check']['releases_timeout']);
+
+        foreach ([['timeout' => 0], ['timeout' => 61], ['releases_timeout' => 0.0]] as $invalid) {
+            try {
+                (new Processor())->processConfiguration(new Configuration(), [['release_check' => $invalid]]);
+                self::fail('Expected an invalid configuration for '.json_encode($invalid));
+            } catch (InvalidConfigurationException $e) {
+                self::assertStringContainsString('release_check', $e->getMessage());
+            }
+        }
     }
 
     public function testReleaseCheckOverridesAndTtlFloor(): void

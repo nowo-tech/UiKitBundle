@@ -6,9 +6,10 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 has_twig=0
-if find src -type f -name '*.twig' 2>/dev/null | grep -q .; then
+# `-print -quit` + a captured value: `find | grep -q` under pipefail reports SIGPIPE (exit 141) and hid the templates.
+if [[ -n "$(find src -type f -name '*.twig' -print -quit 2>/dev/null)" ]]; then
   has_twig=1
-elif find templates Resources -type f -name '*.twig' 2>/dev/null | grep -q .; then
+elif [[ -n "$(find templates Resources -type f -name '*.twig' -print -quit 2>/dev/null)" ]]; then
   has_twig=1
 fi
 

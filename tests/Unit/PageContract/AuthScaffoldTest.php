@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 
+use ArrayIterator;
 use Nowo\UiKitBundle\View\AuthPage;
 use Nowo\UiKitBundle\View\FormPage;
 use Nowo\UiKitBundle\View\Label;
@@ -89,7 +90,7 @@ final class AuthScaffoldTest extends TestCase
 
     public function testAttributesAreValidated(): void
     {
-        self::assertSame(['a.html.twig'], (new AuthPage('T', formThemes: new \ArrayIterator(['a.html.twig'])))->formThemes);
+        self::assertSame(['a.html.twig'], (new AuthPage('T', formThemes: new ArrayIterator(['a.html.twig'])))->formThemes);
         $this->expectExceptionMessage('Invalid or unsafe attribute "onsubmit"');
         new AuthPage('T', formAttributes: ['onsubmit' => 'x']);
     }

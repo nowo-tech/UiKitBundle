@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 
+use ArrayIterator;
 use Nowo\UiKitBundle\View\Action;
 use Nowo\UiKitBundle\View\Crumb;
 use Nowo\UiKitBundle\View\DashboardPage;
@@ -45,7 +46,7 @@ final class PageHeaderHelperTest extends TestCase
         $header = new PageHeader('Item', null, [Action::edit('/e')]);
 
         self::assertStringStartsWith('<header data-p="NowoXBundle|show|Item|1|2|1|header">', $twig->render('t', ['header' => $header, 'b' => 'NowoXBundle', 'extra' => [Action::view('/v')], 'with' => true]));
-        self::assertStringStartsWith('<header data-p="|show|Item|0|1|1|header">', $twig->render('t', ['header' => $header, 'b' => null, 'extra' => new \ArrayIterator([Action::view('/v')]), 'with' => false]));
+        self::assertStringStartsWith('<header data-p="|show|Item|0|1|1|header">', $twig->render('t', ['header' => $header, 'b' => null, 'extra' => new ArrayIterator([Action::view('/v')]), 'with' => false]));
         self::assertStringStartsWith('<header data-p="NowoYBundle||Item|1|1|1|header">', $twig->render('inc', ['header' => $header]));
 
         $this->expectExceptionMessage('nowo_ui_page_header() extra actions: expected');
