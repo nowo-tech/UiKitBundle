@@ -254,6 +254,10 @@ jobs:
           tools: composer:v2
       - run: composer install --prefer-dist --no-progress --no-interaction
       - run: composer phpstan
+      - name: Igor FrankenPHP worker-state audit (REQ-CS-008)
+        run: composer igor
+      - name: Translation key parity (REQ-MAKE-004)
+        run: php .scripts/check-translation-parity.php
 
 # Maintainer: Héctor Franco Aceituno (@HecFranco)
 # Organization: nowo-tech (https://github.com/nowo-tech)

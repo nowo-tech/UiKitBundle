@@ -10,6 +10,8 @@ services:
     volumes:
       - .:/app
       - composer-cache:/root/.composer/cache
+      # Coverage reports (PHPUnit HTML in /app/coverage) kept in a named volume (REQ-DOC-001).
+      - coverage-data:/app/coverage
     environment:
       - COMPOSER_ALLOW_SUPERUSER=1
       - XDEBUG_MODE=coverage
@@ -19,6 +21,8 @@ services:
 
 volumes:
   composer-cache:
+    driver: local
+  coverage-data:
     driver: local
 
 networks:
