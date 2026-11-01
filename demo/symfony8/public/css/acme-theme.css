@@ -39,6 +39,7 @@
 .acme-header__trail li + li::before { content: "/"; margin-right: 0.4rem; opacity: 0.6; }
 .acme-header__trail a { color: inherit; text-decoration: none; }
 .acme-header__row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 1rem; }
+.acme-header__title-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 0.75rem; }
 .acme-title { font-family: var(--acme-display); font-weight: 600; font-size: 2rem; margin: 0; letter-spacing: -0.01em; }
 .acme-intro { color: var(--nowo-ui-muted); margin: 0.25rem 0 0; }
 

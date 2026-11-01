@@ -11,6 +11,7 @@
     chevron_right, book
   2.13: tour (guided tour tab)
   2.20: sort, sort_asc, sort_desc (sortable table headers: neutral / ascending / descending arrows)
+  2.21: more (vertical dots: the square "more" menu of a split page header)
 
   Optional:
     - label: accessible text (aria-hidden decorative when parent has aria-label)
@@ -51,6 +52,7 @@
         sort: 'bi:arrow-down-up',
         sort_asc: 'bi:arrow-up',
         sort_desc: 'bi:arrow-down',
+        more: 'bi:three-dots-vertical',
     } %}
     {{ include('@NowoUiKitBundle/components/_icon_ux.html.twig', {name: ux_map[name]|default(name)}, false) }}
 {% elseif icon_set == 'tabler-icons' %}
@@ -84,6 +86,7 @@
         sort: 'ti ti-arrows-sort',
         sort_asc: 'ti ti-arrow-up',
         sort_desc: 'ti ti-arrow-down',
+        more: 'ti ti-dots-vertical',
     } %}
     <i class="{{ map[name]|default('ti ti-' ~ name) }}" aria-hidden="true"></i>
 {% elseif icon_set == 'svg_inline' %}
@@ -117,6 +120,7 @@
         sort: 'M16 17.01V10h-2v7.01h-3L15 21l4-3.99h-3zM9 3 5 6.99h3V14h2V6.99h3L9 3z',
         sort_asc: 'M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z',
         sort_desc: 'M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z',
+        more: 'M12 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm0 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm0 6a2 2 0 1 0 0 4 2 2 0 0 0 0-4z',
     } %}
     <svg class="nowo-ui-icon" width="1em" height="1em" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
         <path fill="currentColor" d="{{ paths[name]|default(paths.view) }}"/>
@@ -153,6 +157,7 @@
         sort: 'bi bi-arrow-down-up',
         sort_asc: 'bi bi-arrow-up',
         sort_desc: 'bi bi-arrow-down',
+        more: 'bi bi-three-dots-vertical',
     } %}
     <i class="{{ map[name]|default('bi bi-' ~ name) }}" aria-hidden="true"></i>
 {% endif %}

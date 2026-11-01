@@ -23,10 +23,12 @@ use Nowo\UiKitBundle\View\KpiTile;
 use Nowo\UiKitBundle\View\Link;
 use Nowo\UiKitBundle\View\ListPage;
 use Nowo\UiKitBundle\View\PageHeader;
+use Nowo\UiKitBundle\View\PageStatus;
 use Nowo\UiKitBundle\View\Pagination;
 use Nowo\UiKitBundle\View\SettingsPage;
 use Nowo\UiKitBundle\View\SettingsSection;
 use Nowo\UiKitBundle\View\ShowPage;
+use Nowo\UiKitBundle\View\Stat;
 use Nowo\UiKitBundle\View\Table;
 use Nowo\UiKitBundle\View\WizardPage;
 use Nowo\UiKitBundle\View\WizardStep;
@@ -64,7 +66,7 @@ final class PageContractController extends AbstractController
         ['id' => 1038, 'customer' => 'Sofia Almeida', 'email' => 'sofia@example.com', 'total' => '412.75', 'status' => 'paid', 'placed' => '2026-10-15 11:58'],
     ];
 
-    /** Badge tone of each order status (DetailItem::badge, 2.2; the list page maps the same tones in Twig). */
+    /** Badge tone of each order status (DetailItem::badge, 2.2, and PageStatus, 2.21; the list page maps the same tones in Twig). */
     private const STATUS_BADGES = ['paid' => 'success', 'pending' => 'warning', 'shipped' => 'info', 'refunded' => 'neutral'];
 
     #[Route('', name: 'page_contract_index')]
@@ -174,22 +176,34 @@ final class PageContractController extends AbstractController
     public function show(int $id, ?string $theme = null): Response
     {
         $order = $this->order($id);
+        // 2.21 detail page: status badge next to the title, split actions (icon buttons, one primary, the square
+        // "more" menu with the destructive action last), key figures and a compact details grid.
+        $header = $this->header($theme, \sprintf('Order #%d', $order['id']), \sprintf('Placed by %s on %s.', $order['customer'], $order['placed']), 'Order', [
+            Action::edit($this->generateUrl($this->route('page_contract_order_edit', $theme), $this->params($theme, ['id' => $id])))->asIcon(),
+            (new Action('export', 'Download invoice', '#invoice', attributes: ['data-testid' => 'order-invoice']))->asIcon(),
+            new Action('custom', 'Mark as shipped', '#ship', icon: 'save', variant: 'primary', attributes: ['data-testid' => 'order-ship']),
+            new Action('copy', 'Duplicate order', '#duplicate', attributes: ['data-testid' => 'order-duplicate']),
+            // POST action backed by a CSRF-only FormView: drawn as a menu item, the form keeps its token.
+            new Action('restore', 'Reopen', '#', method: 'POST', form: $this->container->get('form.factory')->createNamedBuilder('reopen_order')->add('_token', HiddenType::class, ['data' => 'demo-token'])->getForm()->createView()),
+            Action::delete('#', 'demo-token', Confirm::delete('The order and its invoice will be deleted.', \sprintf('Delete order #%d?', $order['id']))),
+        ])->withStatus(new PageStatus(ucfirst($order['status']), self::STATUS_BADGES[$order['status']], 'Updated 2026-10-16 10:30'))->withSplitActions();
 
         return $this->render('page_contract/orders/show.html.twig', ['order' => $order, 'page' => new ShowPage(
-            $this->header($theme, \sprintf('Order #%d', $order['id']), \sprintf('Placed by %s on %s.', $order['customer'], $order['placed']), 'Order', [
-                Action::edit($this->generateUrl($this->route('page_contract_order_edit', $theme), $this->params($theme, ['id' => $id]))),
-                // POST action backed by a CSRF-only FormView: the host page_header override renders it again after
-                // the scaffold pre-rendered the 1.x toolbar, and the form keeps its token.
-                new Action('restore', 'Reopen', '#', method: 'POST', form: $this->container->get('form.factory')->createNamedBuilder('reopen_order')->add('_token', HiddenType::class, ['data' => 'demo-token'])->getForm()->createView()),
-                Action::delete('#', 'demo-token', Confirm::delete('The order and its invoice will be deleted.', \sprintf('Delete order #%d?', $order['id']))),
-            ]),
+            $header,
             [
                 new DetailSection('Customer', [new DetailItem('Name', $order['customer']), new DetailItem('Email', $order['email'], 'mailto:'.$order['email']), new DetailItem('Newsletter', true)], 'customer'),
                 new DetailSection('Payment', [new DetailItem('Total', $order['total'].' €'), new DetailItem('Status', ucfirst($order['status']), badge: self::STATUS_BADGES[$order['status']]), new DetailItem('Gift wrap', false)], 'payment'),
+                new DetailSection('Shipping', [new DetailItem('Carrier', 'DHL Express'), new DetailItem('Tracking', 'JD014600006281'), new DetailItem('Weight', '1.2 kg'), new DetailItem('Warehouse', 'Madrid 2'), new DetailItem('Service', 'Next day'), new DetailItem('Insured', true)], 'shipping', 'facts'),
             ],
             [new DetailItem('Created', $order['placed']), new DetailItem('Updated', '2026-10-16 10:30')],
             $this->bundle($theme),
             $this->layout($theme),
+            stats: [
+                new Stat('Items', 3),
+                new Stat('Total', $order['total'].' €'),
+                new Stat('Margin', '38 %', 'vs 31 % average', 'success'),
+                new Stat('Returns', 0, href: '#returns'),
+            ],
         )]);
     }
 

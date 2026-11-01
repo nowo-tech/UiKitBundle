@@ -55,6 +55,11 @@ final class ThemeSlots
             'bootstrap' => 'mb-0',
             'tailwind' => 'text-sm',
         ]],
+        // 2.21: title + status badge row (only when PageHeader::status is set) and the badge (with badge_<tone>)
+        'page_title_row' => ['nowo-ui-page-header__title-row', []],
+        'page_status' => ['nowo-ui-page-status', []],
+        // 2.21 split header actions (partial `header_actions`): icon buttons, one primary, the square "more" menu
+        'header_actions' => ['nowo-ui-header-actions', []],
         'toolbar' => ['nowo-ui-toolbar', [
             'bootstrap' => 'd-flex flex-wrap align-items-center gap-1 mb-2',
             'tailwind' => 'flex flex-wrap items-center gap-1 mb-2',
@@ -349,6 +354,14 @@ final class ThemeSlots
         'detail_value' => ['nowo-ui-detail-list__value', []],
         // Show scaffold audit meta list (ShowPage::meta): added to the detail_list classes of that list
         'detail_list_meta' => ['nowo-ui-detail-list--meta', []],
+        // 2.21 compact details grid (DetailSection::layout facts / detail_list `modifier: 'facts'`): added to detail_list
+        'detail_list_facts' => ['nowo-ui-detail-list--facts', []],
+        // 2.21 key figures row (partial `stat_row`, ShowPage::stats): the <dl>, each tile, its label / value / hint
+        'stat_row' => ['nowo-ui-stat-row', []],
+        'stat' => ['nowo-ui-stat', []],
+        'stat_label' => ['nowo-ui-stat__label', []],
+        'stat_value' => ['nowo-ui-stat__value', []],
+        'stat_hint' => ['nowo-ui-stat__hint', []],
         'kpis' => ['nowo-ui-kpis', []],
         'kpi' => ['nowo-ui-kpi', [
             'bootstrap' => 'card',
@@ -399,6 +412,9 @@ final class ThemeSlots
             'tailwind' => 'inline-flex items-center gap-1 font-medium px-2 py-1 text-sm border',
             'foundation' => 'button secondary tiny',
         ]],
+        // 2.21: the toggle of a `square: true` icon-only menu, added to btn_secondary + btn_icon (same box as the
+        // icon buttons next to it)
+        'menu_toggle_square' => ['nowo-ui-menu__toggle--square', []],
         'menu_panel' => ['nowo-ui-menu__panel', []],
         'menu_item' => ['nowo-ui-menu__item', []],
         'popover' => ['nowo-ui-popover', []],
@@ -572,6 +588,7 @@ final class ThemeSlots
         'empty' => '@NowoUiKitBundle/partials/_empty.html.twig',
         'filters' => '@NowoUiKitBundle/partials/_filters.html.twig',
         'flashes' => '@NowoUiKitBundle/partials/_flashes.html.twig',
+        'header_actions' => '@NowoUiKitBundle/partials/_header_actions.html.twig',
         'list_filters' => '@NowoUiKitBundle/page/_list_filters.html.twig',
         'listing_cells' => '@NowoUiKitBundle/partials/_listing_cells.html.twig',
         'listing_customizer' => '@NowoUiKitBundle/partials/_listing_customizer.html.twig',
@@ -581,6 +598,7 @@ final class ThemeSlots
         'menu' => '@NowoUiKitBundle/partials/_menu.html.twig',
         'modal_shell' => '@NowoUiKitBundle/partials/_modal_shell.html.twig',
         'page_header' => '@NowoUiKitBundle/partials/_page_header.html.twig',
+        'page_status' => '@NowoUiKitBundle/partials/_page_status.html.twig',
         'pagination' => '@NowoUiKitBundle/partials/_pagination.html.twig',
         'pagination_compact' => '@NowoUiKitBundle/partials/_pagination_compact.html.twig',
         'progress' => '@NowoUiKitBundle/partials/_progress.html.twig',
@@ -590,6 +608,7 @@ final class ThemeSlots
         'section_form' => '@NowoUiKitBundle/page/_section_form.html.twig',
         'shell' => '@NowoUiKitBundle/partials/_shell.html.twig',
         'sort_header' => '@NowoUiKitBundle/partials/_sort_header.html.twig',
+        'stat_row' => '@NowoUiKitBundle/partials/_stat_row.html.twig',
         'table' => '@NowoUiKitBundle/partials/_table.html.twig',
         'tabs' => '@NowoUiKitBundle/partials/_tabs.html.twig',
         'toasts' => '@NowoUiKitBundle/partials/_toasts.html.twig',

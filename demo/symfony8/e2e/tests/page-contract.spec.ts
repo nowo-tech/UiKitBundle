@@ -271,7 +271,8 @@ test.describe('page contract — validation round 3 (REQ-UI-003)', () => {
       await expect(nav.locator('a[aria-current="page"]')).toHaveText('Sales');
       // Recent orders through the table partial: header row, end-aligned amounts
       const recent = page.locator('table', { has: page.locator('caption', { hasText: 'Last four orders' }) });
-      await expect(recent.locator('thead th')).toHaveText(['#', 'Customer', 'Total'], { ignoreCase: true });
+      // 2.20: the client-sortable headers add a visually hidden "Sort …" hint after the label
+      await expect(recent.locator('thead th')).toHaveText([/^#/, /^Customer/i, /^Total/i]);
       expect(await recent.locator('thead th').last().evaluate((el) => getComputedStyle(el).textAlign)).toBe('end');
     });
   }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 
+use Nowo\UiKitBundle\Theme\FontPreload;
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Twig\ErrorPageExtension;
 use Nowo\UiKitBundle\Twig\ThemeExtension;
@@ -38,12 +39,13 @@ final class PageContractTwig
     }
 
     /**
-     * @param array<string, string>                 $templates  extra in-memory templates
-     * @param array<string, mixed>                  $theme      processed nowo_ui_kit.theme config
+     * @param array<string, string>                 $templates   extra in-memory templates
+     * @param array<string, mixed>                  $theme       processed nowo_ui_kit.theme config
      * @param array{admin?: string, guest?: string} $layouts
-     * @param array<string, mixed>                  $errorPages processed nowo_ui_kit.error_pages (2.6)
-     * @param array<string, array<string, string>>  $messages   extra catalogues: domain => [id => text] (locale $locale)
-     * @param array<string, mixed>|null             $shell      nowo_ui_kit_shell global (2.6; null = not defined)
+     * @param array<string, mixed>                  $errorPages  processed nowo_ui_kit.error_pages (2.6)
+     * @param array<string, array<string, string>>  $messages    extra catalogues: domain => [id => text] (locale $locale)
+     * @param array<string, mixed>|null             $shell       nowo_ui_kit_shell global (2.6; null = not defined)
+     * @param FontPreload|null                      $fontPreload font preload tags (2.21)
      */
     public static function create(
         array $templates = [],
@@ -57,6 +59,7 @@ final class PageContractTwig
         array $errorPages = [],
         array $messages = [],
         ?array $shell = null,
+        ?FontPreload $fontPreload = null,
     ): Environment {
         $views = self::root().'/src/Resources/views';
         $fs = new FilesystemLoader();
@@ -92,6 +95,7 @@ final class PageContractTwig
             ['breadcrumb_kit' => $breadcrumbKit, 'collection' => null, 'enabled' => $breadcrumbs],
             $translator,
             $requestStack,
+            fontPreload: $fontPreload,
         ));
         $twig->addExtension(new ErrorPageExtension($errorPages, $translator, $requestStack));
         if (null !== $shell) {

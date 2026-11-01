@@ -1,0 +1,14 @@
+{#
+  Status badge next to a page title (2.21, theme partial `page_status`): View\PageStatus — label (translated by the
+  host), tone (success | danger | warning | neutral | info → slot badge_<tone>), optional title (tooltip).
+
+  Required:
+    - status: View\PageStatus
+  Optional:
+    - bundle, nowo_ui_page_type
+  Slots: page_status (+ badge_<tone>). Host overrides of `page_header` include it next to their title:
+      {% if header.status %}{{ include(nowo_ui_partial('page_status', bundle), {status: header.status, bundle: bundle}, false) }}{% endif %}
+#}
+{% set _b = bundle|default(null) %}
+{% set _title = status.title is null ? null : status.title|nowo_ui_trans %}
+<span class="{{ nowo_ui_class('page_status', _b) }} {{ nowo_ui_class('badge_' ~ status.tone, _b) }}" data-nowo-ui-page-status="{{ status.tone }}"{% if _title %} title="{{ _title }}"{% endif %}{{ nowo_ui_attrs('page_status', _b) }}{{ nowo_ui_attrs('badge_' ~ status.tone, _b) }}>{{ status.label|nowo_ui_trans }}</span>

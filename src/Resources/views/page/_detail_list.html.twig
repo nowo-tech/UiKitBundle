@@ -5,15 +5,16 @@
   Required:
     - items: list<View\DetailItem>
   Optional:
-    - bundle, modifier (adds nowo-ui-detail-list--<modifier>; `meta` adds the detail_list_meta slot classes instead)
-  Slots: detail_list, detail_list_meta (show scaffold audit meta list), detail_item, detail_term, detail_value, muted
+    - bundle, modifier (adds nowo-ui-detail-list--<modifier>; `meta` adds the detail_list_meta slot classes instead,
+      `facts` (2.21) the detail_list_facts slot: a compact grid of label-over-value cells, several per row)
+  Slots: detail_list, detail_list_meta (show scaffold audit meta list), detail_list_facts (2.21), detail_item, detail_term, detail_value, muted
   (the "—" placeholder of empty values: null, '' and false). Layout: two columns (term | value); the
   `nowo-ui-detail-list--stacked` modifier (e.g. in the detail_list slot classes) puts each label over its value, and
   any host class on detail_item replaces the default `display: contents` (zero-specificity rule).
 #}
 {% set bundle = bundle|default(null) %}
 {% set _modifier = modifier|default(null) %}
-<dl class="{{ nowo_ui_class('detail_list', bundle) }}{{ _modifier == 'meta' ? ' ' ~ nowo_ui_class('detail_list_meta', bundle) : (_modifier ? ' nowo-ui-detail-list--' ~ _modifier) }}"{{ nowo_ui_attrs('detail_list', bundle) }}{{ _modifier == 'meta' ? nowo_ui_attrs('detail_list_meta', bundle) }}>
+<dl class="{{ nowo_ui_class('detail_list', bundle) }}{{ _modifier in ['meta', 'facts'] ? ' ' ~ nowo_ui_class('detail_list_' ~ _modifier, bundle) : (_modifier ? ' nowo-ui-detail-list--' ~ _modifier) }}"{{ nowo_ui_attrs('detail_list', bundle) }}{{ _modifier in ['meta', 'facts'] ? nowo_ui_attrs('detail_list_' ~ _modifier, bundle) }}>
     {% for item in items %}
         <div class="{{ nowo_ui_class('detail_item', bundle) }}">
             <dt class="{{ nowo_ui_class('detail_term', bundle) }}">{{ item.label|nowo_ui_trans }}</dt>

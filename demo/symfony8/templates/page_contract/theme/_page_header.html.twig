@@ -3,6 +3,8 @@
   bundle renders its header through this template. Same inputs as the UiKit partial (header: View\PageHeader,
   bundle, plus `actions` — the toolbar actions incl. FormPage secondary actions — and `region`); actions still go
   through the UiKit action partial (confirm contract, POST forms).
+  2.21: the status badge (`status_badge`, the rendered page_status partial) sits next to the title, and a split
+  header (PageHeader::actionsLayout `split`) prints `toolbar` — the header_actions partial the scaffold rendered.
 #}
 {% set _bundle = bundle|default(null) %}
 {% set _actions = actions|default(header.actions) %}
@@ -16,10 +18,15 @@
     {% endif %}
     <div class="acme-header__row">
         <div>
-            <h1 class="{{ nowo_ui_class('page_title', _bundle) }}">{{ header.title|nowo_ui_trans }}</h1>
+            <div class="acme-header__title-row">
+                <h1 class="{{ nowo_ui_class('page_title', _bundle) }}">{{ header.title|nowo_ui_trans }}</h1>
+                {{ status_badge|default('')|raw }}
+            </div>
             {% if header.intro %}<p class="{{ nowo_ui_class('page_intro', _bundle) }}">{{ header.intro|nowo_ui_trans }}</p>{% endif %}
         </div>
-        {% if _actions is not empty %}
+        {% if header.actionsLayout == 'split' and toolbar|default(null) %}
+            {{ toolbar|raw }}
+        {% elseif _actions is not empty %}
             <div class="{{ nowo_ui_class('toolbar', _bundle) }}">
                 {% for action in _actions %}
                     {{ include(nowo_ui_partial('action', _bundle), {action: action, context: 'toolbar', bundle: _bundle, nowo_ui_page_type: nowo_ui_page_type|default(null)}, false) }}

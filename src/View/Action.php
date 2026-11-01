@@ -36,6 +36,8 @@ use Symfony\Component\Form\FormView;
  * (`data-nowo-ui-dialog-src`, same origin only).
  * `title` (2.2): translatable tooltip (`title` attribute; the accessible name stays the label), also shown on
  * disabled actions (wrapped in a `<span title>`).
+ * `withDisplay()` / `asIcon()` (2.21): immutable copies with another display mode / icon — `display: icon` puts the
+ * action among the icon buttons of a split page header ({@see HeaderActions}, {@see PageHeader::$actionsLayout}).
  *
  * @implements \ArrayAccess<array-key, mixed>
  */
@@ -210,12 +212,50 @@ final readonly class Action implements \ArrayAccess
      */
     public function withConfirmScope(int|string|null $scope): self
     {
-        return new self(
-            $this->kind, $this->label, $this->href, $this->route, $this->params, $this->method, $this->csrfToken,
-            $this->confirm, $this->icon, $this->variant, $this->attributes, $this->form, $this->csrfField,
-            $this->modalId, $this->disabled, $this->visible, $this->display, null === $scope ? null : (string) $scope,
-            $this->fallbackHref, $this->dialogId, $this->title,
-        );
+        return $this->copy(['confirmScope' => null === $scope ? null : (string) $scope]);
+    }
+
+    /**
+     * Copy with another display mode (2.21): `icon` | `text` | `icon_text`, null = the context default. A non-null
+     * `icon` replaces the icon too (null keeps it). `display: icon` marks the action as an icon button for the
+     * `header_actions` partial ({@see HeaderActions}).
+     *
+     * @return self Fluent interface
+     */
+    public function withDisplay(?string $display, ?string $icon = null): self
+    {
+        return $this->copy(['display' => $display, 'icon' => $icon ?? $this->icon]);
+    }
+
+    /**
+     * Copy shown as an icon-only button (2.21): `withDisplay('icon', $icon)` — the label stays the accessible name
+     * (`aria-label` + `title` + a visually-hidden copy).
+     *
+     * @return self Fluent interface
+     */
+    public function asIcon(?string $icon = null): self
+    {
+        return $this->withDisplay('icon', $icon);
+    }
+
+    /**
+     * Copy with some constructor arguments replaced (named, e.g. `['display' => 'icon']`).
+     *
+     * @param array<string, mixed> $changes
+     */
+    private function copy(array $changes): self
+    {
+        $args = [
+            'kind' => $this->kind, 'label' => $this->label, 'href' => $this->href, 'route' => $this->route,
+            'params' => $this->params, 'method' => $this->method, 'csrfToken' => $this->csrfToken,
+            'confirm' => $this->confirm, 'icon' => $this->icon, 'variant' => $this->variant,
+            'attributes' => $this->attributes, 'form' => $this->form, 'csrfField' => $this->csrfField,
+            'modalId' => $this->modalId, 'disabled' => $this->disabled, 'visible' => $this->visible,
+            'display' => $this->display, 'confirmScope' => $this->confirmScope, 'fallbackHref' => $this->fallbackHref,
+            'dialogId' => $this->dialogId, 'title' => $this->title,
+        ];
+
+        return new self(...array_replace($args, $changes));
     }
 
     /**

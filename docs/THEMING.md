@@ -20,6 +20,7 @@ two token blocks of `nowo-ui.css`. A host theme is a short `:root` block.
 - [Pagination](#pagination)
 - [Lists](#lists)
 - [Cards, navigation, progress](#cards-navigation-progress)
+- [Detail pages (2.21)](#detail-pages-221)
 - [Corner tabs, edge tabs, scrollbars (1.17)](#corner-tabs-edge-tabs-scrollbars-117)
 - [Default-theme polish tokens (2.2)](#default-theme-polish-tokens-22)
 - [Layout and metrics tokens](#layout-and-metrics-tokens)
@@ -256,6 +257,30 @@ lays out as a row on every stack (zero-specificity rule; Bootstrap's own `.pagin
 | `--nowo-ui-progress-track` | `var(--nowo-ui-surface-muted)` |
 | `--nowo-ui-progress-bar` | `var(--nowo-ui-primary)` |
 | `--nowo-ui-page-loader-color` | `var(--nowo-ui-primary)` (minimal page loaders) |
+
+## Detail pages (2.21)
+
+Split page-header actions (`header_actions` partial), the key figures row (`stat_row`) and the compact details grid
+(`detail_list` with `modifier: 'facts'`). Every token falls back to the base tokens, so light and dark follow
+`--nowo-ui-surface` / `--nowo-ui-border` / `--nowo-ui-text` / `--nowo-ui-muted` and the tone `*-text` tokens. The
+square "more" toggle has no token of its own: it is painted by the `btn_secondary` + `btn_icon` slots, like the icon
+buttons next to it.
+
+| Token | Default |
+|-------|---------|
+| `--nowo-ui-header-actions-gap` | `0.35rem` (space between the icon buttons, the primary button and the menu) |
+| `--nowo-ui-stat-min-width` | `6.25rem` (narrowest tile; the row auto-fits) |
+| `--nowo-ui-stat-gap` | `0.5rem` |
+| `--nowo-ui-stat-padding` | `0.6rem 0.85rem` |
+| `--nowo-ui-stat-bg` | `var(--nowo-ui-surface)` |
+| `--nowo-ui-stat-border` | `var(--nowo-ui-border)` |
+| `--nowo-ui-stat-radius` | `var(--nowo-ui-radius)` |
+| `--nowo-ui-stat-label-color` | `var(--nowo-ui-muted)` |
+| `--nowo-ui-stat-value-size` | `1.375rem` (value; tones use `--nowo-ui-{success,warning,danger,info}-text`) |
+| `--nowo-ui-detail-facts-min-width` | `10rem` (narrowest cell of the details grid) |
+| `--nowo-ui-detail-facts-gap` | `0.6rem 1.25rem` |
+| `--nowo-ui-detail-facts-padding` | `0` (set e.g. `0.75rem 1rem` with a border for a framed grid outside a card) |
+| `--nowo-ui-detail-facts-border-width` | `0` (border of the grid, colour `--nowo-ui-border`) |
 
 ## Corner tabs, edge tabs, scrollbars (1.17)
 

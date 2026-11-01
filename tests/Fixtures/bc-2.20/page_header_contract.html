@@ -1,0 +1,51 @@
+        <div class="nowo-ui-page-header d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3" data-nowo-ui-region="header">
+    <div class="nowo-ui-page-header__text">                <nav class="nowo-ui-breadcrumbs" aria-label="Breadcrumb">
+        <ol class="nowo-ui-breadcrumbs__list">
+                            <li class="nowo-ui-breadcrumbs__item">                                            <a class="nowo-ui-breadcrumbs__link" href="/orders">Orders</a>
+                                    </li>
+                            <li class="nowo-ui-breadcrumbs__item"><span class="nowo-ui-breadcrumbs__separator" aria-hidden="true">/</span>                                            <span class="nowo-ui-breadcrumbs__current" aria-current="page">Order #1042</span>
+                                    </li>
+                    </ol>
+    </nav>
+
+                                <h1 class="nowo-ui-page-header__title h3 mb-1">Order #1042</h1>
+                                <p class="nowo-ui-page-header__intro">Placed by Lucía on 2026-10-16.</p>
+            </div>
+            <div class="nowo-ui-toolbar d-flex flex-wrap align-items-center gap-1 mb-2"><a class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary nowo-ui-action--edit" href="/orders/1042/edit"><span class="nowo-ui-action__label">Edit</span></a>
+                                                                                <form method="post" action="/orders/1042/reopen" class="nowo-ui-action__form">
+    <button type="submit" class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary nowo-ui-action--restore"><span class="nowo-ui-action__label">Reopen</span></button><input type="hidden" name="_token" value="tok"></form>
+
+
+                                                                                        <a class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary nowo-ui-action--export nowo-ui-btn--icon" href="/orders/1042.csv" title="Export" aria-label="Export">                <i class="bi bi-download" aria-hidden="true"></i>
+
+    <span class="visually-hidden">Export</span>
+</a>
+                                                                            <button type="button" class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary nowo-ui-action--share" data-nowo-ui-dialog-open="share-dialog" aria-haspopup="dialog" aria-controls="share-dialog"><span class="nowo-ui-action__label">Share</span></button>
+                                                                            <button type="button" class="nowo-ui-btn nowo-ui-btn--danger btn btn-outline-danger nowo-ui-action--delete" data-nowo-confirm-open data-nowo-confirm-target="nowo-ui-confirm-5b34e0355925"><span class="nowo-ui-action__label">Delete</span></button>
+                                                            <dialog
+    id="nowo-ui-confirm-5b34e0355925"
+    class="nowo-ui-confirm"
+    data-nowo-ui-confirm
+    aria-labelledby="nowo-ui-confirm-5b34e0355925-title"
+>
+    <div class="nowo-ui-confirm__panel">
+        <header class="nowo-ui-confirm__header">
+            <h2 class="nowo-ui-confirm__title" id="nowo-ui-confirm-5b34e0355925-title">Delete order #1042?</h2>
+                                                        <button type="button" class="nowo-ui-confirm__close" data-nowo-confirm-close aria-label="Close" title="Close"><span aria-hidden="true">&times;</span></button>
+                    </header>
+                    <div class="nowo-ui-confirm__body"><p class="nowo-ui-confirm__message">The order will be deleted.</p></div>
+                                <div class="nowo-ui-confirm__footer">
+                            <button type="button" class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary" data-nowo-confirm-close>
+                    Cancel
+                </button>
+                                        <form method="post" action="/orders/1042" class="nowo-ui-action__form">
+    <button type="submit" class="nowo-ui-btn nowo-ui-btn--danger nowo-ui-btn--solid btn btn-danger nowo-ui-confirm__submit">Delete</button><input type="hidden" name="_token" value="tok"></form>
+
+
+                                    </div>
+    </div>
+</dialog>
+
+                                                                                    <a class="nowo-ui-btn nowo-ui-btn--primary btn btn-primary nowo-ui-action--create" href="/orders/new"><span class="nowo-ui-action__label">New order</span></a></div>
+        </div>
+
