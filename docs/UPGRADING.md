@@ -99,6 +99,11 @@
 
 ## Unreleased
 
+No action needed: 1.x row-action POST hashes with `confirm_message` render exactly as in 2.21. To drop the inline
+`onsubmit` handler (strict CSP), register the `confirm-submit` Stimulus peer and set `nowo_ui_kit.row_actions_confirm:
+native` (or `dialog`), or pass `confirm_mode` to a single `_row_actions` include. See
+[ROW_ACTIONS.md](ROW_ACTIONS.md#confirm-contract-for-post-hashes-222).
+
 ## To 2.21.0
 
 From **2.20.0**: `composer update nowo-tech/ui-kit-bundle`. Nothing to change: pages that use none of the new options

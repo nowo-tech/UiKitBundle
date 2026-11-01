@@ -88,6 +88,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- `nowo_ui_kit.row_actions_confirm` (`inline` default | `native` | `dialog`) and the `_row_actions` option `confirm_mode`: a 1.x POST hash's `confirm_message` can use the UiKit confirm contract (the `confirm-submit` Stimulus peer attributes) instead of the inline `onsubmit="return confirm(…)"` handler, in `_row_actions_form` and `_row_actions_legacy` (REQ-UI-003). Default output is byte-identical to 2.21 (`RowActionsConfirmBcTest`, fixtures `tests/Fixtures/bc-2.21`); opt-in output is pinned in `tests/Fixtures/confirm-contract-2.22`. See [ROW_ACTIONS.md](ROW_ACTIONS.md#confirm-contract-for-post-hashes-222).
+
 ## [2.21.0] - 2026-11-01
 
 Detail page patterns from Symfony Beacon's UI standardisation: status badge, split header actions, key figures and

@@ -132,6 +132,7 @@ final class NowoUiKitExtensionTest extends TestCase
             'css_framework' => 'tailwind',
             'icon_set' => 'svg_inline',
             'row_actions_display' => 'text',
+            'row_actions_confirm' => 'dialog',
         ]);
         $extension->prepend($container);
 
@@ -146,6 +147,7 @@ final class NowoUiKitExtensionTest extends TestCase
         self::assertSame('tailwind', $globals['nowo_ui_kit_css_framework']);
         self::assertSame('svg_inline', $globals['nowo_ui_kit_icon_set']);
         self::assertSame('text', $globals['nowo_ui_kit_row_actions_display']);
+        self::assertSame('dialog', $globals['nowo_ui_kit_row_actions_confirm']);
     }
 
     public function testReleaseCheckDisabledRegistersControllerOnly(): void

@@ -4,16 +4,20 @@
   field name (a deprecation is triggered). Documented REQ-TWIG-005 transition exception (docs/UPGRADING.md
   "To 2.19.0"). A bare Twig environment (no UiKit ThemeExtension) renders it without a
   deprecation. Not a public include.
+  2.22 (REQ-UI-003): confirm_mode native | dialog prints the confirm-submit peer attributes instead of the inline
+  handler; inline (default) keeps the 2.21 markup byte for byte (tags kept on the original lines).
 #}
 <form
     method="post"
     action="{{ action.href|default('#') }}"
     class="nowo-ui-row-actions__form"
-    {% if action.confirm_message is defined and action.confirm_message %}
+    {% set _peer = action.confirm_message is defined and action.confirm_message and confirm_mode|default('inline') in ['native', 'dialog'] %}{% if _peer %}
+        data-controller="{{ ((action.attr['data-controller'] ?? '') ~ ' confirm-submit')|trim }}" data-action="{{ ((action.attr['data-action'] ?? '') ~ ' submit->confirm-submit#confirm')|trim }}" data-confirm-submit-message-value="{{ action.confirm_message }}"{% if confirm_mode == 'dialog' %} data-confirm-submit-mode-value="dialog"{% endif %}
+    {% elseif action.confirm_message is defined and action.confirm_message %}
         onsubmit="return confirm({{ action.confirm_message|json_encode|e('html_attr') }});"
     {% endif %}
     {% if action.attr is defined %}
-        {% for name, value in action.attr %}{{ name }}="{{ value }}" {% endfor %}
+        {% for name, value in action.attr %}{% if not _peer or name not in ['data-controller', 'data-action'] %}{{ name }}="{{ value }}" {% endif %}{% endfor %}
     {% endif %}
 >
     {% if action.csrf_token is defined and action.csrf_token %}

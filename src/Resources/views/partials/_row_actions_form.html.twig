@@ -4,10 +4,13 @@
   Same request as 2.x: POST to action.href, same field name and value; the form keeps its class, the transitional
   confirm_message handler and action.attr (the class / onsubmit of the kit win, as with the raw markup). Not a public
   include.
+  2.22 (REQ-UI-003): confirm_mode native | dialog replaces the inline handler by the UiKit confirm contract (the
+  confirm-submit Stimulus peer); inline (default) keeps the 2.21 markup byte for byte. The tags below are kept on the
+  original lines so the inline output does not change (tests/Fixtures/bc-2.21).
 #}
-{% set _attr = {class: 'nowo-ui-row-actions__form'} %}
+{% set _attr = {class: 'nowo-ui-row-actions__form'} %}{% set _peer = confirm_mode|default('inline') in ['native', 'dialog'] %}{% set _host_attr = action.attr|default({}) %}
 {% if action.confirm_message is defined and action.confirm_message %}
-    {% set _attr = _attr|merge({onsubmit: 'return confirm(' ~ action.confirm_message|json_encode ~ ');'}) %}
+    {% set _attr = _attr|merge(_peer ? {'data-controller': ((_host_attr['data-controller'] ?? '') ~ ' confirm-submit')|trim, 'data-action': ((_host_attr['data-action'] ?? '') ~ ' submit->confirm-submit#confirm')|trim, 'data-confirm-submit-message-value': action.confirm_message} : {onsubmit: 'return confirm(' ~ action.confirm_message|json_encode ~ ');'}) %}{% if _peer and confirm_mode == 'dialog' %}{% set _attr = _attr|merge({'data-confirm-submit-mode-value': 'dialog'}) %}{% endif %}
 {% endif %}
 {% set _attr = _attr|merge((action.attr|default({}))|filter((v, k) => k not in _attr|keys)) %}
 {{ form_start(ui_form, {action: action.href|default('#'), method: 'POST', attr: _attr}) }}
