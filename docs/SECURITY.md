@@ -2,6 +2,20 @@
 
 If you discover a security-related issue, please report it privately (e.g. by email to the maintainers) rather than opening a public issue. We will address it as soon as possible.
 
+## Table of contents
+
+- [Scope](#scope)
+- [Attack surface](#attack-surface)
+- [Threat model](#threat-model)
+- [Mitigations](#mitigations)
+- [AI security audit (REQ-SEC-004)](#ai-security-audit-req-sec-004)
+- [Secrets and cryptography](#secrets-and-cryptography)
+- [Logging](#logging)
+- [Dependencies and updates](#dependencies-and-updates)
+- [Permissions and exposure](#permissions-and-exposure)
+- [Reporting a vulnerability](#reporting-a-vulnerability)
+- [Release security checklist (12.4.1)](#release-security-checklist-1241)
+
 ## Scope
 
 **nowo-tech/ui-kit-bundle** is a presentation kit: Twig macros/partials, semantic `nowo-ui-*` CSS, and small TypeScript helpers for modal/shell chrome. It does **not** ship HTTP manage/CRUD routes, consent cookies, Doctrine entities, or admin controllers.
@@ -39,6 +53,7 @@ The bundle does **not** expose CLI commands that mutate production data, file up
 - `panel_path_rewrites` redirect targets are always a single-`/` same-origin path (no `//host` / `/\host`); config rejects `//`-prefixed or backslash prefixes.
 - Kit JS toggles DOM attributes / theme / loader / canvas; it does not call `eval`, `document.write`, or load remote scripts.
 - Release check: GitHub answers are rendered with `textContent`; only `https://github.com/…` links are emitted (server and client side). Successful answers are cached for `cache_ttl`; failures soft-fail and are negatively cached for 5 minutes (`ReleaseUpdateChecker::ERROR_CACHE_TTL`), so neither page views nor endpoint hits fan out to GitHub. The status endpoint is anonymous unless you protect it and it reveals the installed version: import it behind your admin firewall / `access_control` (see [CONFIGURATION.md — Release check](CONFIGURATION.md#release-check)).
+- Resource limits (REQ-RUNTIME-001): both outbound GitHub requests of the release check have bounded, configurable idle timeouts (`release_check.timeout` 5 s, `release_check.releases_timeout` 8 s, 0.1–60 s) and no redirects, so a slow or hostile upstream cannot pin a PHP / FrankenPHP worker thread indefinitely.
 - Recipe defaults contain no secrets.
 - **FrankenPHP worker:** runtime PHP services (`ReleaseUpdateChecker`, `ReleaseStatusController`, routing helpers) are `readonly` / stateless — no per-request mutable state; safe with kernel not reset between requests ([FRANKENPHP-WORKER-AUDIT.md](FRANKENPHP-WORKER-AUDIT.md)).
 

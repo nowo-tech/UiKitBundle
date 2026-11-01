@@ -13,6 +13,10 @@ This document describes how the **Ui Kit Bundle** demo applications run under **
 - [Production configuration](#production-configuration)
 - [Switching classic vs worker (`FRANKENPHP_MODE`)](#switching-classic-vs-worker-frankenphp_mode)
 - [Troubleshooting](#troubleshooting)
+  - [Twig or PHP changes do not appear](#twig-or-php-changes-do-not-appear)
+  - [Demo does not start](#demo-does-not-start)
+- [Bundle compatibility (`reset_kernel=false`)](#bundle-compatibility-reset_kernelfalse)
+- [Timeouts (REQ-RUNTIME-001)](#timeouts-req-runtime-001)
 
 ---
 
@@ -170,3 +174,10 @@ For the full FrankenPHP pattern used across Nowo bundles, see also [TwigInspecto
 UiKit registers **no runtime PHP services** and holds **no per-request state**. It is safe under FrankenPHP worker mode when the Symfony kernel is **not** reset between requests.
 
 See the full matrix and re-audit triggers: [FRANKENPHP-WORKER-AUDIT.md](FRANKENPHP-WORKER-AUDIT.md).
+
+## Timeouts (REQ-RUNTIME-001)
+
+The only blocking I/O in UiKit is the opt-in release check (two GitHub requests on a cache miss). Its deadlines are
+`nowo_ui_kit.release_check.timeout` (5 s) and `release_check.releases_timeout` (8 s); PHP `max_execution_time`, the
+Caddy `servers.timeouts.write` and FrankenPHP `max_wait_time` of a host must stay strictly greater, in that order. The
+demos do not enable the release check. Full table: [CONFIGURATION.md — Release check timeouts](CONFIGURATION.md#release-check-timeouts-req-runtime-001).

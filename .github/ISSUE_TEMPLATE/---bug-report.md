@@ -1,17 +1,40 @@
 ---
-name: Bug report
-about: Report a bug in UiKitBundle
-title: '[bug] '
+name: "🐞 Bug report"
+about: Something is broken?
+title: ''
 labels: bug
+assignees: ''
+
 ---
 
-**Describe the bug**
+<!--
+- Please do not report an issue for a version of `ui-kit-bundle` that is no longer supported. Currently supported versions are listed here: https://github.com/nowo-tech/UiKitBundle#version-information
+- Please fill in this template according to your issue.
+- Please keep the table shown below at the top of your issue.
+- You can retrieve `ui-kit-bundle` version by running `composer info | grep "ui-kit-bundle"`.
+- You can retrieve PHP version by running `php -v`.
+- Please post code as text (using proper markup). Do not post screenshots of code.
+- Please remove this comment before submitting your issue.
+-->
 
-**Steps to reproduce**
+| Q                           | A
+| ----------------------------| -----------------------
+| `UiKitBundle` version        | x.y.z
+| PHP version                 | x.y.z
+| Database                    | MySQL / PostgreSQL / SQLite / Other
 
-**Expected behaviour**
+#### Summary
 
-**Environment**
-- PHP:
-- Symfony:
-- ui-kit-bundle version:
+<!-- Provide a summary describing the problem you are experiencing. -->
+
+#### Current behavior
+
+<!-- What is the current (buggy) behavior? -->
+
+#### How to reproduce
+
+<!-- Provide steps to reproduce the bug. -->
+
+#### Expected behavior
+
+<!-- What was the expected (correct) behavior? -->

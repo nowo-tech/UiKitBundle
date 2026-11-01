@@ -41,6 +41,9 @@
 - [Sidebar rail (opt-in)](#sidebar-rail-opt-in)
 - [Overriding templates (REQ-TWIG-001)](#overriding-templates-req-twig-001)
 - [Override vs upgrade](#override-vs-upgrade)
+- [Overridable `<subpath>` values](#overridable-subpath-values)
+- [Freeze rule](#freeze-rule)
+- [Procedure](#procedure)
 - [Remap CSS tokens (theming)](#remap-css-tokens)
 - [Feature bundles](#feature-bundles)
 - [Kitchen sink](#kitchen-sink)
@@ -1511,6 +1514,43 @@ Application overrides **always win**. Twig namespace: **`NowoUiKitBundle`**.
 | Preferred | Remap `--nowo-ui-*` CSS tokens; keep macros | Vendor UI upgrades apply |
 | Surgical | Override one partial (`_row_actions`, `_pagination`, …) | Only that file is frozen |
 | Full fork | Copy a whole template under `templates/bundles/…` | That path stays frozen until you delete/merge it |
+
+### Overridable `<subpath>` values
+
+Every template the bundle renders by logical name `@NowoUiKitBundle/<subpath>` can be overridden at
+`templates/bundles/NowoUiKitBundle/<subpath>`. The `<subpath>` is the path relative to `src/Resources/views/`.
+
+| Folder | `<subpath>` values | Purpose / advice |
+| --- | --- | --- |
+| `layout/` | `layout/_bridge.html.twig`, `layout/admin.html.twig`, `layout/document.html.twig`, `layout/guest.html.twig`, `layout/status.html.twig` | Page layouts (`base`, `app`, `auth`, …) — prefer `layout_template` / blocks over forking |
+| `page/` | `page/_auth_form.html.twig`, `page/_detail_list.html.twig`, `page/_list_filters.html.twig`, `page/_page_header.html.twig`, `page/_scaffold.html.twig`, `page/_section_form.html.twig`, `page/_wizard_form.html.twig`, `page/auth.html.twig`, `page/confirm.html.twig`, `page/dashboard.html.twig`, `page/form.html.twig`, `page/list.html.twig`, `page/settings.html.twig`, `page/show.html.twig`, `page/wizard.html.twig` | Page scaffolds of the page contract (REQ-UI-003) — extend and override blocks instead of copying |
+| `shell/` | `shell/_burger.html.twig`, `shell/_close.html.twig`, `shell/_open.html.twig`, `shell/_shell.html.twig` | App shell chrome |
+| `partials/` | `partials/_action.html.twig`, `partials/_action_form_view.html.twig`, `partials/_action_inner.html.twig`, `partials/_action_post.html.twig`, `partials/_action_post_legacy.html.twig`, `partials/_aside.html.twig`, `partials/_aside_nav_items.html.twig`, `partials/_avatar.html.twig`, `partials/_back_link.html.twig`, `partials/_brand.html.twig`, `partials/_breadcrumbs.html.twig`, `partials/_burger.html.twig`, `partials/_card.html.twig`, `partials/_confirm.html.twig`, `partials/_confirm_dialog.html.twig`, `partials/_corner_tab.html.twig`, `partials/_dialog.html.twig`, `partials/_disclosure_icon.html.twig`, `partials/_edge_tab.html.twig`, `partials/_empty.html.twig`, `partials/_filter_actions.html.twig`, `partials/_filters.html.twig`, `partials/_filters_collapse.html.twig`, `partials/_filters_form.html.twig`, `partials/_filters_legacy.html.twig`, `partials/_flashes.html.twig`, `partials/_footer.html.twig`, `partials/_header_actions.html.twig`, `partials/_kebab.html.twig`, `partials/_listing_cells.html.twig`, `partials/_listing_customizer.html.twig`, `partials/_listing_filter_fields.html.twig`, `partials/_listing_head.html.twig`, `partials/_locale_switcher.html.twig`, `partials/_locale_switcher_form.html.twig`, `partials/_locale_switcher_legacy.html.twig`, `partials/_locale_tabs.html.twig`, `partials/_menu.html.twig`, `partials/_modal_shell.html.twig`, `partials/_open_modal_on_load.html.twig`, `partials/_page_header.html.twig`, `partials/_page_loader.html.twig`, `partials/_page_status.html.twig`, `partials/_page_transition.html.twig`, `partials/_pagination.html.twig`, `partials/_pagination_compact.html.twig`, `partials/_pagination_per_page_form.html.twig`, `partials/_pagination_per_page_legacy.html.twig`, `partials/_progress.html.twig`, `partials/_release_version.html.twig`, `partials/_responsive_table.html.twig`, `partials/_row_actions.html.twig`, `partials/_row_actions_form.html.twig`, `partials/_row_actions_legacy.html.twig`, `partials/_row_detail_cell.html.twig`, `partials/_row_detail_head.html.twig`, `partials/_scripts.html.twig`, `partials/_segmented.html.twig`, `partials/_segmented_checkbox_form.html.twig`, `partials/_segmented_field.html.twig`, `partials/_segmented_legacy_checkbox.html.twig`, `partials/_shell.html.twig`, `partials/_sort_header.html.twig`, `partials/_stat_row.html.twig`, `partials/_table.html.twig`, `partials/_tabs.html.twig`, `partials/_theme_boot.html.twig`, `partials/_theme_toggle.html.twig`, `partials/_thinking_orb.html.twig`, `partials/_toasts.html.twig`, `partials/_tour.html.twig`, `partials/_ui_form.html.twig`, `partials/_user_menu.html.twig`, `partials/_user_menu_logout_form.html.twig`, `partials/_user_menu_logout_legacy.html.twig`, `partials/_width_toggle.html.twig` | Reusable partials (one concern each) — the usual surgical override target |
+| `components/` | `components/_icon.html.twig`, `components/_icon_ux.html.twig` | Icon components |
+| `error/` | `error/layout.html.twig`, `error/status.html.twig` | Error page templates |
+| `form/` | `form/nowo_ui_date_range.html.twig`, `form/nowo_ui_kit_fields.html.twig`, `form/nowo_ui_layout.html.twig` | Form themes |
+| `macros/` | `macros/ui.html.twig` | Macro library (`ui`) — do not fork; pass options or override a partial |
+| `demo/` | `demo/_kitchen_sink_filter_bar.html.twig`, `demo/_kitchen_sink_locale_tabs.html.twig`, `demo/_kitchen_sink_swatch.html.twig`, `demo/kitchen_sink.html.twig` | Kitchen sink / demo templates (not for production overrides) |
+| `inline/` | `inline/nowo-ui-theme-boot.js` | Inline assets printed by partials (generated copies — never override) |
+
+Templates listed here are a published contract: renaming or removing a `<subpath>` or a stable `{% block %}` is a
+breaking change (documented in [UPGRADING.md](UPGRADING.md), with a shim template for one major when feasible).
+
+### Freeze rule
+
+**An application file at the override path always wins and will not pick up vendor changes for that path until you remove or merge it.**
+Every `composer update` of the bundle still updates all other templates, but the overridden `<subpath>` stays frozen at your copy.
+
+Recovering upstream after a freeze: delete (or rename aside) the app override, clear the Twig cache
+(`php bin/console cache:clear`), and re-apply only surgical customisations if still needed. Diff against the new vendor
+file under `vendor/nowo-tech/ui-kit-bundle/src/Resources/views/` before re-copying.
+
+### Procedure
+
+1. Find the `<subpath>` in the table above (or with `php bin/console debug:twig @NowoUiKitBundle`).
+2. Prefer config, `--nowo-ui-*` tokens, macro options or a block override in your own page template (extend the kit layout/page and override only the block, using `{{ parent() }}`) over copying the file.
+3. If you must fork, create `templates/bundles/NowoUiKitBundle/<subpath>` with the same relative path and filename.
+4. Clear the cache in dev if needed: `php bin/console cache:clear`.
 
 ## Remap CSS tokens
 

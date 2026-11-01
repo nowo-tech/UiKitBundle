@@ -1,10 +1,10 @@
 ---
-name: Feature request
-about: Suggest an idea for UiKitBundle
-title: '[feature] '
+name: "🎉 Feature Request"
+about: Suggest an idea for this project
+title: ''
 labels: enhancement
+assignees: ''
+
 ---
 
-**Problem**
-
-**Proposed solution**
+<!-- Provide a summary of the feature you would like to see implemented. -->
