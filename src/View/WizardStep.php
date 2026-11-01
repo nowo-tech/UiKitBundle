@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\View;
 
+use InvalidArgumentException;
+
 /**
  * Step of a {@see WizardPage}. Status (done / current / upcoming) comes from the page's current step.
  */
@@ -15,7 +17,7 @@ final readonly class WizardStep
         public ?string $href = null,
     ) {
         if (1 !== preg_match('/^[A-Za-z0-9][A-Za-z0-9_-]*$/', $id)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid WizardStep id "%s".', $id));
+            throw new InvalidArgumentException(\sprintf('Invalid WizardStep id "%s".', $id));
         }
     }
 }

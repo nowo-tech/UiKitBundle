@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\View;
 
+use ArrayAccess;
+use InvalidArgumentException;
+use LogicException;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -21,9 +24,9 @@ use Symfony\Component\HttpFoundation\Request;
  * 2.6: {@see self::$variant} `compact` renders the `pagination_compact` partial (previous / "Page n of m" / next and,
  * with {@see self::$allowedPerPage}, a per-page `<select>`) instead of the numbered pills.
  *
- * @implements \ArrayAccess<array-key, mixed>
+ * @implements ArrayAccess<array-key, mixed>
  */
-final readonly class Pagination implements \ArrayAccess
+final readonly class Pagination implements ArrayAccess
 {
     /** Per-page values {@see self::fromTotal()} accepts by default. */
     public const ALLOWED_PER_PAGE = [10, 25, 50, 100];
@@ -68,7 +71,7 @@ final readonly class Pagination implements \ArrayAccess
         public string $variant = self::VARIANT_FULL,
     ) {
         if (!\in_array($variant, self::VARIANTS, true)) {
-            throw new \InvalidArgumentException(\sprintf('Unknown pagination variant "%s" (known: %s).', $variant, implode(', ', self::VARIANTS)));
+            throw new InvalidArgumentException(\sprintf('Unknown pagination variant "%s" (known: %s).', $variant, implode(', ', self::VARIANTS)));
         }
         $this->perPage = max(1, $perPage);
         $this->total = max(0, $total);
@@ -138,7 +141,7 @@ final readonly class Pagination implements \ArrayAccess
     ): self {
         $allowed = array_values(array_unique(array_filter($allowedPerPage, static fn (int $value): bool => $value > 0)));
         if ([] === $allowed) {
-            throw new \InvalidArgumentException('Pagination::fromTotal() needs at least one positive allowed per-page value.');
+            throw new InvalidArgumentException('Pagination::fromTotal() needs at least one positive allowed per-page value.');
         }
         if (!\in_array($perPage, $allowed, true)) {
             $default = $defaultPerPage ?? self::DEFAULT_PER_PAGE;
@@ -320,7 +323,7 @@ final readonly class Pagination implements \ArrayAccess
     {
         foreach ($methods as $method) {
             if (!method_exists($object, $method)) {
-                throw new \InvalidArgumentException(\sprintf('%s does not look like a %s pager: method %s() is missing.', get_debug_type($object), $library, $method));
+                throw new InvalidArgumentException(\sprintf('%s does not look like a %s pager: method %s() is missing.', get_debug_type($object), $library, $method));
             }
         }
     }
@@ -350,11 +353,11 @@ final readonly class Pagination implements \ArrayAccess
 
     public function offsetSet(mixed $offset, mixed $value): never
     {
-        throw new \LogicException(self::class.' is immutable.');
+        throw new LogicException(self::class.' is immutable.');
     }
 
     public function offsetUnset(mixed $offset): never
     {
-        throw new \LogicException(self::class.' is immutable.');
+        throw new LogicException(self::class.' is immutable.');
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\Twig;
 
+use InvalidArgumentException;
 use Nowo\UiKitBundle\Twig\ErrorPageExtension;
 use Nowo\UiKitBundle\View\ErrorIllustration;
 use Nowo\UiKitBundle\View\ErrorPage;
@@ -177,13 +178,13 @@ final class ErrorPageExtensionTest extends TestCase
 
     public function testIllustrationValidation(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         new ErrorIllustration(' ');
     }
 
     public function testIllustrationSizeValidation(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('width and height must be positive');
         new ErrorIllustration('a', 0, 10);
     }

@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\Twig;
 
+use Closure;
+use InvalidArgumentException;
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Twig\ThemeExtension;
 use Nowo\UiKitBundle\View\Label;
 use PHPUnit\Framework\TestCase;
+use stdClass;
+use Stringable;
 use Symfony\Bridge\Twig\Extension\TranslationExtension;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -15,6 +19,7 @@ use Symfony\Component\Translation\Loader\ArrayLoader as TranslationArrayLoader;
 use Symfony\Component\Translation\Translator;
 use Twig\Environment;
 use Twig\Loader\ArrayLoader;
+use Twig\Node\Expression\FunctionExpression;
 use Twig\TwigFunction;
 
 final class ThemeExtensionTest extends TestCase
@@ -92,7 +97,7 @@ final class ThemeExtensionTest extends TestCase
         self::assertSame('Plain <b>', $extension->trans('Plain <b>'));
         self::assertSame('', $extension->trans(null));
         self::assertSame('42', $extension->trans(42));
-        self::assertSame('str', $extension->trans(new class implements \Stringable {
+        self::assertSame('str', $extension->trans(new class implements Stringable {
             public function __toString(): string
             {
                 return 'str';
@@ -100,10 +105,10 @@ final class ThemeExtensionTest extends TestCase
         }));
 
         $noTranslator = new ThemeExtension(new Theme());
-        self::assertSame('Hi Ann', $noTranslator->trans(new Label('Hi %name%', params: ['%name%' => 'Ann', '%x%' => new \stdClass()])));
+        self::assertSame('Hi Ann', $noTranslator->trans(new Label('Hi %name%', params: ['%name%' => 'Ann', '%x%' => new stdClass()])));
 
-        $this->expectException(\InvalidArgumentException::class);
-        $extension->trans(new \stdClass());
+        $this->expectException(InvalidArgumentException::class);
+        $extension->trans(new stdClass());
     }
 
     public function testTranslatable(): void
@@ -162,15 +167,15 @@ final class ThemeExtensionTest extends TestCase
         self::assertSame('', $weird->render('t'));
 
         $noCallable = $this->twig($extension, '{{ nowo_ui_breadcrumb_kit() }}');
-        $noCallable->addFunction(new TwigFunction('breadcrumb_render', null, ['node_class' => \Twig\Node\Expression\FunctionExpression::class]));
+        $noCallable->addFunction(new TwigFunction('breadcrumb_render', null, ['node_class' => FunctionExpression::class]));
         self::assertSame('', $noCallable->render('t'));
     }
 
-    private function twig(ThemeExtension $extension, string $template, ?\Closure $appearanceStyle = null): Environment
+    private function twig(ThemeExtension $extension, string $template, ?Closure $appearanceStyle = null): Environment
     {
         $twig = new Environment(new ArrayLoader(['t' => $template]), ['strict_variables' => true]);
         $twig->addExtension($extension);
-        if ($appearanceStyle instanceof \Closure) {
+        if ($appearanceStyle instanceof Closure) {
             $twig->addFunction(new TwigFunction('nowo_ui_appearance_style', $appearanceStyle, ['is_safe' => ['html']]));
         }
 

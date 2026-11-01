@@ -6,6 +6,7 @@ namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
@@ -52,7 +53,7 @@ final class FormThemeErrorsTest extends TestCase
     {
         $form = PageContractTwig::forms()->createNamedBuilder('item', FormType::class)
             ->add('name', TextType::class, ['required' => false, 'help' => 'Short'])
-            ->add('agree', \Symfony\Component\Form\Extension\Core\Type\CheckboxType::class, ['required' => false, 'help' => 'Read it'])
+            ->add('agree', CheckboxType::class, ['required' => false, 'help' => 'Read it'])
             ->add('dup', TextType::class, ['required' => false, 'row_attr' => ['class' => 'extra field']])
             ->getForm();
         $form->get('name')->addError(new FormError('Bad name'));

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\View;
 
+use InvalidArgumentException;
+
 /**
  * Illustration of an error page (2.6, `nowo_ui_kit.error_pages.illustrations`): an asset path without extension,
  * rendered as `<picture>` with a WebP `<source>` (when `webp`) and the `fallbackExtension` image (PNG by default),
@@ -19,10 +21,10 @@ final readonly class ErrorIllustration
         public string $fallbackExtension = 'png',
     ) {
         if ('' === trim($path)) {
-            throw new \InvalidArgumentException('An error page illustration needs a non-empty asset path.');
+            throw new InvalidArgumentException('An error page illustration needs a non-empty asset path.');
         }
         if ($width < 1 || $height < 1) {
-            throw new \InvalidArgumentException(\sprintf('Error page illustration "%s": width and height must be positive.', $path));
+            throw new InvalidArgumentException(\sprintf('Error page illustration "%s": width and height must be positive.', $path));
         }
     }
 

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\View;
 
+use InvalidArgumentException;
+use Stringable;
+
 /**
  * Translatable label (REQ-UI-003, REQ-I18N-003): translation key + explicit domain + parameters. Scaffolds and
  * partials translate it; bundles never pre-render strings into view models. A plain `string` wherever a
@@ -12,7 +15,7 @@ namespace Nowo\UiKitBundle\View;
 final readonly class Label
 {
     /**
-     * @param array<string, string|int|float|\Stringable|null> $params
+     * @param array<string, string|int|float|Stringable|null> $params
      */
     public function __construct(
         public string $key,
@@ -20,14 +23,14 @@ final readonly class Label
         public array $params = [],
     ) {
         if ('' === trim($key)) {
-            throw new \InvalidArgumentException('A Label needs a non-empty translation key.');
+            throw new InvalidArgumentException('A Label needs a non-empty translation key.');
         }
     }
 
     /**
      * UiKit's own catalogue (`NowoUiKitBundle` domain).
      *
-     * @param array<string, string|int|float|\Stringable|null> $params
+     * @param array<string, string|int|float|Stringable|null> $params
      *
      * @return self Fluent interface
      */
@@ -37,7 +40,7 @@ final readonly class Label
     }
 
     /**
-     * @param array<string, string|int|float|\Stringable|null> $params
+     * @param array<string, string|int|float|Stringable|null> $params
      *
      * @return self Fluent interface
      */

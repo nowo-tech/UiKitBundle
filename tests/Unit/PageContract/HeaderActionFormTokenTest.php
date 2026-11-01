@@ -15,6 +15,7 @@ use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormView;
+use Twig\Environment;
 
 /**
  * Header actions backed by a CSRF-only FormView keep their hidden fields (the CSRF token) however often the
@@ -119,7 +120,7 @@ final class HeaderActionFormTokenTest extends TestCase
         return $matches[0];
     }
 
-    private function twig(bool $override): \Twig\Environment
+    private function twig(bool $override): Environment
     {
         return $override
             ? PageContractTwig::create(['host/_page_header.html.twig' => self::OVERRIDE], ['partials' => ['page_header' => 'host/_page_header.html.twig']])

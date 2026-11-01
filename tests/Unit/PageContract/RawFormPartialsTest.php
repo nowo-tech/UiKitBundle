@@ -4,15 +4,19 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 
+use InvalidArgumentException;
 use Nowo\UiKitBundle\Form\HiddenFieldsType;
 use Nowo\UiKitBundle\Form\PerPageType;
 use Nowo\UiKitBundle\Form\SearchFilterType;
 use Nowo\UiKitBundle\Form\UiFormViews;
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Twig\ThemeExtension;
+use Nowo\UiKitBundle\View\Action;
 use Nowo\UiKitBundle\View\Pagination;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use stdClass;
+use Stringable;
 use Symfony\Bridge\Twig\Extension\TranslationExtension;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
@@ -135,7 +139,7 @@ final class RawFormPartialsTest extends TestCase
     {
         $form = PageContractTwig::forms()->createNamed('del', FormType::class)->add('_token', HiddenType::class, ['data' => 'ft'])->createView();
         $twig = PageContractTwig::create();
-        $vars = ['action' => new \Nowo\UiKitBundle\View\Action('delete', href: '/d', method: 'POST', form: $form), 'action_href' => '/d', 'button_class' => 'b', 'button_html' => 'x'];
+        $vars = ['action' => new Action('delete', href: '/d', method: 'POST', form: $form), 'action_href' => '/d', 'button_class' => 'b', 'button_html' => 'x'];
         $first = $twig->render('@NowoUiKitBundle/partials/_action_post.html.twig', $vars);
         $second = $twig->render('@NowoUiKitBundle/partials/_action_post.html.twig', $vars);
 
@@ -234,12 +238,12 @@ final class RawFormPartialsTest extends TestCase
         $forms = new UiFormViews(Forms::createFormFactory());
         $twig = PageContractTwig::create();
 
-        $hidden = $forms->create($twig, 'hidden', ['fields' => ['a' => 'x', 'n' => null, 'f' => false, 't' => true, 'i' => 3, 's' => new class implements \Stringable {
+        $hidden = $forms->create($twig, 'hidden', ['fields' => ['a' => 'x', 'n' => null, 'f' => false, 't' => true, 'i' => 3, 's' => new class implements Stringable {
             public function __toString(): string
             {
                 return 'str';
             }
-        }, 'o' => new \stdClass(), 'g' => ['h' => 'y']], 'method' => 'get']);
+        }, 'o' => new stdClass(), 'g' => ['h' => 'y']], 'method' => 'get']);
         self::assertNotNull($hidden);
         self::assertSame(['a', 't', 'i', 's', 'g'], array_keys($hidden->children));
         self::assertSame('1', $hidden->children['t']->vars['value']);
@@ -260,7 +264,7 @@ final class RawFormPartialsTest extends TestCase
 
         self::assertSame('<input type="hidden" name="a" value="x">', $forms->renderHidden($twig, $hidden->children['a']));
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Unknown UiKit form kind "nope"');
         $forms->create($twig, 'nope');
     }

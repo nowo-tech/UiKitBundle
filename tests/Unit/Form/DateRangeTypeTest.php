@@ -21,6 +21,7 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\HttpFoundation\HttpFoundationExtension;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormFactoryInterface;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\Forms;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\HttpFoundation\Request;
@@ -303,9 +304,9 @@ final class DateRangeTypeTest extends TestCase
     /**
      * @param array<string, mixed> $options
      *
-     * @return \Symfony\Component\Form\FormInterface<mixed>
+     * @return FormInterface<mixed>
      */
-    private function filterForm(array $options = []): \Symfony\Component\Form\FormInterface
+    private function filterForm(array $options = []): FormInterface
     {
         return $this->factory()->createNamedBuilder('', FormType::class, null, ['method' => 'GET'])
             ->add('q', TextType::class, ['required' => false])

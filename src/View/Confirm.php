@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\View;
 
+use InvalidArgumentException;
+use JsonSerializable;
+
 /**
  * Confirm dialog of a destructive action (UiKit `_confirm` `<dialog>`; never inline `confirm()`).
  *
@@ -18,7 +21,7 @@ namespace Nowo\UiKitBundle\View;
  * Titles should name the item ("Delete order #1042?"): pass `title` to {@see self::delete()} (2.2) or build the
  * Confirm with a {@see Label} carrying the item as a parameter.
  */
-final readonly class Confirm implements \JsonSerializable
+final readonly class Confirm implements JsonSerializable
 {
     public const VARIANTS = ['danger', 'primary', 'secondary'];
 
@@ -38,16 +41,16 @@ final readonly class Confirm implements \JsonSerializable
         public string $size = 'md',
     ) {
         if (!\in_array($size, self::SIZES, true)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid Confirm size "%s" (%s).', $size, implode('|', self::SIZES)));
+            throw new InvalidArgumentException(\sprintf('Invalid Confirm size "%s" (%s).', $size, implode('|', self::SIZES)));
         }
         if (!\in_array($variant, self::VARIANTS, true)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid Confirm variant "%s" (%s).', $variant, implode('|', self::VARIANTS)));
+            throw new InvalidArgumentException(\sprintf('Invalid Confirm variant "%s" (%s).', $variant, implode('|', self::VARIANTS)));
         }
         if (null !== $id && 1 !== preg_match('/^[A-Za-z][A-Za-z0-9_:.-]*$/', $id)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid Confirm id "%s".', $id));
+            throw new InvalidArgumentException(\sprintf('Invalid Confirm id "%s".', $id));
         }
         if (null !== $expectedValue && '' === trim($expectedValue)) {
-            throw new \InvalidArgumentException('A Confirm expectedValue must not be empty.');
+            throw new InvalidArgumentException('A Confirm expectedValue must not be empty.');
         }
     }
 

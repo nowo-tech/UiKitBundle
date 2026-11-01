@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\DependencyInjection;
 
+use Closure;
+use LogicException;
 use Nowo\UiKitBundle\Appearance\AppearanceCssEmitter;
 use Nowo\UiKitBundle\Appearance\AppearancePreset;
 use Nowo\UiKitBundle\Appearance\AppearancePresetProviderInterface;
@@ -57,13 +59,13 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
     /** Form theme with the date-range field's blocks (2.15), prepended to `twig.form_themes`. */
     public const DATE_RANGE_FORM_THEME = '@NowoUiKit/form/nowo_ui_date_range.html.twig';
 
-    /** @var \Closure(): bool */
-    private readonly \Closure $httpClientAvailable;
+    /** @var Closure(): bool */
+    private readonly Closure $httpClientAvailable;
 
     /**
-     * @param (\Closure(): bool)|null $httpClientAvailable whether symfony/http-client is installed (overridable in tests)
+     * @param (Closure(): bool)|null $httpClientAvailable whether symfony/http-client is installed (overridable in tests)
      */
-    public function __construct(?\Closure $httpClientAvailable = null)
+    public function __construct(?Closure $httpClientAvailable = null)
     {
         $this->httpClientAvailable = $httpClientAvailable ?? static fn (): bool => interface_exists(HttpClientInterface::class) && class_exists(HttpClient::class);
     }
@@ -395,7 +397,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
         }
 
         if (!($this->httpClientAvailable)()) {
-            throw new \LogicException('nowo_ui_kit.release_check.enabled requires symfony/http-client (composer require symfony/http-client).');
+            throw new LogicException('nowo_ui_kit.release_check.enabled requires symfony/http-client (composer require symfony/http-client).');
         }
 
         $container->register('nowo_ui_kit.release_update_checker', ReleaseUpdateChecker::class)

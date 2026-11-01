@@ -12,14 +12,14 @@ use Symfony\Component\Routing\RouteCollection;
  * Prefixes are matched on path-segment boundaries (end of string, `/` or `{`) and the longest
  * prefix always wins. An empty map is a no-op.
  */
-final class PanelPathRewriter
+final readonly class PanelPathRewriter
 {
     /**
      * Prefix map sorted by descending source-prefix length.
      *
      * @var array<string, string>
      */
-    private readonly array $map;
+    private array $map;
 
     /**
      * @param array<string, string> $map Legacy prefix → new prefix (no trailing slash)

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\View;
 
+use InvalidArgumentException;
+use LogicException;
 use Nowo\UiKitBundle\Listing\SortRequest;
 use Symfony\Component\Form\FormView;
 
@@ -99,14 +101,14 @@ final readonly class ListPage
         public bool $clientSort = false,
     ) {
         if (!\in_array($actionsPosition, self::ACTIONS_POSITIONS, true)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid ListPage actionsPosition "%s" (%s).', $actionsPosition, implode('|', self::ACTIONS_POSITIONS)));
+            throw new InvalidArgumentException(\sprintf('Invalid ListPage actionsPosition "%s" (%s).', $actionsPosition, implode('|', self::ACTIONS_POSITIONS)));
         }
         if (!\in_array($actionsAlign, Column::ALIGNS, true)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid ListPage actionsAlign "%s" (%s).', $actionsAlign, implode('|', Column::ALIGNS)));
+            throw new InvalidArgumentException(\sprintf('Invalid ListPage actionsAlign "%s" (%s).', $actionsAlign, implode('|', Column::ALIGNS)));
         }
         Action::assertAttributes($attributes);
         if (null !== $filtersDisplay && !\in_array($filtersDisplay, Action::DISPLAYS, true)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid ListPage filtersDisplay "%s" (%s).', $filtersDisplay, implode('|', Action::DISPLAYS)));
+            throw new InvalidArgumentException(\sprintf('Invalid ListPage filtersDisplay "%s" (%s).', $filtersDisplay, implode('|', Action::DISPLAYS)));
         }
         $fields = [];
         foreach (ViewList::of($filterFields, FilterField::class, 'ListPage filterFields') as $field) {
@@ -115,7 +117,7 @@ final readonly class ListPage
         $this->filterFields = $fields;
         $this->filterActions = ViewList::of($filterActions, Action::class, 'ListPage filterActions');
         if (!\in_array($responsive, self::RESPONSIVE, true)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid ListPage responsive "%s" (%s).', $responsive, implode('|', self::RESPONSIVE)));
+            throw new InvalidArgumentException(\sprintf('Invalid ListPage responsive "%s" (%s).', $responsive, implode('|', self::RESPONSIVE)));
         }
         $this->columns = ViewList::of($columns, Column::class, 'ListPage columns');
         $this->rows = \is_array($rows) ? $rows : iterator_to_array($rows, false);
@@ -123,10 +125,10 @@ final readonly class ListPage
             $rowActions = ViewList::of($rowActions, Action::class, 'ListPage rowActions');
         }
         if (!\in_array($direction, ['asc', 'desc'], true)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid ListPage direction "%s" (asc|desc).', $direction));
+            throw new InvalidArgumentException(\sprintf('Invalid ListPage direction "%s" (asc|desc).', $direction));
         }
         if ($clientSort && $pagination instanceof Pagination && $pagination->totalPages > 1) {
-            throw new \LogicException('A paginated ListPage cannot sort in the browser (clientSort): it would only reorder the current page. Sort on the server (sorting: SortRequest) instead.');
+            throw new LogicException('A paginated ListPage cannot sort in the browser (clientSort): it would only reorder the current page. Sort on the server (sorting: SortRequest) instead.');
         }
         $sorting ??= new SortRequest($sort, $direction, [], 'sort', 'direction');
         if ($pagination instanceof Pagination) {

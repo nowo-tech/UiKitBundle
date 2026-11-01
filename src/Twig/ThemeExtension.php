@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Twig;
 
+use InvalidArgumentException;
 use Nowo\UiKitBundle\Form\ActionCsrfType;
 use Nowo\UiKitBundle\Form\UiFormViews;
 use Nowo\UiKitBundle\Theme\FontPreload;
@@ -14,6 +15,7 @@ use Nowo\UiKitBundle\View\HeaderActions;
 use Nowo\UiKitBundle\View\Label;
 use Nowo\UiKitBundle\View\PageHeader;
 use Nowo\UiKitBundle\View\ViewList;
+use Stringable;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\Forms;
 use Symfony\Component\Form\FormView;
@@ -180,7 +182,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
         $callable = $env->getFunction('nowo_ui_appearance_style')?->getCallable();
         if (\is_callable($callable)) {
             $style = $callable($nonce);
-            $parts[] = \is_scalar($style) || $style instanceof \Stringable ? (string) $style : '';
+            $parts[] = \is_scalar($style) || $style instanceof Stringable ? (string) $style : '';
         }
 
         return implode("\n", array_filter($parts, static fn (string $part): bool => '' !== $part));
@@ -201,13 +203,13 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
         if ($value instanceof Label) {
             $all = array_merge($value->params, $params);
 
-            return $this->translator?->trans($value->key, $all, $value->domain) ?? strtr($value->key, array_map(static fn (mixed $v): string => \is_scalar($v) || $v instanceof \Stringable ? (string) $v : '', $all));
+            return $this->translator?->trans($value->key, $all, $value->domain) ?? strtr($value->key, array_map(static fn (mixed $v): string => \is_scalar($v) || $v instanceof Stringable ? (string) $v : '', $all));
         }
-        if (null === $value || \is_scalar($value) || $value instanceof \Stringable) {
+        if (null === $value || \is_scalar($value) || $value instanceof Stringable) {
             return (string) $value;
         }
 
-        throw new \InvalidArgumentException(\sprintf('nowo_ui_trans expects a Label, a string or a number, %s given.', get_debug_type($value)));
+        throw new InvalidArgumentException(\sprintf('nowo_ui_trans expects a Label, a string or a number, %s given.', get_debug_type($value)));
     }
 
     /**
@@ -296,7 +298,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
 
         $html = $callable($env, $collection ?? $this->breadcrumbs['collection']);
 
-        return \is_scalar($html) || $html instanceof \Stringable ? (string) $html : '';
+        return \is_scalar($html) || $html instanceof Stringable ? (string) $html : '';
     }
 
     /**

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Appearance;
 
+use InvalidArgumentException;
+
 /**
  * Generic presets shipped with the kit. Hosts add their own (config `presets` or a tagged
  * {@see AppearancePresetProviderInterface}) and may restrict these with `builtin_presets`.
@@ -32,12 +34,12 @@ final class BuiltInAppearancePresets
     }
 
     /**
-     * @throws \InvalidArgumentException for an id outside {@see self::IDS}
+     * @throws InvalidArgumentException for an id outside {@see self::IDS}
      */
     public static function get(string $id): AppearancePreset
     {
         if (!isset(self::DATA[$id])) {
-            throw new \InvalidArgumentException(\sprintf('Unknown built-in appearance preset "%s".', $id));
+            throw new InvalidArgumentException(\sprintf('Unknown built-in appearance preset "%s".', $id));
         }
         [$mode, $light, $dark] = self::DATA[$id];
 

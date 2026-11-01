@@ -12,8 +12,13 @@ use Nowo\UiKitBundle\View\Label;
 use Nowo\UiKitBundle\View\PageHeader;
 use Nowo\UiKitBundle\View\Pagination;
 use PHPUnit\Framework\TestCase;
+use Symfony\Bridge\Twig\Extension\TranslationExtension;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
+use Symfony\Component\Translation\IdentityTranslator;
 use Twig\Environment;
+use Twig\Loader\ArrayLoader;
+use Twig\Loader\ChainLoader;
+use Twig\Loader\FilesystemLoader;
 use Twig\TwigFunction;
 
 /**
@@ -365,10 +370,10 @@ final class ViewPartialsTest extends TestCase
 
     private function bare(string $template): string
     {
-        $fs = new \Twig\Loader\FilesystemLoader();
+        $fs = new FilesystemLoader();
         $fs->addPath(PageContractTwig::root().'/src/Resources/views', 'NowoUiKitBundle');
-        $twig = new Environment(new \Twig\Loader\ChainLoader([new \Twig\Loader\ArrayLoader(['t' => $template]), $fs]));
-        $twig->addExtension(new \Symfony\Bridge\Twig\Extension\TranslationExtension(new \Symfony\Component\Translation\IdentityTranslator()));
+        $twig = new Environment(new ChainLoader([new ArrayLoader(['t' => $template]), $fs]));
+        $twig->addExtension(new TranslationExtension(new IdentityTranslator()));
         $twig->addGlobal('nowo_ui_kit_css_framework', 'bootstrap5');
 
         return $twig->render('t');

@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit;
 
+use DOMAttr;
+use DOMDocument;
+use DOMElement;
+use Nowo\UiKitBundle\DependencyInjection\Compiler\TwigPathsPass;
 use Nowo\UiKitBundle\NowoUiKitBundle;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bridge\Twig\Extension\TranslationExtension;
@@ -12,7 +16,10 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Translation\IdentityTranslator;
 use Twig\Environment;
 use Twig\Loader\ArrayLoader;
+use Twig\Loader\ChainLoader;
 use Twig\Loader\FilesystemLoader;
+use Twig\Markup;
+use Twig\TwigFunction;
 
 final class UiMacrosTwigTest extends TestCase
 {
@@ -24,7 +31,7 @@ final class UiMacrosTwigTest extends TestCase
         $passes = $container->getCompilerPassConfig()->getPasses();
         $found = false;
         foreach ($passes as $pass) {
-            if ($pass instanceof \Nowo\UiKitBundle\DependencyInjection\Compiler\TwigPathsPass) {
+            if ($pass instanceof TwigPathsPass) {
                 $found = true;
                 break;
             }
@@ -184,16 +191,16 @@ final class UiMacrosTwigTest extends TestCase
             'confirm_message' => $message,
         ]]);
 
-        $doc = new \DOMDocument();
+        $doc = new DOMDocument();
         self::assertTrue(@$doc->loadHTML('<!doctype html><html><body>'.$html.'</body></html>'));
         $form = $doc->getElementsByTagName('form')->item(0);
-        self::assertInstanceOf(\DOMElement::class, $form);
+        self::assertInstanceOf(DOMElement::class, $form);
 
         // The browser-decoded handler is exactly confirm(<JSON string literal>): no broken quoting, no injected attributes.
         self::assertSame('return confirm('.json_encode($message).');', $form->getAttribute('onsubmit'));
         self::assertFalse($form->hasAttribute('onmouseover'));
         self::assertSame(['method', 'action', 'class', 'onsubmit'], array_map(
-            static fn (\DOMAttr $attr): string => $attr->name,
+            static fn (DOMAttr $attr): string => $attr->name,
             iterator_to_array($form->attributes, false),
         ));
     }
@@ -389,7 +396,7 @@ final class UiMacrosTwigTest extends TestCase
         self::assertStringNotContainsString('--pager', $plain);
 
         $full = $this->renderPartial('_filter_actions.html.twig', [
-            'pager' => new \Twig\Markup('<div class="nowo-ui-filter-bar__pager"><select name="per_page"></select></div>', 'UTF-8'),
+            'pager' => new Markup('<div class="nowo-ui-filter-bar__pager"><select name="per_page"></select></div>', 'UTF-8'),
             'clear_href' => '/items',
             'submit_label' => 'Filter',
             'clear_label' => 'Clear filters',
@@ -401,7 +408,7 @@ final class UiMacrosTwigTest extends TestCase
         self::assertStringContainsString('class="btn-primary nowo-ui-filter-bar__submit">Filter</button>', $full);
         self::assertStringContainsString('<a class="btn-ghost nowo-ui-filter-bar__clear" href="/items">Clear filters</a>', $full);
 
-        $empty = $this->renderPartial('_filter_actions.html.twig', ['pager' => new \Twig\Markup('', 'UTF-8'), 'clear_href' => '/x']);
+        $empty = $this->renderPartial('_filter_actions.html.twig', ['pager' => new Markup('', 'UTF-8'), 'clear_href' => '/x']);
         self::assertStringNotContainsString('--pager', $empty);
         self::assertStringContainsString('nowo-ui-btn--secondary nowo-ui-filter-bar__clear', $empty);
         self::assertStringContainsString('>filters.clear</a>', $empty);
@@ -513,9 +520,9 @@ final class UiMacrosTwigTest extends TestCase
         $fs = new FilesystemLoader();
         $fs->addPath($views, 'NowoUiKitBundle');
         $loader = new ArrayLoader(['t.twig' => "{% include '@NowoUiKitBundle/partials/{$partial}' %}"]);
-        $twig = new Environment(new \Twig\Loader\ChainLoader([$loader, $fs]));
+        $twig = new Environment(new ChainLoader([$loader, $fs]));
         $twig->addExtension(new TranslationExtension(new IdentityTranslator()));
-        $twig->addFunction(new \Twig\TwigFunction('asset', static fn (string $path, ?string $package = null): string => '/bundles/nowouikit/'.$path));
+        $twig->addFunction(new TwigFunction('asset', static fn (string $path, ?string $package = null): string => '/bundles/nowouikit/'.$path));
         $twig->addGlobal('nowo_ui_kit_css_framework', 'custom');
 
         return trim($twig->render('t.twig', $vars));
@@ -531,9 +538,9 @@ final class UiMacrosTwigTest extends TestCase
         $fs = new FilesystemLoader();
         $fs->addPath($views, 'NowoUiKitBundle');
         $loader = new ArrayLoader(['t.twig' => "{% include '@NowoUiKitBundle/partials/_release_version.html.twig' %}"]);
-        $twig = new Environment(new \Twig\Loader\ChainLoader([$loader, $fs]));
+        $twig = new Environment(new ChainLoader([$loader, $fs]));
         $twig->addExtension(new TranslationExtension(new IdentityTranslator()));
-        $twig->addFunction(new \Twig\TwigFunction('path', static fn (string $name): string => 'nowo_ui_kit_release_status' === $name ? '/_nowo-ui/release/status' : '/'.$name));
+        $twig->addFunction(new TwigFunction('path', static fn (string $name): string => 'nowo_ui_kit_release_status' === $name ? '/_nowo-ui/release/status' : '/'.$name));
         $twig->addGlobal('nowo_ui_kit_css_framework', 'bootstrap5');
         if (null !== $global) {
             $twig->addGlobal('nowo_ui_kit_release_check', $global);
@@ -552,7 +559,7 @@ final class UiMacrosTwigTest extends TestCase
             't.twig' => "{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}{$expression}",
         ]);
 
-        $chain = new \Twig\Loader\ChainLoader([$loader, $fs]);
+        $chain = new ChainLoader([$loader, $fs]);
         $twig = new Environment($chain);
         $twig->addGlobal('nowo_ui_kit_css_framework', $framework);
         $twig->addGlobal('nowo_ui_kit_icon_set', 'bootstrap-icons');
@@ -571,7 +578,7 @@ final class UiMacrosTwigTest extends TestCase
             't.twig' => "{% include '@NowoUiKitBundle/components/_icon.html.twig' with { name: name } only %}",
         ]);
 
-        $chain = new \Twig\Loader\ChainLoader([$loader, $fs]);
+        $chain = new ChainLoader([$loader, $fs]);
         $twig = new Environment($chain);
         $twig->addGlobal('nowo_ui_kit_icon_set', $iconSet);
 
@@ -591,7 +598,7 @@ final class UiMacrosTwigTest extends TestCase
             't.twig' => "{% include '@NowoUiKitBundle/partials/_row_actions.html.twig' with { display: display, actions: actions } only %}",
         ]);
 
-        $chain = new \Twig\Loader\ChainLoader([$loader, $fs]);
+        $chain = new ChainLoader([$loader, $fs]);
         $twig = new Environment($chain);
         $twig->addExtension(new TranslationExtension(new IdentityTranslator()));
         $twig->addGlobal('nowo_ui_kit_css_framework', 'bootstrap5');

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\View;
 
+use Closure;
+use InvalidArgumentException;
+use LogicException;
 use Nowo\UiKitBundle\Listing\SortRequest;
 
 /**
@@ -51,7 +54,7 @@ final readonly class Table
     /** @var list<Action> */
     private array $staticRowActions;
 
-    private ?\Closure $rowActionsFactory;
+    private ?Closure $rowActionsFactory;
 
     /**
      * @param iterable<Column>                                                 $columns
@@ -79,16 +82,16 @@ final readonly class Table
         public bool $clientSort = false,
     ) {
         if (!\in_array($actionsAlign, Column::ALIGNS, true)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid Table actionsAlign "%s" (%s).', $actionsAlign, implode('|', Column::ALIGNS)));
+            throw new InvalidArgumentException(\sprintf('Invalid Table actionsAlign "%s" (%s).', $actionsAlign, implode('|', Column::ALIGNS)));
         }
         if (!\in_array($actionsPosition, self::ACTIONS_POSITIONS, true)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid Table actionsPosition "%s" (%s).', $actionsPosition, implode('|', self::ACTIONS_POSITIONS)));
+            throw new InvalidArgumentException(\sprintf('Invalid Table actionsPosition "%s" (%s).', $actionsPosition, implode('|', self::ACTIONS_POSITIONS)));
         }
         if (!\in_array($responsive, self::RESPONSIVE, true)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid Table responsive "%s" (%s).', $responsive, implode('|', self::RESPONSIVE)));
+            throw new InvalidArgumentException(\sprintf('Invalid Table responsive "%s" (%s).', $responsive, implode('|', self::RESPONSIVE)));
         }
         if (!\in_array($direction, ['asc', 'desc'], true)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid Table direction "%s" (asc|desc).', $direction));
+            throw new InvalidArgumentException(\sprintf('Invalid Table direction "%s" (asc|desc).', $direction));
         }
         Action::assertAttributes($attributes);
         $this->columns = ViewList::of($columns, Column::class, 'Table columns');
@@ -148,7 +151,7 @@ final readonly class Table
             }
             if (isset($dialogs[$id])) {
                 if ($dialogs[$id]->confirmKey() !== $action->confirmKey()) {
-                    throw new \LogicException(\sprintf('Confirm id "%s" is used by row actions with different content (target, token or confirm text): give each Confirm its own id, or omit it to derive one per row.', $id));
+                    throw new LogicException(\sprintf('Confirm id "%s" is used by row actions with different content (target, token or confirm text): give each Confirm its own id, or omit it to derive one per row.', $id));
                 }
                 continue;
             }

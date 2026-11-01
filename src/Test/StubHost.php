@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\UiKitBundle\Test;
 
 use Nowo\UiKitBundle\Theme\ThemeSlots;
+use Nowo\UiKitBundle\View\AreaNav;
 
 /**
  * The stub host of {@see PageContractTestCase}: host layouts that render every canonical block inside a marker
@@ -13,7 +14,7 @@ use Nowo\UiKitBundle\Theme\ThemeSlots;
  * 2.0 `actions` input itself through the `action` partial (like a typical host override), after the scaffold has
  * pre-rendered the 1.x `toolbar`: FormView-backed header actions render twice and must keep their hidden fields.
  * The override also renders the area nav (`header.tabs`, 2.2) through the `tabs` partial, so pages with an
- * {@see \Nowo\UiKitBundle\View\AreaNav} reflect the stub theme's tab slots. A bundle replaces any stub template
+ * {@see AreaNav} reflect the stub theme's tab slots. A bundle replaces any stub template
  * through {@see PageContractTestCase::inlineTemplates()} (same template name; inline templates win since 2.2).
  */
 final class StubHost

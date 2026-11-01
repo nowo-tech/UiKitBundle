@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Theme;
 
+use InvalidArgumentException;
+
 /**
  * Single source of the theme slot vocabulary (REQ-UI-003): semantic `nowo-ui-*` class per slot plus the UiKit
  * framework defaults per `css_framework` family. Adding a slot is a minor change; renaming or removing one is
@@ -679,7 +681,7 @@ final class ThemeSlots
     private static function slot(string $slot): array
     {
         if (!isset(self::SLOTS[$slot])) {
-            throw new \InvalidArgumentException(\sprintf('Unknown UiKit theme slot "%s" (known: %s).', $slot, implode(', ', self::names())));
+            throw new InvalidArgumentException(\sprintf('Unknown UiKit theme slot "%s" (known: %s).', $slot, implode(', ', self::names())));
         }
 
         return self::SLOTS[$slot];

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Listing;
 
+use InvalidArgumentException;
 use Nowo\UiKitBundle\View\Label;
 
 /**
@@ -38,17 +39,17 @@ final readonly class ListingField
         public string $sortFirst = 'asc',
     ) {
         if (null !== $sortKey && '' === trim($sortKey)) {
-            throw new \InvalidArgumentException(\sprintf('The sortKey of the ListingField "%s" must be non-empty (null: not sortable).', $key));
+            throw new InvalidArgumentException(\sprintf('The sortKey of the ListingField "%s" must be non-empty (null: not sortable).', $key));
         }
         if (!\in_array($sortFirst, SortRequest::DIRECTIONS, true)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid ListingField sortFirst "%s" (asc|desc).', $sortFirst));
+            throw new InvalidArgumentException(\sprintf('Invalid ListingField sortFirst "%s" (asc|desc).', $sortFirst));
         }
         if ('' === trim($key)) {
-            throw new \InvalidArgumentException('A ListingField needs a non-empty key.');
+            throw new InvalidArgumentException('A ListingField needs a non-empty key.');
         }
         foreach ($queryKeys as $queryKey) {
             if ('' === trim($queryKey)) {
-                throw new \InvalidArgumentException(\sprintf('The query keys of the ListingField "%s" must be non-empty strings.', $key));
+                throw new InvalidArgumentException(\sprintf('The query keys of the ListingField "%s" must be non-empty strings.', $key));
             }
         }
     }

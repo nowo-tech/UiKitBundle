@@ -4,11 +4,17 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\DependencyInjection;
 
+use LogicException;
 use Nowo\UiKitBundle\DependencyInjection\Configuration;
 use Nowo\UiKitBundle\DependencyInjection\NowoUiKitExtension;
+use Nowo\UiKitBundle\Release\ReleaseUpdateChecker;
+use Nowo\UiKitBundle\Routing\PanelPathRewritingLoader;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Config\Loader\DelegatingLoader;
+use Symfony\Component\Config\Loader\LoaderResolver;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
+use Symfony\Component\Yaml\Yaml;
 
 final class NowoUiKitExtensionTest extends TestCase
 {
@@ -63,14 +69,14 @@ final class NowoUiKitExtensionTest extends TestCase
     public function testDecoratorWrapsRoutingLoaderWhenCompiled(): void
     {
         $container = new ContainerBuilder();
-        $container->register('routing.loader', \Symfony\Component\Config\Loader\DelegatingLoader::class)
-            ->setArguments([new \Symfony\Component\Config\Loader\LoaderResolver()])
+        $container->register('routing.loader', DelegatingLoader::class)
+            ->setArguments([new LoaderResolver()])
             ->setPublic(true);
         (new NowoUiKitExtension())->load([['panel_path_rewrites' => ['/admin/blog' => '/panel/blog']]], $container);
         $container->compile();
 
         self::assertInstanceOf(
-            \Nowo\UiKitBundle\Routing\PanelPathRewritingLoader::class,
+            PanelPathRewritingLoader::class,
             $container->get('routing.loader'),
         );
     }
@@ -162,7 +168,7 @@ final class NowoUiKitExtensionTest extends TestCase
 
     public function testReleaseCheckEnabledRequiresTheHttpClient(): void
     {
-        $this->expectException(\LogicException::class);
+        $this->expectException(LogicException::class);
         $this->expectExceptionMessage('requires symfony/http-client');
         (new NowoUiKitExtension(static fn (): bool => false))->load([['release_check' => ['enabled' => true]]], new ContainerBuilder());
     }
@@ -186,12 +192,12 @@ final class NowoUiKitExtensionTest extends TestCase
         self::assertSame('v1.2.3', $container->getParameter('nowo_ui_kit.release_check.current_version'));
 
         $checker = $container->getDefinition('nowo_ui_kit.release_update_checker');
-        self::assertSame(\Nowo\UiKitBundle\Release\ReleaseUpdateChecker::class, $checker->getClass());
+        self::assertSame(ReleaseUpdateChecker::class, $checker->getClass());
         $args = $checker->getArguments();
         self::assertSame('http_client', (string) $args[0]);
         self::assertSame('cache.app', (string) $args[1]);
         self::assertSame(['v1.2.3', 'acme/app', true, 120, 'acme-app', 'develop'], \array_slice($args, 2, 6));
-        self::assertTrue($container->hasAlias(\Nowo\UiKitBundle\Release\ReleaseUpdateChecker::class));
+        self::assertTrue($container->hasAlias(ReleaseUpdateChecker::class));
 
         $controllerArgs = $container->getDefinition('nowo_ui_kit.release_status_controller')->getArguments();
         self::assertSame('nowo_ui_kit.release_update_checker', (string) $controllerArgs[0]);
@@ -221,7 +227,7 @@ final class NowoUiKitExtensionTest extends TestCase
 
     public function testRouteFileDeclaresStatusEndpoint(): void
     {
-        $routes = \Symfony\Component\Yaml\Yaml::parseFile(\dirname(__DIR__, 3).'/src/Resources/config/routes/release_check.yaml');
+        $routes = Yaml::parseFile(\dirname(__DIR__, 3).'/src/Resources/config/routes/release_check.yaml');
         self::assertIsArray($routes);
         self::assertSame('/_nowo-ui/release/status', $routes['nowo_ui_kit_release_status']['path']);
         self::assertSame('nowo_ui_kit.release_status_controller', $routes['nowo_ui_kit_release_status']['controller']);

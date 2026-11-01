@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\Twig;
 
+use Locale;
+use LogicException;
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Twig\LocaleNames;
 use Nowo\UiKitBundle\Twig\ThemeExtension;
 use PHPUnit\Framework\Attributes\RequiresPhpExtension;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Twig\Environment;
@@ -24,7 +27,7 @@ final class LocaleNamesTest extends TestCase
         self::assertSame('Portuguese (Brazil)', $names->name('pt_BR', 'en'));
         self::assertSame('ZZ', $names->name('zz', 'en'), 'unknown locale: the code');
         self::assertSame('', $names->name(''));
-        \Locale::setDefault('en');
+        Locale::setDefault('en');
         self::assertSame('German', $names->name('de'));
     }
 
@@ -43,7 +46,7 @@ final class LocaleNamesTest extends TestCase
     {
         // symfony/polyfill-intl-icu: \Locale exists but getDisplayName() throws MethodNotImplementedException.
         $names = new LocaleNames(true, static function (string $locale, string $display): string {
-            throw new \RuntimeException('Symfony\Polyfill\Intl\Icu\Locale::getDisplayName() is not implemented. Please install the "intl" extension.');
+            throw new RuntimeException('Symfony\Polyfill\Intl\Icu\Locale::getDisplayName() is not implemented. Please install the "intl" extension.');
         });
         self::assertSame('ES', $names->name('es', 'en'));
         self::assertSame('PT_BR', $names->name('pt_BR'));
@@ -59,7 +62,7 @@ final class LocaleNamesTest extends TestCase
 
     public function testResolverIsNotCalledWithoutIntl(): void
     {
-        $names = new LocaleNames(false, static fn (): string => throw new \LogicException('must not be called'));
+        $names = new LocaleNames(false, static fn (): string => throw new LogicException('must not be called'));
         self::assertSame('FR', $names->name('fr', 'en'));
     }
 

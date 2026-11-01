@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\Release;
 
+use DateTimeImmutable;
 use Nowo\UiKitBundle\Release\ReleaseUpdateChecker;
 use Nowo\UiKitBundle\Release\ReleaseUpdateInfo;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
+use ReflectionProperty;
+use RuntimeException;
+use Stringable;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
@@ -130,7 +134,7 @@ final class ReleaseUpdateCheckerTest extends TestCase
     public function testTransportExceptionSoftFails(): void
     {
         $http = new MockHttpClient(static function (): never {
-            throw new \RuntimeException('network down');
+            throw new RuntimeException('network down');
         });
 
         self::assertSame(ReleaseUpdateInfo::STATUS_ERROR, $this->checker($http, 'v1.0.6')->check()->status);
@@ -170,7 +174,7 @@ final class ReleaseUpdateCheckerTest extends TestCase
             if (str_contains($url, '/releases/latest')) {
                 return $this->latestResponse('v1.1.0');
             }
-            throw new \RuntimeException('list down');
+            throw new RuntimeException('list down');
         });
         $info = $this->checker($http, 'v1.0.6')->check();
         self::assertTrue($info->updateAvailable);
@@ -197,7 +201,7 @@ final class ReleaseUpdateCheckerTest extends TestCase
         self::assertNotNull($second->checkedAt);
         self::assertSame(1, $calls, 'A failed GitHub fetch must not be retried on every request.');
 
-        $expiries = new \ReflectionProperty(ArrayAdapter::class, 'expiries');
+        $expiries = new ReflectionProperty(ArrayAdapter::class, 'expiries');
         /** @var array<string, float> $values */
         $values = $expiries->getValue($cache);
         self::assertCount(1, $values);
@@ -221,14 +225,14 @@ final class ReleaseUpdateCheckerTest extends TestCase
         $checker->check();
 
         /** @var array<string, float> $values */
-        $values = (new \ReflectionProperty(ArrayAdapter::class, 'expiries'))->getValue($cache);
+        $values = (new ReflectionProperty(ArrayAdapter::class, 'expiries'))->getValue($cache);
         self::assertLessThanOrEqual(91, reset($values) - microtime(true));
     }
 
     public function testCacheFailureSoftFails(): void
     {
         $cache = $this->createMock(CacheInterface::class);
-        $cache->method('get')->willThrowException(new \RuntimeException('cache down'));
+        $cache->method('get')->willThrowException(new RuntimeException('cache down'));
 
         self::assertSame(ReleaseUpdateInfo::STATUS_ERROR, $this->checker($this->noHttp(), 'v1.0.6', cache: $cache)->check()->status);
     }
@@ -281,7 +285,7 @@ final class ReleaseUpdateCheckerTest extends TestCase
 
     public function testInfoToArray(): void
     {
-        $info = new ReleaseUpdateInfo(ReleaseUpdateInfo::STATUS_OK, 'v1', 'v2', true, 1, 'r', 'c', new \DateTimeImmutable('2026-10-09T08:00:00+00:00'));
+        $info = new ReleaseUpdateInfo(ReleaseUpdateInfo::STATUS_OK, 'v1', 'v2', true, 1, 'r', 'c', new DateTimeImmutable('2026-10-09T08:00:00+00:00'));
 
         self::assertSame([
             'status' => 'ok',
@@ -341,7 +345,7 @@ final class ReleaseUpdateCheckerTest extends TestCase
             /** @var list<string> */
             public array $records = [];
 
-            public function log($level, string|\Stringable $message, array $context = []): void
+            public function log($level, string|Stringable $message, array $context = []): void
             {
                 $this->records[] = (string) $message;
             }

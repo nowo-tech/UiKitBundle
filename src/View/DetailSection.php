@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\View;
 
+use InvalidArgumentException;
+
 /**
  * Definition-list section of a {@see ShowPage}. `layout` (2.21): `list` (default: term | value rows) or `facts` — a
  * compact grid of label-over-value cells, several per row (`detail_list` partial with `modifier: 'facts'`, slot
@@ -26,7 +28,7 @@ final readonly class DetailSection
         public string $layout = 'list',
     ) {
         if (!\in_array($layout, self::LAYOUTS, true)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid DetailSection layout "%s" (%s).', $layout, implode('|', self::LAYOUTS)));
+            throw new InvalidArgumentException(\sprintf('Invalid DetailSection layout "%s" (%s).', $layout, implode('|', self::LAYOUTS)));
         }
         $this->items = ViewList::of($items, DetailItem::class, 'DetailSection items');
     }

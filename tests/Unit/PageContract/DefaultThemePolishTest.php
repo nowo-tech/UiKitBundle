@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 
+use InvalidArgumentException;
+use Nowo\UiKitBundle\Theme\ThemeSlots;
 use Nowo\UiKitBundle\View\Action;
 use Nowo\UiKitBundle\View\AreaNav;
 use Nowo\UiKitBundle\View\AreaNavItem;
@@ -31,7 +33,12 @@ use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormView;
+use Symfony\Component\HttpFoundation\Request;
 use Twig\Environment;
+use Twig\Loader\ArrayLoader;
+use Twig\Loader\ChainLoader;
+use Twig\Loader\FilesystemLoader;
+use Twig\TwigFilter;
 use Twig\TwigFunction;
 
 /**
@@ -62,13 +69,13 @@ final class DefaultThemePolishTest extends TestCase
         self::assertStringContainsString('aria-label="Dismiss"', $legacy);
         self::assertStringNotContainsString('nowo-ui-confirm__close', $twig->render('@NowoUiKitBundle/partials/_confirm.html.twig', ['id' => 'c4', 'title' => 'T']));
 
-        $bare = new Environment(new \Twig\Loader\FilesystemLoader(), ['autoescape' => 'html']);
+        $bare = new Environment(new FilesystemLoader(), ['autoescape' => 'html']);
         $bare->getLoader()->addPath(PageContractTwig::root().'/src/Resources/views', 'NowoUiKitBundle');
         $bare->addFunction(new TwigFunction('path', static fn (string $name): string => '/'.$name));
         // 2.18: _action_post asks the ThemeExtension for the action's FormView (null = raw fallback).
         $bare->addFunction(new TwigFunction('nowo_ui_action_form', static fn (): ?FormView => null));
-        $bare->addFilter(new \Twig\TwigFilter('trans', static fn (string $key): string => $key));
-        $bare->addFilter(new \Twig\TwigFilter('nowo_ui_trans', static fn (mixed $v): string => \is_object($v) ? $v->key : (string) $v));
+        $bare->addFilter(new TwigFilter('trans', static fn (string $key): string => $key));
+        $bare->addFilter(new TwigFilter('nowo_ui_trans', static fn (mixed $v): string => \is_object($v) ? $v->key : (string) $v));
         $bareHtml = $bare->render('@NowoUiKitBundle/partials/_confirm.html.twig', ['confirm' => new Confirm('Sure?'), 'id' => 'c5', 'action' => Action::delete('/x'), 'framework' => 'custom']);
         self::assertStringContainsString('class="nowo-ui-btn nowo-ui-btn--danger nowo-ui-btn--solid nowo-ui-confirm__submit"', $bareHtml);
         self::assertStringContainsString('class="nowo-ui-confirm__close"', $bareHtml);
@@ -83,7 +90,7 @@ final class DefaultThemePolishTest extends TestCase
         self::assertSame('lg', (new Confirm('Sure?', size: 'lg'))->jsonSerialize()['size']);
         self::assertSame('Delete it?', Confirm::delete(title: 'Delete it?')->title);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid Confirm size "xl"');
         new Confirm('Sure?', size: 'xl');
     }
@@ -118,7 +125,7 @@ final class DefaultThemePolishTest extends TestCase
         $row = PageContractTwig::create()->render('@NowoUiKitBundle/partials/_action.html.twig', ['action' => new Action('config', disabled: true, dialogId: 'd9'), 'context' => 'row']);
         self::assertMatchesRegularExpression('#<button type="button" class="[^"]*" title="Settings" aria-label="Settings" disabled data-nowo-ui-dialog-open="d9" aria-haspopup="dialog" aria-controls="d9">#', $row);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid Action dialogId "1x"');
         new Action(dialogId: '1x');
     }
@@ -164,11 +171,11 @@ final class DefaultThemePolishTest extends TestCase
         $own = $twig->render('t', ['form' => $withId, 'actions' => [new Action('custom', 'Go', '/go')]]);
         self::assertStringContainsString('form="own"', $own);
         self::assertStringContainsString('<i>x</i>', $own);
-        $bare = new Environment(new \Twig\Loader\ArrayLoader([]));
-        $bare->addFilter(new \Twig\TwigFilter('trans', static fn (string $key): string => $key));
-        $fs = new \Twig\Loader\FilesystemLoader();
+        $bare = new Environment(new ArrayLoader([]));
+        $bare->addFilter(new TwigFilter('trans', static fn (string $key): string => $key));
+        $fs = new FilesystemLoader();
         $fs->addPath(PageContractTwig::root().'/src/Resources/views', 'NowoUiKitBundle');
-        $bare->setLoader(new \Twig\Loader\ChainLoader([new \Twig\Loader\ArrayLoader(['t' => "{{ include('@NowoUiKitBundle/partials/_tabs.html.twig', {items: [], level: 'secondary', aria_label: 'S'}) }}"]), $fs]));
+        $bare->setLoader(new ChainLoader([new ArrayLoader(['t' => "{{ include('@NowoUiKitBundle/partials/_tabs.html.twig', {items: [], level: 'secondary', aria_label: 'S'}) }}"]), $fs]));
         self::assertStringContainsString('<nav class="nowo-ui-tabs nowo-ui-tabs--secondary" aria-label="S">', $bare->render('t'));
     }
 
@@ -182,7 +189,7 @@ final class DefaultThemePolishTest extends TestCase
         self::assertMatchesRegularExpression('#<tr class="nowo-ui-table__row">\s*<td class="nowo-ui-table__cell nowo-ui-table__actions nowo-ui-cell--end">#', $html);
         self::assertStringContainsString('<th scope="col" class="nowo-ui-table__head-cell nowo-ui-cell--end">Total</th>', $html);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid ListPage actionsPosition "middle"');
         new ListPage(new PageHeader('Orders'), actionsPosition: 'middle');
     }
@@ -212,7 +219,7 @@ final class DefaultThemePolishTest extends TestCase
         $header = (new PageHeader('T', breadcrumbsMode: 'own'))->withActions([])->withTabs(null);
         self::assertSame('own', $header->breadcrumbsMode);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid PageHeader breadcrumbsMode "none"');
         new PageHeader('T', breadcrumbsMode: 'none');
     }
@@ -250,10 +257,10 @@ final class DefaultThemePolishTest extends TestCase
 
     public function testScriptsPartialForHostLayouts(): void
     {
-        $request = new \Symfony\Component\HttpFoundation\Request([], [], ['csp_nonce' => 'n0']);
+        $request = new Request([], [], ['csp_nonce' => 'n0']);
         $twig = PageContractTwig::create(['t' => "{{ include(nowo_ui_partial('scripts')) }}", 'only' => "{{ include(nowo_ui_partial('scripts'), {script_names: ['dialog'], nonce: 'x'}) }}"], request: $request);
 
-        self::assertSame(\count(\Nowo\UiKitBundle\Theme\ThemeSlots::SCRIPTS), substr_count($twig->render('t'), 'nonce="n0"'));
+        self::assertSame(\count(ThemeSlots::SCRIPTS), substr_count($twig->render('t'), 'nonce="n0"'));
         self::assertSame('<script src="/bundles/nowouikit/js/nowo-ui-dialog.js" defer nonce="x"></script>', trim($twig->render('only')));
     }
 
@@ -277,7 +284,7 @@ final class DefaultThemePolishTest extends TestCase
             try {
                 new Table(...$bad);
                 self::fail('expected an exception for '.key($bad));
-            } catch (\InvalidArgumentException $e) {
+            } catch (InvalidArgumentException $e) {
                 self::assertStringStartsWith('Invalid Table '.key($bad), $e->getMessage());
             }
         }
@@ -320,7 +327,7 @@ final class DefaultThemePolishTest extends TestCase
 
     public function testSelfContainedStatusLayout(): void
     {
-        $request = new \Symfony\Component\HttpFoundation\Request([], [], ['csp_nonce' => 'abc']);
+        $request = new Request([], [], ['csp_nonce' => 'abc']);
         $page = new AuthPage('Back soon', intro: 'A restore is in progress.', layout: '@NowoUiKit/layout/status.html.twig', scripts: false);
         $html = PageContractTwig::create([], ['tokens' => ['primary' => '#123456']], request: $request)->render('@NowoUiKit/page/auth.html.twig', ['page' => $page]);
 
@@ -362,7 +369,7 @@ final class DefaultThemePolishTest extends TestCase
         self::assertStringContainsString('<span class="nowo-ui-badge nowo-ui-badge--success badge bg-success-subtle text-success-emphasis border border-success-subtle">Paid</span>', $html);
         self::assertStringContainsString('<span class="nowo-ui-muted text-muted">—</span>', $html);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Invalid DetailItem badge "green"');
         new DetailItem('Status', 'Paid', badge: 'green');
     }
@@ -412,7 +419,7 @@ final class DefaultThemePolishTest extends TestCase
         self::assertStringContainsString('<span class="nowo-ui-check__label"></span>', $html);
         self::assertStringContainsString('<span class="nowo-ui-check__label">Raw</span>', $html);
         self::assertStringContainsString('id="prefs_news_help" class="help-text"', $html);
-        self::assertSame('form-check-input', \Nowo\UiKitBundle\Theme\ThemeSlots::defaults('check_input', 'bootstrap5'));
+        self::assertSame('form-check-input', ThemeSlots::defaults('check_input', 'bootstrap5'));
     }
 
     public function testCssAlignsHeaderCellsAndPaintsCode(): void

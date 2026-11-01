@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Form;
 
+use Stringable;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -30,7 +31,7 @@ final class HiddenFieldsType extends AbstractType
                 $builder->add((string) $name, self::class, ['fields' => $value]);
             } elseif (true === $value) {
                 $builder->add((string) $name, HiddenType::class, ['data' => '1', 'mapped' => false]);
-            } elseif (\is_scalar($value) && false !== $value || $value instanceof \Stringable) {
+            } elseif (\is_scalar($value) && false !== $value || $value instanceof Stringable) {
                 $builder->add((string) $name, HiddenType::class, ['data' => (string) $value, 'mapped' => false]);
             }
         }

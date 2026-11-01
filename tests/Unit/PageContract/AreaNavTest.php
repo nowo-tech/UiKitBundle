@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 
+use InvalidArgumentException;
 use Nowo\UiKitBundle\DependencyInjection\NowoUiKitExtension;
 use Nowo\UiKitBundle\Navigation\AreaNavProviderInterface;
 use Nowo\UiKitBundle\Navigation\AreaNavRegistry;
@@ -91,10 +92,10 @@ final class AreaNavTest extends TestCase
         try {
             new AreaNav(['x']);
             self::fail('items');
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             self::assertStringContainsString('AreaNav items', $e->getMessage());
         }
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         new AreaNavItem('A', '/a', attributes: ['onclick' => 'x()']);
     }
 
