@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.21.0] - 2026-11-01](#2210---2026-11-01)
 - [[2.20.0] - 2026-10-31](#2200---2026-10-31)
 - [[2.19.0] - 2026-10-30](#2190---2026-10-30)
 - [[2.18.0] - 2026-10-30](#2180---2026-10-30)
@@ -86,6 +87,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [2.21.0] - 2026-11-01
+
+Detail page patterns from Symfony Beacon's UI standardisation: status badge, split header actions, key figures and
+the compact details grid, plus font preload tags
+
+### Added
+
+- **Status next to the title**: `View\PageStatus` (label translated by the host, tone `success` / `danger` / `warning`
+  / `neutral` / `info`, optional `title` tooltip) on `PageHeader::$status` (`withStatus()`); rendered by the new
+  theme partial **`page_status`** (slots `page_status` + `badge_<tone>`) inside a `page_title_row` wrapper. The scaffold
+  page header passes it pre-rendered as `status_badge` to host `page_header` overrides.
+- **Split header actions**: `PageHeader::$actionsLayout` (`toolbar` default \| `split`, `withSplitActions()`) and the
+  new theme partial **`header_actions`** — square icon buttons (`aria-label` + `title`), at most one primary button and
+  the square "more" menu (popover) with the rest, destructive actions last and in red; POST / confirm / dialog actions
+  render as menu items and their confirm dialogs **outside** the popover panel. `View\HeaderActions::split()` holds
+  the rules (`icons`, `primary`, `more`, `confirmActions()`), Twig `nowo_ui_header_actions(actions)`; `extra` takes
+  host markup after the icon buttons (share dialog, watch toggle). Slot `header_actions`; icon `more` (vertical dots)
+  in every icon set.
+- `Action::withDisplay(display, icon = null)` and `Action::asIcon(icon = null)`: immutable copies marked icon-only (or
+  another display mode) — `display: icon` puts an action among the icon buttons of a split header.
+- `menu` partial: `square: true` paints an icon-only toggle like the icon buttons next to it (slots `btn_secondary` +
+  `btn_icon` + the new `menu_toggle_square`; same width and height); `menu_items: true` draws POST / confirm / dialog
+  actions as `menu_item`s (the `action` partial's new `menu_item` option) instead of toolbar buttons.
+- **Key figures row**: `View\Stat` (label, value, hint, tone, href) and the theme partial **`stat_row`** (a `<dl>` of
+  compact tiles; slots `stat_row`, `stat`, `stat_label`, `stat_value`, `stat_hint`); `ShowPage::$stats` renders it above
+  the sections (block `nowo_ui_show_stats`).
+- **Compact details grid**: `DetailSection::$layout` `facts` (label over value, several per row) — the `detail_list`
+  partial with `modifier: 'facts'` and the new slot `detail_list_facts`.
+- **Font preload** (Beacon KIT #24): `nowo_ui_kit.font_preload` (`fonts` URLs and / or a Vite `manifest` with `entry`,
+  `prefixes`, `base`) and Twig `nowo_ui_font_preload()` print `<link rel="preload" as="font" type crossorigin>` after
+  the viewport meta of the document and error layouts (`Theme\FontPreload`, manifest memoized per build — FrankenPHP
+  worker safe; font preloads need no CSP nonce).
+- CSS tokens `--nowo-ui-header-actions-gap`, `--nowo-ui-stat-*`, `--nowo-ui-detail-facts-*` (light / dark through the
+  base tokens); no inline styles or SVG.
+- Demos: the order page (`/page-contract/orders/{id}` and the default-theme view) shows the status badge, icon actions,
+  the primary button, the "more" menu with a confirm-protected delete, the key figures and the details grid; Playwright
+  e2e with axe (`@axe-core/playwright`) on that page.
+
+### Changed
+
+- Nothing for existing pages: without the new options (no status, `toolbar` actions layout, no stats, list sections,
+  menus without `square` / `menu_items`, no `font_preload`) the scaffolds, partials and layouts render byte-identical
+  to 2.20 (`DetailPagePatternsBcTest` compares them with 2.20.0 renders).
 
 ## [2.20.0] - 2026-10-31
 

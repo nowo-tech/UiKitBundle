@@ -1,0 +1,42 @@
+    <details class="nowo-ui-menu nowo-ui-menu--end" data-nowo-ui-menu>
+    <summary class="nowo-ui-menu__toggle nowo-ui-menu__toggle--icon" aria-label="Order actions" title="Order actions"><i class="bi bi-gear" aria-hidden="true"></i><span class="visually-hidden">Order actions</span></summary>
+            <ul class="nowo-ui-menu__panel">
+                                                                                                                                                                            <li><a class="nowo-ui-menu__item" href="/orders/1042/edit">Edit</a></li>
+                                                                                                                                                                                                            <li class="nowo-ui-menu__entry">                                                                            <form method="post" action="/orders/1042/reopen" class="nowo-ui-action__form">
+    <button type="submit" class="nowo-ui-btn nowo-ui-btn--secondary nowo-ui-action--restore"><span class="nowo-ui-action__label">Reopen</span></button><input type="hidden" name="_token" value="tok"></form>
+
+
+    </li>
+                                                                                                                                                                                                                                        <li><a class="nowo-ui-menu__item" href="/orders/1042.csv">Export</a></li>
+                                                                                                                                                                                                            <li class="nowo-ui-menu__entry">                                                                        <button type="button" class="nowo-ui-btn nowo-ui-btn--secondary nowo-ui-action--share" data-nowo-ui-dialog-open="share-dialog" aria-haspopup="dialog" aria-controls="share-dialog"><span class="nowo-ui-action__label">Share</span></button>
+    </li>
+                                                                                                                                                                                                            <li class="nowo-ui-menu__entry">                                                                        <button type="button" class="nowo-ui-btn nowo-ui-btn--danger nowo-ui-action--delete" data-nowo-confirm-open data-nowo-confirm-target="nowo-ui-confirm-5b34e0355925"><span class="nowo-ui-action__label">Delete</span></button>
+                                                            <dialog
+    id="nowo-ui-confirm-5b34e0355925"
+    class="nowo-ui-confirm"
+    data-nowo-ui-confirm
+    aria-labelledby="nowo-ui-confirm-5b34e0355925-title"
+>
+    <div class="nowo-ui-confirm__panel">
+        <header class="nowo-ui-confirm__header">
+            <h2 class="nowo-ui-confirm__title" id="nowo-ui-confirm-5b34e0355925-title">Delete order #1042?</h2>
+                                                        <button type="button" class="nowo-ui-confirm__close" data-nowo-confirm-close aria-label="Close" title="Close"><span aria-hidden="true">&times;</span></button>
+                    </header>
+                    <div class="nowo-ui-confirm__body"><p class="nowo-ui-confirm__message">The order will be deleted.</p></div>
+                                <div class="nowo-ui-confirm__footer">
+                            <button type="button" class="nowo-ui-btn nowo-ui-btn--secondary" data-nowo-confirm-close>
+                    Cancel
+                </button>
+                                        <form method="post" action="/orders/1042" class="nowo-ui-action__form">
+    <button type="submit" class="nowo-ui-btn nowo-ui-btn--danger nowo-ui-btn--solid nowo-ui-confirm__submit">Delete</button><input type="hidden" name="_token" value="tok"></form>
+
+
+                                    </div>
+    </div>
+</dialog>
+
+            </li>
+                                                                                                                                                                                                                                        <li><a class="nowo-ui-menu__item" href="/orders/new">New order</a></li>
+                                                                                </ul>
+    
+</details>

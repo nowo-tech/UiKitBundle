@@ -6,9 +6,11 @@ namespace Nowo\UiKitBundle\Twig;
 
 use Nowo\UiKitBundle\Form\ActionCsrfType;
 use Nowo\UiKitBundle\Form\UiFormViews;
+use Nowo\UiKitBundle\Theme\FontPreload;
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Theme\ThemeSlots;
 use Nowo\UiKitBundle\View\Action;
+use Nowo\UiKitBundle\View\HeaderActions;
 use Nowo\UiKitBundle\View\Label;
 use Nowo\UiKitBundle\View\PageHeader;
 use Nowo\UiKitBundle\View\ViewList;
@@ -51,6 +53,10 @@ use Twig\TwigFunction;
  *   that used to print a raw `<form>` / `<input>` ({@see UiFormViews}; null = deprecated raw fallback), called by
  *   `partials/_ui_form.html.twig`; `nowo_ui_form_hidden(field)` prints one hidden field whatever its rendered flag
  *   (shared action FormViews)
+ * - `nowo_ui_header_actions(actions)` (2.21) — the {@see HeaderActions} split of a list of {@see Action}s (icon
+ *   buttons, one primary, the "more" menu) the `header_actions` partial renders
+ * - `nowo_ui_font_preload()` (2.21) — `<link rel="preload" as="font" crossorigin>` tags of `nowo_ui_kit.font_preload`
+ *   ({@see FontPreload}; '' when not configured), printed by the document and error layouts
  * - `|nowo_ui_trans(params = {})` — translates a {@see Label}; strings pass through (escaped by Twig)
  * - `|nowo_ui_translatable(params = {})` (2.3) — a {@see TranslatableText} for values a form theme translates again
  *   (`attr.placeholder`, choice `placeholder`): a Label is translated exactly once, a string printed as given
@@ -67,6 +73,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
      * @param array{admin: string, guest: string}                                  $layouts
      * @param array{breadcrumb_kit: bool, collection: string|null, enabled?: bool} $breadcrumbs `enabled` (2.3.1, default true): false = no breadcrumb trail in page headers
      * @param FormFactoryInterface|null                                            $actionForms standalone factory of the CSRF-only action forms (2.18; core types only, so no host type extension changes them); null = a new one per call
+     * @param FontPreload|null                                                     $fontPreload font preload tags (2.21, `nowo_ui_kit.font_preload`); null = none
      */
     public function __construct(
         private readonly Theme $theme,
@@ -76,6 +83,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
         private readonly ?RequestStack $requestStack = null,
         private readonly LocaleNames $localeNames = new LocaleNames(),
         private readonly ?FormFactoryInterface $actionForms = null,
+        private readonly ?FontPreload $fontPreload = null,
     ) {
         $this->uiForms = new UiFormViews($actionForms);
     }
@@ -99,6 +107,8 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             new TwigFunction('nowo_ui_form', $this->uiForms->create(...), ['needs_environment' => true]),
             new TwigFunction('nowo_ui_form_hidden', $this->uiForms->renderHidden(...), ['needs_environment' => true, 'is_safe' => ['html']]),
             new TwigFunction('nowo_ui_page_header', $this->pageHeader(...), ['needs_environment' => true, 'needs_context' => true, 'is_safe' => ['html']]),
+            new TwigFunction('nowo_ui_header_actions', HeaderActions::split(...)),
+            new TwigFunction('nowo_ui_font_preload', fn (): string => $this->fontPreload?->tags() ?? '', ['is_safe' => ['html']]),
         ];
     }
 

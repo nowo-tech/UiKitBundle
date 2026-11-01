@@ -29,6 +29,7 @@ use Nowo\UiKitBundle\Release\ReleaseStatusController;
 use Nowo\UiKitBundle\Release\ReleaseUpdateChecker;
 use Nowo\UiKitBundle\Routing\PanelPathRewriter;
 use Nowo\UiKitBundle\Routing\PanelPathRewritingLoader;
+use Nowo\UiKitBundle\Theme\FontPreload;
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Twig\AppearanceExtension;
 use Nowo\UiKitBundle\Twig\AreaNavExtension;
@@ -225,7 +226,33 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
                 new Reference('request_stack', ContainerInterface::NULL_ON_INVALID_REFERENCE),
             ])
             ->setArgument('$actionForms', $actionForms)
+            ->setArgument('$fontPreload', $this->registerFontPreload($container, $config))
             ->addTag('twig.extension');
+    }
+
+    /**
+     * 2.21 font preload tags (`nowo_ui_kit.font_preload`): the {@see FontPreload} service, null when nothing is
+     * configured (the layouts then print nothing).
+     *
+     * @param array<string, mixed> $config
+     */
+    private function registerFontPreload(ContainerBuilder $container, array $config): ?Reference
+    {
+        /** @var array{fonts: list<string>, manifest: array{path: ?string, entry: string, prefixes: list<string>, base: string}} $fonts */
+        $fonts = $config['font_preload'];
+        if ([] === $fonts['fonts'] && (null === $fonts['manifest']['path'] || [] === $fonts['manifest']['prefixes'])) {
+            return null;
+        }
+        $container->register('nowo_ui_kit.font_preload', FontPreload::class)
+            ->setArguments([
+                $fonts['fonts'],
+                $fonts['manifest']['path'],
+                $fonts['manifest']['entry'],
+                $fonts['manifest']['prefixes'],
+                $fonts['manifest']['base'],
+            ]);
+
+        return new Reference('nowo_ui_kit.font_preload');
     }
 
     /**

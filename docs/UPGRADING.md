@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.21.0](#to-2210)
 - [To 2.20.0](#to-2200)
 - [To 2.19.0](#to-2190)
 - [To 2.18.0](#to-2180)
@@ -97,6 +98,30 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.21.0
+
+From **2.20.0**: `composer update nowo-tech/ui-kit-bundle`. Nothing to change: pages that use none of the new options
+render the same markup. Opt in per page ([USAGE](USAGE.md#detail-pages-221)):
+
+- **Status badge**: `new PageHeader($title, $intro, $actions, status: new PageStatus(new Label('monitor.status.up'),
+  'success'))` (or `$header->withStatus(...)`). A host `page_header` override prints `{{ status_badge|raw }}` or
+  includes `nowo_ui_partial('page_status')` with `header.status`.
+- **Split header actions**: mark the frequent actions icon-only (`Action::edit($url)->asIcon()`,
+  `$action->withDisplay('icon', 'pause')`) and set `actionsLayout: 'split'` (or `->withSplitActions()`): icon buttons,
+  one primary button, the square "more" menu with the rest (destructive last). Host `page_header` overrides that loop
+  `actions` keep their own layout; print `toolbar|raw` (it holds the split markup) or include
+  `nowo_ui_partial('header_actions')` to follow the split. Pages outside the scaffolds include the `header_actions`
+  partial with `actions` (or a `View\HeaderActions`), plus `extra` for host buttons. `icon_set: ux_icon`: commit
+  `bi:three-dots-vertical` (icon `more`).
+- **Key figures and details grid**: `new ShowPage($header, $sections, stats: [new Stat('Uptime', '99.9 %', tone:
+  'success')])` and `new DetailSection('Details', $items, layout: 'facts')`; elsewhere include the `stat_row` partial or
+  `detail_list` with `modifier: 'facts'`.
+- **Font preload**: replace an app Twig extension that prints `<link rel="preload" as="font">` with
+  `nowo_ui_kit.font_preload` ([CONFIGURATION](CONFIGURATION.md#font-preload-221)); host layouts that do not extend
+  the UiKit document / error layouts print `{{ nowo_ui_font_preload() }}` in `<head>`.
+- Exact-markup tests of the `menu` / `action` partials, the page header and the layouts keep passing; a template
+  override of `show.html.twig` should keep the new `nowo_ui_show_stats` block if it uses `ShowPage::stats`.
 
 ## To 2.20.0
 

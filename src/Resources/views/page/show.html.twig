@@ -4,6 +4,8 @@
   Regions: page header + actions, detail sections (definition lists), audit meta.
   Data blocks: nowo_ui_show_sections (default: page.sections as definition lists), nowo_ui_show_after (related
   tables, history…).
+  2.21: nowo_ui_show_stats (default: page.stats as one `stat_row` above the sections, nothing without stats); a
+  DetailSection with layout `facts` renders its items as the compact grid (detail_list `modifier: 'facts'`).
 #}
 {% extends page.layout ?? nowo_ui_layout.admin %}
 {% set nowo_ui_bundle = page.bundle %}
@@ -19,14 +21,14 @@
 {% block nowo_ui_content %}
     {% set _b = page.bundle %}
     <div class="nowo-ui-show-page" data-nowo-ui-page="show"{{ nowo_ui_html_attrs(page.attributes) }}>
-        {% block nowo_ui_show_sections %}
+        {% block nowo_ui_show_stats %}{% if page.stats is not empty %}{{ include(nowo_ui_partial('stat_row', _b), {items: page.stats, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}{% endif %}{% endblock %}{% block nowo_ui_show_sections %}
             {% for section in page.sections %}
                 <section class="{{ nowo_ui_class('section', _b) }} {{ nowo_ui_class('card', _b) }}"{% if section.id %} id="{{ section.id }}"{% endif %} data-nowo-ui-region="section"{{ nowo_ui_attrs('section', _b) }}>
                     {% if section.title %}
                         <header class="{{ nowo_ui_class('card_header', _b) }}"><h2 class="{{ nowo_ui_class('card_title', _b) }}">{{ section.title|nowo_ui_trans }}</h2></header>
                     {% endif %}
                     <div class="{{ nowo_ui_class('card_body', _b) }}">
-                        {{ include(nowo_ui_partial('detail_list', _b), {items: section.items, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
+                        {{ include(nowo_ui_partial('detail_list', _b), {items: section.items, bundle: _b, modifier: section.layout == 'facts' ? 'facts' : null, nowo_ui_page_type: nowo_ui_page_type}, false) }}
                     </div>
                 </section>
             {% endfor %}

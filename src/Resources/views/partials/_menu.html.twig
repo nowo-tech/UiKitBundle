@@ -15,6 +15,11 @@
     - align: end (default; panel aligned to the toggle's end edge) | start
     - open (bool), id, attr (root attributes, no on*), toggle_attr, bundle, nowo_ui_page_type
     - confirm_external (2.4): passed to the `action` partial (the confirm dialogs are rendered elsewhere)
+    - square (2.21, bool): with display icon, the toggle is painted like the icon buttons next to it — slots
+      btn_secondary + btn_icon + menu_toggle_square instead of menu_toggle — so it has their width and height
+    - menu_items (2.21, bool): POST / confirm / dialog actions are drawn as menu items (slot menu_item through the
+      `action` partial's `menu_item` option; <li class="nowo-ui-menu__entry nowo-ui-menu__entry--item">) instead of
+      toolbar buttons inside the panel
     - popover (2.4, bool; default theme.popover_menus, false): the panel becomes a native [popover] in the browser top
       layer (never clipped by a table scroller / card) opened by a <button popovertarget> toggle instead of
       <details>/<summary>; nowo-ui-popover.js places it under the toggle (flips above without room), closes it on
@@ -51,6 +56,10 @@
         {%- endif -%}
 {% endset %}
 {% set _toggle_class = nowo_ui_class('menu_toggle', _b) ~ (_display == 'icon' ? ' nowo-ui-menu__toggle--icon') %}
+{% if square|default(false) and _display == 'icon' %}
+    {%~ set _toggle_class = nowo_ui_class('btn_secondary', _b) ~ ' ' ~ nowo_ui_class('btn_icon', _b) ~ ' nowo-ui-menu__toggle--icon ' ~ nowo_ui_class('menu_toggle_square', _b) %}
+{%~ endif %}
+{% set _menu_items = menu_items|default(false) %}
 {% set _panel %}
 {% if _content is not null %}
         <div class="{{ nowo_ui_class('popover', _b) }}"{{ _panel_attrs|raw }}{{ nowo_ui_attrs('popover', _b) }}>{{ _content|raw }}</div>
@@ -65,7 +74,7 @@
                             {% set _danger = item.resolvedVariant() == 'danger' %}
                             <li><a class="{{ nowo_ui_class('menu_item', _b) }}{{ _danger ? ' nowo-ui-menu__item--danger' }}" href="{{ _href }}"{{ nowo_ui_attrs('menu_item', _b) }}{{ nowo_ui_html_attrs(item.attributes) }}>{{ item.label is not null ? item.label|nowo_ui_trans : ('action.' ~ item.kind)|trans({}, 'NowoUiKitBundle') }}</a></li>
                         {% else %}
-                            <li class="nowo-ui-menu__entry">{{ include(nowo_ui_partial('action', _b), {action: item, context: 'toolbar', display: 'text', bundle: _b, confirm_external: confirm_external|default(false), nowo_ui_page_type: _pt}, false) }}</li>
+                            <li class="nowo-ui-menu__entry{{ _menu_items ? ' nowo-ui-menu__entry--item' }}">{{ include(nowo_ui_partial('action', _b), {action: item, context: 'toolbar', display: 'text', bundle: _b, confirm_external: confirm_external|default(false), menu_item: _menu_items, nowo_ui_page_type: _pt}, false) }}</li>
                         {% endif %}
                     {% endif %}
                 {% else %}

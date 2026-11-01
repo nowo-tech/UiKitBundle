@@ -5389,3 +5389,147 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
   border: 1px solid var(--nowo-ui-border-strong, var(--nowo-ui-border));
   border-radius: var(--nowo-ui-radius);
 }
+
+/* =============================================================================================
+ * 2.21 — detail page patterns (opt-in: PageHeader::status / actionsLayout split, ShowPage::stats,
+ * DetailSection::layout facts, menu `square` / `menu_items`). Tokens: --nowo-ui-header-actions-gap,
+ * --nowo-ui-stat-*, --nowo-ui-detail-facts-* (light / dark through the base tokens).
+ * ============================================================================================= */
+
+/* Title + status badge on one row (only rendered with PageHeader::status) */
+.nowo-ui-page-header__title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.6rem;
+  min-width: 0;
+}
+
+.nowo-ui-page-header__title-row > .nowo-ui-page-header__title {
+  min-width: 0;
+  margin-bottom: 0;
+  overflow-wrap: anywhere;
+}
+
+.nowo-ui-page-status {
+  flex: none;
+}
+
+/* Split header actions: icon buttons, the primary button, the square "more" menu */
+.nowo-ui-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--nowo-ui-header-actions-gap, 0.35rem);
+  min-width: 0;
+}
+
+/* POST actions (form wrappers) stay inline in the row */
+.nowo-ui-header-actions > form {
+  display: inline-flex;
+  margin: 0;
+}
+
+/* Square menu toggle: painted by btn_secondary + btn_icon like the icon buttons next to it, so it shares their box */
+.nowo-ui-menu__toggle--square {
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* POST / confirm / dialog actions drawn as menu items (menu `menu_items: true`) */
+.nowo-ui-menu__entry--item {
+  padding: 0;
+}
+
+.nowo-ui-menu__entry--item > form {
+  display: block;
+  margin: 0;
+}
+
+/* Key figures row (partial stat_row): compact tiles, label over value */
+.nowo-ui-stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--nowo-ui-stat-min-width, 6.25rem), 1fr));
+  gap: var(--nowo-ui-stat-gap, 0.5rem);
+  margin: 0 0 1rem;
+}
+
+.nowo-ui-stat {
+  min-width: 0;
+  padding: var(--nowo-ui-stat-padding, 0.6rem 0.85rem);
+  border: var(--nowo-ui-border-width, 1px) solid var(--nowo-ui-stat-border, var(--nowo-ui-border));
+  border-radius: var(--nowo-ui-stat-radius, var(--nowo-ui-radius));
+  background: var(--nowo-ui-stat-bg, var(--nowo-ui-surface));
+}
+
+.nowo-ui-stat__label {
+  margin: 0;
+  color: var(--nowo-ui-stat-label-color, var(--nowo-ui-muted));
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.nowo-ui-stat__value {
+  margin: 0.1rem 0 0;
+  color: var(--nowo-ui-text);
+  font-family: var(--nowo-ui-font-display, inherit);
+  font-size: var(--nowo-ui-stat-value-size, 1.375rem);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.nowo-ui-stat__value > a {
+  color: inherit;
+}
+
+.nowo-ui-stat__hint {
+  margin: 0.15rem 0 0;
+  color: var(--nowo-ui-muted);
+  font-size: 0.75rem;
+}
+
+.nowo-ui-stat--success .nowo-ui-stat__value {
+  color: var(--nowo-ui-success-text);
+}
+
+.nowo-ui-stat--warning .nowo-ui-stat__value {
+  color: var(--nowo-ui-warning-text);
+}
+
+.nowo-ui-stat--danger .nowo-ui-stat__value {
+  color: var(--nowo-ui-danger-text);
+}
+
+.nowo-ui-stat--info .nowo-ui-stat__value {
+  color: var(--nowo-ui-info-text);
+}
+
+/* Compact details grid (DetailSection::layout facts, detail_list `modifier: 'facts'`): label over value, several per row */
+.nowo-ui-detail-list.nowo-ui-detail-list--facts {
+  grid-template-columns: repeat(auto-fit, minmax(var(--nowo-ui-detail-facts-min-width, 10rem), 1fr));
+  gap: var(--nowo-ui-detail-facts-gap, 0.6rem 1.25rem);
+  padding: var(--nowo-ui-detail-facts-padding, 0);
+  border: var(--nowo-ui-detail-facts-border-width, 0) solid var(--nowo-ui-border);
+  border-radius: var(--nowo-ui-radius);
+}
+
+.nowo-ui-detail-list--facts > .nowo-ui-detail-list__item {
+  display: block;
+  min-width: 0;
+}
+
+.nowo-ui-detail-list--facts .nowo-ui-detail-list__term {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.nowo-ui-detail-list--facts .nowo-ui-detail-list__value {
+  margin: 0.1rem 0 0;
+  font-size: 0.875rem;
+}

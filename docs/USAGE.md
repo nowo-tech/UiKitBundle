@@ -15,6 +15,7 @@
   - [Server-side lists](#server-side-lists)
   - [Client-side tables](#client-side-tables)
   - [Host tables and customizable listings](#host-tables-and-customizable-listings)
+- [Detail pages (2.21)](#detail-pages-221)
 - [Host chrome (1.17, opt-in)](#host-chrome-117-opt-in)
   - [Responsive table](#responsive-table)
   - [Foldable filter card](#foldable-filter-card)
@@ -564,6 +565,59 @@ Hand-written `<th>` (e.g. inside `_responsive_table`): include the partial and s
 Customizable listings: `new ListingField('total', 'Total', sortKey: 'total', sortFirst: 'desc')`, then
 `listing_head` with `sorting: sort` (server links; a `head_<key>` block still wins) or `client_sort: true` (buttons on
 single-column headers).
+
+## Detail pages (2.21)
+
+The pattern Symfony Beacon standardised for the page of one record (a monitor, an order, a project): one header row
+with the title, a **status badge** next to it and the **actions** on the right — square icon buttons for the frequent
+ones, at most one primary button, everything else in a square **"more"** menu with the destructive actions last —,
+then a compact **row of key figures** and a **details grid**. Every piece is opt-in; pages that use none of them keep
+their 2.20 markup.
+
+```php
+use Nowo\UiKitBundle\View\{Action, Confirm, DetailItem, DetailSection, Label, PageHeader, PageStatus, ShowPage, Stat};
+
+$t = static fn (string $key): Label => new Label($key, 'AcmeMonitorBundle');
+$header = new PageHeader($monitor->name, $monitor->url, [
+    Action::edit($editUrl, $t('action.edit'))->asIcon(),                         // icon button (aria-label + title)
+    (new Action('custom', $t('action.pause'), $pauseUrl, method: 'POST', csrfToken: $token))->asIcon('pause'),
+    (new Action('share', $t('action.share'), dialogId: 'share-monitor'))->asIcon(),
+    Action::create($checkUrl, $t('action.check_now')),                           // the one primary button
+    new Action('export', $t('action.export'), $exportUrl),                        // "more" menu
+    Action::delete($deleteUrl, $token, Confirm::delete($t('confirm.delete'))),    // "more" menu, last, red, confirm dialog
+], status: new PageStatus($t('status.up'), 'success', $t('status.checked_ago')), actionsLayout: 'split');
+
+return $this->render('@NowoUiKit/page/show.html.twig', ['page' => new ShowPage(
+    $header,
+    [new DetailSection($t('section.details'), [new DetailItem($t('field.interval'), '1 min'), new DetailItem($t('field.type'), 'HTTP')], layout: 'facts')],
+    stats: [new Stat($t('stat.uptime'), '99.98 %', tone: 'success'), new Stat($t('stat.response'), '182 ms', $t('stat.p95'))],
+)]);
+```
+
+- **Status** (`PageStatus`): label (translated by the host: `Label` or string), tone `success` / `danger` / `warning` /
+  `neutral` / `info` (badge slots), optional `title` tooltip. The `page_status` partial renders it next to the title.
+- **Split actions** (`actionsLayout: 'split'`, `HeaderActions::split()`): actions with `display: icon`
+  (`asIcon()`, `withDisplay('icon', $icon)`) become icon buttons in their order; the first other `primary` action
+  (Create, Save…) is the filled button; the rest goes to the menu (GET actions as links, POST / confirm / dialog
+  actions as items), destructive ones (variant `danger`, e.g. `Action::delete()`) last and in red. Their confirm
+  dialogs render after the menu, outside the popover panel. The toggle is a square icon button (`menu` partial
+  `square: true`) of the same size as the icon buttons. Hidden actions are dropped.
+- **Outside the scaffolds**, include the partial with the actions (or a prebuilt `HeaderActions`) and, for host buttons
+  that are not `Action`s (a share dialog with a count, a watch toggle), `extra` markup placed after the icon buttons:
+
+  ```twig
+  {% set extra %}{{ include('monitor/_watch_toggle.html.twig') }}{% endset %}
+  {{ include(nowo_ui_partial('header_actions'), {actions: header.actions, extra: extra, more_label: 'monitor.more'|trans}, false) }}
+  ```
+
+- **Key figures** (`Stat`: label, value, hint, tone, href): `ShowPage::$stats` or the `stat_row` partial
+  (`{items: stats, label: 'Key figures'}`) — a `<dl>` of compact tiles that auto-fit the row.
+- **Details grid**: `DetailSection(..., layout: 'facts')` or `{{ include(nowo_ui_partial('detail_list'), {items: items,
+  modifier: 'facts'}, false) }}` — label over value, several per row (framed outside a card with
+  `--nowo-ui-detail-facts-padding` / `--nowo-ui-detail-facts-border-width`).
+- Theme slots `page_title_row`, `page_status`, `header_actions`, `menu_toggle_square`, `stat_row`, `stat`,
+  `stat_label`, `stat_value`, `stat_hint`, `detail_list_facts` ([THEME_SLOTS](THEME_SLOTS.md)); tokens in
+  [THEMING](THEMING.md#detail-pages-221). With `icon_set: ux_icon`, commit `bi:three-dots-vertical` (icon `more`).
 
 ## Host chrome (1.17, opt-in)
 

@@ -13,8 +13,10 @@ use Nowo\UiKitBundle\View\FormPage;
 use Nowo\UiKitBundle\View\KpiTile;
 use Nowo\UiKitBundle\View\ListPage;
 use Nowo\UiKitBundle\View\PageHeader;
+use Nowo\UiKitBundle\View\PageStatus;
 use Nowo\UiKitBundle\View\Pagination;
 use Nowo\UiKitBundle\View\ShowPage;
+use Nowo\UiKitBundle\View\Stat;
 use Nowo\UiKitBundle\View\Table;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\SearchType;
@@ -56,6 +58,17 @@ final class PageContractTest extends PageContractTestCase
         yield 'order' => new PageFixture('page_contract/orders/show.html.twig', ['order' => $order, 'page' => new ShowPage(
             new PageHeader('Order #1042', null, [new Action('restore', 'Reopen', '/orders/1042/reopen', method: 'POST', form: $forms->createNamedBuilder('reopen_order')->add('_token', HiddenType::class, ['data' => 'demo-token'])->getForm()->createView())]),
             [new DetailSection('Customer', [new DetailItem('Name', $order['customer'])])],
+        )]);
+        // 2.21 detail page: status badge, split actions (icon button, primary, "more" menu with a confirm), stats, facts
+        yield 'order_detail' => new PageFixture('page_contract/orders/show.html.twig', ['order' => $order, 'page' => new ShowPage(
+            new PageHeader('Order #1042', null, [
+                Action::edit('/orders/1042/edit')->asIcon(),
+                new Action('custom', 'Mark as shipped', '/orders/1042/ship', variant: 'primary'),
+                new Action('copy', 'Duplicate order', '/orders/1042/duplicate'),
+                Action::delete('/orders/1042', 'demo-token'),
+            ], status: new PageStatus('Paid', 'success'), actionsLayout: 'split'),
+            [new DetailSection('Shipping', [new DetailItem('Carrier', 'DHL Express')], layout: 'facts')],
+            stats: [new Stat('Items', 3)],
         )]);
         yield 'order_edit' => new PageFixture('page_contract/orders/edit.html.twig', ['page' => new FormPage(
             new PageHeader('Edit order #1042'),

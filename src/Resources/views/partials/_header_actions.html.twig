@@ -1,0 +1,56 @@
+{#
+  Split page-header actions (2.21, theme partial `header_actions`; PageHeader::actionsLayout `split`): square icon
+  buttons, at most one primary button, then the square "more" menu (popover) with the rest — destructive actions last,
+  in red. POST / confirm / dialog actions keep working: the menu draws them as items, and the confirm dialogs render
+  after the menu, outside the popover panel (a closed popover would hide them).
+
+  One of:
+    - actions: list of View\Action (split with nowo_ui_header_actions(): View\HeaderActions::split)
+    - split: a View\HeaderActions built by the caller
+  Optional:
+    - extra: pre-rendered markup placed after the icon buttons (e.g. a share dialog trigger, a watch toggle) —
+      capture it with {% set extra %}…{% endset %}
+    - more_label: accessible name / tooltip of the menu toggle (default "More actions", action.more)
+    - more_id: id of the menu (default nowo-ui-header-more; the panel is "<id>-panel")
+    - more_attr: extra attributes of the menu root (e.g. {'data-testid': 'page-header-more'})
+    - attr: extra root attributes (no on*), bundle, nowo_ui_page_type
+  Slots: header_actions (root), btn_* / btn_icon (buttons), menu + menu_toggle_square + menu_panel + menu_item (menu).
+#}
+{% set _b = bundle|default(null) %}
+{% set _pt = nowo_ui_page_type|default(null) %}
+{% set _split = split is defined and split ? split : nowo_ui_header_actions(actions|default([])) %}
+<div class="{{ nowo_ui_class('header_actions', _b) }}" data-nowo-ui-header-actions{{ nowo_ui_attrs('header_actions', _b) }}{{ nowo_ui_html_attrs(attr|default({})) }}>
+    {% for action in _split.icons %}
+        {{ include(nowo_ui_partial('action', _b), {action: action, context: 'toolbar', bundle: _b, nowo_ui_page_type: _pt}, false) }}
+    {% endfor %}
+    {{ extra|default('') }}
+    {% if _split.primary %}
+        {{ include(nowo_ui_partial('action', _b), {action: _split.primary, context: 'toolbar', bundle: _b, nowo_ui_page_type: _pt}, false) }}
+    {% endif %}
+    {% if _split.more is not empty %}
+        {{ include(nowo_ui_partial('menu', _b), {
+            items: _split.more,
+            label: more_label|default(null),
+            icon: 'more',
+            display: 'icon',
+            square: true,
+            menu_items: true,
+            popover: true,
+            confirm_external: true,
+            id: more_id|default('nowo-ui-header-more'),
+            attr: {'data-nowo-ui-header-more': true}|merge(more_attr|default({})),
+            bundle: _b,
+            nowo_ui_page_type: _pt,
+        }, false) }}
+        {% for action in _split.confirmActions() %}
+            {{ include(nowo_ui_partial('confirm', _b), {
+                id: action.confirmId(),
+                confirm: action.confirm,
+                action: action,
+                action_href: action.href ?? (action.route ? path(action.route, action.params) : null),
+                bundle: _b,
+                nowo_ui_page_type: _pt,
+            }, false) }}
+        {% endfor %}
+    {% endif %}
+</div>

@@ -16,6 +16,9 @@
       scaffolds pre-render them, plus FormPage secondary actions, so 1.x overrides that print `toolbar` show them);
       `actions` then lists every View\Action of that toolbar for 2.0 overrides
     - region: data-nowo-ui-region on the root (scaffolds pass `header`)
+  2.21: header.status (View\PageStatus) renders through the `page_status` partial next to the title, both inside a
+  `page_title_row` wrapper (no wrapper without a status); header.actionsLayout `split` renders header.actions through
+  the `header_actions` partial (icon buttons, one primary, the square "more" menu) instead of one button each.
   Breadcrumbs (none when nowo_ui_kit.breadcrumbs.enabled is false, 2.3.1) and actions render through the theme partials `breadcrumbs` and `action`; header.tabs (View\AreaNav,
   2.1) renders under the title row through the `tabs` partial (region `area-nav`, inside nowo-ui-page-header__nav).
 #}
@@ -29,6 +32,19 @@
     {% set intro = header.intro is null ? null : (header.intro.key is defined ? header.intro.key|trans(header.intro.params, header.intro.domain) : header.intro) %}
 {% endif %}
 {% set _toolbar_class = _t ? _t.macroClasses('toolbar', ui.toolbar(framework), bundle, _pt) : ui.toolbar(framework) %}
+{% set _header = header is defined and header ? header : null %}
+{% set _status = _header and _header.status is defined ? _header.status : null %}
+{% set _split = _header and _header.actionsLayout is defined and _header.actionsLayout == 'split' and not header_actions_rendered|default(false) %}
+{% set _title_row_open = '' %}
+{% set _title_row_close = '' %}
+{% set _split_html = '' %}
+{% if _status %}
+{% set _title_row_open %}<div class="{{ _t ? _t.classFor('page_title_row', bundle, framework, _pt) : 'nowo-ui-page-header__title-row' }}">{% endset %}
+{% set _title_row_close %}{{ include(_t ? _t.partial('page_status', bundle) : '@NowoUiKitBundle/partials/_page_status.html.twig', {status: _status, bundle: bundle, nowo_ui_page_type: _pt}, false)|trim|raw }}</div>{% endset %}
+{% endif %}
+{% if _split %}
+{% set _split_html %}{{ include(_t ? _t.partial('header_actions', bundle) : '@NowoUiKitBundle/partials/_header_actions.html.twig', {split: _header.splitActions(), bundle: bundle, nowo_ui_page_type: _pt}, false)|trim|raw }}{% endset %}
+{% endif %}
 <div class="{{ _t ? _t.macroClasses('page_header', ui.page_header(framework), bundle, _pt) : ui.page_header(framework) }}"{{ _t ? _t.renderAttributes('page_header', bundle, {}, _pt)|raw }}{% if region|default(null) %} data-nowo-ui-region="{{ region }}"{% endif %}>
     <div class="nowo-ui-page-header__text">
         {#- nowo_ui_kit.breadcrumbs.enabled (2.3.1): false drops the trail from every page header. -#}
@@ -40,7 +56,7 @@
         {% endif %}
         {# 2.3: full slot resolution (semantic + framework defaults + host classes), so Bootstrap hosts get the `h3`
            type scale instead of a full-size h1 #}
-        <h1 class="{{ _t ? _t.classFor('page_title', bundle, framework, _pt) : 'nowo-ui-page-header__title' }}">{{ title }}</h1>
+        {{ _title_row_open }}<h1 class="{{ _t ? _t.classFor('page_title', bundle, framework, _pt) : 'nowo-ui-page-header__title' }}">{{ title }}</h1>{{ _title_row_close }}
         {% if intro is defined and intro %}
             {% set _intro_extra = _t ? _t.extraClasses('page_intro', bundle, _pt) : '' %}
             <p class="nowo-ui-page-header__intro{{ _intro_extra ? ' ' ~ _intro_extra }}">{{ intro }}</p>
@@ -48,10 +64,10 @@
     </div>
     {% if header is defined and header and header.actions is not empty and not header_actions_rendered|default(false) %}
         <div class="{{ _toolbar_class }}">
-            {% for action in header.actions %}
+            {% for action in (_split ? [] : header.actions) %}
                 {{ include(_t ? _t.partial('action', bundle) : '@NowoUiKitBundle/partials/_action.html.twig', {action: action, context: 'toolbar', framework: framework, bundle: bundle, nowo_ui_page_type: _pt}, false) }}
             {% endfor %}
-            {% if toolbar is defined and toolbar %}{{ toolbar|raw }}{% endif %}
+            {{ _split_html }}{% if toolbar is defined and toolbar %}{{ toolbar|raw }}{% endif %}
         </div>
     {% elseif toolbar is defined and toolbar %}
         <div class="{{ _toolbar_class }}">{{ toolbar|raw }}</div>

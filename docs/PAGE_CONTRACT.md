@@ -116,6 +116,8 @@ any printable character (`"`, `'`, `<`, `>`, `&` included), so Tailwind arbitrar
 | `value\|nowo_ui_trans(params = {})` | translates a `View\Label` (or `{key, domain, params}`); plain strings pass through (escaped by Twig) |
 | `value\|nowo_ui_translatable(params = {})` *(2.3)* | a `TranslatableText` for a form theme that pipes the value through `\|trans` again (`attr.placeholder`, choice `placeholder`): a `Label` is translated exactly once in its own domain, a string printed as given |
 | `nowo_ui_page_header(header, bundle = null, extra_actions = [], header_actions = true)` *(2.3)* | the scaffolds' page header (`page/_page_header.html.twig`) for unique pages |
+| `nowo_ui_header_actions(actions)` *(2.21)* | `View\HeaderActions` split of a list of `Action`s (icon buttons, one primary, the "more" menu) — what the `header_actions` partial renders |
+| `nowo_ui_font_preload()` *(2.21)* | `<link rel="preload" as="font" crossorigin>` tags of `nowo_ui_kit.font_preload` ('' when not configured) |
 | global `nowo_ui_layout` | `{admin, guest}` — the configured layouts |
 | global `nowo_ui_theme` | the `Theme\Theme` object (used by the 1.x partials: `macroClasses()`, `extraClasses()`, `frameworkDefaults()`, `renderAttributes()`, `partial()`, `hasTokens()`) |
 | global `nowo_ui_breadcrumbs` | `{breadcrumb_kit, collection, enabled}` (`enabled` 2.3.1) |
@@ -191,12 +193,18 @@ panel's border. For the Scroll / Responsive toggle with a row-detail dialog (Sti
 
 ### Show
 
-`page/show.html.twig` · `page: ShowPage` (`header`, `sections: list<DetailSection>`, `meta: list<DetailItem>`)
+`page/show.html.twig` · `page: ShowPage` (`header`, `sections: list<DetailSection>`, `meta: list<DetailItem>`,
+2.21 `stats: list<Stat>`)
 
 | Data block | Default | Context |
 | --- | --- | --- |
 | `nowo_ui_show_sections` | one card (title: `card_title` slot) + definition list per `DetailSection` (booleans as ✓ / —, links via `DetailItem::href`; slots `detail_list`, `detail_item`, `detail_term`, `detail_value` — add `nowo-ui-detail-list--stacked` to `detail_list` for label over value). `page.meta` renders after the sections as one more list with the `detail_list` + `detail_list_meta` slots (`nowo-ui-detail-list--meta`) | `page` |
+| `nowo_ui_show_stats` *(2.21)* | the `stat_row` partial with `page.stats` above the sections (nothing without stats) | `page` |
 | `nowo_ui_show_after` | empty (related tables, history) | `page` |
+
+A `DetailSection` with `layout: 'facts'` (2.21) renders its items as the compact grid (`detail_list` with
+`modifier: 'facts'`, slot `detail_list_facts`). Detail pages combine it with `PageHeader::status` and the split actions
+layout — see [USAGE](USAGE.md#detail-pages-221).
 
 ### Form
 
@@ -288,9 +296,12 @@ or a plain string printed escaped. Never pre-render HTML into a view model.
 | Class | Constructor |
 | --- | --- |
 | `Label` | `(key, domain = 'messages', params = [])`, `Label::kit(key)` (UiKit domain), `withParams()` |
-| `PageHeader` | `(title, intro = null, actions = [], breadcrumbs = [], breadcrumbCollection = null, tabs = null)`, `withActions(actions)`, `withTabs(tabs)` |
+| `PageHeader` | `(title, intro = null, actions = [], breadcrumbs = [], breadcrumbCollection = null, tabs = null, breadcrumbsMode = 'auto', back = null, status = null, actionsLayout = 'toolbar')`, `withActions(actions)`, `withTabs(tabs)`; 2.21: `status` (`PageStatus`), `actionsLayout` (`toolbar` \| `split`), `withStatus()`, `withSplitActions(split = true)`, `splitActions()` |
+| `PageStatus` *(2.21)* | `(label, tone = 'neutral', title = null)` — tone `success` \| `danger` \| `warning` \| `neutral` \| `info` |
+| `HeaderActions` *(2.21)* | `(primary = null, icons = [], more = [])`, `HeaderActions::split(actions)` (display `icon` → `icons`; first other `primary` → `primary`; the rest → `more`, danger last; hidden dropped), `isEmpty()`, `confirmActions()` |
+| `Stat` *(2.21)* | `(label, value, hint = null, tone = 'neutral', href = null)` — tone `neutral` \| `success` \| `warning` \| `danger` \| `info` |
 | `AreaNav` / `AreaNavItem` *(2.1)* | `(items = [], label = null, attributes = [])`, `isEmpty()`, `active()`, `withActive(href)` / `(label, href, active = false, attributes = [])`, `withActive(bool)` — see [Area navigation](#area-navigation) |
-| `Action` | `(kind = 'custom', label = null, href = null, route = null, params = [], method = 'GET', csrfToken = null, confirm = null, icon = null, variant = null, attributes = [], form = null, csrfField = '_token', modalId = null, disabled = false, visible = true, display = null, confirmScope = null, fallbackHref = null)`; factories `create()`, `edit()`, `view()`, `delete()`, `route()`; `isPost()`, `resolvedVariant()`, `confirmId()`, `confirmKey()`, `withConfirmScope()`, `toArray()` |
+| `Action` | `(kind = 'custom', label = null, href = null, route = null, params = [], method = 'GET', csrfToken = null, confirm = null, icon = null, variant = null, attributes = [], form = null, csrfField = '_token', modalId = null, disabled = false, visible = true, display = null, confirmScope = null, fallbackHref = null)`; factories `create()`, `edit()`, `view()`, `delete()`, `route()`; `isPost()`, `resolvedVariant()`, `confirmId()`, `confirmKey()`, `withConfirmScope()`, `toArray()`; 2.21: `withDisplay(display, icon = null)`, `asIcon(icon = null)` |
 | `Confirm` | `(title, message = null, confirmLabel = null, variant = 'danger', cancelLabel = null, id = null, expectedValue = null, expectedLabel = null, messageInHeader = null)`, `Confirm::delete(message = null)`, `expectedPattern()` |
 | `Crumb` | `(label, href = null)` |
 | `Link` | `(label, href, attributes = [])` |
@@ -299,12 +310,12 @@ or a plain string printed escaped. Never pre-render HTML into a view model.
 | `Listing\SortRequest` *(2.20)* | `(field = null, direction = 'asc', fields = [], sortParam = 'sort', directionParam = 'dir', pageParam = 'page')`; `fromRequest(request, fields, defaultField, defaultDirection, …)` / `fromQuery()` (whitelist `key => first-click direction`; unknown key → default, unknown direction → first-click one), `fieldsOf(columns)`, `isActive()`, `nextDirection()`, `query()`, `linkQuery(field, query)` (next sort, page dropped), `withPageParam()`, `sortRows(rows, extractors)` |
 | `FilterField` | `(name, placeholder = null, width = null, class = null, rowClass = null, attributes = [], rowAttributes = [])` — `width`: `xs`, `sm`, `md`, `lg`, `full` |
 | `EmptyState` | `(title = null, message = null, action = null)` |
-| `DetailItem` / `DetailSection` | `(label, value, href = null)` / `(title = null, items = [], id = null)` |
+| `DetailItem` / `DetailSection` | `(label, value, href = null, badge = null)` / `(title = null, items = [], id = null, layout = 'list')` — 2.21 `layout: 'facts'` |
 | `KpiTile` | `(label, value, hint = null, href = null, variant = 'neutral', linkTile = false)` |
 | `SettingsSection` | `(id, label, href = null, form = null, intro = null, submitLabel = null, formThemes = [])` — `formThemes` (2.1) applied to `form` with `form_theme` before the `nowo_ui_settings_section` block |
 | `WizardStep` | `(id, label, href = null)` |
 | `ListPage` | `(header, columns = [], rows = [], filters = null, rowActions = [] \| callable(row, key), pagination = null, empty = null, filtersClearHref = null, sort = null, direction = 'asc', caption = null, bundle = null, layout = null, attributes = [], actionsLabel = null, actionsLabelVisible = false, filterFields = [], filtersSubmit = null, filtersClear = null, filterActions = [], responsive = 'cards', filtersDisplay = null, headerActionsInFilters = null, actionsAlign = 'end', actionsPosition = 'end', captionVisible = true, sorting = null, clientSort = false)`; `rowActions(row, key)`, `confirmDialogs(actions)`, `nextDirection(column)`; 2.20: `sorting` (`Listing\SortRequest`; header links keep the query and drop the pagination's page parameter) replaces `sort` / `direction`; `clientSort` sorts a list without pages in the browser |
-| `ShowPage` | `(header, sections = [], meta = [], bundle = null, layout = null, attributes = [])` |
+| `ShowPage` | `(header, sections = [], meta = [], bundle = null, layout = null, attributes = [], stats = [])` — 2.21 `stats` |
 | `FormPage` | `(header, form, submitLabel = null, cancelHref = null, cancelLabel = null, secondaryActions = [], deleteAction = null, bundle = null, layout = null, attributes = [], secondaryActionsInHeader = true, dangerZoneTitle = null, dangerZoneIntro = null, formThemes = [], formTag = true, formAttributes = [])` — `formAttributes` (2.3): extra `<form>` attributes (`novalidate`, `data-turbo`…; `class` appended to the `form` slot, no `on*`); `formThemes` (2.1): form theme templates (e.g. the bundle's FormKit theme) applied to `form` with `form_theme` before it renders, so the bundle does not override `nowo_ui_content` |
 | `SettingsPage` | `(header, sections = [], current = null, bundle = null, layout = null, attributes = [])` |
 | `DashboardPage` | `(header, kpis = [], bundle = null, layout = null, attributes = [])` |

@@ -9,6 +9,7 @@
 - [Route links](#route-links)
 - [Error pages](#error-pages)
 - [App shell](#app-shell)
+- [Font preload (2.21)](#font-preload-221)
 - [Examples](#examples)
 
 ## Root keys
@@ -26,6 +27,7 @@ Alias: **`nowo_ui_kit`**
 | `route_links` | map | `routes: {}` | Route (prefix) → link map for `nowo_ui_route_link()`, e.g. the page-edge manual tab (since 1.17.0). See [Route links](#route-links) |
 | `error_pages` | map | kit layout + texts | Kit HTTP error pages (since 2.6.0). See [Error pages](#error-pages) |
 | `shell` | map | `kit_styles: true` | Signed-in app shell templates (since 2.6.0). See [App shell](#app-shell) |
+| `font_preload` | map | `fonts: []`, `manifest.path: null` | `<link rel="preload" as="font">` tags in the document / error layouts (since 2.21.0). See [Font preload](#font-preload-221) |
 
 Parameters / Twig globals:
 
@@ -283,6 +285,37 @@ nowo_ui_kit:
 | `sidebar_cookie` | `null` | Cookie read server-side when the template passes no `collapsed` / `rail` |
 | `sidebar_hidden_value` / `sidebar_rail_value` | `collapsed` / `rail` | Cookie values of the hidden aside and the icons-only rail |
 | `sidebar_storage` | `null` | `data-nowo-ui-sidebar-storage` of a three-mode (`rail_mode`) kit-styled shell |
+
+## Font preload (2.21)
+
+Since **2.21.0**. `<link rel="preload" as="font" type="…" crossorigin>` tags for the fonts painted above the fold, so
+text does not wait for the stylesheet to discover them. The UiKit document and error layouts print them right after the
+viewport meta through `nowo_ui_font_preload()`; a host layout that extends neither prints `{{ nowo_ui_font_preload() }}`
+in its `<head>`. Nothing is printed while nothing is configured.
+
+```yaml
+nowo_ui_kit:
+    font_preload:
+        fonts: ['/fonts/inter-latin-400-normal.woff2']        # served URLs, printed as given
+        manifest:                                              # hashed Vite builds
+            path: '%kernel.project_dir%/public/build/.vite/manifest.json'
+            entry: 'assets/app.ts'
+            prefixes: ['montserrat-latin-400-normal', 'montserrat-latin-600-normal']
+            base: '/build/'
+```
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `fonts` | `[]` | Font URLs; the `type` comes from the extension (`woff2`, `woff`, `ttf`, `otf`; none for others) |
+| `manifest.path` | `null` | Vite manifest; a missing or broken file (dev server, no build yet) prints nothing |
+| `manifest.entry` | `assets/app.js` | Entry whose `assets` list holds the fonts |
+| `manifest.prefixes` | `[]` | One tag per prefix: the first asset whose basename starts with it (`montserrat-latin-400-normal-<hash>.woff2`) |
+| `manifest.base` | `/build/` | Public URL prefix of the manifest assets |
+
+The manifest tags are memoized per process, keyed by the file's mtime + size (FrankenPHP worker safe: the memo
+derives from a build file only, and a new build replaces it on the next render). Font preloads are governed by the
+CSP `font-src` directive, not by a nonce, so the tags carry none; keep the fonts same-origin (or allowed by
+`font-src`) — `crossorigin` is required for font preloads even on the same origin.
 
 ## Examples
 
