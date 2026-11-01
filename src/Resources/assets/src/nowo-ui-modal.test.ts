@@ -82,4 +82,10 @@ describe('nowo-ui-modal', () => {
     mod.bindNowoUiModal();
     expect(window.nowoOpenModal).toBe(mod.openModal);
   });
+
+  it('ignores clicks whose target is not an element', () => {
+    mod.openModal('m1');
+    document.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    expect(document.getElementById('m1')?.classList.contains('nowo-ui-modal-open')).toBe(true);
+  });
 });

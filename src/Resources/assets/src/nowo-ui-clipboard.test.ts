@@ -175,4 +175,32 @@ describe('nowo-ui-clipboard', () => {
     document.querySelector('button')!.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
     expect(navigator.clipboard.writeText).not.toHaveBeenCalled();
   });
+
+  it('falls back and flashes the target when the clipboard API rejects', async () => {
+    mockClipboard(vi.fn().mockRejectedValue(new Error('denied')));
+    Object.defineProperty(document, 'execCommand', {
+      configurable: true,
+      writable: true,
+      value: vi.fn().mockReturnValue(true),
+    });
+    const btn = document.querySelector('button')!;
+    expect(await mod.copyText('fallback', btn)).toBe(true);
+    expect(document.execCommand).toHaveBeenCalledWith('copy');
+    expect(btn.textContent).toBe('Copied');
+    expect(btn.getAttribute('aria-label')).toBe('Copied');
+    vi.advanceTimersByTime(1600);
+    expect(btn.textContent).toBe('Copy');
+
+    btn.removeAttribute('data-nowo-ui-clipboard-label');
+    btn.removeAttribute('data-nowo-ui-clipboard-done-label');
+    expect(await mod.copyText('fallback', btn)).toBe(true);
+    expect(btn.textContent).toBe('Copied');
+    vi.advanceTimersByTime(1600);
+    expect(btn.textContent).toBe('Copy');
+  });
+
+  it('ignores clicks whose target is not an element', () => {
+    document.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    expect(navigator.clipboard.writeText).not.toHaveBeenCalled();
+  });
 });

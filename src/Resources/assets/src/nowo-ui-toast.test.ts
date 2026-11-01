@@ -60,5 +60,9 @@ describe('nowo-ui-toast', () => {
     document.body.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
     expect(document.querySelector('[data-nowo-ui-toast]')).not.toBeNull();
   });
-});
 
+  it('ignores clicks whose target is not an element', () => {
+    document.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    expect(document.querySelector('[data-nowo-ui-toast]')?.classList.contains('is-leaving')).toBe(false);
+  });
+});
