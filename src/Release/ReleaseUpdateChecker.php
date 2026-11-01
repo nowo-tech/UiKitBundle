@@ -37,6 +37,12 @@ final readonly class ReleaseUpdateChecker
 
     private const RELEASES_PAGE_SIZE = 100;
 
+    /** Default idle timeout (seconds) of the `releases/latest` request (REQ-RUNTIME-001). */
+    public const DEFAULT_LATEST_TIMEOUT = 5.0;
+
+    /** Default idle timeout (seconds) of the `releases` listing used for "versions behind" (REQ-RUNTIME-001). */
+    public const DEFAULT_RELEASES_TIMEOUT = 8.0;
+
     public function __construct(
         private HttpClientInterface $httpClient,
         private CacheInterface $cache,
@@ -47,6 +53,8 @@ final readonly class ReleaseUpdateChecker
         private string $userAgent = 'nowo-ui-kit-release-check',
         private string $defaultBranch = 'main',
         private ?LoggerInterface $logger = null,
+        private float $latestTimeout = self::DEFAULT_LATEST_TIMEOUT,
+        private float $releasesTimeout = self::DEFAULT_RELEASES_TIMEOUT,
     ) {
     }
 
@@ -150,7 +158,7 @@ final readonly class ReleaseUpdateChecker
         try {
             $response = $this->httpClient->request('GET', self::API_HOST.'/repos/'.$repo.'/releases/latest', [
                 'headers' => $this->githubHeaders(),
-                'timeout' => 5,
+                'timeout' => $this->latestTimeout,
                 'max_redirects' => 0,
             ]);
             $status = $response->getStatusCode();
@@ -194,7 +202,7 @@ final readonly class ReleaseUpdateChecker
             $response = $this->httpClient->request('GET', self::API_HOST.'/repos/'.$repo.'/releases', [
                 'headers' => $this->githubHeaders(),
                 'query' => ['per_page' => self::RELEASES_PAGE_SIZE],
-                'timeout' => 8,
+                'timeout' => $this->releasesTimeout,
                 'max_redirects' => 0,
             ]);
             if ($response->getStatusCode() < 200 || $response->getStatusCode() >= 300) {

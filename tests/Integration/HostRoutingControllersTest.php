@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Nowo\UiKitBundle\Tests\Unit\Integration;
+namespace Nowo\UiKitBundle\Tests\Integration;
 
 use Nowo\UiKitBundle\NowoUiKitBundle;
 use PHPUnit\Framework\TestCase;
@@ -12,6 +12,7 @@ use Symfony\Bundle\TwigBundle\TwigBundle;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Routing\Loader\AttributeServicesLoader;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
@@ -53,7 +54,25 @@ final class HostRoutingControllersTest extends TestCase
 
     public function testImportedReleaseCheckRouteIsRegistered(): void
     {
-        self::assertSame('/_nowo-ui/release/status', $this->routes(true)->get('nowo_ui_kit_release_status')?->getPath());
+        $route = $this->routes(true)->get('nowo_ui_kit_release_status');
+        self::assertNotNull($route);
+        self::assertSame('/_nowo-ui/release/status', $route->getPath());
+        self::assertSame(['GET'], $route->getMethods());
+    }
+
+    public function testImportedReleaseCheckRouteDispatchesToTheControllerService(): void
+    {
+        $this->dir = sys_get_temp_dir().'/nowo-ui-kit-routing-'.bin2hex(random_bytes(4));
+        $kernel = new HostRoutingTestKernel($this->dir, true);
+
+        try {
+            $response = $kernel->handle(Request::create('/_nowo-ui/release/status'));
+            // Feature off: the controller answers its documented 404 JSON (route imported, checker disabled).
+            self::assertSame(404, $response->getStatusCode());
+            self::assertSame('{"status":"skipped"}', $response->getContent());
+        } finally {
+            $kernel->shutdown();
+        }
     }
 
     private function routes(bool $importBundleRoutes): RouteCollection

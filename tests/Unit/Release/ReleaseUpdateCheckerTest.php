@@ -85,6 +85,45 @@ final class ReleaseUpdateCheckerTest extends TestCase
         self::assertCount(2, $requests);
         self::assertSame('https://api.github.com/repos/acme/app/releases/latest', $requests[0][0]);
         self::assertContains('User-Agent: my-app', $requests[0][1]['headers']);
+        self::assertSame(ReleaseUpdateChecker::DEFAULT_LATEST_TIMEOUT, $requests[0][1]['timeout']);
+        self::assertSame(ReleaseUpdateChecker::DEFAULT_RELEASES_TIMEOUT, $requests[1][1]['timeout']);
+        self::assertSame(5.0, ReleaseUpdateChecker::DEFAULT_LATEST_TIMEOUT);
+        self::assertSame(8.0, ReleaseUpdateChecker::DEFAULT_RELEASES_TIMEOUT);
+    }
+
+    public function testConfiguredTimeoutsAreSentWithEveryRequest(): void
+    {
+        $timeouts = [];
+        $http = new MockHttpClient(function (string $method, string $url, array $options) use (&$timeouts): ResponseInterface {
+            $timeouts[] = $options['timeout'];
+
+            return str_contains($url, '/releases/latest')
+                ? $this->latestResponse('v1.2.0')
+                : $this->releasesListResponse([['tag_name' => 'v1.2.0', 'draft' => false, 'prerelease' => false]]);
+        });
+
+        $checker = new ReleaseUpdateChecker($http, new ArrayAdapter(), 'v1.0.0', self::REPO, true, 3600, 'ua', 'main', null, 1.5, 2.5);
+        self::assertSame(ReleaseUpdateInfo::STATUS_OK, $checker->check()->status);
+        self::assertSame([1.5, 2.5], $timeouts);
+    }
+
+    public function testIdleTimeoutSoftFailsToError(): void
+    {
+        // An empty chunk makes MockResponse simulate an idle timeout (REQ-RUNTIME-001 timeout path).
+        $http = new MockHttpClient([new MockResponse(['', '{"tag_name":"v9.9.9"}'], ['http_code' => 200])]);
+        $logger = new class extends AbstractLogger {
+            /** @var list<string> */
+            public array $messages = [];
+
+            public function log($level, string|Stringable $message, array $context = []): void
+            {
+                $this->messages[] = (string) $message;
+            }
+        };
+
+        $checker = new ReleaseUpdateChecker($http, new ArrayAdapter(), 'v1.0.0', self::REPO, true, 3600, 'ua', 'main', $logger, 0.1, 0.1);
+        self::assertSame(ReleaseUpdateInfo::STATUS_ERROR, $checker->check()->status);
+        self::assertContains('Release update check HTTP failed.', $logger->messages);
     }
 
     public function testUpToDateComparesAgainstDefaultBranch(): void

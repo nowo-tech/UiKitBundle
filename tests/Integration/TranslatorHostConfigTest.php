@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Nowo\UiKitBundle\Tests\Unit\Integration;
+namespace Nowo\UiKitBundle\Tests\Integration;
 
 use Nowo\UiKitBundle\DependencyInjection\NowoUiKitExtension;
 use Nowo\UiKitBundle\NowoUiKitBundle;

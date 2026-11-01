@@ -7,13 +7,16 @@ namespace Nowo\UiKitBundle\Tests\Unit\DependencyInjection;
 use LogicException;
 use Nowo\UiKitBundle\DependencyInjection\Configuration;
 use Nowo\UiKitBundle\DependencyInjection\NowoUiKitExtension;
+use Nowo\UiKitBundle\Release\ReleaseStatusController;
 use Nowo\UiKitBundle\Release\ReleaseUpdateChecker;
 use Nowo\UiKitBundle\Routing\PanelPathRewritingLoader;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 use Symfony\Component\Config\Loader\DelegatingLoader;
 use Symfony\Component\Config\Loader\LoaderResolver;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Yaml\Yaml;
 
 final class NowoUiKitExtensionTest extends TestCase
@@ -197,10 +200,22 @@ final class NowoUiKitExtensionTest extends TestCase
         self::assertSame('http_client', (string) $args[0]);
         self::assertSame('cache.app', (string) $args[1]);
         self::assertSame(['v1.2.3', 'acme/app', true, 120, 'acme-app', 'develop'], \array_slice($args, 2, 6));
+        self::assertSame([5.0, 8.0], \array_slice($args, 9, 2));
         self::assertTrue($container->hasAlias(ReleaseUpdateChecker::class));
 
         $controllerArgs = $container->getDefinition('nowo_ui_kit.release_status_controller')->getArguments();
         self::assertSame('nowo_ui_kit.release_update_checker', (string) $controllerArgs[0]);
+    }
+
+    public function testReleaseCheckTimeoutsAreWiredIntoTheChecker(): void
+    {
+        $container = new ContainerBuilder();
+        (new NowoUiKitExtension())->load([[
+            'release_check' => ['enabled' => true, 'github_repo' => 'acme/app', 'timeout' => 1.5, 'releases_timeout' => 2.0],
+        ]], $container);
+
+        $args = $container->getDefinition('nowo_ui_kit.release_update_checker')->getArguments();
+        self::assertSame([1.5, 2.0], \array_slice($args, 9, 2));
     }
 
     public function testPrependExposesReleaseCheckTwigGlobal(): void
@@ -225,13 +240,33 @@ final class NowoUiKitExtensionTest extends TestCase
         self::assertSame(['enabled' => true, 'current_version' => 'v9.9.9'], $globals['nowo_ui_kit_release_check'] ?? null);
     }
 
-    public function testRouteFileDeclaresStatusEndpoint(): void
+    public function testRouteFileIsAThinAttributeImportOfTheStatusController(): void
     {
         $routes = Yaml::parseFile(\dirname(__DIR__, 3).'/src/Resources/config/routes/release_check.yaml');
         self::assertIsArray($routes);
-        self::assertSame('/_nowo-ui/release/status', $routes['nowo_ui_kit_release_status']['path']);
-        self::assertSame('nowo_ui_kit.release_status_controller', $routes['nowo_ui_kit_release_status']['controller']);
-        self::assertSame(['GET'], $routes['nowo_ui_kit_release_status']['methods']);
+        self::assertSame([
+            'nowo_ui_kit_release_status_attribute' => ['resource' => ReleaseStatusController::class, 'type' => 'attribute'],
+        ], $routes);
+
+        $attributes = (new ReflectionClass(ReleaseStatusController::class))->getAttributes(Route::class);
+        self::assertCount(1, $attributes);
+        $route = $attributes[0]->newInstance();
+        self::assertSame('nowo_ui_kit_release_status', $route->name);
+        self::assertSame('/_nowo-ui/release/status', $route->path);
+        self::assertSame(['GET'], $route->methods);
+    }
+
+    public function testStatusControllerIsExplicitPublicAndNotAutoconfigured(): void
+    {
+        $container = new ContainerBuilder();
+        (new NowoUiKitExtension())->load([[]], $container);
+
+        $definition = $container->getDefinition('nowo_ui_kit.release_status_controller');
+        self::assertTrue($definition->isPublic());
+        self::assertFalse($definition->isAutoconfigured());
+        self::assertTrue($definition->hasTag('controller.service_arguments'));
+        self::assertSame('nowo_ui_kit.release_status_controller', (string) $container->getAlias(ReleaseStatusController::class));
+        self::assertTrue($container->getAlias(ReleaseStatusController::class)->isPublic());
     }
 
     public function testAlias(): void
