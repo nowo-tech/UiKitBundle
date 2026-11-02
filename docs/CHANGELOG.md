@@ -89,6 +89,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- `attributes` on `View\Stat` (tile), `View\PageStatus` (badge) and `View\DetailItem` (item, e.g. a `facts` cell),
+  plus `valueAttributes` on `Stat` / `DetailItem` (the value `<dd>`): host hooks for live updates
+  (`data-detail-status`, `data-uptime-24h`…), validated with `Action::assertAttributes()` (no `on*`), printed escaped.
+- Pagination modes: `View\Pagination::$mode` `pager` (default) | `infinite` | `responsive` (`modeNarrow`, `modeWide`,
+  `breakpoint` default `(max-width: 900px)`, `autoLoads` default 3), `withMode()`, `isProgressive()`; the
+  `_pagination_mode` partial adds the peer contract to the `pagination` / `pagination_compact` partials (pager links
+  kept as the no-JS fallback); the list scaffold marks its rows `data-nowo-ui-list-rows`; new Stimulus peer
+  `list-pagination` (IntersectionObserver auto-load, "Load more" button, same-origin fetch of the next page's full HTML,
+  rows-only append, `history.replaceState`, live region, `nowo-ui:rows-appended`, live `matchMedia` switching).
+- Provider-dependent fields: Stimulus peer `visible-when` (hidden + inert + aria-hidden, never disabled or cleared),
+  `Form\VisibleWhen` (`attributes()`, `fromOption()`, `rowAttr()`, `containerAttributes()`) and the Twig function
+  `nowo_ui_visible_when()`.
+- Translations `pagination.load_more`, `pagination.loaded`, `pagination.load_error` (7 locales).
+- Demo routes `/kit/2.23/item-attributes`, `/kit/2.23/pagination/{pager|infinite|responsive}`,
+  `/kit/2.23/provider-fields` with Playwright e2e (phone and desktop widths, axe) and the demo Stimulus app
+  `demo/symfony8/public/js/demo-peers.js` (`pnpm run build:demo-peers`).
+
+### Security
+
+- Audit CK L1: `js/nowo-ui-confirm.js` fails closed for `confirm-submit` forms submitted without the peer connected
+  (`window.confirm()` fallback; `blocked` stays cancelled, an empty message passes).
+- Audit CK L2: the `confirm-submit` peer clears `approved` in a `finally` around the replayed `requestSubmit()` /
+  `click()`.
+- Audit CK O1: the error page retry URI is path-only (`ErrorPageExtension::pathOnly()`; `pathOnlyUrl()` in the
+  countdown as defence in depth).
+
+### Fixed
+
+- Demo e2e "list: the table turns into labelled cards on a phone" expected `display: grid` for labelled cells; since
+  2.11 they are blocks with a positioned label (test aligned, no CSS change).
+
 ## [2.22.0] - 2026-11-02
 
 Opt-in row_actions_confirm (inline default byte-identical, native, dialog) with a missing-peer console warning, iOS date-input width fix, release-status route on #[Route] (same name/path), configurable timeouts, 100% PHP/TS line coverage. See [UPGRADING](https://github.com/nowo-tech/UiKitBundle/blob/v2.22.0/docs/UPGRADING.md#to-2220).

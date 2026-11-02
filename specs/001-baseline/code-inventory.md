@@ -80,6 +80,7 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | `Form/DateRangeRequestHandler.php` | 2.15.1: request handler decorator — a URL carrying only a range submits the nameless filter form | FR-DATERANGE-001 |
 | `Form/DateRangeSubmitExtension.php` | 2.15: moves the flat sibling from / to parameters onto the date-range child before submit | FR-DATERANGE-001 |
 | `Form/MultiSelectTypeExtension.php` | 2.14: ChoiceType option `nowo_ui_multi_select` adds the `multi-select` peer markup | FR-MULTISELECT-001 |
+| `Form/VisibleWhen.php` | 2.23: `visible-when` peer contract — row attributes (`data-nowo-ui-visible-when-field` / `-in`), `fromOption()` for a `visible_when` option, container attributes | FR-VISIBLEWHEN-001 |
 
 ## Listing (customizer, preferences, sorting)
 
@@ -125,10 +126,10 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 
 | Source file | Spec section | Requirement IDs |
 | --- | --- | --- |
-| `Twig/ThemeExtension.php` | Page contract Twig API: `nowo_ui_class` / `attrs` / `partial` / `tokens` / `page_header` / `script_names` / `action_form` / `form` / `form_hidden` / `header_actions` / `font_preload`, filters `nowo_ui_trans` / `nowo_ui_translatable` | FR-THEME-002, FR-PAGEHEADER-001, FR-SCRIPTS-001, FR-FORM-001, FR-FORM-002, FR-HEADERACTIONS-001, FR-FONTPRELOAD-001, FR-I18N-002 |
+| `Twig/ThemeExtension.php` | Page contract Twig API: `nowo_ui_class` / `attrs` / `partial` / `tokens` / `page_header` / `script_names` / `action_form` / `form` / `form_hidden` / `header_actions` / `font_preload` / `visible_when` (2.23), filters `nowo_ui_trans` / `nowo_ui_translatable` | FR-THEME-002, FR-PAGEHEADER-001, FR-SCRIPTS-001, FR-FORM-001, FR-FORM-002, FR-HEADERACTIONS-001, FR-FONTPRELOAD-001, FR-I18N-002, FR-VISIBLEWHEN-001 |
 | `Twig/AppearanceExtension.php` | `nowo_ui_appearance()`, `_css()`, `_style(nonce)`, `_presets(mode)` (only when appearance is enabled) | FR-APPEARANCE-005 |
 | `Twig/AreaNavExtension.php` | `nowo_ui_area_nav(area, context)` | FR-AREANAV-001 |
-| `Twig/ErrorPageExtension.php` | `nowo_ui_error_page()`, `nowo_ui_error_text()`, global `nowo_ui_error_pages` | FR-ERROR-001 |
+| `Twig/ErrorPageExtension.php` | `nowo_ui_error_page()`, `nowo_ui_error_text()`, global `nowo_ui_error_pages`; 2.23 path-only retry URI (`pathOnly()`) | FR-ERROR-001, FR-SEC-223 |
 | `Twig/LocaleNames.php` | Locale display names and direction (ext-intl, code fallback) | FR-LOCALE-001 |
 | `Twig/RouteLinkExtension.php` | `nowo_ui_route_link()` from `route_links` (longest prefix wins) | FR-EDGETAB-001 |
 | `Twig/TranslatableText.php` | Text translated once more by Symfony form themes (`nowo_ui_translatable`) | FR-I18N-002 |
@@ -146,7 +147,7 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | `View/PageHeader.php` | Title, intro, actions, breadcrumbs mode, back link, area nav, 2.21 `status` / `actionsLayout` | FR-PAGEHEADER-001, FR-STATUS-001, FR-HEADERACTIONS-001 |
 | `View/Crumb.php` | One breadcrumb of the plain trail | FR-PAGEHEADER-001 |
 | `View/BackLink.php` | 2.7: "Back to …" control above the title | FR-PAGEHEADER-001 |
-| `View/PageStatus.php` | 2.21: status badge next to the title (label, tone, tooltip) | FR-STATUS-001 |
+| `View/PageStatus.php` | 2.21: status badge next to the title (label, tone, tooltip); 2.23 `attributes` | FR-STATUS-001, FR-ITEMATTR-001 |
 | `View/HeaderActions.php` | 2.21: split of header actions into icons / primary / more | FR-HEADERACTIONS-001 |
 | `View/AreaNav.php` | Area navigation tab bar of a bundle area | FR-AREANAV-001 |
 | `View/AreaNavItem.php` | One area tab (2.17 `icon`) | FR-AREANAV-001, FR-TABS-001 |
@@ -155,11 +156,11 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | `View/Column.php` | Table column (priority, required, 2.20 sort key / first / type / value key) | FR-LIST-001, FR-SORT-002 |
 | `View/FilterField.php` | Filter field options (width, row attributes) | FR-LIST-001 |
 | `View/EmptyState.php` | Empty state of a list | FR-LIST-001 |
-| `View/Pagination.php` | Pagination shape (`fromArray`, `fromPagerfanta`, `fromKnp`, `fromTotal`, compact variant) | FR-PAGINATION-001 |
+| `View/Pagination.php` | Pagination shape (`fromArray`, `fromPagerfanta`, `fromKnp`, `fromTotal`, compact variant; 2.23 modes `pager` / `infinite` / `responsive`, `withMode()`) | FR-PAGINATION-001, FR-PAGINATION-002 |
 | `View/ShowPage.php` | Show scaffold model: sections, audit meta, 2.21 `stats` | FR-SHOW-001, FR-STAT-001 |
 | `View/DetailSection.php` | Definition-list section, 2.21 `facts` layout | FR-SHOW-001, FR-FACTS-001 |
-| `View/DetailItem.php` | Label / value item (2.2 `badge` tone) | FR-SHOW-001 |
-| `View/Stat.php` | 2.21: one key figure (label, value, hint, tone, href) | FR-STAT-001 |
+| `View/DetailItem.php` | Label / value item (2.2 `badge` tone; 2.23 `attributes` / `valueAttributes`) | FR-SHOW-001, FR-ITEMATTR-001 |
+| `View/Stat.php` | 2.21: one key figure (label, value, hint, tone, href); 2.23 `attributes` / `valueAttributes` | FR-STAT-001, FR-ITEMATTR-001 |
 | `View/FormPage.php` | Form scaffold model (actions, danger zone, form themes) | FR-FORMPAGE-001 |
 | `View/SettingsPage.php` | Settings scaffold model (sections, current section) | FR-FORMPAGE-001 |
 | `View/SettingsSection.php` | One settings section (form themes, 2.17 `icon`) | FR-FORMPAGE-001, FR-TABS-001 |
@@ -215,7 +216,7 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 
 | Source file | Spec section | Requirement IDs |
 | --- | --- | --- |
-| `Resources/views/page/list.html.twig` | List scaffold (filters, table, row actions, pagination, empty state, sorting) | FR-SCAFFOLD-001, FR-LIST-001, FR-SORT-002 |
+| `Resources/views/page/list.html.twig` | List scaffold (filters, table, row actions, pagination, empty state, sorting; 2.23 rows marker for pagination modes) | FR-SCAFFOLD-001, FR-LIST-001, FR-SORT-002, FR-PAGINATION-002 |
 | `Resources/views/page/show.html.twig` | Show scaffold (sections, audit meta, 2.21 stats row) | FR-SCAFFOLD-001, FR-SHOW-001, FR-STAT-001 |
 | `Resources/views/page/form.html.twig` | Form scaffold | FR-SCAFFOLD-001, FR-FORMPAGE-001 |
 | `Resources/views/page/settings.html.twig` | Settings scaffold (section tabs) | FR-SCAFFOLD-001, FR-FORMPAGE-001 |
@@ -225,7 +226,7 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | `Resources/views/page/confirm.html.twig` | Full-page confirm scaffold | FR-SCAFFOLD-001, FR-CONFIRM-001 |
 | `Resources/views/page/_scaffold.html.twig` | Internal scaffold helpers (page header, status badge, actions) | FR-SCAFFOLD-001, FR-STATUS-001 |
 | `Resources/views/page/_page_header.html.twig` | 2.3: public page-header contract (2.21 title row + status + split actions) | FR-PAGEHEADER-001, FR-STATUS-001, FR-HEADERACTIONS-001 |
-| `Resources/views/page/_detail_list.html.twig` | Definition list of detail items (badges, 2.21 `facts` modifier) | FR-SHOW-001, FR-FACTS-001 |
+| `Resources/views/page/_detail_list.html.twig` | Definition list of detail items (badges, 2.21 `facts` modifier, 2.23 item attributes) | FR-SHOW-001, FR-FACTS-001, FR-ITEMATTR-001 |
 | `Resources/views/page/_list_filters.html.twig` | Filters region of the list scaffold (child loop) | FR-SCAFFOLD-001, FR-LIST-001 |
 | `Resources/views/page/_section_form.html.twig` | Settings section form (child loop + submit) | FR-FORMPAGE-001 |
 | `Resources/views/page/_wizard_form.html.twig` | Default wizard step body | FR-FORMPAGE-001 |
@@ -295,8 +296,8 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | Source file | Spec section | Requirement IDs |
 | --- | --- | --- |
 | `Resources/views/partials/_page_header.html.twig` | 1.x page header (title, intro, toolbar slot) | FR-PARTIAL-001, FR-PAGEHEADER-001 |
-| `Resources/views/partials/_page_status.html.twig` | 2.21: status badge next to the title | FR-STATUS-001 |
-| `Resources/views/partials/_stat_row.html.twig` | 2.21: key figures row (`<dl>` of compact `Stat` tiles) above the details | FR-STAT-001 |
+| `Resources/views/partials/_page_status.html.twig` | 2.21: status badge next to the title (2.23 attributes) | FR-STATUS-001, FR-ITEMATTR-001 |
+| `Resources/views/partials/_stat_row.html.twig` | 2.21: key figures row (`<dl>` of compact `Stat` tiles) above the details (2.23 tile / value attributes) | FR-STAT-001, FR-ITEMATTR-001 |
 | `Resources/views/partials/_breadcrumbs.html.twig` | BreadcrumbKit trail or plain trail by `breadcrumbsMode` | FR-PAGEHEADER-001 |
 | `Resources/views/partials/_back_link.html.twig` | 2.7: "Back to …" link | FR-PAGEHEADER-001 |
 | `Resources/views/partials/_tabs.html.twig` | Link-based tabs (2.16 icons and tab style) | FR-TABS-001, FR-PARTIAL-001 |
@@ -347,7 +348,7 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | `Resources/views/partials/_filters_legacy.html.twig` | Deprecated (2.19) raw search fallback | FR-FORM-003 |
 | `Resources/views/partials/_filter_actions.html.twig` | Filter bar actions (pager + Filter + Clear, icon-only) | FR-FILTERBAR-001 |
 | `Resources/views/partials/_filters_collapse.html.twig` | 1.17: foldable filter card | FR-FILTERCOLLAPSE-001 |
-| `Resources/views/partials/_table.html.twig` | 2.2: data table (caption, sort headers, row actions, confirms) | FR-LIST-001, FR-SORT-002 |
+| `Resources/views/partials/_table.html.twig` | 2.2: data table (caption, sort headers, row actions, confirms; 2.23 `list_rows`) | FR-LIST-001, FR-SORT-002, FR-PAGINATION-002 |
 | `Resources/views/partials/_sort_header.html.twig` | 2.20: sortable header content (link or `table-sort` button) | FR-SORT-002, FR-SORT-003 |
 | `Resources/views/partials/_responsive_table.html.twig` | 1.17: scroll ↔ responsive table | FR-RESPTABLE-001 |
 | `Resources/views/partials/_row_detail_head.html.twig` | 1.17: header cell of the row detail column | FR-RESPTABLE-001 |
@@ -361,6 +362,7 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | `Resources/views/partials/_row_actions_legacy.html.twig` | Deprecated (2.19) raw POST fallback | FR-FORM-003 |
 | `Resources/views/partials/_pagination.html.twig` | Server-side pagination | FR-PAGINATION-001, FR-PARTIAL-001 |
 | `Resources/views/partials/_pagination_compact.html.twig` | 2.6: compact pagination + per-page select | FR-PAGINATION-001 |
+| `Resources/views/partials/_pagination_mode.html.twig` | 2.23: `list-pagination` peer contract of the pagination modes (root attributes, load-more region, live region) | FR-PAGINATION-002 |
 | `Resources/views/partials/_pagination_per_page_form.html.twig` | 2.19: per-page FormView branch | FR-FORM-002, FR-PAGINATION-001 |
 | `Resources/views/partials/_pagination_per_page_legacy.html.twig` | Deprecated (2.19) raw per-page fallback | FR-FORM-003 |
 | `Resources/views/partials/_segmented.html.twig` | 2.4: segmented control backed by one checkbox | FR-SEGMENTED-001 |
@@ -385,7 +387,7 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | `Resources/assets/src/nowo-ui-shell.ts` | Shell: burger, aside, backdrop, width toggle, opt-in rail | FR-JS-001, FR-SIDEBAR-001 |
 | `Resources/assets/src/nowo-ui-sidebar-core.ts` | 1.15: side-effect-free three-mode sidebar helpers | FR-SIDEBAR-001 |
 | `Resources/assets/src/nowo-ui-toast.ts` | Toast dismiss + auto-hide | FR-JS-001 |
-| `Resources/assets/src/nowo-ui-confirm.ts` | Native confirm dialog open / close, type-to-confirm | FR-JS-001, FR-CONFIRM-001 |
+| `Resources/assets/src/nowo-ui-confirm.ts` | Native confirm dialog open / close, type-to-confirm; 2.22 missing-peer warning, 2.23 `window.confirm` fail-closed fallback | FR-JS-001, FR-CONFIRM-001, FR-SEC-223 |
 | `Resources/assets/src/nowo-ui-page-loader.ts` | Page loader overlay | FR-JS-001, FR-LOADER-001 |
 | `Resources/assets/src/nowo-ui-theme.ts` | Theme toggle (`data-theme`, `data-bs-theme`, follows OS) | FR-JS-001 |
 | `Resources/assets/src/nowo-ui-theme-core.ts` | Shared theme storage helpers (boot + toggle) | FR-THEMEBOOT-001 |
@@ -401,7 +403,7 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | `Resources/assets/src/nowo-ui-popover.ts` | 2.4: popover menu placement and keyboard | FR-MENU-001 |
 | `Resources/assets/src/nowo-ui-segmented.ts` | 2.4: segmented radio group synced to its checkbox | FR-SEGMENTED-001 |
 | `Resources/assets/src/nowo-ui-autosubmit.ts` | 2.6: `data-nowo-ui-autosubmit` submits on change | FR-AUTOSUBMIT-001 |
-| `Resources/assets/src/nowo-ui-error-retry-core.ts` | 2.6: error page self-reload countdown logic | FR-ERROR-002 |
+| `Resources/assets/src/nowo-ui-error-retry-core.ts` | 2.6: error page self-reload countdown logic (2.23 `pathOnlyUrl()`) | FR-ERROR-002, FR-SEC-223 |
 | `Resources/assets/src/nowo-ui-error-retry.ts` | 2.6: error page self-reload IIFE | FR-ERROR-002 |
 
 ## TypeScript — Thinking Orbs (vendored MIT, `Resources/assets/src/orb/`)
@@ -439,7 +441,7 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | `Resources/assets/stimulus-peers/clipboard_copy_controller.ts` | `clipboard-copy` | FR-PEER-001, FR-CLIPBOARD-001 |
 | `Resources/assets/stimulus-peers/collapse_panel_controller.ts` | 1.15: `collapse-panel` (state in a localStorage map) | FR-PEER-003 |
 | `Resources/assets/stimulus-peers/confirm_dialog_controller.ts` | `confirm-dialog` (typed confirmation, body portal) | FR-PEER-001, FR-CONFIRM-001 |
-| `Resources/assets/stimulus-peers/confirm_submit_controller.ts` | `confirm-submit` (submit / click, `blocked`, 2.8 dialog mode) | FR-PEER-001 |
+| `Resources/assets/stimulus-peers/confirm_submit_controller.ts` | `confirm-submit` (submit / click, `blocked`, 2.8 dialog mode; 2.23 approval cleared after the replay) | FR-PEER-001, FR-SEC-223 |
 | `Resources/assets/stimulus-peers/datatable_controller.ts` | 1.15: `datatable` (optional DataTables peer deps) | FR-PEER-005 |
 | `Resources/assets/stimulus-peers/date_range_controller.ts` | 2.15: `date-range` (Cally range calendar on demand) | FR-DATERANGE-001 |
 | `Resources/assets/stimulus-peers/disclosure_icon_controller.ts` | 1.17: `disclosure-icon` | FR-DISCLOSURE-001 |
@@ -448,6 +450,7 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | `Resources/assets/stimulus-peers/icon_state.ts` | 1.17: icon state bridge (no icon library import) | FR-MORPH-001 |
 | `Resources/assets/stimulus-peers/listing_cookie.ts` | Listing preference cookie read / write | FR-LISTING-003 |
 | `Resources/assets/stimulus-peers/listing_customizer_controller.ts` | 2.13: `listing-customizer` (show / hide / reorder / stack) | FR-LISTING-004 |
+| `Resources/assets/stimulus-peers/list_pagination_controller.ts` | 2.23: `list-pagination` (pagination modes `infinite` / `responsive`: fetch + append the next page rows, load more, live region) | FR-PAGINATION-002 |
 | `Resources/assets/stimulus-peers/multi_select_controller.ts` | 2.14: `multi-select` (Tom Select, native fallback) | FR-MULTISELECT-001 |
 | `Resources/assets/stimulus-peers/page_loader_controller.ts` | `page-loader` (min-visible timing, leave animation) | FR-PEER-001, FR-LOADER-001 |
 | `Resources/assets/stimulus-peers/product_tour_controller.ts` | 2.13: `product-tour` (driver.js on demand) | FR-TOUR-001 |
@@ -456,6 +459,7 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | `Resources/assets/stimulus-peers/table_sort_controller.ts` | 2.20: `table-sort` (client-side sort) | FR-SORT-003 |
 | `Resources/assets/stimulus-peers/tabs_controller.ts` | `tabs` | FR-PEER-001, FR-TABS-001 |
 | `Resources/assets/stimulus-peers/temporary_reveal_controller.ts` | 1.15: `temporary-reveal` (masked secret, auto-hide) | FR-PEER-004 |
+| `Resources/assets/stimulus-peers/visible_when_controller.ts` | 2.23: `visible-when` (provider-dependent rows: hidden / inert / aria-hidden, never disabled or cleared) | FR-VISIBLEWHEN-001 |
 | `Resources/assets/stimulus-peers/toast_stack_controller.ts` | `toast-stack` | FR-PEER-001 |
 
 ## Build outputs (generated, committed, never hand-edited)

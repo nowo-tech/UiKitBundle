@@ -118,8 +118,11 @@ test.describe('page contract — validation follow-ups (REQ-UI-003)', () => {
     await page.goto('/page-contract/orders');
     const cell = page.locator('tbody tr').first().locator('td[data-label="Customer"]');
     await expect(cell).toBeVisible();
-    expect(await cell.evaluate((el) => getComputedStyle(el).display)).toBe('grid');
+    // 2.11: a labelled cell is a block with its label positioned in the start column (the label | value grid only
+    // stays for cells without data-label and for priority cells)
+    expect(await cell.evaluate((el) => getComputedStyle(el).display)).toBe('block');
     expect(await cell.evaluate((el) => getComputedStyle(el, '::before').content)).toBe('"Customer"');
+    expect(await cell.evaluate((el) => getComputedStyle(el, '::before').position)).toBe('absolute');
     expect(await page.locator('table.nowo-ui-table--cards > thead').evaluate((el) => getComputedStyle(el).position)).toBe('absolute');
     // every column shows again in card mode, including the priority 3 "Placed" column
     await expect(page.locator('tbody tr').first().locator('td[data-label="Placed"]')).toBeVisible();

@@ -16,6 +16,9 @@
   - [Client-side tables](#client-side-tables)
   - [Host tables and customizable listings](#host-tables-and-customizable-listings)
 - [Detail pages (2.21)](#detail-pages-221)
+- [Live item attributes (2.23)](#live-item-attributes-223)
+- [Pagination modes (2.23)](#pagination-modes-223)
+- [Provider-dependent fields (2.23)](#provider-dependent-fields-223)
 - [Host chrome (1.17, opt-in)](#host-chrome-117-opt-in)
   - [Responsive table](#responsive-table)
   - [Foldable filter card](#foldable-filter-card)
@@ -621,6 +624,82 @@ return $this->render('@NowoUiKit/page/show.html.twig', ['page' => new ShowPage(
 - Theme slots `page_title_row`, `page_status`, `header_actions`, `menu_toggle_square`, `stat_row`, `stat`,
   `stat_label`, `stat_value`, `stat_hint`, `detail_list_facts` ([THEME_SLOTS](THEME_SLOTS.md)); tokens in
   [THEMING](THEMING.md#detail-pages-221). With `icon_set: ux_icon`, commit `bi:three-dots-vertical` (icon `more`).
+
+## Live item attributes (2.23)
+
+`View\Stat`, `View\PageStatus` and `View\DetailItem` (the `facts` cells and list items) take optional host attributes,
+so a page that updates its figures live (polling, Mercure) finds them without extra wrappers:
+
+```php
+$header = $header->withStatus(new PageStatus('Up', 'success', attributes: ['data-detail-status' => 'up']));
+new Stat('Uptime 24h', '99.98 %', attributes: ['data-stat' => 'uptime'], valueAttributes: ['data-uptime-24h' => '99.98']);
+new DetailItem('Last check', '10:41', attributes: ['data-fact' => 'last-check'], valueAttributes: ['data-last-check' => $iso]);
+```
+
+- `Stat::attributes` go on the tile `<div>`, `Stat::valueAttributes` on the value `<dd>`;
+  `PageStatus::attributes` on the badge `<span>`; `DetailItem::attributes` on the item `<div>` (any layout) and
+  `DetailItem::valueAttributes` on its `<dd>`.
+- Validated like `Action` attributes (`Action::assertAttributes()`: valid names, no `on*` handlers, scalar / bool /
+  null values; `false` / `null` drop the attribute, `true` prints it bare) and printed escaped with
+  `nowo_ui_html_attrs`.
+- Empty (the default): the markup is byte-identical to 2.22.
+
+## Pagination modes (2.23)
+
+`View\Pagination` has a `mode`: `pager` (default, unchanged markup), `infinite` or `responsive`:
+
+```php
+$pagination = Pagination::fromRequest($request, $total)->withMode('infinite');
+// phones scroll, desktops page: infinite below the breakpoint, pager above
+$pagination = Pagination::fromRequest($request, $total)->withMode('responsive', narrow: 'infinite', wide: 'pager', breakpoint: '(max-width: 900px)');
+```
+
+`withMode(mode, narrow, wide, breakpoint, autoLoads)`; constructor / `fromArray()` keys `mode`, `mode_narrow`,
+`mode_wide`, `breakpoint`, `auto_loads`; a 1.x `_pagination` include takes `pagination_mode`, `mode_narrow`,
+`mode_wide`, `breakpoint`, `auto_loads` variables.
+
+- The `pagination` / `pagination_compact` partials **always** render the pager links: they are the no-JS fallback. A
+  mode other than `pager` adds the `list-pagination` peer contract (`partials/_pagination_mode.html.twig`): root
+  attributes `data-controller="list-pagination"`, `data-nowo-ui-pagination-mode|-narrow|-wide|-query|-auto|-next`, a
+  hidden "Load more" region and a polite live region. The list scaffold marks its `<tbody>` with
+  `data-nowo-ui-list-rows`; a host list marks its own row container.
+- Register the peer (`stimulus-peers/list_pagination_controller.ts`, identifier `list-pagination`). In `infinite` it
+  hides the links, shows "Load more" (always there for keyboard users and browsers without IntersectionObserver),
+  loads the next page when the end of the list scrolls into view (`autoLoads` times, default 3; then the button only),
+  and appends **only** the rows of `[data-nowo-ui-list-rows]` from the next page's full HTML (the same URL as the
+  "next" link: same filters, sort and per_page). Hosts change no query and add no endpoint: each fetch is one normal
+  page request (no N+1). The row confirm dialogs of the new rows come along; `?page=` is updated with
+  `history.replaceState`; "N more rows loaded" is announced; focus stays on the button (on the last page it moves to
+  the first new row); the event `nowo-ui:rows-appended` (bubbles, detail `{rows, page, url}`) lets other scripts set up
+  the new rows (Stimulus connects controllers by itself).
+- `responsive` switches live on `matchMedia` change; going back to `pager` stops loading and keeps the rows already
+  appended. Phone "cards" mode applies to the appended rows like to the first ones.
+- The fetch carries `X-Nowo-Ui-Pagination: 1` and `Accept: text/html`; only same-origin next URLs load.
+
+## Provider-dependent fields (2.23)
+
+Fields that only apply to one value of another field (SMTP host for `smtp`, API key for `ses`) are hidden — never
+disabled — by the `visible-when` peer (`stimulus-peers/visible_when_controller.ts`). It is a distinct mode from a
+disabling "field visibility": hidden inputs are still submitted and their stored values survive a switch; a secret
+field keeps "blank = keep". Without JavaScript every field is visible.
+
+```php
+use Nowo\UiKitBundle\Form\VisibleWhen;
+
+$builder = $factory->createNamedBuilder('settings', FormType::class, $data, ['attr' => VisibleWhen::containerAttributes()])
+    ->add('provider', ChoiceType::class, ['choices' => ['SMTP' => 'smtp', 'SES' => 'ses']])
+    ->add('smtp_host', TextType::class, ['row_attr' => VisibleWhen::attributes('settings[provider]', ['smtp'])])
+    ->add('api_key', PasswordType::class, ['row_attr' => VisibleWhen::fromOption(['field' => 'settings[provider]', 'in' => ['ses']])]);
+```
+
+- Row contract: `data-nowo-ui-visible-when-field="<name or id of the controlling input>"` and
+  `data-nowo-ui-visible-when-in='["smtp"]'` (JSON list; a comma list works too). The container (the form) carries
+  `data-controller="visible-when"`. Both are plain attributes: `row_attr` (rendered by the UiKit form theme and by
+  Symfony's form layouts), or `{{ nowo_ui_html_attrs(nowo_ui_visible_when('settings[provider]', ['smtp'])) }}` on hand
+  written rows.
+- The peer sets `hidden`, `inert` and `aria-hidden="true"` on non-matching rows, re-syncs on connect and on every
+  `change` / `input`, and dispatches `visible-when:synced` (detail `{hidden}`).
+- `VisibleWhen::fromOption(['field' => …, 'in' => […]])` maps a bundle's `visible_when` option (InstanceSettings).
 
 ## Host chrome (1.17, opt-in)
 
