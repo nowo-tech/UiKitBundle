@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.23.0](#to-2230)
 - [To 2.22.0](#to-2220)
 - [To 2.21.0](#to-2210)
 - [To 2.20.0](#to-2200)
@@ -99,6 +100,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.23.0
+
+From **2.22.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 From **2.22.0** (target 2.23.0):
 

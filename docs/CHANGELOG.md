@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.23.0] - 2026-11-02](#2230---2026-11-02)
 - [[2.22.0] - 2026-11-02](#2220---2026-11-02)
 - [[2.21.0] - 2026-11-01](#2210---2026-11-01)
 - [[2.20.0] - 2026-10-31](#2200---2026-10-31)
@@ -88,6 +89,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [2.23.0] - 2026-11-02
+
+Opt-in per-item attributes on Stat / PageStatus / DetailItem, infinite and responsive list pagination (list-pagination peer, pager links always rendered), provider-dependent form fields (visible-when peer: hidden + inert, never disabled or cleared), window.confirm fallback when the confirm peer is missing, path-only error retry link. Defaults render byte-identical to 2.22. See [UPGRADING](https://github.com/nowo-tech/UiKitBundle/blob/v2.23.0/docs/UPGRADING.md#to-2230).
 
 ### Added
 
@@ -1662,7 +1667,7 @@ Supersedes 1.17.3: same runtime code and CSS, release gate hardened so the tagge
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.22.0...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.23.0...HEAD
 [1.10.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.4...v1.10.0
 [1.8.4]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.3...v1.8.4
 [1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0
