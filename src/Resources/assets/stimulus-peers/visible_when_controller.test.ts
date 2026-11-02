@@ -74,6 +74,7 @@ describe('visible-when peer', () => {
         <input type="checkbox" name="enabled" value="1">
         <select name="tags" multiple><option value="x" selected>x</option><option value="y" selected>y</option></select>
         <textarea name="note">hello</textarea>
+        <input id="in-form" value="f">
       </form>
       <div id="loose"><input id="by-id" value="z"><input name="loose" value="l"></div>`;
     const form = document.getElementById('f')!;
@@ -81,7 +82,9 @@ describe('visible-when peer', () => {
     expect(fieldValues(form, 'enabled')).toEqual(['']);
     expect(fieldValues(form, 'tags')).toEqual(['x', 'y']);
     expect(fieldValues(form, 'note')).toEqual(['hello']);
-    expect(fieldValues(form, 'by-id')).toEqual(['z']);
+    // audit CS I3: ids resolve inside the form only
+    expect(fieldValues(form, 'in-form')).toEqual(['f']);
+    expect(fieldValues(form, 'by-id')).toBeNull();
     expect(fieldValues(document.getElementById('loose')!, 'loose')).toEqual(['l']);
     expect(fieldValues(form, 'nope')).toBeNull();
   });
@@ -94,6 +97,20 @@ describe('visible-when peer', () => {
     expect(parseValues('{"a":1}')).toEqual(['{"a":1}']);
     expect(parseValues('')).toEqual([]);
     expect(parseValues(null)).toEqual([]);
+  });
+
+  // audit CS I3: a hidden required field must not block the submit; required comes back when shown, values untouched
+  it('lifts required while a row is hidden and restores it when shown', () => {
+    const el = document.createElement('div');
+    el.innerHTML = '<input name="a" required value="kept"><input name="b">';
+    setRowVisible(el, false);
+    expect(el.querySelector('[name="a"]')!.hasAttribute('required')).toBe(false);
+    expect(el.querySelector('[name="a"]')!.hasAttribute('data-nowo-ui-visible-when-required')).toBe(true);
+    expect((el.querySelector('[name="a"]') as HTMLInputElement).value).toBe('kept');
+    setRowVisible(el, true);
+    expect(el.querySelector('[name="a"]')!.hasAttribute('required')).toBe(true);
+    expect(el.querySelector('[name="a"]')!.hasAttribute('data-nowo-ui-visible-when-required')).toBe(false);
+    expect(el.querySelector('[name="b"]')!.hasAttribute('required')).toBe(false);
   });
 
   it('toggles a row', () => {

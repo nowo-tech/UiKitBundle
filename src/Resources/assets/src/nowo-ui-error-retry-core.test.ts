@@ -18,6 +18,9 @@ describe('nowo-ui-error-retry-core', () => {
     expect(pathOnlyUrl('\\\\evil.example')).toBe('/evil.example');
     expect(pathOnlyUrl('/\t/evil.example')).toBe('/evil.example');
     expect(pathOnlyUrl(' //evil.example')).toBe('/evil.example');
+    // audit CS I2: leading C0 controls
+    expect(pathOnlyUrl('\u0001\u001f//evil.example')).toBe('/evil.example');
+    expect(pathOnlyUrl('/\u000b/evil.example')).toBe('/evil.example');
     expect(pathOnlyUrl('/orders?page=2')).toBe('/orders?page=2');
     expect(pathOnlyUrl('https://app.example/orders')).toBe('https://app.example/orders');
     expect(pathOnlyUrl('')).toBe('');

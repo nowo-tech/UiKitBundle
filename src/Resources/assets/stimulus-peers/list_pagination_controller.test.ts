@@ -1,7 +1,7 @@
 import { Application } from '@hotwired/stimulus';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import ListPaginationController, { APPENDED_EVENT, findRowsRegion, normaliseMode, resolveMode, sameOriginUrl } from './list_pagination_controller';
+import ListPaginationController, { APPENDED_EVENT, findRowsRegion, isSameOriginResponse, normaliseMode, resolveMode, sameOriginUrl, sanitizeImported } from './list_pagination_controller';
 
 const flush = async (): Promise<void> => {
   for (let i = 0; i < 6; i += 1) {
@@ -158,7 +158,7 @@ describe('list-pagination peer, infinite mode', () => {
     await flush();
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0]![0]).toBe(`${window.location.origin}/monitors?status=up&per_page=2&page=2`);
-    expect(fetchMock.mock.calls[0]![1]).toMatchObject({ credentials: 'same-origin' });
+    expect(fetchMock.mock.calls[0]![1]).toMatchObject({ credentials: 'same-origin', redirect: 'error' });
     expect(rowTexts()).toEqual(['p1-r1', 'p1-r2', 'p2-r1', 'p2-r2']);
     expect(document.querySelector('[data-nowo-ui-list-rows] script')).toBeNull();
     expect((window as unknown as Record<string, unknown>).__pwned).toBeUndefined();
@@ -233,6 +233,50 @@ describe('list-pagination peer, infinite mode', () => {
     FakeObserver.trigger();
     await flush();
     expect(rowTexts()).toHaveLength(4);
+  });
+});
+
+// 2.23 (audit CS L1): a redirected / cross-origin response is never imported; imported markup loses inline handlers
+describe('list-pagination peer, hostile responses', () => {
+  it('rejects a cross-origin or CORS response (open redirect) and imports nothing', async () => {
+    const root = await mount(pageHtml(1, 3));
+    fetchMock.mockResolvedValueOnce({ ok: true, status: 200, type: 'cors', url: 'https://evil.example/', redirected: true, text: async () => pageHtml(2, 3) });
+    FakeObserver.trigger();
+    await flush();
+    expect(rowTexts()).toHaveLength(2);
+    expect(root.querySelector('[data-nowo-ui-pagination-status]')!.textContent).toBe('Could not load.');
+    expect(isSameOriginResponse({ type: 'basic', url: `${window.location.origin}/monitors?page=2` })).toBe(true);
+    expect(isSameOriginResponse({ type: 'basic', url: 'https://evil.example/' })).toBe(false);
+    expect(isSameOriginResponse({ type: 'opaqueredirect', url: '' })).toBe(false);
+    expect(isSameOriginResponse({})).toBe(true);
+  });
+
+  it('strips on* attributes, srcdoc and javascript: URLs from imported rows but keeps the confirm dialogs working', async () => {
+    await mount(pageHtml(1, 3));
+    const hostile = pageHtml(2, 3)
+      .replace('<td data-label="Name">p2-r1</td>', '<td data-label="Name" onclick="alert(1)"><a href=" JaVaScRiPt:alert(1)">p2-r1</a><img src="x" onerror="alert(2)"><iframe srcdoc="<b>x</b>"></iframe></td>')
+      .replace('<dialog id="confirm-p2"></dialog>', '<dialog id="confirm-p2" data-nowo-ui-confirm><button type="button" data-nowo-confirm-close onmouseover="x()">Cancel</button><a href="/delete/2">Go</a></dialog>');
+    fetchMock.mockResolvedValueOnce({ ok: true, status: 200, type: 'basic', url: `${window.location.origin}/monitors?page=2`, text: async () => hostile });
+    FakeObserver.trigger();
+    await flush();
+    const cell = Array.from(document.querySelectorAll('[data-nowo-ui-list-rows] td')).find((td) => td.textContent === 'p2-r1')!;
+    expect(cell.hasAttribute('onclick')).toBe(false);
+    expect(cell.querySelector('a')!.hasAttribute('href')).toBe(false);
+    expect(cell.querySelector('img')!.hasAttribute('onerror')).toBe(false);
+    expect(cell.querySelector('img')!.getAttribute('src')).toBe('x');
+    expect(cell.querySelector('iframe')!.hasAttribute('srcdoc')).toBe(false);
+    const dialog = document.getElementById('confirm-p2')!;
+    expect(dialog.hasAttribute('data-nowo-ui-confirm')).toBe(true);
+    expect(dialog.querySelector('[data-nowo-confirm-close]')!.hasAttribute('onmouseover')).toBe(false);
+    expect(dialog.querySelector('a')!.getAttribute('href')).toBe('/delete/2');
+  });
+
+  it('sanitizes the root element itself', () => {
+    const el = document.createElement('div');
+    el.setAttribute('onfocus', 'x()');
+    el.innerHTML = '<form action="vbscript:x"><button formaction="/ok">ok</button></form>';
+    sanitizeImported(el);
+    expect(el.outerHTML).toBe('<div><form><button formaction="/ok">ok</button></form></div>');
   });
 });
 

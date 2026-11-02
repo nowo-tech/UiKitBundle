@@ -28,7 +28,8 @@ export function parseSeconds(value: unknown, fallback: number = DEFAULT_SECONDS)
  */
 export function pathOnlyUrl(url: string): string {
   const clean = url.replace(/[\t\n\r]/g, '');
-  return /^\s*[/\\]\s*[/\\]|^\s*\\/.test(clean) ? `/${clean.replace(/^[\s/\\]+/, '')}` : clean;
+  // leading C0 controls / blanks are ignored by URL parsers too (audit CS I2)
+  return /^[\u0000-\u0020]*[/\\][\u0000-\u0020]*[/\\]|^[\u0000-\u0020]*\\/.test(clean) ? `/${clean.replace(/^[\u0000-\u0020/\\]+/, '')}` : clean;
 }
 
 export interface CountdownOptions {

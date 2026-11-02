@@ -67,6 +67,11 @@ export function createConfirmSubmitController(options: ConfirmSubmitOptions = {}
       (this.element as unknown as Record<symbol, unknown>)[CONFIRM_SUBMIT_PEER_MARK] = true;
     }
 
+    /** 2.23 (audit CS L2): an element whose controller is gone falls back to the kit runtime's window.confirm(). */
+    override disconnect(): void {
+      delete (this.element as unknown as Record<symbol, unknown>)[CONFIRM_SUBMIT_PEER_MARK];
+    }
+
     confirm(event: Event): void {
       if (this.blockedValue) {
         event.preventDefault();

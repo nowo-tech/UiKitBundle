@@ -153,6 +153,15 @@ describe('confirm-submit peer, dialog mode', () => {
     expect(document.querySelectorAll('dialog').length).toBe(1);
   });
 
+  // 2.23 (audit CS L2): a removed controller no longer marks the form, so the kit runtime's fallback confirms it
+  it('clears the peer mark on disconnect', async () => {
+    await start(`<form data-controller="confirm-submit" data-confirm-submit-message-value="Delete?"></form>`);
+    const form = document.querySelector('form')!;
+    expect((form as unknown as Record<symbol, unknown>)[CONFIRM_SUBMIT_PEER_MARK]).toBe(true);
+    (application.getControllerForElementAndIdentifier(form, 'confirm-submit') as ConfirmSubmit).disconnect();
+    expect(CONFIRM_SUBMIT_PEER_MARK in form).toBe(false);
+  });
+
   it('asks in the dialog when one element sets mode=dialog on a native-mode app', async () => {
     document.body.innerHTML = `
       <button type="button" data-controller="native-confirm" data-native-confirm-message-value="Go?" data-native-confirm-mode-value="dialog"

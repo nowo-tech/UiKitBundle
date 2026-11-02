@@ -211,6 +211,20 @@ describe('nowo-ui-confirm missing confirm-submit peer warning', () => {
     expect(ask).toHaveBeenCalledTimes(2);
   });
 
+  // 2.23 (audit CS L2): blocked is parsed like the peer's Stimulus Boolean
+  it('parses blocked like Stimulus: "", "1", "TRUE" block; "0" / "false" do not', () => {
+    expect(['', '1', 'TRUE', 'true', 'yes'].map((v) => mod.isBlocked(v))).toEqual([true, true, true, true, true]);
+    expect(['0', 'false', 'False'].map((v) => mod.isBlocked(v))).toEqual([false, false, false]);
+    expect(mod.isBlocked(null)).toBe(false);
+    document.body.innerHTML = '<form id="b" data-confirm-submit-message-value="Remove?" data-confirm-submit-blocked-value=""></form>';
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const ask = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const event = new Event('submit', { bubbles: true, cancelable: true });
+    document.getElementById('b')!.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+    expect(ask).not.toHaveBeenCalled();
+  });
+
   it('keeps a blocked form cancelled and lets an empty message through without asking (no peer)', () => {
     document.body.innerHTML = '<form id="b" data-confirm-submit-message-value="Remove?" data-confirm-submit-blocked-value="true"></form><form id="e" data-confirm-submit-message-value=" "></form>';
     vi.spyOn(console, 'warn').mockImplementation(() => undefined);

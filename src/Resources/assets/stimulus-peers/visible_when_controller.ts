@@ -45,7 +45,8 @@ export function fieldValues(scope: Element, name: string): string[] | null {
   const named = form ? Array.from(form.elements).filter((el) => (el as HTMLInputElement).name === name) : [];
   const fields = named.length > 0 ? named : Array.from(scope.querySelectorAll(`[name="${CSS.escape(name)}"]`));
   if (fields.length === 0) {
-    const byId = document.getElementById(name);
+    // scoped to the form / container (audit CS I3), never the whole document
+    const byId = (form ?? scope).querySelector(`#${CSS.escape(name)}`);
     if (byId) {
       fields.push(byId);
     }
@@ -76,8 +77,25 @@ export function fieldValues(scope: Element, name: string): string[] | null {
   return values;
 }
 
-/** Shows or hides one row (never touches its inputs). */
+const REQUIRED_MARK = 'data-nowo-ui-visible-when-required';
+
+/**
+ * Shows or hides one row. Never disables an input nor touches a value; a hidden `required` field would block the
+ * submit silently, so `required` is lifted while the row is hidden (marked `data-nowo-ui-visible-when-required`) and
+ * restored when it shows again (audit CS I3).
+ */
 export function setRowVisible(row: HTMLElement, visible: boolean): void {
+  if (visible) {
+    row.querySelectorAll(`[${REQUIRED_MARK}]`).forEach((field) => {
+      field.removeAttribute(REQUIRED_MARK);
+      field.setAttribute('required', '');
+    });
+  } else {
+    row.querySelectorAll('[required]').forEach((field) => {
+      field.removeAttribute('required');
+      field.setAttribute(REQUIRED_MARK, '');
+    });
+  }
   row.hidden = !visible;
   row.toggleAttribute('inert', !visible);
   if (visible) {

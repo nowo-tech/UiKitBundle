@@ -114,6 +114,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   (`window.confirm()` fallback; `blocked` stays cancelled, an empty message passes).
 - Audit CK L2: the `confirm-submit` peer clears `approved` in a `finally` around the replayed `requestSubmit()` /
   `click()`.
+- Audit CS L1: `list-pagination` refuses redirects (`redirect: 'error'`), rejects non-`basic` / off-origin
+  responses and strips `on*`, `srcdoc` and `javascript:` URLs from imported nodes.
+- Audit CS L2: the L1 fallback parses `blocked` like Stimulus (`""`, `1`… block); the `confirm-submit` peer deletes
+  its mark on `disconnect()`.
+- Audit CS info: `pathOnlyUrl()` ignores leading C0 controls; `visible-when` resolves ids inside the form only and
+  lifts `required` on hidden rows (restored when shown).
 - Audit CK O1: the error page retry URI is path-only (`ErrorPageExtension::pathOnly()`; `pathOnlyUrl()` in the
   countdown as defence in depth).
 

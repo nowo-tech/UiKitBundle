@@ -134,6 +134,11 @@ const PEER_MARK = Symbol.for('nowo-ui.confirm-submit');
 const PEER_FORM = 'form[data-confirm-submit-message-value]';
 const warnedForms = new WeakSet<HTMLFormElement>();
 
+/** Stimulus Boolean parsing of `data-confirm-submit-blocked-value` (audit CS L2): present and not "0" / "false". */
+export function isBlocked(value: string | null): boolean {
+  return value !== null && !(value === '0' || value.toLowerCase() === 'false');
+}
+
 /**
  * A confirm-submit form that submits without the Stimulus peer connected to it: warns (once per form) and asks with
  * `window.confirm()` (every submit), cancelling the submit when declined (2.23: fail closed). An empty message or
@@ -147,7 +152,7 @@ export function warnMissingConfirmPeer(event: Event): void {
   if ((form as unknown as Record<symbol, unknown>)[PEER_MARK] === true) {
     return;
   }
-  if (form.getAttribute('data-confirm-submit-blocked-value') === 'true') {
+  if (isBlocked(form.getAttribute('data-confirm-submit-blocked-value'))) {
     event.preventDefault();
   } else {
     const message = (form.getAttribute('data-confirm-submit-message-value') ?? '').trim();

@@ -19,7 +19,9 @@
  * takes the response's pagination (links, info line, next URL), sets `?page=` with `history.replaceState`, announces
  * "N more rows loaded" in the live region and dispatches `nowo-ui:rows-appended` (bubbles; detail `{rows, page, url}`)
  * on the rows region so other scripts can initialise the new rows (Stimulus connects controllers by itself). Focus
- * stays on the button; when the last page is in, it moves to the first appended row. Only same-origin URLs load.
+ * stays on the button; when the last page is in, it moves to the first appended row. Only same-origin URLs load;
+ * redirects are refused (`redirect: 'error'`) and a non-`basic` or off-origin response is rejected; imported nodes
+ * lose `<script>`, `on*`, `srcdoc` and `javascript:` URLs (audit CS L1).
  *
  * In `responsive` mode `-narrow` applies while `-query` matches, `-wide` otherwise, switched live on matchMedia
  * change. Going back to `pager` stops loading, shows the links again and keeps the rows already appended. The mode in
@@ -65,6 +67,35 @@ export function sameOriginUrl(href: string | null, base: string = window.locatio
   } catch {
     return null;
   }
+}
+
+const URL_ATTRIBUTES = ['href', 'src', 'action', 'formaction', 'xlink:href', 'data', 'poster'];
+
+/**
+ * Defence in depth for imported markup (2.23, audit CS L1/I1): removes `<script>`, every `on*` attribute, `srcdoc`
+ * and `javascript:` / `vbscript:` URLs (control characters and blanks ignored, any case) under `root`, root included.
+ * Kit markup (rows, confirm dialogs, pager links) carries none of them, so it imports unchanged.
+ */
+export function sanitizeImported(root: Element): void {
+  root.querySelectorAll('script').forEach((script) => script.remove());
+  [root, ...Array.from(root.querySelectorAll('*'))].forEach((el) => {
+    Array.from(el.attributes).forEach((attr) => {
+      const name = attr.name.toLowerCase();
+      const unsafeUrl = URL_ATTRIBUTES.includes(name) && /^(?:javascript|vbscript):/i.test(attr.value.replace(/[\u0000-\u0020\u007f]+/g, ''));
+      if (name.startsWith('on') || name === 'srcdoc' || unsafeUrl) {
+        el.removeAttribute(attr.name);
+      }
+    });
+  });
+}
+
+/** Whether a fetched response is a plain same-origin one (no cross-origin redirect, not opaque / CORS). */
+export function isSameOriginResponse(response: { type?: string; url?: string; redirected?: boolean }): boolean {
+  if (typeof response.type === 'string' && response.type !== '' && response.type !== 'basic') {
+    return false;
+  }
+
+  return typeof response.url !== 'string' || response.url === '' || sameOriginUrl(response.url) !== null;
 }
 
 /** The rows region of a pagination root: in the nearest ancestor that holds one. */
@@ -157,9 +188,11 @@ export class ListPaginationController extends Controller {
     try {
       const response = await fetch(url.toString(), {
         credentials: 'same-origin',
+        // audit CS L1: never follow a redirect (an open redirect could hand over another origin's markup)
+        redirect: 'error',
         headers: { Accept: 'text/html', 'X-Nowo-Ui-Pagination': '1' },
       });
-      if (!response.ok) {
+      if (!response.ok || !isSameOriginResponse(response)) {
         throw new Error(`HTTP ${response.status}`);
       }
       const html = await response.text();
@@ -188,7 +221,7 @@ export class ListPaginationController extends Controller {
     const incoming = doc.querySelectorAll(ROWS_SELECTOR)[Math.max(0, index)];
     const appended: Element[] = [];
     if (incoming) {
-      incoming.querySelectorAll('script').forEach((script) => script.remove());
+      sanitizeImported(incoming);
       Array.from(incoming.children).forEach((child) => {
         const row = document.importNode(child, true);
         rows.appendChild(row);
@@ -210,6 +243,7 @@ export class ListPaginationController extends Controller {
         const mine = this.element.querySelector(selector);
         const theirs = nextRoot.querySelector(selector);
         if (mine && theirs) {
+          sanitizeImported(theirs);
           mine.replaceChildren(...Array.from(theirs.childNodes).map((node) => document.importNode(node, true)));
         }
       }
@@ -238,7 +272,7 @@ export class ListPaginationController extends Controller {
       wrap.after(target);
     }
     dialogs.forEach((dialog) => {
-      dialog.querySelectorAll('script').forEach((script) => script.remove());
+      sanitizeImported(dialog);
       target?.appendChild(document.importNode(dialog, true));
     });
   }

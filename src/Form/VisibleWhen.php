@@ -17,7 +17,7 @@ use InvalidArgumentException;
  *         'row_attr' => VisibleWhen::attributes('settings[provider]', ['smtp']),
  *     ]);
  *
- * `field` is the controlling input's `name` attribute (full name, e.g. `settings[provider]`) or its id. In Twig:
+ * `field` is the controlling input's `name` attribute (full name, e.g. `settings[provider]`) or its id (inside the form). In Twig:
  * `nowo_ui_visible_when(field, values)` returns the same map ({@see self::attributes()}).
  */
 final class VisibleWhen

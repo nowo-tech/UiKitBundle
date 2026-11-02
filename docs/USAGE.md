@@ -674,7 +674,9 @@ $pagination = Pagination::fromRequest($request, $total)->withMode('responsive', 
   the new rows (Stimulus connects controllers by itself).
 - `responsive` switches live on `matchMedia` change; going back to `pager` stops loading and keeps the rows already
   appended. Phone "cards" mode applies to the appended rows like to the first ones.
-- The fetch carries `X-Nowo-Ui-Pagination: 1` and `Accept: text/html`; only same-origin next URLs load.
+- The fetch carries `X-Nowo-Ui-Pagination: 1` and `Accept: text/html`; only same-origin next URLs load, redirects
+  are refused (`redirect: 'error'`) and a non-`basic` / off-origin response is rejected. Imported rows, dialogs and
+  links lose `<script>`, `on*` attributes, `srcdoc` and `javascript:` URLs.
 
 ## Provider-dependent fields (2.23)
 
@@ -694,7 +696,9 @@ $builder = $factory->createNamedBuilder('settings', FormType::class, $data, ['at
 
 - Row contract: `data-nowo-ui-visible-when-field="<name or id of the controlling input>"` and
   `data-nowo-ui-visible-when-in='["smtp"]'` (JSON list; a comma list works too). The container (the form) carries
-  `data-controller="visible-when"`. Both are plain attributes: `row_attr` (rendered by the UiKit form theme and by
+  `data-controller="visible-when"`. The id fallback only looks inside the form. A `required` input in a hidden row
+  has `required` lifted while hidden (marked `data-nowo-ui-visible-when-required`) and restored when shown, so it never
+  blocks the submit; its value is untouched. Both are plain attributes: `row_attr` (rendered by the UiKit form theme and by
   Symfony's form layouts), or `{{ nowo_ui_html_attrs(nowo_ui_visible_when('settings[provider]', ['smtp'])) }}` on hand
   written rows.
 - The peer sets `hidden`, `inert` and `aria-hidden="true"` on non-matching rows, re-syncs on connect and on every
