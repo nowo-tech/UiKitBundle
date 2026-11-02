@@ -109,7 +109,9 @@ By default a 1.x POST hash with `confirm_message` keeps the 2.21 markup: `onsubm
 
 `native` / `dialog` **require the `confirm-submit` Stimulus peer** to be registered
 (`app.register('confirm-submit', ConfirmSubmitController)`, see [STIMULUS.md](STIMULUS.md)); without it the form submits
-with no confirmation, so only switch the global once every page that renders row actions loads the peer. Host
+with no confirmation, so only switch the global once every page that renders row actions loads the peer. `js/nowo-ui-confirm.js` warns in
+the console (once per form) when such a form submits with no peer connected. A host `attr.onsubmit` is dropped with
+`inline` (the kit's handler wins) but rendered with `native` / `dialog`, where it runs before the peer. Host
 `attr['data-controller']` / `attr['data-action']` tokens are kept in front of the peer's; other host attributes pass
 through as before (the kit's own keys win). Unknown values fall back to `inline`. The same attributes are printed by
 the `symfony/form` path and by the deprecated raw-form fallback.

@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Root keys](#root-keys)
+- [Row actions confirm (2.22)](#row-actions-confirm-222)
 - [Panel path rewrites](#panel-path-rewrites)
 - [Release check](#release-check)
 - [Appearance](#appearance)
@@ -46,6 +47,28 @@ Parameters / Twig globals:
 Asset package (always prepended): `nowo_ui_kit` → `/bundles/nowouikit`.
 
 `icon_set` and `row_actions_display` are independent: with `row_actions_display: text`, `_row_actions` does not emit glyphs (regardless of `icon_set`).
+
+## Row actions confirm (2.22)
+
+`row_actions_confirm` (`inline` | `native` | `dialog`, default `inline`) picks how a 1.x `_row_actions` POST hash with
+`confirm_message` asks; a single include overrides it with `confirm_mode`. Full table:
+[ROW_ACTIONS.md](ROW_ACTIONS.md#confirm-contract-for-post-hashes-222).
+
+```yaml
+nowo_ui_kit:
+    row_actions_confirm: dialog   # or native; inline (default) keeps the 2.21 markup byte for byte
+```
+
+- **`native` / `dialog` need the `confirm-submit` Stimulus peer** registered on every page that renders row actions
+  (`app.register('confirm-submit', ConfirmSubmitController)`, [STIMULUS.md](STIMULUS.md)). Without it the forms
+  **submit with no confirmation**. The kit confirm runtime (`js/nowo-ui-confirm.js`, in the default
+  `nowo_ui_script_names()` set) prints a `console.warn` the first time such a form submits with no peer connected.
+- **Host `attr.onsubmit`**: with `inline` the kit's own `onsubmit="return confirm(…)"` wins and a host `attr.onsubmit`
+  is dropped (unchanged since 1.x). With `native` / `dialog` the kit prints no `onsubmit`, so a host `attr.onsubmit`
+  **is rendered and runs before the peer**: remove any host `return confirm(…)` there (it would ask twice) and any
+  handler that returns `false` (the peer never asks).
+- **Default**: `inline` output is byte-identical to 2.21 (`tests/Unit/PageContract/RowActionsConfirmBcTest.php`,
+  fixtures `tests/Fixtures/bc-2.21`); hosts that do not set the key see no change.
 
 ## Panel path rewrites
 

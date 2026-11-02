@@ -106,6 +106,18 @@ Row actions: 1.x row-action POST hashes with `confirm_message` render exactly as
 native` (or `dialog`), or pass `confirm_mode` to a single `_row_actions` include. See
 [ROW_ACTIONS.md](ROW_ACTIONS.md#confirm-contract-for-post-hashes-222).
 
+If you opt in to `native` / `dialog` ([CONFIGURATION](CONFIGURATION.md#row-actions-confirm-222)):
+
+- Register the `confirm-submit` peer on every page with row actions first: without it the forms **submit with no
+  confirmation**. `js/nowo-ui-confirm.js` logs a `console.warn` the first time such a form submits with no peer.
+- A host `attr.onsubmit` on a POST hash is **no longer dropped** in these modes (with `inline` the kit's handler wins
+  and drops it): it is rendered and runs before the peer, so remove a host `return confirm(…)` (double prompt) or a
+  handler returning `false`.
+- `inline` (the default) stays byte-identical to 2.21 (`RowActionsConfirmBcTest`).
+
+iOS: a native `input[type=date]` in kit filters / forms now fills its field (CSS only, `@supports
+(-webkit-touch-callout: none)`); a host rule that relied on its intrinsic iOS width can set `min-width` again.
+
 ## To 2.21.0
 
 From **2.20.0**: `composer update nowo-tech/ui-kit-bundle`. Nothing to change: pages that use none of the new options

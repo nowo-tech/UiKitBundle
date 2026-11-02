@@ -1,6 +1,6 @@
 import { Application } from '@hotwired/stimulus';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createConfirmSubmitController } from './confirm_submit_controller';
+import { CONFIRM_SUBMIT_PEER_MARK, createConfirmSubmitController } from './confirm_submit_controller';
 
 const ConfirmSubmitController = createConfirmSubmitController({ mode: 'dialog', classes: { dialog: 'confirm-dialog', confirm: 'btn-primary', danger: 'btn-danger' } });
 type ConfirmSubmit = InstanceType<typeof ConfirmSubmitController>;
@@ -43,6 +43,7 @@ describe('confirm-submit peer, dialog mode', () => {
         <button type="submit" name="op" value="delete">Delete</button>
       </form>`);
     const form = document.querySelector('form')!;
+    expect((form as unknown as Record<symbol, unknown>)[CONFIRM_SUBMIT_PEER_MARK]).toBe(true);
     const submitted: (HTMLElement | null)[] = [];
     form.addEventListener('submit', (event) => {
       if (!event.defaultPrevented) {
