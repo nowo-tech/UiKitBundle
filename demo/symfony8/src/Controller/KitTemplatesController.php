@@ -42,4 +42,15 @@ final class KitTemplatesController extends AbstractController
             'void_form' => $this->createForm(CsrfOnlyType::class, null, ['action' => $this->generateUrl('kit_shell')])->createView(),
         ]);
     }
+
+    /**
+     * UiKit 2.22: a 1.x row-action POST hash with confirm_mode native on a page without Stimulus, i.e. without the
+     * confirm-submit peer: no inline handler, the form submits unconfirmed and js/nowo-ui-confirm.js warns once in
+     * the console (docs/CONFIGURATION.md#row-actions-confirm-222).
+     */
+    #[Route('/row-actions-confirm', name: 'kit_row_actions_confirm', methods: ['GET', 'POST'])]
+    public function rowActionsConfirm(Request $request): Response
+    {
+        return $this->render('kit/row_actions_confirm.html.twig', ['submitted' => $request->isMethod('POST')]);
+    }
 }

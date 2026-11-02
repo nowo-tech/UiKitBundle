@@ -101,6 +101,23 @@
 
 No action needed. Optional: tune `nowo_ui_kit.release_check.timeout` / `releases_timeout` (defaults 5 s / 8 s, as before). Keep importing `@NowoUiKitBundle/Resources/config/routes/release_check.yaml`; it now loads the `#[Route]` of `ReleaseStatusController` with the same name and path. Only code that read the route's `_controller` default (`nowo_ui_kit.release_status_controller`) sees the class name `Nowo\UiKitBundle\Release\ReleaseStatusController` instead; both resolve to the same service.
 
+Row actions: 1.x row-action POST hashes with `confirm_message` render exactly as in 2.21. To drop the inline
+`onsubmit` handler (strict CSP), register the `confirm-submit` Stimulus peer and set `nowo_ui_kit.row_actions_confirm:
+native` (or `dialog`), or pass `confirm_mode` to a single `_row_actions` include. See
+[ROW_ACTIONS.md](ROW_ACTIONS.md#confirm-contract-for-post-hashes-222).
+
+If you opt in to `native` / `dialog` ([CONFIGURATION](CONFIGURATION.md#row-actions-confirm-222)):
+
+- Register the `confirm-submit` peer on every page with row actions first: without it the forms **submit with no
+  confirmation**. `js/nowo-ui-confirm.js` logs a `console.warn` the first time such a form submits with no peer.
+- A host `attr.onsubmit` on a POST hash is **no longer dropped** in these modes (with `inline` the kit's handler wins
+  and drops it): it is rendered and runs before the peer, so remove a host `return confirm(…)` (double prompt) or a
+  handler returning `false`.
+- `inline` (the default) stays byte-identical to 2.21 (`RowActionsConfirmBcTest`).
+
+iOS: a native `input[type=date]` in kit filters / forms now fills its field (CSS only, `@supports
+(-webkit-touch-callout: none)`); a host rule that relied on its intrinsic iOS width can set `min-width` again.
+
 ## To 2.21.0
 
 From **2.20.0**: `composer update nowo-tech/ui-kit-bundle`. Nothing to change: pages that use none of the new options

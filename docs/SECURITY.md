@@ -49,7 +49,7 @@ The bundle does **not** expose CLI commands that mutate production data, file up
 ## Mitigations
 
 - Twig auto-escaping remains enabled for normal variables; documented composition slots use `|raw` for **developer-controlled** HTML only.
-- Row actions `confirm_message` is JSON-encoded and HTML-attribute escaped inside the `onsubmit` handler, so quotes / `=` / markup in messages cannot break out of the attribute.
+- Row actions `confirm_message` is JSON-encoded and HTML-attribute escaped inside the `onsubmit` handler, so quotes / `=` / markup in messages cannot break out of the attribute. Since 2.22, `row_actions_confirm` / `confirm_mode` `native` | `dialog` drop the inline handler (strict-CSP friendly): the message is an escaped `data-confirm-submit-message-value` attribute read by the `confirm-submit` peer.
 - `panel_path_rewrites` redirect targets are always a single-`/` same-origin path (no `//host` / `/\host`); config rejects `//`-prefixed or backslash prefixes.
 - Kit JS toggles DOM attributes / theme / loader / canvas; it does not call `eval`, `document.write`, or load remote scripts.
 - Release check: GitHub answers are rendered with `textContent`; only `https://github.com/…` links are emitted (server and client side). Successful answers are cached for `cache_ttl`; failures soft-fail and are negatively cached for 5 minutes (`ReleaseUpdateChecker::ERROR_CACHE_TTL`), so neither page views nor endpoint hits fan out to GitHub. The status endpoint is anonymous unless you protect it and it reveals the installed version: import it behind your admin firewall / `access_control` (see [CONFIGURATION.md — Release check](CONFIGURATION.md#release-check)).

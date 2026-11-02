@@ -20,6 +20,10 @@
       keep their POST / confirm / dialog behaviour; 1.x hashes become GET links (POST hashes need a View\Action).
     - popover (2.4, bool; default theme.popover_menus): with `menu`, the panel is a native [popover] (top layer, never
       clipped by the table scroller)
+    - confirm_mode (2.22): how a POST hash's confirm_message asks — inline (default, from
+      nowo_ui_kit_row_actions_confirm): onsubmit="return confirm(…)"; native | dialog: no inline handler, the form
+      carries the confirm-submit Stimulus peer (data-controller / data-action / message value; dialog adds
+      mode value "dialog"). Host data-controller / data-action tokens are kept in front of the peer's.
 
   Each action:
     kind          edit|delete|view|copy|create|save|cancel|restore|share|config|export|filter|prev|next|close
@@ -37,7 +41,8 @@
     csrf_field    CSRF field name (default _token)
     confirm_id    UiKit _confirm target (data-nowo-confirm-*)
     modal_id      framework modal target
-    confirm_message  transitional window.confirm on form submit (prefer confirm_id)
+    confirm_message  confirm on form submit: inline window.confirm, or the confirm-submit peer with confirm_mode
+                  native | dialog (prefer confirm_id)
     attr          extra HTML attributes (hash)
     disabled      bool
 #}
@@ -101,7 +106,7 @@
             {% if tag == 'form' %}
                 {#- 2.19 (REQ-TWIG-005): a POST hash renders through form_start / form_end (Form\HiddenFieldsType with the
                     csrf_token in csrf_field, via _ui_form); without symfony/form the deprecated raw form (_row_actions_legacy) -#}
-                {% set _row_vars = {action: action, class: class, label: label, disabled: disabled, display: display, icon_name: icon_name} %}
+                {% set _confirm_mode = confirm_mode|default(nowo_ui_kit_row_actions_confirm|default('inline')) %}{% set _row_vars = {action: action, class: class, label: label, disabled: disabled, display: display, icon_name: icon_name, confirm_mode: _confirm_mode in ['native', 'dialog'] ? _confirm_mode : 'inline'} %}
                 {% if nowo_ui_theme is defined %}
                     {{ include('@NowoUiKitBundle/partials/_ui_form.html.twig', _row_vars|merge({ui_form_kind: 'hidden', ui_form_options: {fields: action.csrf_token is defined and action.csrf_token ? {(action.csrf_field|default('_token')): action.csrf_token} : {}, partial: 'row_actions'}, ui_form_template: '@NowoUiKitBundle/partials/_row_actions_form.html.twig', ui_form_legacy: '@NowoUiKitBundle/partials/_row_actions_legacy.html.twig'}), false) }}
                 {% else %}

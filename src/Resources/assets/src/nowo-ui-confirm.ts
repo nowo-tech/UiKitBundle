@@ -8,6 +8,10 @@
  * dialog (or inside a `[data-nowo-confirm-scope]` element, e.g. the full-page confirm) keeps every
  * `[data-nowo-confirm-submit]` button of that scope disabled until the input value is exactly VALUE. Opening a
  * dialog clears the input and focuses it. No inline handlers (CSP).
+ *
+ * Missing peer warning (2.22): a form rendered for the `confirm-submit` Stimulus peer (row actions with
+ * `row_actions_confirm` / `confirm_mode` `native` | `dialog`) that submits while no peer connected to it is reported
+ * once per form with console.warn — without the peer the form submits unconfirmed.
  */
 
 declare global {
@@ -121,6 +125,27 @@ function onDocumentInput(event: Event): void {
   }
 }
 
+/** Same key as CONFIRM_SUBMIT_PEER_MARK of the confirm-submit peer (Symbol.for is shared across bundles). */
+const PEER_MARK = Symbol.for('nowo-ui.confirm-submit');
+const PEER_FORM = 'form[data-confirm-submit-message-value]';
+const warnedForms = new WeakSet<HTMLFormElement>();
+
+/** Warns (once per form) when a confirm-submit form submits without the Stimulus peer connected to it. */
+export function warnMissingConfirmPeer(event: Event): void {
+  const form = event.target;
+  if (!(form instanceof HTMLFormElement) || !form.matches(PEER_FORM) || warnedForms.has(form)) {
+    return;
+  }
+  if ((form as unknown as Record<symbol, unknown>)[PEER_MARK] === true) {
+    return;
+  }
+  warnedForms.add(form);
+  console.warn(
+    '[nowo-ui] This form expects the "confirm-submit" Stimulus peer (row_actions_confirm native|dialog) but none is connected: it submits without confirmation. Register it: app.register(\'confirm-submit\', ConfirmSubmitController).',
+    form,
+  );
+}
+
 let confirmBound = false;
 
 export function bindNowoUiConfirm(): void {
@@ -130,6 +155,7 @@ export function bindNowoUiConfirm(): void {
   confirmBound = true;
   document.addEventListener('click', onDocumentClick);
   document.addEventListener('input', onDocumentInput);
+  document.addEventListener('submit', warnMissingConfirmPeer, true);
   syncAllExpected(document);
   window.nowoUiOpenConfirm = openConfirm;
   window.nowoUiCloseConfirm = closeConfirm;

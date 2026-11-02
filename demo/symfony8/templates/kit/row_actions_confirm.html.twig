@@ -1,0 +1,17 @@
+{#
+  UiKit 2.22 demo: a 1.x row-action POST hash with confirm_message and confirm_mode native. This demo registers no
+  Stimulus, so the confirm-submit peer is missing: the form carries no inline onsubmit, submits unconfirmed and
+  js/nowo-ui-confirm.js (default runtime scripts of the document layout) logs a console warning.
+#}
+{% extends '@NowoUiKit/layout/document.html.twig' %}
+{% set nowo_ui_document_title = 'Row actions confirm · UiKit 2.22' %}
+
+{% block nowo_ui_body %}
+    <main id="main-content" class="nowo-ui-content" data-testid="row-actions-confirm">
+        {% if submitted %}<p data-testid="row-actions-submitted">Submitted without confirmation.</p>{% endif %}
+        {{ include('@NowoUiKitBundle/partials/_row_actions.html.twig', {
+            confirm_mode: 'native',
+            actions: [{kind: 'delete', label: 'Delete', href: path('kit_row_actions_confirm'), method: 'POST', confirm_message: 'Delete invoice #1042?'}],
+        }) }}
+    </main>
+{% endblock %}

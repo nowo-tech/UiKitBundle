@@ -76,7 +76,7 @@ Feature `web_ui.row_actions_display` **MAY** mirror the kit key and pass `displa
 | `csrf_token` / `csrf_field` | POST forms (`_token` default) |
 | `confirm_id` | Opens UiKit `_confirm` |
 | `modal_id` | Opens framework / kit modal |
-| `confirm_message` | Transitional `window.confirm` on form submit — prefer `confirm_id` |
+| `confirm_message` | Confirm on form submit: inline `window.confirm` (default) or the `confirm-submit` peer with `confirm_mode` `native` / `dialog` (2.22) — prefer `confirm_id` |
 | `attr` | Extra HTML attributes |
 | `visible` / `disabled` | Optional gates |
 
@@ -90,6 +90,31 @@ Macro `ui.action(kind, framework, variant=null)` only emits **classes**; prefer 
 4. 2.0: `View\Action` + `View\Confirm` render the dialog for you; `Confirm::expectedValue` adds type-to-confirm. Theme
    slots `action_primary` / `action_secondary` / `action_danger` add host classes per resolved variant (e.g. a red
    delete on Tailwind) — [`PAGE_CONTRACT.md`](PAGE_CONTRACT.md#view-models).
+
+## Confirm contract for POST hashes (2.22)
+
+By default a 1.x POST hash with `confirm_message` keeps the 2.21 markup: `onsubmit="return confirm(…)"` on the form
+(blocked by a strict CSP `script-src` without `'unsafe-inline'`). Opt in to the UiKit confirm contract with the
+`_row_actions` option `confirm_mode` or the app-wide `nowo_ui_kit.row_actions_confirm` (the option wins):
+
+| `confirm_mode` | Form attributes | Who asks |
+| --- | --- | --- |
+| `inline` (default) | `onsubmit="return confirm(&quot;…&quot;);"` | the browser, inline handler |
+| `native` | `data-controller="confirm-submit" data-action="submit->confirm-submit#confirm" data-confirm-submit-message-value="…"` | `confirm-submit` peer, `window.confirm()` |
+| `dialog` | as `native` + `data-confirm-submit-mode-value="dialog"` | `confirm-submit` peer, kit `<dialog>` (`askConfirm`), replays the submit once on Confirm |
+
+```twig
+{{ include('@NowoUiKitBundle/partials/_row_actions.html.twig', {actions: actions, confirm_mode: 'dialog'}) }}
+```
+
+`native` / `dialog` **require the `confirm-submit` Stimulus peer** to be registered
+(`app.register('confirm-submit', ConfirmSubmitController)`, see [STIMULUS.md](STIMULUS.md)); without it the form submits
+with no confirmation, so only switch the global once every page that renders row actions loads the peer. `js/nowo-ui-confirm.js` warns in
+the console (once per form) when such a form submits with no peer connected. A host `attr.onsubmit` is dropped with
+`inline` (the kit's handler wins) but rendered with `native` / `dialog`, where it runs before the peer. Host
+`attr['data-controller']` / `attr['data-action']` tokens are kept in front of the peer's; other host attributes pass
+through as before (the kit's own keys win). Unknown values fall back to `inline`. The same attributes are printed by
+the `symfony/form` path and by the deprecated raw-form fallback.
 
 ## Do / don't
 

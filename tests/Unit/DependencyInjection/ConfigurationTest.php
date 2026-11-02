@@ -22,6 +22,7 @@ final class ConfigurationTest extends TestCase
         self::assertSame(CssFramework::Bootstrap5->value, $config['css_framework']);
         self::assertSame(IconSet::BootstrapIcons->value, $config['icon_set']);
         self::assertSame(RowActionsDisplay::Icon->value, $config['row_actions_display']);
+        self::assertSame('inline', $config['row_actions_confirm']);
         self::assertSame([], $config['panel_path_rewrites']);
         self::assertSame([
             'enabled' => false,
@@ -64,6 +65,17 @@ final class ConfigurationTest extends TestCase
 
         $this->expectException(InvalidConfigurationException::class);
         (new Processor())->processConfiguration(new Configuration(), [['release_check' => ['cache_ttl' => 10]]]);
+    }
+
+    public function testRowActionsConfirmModes(): void
+    {
+        foreach (['inline', 'native', 'dialog'] as $mode) {
+            $config = (new Processor())->processConfiguration(new Configuration(), [['row_actions_confirm' => $mode]]);
+            self::assertSame($mode, $config['row_actions_confirm']);
+        }
+
+        $this->expectException(InvalidConfigurationException::class);
+        (new Processor())->processConfiguration(new Configuration(), [['row_actions_confirm' => 'popup']]);
     }
 
     public function testPanelPathRewritesMap(): void

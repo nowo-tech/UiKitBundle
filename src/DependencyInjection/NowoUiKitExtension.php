@@ -105,6 +105,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
                 'nowo_ui_kit_css_framework' => $fw,
                 'nowo_ui_kit_icon_set' => $config['icon_set'],
                 'nowo_ui_kit_row_actions_display' => $config['row_actions_display'],
+                'nowo_ui_kit_row_actions_confirm' => $config['row_actions_confirm'],
                 'nowo_ui_kit_release_check' => [
                     'enabled' => $config['release_check']['enabled'],
                     'current_version' => $config['release_check']['current_version'],

@@ -90,6 +90,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- `nowo_ui_kit.row_actions_confirm` (`inline` default | `native` | `dialog`) and the `_row_actions` option `confirm_mode`: a 1.x POST hash's `confirm_message` can use the UiKit confirm contract (the `confirm-submit` Stimulus peer attributes) instead of the inline `onsubmit="return confirm(…)"` handler, in `_row_actions_form` and `_row_actions_legacy` (REQ-UI-003). Default output is byte-identical to 2.21 (`RowActionsConfirmBcTest`, fixtures `tests/Fixtures/bc-2.21`); opt-in output is pinned in `tests/Fixtures/confirm-contract-2.22`. See [ROW_ACTIONS.md](ROW_ACTIONS.md#confirm-contract-for-post-hashes-222).
+- `js/nowo-ui-confirm.js` warns in the console (once per form) when a `confirm-submit` form (`row_actions_confirm` / `confirm_mode` `native` | `dialog`) submits with no peer connected; the peer marks the elements it connects to with `Symbol.for('nowo-ui.confirm-submit')` (a property, not an attribute). Documented the peer requirement and the host `attr.onsubmit` difference in [CONFIGURATION.md](CONFIGURATION.md#row-actions-confirm-222).
 - `nowo_ui_kit.release_check.timeout` (default `5.0` s) and `release_check.releases_timeout` (default `8.0` s): the GitHub request timeouts of the release check are configurable (0.1–60 s) and documented with the timeout hierarchy ([CONFIGURATION.md](CONFIGURATION.md#release-check-timeouts-req-runtime-001), REQ-RUNTIME-001). Defaults unchanged.
 - `make validate-translations` (and CI) checks key parity of every locale against `en`, not only YAML syntax (`.scripts/check-translation-parity.php`, REQ-MAKE-004). CI also runs `composer igor` (REQ-CS-008).
 - Overridable `<subpath>` table, freeze rule and override procedure in [USAGE.md](USAGE.md#overriding-templates-req-twig-001) (REQ-TWIG-001).
@@ -105,6 +107,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Fixed
 
 - `.scripts/check-twig-extra.sh` no longer reports "Twig does not apply": under `pipefail`, `find | grep -q` failed with SIGPIPE and hid the bundle templates, so the REQ-TWIG-004 checks were skipped.
+- iOS WebKit: a native `input[type=date]` in kit filters / forms (`.nowo-ui-filters`, `.nowo-ui-filter-bar`, `form.nowo-ui-form`, dialog forms) fills its field (`appearance: none; min-width: 0` under `@supports (-webkit-touch-callout: none)`); iOS ignored `width: 100%`. CSS only, no markup change.
 
 ## [2.21.0] - 2026-11-01
 

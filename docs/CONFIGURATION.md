@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Root keys](#root-keys)
+- [Row actions confirm (2.22)](#row-actions-confirm-222)
 - [Panel path rewrites](#panel-path-rewrites)
 - [Release check](#release-check)
 - [Appearance](#appearance)
@@ -21,6 +22,7 @@ Alias: **`nowo_ui_kit`**
 | `css_framework` | enum | `bootstrap5` | `bootstrap` (alias of `bootstrap5`), `bootstrap4`, `bootstrap5`, `tabler`, `tailwind`, `foundation`, `custom`, `none` |
 | `icon_set` | enum | `bootstrap-icons` | `bootstrap-icons`, `tabler-icons`, `ux_icon`, `svg_inline`, `none` — how glyphs are drawn |
 | `row_actions_display` | enum | `icon` | Table/list row actions: `icon` (glyph + visually hidden label), `text` (visible label only), `icon_text` (glyph + visible label) |
+| `row_actions_confirm` | enum | `inline` | How `confirm_message` of 1.x `_row_actions` POST hashes asks (since 2.22.0): `inline` (`onsubmit="return confirm(…)"`, unchanged markup), `native` / `dialog` (no inline handler: the `confirm-submit` Stimulus peer asks with `window.confirm()` / the kit `<dialog>`). See [ROW_ACTIONS.md](ROW_ACTIONS.md#confirm-contract-for-post-hashes-222) |
 | `panel_path_rewrites` | map | `{}` | Legacy path prefix → new prefix (e.g. `/admin/blog: /panel/blog`). Empty = feature disabled (since 1.9.0) |
 | `release_check` | map | `enabled: false` | Optional GitHub release-version checker (footer dialog + JSON endpoint). See [Release check](#release-check) |
 | `appearance` | map | `enabled: false` | Optional site appearance SPI: presets, `--nowo-ui-*` token emitter, Twig functions, optional form (since 1.16.0). See [Appearance](#appearance) |
@@ -34,6 +36,7 @@ Parameters / Twig globals:
 - `%nowo_ui_kit.css_framework%` → `nowo_ui_kit_css_framework` (normalized: `bootstrap` → `bootstrap5`)
 - `%nowo_ui_kit.icon_set%` → `nowo_ui_kit_icon_set`
 - `%nowo_ui_kit.row_actions_display%` → `nowo_ui_kit_row_actions_display`
+- `row_actions_confirm` → Twig global `nowo_ui_kit_row_actions_confirm` (no container parameter)
 - `%nowo_ui_kit.panel_path_rewrites%` — the validated rewrite map (no Twig global)
 - `%nowo_ui_kit.appearance.enabled%` (no Twig global; use the `nowo_ui_appearance*()` functions)
 - `%nowo_ui_kit.route_links%` (no Twig global; use `nowo_ui_route_link()`)
@@ -44,6 +47,28 @@ Parameters / Twig globals:
 Asset package (always prepended): `nowo_ui_kit` → `/bundles/nowouikit`.
 
 `icon_set` and `row_actions_display` are independent: with `row_actions_display: text`, `_row_actions` does not emit glyphs (regardless of `icon_set`).
+
+## Row actions confirm (2.22)
+
+`row_actions_confirm` (`inline` | `native` | `dialog`, default `inline`) picks how a 1.x `_row_actions` POST hash with
+`confirm_message` asks; a single include overrides it with `confirm_mode`. Full table:
+[ROW_ACTIONS.md](ROW_ACTIONS.md#confirm-contract-for-post-hashes-222).
+
+```yaml
+nowo_ui_kit:
+    row_actions_confirm: dialog   # or native; inline (default) keeps the 2.21 markup byte for byte
+```
+
+- **`native` / `dialog` need the `confirm-submit` Stimulus peer** registered on every page that renders row actions
+  (`app.register('confirm-submit', ConfirmSubmitController)`, [STIMULUS.md](STIMULUS.md)). Without it the forms
+  **submit with no confirmation**. The kit confirm runtime (`js/nowo-ui-confirm.js`, in the default
+  `nowo_ui_script_names()` set) prints a `console.warn` the first time such a form submits with no peer connected.
+- **Host `attr.onsubmit`**: with `inline` the kit's own `onsubmit="return confirm(…)"` wins and a host `attr.onsubmit`
+  is dropped (unchanged since 1.x). With `native` / `dialog` the kit prints no `onsubmit`, so a host `attr.onsubmit`
+  **is rendered and runs before the peer**: remove any host `return confirm(…)` there (it would ask twice) and any
+  handler that returns `false` (the peer never asks).
+- **Default**: `inline` output is byte-identical to 2.21 (`tests/Unit/PageContract/RowActionsConfirmBcTest.php`,
+  fixtures `tests/Fixtures/bc-2.21`); hosts that do not set the key see no change.
 
 ## Panel path rewrites
 

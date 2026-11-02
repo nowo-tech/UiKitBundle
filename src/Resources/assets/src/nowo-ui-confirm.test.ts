@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as mod from './nowo-ui-confirm';
 
 describe('nowo-ui-confirm', () => {
@@ -159,5 +159,42 @@ describe('nowo-ui-confirm', () => {
       document.dispatchEvent(new MouseEvent('click', { bubbles: true }));
       expect((document.getElementById('c2') as HTMLDialogElement).open).toBe(false);
     });
+  });
+});
+
+describe('nowo-ui-confirm missing confirm-submit peer warning', () => {
+  const submit = (form: HTMLFormElement): void => {
+    form.addEventListener('submit', (event) => event.preventDefault());
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+  };
+
+  beforeEach(() => {
+    mod.bindNowoUiConfirm();
+  });
+
+  afterEach(() => {
+    document.body.innerHTML = '';
+    vi.restoreAllMocks();
+  });
+
+  it('warns once per peer form submitted without the peer connected', () => {
+    document.body.innerHTML = '<form data-controller="confirm-submit" data-confirm-submit-message-value="Delete?"></form>';
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const form = document.querySelector('form')!;
+    submit(form);
+    submit(form);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(String(warn.mock.calls[0]![0])).toContain('confirm-submit');
+  });
+
+  it('stays silent when the peer is connected, for other forms and for non-form targets', () => {
+    document.body.innerHTML = '<form id="peer" data-confirm-submit-message-value="Delete?"></form><form id="plain"></form>';
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const peer = document.getElementById('peer') as HTMLFormElement;
+    (peer as unknown as Record<symbol, unknown>)[Symbol.for('nowo-ui.confirm-submit')] = true;
+    submit(peer);
+    submit(document.getElementById('plain') as HTMLFormElement);
+    mod.warnMissingConfirmPeer(new Event('submit'));
+    expect(warn).not.toHaveBeenCalled();
   });
 });

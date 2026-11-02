@@ -35,6 +35,12 @@ import { askConfirm, pageConfirmLabels, type ConfirmClasses } from './ask_confir
 
 export type ConfirmMode = 'native' | 'dialog';
 
+/**
+ * Set (as a property, never an attribute) on every element the peer connects to (2.22). The kit confirm runtime
+ * (nowo-ui-confirm.js) reads it to warn in the console when a `confirm-submit` form submits with no peer registered.
+ */
+export const CONFIRM_SUBMIT_PEER_MARK: unique symbol = Symbol.for('nowo-ui.confirm-submit');
+
 export interface ConfirmSubmitOptions {
   mode?: ConfirmMode;
   classes?: Partial<ConfirmClasses>;
@@ -56,6 +62,10 @@ export function createConfirmSubmitController(options: ConfirmSubmitOptions = {}
     declare readonly modeValue: string;
 
     private approved = false;
+
+    override connect(): void {
+      (this.element as unknown as Record<symbol, unknown>)[CONFIRM_SUBMIT_PEER_MARK] = true;
+    }
 
     confirm(event: Event): void {
       if (this.blockedValue) {
