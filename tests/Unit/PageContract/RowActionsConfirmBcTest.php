@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 
+use Closure;
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Twig\ThemeExtension;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -64,7 +65,7 @@ final class RowActionsConfirmBcTest extends TestCase
     /**
      * Scenario name => render callback.
      *
-     * @return array<string, \Closure(): string>
+     * @return array<string, Closure(): string>
      */
     public static function renders(): array
     {
@@ -91,9 +92,9 @@ final class RowActionsConfirmBcTest extends TestCase
     }
 
     /**
-     * @param \Closure(): string $render
+     * @param Closure(): string $render
      */
-    private static function silenced(\Closure $render): string
+    private static function silenced(Closure $render): string
     {
         set_error_handler(static fn (): bool => true, \E_USER_DEPRECATED);
         try {

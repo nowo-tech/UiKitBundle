@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 
+use Closure;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Twig\Environment;
@@ -75,7 +76,7 @@ final class RowActionsConfirmContractTest extends TestCase
     /**
      * The BC option sets of {@see RowActionsConfirmBcTest} with confirm_mode native and dialog.
      *
-     * @return array<string, \Closure(): string>
+     * @return array<string, Closure(): string>
      */
     public static function renders(): array
     {
@@ -105,9 +106,9 @@ final class RowActionsConfirmContractTest extends TestCase
     }
 
     /**
-     * @param \Closure(): string $render
+     * @param Closure(): string $render
      */
-    private static function silenced(\Closure $render): string
+    private static function silenced(Closure $render): string
     {
         set_error_handler(static fn (): bool => true, \E_USER_DEPRECATED);
         try {
