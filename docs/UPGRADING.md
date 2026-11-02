@@ -100,6 +100,31 @@
 
 ## Unreleased
 
+From **2.22.0** (target 2.23.0):
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+No action needed: every feature is opt-in and pages that use none of them render byte-identical to 2.22
+(`OptInFeatures223BcTest`). Opt-ins: `attributes` / `valueAttributes` on `Stat`, `PageStatus` and `DetailItem`
+([USAGE](USAGE.md#live-item-attributes-223)); `Pagination::withMode('infinite' | 'responsive')` with the new
+`list-pagination` peer ([USAGE](USAGE.md#pagination-modes-223)); the `visible-when` peer and `Form\VisibleWhen`
+([USAGE](USAGE.md#provider-dependent-fields-223)). New translation keys `pagination.load_more`, `pagination.loaded`,
+`pagination.load_error` (a host override of the `NowoUiKitBundle` domain may add them).
+
+Behaviour changes (security hardening, audit CK):
+
+- Row actions in `native` / `dialog` confirm mode **fail closed** without the `confirm-submit` peer (not registered,
+  host bundle not loaded, or a submit before Stimulus connected): `js/nowo-ui-confirm.js` now asks with
+  `window.confirm(message)` and cancels the submit when declined, instead of submitting unconfirmed (the
+  `console.warn` stays). Pages with the peer connected see no change.
+- The `confirm-submit` peer in `dialog` mode clears its approval right after replaying the submit, so a replay that
+  never reached it (another listener stopped it) no longer lets the next submit skip the dialog.
+- The error page "Try again" link and auto-retry use a path-only URI: a request-target starting with `//` or `/\`
+  collapses to one `/` (`ErrorPageExtension::pathOnly()`), the absolute form keeps its path and query. Ordinary
+  request URIs are unchanged.
+
 ## To 2.22.0
 
 From **2.21.0**:
@@ -118,7 +143,7 @@ native` (or `dialog`), or pass `confirm_mode` to a single `_row_actions` include
 If you opt in to `native` / `dialog` ([CONFIGURATION](CONFIGURATION.md#row-actions-confirm-222)):
 
 - Register the `confirm-submit` peer on every page with row actions first: without it the forms **submit with no
-  confirmation**. `js/nowo-ui-confirm.js` logs a `console.warn` the first time such a form submits with no peer.
+  confirmation**. `js/nowo-ui-confirm.js` logs a `console.warn` the first time such a form submits with no peer. (2.23: it also falls back to `window.confirm()`.)
 - A host `attr.onsubmit` on a POST hash is **no longer dropped** in these modes (with `inline` the kit's handler wins
   and drops it): it is rendered and runs before the peer, so remove a host `return confirm(…)` (double prompt) or a
   handler returning `false`.

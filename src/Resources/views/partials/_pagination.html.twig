@@ -27,9 +27,16 @@
       add host classes; slot pagination attributes on the root)
     - variant (2.6): `compact` (default: the View\Pagination's variant, else `full`) renders the `pagination_compact`
       partial with the same input instead (previous / "Page n of m" / next + per-page select)
+    - pagination_mode (2.23): `infinite` | `responsive` (default: the View\Pagination's mode, else `pager` = unchanged markup);
+      mode_narrow / mode_wide (pager | infinite), breakpoint (media query, default `(max-width: 900px)`), auto_loads
+      (default 3). Adds the `list-pagination` peer contract (partial `_pagination_mode`): the links stay as the no-JS
+      fallback; the peer appends the next pages into [data-nowo-ui-list-rows]. Needs the ThemeExtension.
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 {% set bundle = bundle|default(null) %}
+{% set _pm_source = pagination_model is defined and pagination_model ? pagination_model : pagination %}
+{% set _pm_mode = pagination_mode|default(_pm_source.mode ?? 'pager') %}
+{% set _pm_on = _pm_mode in ['infinite', 'responsive'] %}
 {% set _variant = variant|default(pagination_model is defined and pagination_model ? pagination_model.variant : (pagination is iterable ? pagination.variant|default('full') : pagination.variant)) %}
 {% if _variant == 'compact' %}
     {{ include(nowo_ui_theme is defined and nowo_ui_theme ? nowo_ui_theme.partial('pagination_compact', bundle) : '@NowoUiKitBundle/partials/_pagination_compact.html.twig', {pagination: pagination_model is defined and pagination_model ? pagination_model : pagination}) }}
@@ -65,7 +72,10 @@
     {% set from = (page - 1) * per_page + 1 %}
     {% set to = (page - 1) * per_page + item_count %}
     {% set base_params = route_params|merge(query)|merge({(per_page_param): per_page}) %}
-    <div class="{{ _t ? _t.macroClasses('pagination', ui.pagination_wrap(framework), bundle, _pt) : ui.pagination_wrap(framework) }}"{{ _t ? _t.renderAttributes('pagination', bundle, {}, _pt)|raw }}{% if region|default(null) %} data-nowo-ui-region="{{ region }}"{% endif %}>
+    {%- if _pm_on %}
+        {% set _pm_vars = {mode: _pm_mode, mode_narrow: mode_narrow|default(_pm_source.mode_narrow ?? 'infinite'), mode_wide: mode_wide|default(_pm_source.mode_wide ?? 'pager'), breakpoint: breakpoint|default(_pm_source.breakpoint ?? '(max-width: 900px)'), auto_loads: auto_loads ?? (_pm_source.auto_loads ?? 3), next_href: page < total_pages ? path(route, base_params|merge({(page_param): page + 1})) : null, bundle: bundle, trans_domain: trans_domain} %}
+    {%- endif %}
+    <div class="{{ _t ? _t.macroClasses('pagination', ui.pagination_wrap(framework), bundle, _pt) : ui.pagination_wrap(framework) }}"{{ _t ? _t.renderAttributes('pagination', bundle, {}, _pt)|raw }}{% if region|default(null) %} data-nowo-ui-region="{{ region }}"{% endif %}{% if _pm_on %}{{ include('@NowoUiKitBundle/partials/_pagination_mode.html.twig', _pm_vars|merge({part: 'attrs'}), false) }}{% endif %}>
         <p class="nowo-ui-pagination__info{{ _info_extra ? ' ' ~ _info_extra }}">
             {{ 'pagination.showing'|trans({'%from%': from, '%to%': to, '%total%': total}, trans_domain) }}
         </p>
@@ -118,6 +128,9 @@
                 </ul>
             </nav>
         {% endif %}
+        {%- if _pm_on %}
+            {{ include('@NowoUiKitBundle/partials/_pagination_mode.html.twig', _pm_vars|merge({part: 'extras'}), false) }}
+        {%- endif %}
     </div>
 {% endif %}
 {% endif %}

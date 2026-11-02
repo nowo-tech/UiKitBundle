@@ -3,6 +3,9 @@ pagination.showing: '%from%–%to% van %total% weergegeven'
 pagination.previous: Vorige
 pagination.next: Volgende
 pagination.per_page: Per pagina
+pagination.load_more: "Meer laden"
+pagination.loaded: "%count% extra rijen geladen"
+pagination.load_error: "Kon geen extra rijen laden. Probeer het opnieuw."
 action.edit: Bewerken
 action.delete: Verwijderen
 action.view: Bekijken

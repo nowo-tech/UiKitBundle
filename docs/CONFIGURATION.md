@@ -60,9 +60,11 @@ nowo_ui_kit:
 ```
 
 - **`native` / `dialog` need the `confirm-submit` Stimulus peer** registered on every page that renders row actions
-  (`app.register('confirm-submit', ConfirmSubmitController)`, [STIMULUS.md](STIMULUS.md)). Without it the forms
-  **submit with no confirmation**. The kit confirm runtime (`js/nowo-ui-confirm.js`, in the default
-  `nowo_ui_script_names()` set) prints a `console.warn` the first time such a form submits with no peer connected.
+  (`app.register('confirm-submit', ConfirmSubmitController)`, [STIMULUS.md](STIMULUS.md)). Without it (or before it
+  connects) the kit confirm runtime (`js/nowo-ui-confirm.js`, in the default `nowo_ui_script_names()` set) **fails
+  closed** since 2.23: it asks with the browser's `window.confirm()` and cancels the submit when declined, and prints a
+  `console.warn` the first time such a form submits with no peer connected. Without that runtime either, the forms
+  submit with no confirmation.
 - **Host `attr.onsubmit`**: with `inline` the kit's own `onsubmit="return confirm(…)"` wins and a host `attr.onsubmit`
   is dropped (unchanged since 1.x). With `native` / `dialog` the kit prints no `onsubmit`, so a host `attr.onsubmit`
   **is rendered and runs before the peer**: remove any host `return confirm(…)` there (it would ask twice) and any

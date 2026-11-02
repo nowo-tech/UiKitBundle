@@ -114,6 +114,54 @@ describe('confirm-submit peer, dialog mode', () => {
     expect(document.querySelector('dialog')).toBeNull();
   });
 
+  // 2.23 (audit CK L2): a replayed submit that never reaches the peer must not leave it approved
+  it('clears the approval when the replayed submit is stopped before the peer, so the next submit asks again', async () => {
+    await start(`
+      <form data-controller="confirm-submit" data-confirm-submit-message-value="Delete?" data-action="submit->confirm-submit#confirm"></form>`);
+    const form = document.querySelector('form')!;
+    let stopNext = false;
+    form.addEventListener(
+      'submit',
+      (event) => {
+        if (stopNext) {
+          stopNext = false;
+          event.preventDefault();
+          event.stopImmediatePropagation();
+        }
+      },
+      true,
+    );
+    const sent = vi.fn();
+    form.addEventListener('submit', (event) => {
+      if (!event.defaultPrevented) {
+        sent();
+      }
+      event.preventDefault();
+    });
+
+    form.requestSubmit();
+    expect(document.querySelectorAll('dialog').length).toBe(1);
+    stopNext = true;
+    dialogButton('Yes').click();
+    await flush();
+    expect(sent).not.toHaveBeenCalled();
+
+    // the next submit is held for confirmation again instead of going through
+    document.querySelectorAll('dialog').forEach((dialog) => dialog.remove());
+    form.requestSubmit();
+    expect(sent).not.toHaveBeenCalled();
+    expect(document.querySelectorAll('dialog').length).toBe(1);
+  });
+
+  // 2.23 (audit CS L2): a removed controller no longer marks the form, so the kit runtime's fallback confirms it
+  it('clears the peer mark on disconnect', async () => {
+    await start(`<form data-controller="confirm-submit" data-confirm-submit-message-value="Delete?"></form>`);
+    const form = document.querySelector('form')!;
+    expect((form as unknown as Record<symbol, unknown>)[CONFIRM_SUBMIT_PEER_MARK]).toBe(true);
+    (application.getControllerForElementAndIdentifier(form, 'confirm-submit') as ConfirmSubmit).disconnect();
+    expect(CONFIRM_SUBMIT_PEER_MARK in form).toBe(false);
+  });
+
   it('asks in the dialog when one element sets mode=dialog on a native-mode app', async () => {
     document.body.innerHTML = `
       <button type="button" data-controller="native-confirm" data-native-confirm-message-value="Go?" data-native-confirm-mode-value="dialog"

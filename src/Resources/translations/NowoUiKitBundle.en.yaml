@@ -3,6 +3,9 @@ pagination.showing: Showing %from%–%to% of %total%
 pagination.previous: Previous
 pagination.next: Next
 pagination.per_page: Per page
+pagination.load_more: "Load more"
+pagination.loaded: "%count% more rows loaded"
+pagination.load_error: "Could not load more rows. Try again."
 action.edit: Edit
 action.delete: Delete
 action.view: View

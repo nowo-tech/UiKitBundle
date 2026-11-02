@@ -45,8 +45,8 @@ final class KitTemplatesController extends AbstractController
 
     /**
      * UiKit 2.22: a 1.x row-action POST hash with confirm_mode native on a page without Stimulus, i.e. without the
-     * confirm-submit peer: no inline handler, the form submits unconfirmed and js/nowo-ui-confirm.js warns once in
-     * the console (docs/CONFIGURATION.md#row-actions-confirm-222).
+     * confirm-submit peer: no inline handler, js/nowo-ui-confirm.js warns once in the console and (2.23) falls back to
+     * window.confirm() so the form never submits unconfirmed (docs/CONFIGURATION.md#row-actions-confirm-222).
      */
     #[Route('/row-actions-confirm', name: 'kit_row_actions_confirm', methods: ['GET', 'POST'])]
     public function rowActionsConfirm(Request $request): Response

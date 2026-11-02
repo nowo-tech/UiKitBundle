@@ -20,6 +20,18 @@ export function parseSeconds(value: unknown, fallback: number = DEFAULT_SECONDS)
   return Number.isFinite(seconds) && seconds >= 1 ? Math.floor(seconds) : fallback;
 }
 
+/**
+ * Retry URL without a protocol-relative start (2.23, audit CK O1; defence in depth for the server-side
+ * `ErrorPageExtension::pathOnly()`): tab / newline are dropped and a leading run of `/` / `\` that a browser would read
+ * as `//host` collapses to one `/`, so `//evil.example/x` stays on this site. Any other URL (path, absolute, '') is
+ * returned unchanged.
+ */
+export function pathOnlyUrl(url: string): string {
+  const clean = url.replace(/[\t\n\r]/g, '');
+  // leading C0 controls / blanks are ignored by URL parsers too (audit CS I2)
+  return /^[\u0000-\u0020]*[/\\][\u0000-\u0020]*[/\\]|^[\u0000-\u0020]*\\/.test(clean) ? `/${clean.replace(/^[\u0000-\u0020/\\]+/, '')}` : clean;
+}
+
 export interface CountdownOptions {
   /** URL to load at zero ('' = the current location). */
   url: string;
@@ -65,7 +77,7 @@ export class RetryCountdown {
     if (this.left <= 0) {
       this.stop();
       const navigate = this.options.navigate ?? ((url: string) => window.location.assign(url));
-      navigate(this.options.url || window.location.href);
+      navigate(pathOnlyUrl(this.options.url) || window.location.href);
     }
   }
 }

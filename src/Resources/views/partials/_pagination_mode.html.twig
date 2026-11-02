@@ -1,0 +1,40 @@
+{#
+  Pagination modes (2.23, View\Pagination::$mode `infinite` | `responsive`): the peer contract added by the
+  `pagination` / `pagination_compact` partials when a mode other than `pager` is set (never for `pager`: unchanged
+  markup). The pager links stay in the markup (the no-JS fallback); the `list-pagination` Stimulus peer
+  (stimulus-peers/list_pagination_controller.ts) hides them while it loads the next pages into the list.
+
+  Input:
+    - part: `attrs` (the root attributes) or `extras` (the load-more region and the live region)
+    - mode: infinite | responsive; mode_narrow / mode_wide: pager | infinite; breakpoint: media query; auto_loads
+    - next_href: URL of the next page (same filters / sort / per_page; null on the last page)
+    - bundle, trans_domain
+  Root attributes: data-controller="list-pagination", data-nowo-ui-pagination-mode, -narrow, -wide, -query (media
+  query of the narrow side), -auto (automatic loads before the button only), -next, -loaded-text (%count%),
+  -error-text. Extras: [data-nowo-ui-pagination-more-region] (hidden until the peer shows it) with the sentinel
+  [data-nowo-ui-pagination-sentinel] and the "Load more" button [data-nowo-ui-pagination-more] (slot btn_secondary),
+  and the polite live region [data-nowo-ui-pagination-status].
+#}
+{%- set _domain = trans_domain|default('NowoUiKitBundle') -%}
+{%- set _m = mode == 'responsive' ? 'responsive' : 'infinite' -%}
+{%- set _narrow = _m == 'infinite' ? 'infinite' : (mode_narrow|default('infinite') == 'pager' ? 'pager' : 'infinite') -%}
+{%- set _wide = _m == 'infinite' ? 'infinite' : (mode_wide|default('pager') == 'infinite' ? 'infinite' : 'pager') -%}
+{%- if part == 'attrs' -%}
+    {{- nowo_ui_html_attrs({
+        'data-controller': 'list-pagination',
+        'data-nowo-ui-pagination-mode': _m,
+        'data-nowo-ui-pagination-narrow': _narrow,
+        'data-nowo-ui-pagination-wide': _wide,
+        'data-nowo-ui-pagination-query': breakpoint|default('(max-width: 900px)'),
+        'data-nowo-ui-pagination-auto': max(0, auto_loads|default(3)),
+        'data-nowo-ui-pagination-next': next_href|default(null),
+        'data-nowo-ui-pagination-loaded-text': 'pagination.loaded'|trans({}, _domain),
+        'data-nowo-ui-pagination-error-text': 'pagination.load_error'|trans({}, _domain),
+    }) -}}
+{%- else -%}
+    <div class="nowo-ui-pagination__more" data-nowo-ui-pagination-more-region hidden>
+        <span class="nowo-ui-pagination__sentinel" data-nowo-ui-pagination-sentinel aria-hidden="true"></span>
+        <button type="button" class="{{ nowo_ui_class('btn_secondary', bundle|default(null)) }}" data-nowo-ui-pagination-more{{ nowo_ui_attrs('btn_secondary', bundle|default(null)) }}>{{ 'pagination.load_more'|trans({}, _domain) }}</button>
+    </div>
+    <p class="visually-hidden" role="status" aria-live="polite" data-nowo-ui-pagination-status></p>
+{%- endif -%}

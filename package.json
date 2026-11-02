@@ -23,6 +23,7 @@
     "build:segmented": "VITE_ENTRY=segmented vite build",
     "build:autosubmit": "VITE_ENTRY=autosubmit vite build",
     "build:error-retry": "VITE_ENTRY=error-retry vite build",
+    "build:demo-peers": "VITE_ENTRY=demo-peers vite build",
     "watch": "VITE_ENTRY=modal vite build --watch",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.strict-host.json",
     "test": "vitest run",

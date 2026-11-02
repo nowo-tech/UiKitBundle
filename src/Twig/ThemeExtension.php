@@ -7,6 +7,7 @@ namespace Nowo\UiKitBundle\Twig;
 use InvalidArgumentException;
 use Nowo\UiKitBundle\Form\ActionCsrfType;
 use Nowo\UiKitBundle\Form\UiFormViews;
+use Nowo\UiKitBundle\Form\VisibleWhen;
 use Nowo\UiKitBundle\Theme\FontPreload;
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Theme\ThemeSlots;
@@ -57,6 +58,8 @@ use Twig\TwigFunction;
  *   (shared action FormViews)
  * - `nowo_ui_header_actions(actions)` (2.21) — the {@see HeaderActions} split of a list of {@see Action}s (icon
  *   buttons, one primary, the "more" menu) the `header_actions` partial renders
+ * - `nowo_ui_visible_when(field, values)` (2.23) — row attributes of the `visible-when` peer
+ *   ({@see VisibleWhen::attributes()}; merge into `row_attr`, or print with `nowo_ui_html_attrs`)
  * - `nowo_ui_font_preload()` (2.21) — `<link rel="preload" as="font" crossorigin>` tags of `nowo_ui_kit.font_preload`
  *   ({@see FontPreload}; '' when not configured), printed by the document and error layouts
  * - `|nowo_ui_trans(params = {})` — translates a {@see Label}; strings pass through (escaped by Twig)
@@ -110,6 +113,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             new TwigFunction('nowo_ui_form_hidden', $this->uiForms->renderHidden(...), ['needs_environment' => true, 'is_safe' => ['html']]),
             new TwigFunction('nowo_ui_page_header', $this->pageHeader(...), ['needs_environment' => true, 'needs_context' => true, 'is_safe' => ['html']]),
             new TwigFunction('nowo_ui_header_actions', HeaderActions::split(...)),
+            new TwigFunction('nowo_ui_visible_when', VisibleWhen::attributes(...)),
             new TwigFunction('nowo_ui_font_preload', fn (): string => $this->fontPreload?->tags() ?? '', ['is_safe' => ['html']]),
         ];
     }

@@ -5416,6 +5416,39 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
   border-radius: var(--nowo-ui-radius);
 }
 
+/*
+ * 2.23 pagination modes (View\Pagination mode infinite | responsive, `list-pagination` Stimulus peer): the "Load
+ * more" region under the list (hidden until the peer shows it), the scroll sentinel and the loading state.
+ */
+.nowo-ui-pagination__more {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.75rem;
+}
+
+.nowo-ui-pagination__more[hidden],
+[data-nowo-ui-pagination-mode] > .nowo-ui-pagination__nav[hidden] {
+  display: none !important;
+}
+
+.nowo-ui-pagination__sentinel {
+  display: block;
+  width: 100%;
+  height: 1px;
+}
+
+[data-nowo-ui-pagination-loading] .nowo-ui-pagination__more [data-nowo-ui-pagination-more] {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+/* 2.23 visible-when peer: a row hidden for the current provider stays hidden whatever display its row class sets */
+[data-nowo-ui-visible-when-field][hidden] {
+  display: none !important;
+}
+
 /* =============================================================================================
  * 2.21 — detail page patterns (opt-in: PageHeader::status / actionsLayout split, ShowPage::stats,
  * DetailSection::layout facts, menu `square` / `menu_items`). Tokens: --nowo-ui-header-actions-gap,

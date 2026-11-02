@@ -21,6 +21,8 @@ Optional **Stimulus peer** TypeScript sources live under `src/Resources/assets/s
 - [Responsive table (Stimulus peer only)](#responsive-table-stimulus-peer-only)
 - [Listing customizer (Stimulus peer only)](#listing-customizer-stimulus-peer-only)
 - [Table sort (2.20)](#table-sort-220)
+- [List pagination (2.23)](#list-pagination-223)
+- [Visible when (2.23)](#visible-when-223)
 - [Filters collapse (Stimulus peer only)](#filters-collapse-stimulus-peer-only)
 - [Disclosure icon (Stimulus peer only)](#disclosure-icon-stimulus-peer-only)
 - [Product tour (Stimulus peer only)](#product-tour-stimulus-peer-only)
@@ -122,6 +124,9 @@ Destructive **POST + CSRF** stays in the host form inside the dialog (REQ-SEC-00
 Stimulus peer: identifier `confirm-dialog` (`confirm_dialog_controller.ts`) — typed confirmation, portal to `document.body`, optional `nowoUiOpenConfirm`/`nowoUiCloseConfirm` when the IIFE is also loaded. Close also accepts legacy `data-confirm-dialog-close`.
 
 ## Confirm submit (Stimulus peer only)
+
+2.23: in `dialog` mode the approval is cleared right after the replayed submit (audit CK L2). Forms printed for this
+peer by row actions fail closed in `js/nowo-ui-confirm.js` while the peer is missing (`window.confirm()`, audit CK L1).
 
 No kit IIFE. Two modes (2.8): `native` (default, `window.confirm`) and `dialog` (the kit `<dialog>`, see below).
 
@@ -349,6 +354,27 @@ the server, `Listing\SortRequest`) — markup from the `table` partial / list sc
 Empty values stay last in both directions; equal values keep their first-rendered order; column spans are counted.
 Event: `table-sort:sorted` (`detail.column`, `detail.direction`). Peer: `table_sort_controller.ts` (also exports
 `compareSortValues()`, `parseSortValue()`). No script-built markup (CSP).
+
+## List pagination (2.23)
+
+Identifier `list-pagination` (`list_pagination_controller.ts`). Printed by the `pagination` / `pagination_compact`
+partials for `View\Pagination::withMode('infinite' | 'responsive')` (never for the default `pager`). Root attributes:
+`data-nowo-ui-pagination-mode` (`infinite` | `responsive`), `-narrow` / `-wide` (`pager` | `infinite`), `-query`
+(media query of the narrow side), `-auto` (automatic loads, default 3), `-next` (next page URL), `-loaded-text`
+(`%count%`), `-error-text`. Children: `.nowo-ui-pagination__nav` (pager links, the no-JS fallback),
+`[data-nowo-ui-pagination-more-region]` with `[data-nowo-ui-pagination-sentinel]` and the "Load more" button
+`[data-nowo-ui-pagination-more]`, the live region `[data-nowo-ui-pagination-status]`. Rows: `[data-nowo-ui-list-rows]`
+in the nearest ancestor. Runtime state: `data-nowo-ui-pagination-active` (`pager` | `infinite`),
+`data-nowo-ui-pagination-loading`, `aria-busy` on the rows. Event: `nowo-ui:rows-appended` on the rows region (bubbles;
+detail `{rows, page, url}`). Request header `X-Nowo-Ui-Pagination: 1`. See [USAGE](USAGE.md#pagination-modes-223).
+
+## Visible when (2.23)
+
+Identifier `visible-when` (`visible_when_controller.ts`) on the form. Rows: `data-nowo-ui-visible-when-field` (name or
+id of the controlling input) and `data-nowo-ui-visible-when-in` (JSON list or comma list). Non-matching rows get
+`hidden` + `inert` + `aria-hidden="true"`; inputs are never disabled or cleared. Re-syncs on connect, `change` and
+`input`; event `visible-when:synced` (detail `{hidden}`). PHP `Form\VisibleWhen`, Twig `nowo_ui_visible_when()`. See
+[USAGE](USAGE.md#provider-dependent-fields-223).
 
 ## Listing customizer (Stimulus peer only)
 

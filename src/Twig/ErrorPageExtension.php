@@ -111,7 +111,7 @@ final class ErrorPageExtension extends AbstractExtension implements GlobalsInter
         /** @var list<int> $backStatuses */
         $backStatuses = $this->config['back_link_statuses'];
 
-        $retryHref = $get && ($code >= 500 || \in_array($code, $retryStatuses, true)) ? $request->getRequestUri() : null;
+        $retryHref = $get && ($code >= 500 || \in_array($code, $retryStatuses, true)) ? self::pathOnly($request->getRequestUri()) : null;
         $backHref = null;
         if ($request instanceof Request && \in_array($code, $backStatuses, true)) {
             $referer = (string) $request->headers->get('referer', '');
@@ -128,6 +128,25 @@ final class ErrorPageExtension extends AbstractExtension implements GlobalsInter
             $autoRetry,
             (string) $this->config['home_path'],
         );
+    }
+
+    /**
+     * Same-site, path-only form of a request-target (2.23, audit CK O1): an absolute-form target keeps only its path
+     * and query, tab / newline are dropped and a leading run of `/`, `\` (and blanks) collapses to one `/`, so
+     * `//evil.example/x` or `/\evil.example` never becomes a protocol-relative "Try again" link or auto-retry target.
+     * Ordinary URIs are returned unchanged.
+     */
+    public static function pathOnly(string $uri): string
+    {
+        // browsers drop tab / newline anywhere in a URL (WHATWG), so `/\t/evil.example` would read as `//evil.example`
+        $uri = str_replace(["\t", "\n", "\r"], '', $uri);
+        if (1 === preg_match('#^[a-z][a-z0-9+.-]*://#i', $uri)) {
+            $path = (string) parse_url($uri, \PHP_URL_PATH);
+            $query = parse_url($uri, \PHP_URL_QUERY);
+            $uri = $path.(\is_string($query) && '' !== $query ? '?'.$query : '');
+        }
+
+        return '/'.ltrim($uri, "/\\ \0\x0B\f");
     }
 
     /**

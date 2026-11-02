@@ -11,7 +11,11 @@
  *
  * Missing peer warning (2.22): a form rendered for the `confirm-submit` Stimulus peer (row actions with
  * `row_actions_confirm` / `confirm_mode` `native` | `dialog`) that submits while no peer connected to it is reported
- * once per form with console.warn — without the peer the form submits unconfirmed.
+ * once per form with console.warn.
+ *
+ * Fail closed (2.23, audit CK L1): such a form submitting while no peer is connected (peer not registered, host bundle
+ * not loaded, or a submit before Stimulus connected) asks with `window.confirm(message)` instead and cancels the submit
+ * when the user declines — it never submits unconfirmed. Once the peer is connected it confirms and this stays out.
  */
 
 declare global {
@@ -130,18 +134,38 @@ const PEER_MARK = Symbol.for('nowo-ui.confirm-submit');
 const PEER_FORM = 'form[data-confirm-submit-message-value]';
 const warnedForms = new WeakSet<HTMLFormElement>();
 
-/** Warns (once per form) when a confirm-submit form submits without the Stimulus peer connected to it. */
+/** Stimulus Boolean parsing of `data-confirm-submit-blocked-value` (audit CS L2): present and not "0" / "false". */
+export function isBlocked(value: string | null): boolean {
+  return value !== null && !(value === '0' || value.toLowerCase() === 'false');
+}
+
+/**
+ * A confirm-submit form that submits without the Stimulus peer connected to it: warns (once per form) and asks with
+ * `window.confirm()` (every submit), cancelling the submit when declined (2.23: fail closed). An empty message or
+ * `data-confirm-submit-blocked-value="true"` mirror the peer (no question / always cancelled).
+ */
 export function warnMissingConfirmPeer(event: Event): void {
   const form = event.target;
-  if (!(form instanceof HTMLFormElement) || !form.matches(PEER_FORM) || warnedForms.has(form)) {
+  if (!(form instanceof HTMLFormElement) || !form.matches(PEER_FORM)) {
     return;
   }
   if ((form as unknown as Record<symbol, unknown>)[PEER_MARK] === true) {
     return;
   }
+  if (isBlocked(form.getAttribute('data-confirm-submit-blocked-value'))) {
+    event.preventDefault();
+  } else {
+    const message = (form.getAttribute('data-confirm-submit-message-value') ?? '').trim();
+    if (message !== '' && !window.confirm(message)) {
+      event.preventDefault();
+    }
+  }
+  if (warnedForms.has(form)) {
+    return;
+  }
   warnedForms.add(form);
   console.warn(
-    '[nowo-ui] This form expects the "confirm-submit" Stimulus peer (row_actions_confirm native|dialog) but none is connected: it submits without confirmation. Register it: app.register(\'confirm-submit\', ConfirmSubmitController).',
+    '[nowo-ui] This form expects the "confirm-submit" Stimulus peer (row_actions_confirm native|dialog) but none is connected: it falls back to window.confirm(). Register it: app.register(\'confirm-submit\', ConfirmSubmitController).',
     form,
   );
 }

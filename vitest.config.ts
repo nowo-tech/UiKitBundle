@@ -24,6 +24,7 @@ export default defineConfig({
         'src/Resources/assets/stimulus-peers/icon_state.ts',
         'src/Resources/assets/stimulus-peers/listing_cookie.ts',
         'src/Resources/assets/stimulus-peers/listing_customizer_controller.ts',
+        'src/Resources/assets/stimulus-peers/list_pagination_controller.ts',
         'src/Resources/assets/stimulus-peers/multi_select_controller.ts',
         'src/Resources/assets/stimulus-peers/product_tour_controller.ts',
         'src/Resources/assets/stimulus-peers/responsive_table_controller.ts',
@@ -31,6 +32,7 @@ export default defineConfig({
         'src/Resources/assets/stimulus-peers/tabs_controller.ts',
         'src/Resources/assets/morphicons/index.ts',
         'src/Resources/assets/stimulus-peers/temporary_reveal_controller.ts',
+        'src/Resources/assets/stimulus-peers/visible_when_controller.ts',
       ],
       exclude: ['**/*.test.ts', '**/node_modules/**'],
       thresholds: {

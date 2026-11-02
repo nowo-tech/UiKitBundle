@@ -24,6 +24,12 @@ use Symfony\Component\HttpFoundation\Request;
  * 2.6: {@see self::$variant} `compact` renders the `pagination_compact` partial (previous / "Page n of m" / next and,
  * with {@see self::$allowedPerPage}, a per-page `<select>`) instead of the numbered pills.
  *
+ * 2.23: {@see self::$mode} `infinite` / `responsive` (opt-in; default `pager`, unchanged markup) — the pager links are
+ * still rendered (no-JS fallback) and the `list-pagination` Stimulus peer loads the next pages into the list
+ * (`data-nowo-ui-list-rows`) as the user scrolls, with a "Load more" button; `responsive` picks
+ * {@see self::$modeNarrow} / {@see self::$modeWide} by the {@see self::$breakpoint} media query. See
+ * {@see self::withMode()} and docs/USAGE.md#pagination-modes-223.
+ *
  * @implements ArrayAccess<array-key, mixed>
  */
 final readonly class Pagination implements ArrayAccess
@@ -43,6 +49,24 @@ final readonly class Pagination implements ArrayAccess
     /** @var list<string> */
     public const VARIANTS = [self::VARIANT_FULL, self::VARIANT_COMPACT];
 
+    /** Numbered links only (default, 2.22 markup). */
+    public const MODE_PAGER = 'pager';
+
+    /** Pager links + the `list-pagination` peer appending the next pages (2.23). */
+    public const MODE_INFINITE = 'infinite';
+
+    /** `modeNarrow` below the breakpoint, `modeWide` above (2.23). */
+    public const MODE_RESPONSIVE = 'responsive';
+
+    /** @var list<string> */
+    public const MODES = [self::MODE_PAGER, self::MODE_INFINITE, self::MODE_RESPONSIVE];
+
+    /** Media query of the narrow side of `responsive` (2.23). */
+    public const DEFAULT_BREAKPOINT = '(max-width: 900px)';
+
+    /** Automatic loads before only the "Load more" button loads more (2.23). */
+    public const DEFAULT_AUTO_LOADS = 3;
+
     public int $page;
 
     public int $perPage;
@@ -56,6 +80,11 @@ final readonly class Pagination implements ArrayAccess
      * @param array<string, mixed>|null $routeParams    route parameters (null: the current request's)
      * @param list<int>                 $allowedPerPage per-page choices (2.4; `_pagination` with `per_page_selector: true` links them)
      * @param string                    $variant        `full` (default) or `compact` (2.6)
+     * @param string                    $mode           `pager` (default), `infinite` or `responsive` (2.23)
+     * @param string                    $modeNarrow     `responsive`: mode below the breakpoint, `pager` | `infinite` (2.23)
+     * @param string                    $modeWide       `responsive`: mode above the breakpoint, `pager` | `infinite` (2.23)
+     * @param string                    $breakpoint     `responsive`: media query of the narrow side (2.23)
+     * @param int                       $autoLoads      pages loaded on scroll before only "Load more" loads (2.23; 0 = button only)
      */
     public function __construct(
         int $page,
@@ -69,9 +98,28 @@ final readonly class Pagination implements ArrayAccess
         public string $perPageParam = 'per_page',
         public array $allowedPerPage = [],
         public string $variant = self::VARIANT_FULL,
+        public string $mode = self::MODE_PAGER,
+        public string $modeNarrow = self::MODE_INFINITE,
+        public string $modeWide = self::MODE_PAGER,
+        public string $breakpoint = self::DEFAULT_BREAKPOINT,
+        public int $autoLoads = self::DEFAULT_AUTO_LOADS,
     ) {
         if (!\in_array($variant, self::VARIANTS, true)) {
             throw new InvalidArgumentException(\sprintf('Unknown pagination variant "%s" (known: %s).', $variant, implode(', ', self::VARIANTS)));
+        }
+        if (!\in_array($mode, self::MODES, true)) {
+            throw new InvalidArgumentException(\sprintf('Unknown pagination mode "%s" (known: %s).', $mode, implode(', ', self::MODES)));
+        }
+        foreach (['modeNarrow' => $modeNarrow, 'modeWide' => $modeWide] as $name => $value) {
+            if (!\in_array($value, [self::MODE_PAGER, self::MODE_INFINITE], true)) {
+                throw new InvalidArgumentException(\sprintf('Invalid pagination %s "%s" (pager|infinite).', $name, $value));
+            }
+        }
+        if ('' === trim($breakpoint) || \strlen($breakpoint) > 200 || 1 === preg_match('/[<>"{};]/', $breakpoint)) {
+            throw new InvalidArgumentException(\sprintf('Invalid pagination breakpoint "%s" (a media query such as "(max-width: 900px)").', $breakpoint));
+        }
+        if ($autoLoads < 0) {
+            throw new InvalidArgumentException('Pagination autoLoads must be 0 or more.');
         }
         $this->perPage = max(1, $perPage);
         $this->total = max(0, $total);
@@ -82,7 +130,7 @@ final readonly class Pagination implements ArrayAccess
     /**
      * Accepts the 1.x `_pagination` shape and the bundle variants: page|current_page|currentPage,
      * per_page|perPage|page_size|limit, total|total_items|totalItems|count, total_pages|totalPages|pages|last_page,
-     * plus route, query, route_params and (2.6) variant.
+     * plus route, query, route_params, (2.6) variant and (2.23) mode, mode_narrow, mode_wide, breakpoint, auto_loads.
      *
      * @param array<string, mixed> $data
      *
@@ -111,6 +159,11 @@ final readonly class Pagination implements ArrayAccess
             \is_array($query) ? $query : [],
             \is_array($routeParams) ? $routeParams : null,
             variant: isset($data['variant']) && \is_string($data['variant']) ? $data['variant'] : self::VARIANT_FULL,
+            mode: isset($data['mode']) && \is_string($data['mode']) ? $data['mode'] : self::MODE_PAGER,
+            modeNarrow: isset($data['mode_narrow']) && \is_string($data['mode_narrow']) ? $data['mode_narrow'] : self::MODE_INFINITE,
+            modeWide: isset($data['mode_wide']) && \is_string($data['mode_wide']) ? $data['mode_wide'] : self::MODE_PAGER,
+            breakpoint: isset($data['breakpoint']) && \is_string($data['breakpoint']) ? $data['breakpoint'] : self::DEFAULT_BREAKPOINT,
+            autoLoads: (int) $int(['auto_loads'], self::DEFAULT_AUTO_LOADS),
         );
     }
 
@@ -275,7 +328,27 @@ final readonly class Pagination implements ArrayAccess
      */
     public function withVariant(string $variant): self
     {
-        return new self($this->page, $this->perPage, $this->total, $this->totalPages, $this->route, $this->query, $this->routeParams, $this->pageParam, $this->perPageParam, $this->allowedPerPage, $variant);
+        return new self($this->page, $this->perPage, $this->total, $this->totalPages, $this->route, $this->query, $this->routeParams, $this->pageParam, $this->perPageParam, $this->allowedPerPage, $variant, $this->mode, $this->modeNarrow, $this->modeWide, $this->breakpoint, $this->autoLoads);
+    }
+
+    /**
+     * Same pagination with another mode (2.23): `pager`, `infinite`, or `responsive` (`$narrow` below `$breakpoint`,
+     * `$wide` above; each `pager` | `infinite`). Null arguments keep the current values.
+     *
+     * @return self Fluent interface
+     */
+    public function withMode(string $mode, ?string $narrow = null, ?string $wide = null, ?string $breakpoint = null, ?int $autoLoads = null): self
+    {
+        return new self($this->page, $this->perPage, $this->total, $this->totalPages, $this->route, $this->query, $this->routeParams, $this->pageParam, $this->perPageParam, $this->allowedPerPage, $this->variant, $mode, $narrow ?? $this->modeNarrow, $wide ?? $this->modeWide, $breakpoint ?? $this->breakpoint, $autoLoads ?? $this->autoLoads);
+    }
+
+    /**
+     * Whether a mode other than `pager` is set (2.23): the partial then adds the `list-pagination` peer contract and
+     * the list scaffold marks its rows (`data-nowo-ui-list-rows`).
+     */
+    public function isProgressive(): bool
+    {
+        return self::MODE_PAGER !== $this->mode;
     }
 
     /**
@@ -338,7 +411,8 @@ final readonly class Pagination implements ArrayAccess
 
     /**
      * Value of a 1.x key ({@see self::toArray()}), `offset` / `limit` (2.4, the `PagePagination` array keys for the
-     * query), `variant` / `allowed_per_page` (2.6), null when unknown.
+     * query), `variant` / `allowed_per_page` (2.6), `mode` / `mode_narrow` / `mode_wide` / `breakpoint` / `auto_loads`
+     * (2.23), null when unknown.
      */
     public function offsetGet(mixed $offset): mixed
     {
@@ -347,6 +421,11 @@ final readonly class Pagination implements ArrayAccess
             'limit' => $this->limit(),
             'variant' => $this->variant,
             'allowed_per_page' => $this->allowedPerPage,
+            'mode' => $this->mode,
+            'mode_narrow' => $this->modeNarrow,
+            'mode_wide' => $this->modeWide,
+            'breakpoint' => $this->breakpoint,
+            'auto_loads' => $this->autoLoads,
             default => \is_string($offset) ? ($this->toArray()[$offset] ?? null) : null,
         };
     }

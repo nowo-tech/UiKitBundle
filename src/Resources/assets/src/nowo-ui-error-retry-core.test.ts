@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { DEFAULT_SECONDS, RetryCountdown, formatClock, parseSeconds } from './nowo-ui-error-retry-core';
+import { DEFAULT_SECONDS, RetryCountdown, formatClock, parseSeconds, pathOnlyUrl } from './nowo-ui-error-retry-core';
 
 describe('nowo-ui-error-retry-core', () => {
   beforeEach(() => {
@@ -9,6 +9,26 @@ describe('nowo-ui-error-retry-core', () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.restoreAllMocks();
+  });
+
+  // 2.23 (audit CK O1): a protocol-relative retry target never leaves the site
+  it('collapses a protocol-relative retry URL to a path and keeps any other URL', () => {
+    expect(pathOnlyUrl('//evil.example/x')).toBe('/evil.example/x');
+    expect(pathOnlyUrl('/\\evil.example')).toBe('/evil.example');
+    expect(pathOnlyUrl('\\\\evil.example')).toBe('/evil.example');
+    expect(pathOnlyUrl('/\t/evil.example')).toBe('/evil.example');
+    expect(pathOnlyUrl(' //evil.example')).toBe('/evil.example');
+    // audit CS I2: leading C0 controls
+    expect(pathOnlyUrl('\u0001\u001f//evil.example')).toBe('/evil.example');
+    expect(pathOnlyUrl('/\u000b/evil.example')).toBe('/evil.example');
+    expect(pathOnlyUrl('/orders?page=2')).toBe('/orders?page=2');
+    expect(pathOnlyUrl('https://app.example/orders')).toBe('https://app.example/orders');
+    expect(pathOnlyUrl('')).toBe('');
+    const navigate = vi.fn();
+    const countdown = new RetryCountdown({ url: '//evil.example/x', seconds: 1, render: () => undefined, navigate });
+    countdown.start();
+    vi.advanceTimersByTime(1000);
+    expect(navigate).toHaveBeenCalledWith('/evil.example/x');
   });
 
   it('formats m:ss', () => {
