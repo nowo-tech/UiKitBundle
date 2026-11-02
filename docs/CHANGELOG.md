@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.22.0] - 2026-11-02](#2220---2026-11-02)
 - [[2.21.0] - 2026-11-01](#2210---2026-11-01)
 - [[2.20.0] - 2026-10-31](#2200---2026-10-31)
 - [[2.19.0] - 2026-10-30](#2190---2026-10-30)
@@ -87,6 +88,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [2.22.0] - 2026-11-02
+
+Opt-in row_actions_confirm (inline default byte-identical, native, dialog) with a missing-peer console warning, iOS date-input width fix, release-status route on #[Route] (same name/path), configurable timeouts, 100% PHP/TS line coverage. See [UPGRADING](https://github.com/nowo-tech/UiKitBundle/blob/v2.22.0/docs/UPGRADING.md#to-2220).
 
 ### Added
 
@@ -1618,7 +1623,7 @@ Supersedes 1.17.3: same runtime code and CSS, release gate hardened so the tagge
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.15.4...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.22.0...HEAD
 [1.10.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.4...v1.10.0
 [1.8.4]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.3...v1.8.4
 [1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0
