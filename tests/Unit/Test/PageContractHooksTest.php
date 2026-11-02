@@ -12,6 +12,7 @@ use Nowo\UiKitBundle\View\KpiTile;
 use Nowo\UiKitBundle\View\PageHeader;
 use PHPUnit\Framework\AssertionFailedError;
 use PHPUnit\Framework\TestCase;
+use Twig\Environment;
 
 /**
  * Hooks of {@see PageContractTestCase} that the two contract self-tests keep at their defaults or cannot reach:
@@ -69,7 +70,7 @@ final class PageContractHooksTest extends TestCase
                 return $this->renderPage($fixture);
             }
 
-            public function twig(): \Twig\Environment
+            public function twig(): Environment
             {
                 return $this->createTwig();
             }

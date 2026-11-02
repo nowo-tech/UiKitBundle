@@ -88,6 +88,8 @@ nowo_ui_kit:
         # cache_ttl: 43200                   # seconds (min 60), cache.app
         # default_branch: main               # compare target when already up to date
         # user_agent: nowo-ui-kit-release-check
+        # timeout: 5.0                       # seconds, releases/latest request (0.1-60)
+        # releases_timeout: 8.0              # seconds, versions-behind listing (0.1-60)
 ```
 
 ```yaml
@@ -110,11 +112,13 @@ nowo_ui_kit_release:
 | `cache_ttl` | `43200` | Seconds the GitHub answer is cached per repo + version (`cache.app`) |
 | `default_branch` | `main` | Compare target when the installed version is the latest |
 | `user_agent` | `nowo-ui-kit-release-check` | Sent to `api.github.com` |
+| `timeout` | `5.0` | Idle timeout (seconds, HttpClient `timeout`) of the `releases/latest` request; `0.1`–`60` |
+| `releases_timeout` | `8.0` | Idle timeout (seconds) of the `releases` listing used to count versions behind; `0.1`–`60` |
 
 Behaviour:
 
 - Route `nowo_ui_kit_release_status` (`GET /_nowo-ui/release/status`) → JSON `{status, current, latest, updateAvailable, versionsBehind, releaseUrl, compareUrl, checkedAt}` with `Cache-Control: private, no-store`. While disabled the controller still exists and answers **404**, so an imported route never breaks the router.
-- At most two GitHub calls per TTL (`releases/latest` + one page of `releases` to count newer non-prerelease tags). Timeouts 5 s / 8 s, no redirects; every failure soft-fails to `status: error` and is logged (`logger` if present). A failed `releases/latest` fetch (rate limit, outage, bad payload) is cached as an error for `ReleaseUpdateChecker::ERROR_CACHE_TTL` (5 minutes, or `cache_ttl` if shorter), so failures are not retried on every hit.
+- At most two GitHub calls per TTL (`releases/latest` + one page of `releases` to count newer non-prerelease tags). Timeouts `timeout` (5 s) / `releases_timeout` (8 s), no redirects; every failure soft-fails to `status: error` and is logged (`logger` if present). A failed `releases/latest` fetch (rate limit, outage, bad payload) is cached as an error for `ReleaseUpdateChecker::ERROR_CACHE_TTL` (5 minutes, or `cache_ttl` if shorter), so failures are not retried on every hit.
 - Only `https://github.com/…` URLs are returned and rendered.
 - Partial options: `version`, `status_url`, `id`, `title`, `stimulus` (use peers `confirm-dialog` + `release-status` instead of the IIFEs), `force`, `framework`, `trigger_class`, `wrapper_class`. Labels live in the `NowoUiKitBundle` domain (`release.*`).
 - **The endpoint is anonymous by default** and discloses the installed version (useful to an attacker matching known CVEs). Unless the version is public anyway, put it behind your admin firewall, for example by importing it under an admin prefix and adding an access rule:
@@ -132,6 +136,22 @@ Behaviour:
   ```
 
   The partial's default `status_url` is `path('nowo_ui_kit_release_status')`, so the prefix is picked up automatically; only include the partial for users who can reach the route.
+
+### Release check timeouts (REQ-RUNTIME-001)
+
+The release check is the only blocking I/O in the bundle: at most two outbound GitHub requests on a cache miss, from
+the opt-in status endpoint only (never during an HTML render). Keep the deadlines layered so the innermost one fires
+first and the request is freed:
+
+| Layer | Default | Rule |
+| ----- | ------- | ---- |
+| `release_check.timeout` / `release_check.releases_timeout` | 5 s / 8 s | Fires first; the checker soft-fails to `status: error` and negatively caches it for 5 minutes |
+| PHP `max_execution_time` | host php.ini | Strictly greater than the sum of both timeouts (13 s with the defaults) |
+| Reverse proxy / Caddy `servers.timeouts.write` | host | Strictly greater than PHP |
+| FrankenPHP `max_wait_time` (worker mode) | host | Caps how long a request waits for a free thread |
+
+When you raise either timeout, raise PHP and the HTTP write deadline in the same change. Under FrankenPHP worker mode a
+stuck call pins one thread for at most the configured timeout; the cache keeps the endpoint from fanning out to GitHub.
 
 ## Appearance
 

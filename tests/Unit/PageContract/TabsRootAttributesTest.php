@@ -6,7 +6,9 @@ namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 
 use PHPUnit\Framework\TestCase;
 use Twig\Environment;
+use Twig\Error\RuntimeError;
 use Twig\Loader\FilesystemLoader;
+use Twig\TwigFilter;
 
 /**
  * `_tabs` root `attr` (2.1): bundles keep 1.x `<nav>` attributes (e.g. `data-turbo="false"`), merged over the `tabs`
@@ -28,7 +30,7 @@ final class TabsRootAttributesTest extends TestCase
 
     public function testOnHandlersAreRefused(): void
     {
-        $this->expectException(\Twig\Error\RuntimeError::class);
+        $this->expectException(RuntimeError::class);
         PageContractTwig::create()->render('@NowoUiKitBundle/partials/_tabs.html.twig', ['items' => self::ITEMS, 'attr' => ['onclick' => 'x()']]);
     }
 
@@ -37,7 +39,7 @@ final class TabsRootAttributesTest extends TestCase
         $fs = new FilesystemLoader();
         $fs->addPath(PageContractTwig::root().'/src/Resources/views', 'NowoUiKitBundle');
         $twig = new Environment($fs);
-        $twig->addFilter(new \Twig\TwigFilter('trans', static fn (string $id): string => $id));
+        $twig->addFilter(new TwigFilter('trans', static fn (string $id): string => $id));
 
         $html = $twig->render('@NowoUiKitBundle/partials/_tabs.html.twig', ['items' => self::ITEMS, 'aria_label' => 'Sections', 'attr' => ['data-turbo' => 'false', 'hidden' => true, 'data-off' => false]]);
 

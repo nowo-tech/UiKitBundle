@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\View;
 
+use InvalidArgumentException;
 use Symfony\Component\Form\FormView;
 
 /**
@@ -37,7 +38,7 @@ final readonly class WizardPage
         Action::assertAttributes($attributes);
         $this->steps = ViewList::of($steps, WizardStep::class, 'WizardPage steps');
         if (null === $this->currentIndex()) {
-            throw new \InvalidArgumentException(\sprintf('WizardPage current step "%s" is not one of its steps.', $current));
+            throw new InvalidArgumentException(\sprintf('WizardPage current step "%s" is not one of its steps.', $current));
         }
     }
 

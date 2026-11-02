@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\Tour;
 
+use Closure;
+use InvalidArgumentException;
 use Nowo\UiKitBundle\Tour\Tour;
 use Nowo\UiKitBundle\Tour\TourBuilder;
 use Nowo\UiKitBundle\Tour\TourStep;
@@ -33,7 +35,7 @@ final class TourTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{0: \Closure(): mixed, 1: string}>
+     * @return iterable<string, array{0: Closure(): mixed, 1: string}>
      */
     public static function invalidProvider(): iterable
     {
@@ -46,12 +48,12 @@ final class TourTest extends TestCase
     }
 
     /**
-     * @param \Closure(): mixed $factory
+     * @param Closure(): mixed $factory
      */
     #[DataProvider('invalidProvider')]
-    public function testInvalidInputThrows(\Closure $factory, string $message): void
+    public function testInvalidInputThrows(Closure $factory, string $message): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage($message);
         $factory();
     }

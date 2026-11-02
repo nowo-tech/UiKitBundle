@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\View;
 
+use InvalidArgumentException;
+
 /**
  * One term / description pair of a {@see DetailSection} (`<dt>` / `<dd>`). Values are printed escaped.
  * `badge` (2.2): print the value as a badge of that tone (slot `badge_<tone>`: primary, success, warning, danger,
@@ -20,7 +22,7 @@ final readonly class DetailItem
         public ?string $badge = null,
     ) {
         if (null !== $badge && !\in_array($badge, self::BADGES, true)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid DetailItem badge "%s" (%s).', $badge, implode('|', self::BADGES)));
+            throw new InvalidArgumentException(\sprintf('Invalid DetailItem badge "%s" (%s).', $badge, implode('|', self::BADGES)));
         }
     }
 }

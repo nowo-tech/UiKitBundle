@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\View;
 
+use InvalidArgumentException;
+
 /**
  * Per-field options of a {@see ListPage} filter (keyed by the form child name): placeholder, width and classes
  * applied by the `list_filters` partial through `form_row()` (`attr` / `row_attr`); the row also gets the
@@ -31,10 +33,10 @@ final readonly class FilterField
         public array $rowAttributes = [],
     ) {
         if (1 !== preg_match('/^[A-Za-z0-9_][A-Za-z0-9_-]*$/', $name)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid FilterField name "%s" (the form child name).', $name));
+            throw new InvalidArgumentException(\sprintf('Invalid FilterField name "%s" (the form child name).', $name));
         }
         if (null !== $width && !\in_array($width, self::WIDTHS, true)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid FilterField width "%s" (%s).', $width, implode('|', self::WIDTHS)));
+            throw new InvalidArgumentException(\sprintf('Invalid FilterField width "%s" (%s).', $width, implode('|', self::WIDTHS)));
         }
         Action::assertAttributes($attributes);
         Action::assertAttributes($rowAttributes);

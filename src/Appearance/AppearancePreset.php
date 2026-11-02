@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Appearance;
 
+use InvalidArgumentException;
+
 /**
  * A named palette pair. `mode` tags which half the preset is meant for: applying a light preset only
  * replaces the light colours, a dark preset only the dark ones, so each mode keeps its own selection.
@@ -21,10 +23,10 @@ final readonly class AppearancePreset
         public AppearancePalette $dark,
     ) {
         if (1 !== preg_match('/^[a-z0-9][a-z0-9_-]*$/', $id)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid appearance preset id "%s" (lowercase letters, digits, "-" and "_").', $id));
+            throw new InvalidArgumentException(\sprintf('Invalid appearance preset id "%s" (lowercase letters, digits, "-" and "_").', $id));
         }
         if (self::MODE_LIGHT !== $mode && self::MODE_DARK !== $mode) {
-            throw new \InvalidArgumentException(\sprintf('Invalid appearance preset mode "%s" for "%s" (light|dark).', $mode, $id));
+            throw new InvalidArgumentException(\sprintf('Invalid appearance preset mode "%s" for "%s" (light|dark).', $mode, $id));
         }
     }
 

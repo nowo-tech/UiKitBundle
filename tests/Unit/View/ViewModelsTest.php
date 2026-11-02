@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\View;
 
+use ArrayIterator;
+use Closure;
+use InvalidArgumentException;
 use Nowo\UiKitBundle\View\Action;
 use Nowo\UiKitBundle\View\AuthPage;
 use Nowo\UiKitBundle\View\Column;
@@ -39,7 +42,7 @@ final class ViewModelsTest extends TestCase
         self::assertSame('NowoUiKitBundle', Label::kit('action.edit')->domain);
         self::assertSame('messages', (new Label('x'))->domain);
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         new Label(' ');
     }
 
@@ -86,7 +89,7 @@ final class ViewModelsTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{\Closure(): object, string}>
+     * @return iterable<string, array{Closure(): object, string}>
      */
     public static function invalidModels(): iterable
     {
@@ -114,12 +117,12 @@ final class ViewModelsTest extends TestCase
     }
 
     /**
-     * @param \Closure(): object $factory
+     * @param Closure(): object $factory
      */
     #[DataProvider('invalidModels')]
-    public function testRejectsInvalidModels(\Closure $factory, string $message): void
+    public function testRejectsInvalidModels(Closure $factory, string $message): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage($message);
         $factory();
     }
@@ -150,7 +153,7 @@ final class ViewModelsTest extends TestCase
         $bare = $header->withActions([]);
         self::assertSame([[], 'T', 'I', 'admin', 1], [$bare->actions, $bare->title, $bare->intro, $bare->breadcrumbCollection, \count($bare->breadcrumbs)]);
         self::assertCount(1, $header->actions);
-        $header = new PageHeader('T', 'I', new \ArrayIterator([Action::create('/n')]), (static function () {
+        $header = new PageHeader('T', 'I', new ArrayIterator([Action::create('/n')]), (static function () {
             yield new Crumb('Home', '/');
         })(), 'admin');
         self::assertCount(1, $header->actions);

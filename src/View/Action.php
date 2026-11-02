@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\View;
 
+use ArrayAccess;
+use InvalidArgumentException;
+use LogicException;
 use Symfony\Component\Form\FormView;
 
 /**
@@ -39,9 +42,9 @@ use Symfony\Component\Form\FormView;
  * `withDisplay()` / `asIcon()` (2.21): immutable copies with another display mode / icon — `display: icon` puts the
  * action among the icon buttons of a split page header ({@see HeaderActions}, {@see PageHeader::$actionsLayout}).
  *
- * @implements \ArrayAccess<array-key, mixed>
+ * @implements ArrayAccess<array-key, mixed>
  */
-final readonly class Action implements \ArrayAccess
+final readonly class Action implements ArrayAccess
 {
     /** Canonical kinds (REQ-UI-003) plus the 1.x row-action kinds (docs/ROW_ACTIONS.md). */
     public const KINDS = ['create', 'edit', 'delete', 'view', 'export', 'import', 'custom', 'copy', 'save', 'cancel', 'restore', 'share', 'config', 'filter', 'prev', 'next', 'close'];
@@ -84,23 +87,23 @@ final readonly class Action implements \ArrayAccess
         public Label|string|null $title = null,
     ) {
         if (null !== $dialogId && 1 !== preg_match('/^[A-Za-z][A-Za-z0-9_:.-]*$/', $dialogId)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid Action dialogId "%s".', $dialogId));
+            throw new InvalidArgumentException(\sprintf('Invalid Action dialogId "%s".', $dialogId));
         }
         if (!\in_array($kind, self::KINDS, true)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid Action kind "%s" (%s).', $kind, implode('|', self::KINDS)));
+            throw new InvalidArgumentException(\sprintf('Invalid Action kind "%s" (%s).', $kind, implode('|', self::KINDS)));
         }
         if (null !== $variant && !\in_array($variant, self::VARIANTS, true)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid Action variant "%s" (%s).', $variant, implode('|', self::VARIANTS)));
+            throw new InvalidArgumentException(\sprintf('Invalid Action variant "%s" (%s).', $variant, implode('|', self::VARIANTS)));
         }
         $method = strtoupper($method);
         if (!\in_array($method, self::METHODS, true)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid Action method "%s" (%s).', $method, implode('|', self::METHODS)));
+            throw new InvalidArgumentException(\sprintf('Invalid Action method "%s" (%s).', $method, implode('|', self::METHODS)));
         }
         if (null !== $display && !\in_array($display, self::DISPLAYS, true)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid Action display "%s" (%s).', $display, implode('|', self::DISPLAYS)));
+            throw new InvalidArgumentException(\sprintf('Invalid Action display "%s" (%s).', $display, implode('|', self::DISPLAYS)));
         }
         if (null !== $href && null !== $route) {
-            throw new \InvalidArgumentException('An Action takes either href or route, not both.');
+            throw new InvalidArgumentException('An Action takes either href or route, not both.');
         }
         self::assertAttributes($attributes);
         $this->method = $method;
@@ -295,10 +298,10 @@ final readonly class Action implements \ArrayAccess
         foreach ($attributes as $name => $value) {
             $name = (string) $name;
             if (1 !== preg_match('/^[a-zA-Z_:][a-zA-Z0-9_:.-]*$/', $name) || str_starts_with(strtolower($name), 'on')) {
-                throw new \InvalidArgumentException(\sprintf('Invalid or unsafe attribute "%s" (no on* handlers: CSP).', $name));
+                throw new InvalidArgumentException(\sprintf('Invalid or unsafe attribute "%s" (no on* handlers: CSP).', $name));
             }
             if (null !== $value && !\is_scalar($value)) {
-                throw new \InvalidArgumentException(\sprintf('Attribute "%s" must be a scalar, bool or null.', $name));
+                throw new InvalidArgumentException(\sprintf('Attribute "%s" must be a scalar, bool or null.', $name));
             }
         }
     }
@@ -321,11 +324,11 @@ final readonly class Action implements \ArrayAccess
 
     public function offsetSet(mixed $offset, mixed $value): never
     {
-        throw new \LogicException(self::class.' is immutable.');
+        throw new LogicException(self::class.' is immutable.');
     }
 
     public function offsetUnset(mixed $offset): never
     {
-        throw new \LogicException(self::class.' is immutable.');
+        throw new LogicException(self::class.' is immutable.');
     }
 }

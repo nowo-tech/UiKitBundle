@@ -6,7 +6,9 @@ namespace Nowo\UiKitBundle\Tests\Unit;
 
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Twig\ThemeExtension;
+use Nowo\UiKitBundle\View\Label;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 use Symfony\Bridge\Twig\Extension\FormExtension;
 use Symfony\Bridge\Twig\Extension\TranslationExtension;
 use Symfony\Bridge\Twig\Form\TwigRendererEngine;
@@ -26,6 +28,7 @@ use Twig\Loader\ArrayLoader;
 use Twig\Loader\ChainLoader;
 use Twig\Loader\FilesystemLoader;
 use Twig\RuntimeLoader\FactoryRuntimeLoader;
+use Twig\TwigFunction;
 
 /**
  * 1.17 host chrome partials: responsive table, row detail cells, foldable filters, disclosure icon, corner tab,
@@ -225,7 +228,7 @@ final class HostChromePartialsTest extends TestCase
             $link,
         );
 
-        $custom = $this->render("{% include '@NowoUiKitBundle/partials/_back_link.html.twig' with {href: '/x', label: label, icon: 'close', class: 'mine'} only %}", ['label' => new \Nowo\UiKitBundle\View\Label('back.key')]);
+        $custom = $this->render("{% include '@NowoUiKitBundle/partials/_back_link.html.twig' with {href: '/x', label: label, icon: 'close', class: 'mine'} only %}", ['label' => new Label('back.key')]);
         self::assertStringContainsString('<a href="/x" class="nowo-ui-back-link mine">', $custom);
         self::assertStringContainsString('bi-x-lg', $custom);
         self::assertStringContainsString('<span>back.key</span>', $custom);
@@ -364,7 +367,7 @@ final class HostChromePartialsTest extends TestCase
     {
         $fs = new FilesystemLoader();
         $fs->addPath(\dirname(__DIR__, 2).'/src/Resources/views', 'NowoUiKitBundle');
-        $fs->addPath(\dirname((string) (new \ReflectionClass(FormExtension::class))->getFileName(), 2).'/Resources/views/Form');
+        $fs->addPath(\dirname((string) (new ReflectionClass(FormExtension::class))->getFileName(), 2).'/Resources/views/Form');
         $twig = new Environment(new ChainLoader([
             new ArrayLoader(['base.html.twig' => '{% block stylesheets %}{% endblock %}{% block body %}{% endblock %}{% block javascripts %}{% endblock %}']),
             $fs,
@@ -373,8 +376,8 @@ final class HostChromePartialsTest extends TestCase
         $engine = new TwigRendererEngine(['form_div_layout.html.twig'], $twig);
         $twig->addRuntimeLoader(new FactoryRuntimeLoader([FormRenderer::class => static fn (): FormRenderer => new FormRenderer($engine)]));
         $twig->addExtension(new FormExtension());
-        $twig->addFunction(new \Twig\TwigFunction('asset', static fn (string $path, ?string $package = null): string => '/bundles/nowouikit/'.$path));
-        $twig->addFunction(new \Twig\TwigFunction('path', static fn (string $name, array $params = []): string => '/'.$name));
+        $twig->addFunction(new TwigFunction('asset', static fn (string $path, ?string $package = null): string => '/bundles/nowouikit/'.$path));
+        $twig->addFunction(new TwigFunction('path', static fn (string $name, array $params = []): string => '/'.$name));
         $twig->addGlobal('nowo_ui_kit_css_framework', 'bootstrap5');
         $twig->addGlobal('nowo_ui_kit_icon_set', 'bootstrap-icons');
         $twig->addGlobal('nowo_ui_kit_row_actions_display', 'icon');

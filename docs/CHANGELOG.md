@@ -91,6 +91,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Added
 
 - `nowo_ui_kit.row_actions_confirm` (`inline` default | `native` | `dialog`) and the `_row_actions` option `confirm_mode`: a 1.x POST hash's `confirm_message` can use the UiKit confirm contract (the `confirm-submit` Stimulus peer attributes) instead of the inline `onsubmit="return confirm(…)"` handler, in `_row_actions_form` and `_row_actions_legacy` (REQ-UI-003). Default output is byte-identical to 2.21 (`RowActionsConfirmBcTest`, fixtures `tests/Fixtures/bc-2.21`); opt-in output is pinned in `tests/Fixtures/confirm-contract-2.22`. See [ROW_ACTIONS.md](ROW_ACTIONS.md#confirm-contract-for-post-hashes-222).
+- `nowo_ui_kit.release_check.timeout` (default `5.0` s) and `release_check.releases_timeout` (default `8.0` s): the GitHub request timeouts of the release check are configurable (0.1–60 s) and documented with the timeout hierarchy ([CONFIGURATION.md](CONFIGURATION.md#release-check-timeouts-req-runtime-001), REQ-RUNTIME-001). Defaults unchanged.
+- `make validate-translations` (and CI) checks key parity of every locale against `en`, not only YAML syntax (`.scripts/check-translation-parity.php`, REQ-MAKE-004). CI also runs `composer igor` (REQ-CS-008).
+- Overridable `<subpath>` table, freeze rule and override procedure in [USAGE.md](USAGE.md#overriding-templates-req-twig-001) (REQ-TWIG-001).
+
+### Changed
+
+- The release-status route is declared with `#[Route]` on `ReleaseStatusController`; `Resources/config/routes/release_check.yaml` remains the opt-in import (now a thin `type: attribute` import). Route name `nowo_ui_kit_release_status`, path `GET /_nowo-ui/release/status` and the import line are unchanged; the route's `_controller` default is now the class name (a public alias points it at the same `nowo_ui_kit.release_status_controller` service) (REQ-SF-004).
+- PHP-CS-Fixer import rules (`fully_qualified_strict_types`, `global_namespace_import`, `ordered_imports`, `no_unused_imports`) and Rector `php82` set; code reformatted, no behaviour change (REQ-CS-001, REQ-CS-003).
+- `release-check` runs in the canonical order with `cs-fix` and translations parity; `test-coverage` fails under 99% (REQ-MAKE-002). Integration tests live in `tests/Integration` (REQ-TEST-002). PHP and TS line coverage are 100% (REQ-TEST-003).
+- Demos publish their port on `127.0.0.1` only; `.env.example` comments every variable (REQ-DEMO-003).
+- Repository hygiene: canonical issue / PR templates, `.github/SECURITY.md` lists 2.x, README `## Documentation` canonical list with Engram, CONTRIBUTING links the Code of Conduct and documents the Cursor Agent settings, TOCs, Spec Kit inventory covers all of `src/` with specs for 2.18–2.21.
+
+### Fixed
+
+- `.scripts/check-twig-extra.sh` no longer reports "Twig does not apply": under `pipefail`, `find | grep -q` failed with SIGPIPE and hid the bundle templates, so the REQ-TWIG-004 checks were skipped.
 
 ## [2.21.0] - 2026-11-01
 

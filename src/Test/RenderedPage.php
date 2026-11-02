@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Test;
 
+use DOMDocument;
+use DOMElement;
+use DOMXPath;
+
 /**
  * Output of one page rendered by {@see PageContractTestCase} inside the stub host layout, with DOM helpers for the
  * contract assertions (stub layout blocks, classes, text, attributes) and the translation ids the translator could
@@ -11,7 +15,7 @@ namespace Nowo\UiKitBundle\Test;
  */
 final readonly class RenderedPage
 {
-    private \DOMXPath $xpath;
+    private DOMXPath $xpath;
 
     /**
      * @param list<string>                         $missingTranslations translation ids (domain-prefixed, `domain:id`) missing in the catalogues
@@ -25,12 +29,12 @@ final readonly class RenderedPage
         public array $missingTranslations = [],
         public array $actionForms = [],
     ) {
-        $document = new \DOMDocument();
+        $document = new DOMDocument();
         $previous = libxml_use_internal_errors(true);
         $document->loadHTML('<?xml encoding="UTF-8"?><div data-nowo-ui-contract-root>'.$html.'</div>', \LIBXML_NONET | \LIBXML_HTML_NOIMPLIED | \LIBXML_HTML_NODEFDTD);
         libxml_clear_errors();
         libxml_use_internal_errors($previous);
-        $this->xpath = new \DOMXPath($document);
+        $this->xpath = new DOMXPath($document);
     }
 
     /**
@@ -46,12 +50,12 @@ final readonly class RenderedPage
     /**
      * Element of a canonical block in the stub layout (null when the layout did not render it).
      */
-    public function block(string $name): ?\DOMElement
+    public function block(string $name): ?DOMElement
     {
         $nodes = $this->xpath->query(\sprintf('//*[@data-nowo-ui-contract-block="%s"]', $name));
         $node = false !== $nodes ? $nodes->item(0) : null;
 
-        return $node instanceof \DOMElement ? $node : null;
+        return $node instanceof DOMElement ? $node : null;
     }
 
     /**
@@ -60,7 +64,7 @@ final readonly class RenderedPage
     public function blockHtml(string $name): string
     {
         $block = $this->block($name);
-        if (!$block instanceof \DOMElement) {
+        if (!$block instanceof DOMElement) {
             return '';
         }
         $html = '';
@@ -96,7 +100,7 @@ final readonly class RenderedPage
         $scope = null === $block ? '' : \sprintf('//*[@data-nowo-ui-contract-block="%s"]', $block);
         $values = [];
         foreach ($this->xpath->query($scope.'//*[@'.$attribute.']') ?: [] as $node) {
-            if ($node instanceof \DOMElement) {
+            if ($node instanceof DOMElement) {
                 $values[] = $node->getAttribute($attribute);
             }
         }
@@ -158,12 +162,12 @@ final readonly class RenderedPage
     {
         $result = [];
         foreach ($this->xpath->query('//form[@name]') ?: [] as $node) {
-            if (!$node instanceof \DOMElement || $node->getAttribute('name') !== $form) {
+            if (!$node instanceof DOMElement || $node->getAttribute('name') !== $form) {
                 continue;
             }
             $values = array_fill_keys($fields, []);
             foreach ($this->xpath->query('.//input[@type="hidden"][@name]', $node) ?: [] as $input) {
-                if ($input instanceof \DOMElement && \array_key_exists($input->getAttribute('name'), $values)) {
+                if ($input instanceof DOMElement && \array_key_exists($input->getAttribute('name'), $values)) {
                     $values[$input->getAttribute('name')][] = $input->getAttribute('value');
                 }
             }

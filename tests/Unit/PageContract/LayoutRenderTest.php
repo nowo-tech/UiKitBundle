@@ -6,6 +6,7 @@ namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
+use Twig\TwigFunction;
 
 final class LayoutRenderTest extends TestCase
 {
@@ -66,7 +67,7 @@ final class LayoutRenderTest extends TestCase
     {
         $request = new Request([], [], ['_route' => 'x', 'csp_nonce' => 'abc']);
         $twig = PageContractTwig::create(['child' => self::CHILD], ['tokens' => ['primary' => 'var(--moss)']], request: $request);
-        $twig->addFunction(new \Twig\TwigFunction('nowo_ui_appearance_style', static fn (?string $nonce = null): string => '<style nonce="'.$nonce.'" data-nowo-ui-appearance>:root { --nowo-ui-primary: #c00; }</style>', ['is_safe' => ['html']]));
+        $twig->addFunction(new TwigFunction('nowo_ui_appearance_style', static fn (?string $nonce = null): string => '<style nonce="'.$nonce.'" data-nowo-ui-appearance>:root { --nowo-ui-primary: #c00; }</style>', ['is_safe' => ['html']]));
 
         $html = $twig->render('child', ['layout' => '@NowoUiKit/layout/admin.html.twig']);
 

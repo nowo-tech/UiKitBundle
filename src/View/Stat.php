@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\View;
 
+use InvalidArgumentException;
+
 /**
  * One key figure of a stat row (2.21, `stat_row` partial, {@see ShowPage::$stats}): a compact tile with a label over
  * its value — uptime, response time, open incidents… Lighter than a {@see KpiTile} (no card, smaller type) so a row
@@ -22,7 +24,7 @@ final readonly class Stat
         public ?string $href = null,
     ) {
         if (!\in_array($tone, self::TONES, true)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid Stat tone "%s" (%s).', $tone, implode('|', self::TONES)));
+            throw new InvalidArgumentException(\sprintf('Invalid Stat tone "%s" (%s).', $tone, implode('|', self::TONES)));
         }
     }
 }

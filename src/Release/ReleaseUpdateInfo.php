@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Release;
 
+use DateTimeImmutable;
+use DateTimeInterface;
+
 /**
  * Result of comparing the installed version to the latest public GitHub release (cached).
  */
@@ -23,7 +26,7 @@ final readonly class ReleaseUpdateInfo
         public ?int $versionsBehind = null,
         public ?string $releaseUrl = null,
         public ?string $compareUrl = null,
-        public ?\DateTimeImmutable $checkedAt = null,
+        public ?DateTimeImmutable $checkedAt = null,
     ) {
     }
 
@@ -49,7 +52,7 @@ final readonly class ReleaseUpdateInfo
             'versionsBehind' => $this->versionsBehind,
             'releaseUrl' => $this->releaseUrl,
             'compareUrl' => $this->compareUrl,
-            'checkedAt' => $this->checkedAt?->format(\DateTimeInterface::ATOM),
+            'checkedAt' => $this->checkedAt?->format(DateTimeInterface::ATOM),
         ];
     }
 }

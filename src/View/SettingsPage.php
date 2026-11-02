@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\View;
 
+use InvalidArgumentException;
+
 /**
  * View model of `@NowoUiKit/page/settings.html.twig`: header, section tabs (when sections have hrefs) and one
  * form per section. With `current` set only that section renders; otherwise every section renders stacked.
@@ -29,7 +31,7 @@ final readonly class SettingsPage
         Action::assertAttributes($attributes);
         $this->sections = ViewList::of($sections, SettingsSection::class, 'SettingsPage sections');
         if (null !== $current && [] === array_filter($this->sections, static fn (SettingsSection $s): bool => $s->id === $current)) {
-            throw new \InvalidArgumentException(\sprintf('SettingsPage current section "%s" is not one of its sections.', $current));
+            throw new InvalidArgumentException(\sprintf('SettingsPage current section "%s" is not one of its sections.', $current));
         }
     }
 

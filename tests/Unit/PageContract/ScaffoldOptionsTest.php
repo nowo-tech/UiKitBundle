@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 
+use InvalidArgumentException;
 use Nowo\UiKitBundle\View\Action;
 use Nowo\UiKitBundle\View\Column;
 use Nowo\UiKitBundle\View\DashboardPage;
@@ -163,7 +164,7 @@ final class ScaffoldOptionsTest extends TestCase
             try {
                 $factory();
                 self::fail('Expected InvalidArgumentException');
-            } catch (\InvalidArgumentException $e) {
+            } catch (InvalidArgumentException $e) {
                 self::assertNotSame('', $e->getMessage());
             }
         }

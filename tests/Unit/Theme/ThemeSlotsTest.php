@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\Theme;
 
+use InvalidArgumentException;
 use Nowo\UiKitBundle\Theme\ThemeSlots;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -109,7 +110,7 @@ final class ThemeSlotsTest extends TestCase
 
     public function testUnknownSlotThrows(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Unknown UiKit theme slot "btn_moss"');
         ThemeSlots::semantic('btn_moss');
     }

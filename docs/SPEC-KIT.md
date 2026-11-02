@@ -123,11 +123,15 @@ Repository root/
 │   ├── 001-baseline/
 │   │   ├── spec.md              # Full-product baseline spec
 │   │   └── code-inventory.md    # 100% src/ file → FR-* mapping
-│   ├── 002-my-feature/          # (future) incremental feature specs
-│   │   ├── spec.md
-│   │   ├── plan.md
-│   │   └── tasks.md
-│   └── …
+│   ├── 002-theming-tokens/      # 1.13 incremental feature specs (spec.md each)
+│   ├── 003-host-chrome-extractions/   # 1.15
+│   ├── 004-appearance-spi/      # 1.16
+│   ├── 005-host-chrome-tables-filters/  # 1.17
+│   ├── 006-action-csrf-forms/   # 2.18
+│   ├── 007-form-types-everywhere/     # 2.19
+│   ├── 008-sortable-columns/    # 2.20
+│   ├── 009-detail-page-patterns/      # 2.21
+│   └── …                        # next: 010-… (spec.md, optional plan.md / tasks.md)
 └── docs/
     ├── SPEC-DRIVEN-DEVELOPMENT.md   # Product behavior + REQ-* traceability
     ├── SPEC-KIT.md                  # This manual
@@ -196,12 +200,17 @@ Every Nowo bundle with Spec Kit must ship:
 **Audit command (maintainers):**
 
 ```bash
-find src -type f ! -path '*/assets/dist/*' ! -name '*.test.ts' | wc -l
+git ls-files src | grep -v '\.test\.ts$' | wc -l
+# same result: find src -type f ! -name '*.test.ts' | wc -l   (no untracked build output under src/)
 ```
 
 The **Total production sources** row in `code-inventory.md` must match this count.
 
-In **UiKitBundle**, the baseline inventory covers **98/98** files — see [`specs/001-baseline/code-inventory.md`](../specs/001-baseline/code-inventory.md).
+In **UiKitBundle**, the baseline inventory covers **306/306** files (101 PHP, 60 TypeScript, 112 Twig, 9 YAML, 4 CSS,
+1 SCSS, 18 built JS, 1 Markdown; the 42 co-located `*.test.ts` files are excluded), last audited **2026-11-01**
+(2.21.0) — see [`specs/001-baseline/code-inventory.md`](../specs/001-baseline/code-inventory.md). The committed Vite
+IIFEs (`Resources/public/js/*.js`), the inline theme-boot copy and the layered `nowo-ui.css` are listed as build
+outputs of named sources (`FR-BUILD-*`).
 
 ---
 
@@ -268,6 +277,16 @@ Use `/speckit-converge` to find gaps between specs and code after large refactor
 | `specs/001-baseline/` | **Authoritative full-product** backfill; must not be contradicted by later specs |
 | `specs/002-feature-name/` | Single feature: `spec.md`, optionally `plan.md`, `tasks.md`, checklists |
 | `specs/003-…` | Next feature (sequential numbering) |
+
+Feature specs in this repository: [`002-theming-tokens`](../specs/002-theming-tokens/spec.md) (1.13),
+[`003-host-chrome-extractions`](../specs/003-host-chrome-extractions/spec.md) (1.15),
+[`004-appearance-spi`](../specs/004-appearance-spi/spec.md) (1.16),
+[`005-host-chrome-tables-filters`](../specs/005-host-chrome-tables-filters/spec.md) (1.17),
+[`006-action-csrf-forms`](../specs/006-action-csrf-forms/spec.md) (2.18),
+[`007-form-types-everywhere`](../specs/007-form-types-everywhere/spec.md) (2.19),
+[`008-sortable-columns`](../specs/008-sortable-columns/spec.md) (2.20),
+[`009-detail-page-patterns`](../specs/009-detail-page-patterns/spec.md) (2.21). The 2.0–2.17 surfaces (page
+contract, error pages, listing customizer, tour, …) are specified directly in the baseline.
 
 Feature specs are created by `/speckit-specify` (sequential numbering is automatic unless you set `SPECIFY_FEATURE_DIRECTORY`).
 

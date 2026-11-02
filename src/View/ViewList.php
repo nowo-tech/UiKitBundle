@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\View;
 
+use InvalidArgumentException;
+
 /**
  * @internal typed list normalisation for the view models
  */
@@ -22,7 +24,7 @@ final class ViewList
         $list = [];
         foreach ($items as $item) {
             if (!$item instanceof $class) {
-                throw new \InvalidArgumentException(\sprintf('%s: expected %s, got %s.', $what, $class, get_debug_type($item)));
+                throw new InvalidArgumentException(\sprintf('%s: expected %s, got %s.', $what, $class, get_debug_type($item)));
             }
             $list[] = $item;
         }

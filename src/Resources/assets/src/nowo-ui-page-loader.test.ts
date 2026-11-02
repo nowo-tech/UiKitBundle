@@ -51,5 +51,9 @@ describe('nowo-ui-page-loader', () => {
     document.body.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
     expect(document.querySelector('[data-nowo-ui-page-loader]')?.classList.contains('is-active')).toBe(false);
   });
-});
 
+  it('ignores clicks whose target is not an element', () => {
+    document.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    expect(document.querySelector('[data-nowo-ui-page-loader]')?.classList.contains('is-active')).toBe(false);
+  });
+});

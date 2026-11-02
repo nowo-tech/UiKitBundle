@@ -25,10 +25,7 @@ function fallbackCopy(value: string): void {
   area.remove();
 }
 
-function flashDone(target: HTMLElement | null, label: string, doneLabel: string): void {
-  if (!target) {
-    return;
-  }
+function flashDone(target: HTMLElement, label: string, doneLabel: string): void {
   const prev = target.getAttribute('data-nowo-ui-clipboard-flash-timer');
   if (prev) {
     window.clearTimeout(Number.parseInt(prev, 10));
@@ -75,11 +72,8 @@ export async function copyText(value: string, flashTarget: HTMLElement | null = 
   }
 }
 
-async function copyFromUrl(url: string, flashTarget: HTMLElement | null): Promise<void> {
-  const trimmed = url.trim();
-  if (trimmed === '') {
-    return;
-  }
+/** `url` is the trimmed, non-empty `data-nowo-ui-clipboard-url` (checked by the click handler). */
+async function copyFromUrl(trimmed: string, flashTarget: HTMLElement | null): Promise<void> {
   try {
     const response = await fetch(trimmed, {
       headers: { Accept: 'text/markdown, application/json, text/plain' },
@@ -126,7 +120,7 @@ function onDocumentClick(event: MouseEvent): void {
     return;
   }
   if (url.trim() !== '') {
-    void copyFromUrl(url, flashTarget);
+    void copyFromUrl(url.trim(), flashTarget);
   }
 }
 

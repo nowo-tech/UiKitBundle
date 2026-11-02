@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tour;
 
+use InvalidArgumentException;
 use Nowo\UiKitBundle\View\Label;
 
 /**
@@ -33,13 +34,13 @@ final readonly class TourStep
         public ?string $align = null,
     ) {
         if (null !== $selector && '' === trim($selector)) {
-            throw new \InvalidArgumentException('A TourStep selector must be null (centred step) or a non-empty CSS selector.');
+            throw new InvalidArgumentException('A TourStep selector must be null (centred step) or a non-empty CSS selector.');
         }
         if (null !== $side && !\in_array($side, self::SIDES, true)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid TourStep side "%s" (expected one of: %s).', $side, implode(', ', self::SIDES)));
+            throw new InvalidArgumentException(\sprintf('Invalid TourStep side "%s" (expected one of: %s).', $side, implode(', ', self::SIDES)));
         }
         if (null !== $align && !\in_array($align, self::ALIGNS, true)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid TourStep align "%s" (expected one of: %s).', $align, implode(', ', self::ALIGNS)));
+            throw new InvalidArgumentException(\sprintf('Invalid TourStep align "%s" (expected one of: %s).', $align, implode(', ', self::ALIGNS)));
         }
     }
 
@@ -49,7 +50,7 @@ final readonly class TourStep
     public static function anchor(string $name): string
     {
         if (1 !== preg_match('/^[A-Za-z0-9][A-Za-z0-9_.:-]*$/', $name)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid tour anchor name "%s".', $name));
+            throw new InvalidArgumentException(\sprintf('Invalid tour anchor name "%s".', $name));
         }
 
         return '[data-tour="'.$name.'"]';

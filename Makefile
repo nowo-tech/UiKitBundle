@@ -9,7 +9,7 @@ SERVICE_PHP = php
 BUNDLE_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 export DOCKER_CONFIG := $(BUNDLE_ROOT)/.docker
 
-.PHONY: help ensure-up up down down-dev build shell install assets assets-test test-ts test test-coverage test-with-db \ check-twig-extra
+.PHONY: help ensure-up up down down-dev build shell install assets assets-test test-ts test test-coverage test-with-db check-twig-extra igor twig-lint \
 	test-coverage-with-db coverage-check cs-check cs-fix rector rector-dry phpstan validate-phpdoc qa release-check \
 	release-check-demos demo-smoke composer-sync clean update validate validate-translations \
 	setup-hooks check-no-cursor-coauthor check-open-prs strip-cursor-coauthor-from-history check-clean-tree \
@@ -74,6 +74,7 @@ test-with-db: test
 test-coverage: ensure-up
 	@$(COMPOSE) exec -T $(SERVICE_PHP) composer test-coverage
 	@./.scripts/php-coverage-percent.sh coverage-output.txt
+	@./.scripts/coverage-fail-under.sh coverage-output.txt 99
 
 coverage-check: ensure-up
 	@$(COMPOSE) exec -T $(SERVICE_PHP) sh -lc 'composer test-coverage'
@@ -99,9 +100,9 @@ validate-phpdoc: ensure-up
 phpstan: ensure-up
 	@$(COMPOSE) exec -T $(SERVICE_PHP) composer phpstan
 
+# REQ-MAKE-004: YAML syntax + key parity of every locale against `en` (fails non-zero on missing / extra keys).
 validate-translations: ensure-up
-	@echo "Translation files validated (YAML syntax only)."
-	@$(COMPOSE) exec -T $(SERVICE_PHP) php -r 'require "vendor/autoload.php"; foreach (glob("src/Resources/translations/*.yaml") as $$f) { Symfony\Component\Yaml\Yaml::parseFile($$f); } echo "OK\n";'
+	@$(COMPOSE) exec -T $(SERVICE_PHP) php .scripts/check-translation-parity.php
 
 qa: cs-check twig-lint test test-ts
 
@@ -119,9 +120,28 @@ check-no-raw-html-form:
 # Run Igor worker-state audit (REQ-CS-008)
 igor: ensure-up
 	$(COMPOSE) exec -T php composer igor
-# Check-only: no step may rewrite tracked files (cs-check, not cs-fix; validate-phpdoc is read-only). The tree must
-# be clean before and after, so "release-check: OK <sha>" proves exactly the committed tree (REQ-GIT / release rule).
-release-check: check-clean-tree check-no-cursor-coauthor check-open-prs check-twig-extra check-no-raw-html-form ensure-up assets composer-sync cs-check rector-dry phpstan igor validate-phpdoc coverage-check test-ts release-check-demos
+# Canonical order (REQ-MAKE-002). The tree must be clean right after ensure-up and again at the end, so steps that may
+# rewrite files (assets build, cs-fix) fail the release check when they change anything: "release-check: OK <sha>"
+# proves exactly the committed tree (REQ-GIT / release rule).
+release-check:
+	@$(MAKE) --no-print-directory ensure-up
+	@$(MAKE) --no-print-directory check-clean-tree
+	@$(MAKE) --no-print-directory check-no-cursor-coauthor
+	@$(MAKE) --no-print-directory check-open-prs
+	@$(MAKE) --no-print-directory check-twig-extra
+	@$(MAKE) --no-print-directory check-no-raw-html-form
+	@$(MAKE) --no-print-directory composer-sync
+	@$(MAKE) --no-print-directory assets
+	@$(MAKE) --no-print-directory cs-fix
+	@$(MAKE) --no-print-directory cs-check
+	@$(MAKE) --no-print-directory rector-dry
+	@$(MAKE) --no-print-directory phpstan
+	@$(MAKE) --no-print-directory igor
+	@$(MAKE) --no-print-directory validate-phpdoc
+	@$(MAKE) --no-print-directory validate-translations
+	@$(MAKE) --no-print-directory test-coverage
+	@$(MAKE) --no-print-directory release-check-demos
+	@$(MAKE) --no-print-directory test-ts
 	@$(MAKE) --no-print-directory check-clean-tree
 
 # Fails when tracked or untracked (non-ignored) files differ from HEAD.

@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\Listing;
 
+use ArrayIterator;
+use ArrayObject;
+use Closure;
+use InvalidArgumentException;
 use Nowo\UiKitBundle\Listing\ListingField;
 use Nowo\UiKitBundle\Listing\SortRequest;
 use Nowo\UiKitBundle\View\Column;
@@ -99,16 +103,16 @@ final class SortRequestTest extends TestCase
         self::assertSame(['Alpha', 'alpha 2', 'beta', null, ''], $names((new SortRequest('name'))->sortRows($rows)));
         self::assertSame(['beta', 'alpha 2', 'Alpha', null, ''], $names((new SortRequest('name', 'desc'))->sortRows($rows)));
         self::assertSame(['', 'Alpha', 'alpha 2', 'beta', null], $names((new SortRequest('count'))->sortRows($rows, ['count' => 'n'])), 'equal values keep their order');
-        self::assertSame([null, 'beta', 'Alpha', 'alpha 2', ''], $names((new SortRequest('count', 'desc'))->sortRows(new \ArrayIterator($rows), ['count' => static fn (array $row): int => $row['n']])));
+        self::assertSame([null, 'beta', 'Alpha', 'alpha 2', ''], $names((new SortRequest('count', 'desc'))->sortRows(new ArrayIterator($rows), ['count' => static fn (array $row): int => $row['n']])));
         self::assertSame($rows, (new SortRequest())->sortRows($rows));
 
-        $objects = [(object) ['n' => 2], (object) ['n' => 1], 'scalar', new \ArrayObject(['n' => 3])];
+        $objects = [(object) ['n' => 2], (object) ['n' => 1], 'scalar', new ArrayObject(['n' => 3])];
         $sorted = (new SortRequest('n'))->sortRows($objects);
         self::assertSame([$objects[1], $objects[0], $objects[3], 'scalar'], $sorted);
     }
 
     /**
-     * @return iterable<string, array{\Closure(): mixed, string}>
+     * @return iterable<string, array{Closure(): mixed, string}>
      */
     public static function invalid(): iterable
     {
@@ -122,12 +126,12 @@ final class SortRequestTest extends TestCase
     }
 
     /**
-     * @param \Closure(): mixed $build
+     * @param Closure(): mixed $build
      */
     #[DataProvider('invalid')]
-    public function testRejectsInvalidDeclarations(\Closure $build, string $message): void
+    public function testRejectsInvalidDeclarations(Closure $build, string $message): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage($message);
         $build();
     }

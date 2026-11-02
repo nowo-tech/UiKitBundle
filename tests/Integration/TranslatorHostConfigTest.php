@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Nowo\UiKitBundle\Tests\Unit\Integration;
+namespace Nowo\UiKitBundle\Tests\Integration;
 
 use Nowo\UiKitBundle\DependencyInjection\NowoUiKitExtension;
 use Nowo\UiKitBundle\NowoUiKitBundle;
@@ -12,10 +12,13 @@ use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Bundle\TwigBundle\TwigBundle;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpKernel\Kernel;
+use Symfony\Component\Translation\Translator;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use Twig\Environment;
 
 /**
  * The bundle must not override the host translator settings (enabled flag, fallbacks)
@@ -57,7 +60,7 @@ final class TranslatorHostConfigTest extends TestCase
     {
         $container = $this->boot(['default_path' => '%kernel.project_dir%/translations', 'fallbacks' => ['es']]);
 
-        /** @var TranslatorInterface&\Symfony\Component\Translation\Translator $translator */
+        /** @var TranslatorInterface&Translator $translator */
         $translator = $container->get('translator');
         self::assertSame(['es'], $translator->getFallbackLocales());
         self::assertSame('Bearbeiten', $translator->trans('action.edit', [], 'NowoUiKitBundle', 'de'));
@@ -75,7 +78,7 @@ final class TranslatorHostConfigTest extends TestCase
 
         self::assertFalse($container->has('translator.default'));
 
-        /** @var \Twig\Environment $twig */
+        /** @var Environment $twig */
         $twig = $container->get('twig');
         self::assertSame('action.edit', $twig->createTemplate("{{ 'action.edit'|trans({}, 'NowoUiKitBundle') }}")->render());
     }
@@ -83,7 +86,7 @@ final class TranslatorHostConfigTest extends TestCase
     /**
      * @param array<string, mixed> $translator
      */
-    private function boot(array $translator): \Symfony\Component\DependencyInjection\ContainerInterface
+    private function boot(array $translator): ContainerInterface
     {
         $this->dir = sys_get_temp_dir().'/nowo-ui-kit-translator-'.bin2hex(random_bytes(4));
         $kernel = new TranslatorTestKernel($this->dir, $translator);

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\View;
 
+use InvalidArgumentException;
+use Nowo\UiKitBundle\Navigation\AreaNavRegistry;
+
 /**
  * Page header: title, intro, toolbar actions, breadcrumbs (plain trail, or BreadcrumbKit when installed) and an
  * optional area navigation ({@see AreaNav}, rendered under the title through the `tabs` partial).
@@ -49,10 +52,10 @@ final readonly class PageHeader
         public string $actionsLayout = 'toolbar',
     ) {
         if (!\in_array($breadcrumbsMode, self::BREADCRUMBS_MODES, true)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid PageHeader breadcrumbsMode "%s" (%s).', $breadcrumbsMode, implode('|', self::BREADCRUMBS_MODES)));
+            throw new InvalidArgumentException(\sprintf('Invalid PageHeader breadcrumbsMode "%s" (%s).', $breadcrumbsMode, implode('|', self::BREADCRUMBS_MODES)));
         }
         if (!\in_array($actionsLayout, self::ACTIONS_LAYOUTS, true)) {
-            throw new \InvalidArgumentException(\sprintf('Invalid PageHeader actionsLayout "%s" (%s).', $actionsLayout, implode('|', self::ACTIONS_LAYOUTS)));
+            throw new InvalidArgumentException(\sprintf('Invalid PageHeader actionsLayout "%s" (%s).', $actionsLayout, implode('|', self::ACTIONS_LAYOUTS)));
         }
         $this->actions = ViewList::of($actions, Action::class, 'PageHeader actions');
         $this->breadcrumbs = ViewList::of($breadcrumbs, Crumb::class, 'PageHeader breadcrumbs');
@@ -72,7 +75,7 @@ final readonly class PageHeader
     }
 
     /**
-     * Copy with another area navigation (e.g. from {@see \Nowo\UiKitBundle\Navigation\AreaNavRegistry}).
+     * Copy with another area navigation (e.g. from {@see AreaNavRegistry}).
      *
      * @return self Fluent interface
      */

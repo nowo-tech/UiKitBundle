@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Form;
 
+use Closure;
+use InvalidArgumentException;
 use Symfony\Component\Form\Exception\ExceptionInterface as FormException;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\FormFactoryInterface;
@@ -30,7 +32,7 @@ use Twig\TwigFunction;
  * the {@see FormRenderer} runtime) or a valid form field name is missing: the partial then prints its deprecated 2.18
  * raw markup (`*_legacy.html.twig`, removed in 3.0).
  */
-final class UiFormViews
+final readonly class UiFormViews
 {
     /** Form theme with the hidden-field blocks of the UiKit forms (2.19). */
     public const FIELDS_THEME = '@NowoUiKitBundle/form/nowo_ui_kit_fields.html.twig';
@@ -41,7 +43,7 @@ final class UiFormViews
     /**
      * @param FormFactoryInterface|null $factory standalone factory (core types); null = a new one per call
      */
-    public function __construct(private readonly ?FormFactoryInterface $factory = null)
+    public function __construct(private ?FormFactoryInterface $factory = null)
     {
     }
 
@@ -62,7 +64,7 @@ final class UiFormViews
             'search' => $this->search($env, $options, $partial),
             'per_page' => $this->perPage($env, $options, $partial),
             'checkbox' => $this->checkbox($env, \is_string($options['name'] ?? null) ? $options['name'] : '', (bool) ($options['checked'] ?? false), \is_scalar($options['value'] ?? null) ? (string) $options['value'] : '1', \is_string($options['id'] ?? null) && '' !== $options['id'] ? $options['id'] : null, $partial),
-            default => throw new \InvalidArgumentException(\sprintf('Unknown UiKit form kind "%s" (hidden, search, per_page, checkbox).', $kind)),
+            default => throw new InvalidArgumentException(\sprintf('Unknown UiKit form kind "%s" (hidden, search, per_page, checkbox).', $kind)),
         };
     }
 
@@ -148,9 +150,9 @@ final class UiFormViews
     }
 
     /**
-     * @param \Closure(FormFactoryInterface): FormView $create
+     * @param Closure(FormFactoryInterface): FormView $create
      */
-    private function build(Environment $env, string $partial, \Closure $create): ?FormView
+    private function build(Environment $env, string $partial, Closure $create): ?FormView
     {
         if (!class_exists(Forms::class) || !$env->getFunction('form_start') instanceof TwigFunction) {
             $this->deprecate($partial, 'symfony/form or its Twig extension (form_start) is missing');

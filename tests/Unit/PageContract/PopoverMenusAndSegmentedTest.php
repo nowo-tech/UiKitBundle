@@ -11,6 +11,7 @@ use Nowo\UiKitBundle\View\Pagination;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Component\Form\Extension\Core\Type\FormType;
 
 /**
  * 2.4: popover menus (`popover` on the menu / kebab / row_actions partials, theme.popover_menus), the `segmented`
@@ -65,7 +66,7 @@ final class PopoverMenusAndSegmentedTest extends TestCase
 
     public function testRowActionsMenuMode(): void
     {
-        $csrf = PageContractTwig::forms()->createNamedBuilder('del', \Symfony\Component\Form\Extension\Core\Type\FormType::class)->getForm()->createView();
+        $csrf = PageContractTwig::forms()->createNamedBuilder('del', FormType::class)->getForm()->createView();
         $actions = [
             Action::create('/items/1', 'Open'),
             ['view' => Action::delete('/items/1/delete', null, new Confirm('Delete?'), 'Delete', $csrf)],

@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\View;
 
+use Nowo\UiKitBundle\Navigation\AreaNavProviderInterface;
+
 /**
  * Area navigation (REQ-UI-003): the tab bar between the sections of one bundle area (e.g. CookieConsent
  * "Consents | Categories | Settings"), rendered by the `page_header` partial through the `tabs` partial
  * ({@see PageHeader::$tabs}). `label` is the `aria-label` of the `<nav>` (default `tabs.nav`), `attributes` its root
  * attributes (e.g. `data-turbo: 'false'`). Built by the bundle, or by an
- * {@see \Nowo\UiKitBundle\Navigation\AreaNavProviderInterface} (DashboardMenu and others consume the registry).
+ * {@see AreaNavProviderInterface} (DashboardMenu and others consume the registry).
  */
 final readonly class AreaNav
 {

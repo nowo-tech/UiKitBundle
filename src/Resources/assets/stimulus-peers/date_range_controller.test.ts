@@ -493,3 +493,45 @@ describe('date-range panel position', () => {
     expect(wide.left).toBe(margin);
   });
 });
+
+describe('date-range peer edge cases', () => {
+  it('drops a calendar that resolves after the control was disconnected', async () => {
+    stubPopover();
+    let resolveFactory: () => void = () => undefined;
+    class SlowCalendarController extends DateRangeController {
+      protected override calendarFactory(): Promise<void> {
+        return new Promise<void>((resolve) => {
+          resolveFactory = resolve;
+        });
+      }
+    }
+    app.register('slow-date-range', SlowCalendarController);
+    document.body.innerHTML = field('slow-date-range');
+    await settle();
+
+    controller('slow-date-range').open();
+    await settle();
+    const element = root();
+    element.remove();
+    await settle();
+    resolveFactory();
+    await settle();
+    expect(element.querySelector('calendar-range')).toBeNull();
+    expect(element.classList.contains('is-enhanced')).toBe(false);
+  });
+
+  it('clears the days without rendering when the control was never enhanced', async () => {
+    document.body.innerHTML = `
+      <div class="nowo-ui-date-range" data-controller="date-range">
+        <input type="date" name="from" value="2026-01-01" data-date-range-target="from">
+        <input type="date" name="to" value="2026-01-31" data-date-range-target="to">
+      </div>`;
+    await settle();
+
+    expect(root().classList.contains('is-enhanced')).toBe(false);
+    controller().clear();
+    expect(input('from').value).toBe('');
+    expect(input('to').value).toBe('');
+    expect(root().querySelector('[data-date-range-trigger]')).toBeNull();
+  });
+});

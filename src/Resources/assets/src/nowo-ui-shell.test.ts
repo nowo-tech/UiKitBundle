@@ -199,4 +199,39 @@ describe('nowo-ui-shell', () => {
     document.querySelector('[data-nowo-ui-locale-switcher]')!.dispatchEvent(new Event('click', { bubbles: true }));
     window.history.replaceState(null, '', '/');
   });
+
+  it('skips non-HTML width toggles, no-ops without a shell and exposes the width hooks', () => {
+    document.body.innerHTML = `
+      <div data-nowo-ui-shell class="nowo-ui-shell">
+        <svg data-nowo-ui-width-toggle></svg>
+        <button type="button" data-nowo-ui-width-toggle></button>
+      </div>
+    `;
+    const shell = document.querySelector('[data-nowo-ui-shell]') as HTMLElement;
+    const svg = shell.querySelector('svg')!;
+    mod.setMainWidth('content', shell);
+    expect(shell.classList.contains('is-main-content')).toBe(true);
+    expect(svg.hasAttribute('aria-pressed')).toBe(false);
+    expect(shell.querySelector('button')?.getAttribute('aria-pressed')).toBe('true');
+
+    window.nowoUiSetMainWidth!('full');
+    expect(shell.classList.contains('is-main-content')).toBe(false);
+    window.nowoUiToggleMainWidth!();
+    expect(shell.classList.contains('is-main-content')).toBe(true);
+    window.nowoUiSetMainWidth!('full', shell);
+    window.nowoUiToggleMainWidth!(shell);
+    expect(shell.classList.contains('is-main-content')).toBe(true);
+
+    document.body.innerHTML = '';
+    expect(() => mod.setMainWidth('content')).not.toThrow();
+    expect(() => mod.toggleMainWidth()).not.toThrow();
+    expect(document.querySelector('[data-nowo-ui-shell]')).toBeNull();
+    window.localStorage.removeItem('nowo-ui-main-width');
+  });
+
+  it('ignores clicks whose target is not an element', () => {
+    const shell = document.querySelector('[data-nowo-ui-shell]') as HTMLElement;
+    document.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    expect(shell.classList.contains('is-aside-collapsed')).toBe(false);
+  });
 });

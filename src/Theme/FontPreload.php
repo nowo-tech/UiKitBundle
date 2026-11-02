@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Theme;
 
+use JsonException;
+
 /**
  * `<link rel="preload" as="font" crossorigin>` tags for the fonts a page paints above the fold (2.21,
  * `nowo_ui_kit.font_preload`, Twig `nowo_ui_font_preload()`; the document and error layouts print them in <head>), so
@@ -82,7 +84,7 @@ final class FontPreload
     {
         try {
             $manifest = json_decode((string) file_get_contents($path), true, 512, \JSON_THROW_ON_ERROR);
-        } catch (\JsonException) {
+        } catch (JsonException) {
             return '';
         }
         $assets = \is_array($manifest) && \is_array($manifest[$this->entry]['assets'] ?? null) ? $manifest[$this->entry]['assets'] : [];

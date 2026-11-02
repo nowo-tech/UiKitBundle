@@ -99,7 +99,9 @@
 
 ## Unreleased
 
-No action needed: 1.x row-action POST hashes with `confirm_message` render exactly as in 2.21. To drop the inline
+No action needed. Optional: tune `nowo_ui_kit.release_check.timeout` / `releases_timeout` (defaults 5 s / 8 s, as before). Keep importing `@NowoUiKitBundle/Resources/config/routes/release_check.yaml`; it now loads the `#[Route]` of `ReleaseStatusController` with the same name and path. Only code that read the route's `_controller` default (`nowo_ui_kit.release_status_controller`) sees the class name `Nowo\UiKitBundle\Release\ReleaseStatusController` instead; both resolve to the same service.
+
+Row actions: 1.x row-action POST hashes with `confirm_message` render exactly as in 2.21. To drop the inline
 `onsubmit` handler (strict CSP), register the `confirm-submit` Stimulus peer and set `nowo_ui_kit.row_actions_confirm:
 native` (or `dialog`), or pass `confirm_mode` to a single `_row_actions` include. See
 [ROW_ACTIONS.md](ROW_ACTIONS.md#confirm-contract-for-post-hashes-222).

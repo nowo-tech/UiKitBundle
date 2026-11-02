@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Twig;
 
+use Stringable;
 use Symfony\Contracts\Translation\TranslatableInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -12,7 +13,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * the theme's `|trans` calls {@see self::trans()}, so a catalogue message is translated exactly once in its own
  * domain and a literal (`domain` null) is printed as given (2.3, `|nowo_ui_translatable`).
  */
-final readonly class TranslatableText implements TranslatableInterface, \Stringable
+final readonly class TranslatableText implements TranslatableInterface, Stringable
 {
     /**
      * @param string               $text   catalogue id (with a domain) or literal text (domain null)
@@ -45,6 +46,6 @@ final readonly class TranslatableText implements TranslatableInterface, \Stringa
 
     private function literal(): string
     {
-        return strtr($this->text, array_map(static fn (mixed $v): string => \is_scalar($v) || $v instanceof \Stringable ? (string) $v : '', $this->params));
+        return strtr($this->text, array_map(static fn (mixed $v): string => \is_scalar($v) || $v instanceof Stringable ? (string) $v : '', $this->params));
     }
 }

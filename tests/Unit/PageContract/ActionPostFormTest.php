@@ -13,6 +13,7 @@ use Symfony\Bridge\Twig\Extension\TranslationExtension;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Forms;
+use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\Translation\IdentityTranslator;
 use Symfony\Component\Translation\Translator;
 use Twig\Environment;
@@ -118,7 +119,7 @@ final class ActionPostFormTest extends TestCase
         self::assertCount(0, $factory->createNamed('', ActionCsrfType::class)->createView());
         self::assertNull(ActionCsrfType::createActionView($factory, new Action('custom', href: '/x', method: 'POST', csrfField: 'a b')));
 
-        $this->expectException(\Symfony\Component\OptionsResolver\Exception\InvalidOptionsException::class);
+        $this->expectException(InvalidOptionsException::class);
         $factory->createNamed('', ActionCsrfType::class, null, ['csrf_field' => 'a[b]']);
     }
 

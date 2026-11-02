@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\Appearance;
 
+use InvalidArgumentException;
 use Nowo\UiKitBundle\Appearance\Appearance;
 use Nowo\UiKitBundle\Appearance\AppearancePalette;
 use Nowo\UiKitBundle\Appearance\AppearancePreset;
@@ -59,7 +60,7 @@ final class AppearanceModelTest extends TestCase
         self::assertSame($ocean->dark, $ocean->palette('dark'));
         self::assertSame($ocean->light, $ocean->palette('light'));
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         BuiltInAppearancePresets::get('beacon');
     }
 
@@ -75,10 +76,10 @@ final class AppearanceModelTest extends TestCase
         try {
             new AppearancePreset('Bad Id', 'light', $preset->light, $preset->dark);
             self::fail('id');
-        } catch (\InvalidArgumentException $e) {
+        } catch (InvalidArgumentException $e) {
             self::assertStringContainsString('Bad Id', $e->getMessage());
         }
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         new AppearancePreset('ok', 'dim', $preset->light, $preset->dark);
     }
 

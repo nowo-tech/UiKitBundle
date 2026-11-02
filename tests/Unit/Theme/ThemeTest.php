@@ -4,9 +4,13 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\Theme;
 
+use Closure;
+use InvalidArgumentException;
 use Nowo\UiKitBundle\Theme\Theme;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use stdClass;
+use Twig\Markup;
 
 final class ThemeTest extends TestCase
 {
@@ -78,7 +82,7 @@ final class ThemeTest extends TestCase
         ]);
 
         self::assertSame('nowo-ui-empty nowo-ui-muted text-muted app-empty', $theme->macroClasses('empty', 'nowo-ui-empty nowo-ui-muted text-muted'));
-        self::assertSame('nowo-ui-flash nowo-ui-flash--success alert alert-success', $theme->macroClasses('flash_success', new \Twig\Markup('nowo-ui-flash nowo-ui-flash--success alert alert-success', 'UTF-8')));
+        self::assertSame('nowo-ui-flash nowo-ui-flash--success alert alert-success', $theme->macroClasses('flash_success', new Markup('nowo-ui-flash nowo-ui-flash--success alert alert-success', 'UTF-8')));
         self::assertSame('nowo-ui-card acme-card', $theme->macroClasses('card', 'nowo-ui-card card'));
         self::assertSame('nowo-ui-pagination__link is-disabled', $theme->macroClasses('pagination_link', 'page-link nowo-ui-pagination__link is-disabled'));
     }
@@ -107,7 +111,7 @@ final class ThemeTest extends TestCase
 
     public function testRenderAttributesRefusesUnsafeCallSiteAttributes(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('inline event handler');
         (new Theme())->renderAttributes('btn', null, ['onclick' => 'x()']);
     }
@@ -236,7 +240,7 @@ final class ThemeTest extends TestCase
         self::assertSame(['a b', null], Theme::normalizeClassEntry([' a', 'b ']));
         self::assertSame(['a', false], Theme::normalizeClassEntry(['value' => 'a', 'framework_defaults' => false]));
         self::assertSame(['', true], Theme::normalizeClassEntry(['framework_defaults' => true]));
-        self::assertSame(['a', null], Theme::normalizeClassEntry(['value' => [new \stdClass(), 'a']]));
+        self::assertSame(['a', null], Theme::normalizeClassEntry(['value' => [new stdClass(), 'a']]));
         self::assertNull(Theme::attributeNameError('data-controller'));
         self::assertNotNull(Theme::attributeNameError('on-click'));
         self::assertNotNull(Theme::attributeNameError('a b'));
@@ -244,7 +248,7 @@ final class ThemeTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{\Closure(): Theme, string}>
+     * @return iterable<string, array{Closure(): Theme, string}>
      */
     public static function invalidThemes(): iterable
     {
@@ -268,12 +272,12 @@ final class ThemeTest extends TestCase
     }
 
     /**
-     * @param \Closure(): Theme $factory
+     * @param Closure(): Theme $factory
      */
     #[DataProvider('invalidThemes')]
-    public function testRejectsInvalidThemes(\Closure $factory, string $message): void
+    public function testRejectsInvalidThemes(Closure $factory, string $message): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage($message);
         $factory();
     }
@@ -311,7 +315,7 @@ final class ThemeTest extends TestCase
         $theme = new Theme();
         self::assertSame(' data-testid="a&quot;b" hidden data-n="1"', $theme->renderAttributeMap(['data-testid' => 'a"b', 'hidden' => true, 'data-off' => false, 'data-null' => null, 'data-n' => 1]));
 
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('values are strings, numbers, booleans or null');
         $theme->renderAttributeMap(['data-x' => ['a']]);
     }
@@ -323,7 +327,7 @@ final class ThemeTest extends TestCase
             try {
                 $call();
                 self::fail('Expected exception');
-            } catch (\InvalidArgumentException $e) {
+            } catch (InvalidArgumentException $e) {
                 self::assertStringContainsString('Unknown UiKit theme', $e->getMessage());
             }
         }

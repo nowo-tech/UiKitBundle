@@ -3,7 +3,10 @@
 #   # config/routes/nowo_ui_kit.yaml
 #   nowo_ui_kit_release:
 #       resource: '@NowoUiKitBundle/Resources/config/routes/release_check.yaml'
-nowo_ui_kit_release_status:
-    path: /_nowo-ui/release/status
-    controller: nowo_ui_kit.release_status_controller
-    methods: [GET]
+#
+# Thin attribute import (REQ-SF-004): the route itself is the #[Route] on ReleaseStatusController
+# (name nowo_ui_kit_release_status, GET /_nowo-ui/release/status). The controller service is registered
+# explicitly and is not autoconfigured, so the route exists only where the host imports this file.
+nowo_ui_kit_release_status_attribute:
+    resource: Nowo\UiKitBundle\Release\ReleaseStatusController
+    type: attribute

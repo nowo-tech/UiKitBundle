@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Release;
 
+use DateTimeImmutable;
+use DateTimeInterface;
+use DateTimeZone;
+use Exception;
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Throwable;
 
 /**
  * Compares the installed version to GitHub `releases/latest` of one public repository.
@@ -32,6 +37,12 @@ final readonly class ReleaseUpdateChecker
 
     private const RELEASES_PAGE_SIZE = 100;
 
+    /** Default idle timeout (seconds) of the `releases/latest` request (REQ-RUNTIME-001). */
+    public const DEFAULT_LATEST_TIMEOUT = 5.0;
+
+    /** Default idle timeout (seconds) of the `releases` listing used for "versions behind" (REQ-RUNTIME-001). */
+    public const DEFAULT_RELEASES_TIMEOUT = 8.0;
+
     public function __construct(
         private HttpClientInterface $httpClient,
         private CacheInterface $cache,
@@ -42,6 +53,8 @@ final readonly class ReleaseUpdateChecker
         private string $userAgent = 'nowo-ui-kit-release-check',
         private string $defaultBranch = 'main',
         private ?LoggerInterface $logger = null,
+        private float $latestTimeout = self::DEFAULT_LATEST_TIMEOUT,
+        private float $releasesTimeout = self::DEFAULT_RELEASES_TIMEOUT,
     ) {
     }
 
@@ -77,7 +90,7 @@ final readonly class ReleaseUpdateChecker
                 $this->cacheKey($repo, $currentNorm),
                 fn (ItemInterface $item): array => $this->computeReleasePayload($item, $repo, $currentNorm),
             );
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->logger?->warning('Release update check cache/fetch failed.', [
                 'exception' => $e::class,
                 'message' => $e->getMessage(),
@@ -145,7 +158,7 @@ final readonly class ReleaseUpdateChecker
         try {
             $response = $this->httpClient->request('GET', self::API_HOST.'/repos/'.$repo.'/releases/latest', [
                 'headers' => $this->githubHeaders(),
-                'timeout' => 5,
+                'timeout' => $this->latestTimeout,
                 'max_redirects' => 0,
             ]);
             $status = $response->getStatusCode();
@@ -157,7 +170,7 @@ final readonly class ReleaseUpdateChecker
 
             /** @var array{tag_name?: mixed, html_url?: mixed} $data */
             $data = $response->toArray(false);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->logger?->warning('Release update check HTTP failed.', [
                 'exception' => $e::class,
                 'message' => $e->getMessage(),
@@ -176,7 +189,7 @@ final readonly class ReleaseUpdateChecker
         return [
             'tag' => $tag,
             'url' => $htmlUrl,
-            'at' => (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format(\DateTimeInterface::ATOM),
+            'at' => (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format(DateTimeInterface::ATOM),
         ];
     }
 
@@ -189,7 +202,7 @@ final readonly class ReleaseUpdateChecker
             $response = $this->httpClient->request('GET', self::API_HOST.'/repos/'.$repo.'/releases', [
                 'headers' => $this->githubHeaders(),
                 'query' => ['per_page' => self::RELEASES_PAGE_SIZE],
-                'timeout' => 8,
+                'timeout' => $this->releasesTimeout,
                 'max_redirects' => 0,
             ]);
             if ($response->getStatusCode() < 200 || $response->getStatusCode() >= 300) {
@@ -198,7 +211,7 @@ final readonly class ReleaseUpdateChecker
 
             /** @var list<array{tag_name?: mixed, draft?: mixed, prerelease?: mixed}> $data */
             $data = $response->toArray(false);
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->logger?->warning('Release update versions-behind fetch failed.', [
                 'exception' => $e::class,
                 'message' => $e->getMessage(),
@@ -252,7 +265,7 @@ final readonly class ReleaseUpdateChecker
             return [
                 'tag' => '',
                 'url' => '',
-                'at' => (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format(\DateTimeInterface::ATOM),
+                'at' => (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format(DateTimeInterface::ATOM),
                 'behind' => null,
                 'error' => true,
             ];
@@ -300,11 +313,11 @@ final readonly class ReleaseUpdateChecker
         return 1 === preg_match('/^\d+\.\d+\.\d+$/', $t) ? 'v'.$t : $t;
     }
 
-    private function parseCheckedAt(string $atom): ?\DateTimeImmutable
+    private function parseCheckedAt(string $atom): ?DateTimeImmutable
     {
         try {
-            return new \DateTimeImmutable($atom);
-        } catch (\Exception) {
+            return new DateTimeImmutable($atom);
+        } catch (Exception) {
             return null;
         }
     }

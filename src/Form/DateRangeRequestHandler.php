@@ -22,9 +22,9 @@ use Symfony\Component\HttpFoundation\Request;
  * {@see DateRangeSubmitExtension} maps the two flat values onto the range. Named forms, other methods and requests
  * without a range parameter are passed through untouched. Stateless (safe in kept-alive workers).
  */
-final class DateRangeRequestHandler implements RequestHandlerInterface
+final readonly class DateRangeRequestHandler implements RequestHandlerInterface
 {
-    public function __construct(private readonly RequestHandlerInterface $inner)
+    public function __construct(private RequestHandlerInterface $inner)
     {
     }
 
