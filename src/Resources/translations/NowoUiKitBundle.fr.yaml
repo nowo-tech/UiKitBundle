@@ -3,6 +3,9 @@ pagination.showing: Affichage %from%–%to% sur %total%
 pagination.previous: Précédent
 pagination.next: Suivant
 pagination.per_page: Par page
+pagination.load_more: "Charger plus"
+pagination.loaded: "%count% lignes supplémentaires chargées"
+pagination.load_error: "Impossible de charger plus de lignes. Réessayez."
 action.edit: Modifier
 action.delete: Supprimer
 action.view: Voir

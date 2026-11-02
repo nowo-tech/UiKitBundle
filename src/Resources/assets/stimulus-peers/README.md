@@ -22,6 +22,8 @@ They are **not** built into the kit IIFEs. Prefer the no-build scripts under `sr
 | `disclosure_icon_controller.ts` | `disclosure-icon` | — (peer only, 1.17; `partials/_disclosure_icon.html.twig`) |
 | `listing_customizer_controller.ts` | `listing-customizer` | — (peer only; `partials/_listing_customizer.html.twig`, listing preferences cookie via `listing_cookie.ts`) |
 | `table_sort_controller.ts` | `table-sort` | — (peer only, 2.20; client-side sortable headers: `View\Table::$clientSort`, `partials/_sort_header.html.twig`) |
+| `list_pagination_controller.ts` | `list-pagination` | — (peer only, 2.23; pagination modes `infinite` / `responsive`: `View\Pagination::withMode()`, `partials/_pagination_mode.html.twig`) |
+| `visible_when_controller.ts` | `visible-when` | — (peer only, 2.23; provider-dependent form rows: `Form\VisibleWhen`, `nowo_ui_visible_when()`) |
 
 `listing_cookie.ts` (module: `readListingCookie()`, `writeListingCookie()`, `patchListingCookie()`,
 `deleteListingCookie()`) reads and writes the listing preference cookie shared by `listing-customizer` and

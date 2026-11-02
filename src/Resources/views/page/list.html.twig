@@ -18,6 +18,8 @@
   panel, add `nowo-ui-table-wrap--flush` to the table_wrap slot: card-mode rows then drop their own border.
   2.2: caption through the table_caption slot (page.captionVisible = false: visually hidden); the row-actions column
   header is visible by default (page.actionsLabelVisible) and the column sits first or last (page.actionsPosition).
+  2.23: with a View\Pagination mode other than `pager` (infinite | responsive) the `table` partial gets `list_rows`
+  (tbody[data-nowo-ui-list-rows]: the rows the `list-pagination` peer appends to and copies from the next page).
 #}
 {% extends page.layout ?? nowo_ui_layout.admin %}
 {% set nowo_ui_bundle = page.bundle %}
@@ -76,7 +78,7 @@
                 {% endset %}
                 {% set _rows_html = _rows_html|merge({('k' ~ row_key): _cells}) %}
             {% endfor %}
-            {{ include(nowo_ui_partial('table', _b), {table: page.table, label: page.header.title, route: _route, head_html: _head_html, rows_html: _rows_html, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
+            {{ include(nowo_ui_partial('table', _b), {table: page.table, label: page.header.title, route: _route, head_html: _head_html, rows_html: _rows_html, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}|merge(page.pagination and page.pagination.isProgressive() ? {list_rows: true} : {}), false) }}
             {% if page.pagination %}
                 {#- 1.x array shape (+ the object as pagination_model) and the 1.x top-level route / route_params / query
                     (query = the current request query without the page parameters, then Pagination::query), so an

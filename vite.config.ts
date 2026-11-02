@@ -22,7 +22,8 @@ type Entry =
   | 'popover'
   | 'segmented'
   | 'autosubmit'
-  | 'error-retry';
+  | 'error-retry'
+  | 'demo-peers';
 
 const entry = process.env.VITE_ENTRY as Entry | undefined;
 
@@ -276,6 +277,22 @@ const configs: Record<Entry, { build: object }> = {
         output: {
           format: 'iife' as const,
           entryFileNames: 'js/nowo-ui-error-retry.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  // Demo only (UiKit 2.23 demos): Stimulus + the kit peers those pages use, committed to demo/symfony8/public/js.
+  'demo-peers': {
+    build: {
+      outDir: 'demo/symfony8/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'demo/symfony8/assets/demo-peers.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/demo-peers.js',
         },
       },
       minify: true,

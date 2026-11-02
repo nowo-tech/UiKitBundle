@@ -13,6 +13,8 @@
       Pagination::fromTotal(); none = no select); per_page_selector: false hides it
     - id: id prefix of the select (default nowo-ui-pagination)
   Renders nothing without rows; the nav only with more than one page.
+  2.23: pagination_mode / mode_narrow / mode_wide / breakpoint / auto_loads as on the `pagination` partial (default: the
+  View\Pagination's; `pager` = unchanged markup) add the `list-pagination` peer contract (partial `_pagination_mode`).
   Slots: pagination_compact (root), pagination_link (previous / next), pagination_page ("Page n of m"),
   pagination_per_page (the form), pagination_info (its label), pagination_select, btn_secondary + btn_sm (no-JS button).
 #}
@@ -37,8 +39,14 @@
 {% set _keep_per_page = _choices is not empty or (app.request is not null and app.request.query.has(per_page_param)) %}
 {% set _base = route_params|merge(query)|merge(_keep_per_page ? {(per_page_param): per_page} : {}) %}
 {% set _id = (id|default('nowo-ui-pagination')) ~ '-per-page' %}
+{% set _pm_source = _model ?? pagination %}
+{% set _pm_mode = pagination_mode|default(_pm_source.mode ?? 'pager') %}
+{% set _pm_on = _pm_mode in ['infinite', 'responsive'] %}
+{% if _pm_on %}
+    {% set _pm_vars = {mode: _pm_mode, mode_narrow: mode_narrow|default(_pm_source.mode_narrow ?? 'infinite'), mode_wide: mode_wide|default(_pm_source.mode_wide ?? 'pager'), breakpoint: breakpoint|default(_pm_source.breakpoint ?? '(max-width: 900px)'), auto_loads: auto_loads ?? (_pm_source.auto_loads ?? 3), next_href: page < total_pages ? path(route, _base|merge({(page_param): page + 1})) : null, bundle: bundle, trans_domain: trans_domain} %}
+{% endif %}
 {% if total > 0 and (total_pages > 1 or _choices is not empty) %}
-    <div class="{{ nowo_ui_class('pagination_compact', bundle) }}" data-nowo-ui-pagination="compact"{{ nowo_ui_attrs('pagination_compact', bundle) }}{% if region|default(null) %} data-nowo-ui-region="{{ region }}"{% endif %}>
+    <div class="{{ nowo_ui_class('pagination_compact', bundle) }}" data-nowo-ui-pagination="compact"{{ nowo_ui_attrs('pagination_compact', bundle) }}{% if region|default(null) %} data-nowo-ui-region="{{ region }}"{% endif %}{% if _pm_on %}{{ include('@NowoUiKitBundle/partials/_pagination_mode.html.twig', _pm_vars|merge({part: 'attrs'}), false) }}{% endif %}>
         {% if total_pages > 1 %}
             <nav class="nowo-ui-pagination__nav" aria-label="{{ nav_label|trans({}, nav_trans_domain) }}">
                 {% if page > 1 %}
@@ -76,5 +84,8 @@
                 {{ include('@NowoUiKitBundle/partials/_pagination_per_page_legacy.html.twig', _context, false) }}
             {% endif %}
         {% endif %}
+        {%- if _pm_on %}
+            {{ include('@NowoUiKitBundle/partials/_pagination_mode.html.twig', _pm_vars|merge({part: 'extras'}), false) }}
+        {%- endif %}
     </div>
 {% endif %}

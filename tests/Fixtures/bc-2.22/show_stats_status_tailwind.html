@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>api.example.com</title>
+            <script src="/bundles/nowouikit/js/nowo-ui-theme-boot.js" data-nowo-ui-theme-boot></script>
+
+                    <link rel="stylesheet" href="/bundles/nowouikit/css/nowo-ui.css">
+    </head>
+<body class="nowo-ui-body">
+            <div class="nowo-ui-page nowo-ui-page--admin">
+                <main class="nowo-ui-content" id="nowo-ui-content">
+                            <div class="nowo-ui-page-header flex flex-wrap items-start justify-between gap-2 mb-3" data-nowo-ui-region="header">
+    <div class="nowo-ui-page-header__text">                <nav class="nowo-ui-breadcrumbs" aria-label="Breadcrumb">
+        <ol class="nowo-ui-breadcrumbs__list">
+                            <li class="nowo-ui-breadcrumbs__item">                                            <a class="nowo-ui-breadcrumbs__link" href="/monitors">Monitors</a>
+                                    </li>
+                            <li class="nowo-ui-breadcrumbs__item"><span class="nowo-ui-breadcrumbs__separator" aria-hidden="true">/</span>                                            <span class="nowo-ui-breadcrumbs__current" aria-current="page">api.example.com</span>
+                                    </li>
+                    </ol>
+    </nav>
+
+                                <div class="nowo-ui-page-header__title-row"><h1 class="nowo-ui-page-header__title text-xl font-semibold mb-1">api.example.com</h1><span class="nowo-ui-page-status nowo-ui-badge nowo-ui-badge--success inline-flex border px-2 py-0.5 text-xs" data-nowo-ui-page-status="success" title="Checked 1 min ago">Up</span></div>
+            </div>
+        </div>
+
+
+                                                                                <div class="nowo-ui-flash nowo-ui-flash--success px-4 py-3 text-sm mb-2 border" role="alert">Saved.</div>
+    
+                                <div class="nowo-ui-show-page" data-nowo-ui-page="show" data-testid="monitor">
+        <dl class="nowo-ui-stat-row" data-nowo-ui-region="stats">
+            <div class="nowo-ui-stat nowo-ui-stat--success">
+            <dt class="nowo-ui-stat__label">Uptime 24h</dt>
+            <dd class="nowo-ui-stat__value">99.98 %</dd>
+                            <dd class="nowo-ui-stat__hint">last 24 h</dd>
+                    </div>
+            <div class="nowo-ui-stat nowo-ui-stat--neutral">
+            <dt class="nowo-ui-stat__label">Response</dt>
+            <dd class="nowo-ui-stat__value"><a href="/monitors/1/checks">182</a></dd>
+                    </div>
+            <div class="nowo-ui-stat nowo-ui-stat--warning">
+            <dt class="nowo-ui-stat__label">Incidents</dt>
+            <dd class="nowo-ui-stat__value">0</dd>
+                    </div>
+    </dl>
+                            <section class="nowo-ui-section mb-6 nowo-ui-card border" id="check" data-nowo-ui-region="section">
+                                            <header class="nowo-ui-card__header flex flex-wrap items-start justify-between gap-2 border-b px-4 py-3"><h2 class="nowo-ui-card__title">Check</h2></header>
+                                        <div class="nowo-ui-card__body px-4 py-3">
+                        <dl class="nowo-ui-detail-list nowo-ui-detail-list--facts">
+            <div class="nowo-ui-detail-list__item">
+            <dt class="nowo-ui-detail-list__term">URL</dt>
+            <dd class="nowo-ui-detail-list__value"><a href="https://api.example.com">https://api.example.com</a></dd>
+        </div>
+            <div class="nowo-ui-detail-list__item">
+            <dt class="nowo-ui-detail-list__term">Status</dt>
+            <dd class="nowo-ui-detail-list__value"><span class="nowo-ui-badge nowo-ui-badge--success inline-flex border px-2 py-0.5 text-xs">Up</span></dd>
+        </div>
+            <div class="nowo-ui-detail-list__item">
+            <dt class="nowo-ui-detail-list__term">Interval</dt>
+            <dd class="nowo-ui-detail-list__value">60 s</dd>
+        </div>
+            <div class="nowo-ui-detail-list__item">
+            <dt class="nowo-ui-detail-list__term">Paused</dt>
+            <dd class="nowo-ui-detail-list__value"><span class="nowo-ui-muted">—</span></dd>
+        </div>
+    </dl>
+
+                    </div>
+                </section>
+                            <section class="nowo-ui-section mb-6 nowo-ui-card border" data-nowo-ui-region="section">
+                                            <header class="nowo-ui-card__header flex flex-wrap items-start justify-between gap-2 border-b px-4 py-3"><h2 class="nowo-ui-card__title">Notes</h2></header>
+                                        <div class="nowo-ui-card__body px-4 py-3">
+                        <dl class="nowo-ui-detail-list">
+            <div class="nowo-ui-detail-list__item">
+            <dt class="nowo-ui-detail-list__term">Owner</dt>
+            <dd class="nowo-ui-detail-list__value">Ops</dd>
+        </div>
+    </dl>
+
+                    </div>
+                </section>
+                                        <aside class="nowo-ui-show-page__meta" data-nowo-ui-region="meta">
+                <dl class="nowo-ui-detail-list nowo-ui-detail-list--meta">
+            <div class="nowo-ui-detail-list__item">
+            <dt class="nowo-ui-detail-list__term">Created</dt>
+            <dd class="nowo-ui-detail-list__value">2026-10-16 09:12</dd>
+        </div>
+    </dl>
+
+            </aside>
+                    </div>
+        </main>
+            </div>
+                            <script src="/bundles/nowouikit/js/nowo-ui-modal.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-confirm.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-dialog.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-toast.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-tabs.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-theme.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-popover.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-segmented.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-autosubmit.js" defer></script>
+
+            </body>
+</html>

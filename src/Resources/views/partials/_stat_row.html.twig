@@ -8,6 +8,8 @@
   Optional:
     - label: accessible name of the row (aria-label; View\Label or string)
     - attr: extra root attributes (no on*), bundle, nowo_ui_page_type
+  2.23: View\Stat::attributes on the tile <div>, Stat::valueAttributes on the value <dd> (escaped, no on*; empty =
+  unchanged markup), for hosts that update figures live (data-uptime-24h…).
   Slots: stat_row, stat, stat_label, stat_value, stat_hint. Tokens: --nowo-ui-stat-min-width, --nowo-ui-stat-gap,
   --nowo-ui-stat-bg, --nowo-ui-stat-border, --nowo-ui-stat-value-size (light / dark through the base tokens).
 #}
@@ -15,9 +17,9 @@
 {% set _label = label|default(null) %}
 <dl class="{{ nowo_ui_class('stat_row', _b) }}" data-nowo-ui-region="stats"{% if _label %} aria-label="{{ _label|nowo_ui_trans }}"{% endif %}{{ nowo_ui_attrs('stat_row', _b) }}{{ nowo_ui_html_attrs(attr|default({})) }}>
     {% for stat in items %}
-        <div class="{{ nowo_ui_class('stat', _b) }} nowo-ui-stat--{{ stat.tone }}"{{ nowo_ui_attrs('stat', _b) }}>
+        <div class="{{ nowo_ui_class('stat', _b) }} nowo-ui-stat--{{ stat.tone }}"{{ nowo_ui_attrs('stat', _b) }}{{ nowo_ui_html_attrs(stat.attributes ?? {}) }}>
             <dt class="{{ nowo_ui_class('stat_label', _b) }}">{{ stat.label|nowo_ui_trans }}</dt>
-            <dd class="{{ nowo_ui_class('stat_value', _b) }}">{% if stat.href %}<a href="{{ stat.href }}">{{ stat.value|nowo_ui_trans }}</a>{% else %}{{ stat.value|nowo_ui_trans }}{% endif %}</dd>
+            <dd class="{{ nowo_ui_class('stat_value', _b) }}"{{ nowo_ui_html_attrs(stat.valueAttributes ?? {}) }}>{% if stat.href %}<a href="{{ stat.href }}">{{ stat.value|nowo_ui_trans }}</a>{% else %}{{ stat.value|nowo_ui_trans }}{% endif %}</dd>
             {% if stat.hint is not null %}
                 <dd class="{{ nowo_ui_class('stat_hint', _b) }}">{{ stat.hint|nowo_ui_trans }}</dd>
             {% endif %}

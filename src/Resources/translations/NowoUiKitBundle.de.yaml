@@ -3,6 +3,9 @@ pagination.showing: Zeige %from%–%to% von %total%
 pagination.previous: Zurück
 pagination.next: Weiter
 pagination.per_page: Pro Seite
+pagination.load_more: "Mehr laden"
+pagination.loaded: "%count% weitere Zeilen geladen"
+pagination.load_error: "Weitere Zeilen konnten nicht geladen werden. Bitte erneut versuchen."
 action.edit: Bearbeiten
 action.delete: Löschen
 action.view: Ansehen

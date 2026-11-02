@@ -14,6 +14,8 @@
       the page title)
     - head_html / rows_html: pre-rendered header cells / row cells keyed 'k' ~ row_key (the list scaffold passes its
       nowo_ui_list_head / nowo_ui_list_row blocks this way)
+    - list_rows (2.23): true marks the <tbody> with data-nowo-ui-list-rows (pagination modes: the region the
+      `list-pagination` peer appends the next page's rows to; the list scaffold passes it with a mode other than pager)
   Blocks (through {% embed %}): nowo_ui_table_head (header cells), nowo_ui_table_row (cells of one row: `row`,
   `row_key`, `loop`, `table` in context).
   Slots: table_wrap, table, table_caption, table_head, table_head_row, table_head_cell, sortable_header, sort_link,
@@ -64,7 +66,7 @@
                 {% if _actions_end %}{{ _actions_head }}{% endif %}
             </tr>
         </thead>
-        <tbody>
+        <tbody{% if list_rows|default(false) %} data-nowo-ui-list-rows{% endif %}>
             {% for row_key, row in table.rows %}
                 <tr class="{{ nowo_ui_class('table_row', _b) }}">
                     {% set _actions_cell %}{% if table.hasRowActions() %}
