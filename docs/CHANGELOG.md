@@ -106,6 +106,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Fixed
 
 - `.scripts/check-twig-extra.sh` no longer reports "Twig does not apply": under `pipefail`, `find | grep -q` failed with SIGPIPE and hid the bundle templates, so the REQ-TWIG-004 checks were skipped.
+- iOS WebKit: a native `input[type=date]` in kit filters / forms (`.nowo-ui-filters`, `.nowo-ui-filter-bar`, `form.nowo-ui-form`, dialog forms) fills its field (`appearance: none; min-width: 0` under `@supports (-webkit-touch-callout: none)`); iOS ignored `width: 100%`. CSS only, no markup change.
 
 ## [2.21.0] - 2026-11-01
 

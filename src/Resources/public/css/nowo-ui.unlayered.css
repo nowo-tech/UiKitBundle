@@ -2314,6 +2314,17 @@ form.nowo-ui-filters[data-nowo-ui-region] > .nowo-ui-filters__field--full {
   min-height: var(--nowo-ui-filter-control-height);
 }
 
+/* iOS WebKit (2.22): a native date input keeps its intrinsic width and ignores `width: 100%`, overflowing narrow filter
+   and form fields. Dropping the native appearance and the intrinsic min-width lets it fill its field. Scoped to iOS
+   (`-webkit-touch-callout`) and to the kit's form / filter containers; no markup change. */
+@supports (-webkit-touch-callout: none) {
+  :is(.nowo-ui-filters, .nowo-ui-filter-bar, form.nowo-ui-form, .nowo-ui-dialog__body form) input[type='date'] {
+    -webkit-appearance: none;
+    appearance: none;
+    min-width: 0;
+  }
+}
+
 .nowo-ui-filter-bar--compact input:not([type='checkbox']):not([type='radio']):not([type='color']):not([type='range']):not([type='file']):not([type='hidden']),
 .nowo-ui-filter-bar--compact select:not([multiple]):not([size]),
 [data-ui-density='compact'] .nowo-ui-filter-bar input:not([type='checkbox']):not([type='radio']):not([type='color']):not([type='range']):not([type='file']):not([type='hidden']),
