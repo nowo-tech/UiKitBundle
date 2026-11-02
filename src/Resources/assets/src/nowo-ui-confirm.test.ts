@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as mod from './nowo-ui-confirm';
 
+// vitest 4 + happy-dom no longer expose window.confirm; give vi.spyOn() a function to wrap.
+if (typeof window.confirm !== 'function') {
+  Object.defineProperty(window, 'confirm', { value: (): boolean => true, configurable: true, writable: true });
+}
+
 describe('nowo-ui-confirm', () => {
   beforeEach(() => {
     document.body.innerHTML = `
@@ -180,6 +185,7 @@ describe('nowo-ui-confirm missing confirm-submit peer warning', () => {
   it('warns once per peer form submitted without the peer connected', () => {
     document.body.innerHTML = '<form data-controller="confirm-submit" data-confirm-submit-message-value="Delete?"></form>';
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
     const form = document.querySelector('form')!;
     submit(form);
     submit(form);
@@ -187,14 +193,47 @@ describe('nowo-ui-confirm missing confirm-submit peer warning', () => {
     expect(String(warn.mock.calls[0]![0])).toContain('confirm-submit');
   });
 
+  // 2.23 (audit CK L1): without the peer (not registered, bundle not loaded, not yet connected) the form fails closed
+  it('falls back to window.confirm without the peer and cancels the submit when declined', () => {
+    document.body.innerHTML = '<form data-controller="confirm-submit" data-confirm-submit-message-value=" Delete invoice #1042? "></form>';
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const ask = vi.spyOn(window, 'confirm').mockReturnValueOnce(false).mockReturnValueOnce(true);
+    const form = document.querySelector('form')!;
+
+    const declined = new Event('submit', { bubbles: true, cancelable: true });
+    form.dispatchEvent(declined);
+    expect(declined.defaultPrevented).toBe(true);
+    expect(ask).toHaveBeenLastCalledWith('Delete invoice #1042?');
+
+    const accepted = new Event('submit', { bubbles: true, cancelable: true });
+    form.dispatchEvent(accepted);
+    expect(accepted.defaultPrevented).toBe(false);
+    expect(ask).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps a blocked form cancelled and lets an empty message through without asking (no peer)', () => {
+    document.body.innerHTML = '<form id="b" data-confirm-submit-message-value="Remove?" data-confirm-submit-blocked-value="true"></form><form id="e" data-confirm-submit-message-value=" "></form>';
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const ask = vi.spyOn(window, 'confirm');
+    const blocked = new Event('submit', { bubbles: true, cancelable: true });
+    document.getElementById('b')!.dispatchEvent(blocked);
+    const empty = new Event('submit', { bubbles: true, cancelable: true });
+    document.getElementById('e')!.dispatchEvent(empty);
+    expect(blocked.defaultPrevented).toBe(true);
+    expect(empty.defaultPrevented).toBe(false);
+    expect(ask).not.toHaveBeenCalled();
+  });
+
   it('stays silent when the peer is connected, for other forms and for non-form targets', () => {
     document.body.innerHTML = '<form id="peer" data-confirm-submit-message-value="Delete?"></form><form id="plain"></form>';
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const ask = vi.spyOn(window, 'confirm');
     const peer = document.getElementById('peer') as HTMLFormElement;
     (peer as unknown as Record<symbol, unknown>)[Symbol.for('nowo-ui.confirm-submit')] = true;
     submit(peer);
     submit(document.getElementById('plain') as HTMLFormElement);
     mod.warnMissingConfirmPeer(new Event('submit'));
     expect(warn).not.toHaveBeenCalled();
+    expect(ask).not.toHaveBeenCalled();
   });
 });

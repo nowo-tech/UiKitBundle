@@ -87,19 +87,28 @@ export function createConfirmSubmitController(options: ConfirmSubmitOptions = {}
       const submitter = event instanceof SubmitEvent ? event.submitter : null;
       void askConfirm(message, { ...pageConfirmLabels(), danger: this.dangerValue, classes: options.classes }).then((ok) => {
         if (ok) {
-          this.approved = true;
           this.replay(submitter);
         }
       });
     }
 
+    /**
+     * Replays the held event once with `approved` set. `requestSubmit()` / `click()` dispatch synchronously, so the
+     * flag is cleared in `finally` (2.23, audit CK L2): when the replayed event never reaches `confirm()` (another
+     * listener stopped it, constraint validation blocked it) the next submit is confirmed again.
+     */
     private replay(submitter: HTMLElement | null): void {
       const element = this.element;
-      if (element instanceof HTMLFormElement) {
-        element.requestSubmit(submitter instanceof HTMLButtonElement || submitter instanceof HTMLInputElement ? submitter : undefined);
-        return;
+      this.approved = true;
+      try {
+        if (element instanceof HTMLFormElement) {
+          element.requestSubmit(submitter instanceof HTMLButtonElement || submitter instanceof HTMLInputElement ? submitter : undefined);
+          return;
+        }
+        (element as HTMLElement).click();
+      } finally {
+        this.approved = false;
       }
-      (element as HTMLElement).click();
     }
   };
 }
