@@ -101,6 +101,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             new TwigFunction('nowo_ui_html_attrs', $this->theme->renderAttributeMap(...), ['is_safe' => ['html']]),
             new TwigFunction('nowo_ui_partial', $this->theme->partial(...)),
             new TwigFunction('nowo_ui_script_names', static fn (): array => ThemeSlots::SCRIPTS),
+            new TwigFunction('nowo_ui_tree_has_current', self::treeHasCurrent(...)),
             new TwigFunction('nowo_ui_theme_tokens', $this->tokens(...), ['is_safe' => ['html']]),
             new TwigFunction('nowo_ui_theme_css', $this->theme->tokensCss(...)),
             new TwigFunction('nowo_ui_tokens', $this->allTokens(...), ['is_safe' => ['html'], 'needs_environment' => true]),
@@ -136,6 +137,25 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             'nowo_ui_theme' => $this->theme,
             'nowo_ui_breadcrumbs' => $this->breadcrumbs,
         ];
+    }
+
+    /**
+     * Whether any node of a `tree` (at any depth) is the current page (2.24): otherwise the first item takes the tab stop.
+     *
+     * @param iterable<mixed> $nodes Tree nodes ({current?, children?})
+     */
+    public static function treeHasCurrent(iterable $nodes): bool
+    {
+        foreach ($nodes as $node) {
+            if (!\is_array($node)) {
+                continue;
+            }
+            if (($node['current'] ?? false) === true || (is_iterable($node['children'] ?? null) && self::treeHasCurrent($node['children']))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
