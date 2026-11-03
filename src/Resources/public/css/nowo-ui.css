@@ -2194,7 +2194,10 @@ a.nowo-ui-pagination__link:hover {
 
 .nowo-ui-card__intro {
   margin: 0.25rem 0 0;
-  color: var(--nowo-ui-muted);
+  /* Muted pulled 15% towards the text colour so the 0.875rem intro keeps WCAG AA (4.5:1) on Bootstrap's
+     `.card-header` cap (rgba(33, 37, 41, 0.03) over the card), where plain muted measured 4.48:1 (default palette:
+     5.50:1 light, 7.37:1 dark). Follows host muted / text remaps and dark mode. */
+  color: var(--nowo-ui-card-intro-text, color-mix(in srgb, var(--nowo-ui-muted) 85%, var(--nowo-ui-text)));
   font-size: 0.875rem;
 }
 

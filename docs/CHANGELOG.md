@@ -90,6 +90,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Card intro (`.nowo-ui-card__intro`, e.g. the section intro of the settings scaffold) failed WCAG AA colour contrast on
+  the bootstrap5 stack: plain muted `#64748b` on Bootstrap's `.card-header` cap (`rgba(33, 37, 41, 0.03)` over the white
+  card, `#f8f8f9`) measured **4.48:1** (< 4.5:1 for 0.875rem text). CSS only, no markup change: the intro colour is now
+  `var(--nowo-ui-card-intro-text, color-mix(in srgb, var(--nowo-ui-muted) 85%, var(--nowo-ui-text)))` (new optional
+  component token, docs/THEMING.md). With the default palette it computes to `#57667c` in light mode (was `#64748b`)
+  and `#a0adc0` in dark mode (was `#94a3b8`); it follows host `muted` / `text` remaps. Ratios measured in the demo
+  (settings scaffold, Bootstrap 5.3.3 in the `base` layer and unlayered): light **4.48:1 → 5.50:1**; dark **6.53:1 →
+  7.37:1** (layered) and **5.57:1 → 6.28:1** (unlayered). On a card without a header background (custom / tailwind
+  stacks, white card): light 4.76:1 → 5.84:1, dark 6.96:1 → 7.85:1. New demo e2e `card-intro-contrast.spec.ts`
+  (computed ratio ≥ 4.5 and axe `color-contrast` in light and dark, layered and unlayered Bootstrap). Hosts that
+  excluded `.nowo-ui-card__intro` from axe can drop the exclusion.
+
 ## [2.23.0] - 2026-11-02
 
 Opt-in per-item attributes on Stat / PageStatus / DetailItem, infinite and responsive list pagination (list-pagination peer, pager links always rendered), provider-dependent form fields (visible-when peer: hidden + inert, never disabled or cleared), window.confirm fallback when the confirm peer is missing, path-only error retry link. Defaults render byte-identical to 2.22. See [UPGRADING](https://github.com/nowo-tech/UiKitBundle/blob/v2.23.0/docs/UPGRADING.md#to-2230).
