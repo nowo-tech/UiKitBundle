@@ -27,18 +27,18 @@ final class TreePartialTest extends TestCase
                 ['id' => 'a2', 'label' => 'Avocado', 'href' => '/a2', 'has_children' => true, 'children_url' => '/children?parent=a2'],
             ]],
             ['id' => 'b', 'label' => 'Beta', 'href' => '/b'],
-        ], ['movable' => true, 'attr' => ['data-testid' => 'pages']]);
+        ], ['movable' => true, 'attr' => ['id' => 'pages', 'data-testid' => 'pages']]);
 
-        self::assertStringContainsString('<ul class="nowo-ui-tree" role="tree" aria-label="Pages" data-nowo-ui-tree data-nowo-ui-tree-movable data-testid="pages">', $html);
+        self::assertStringContainsString('<ul class="nowo-ui-tree" id="pages" role="tree" aria-label="Pages" data-nowo-ui-tree data-nowo-ui-tree-movable data-testid="pages">', $html);
         self::assertStringContainsString('<li class="nowo-ui-tree__item" role="none" data-nowo-ui-tree-node="a">', $html);
-        self::assertStringContainsString('href="/a" role="treeitem" data-nowo-ui-tree-item tabindex="-1" aria-level="1" aria-setsize="2" aria-posinset="1" aria-expanded="true" aria-owns="nowo-ui-tree-a-group" draggable="true"', $html);
+        self::assertStringContainsString('href="/a" role="treeitem" data-nowo-ui-tree-item tabindex="-1" aria-level="1" aria-setsize="2" aria-posinset="1" aria-expanded="true" aria-owns="pages-a-group" draggable="true"', $html);
         self::assertStringContainsString('Alpha &lt;b&gt;', $html);
         self::assertStringContainsString('<span class="nowo-ui-tree__icon" aria-hidden="true">📘</span>', $html);
         self::assertStringContainsString('<span class="nowo-ui-tree__badge">2</span>', $html);
-        self::assertStringContainsString('<ul class="nowo-ui-tree__group" role="group" id="nowo-ui-tree-a-group">', $html);
+        self::assertStringContainsString('<ul class="nowo-ui-tree__group" role="group" id="pages-a-group">', $html);
         self::assertStringContainsString('href="/a1" role="treeitem" data-nowo-ui-tree-item tabindex="0" aria-level="2" aria-setsize="2" aria-posinset="1" aria-current="page"', $html);
-        self::assertStringContainsString('aria-expanded="false" aria-owns="nowo-ui-tree-a2-group"', $html);
-        self::assertStringContainsString('<ul class="nowo-ui-tree__group" role="group" id="nowo-ui-tree-a2-group" hidden data-nowo-ui-tree-children-url="/children?parent=a2">', $html);
+        self::assertStringContainsString('aria-expanded="false" aria-owns="pages-a2-group"', $html);
+        self::assertStringContainsString('<ul class="nowo-ui-tree__group" role="group" id="pages-a2-group" hidden data-nowo-ui-tree-children-url="/children?parent=a2">', $html);
         self::assertStringContainsString('<span class="nowo-ui-tree__spacer" aria-hidden="true"></span>', $html);
         self::assertSame(2, substr_count($html, 'data-nowo-ui-tree-toggle'));
         self::assertSame(1, substr_count($html, 'tabindex="0"'));
@@ -53,6 +53,33 @@ final class TreePartialTest extends TestCase
         self::assertStringNotContainsString('data-nowo-ui-tree-movable', $html);
     }
 
+    public function testGroupIdsAreUniquePerTreeAndSanitised(): void
+    {
+        $nodes = [['id' => 'a b/<c>', 'label' => 'A', 'href' => '/a', 'children' => [['id' => 'x', 'label' => 'X', 'href' => '/x']]]];
+        $one = $this->render($nodes, ['attr' => ['id' => 'left']]);
+        $two = $this->render($nodes, ['attr' => ['id' => 'right']]);
+        self::assertStringContainsString('aria-owns="left-a_b__c_-group"', $one);
+        self::assertStringContainsString('id="left-a_b__c_-group"', $one);
+        self::assertStringContainsString('aria-owns="right-a_b__c_-group"', $two);
+        // Without an id each tree gets a generated one.
+        preg_match('/<ul class="nowo-ui-tree" id="([^"]+)"/', $this->render($nodes), $a);
+        preg_match('/<ul class="nowo-ui-tree" id="([^"]+)"/', $this->render($nodes), $b);
+        self::assertMatchesRegularExpression('/^nowo-ui-tree-\d{9}$/', $a[1] ?? '');
+        self::assertNotSame($a[1] ?? '', $b[1] ?? '');
+    }
+
+    public function testTheAncestorsOfTheCurrentNodeAreExpanded(): void
+    {
+        $html = $this->render([['id' => 'a', 'label' => 'A', 'href' => '/a', 'children' => [
+            ['id' => 'b', 'label' => 'B', 'href' => '/b', 'children' => [['id' => 'c', 'label' => 'C', 'href' => '/c', 'current' => true]]],
+        ]]], ['attr' => ['id' => 't']]);
+        self::assertStringContainsString('aria-expanded="true" aria-owns="t-a-group"', $html);
+        self::assertStringContainsString('aria-expanded="true" aria-owns="t-b-group"', $html);
+        self::assertStringNotContainsString(' hidden', $html, 'the current branch is shown without JavaScript');
+        self::assertSame(1, substr_count($html, 'tabindex="0"'));
+        self::assertStringContainsString('href="/c" role="treeitem" data-nowo-ui-tree-item tabindex="0"', $html);
+    }
+
     public function testActionsTemplateIsIncludedPerNode(): void
     {
         $html = $this->render([['id' => 'x', 'label' => 'X', 'href' => '/x']], ['actions_template' => 'actions.twig']);
@@ -64,6 +91,7 @@ final class TreePartialTest extends TestCase
         self::assertFalse(ThemeExtension::treeHasCurrent([]));
         self::assertFalse(ThemeExtension::treeHasCurrent(['junk', ['children' => [['current' => false]]]]));
         self::assertTrue(ThemeExtension::treeHasCurrent([['children' => [['children' => [['current' => true]]]]]]));
+        self::assertSame('t-1-group', ThemeExtension::treeGroupId('t', 1));
     }
 
     /**

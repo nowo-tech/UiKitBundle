@@ -4558,8 +4558,19 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
   height: 1.5rem;
 }
 .nowo-ui-tree__toggle {
-  cursor: pointer;
   position: relative;
+}
+/* 2.24: the toggle only acts once nowo-ui-tree.js runs */
+[data-nowo-ui-tree-ready] .nowo-ui-tree__toggle {
+  cursor: pointer;
+}
+@media (pointer: coarse) {
+  .nowo-ui-tree__toggle,
+  .nowo-ui-tree__spacer {
+    flex-basis: 2rem;
+    width: 2rem;
+    height: 2rem;
+  }
 }
 .nowo-ui-tree__toggle::before {
   content: '';
@@ -4572,6 +4583,9 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
 }
 .nowo-ui-tree__row:has([aria-expanded='true']) > .nowo-ui-tree__toggle::before {
   transform: rotate(45deg);
+}
+.nowo-ui-tree__toggle:dir(rtl)::before {
+  transform: rotate(135deg);
 }
 .nowo-ui-tree__link {
   display: flex;
@@ -4588,13 +4602,15 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
   font-weight: 600;
 }
 .nowo-ui-tree__link:focus-visible {
-  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  /* 2.24: a solid ring (3:1 non-text contrast, also on the current row); --nowo-ui-focus-ring-color overrides */
+  outline: 2px solid var(--nowo-ui-focus-ring-color, var(--nowo-ui-primary));
   outline-offset: -2px;
 }
 .nowo-ui-tree__badge {
   margin-inline-start: auto;
   font-size: 0.75em;
-  color: var(--nowo-ui-muted);
+  /* 2.24: the card-intro mix (AA on the current row's tint too); --nowo-ui-tree-badge-text overrides */
+  color: var(--nowo-ui-tree-badge-text, color-mix(in srgb, var(--nowo-ui-muted) 85%, var(--nowo-ui-text)));
 }
 .nowo-ui-tree__row[data-nowo-ui-tree-drop='before'] {
   box-shadow: inset 0 0.125rem 0 var(--nowo-ui-primary);

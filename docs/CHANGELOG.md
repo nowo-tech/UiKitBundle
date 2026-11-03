@@ -101,7 +101,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   trees the cancellable `nowo-ui:tree:move` (Alt+arrows, the keyboard alternative to dragging) and
   `nowo-ui:tree:drop` (pointer drag with a drop line and auto-expand) for the host to move nodes;
   `announceTree()` for a polite result. No inline handlers or style attributes. Opt-in: no existing partial, slot
-  default or the default `scripts` list changes, so existing pages render byte-identical. First consumer: WikiBundle
+  default or the default `scripts` list changes, so existing pages render byte-identical. Group ids are prefixed with
+  the tree id (`attr.id` or a generated one) and sanitised; the current node's ancestors are always expanded; solid
+  focus ring (`--nowo-ui-focus-ring-color` overrides) and an AA badge colour (`--nowo-ui-tree-badge-text`); the
+  chevron mirrors in RTL, the toggle has a pointer once the script runs and a 2rem target on coarse pointers. First
+  consumer: WikiBundle
   1.14's page tree.
 
 ## [2.23.1] - 2026-11-03

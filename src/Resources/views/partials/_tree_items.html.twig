@@ -1,12 +1,13 @@
 {#
-  One level of the `tree` partial (recursive). Variables: nodes, level (1-based), tab_first (the first item gets
+  One level of the `tree` partial (recursive). Variables: tree_id, nodes, level (1-based), tab_first (the first item gets
   tabindex 0 when no item is current), actions_template, movable, bundle.
 #}
 {% for node in nodes %}
     {% set _children = node.children|default([]) %}
     {% set _is_parent = _children is not empty or node.has_children|default(false) %}
-    {% set _expanded = _is_parent and node.expanded|default(false) %}
-    {% set _group_id = 'nowo-ui-tree-' ~ (node.id ~ '')|replace({' ': '_'}) ~ '-group' %}
+    {# 2.24: a parent of the current node is always expanded (visible current item, reachable tab stop) #}
+    {% set _expanded = _is_parent and (node.expanded|default(false) or nowo_ui_tree_has_current(_children)) %}
+    {% set _group_id = nowo_ui_tree_group_id(tree_id, node.id) %}
     <li class="{{ nowo_ui_class('tree_item', bundle) }}" role="none" data-nowo-ui-tree-node="{{ node.id }}"{{ nowo_ui_attrs('tree_item', bundle) }}>
         <div class="nowo-ui-tree__row{{ node.current|default(false) ? ' is-current' }}">
             {%- if _is_parent -%}
@@ -23,7 +24,7 @@
         </div>
         {%- if _is_parent %}
             <ul class="{{ nowo_ui_class('tree_group', bundle) }}" role="group" id="{{ _group_id }}"{% if not _expanded %} hidden{% endif %}{% if _children is empty and node.children_url|default(null) %} data-nowo-ui-tree-children-url="{{ node.children_url }}"{% endif %}{{ nowo_ui_attrs('tree_group', bundle) }}>
-                {%- if _children is not empty %}{{ include('@NowoUiKitBundle/partials/_tree_items.html.twig', {nodes: _children, level: level + 1, tab_first: false, actions_template: actions_template, movable: movable, bundle: bundle}, false) }}{% endif -%}
+                {%- if _children is not empty %}{{ include('@NowoUiKitBundle/partials/_tree_items.html.twig', {tree_id: tree_id, nodes: _children, level: level + 1, tab_first: false, actions_template: actions_template, movable: movable, bundle: bundle}, false) }}{% endif -%}
             </ul>
         {%- endif %}
     </li>

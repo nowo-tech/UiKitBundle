@@ -184,6 +184,12 @@ describe('nowo-ui-tree', () => {
     vi.useRealTimers();
   });
 
+  it('marks the trees as driven by the script (pointer on toggles only then)', () => {
+    tree.removeAttribute('data-nowo-ui-tree-ready');
+    mod.markTreesReady();
+    expect(tree.hasAttribute('data-nowo-ui-tree-ready')).toBe(true);
+  });
+
   it('announces in a polite live region next to the tree', () => {
     mod.announceTree(tree, 'Moved');
     mod.announceTree(tree, 'Moved again');

@@ -297,7 +297,14 @@ function onDragEnd(): void {
 
 let bound = false;
 
+/** Marks the trees under `root` as driven by this script (`data-nowo-ui-tree-ready`: toggles show a pointer). */
+export function markTreesReady(root: ParentNode = document): void {
+  root.querySelectorAll<HTMLElement>(TREE).forEach((tree) => tree.setAttribute('data-nowo-ui-tree-ready', ''));
+}
+
 export function bindNowoUiTree(): void {
+  markTreesReady();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => markTreesReady(), { once: true });
   if (bound) return;
   bound = true;
   document.addEventListener('keydown', onKeydown);

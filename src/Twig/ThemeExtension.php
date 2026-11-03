@@ -102,6 +102,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             new TwigFunction('nowo_ui_partial', $this->theme->partial(...)),
             new TwigFunction('nowo_ui_script_names', static fn (): array => ThemeSlots::SCRIPTS),
             new TwigFunction('nowo_ui_tree_has_current', self::treeHasCurrent(...)),
+            new TwigFunction('nowo_ui_tree_group_id', self::treeGroupId(...)),
             new TwigFunction('nowo_ui_theme_tokens', $this->tokens(...), ['is_safe' => ['html']]),
             new TwigFunction('nowo_ui_theme_css', $this->theme->tokensCss(...)),
             new TwigFunction('nowo_ui_tokens', $this->allTokens(...), ['is_safe' => ['html'], 'needs_environment' => true]),
@@ -137,6 +138,15 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             'nowo_ui_theme' => $this->theme,
             'nowo_ui_breadcrumbs' => $this->breadcrumbs,
         ];
+    }
+
+    /**
+     * Id of a node's child group in a `tree` (2.24): unique per tree (the tree id prefixes it, so two trees with the same
+     * node ids on one page never share an aria-owns target), with anything outside `[A-Za-z0-9_-]` replaced.
+     */
+    public static function treeGroupId(string $treeId, string|int $nodeId): string
+    {
+        return $treeId.'-'.preg_replace('/[^A-Za-z0-9_-]/', '_', (string) $nodeId).'-group';
     }
 
     /**
