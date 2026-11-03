@@ -223,6 +223,10 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `popover` | `nowo-ui-popover` | — | — | — | — |
 | `segmented` | `nowo-ui-segmented` | — | — | — | — |
 | `segmented_option` | `nowo-ui-segmented__option` | — | — | — | — |
+| `tree` | `nowo-ui-tree` | — | — | — | — |
+| `tree_item` | `nowo-ui-tree__item` | — | — | — | — |
+| `tree_link` | `nowo-ui-tree__link` | — | — | — | — |
+| `tree_group` | `nowo-ui-tree__group` | — | — | — | — |
 | `modal` | `nowo-ui-modal` | — | — | — | — |
 | `modal_panel` | `nowo-ui-modal__panel` | — | — | — | — |
 | `modal_header` | `nowo-ui-modal__header` | — | — | — | — |
@@ -488,6 +492,7 @@ as the UiKit partial (documented in the header comment of each template) and sho
 | `tabs` | `partials/_tabs.html.twig` | `items` (`{label, href, current, attr}`, label also a `Label`), `aria_label`, `region`, `bundle`, `attr` (2.1: `<nav>` attributes such as `data-turbo: 'false'`, merged over the `tabs` slot attributes), `level` (2.2: `primary` \| `secondary` → slot `tabs_secondary`); slots `tabs` / `tabs_secondary`, `tab`, `tab_active` | settings scaffold, bundle tab bars |
 | `toasts` | `partials/_toasts.html.twig` | `flashes`, `trans_domain`, `bundle` | layouts / hosts |
 | `tour` *(2.13)* | `partials/_tour.html.twig` | `tour` (`Tour\Tour` or `{key, steps: [{selector, title, description, side, align}], auto_start}`; titles / descriptions `Label` or string), `auto_start`, `force`, `force_param`, `storage_key`, `seen_url`, `seen_token`, `seen_token_url`, `seen_method`, `labels` (`tab`, `next`, `previous`, `done`, `close`, `progress`), `html_content`, `popover_class`, `show_tab`, `tab_slot`, `tab_inline`, `tab_icon`, `tab_class`, `attr`, `testids` | guided page tour (Stimulus peer `product-tour`, driver.js); see [USAGE](USAGE.md#guided-tour) |
+| `tree` *(2.24)* | `partials/_tree.html.twig` | `nodes` (`{id, label, href, current?, expanded?, children?, has_children?, children_url?, icon?, badge?}`), `label` (tree name), `movable`, `actions_template` (included after each link with `{node}`), `attr`, `bundle`; slots `tree`, `tree_item`, `tree_link`, `tree_group` | WAI-ARIA navigation treeview (folding, lazy children, Alt+arrow moves and drag and drop as events) — load `js/nowo-ui-tree.js` on the page; it is not in the default `scripts` list |
 | `wizard_form` | `page/_wizard_form.html.twig` | `page` (`View\WizardPage`), `bundle` | wizard scaffold |
 
 Every partial also receives `nowo_ui_page_type` from the scaffolds. Internal templates that are not theme partials

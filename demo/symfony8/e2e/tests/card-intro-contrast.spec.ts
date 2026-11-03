@@ -16,8 +16,8 @@ const BOOTSTRAP_CSS = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/boo
 type Mode = 'light' | 'dark';
 
 /** Contrast of every card intro against the opaque colour behind it (alpha backgrounds composited up the tree). */
-const introRatios = (page: Page): Promise<number[]> =>
-  page.locator('.nowo-ui-card__intro').evaluateAll((nodes) => {
+const ratiosOf = (page: Page, selector: string): Promise<number[]> =>
+  page.locator(selector).evaluateAll((nodes) => {
     const probe = document.createElement('canvas').getContext('2d', { willReadFrequently: true }) as CanvasRenderingContext2D;
     // Any CSS colour (rgb(), color(srgb …) from color-mix) → [r, g, b, a] through a 1px canvas.
     const rgba = (css: string): number[] => {
@@ -73,7 +73,7 @@ for (const unlayeredBootstrap of [false, true]) {
   for (const mode of ['light', 'dark'] as Mode[]) {
     test(`card intro keeps 4.5:1 (${unlayeredBootstrap ? 'unlayered' : 'layered'} Bootstrap, ${mode})`, async ({ page }) => {
       await open(page, unlayeredBootstrap, mode);
-      const ratios = await introRatios(page);
+      const ratios = await ratiosOf(page, '.nowo-ui-card__intro');
       expect(ratios.length).toBeGreaterThan(0);
       for (const ratio of ratios) {
         expect(ratio).toBeGreaterThanOrEqual(4.5);
@@ -83,4 +83,23 @@ for (const unlayeredBootstrap of [false, true]) {
       expect(axe.passes.map((rule) => rule.id)).toContain('color-contrast');
     });
   }
+}
+
+/** 2.24: the tree badge on the tinted current row (and on a plain row) keeps 4.5:1 in light and dark. */
+for (const mode of ['light', 'dark'] as Mode[]) {
+  test(`tree badge keeps 4.5:1 on the current row (${mode})`, async ({ page }) => {
+    await page.goto('/');
+    await page.evaluate((m) => {
+      document.documentElement.setAttribute('data-theme', m);
+      document.documentElement.setAttribute('data-bs-theme', m);
+    }, mode);
+    await expect(page.locator('#demo-tree .is-current .nowo-ui-tree__badge')).toBeVisible();
+    const ratios = await ratiosOf(page, '#demo-tree .nowo-ui-tree__badge');
+    expect(ratios.length).toBe(2);
+    for (const ratio of ratios) {
+      expect(ratio).toBeGreaterThanOrEqual(4.5);
+    }
+    const axe = await new AxeBuilder({ page }).include('#demo-tree').withTags(['wcag2a', 'wcag2aa']).analyze();
+    expect(axe.violations.map((v) => v.id)).toEqual([]);
+  });
 }

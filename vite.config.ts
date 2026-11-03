@@ -21,6 +21,7 @@ type Entry =
   | 'dialog'
   | 'popover'
   | 'segmented'
+  | 'tree'
   | 'autosubmit'
   | 'error-retry'
   | 'demo-peers';
@@ -247,6 +248,21 @@ const configs: Record<Entry, { build: object }> = {
         output: {
           format: 'iife' as const,
           entryFileNames: 'js/nowo-ui-segmented.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  tree: {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-tree.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-tree.js',
         },
       },
       minify: true,

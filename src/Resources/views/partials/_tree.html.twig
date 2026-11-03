@@ -1,0 +1,25 @@
+{#
+  Tree view (2.24, theme partial `tree`): a navigation tree with disclosures to any depth, following the WAI-ARIA APG
+  navigation treeview (ul[role=tree] > li[role=none] > a[role=treeitem] + ul[role=group]). Without JavaScript every
+  item is a plain link and the groups the server marked expanded are shown; js/nowo-ui-tree.js (load it on the page:
+  it is not in the default `scripts` list) adds the keyboard model, folding, lazy children, moves and drag and drop.
+  Slots: tree (root), tree_item (each li), tree_link (the treeitem link), tree_group (child lists).
+
+  Required:
+    - nodes: list of hashes {id, label (View\Label|string), href, current?, expanded?, children? (nodes),
+      has_children? (true without children: lazy), children_url? (JSON children, see the script), icon? (text, e.g. an
+      emoji), badge? (string)}
+    - label (View\Label|string): accessible name of the tree
+  Optional:
+    - movable (bool): Alt+arrows and drag and drop emit nowo-ui:tree:move / nowo-ui:tree:drop (the host moves)
+    - actions_template: template included after each link with {node} (e.g. "+" and "⋯" buttons; give them
+      tabindex="-1" and a keyboard shortcut so the tree keeps one tab stop)
+    - attr: root attributes (no on*; attr.id is the tree id that prefixes the group ids), bundle
+  The current node's ancestors are always expanded (2.24), so the current item is visible and is the tab stop.
+#}
+{% set _b = bundle|default(null) %}
+{# 2.24: every group id is prefixed with the tree id (attr.id, or a generated one) — unique across trees on a page #}
+{% set _tree_id = (attr|default({})).id ?? ('nowo-ui-tree-' ~ random(100000000, 999999999)) %}
+<ul class="{{ nowo_ui_class('tree', _b) }}" id="{{ _tree_id }}" role="tree" aria-label="{{ label|nowo_ui_trans }}" data-nowo-ui-tree{% if movable|default(false) %} data-nowo-ui-tree-movable{% endif %}{{ nowo_ui_attrs('tree', _b) }}{{ nowo_ui_html_attrs((attr|default({}))|filter((v, k) => k != 'id')) }}>
+    {{ include('@NowoUiKitBundle/partials/_tree_items.html.twig', {tree_id: _tree_id, nodes: nodes, level: 1, tab_first: not nowo_ui_tree_has_current(nodes), actions_template: actions_template|default(null), movable: movable|default(false), bundle: _b}, false) }}
+</ul>

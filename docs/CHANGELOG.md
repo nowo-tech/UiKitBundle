@@ -91,6 +91,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **`tree` partial** (2.24, slots `tree`, `tree_item`, `tree_link`, `tree_group`) and **`js/nowo-ui-tree.js`**: a
+  navigation tree following the WAI-ARIA APG treeview (`ul[role=tree]` > `li[role=none]` > `a[role=treeitem]` +
+  `ul[role=group]`, `aria-level` / `setsize` / `posinset` / `expanded` / `owns` / `current`). One tab stop (roving
+  tabindex), Up / Down / Right / Left / Home / End, `*` expands the siblings, type-ahead; lazy children from a JSON URL
+  (built with DOM APIs, safe links only); `nowo-ui:tree:toggle` after each fold change (persist it), and on `movable`
+  trees the cancellable `nowo-ui:tree:move` (Alt+arrows, the keyboard alternative to dragging) and
+  `nowo-ui:tree:drop` (pointer drag with a drop line and auto-expand) for the host to move nodes;
+  `announceTree()` for a polite result. No inline handlers or style attributes. Opt-in: no existing partial, slot
+  default or the default `scripts` list changes, so existing pages render byte-identical. Group ids are prefixed with
+  the tree id (`attr.id` or a generated one) and sanitised; the current node's ancestors are always expanded; solid
+  focus ring (`--nowo-ui-focus-ring-color` overrides) and an AA badge colour (`--nowo-ui-tree-badge-text`); the
+  chevron mirrors in RTL, the toggle has a pointer once the script runs and a 2rem target on coarse pointers. First
+  consumer: WikiBundle
+  1.14's page tree.
+
 ## [2.23.1] - 2026-11-03
 
 card intro text meets WCAG AA contrast (optional --nowo-ui-card-intro-text token)

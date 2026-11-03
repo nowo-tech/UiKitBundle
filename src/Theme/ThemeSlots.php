@@ -423,6 +423,11 @@ final class ThemeSlots
         // Segmented control (2.4, partial `segmented`): radiogroup root and its option buttons (one checkbox behind)
         'segmented' => ['nowo-ui-segmented', []],
         'segmented_option' => ['nowo-ui-segmented__option', []],
+        // Tree view (2.24, partial `tree`): role=tree root, each li, the treeitem link and the child groups
+        'tree' => ['nowo-ui-tree', []],
+        'tree_item' => ['nowo-ui-tree__item', []],
+        'tree_link' => ['nowo-ui-tree__link', []],
+        'tree_group' => ['nowo-ui-tree__group', []],
         'modal' => ['nowo-ui-modal', []],
         // _modal_shell internals (1.x markup: the Bootstrap structure classes modal-content / modal-header /
         // modal-body / modal-footer stay; the theme adds host classes and attributes)
@@ -615,6 +620,7 @@ final class ThemeSlots
         'tabs' => '@NowoUiKitBundle/partials/_tabs.html.twig',
         'toasts' => '@NowoUiKitBundle/partials/_toasts.html.twig',
         'tour' => '@NowoUiKitBundle/partials/_tour.html.twig',
+        'tree' => '@NowoUiKitBundle/partials/_tree.html.twig',
         'wizard_form' => '@NowoUiKitBundle/page/_wizard_form.html.twig',
     ];
 
