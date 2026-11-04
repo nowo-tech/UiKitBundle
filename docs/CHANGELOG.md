@@ -99,7 +99,10 @@ Target **2.26.0**: avatars, the shared person picture of the kit and the feature
 - **`Nowo\UiKitBundle\Avatar\AvatarUrlPolicy::sanitize()`** and the **`nowo_ui_avatar_url`** Twig filter: the only
   picture URLs that reach `<img src>` are `https://` URLs without userinfo and same-origin paths starting with a single
   `/`. `http:`, `javascript:`, `data:` (including `data:image/…`), `blob:`, protocol-relative `//host`, backslashes,
-  control characters / whitespace and anything over 2048 bytes give `null` (the initials). Bundles that require UiKit
+  control characters / whitespace (also a trailing line feed), quotes, `<`, `>`, backtick, IPv6-literal hosts, ports
+  above 65535 and anything over 2048 bytes give `null` (the initials). The partial prints the accepted URL as a string,
+  so a `Twig\Markup` value is escaped too. One case table (`tests/Fixtures/avatar/url-policy-cases.json`) drives the
+  PHP and the JS tests. Bundles that require UiKit
   call the PHP class instead of keeping a copy.
 - **`js/nowo-ui-avatar.js`**, in the default `scripts` list: one capture-phase `load` and one capture-phase `error`
   listener on the document (no inline handlers), for `img.nowo-ui-avatar__image` and for `img[data-nowo-avatar-image]`

@@ -115,8 +115,13 @@ Behaviour changes of `partials/_avatar.html.twig` (and the user menu / shell `av
 
 - **`http:` and `data:` avatars now show the initials.** `src` goes through `AvatarUrlPolicy`: only `https://` URLs
   without userinfo and same-origin paths starting with a single `/` are rendered. `http:`, `data:` (including
-  `data:image/…`), `javascript:`, `blob:`, `//host`, backslashes and control characters give the initials. This is a
-  deliberate security tightening (avatar contract Q-12): serve inline or local pictures from a same-origin URL instead.
+  `data:image/…`), `javascript:`, `blob:`, `//host`, backslashes, quotes, `<`, `>`, backtick and control characters
+  give the initials. This is a deliberate security tightening (avatar contract Q-12): serve inline or local pictures
+  from a same-origin URL instead. Three more cases now silently show the initials:
+  - relative paths without a leading `/` (`avatars/1.png`, `./a.png`): make them root-relative;
+  - URLs from an asset package with a protocol-relative or `http:` `base_urls` (`asset()` returns `//cdn…/a.png` or
+    `http://cdn…/a.png`): configure the package with `https://` base URLs;
+  - IPv6-literal hosts (`https://[::1]/a.png`) and ports above 65535: use a host name.
 - **The initials are always in the markup**, under the picture, and the picture is `alt=""`. With `src` and `alt` the
   accessible name moves from the `<img alt>` to the wrapper (`role="img"` + `aria-label`), so screen readers read the
   same text and keep it when the picture fails. An avatar with `alt` (or the new `name`) and no picture is labelled

@@ -11,24 +11,29 @@
  *   joins a page-lifetime set of failed URLs, and a picture with a failed URL that is inserted later is removed
  *   before it is fetched again (the set lives as long as the page).
  * - Start-up: pictures that finished before the script ran are handled (`complete`, then `naturalWidth`).
- * - Defence in depth, the same client check as ChatKit: only `https://…` or a same-origin `/path` (not `//` or `/\`)
- *   is kept; any other `src` is treated as failed.
+ * - Defence in depth, the same rules as the PHP policy (`isSafeAvatarUrl()`, a shared case table): any other `src` is
+ *   treated as failed. It runs after the browser started an eager fetch, so it prevents lazy fetches and re-fetches of
+ *   failed URLs; the server-side policy is the gate.
  */
 
 export const AVATAR_IMAGE = 'img.nowo-ui-avatar__image, img[data-nowo-avatar-image]';
 
 const failed = new Set<string>();
 
-/** The client-side URL check: `https://` or a path starting with a single `/` (no `//`, no `/\`, no backslash). */
-export function isSafeAvatarUrl(url: string | null | undefined): url is string {
-  if (typeof url !== 'string' || url === '' || url.length > 2048 || /[\u0000- \u007f\\]/.test(url)) {
-    return false;
-  }
-  if (url.startsWith('/')) {
-    return !url.startsWith('//');
-  }
+/**
+ * The PHP policy (`AvatarUrlPolicy::PATTERN`) in JavaScript: 1 to 2048 UTF-8 bytes without control characters,
+ * whitespace, backslash, quotes, `<`, `>` or backtick, then a same-origin `/path` (not `//`) or `https://` with a host
+ * free of userinfo and IPv6 brackets and an optional port from 0 to 65535. Both are tested against
+ * tests/Fixtures/avatar/url-policy-cases.json.
+ */
+export const AVATAR_URL_PATTERN =
+  /^(?=[^\u0000- \u007f\\"'<>`]+$)(?:\/(?!\/)|https:\/\/[^/?#@:[\]]+(?::(?:6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[0-9]{1,4}))?(?:[/?#]|$))/i;
 
-  return /^https:\/\/[^/?#@]+([/?#]|$)/i.test(url);
+const encoder = new TextEncoder();
+
+/** The client-side URL check, the same rules as the server (`AvatarUrlPolicy`). */
+export function isSafeAvatarUrl(url: string | null | undefined): url is string {
+  return typeof url === 'string' && url !== '' && encoder.encode(url).length <= 2048 && AVATAR_URL_PATTERN.test(url);
 }
 
 /** Whether a URL failed earlier on this page. */

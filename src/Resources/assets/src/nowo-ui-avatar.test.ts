@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import * as mod from './nowo-ui-avatar';
+import cases from '../../../../tests/Fixtures/avatar/url-policy-cases.json';
 
 const avatar = (src: string, extra = ''): string =>
   `<span class="nowo-ui-avatar has-image" aria-hidden="true" data-nowo-ui-avatar ${extra}>AL<img class="nowo-ui-avatar__image" src="${src}" alt="" width="32" height="32" loading="lazy" decoding="async" referrerpolicy="same-origin"></span>`;
@@ -17,13 +18,15 @@ describe('nowo-ui-avatar', () => {
     mod.resetFailedAvatars();
   });
 
-  it('applies the client-side URL check', () => {
-    for (const ok of ['https://cdn.example.com/a.webp', 'HTTPS://cdn.example.com', 'https://cdn.example.com?x=1', '/files/abc/s64', '/a@b']) {
-      expect(mod.isSafeAvatarUrl(ok), ok).toBe(true);
+  it('applies the same URL policy as PHP (shared case table)', () => {
+    for (const [name, url] of Object.entries(cases.accepted)) {
+      expect(mod.isSafeAvatarUrl(url), name).toBe(true);
     }
-    for (const bad of [null, undefined, '', 'http://x.test/a.png', 'javascript:alert(1)', 'data:image/png;base64,AAAA', 'blob:https://x', '//evil.test/a', '/\\evil', '/a\\b', 'https://good@evil.test/a', 'https://', 'https:///a', ' /a', '/a b', `/a${'b'.repeat(2048)}`, 'files/a', './a']) {
-      expect(mod.isSafeAvatarUrl(bad), String(bad)).toBe(false);
+    for (const [name, url] of Object.entries(cases.rejected)) {
+      expect(mod.isSafeAvatarUrl(url), name).toBe(false);
     }
+    expect(mod.isSafeAvatarUrl(null)).toBe(false);
+    expect(mod.isSafeAvatarUrl(undefined)).toBe(false);
   });
 
   it('marks the wrapper loaded on load (capture listener on the document)', () => {

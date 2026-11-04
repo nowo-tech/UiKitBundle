@@ -33,12 +33,13 @@
 {% else %}
     {% set _initials = '?' %}
 {% endif %}
-{#- the avatar URL policy (AvatarUrlPolicy::PATTERN, also the nowo_ui_avatar_url filter) through core Twig only -#}
+{#- the avatar URL policy (AvatarUrlPolicy::PATTERN, also the nowo_ui_avatar_url filter) through core Twig only; the
+    accepted value is printed as a string (~ ''), so autoescape also applies to a Twig\Markup src or attr value -#}
 {% set _src = src|default(null) %}
-{% set _src = _src is not null and _src is not iterable and (_src ~ '') matches constant('Nowo\\UiKitBundle\\Avatar\\AvatarUrlPolicy::PATTERN') ? _src : null %}
+{% set _src = _src is not null and _src is not iterable and (_src ~ '') matches constant('Nowo\\UiKitBundle\\Avatar\\AvatarUrlPolicy::PATTERN') ? (_src ~ '') : null %}
 {% set _px = {xs: 20, sm: 24, lg: 44}[size] ?? 32 %}
 <span class="{{ ui.avatar(size, framework) }}{{ _src ? ' has-image' : '' }}"
     {%- if _labelled %} role="img" aria-label="{{ _label }}"{% else %} aria-hidden="true"{% endif %}
     {%- if _src %} data-nowo-ui-avatar{% endif %}
-    {%- for _key, _value in attr|default({}) %}{% if _key matches '/^data-[a-z0-9][a-z0-9_.:-]*$/' and _value is not null and _value is not same as(false) %} {{ _key }}="{{ _value is same as(true) ? '' : _value }}"{% endif %}{% endfor -%}
+    {%- for _key, _value in attr|default({}) %}{% if _key matches '/^data-[a-z0-9][a-z0-9_.:-]*$/D' and _value is not null and _value is not same as(false) %} {{ _key }}="{{ _value is same as(true) ? '' : (_value ~ '') }}"{% endif %}{% endfor -%}
 >{{ _initials }}{% if _src %}<img class="nowo-ui-avatar__image" src="{{ _src }}" alt="" width="{{ _px }}" height="{{ _px }}" loading="lazy" decoding="async" referrerpolicy="same-origin">{% endif %}</span>

@@ -21,7 +21,8 @@ final class AvatarExtensionTest extends TestCase
         ]));
         $twig->addExtension(new AvatarExtension());
 
-        self::assertSame('[/files/a/s64?x=1&amp;y=&quot;2&quot;]', $twig->render('t', ['url' => '/files/a/s64?x=1&y="2"']));
+        self::assertSame('[/files/a/s64?x=1&amp;y=2]', $twig->render('t', ['url' => '/files/a/s64?x=1&y=2']));
+        self::assertSame('null', $twig->render('null', ['url' => '/files/a/s64?x=1&y="2"']));
         self::assertSame('[https://cdn.example.com/a.webp]', $twig->render('t', ['url' => 'https://cdn.example.com/a.webp']));
         self::assertSame('null', $twig->render('null', ['url' => 'data:image/png;base64,AAAA']));
         self::assertSame('null', $twig->render('null', ['url' => null]));

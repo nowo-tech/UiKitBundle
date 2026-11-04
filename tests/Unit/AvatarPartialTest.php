@@ -17,6 +17,7 @@ use Twig\Environment;
 use Twig\Loader\ArrayLoader;
 use Twig\Loader\ChainLoader;
 use Twig\Loader\FilesystemLoader;
+use Twig\Markup;
 
 /**
  * 2.26: partials/_avatar.html.twig is the shared avatar markup (picture over the initials, URL policy, labelled or
@@ -52,14 +53,33 @@ final class AvatarPartialTest extends TestCase
 
     public function testTheLabelAndTheAttributesAreEscaped(): void
     {
-        $html = $this->avatar(['name' => '"><script>x</script>', 'src' => '/a?x="><b>&y=1', 'attr' => ['data-testid' => '"><i>', 'data-flag' => true, 'data-off' => false, 'data-null' => null, 'onclick' => 'alert(1)', 'style' => 'color:red', 'id' => 'x', 'data-Bad' => 'x']]);
+        $html = $this->avatar(['name' => '"><script>x</script>', 'src' => '/a?x=1&y=2', 'attr' => ['data-testid' => '"><i>', 'data-flag' => true, 'data-off' => false, 'data-null' => null, 'onclick' => 'alert(1)', 'style' => 'color:red', 'id' => 'x', 'data-Bad' => 'x']]);
         self::assertStringContainsString('aria-label="&quot;&gt;&lt;script&gt;x&lt;/script&gt;"', $html);
-        self::assertStringContainsString('src="/a?x=&quot;&gt;&lt;b&gt;&amp;y=1"', $html);
+        self::assertStringContainsString('src="/a?x=1&amp;y=2"', $html);
         self::assertStringContainsString(' data-testid="&quot;&gt;&lt;i&gt;" data-flag="">', $html);
         self::assertStringNotContainsString('<script', $html);
         foreach (['onclick', 'style', ' id=', 'data-off', 'data-null', 'data-Bad'] as $forbidden) {
             self::assertStringNotContainsString($forbidden, $html);
         }
+    }
+
+    /**
+     * Audit DZ-L2: a Twig\Markup src or attr value is printed as an escaped string, never as raw markup.
+     */
+    public function testMarkupValuesAreEscapedToo(): void
+    {
+        self::assertSame('<span class="nowo-ui-avatar" aria-hidden="true">A</span>', $this->avatar(['initials' => 'A', 'src' => new Markup('/a"/onerror="alert(1)', 'UTF-8')]));
+
+        $html = $this->avatar(['initials' => 'A', 'src' => new Markup('/a.webp?x=1&y=2', 'UTF-8'), 'attr' => ['data-x' => new Markup('"/onclick="alert(1)', 'UTF-8')]]);
+        self::assertStringContainsString('src="/a.webp?x=1&amp;y=2"', $html);
+        self::assertStringContainsString('data-x="&quot;/onclick=&quot;alert(1)"', $html);
+        self::assertStringNotContainsString('onclick="', $html);
+        self::assertStringNotContainsString('onerror', $html);
+    }
+
+    public function testADataKeyWithATrailingNewlineIsDropped(): void
+    {
+        self::assertStringNotContainsString('data-x', $this->avatar(['initials' => 'A', 'attr' => ["data-x\n" => 'y']]));
     }
 
     /**
