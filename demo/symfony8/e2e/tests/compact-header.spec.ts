@@ -128,6 +128,14 @@ test.describe('compact header (2.27)', () => {
       const current = nav.locator('[aria-current="page"]');
       await expect(current).toBeVisible();
       expect(await nav.locator('.nowo-ui-header-crumbs__item--current').evaluate((el) => getComputedStyle(el, '::before').content)).toBe('none');
+      // Truncated on screen, complete for assistive technology (accessibility tree) and in the tooltip.
+      await expect(current).toHaveAttribute('title', CURRENT);
+      await expect(nav).toMatchAriaSnapshot(`
+        - navigation "Breadcrumb":
+          - link "Up to Quotes"
+          - list:
+            - listitem: ${CURRENT}
+      `);
       expect(await current.evaluate((el) => el.scrollWidth > el.clientWidth && getComputedStyle(el).textOverflow === 'ellipsis')).toBe(true);
       await expect(page.getByTestId('page-actions').getByRole('button', { name: 'Page actions' })).toBeVisible();
       await expect(page.getByRole('link', { name: 'Home', exact: true })).toBeVisible();

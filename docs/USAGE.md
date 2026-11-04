@@ -1768,6 +1768,24 @@ Behaviour and accessibility:
   ([THEME_SLOTS](THEME_SLOTS.md)) and the `--nowo-ui-header-*` tokens ([THEMING](THEMING.md#compact-header-227)); no
   inline style, script or handler.
 
+**Twig API** (all request-scoped and stateless, safe in FrankenPHP workers):
+
+| Name | Kind | Returns / use |
+| --- | --- | --- |
+| `nowo_ui_header_presentation(presentation = null)` | function | `'standard'` or `'compact'`: the option (an invalid one throws), else the request attribute `_nowo_ui_header_presentation` (an invalid one is ignored), else `nowo_ui_kit.header.presentation` |
+| `nowo_ui_header` | global | the `Nowo\UiKitBundle\Shell\HeaderPresentationResolver` behind that function: `nowo_ui_header.resolve(option)`, `nowo_ui_header.isCompact(option)`, `nowo_ui_header.compactActions()` (`'page'` \| `'bar'`). Partials read it with `nowo_ui_header\|default(null)`, so a Twig environment without UiKit's extension still renders them (standard, unless `presentation` / `title_hidden` is passed) |
+| `nowo_ui_breadcrumb_kit_trail(collection = null, context_key = '')` | function | BreadcrumbKit's trail as `list<View\Crumb>` (a level with `linkEnabled: false` has no href); `[]` without BreadcrumbKit; ignores `nowo_ui_kit.breadcrumbs.breadcrumb_kit` |
+| `nowo_ui_header_crumbs(crumbs = null, header = null, options = {})` | function | the `Nowo\UiKitBundle\Shell\HeaderCrumbs` model the `header_crumbs` partial renders — `items` (`{label, href, middle, current}`, translated labels), `panel` (the levels behind "…"), `up` (`{label, href}` or null), `isEmpty()`, `isCollapsible()`; options `home_href`, `drop_home_crumb` (default true), `max_visible` (default 3, at least 2). Use it for a host-made trail with the same rules |
+
+```twig
+{% set trail = nowo_ui_header_crumbs(nowo_ui_breadcrumb_kit_trail(), null, {home_href: path('dashboard')}) %}
+{% if nowo_ui_header.isCompact() and not trail.isEmpty() %}…{% endif %}
+```
+
+**Truncated labels stay complete for assistive technology:** every level's text in the DOM is the full label (only CSS
+cuts it with `text-overflow: ellipsis`), so its accessible name is the full text, and each level also carries `title`
+with the full label for pointer users.
+
 Demo: `/demo/compact-header` in `demo/symfony8` (`?presentation=standard`, `?dir=rtl`).
 
 ## Overriding templates (REQ-TWIG-001)

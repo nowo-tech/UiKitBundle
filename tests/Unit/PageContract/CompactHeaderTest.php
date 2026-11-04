@@ -274,6 +274,21 @@ final class CompactHeaderTest extends TestCase
         $this->crumbs(['crumbs' => [42]]);
     }
 
+    public function testTruncatedLabelsKeepTheFullTextForAssistiveTechnology(): void
+    {
+        $long = 'Q-1042 · Annual maintenance renewal for ACME Corporation, northern region';
+        $ancestor = 'Customers of the northern region and partners';
+        $html = $this->crumbs(['crumbs' => [new Crumb($ancestor, '/c'), new Crumb('Quotes', '/q'), new Crumb($long)], 'max_visible' => 2]);
+        // The DOM text is the whole label (CSS truncates it visually), so the accessible name is complete; title repeats it.
+        self::assertStringContainsString('<span class="nowo-ui-header-crumbs__current" aria-current="page" title="'.$long.'">'.$long.'</span>', $html);
+        self::assertStringContainsString('title="'.$ancestor.'">'.$ancestor.'</a>', $html);
+        self::assertStringContainsString('<li><a class="nowo-ui-header-crumbs__panel-link" href="/q">Quotes</a></li>', $html, 'collapsed levels keep their full text in the panel');
+        self::assertStringNotContainsString('aria-hidden="true">'.$long, $html);
+        self::assertStringNotContainsString('…</span></li>', $html, 'no server-side ellipsis');
+        $model = (new ThemeExtension(new Theme()))->headerCrumbs(PageContractTwig::create(), [new Crumb($long)]);
+        self::assertSame($long, $model->items[0]['label']);
+    }
+
     /**
      * @return iterable<string, array{0: int, 1: int, 2: list<int>}>
      */

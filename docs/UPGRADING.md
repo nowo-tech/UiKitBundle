@@ -142,6 +142,12 @@ Points to check:
 - `nowo_ui_page_header()` gained a `presentation` argument and accepts an options hash as its second argument; the
   positional `bundle` string keeps working.
 - `ThemeExtension` takes a new optional `$header` constructor argument; hosts that build it by hand need no change.
+- New Twig names (avoid clashes with host globals / functions of the same name): the global **`nowo_ui_header`** (the
+  stateless `HeaderPresentationResolver`: `resolve()`, `isCompact()`, `compactActions()`) and the functions
+  `nowo_ui_header_presentation()`, `nowo_ui_breadcrumb_kit_trail()` and **`nowo_ui_header_crumbs()`** (the compact
+  trail model: `items`, `panel`, `up`, `isEmpty()`, `isCollapsible()`). Host `page_header` overrides that decide on
+  their own whether to hide the title can call `nowo_ui_header.isCompact(presentation ?? null)`; see
+  [USAGE](USAGE.md#compact-header-227).
 
 ## To 2.26.0
 
