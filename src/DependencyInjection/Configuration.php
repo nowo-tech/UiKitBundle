@@ -13,6 +13,7 @@ use Nowo\UiKitBundle\Appearance\CornerStyle;
 use Nowo\UiKitBundle\Enum\CssFramework;
 use Nowo\UiKitBundle\Enum\IconSet;
 use Nowo\UiKitBundle\Enum\RowActionsDisplay;
+use Nowo\UiKitBundle\Shell\HeaderPresentation;
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Theme\ThemeSlots;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
@@ -328,6 +329,22 @@ final class Configuration implements ConfigurationInterface
                         ->booleanNode('breadcrumb_kit')->defaultTrue()->info('Use BreadcrumbKit when its breadcrumb_render() Twig function exists.')->end()
                         ->scalarNode('collection')->defaultNull()->info('BreadcrumbKit collection code (null = its default collection). PageHeader::breadcrumbCollection overrides it.')->end()
                         ->booleanNode('enabled')->defaultTrue()->info('2.3.1: false drops the breadcrumb trail (BreadcrumbKit and PageHeader::breadcrumbs) from every page header, e.g. when the host layout renders its own.')->end()
+                    ->end()
+                ->end()
+                ->arrayNode('header')
+                    ->info('2.27 compact header: the default page-header presentation (a request attribute _nowo_ui_header_presentation overrides it per request) and where PageHeader::actions go in the compact presentation.')
+                    ->addDefaultsIfNotSet()
+                    ->children()
+                        ->enumNode('presentation')
+                            ->values(HeaderPresentation::values())
+                            ->defaultValue(HeaderPresentation::Standard->value)
+                            ->info('standard (default) | compact: in compact the page header keeps a visually hidden h1 and leaves its intro, breadcrumbs and back link to the top bar (header_context).')
+                        ->end()
+                        ->enumNode('compact_actions')
+                            ->values(['page', 'bar'])
+                            ->defaultValue('page')
+                            ->info('page (default): header.actions stay in the page header; bar: in the compact presentation the page header leaves them out (the host shows them in the top bar through the page_actions partial). extra_actions always stay.')
+                        ->end()
                     ->end()
                 ->end()
                 ->append($this->themeNode())

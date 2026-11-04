@@ -16,10 +16,17 @@
   2.21: with header.actionsLayout `split`, `toolbar` holds the `header_actions` partial (icon buttons, one primary, the
   square "more" menu; extra_actions included) instead of one button per action; `status_badge` holds the rendered
   `page_status` partial of header.status (null without; print it with |raw like `toolbar`), for host overrides.
+  2.27, presentation (`standard` | `compact`; default nowo_ui_header_presentation(): the request attribute
+  _nowo_ui_header_presentation, else nowo_ui_kit.header.presentation): compact passes `intro: null`, `presentation`
+  and `title_hidden: true` to the partial (the title stays the page's h1, visually hidden; no breadcrumbs or back
+  link: the top bar carries them), and with nowo_ui_kit.header.compact_actions `bar` it behaves as
+  `header_actions: false` (extra_actions stay in the page).
 #}
 {% set _b = bundle|default(nowo_ui_bundle|default(null)) %}
 {% set _pt = nowo_ui_page_type|default(null) %}
-{% set _with_header_actions = header_actions is defined ? header_actions : true %}
+{% set _presentation = nowo_ui_header_presentation(presentation ?? null) %}
+{% set _compact = _presentation == 'compact' %}
+{% set _with_header_actions = (header_actions is defined ? header_actions : true) and not (_compact and nowo_ui_header.compactActions() == 'bar') %}
 {% set _actions = (_with_header_actions ? header.actions : [])|merge(extra_actions|default([])) %}
 {% set _split = _with_header_actions and header.actionsLayout is defined and header.actionsLayout == 'split' %}
 {% set _toolbar -%}
@@ -36,11 +43,13 @@
     header: _with_header_actions ? header : header.withActions([]),
     actions: _actions,
     title: header.title|nowo_ui_trans,
-    intro: header.intro is null ? null : header.intro|nowo_ui_trans,
+    intro: _compact or header.intro is null ? null : header.intro|nowo_ui_trans,
     toolbar: _actions is empty ? null : _toolbar|trim,
     header_actions_rendered: true,
     status_badge: _status_badge,
     region: 'header',
     bundle: _b,
     nowo_ui_page_type: _pt,
+    presentation: _presentation,
+    title_hidden: _compact,
 }, false) }}

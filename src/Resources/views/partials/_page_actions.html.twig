@@ -1,0 +1,63 @@
+{#
+  Page-actions trigger (2.27, theme partial `page_actions`): the square popover `menu` (display icon, square,
+  menu_items, popover, confirm_external) — the split page header's "more" menu, which includes this partial too — then
+  the confirm dialogs of its POST / confirm actions, after the menu and outside the popover panel (a closed popover
+  would hide them). Renders nothing without items. In the compact top bar it sits in the `header_context` partial.
+
+  Optional:
+    - actions: list of View\Action (hidden ones are skipped; POST, confirm, dialog and modal actions work as in the
+      split header: menu items, confirm dialogs after the menu)
+    - items: hashes for hosts without View\Action, after the actions: {label, href?, icon?, attr?, danger?, current?};
+      without `href` an item is a <button type="button"> with its `attr` (data / aria attributes, on* refused)
+    - label (View\Label|string; default "Page actions", action.page_actions): accessible name and tooltip of the toggle
+    - icon (default grid; `more` gives the vertical dots), id (default nowo-ui-page-actions; panel "<id>-panel")
+    - align (default end; the compact bar passes start), attr (root attributes, no on*), bundle, nowo_ui_page_type
+    - page_actions_slot (default true): false leaves out the `page_actions` slot class / attributes and
+      data-nowo-ui-page-actions (the split header's "more" menu, so its markup stays as in 2.21 – 2.26)
+  Slots: page_actions (root, with menu), menu_toggle_square, menu_panel, menu_item; confirm dialogs: confirm.
+#}
+{%- set _b = bundle|default(null) -%}
+{%- set _pt = nowo_ui_page_type|default(null) -%}
+{%- set _items = [] -%}
+{%- set _confirms = [] -%}
+{%- for action in actions|default([]) -%}
+    {%- if action.visible -%}
+        {%- set _items = _items|merge([action]) -%}
+        {%- if action.confirm -%}
+            {%- set _confirms = _confirms|merge([action]) -%}
+        {%- endif -%}
+    {%- endif -%}
+{%- endfor -%}
+{%- set _items = _items|merge(items|default([])) -%}
+{%- if _items is not empty -%}
+    {%- set _slot = page_actions_slot ?? true -%}
+    {%- set _menu = include(nowo_ui_partial('menu', _b), {
+        items: _items,
+        label: label|default(null) is null ? 'action.page_actions'|trans({}, 'NowoUiKitBundle') : label,
+        icon: icon|default('grid'),
+        display: 'icon',
+        square: true,
+        menu_items: true,
+        popover: true,
+        confirm_external: true,
+        id: id|default('nowo-ui-page-actions'),
+        align: align|default('end'),
+        root_class: _slot ? nowo_ui_class('page_actions', _b) : '',
+        attr: (_slot ? {'data-nowo-ui-page-actions': true}|merge(nowo_ui_theme.attributesFor('page_actions', _b, {}, _pt)) : {})|merge(attr|default({})),
+        bundle: _b,
+        nowo_ui_page_type: _pt,
+    }, false) -%}
+    {%- set _dialogs = '' -%}
+    {%- for action in _confirms -%}
+        {%- set _dialogs = _dialogs ~ '            ' ~ include(nowo_ui_partial('confirm', _b), {
+            id: action.confirmId(),
+            confirm: action.confirm,
+            action: action,
+            action_href: action.href ?? (action.route ? path(action.route, action.params) : null),
+            bundle: _b,
+            nowo_ui_page_type: _pt,
+        }, false) ~ '\n        ' -%}
+    {%- endfor -%}
+    {#- the whitespace between the parts is the split header's 2.21 – 2.26 output, kept byte for byte -#}
+    {{- (_menu ~ '\n        ' ~ _dialogs ~ '    ')|raw -}}
+{%- endif -%}

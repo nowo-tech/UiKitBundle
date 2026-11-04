@@ -3,11 +3,12 @@
  * The panel is a native `[popover]` in the browser top layer, so table scrollers and cards never clip it; the
  * toggle is a `<button popovertarget>` (the browser opens / closes it, light-dismisses it on an outside click, no JS
  * needed). This runtime adds, by delegation:
- *  - placement: under the toggle, end edges aligned, flipped above when the viewport has no room below, kept inside
- *    the viewport (`placePopover`);
+ *  - placement: under the toggle, end edges aligned (2.27: start edges for a root with `nowo-ui-menu--start` or
+ *    `data-nowo-ui-popover-align="start"`, the right edge in RTL), flipped above when the viewport has no room below,
+ *    kept inside the viewport (`placePopover`);
  *  - `aria-expanded` on the toggle;
- *  - close on scroll (outside the panel) and resize — no stale position — and after choosing an item (a link or a
- *    submit button that does not open a dialog);
+ *  - close on scroll (outside the panel) and resize — no stale position — and after choosing an item (a link, a
+ *    submit button that does not open a dialog, or 2.27 a `button[data-nowo-ui-menu-button]` hash item);
  *  - Escape closes the open menu first and returns focus to its toggle, without reaching a surrounding dialog (a
  *    dialog opened from inside the menu still closes first).
  * Markup: `[data-nowo-ui-popover-menu]` root, `[data-nowo-ui-popover-trigger]` toggle, `[data-nowo-ui-popover-panel]`
@@ -37,7 +38,19 @@ export function triggerOf(panel: HTMLElement): HTMLElement | null {
   return [...document.querySelectorAll<HTMLElement>('[popovertarget]')].find((el) => el.getAttribute('popovertarget') === panel.id) ?? null;
 }
 
-/** Below the trigger, end edges aligned; above it when the viewport has no room below; kept inside the viewport. */
+/** Root selector of the menus whose panel aligns with the toggle's start edge (2.27). */
+export const ALIGN_START = '.nowo-ui-menu--start, [data-nowo-ui-popover-align="start"]';
+
+/** Whether the panel's left edge follows the toggle's left edge: start-aligned menus in left-to-right text. */
+function alignsLeft(trigger: HTMLElement, panel: HTMLElement): boolean {
+  if (!panel.closest(ROOT)?.matches(ALIGN_START)) {
+    return false;
+  }
+  return getComputedStyle(trigger).direction !== 'rtl';
+}
+
+/** Below the trigger, end edges aligned (start edges for start-aligned menus); above it when the viewport has no room
+ * below; kept inside the viewport. */
 export function placePopover(trigger: HTMLElement, panel: HTMLElement): void {
   const rect = trigger.getBoundingClientRect();
   const width = panel.offsetWidth;
@@ -45,7 +58,8 @@ export function placePopover(trigger: HTMLElement, panel: HTMLElement): void {
   const below = rect.bottom + GAP_PX;
   const above = rect.top - GAP_PX - height;
   const top = below + height > window.innerHeight - EDGE_PX && above >= EDGE_PX ? above : below;
-  const left = Math.min(Math.max(EDGE_PX, rect.right - width), window.innerWidth - EDGE_PX - width);
+  const start = alignsLeft(trigger, panel) ? rect.left : rect.right - width;
+  const left = Math.min(Math.max(EDGE_PX, start), window.innerWidth - EDGE_PX - width);
   panel.style.top = `${Math.round(top)}px`;
   panel.style.left = `${Math.round(Math.max(EDGE_PX, left))}px`;
 }
@@ -135,7 +149,7 @@ function onClick(event: MouseEvent): void {
   if (!(target instanceof Element)) {
     return;
   }
-  const item = target.closest('a[href], button[type="submit"], input[type="submit"]');
+  const item = target.closest('a[href], button[type="submit"], input[type="submit"], button[data-nowo-ui-menu-button]');
   const panel = item?.closest<HTMLElement>(PANEL);
   if (!item || !panel || item.hasAttribute('data-nowo-ui-dialog-open')) {
     return;

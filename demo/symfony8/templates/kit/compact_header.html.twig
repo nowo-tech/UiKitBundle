@@ -1,0 +1,75 @@
+{#
+  UiKit 2.27 demo: the compact header. In Compact the shell's header_context holds the `header_context` partial (the
+  page-actions trigger, the home link and the compact breadcrumb) and the page header keeps a visually hidden h1; in
+  Standard the page header shows its trail, title, intro and split actions. js/nowo-ui-header-crumbs.js is opt-in
+  (merged into script_names). nowo_ui_kit.header.compact_actions is `bar` in this demo's config.
+#}
+{% extends '@NowoUiKit/layout/document.html.twig' %}
+{% set nowo_ui_document_title = 'Compact header · UiKit 2.27' %}
+
+{% block nowo_ui_styles %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/compact-header-demo.css') }}">
+{% endblock %}
+
+{% block nowo_ui_body %}
+    {% set compact = nowo_ui_header_presentation() == 'compact' %}
+    <div class="kit-compact-demo" dir="{{ dir }}" data-testid="compact-demo">
+        <a class="{{ nowo_ui_class('skip_link') }}" href="#main-content" data-testid="skip-link">Skip to main content</a>
+        {% set brand_html %}<a class="nowo-ui-header__brand kit-compact-demo__brand" href="{{ path('kit_compact_header', query) }}" data-testid="brand"><span class="kit-compact-demo__switcher" aria-hidden="true"></span><span class="kit-compact-demo__brand-name">Acme Sales</span></a>{% endset %}
+        {% set header_end %}
+            <a class="{{ nowo_ui_class('btn_secondary') }} {{ nowo_ui_class('btn_icon') }} kit-compact-demo__control" href="{{ path('kit_compact_header', query|merge({at: 'search'})) }}" aria-label="Search" title="Search" data-testid="control-search"><span class="kit-compact-demo__glyph kit-compact-demo__glyph--search" aria-hidden="true"></span></a>
+            <a class="{{ nowo_ui_class('btn_secondary') }} {{ nowo_ui_class('btn_icon') }} kit-compact-demo__control" href="{{ path('kit_compact_header', query|merge({at: 'help'})) }}" aria-label="Help" title="Help" data-testid="control-help"><span class="kit-compact-demo__glyph kit-compact-demo__glyph--help" aria-hidden="true"></span></a>
+            {{ include('@NowoUiKitBundle/partials/_theme_toggle.html.twig', {compact: true}) }}
+        {% endset %}
+        {% set header_context = compact ? include(nowo_ui_partial('header_context'), {
+            actions: header.actions,
+            actions_attr: {'data-testid': 'page-actions'},
+            home_href: path('nowo_ui_kit_kitchen_sink'),
+            header: header,
+            attr: {'data-testid': 'header-context'},
+        }) : '' %}
+        {{ include(nowo_ui_partial('app_shell_open'), {
+            brand_html: brand_html,
+            header_end: header_end,
+            header_context: header_context,
+            aside_label: 'Sales',
+            aside_items: [
+                {label: 'Quotes', href: path('kit_compact_header', query), current: true},
+                {label: 'App shell', href: path('kit_shell')},
+                {label: 'Side panel', href: path('kit_side_panel')},
+            ],
+            show_user_menu: false,
+            collapsed: true,
+        }) }}
+            <main id="main-content" tabindex="-1" class="nowo-ui-content" data-testid="compact-main">
+                {{ nowo_ui_page_header(header, {bundle: 'DemoDefaultTheme'}) }}
+                <section class="{{ nowo_ui_class('card') }}" data-testid="presentation-switch" aria-labelledby="presentation-title">
+                    <div class="{{ nowo_ui_class('card_body') }}">
+                        <h2 id="presentation-title" class="kit-compact-demo__subtitle">Header presentation</h2>
+                        <p class="kit-compact-demo__switch">
+                            <a href="{{ path('kit_compact_header', query|merge({presentation: 'standard'})) }}"{% if not compact %} aria-current="page"{% endif %} data-testid="to-standard">Standard</a>
+                            <a href="{{ path('kit_compact_header', query|filter((v, k) => k != 'presentation')) }}"{% if compact %} aria-current="page"{% endif %} data-testid="to-compact">Compact</a>
+                            <a href="{{ path('kit_compact_header', query|merge({dir: query.dir is defined ? null : 'rtl'})|filter(v => v is not null)) }}" data-testid="to-rtl">{{ dir == 'rtl' ? 'Left to right' : 'Right to left' }}</a>
+                        </p>
+                        {% if at %}<p data-testid="visited">Visited: {{ at }}</p>{% endif %}
+                    </div>
+                </section>
+                <section class="{{ nowo_ui_class('card') }}" aria-labelledby="lines-title">
+                    <div class="{{ nowo_ui_class('card_body') }}">
+                        <h2 id="lines-title" class="kit-compact-demo__subtitle">Lines</h2>
+                        <ul class="kit-compact-demo__lines" data-testid="lines">
+                            <li>Preventive maintenance, 12 visits — 4 800 €</li>
+                            <li>On-call support, business hours — 2 400 €</li>
+                            <li>Spare parts allowance — 1 200 €</li>
+                        </ul>
+                    </div>
+                </section>
+            </main>
+        {{ include(nowo_ui_partial('app_shell_close'), {footer_html: false}) }}
+    </div>
+{% endblock %}
+
+{% block nowo_ui_scripts %}
+    {{ include(nowo_ui_partial('scripts'), {script_names: nowo_ui_script_names()|merge(['header-crumbs'])}) }}
+{% endblock %}

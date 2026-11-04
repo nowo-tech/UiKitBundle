@@ -452,6 +452,22 @@ final class ThemeSlots
         ]],
         'side_panel_container' => ['nowo-ui-side-panel-container', []],
         'side_panel_main' => ['nowo-ui-side-panel-container__main', []],
+        // Compact header (2.27, partials `header_context`, `header_crumbs`, `page_actions`): the filling of the top bar's
+        // `app_header_context` slot — page-actions trigger, home link (added to btn_secondary + btn_icon) and the
+        // one-line breadcrumb with its "…" disclosure, panel and phone "‹" up link
+        'header_context' => ['nowo-ui-header-context', []],
+        'header_context_home' => ['nowo-ui-header-context__home', []],
+        'header_crumbs' => ['nowo-ui-header-crumbs', []],
+        'header_crumbs_list' => ['nowo-ui-header-crumbs__list', []],
+        'header_crumbs_item' => ['nowo-ui-header-crumbs__item', []],
+        'header_crumbs_link' => ['nowo-ui-header-crumbs__link', []],
+        'header_crumbs_current' => ['nowo-ui-header-crumbs__current', []],
+        'header_crumbs_up' => ['nowo-ui-header-crumbs__up', []],
+        'header_crumbs_more' => ['nowo-ui-header-crumbs__more', []],
+        'header_crumbs_panel' => ['nowo-ui-header-crumbs__panel', []],
+        'header_crumbs_panel_link' => ['nowo-ui-header-crumbs__panel-link', []],
+        // The page-actions menu root (the square popover `menu`; also the split page header's "more" menu, without it)
+        'page_actions' => ['nowo-ui-page-actions', []],
         'modal' => ['nowo-ui-modal', []],
         // _modal_shell internals (1.x markup: the Bootstrap structure classes modal-content / modal-header /
         // modal-body / modal-footer stay; the theme adds host classes and attributes)
@@ -557,6 +573,8 @@ final class ThemeSlots
         'app_header' => ['nowo-ui-app-shell__header', []],
         'app_header_start' => ['nowo-ui-app-shell__header-start', []],
         'app_header_end' => ['nowo-ui-app-shell__header-end', []],
+        // 2.27: the header slot between start and end (header_context option / nowo_ui_shell_header_context block)
+        'app_header_context' => ['nowo-ui-app-shell__header-context', []],
         'app_brand' => ['nowo-ui-app-shell__brand', []],
         'app_burger' => ['nowo-ui-app-shell__burger', []],
         // Burger glyphs (svg / morph mode static icons, + --open / --close) and the <morph-icon data-sidebar-morph>
@@ -621,6 +639,8 @@ final class ThemeSlots
         'filters' => '@NowoUiKitBundle/partials/_filters.html.twig',
         'flashes' => '@NowoUiKitBundle/partials/_flashes.html.twig',
         'header_actions' => '@NowoUiKitBundle/partials/_header_actions.html.twig',
+        'header_context' => '@NowoUiKitBundle/partials/_header_context.html.twig',
+        'header_crumbs' => '@NowoUiKitBundle/partials/_header_crumbs.html.twig',
         'list_filters' => '@NowoUiKitBundle/page/_list_filters.html.twig',
         'listing_cells' => '@NowoUiKitBundle/partials/_listing_cells.html.twig',
         'listing_customizer' => '@NowoUiKitBundle/partials/_listing_customizer.html.twig',
@@ -629,6 +649,7 @@ final class ThemeSlots
         'locale_tabs' => '@NowoUiKitBundle/partials/_locale_tabs.html.twig',
         'menu' => '@NowoUiKitBundle/partials/_menu.html.twig',
         'modal_shell' => '@NowoUiKitBundle/partials/_modal_shell.html.twig',
+        'page_actions' => '@NowoUiKitBundle/partials/_page_actions.html.twig',
         'page_header' => '@NowoUiKitBundle/partials/_page_header.html.twig',
         'page_status' => '@NowoUiKitBundle/partials/_page_status.html.twig',
         'pagination' => '@NowoUiKitBundle/partials/_pagination.html.twig',

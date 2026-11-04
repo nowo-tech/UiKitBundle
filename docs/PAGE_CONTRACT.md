@@ -78,6 +78,9 @@ nowo_ui_kit:
     breadcrumb_kit: true              # render PageHeader trails with BreadcrumbKit's breadcrumb_render() when installed
     collection: null                  # BreadcrumbKit collection (PageHeader::breadcrumbCollection overrides)
     enabled: true                     # 2.3.1: false = no breadcrumb trail in any page header (host layout renders its own)
+  header:                             # 2.27 compact header (docs/CONFIGURATION.md#compact-header-227)
+    presentation: standard            # standard | compact (request attribute _nowo_ui_header_presentation overrides)
+    compact_actions: page             # page | bar: compact page headers leave header.actions to the top bar
   theme:
     framework_defaults: true                                           # false = no UiKit framework classes on any slot
     classes:    { btn_primary: 'btn-moss', table: 'data-table' }        # slot => classes (string or list)

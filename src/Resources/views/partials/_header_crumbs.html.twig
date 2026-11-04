@@ -1,0 +1,58 @@
+{#
+  Compact breadcrumb of the top bar (2.27, theme partial `header_crumbs`): one line, every level truncated with its
+  full text in `title`, separators drawn by CSS (token --nowo-ui-header-crumbs-separator, never read by screen readers),
+  the last level is the current page (a span with aria-current="page"), a level without link is a plain span.
+  With more than max_visible levels the middle ones are marked --middle and listed in the "…" disclosure panel (APG
+  disclosure; a native [popover] driven by nowo-ui-popover.js). The "…" item is rendered `hidden`: without
+  js/nowo-ui-header-crumbs.js (opt-in) the whole trail shows; the script sets data-collapsed="true" (CSS hides the
+  middle levels) and reveals "…". On phones (≤ 30rem, CSS only) only the current level shows, after the "‹" link to
+  the nearest linked ancestor.
+
+  Source (nowo_ui_header_crumbs()), first match:
+    - crumbs: View\Crumb list, hashes {label, href?} or BreadcrumbKit nodes (the last one is the current page)
+    - header: a View\PageHeader, resolved like the page-header trail (breadcrumbsMode own / kit / auto)
+    - neither: nowo_ui_breadcrumb_kit_trail() (BreadcrumbKit's default collection; nothing without BreadcrumbKit)
+  Optional:
+    - home_href + drop_home_crumb (default true): the first level is dropped when it is the home page
+    - max_visible (default 3; at least 2): with 2 the trail collapses to first, "…", current
+    - id (default nowo-ui-header-crumbs; the panel is "<id>-panel"), attr (root attributes, no on*), bundle
+  Slots: header_crumbs (nav), header_crumbs_list, header_crumbs_item, header_crumbs_link, header_crumbs_current,
+  header_crumbs_up, header_crumbs_more, header_crumbs_panel, header_crumbs_panel_link.
+#}
+{%- set _b = bundle|default(null) -%}
+{%- set _model = nowo_ui_header_crumbs(crumbs ?? null, header ?? null, {home_href: home_href|default(null), drop_home_crumb: drop_home_crumb ?? true, max_visible: max_visible|default(3)}) -%}
+{%- if not _model.isEmpty() -%}
+{%- set _id = id|default('nowo-ui-header-crumbs') -%}
+{%- set _collapsible = _model.isCollapsible() -%}
+{%- set _more_label = 'breadcrumbs.more'|trans({}, 'NowoUiKitBundle') -%}
+<nav class="{{ nowo_ui_class('header_crumbs', _b) }}" aria-label="{{ 'breadcrumbs.nav'|trans({}, 'NowoUiKitBundle') }}" data-nowo-ui-header-crumbs{% if _collapsible %} data-collapsible="true"{% endif %}{{ nowo_ui_attrs('header_crumbs', _b) }}{{ nowo_ui_html_attrs(attr|default({})) }}>
+    {%- if _model.up %}
+    <a class="{{ nowo_ui_class('header_crumbs_up', _b) }}" href="{{ _model.up.href }}" data-nowo-ui-header-crumbs-up{{ nowo_ui_attrs('header_crumbs_up', _b) }}><span class="nowo-ui-header-crumbs__up-glyph" aria-hidden="true">‹</span><span class="visually-hidden">{{ 'breadcrumbs.up'|trans({'%label%': _model.up.label}, 'NowoUiKitBundle') }}</span></a>
+    {%- endif %}
+    <ol class="{{ nowo_ui_class('header_crumbs_list', _b) }}"{{ nowo_ui_attrs('header_crumbs_list', _b) }}>
+    {%- for item in _model.items %}
+        <li class="{{ nowo_ui_class('header_crumbs_item', _b) }}{{ item.middle ? ' nowo-ui-header-crumbs__item--middle' }}{{ item.current ? ' nowo-ui-header-crumbs__item--current' }}"{{ nowo_ui_attrs('header_crumbs_item', _b) }}>
+            {%- if item.current -%}
+            <span class="{{ nowo_ui_class('header_crumbs_current', _b) }}" aria-current="page" title="{{ item.label }}"{{ nowo_ui_attrs('header_crumbs_current', _b) }}>{{ item.label }}</span>
+            {%- elseif item.href is not null -%}
+            <a class="{{ nowo_ui_class('header_crumbs_link', _b) }}" href="{{ item.href }}" title="{{ item.label }}"{{ nowo_ui_attrs('header_crumbs_link', _b) }}>{{ item.label }}</a>
+            {%- else -%}
+            <span class="nowo-ui-header-crumbs__text" title="{{ item.label }}">{{ item.label }}</span>
+            {%- endif -%}
+        </li>
+        {%- if loop.first and _collapsible %}
+        <li class="{{ nowo_ui_class('header_crumbs_item', _b) }} nowo-ui-header-crumbs__item--more" data-nowo-ui-header-crumbs-more hidden{{ nowo_ui_attrs('header_crumbs_item', _b) }}>
+            <span class="nowo-ui-header-crumbs__menu" data-nowo-ui-popover-menu data-nowo-ui-popover-align="start">
+                <button type="button" class="{{ nowo_ui_class('header_crumbs_more', _b) }}" popovertarget="{{ _id }}-panel" aria-controls="{{ _id }}-panel" aria-expanded="false" aria-label="{{ _more_label }}" title="{{ _more_label }}" data-nowo-ui-popover-trigger{{ nowo_ui_attrs('header_crumbs_more', _b) }}><span aria-hidden="true">…</span></button>
+                <ul class="{{ nowo_ui_class('header_crumbs_panel', _b) }}" id="{{ _id }}-panel" popover data-nowo-ui-popover-panel{{ nowo_ui_attrs('header_crumbs_panel', _b) }}>
+                {%- for level in _model.panel %}
+                    <li>{% if level.href is not null %}<a class="{{ nowo_ui_class('header_crumbs_panel_link', _b) }}" href="{{ level.href }}"{{ nowo_ui_attrs('header_crumbs_panel_link', _b) }}>{{ level.label }}</a>{% else %}<span class="nowo-ui-header-crumbs__panel-text">{{ level.label }}</span>{% endif %}</li>
+                {%- endfor %}
+                </ul>
+            </span>
+        </li>
+        {%- endif -%}
+    {%- endfor %}
+    </ol>
+</nav>
+{%- endif -%}

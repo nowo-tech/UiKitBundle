@@ -24,6 +24,7 @@ type Entry =
   | 'tree'
   | 'side-panel'
   | 'avatar'
+  | 'header-crumbs'
   | 'autosubmit'
   | 'error-retry'
   | 'demo-peers';
@@ -295,6 +296,21 @@ const configs: Record<Entry, { build: object }> = {
         output: {
           format: 'iife' as const,
           entryFileNames: 'js/nowo-ui-avatar.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  'header-crumbs': {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-header-crumbs.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-header-crumbs.js',
         },
       },
       minify: true,

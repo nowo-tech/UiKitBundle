@@ -15,6 +15,8 @@
     - more_attr: extra attributes of the menu root (e.g. {'data-testid': 'page-header-more'})
     - attr: extra root attributes (no on*), bundle, nowo_ui_page_type
   Slots: header_actions (root), btn_* / btn_icon (buttons), menu + menu_toggle_square + menu_panel + menu_item (menu).
+  2.27: the "more" menu and its confirm dialogs come from the `page_actions` partial (page_actions_slot: false, so the
+  markup is unchanged); a host override of `menu` or `page_actions` serves the header and the compact top bar alike.
 #}
 {% set _b = bundle|default(null) %}
 {% set _pt = nowo_ui_page_type|default(null) %}
@@ -28,29 +30,15 @@
         {{ include(nowo_ui_partial('action', _b), {action: _split.primary, context: 'toolbar', bundle: _b, nowo_ui_page_type: _pt}, false) }}
     {% endif %}
     {% if _split.more is not empty %}
-        {{ include(nowo_ui_partial('menu', _b), {
-            items: _split.more,
-            label: more_label|default(null),
+        {{ include(nowo_ui_partial('page_actions', _b), {
+            actions: _split.more,
+            label: more_label ?? 'action.more'|trans({}, 'NowoUiKitBundle'),
             icon: 'more',
-            display: 'icon',
-            square: true,
-            menu_items: true,
-            popover: true,
-            confirm_external: true,
             id: more_id|default('nowo-ui-header-more'),
             attr: {'data-nowo-ui-header-more': true}|merge(more_attr|default({})),
+            align: 'end',
+            page_actions_slot: false,
             bundle: _b,
             nowo_ui_page_type: _pt,
-        }, false) }}
-        {% for action in _split.confirmActions() %}
-            {{ include(nowo_ui_partial('confirm', _b), {
-                id: action.confirmId(),
-                confirm: action.confirm,
-                action: action,
-                action_href: action.href ?? (action.route ? path(action.route, action.params) : null),
-                bundle: _b,
-                nowo_ui_page_type: _pt,
-            }, false) }}
-        {% endfor %}
-    {% endif %}
+        }, false) }}{% endif %}
 </div>
