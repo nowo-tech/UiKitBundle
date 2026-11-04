@@ -5694,4 +5694,182 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
   margin: 0.1rem 0 0;
   font-size: 0.875rem;
 }
+
+/*
+ * Side panel / drawer (2.25, partials side_panel, side_panel_toggle, side_panel_container): an inline column beside
+ * the content on wide screens, an overlay full-height drawer at <= 767 px (or always with data-layout="overlay").
+ * Tokens: --nowo-ui-side-panel-width / -bg / -border / -shadow / -backdrop / -z.
+ */
+.nowo-ui-side-panel-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.nowo-ui-side-panel-container__main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.nowo-ui-side-panel {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  flex: 0 0 var(--nowo-ui-side-panel-width, 22rem);
+  width: var(--nowo-ui-side-panel-width, 22rem);
+  max-width: 100%;
+  max-height: 100vh;
+  position: sticky;
+  top: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: var(--nowo-ui-side-panel-bg, var(--nowo-ui-surface));
+  color: var(--nowo-ui-text);
+  border: 1px solid var(--nowo-ui-side-panel-border, var(--nowo-ui-border));
+  border-radius: var(--nowo-ui-radius, 0.5rem);
+}
+
+.nowo-ui-side-panel--start {
+  order: -1;
+}
+
+.nowo-ui-side-panel[hidden],
+.nowo-ui-side-panel__backdrop[hidden],
+.nowo-ui-side-panel-toggle__badge[hidden] {
+  display: none !important;
+}
+
+.nowo-ui-side-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--nowo-ui-side-panel-border, var(--nowo-ui-border));
+  position: sticky;
+  top: 0;
+  background: inherit;
+  z-index: 1;
+}
+
+.nowo-ui-side-panel__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.nowo-ui-side-panel__title:focus-visible,
+.nowo-ui-side-panel__close:focus-visible,
+.nowo-ui-side-panel-toggle:focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, var(--nowo-ui-primary));
+  outline-offset: 2px;
+}
+
+.nowo-ui-side-panel__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  min-height: 2rem;
+  text-decoration: none;
+}
+
+.nowo-ui-side-panel__body {
+  flex: 1 1 auto;
+  padding: 1rem;
+}
+
+.nowo-ui-side-panel__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--nowo-ui-side-panel-z, 1040);
+  background: var(--nowo-ui-side-panel-backdrop, rgb(0 0 0 / 40%));
+}
+
+.nowo-ui-side-panel--overlay {
+  position: fixed;
+  inset-block: 0;
+  inset-inline-end: 0;
+  width: min(100%, var(--nowo-ui-side-panel-width, 22rem));
+  height: 100%;
+  max-height: none;
+  border-radius: 0;
+  border-block: 0;
+  border-inline-end: 0;
+  z-index: calc(var(--nowo-ui-side-panel-z, 1040) + 1);
+  box-shadow: var(--nowo-ui-side-panel-shadow, 0 0 1.5rem rgb(0 0 0 / 25%));
+}
+
+.nowo-ui-side-panel--overlay.nowo-ui-side-panel--start {
+  inset-inline-end: auto;
+  inset-inline-start: 0;
+  border-inline-start: 0;
+  border-inline-end: 1px solid var(--nowo-ui-side-panel-border, var(--nowo-ui-border));
+}
+
+.nowo-ui-side-panel-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  text-decoration: none;
+}
+
+.nowo-ui-side-panel-toggle__icon {
+  display: inline-flex;
+  line-height: 1;
+}
+
+@media (max-width: 767px) {
+  .nowo-ui-side-panel-container {
+    display: block;
+  }
+
+  .nowo-ui-side-panel {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-end: 0;
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+    z-index: calc(var(--nowo-ui-side-panel-z, 1040) + 1);
+    box-shadow: var(--nowo-ui-side-panel-shadow, 0 0 1.5rem rgb(0 0 0 / 25%));
+  }
+
+  .nowo-ui-side-panel--start {
+    inset-inline-end: auto;
+    inset-inline-start: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .nowo-ui-side-panel[data-drawer] {
+    animation: nowo-ui-side-panel-in 0.18s ease-out;
+  }
+
+  .nowo-ui-side-panel--start[data-drawer],
+  .nowo-ui-side-panel[data-drawer]:dir(rtl) {
+    animation-name: nowo-ui-side-panel-in-start;
+  }
+
+  .nowo-ui-side-panel--start[data-drawer]:dir(rtl) {
+    animation-name: nowo-ui-side-panel-in;
+  }
+}
+
+@keyframes nowo-ui-side-panel-in {
+  from {
+    transform: translateX(1.5rem);
+    opacity: 0;
+  }
+}
+
+@keyframes nowo-ui-side-panel-in-start {
+  from {
+    transform: translateX(-1.5rem);
+    opacity: 0;
+  }
+}
 }

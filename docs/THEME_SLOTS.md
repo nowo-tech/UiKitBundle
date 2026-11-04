@@ -227,6 +227,16 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `tree_item` | `nowo-ui-tree__item` | — | — | — | — |
 | `tree_link` | `nowo-ui-tree__link` | — | — | — | — |
 | `tree_group` | `nowo-ui-tree__group` | — | — | — | — |
+| `side_panel` | `nowo-ui-side-panel` | — | — | — | — |
+| `side_panel_header` | `nowo-ui-side-panel__header` | — | — | — | — |
+| `side_panel_title` | `nowo-ui-side-panel__title` | — | — | — | — |
+| `side_panel_close` | `nowo-ui-btn nowo-ui-btn--icon nowo-ui-side-panel__close` | `btn btn-sm btn-outline-secondary` | `btn btn-sm btn-outline-secondary` | — | `button clear tiny` |
+| `side_panel_body` | `nowo-ui-side-panel__body` | — | — | — | — |
+| `side_panel_backdrop` | `nowo-ui-side-panel__backdrop` | — | — | — | — |
+| `side_panel_toggle` | `nowo-ui-btn nowo-ui-btn--secondary nowo-ui-side-panel-toggle` | `btn btn-outline-secondary` | `btn btn-outline-secondary` | `inline-flex items-center gap-1 font-medium px-3 py-1.5 text-sm border` | `button secondary` |
+| `side_panel_badge` | `nowo-ui-badge nowo-ui-badge--primary nowo-ui-side-panel-toggle__badge` | `badge bg-primary-subtle text-primary-emphasis border border-primary-subtle` | `badge badge-primary` | `inline-flex border px-2 py-0.5 text-xs` | `badge primary` |
+| `side_panel_container` | `nowo-ui-side-panel-container` | — | — | — | — |
+| `side_panel_main` | `nowo-ui-side-panel-container__main` | — | — | — | — |
 | `modal` | `nowo-ui-modal` | — | — | — | — |
 | `modal_panel` | `nowo-ui-modal__panel` | — | — | — | — |
 | `modal_header` | `nowo-ui-modal__header` | — | — | — | — |
@@ -485,6 +495,9 @@ as the UiKit partial (documented in the header comment of each template) and sho
 | `scripts` *(2.2)* | `partials/_scripts.html.twig` | `script_names` (default `nowo_ui_script_names()`: `modal`, `confirm`, `dialog`, `toast`, `tabs`, `theme`, 2.4: `popover`, `segmented`, 2.6: `autosubmit`), `nonce` | document layout; host layouts with their own script list (`{{ include(nowo_ui_partial('scripts')) }}`) |
 | `segmented` *(2.4)* | `partials/_segmented.html.twig` | `options` (two `{label, checked, title?, attr?}`), `field` (checkbox `FormView`) or `name` / `checked` / `value` / `id`, `label` or `labelled_by`, `input_attr` (e.g. Live Component `data-model`), `attr`, `bundle`; slots `segmented`, `segmented_option` | two-option choice backed by one checkbox (radiogroup; `nowo-ui-segmented.js` syncs the checkbox and dispatches `change`) |
 | `section_form` | `page/_section_form.html.twig` | `form` (FormView), `submit_label`, `actions` (2.2: `View\Action`s after the submit button), `extra_actions`, `bundle` | settings scaffold |
+| `side_panel` *(2.25)* | `partials/_side_panel.html.twig` | `id`, `title` (`Label` or string), `open`, `side` (`end` \| `start`), `layout` (`inline` \| `overlay`), `heading_level` (2–6), `close_href` (no-JS close URL), `content_template` / `content_context` or the embed block `nowo_ui_side_panel_body`, `labels` (`close`, `opened`, `closed`), `attr`, `bundle`; slots `side_panel*` | complementary panel: inline column ≥ 768 px, overlay drawer ≤ 767 px — load `js/nowo-ui-side-panel.js`; see [USAGE](USAGE.md#side-panel-and-drawer-225) |
+| `side_panel_container` *(2.25)* | `partials/_side_panel_container.html.twig` | embed blocks `nowo_ui_side_panel_main`, `nowo_ui_side_panel_panel`; `attr`, `bundle`; slots `side_panel_container`, `side_panel_main` | content + panel columns |
+| `side_panel_toggle` *(2.25)* | `partials/_side_panel_toggle.html.twig` | `target`, `label`, `open`, `href` (no-JS URL of the other state), `icon`, `count`, `count_suffix`, `shortcut`, `attr`, `bundle`; slots `side_panel_toggle`, `side_panel_badge` | the panel's toggle (`aria-controls` / `aria-expanded`, count in the name) |
 | `sort_header` *(2.20)* | `partials/_sort_header.html.twig` | `label` (translated), `href` (server-side link; absent = client-side `<button data-action="table-sort#sort">`), `active`, `direction`, `next_direction`, `icons` (`none` / `asc` / `desc`, default `sort` / `sort_asc` / `sort_desc`), `labels` (`asc` / `desc` hints), `attr`, `bundle`; slots `sort_link`, `sort_button` | sortable headers of the `table` partial, the list scaffold and `listing_head`; host `<th>` cells |
 | `shell` | `partials/_shell.html.twig` | `brand_html`, `aside_items`, `main`, `root_class`, `header_class`, `attr`, `burger_root_class`, `bundle` | host shells |
 | `stat_row` *(2.21)* | `partials/_stat_row.html.twig` | `items` (list of `View\Stat`), `label` (row `aria-label`), `attr`, `bundle`; slots `stat_row`, `stat`, `stat_label`, `stat_value`, `stat_hint` | show scaffold (`ShowPage::stats`), detail pages |

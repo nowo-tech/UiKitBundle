@@ -1,0 +1,40 @@
+{#
+  Side panel toggle (2.25, theme partial `side_panel_toggle`): the control that opens and closes a side panel
+  (partials/_side_panel.html.twig), with aria-controls / aria-expanded and an optional count badge. With `href` it is a
+  link (role=button) to the host URL of the other state — the no-JavaScript path; js/nowo-ui-side-panel.js then toggles
+  in place. Without `href` it is a button (JavaScript only).
+  Slots: side_panel_toggle, side_panel_badge.
+
+  Required:
+    - target: id of the panel
+    - label (View\Label|string): accessible name (visible text unless an icon is shown)
+  Optional:
+    - open (bool): the panel is rendered open (aria-expanded="true")
+    - href: URL of the other state (the panel's open URL when closed, its closed URL when open)
+    - icon: icon name (a canonical kind or a prefixed name such as `tabler:message-circle`); the label is then visually
+      hidden. A prefixed name the icon set cannot draw falls back to the visible label (as `tabs` does).
+    - count (int|null): visible badge, also part of the accessible name; 0 or null hides it
+    - count_suffix (View\Label|string): visually hidden text after the count (e.g. "open" → "Comments 3 open")
+    - shortcut: keyboard shortcut (e.g. `Alt+Shift+C`; none by default), exposed as aria-keyshortcuts
+    - attr: root attributes (no on*), bundle
+#}
+{% set _b = bundle|default(null) %}
+{% set _open = open|default(false) %}
+{% set _label = label|nowo_ui_trans %}
+{% set _set = nowo_ui_kit_icon_set|default('bootstrap-icons') %}
+{% set _icon = icon|default(null) %}
+{% if _icon and ':' in _icon and _set != 'ux_icon' %}
+    {% set _prefix = _icon|split(':')|first %}
+    {% set _icon = (_set == 'tabler-icons' and _prefix == 'tabler') or (_set == 'bootstrap-icons' and _prefix == 'bi') ? _icon|split(':', 2)|last : null %}
+{% endif %}
+{% set _icon = _icon and _set != 'none' ? _icon : null %}
+{% set _count = count|default(0) %}
+{% set _has = _count is not null and _count > 0 %}
+{% set _href = href|default(null) %}
+{% set _shortcut = shortcut|default(null) %}
+{% if _href %}<a href="{{ _href }}" role="button"{% else %}<button type="button"{% endif %} class="{{ nowo_ui_class('side_panel_toggle', _b) }}{% if _icon %} nowo-ui-side-panel-toggle--icon{% endif %}" aria-controls="{{ target }}" aria-expanded="{{ _open ? 'true' : 'false' }}" data-nowo-ui-side-panel-toggle{% if _shortcut %} aria-keyshortcuts="{{ _shortcut }}" data-nowo-ui-side-panel-shortcut="{{ _shortcut }}"{% endif %}{{ nowo_ui_attrs('side_panel_toggle', _b) }}{{ nowo_ui_html_attrs(attr|default({})) }}>
+    {% if _icon %}<span class="nowo-ui-side-panel-toggle__icon" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _icon, label: _label}, false)|trim|raw }}</span>
+    <span class="visually-hidden">{{ _label }}</span>{% else %}<span class="nowo-ui-side-panel-toggle__label">{{ _label }}</span>{% endif %}
+    <span class="{{ nowo_ui_class('side_panel_badge', _b) }}" data-nowo-ui-side-panel-badge{% if not _has %} hidden{% endif %}{{ nowo_ui_attrs('side_panel_badge', _b) }}>{{ _has ? _count : '' }}</span>
+    {% if count_suffix|default(null) %}<span class="visually-hidden" data-nowo-ui-side-panel-badge-suffix{% if not _has %} hidden{% endif %}>{{ count_suffix|nowo_ui_trans }}</span>{% endif %}
+{% if _href %}</a>{% else %}</button>{% endif %}
