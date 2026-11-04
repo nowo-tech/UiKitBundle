@@ -11,8 +11,9 @@
  * - Close (toggle, close control, Escape inside the panel, backdrop): hides it, returns focus to the toggle that opened
  *   it when focus was inside, announces `data-nowo-ui-side-panel-closed`.
  * - Inline column (>= 768 px, `data-layout="inline"`): no focus trap. Overlay drawer (<= 767 px, or
- *   `data-layout="overlay"`): backdrop shown, the container's `[data-nowo-ui-side-panel-main]` inert (only an `inert`
- *   this script set is removed again; the host's own is kept), Tab cycles inside.
+ *   `data-layout="overlay"`): backdrop shown, the container's `[data-nowo-ui-side-panel-main]` inert while any drawer of
+ *   it is open (only an `inert` this script set is removed again, and not when the host wrote it since), Tab cycles
+ *   inside.
  * - Optional shortcut per toggle (`data-nowo-ui-side-panel-shortcut`, e.g. `Alt+Shift+C`; none by default).
  * - Events (bubbling, on the panel, after the change): `nowo-ui:side-panel:open` / `nowo-ui:side-panel:close`
  *   `{ id, source }` — the host persists the state from them.
@@ -40,8 +41,12 @@ const FOCUSABLE =
 
 /** Toggle that opened each panel (focus goes back there on close). */
 const openers = new WeakMap<HTMLElement, HTMLElement>();
-/** Main columns this script made inert (an `inert` set by the host is never removed). */
-const inertByPanel = new WeakSet<HTMLElement>();
+/**
+ * Per main column: the open drawers that need it inert, whether this script added the attribute, and whether the host
+ * touched the attribute since (then it is the host's and stays). An `inert` the host set is never removed.
+ */
+type InertState = { owners: Set<HTMLElement>; ours: boolean; hostTouched: boolean; observer: MutationObserver | null };
+const inertStates = new WeakMap<HTMLElement, InertState>();
 
 /** The panel with this id, or null. */
 export function panelById(id: string): HTMLElement | null {
@@ -81,15 +86,33 @@ export function applyMode(panel: HTMLElement): void {
   panel.toggleAttribute('data-drawer', drawer);
   const main = panel.closest(CONTAINER)?.querySelector<HTMLElement>(MAIN);
   if (!main) return;
-  if (drawer && !main.hasAttribute('inert')) {
-    // Switching to the drawer while focus is in the content: keep it usable by moving it into the panel first.
-    const active = document.activeElement;
-    if (active instanceof Node && main.contains(active)) document.getElementById(`${panel.id}-title`)?.focus();
-    main.setAttribute('inert', '');
-    inertByPanel.add(main);
-  } else if (!drawer && inertByPanel.has(main)) {
-    main.removeAttribute('inert');
-    inertByPanel.delete(main);
+  let state = inertStates.get(main);
+  if (drawer) {
+    if (!state) {
+      const ours = !main.hasAttribute('inert');
+      const created: InertState = { owners: new Set(), ours, hostTouched: false, observer: null };
+      if (ours) {
+        // Switching to the drawer while focus is in the content: keep it usable by moving it into the panel first.
+        const active = document.activeElement;
+        if (active instanceof Node && main.contains(active)) document.getElementById(`${panel.id}-title`)?.focus();
+        main.setAttribute('inert', '');
+        // Observed after our own change: any later write of `inert` (even the same value) is the host's.
+        created.observer = new MutationObserver(() => {
+          created.hostTouched = true;
+        });
+        created.observer.observe(main, { attributes: true, attributeFilter: ['inert'] });
+      }
+      inertStates.set(main, created);
+      state = created;
+    }
+    state.owners.add(panel);
+  } else if (state?.owners.delete(panel) && state.owners.size === 0) {
+    if (state.observer) {
+      if (state.observer.takeRecords().length > 0) state.hostTouched = true;
+      state.observer.disconnect();
+    }
+    if (state.ours && !state.hostTouched) main.removeAttribute('inert');
+    inertStates.delete(main);
   }
 }
 
@@ -97,13 +120,19 @@ function emit(panel: HTMLElement, name: string, source: SidePanelSource): void {
   panel.dispatchEvent(new CustomEvent(name, { bubbles: true, detail: { id: panel.id, source } }));
 }
 
-function focusInto(panel: HTMLElement, focus: OpenOptions['focus']): void {
-  if (focus === false) return;
+/** The element to focus on open (resolved before any state change): the option, else the heading; null = none. */
+function focusTarget(panel: HTMLElement, focus: OpenOptions['focus']): HTMLElement | null {
+  if (focus === false) return null;
   let target: HTMLElement | null = null;
-  if (typeof focus === 'string') target = panel.querySelector<HTMLElement>(focus);
-  else if (focus instanceof HTMLElement) target = focus;
-  target ??= document.getElementById(`${panel.id}-title`);
-  target?.focus();
+  if (typeof focus === 'string') {
+    try {
+      target = panel.querySelector<HTMLElement>(focus);
+    } catch {
+      // An invalid selector falls back to the heading; the panel still opens consistently.
+      target = null;
+    }
+  } else if (focus instanceof HTMLElement) target = focus;
+  return target ?? document.getElementById(`${panel.id}-title`);
 }
 
 function setExpanded(panel: HTMLElement, open: boolean): void {
@@ -112,8 +141,9 @@ function setExpanded(panel: HTMLElement, open: boolean): void {
 
 /** Opens a panel (or only moves focus into it when it is already open). Returns whether it was opened. */
 export function openPanel(panel: HTMLElement, options: OpenOptions = {}): boolean {
+  const target = focusTarget(panel, options.focus);
   if (isOpen(panel)) {
-    focusInto(panel, options.focus);
+    target?.focus();
     return false;
   }
   panel.hidden = false;
@@ -121,7 +151,7 @@ export function openPanel(panel: HTMLElement, options: OpenOptions = {}): boolea
   if (options.opener) openers.set(panel, options.opener);
   else openers.delete(panel);
   applyMode(panel);
-  focusInto(panel, options.focus);
+  target?.focus();
   announce(panel, panel.getAttribute('data-nowo-ui-side-panel-opened') ?? '');
   emit(panel, 'nowo-ui:side-panel:open', options.source ?? 'api');
   return true;
@@ -187,6 +217,15 @@ export function matchesShortcut(event: KeyboardEvent, shortcut: Shortcut): boole
 const isTyping = (el: Element | null): boolean =>
   el instanceof HTMLElement && (el.isContentEditable || el.matches('input, textarea, select, [contenteditable="true"]'));
 
+/** The open dialog or popover around an element (`:popover-open` is skipped where the browser does not know it). */
+export function openLayer(el: Element): Element | null {
+  try {
+    return el.closest('dialog[open], [popover]:popover-open');
+  } catch {
+    return el.closest('dialog[open]');
+  }
+}
+
 function focusables(panel: HTMLElement): HTMLElement[] {
   return [...panel.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((el) => !el.closest('[hidden]'));
 }
@@ -219,7 +258,8 @@ function onKeydown(event: KeyboardEvent): void {
   const panel = active instanceof Element ? active.closest<HTMLElement>(PANEL) : null;
   if (event.key === 'Escape' && panel && isOpen(panel)) {
     // A dialog or menu opened inside the panel closes first.
-    if (active instanceof Element && active.closest('dialog[open], [popover]:popover-open') && !active.closest('dialog[open], [popover]:popover-open')?.contains(panel)) return;
+    const layer = openLayer(active as Element); // `panel` was found from it
+    if (layer && !layer.contains(panel)) return;
     event.preventDefault();
     closePanel(panel, 'escape');
     return;

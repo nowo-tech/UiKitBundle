@@ -44,7 +44,7 @@ final class SidePanelPartialTest extends TestCase
             TWIG, ['label' => new Label('panel.title')]);
 
         self::assertStringContainsString('class="nowo-ui-side-panel nowo-ui-side-panel--start nowo-ui-side-panel--overlay" data-nowo-ui-side-panel data-side="start" data-layout="overlay" aria-labelledby="nav-title" data-nowo-ui-side-panel-opened="Shown" data-nowo-ui-side-panel-closed="Hidden">', $html);
-        self::assertStringContainsString('<h6 id="nav-title" class="nowo-ui-side-panel__title" tabindex="-1">panel.title</h6>', $html);
+        self::assertStringContainsString('<h2 id="nav-title" class="nowo-ui-side-panel__title" tabindex="-1">panel.title</h2>', $html);
         self::assertStringContainsString('<button type="button" class="nowo-ui-btn nowo-ui-btn--icon nowo-ui-side-panel__close" data-nowo-ui-side-panel-close aria-label="Hide">', $html);
         self::assertStringContainsString('<em>embedded</em>', $html);
         self::assertStringNotContainsString(' hidden>', explode('</aside>', $html)[0]);
@@ -52,10 +52,26 @@ final class SidePanelPartialTest extends TestCase
         $odd = $this->render("{% include '@NowoUiKitBundle/partials/_side_panel.html.twig' with {id: 'x', title: 'X', side: 'left', layout: 'float', heading_level: 1} only %}");
         self::assertStringContainsString('nowo-ui-side-panel--end nowo-ui-side-panel--inline', $odd);
         self::assertStringContainsString('<h2 id="x-title"', $odd);
+
+        $h4 = $this->render("{% include '@NowoUiKitBundle/partials/_side_panel.html.twig' with {id: 'x', title: 'X', heading_level: 4} only %}");
+        self::assertStringContainsString('<h4 id="x-title"', $h4);
+        self::assertStringContainsString('</h4>', $h4);
+
+        // DU-L1: a string never reaches the tag name (no attribute injection), not even a numeric one.
+        foreach (['3 onfocus=alert(1) x', '3'] as $level) {
+            $string = $this->render("{% include '@NowoUiKitBundle/partials/_side_panel.html.twig' with {id: 'x', title: 'X', heading_level: level} only %}", ['level' => $level]);
+            self::assertStringContainsString('<h2 id="x-title"', $string);
+            self::assertStringNotContainsString('onfocus', $string);
+        }
         self::assertStringContainsString('<div class="nowo-ui-side-panel__body" data-nowo-ui-side-panel-body></div>', $odd);
 
         $content = $this->render("{% include '@NowoUiKitBundle/partials/_side_panel.html.twig' with {id: 'x', title: 'X', content: '<p>safe</p>', content_template: 'body.twig'} only %}");
         self::assertStringContainsString('<div class="nowo-ui-side-panel__body" data-nowo-ui-side-panel-body><p>safe</p></div>', $content);
+
+        // User content goes through content_template / content_context, where Twig escapes it.
+        $user = $this->render("{% include '@NowoUiKitBundle/partials/_side_panel.html.twig' with {id: 'x', title: 'X', content_template: 'body.twig', content_context: {n: '<script>x</script>'}} only %}");
+        self::assertStringContainsString('<p>&lt;script&gt;x&lt;/script&gt; threads</p>', $user);
+        self::assertStringNotContainsString('<script>', $user);
     }
 
     public function testTheToggleAsALinkWithAnIconACountAndAShortcut(): void

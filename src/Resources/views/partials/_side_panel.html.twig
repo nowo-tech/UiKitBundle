@@ -15,10 +15,11 @@
     - open (bool, default false): rendered open
     - side: end (default; right in LTR) | start
     - layout: inline (default; a column >= 768 px, a drawer below) | overlay (a drawer at every width)
-    - heading_level: 2 (default) to 6
+    - heading_level: integer 2 (default) to 6; any other value (out of range, a string) renders the default
     - close_href: URL of the closed state (the close control is then a link, the no-JavaScript path); without it a
       button (JavaScript only)
-    - content: body HTML, printed as is (the host escapes it; never pass user input unescaped)
+    - content: TRUSTED HTML ONLY, printed as is (`|raw`). Never pass user or tenant input here, not even escaped by
+      hand: render user content with content_template / content_context or the embed block, where Twig escapes it
     - content_template / content_context: template included in the body (instead of `content`); or embed this
       partial and fill the block nowo_ui_side_panel_body
     - labels: {close, opened, closed} (View\Label|string; defaults "Close %title%", "%title% opened", "%title% closed")
@@ -33,7 +34,9 @@
 {% set _close_label = _labels.close is defined ? _labels.close|nowo_ui_trans : 'side_panel.close'|trans({'%title%': _title}, 'NowoUiKitBundle') %}
 {% set _opened = _labels.opened is defined ? _labels.opened|nowo_ui_trans : 'side_panel.opened'|trans({'%title%': _title}, 'NowoUiKitBundle') %}
 {% set _closed = _labels.closed is defined ? _labels.closed|nowo_ui_trans : 'side_panel.closed'|trans({'%title%': _title}, 'NowoUiKitBundle') %}
-{% set _level = min(6, max(2, heading_level|default(2))) %}
+{# Only the integers 2 to 6 (strict: a string never reaches the tag name); anything else is the default 2. #}
+{% set _hl = heading_level|default(2) %}
+{% set _level = [2, 3, 4, 5, 6]|filter(n => n is same as(_hl))|first|default(2) %}
 {% set _close_href = close_href|default(null) %}
 <aside id="{{ id }}" class="{{ nowo_ui_class('side_panel', _b) }} nowo-ui-side-panel--{{ _side }} nowo-ui-side-panel--{{ _layout }}" data-nowo-ui-side-panel data-side="{{ _side }}" data-layout="{{ _layout }}" aria-labelledby="{{ id }}-title" data-nowo-ui-side-panel-opened="{{ _opened }}" data-nowo-ui-side-panel-closed="{{ _closed }}"{% if not _open %} hidden{% endif %}{{ nowo_ui_attrs('side_panel', _b) }}{{ nowo_ui_html_attrs((attr|default({}))|filter((v, k) => k != 'id')) }}>
     <div class="{{ nowo_ui_class('side_panel_header', _b) }}"{{ nowo_ui_attrs('side_panel_header', _b) }}>

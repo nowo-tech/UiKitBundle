@@ -12,7 +12,9 @@
     - open (bool): the panel is rendered open (aria-expanded="true")
     - href: URL of the other state (the panel's open URL when closed, its closed URL when open)
     - icon: icon name (a canonical kind or a prefixed name such as `tabler:message-circle`); the label is then visually
-      hidden. A prefixed name the icon set cannot draw falls back to the visible label (as `tabs` does).
+      hidden and the root gets the stable modifier class `nowo-ui-side-panel-toggle--icon` (public API, safe to select
+      in host CSS and tests). A prefixed name the icon set cannot draw falls back to the visible label (as `tabs`
+      does), without the modifier.
     - count (int|null): visible badge, also part of the accessible name; 0 or null hides it
     - count_suffix (View\Label|string): visually hidden text after the count (e.g. "open" → "Comments 3 open")
     - shortcut: keyboard shortcut (e.g. `Alt+Shift+C`; none by default), exposed as aria-keyshortcuts

@@ -1601,7 +1601,7 @@ page (it is not in the default `scripts` list).
     {% block nowo_ui_side_panel_panel %}
         {{ include('@NowoUiKitBundle/partials/_side_panel.html.twig', {
             id: 'comments', title: 'Comments', open: open, close_href: path('page', {comments: 0}),
-            content_template: 'comments/_list.html.twig',   {# or content: (trusted HTML), or embed the block nowo_ui_side_panel_body #}
+            content_template: 'comments/_list.html.twig',   {# or the embed block nowo_ui_side_panel_body; content: is trusted HTML only #}
         }) }}
     {% endblock %}
 {% endembed %}
@@ -1618,6 +1618,22 @@ page (it is not in the default `scripts` list).
   announcement; 0 hides it and the name is the bare label.
 - **Shortcut:** none by default; `shortcut: 'Alt+Shift+C'` sets `aria-keyshortcuts` and toggles the panel (ignored
   while typing unless it has Ctrl, Alt or Meta).
+- **Body content:** `content` is **trusted HTML only** (printed with `|raw`). Never pass user or tenant input to it;
+  render user content with `content_template` + `content_context` or the embed block `nowo_ui_side_panel_body`, where
+  Twig autoescaping applies.
+- **URLs:** the toggle's `href` and the panel's `close_href` must be URLs the host generates (`path()` / `url()`),
+  never user input.
+- **User HTML:** the script acts on `data-nowo-ui-side-panel*` attributes anywhere in the document (delegated
+  listeners). Host sanitizers for user or tenant HTML (comments, wiki pages) must strip `data-nowo-ui-*` attributes, or
+  that content could drive the panels.
+- **Heading level:** `heading_level` accepts only the integers 2 to 6; anything else (a string, out of range) renders
+  the default `h2`.
+- **Drawers and `inert`:** while any overlay drawer of a container is open, its main column is `inert`. The script
+  removes only an `inert` it added, and keeps it when the host wrote the attribute itself (before or while a drawer
+  was open).
+- **Icon toggle:** a toggle that draws its icon carries the modifier class `nowo-ui-side-panel-toggle--icon` (the
+  label is then visually hidden). It is a stable, public class: hosts may select it in CSS and tests. A toggle without
+  an icon, or whose icon the icon set cannot draw, does not have it.
 - **Theming:** slots `side_panel*` ([THEME_SLOTS](THEME_SLOTS.md)) and the `--nowo-ui-side-panel-*` tokens
   ([THEMING](THEMING.md)); no inline styles or handlers (strict CSP).
 

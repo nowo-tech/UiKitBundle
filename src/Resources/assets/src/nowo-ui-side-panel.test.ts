@@ -38,6 +38,7 @@ const MARKUP = `
   <aside id="empty" data-nowo-ui-side-panel data-layout="overlay" hidden><h2 id="empty-title" tabindex="-1">Empty</h2></aside>
   <div id="not-a-panel"></div>`;
 
+const last = <T>(list: T[]): T | undefined => list[list.length - 1];
 const el = (id: string) => document.getElementById(id) as HTMLElement;
 const status = () => document.querySelector('[data-nowo-ui-side-panel-status]')!.textContent;
 
@@ -70,7 +71,7 @@ describe('nowo-ui-side-panel', () => {
     expect(el('t2').getAttribute('aria-expanded')).toBe('true');
     expect(document.activeElement).toBe(el('comments-title'));
     expect(status()).toBe('Comments opened');
-    expect(events.at(-1)).toEqual({ type: 'nowo-ui:side-panel:open', detail: { id: 'comments', source: 'toggle' } });
+    expect(last(events)).toEqual({ type: 'nowo-ui:side-panel:open', detail: { id: 'comments', source: 'toggle' } });
     expect(el('comments').hasAttribute('data-nowo-ui-side-panel-ready')).toBe(true);
     // Inline: no backdrop, the content stays usable.
     expect(document.querySelector<HTMLElement>('[data-nowo-ui-side-panel-backdrop]')!.hidden).toBe(true);
@@ -83,14 +84,14 @@ describe('nowo-ui-side-panel', () => {
     expect(el('comments').hidden).toBe(true);
     expect(el('t1').getAttribute('aria-expanded')).toBe('false');
     expect(status()).toBe('Comments closed');
-    expect(events.at(-1)).toEqual({ type: 'nowo-ui:side-panel:close', detail: { id: 'comments', source: 'toggle' } });
+    expect(last(events)).toEqual({ type: 'nowo-ui:side-panel:close', detail: { id: 'comments', source: 'toggle' } });
 
     click(el('t2'));
     el('first-thread').focus();
     const close = click(el('close'));
     expect(close.defaultPrevented).toBe(true);
     expect(document.activeElement).toBe(el('t2'));
-    expect(events.at(-1)).toMatchObject({ detail: { source: 'close' } });
+    expect(last(events)).toMatchObject({ detail: { source: 'close' } });
 
     click(el('t1'));
     el('reply').focus();
@@ -98,7 +99,7 @@ describe('nowo-ui-side-panel', () => {
     expect(escape.defaultPrevented).toBe(true);
     expect(el('comments').hidden).toBe(true);
     expect(document.activeElement).toBe(el('t1'));
-    expect(events.at(-1)).toMatchObject({ detail: { source: 'escape' } });
+    expect(last(events)).toMatchObject({ detail: { source: 'escape' } });
   });
 
   it('Escape outside the panel, or inside an open dialog in it, does not close it', () => {
@@ -139,7 +140,7 @@ describe('nowo-ui-side-panel', () => {
     expect(el('comments').hidden).toBe(true);
     expect(backdrop.hidden).toBe(true);
     expect(document.querySelector('[data-nowo-ui-side-panel-main]')!.hasAttribute('inert')).toBe(false);
-    expect(events.at(-1)).toMatchObject({ detail: { source: 'backdrop' } });
+    expect(last(events)).toMatchObject({ detail: { source: 'backdrop' } });
   });
 
   it('never removes an inert the host set on the main column', () => {
@@ -153,6 +154,68 @@ describe('nowo-ui-side-panel', () => {
     main.remove();
     click(el('t1'));
     expect(el('comments').hasAttribute('data-drawer')).toBe(true);
+  });
+
+  it('keeps the main column inert while any drawer of the container is open', () => {
+    document.body.innerHTML = `
+      <div data-nowo-ui-side-panel-container>
+        <div data-nowo-ui-side-panel-main><p>Content</p></div>
+        <aside id="a" data-nowo-ui-side-panel data-layout="overlay" hidden><h2 id="a-title" tabindex="-1">A</h2></aside>
+        <aside id="b" data-nowo-ui-side-panel data-layout="overlay" hidden><h2 id="b-title" tabindex="-1">B</h2></aside>
+      </div>`;
+    const main = document.querySelector<HTMLElement>('[data-nowo-ui-side-panel-main]')!;
+    mod.openPanel(el('a'));
+    mod.openPanel(el('b'));
+    mod.closePanel(el('a'));
+    expect(main.hasAttribute('inert')).toBe(true);
+    mod.closePanel(el('b'));
+    expect(main.hasAttribute('inert')).toBe(false);
+    // Closing a panel that never owned it changes nothing.
+    mod.closePanel(el('a'));
+    expect(main.hasAttribute('inert')).toBe(false);
+  });
+
+  it('keeps an inert the host wrote after a drawer added it (sync and after observation)', async () => {
+    setDrawer(true);
+    const main = document.querySelector<HTMLElement>('[data-nowo-ui-side-panel-main]')!;
+    click(el('t1'));
+    main.setAttribute('inert', ''); // the host re-asserts it; closed before the observer callback runs
+    click(el('close'));
+    expect(main.hasAttribute('inert')).toBe(true);
+
+    main.removeAttribute('inert');
+    click(el('t1'));
+    expect(main.hasAttribute('inert')).toBe(true);
+    main.setAttribute('inert', '');
+    await Promise.resolve(); // the observer callback has run
+    click(el('close'));
+    expect(main.hasAttribute('inert')).toBe(true);
+  });
+
+  it('an invalid focus selector falls back to the heading, with one consistent open', () => {
+    let opens = 0;
+    el('comments').addEventListener('nowo-ui:side-panel:open', () => opens++);
+    expect(mod.api.open('comments', { focus: '[[nope' })).toBe(true);
+    expect(el('comments').hidden).toBe(false);
+    expect(document.activeElement).toBe(el('comments-title'));
+    expect(opens).toBe(1);
+    expect(status()).toBe('Comments opened');
+    expect(mod.api.open('comments', { focus: '[[nope' })).toBe(false);
+    expect(document.activeElement).toBe(el('comments-title'));
+    expect(opens).toBe(1);
+  });
+
+  it('Escape still closes where the browser does not know :popover-open', () => {
+    const original = Element.prototype.closest;
+    const spy = vi.spyOn(Element.prototype, 'closest').mockImplementation(function (this: Element, selector: string) {
+      if (selector.includes(':popover-open')) throw new SyntaxError('unknown pseudo-class');
+      return original.call(this, selector);
+    } as unknown as typeof original);
+    click(el('t1'));
+    el('reply').focus();
+    expect(key(el('reply'), 'Escape').defaultPrevented).toBe(true);
+    expect(el('comments').hidden).toBe(true);
+    spy.mockRestore();
   });
 
   it('switches between inline and drawer on resize while open; Tab is free inline and in an empty drawer', () => {
@@ -198,7 +261,7 @@ describe('nowo-ui-side-panel', () => {
     const shortcut = key(el('field'), 'C', { altKey: true, shiftKey: true, code: 'KeyC' });
     expect(shortcut.defaultPrevented).toBe(true);
     expect(el('comments').hidden).toBe(true);
-    expect(events.at(-1)).toMatchObject({ detail: { source: 'shortcut' } });
+    expect(last(events)).toMatchObject({ detail: { source: 'shortcut' } });
 
     // "c" alone: ignored while typing, works elsewhere.
     expect(key(el('field'), 'c', { code: 'KeyC' }).defaultPrevented).toBe(false);
@@ -235,7 +298,7 @@ describe('nowo-ui-side-panel', () => {
     expect(api).toBe(mod.api);
     expect(api.open('comments', { focus: '#reply' })).toBe(true);
     expect(document.activeElement).toBe(el('reply'));
-    expect(events.at(-1)).toMatchObject({ detail: { source: 'api' } });
+    expect(last(events)).toMatchObject({ detail: { source: 'api' } });
     // Already open: only the focus moves.
     expect(api.open('comments', { focus: el('first-thread') })).toBe(false);
     expect(document.activeElement).toBe(el('first-thread'));

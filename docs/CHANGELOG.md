@@ -104,8 +104,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `aria-expanded`, an optional icon (`tabler:message-circle`, falling back to the visible label), a count badge that
   is part of the accessible name (0 hides it: the name is the bare label) and an optional shortcut
   (`aria-keyshortcuts`; none by default). Works without JavaScript: the toggle and close controls are links to the
-  host's open / closed URLs. The body comes from `content` (trusted HTML), `content_template` or the embed block
-  `nowo_ui_side_panel_body`. Events `nowo-ui:side-panel:open` / `close` (`{ id, source }`) to persist the state, and
+  host's open / closed URLs. The body comes from `content_template` + `content_context`, the embed block
+  `nowo_ui_side_panel_body` or `content` (**trusted HTML only**, printed raw: never user or tenant input). A toggle
+  that draws its icon carries the stable, public modifier class `nowo-ui-side-panel-toggle--icon`.
+  `href` / `close_href` must be host-generated URLs, and host sanitizers must strip `data-nowo-ui-*` from user HTML
+  (see USAGE). Events `nowo-ui:side-panel:open` / `close` (`{ id, source }`) to persist the state, and
   `window.NowoUiSidePanel` (`open(id, { focus })`, `close`, `toggle`, `isOpen`, `setCount`). Tokens
   `--nowo-ui-side-panel-width` / `-bg` / `-border` / `-shadow` / `-backdrop` / `-z`; no inline styles or handlers.
   Opt-in: no existing partial, slot default or the default `scripts` list changes. Demo: `/kit/side-panel`. First
