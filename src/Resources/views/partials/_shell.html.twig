@@ -4,7 +4,8 @@
   Variables:
     - brand_html / brand: header brand
     - aside_items, aside_label, aside_id
-    - user_* for user menu (name, email, initials, links, logout_*)
+    - user_* for user menu (name, email, initials, avatar_src, links, logout_*); 2.26: avatar_src goes through the
+      avatar URL policy (https:// or a same-origin /path; anything else shows the initials)
     - footer_links, footer_copyright, footer_brand
     - main: HTML string for main content (or use embed / set main)
     - show_user_menu: bool (default true when name/initials present)

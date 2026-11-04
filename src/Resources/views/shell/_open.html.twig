@@ -13,7 +13,8 @@
     - brand_html (HTML) / brand (text): header brand (slot app_brand for the text)
     - header_end (HTML): header actions — global search, theme toggle, locale switcher, user menu…
     - show_user_menu + name, email, initials, avatar_src, user_links, logout_href, logout_path, logout_csrf: the UiKit
-      user menu at the end of the header (default: when name or initials are given)
+      user menu at the end of the header (default: when name or initials are given); 2.26: avatar_src goes through the
+      avatar URL policy (https:// or a same-origin /path; anything else shows the initials)
     - aside_html (HTML): the whole aside content, or aside_items ({label, href, current, children…}) + aside_label
     - aside_id (default nowo-ui-aside), aside_label (aria-label; default nav.aside)
     - collapsed / rail: the server-rendered desktop aside state; when not passed they come from the cookie

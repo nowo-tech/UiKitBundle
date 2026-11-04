@@ -92,6 +92,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Target **2.26.0**: avatars, the shared person picture of the kit and the feature bundles (avatar contract v1.1, §9).
+
+### Added
+
+- **`Nowo\UiKitBundle\Avatar\AvatarUrlPolicy::sanitize()`** and the **`nowo_ui_avatar_url`** Twig filter: the only
+  picture URLs that reach `<img src>` are `https://` URLs without userinfo and same-origin paths starting with a single
+  `/`. `http:`, `javascript:`, `data:` (including `data:image/…`), `blob:`, protocol-relative `//host`, backslashes,
+  control characters / whitespace and anything over 2048 bytes give `null` (the initials). Bundles that require UiKit
+  call the PHP class instead of keeping a copy.
+- **`js/nowo-ui-avatar.js`**, in the default `scripts` list: one capture-phase `load` and one capture-phase `error`
+  listener on the document (no inline handlers), for `img.nowo-ui-avatar__image` and for `img[data-nowo-avatar-image]`
+  (bundles that only suggest UiKit opt in with the attribute). `load` adds `is-loaded` to the wrapper; `error` removes
+  the picture and `has-image`, and remembers the URL for the page's lifetime (a later fragment with that URL loses its
+  picture before it is fetched again). Pictures that finished before the script ran are settled at start-up, and the
+  same client-side URL check as the server runs again.
+- `partials/_avatar.html.twig`: the **`xs`** size (20 px, dense table cells), and the `name`, `decorative` and `attr`
+  (`data-*` only) options.
+
+### Changed
+
+- **`partials/_avatar.html.twig` is the single shared avatar markup.** The initials are always printed; a picture that
+  passes the policy goes over them (`<img class="nowo-ui-avatar__image" alt="" width height loading="lazy"
+  decoding="async" referrerpolicy="same-origin">`, sizes xs 20 / sm 24 / default 32 / lg 44) and the initials hide
+  only after `load`, so a broken picture degrades to the initials even without JavaScript. With `alt` or `name` (and
+  not `decorative`) the wrapper is `role="img"` with `aria-label`, so the name survives the fallback; otherwise it is
+  `aria-hidden`. No inline style or handler.
+- Avatar initials contrast: the text colour is now `color-mix(primary 70%, --nowo-ui-text)` instead of the primary
+  colour (4.18:1 → about 6:1 on the default theme, WCAG AA; found by the avatar e2e axe run).
+- `_user_menu` (and so the shell's `avatar_src`) passes `name` and `avatar_src` through the partial: the picture is
+  filtered by the policy, and both avatars are decorative (the summary has its own label, the panel prints the name).
+
 ## [2.24.0] - 2026-11-03
 
 accessible treeview partial (APG) with lazy children, keyboard move and drag-and-drop events

@@ -1116,6 +1116,7 @@ a.nowo-ui-pagination__link:hover {
 
 /* Avatar */
 .nowo-ui-avatar {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1123,13 +1124,20 @@ a.nowo-ui-pagination__link:hover {
   height: 2rem;
   border-radius: 999px;
   background: color-mix(in srgb, var(--nowo-ui-primary) 18%, var(--nowo-ui-surface));
-  color: var(--nowo-ui-primary);
+  /* 2.26: initials darkened toward the text colour (AA: 4.18:1 → about 6:1 on the default theme). */
+  color: color-mix(in srgb, var(--nowo-ui-primary) 70%, var(--nowo-ui-text));
   font-size: 0.75rem;
   font-weight: 700;
   line-height: 1;
   overflow: hidden;
   flex-shrink: 0;
   border: 1px solid var(--nowo-ui-border);
+}
+
+.nowo-ui-avatar--xs {
+  width: 1.25rem;
+  height: 1.25rem;
+  font-size: 0.55rem;
 }
 
 .nowo-ui-avatar--sm {
@@ -1148,6 +1156,22 @@ a.nowo-ui-pagination__link:hover {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* 2.26: the picture sits over the initials, which hide only once it has loaded (js/nowo-ui-avatar.js adds
+   is-loaded; on error it removes the picture). Without the script a broken picture leaves the initials visible. */
+.nowo-ui-avatar__image {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+.nowo-ui-avatar.is-loaded {
+  color: transparent;
+}
+
+.nowo-ui-avatar.is-loaded .nowo-ui-avatar__image {
+  background: var(--nowo-ui-surface);
 }
 
 /* User dropdown */

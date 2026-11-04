@@ -1,21 +1,44 @@
 {#
-  Avatar (initials or image).
+  Avatar (2.26: the shared person picture of the kit and of the feature bundles that show a user). The initials are
+  always in the markup; with a `src` that passes the avatar URL policy (Nowo\UiKitBundle\Avatar\AvatarUrlPolicy,
+  applied with core Twig only, so the partial needs no extension; `nowo_ui_avatar_url` is the same policy as a filter)
+  the picture goes over them. The initials are hidden only once the picture
+  has loaded (js/nowo-ui-avatar.js adds `is-loaded`; on `error` it removes the picture). Without the script a broken
+  picture leaves the initials visible, because a failed <img alt=""> paints nothing. No inline style or handler (CSP).
 
   Optional:
-    - initials: string (e.g. JD)
-    - src: image URL
-    - alt: alt text for image
-    - size: sm|lg|null
+    - initials: string (e.g. JD); default: the first letters of `name` (up to two words), else "?"
+    - name: the person's display name (2.26): the accessible name and the source of the initials
+    - src: picture URL: https:// without userinfo, or a same-origin path starting with a single "/". Anything else
+      (http:, data:, //host, javascript:…) renders the initials only
+    - alt: accessible name (default `name`)
+    - decorative: true when the name is printed next to the avatar (2.26): aria-hidden and no label. An avatar
+      without `alt` / `name` is decorative too
+    - size: xs (20 px, 2.26) | sm (24 px) | null (32 px) | lg (44 px)
+    - attr: extra `data-*` attributes for the wrapper, e.g. {'data-testid': 'author-avatar'} (2.26; other keys are
+      ignored)
     - framework
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 {% set framework = framework|default(null) %}
 {% set size = size|default(null) %}
-{% set initials = initials|default('?') %}
-<span class="{{ ui.avatar(size, framework) }}" {% if src is not defined or not src %}aria-hidden="true"{% endif %}>
-    {% if src is defined and src %}
-        <img src="{{ src }}" alt="{{ alt|default('') }}">
-    {% else %}
-        {{ initials|slice(0, 2)|upper }}
-    {% endif %}
-</span>
+{% set _name = name|default('')|trim %}
+{% set _label = alt|default('')|trim %}
+{% set _label = _label != '' ? _label : _name %}
+{% set _labelled = _label != '' and not decorative|default(false) %}
+{% if initials is defined and initials %}
+    {% set _initials = initials|slice(0, 2)|upper %}
+{% elseif _name != '' %}
+    {% set _initials = _name|split(' ')|filter(w => w|trim != '')|slice(0, 2)|map(w => w|trim|first)|join|upper %}
+{% else %}
+    {% set _initials = '?' %}
+{% endif %}
+{#- the avatar URL policy (AvatarUrlPolicy::PATTERN, also the nowo_ui_avatar_url filter) through core Twig only -#}
+{% set _src = src|default(null) %}
+{% set _src = _src is not null and _src is not iterable and (_src ~ '') matches constant('Nowo\\UiKitBundle\\Avatar\\AvatarUrlPolicy::PATTERN') ? _src : null %}
+{% set _px = {xs: 20, sm: 24, lg: 44}[size] ?? 32 %}
+<span class="{{ ui.avatar(size, framework) }}{{ _src ? ' has-image' : '' }}"
+    {%- if _labelled %} role="img" aria-label="{{ _label }}"{% else %} aria-hidden="true"{% endif %}
+    {%- if _src %} data-nowo-ui-avatar{% endif %}
+    {%- for _key, _value in attr|default({}) %}{% if _key matches '/^data-[a-z0-9][a-z0-9_.:-]*$/' and _value is not null and _value is not same as(false) %} {{ _key }}="{{ _value is same as(true) ? '' : _value }}"{% endif %}{% endfor -%}
+>{{ _initials }}{% if _src %}<img class="nowo-ui-avatar__image" src="{{ _src }}" alt="" width="{{ _px }}" height="{{ _px }}" loading="lazy" decoding="async" referrerpolicy="same-origin">{% endif %}</span>

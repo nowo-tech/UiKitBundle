@@ -103,6 +103,32 @@
 
 ## Unreleased
 
+Target **2.26.0**, from **2.24.x** (or 2.25.x):
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+Then `php bin/console assets:install` (new `js/nowo-ui-avatar.js`, new CSS rules in `nowo-ui.css`).
+
+Behaviour changes of `partials/_avatar.html.twig` (and the user menu / shell `avatar_src`):
+
+- **`http:` and `data:` avatars now show the initials.** `src` goes through `AvatarUrlPolicy`: only `https://` URLs
+  without userinfo and same-origin paths starting with a single `/` are rendered. `http:`, `data:` (including
+  `data:image/…`), `javascript:`, `blob:`, `//host`, backslashes and control characters give the initials. This is a
+  deliberate security tightening (avatar contract Q-12): serve inline or local pictures from a same-origin URL instead.
+- **The initials are always in the markup**, under the picture, and the picture is `alt=""`. With `src` and `alt` the
+  accessible name moves from the `<img alt>` to the wrapper (`role="img"` + `aria-label`), so screen readers read the
+  same text and keep it when the picture fails. An avatar with `alt` (or the new `name`) and no picture is labelled
+  too; pass `decorative: true` when the name is printed next to it.
+- `js/nowo-ui-avatar.js` joins the default `scripts` list: layouts that print `{{ include(nowo_ui_partial('scripts')) }}`
+  load it automatically; a host with a hand-written script list adds `js/nowo-ui-avatar.js` (asset package
+  `nowo_ui_kit`). Without it the partial still degrades to the initials.
+- The partial applies the policy with core Twig only (`constant('…AvatarUrlPolicy::PATTERN')` and `matches`), so it
+  keeps working in a hand-built Twig `Environment`. The `nowo_ui_avatar_url` filter is registered by the bundle (and
+  by `PageContractTestCase`) for hosts that draw their own picture.
+- Overrides of `_avatar.html.twig` / `_user_menu.html.twig` keep working; compare them with the new markup.
+
 ## To 2.24.0
 
 From **2.23.1**:

@@ -35,6 +35,7 @@ use Nowo\UiKitBundle\Theme\FontPreload;
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Twig\AppearanceExtension;
 use Nowo\UiKitBundle\Twig\AreaNavExtension;
+use Nowo\UiKitBundle\Twig\AvatarExtension;
 use Nowo\UiKitBundle\Twig\ErrorPageExtension;
 use Nowo\UiKitBundle\Twig\RouteLinkExtension;
 use Nowo\UiKitBundle\Twig\ThemeExtension;
@@ -164,6 +165,10 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
                 $routeLinks['default_testid'],
                 new Reference('request_stack', ContainerInterface::NULL_ON_INVALID_REFERENCE),
             ])
+            ->addTag('twig.extension');
+
+        // 2.26: nowo_ui_avatar_url (the avatar URL policy of partials/_avatar.html.twig).
+        $container->register('nowo_ui_kit.avatar_twig_extension', AvatarExtension::class)
             ->addTag('twig.extension');
 
         $this->registerPageContract($container, $fw, $config);

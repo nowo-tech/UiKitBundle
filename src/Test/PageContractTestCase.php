@@ -6,6 +6,7 @@ namespace Nowo\UiKitBundle\Test;
 
 use LogicException;
 use Nowo\UiKitBundle\Theme\Theme;
+use Nowo\UiKitBundle\Twig\AvatarExtension;
 use Nowo\UiKitBundle\Twig\ThemeExtension;
 use Nowo\UiKitBundle\View\Action;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -615,6 +616,7 @@ abstract class PageContractTestCase extends TestCase
             $requestStack,
         ));
         $twig->addExtension(new ContractStubExtension());
+        $twig->addExtension(new AvatarExtension());
 
         $app = new AppVariable();
         $app->setRequestStack($requestStack);
