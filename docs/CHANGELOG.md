@@ -96,6 +96,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Full-height boxes on iOS Safari** (found by symfony-beacon on iPhone): `.nowo-ui-shell`, `.nowo-ui-page`,
+  `.nowo-ui-date-range__panel` and the `layout/status.html.twig` body add a `dvh` declaration after their `100vh`
+  fallback (`100dvh`, `calc(100dvh - 1rem)`), so the large viewport no longer makes them scroll under the toolbars.
+  The demo's `acme-theme.css` shell and guest boxes do the same.
+
 ## [2.27.1] - 2026-11-04
 
 ### Fixed

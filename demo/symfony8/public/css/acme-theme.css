@@ -20,7 +20,7 @@
 .acme-body { background: var(--nowo-ui-surface-muted); color: var(--nowo-ui-text); font-family: var(--acme-font); }
 
 /* Shell */
-.acme-shell { display: grid; grid-template-columns: 15rem 1fr; min-height: 100vh; }
+.acme-shell { display: grid; grid-template-columns: 15rem 1fr; min-height: 100vh; min-height: 100dvh; }
 .acme-sidebar { background: #12302c; color: #d9efe9; padding: 1.25rem 1rem; display: flex; flex-direction: column; gap: 1rem; }
 .acme-brand { display: flex; align-items: center; gap: 0.6rem; font-family: var(--acme-display); font-size: 1.2rem; margin: 0; color: #fff; }
 .acme-brand__mark { display: inline-grid; place-items: center; width: 2rem; height: 2rem; border-radius: 0.6rem; background: #f2b84b; color: #12302c; font-weight: 700; font-family: var(--acme-font); }
@@ -31,7 +31,7 @@
 .acme-nav__foot { margin-top: auto; font-size: 0.75rem; white-space: nowrap; }
 .acme-nav__foot a { color: #f2b84b; }
 .acme-main { padding: 1.75rem 2.25rem 3rem; max-width: 80rem; }
-.acme-guest { min-height: 100vh; display: grid; place-items: center; padding: 2rem 1rem; background: radial-gradient(circle at 20% 10%, #d8efe8, transparent 45%), var(--nowo-ui-surface-muted); }
+.acme-guest { min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 2rem 1rem; background: radial-gradient(circle at 20% 10%, #d8efe8, transparent 45%), var(--nowo-ui-surface-muted); }
 
 /* Page header (partial override) */
 .acme-header { margin-bottom: 1.5rem; }
