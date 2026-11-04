@@ -253,6 +253,12 @@ lays out as a row on every stack (zero-specificity rule; Bootstrap's own `.pagin
 | `--nowo-ui-card-bg` | `var(--nowo-ui-surface)` |
 | `--nowo-ui-card-border` | `var(--nowo-ui-border)` |
 | `--nowo-ui-card-intro-text` | `color-mix(in srgb, var(--nowo-ui-muted) 85%, var(--nowo-ui-text))` (card intro under the title; keeps 4.5:1 on a Bootstrap card header) |
+| `--nowo-ui-side-panel-width` | `22rem` (2.25: side panel column and overlay drawer width; phones use the full width) |
+| `--nowo-ui-side-panel-bg` | `var(--nowo-ui-surface)` |
+| `--nowo-ui-side-panel-border` | `var(--nowo-ui-border)` |
+| `--nowo-ui-side-panel-shadow` | `0 0 1.5rem rgb(0 0 0 / 25%)` (drawer only) |
+| `--nowo-ui-side-panel-backdrop` | `rgb(0 0 0 / 40%)` |
+| `--nowo-ui-side-panel-z` | `1040` (backdrop; the drawer is one above) |
 | `--nowo-ui-tree-badge-text` | `color-mix(in srgb, var(--nowo-ui-muted) 85%, var(--nowo-ui-text))` (2.24: `tree` badges; keeps 4.5:1 on the tinted current row) |
 | `--nowo-ui-nav-active-bg` | `color-mix(in srgb, var(--nowo-ui-primary) 12%, transparent)` (current aside link) |
 | `--nowo-ui-nav-active-text` | `var(--nowo-ui-primary)` |

@@ -42,6 +42,7 @@
 - [Pre-paint theme boot](#pre-paint-theme-boot)
 - [App chrome](#app-chrome-aside-avatar-user-menu-footer)
 - [Sidebar rail (opt-in)](#sidebar-rail-opt-in)
+- [Side panel and drawer (2.25)](#side-panel-and-drawer-225)
 - [Overriding templates (REQ-TWIG-001)](#overriding-templates-req-twig-001)
 - [Override vs upgrade](#override-vs-upgrade)
 - [Overridable `<subpath>` values](#overridable-subpath-values)
@@ -1581,6 +1582,62 @@ Bundled hosts with their own shell markup import the side-effect-free helpers fr
 `src/Resources/assets/src/nowo-ui-sidebar-core.ts` (`advanceSidebarMode`, `resolveSidebarMode`,
 `persistSidebarMode`, `syncSidebarStorageFromCookie`, `syncSidebarToggle`, `applySidebarShellState` with their own
 classes / attribute prefix / label lookup, …).
+
+## Side panel and drawer (2.25)
+
+A complementary panel beside the page — comments, details, an outline. On wide screens it is a column next to the
+content (no focus trap, the page stays usable); at ≤ 767 px, or always with `layout: 'overlay'`, it is a full-height
+drawer with a backdrop, the content behind made `inert` and Tab kept inside. Load `js/nowo-ui-side-panel.js` on the
+page (it is not in the default `scripts` list).
+
+```twig
+{{ include('@NowoUiKitBundle/partials/_side_panel_toggle.html.twig', {
+    target: 'comments', label: 'Comments', open: open,
+    href: path('page', {comments: open ? 0 : 1}),   {# no-JavaScript fallback: the URL of the other state #}
+    icon: 'tabler:message-circle', count: 3, count_suffix: 'open',
+}) }}
+{% embed '@NowoUiKitBundle/partials/_side_panel_container.html.twig' %}
+    {% block nowo_ui_side_panel_main %}…page content…{% endblock %}
+    {% block nowo_ui_side_panel_panel %}
+        {{ include('@NowoUiKitBundle/partials/_side_panel.html.twig', {
+            id: 'comments', title: 'Comments', open: open, close_href: path('page', {comments: 0}),
+            content_template: 'comments/_list.html.twig',   {# or the embed block nowo_ui_side_panel_body; content: is trusted HTML only #}
+        }) }}
+    {% endblock %}
+{% endembed %}
+<script src="{{ asset('js/nowo-ui-side-panel.js', 'nowo_ui_kit') }}" defer></script>
+```
+
+- **State:** the server renders `open`; persist the user's choice from the bubbling `nowo-ui:side-panel:open` /
+  `nowo-ui:side-panel:close` events (`detail: { id, source }`, source `toggle | close | escape | backdrop | shortcut |
+  api`).
+- **Focus:** opening moves focus to the heading (`<id>-title`, `tabindex="-1"`, also the panel's name) or to
+  `NowoUiSidePanel.open(id, { focus: element | selector })`; closing returns it to the toggle that opened the panel.
+  Escape closes when focus is inside (a dialog or popover open inside closes first).
+- **Count:** `NowoUiSidePanel.setCount(id, n, suffix?)` updates the badge of every toggle of the panel, without an
+  announcement; 0 hides it and the name is the bare label.
+- **Shortcut:** none by default; `shortcut: 'Alt+Shift+C'` sets `aria-keyshortcuts` and toggles the panel (ignored
+  while typing unless it has Ctrl, Alt or Meta).
+- **Body content:** `content` is **trusted HTML only** (printed with `|raw`). Never pass user or tenant input to it;
+  render user content with `content_template` + `content_context` or the embed block `nowo_ui_side_panel_body`, where
+  Twig autoescaping applies.
+- **URLs:** the toggle's `href` and the panel's `close_href` must be URLs the host generates (`path()` / `url()`),
+  never user input.
+- **User HTML:** the script acts on `data-nowo-ui-side-panel*` attributes anywhere in the document (delegated
+  listeners). Host sanitizers for user or tenant HTML (comments, wiki pages) must strip `data-nowo-ui-*` attributes, or
+  that content could drive the panels.
+- **Heading level:** `heading_level` accepts only the integers 2 to 6; anything else (a string, out of range) renders
+  the default `h2`.
+- **Drawers and `inert`:** while any overlay drawer of a container is open, its main column is `inert`. The script
+  removes only an `inert` it added, and keeps it when the host wrote the attribute itself (before or while a drawer
+  was open).
+- **Icon toggle:** a toggle that draws its icon carries the modifier class `nowo-ui-side-panel-toggle--icon` (the
+  label is then visually hidden). It is a stable, public class: hosts may select it in CSS and tests. A toggle without
+  an icon, or whose icon the icon set cannot draw, does not have it.
+- **Theming:** slots `side_panel*` ([THEME_SLOTS](THEME_SLOTS.md)) and the `--nowo-ui-side-panel-*` tokens
+  ([THEMING](THEMING.md)); no inline styles or handlers (strict CSP).
+
+Demo: `/kit/side-panel` in `demo/symfony8`.
 
 ## Overriding templates (REQ-TWIG-001)
 

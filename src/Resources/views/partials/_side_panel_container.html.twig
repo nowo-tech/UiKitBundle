@@ -1,0 +1,17 @@
+{#
+  Side panel container (2.25, theme partial `side_panel_container`): the page content and a side panel as two
+  columns (the panel is a drawer at <= 767 px). Embed it and fill the blocks:
+    {% embed '@NowoUiKitBundle/partials/_side_panel_container.html.twig' %}
+        {% block nowo_ui_side_panel_main %}…content…{% endblock %}
+        {% block nowo_ui_side_panel_panel %}{{ include('@NowoUiKitBundle/partials/_side_panel.html.twig', {…}) }}{% endblock %}
+    {% endembed %}
+  The main column carries data-nowo-ui-side-panel-main: the script makes it inert while a drawer is open.
+  Slots: side_panel_container, side_panel_main. Optional: attr (root attributes, no on*), bundle.
+#}
+{% set _b = bundle|default(null) %}
+<div class="{{ nowo_ui_class('side_panel_container', _b) }}" data-nowo-ui-side-panel-container{{ nowo_ui_attrs('side_panel_container', _b) }}{{ nowo_ui_html_attrs(attr|default({})) }}>
+    <div class="{{ nowo_ui_class('side_panel_main', _b) }}" data-nowo-ui-side-panel-main{{ nowo_ui_attrs('side_panel_main', _b) }}>
+        {%- block nowo_ui_side_panel_main -%}{%- endblock -%}
+    </div>
+    {%- block nowo_ui_side_panel_panel -%}{%- endblock -%}
+</div>

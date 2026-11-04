@@ -92,6 +92,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Side panel / drawer** (2.25, partials `side_panel`, `side_panel_toggle`, `side_panel_container`, slots
+  `side_panel*`, and **`js/nowo-ui-side-panel.js`**): a complementary panel at the end (default) or start side —
+  an inline column beside the content on wide screens, an overlay full-height drawer at ≤ 767 px (or always with
+  `layout: 'overlay'`). The `aside` is named by its heading (`<id>-title`, `tabindex="-1"`), which takes the focus on
+  open; closing returns focus to the toggle that opened it; Escape closes; open / close are announced in a polite
+  status region. Inline mode has no focus trap; the drawer shows a backdrop (click closes), makes the container's main
+  column `inert` (an `inert` set by the host is never removed) and cycles Tab inside. Toggles carry `aria-controls` /
+  `aria-expanded`, an optional icon (`tabler:message-circle`, falling back to the visible label), a count badge that
+  is part of the accessible name (0 hides it: the name is the bare label) and an optional shortcut
+  (`aria-keyshortcuts`; none by default). Works without JavaScript: the toggle and close controls are links to the
+  host's open / closed URLs. The body comes from `content_template` + `content_context`, the embed block
+  `nowo_ui_side_panel_body` or `content` (**trusted HTML only**, printed raw: never user or tenant input). A toggle
+  that draws its icon carries the stable, public modifier class `nowo-ui-side-panel-toggle--icon`.
+  `href` / `close_href` must be host-generated URLs, and host sanitizers must strip `data-nowo-ui-*` from user HTML
+  (see USAGE). Events `nowo-ui:side-panel:open` / `close` (`{ id, source }`) to persist the state, and
+  `window.NowoUiSidePanel` (`open(id, { focus })`, `close`, `toggle`, `isOpen`, `setCount`). Tokens
+  `--nowo-ui-side-panel-width` / `-bg` / `-border` / `-shadow` / `-backdrop` / `-z`; no inline styles or handlers.
+  Opt-in: no existing partial, slot default or the default `scripts` list changes. Demo: `/kit/side-panel`. First
+  consumer: the WikiBundle 1.16 comments panel.
+
 ## [2.24.0] - 2026-11-03
 
 accessible treeview partial (APG) with lazy children, keyboard move and drag-and-drop events
