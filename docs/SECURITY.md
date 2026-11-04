@@ -31,7 +31,8 @@ If you discover a security-related issue, please report it privately (e.g. by em
 | **Twig macros / partials** | Labels, hrefs, and optional HTML fragments passed by the host app |
 | **Configuration** | `nowo_ui_kit.css_framework` / `icon_set` / `row_actions_display` (compile-time enums); optional `release_check` (repo + version strings) |
 | **Release check (opt-in)** | Public `GET /_nowo-ui/release/status` (only when the host imports the route; 404 while disabled) + outbound `GET https://api.github.com/repos/{owner}/{name}/releases[/latest]` (fixed host, `owner/name` regex, 5–8 s timeout, no redirects, cached) |
-| **Frontend JS** | IIFEs: `nowo-ui-modal.js`, `nowo-ui-shell.js`, `nowo-ui-toast.js`, `nowo-ui-confirm.js`, `nowo-ui-page-loader.js`, `nowo-ui-theme.js`, `nowo-ui-orb.js`, `nowo-ui-clipboard.js`, `nowo-ui-tabs.js`, `nowo-ui-release.js`, `nowo-ui-dialog.js` (DOM / canvas; clipboard and release may `fetch` same-origin URLs) |
+| **Frontend JS** | IIFEs: `nowo-ui-modal.js`, `nowo-ui-shell.js`, `nowo-ui-toast.js`, `nowo-ui-confirm.js`, `nowo-ui-page-loader.js`, `nowo-ui-theme.js`, `nowo-ui-orb.js`, `nowo-ui-clipboard.js`, `nowo-ui-tabs.js`, `nowo-ui-release.js`, `nowo-ui-dialog.js`, `nowo-ui-overlay.js`, `nowo-ui-side-panel.js` (DOM / canvas; clipboard, release and the dialog may `fetch` same-origin URLs; 2.28: the remote form dialog posts host forms back with `fetch`) |
+| **Remote form dialog (2.28)** | Request header `X-Nowo-Dialog`, response header `X-Nowo-Redirect`, `RemoteDialogResponder`, opt-in `RemoteDialogRedirectListener` |
 | **Translations** | Domain `NowoUiKitBundle` strings rendered in Twig |
 
 The bundle does **not** expose CLI commands that mutate production data, file uploads, or cookie writers. The only outbound HTTP integration is the opt-in release check (off by default).
@@ -68,6 +69,22 @@ The bundle does **not** expose CLI commands that mutate production data, file up
   (it was not, 2.4 – 2.26). The shells' `header_context` slot is host-trusted HTML (printed
   `|raw`, like `header_end`). The request attribute `_nowo_ui_header_presentation` only selects between two fixed
   values (anything else is ignored).
+- Remote form dialog (2.28): fetches use `mode: 'same-origin'`, `credentials: 'same-origin'`, `redirect: 'manual'`;
+  openers and form actions on another origin are not intercepted (normal navigation). `X-Nowo-Redirect` is honoured
+  only as a path-absolute same-origin URL (one leading `/`, no `//`, no backslash, no control character, ≤ 2048
+  characters, absolute URLs refused); `RemoteDialogResponder` / `RemoteDialogTarget` apply the same rule server side
+  (an absolute URL on the request's own origin is reduced to its path, anything else throws), also for the
+  non-dialog `RedirectResponse`, so the helper is never an open redirect. Only the server's own same-origin
+  `text/html` answer is injected (whole documents refused), parsed in an inert `<template>` with `<script>` removed;
+  titles and messages are `textContent`. The fragment is host Twig output with autoescaping, at the same trust level
+  as the page. `X-Nowo-Dialog` is **not** a security signal (any page can send it): CSRF stays the host form's own
+  token, and hosts must never skip CSRF, authorization or validation because of the header. `Vary: X-Nowo-Dialog`
+  keeps caches from mixing the two modes; the `204` answers are `no-store`. Closing aborts the request, so a late
+  answer never injects or navigates. Warnings name a rejected header, never its value.
+- Overlay registry (2.28): it only toggles `inert` / `aria-hidden` and a root attribute, removes only what it set
+  (never an `inert` the host wrote), drops handles of removed owners and releases everything on `pagehide`, so an
+  error cannot leave the shell locked. The `nowo:overlay-*` events can be dispatched by any same-document script;
+  they only hide or show chrome (no data, no permission).
 - Recipe defaults contain no secrets.
 - **FrankenPHP worker:** runtime PHP services (`ReleaseUpdateChecker`, `ReleaseStatusController`, routing helpers) are `readonly` / stateless — no per-request mutable state; safe with kernel not reset between requests ([FRANKENPHP-WORKER-AUDIT.md](FRANKENPHP-WORKER-AUDIT.md)).
 

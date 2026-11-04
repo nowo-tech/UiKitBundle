@@ -7,6 +7,7 @@ namespace Nowo\UiKitBundle\Tests\Unit\DependencyInjection;
 use LogicException;
 use Nowo\UiKitBundle\DependencyInjection\Configuration;
 use Nowo\UiKitBundle\DependencyInjection\NowoUiKitExtension;
+use Nowo\UiKitBundle\Dialog\RemoteDialogResponder;
 use Nowo\UiKitBundle\Release\ReleaseStatusController;
 use Nowo\UiKitBundle\Release\ReleaseUpdateChecker;
 use Nowo\UiKitBundle\Routing\PanelPathRewritingLoader;
@@ -41,6 +42,22 @@ final class NowoUiKitExtensionTest extends TestCase
         $extension->load([['row_actions_display' => 'icon_text']], $container);
 
         self::assertSame('icon_text', $container->getParameter('nowo_ui_kit.row_actions_display'));
+    }
+
+    public function testRemoteDialogResponderIsPublicAndTheRedirectListenerOptIn(): void
+    {
+        $container = new ContainerBuilder();
+        (new NowoUiKitExtension())->load([[]], $container);
+        self::assertTrue($container->getDefinition('nowo_ui_kit.remote_dialog_responder')->isPublic());
+        self::assertTrue($container->hasAlias(RemoteDialogResponder::class));
+        self::assertFalse($container->hasDefinition('nowo_ui_kit.remote_dialog_redirect_listener'));
+        self::assertNull($container->getParameter('nowo_ui_kit.theme')['menu_semantics']);
+
+        $container = new ContainerBuilder();
+        (new NowoUiKitExtension())->load([['remote_dialog' => ['convert_redirects' => true], 'theme' => ['menu_semantics' => 'menu']]], $container);
+        $listener = $container->getDefinition('nowo_ui_kit.remote_dialog_redirect_listener');
+        self::assertSame([['event' => 'kernel.response', 'priority' => -10]], $listener->getTag('kernel.event_listener'));
+        self::assertSame('menu', $container->getParameter('nowo_ui_kit.theme')['menu_semantics']);
     }
 
     public function testEmptyPanelPathRewritesRegistersNoRoutingServices(): void

@@ -28,6 +28,9 @@ use Stringable;
 final readonly class Theme
 {
     /** Attribute value: string/number, true = bare attribute, false/null = omitted. */
+    /** 2.28: values of `theme.menu_semantics` (null = 2.27 markup). */
+    public const MENU_SEMANTICS = ['menu', 'disclosure'];
+
     private const ATTRIBUTE_NAME = '/^[a-zA-Z_:][a-zA-Z0-9_:.-]*$/D';
 
     /**
@@ -83,6 +86,7 @@ final readonly class Theme
      * @param bool                                                     $confirmMessageInHeader confirm dialogs / page render the message inside the header (`Confirm::$messageInHeader` wins when set)
      * @param bool                                                     $popoverMenus           2.4: menu / kebab partials render their panel as a native [popover] (top layer) by default
      * @param bool                                                     $formErrorsAfterWidget  2.10: the UiKit form theme prints a field's errors after its widget (default: Symfony's order, before)
+     * @param string|null                                              $menuSemantics          2.28: default ARIA of popover menus (`menu` partial option `menu_semantics`); null = as 2.27
      */
     public function __construct(
         private string $framework = 'bootstrap5',
@@ -97,7 +101,11 @@ final readonly class Theme
         private bool $confirmMessageInHeader = false,
         private bool $popoverMenus = false,
         private bool $formErrorsAfterWidget = false,
+        private ?string $menuSemantics = null,
     ) {
+        if (null !== $menuSemantics && !\in_array($menuSemantics, self::MENU_SEMANTICS, true)) {
+            throw new InvalidArgumentException(\sprintf('Invalid UiKit theme menu_semantics "%s": use null, "menu" or "disclosure".', $menuSemantics));
+        }
         $this->classes = $this->normalizeClasses($classes, 'classes');
         $this->pages = $this->normalizePages($pages, 'pages');
         $this->listHeaderActionsInFilters = $this->listHeaderActionsInFiltersOption($pages);
@@ -179,7 +187,32 @@ final readonly class Theme
         /** @var array<string, array<string, mixed>> $pages */
         $pages = $theme['pages'] ?? [];
 
-        return new self($framework, $classes, $attributes, $partials, $tokens, $tokensDark, $bundles, false !== ($theme['framework_defaults'] ?? true), $pages, true === ($theme['confirm_message_in_header'] ?? false), true === ($theme['popover_menus'] ?? false), true === ($theme['form_errors_after_widget'] ?? false));
+        return new self($framework, $classes, $attributes, $partials, $tokens, $tokensDark, $bundles, false !== ($theme['framework_defaults'] ?? true), $pages, true === ($theme['confirm_message_in_header'] ?? false), true === ($theme['popover_menus'] ?? false), true === ($theme['form_errors_after_widget'] ?? false), self::menuSemanticsOption($theme['menu_semantics'] ?? null));
+    }
+
+    /**
+     * Validates `theme.menu_semantics` from the processed config.
+     */
+    private static function menuSemanticsOption(mixed $value): ?string
+    {
+        if (null === $value) {
+            return null;
+        }
+        if (!\is_string($value) || !\in_array($value, self::MENU_SEMANTICS, true)) {
+            throw new InvalidArgumentException(\sprintf('Invalid UiKit theme menu_semantics "%s": use null, "menu" or "disclosure".', get_debug_type($value)));
+        }
+
+        return $value;
+    }
+
+    /**
+     * Default ARIA semantics of popover menus with items (`theme.menu_semantics`, 2.28): null keeps the 2.27 markup,
+     * `menu` = APG menu button (role="menu" / menuitem, arrow keys), `disclosure` = no aria-haspopup. The `menu`
+     * partial's `menu_semantics` option wins.
+     */
+    public function menuSemantics(): ?string
+    {
+        return $this->menuSemantics;
     }
 
     public function framework(): string

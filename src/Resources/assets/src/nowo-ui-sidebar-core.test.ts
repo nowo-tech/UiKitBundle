@@ -27,6 +27,21 @@ import {
   type SidebarOptions,
 } from './nowo-ui-sidebar-core';
 
+/** A Storage whose reads and writes throw (blocked / full storage). */
+const throwingStorage = (): Storage =>
+  ({
+    getItem: () => {
+      throw new Error('blocked');
+    },
+    setItem: () => {
+      throw new Error('quota');
+    },
+    removeItem: () => undefined,
+    clear: () => undefined,
+    key: () => null,
+    length: 0,
+  }) as Storage;
+
 const COOKIE_OPTS: SidebarOptions = { ...SIDEBAR_DEFAULTS, cookieName: 'app_sidebar' };
 const LEGACY_OPTS: SidebarOptions = { ...COOKIE_OPTS, storageKey: 'app-sidebar', hiddenValue: 'collapsed' };
 
@@ -222,9 +237,9 @@ describe('sidebar cookie + storage', () => {
     expect(localStorage.getItem('app-sidebar')).toBe('rail');
     expect(parseSidebarCookie(document.cookie, LEGACY_OPTS)).toBe('rail');
 
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-      throw new Error('quota');
-    });
+    // A getter spy, not Storage.prototype: happy-dom binds Storage methods on first access, so a prototype spy is
+    // either ignored or captured for the rest of the file depending on test order (shuffle).
+    vi.spyOn(window, 'localStorage', 'get').mockReturnValue(throwingStorage());
     persistSidebarMode('hidden', LEGACY_OPTS);
     expect(document.cookie).toContain('app_sidebar=collapsed');
   });
@@ -286,9 +301,7 @@ describe('sidebar cookie + storage', () => {
     expect(setter).not.toHaveBeenCalled();
     setter.mockRestore();
 
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-      throw new Error('blocked');
-    });
+    vi.spyOn(window, 'localStorage', 'get').mockReturnValue(throwingStorage());
     expect(() => syncSidebarStorageFromCookie('rail', COOKIE_OPTS)).not.toThrow();
   });
 });

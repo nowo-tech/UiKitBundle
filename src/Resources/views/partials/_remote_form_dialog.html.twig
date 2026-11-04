@@ -1,0 +1,60 @@
+{#
+  Remote form dialog (2.28, theme partial `remote_form_dialog`): the `dialog` partial prepared for a form page loaded
+  into it and posted back with fetch (nowo-ui-remote-form-core.ts). Two drivers:
+    - stimulus: true — the `remote-form-dialog` Stimulus peer (targets dialog / title / body; put
+      data-controller="remote-form-dialog" on an ancestor that also holds the openers, with
+      data-action="remote-form-dialog#open" on each opener link); the texts go on that controller element as values
+      (`data-remote-form-dialog-loading-value`, …), so this partial only renders the dialog;
+    - stimulus: false (default) — js/nowo-ui-dialog.js: openers carry data-nowo-ui-dialog-open="<id>",
+      data-nowo-ui-dialog-src="<url>" and data-nowo-ui-dialog-form (see nowo_ui_remote_form_opener()); the settings
+      are attributes of the dialog.
+  The server answers the fragment for `X-Nowo-Dialog: 1`, 422 when invalid, 204 + X-Nowo-Redirect once saved
+  (Nowo\UiKitBundle\Dialog\RemoteDialogResponder). Full screen on phones (token --nowo-ui-remote-dialog-phone-inset).
+
+  Required:
+    - id
+  Optional:
+    - stimulus (bool, default false)
+    - title (View\Label|string): initial title (the opener's title replaces it)
+    - size: sm | md | lg (default) | xl
+    - labels: {loading, error, load_error} (View\Label|string; defaults remote_form_dialog.loading / .save_failed /
+      .load_failed) — IIFE driver
+    - invalid_selector: extra selector of the first invalid control after [aria-invalid="true"] — IIFE driver
+    - follow_on_load_error (bool, default true): a failed load follows the opener's link — IIFE driver
+    - backdrop_close (bool, default false): closeOnBackdrop; false = a stray click never loses a typed form
+    - attr: extra <dialog> attributes (no on*), bundle
+#}
+{% set _b = bundle|default(null) %}
+{% set _stimulus = stimulus|default(false) %}
+{% set _labels = labels|default({}) %}
+{% set _loading = _labels.loading is defined ? _labels.loading|nowo_ui_trans : 'remote_form_dialog.loading'|trans({}, 'NowoUiKitBundle') %}
+{% set _load_error = _labels.load_error is defined ? _labels.load_error|nowo_ui_trans : 'remote_form_dialog.load_failed'|trans({}, 'NowoUiKitBundle') %}
+{% set _error = _labels.error is defined ? _labels.error|nowo_ui_trans : 'remote_form_dialog.save_failed'|trans({}, 'NowoUiKitBundle') %}
+{% set _title = title|default(null) is null ? '' : title|nowo_ui_trans %}
+{% set _attr = {} %}
+{% if _stimulus %}
+    {% set _attr = _attr|merge({'data-remote-form-dialog-target': 'dialog'}) %}
+{% else %}
+    {% set _attr = _attr|merge({
+        'data-nowo-ui-remote-form': true,
+        'data-nowo-ui-remote-form-loading': _loading,
+        'data-nowo-ui-remote-form-error': _error,
+        'data-nowo-ui-remote-form-load-error': _load_error,
+        'data-nowo-ui-remote-form-invalid': invalid_selector|default(null),
+        'data-nowo-ui-remote-form-follow-on-load-error': (follow_on_load_error ?? true) ? null : 'false',
+    }) %}
+{% endif %}
+{% set _attr = _attr|merge(attr|default({})) %}
+{% set _title_attr = {tabindex: '-1'}|merge(_stimulus ? {'data-remote-form-dialog-target': 'title'} : {}) %}
+{% set _body_attr = {'data-nowo-ui-dialog-body': true}|merge(_stimulus ? {'data-remote-form-dialog-target': 'body', 'data-action': 'submit->remote-form-dialog#submit'} : {}) %}
+{{ include(nowo_ui_partial('dialog', _b), {
+    id: id,
+    title: _title,
+    size: size|default('lg'),
+    backdrop_close: backdrop_close|default(false),
+    root_class: 'nowo-ui-dialog--remote-form',
+    attr: _attr,
+    title_attr: _title_attr,
+    body_attr: _body_attr,
+    bundle: _b,
+}, false) }}

@@ -12,6 +12,8 @@ use Nowo\UiKitBundle\Appearance\AppearancePresetProviderInterface;
 use Nowo\UiKitBundle\Appearance\AppearancePresetRegistry;
 use Nowo\UiKitBundle\Appearance\AppearanceProviderInterface;
 use Nowo\UiKitBundle\Appearance\ConfigAppearanceProvider;
+use Nowo\UiKitBundle\Dialog\RemoteDialogRedirectListener;
+use Nowo\UiKitBundle\Dialog\RemoteDialogResponder;
 use Nowo\UiKitBundle\Enum\CssFramework;
 use Nowo\UiKitBundle\EventSubscriber\LegacyPanelPathRedirectSubscriber;
 use Nowo\UiKitBundle\Form\AppearancePaletteType;
@@ -240,6 +242,33 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
             ->setArgument('$fontPreload', $this->registerFontPreload($container, $config))
             ->setArgument('$header', $config['header'])
             ->addTag('twig.extension');
+
+        $this->registerRemoteDialog($container, $config);
+    }
+
+    /**
+     * 2.28 remote form dialog: the public `RemoteDialogResponder` service (autowirable) and, with
+     * `remote_dialog.convert_redirects`, the `kernel.response` listener that turns redirects of dialog requests into
+     * `204` + `X-Nowo-Redirect`.
+     *
+     * @param array<string, mixed> $config
+     */
+    private function registerRemoteDialog(ContainerBuilder $container, array $config): void
+    {
+        $container->register('nowo_ui_kit.remote_dialog_responder', RemoteDialogResponder::class)
+            ->setArguments([
+                new Reference('request_stack', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                new Reference('router', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+            ])
+            ->setPublic(true);
+        $container->setAlias(RemoteDialogResponder::class, 'nowo_ui_kit.remote_dialog_responder')->setPublic(true);
+
+        /** @var array{convert_redirects: bool} $remoteDialog */
+        $remoteDialog = $config['remote_dialog'];
+        if ($remoteDialog['convert_redirects']) {
+            $container->register('nowo_ui_kit.remote_dialog_redirect_listener', RemoteDialogRedirectListener::class)
+                ->addTag('kernel.event_listener', ['event' => 'kernel.response', 'priority' => -10]);
+        }
     }
 
     /**

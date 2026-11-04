@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\UiKitBundle\Twig;
 
 use InvalidArgumentException;
+use Nowo\UiKitBundle\Dialog\RemoteDialog;
 use Nowo\UiKitBundle\Form\ActionCsrfType;
 use Nowo\UiKitBundle\Form\UiFormViews;
 use Nowo\UiKitBundle\Form\VisibleWhen;
@@ -145,7 +146,30 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             new TwigFunction('nowo_ui_breadcrumb_kit_trail', $this->breadcrumbKitTrail(...), ['needs_environment' => true]),
             new TwigFunction('nowo_ui_header_crumbs', $this->headerCrumbs(...), ['needs_environment' => true]),
             new TwigFunction('nowo_ui_safe_href', static fn (mixed $href): ?string => \is_string($href) ? SafeHref::filter($href) : null),
+            new TwigFunction('nowo_ui_dialog_request', fn (): bool => RemoteDialog::isRequest($this->requestStack?->getCurrentRequest())),
+            new TwigFunction('nowo_ui_remote_form_opener', self::remoteFormOpener(...)),
         ];
+    }
+
+    /**
+     * Attributes of a remote form dialog opener (2.28), for `nowo_ui_html_attrs()`: the Stimulus peer's action and
+     * title, or the IIFE's `data-nowo-ui-dialog-open` / `-src` / `-form` / `-title`. `src` is the opener's own href
+     * (the full page) for the IIFE; Stimulus reads the href itself.
+     *
+     * @return array<string, string|bool>
+     */
+    public static function remoteFormOpener(string $dialogId, ?string $title = null, bool $stimulus = false, ?string $src = null): array
+    {
+        if ($stimulus) {
+            return array_filter(['data-action' => 'remote-form-dialog#open', 'data-remote-form-dialog-title' => $title], static fn (?string $v): bool => null !== $v);
+        }
+
+        return array_filter([
+            'data-nowo-ui-dialog-open' => $dialogId,
+            'data-nowo-ui-dialog-src' => $src,
+            'data-nowo-ui-dialog-form' => true,
+            'data-nowo-ui-dialog-title' => $title,
+        ], static fn (string|bool|null $v): bool => null !== $v);
     }
 
     public function getFilters(): array

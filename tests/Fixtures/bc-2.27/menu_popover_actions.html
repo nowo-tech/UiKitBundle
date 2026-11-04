@@ -1,0 +1,38 @@
+            <div class="nowo-ui-menu nowo-ui-menu--end nowo-ui-menu--popover" data-nowo-ui-menu data-nowo-ui-popover-menu id="row">
+    <button type="button" class="nowo-ui-menu__toggle btn btn-outline-secondary btn-sm" popovertarget="row-panel" aria-haspopup="menu" aria-expanded="false" data-nowo-ui-popover-trigger><span class="nowo-ui-menu__label">More actions</span></button>
+            <ul class="nowo-ui-menu__panel" id="row-panel" popover data-nowo-ui-popover-panel>
+                                                                                                                                                                            <li><a class="nowo-ui-menu__item" href="/quotes/new">New quote</a></li>
+                                                                                                                                                                                                            <li class="nowo-ui-menu__entry nowo-ui-menu__entry--item">                                                                            <form method="post" action="/quotes/7/copy" class="nowo-ui-action__form">
+    <button type="submit" class="nowo-ui-menu__item nowo-ui-action--copy"><span class="nowo-ui-action__label">Duplicate</span></button><input type="hidden" name="_token" value="tok-copy"></form>
+
+
+    </li>
+                                                                                                                                                                                                            <li class="nowo-ui-menu__entry nowo-ui-menu__entry--item">                                                                        <button type="button" class="nowo-ui-menu__item nowo-ui-menu__item--danger nowo-ui-action--delete" data-nowo-confirm-open data-nowo-confirm-target="nowo-ui-confirm-9f8ab4fd881a"><span class="nowo-ui-action__label">Delete</span></button>
+                                                            <dialog
+    id="nowo-ui-confirm-9f8ab4fd881a"
+    class="nowo-ui-confirm"
+    data-nowo-ui-confirm
+    aria-labelledby="nowo-ui-confirm-9f8ab4fd881a-title"
+>
+    <div class="nowo-ui-confirm__panel">
+        <header class="nowo-ui-confirm__header">
+            <h2 class="nowo-ui-confirm__title" id="nowo-ui-confirm-9f8ab4fd881a-title">Delete Q-1042?</h2>
+                                                        <button type="button" class="nowo-ui-confirm__close" data-nowo-confirm-close aria-label="Close" title="Close"><span aria-hidden="true">&times;</span></button>
+                    </header>
+                    <div class="nowo-ui-confirm__body"><p class="nowo-ui-confirm__message">This cannot be undone.</p></div>
+                                <div class="nowo-ui-confirm__footer">
+                            <button type="button" class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary" data-nowo-confirm-close>
+                    Cancel
+                </button>
+                                        <form method="post" action="/quotes/7" class="nowo-ui-action__form">
+    <button type="submit" class="nowo-ui-btn nowo-ui-btn--danger nowo-ui-btn--solid btn btn-danger nowo-ui-confirm__submit">Confirm</button><input type="hidden" name="_token" value="tok-del"></form>
+
+
+                                    </div>
+    </div>
+</dialog>
+
+            </li>
+                                                                                </ul>
+    
+</div>

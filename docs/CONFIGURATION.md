@@ -11,6 +11,7 @@
 - [Error pages](#error-pages)
 - [App shell](#app-shell)
 - [Compact header (2.27)](#compact-header-227)
+- [Remote dialog (2.28)](#remote-dialog-228)
 - [Font preload (2.21)](#font-preload-221)
 - [Examples](#examples)
 
@@ -353,6 +354,21 @@ nowo_ui_kit:
 |-----|---------|-------------|
 | `presentation` | `standard` | Used when neither the template option nor the request attribute `_nowo_ui_header_presentation` (`Nowo\UiKitBundle\Shell\HeaderPresentation::ATTRIBUTE`) is set. An invalid value fails the config; an invalid request value is ignored |
 | `compact_actions` | `page` | `bar`: in the compact presentation `page/_page_header.html.twig` behaves as `header_actions: false` (`extra_actions` stay). The default keeps the actions in the page, so turning compact on without filling the bar never loses them |
+
+## Remote dialog (2.28)
+
+```yaml
+nowo_ui_kit:
+    remote_dialog:
+        convert_redirects: false   # true: RedirectResponse → 204 + X-Nowo-Redirect for dialog requests
+    theme:
+        menu_semantics: null       # null | menu | disclosure (popover menus with items; USAGE "Menu semantics")
+```
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `remote_dialog.convert_redirects` | `false` | A `kernel.response` listener (priority -10, main requests only) turns a `RedirectResponse` answered to a request with `X-Nowo-Dialog: 1` into `204` + `X-Nowo-Redirect` + `Vary`, when its target is a same-origin path; other answers are left alone. Without it, use `Nowo\UiKitBundle\Dialog\RemoteDialogResponder` (always registered, autowirable) |
+| `theme.menu_semantics` | `null` | Default ARIA of popover menus with items: `null` = 2.27 markup, `menu` = APG menu button, `disclosure` = no `aria-haspopup`. The `menu` partial option wins |
 
 ## Font preload (2.21)
 

@@ -108,6 +108,38 @@
 
 ## Unreleased
 
+From **2.27.2** (next minor: **2.28.0**):
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+php bin/console assets:install   # new js/nowo-ui-overlay.js; nowo-ui-dialog.js, nowo-ui-side-panel.js, nowo-ui-popover.js and nowo-ui.css changed
+```
+
+Additive in the markup: without the new options the `menu`, `dialog` and side panel partials and the `_scripts`
+output render as in 2.27.2, byte for byte. Two runtime behaviour changes:
+
+- **Side panel drawers are modal for the whole shell.** While a panel is a drawer (overlay layout, or ≤ 767 px), the
+  shell header (`[data-nowo-ui-shell] > header`) and aside (`[data-nowo-ui-aside]`) are `inert` as well as the main
+  column. Host chrome outside the kit shell can opt in with
+  `data-nowo-ui-overlay-region`. Tests that click the header or sidebar while a drawer is open must close the drawer
+  first. A backdrop click still closes the drawer; `backdrop_close: false` keeps it open.
+- **Overlay events.** Every dialog opened by `nowo-ui-dialog.js` and every side panel drawer dispatches
+  `nowo:overlay-open` / `nowo:overlay-close` on `document` and sets `<html data-nowo-overlay="<depth>">`. ChatKitBundle
+  1.17+ hides its dock on them. If you hid fixed footers or launchers with `:has()` rules on drawer classes, you can
+  switch to `html[data-nowo-overlay] …`.
+
+Optional:
+
+- **Remote form dialog** ([USAGE](USAGE.md#remote-form-dialog-228)): replace a host copy (e.g. a `remote-form-dialog`
+  Stimulus controller) with UiKit's peer or the IIFE mode, use the `remote_form_dialog` partial, answer dialog requests
+  with `RemoteDialogResponder` (`X-Nowo-Dialog` / `X-Nowo-Redirect`), or set
+  `nowo_ui_kit.remote_dialog.convert_redirects: true`.
+- **Host drawers**: call `window.NowoUiOverlay.acquire(drawer, {kind: 'drawer'})` / `handle.release()` instead of
+  toggling `inert` on your shell yourself.
+- **Layers**: map your z-index scale once with `--nowo-ui-z-overlay`, `--nowo-ui-z-modal`, `--nowo-ui-z-popover`,
+  `--nowo-ui-z-toast`, `--nowo-ui-z-loader` ([THEMING](THEMING.md#layers-public-api-228)).
+- **Menus**: `nowo_ui_kit.theme.menu_semantics: menu` for action menus (APG menu button), `disclosure` for link lists.
+
 ## To 2.27.2
 
 From **2.27.1**:

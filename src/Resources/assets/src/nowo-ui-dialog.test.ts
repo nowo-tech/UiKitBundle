@@ -255,3 +255,78 @@ describe('nowo-ui-dialog remote content', () => {
     expect(mod.closeMenus()).toEqual([]);
   });
 });
+
+describe('nowo-ui-dialog remote form mode (2.28)', () => {
+  const tick = (): Promise<void> => new Promise((r) => setTimeout(r, 0));
+  const reply = (status: number, body = '', headers: Record<string, string> = { 'content-type': 'text/html' }): Response =>
+    ({ status, type: 'basic', ok: status < 300, headers: new Headers(headers), text: () => Promise.resolve(body) }) as unknown as Response;
+
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <a href="/monitors/1/edit" id="ropen" data-nowo-ui-dialog-open="rf" data-nowo-ui-dialog-src="/monitors/1/edit" data-nowo-ui-dialog-form data-nowo-ui-dialog-title="Edit monitor">Edit</a>
+      <a href="/x" id="rbad" data-nowo-ui-dialog-open="rf" data-nowo-ui-dialog-src="https://evil.test/x" data-nowo-ui-dialog-form>Bad</a>
+      <dialog id="rf" data-nowo-ui-dialog data-nowo-ui-remote-form data-nowo-ui-remote-form-loading="Loading" data-nowo-ui-remote-form-error="Failed"
+              data-nowo-ui-remote-form-load-error="Load failed" data-nowo-ui-remote-form-invalid=".err input" data-nowo-ui-remote-form-follow-on-load-error="false">
+        <h2 id="rf-title" tabindex="-1"></h2><div class="nowo-ui-dialog__body" data-nowo-ui-dialog-body></div>
+      </dialog>
+      <dialog id="plain2" data-nowo-ui-dialog><p>p</p></dialog>`;
+    document.querySelectorAll('dialog').forEach((d) => polyfill(d as HTMLDialogElement));
+    mod.bindNowoUiDialog();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+    window.NowoUiOverlay?.releaseAll();
+    document.body.innerHTML = '';
+  });
+
+  it('reads the settings from the dialog attributes', () => {
+    const settings = mod.remoteFormSettings(document.getElementById('rf') as HTMLDialogElement);
+    expect(settings).toMatchObject({ loading: 'Loading', error: 'Failed', loadError: 'Load failed', invalidSelector: '.err input', followOnLoadError: false, closeOnBackdrop: false });
+    const plain = mod.remoteFormSettings(document.getElementById('plain2') as HTMLDialogElement);
+    expect(plain).toMatchObject({ loading: '', followOnLoadError: true });
+  });
+
+  it('opens the remote form from an opener, posts back and emits nowo-ui:remote-form:* events', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(200, '<form method="post" action="/monitors/1/edit"><button type="submit">Save</button></form>')));
+    const dialog = document.getElementById('rf') as HTMLDialogElement;
+    const loaded = vi.fn();
+    dialog.addEventListener('nowo-ui:remote-form:loaded', loaded);
+    const event = click(document.getElementById('ropen')!);
+    expect(event.defaultPrevented).toBe(true);
+    expect(dialog.open).toBe(true);
+    expect(document.getElementById('rf-title')?.textContent).toBe('Edit monitor');
+    await tick();
+    await tick();
+    expect(loaded).toHaveBeenCalled();
+    const saved = vi.fn((e: Event) => e.preventDefault());
+    document.addEventListener('nowo-ui:remote-form:saved', saved);
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(204, '', {})));
+    dialog.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await tick();
+    await tick();
+    document.removeEventListener('nowo-ui:remote-form:saved', saved);
+    expect(saved).toHaveBeenCalled();
+    expect(dialog.open).toBe(false);
+  });
+
+  it('lets cross-origin sources and modified clicks navigate', () => {
+    expect(click(document.getElementById('rbad')!).defaultPrevented).toBe(false);
+    expect(click(document.getElementById('ropen')!, { ctrlKey: true }).defaultPrevented).toBe(false);
+  });
+
+  it('opens from script, and refuses unknown dialogs', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(200, '<p>x</p>')));
+    expect(window.nowoUiOpenRemoteForm?.('nope', '/x')).toBe(false);
+    expect(mod.openRemoteForm('rf', '/monitors/2/edit')).toBe(true);
+    expect((document.getElementById('rf') as HTMLDialogElement).open).toBe(true);
+  });
+
+  it('registers plain dialogs with the overlay registry until they close', () => {
+    expect(mod.openDialog('plain2')).toBe(true);
+    expect(document.documentElement.getAttribute('data-nowo-overlay')).toBe('1');
+    mod.closeDialog('plain2');
+    expect(document.documentElement.hasAttribute('data-nowo-overlay')).toBe(false);
+  });
+});

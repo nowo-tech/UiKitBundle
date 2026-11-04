@@ -27,6 +27,7 @@ export default defineConfig({
         'src/Resources/assets/stimulus-peers/list_pagination_controller.ts',
         'src/Resources/assets/stimulus-peers/multi_select_controller.ts',
         'src/Resources/assets/stimulus-peers/product_tour_controller.ts',
+        'src/Resources/assets/stimulus-peers/remote_form_dialog_controller.ts',
         'src/Resources/assets/stimulus-peers/responsive_table_controller.ts',
         'src/Resources/assets/stimulus-peers/table_sort_controller.ts',
         'src/Resources/assets/stimulus-peers/tabs_controller.ts',

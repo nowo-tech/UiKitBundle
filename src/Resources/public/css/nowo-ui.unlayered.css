@@ -472,7 +472,7 @@
   display: flex;
   position: fixed;
   inset: 0;
-  z-index: 1050;
+  z-index: var(--nowo-ui-z-modal, 1050);
   overflow-x: hidden;
   overflow-y: auto;
   background: var(--nowo-ui-overlay, rgba(0, 0, 0, 0.45));
@@ -1450,7 +1450,7 @@ a.nowo-ui-pagination__link:hover {
 /* --- Toasts --- */
 .nowo-ui-toast-stack {
   position: fixed;
-  z-index: 1100;
+  z-index: var(--nowo-ui-z-toast, 1100);
   right: 1rem;
   bottom: 1rem;
   display: flex;
@@ -1824,7 +1824,7 @@ a.nowo-ui-pagination__link:hover {
 .nowo-ui-page-loader {
   position: fixed;
   inset: 0;
-  z-index: 1200;
+  z-index: var(--nowo-ui-z-loader, 1200);
   display: none;
   align-items: center;
   justify-content: center;
@@ -2496,7 +2496,7 @@ form.nowo-ui-filters select[multiple]:not(.ts-hidden-accessible) {
   --nowo-ui-date-range-day-size: 2.25rem;
   position: fixed;
   inset: auto;
-  z-index: var(--nowo-ui-date-range-z, 1080);
+  z-index: var(--nowo-ui-date-range-z, var(--nowo-ui-z-popover, 1080));
   box-sizing: border-box;
   max-width: calc(100vw - 1rem);
   max-height: calc(100vh - 1rem);
@@ -4461,7 +4461,7 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
 .nowo-ui-menu__panel,
 .nowo-ui-popover {
   position: absolute;
-  z-index: var(--nowo-ui-menu-z-index, 1050);
+  z-index: var(--nowo-ui-menu-z-index, var(--nowo-ui-z-modal, 1050));
   top: calc(100% + 0.25rem);
   inset-inline-start: 0;
   box-sizing: border-box;
@@ -5801,7 +5801,7 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
 .nowo-ui-side-panel__backdrop {
   position: fixed;
   inset: 0;
-  z-index: var(--nowo-ui-side-panel-z, 1040);
+  z-index: var(--nowo-ui-side-panel-z, var(--nowo-ui-z-overlay, 1040));
   background: var(--nowo-ui-side-panel-backdrop, rgb(0 0 0 / 40%));
 }
 
@@ -5817,7 +5817,7 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
   border-radius: 0;
   border-block: 0;
   border-inline-end: 0;
-  z-index: calc(var(--nowo-ui-side-panel-z, 1040) + 1);
+  z-index: calc(var(--nowo-ui-side-panel-z, var(--nowo-ui-z-overlay, 1040)) + 1);
   box-shadow: var(--nowo-ui-side-panel-shadow, 0 0 1.5rem rgb(0 0 0 / 25%));
 }
 
@@ -5856,7 +5856,7 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
     max-height: none;
     border: 0;
     border-radius: 0;
-    z-index: calc(var(--nowo-ui-side-panel-z, 1040) + 1);
+    z-index: calc(var(--nowo-ui-side-panel-z, var(--nowo-ui-z-overlay, 1040)) + 1);
     box-shadow: var(--nowo-ui-side-panel-shadow, 0 0 1.5rem rgb(0 0 0 / 25%));
   }
 
@@ -6154,4 +6154,58 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
   min-height: 0;
   margin: 0;
   padding: 0;
+}
+
+/*
+ * Remote form dialog (2.28, partials/_remote_form_dialog.html.twig, nowo-ui-remote-form-core.ts): the body is a flex
+ * column that scrolls between the header and the fragment's own actions; full screen on phones (a gutter with
+ * --nowo-ui-remote-dialog-phone-inset).
+ */
+.nowo-ui-dialog--remote-form[open] {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.nowo-ui-dialog--remote-form > .nowo-ui-dialog__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  overflow: auto;
+}
+
+.nowo-ui-dialog--remote-form .nowo-ui-dialog__title:focus {
+  outline: none;
+}
+
+.nowo-ui-dialog--remote-form .nowo-ui-dialog__title:focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, var(--nowo-ui-primary));
+  outline-offset: 2px;
+}
+
+.nowo-ui-remote-form__status {
+  margin: 0;
+  color: var(--nowo-ui-muted);
+}
+
+.nowo-ui-remote-form__alert {
+  margin: 0 0 0.75rem;
+  color: var(--nowo-ui-danger-text, var(--nowo-ui-danger));
+}
+
+@media (max-width: 40rem) {
+  .nowo-ui-dialog--remote-form {
+    width: calc(100vw - 2 * var(--nowo-ui-remote-dialog-phone-inset, 0px));
+    max-width: none;
+    height: calc(100vh - 2 * var(--nowo-ui-remote-dialog-phone-inset, 0px));
+    height: calc(100dvh - 2 * var(--nowo-ui-remote-dialog-phone-inset, 0px));
+    max-height: none;
+    margin: var(--nowo-ui-remote-dialog-phone-inset, 0px);
+    border-radius: var(--nowo-ui-remote-dialog-phone-radius, 0);
+  }
+
+  .nowo-ui-dialog--remote-form > .nowo-ui-dialog__body {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  }
 }

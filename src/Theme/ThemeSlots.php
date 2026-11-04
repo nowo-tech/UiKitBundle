@@ -655,6 +655,7 @@ final class ThemeSlots
         'pagination' => '@NowoUiKitBundle/partials/_pagination.html.twig',
         'pagination_compact' => '@NowoUiKitBundle/partials/_pagination_compact.html.twig',
         'progress' => '@NowoUiKitBundle/partials/_progress.html.twig',
+        'remote_form_dialog' => '@NowoUiKitBundle/partials/_remote_form_dialog.html.twig',
         'row_actions' => '@NowoUiKitBundle/partials/_row_actions.html.twig',
         'scripts' => '@NowoUiKitBundle/partials/_scripts.html.twig',
         'segmented' => '@NowoUiKitBundle/partials/_segmented.html.twig',

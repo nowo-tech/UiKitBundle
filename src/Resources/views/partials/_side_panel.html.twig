@@ -23,7 +23,10 @@
     - content_template / content_context: template included in the body (instead of `content`); or embed this
       partial and fill the block nowo_ui_side_panel_body
     - labels: {close, opened, closed} (View\Label|string; defaults "Close %title%", "%title% opened", "%title% closed")
+    - backdrop_close (bool, default true; 2.28): in drawer mode a backdrop click closes the panel (closeOnBackdrop of the
+      `side-panel` overlay kind); false renders data-nowo-ui-side-panel-backdrop-close="false"
     - attr: root attributes (no on*; not id), bundle
+  2.28: while a drawer, js/nowo-ui-side-panel.js registers the panel with the overlay registry (the shell header and aside become inert; html[data-nowo-overlay]; nowo:overlay-* events).
 #}
 {% set _b = bundle|default(null) %}
 {% set _side = side|default('end') == 'start' ? 'start' : 'end' %}
@@ -38,7 +41,7 @@
 {% set _hl = heading_level|default(2) %}
 {% set _level = [2, 3, 4, 5, 6]|filter(n => n is same as(_hl))|first|default(2) %}
 {% set _close_href = close_href|default(null) %}
-<aside id="{{ id }}" class="{{ nowo_ui_class('side_panel', _b) }} nowo-ui-side-panel--{{ _side }} nowo-ui-side-panel--{{ _layout }}" data-nowo-ui-side-panel data-side="{{ _side }}" data-layout="{{ _layout }}" aria-labelledby="{{ id }}-title" data-nowo-ui-side-panel-opened="{{ _opened }}" data-nowo-ui-side-panel-closed="{{ _closed }}"{% if not _open %} hidden{% endif %}{{ nowo_ui_attrs('side_panel', _b) }}{{ nowo_ui_html_attrs((attr|default({}))|filter((v, k) => k != 'id')) }}>
+<aside id="{{ id }}" class="{{ nowo_ui_class('side_panel', _b) }} nowo-ui-side-panel--{{ _side }} nowo-ui-side-panel--{{ _layout }}" data-nowo-ui-side-panel data-side="{{ _side }}" data-layout="{{ _layout }}" aria-labelledby="{{ id }}-title" data-nowo-ui-side-panel-opened="{{ _opened }}" data-nowo-ui-side-panel-closed="{{ _closed }}"{% if not _open %} hidden{% endif %}{% if not (backdrop_close ?? true) %} data-nowo-ui-side-panel-backdrop-close="false"{% endif %}{{ nowo_ui_attrs('side_panel', _b) }}{{ nowo_ui_html_attrs((attr|default({}))|filter((v, k) => k != 'id')) }}>
     <div class="{{ nowo_ui_class('side_panel_header', _b) }}"{{ nowo_ui_attrs('side_panel_header', _b) }}>
         <h{{ _level }} id="{{ id }}-title" class="{{ nowo_ui_class('side_panel_title', _b) }}" tabindex="-1"{{ nowo_ui_attrs('side_panel_title', _b) }}>{{ _title }}</h{{ _level }}>
         {% if _close_href %}<a href="{{ _close_href }}" role="button"{% else %}<button type="button"{% endif %} class="{{ nowo_ui_class('side_panel_close', _b) }}" data-nowo-ui-side-panel-close aria-label="{{ _close_label }}"{{ nowo_ui_attrs('side_panel_close', _b) }}><span aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: 'close', label: _close_label}, false)|trim|raw }}</span>{% if _close_href %}</a>{% else %}</button>{% endif %}

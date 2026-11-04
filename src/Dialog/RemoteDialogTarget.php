@@ -1,0 +1,63 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Nowo\UiKitBundle\Dialog;
+
+use InvalidArgumentException;
+use Symfony\Component\HttpFoundation\Request;
+
+/**
+ * Redirect targets of the remote form dialog (2.28): a path-absolute URL (one leading `/`, no `//`, no backslash, no
+ * control character, at most 2048 characters), or an absolute URL on the request's own scheme, host and port, which
+ * is reduced to its path, query and fragment. The client applies the same rule to `X-Nowo-Redirect`.
+ *
+ * @internal
+ */
+final class RemoteDialogTarget
+{
+    public const MAX_LENGTH = 2048;
+
+    /**
+     * @throws InvalidArgumentException when the URL is not a same-origin target (a programming error)
+     */
+    public static function path(string $url, ?Request $request): string
+    {
+        $path = self::tryPath($url, $request);
+        if (null === $path) {
+            throw new InvalidArgumentException('A remote dialog redirect must be a same-origin path (e.g. "/orders/7"), not another origin, a protocol-relative URL or a non-HTTP scheme.');
+        }
+
+        return $path;
+    }
+
+    /** The same-origin path of a URL, or null. */
+    public static function tryPath(string $url, ?Request $request): ?string
+    {
+        if ('' === $url || \strlen($url) > self::MAX_LENGTH || 1 === preg_match('/[\x00-\x1F\x7F\\\\]/', $url)) {
+            return null;
+        }
+        if (str_starts_with($url, '/')) {
+            return str_starts_with($url, '//') ? null : $url;
+        }
+        if (!$request instanceof Request) {
+            return null;
+        }
+        $parts = parse_url($url);
+        if (false === $parts || !isset($parts['scheme'], $parts['host'])) {
+            return null;
+        }
+        $scheme = strtolower($parts['scheme']);
+        $port = $parts['port'] ?? ('https' === $scheme ? 443 : 80);
+        if (!\in_array($scheme, ['http', 'https'], true) || isset($parts['user']) || isset($parts['pass'])
+            || $scheme !== $request->getScheme() || strtolower($parts['host']) !== strtolower($request->getHost()) || $port !== $request->getPort()) {
+            return null;
+        }
+        $path = ($parts['path'] ?? '') === '' ? '/' : $parts['path'];
+        if (str_starts_with($path, '//')) {
+            return null;
+        }
+
+        return $path.(isset($parts['query']) ? '?'.$parts['query'] : '').(isset($parts['fragment']) ? '#'.$parts['fragment'] : '');
+    }
+}

@@ -1,0 +1,32 @@
+{#
+  UiKit 2.28 demo: the remote form dialog (IIFE driver of js/nowo-ui-dialog.js, partial remote_form_dialog) and the
+  overlay registry. "Add destination" is a link to the form page: with JavaScript it opens in a dialog, posts back
+  with fetch (422 re-rendered, 204 + X-Nowo-Redirect followed with the saved label). The page header is marked
+  data-nowo-ui-overlay-region, so it becomes inert while the overlay side panel ("Help") is open.
+#}
+{% extends '@NowoUiKit/layout/document.html.twig' %}
+{% set nowo_ui_document_title = 'Remote form dialog · UiKit 2.28' %}
+
+{% block nowo_ui_body %}
+    <header class="kit-remote-form-header" data-nowo-ui-overlay-region data-testid="remote-form-header">
+        <a href="{{ path('kit_remote_form') }}" data-testid="header-link">Destinations</a>
+        {{ include('@NowoUiKitBundle/partials/_theme_toggle.html.twig', {compact: true}) }}
+        {{ include('@NowoUiKitBundle/partials/_side_panel_toggle.html.twig', {target: 'demo-help', label: 'Help', attr: {'data-testid': 'help-toggle'}}, false) }}
+    </header>
+    <main id="main-content" class="nowo-ui-content" data-testid="remote-form-demo">
+        <h1>Notification destinations</h1>
+        {% if saved %}
+            <p role="status" data-testid="flash">Destination "{{ saved }}" saved.</p>
+        {% endif %}
+        {% set _new = path('kit_remote_form_new') %}
+        <a href="{{ _new }}" class="{{ nowo_ui_class('btn_primary') }}" data-testid="destination-add"
+            {{- nowo_ui_html_attrs(nowo_ui_remote_form_opener('destination-dialog', 'New destination', false, _new)) }}>Add destination</a>
+    </main>
+    {{ include(nowo_ui_partial('remote_form_dialog'), {id: 'destination-dialog', invalid_selector: '.is-invalid', attr: {'data-testid': 'destination-dialog'}}) }}
+    {{ include('@NowoUiKitBundle/partials/_side_panel.html.twig', {id: 'demo-help', title: 'Help', layout: 'overlay', content_template: 'kit/_remote_form_help.html.twig', attr: {'data-testid': 'help-panel'}}) }}
+{% endblock %}
+
+{% block nowo_ui_scripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/nowo-ui-side-panel.js', 'nowo_ui_kit') }}" defer></script>
+{% endblock %}

@@ -201,3 +201,94 @@ describe('nowo-ui-popover', () => {
     document.dispatchEvent(new MouseEvent('click'));
   });
 });
+
+describe('nowo-ui-popover APG menu (2.28 menu_semantics: menu)', () => {
+  const key = (el: Element, name: string): KeyboardEvent => {
+    const event = new KeyboardEvent('keydown', { key: name, bubbles: true, cancelable: true });
+    el.dispatchEvent(event);
+    return event;
+  };
+  let panel: HTMLElement;
+  let trigger: HTMLElement;
+
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <div data-nowo-ui-popover-menu data-nowo-ui-menu-semantics="menu">
+        <button type="button" id="mt" popovertarget="mm" aria-haspopup="menu" aria-expanded="false" aria-controls="mm" data-nowo-ui-popover-trigger>⋮</button>
+        <ul id="mm" popover data-nowo-ui-popover-panel role="menu" aria-labelledby="mt">
+          <li role="none"><a id="i1" href="/a" role="menuitem" tabindex="-1">A</a></li>
+          <li class="nowo-ui-menu__entry"><form method="post"><button type="submit" id="i2">B</button></form></li>
+          <li><button type="button" id="i3" disabled>C</button></li>
+          <li><button type="button" id="i4">D</button></li>
+        </ul>
+      </div>
+      <div data-nowo-ui-popover-menu><button id="plain-t" data-nowo-ui-popover-trigger popovertarget="pp">x</button><ul id="pp" popover data-nowo-ui-popover-panel><li><a id="p1" href="/p">P</a></li></ul></div>`;
+    panel = document.getElementById('mm')!;
+    trigger = document.getElementById('mt')!;
+    panel.hidePopover = vi.fn();
+    panel.showPopover = vi.fn(() => toggle(panel, 'open'));
+    mod.bindNowoUiPopover();
+  });
+
+  afterEach(() => {
+    if (mod.isOpen(panel)) {
+      mod.closePopover(panel);
+    }
+    document.body.innerHTML = '';
+  });
+
+  it('sets the item roles, skipping disabled controls', () => {
+    const items = mod.menuItems(panel);
+    expect(items.map((item) => item.id)).toEqual(['i1', 'i2', 'i4']);
+    expect(document.getElementById('i2')?.getAttribute('role')).toBe('menuitem');
+    expect(document.getElementById('i2')?.closest('li')?.getAttribute('role')).toBe('none');
+    expect(mod.isMenu(panel)).toBe(true);
+    expect(mod.isMenu(document.getElementById('pp')!)).toBe(false);
+  });
+
+  it('opens with ArrowDown on the toggle (first item) and ArrowUp (last item)', () => {
+    trigger.focus();
+    expect(key(trigger, 'ArrowDown').defaultPrevented).toBe(true);
+    expect(document.activeElement?.id).toBe('i1');
+    mod.closePopover(panel);
+    trigger.focus();
+    key(trigger, 'ArrowUp');
+    expect(document.activeElement?.id).toBe('i4');
+    trigger.focus();
+    key(trigger, 'ArrowDown');
+    expect(document.activeElement?.id).toBe('i1');
+  });
+
+  it('moves a roving focus with the arrows, Home and End, and closes on Tab', () => {
+    toggle(panel, 'open');
+    expect(document.activeElement?.id).toBe('i1');
+    key(document.activeElement!, 'ArrowDown');
+    expect(document.activeElement?.id).toBe('i2');
+    key(document.activeElement!, 'ArrowUp');
+    key(document.activeElement!, 'ArrowUp');
+    expect(document.activeElement?.id).toBe('i4');
+    key(document.activeElement!, 'Home');
+    expect(document.activeElement?.id).toBe('i1');
+    key(document.activeElement!, 'End');
+    expect(document.activeElement?.id).toBe('i4');
+    key(document.activeElement!, 'ArrowDown');
+    expect(document.activeElement?.id).toBe('i1');
+    expect(key(document.activeElement!, 'x').defaultPrevented).toBe(false);
+    key(document.activeElement!, 'Tab');
+    expect(mod.isOpen(panel)).toBe(false);
+  });
+
+  it('handles empty menus and focus outside the items', () => {
+    expect(mod.moveFocus(document.createElement('ul'), 'first')).toBeNull();
+    (document.activeElement as HTMLElement | null)?.blur();
+    expect(mod.moveFocus(panel, 'next')?.id).toBe('i1');
+    (document.activeElement as HTMLElement | null)?.blur();
+    expect(mod.moveFocus(panel, 'prev')?.id).toBe('i4');
+  });
+
+  it('leaves plain popover menus alone', () => {
+    const plain = document.getElementById('plain-t')!;
+    plain.focus();
+    expect(key(plain, 'ArrowDown').defaultPrevented).toBe(false);
+  });
+});

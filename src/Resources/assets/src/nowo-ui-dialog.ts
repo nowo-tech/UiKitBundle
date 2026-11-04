@@ -11,21 +11,36 @@
  * .nowo-ui-dialog__body; aria-busy while loading) and dispatches `nowo-ui:dialog-loaded` (detail {url}) on the
  * dialog. The fetched HTML is inserted as markup only (scripts do not run: CSP-safe); behaviour comes from delegated
  * listeners / Stimulus. On a failed request the opener's href (the no-JS fallback) is followed.
+ * Remote form (2.28): an opener with [data-nowo-ui-dialog-src] AND [data-nowo-ui-dialog-form] runs the remote form
+ * dialog of nowo-ui-remote-form-core.ts instead (form posted back with fetch, 422 re-rendered, 204 + X-Nowo-Redirect
+ * followed; events nowo-ui:remote-form:loaded|invalid|saved|failed|closed on the dialog). Settings from the dialog:
+ * data-nowo-ui-remote-form-loading / -error / -invalid / -follow-on-load-error, data-nowo-ui-dialog-backdrop-close.
+ * `window.nowoUiOpenRemoteForm(id, url, opener?)` opens one from script.
+ * Overlay (2.28): every dialog opened here registers with the overlay registry (nowo-ui-overlay.ts: `nowo:overlay-*`
+ * events, html[data-nowo-overlay]) until it closes.
  * Menus (2.3, partial `menu`): light dismiss for the native <details data-nowo-ui-menu> disclosures — a click outside
  * an open menu or Escape closes it (Escape returns focus to its <summary>). Without this script the menu still works
  * (it closes when its toggle is activated again).
  */
 
+import { overlayRegistry, type OverlayHandle } from './nowo-ui-overlay';
+import { DEFAULT_SETTINGS, isPlainClick, openerTitle, RemoteFormSession, type RemoteFormSettings } from './nowo-ui-remote-form-core';
+
 declare global {
   interface Window {
     nowoUiOpenDialog?: (id: string | HTMLDialogElement | null, opener?: Element | null) => void;
     nowoUiCloseDialog?: (id: string | HTMLDialogElement | null) => void;
+    nowoUiOpenRemoteForm?: (id: string | HTMLDialogElement | null, url: string, opener?: HTMLElement | null) => boolean;
   }
 }
 
 const DIALOG = 'dialog[data-nowo-ui-dialog]';
 const MENU = 'details[data-nowo-ui-menu]';
 const openers = new WeakMap<HTMLDialogElement, Element>();
+/** Overlay handle of each dialog opened through this runtime (released on `close`). */
+const overlays = new WeakMap<HTMLDialogElement, OverlayHandle>();
+/** Remote form sessions, one per dialog. */
+const sessions = new WeakMap<HTMLDialogElement, RemoteFormSession>();
 
 export function resolveDialog(id: string | HTMLDialogElement | null): HTMLDialogElement | null {
   if (id === null) {
@@ -48,6 +63,7 @@ export function openDialog(id: string | HTMLDialogElement | null, opener: Elemen
       openers.set(dialog, opener);
     }
     dialog.showModal();
+    trackOverlay(dialog);
     const autofocus = dialog.querySelector('[autofocus]');
     if (autofocus instanceof HTMLElement) {
       autofocus.focus();
@@ -77,6 +93,54 @@ export function replaceDialog(id: string | HTMLDialogElement | null, opener: Ele
   openers.delete(current);
   closeDialog(current);
   return openDialog(next, handover);
+}
+
+/** Registers an open dialog with the overlay registry (once). */
+function trackOverlay(dialog: HTMLDialogElement): void {
+  if (!overlays.has(dialog) && !sessions.has(dialog)) {
+    overlays.set(dialog, overlayRegistry().acquire(dialog, { kind: 'dialog', inertShell: false, closeOnBackdrop: dialog.hasAttribute('data-nowo-ui-dialog-backdrop-close') }));
+  }
+}
+
+/** Settings of a remote form dialog, read from its attributes. */
+export function remoteFormSettings(dialog: HTMLDialogElement): RemoteFormSettings {
+  return {
+    ...DEFAULT_SETTINGS,
+    loading: dialog.getAttribute('data-nowo-ui-remote-form-loading') ?? '',
+    error: dialog.getAttribute('data-nowo-ui-remote-form-error') ?? '',
+    loadError: dialog.getAttribute('data-nowo-ui-remote-form-load-error') ?? '',
+    invalidSelector: dialog.getAttribute('data-nowo-ui-remote-form-invalid') ?? '',
+    followOnLoadError: dialog.getAttribute('data-nowo-ui-remote-form-follow-on-load-error') !== 'false',
+    closeOnBackdrop: dialog.hasAttribute('data-nowo-ui-dialog-backdrop-close'),
+  };
+}
+
+/** The remote form session of a dialog (created and bound on first use). */
+export function remoteSession(dialog: HTMLDialogElement): RemoteFormSession {
+  let session = sessions.get(dialog);
+  if (!session) {
+    const created = new RemoteFormSession(
+      dialog,
+      () => document.getElementById(`${dialog.id}-title`),
+      () => dialog.querySelector<HTMLElement>('[data-nowo-ui-dialog-body]') ?? dialog.querySelector<HTMLElement>('.nowo-ui-dialog__body'),
+      () => remoteFormSettings(dialog),
+      (name, detail, cancelable = false) => dialog.dispatchEvent(new CustomEvent(`nowo-ui:remote-form:${name}`, { bubbles: true, cancelable, detail })),
+    );
+    created.bind();
+    sessions.set(dialog, created);
+    session = created;
+  }
+  return session;
+}
+
+/** Opens `url` as a remote form in dialog `id`; false when it cannot (the caller follows the link instead). */
+export function openRemoteForm(id: string | HTMLDialogElement | null, url: string, opener: HTMLElement | null = null): boolean {
+  const dialog = resolveDialog(id);
+  if (!dialog) {
+    return false;
+  }
+  const title = opener ? openerTitle(opener, opener.getAttribute('data-nowo-ui-dialog-title') ?? undefined) : (document.getElementById(`${dialog.id}-title`)?.textContent ?? '');
+  return remoteSession(dialog).open(url, opener, title);
 }
 
 /** Same-origin absolute URL of a dialog source, null for another origin or an invalid URL. */
@@ -177,6 +241,12 @@ function onDocumentClick(event: MouseEvent): void {
   closeMenus(target);
 
   const openBtn = target.closest('[data-nowo-ui-dialog-open]');
+  if (openBtn && openBtn.hasAttribute('data-nowo-ui-dialog-form') && openBtn.hasAttribute('data-nowo-ui-dialog-src')) {
+    if (isPlainClick(event) && openBtn instanceof HTMLElement && openRemoteForm(openBtn.getAttribute('data-nowo-ui-dialog-open'), openBtn.getAttribute('data-nowo-ui-dialog-src') ?? '', openBtn)) {
+      event.preventDefault();
+    }
+    return;
+  }
   if (openBtn) {
     const targetId = openBtn.getAttribute('data-nowo-ui-dialog-open');
     const opened = openBtn.hasAttribute('data-nowo-ui-dialog-replace') ? replaceDialog(targetId, openBtn) : openDialog(targetId, openBtn);
@@ -211,6 +281,8 @@ function onDialogClose(event: Event): void {
   const target = event.target;
   if (target instanceof HTMLDialogElement && target.matches(DIALOG)) {
     restoreFocus(target);
+    overlays.get(target)?.release();
+    overlays.delete(target);
   }
 }
 
@@ -227,6 +299,7 @@ export function bindNowoUiDialog(): void {
   document.addEventListener('close', onDialogClose, true);
   window.nowoUiOpenDialog = openDialog;
   window.nowoUiCloseDialog = closeDialog;
+  window.nowoUiOpenRemoteForm = openRemoteForm;
 }
 
 bindNowoUiDialog();

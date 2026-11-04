@@ -37,6 +37,7 @@ Optional **Stimulus peer** TypeScript sources live under `src/Resources/assets/s
 - [Theme toggle](#theme-toggle)
 - [Theme boot](#theme-boot)
 - [Locale / kebab](#locale--kebab)
+- [Remote form dialog (2.28)](#remote-form-dialog-228)
 - [Stimulus peers — import examples](#stimulus-peers--import-examples)
 - [Beacon attribute migration](#beacon-attribute-migration)
 
@@ -619,6 +620,31 @@ No kit JS required (`<details>` menus).
 
 - Locale: `data-nowo-ui-locale-switcher` — host supplies `locales` with `href` or `form_action` + CSRF.
 - Kebab: `data-nowo-ui-kebab` — overflow links only.
+
+## Remote form dialog (2.28)
+
+IIFE (default): `js/nowo-ui-dialog.js`, openers with `data-nowo-ui-dialog-open="<id>"` + `data-nowo-ui-dialog-src` +
+`data-nowo-ui-dialog-form` (+ `data-nowo-ui-dialog-title`), the dialog from the `remote_form_dialog` partial. Stimulus
+peer: `stimulus-peers/remote_form_dialog_controller.ts`, identifier **`remote-form-dialog`** (symfony-beacon's
+attributes). Contract and server side: [USAGE — Remote form dialog](USAGE.md#remote-form-dialog-228).
+
+| Kind | Name | Notes |
+|------|------|-------|
+| Target | `dialog`, `title`, `body` | The `remote_form_dialog` partial with `stimulus: true` renders them; the body carries `data-action="submit->remote-form-dialog#submit"` |
+| Value | `loading`, `error`, `loadError` | Texts (status line, save alert, load alert) |
+| Value | `requestHeader` / `redirectHeader` | Default `X-Nowo-Dialog` / `X-Nowo-Redirect` (renaming is a migration aid only) |
+| Value | `invalidSelector` | Extra "first invalid control" selector after `[aria-invalid="true"]` |
+| Value | `followOnLoadError` | Default `true`: a failed load follows the opener's link |
+| Value | `closeOnBackdrop` | Default `false` |
+| Action | `open` (on an opener link: `href`, optional `data-remote-form-dialog-title`), `close`, `submit` | Modified clicks (Ctrl / Cmd / Shift / middle) keep the browser's new tab |
+| Event | `remote-form-dialog:loaded`, `:invalid`, `:saved` (cancelable), `:failed`, `:closed` | Same details as the IIFE events |
+
+```html
+<section data-controller="remote-form-dialog" data-remote-form-dialog-loading-value="Loading…" data-remote-form-dialog-error-value="Could not save.">
+  <a href="/projects/7/notifications/new" data-action="remote-form-dialog#open" data-remote-form-dialog-title="New destination">Add</a>
+  {{ include(nowo_ui_partial('remote_form_dialog'), {id: 'destination-dialog', stimulus: true}) }}
+</section>
+```
 
 ## Stimulus peers — import examples
 

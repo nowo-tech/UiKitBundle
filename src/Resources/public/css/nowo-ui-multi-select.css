@@ -191,7 +191,7 @@ select.ts-hidden-accessible {
   position: absolute;
   top: 100%;
   left: 0;
-  z-index: var(--nowo-ui-multi-select-z, 1080);
+  z-index: var(--nowo-ui-multi-select-z, var(--nowo-ui-z-popover, 1080));
   box-sizing: border-box;
   width: 100%;
   margin: 0.25rem 0 0;
