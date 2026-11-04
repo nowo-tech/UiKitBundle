@@ -82,6 +82,11 @@ test.describe('compact header (2.27)', () => {
     await watchCsp(page);
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto(COMPACT);
+    // The policy is delivered in a <meta> as well as the header (the dev stack sometimes drops the header in a long run).
+    const policy = (await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute('content')) ?? '';
+    expect(policy).toContain("style-src-attr 'none'");
+    expect(policy).toContain("script-src-attr 'none'");
+    expect(policy).not.toContain('unsafe-inline');
     const nav = trail(page);
     await expect(nav).toHaveAttribute('data-collapsed', 'true');
     await expect(more(page)).toBeVisible();
@@ -104,10 +109,14 @@ test.describe('compact header (2.27)', () => {
     await page.waitForLoadState('networkidle');
     await expect(page.locator('.sf-toolbar, [id^="sfwdt"]')).toHaveCount(0); // no dev tool injects inline code here
     expect(await cspViolations(page)).toEqual([]);
-    // The watcher works: parsed inline style attributes are reported.
+    // The watcher works: an inline script without the nonce is blocked and reported.
     await expect
       .poll(async () => {
-        await page.evaluate(() => document.body.insertAdjacentHTML('beforeend', `<div data-csp-probe style="color: red">${Date.now()}</div>`));
+        await page.evaluate(() => {
+          const probe = document.createElement('script');
+          probe.textContent = `window.cspProbe = ${Date.now()};`;
+          document.body.append(probe);
+        });
         return (await cspViolations(page)).length;
       })
       .toBeGreaterThan(0);

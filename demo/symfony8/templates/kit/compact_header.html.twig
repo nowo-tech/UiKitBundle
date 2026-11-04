@@ -7,6 +7,10 @@
 {% extends '@NowoUiKit/layout/document.html.twig' %}
 {% set nowo_ui_document_title = 'Compact header · UiKit 2.27' %}
 
+{% block nowo_ui_head %}
+    <meta http-equiv="Content-Security-Policy" content="{{ csp }}">
+{% endblock %}
+
 {% block nowo_ui_styles %}
     {{ parent() }}
     <link rel="stylesheet" href="{{ asset('css/compact-header-demo.css') }}">

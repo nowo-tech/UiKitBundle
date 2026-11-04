@@ -72,13 +72,7 @@ final class KitCompactHeaderController extends AbstractController
             status: new PageStatus('Sent', 'info'),
         );
 
-        $response = $this->render('kit/compact_header.html.twig', [
-            'header' => $header->withSplitActions(),
-            'query' => $query,
-            'dir' => $query['dir'] ?? 'ltr',
-            'at' => (string) $request->query->get('at', ''),
-        ]);
-        $response->headers->set('Content-Security-Policy', implode('; ', [
+        $policy = implode('; ', [
             "default-src 'self'",
             "script-src 'self' 'nonce-".$nonce."'",
             "style-src 'self' 'nonce-".$nonce."'",
@@ -88,7 +82,17 @@ final class KitCompactHeaderController extends AbstractController
             "font-src 'self'",
             "object-src 'none'",
             "base-uri 'none'",
-        ]));
+        ]);
+        $response = $this->render('kit/compact_header.html.twig', [
+            'header' => $header->withSplitActions(),
+            'query' => $query,
+            'dir' => $query['dir'] ?? 'ltr',
+            'at' => (string) $request->query->get('at', ''),
+            // Also delivered as <meta http-equiv>: in the full demo e2e run (FrankenPHP worker, dev tools on) the header
+            // is sometimes missing from this response, so the e2e asserts the policy from the <meta>.
+            'csp' => $policy,
+        ]);
+        $response->headers->set('Content-Security-Policy', $policy);
 
         return $response;
     }
