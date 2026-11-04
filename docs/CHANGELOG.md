@@ -94,6 +94,99 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Planned as **2.27.0**: the compact header — the breadcrumb and the page actions in the top bar (compact header
+contract v1, approved by symfony-beacon). Opt-in and additive: with the new options left empty, the shells, the page
+header, the split header actions, `_menu` hash items with `href` and the `_scripts` output render byte-identical to
+2.26.0 (fixtures under `tests/Fixtures/bc-2.26`).
+
+### Added
+
+- **Header slot in the shells**: the `header_context` option of `app_shell_open`, `app_shell` (also the block
+  **`nowo_ui_shell_header_context`**) and the legacy `shell` partial renders `<div class="nowo-ui-app-shell__header-context
+  nowo-ui-header__context" data-nowo-ui-header-context>` between the header's start and end (theme slot
+  `app_header_context`), and the shell root gets `has-header-context`. Blank or whitespace renders nothing.
+- **`header_context` partial** (`partials/_header_context.html.twig`): the ready-made filling — the page-actions
+  trigger, the home link (square icon button named `nav.home`) and the compact breadcrumb, in that DOM / Tab order,
+  each only with content; nothing at all when the three are empty.
+- **`header_crumbs` partial** (`partials/_header_crumbs.html.twig`): a one-line breadcrumb (`nav aria-label="Breadcrumb"`)
+  whose last level is the current page (`aria-current="page"`, never a link); levels without a link are plain text;
+  every label is escaped and carries its full text in `title`; separators come from the
+  `--nowo-ui-header-crumbs-separator` token (CSS, never read). With more than `max_visible` levels (default 3) the
+  middle ones collapse behind an APG **disclosure** "…" (`aria-expanded` / `aria-controls`, a native `[popover]` panel
+  of links driven by `nowo-ui-popover.js`: Escape returns focus, outside click, item click). On phones (≤ 30 rem, CSS
+  only) only a "‹" link to the nearest linked ancestor (`breadcrumbs.up`) and the current level show. Data: `crumbs`
+  (`View\Crumb`, `{label, href?}` hashes or BreadcrumbKit nodes), `header` (`View\PageHeader`, resolved like the
+  page-header trail) or BreadcrumbKit's default trail; the first level is dropped when it is `home_href`
+  (`drop_home_crumb`, default true). BreadcrumbKit's icon HTML is never printed.
+- **`js/nowo-ui-header-crumbs.js`** (opt-in, not in the default `scripts` list; add `header-crumbs` to
+  `script_names`): sets `data-collapsed="true"` on collapsible trails and reveals "…", at start-up and for trails
+  inserted later (`MutationObserver`). Without it, or without the Popover API, the whole trail shows on one line, each
+  level truncated.
+- **`page_actions` partial** (`partials/_page_actions.html.twig`, slot `page_actions`): the square popover `menu`
+  (default icon `grid`, label `action.page_actions`, id `nowo-ui-page-actions`) of `View\Action`s and/or hash `items`,
+  with the confirm dialogs of its actions after the menu. Nothing without items.
+- **`_menu` hash items**: `icon` prints the `_icon` component before the label (modifier `nowo-ui-menu__item--icon`), and
+  an item without `href` renders `<button type="button" class="nowo-ui-menu__item" data-nowo-ui-menu-button>` with its
+  `attr` (data / aria attributes; `on*` refused), so host scripts (Stimulus actions) can drive it.
+  `nowo-ui-popover.js` closes the popover when such a button is chosen. `_menu` also takes `root_class`.
+- **Compact page-header presentation**: `presentation: 'standard' | 'compact'` on `nowo_ui_page_header()` (positional
+  or in the new options-hash form `nowo_ui_page_header(header, {presentation: …})`), `page/_page_header.html.twig`,
+  the scaffold macro and the `page_header` partial. Compact keeps the title as the page's `h1` with `visually-hidden`,
+  renders no intro, breadcrumbs or back link, keeps the status badge, the toolbar (unless the actions moved to the bar)
+  and the tabs, adds `nowo-ui-page-header--compact` / `data-nowo-ui-page-header="compact"`, and
+  `data-nowo-ui-page-header-empty` when nothing visible is left (the box collapses). Host overrides receive
+  `presentation` and `title_hidden`; 1.x overrides receive `intro: null`.
+- **Presentation resolution**: the option, else the request attribute `_nowo_ui_header_presentation`
+  (`Nowo\UiKitBundle\Shell\HeaderPresentation::ATTRIBUTE`, set per request by the host, e.g. from the user's
+  preference; an invalid value is ignored), else **`nowo_ui_kit.header.presentation`** (`standard` | `compact`,
+  default `standard`). Twig `nowo_ui_header_presentation()` returns the resolved value (global `nowo_ui_header`,
+  a stateless `HeaderPresentationResolver`, safe in FrankenPHP workers).
+- **`nowo_ui_kit.header.compact_actions`** (`page` | `bar`, default `page`): with `bar`, the page header leaves
+  `header.actions` out in the compact presentation (`extra_actions` stay), so the host shows them in the top bar.
+- **`nowo_ui_breadcrumb_kit_trail(collection = null, context_key = '')`**: BreadcrumbKit's `breadcrumb_trail()` mapped to
+  `list<View\Crumb>` (a level with `linkEnabled: false` has no href); `[]` without BreadcrumbKit. It ignores
+  `nowo_ui_kit.breadcrumbs.breadcrumb_kit` (calling it is the opt-in). No BreadcrumbKit release or dependency.
+  **`nowo_ui_header_crumbs()`** returns the trail model the partial renders.
+- `_icon` kinds **`home`**, **`grid`**, **`chevron_left`** (bootstrap-icons, tabler-icons, `ux_icon`, `svg_inline`).
+- Translation keys `nav.home`, `action.page_actions`, `breadcrumbs.more`, `breadcrumbs.up` in the 7 locales.
+- Theme slots `app_header_context`, `header_context`, `header_context_home`, `header_crumbs`, `header_crumbs_list`,
+  `header_crumbs_item`, `header_crumbs_link`, `header_crumbs_current`, `header_crumbs_up`, `header_crumbs_more`,
+  `header_crumbs_panel`, `header_crumbs_panel_link`, `page_actions`.
+- Tokens `--nowo-ui-header-context-gap`, `--nowo-ui-header-crumbs-*` (font size, colours, weight, separator and its
+  RTL variant, item max, current min, focus inset, panel background / border / shadow) and
+  `--nowo-ui-main-padding-top-compact`; `header-crumbs-panel-shadow` has a dark default (`Theme::LIGHT_ONLY_TOKENS`).
+- Demo `/demo/compact-header` (Standard / Compact, six-level trail, RTL, strict CSP) with a Playwright suite: axe in
+  light and dark, 320 / 375 / 1280 px without horizontal scroll, Tab order, the two menus, no-JS, landmarks, CSP, RTL.
+
+### Changed
+
+- The split page header's "more" menu (`header_actions`) now includes the `page_actions` partial
+  (`page_actions_slot: false`): the markup is unchanged, and a host override of `menu` serves both places.
+- `nowo-ui-popover.js`: a menu whose root has `nowo-ui-menu--start` or `data-nowo-ui-popover-align="start"` places its
+  panel on the toggle's start edge (the right edge in RTL); end-aligned menus are placed as before. Existing menus
+  with `align: 'start'` therefore open from their start edge now.
+- Hash items of `_menu` without `href` (and so of `page_actions`) keep only the `data-*` / `aria-*` entries of their
+  `attr`; `on*` still fails, anything else (`style`, `type`, `formaction`, `popovertarget`…) is dropped. Link items keep
+  their 2.3 behaviour.
+- The compact header drops link targets with an unsafe scheme: crumb hrefs (the level renders as text and is never the
+  "‹" link), `home_href` and `page_actions` hash item hrefs (the item becomes a button). Allowed: relative URLs, `#…`,
+  `http`, `https`, `mailto`, checked as a browser reads them (case, tabs and line breaks, leading controls). New Twig
+  function `nowo_ui_safe_href()`.
+- The page-header presentation ignores any value but `standard` / `compact` (a host context variable that happens to be
+  called `presentation`, an object or a boolean), and `title_hidden` must be `true`. A page header rendered in a
+  sub-request falls back to the main request's `_nowo_ui_header_presentation`.
+- `js/nowo-ui-header-crumbs.js` observes `document.documentElement`, so trails still collapse after a Turbo Drive visit
+  replaces `<body>`.
+
+### Security
+
+- **Popover menu panel `id` escaped** (`_menu.html.twig`, since 2.4.0): with `popover: true` the panel's `id` was printed
+  unescaped inside a raw attribute string, so a menu `id` containing a quote could add attributes (for example an
+  `on*` handler) to the panel. Reachable in 2.4 – 2.26 through `_menu` `id` and the split header's `more_id` (2.21; `row_actions`
+  passes no id and the kebab escapes its own); 2.27 added `page_actions` `id` and `header_context` `actions_id`. The
+  id is now escaped (`html_attr`); output only changes for ids with characters that need escaping. Low: it needs a host
+  that builds a menu id from untrusted data.
+
 ## [2.26.0] - 2026-11-04
 
 Avatars, the shared person picture of the kit and the feature bundles (avatar contract v1.1, §9).

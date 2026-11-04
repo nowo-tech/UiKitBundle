@@ -3336,6 +3336,8 @@ button.nowo-ui-kebab__item.is-current {
   --nowo-ui-text: #e2e8f0;
   --nowo-ui-muted: #94a3b8;
   --nowo-ui-link: var(--nowo-ui-primary);
+  /* 2.27: the only component token with its own dark default (Theme::LIGHT_ONLY_TOKENS) */
+  --nowo-ui-header-crumbs-panel-shadow: 0 8px 24px rgb(0 0 0 / 45%);
 }
 
 
@@ -5880,4 +5882,265 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
     transform: translateX(-1.5rem);
     opacity: 0;
   }
+}
+
+/*
+ * Compact header (2.27, shells' header_context option / nowo_ui_shell_header_context block; partials header_context,
+ * header_crumbs, page_actions): the page-actions trigger, the home link and a one-line breadcrumb in the top bar,
+ * between its start and end. Nothing here applies without the slot (has-header-context / the new classes).
+ * One line at every width, never a horizontal scroll: ancestors shrink first, the current level last (down to
+ * --nowo-ui-header-crumbs-current-min). Separators come from a token (never text in the DOM). With
+ * js/nowo-ui-header-crumbs.js the middle levels collapse behind "…"; on phones (<= 30rem) only "‹" and the current
+ * level show (CSS only, the same without JavaScript).
+ * Tokens: --nowo-ui-header-context-gap, --nowo-ui-header-crumbs-font-size / -color / -current-color /
+ * -current-weight / -separator / -separator-rtl / -item-max / -current-min / -focus-inset / -panel-bg /
+ * -panel-border / -panel-shadow, --nowo-ui-main-padding-top-compact.
+ */
+.has-header-context > .nowo-ui-header {
+  min-width: 0;
+}
+
+.has-header-context > .nowo-ui-header > :is(.nowo-ui-header__start, .nowo-ui-header__end) {
+  flex: 0 0 auto;
+}
+
+.nowo-ui-header__context {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  min-width: 0;
+}
+
+.nowo-ui-header-context {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: var(--nowo-ui-header-context-gap, 0.35rem);
+  min-width: 0;
+}
+
+.nowo-ui-header-context > :is(.nowo-ui-page-actions, .nowo-ui-header-context__home) {
+  flex: 0 0 auto;
+}
+
+.nowo-ui-header-context__home {
+  text-decoration: none;
+}
+
+.nowo-ui-header-crumbs {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  min-width: 0;
+  font-size: var(--nowo-ui-header-crumbs-font-size, 0.875rem);
+  line-height: 1.5;
+}
+
+.nowo-ui-header-crumbs__list {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  margin: 0;
+  padding: var(--nowo-ui-header-crumbs-focus-inset, 2px);
+  list-style: none;
+}
+
+/* Ancestors shrink (much) faster than the current level, which keeps --nowo-ui-header-crumbs-current-min; "…" never
+   shrinks. Each label ends with an ellipsis when cut and carries its full text in `title`. */
+.nowo-ui-header-crumbs__item {
+  display: flex;
+  flex: 0 100 auto;
+  align-items: center;
+  min-width: 0;
+}
+
+.nowo-ui-header-crumbs__item:not(.nowo-ui-header-crumbs__item--current) {
+  max-width: var(--nowo-ui-header-crumbs-item-max, 12rem);
+}
+
+.nowo-ui-header-crumbs__item--current {
+  flex-shrink: 1;
+  min-width: var(--nowo-ui-header-crumbs-current-min, 4rem);
+}
+
+.nowo-ui-header-crumbs__item--more {
+  flex-shrink: 0;
+}
+
+.nowo-ui-header-crumbs__item[hidden] {
+  display: none !important;
+}
+
+.nowo-ui-header-crumbs__item + .nowo-ui-header-crumbs__item::before {
+  content: var(--nowo-ui-header-crumbs-separator, "/");
+  flex: 0 0 auto;
+  padding-inline: 0.4rem;
+  color: var(--nowo-ui-header-crumbs-color, var(--nowo-ui-muted));
+}
+
+.nowo-ui-header-crumbs__item + .nowo-ui-header-crumbs__item:dir(rtl)::before {
+  content: var(--nowo-ui-header-crumbs-separator-rtl, var(--nowo-ui-header-crumbs-separator, "/"));
+}
+
+.nowo-ui-header-crumbs__link,
+.nowo-ui-header-crumbs__current,
+.nowo-ui-header-crumbs__text {
+  overflow: hidden;
+  min-width: 0;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.nowo-ui-header-crumbs__link,
+.nowo-ui-header-crumbs__text {
+  color: var(--nowo-ui-header-crumbs-color, var(--nowo-ui-muted));
+}
+
+.nowo-ui-header-crumbs__link {
+  text-decoration: none;
+}
+
+.nowo-ui-header-crumbs__link:hover {
+  color: var(--nowo-ui-text);
+  text-decoration: underline;
+}
+
+.nowo-ui-header-crumbs__current {
+  color: var(--nowo-ui-header-crumbs-current-color, var(--nowo-ui-text));
+  font-weight: var(--nowo-ui-header-crumbs-current-weight, 600);
+}
+
+:is(.nowo-ui-header-crumbs__link, .nowo-ui-header-crumbs__more, .nowo-ui-header-crumbs__up):focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, var(--nowo-ui-primary));
+  outline-offset: calc(-1 * var(--nowo-ui-header-crumbs-focus-inset, 2px));
+  border-radius: calc(var(--nowo-ui-radius) * 0.5);
+}
+
+.nowo-ui-header-crumbs__menu {
+  display: inline-flex;
+}
+
+.nowo-ui-header-crumbs__more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.75rem;
+  min-height: 1.75rem;
+  padding: 0 0.35rem;
+  border: 0;
+  border-radius: calc(var(--nowo-ui-radius) * 0.75);
+  background: none;
+  color: var(--nowo-ui-header-crumbs-color, var(--nowo-ui-muted));
+  font: inherit;
+  cursor: pointer;
+}
+
+.nowo-ui-header-crumbs__more:hover,
+.nowo-ui-header-crumbs__more[aria-expanded="true"] {
+  background: var(--nowo-ui-surface-muted);
+  color: var(--nowo-ui-text);
+}
+
+.nowo-ui-header-crumbs[data-collapsed="true"] .nowo-ui-header-crumbs__item--middle {
+  display: none;
+}
+
+.nowo-ui-header-crumbs__panel {
+  box-sizing: border-box;
+  min-width: 10rem;
+  max-width: min(22rem, calc(100vw - 1rem));
+  margin: 0;
+  padding: 0.25rem;
+  list-style: none;
+  border: 1px solid var(--nowo-ui-header-crumbs-panel-border, var(--nowo-ui-border));
+  border-radius: var(--nowo-ui-radius);
+  background: var(--nowo-ui-header-crumbs-panel-bg, var(--nowo-ui-surface));
+  color: var(--nowo-ui-text);
+  box-shadow: var(--nowo-ui-header-crumbs-panel-shadow, 0 8px 24px rgb(15 23 42 / 12%));
+}
+
+.nowo-ui-header-crumbs__panel[popover] {
+  position: fixed;
+  inset: auto;
+  top: 0.5rem;
+  left: 0.5rem;
+  overflow: visible;
+}
+
+.nowo-ui-header-crumbs__panel-link,
+.nowo-ui-header-crumbs__panel-text {
+  display: block;
+  overflow: hidden;
+  padding: 0.4rem 0.65rem;
+  border-radius: calc(var(--nowo-ui-radius) * 0.75);
+  color: var(--nowo-ui-text);
+  font-size: var(--nowo-ui-header-crumbs-font-size, 0.875rem);
+  text-decoration: none;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.nowo-ui-header-crumbs__panel-link:hover,
+.nowo-ui-header-crumbs__panel-link:focus-visible {
+  background: var(--nowo-ui-surface-muted);
+}
+
+.nowo-ui-header-crumbs__panel-link:focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, var(--nowo-ui-primary));
+  outline-offset: -2px;
+}
+
+.nowo-ui-header-crumbs__up {
+  display: none;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  min-height: 1.75rem;
+  color: var(--nowo-ui-header-crumbs-color, var(--nowo-ui-muted));
+  font-size: 1.25rem;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.nowo-ui-header-crumbs__up-glyph:dir(rtl) {
+  display: inline-block;
+  transform: scaleX(-1);
+}
+
+@media (max-width: 30rem) {
+  .nowo-ui-header-crumbs__up {
+    display: inline-flex;
+  }
+
+  .nowo-ui-header-crumbs__item:not(.nowo-ui-header-crumbs__item--current) {
+    display: none;
+  }
+
+  /* no separator before the lone current level (beats the separator rules, :dir(rtl) included) */
+  .nowo-ui-header-crumbs .nowo-ui-header-crumbs__item.nowo-ui-header-crumbs__item--current::before {
+    content: none;
+  }
+
+  .has-header-context > .nowo-ui-header {
+    gap: 0.5rem;
+    padding-inline: 0.5rem;
+  }
+}
+
+/* The page under a compact bar: content right under the bar; a compact page header with nothing visible collapses. */
+.nowo-ui-shell.has-header-context .nowo-ui-main {
+  padding-block-start: var(--nowo-ui-main-padding-top-compact, 0.75rem);
+}
+
+.nowo-ui-page-header--compact .nowo-ui-page-header__text {
+  position: relative;
+}
+
+.nowo-ui-page-header[data-nowo-ui-page-header-empty] {
+  min-height: 0;
+  margin: 0;
+  padding: 0;
 }

@@ -1,0 +1,58 @@
+{#
+  Compact header filling (2.27, theme partial `header_context`): what a host passes as the shells' `header_context`
+  when the page uses the compact presentation — in this order, each part only when it has content:
+    1. the page-actions trigger (`page_actions` partial, aligned start so the panel opens towards the content);
+    2. the home link (square icon button, accessible name nav.home);
+    3. the compact breadcrumb (`header_crumbs` partial).
+  Renders nothing when all three are empty, so the host can always include it:
+
+      {% set header_context = nowo_ui_header_presentation() == 'compact' ? include(nowo_ui_partial('header_context'), {
+          actions: page.header.actions, home_href: path('dashboard'), crumbs: nowo_ui_breadcrumb_kit_trail(),
+      }) : '' %}
+
+  Optional:
+    - actions / action_items: forwarded to `page_actions` as `actions` (View\Action) / `items` (hashes)
+    - actions_label, actions_icon, actions_id, actions_attr, actions_align (default start): forwarded as label, icon,
+      id, attr, align
+    - home_href (no home link without it, or when its scheme is unsafe: only relative, http, https, mailto), home_label (View\Label|string; default "Home", nav.home), home_icon
+      (default home)
+    - crumbs / header / crumbs_options ({max_visible, drop_home_crumb, id, attr}): forwarded to `header_crumbs`, with
+      home_href (the first crumb is dropped when it is the home page)
+    - attr (root attributes, no on*), bundle, nowo_ui_page_type
+  Slots: header_context (root), btn_secondary + btn_icon + header_context_home (home link).
+#}
+{%- set _b = bundle|default(null) -%}
+{%- set _pt = nowo_ui_page_type|default(null) -%}
+{%- set _home = nowo_ui_safe_href(home_href|default(null)) -%}
+{%- set _actions_html = include(nowo_ui_partial('page_actions', _b), {
+    actions: actions|default([]),
+    items: action_items|default([]),
+    label: actions_label|default(null),
+    icon: actions_icon|default('grid'),
+    id: actions_id|default('nowo-ui-page-actions'),
+    attr: actions_attr|default({}),
+    align: actions_align|default('start'),
+    bundle: _b,
+    nowo_ui_page_type: _pt,
+}, false)|trim -%}
+{%- set _crumbs_html = include(nowo_ui_partial('header_crumbs', _b), {
+    crumbs: crumbs ?? null,
+    header: header ?? null,
+    home_href: _home,
+    bundle: _b,
+    nowo_ui_page_type: _pt,
+}|merge(crumbs_options|default({})), false)|trim -%}
+{%- if _actions_html is not same as('') or _home or _crumbs_html is not same as('') -%}
+{%- set _home_label = home_label|default(null) is null ? 'nav.home'|trans({}, 'NowoUiKitBundle') : home_label|nowo_ui_trans -%}
+<div class="{{ nowo_ui_class('header_context', _b) }}" data-nowo-ui-header-context-inner{{ nowo_ui_attrs('header_context', _b) }}{{ nowo_ui_html_attrs(attr|default({})) }}>
+    {%- if _actions_html is not same as('') %}
+    {{ _actions_html|raw }}
+    {%- endif -%}
+    {%- if _home %}
+    <a class="{{ nowo_ui_class('btn_secondary', _b) }} {{ nowo_ui_class('btn_icon', _b) }} {{ nowo_ui_class('header_context_home', _b) }}" href="{{ _home }}" aria-label="{{ _home_label }}" title="{{ _home_label }}"{{ nowo_ui_attrs('header_context_home', _b) }}>{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: home_icon|default('home'), label: _home_label}, false)|trim|raw }}</a>
+    {%- endif -%}
+    {%- if _crumbs_html is not same as('') %}
+    {{ _crumbs_html|raw }}
+    {%- endif %}
+</div>
+{%- endif -%}

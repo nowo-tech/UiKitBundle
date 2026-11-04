@@ -133,3 +133,8 @@ nowo_ui_kit:
     # UiKit 2.6 signed-in app shell (/kit/shell): the aside state is rendered from this cookie on the first paint.
     shell:
         sidebar_cookie: 'uikit_demo_sidebar'
+
+    # UiKit 2.27 compact header (/demo/compact-header): in the compact presentation the page-header actions move to the
+    # top bar (the page_actions partial); the standard presentation (every other page) is unchanged.
+    header:
+        compact_actions: bar

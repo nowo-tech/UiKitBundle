@@ -1,0 +1,67 @@
+/* UiKit 2.27 compact header demo (/demo/compact-header): the brand's app-switcher square and the glyphs of the
+   demo controls. The kit's icons use Bootstrap Icons class names; this demo loads no icon font (strict CSP, no CDN),
+   so it draws the three glyphs it needs with text. */
+.kit-compact-demo__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.kit-compact-demo__switcher {
+  display: inline-block;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 0.35rem;
+  background: var(--nowo-ui-primary);
+}
+
+.kit-compact-demo .bi::before,
+.kit-compact-demo__glyph::before {
+  display: inline-block;
+  min-width: 1em;
+  line-height: 1;
+  text-align: center;
+}
+
+.kit-compact-demo .bi-grid::before { content: "▦"; }
+.kit-compact-demo .bi-house::before { content: "⌂"; }
+.kit-compact-demo .bi-three-dots-vertical::before { content: "⋮"; }
+.kit-compact-demo .bi-pencil::before { content: "✎"; }
+.kit-compact-demo__glyph--search::before { content: "⌕"; }
+.kit-compact-demo__glyph--help::before { content: "?"; }
+
+.kit-compact-demo__subtitle {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.kit-compact-demo__switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 0;
+}
+
+.kit-compact-demo__switch [aria-current="page"] {
+  font-weight: 600;
+}
+
+.kit-compact-demo__lines {
+  margin: 0;
+  padding-inline-start: 1.25rem;
+}
+
+@media (max-width: 30rem) {
+  .kit-compact-demo__brand-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+}

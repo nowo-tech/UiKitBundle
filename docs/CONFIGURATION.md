@@ -10,6 +10,7 @@
 - [Route links](#route-links)
 - [Error pages](#error-pages)
 - [App shell](#app-shell)
+- [Compact header (2.27)](#compact-header-227)
 - [Font preload (2.21)](#font-preload-221)
 - [Examples](#examples)
 
@@ -29,6 +30,7 @@ Alias: **`nowo_ui_kit`**
 | `route_links` | map | `routes: {}` | Route (prefix) → link map for `nowo_ui_route_link()`, e.g. the page-edge manual tab (since 1.17.0). See [Route links](#route-links) |
 | `error_pages` | map | kit layout + texts | Kit HTTP error pages (since 2.6.0). See [Error pages](#error-pages) |
 | `shell` | map | `kit_styles: true` | Signed-in app shell templates (since 2.6.0). See [App shell](#app-shell) |
+| `header` | map | `presentation: standard`, `compact_actions: page` | Compact header (since 2.27.0): default page-header presentation and where `PageHeader::actions` go in compact. See [Compact header](#compact-header-227) |
 | `font_preload` | map | `fonts: []`, `manifest.path: null` | `<link rel="preload" as="font">` tags in the document / error layouts (since 2.21.0). See [Font preload](#font-preload-221) |
 
 Parameters / Twig globals:
@@ -43,6 +45,8 @@ Parameters / Twig globals:
 - `%nowo_ui_kit.release_check.enabled%`, `%nowo_ui_kit.release_check.github_repo%`, `%nowo_ui_kit.release_check.current_version%` → Twig global `nowo_ui_kit_release_check` (`{enabled, current_version}`)
 - `%nowo_ui_kit.error_pages%` → Twig global `nowo_ui_error_pages` (`{layout_template, theme_storage, theme_toggle, html_attributes, translation_domain, translation_prefix}`) and the functions `nowo_ui_error_page()` / `nowo_ui_error_text()` (2.6)
 - `nowo_ui_kit.shell` → Twig global `nowo_ui_kit_shell` (the whole map, 2.6)
+- `nowo_ui_kit.header` → Twig global `nowo_ui_header` (a stateless `HeaderPresentationResolver`) and the function
+  `nowo_ui_header_presentation()` (2.27; no container parameter)
 
 Asset package (always prepended): `nowo_ui_kit` → `/bundles/nowouikit`.
 
@@ -332,6 +336,23 @@ nowo_ui_kit:
 | `sidebar_cookie` | `null` | Cookie read server-side when the template passes no `collapsed` / `rail` |
 | `sidebar_hidden_value` / `sidebar_rail_value` | `collapsed` / `rail` | Cookie values of the hidden aside and the icons-only rail |
 | `sidebar_storage` | `null` | `data-nowo-ui-sidebar-storage` of a three-mode (`rail_mode`) kit-styled shell |
+
+## Compact header (2.27)
+
+Since **2.27.0**. The page-header presentation of a request and where the page actions go in the compact one
+([USAGE](USAGE.md#compact-header-227)).
+
+```yaml
+nowo_ui_kit:
+    header:
+        presentation: standard      # standard | compact: default when the request has no _nowo_ui_header_presentation
+        compact_actions: page       # page | bar: with bar, compact page headers leave header.actions to the top bar
+```
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `presentation` | `standard` | Used when neither the template option nor the request attribute `_nowo_ui_header_presentation` (`Nowo\UiKitBundle\Shell\HeaderPresentation::ATTRIBUTE`) is set. An invalid value fails the config; an invalid request value is ignored |
+| `compact_actions` | `page` | `bar`: in the compact presentation `page/_page_header.html.twig` behaves as `header_actions: false` (`extra_actions` stay). The default keeps the actions in the page, so turning compact on without filling the bar never loses them |
 
 ## Font preload (2.21)
 

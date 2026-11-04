@@ -44,6 +44,8 @@ final readonly class Theme
         'warning-bg', 'warning-border', 'warning-text',
         'info-bg', 'info-border', 'info-text',
         'surface', 'surface-muted', 'border', 'border-strong', 'text', 'muted', 'link',
+        // 2.27: the compact breadcrumb's "…" panel shadow (the only component token with a dark default)
+        'header-crumbs-panel-shadow',
     ];
 
     /**

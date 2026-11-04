@@ -26,11 +26,15 @@
     - kit_styles: override nowo_ui_kit.shell.kit_styles (true adds nowo-ui-shell / -header / -aside / -main classes)
     - burger_attr, burger_label_attr_names, burger_icon (svg | morph | none), burger_static_icons, burger_label,
       burger_label_expand / burger_label_rail / burger_label_hide: forwarded to the `app_shell_burger` partial
+    - header_context (2.27, HTML): the compact header slot between the start and the end of the header (theme slot
+      app_header_context, + nowo-ui-header__context with kit styles, hook data-nowo-ui-header-context) — typically
+      the `header_context` partial (page actions, home link, compact breadcrumb). Only rendered when not blank; then
+      the root gets has-header-context. Empty or whitespace = the 2.26 markup, byte for byte
     - bundle: per-bundle theme exceptions
   Root state classes: is-sidebar-collapsed, is-sidebar-rail, is-full-width / is-content-width (+ is-aside-collapsed /
   is-aside-rail with kit styles, the classes nowo-ui-shell.js toggles). Hooks: data-nowo-ui-shell, data-nowo-ui-aside,
   data-nowo-ui-burger, data-nowo-ui-aside-backdrop.
-  Slots: app_shell, app_header, app_header_start, app_header_end, app_brand, app_aside, app_aside_inner,
+  Slots: app_shell, app_header, app_header_start, app_header_context (2.27), app_header_end, app_brand, app_aside, app_aside_inner,
   app_aside_label, app_aside_nav, app_main (+ app_burger… in the burger, app_backdrop in the closing half).
 #}
 {% set bundle = bundle|default(null) %}
@@ -57,7 +61,8 @@
     }|merge(_root_attr) %}
 {% endif %}
 {% set aside_label = aside_label|default('nav.aside'|trans({}, 'NowoUiKitBundle')) %}
-<div class="{{ nowo_ui_class('app_shell', bundle) }}{{ _kit ? ' nowo-ui-shell' }} {{ _state }}" data-nowo-ui-shell{{ nowo_ui_attrs('app_shell', bundle, _root_attr) }}>
+{% set _header_context = header_context is defined and header_context ? header_context|trim : '' %}
+<div class="{{ nowo_ui_class('app_shell', bundle) }}{{ _kit ? ' nowo-ui-shell' }} {{ _state }}{{ _header_context is not same as('') ? ' has-header-context' }}" data-nowo-ui-shell{{ nowo_ui_attrs('app_shell', bundle, _root_attr) }}>
     <header class="{{ nowo_ui_class('app_header', bundle) }}{{ _kit ? ' nowo-ui-header' }}"{{ nowo_ui_attrs('app_header', bundle) }}>
         <div class="{{ nowo_ui_class('app_header_start', bundle) }}{{ _kit ? ' nowo-ui-header__start' }}"{{ nowo_ui_attrs('app_header_start', bundle) }}>
             {{ include(nowo_ui_partial('app_shell_burger', bundle), {
@@ -82,6 +87,11 @@
                 <strong class="{{ nowo_ui_class('app_brand', bundle) }}{{ _kit ? ' nowo-ui-header__brand' }}"{{ nowo_ui_attrs('app_brand', bundle) }}>{{ brand }}</strong>
             {% endif %}
         </div>
+{% if _header_context is not same as('') %}
+        <div class="{{ nowo_ui_class('app_header_context', bundle) }}{{ _kit ? ' nowo-ui-header__context' }}" data-nowo-ui-header-context{{ nowo_ui_attrs('app_header_context', bundle) }}>
+            {{ _header_context|raw }}
+        </div>
+{% endif %}
         <div class="{{ nowo_ui_class('app_header_end', bundle) }}{{ _kit ? ' nowo-ui-header__end' }}"{{ nowo_ui_attrs('app_header_end', bundle) }}>
             {% if header_end is defined and header_end %}
                 {{ header_end|raw }}

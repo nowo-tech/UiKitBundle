@@ -2,6 +2,8 @@
 nowo_hot_reload:
     enabled: true
     auto_inject: true
+    # /demo/compact-header asserts a strict CSP with zero violations: no injected dev script there (UiKit 2.27 demo).
+    ignore_path_prefixes: ['/_wdt', '/_profiler', '/demo/compact-header']
     require_frankenphp_env: true
     allow_production: false
     idiomorph: true

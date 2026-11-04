@@ -44,6 +44,7 @@
   - [Avatars (2.26)](#avatars-226)
 - [Sidebar rail (opt-in)](#sidebar-rail-opt-in)
 - [Side panel and drawer (2.25)](#side-panel-and-drawer-225)
+- [Compact header (2.27)](#compact-header-227)
 - [Overriding templates (REQ-TWIG-001)](#overriding-templates-req-twig-001)
 - [Override vs upgrade](#override-vs-upgrade)
 - [Overridable `<subpath>` values](#overridable-subpath-values)
@@ -1430,13 +1431,14 @@ in two halves, so a base layout keeps its page `{% block body %}` uncaptured:
 ```
 
 or `{% embed nowo_ui_partial('app_shell') %}` with the blocks `nowo_ui_shell_brand`, `nowo_ui_shell_header_actions`,
-`nowo_ui_shell_aside`, `nowo_ui_shell_main`, `nowo_ui_shell_footer`.
+`nowo_ui_shell_header_context` (2.27), `nowo_ui_shell_aside`, `nowo_ui_shell_main`, `nowo_ui_shell_footer`.
 
 Options of the opening half: `brand_html` / `brand`, `header_end`, `show_user_menu` + `name`, `email`, `initials`,
 `avatar_src`, `user_links`, `logout_*` (UiKit user menu), `aside_html` or `aside_items` + `aside_label`, `aside_id`,
 `collapsed` / `rail` (server-rendered state; default from the `nowo_ui_kit.shell.sidebar_cookie` cookie),
 `rail_mode` (three-mode expanded / rail / hidden), `content_width` (`full` → `is-full-width`), `attr` / `shell_attr`,
-`kit_styles`, `burger_*` (forwarded to the burger). Closing half: `footer_html` (`false` = none) or `footer_brand`,
+`kit_styles`, `burger_*` (forwarded to the burger), `header_context` (2.27, the compact header slot between start and
+end — see [Compact header](#compact-header-227)). Closing half: `footer_html` (`false` = none) or `footer_brand`,
 `footer_links`, `footer_copyright`.
 
 The burger (`app_shell_burger`) names the next action (`aria-label` + `title`) and prints the next-action labels as
@@ -1447,7 +1449,7 @@ The burger (`app_shell_burger`) names the next action (`aria-label` + `title`) a
 With `nowo_ui_kit.shell.kit_styles: true` (default) the templates add the kit shell classes, so `nowo-ui.css` paints
 the shell and `nowo-ui-shell.js` drives it (load it next to the `scripts` partial). A host with its own shell CSS and
 script sets `kit_styles: false` and maps its classes / hooks on the slots `app_shell`, `app_header`,
-`app_header_start`, `app_header_end`, `app_brand`, `app_burger`, `app_burger_icon`, `app_burger_morph`, `app_aside`,
+`app_header_start`, `app_header_context`, `app_header_end`, `app_brand`, `app_burger`, `app_burger_icon`, `app_burger_morph`, `app_aside`,
 `app_aside_inner`, `app_aside_label`, `app_aside_nav`, `app_main`, `app_backdrop` (classes and attributes, e.g.
 `attributes.app_burger: {data-sidebar-toggle: true}`). Root state classes: `is-sidebar-collapsed`, `is-sidebar-rail`,
 `is-full-width` / `is-content-width` (+ `is-aside-collapsed` / `is-aside-rail` with kit styles).
@@ -1686,6 +1688,109 @@ page (it is not in the default `scripts` list).
   ([THEMING](THEMING.md)); no inline styles or handlers (strict CSP).
 
 Demo: `/kit/side-panel` in `demo/symfony8`.
+
+## Compact header (2.27)
+
+A per-request presentation of the page header: in **compact**, the breadcrumb and the page actions move into the top
+bar (between the brand and the right-hand controls), the page header below keeps only a visually hidden `h1` (plus the
+status badge, tabs and any toolbar left), and the content starts right under the bar. UiKit renders; the host decides
+(for example from a user preference) and fills the bar. Nothing changes until you opt in.
+
+**1. Choose the presentation per request** — the option, else the request attribute, else the config:
+
+```php
+use Nowo\UiKitBundle\Shell\HeaderPresentation;
+
+// kernel.request listener (request scope: safe in FrankenPHP workers)
+$request->attributes->set(HeaderPresentation::ATTRIBUTE, $user->prefersCompactHeader() ? 'compact' : 'standard');
+```
+
+```yaml
+nowo_ui_kit:
+    header:
+        presentation: standard   # default for every request without the attribute
+        compact_actions: bar     # page (default) | bar: in compact, header.actions leave the page header
+```
+
+**2. Fill the bar** in the signed-in layout, from the same source:
+
+```twig
+{% set _compact = nowo_ui_header_presentation() == 'compact' %}
+{% set header_context = _compact ? include(nowo_ui_partial('header_context'), {
+    actions: page.header.actions ?? [],          {# View\Action list; or action_items: [{label, href?, icon?, attr?}] #}
+    actions_attr: {'data-controller': 'page-actions'},
+    home_href: path('dashboard'),
+    crumbs: nowo_ui_breadcrumb_kit_trail(),      {# or header: page.header, or a list of View\Crumb / {label, href?} #}
+}) : '' %}
+{{ include(nowo_ui_partial('app_shell_open'), {brand_html: brand_html, header_end: header_end, header_context: header_context}) }}
+{# …and do not print your own breadcrumb above the page when _compact: one breadcrumb nav per page #}
+```
+
+`app_shell` takes the same `header_context` option or the block `nowo_ui_shell_header_context`; the legacy `shell`
+partial takes the option. A blank value renders nothing (2.26 markup). The scaffolds and `nowo_ui_page_header()` follow
+the request attribute; `nowo_ui_page_header(header, {presentation: 'compact'})` forces one page.
+
+**3. Load the collapse script** (opt-in):
+
+```twig
+{{ include(nowo_ui_partial('scripts'), {script_names: nowo_ui_script_names()|merge(['header-crumbs'])}) }}
+```
+
+Behaviour and accessibility:
+
+- **Order** (DOM = visual = Tab): burger, brand, page-actions trigger, home link, "‹" (phones), the breadcrumb links
+  (first level, "…", the visible levels; the current level is not focusable), then `header_end`. The host skip link
+  still targets `main`.
+- **Breadcrumb:** one line at every width, each label truncated with an ellipsis and its full text in `title`; the
+  current level shrinks last (`--nowo-ui-header-crumbs-current-min`). With more than `max_visible` levels (default 3;
+  2 gives first, "…", current) the middle ones go behind "…", an APG disclosure (`aria-expanded`, `aria-controls`)
+  whose panel is a native `[popover]` list of links: Escape closes it and returns focus, an outside click or a link
+  closes it. Without the script (or the Popover API) the whole trail shows. On phones (≤ 30 rem) only "‹" (the nearest
+  linked ancestor, named "Up to …") and the current level show — CSS only.
+- **Data:** `crumbs` wins, then `header` (`own` / `kit` / `auto` like the page-header trail), then BreadcrumbKit's
+  default trail. The first level is dropped when it is `home_href` (path compared, query ignored; never the only
+  level; `crumbs_options: {drop_home_crumb: false}` keeps it). `nowo_ui_breadcrumb_kit_trail()` ignores
+  `nowo_ui_kit.breadcrumbs.breadcrumb_kit`, so a host that turned BreadcrumbKit off in page headers can still feed the
+  bar. Labels are escaped; BreadcrumbKit's icon HTML is not printed. Hrefs with an unsafe scheme are dropped (the
+  level renders as text): only relative URLs, `#…`, `http`, `https` and `mailto` are kept — the same rule for
+  `home_href` and the `page_actions` hash items (`nowo_ui_safe_href()`).
+- **Page actions:** the `page_actions` partial is the split header's square "more" menu (`aria-haspopup="menu"`,
+  popover panel, confirm dialogs after it) with the `grid` icon and the name "Page actions". Hash items without `href`
+  are `<button type="button">`s that keep only their `data-*` / `aria-*` attributes (Stimulus actions; `on*` is refused,
+  `style`, `type`, `formaction`… are dropped).
+  The bar aligns the menu `start`, so the panel opens towards the content.
+- **Page header in compact:** one `h1`, `visually-hidden`; no intro, breadcrumbs or back link; status badge, toolbar
+  and tabs stay. `data-nowo-ui-page-header-empty` marks a header with nothing visible left; utilities on the
+  `page_header` slot (`mb-6`) beat the kit's reset, so add `[data-nowo-ui-page-header-empty] { margin-block-end: 0; }`.
+  Host `page_header` overrides receive `presentation` and `title_hidden`.
+- **Width:** UiKit guarantees the slot's own floor (trigger + home + "‹" + the current level's minimum, about
+  10.5 rem); the width of your `header_end` is yours — fold controls into the user menu on phones if needed.
+- **RTL:** logical properties throughout; "‹" is mirrored; set `--nowo-ui-header-crumbs-separator-rtl` for a
+  directional separator (`"«"`).
+- **Theming / CSP:** slots `app_header_context`, `header_context*`, `header_crumbs*`, `page_actions`
+  ([THEME_SLOTS](THEME_SLOTS.md)) and the `--nowo-ui-header-*` tokens ([THEMING](THEMING.md#compact-header-227)); no
+  inline style, script or handler.
+
+**Twig API** (all request-scoped and stateless, safe in FrankenPHP workers):
+
+| Name | Kind | Returns / use |
+| --- | --- | --- |
+| `nowo_ui_header_presentation(presentation = null)` | function | `'standard'` or `'compact'`: a valid option, else the request attribute `_nowo_ui_header_presentation` (the current request, then the main one, so `render(controller())` follows the page), else `nowo_ui_kit.header.presentation`; invalid values are ignored |
+| `nowo_ui_header` | global | the `Nowo\UiKitBundle\Shell\HeaderPresentationResolver` behind that function: `nowo_ui_header.resolve(option)`, `nowo_ui_header.isCompact(option)`, `nowo_ui_header.compactActions()` (`'page'` \| `'bar'`). Partials read it with `nowo_ui_header\|default(null)`, so a Twig environment without UiKit's extension still renders them (standard, unless `presentation` / `title_hidden` is passed) |
+| `nowo_ui_breadcrumb_kit_trail(collection = null, context_key = '')` | function | BreadcrumbKit's trail as `list<View\Crumb>` (a level with `linkEnabled: false` has no href); `[]` without BreadcrumbKit; ignores `nowo_ui_kit.breadcrumbs.breadcrumb_kit` |
+| `nowo_ui_safe_href(href)` | function | the href when its scheme is safe (relative, `#…`, `http`, `https`, `mailto`, checked as a browser reads it), else `null` |
+| `nowo_ui_header_crumbs(crumbs = null, header = null, options = {})` | function | the `Nowo\UiKitBundle\Shell\HeaderCrumbs` model the `header_crumbs` partial renders — `items` (`{label, href, middle, current}`, translated labels), `panel` (the levels behind "…"), `up` (`{label, href}` or null), `isEmpty()`, `isCollapsible()`; options `home_href`, `drop_home_crumb` (default true), `max_visible` (default 3, at least 2). Use it for a host-made trail with the same rules |
+
+```twig
+{% set trail = nowo_ui_header_crumbs(nowo_ui_breadcrumb_kit_trail(), null, {home_href: path('dashboard')}) %}
+{% if nowo_ui_header.isCompact() and not trail.isEmpty() %}…{% endif %}
+```
+
+**Truncated labels stay complete for assistive technology:** every level's text in the DOM is the full label (only CSS
+cuts it with `text-overflow: ellipsis`), so its accessible name is the full text, and each level also carries `title`
+with the full label for pointer users.
+
+Demo: `/demo/compact-header` in `demo/symfony8` (`?presentation=standard`, `?dir=rtl`).
 
 ## Overriding templates (REQ-TWIG-001)
 

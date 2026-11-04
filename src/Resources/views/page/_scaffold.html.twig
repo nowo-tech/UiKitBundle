@@ -7,8 +7,9 @@
   extra actions pre-rendered through the `action` partial, `header_actions_rendered: true`), so host overrides
   written for either contract render the same header. header_actions = false leaves page.header.actions out of
   `actions` / `toolbar` and passes `header` without them (PageHeader::withActions([])): the list scaffold renders
-  them in the filter row (ListPage::headerActionsInFilters).
+  them in the filter row (ListPage::headerActionsInFilters). presentation (2.27): `standard` | `compact`; null = the
+  request attribute / config (nowo_ui_header_presentation()).
 #}
-{% macro page_header(page, page_type, extra_actions = [], header_actions = true) %}
-    {{- include('@NowoUiKitBundle/page/_page_header.html.twig', {header: page.header, bundle: page.bundle, nowo_ui_page_type: page_type, extra_actions: extra_actions, header_actions: header_actions}, false) -}}
+{% macro page_header(page, page_type, extra_actions = [], header_actions = true, presentation = null) %}
+    {{- include('@NowoUiKitBundle/page/_page_header.html.twig', {header: page.header, bundle: page.bundle, nowo_ui_page_type: page_type, extra_actions: extra_actions, header_actions: header_actions, presentation: presentation}, false) -}}
 {% endmacro %}

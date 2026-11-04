@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Q-1042</title>
+            <script src="/bundles/nowouikit/js/nowo-ui-theme-boot.js" data-nowo-ui-theme-boot></script>
+
+                    <link rel="stylesheet" href="/bundles/nowouikit/css/nowo-ui.css">
+    </head>
+<body class="nowo-ui-body">
+            <div class="nowo-ui-page nowo-ui-page--admin">
+                <main class="nowo-ui-content" id="nowo-ui-content">
+                            <div class="nowo-ui-page-header d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3" data-nowo-ui-region="header">
+    <div class="nowo-ui-page-header__text">                <nav class="nowo-ui-breadcrumbs" aria-label="Breadcrumb">
+        <ol class="nowo-ui-breadcrumbs__list">
+                            <li class="nowo-ui-breadcrumbs__item">                                            <a class="nowo-ui-breadcrumbs__link" href="/sales">Sales</a>
+                                    </li>
+                            <li class="nowo-ui-breadcrumbs__item"><span class="nowo-ui-breadcrumbs__separator" aria-hidden="true">/</span>                                            <a class="nowo-ui-breadcrumbs__link" href="/sales/quotes">Quotes</a>
+                                    </li>
+                            <li class="nowo-ui-breadcrumbs__item"><span class="nowo-ui-breadcrumbs__separator" aria-hidden="true">/</span>                                            <span class="nowo-ui-breadcrumbs__current" aria-current="page">Q-1042</span>
+                                    </li>
+                    </ol>
+    </nav>
+
+                                <div class="nowo-ui-page-header__title-row"><h1 class="nowo-ui-page-header__title h3 mb-1">Q-1042</h1><span class="nowo-ui-page-status nowo-ui-badge nowo-ui-badge--warning badge bg-warning-subtle text-warning-emphasis border border-warning-subtle" data-nowo-ui-page-status="warning">Draft</span></div>
+                                <p class="nowo-ui-page-header__intro">Quote for ACME</p>
+            </div>
+            <div class="nowo-ui-toolbar d-flex flex-wrap align-items-center gap-1 mb-2"><div class="nowo-ui-header-actions" data-nowo-ui-header-actions>
+                                                                                                <a class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary nowo-ui-action--edit nowo-ui-btn--icon" href="/quotes/7/edit" title="Edit" aria-label="Edit">                <i class="bi bi-pencil" aria-hidden="true"></i>
+
+    <span class="visually-hidden">Edit</span>
+</a>
+    
+        
+                                                                                    <a class="nowo-ui-btn nowo-ui-btn--primary btn btn-primary nowo-ui-action--create" href="/quotes/new"><span class="nowo-ui-action__label">New quote</span></a>
+    
+                        <div class="nowo-ui-menu nowo-ui-menu--end nowo-ui-menu--popover" data-nowo-ui-menu data-nowo-ui-popover-menu id="nowo-ui-header-more" data-nowo-ui-header-more>
+    <button type="button" class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary nowo-ui-btn--icon nowo-ui-menu__toggle--icon nowo-ui-menu__toggle--square" popovertarget="nowo-ui-header-more-panel" aria-haspopup="menu" aria-expanded="false" data-nowo-ui-popover-trigger aria-label="More actions" title="More actions"><i class="bi bi-three-dots-vertical" aria-hidden="true"></i><span class="visually-hidden">More actions</span></button>
+            <ul class="nowo-ui-menu__panel" id="nowo-ui-header-more-panel" popover data-nowo-ui-popover-panel>
+                                                                                                                                                                            <li><a class="nowo-ui-menu__item" href="/quotes/7.pdf">Export</a></li>
+                                                                                                                                                                                                            <li class="nowo-ui-menu__entry nowo-ui-menu__entry--item">                                                                            <form method="post" action="/quotes/7/copy" class="nowo-ui-action__form">
+    <button type="submit" class="nowo-ui-menu__item nowo-ui-action--copy"><span class="nowo-ui-action__label">Duplicate</span></button><input type="hidden" name="_token" value="tok-copy"></form>
+
+
+    </li>
+                                                                                                                                                                                                            <li class="nowo-ui-menu__entry nowo-ui-menu__entry--item">                                                                        <button type="button" class="nowo-ui-menu__item nowo-ui-menu__item--danger nowo-ui-action--delete" data-nowo-confirm-open data-nowo-confirm-target="nowo-ui-confirm-9f8ab4fd881a"><span class="nowo-ui-action__label">Delete</span></button>
+                    </li>
+                                                                                </ul>
+    
+</div>
+
+                                                    <dialog
+    id="nowo-ui-confirm-9f8ab4fd881a"
+    class="nowo-ui-confirm"
+    data-nowo-ui-confirm
+    aria-labelledby="nowo-ui-confirm-9f8ab4fd881a-title"
+>
+    <div class="nowo-ui-confirm__panel">
+        <header class="nowo-ui-confirm__header">
+            <h2 class="nowo-ui-confirm__title" id="nowo-ui-confirm-9f8ab4fd881a-title">Delete Q-1042?</h2>
+                                                        <button type="button" class="nowo-ui-confirm__close" data-nowo-confirm-close aria-label="Close" title="Close"><span aria-hidden="true">&times;</span></button>
+                    </header>
+                    <div class="nowo-ui-confirm__body"><p class="nowo-ui-confirm__message">This cannot be undone.</p></div>
+                                <div class="nowo-ui-confirm__footer">
+                            <button type="button" class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary" data-nowo-confirm-close>
+                    Cancel
+                </button>
+                                        <form method="post" action="/quotes/7" class="nowo-ui-action__form">
+    <button type="submit" class="nowo-ui-btn nowo-ui-btn--danger nowo-ui-btn--solid btn btn-danger nowo-ui-confirm__submit">Confirm</button><input type="hidden" name="_token" value="tok-del"></form>
+
+
+                                    </div>
+    </div>
+</dialog>
+
+            </div></div>
+        </div>
+
+
+                                                                                <div class="nowo-ui-flash nowo-ui-flash--success alert alert-success" role="alert">Saved.</div>
+    
+                                <div class="nowo-ui-show-page" data-nowo-ui-page="show">
+                                                </div>
+        </main>
+            </div>
+                            <script src="/bundles/nowouikit/js/nowo-ui-modal.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-confirm.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-dialog.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-toast.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-tabs.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-theme.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-popover.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-segmented.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-autosubmit.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-avatar.js" defer></script>
+
+            </body>
+</html>

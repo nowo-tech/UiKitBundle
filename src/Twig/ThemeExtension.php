@@ -8,10 +8,15 @@ use InvalidArgumentException;
 use Nowo\UiKitBundle\Form\ActionCsrfType;
 use Nowo\UiKitBundle\Form\UiFormViews;
 use Nowo\UiKitBundle\Form\VisibleWhen;
+use Nowo\UiKitBundle\Shell\HeaderCrumbs;
+use Nowo\UiKitBundle\Shell\HeaderPresentation;
+use Nowo\UiKitBundle\Shell\HeaderPresentationResolver;
+use Nowo\UiKitBundle\Shell\SafeHref;
 use Nowo\UiKitBundle\Theme\FontPreload;
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Theme\ThemeSlots;
 use Nowo\UiKitBundle\View\Action;
+use Nowo\UiKitBundle\View\Crumb;
 use Nowo\UiKitBundle\View\HeaderActions;
 use Nowo\UiKitBundle\View\Label;
 use Nowo\UiKitBundle\View\PageHeader;
@@ -44,9 +49,20 @@ use Twig\TwigFunction;
  * - `nowo_ui_theme_css()` — the token stylesheet text
  * - `nowo_ui_breadcrumb_kit(collection = null)` — BreadcrumbKit's `breadcrumb_render()` output ('' when absent)
  * - `nowo_ui_breadcrumb_kit_available()` — whether BreadcrumbKit is installed and enabled for page headers
- * - `nowo_ui_page_header(header, bundle = null, extra_actions = [], header_actions = true)` (2.3) — the scaffold page
- *   header (`page/_page_header.html.twig`: the `page_header` partial with the 2.0 and 1.x inputs) for unique pages;
- *   bundle and page type default to `nowo_ui_bundle` / `nowo_ui_page_type` of the context
+ * - `nowo_ui_page_header(header, bundle = null, extra_actions = [], header_actions = true, presentation = null)` (2.3)
+ *   — the scaffold page header (`page/_page_header.html.twig`: the `page_header` partial with the 2.0 and 1.x inputs)
+ *   for unique pages; bundle and page type default to `nowo_ui_bundle` / `nowo_ui_page_type` of the context. 2.27: the
+ *   second argument may be an options hash instead (`{bundle, extra_actions, header_actions, presentation}`), and
+ *   `presentation` (`standard` | `compact`; anything else is ignored) defaults to {@see self::headerPresentation()}
+ * - `nowo_ui_header_presentation(presentation = null)` (2.27) — the resolved page-header presentation of the request
+ *   ({@see HeaderPresentation}: a valid option, else the request attribute, else `nowo_ui_kit.header.presentation`)
+ * - `nowo_ui_safe_href(href)` (2.27) — the href when its scheme is safe ({@see SafeHref}: relative, http, https,
+ *   mailto), else null
+ * - `nowo_ui_breadcrumb_kit_trail(collection = null, context_key = '')` (2.27) — BreadcrumbKit's `breadcrumb_trail()`
+ *   mapped to `list<View\Crumb>` ([] without BreadcrumbKit); unlike `nowo_ui_breadcrumb_kit()` it ignores
+ *   `nowo_ui_kit.breadcrumbs.breadcrumb_kit` (calling it is the opt-in)
+ * - `nowo_ui_header_crumbs(crumbs = null, header = null, options = {})` (2.27) — the {@see HeaderCrumbs} model the
+ *   `header_crumbs` partial renders (options: home_href, drop_home_crumb, max_visible)
  * - `nowo_ui_locale_name(locale, display_locale = null)` (2.5) — human name of a locale in the display locale (default
  *   the request locale; ext-intl, else the upper-cased code), `nowo_ui_locale_dir(locale)` — `rtl` / `ltr`
  * - `nowo_ui_action_form(action)` (2.18) — the `FormView` a POST {@see Action} renders through `form_start` /
@@ -65,11 +81,16 @@ use Twig\TwigFunction;
  * - `|nowo_ui_trans(params = {})` — translates a {@see Label}; strings pass through (escaped by Twig)
  * - `|nowo_ui_translatable(params = {})` (2.3) — a {@see TranslatableText} for values a form theme translates again
  *   (`attr.placeholder`, choice `placeholder`): a Label is translated exactly once, a string printed as given
- * - globals `nowo_ui_layout` ({admin, guest}), `nowo_ui_theme` ({@see Theme}), `nowo_ui_breadcrumbs`
+ * - globals `nowo_ui_layout` ({admin, guest}), `nowo_ui_theme` ({@see Theme}), `nowo_ui_breadcrumbs`,
+ *   `nowo_ui_header` (2.27, the {@see HeaderPresentationResolver}: `resolve(option)`, `isCompact(option)`,
+ *   `compactActions()` — partials read it with `|default(null)`, so a Twig environment without this extension still
+ *   renders them in the standard presentation)
  */
 final class ThemeExtension extends AbstractExtension implements GlobalsInterface
 {
     private readonly UiFormViews $uiForms;
+
+    private readonly HeaderPresentationResolver $presentationResolver;
 
     /** Public page-header contract (2.3): what the scaffolds render in `nowo_ui_page_header`. */
     public const PAGE_HEADER_TEMPLATE = '@NowoUiKitBundle/page/_page_header.html.twig';
@@ -79,6 +100,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
      * @param array{breadcrumb_kit: bool, collection: string|null, enabled?: bool} $breadcrumbs `enabled` (2.3.1, default true): false = no breadcrumb trail in page headers
      * @param FormFactoryInterface|null                                            $actionForms standalone factory of the CSRF-only action forms (2.18; core types only, so no host type extension changes them); null = a new one per call
      * @param FontPreload|null                                                     $fontPreload font preload tags (2.21, `nowo_ui_kit.font_preload`); null = none
+     * @param array{presentation: string, compact_actions: string}                 $header      2.27 `nowo_ui_kit.header`: default presentation, where `header.actions` go in compact (`page` | `bar`)
      */
     public function __construct(
         private readonly Theme $theme,
@@ -89,8 +111,10 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
         private readonly LocaleNames $localeNames = new LocaleNames(),
         private readonly ?FormFactoryInterface $actionForms = null,
         private readonly ?FontPreload $fontPreload = null,
+        array $header = ['presentation' => 'standard', 'compact_actions' => 'page'],
     ) {
         $this->uiForms = new UiFormViews($actionForms);
+        $this->presentationResolver = new HeaderPresentationResolver($requestStack, $header['presentation'], $header['compact_actions']);
     }
 
     public function getFunctions(): array
@@ -117,6 +141,10 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             new TwigFunction('nowo_ui_header_actions', HeaderActions::split(...)),
             new TwigFunction('nowo_ui_visible_when', VisibleWhen::attributes(...)),
             new TwigFunction('nowo_ui_font_preload', fn (): string => $this->fontPreload?->tags() ?? '', ['is_safe' => ['html']]),
+            new TwigFunction('nowo_ui_header_presentation', $this->headerPresentation(...)),
+            new TwigFunction('nowo_ui_breadcrumb_kit_trail', $this->breadcrumbKitTrail(...), ['needs_environment' => true]),
+            new TwigFunction('nowo_ui_header_crumbs', $this->headerCrumbs(...), ['needs_environment' => true]),
+            new TwigFunction('nowo_ui_safe_href', static fn (mixed $href): ?string => \is_string($href) ? SafeHref::filter($href) : null),
         ];
     }
 
@@ -137,6 +165,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             'nowo_ui_layout' => $this->layouts,
             'nowo_ui_theme' => $this->theme,
             'nowo_ui_breadcrumbs' => $this->breadcrumbs,
+            'nowo_ui_header' => $this->presentationResolver,
         ];
     }
 
@@ -273,12 +302,22 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
 
     /**
      * `nowo_ui_page_header()`: renders `page/_page_header.html.twig` (the scaffolds' page header) for a unique page.
+     * 2.27: `$bundle` may be an options hash (`bundle`, `extra_actions`, `header_actions`, `presentation`) instead of
+     * the positional arguments; `presentation` null resolves through {@see self::headerPresentation()}.
      *
-     * @param array<string, mixed> $context
-     * @param iterable<Action>     $extraActions rendered after the header actions
+     * @param array<string, mixed>             $context
+     * @param string|array<string, mixed>|null $bundle       bundle name, or the options hash (2.27)
+     * @param iterable<Action>                 $extraActions rendered after the header actions
      */
-    public function pageHeader(Environment $env, array $context, PageHeader $header, ?string $bundle = null, iterable $extraActions = [], bool $headerActions = true): string
+    public function pageHeader(Environment $env, array $context, PageHeader $header, string|array|null $bundle = null, iterable $extraActions = [], bool $headerActions = true, mixed $presentation = null): string
     {
+        if (\is_array($bundle)) {
+            $options = $bundle;
+            $bundle = \is_string($options['bundle'] ?? null) ? $options['bundle'] : null;
+            $extraActions = is_iterable($options['extra_actions'] ?? null) ? $options['extra_actions'] : $extraActions;
+            $headerActions = \is_bool($options['header_actions'] ?? null) ? $options['header_actions'] : $headerActions;
+            $presentation = $options['presentation'] ?? $presentation;
+        }
         $contextBundle = $context['nowo_ui_bundle'] ?? null;
 
         return $env->render(self::PAGE_HEADER_TEMPLATE, [
@@ -287,7 +326,74 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             'nowo_ui_page_type' => $this->pageType($context),
             'extra_actions' => ViewList::of($extraActions, Action::class, 'nowo_ui_page_header() extra actions'),
             'header_actions' => $headerActions,
+            'presentation' => $this->headerPresentation($presentation),
         ]);
+    }
+
+    /**
+     * `nowo_ui_header_presentation()` (2.27): a valid explicit option, else the request attribute
+     * {@see HeaderPresentation::ATTRIBUTE} (current, then main request), else `nowo_ui_kit.header.presentation`. Invalid
+     * values are ignored ({@see HeaderPresentationResolver::resolve()}).
+     */
+    public function headerPresentation(mixed $presentation = null): string
+    {
+        return $this->presentationResolver->resolve($presentation);
+    }
+
+    /**
+     * `nowo_ui_breadcrumb_kit_trail()` (2.27): BreadcrumbKit's `breadcrumb_trail()` as {@see Crumb}s — label as given
+     * (BreadcrumbKit localises it), href only for a linked level. [] when BreadcrumbKit is not installed. The
+     * collection defaults to `nowo_ui_kit.breadcrumbs.collection`.
+     *
+     * @return list<Crumb>
+     */
+    public function breadcrumbKitTrail(Environment $env, ?string $collection = null, string $contextKey = ''): array
+    {
+        $callable = $env->getFunction('breadcrumb_trail')?->getCallable();
+        if (!\is_callable($callable)) {
+            return [];
+        }
+        $nodes = $callable($collection ?? $this->breadcrumbs['collection'], $contextKey);
+        $crumbs = [];
+        foreach (is_iterable($nodes) ? $nodes : [] as $node) {
+            if (\is_object($node)) {
+                $crumbs[] = $this->crumbFromNode($node);
+            }
+        }
+
+        return $crumbs;
+    }
+
+    /**
+     * `nowo_ui_header_crumbs()` (2.27): the compact top-bar trail. Source, first match: `crumbs` (View\Crumb, hashes
+     * {label, href?} or BreadcrumbKit nodes); `header` (View\PageHeader, resolved like the page-header trail:
+     * `own` its breadcrumbs, `kit` BreadcrumbKit for its collection, `auto` BreadcrumbKit when it yields levels, else its
+     * breadcrumbs; BreadcrumbKit only while `nowo_ui_kit.breadcrumbs.breadcrumb_kit` is on); else
+     * {@see self::breadcrumbKitTrail()}.
+     *
+     * @param iterable<mixed>|null $crumbs
+     * @param array<string, mixed> $options home_href, drop_home_crumb (default true), max_visible (default 3)
+     */
+    public function headerCrumbs(Environment $env, ?iterable $crumbs = null, ?PageHeader $header = null, array $options = []): HeaderCrumbs
+    {
+        if (null === $crumbs && $header instanceof PageHeader) {
+            $kit = 'own' !== $header->breadcrumbsMode && $this->breadcrumbs['breadcrumb_kit'] ? $this->breadcrumbKitTrail($env, $header->breadcrumbCollection) : [];
+            $crumbs = 'kit' === $header->breadcrumbsMode || [] !== $kit ? $kit : $header->breadcrumbs;
+        }
+        $crumbs ??= $this->breadcrumbKitTrail($env);
+        $levels = [];
+        foreach ($crumbs as $crumb) {
+            $levels[] = $this->level($crumb);
+        }
+        $home = $options['home_href'] ?? null;
+        $max = $options['max_visible'] ?? HeaderCrumbs::DEFAULT_MAX_VISIBLE;
+
+        return HeaderCrumbs::build(
+            $levels,
+            \is_string($home) && '' !== $home ? $home : null,
+            false !== ($options['drop_home_crumb'] ?? true),
+            is_numeric($max) ? (int) $max : HeaderCrumbs::DEFAULT_MAX_VISIBLE,
+        );
     }
 
     /**
@@ -333,6 +439,38 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
         $html = $callable($env, $collection ?? $this->breadcrumbs['collection']);
 
         return \is_scalar($html) || $html instanceof Stringable ? (string) $html : '';
+    }
+
+    /**
+     * One translated level of a compact trail: a {@see Crumb}, a hash {label, href?} or a BreadcrumbKit node.
+     *
+     * @return array{label: string, href: string|null}
+     */
+    private function level(mixed $crumb): array
+    {
+        if (\is_array($crumb) && \array_key_exists('label', $crumb)) {
+            $crumb = new Crumb($crumb['label'] instanceof Label ? $crumb['label'] : $this->trans($crumb['label']), \is_string($crumb['href'] ?? null) ? $crumb['href'] : null);
+        } elseif (\is_object($crumb) && !$crumb instanceof Crumb && property_exists($crumb, 'label')) {
+            $crumb = $this->crumbFromNode($crumb);
+        }
+        if (!$crumb instanceof Crumb) {
+            throw new InvalidArgumentException(\sprintf('nowo_ui_header_crumbs expects View\Crumb items, {label, href?} hashes or BreadcrumbKit nodes, %s given.', get_debug_type($crumb)));
+        }
+
+        return ['label' => $this->trans($crumb->label), 'href' => null !== $crumb->href && '' !== $crumb->href ? $crumb->href : null];
+    }
+
+    /**
+     * A BreadcrumbKit `BreadcrumbNode` (read by property, BreadcrumbKit is optional): `label`, `url`, `linkEnabled`.
+     */
+    private function crumbFromNode(object $node): Crumb
+    {
+        $vars = get_object_vars($node);
+        $label = $vars['label'] ?? '';
+        $url = $vars['url'] ?? null;
+        $linked = ($vars['linkEnabled'] ?? true) && \is_string($url) && '' !== $url;
+
+        return new Crumb(\is_scalar($label) || $label instanceof Stringable ? (string) $label : '', $linked ? $url : null);
     }
 
     /**

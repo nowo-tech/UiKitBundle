@@ -105,6 +105,62 @@
 
 ## Unreleased
 
+Planned as **2.27.0**, from **2.26.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+php bin/console assets:install   # new js/nowo-ui-header-crumbs.js, new rules in nowo-ui.css
+```
+
+Additive and opt-in (the compact header). Pages that pass none of the new options render as in 2.26.0, byte for byte:
+the shells without `header_context`, the page header without `presentation` (and with config and request attribute
+left at `standard`), the split header actions, `_menu` hash items that have an `href`, and the `_scripts` output.
+
+To offer a compact header (see [USAGE](USAGE.md#compact-header-227)):
+
+- set the request attribute `_nowo_ui_header_presentation` (`HeaderPresentation::ATTRIBUTE`) per request, for example
+  from the user's preference in a `kernel.request` listener, or `nowo_ui_kit.header.presentation: compact` for every
+  page;
+- fill the shell's `header_context` with the `header_context` partial when `nowo_ui_header_presentation() == 'compact'`,
+  and stop printing your own breadcrumb above the page then, so the page keeps exactly one breadcrumb `nav`;
+- add `header-crumbs` to `script_names` (`nowo_ui_script_names()|merge(['header-crumbs'])`) for the "…" collapse.
+
+Points to check:
+
+- **Host `page_header` overrides** must honour `title_hidden` (visually hide the `h1`, keep it in the DOM) to support the
+  compact presentation; an override written before 2.27 ignores it and keeps showing its title. They also receive
+  `presentation`, and 1.x overrides get `intro: null` in compact.
+- **Spacing utilities on the `page_header` slot** (for example `mb-6`) beat the kit's reset of an empty compact header
+  (`[data-nowo-ui-page-header-empty]`, in `@layer nowo-ui`). Add one rule of your own:
+  `[data-nowo-ui-page-header-empty] { margin-block-end: 0; }`.
+- **`nowo_ui_kit.header.compact_actions: bar`** removes `header.actions` from the page header in the compact
+  presentation only (`extra_actions`, e.g. FormPage secondary buttons, stay); pass them to the bar
+  (`header_context` → `actions`). Pages whose actions sit in the list filter row
+  (`ListPage::headerActionsInFilters`) should pass no `actions` to the bar.
+- **`_menu` hash items without `href`** used to print `<a href="">` (or fail under `strict_variables`); they now print
+  `<button type="button" class="nowo-ui-menu__item" data-nowo-ui-menu-button>`. Give real links an `href`.
+- `nowo_ui_page_header()` gained a `presentation` argument and accepts an options hash as its second argument; the
+  positional `bundle` string keeps working.
+- `ThemeExtension` takes a new optional `$header` constructor argument; hosts that build it by hand need no change.
+- New Twig names (avoid clashes with host globals / functions of the same name): the global **`nowo_ui_header`** (the
+  stateless `HeaderPresentationResolver`: `resolve()`, `isCompact()`, `compactActions()`) and the functions
+  `nowo_ui_header_presentation()`, `nowo_ui_breadcrumb_kit_trail()` and **`nowo_ui_header_crumbs()`** (the compact
+  trail model: `items`, `panel`, `up`, `isEmpty()`, `isCollapsible()`), and `nowo_ui_safe_href()`. Host `page_header`
+  overrides that decide on their own whether to hide the title can call `nowo_ui_header.isCompact(presentation ?? null)`
+  (it ignores any value that is not `standard` / `compact`) or test `title_hidden is same as(true)`; see
+  [USAGE](USAGE.md#compact-header-227).
+- New option names read from an inherited include context: `presentation` and `title_hidden` (the `page_header`
+  partial), `header_context` (the shells). The partial ignores a `presentation` that is not `standard` / `compact` and a
+  `title_hidden` that is not `true`, so an unrelated host variable with that name changes nothing; a `header_context`
+  variable, however, is printed in the top bar like `header_end` — rename such a variable or include with
+  `with_context = false`.
+- **Popover menus with `align: 'start'`** (`_menu`, 2.4 – 2.26) now open from the toggle's start edge (the right edge in
+  RTL) instead of being aligned to its end edge. Pass `align: 'end'` (the default) to keep the old placement.
+- **Hash items without `href`** keep only `data-*` / `aria-*` attributes (other `attr` entries are dropped); link items
+  are unchanged. Unsafe link targets (`javascript:`, `data:`, any scheme but http / https / mailto) are dropped in the
+  compact header's crumbs, home link and `page_actions` items.
+- The popover menu panel `id` is now escaped: only ids with characters that need escaping render differently.
+
 ## To 2.26.0
 
 From **2.25.0** (or 2.24.x: apply [To 2.25.0](#to-2250) too, it is additive):

@@ -21,6 +21,7 @@ two token blocks of `nowo-ui.css`. A host theme is a short `:root` block.
 - [Lists](#lists)
 - [Cards, navigation, progress](#cards-navigation-progress)
 - [Detail pages (2.21)](#detail-pages-221)
+- [Compact header (2.27)](#compact-header-227)
 - [Corner tabs, edge tabs, scrollbars (1.17)](#corner-tabs-edge-tabs-scrollbars-117)
 - [Default-theme polish tokens (2.2)](#default-theme-polish-tokens-22)
 - [Layout and metrics tokens](#layout-and-metrics-tokens)
@@ -265,6 +266,30 @@ lays out as a row on every stack (zero-specificity rule; Bootstrap's own `.pagin
 | `--nowo-ui-progress-track` | `var(--nowo-ui-surface-muted)` |
 | `--nowo-ui-progress-bar` | `var(--nowo-ui-primary)` |
 | `--nowo-ui-page-loader-color` | `var(--nowo-ui-primary)` (minimal page loaders) |
+
+## Compact header (2.27)
+
+The top-bar slot of the shells (`header_context`) and its partials `header_context`, `header_crumbs` and
+`page_actions` ([USAGE](USAGE.md#compact-header-227)). Every colour derives from the base tokens, so host `tokens` /
+`tokens_dark` keep working; only the panel shadow has its own dark default (`Theme::LIGHT_ONLY_TOKENS`, so a host
+`tokens` value for it applies in light mode only).
+
+| Token | Default |
+|-------|---------|
+| `--nowo-ui-header-context-gap` | `0.35rem` (between the trigger, the home link and the trail) |
+| `--nowo-ui-header-crumbs-font-size` | `0.875rem` |
+| `--nowo-ui-header-crumbs-color` | `var(--nowo-ui-muted)` (ancestor links, separators, "…", "‹") |
+| `--nowo-ui-header-crumbs-current-color` | `var(--nowo-ui-text)` |
+| `--nowo-ui-header-crumbs-current-weight` | `600` |
+| `--nowo-ui-header-crumbs-separator` | `"/"` (a CSS string for `content:`; e.g. `"»"` or `"›"`) |
+| `--nowo-ui-header-crumbs-separator-rtl` | `var(--nowo-ui-header-crumbs-separator)` (set it when the glyph is directional, e.g. `"«"`) |
+| `--nowo-ui-header-crumbs-item-max` | `12rem` (cap of each ancestor label) |
+| `--nowo-ui-header-crumbs-current-min` | `4rem` (floor of the current label) |
+| `--nowo-ui-header-crumbs-focus-inset` | `2px` (padding that keeps focus rings visible inside the clipped list) |
+| `--nowo-ui-header-crumbs-panel-bg` | `var(--nowo-ui-surface)` ("…" panel) |
+| `--nowo-ui-header-crumbs-panel-border` | `var(--nowo-ui-border)` |
+| `--nowo-ui-header-crumbs-panel-shadow` | `0 8px 24px rgb(15 23 42 / 12%)`; dark `0 8px 24px rgb(0 0 0 / 45%)` |
+| `--nowo-ui-main-padding-top-compact` | `0.75rem` (top padding of `.nowo-ui-main` under a filled bar) |
 
 ## Detail pages (2.21)
 

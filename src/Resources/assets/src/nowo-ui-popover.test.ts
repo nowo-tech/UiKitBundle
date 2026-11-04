@@ -72,6 +72,36 @@ describe('nowo-ui-popover', () => {
     expect([panel.style.top, panel.style.left]).toEqual(['136px', '272px']);
   });
 
+  it('aligns start edges for start-aligned menus (the right edge in RTL)', () => {
+    const root = trigger.closest<HTMLElement>(mod.ROOT)!;
+    root.setAttribute('data-nowo-ui-popover-align', 'start');
+    size(panel, 120, 80);
+    rect(trigger, { top: 40, bottom: 72, right: 100 });
+    mod.placePopover(trigger, panel);
+    expect([panel.style.top, panel.style.left]).toEqual(['76px', '68px']);
+
+    root.removeAttribute('data-nowo-ui-popover-align');
+    root.classList.add('nowo-ui-menu--start');
+    trigger.style.direction = 'rtl';
+    mod.placePopover(trigger, panel);
+    expect(panel.style.left).toBe('8px');
+
+    // A panel outside any root keeps the end alignment.
+    const m2 = document.getElementById('m2')!;
+    size(m2, 120, 80);
+    mod.placePopover(trigger, m2);
+    expect(m2.style.left).toBe('8px');
+  });
+
+  it('closes after choosing a hash item button (2.27), not after other buttons', () => {
+    panel.insertAdjacentHTML('beforeend', '<li><button type="button" id="menu-button" data-nowo-ui-menu-button>Open</button></li><li><button type="button" id="plain">Plain</button></li>');
+    toggle(panel, 'open');
+    document.getElementById('plain')!.click();
+    expect(mod.isOpen(panel)).toBe(true);
+    document.getElementById('menu-button')!.click();
+    expect(mod.isOpen(panel)).toBe(false);
+  });
+
   it('tracks aria-expanded and places on open; ignores other popovers', () => {
     size(panel, 100, 50);
     rect(trigger, { top: 10, bottom: 40, right: 150 });
