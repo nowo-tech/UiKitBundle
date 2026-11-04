@@ -935,6 +935,7 @@ a.nowo-ui-pagination__link:hover {
     "aside main"
     "footer footer";
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--nowo-ui-surface-muted);
   color: var(--nowo-ui-text);
   font-family: var(--nowo-ui-font-family, inherit);
@@ -2499,6 +2500,7 @@ form.nowo-ui-filters select[multiple]:not(.ts-hidden-accessible) {
   box-sizing: border-box;
   max-width: calc(100vw - 1rem);
   max-height: calc(100vh - 1rem);
+  max-height: calc(100dvh - 1rem);
   margin: 0;
   padding: 0.75rem;
   overflow: auto;
@@ -4095,6 +4097,7 @@ button.nowo-ui-edge-tab__link {
  * ============================================================================================= */
 .nowo-ui-page {
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .nowo-ui-page--guest {

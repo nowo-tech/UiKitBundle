@@ -22,7 +22,7 @@
     <style{% if _nonce %} nonce="{{ _nonce }}"{% endif %} data-nowo-ui-status-css>
         :root { color-scheme: light dark; }
         *, *::before, *::after { box-sizing: border-box; }
-        body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 2rem 1rem; font: 1rem/1.5 var(--nowo-ui-font-sans, system-ui, -apple-system, "Segoe UI", sans-serif); color: var(--nowo-ui-text, CanvasText); background: var(--nowo-ui-surface-muted, Canvas); }
+        body { margin: 0; min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 2rem 1rem; font: 1rem/1.5 var(--nowo-ui-font-sans, system-ui, -apple-system, "Segoe UI", sans-serif); color: var(--nowo-ui-text, CanvasText); background: var(--nowo-ui-surface-muted, Canvas); }
         .nowo-ui-status { width: 100%; max-width: 32rem; }
         .nowo-ui-status :is(.nowo-ui-auth-panel, .nowo-ui-card) { padding: 1.5rem; border: 1px solid var(--nowo-ui-border, GrayText); border-radius: var(--nowo-ui-radius, 0.5rem); background: var(--nowo-ui-surface, Canvas); }
         .nowo-ui-status h1 { margin: 0 0 0.5rem; font-size: 1.5rem; line-height: 1.25; }
