@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.25.0](#to-2250)
 - [To 2.24.0](#to-2240)
 - [To 2.23.1](#to-2231)
 - [To 2.23.0](#to-2230)
@@ -103,7 +104,7 @@
 
 ## Unreleased
 
-### To 2.25.0
+## To 2.25.0
 
 From **2.24.0**:
 
