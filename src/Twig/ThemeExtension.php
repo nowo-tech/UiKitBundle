@@ -11,6 +11,7 @@ use Nowo\UiKitBundle\Form\VisibleWhen;
 use Nowo\UiKitBundle\Shell\HeaderCrumbs;
 use Nowo\UiKitBundle\Shell\HeaderPresentation;
 use Nowo\UiKitBundle\Shell\HeaderPresentationResolver;
+use Nowo\UiKitBundle\Shell\SafeHref;
 use Nowo\UiKitBundle\Theme\FontPreload;
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Theme\ThemeSlots;
@@ -52,9 +53,11 @@ use Twig\TwigFunction;
  *   — the scaffold page header (`page/_page_header.html.twig`: the `page_header` partial with the 2.0 and 1.x inputs)
  *   for unique pages; bundle and page type default to `nowo_ui_bundle` / `nowo_ui_page_type` of the context. 2.27: the
  *   second argument may be an options hash instead (`{bundle, extra_actions, header_actions, presentation}`), and
- *   `presentation` (`standard` | `compact`) defaults to {@see self::headerPresentation()}
+ *   `presentation` (`standard` | `compact`; anything else is ignored) defaults to {@see self::headerPresentation()}
  * - `nowo_ui_header_presentation(presentation = null)` (2.27) — the resolved page-header presentation of the request
- *   ({@see HeaderPresentation}: the option, else the request attribute, else `nowo_ui_kit.header.presentation`)
+ *   ({@see HeaderPresentation}: a valid option, else the request attribute, else `nowo_ui_kit.header.presentation`)
+ * - `nowo_ui_safe_href(href)` (2.27) — the href when its scheme is safe ({@see SafeHref}: relative, http, https,
+ *   mailto), else null
  * - `nowo_ui_breadcrumb_kit_trail(collection = null, context_key = '')` (2.27) — BreadcrumbKit's `breadcrumb_trail()`
  *   mapped to `list<View\Crumb>` ([] without BreadcrumbKit); unlike `nowo_ui_breadcrumb_kit()` it ignores
  *   `nowo_ui_kit.breadcrumbs.breadcrumb_kit` (calling it is the opt-in)
@@ -141,6 +144,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             new TwigFunction('nowo_ui_header_presentation', $this->headerPresentation(...)),
             new TwigFunction('nowo_ui_breadcrumb_kit_trail', $this->breadcrumbKitTrail(...), ['needs_environment' => true]),
             new TwigFunction('nowo_ui_header_crumbs', $this->headerCrumbs(...), ['needs_environment' => true]),
+            new TwigFunction('nowo_ui_safe_href', static fn (mixed $href): ?string => \is_string($href) ? SafeHref::filter($href) : null),
         ];
     }
 
@@ -305,14 +309,14 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
      * @param string|array<string, mixed>|null $bundle       bundle name, or the options hash (2.27)
      * @param iterable<Action>                 $extraActions rendered after the header actions
      */
-    public function pageHeader(Environment $env, array $context, PageHeader $header, string|array|null $bundle = null, iterable $extraActions = [], bool $headerActions = true, HeaderPresentation|string|null $presentation = null): string
+    public function pageHeader(Environment $env, array $context, PageHeader $header, string|array|null $bundle = null, iterable $extraActions = [], bool $headerActions = true, mixed $presentation = null): string
     {
         if (\is_array($bundle)) {
             $options = $bundle;
             $bundle = \is_string($options['bundle'] ?? null) ? $options['bundle'] : null;
             $extraActions = is_iterable($options['extra_actions'] ?? null) ? $options['extra_actions'] : $extraActions;
             $headerActions = \is_bool($options['header_actions'] ?? null) ? $options['header_actions'] : $headerActions;
-            $presentation = ($options['presentation'] ?? null) instanceof HeaderPresentation || \is_string($options['presentation'] ?? null) ? $options['presentation'] : $presentation;
+            $presentation = $options['presentation'] ?? $presentation;
         }
         $contextBundle = $context['nowo_ui_bundle'] ?? null;
 
@@ -327,10 +331,11 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
     }
 
     /**
-     * `nowo_ui_header_presentation()` (2.27): the explicit option (an invalid one throws), else the request attribute
-     * {@see HeaderPresentation::ATTRIBUTE} (an invalid one is ignored), else `nowo_ui_kit.header.presentation`.
+     * `nowo_ui_header_presentation()` (2.27): a valid explicit option, else the request attribute
+     * {@see HeaderPresentation::ATTRIBUTE} (current, then main request), else `nowo_ui_kit.header.presentation`. Invalid
+     * values are ignored ({@see HeaderPresentationResolver::resolve()}).
      */
-    public function headerPresentation(HeaderPresentation|string|null $presentation = null): string
+    public function headerPresentation(mixed $presentation = null): string
     {
         return $this->presentationResolver->resolve($presentation);
     }

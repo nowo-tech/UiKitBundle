@@ -22,7 +22,7 @@
   Breadcrumbs (none when nowo_ui_kit.breadcrumbs.enabled is false, 2.3.1) and actions render through the theme partials `breadcrumbs` and `action`; header.tabs (View\AreaNav,
   2.1) renders under the title row through the `tabs` partial (region `area-nav`, inside nowo-ui-page-header__nav).
   2.27, presentation (`standard` | `compact`; default nowo_ui_header_presentation(), through the `nowo_ui_header`
-  global) / title_hidden: compact adds the
+  global; any value but `standard` / `compact` is ignored, e.g. an unrelated context variable) / title_hidden (only `true`): compact adds the
   root modifier nowo-ui-page-header--compact and data-nowo-ui-page-header="compact", keeps the title as the page's h1
   with `visually-hidden`, and renders no intro, breadcrumbs or back link (the top bar carries the trail); status badge,
   toolbar and tabs stay. data-nowo-ui-page-header-empty marks a compact header with nothing visible left (no toolbar,
@@ -34,7 +34,7 @@
 {% set _t = nowo_ui_theme|default(null) %}
 {% set _pt = nowo_ui_page_type|default(null) %}
 {% set _hp = nowo_ui_header|default(null) %}
-{% set _compact = (title_hidden ?? false) or (_hp ? _hp.isCompact(presentation ?? null) : (presentation ?? null) == 'compact') %}
+{% set _compact = (title_hidden ?? false) is same as(true) or (_hp ? _hp.isCompact(presentation ?? null) : (presentation ?? null) is same as('compact')) %}
 {% if header is defined and header %}
     {% set title = header.title.key is defined ? header.title.key|trans(header.title.params, header.title.domain) : header.title %}
     {% set intro = header.intro is null ? null : (header.intro.key is defined ? header.intro.key|trans(header.intro.params, header.intro.domain) : header.intro) %}

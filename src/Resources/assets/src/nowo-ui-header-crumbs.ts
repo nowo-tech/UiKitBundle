@@ -3,7 +3,8 @@
  * `header-crumbs` to `script_names`). The server prints the whole trail with the "…" item `hidden`, so without this
  * script every level shows on one line, each truncated. For every `[data-nowo-ui-header-crumbs]` with
  * `data-collapsible="true"` and without `data-collapsed`, on start-up and for trails inserted later (a
- * `MutationObserver` on `document.body`, for Turbo and lazy HTML), it:
+ * `MutationObserver` on `document.documentElement`, so a Turbo Drive visit that replaces `<body>` and lazy HTML are both
+ * covered), it:
  *  - sets `data-collapsed="true"` (the CSS then hides the `--middle` levels);
  *  - removes `hidden` from the "…" item (`[data-nowo-ui-header-crumbs-more]`).
  * That is its whole job: no state, no per-element set-up. The "…" disclosure itself (placement, aria-expanded,
@@ -40,7 +41,7 @@ export function enhanceHeaderCrumbs(root: ParentNode = document): number {
 let observer: MutationObserver | null = null;
 let bound = false;
 
-/** Start-up: enhance now (or on DOMContentLoaded) and watch `document.body` for trails inserted later. */
+/** Start-up: enhance now (or on DOMContentLoaded) and watch the document for trails inserted later (body swaps too). */
 export function bindNowoUiHeaderCrumbs(): void {
   if (bound || !supportsPopover()) {
     return;
@@ -49,7 +50,8 @@ export function bindNowoUiHeaderCrumbs(): void {
   const start = (): void => {
     enhanceHeaderCrumbs();
     observer = new MutationObserver(() => enhanceHeaderCrumbs());
-    observer.observe(document.body, { childList: true, subtree: true });
+    // The whole document, not `body`: Turbo Drive swaps the `<body>` element on every visit.
+    observer.observe(document.documentElement, { childList: true, subtree: true });
   };
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', start, { once: true });

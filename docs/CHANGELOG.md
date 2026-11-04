@@ -163,7 +163,29 @@ header, the split header actions, `_menu` hash items with `href` and the `_scrip
 - The split page header's "more" menu (`header_actions`) now includes the `page_actions` partial
   (`page_actions_slot: false`): the markup is unchanged, and a host override of `menu` serves both places.
 - `nowo-ui-popover.js`: a menu whose root has `nowo-ui-menu--start` or `data-nowo-ui-popover-align="start"` places its
-  panel on the toggle's start edge (the right edge in RTL); end-aligned menus are placed as before.
+  panel on the toggle's start edge (the right edge in RTL); end-aligned menus are placed as before. Existing menus
+  with `align: 'start'` therefore open from their start edge now.
+- Hash items of `_menu` without `href` (and so of `page_actions`) keep only the `data-*` / `aria-*` entries of their
+  `attr`; `on*` still fails, anything else (`style`, `type`, `formaction`, `popovertarget`…) is dropped. Link items keep
+  their 2.3 behaviour.
+- The compact header drops link targets with an unsafe scheme: crumb hrefs (the level renders as text and is never the
+  "‹" link), `home_href` and `page_actions` hash item hrefs (the item becomes a button). Allowed: relative URLs, `#…`,
+  `http`, `https`, `mailto`, checked as a browser reads them (case, tabs and line breaks, leading controls). New Twig
+  function `nowo_ui_safe_href()`.
+- The page-header presentation ignores any value but `standard` / `compact` (a host context variable that happens to be
+  called `presentation`, an object or a boolean), and `title_hidden` must be `true`. A page header rendered in a
+  sub-request falls back to the main request's `_nowo_ui_header_presentation`.
+- `js/nowo-ui-header-crumbs.js` observes `document.documentElement`, so trails still collapse after a Turbo Drive visit
+  replaces `<body>`.
+
+### Security
+
+- **Popover menu panel `id` escaped** (`_menu.html.twig`, since 2.4.0): with `popover: true` the panel's `id` was printed
+  unescaped inside a raw attribute string, so a menu `id` containing a quote could add attributes (for example an
+  `on*` handler) to the panel. Reachable in 2.4 – 2.26 through `_menu` `id` and the split header's `more_id` (2.21; `row_actions`
+  passes no id and the kebab escapes its own); 2.27 added `page_actions` `id` and `header_context` `actions_id`. The
+  id is now escaped (`html_attr`); output only changes for ids with characters that need escaping. Low: it needs a host
+  that builds a menu id from untrusted data.
 
 ## [2.26.0] - 2026-11-04
 

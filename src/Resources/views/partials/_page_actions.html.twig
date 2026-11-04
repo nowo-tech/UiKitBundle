@@ -8,7 +8,8 @@
     - actions: list of View\Action (hidden ones are skipped; POST, confirm, dialog and modal actions work as in the
       split header: menu items, confirm dialogs after the menu)
     - items: hashes for hosts without View\Action, after the actions: {label, href?, icon?, attr?, danger?, current?};
-      without `href` an item is a <button type="button"> with its `attr` (data / aria attributes, on* refused)
+      without `href` an item is a <button type="button"> with the data-* / aria-* entries of its `attr`; an `href` with
+      an unsafe scheme (anything but relative, http, https, mailto) is dropped
     - label (View\Label|string; default "Page actions", action.page_actions): accessible name and tooltip of the toggle
     - icon (default grid; `more` gives the vertical dots), id (default nowo-ui-page-actions; panel "<id>-panel")
     - align (default end; the compact bar passes start), attr (root attributes, no on*), bundle, nowo_ui_page_type
@@ -28,7 +29,10 @@
         {%- endif -%}
     {%- endif -%}
 {%- endfor -%}
-{%- set _items = _items|merge(items|default([])) -%}
+{#- hash items: an href with an unsafe scheme (javascript:, data:…) is dropped, the item becomes a plain button -#}
+{%- for item in items|default([]) -%}
+    {%- set _items = _items|merge([item is iterable and (item.href ?? null) is not null and nowo_ui_safe_href(item.href) is null ? item|merge({href: null}) : item]) -%}
+{%- endfor -%}
 {%- if _items is not empty -%}
     {%- set _slot = page_actions_slot ?? true -%}
     {%- set _menu = include(nowo_ui_partial('menu', _b), {

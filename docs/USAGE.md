@@ -1751,10 +1751,13 @@ Behaviour and accessibility:
   default trail. The first level is dropped when it is `home_href` (path compared, query ignored; never the only
   level; `crumbs_options: {drop_home_crumb: false}` keeps it). `nowo_ui_breadcrumb_kit_trail()` ignores
   `nowo_ui_kit.breadcrumbs.breadcrumb_kit`, so a host that turned BreadcrumbKit off in page headers can still feed the
-  bar. Labels are escaped; BreadcrumbKit's icon HTML is not printed.
+  bar. Labels are escaped; BreadcrumbKit's icon HTML is not printed. Hrefs with an unsafe scheme are dropped (the
+  level renders as text): only relative URLs, `#…`, `http`, `https` and `mailto` are kept — the same rule for
+  `home_href` and the `page_actions` hash items (`nowo_ui_safe_href()`).
 - **Page actions:** the `page_actions` partial is the split header's square "more" menu (`aria-haspopup="menu"`,
   popover panel, confirm dialogs after it) with the `grid` icon and the name "Page actions". Hash items without `href`
-  are `<button type="button">`s that keep their `data-*` / `aria-*` attributes (Stimulus actions); `on*` is refused.
+  are `<button type="button">`s that keep only their `data-*` / `aria-*` attributes (Stimulus actions; `on*` is refused,
+  `style`, `type`, `formaction`… are dropped).
   The bar aligns the menu `start`, so the panel opens towards the content.
 - **Page header in compact:** one `h1`, `visually-hidden`; no intro, breadcrumbs or back link; status badge, toolbar
   and tabs stay. `data-nowo-ui-page-header-empty` marks a header with nothing visible left; utilities on the
@@ -1772,9 +1775,10 @@ Behaviour and accessibility:
 
 | Name | Kind | Returns / use |
 | --- | --- | --- |
-| `nowo_ui_header_presentation(presentation = null)` | function | `'standard'` or `'compact'`: the option (an invalid one throws), else the request attribute `_nowo_ui_header_presentation` (an invalid one is ignored), else `nowo_ui_kit.header.presentation` |
+| `nowo_ui_header_presentation(presentation = null)` | function | `'standard'` or `'compact'`: a valid option, else the request attribute `_nowo_ui_header_presentation` (the current request, then the main one, so `render(controller())` follows the page), else `nowo_ui_kit.header.presentation`; invalid values are ignored |
 | `nowo_ui_header` | global | the `Nowo\UiKitBundle\Shell\HeaderPresentationResolver` behind that function: `nowo_ui_header.resolve(option)`, `nowo_ui_header.isCompact(option)`, `nowo_ui_header.compactActions()` (`'page'` \| `'bar'`). Partials read it with `nowo_ui_header\|default(null)`, so a Twig environment without UiKit's extension still renders them (standard, unless `presentation` / `title_hidden` is passed) |
 | `nowo_ui_breadcrumb_kit_trail(collection = null, context_key = '')` | function | BreadcrumbKit's trail as `list<View\Crumb>` (a level with `linkEnabled: false` has no href); `[]` without BreadcrumbKit; ignores `nowo_ui_kit.breadcrumbs.breadcrumb_kit` |
+| `nowo_ui_safe_href(href)` | function | the href when its scheme is safe (relative, `#…`, `http`, `https`, `mailto`, checked as a browser reads it), else `null` |
 | `nowo_ui_header_crumbs(crumbs = null, header = null, options = {})` | function | the `Nowo\UiKitBundle\Shell\HeaderCrumbs` model the `header_crumbs` partial renders — `items` (`{label, href, middle, current}`, translated labels), `panel` (the levels behind "…"), `up` (`{label, href}` or null), `isEmpty()`, `isCollapsible()`; options `home_href`, `drop_home_crumb` (default true), `max_visible` (default 3, at least 2). Use it for a host-made trail with the same rules |
 
 ```twig

@@ -145,9 +145,21 @@ Points to check:
 - New Twig names (avoid clashes with host globals / functions of the same name): the global **`nowo_ui_header`** (the
   stateless `HeaderPresentationResolver`: `resolve()`, `isCompact()`, `compactActions()`) and the functions
   `nowo_ui_header_presentation()`, `nowo_ui_breadcrumb_kit_trail()` and **`nowo_ui_header_crumbs()`** (the compact
-  trail model: `items`, `panel`, `up`, `isEmpty()`, `isCollapsible()`). Host `page_header` overrides that decide on
-  their own whether to hide the title can call `nowo_ui_header.isCompact(presentation ?? null)`; see
+  trail model: `items`, `panel`, `up`, `isEmpty()`, `isCollapsible()`), and `nowo_ui_safe_href()`. Host `page_header`
+  overrides that decide on their own whether to hide the title can call `nowo_ui_header.isCompact(presentation ?? null)`
+  (it ignores any value that is not `standard` / `compact`) or test `title_hidden is same as(true)`; see
   [USAGE](USAGE.md#compact-header-227).
+- New option names read from an inherited include context: `presentation` and `title_hidden` (the `page_header`
+  partial), `header_context` (the shells). The partial ignores a `presentation` that is not `standard` / `compact` and a
+  `title_hidden` that is not `true`, so an unrelated host variable with that name changes nothing; a `header_context`
+  variable, however, is printed in the top bar like `header_end` — rename such a variable or include with
+  `with_context = false`.
+- **Popover menus with `align: 'start'`** (`_menu`, 2.4 – 2.26) now open from the toggle's start edge (the right edge in
+  RTL) instead of being aligned to its end edge. Pass `align: 'end'` (the default) to keep the old placement.
+- **Hash items without `href`** keep only `data-*` / `aria-*` attributes (other `attr` entries are dropped); link items
+  are unchanged. Unsafe link targets (`javascript:`, `data:`, any scheme but http / https / mailto) are dropped in the
+  compact header's crumbs, home link and `page_actions` items.
+- The popover menu panel `id` is now escaped: only ids with characters that need escaping render differently.
 
 ## To 2.26.0
 

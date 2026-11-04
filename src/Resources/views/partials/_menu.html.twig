@@ -8,8 +8,9 @@
       and links render as <a class="menu_item">; other actions (POST / form / confirm / dialog) through the `action`
       partial (toolbar context, text display) — their button classes, inside the panel. 2.27, hashes: `icon` prints
       the `_icon` component before the label (item modifier nowo-ui-menu__item--icon), and an item without `href`
-      renders <button type="button" class="menu_item"> with its `attr` (data / aria attributes; on* refused) — for host
-      scripts such as a Stimulus action; nowo-ui-popover.js closes the popover when one is chosen
+      renders <button type="button" class="menu_item"> with only the data-* / aria-* entries of its `attr` (on* still
+      fails as everywhere, any other entry — style, type, formaction, popovertarget… — is dropped) — for host scripts such as a Stimulus action; nowo-ui-popover.js closes the popover when one
+      is chosen. Link items keep every `attr` entry but on* (as since 2.3). 2.27: the popover panel id is escaped
     - content: pre-rendered HTML (escaped by the caller) — the panel is the `popover` slot
   Optional:
     - label (View\Label|string; default "More actions" — action.more), icon (toggle icon name),
@@ -45,7 +46,7 @@
 {% set _popover = popover ?? (_t ? _t.popoverMenus() : false) %}
 {% if _popover %}
     {% set _panel_id = (id|default(null) ?: 'nowo-ui-menu-' ~ random()) ~ '-panel' %}
-    {% set _panel_attrs = ' id="' ~ _panel_id ~ '" popover data-nowo-ui-popover-panel' %}
+    {% set _panel_attrs = ' id="' ~ _panel_id|e('html_attr') ~ '" popover data-nowo-ui-popover-panel' %}
 {% else %}
     {% set _panel_attrs = '' %}
 {% endif %}
@@ -85,7 +86,7 @@
                     {# View\Link or hash #}
                     {% set _current = item.current|default(false) %}
                     {% set _attrs = item.attributes ?? item.attr ?? {} %}{% set _item_href = item.href ?? null %}{% set _item_icon = (item.icon ?? null) and nowo_ui_kit_icon_set|default('bootstrap-icons') != 'none' ? item.icon : null %}{% set _item_class = nowo_ui_class('menu_item', _b) ~ (item.danger|default(false) ? ' nowo-ui-menu__item--danger') ~ (_current ? ' is-current') ~ (_item_icon ? ' nowo-ui-menu__item--icon') %}{% set _item_inner %}{% if _item_icon %}{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _item_icon, label: ''}, false)|trim|raw }}{% endif %}{{ item.label|nowo_ui_trans }}{% endset %}
-                    <li>{% if _item_href is not null %}<a class="{{ _item_class }}" href="{{ _item_href }}"{% if _current %} aria-current="page"{% endif %}{{ nowo_ui_attrs('menu_item', _b) }}{{ nowo_ui_html_attrs(_attrs) }}>{{ _item_inner }}</a>{% else %}<button type="button" class="{{ _item_class }}"{{ nowo_ui_attrs('menu_item', _b) }}{{ nowo_ui_html_attrs(_attrs) }} data-nowo-ui-menu-button>{{ _item_inner }}</button>{% endif %}</li>
+                    <li>{% if _item_href is not null %}<a class="{{ _item_class }}" href="{{ _item_href }}"{% if _current %} aria-current="page"{% endif %}{{ nowo_ui_attrs('menu_item', _b) }}{{ nowo_ui_html_attrs(_attrs) }}>{{ _item_inner }}</a>{% else %}<button type="button" class="{{ _item_class }}"{{ nowo_ui_attrs('menu_item', _b) }}{{ nowo_ui_html_attrs(_attrs|filter((v, k) => (k|lower) starts with 'data-' or (k|lower) starts with 'aria-' or (k|lower) starts with 'on')) }} data-nowo-ui-menu-button>{{ _item_inner }}</button>{% endif %}</li>
                 {% endif %}
             {% endfor %}
         </ul>

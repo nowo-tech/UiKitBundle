@@ -14,7 +14,7 @@
     - actions / action_items: forwarded to `page_actions` as `actions` (View\Action) / `items` (hashes)
     - actions_label, actions_icon, actions_id, actions_attr, actions_align (default start): forwarded as label, icon,
       id, attr, align
-    - home_href (no home link without it), home_label (View\Label|string; default "Home", nav.home), home_icon
+    - home_href (no home link without it, or when its scheme is unsafe: only relative, http, https, mailto), home_label (View\Label|string; default "Home", nav.home), home_icon
       (default home)
     - crumbs / header / crumbs_options ({max_visible, drop_home_crumb, id, attr}): forwarded to `header_crumbs`, with
       home_href (the first crumb is dropped when it is the home page)
@@ -23,7 +23,7 @@
 #}
 {%- set _b = bundle|default(null) -%}
 {%- set _pt = nowo_ui_page_type|default(null) -%}
-{%- set _home = home_href|default(null) -%}
+{%- set _home = nowo_ui_safe_href(home_href|default(null)) -%}
 {%- set _actions_html = include(nowo_ui_partial('page_actions', _b), {
     actions: actions|default([]),
     items: action_items|default([]),

@@ -12,7 +12,9 @@ namespace Nowo\UiKitBundle\Shell;
  *   ignored) and at least one other level remains, because the home link already stands for it;
  * - with more than `maxVisible` levels (at least 2), every level except the first and the last `maxVisible - 1` is a
  *   "middle" level: hidden behind the "…" disclosure once the script collapses the trail, and listed in its panel;
- * - `up` is the nearest linked ancestor of the current level (the phone "‹" link), null without one.
+ * - `up` is the nearest linked ancestor of the current level (the phone "‹" link), null without one;
+ * - an href with an unsafe scheme ({@see SafeHref}: anything but relative, http, https, mailto) is dropped, so that
+ *   level renders as text (and is never the up link). The home link is checked the same way.
  *
  * Pure value object: nothing is kept between requests.
  */
@@ -37,6 +39,8 @@ final readonly class HeaderCrumbs
      */
     public static function build(array $levels, ?string $homeHref = null, bool $dropHomeCrumb = true, int $maxVisible = self::DEFAULT_MAX_VISIBLE): self
     {
+        $levels = array_map(static fn (array $level): array => ['label' => $level['label'], 'href' => SafeHref::filter($level['href'])], $levels);
+        $homeHref = SafeHref::filter($homeHref);
         if ($dropHomeCrumb && \count($levels) > 1 && null !== $homeHref && null !== $levels[0]['href'] && self::samePath($levels[0]['href'], $homeHref)) {
             array_shift($levels);
         }

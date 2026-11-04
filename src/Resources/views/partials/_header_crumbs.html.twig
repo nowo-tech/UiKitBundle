@@ -12,6 +12,7 @@
     - crumbs: View\Crumb list, hashes {label, href?} or BreadcrumbKit nodes (the last one is the current page)
     - header: a View\PageHeader, resolved like the page-header trail (breadcrumbsMode own / kit / auto)
     - neither: nowo_ui_breadcrumb_kit_trail() (BreadcrumbKit's default collection; nothing without BreadcrumbKit)
+  Hrefs with an unsafe scheme (anything but relative, http, https, mailto) are dropped: that level renders as text.
   Optional:
     - home_href + drop_home_crumb (default true): the first level is dropped when it is the home page
     - max_visible (default 3; at least 2): with 2 the trail collapses to first, "…", current

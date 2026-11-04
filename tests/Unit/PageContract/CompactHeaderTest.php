@@ -10,6 +10,7 @@ use Nowo\UiKitBundle\DependencyInjection\NowoUiKitExtension;
 use Nowo\UiKitBundle\Shell\HeaderCrumbs;
 use Nowo\UiKitBundle\Shell\HeaderPresentation;
 use Nowo\UiKitBundle\Shell\HeaderPresentationResolver;
+use Nowo\UiKitBundle\Shell\SafeHref;
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Theme\ThemeSlots;
 use Nowo\UiKitBundle\Twig\ThemeExtension;
@@ -26,6 +27,7 @@ use Nowo\UiKitBundle\View\PageStatus;
 use Nowo\UiKitBundle\View\ShowPage;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use stdClass;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -89,8 +91,20 @@ final class CompactHeaderTest extends TestCase
         self::assertSame('standard', (new HeaderPresentationResolver($stack, 'unknown'))->resolve(), 'an unknown config value means standard');
         self::assertSame('page', (new HeaderPresentationResolver(null, 'standard', 'nowhere'))->compactActions());
 
-        $this->expectException(InvalidArgumentException::class);
-        $resolver->resolve('nonsense');
+        // Anything but a valid presentation is ignored (EH-I4): no exception, the request / config value applies.
+        $lenient = new HeaderPresentationResolver(null, 'standard');
+        foreach (['nonsense', 'COMPACT', true, 1, new stdClass(), ['compact']] as $odd) {
+            self::assertSame('standard', $lenient->resolve($odd));
+            self::assertFalse($lenient->isCompact($odd));
+        }
+
+        // Sub-request (render(controller())): the main request's attribute applies when the sub-request has none (EH-I3).
+        $sub = new RequestStack();
+        $sub->push(new Request(attributes: [HeaderPresentation::ATTRIBUTE => 'compact']));
+        $sub->push(new Request());
+        self::assertSame('compact', (new HeaderPresentationResolver($sub))->resolve());
+        $sub->push(new Request(attributes: [HeaderPresentation::ATTRIBUTE => 'standard']));
+        self::assertSame('standard', (new HeaderPresentationResolver($sub))->resolve(), "the sub-request's own value wins");
     }
 
     public function testConfigKeysAreValidatedAndReachTheTwigExtension(): void
@@ -400,6 +414,105 @@ final class CompactHeaderTest extends TestCase
         self::assertSame([], (new ThemeExtension(new Theme()))->breadcrumbKitTrail(PageContractTwig::create()), 'no BreadcrumbKit: []');
         self::assertSame('', PageContractTwig::create()->render('@NowoUiKitBundle/partials/_header_crumbs.html.twig'));
         self::assertSame(3, \count((new ThemeExtension(new Theme()))->headerCrumbs($off, null, null, ['max_visible' => 'many'])->items));
+    }
+
+    // --- Audit EH (2.27 review) ---------------------------------------------------------------------------------
+
+    public function testMenuPanelIdIsEscaped(): void
+    {
+        $id = 'p" onfocus="1';
+        $twig = PageContractTwig::create();
+        $menu = $twig->render('@NowoUiKitBundle/partials/_menu.html.twig', ['items' => [['label' => 'A', 'href' => '/a']], 'popover' => true, 'id' => $id]);
+        $actions = $twig->render('@NowoUiKitBundle/partials/_page_actions.html.twig', ['items' => [['label' => 'A', 'href' => '/a']], 'id' => $id]);
+        $context = $twig->render('@NowoUiKitBundle/partials/_header_context.html.twig', ['crumbs' => [], 'action_items' => [['label' => 'A', 'href' => '/a']], 'actions_id' => $id]);
+        foreach ([$menu, $actions, $context] as $html) {
+            self::assertStringContainsString('id="p&quot;&#x20;onfocus&#x3D;&quot;1-panel" popover data-nowo-ui-popover-panel', $html);
+            self::assertStringNotContainsString('" onfocus="', $html, 'no attribute can be injected');
+            self::assertStringContainsString('popovertarget="p&quot; onfocus=&quot;1-panel"', $html, 'the toggle still targets the same id');
+        }
+    }
+
+    /**
+     * @return iterable<string, array{0: string, 1: bool}>
+     */
+    public static function hrefCases(): iterable
+    {
+        yield 'path' => ['/sales/quotes', true];
+        yield 'relative' => ['quotes/7', true];
+        yield 'query' => ['?page=2', true];
+        yield 'fragment' => ['#lines', true];
+        yield 'protocol-relative' => ['//cdn.example/x', true];
+        yield 'https' => ['https://app.example/q', true];
+        yield 'HTTP upper' => ['HTTP://app.example/q', true];
+        yield 'mailto' => ['mailto:sales@example.com', true];
+        yield 'colon after slash' => ['/a:b', true];
+        yield 'javascript' => ['javascript:alert(1)', false];
+        yield 'mixed case' => ['JaVaScRiPt:alert(2)', false];
+        yield 'tab split' => ['java	script:alert(3)', false];
+        yield 'newline split' => ['java
+script:alert(4)', false];
+        yield 'leading control and space' => [' javascript:alert(5)', false];
+        yield 'data' => ['data:text/html,<b>x</b>', false];
+        yield 'vbscript' => ['VBScript:msgbox', false];
+        yield 'other scheme' => ['tel:+34600000000', false];
+        yield 'blank' => [' 	 ', false];
+    }
+
+    #[DataProvider('hrefCases')]
+    public function testUnsafeSchemesAreDropped(string $href, bool $safe): void
+    {
+        self::assertSame($safe, SafeHref::isSafe($href));
+        self::assertSame($safe ? $href : null, SafeHref::filter($href));
+
+        $twig = PageContractTwig::create();
+        $crumbs = $twig->render('@NowoUiKitBundle/partials/_header_crumbs.html.twig', ['crumbs' => [['label' => 'Target', 'href' => $href], ['label' => 'Here']], 'drop_home_crumb' => false]);
+        self::assertSame($safe, str_contains($crumbs, 'title="Target">Target</a>'), 'crumb link');
+        self::assertSame($safe, str_contains($crumbs, 'data-nowo-ui-header-crumbs-up'), 'up link');
+        if (!$safe) {
+            self::assertStringContainsString('<span class="nowo-ui-header-crumbs__text" title="Target">Target</span>', $crumbs);
+        }
+        $actions = $twig->render('@NowoUiKitBundle/partials/_page_actions.html.twig', ['items' => [['label' => 'Go', 'href' => $href, 'attr' => ['data-x' => '1']]]]);
+        self::assertSame($safe, str_contains($actions, '<a class="nowo-ui-menu__item"'), 'page_actions item');
+        if (!$safe) {
+            self::assertStringContainsString('<button type="button" class="nowo-ui-menu__item" data-x="1" data-nowo-ui-menu-button>Go</button>', $actions);
+        }
+        $home = $twig->render('@NowoUiKitBundle/partials/_header_context.html.twig', ['crumbs' => [], 'home_href' => $href]);
+        self::assertSame($safe, str_contains($home, 'header-context__home'), 'home link');
+        self::assertSame($safe ? $href : '-', $twig->createTemplate('{{ nowo_ui_safe_href(h) ?? "-" }}')->render(['h' => $href]));
+    }
+
+    public function testSafeHrefTwigFunctionWithNonStrings(): void
+    {
+        self::assertSame('-|-', PageContractTwig::create()->createTemplate('{{ nowo_ui_safe_href(null) ?? "-" }}|{{ nowo_ui_safe_href(42) ?? "-" }}')->render());
+    }
+
+    public function testButtonItemsKeepOnlyDataAndAriaAttributes(): void
+    {
+        $twig = PageContractTwig::create();
+        $html = $twig->render('@NowoUiKitBundle/partials/_page_actions.html.twig', ['items' => [
+            ['label' => 'Open', 'attr' => ['data-action' => 'x#open', 'ARIA-describedby' => 'help', 'style' => 'color:red', 'formaction' => '/evil', 'type' => 'submit', 'popovertarget' => 'other', 'title' => 'T']],
+            ['label' => 'Docs', 'href' => '/docs', 'attr' => ['target' => '_blank', 'rel' => 'noopener', 'data-x' => '1']],
+        ]]);
+        self::assertStringContainsString('<button type="button" class="nowo-ui-menu__item" data-action="x#open" ARIA-describedby="help" data-nowo-ui-menu-button>Open</button>', $html);
+        foreach (['style=', 'formaction=', 'type="submit"', 'popovertarget="other"', 'title="T"'] as $dropped) {
+            self::assertStringNotContainsString($dropped, $html);
+        }
+        self::assertStringContainsString('<a class="nowo-ui-menu__item" href="/docs" target="_blank" rel="noopener" data-x="1">Docs</a>', $html, 'link items keep their 2.3 attributes');
+    }
+
+    public function testUnrelatedPresentationVariablesAreIgnored(): void
+    {
+        $header = new PageHeader('Quotes', 'Intro');
+        $twig = PageContractTwig::create(['with_context' => "{{ include('@NowoUiKitBundle/partials/_page_header.html.twig') }}"]);
+        foreach (['object' => new stdClass(), 'bool' => true, 'unknown string' => 'slides', 'upper' => 'COMPACT'] as $case => $value) {
+            $partial = $twig->render('with_context', ['header' => $header, 'presentation' => $value, 'title_hidden' => 'yes']);
+            self::assertStringNotContainsString('visually-hidden', $partial, $case.': partial stays standard');
+            $wrapper = $twig->render('@NowoUiKit/page/_page_header.html.twig', ['header' => $header, 'presentation' => $value]);
+            self::assertStringContainsString('Intro', $wrapper, $case.': wrapper stays standard');
+            self::assertSame('standard|s', $twig->createTemplate('{{ nowo_ui_header_presentation(p) }}|{{ nowo_ui_header.isCompact(p) ? "c" : "s" }}')->render(['p' => $value]), $case);
+        }
+        $fn = PageContractTwig::create(['f' => '{{ nowo_ui_page_header(header, {presentation: p}) }}'])->render('f', ['header' => $header, 'p' => new stdClass()]);
+        self::assertStringContainsString('Intro', $fn);
     }
 
     // --- page_actions and _menu ---------------------------------------------------------------------------------

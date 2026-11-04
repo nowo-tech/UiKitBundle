@@ -54,10 +54,15 @@ The bundle does **not** expose CLI commands that mutate production data, file up
 - Kit JS toggles DOM attributes / theme / loader / canvas; it does not call `eval`, `document.write`, or load remote scripts.
 - Release check: GitHub answers are rendered with `textContent`; only `https://github.com/…` links are emitted (server and client side). Successful answers are cached for `cache_ttl`; failures soft-fail and are negatively cached for 5 minutes (`ReleaseUpdateChecker::ERROR_CACHE_TTL`), so neither page views nor endpoint hits fan out to GitHub. The status endpoint is anonymous unless you protect it and it reveals the installed version: import it behind your admin firewall / `access_control` (see [CONFIGURATION.md — Release check](CONFIGURATION.md#release-check)).
 - Resource limits (REQ-RUNTIME-001): both outbound GitHub requests of the release check have bounded, configurable idle timeouts (`release_check.timeout` 5 s, `release_check.releases_timeout` 8 s, 0.1–60 s) and no redirects, so a slow or hostile upstream cannot pin a PHP / FrankenPHP worker thread indefinitely.
-- Compact header (2.27): the breadcrumb labels and hrefs of the `header_crumbs` partial come from host data or
-  BreadcrumbKit (router URLs) and are always printed escaped (`title` and text); BreadcrumbKit's unescaped `icon` HTML
-  is never printed. Hash `attr` of `_menu` / `page_actions` items goes through `nowo_ui_html_attrs` (attribute names
-  validated, `on*` handlers refused, values escaped). The shells' `header_context` slot is host-trusted HTML (printed
+- Compact header (2.27): the breadcrumb labels of the `header_crumbs` partial come from host data or BreadcrumbKit and
+  are always printed escaped (`title` and text); BreadcrumbKit's unescaped `icon` HTML is never printed. Escaping does
+  not stop a `javascript:` URL, so hrefs are also scheme-checked (`Shell\SafeHref`): crumb hrefs, `home_href` and
+  `page_actions` hash item hrefs keep only relative URLs, `#…`, `http`, `https` and `mailto`, read the way a browser
+  reads them (case-insensitive, tabs and line breaks removed, leading controls trimmed); anything else is dropped.
+  Other host-supplied hrefs (`_menu` link items, actions) must still be router-generated or validated by the host.
+  Hash `attr` of `_menu` / `page_actions` items goes through `nowo_ui_html_attrs` (attribute names validated, `on*`
+  handlers refused, values escaped); button items keep only `data-*` / `aria-*`. The popover menu panel `id` is escaped
+  (it was not, 2.4 – 2.26). The shells' `header_context` slot is host-trusted HTML (printed
   `|raw`, like `header_end`). The request attribute `_nowo_ui_header_presentation` only selects between two fixed
   values (anything else is ignored).
 - Recipe defaults contain no secrets.

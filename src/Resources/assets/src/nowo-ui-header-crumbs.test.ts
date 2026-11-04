@@ -62,6 +62,22 @@ describe('nowo-ui-header-crumbs', () => {
     expect(later.querySelector('nav')?.hasAttribute('data-collapsed')).toBe(false);
   });
 
+  it('keeps working after a Turbo Drive style body swap', async () => {
+    mod.bindNowoUiHeaderCrumbs();
+    const oldBody = document.body;
+    const newBody = document.createElement('body');
+    newBody.innerHTML = trail();
+    document.documentElement.replaceChild(newBody, oldBody);
+    await flush();
+    expect(newBody.querySelector('nav')?.getAttribute('data-collapsed')).toBe('true');
+    const later = document.createElement('div');
+    later.innerHTML = trail();
+    newBody.append(later);
+    await flush();
+    expect(later.querySelector('nav')?.getAttribute('data-collapsed')).toBe('true');
+    expect(later.querySelector('[data-nowo-ui-header-crumbs-more]')?.hasAttribute('hidden')).toBe(false);
+  });
+
   it('is idempotent and leaves non-collapsible trails alone', () => {
     document.body.innerHTML = trail('data-collapsible="true" data-collapsed="true"') + trail('') + trail();
     const navs = document.querySelectorAll('nav');
