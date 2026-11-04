@@ -125,6 +125,26 @@ final class SidePanelPartialTest extends TestCase
     }
 
     /**
+     * 2.27.1 (Beacon on iPhone): the drawer and the overlay use the dynamic viewport height with a 100vh fallback, the
+     * sticky column caps itself the same way, and the body keeps its last controls above the home indicator.
+     */
+    public function testPhoneViewportRules(): void
+    {
+        $css = (string) file_get_contents(\dirname(__DIR__, 2).'/src/Resources/public/css/nowo-ui.unlayered.css');
+        $rule = static function (string $selector, string $after = '') use ($css): string {
+            $start = strpos($css, "\n".$selector." {\n", '' === $after ? 0 : (int) strpos($css, $after));
+            self::assertNotFalse($start, $selector);
+
+            return substr($css, $start, (int) strpos($css, '}', $start) - $start);
+        };
+        self::assertStringContainsString("max-height: 100vh;\n  max-height: 100dvh;", $rule('.nowo-ui-side-panel'));
+        self::assertStringContainsString("inset-block-end: auto;\n  height: 100vh;\n  height: 100dvh;", $rule('.nowo-ui-side-panel--overlay'));
+        self::assertStringContainsString("inset-block-end: auto;\n    height: 100vh;\n    height: 100dvh;", $rule('  .nowo-ui-side-panel', '@media (max-width: 767px)'));
+        self::assertStringContainsString('padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));', $rule('.nowo-ui-side-panel__body'));
+        self::assertStringNotContainsString('height: 100%;', $rule('.nowo-ui-side-panel--overlay'));
+    }
+
+    /**
      * @param array<string, mixed> $context
      */
     private function render(string $template, array $context = [], string $iconSet = 'bootstrap-icons'): string

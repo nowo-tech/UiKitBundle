@@ -91,6 +91,47 @@ test.describe('side panel (2.25)', () => {
     await expect(page.getByTestId('comments-toggle')).toBeFocused();
   });
 
+  test('phone: the drawer follows the dynamic viewport height and keeps its last control on screen (2.27.1)', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 740 });
+    await page.goto('/kit/side-panel');
+    await page.getByTestId('comments-toggle').click();
+    const panel = page.getByTestId('comments-panel');
+    await expect(panel).toBeVisible();
+    const sizes = await panel.evaluate((el) => {
+      const probe = document.createElement('div');
+      probe.className = 'nowo-ui-dvh-probe';
+      probe.setAttribute('aria-hidden', 'true');
+      document.body.append(probe);
+      // CSSOM only (the page forbids style attributes): a 100dvh probe for comparison
+      probe.style.position = 'fixed';
+      probe.style.height = '100dvh';
+      const dvh = probe.getBoundingClientRect().height;
+      probe.remove();
+      const body = el.querySelector('.nowo-ui-side-panel__body') as HTMLElement;
+      return {
+        supported: CSS.supports('height', '100dvh'),
+        dvh,
+        height: el.getBoundingClientRect().height,
+        bottom: el.getBoundingClientRect().bottom,
+        inner: window.innerHeight,
+        bodyPaddingBottom: getComputedStyle(body).paddingBottom,
+      };
+    });
+    expect(sizes.supported).toBe(true);
+    expect(sizes.height).toBe(sizes.dvh);
+    expect(sizes.bottom).toBeLessThanOrEqual(sizes.inner);
+    expect(sizes.bodyPaddingBottom).toBe('16px'); // 1rem + env(safe-area-inset-bottom), 0 in this browser
+
+    // A shorter viewport (a browser toolbar showing): the drawer shrinks with it and the last control stays reachable.
+    await page.setViewportSize({ width: 375, height: 560 });
+    await expect.poll(async () => (await panel.boundingBox())!.height).toBe(560);
+    const reply = page.getByTestId('reply');
+    await reply.scrollIntoViewIfNeeded();
+    const box = (await reply.boundingBox())!;
+    expect(box.y + box.height).toBeLessThanOrEqual(560);
+    await reply.click();
+  });
+
   test('overlay panel at the start side closes from its backdrop', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto('/kit/side-panel');

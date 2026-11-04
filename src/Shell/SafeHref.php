@@ -11,6 +11,10 @@ namespace Nowo\UiKitBundle\Shell;
  * the value as a browser reads it — tabs and line breaks removed anywhere, C0 controls and spaces trimmed at both
  * ends, scheme case-insensitive — so `JaVaScRiPt:` and `java<TAB>script:` are refused too. An accepted value is
  * returned unchanged (Twig escapes it when printing); a refused one gives null, and the caller renders no link.
+ *
+ * It checks the scheme only, not the origin: protocol-relative `//host/path` is accepted, and so are its backslash
+ * forms `/\host/path` and `\\host/path`, which browsers read as `//host` (an http(s) link to another host). Hosts
+ * that must keep links same-origin validate them before passing them in.
  */
 final class SafeHref
 {

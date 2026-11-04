@@ -28,7 +28,7 @@ use Stringable;
 final readonly class Theme
 {
     /** Attribute value: string/number, true = bare attribute, false/null = omitted. */
-    private const ATTRIBUTE_NAME = '/^[a-zA-Z_:][a-zA-Z0-9_:.-]*$/';
+    private const ATTRIBUTE_NAME = '/^[a-zA-Z_:][a-zA-Z0-9_:.-]*$/D';
 
     /**
      * Palette tokens with a UiKit dark default (the `[data-theme="dark"]` token block of nowo-ui.css, kept in sync by

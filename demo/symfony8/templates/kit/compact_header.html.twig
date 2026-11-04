@@ -6,9 +6,13 @@
 #}
 {% extends '@NowoUiKit/layout/document.html.twig' %}
 {% set nowo_ui_document_title = 'Compact header · UiKit 2.27' %}
+{#- The layout's own theme boot would run before nowo_ui_head; print it here, after the <meta> CSP, so the policy
+    covers it (it carries the request nonce). -#}
+{% set nowo_ui_theme_boot = false %}
 
 {% block nowo_ui_head %}
     <meta http-equiv="Content-Security-Policy" content="{{ csp }}">
+    {{ include('@NowoUiKitBundle/partials/_theme_boot.html.twig', {inline: true, nonce: app.request.attributes.get('csp_nonce')}, false) }}
 {% endblock %}
 
 {% block nowo_ui_styles %}

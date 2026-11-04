@@ -95,6 +95,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Planned as **2.27.1** (patch).
+
+### Fixed
+
+- **Side panel on phones** (2.25+, found by symfony-beacon on iPhone): the overlay panel and the ≤ 767 px drawer are
+  `100dvh` high (with a `100vh` fallback) instead of `100%` / `100vh`, and the sticky column is capped at `100dvh`, so
+  iOS Safari's bottom toolbar no longer covers the last controls; `.nowo-ui-side-panel__body` adds
+  `env(safe-area-inset-bottom)` to its bottom padding. USAGE: hide fixed footers and floating launchers while a drawer
+  is open.
+
+### Security
+
+- `_menu` link items (hashes and `View\Link`) drop `href`, `style` and `ping` from their `attr`, so the item's own
+  href is the only link target and no inline style or tracking ping can be added through it (EH follow-up).
+- Attribute names ending in a line feed (`"style\n"`, `"ping\n"`, `"href\n"`, `"onclick\n"`) are refused: the name
+  pattern of `Theme` (theme attributes, `nowo_ui_html_attrs`, menu item `attr`) and of `Action::assertAttributes` now
+  uses the PCRE `D` modifier, so `$` no longer matches before a final `\n` — such a key slipped past the `on*` refusal
+  and the `href` / `style` / `ping` drop, and the browser read it as the bare attribute.
+- SECURITY.md names the backslash forms `/\host` and `\\host` next to protocol-relative `//host`: the compact header's
+  href check is about the scheme, not the origin.
+
 ## [2.27.0] - 2026-11-04
 
 The compact header — the breadcrumb and the page actions in the top bar (compact header

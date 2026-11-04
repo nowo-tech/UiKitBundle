@@ -1686,6 +1686,12 @@ page (it is not in the default `scripts` list).
   an icon, or whose icon the icon set cannot draw, does not have it.
 - **Theming:** slots `side_panel*` ([THEME_SLOTS](THEME_SLOTS.md)) and the `--nowo-ui-side-panel-*` tokens
   ([THEMING](THEMING.md)); no inline styles or handlers (strict CSP).
+- **Phones (2.27.1):** the drawer is `100dvh` high (`100vh` where `dvh` is unknown), so iOS Safari's toolbars no longer
+  cover its last controls, and the body adds `env(safe-area-inset-bottom)` to its bottom padding (non-zero only with
+  `<meta name="viewport" content="…, viewport-fit=cover">`). **Hide your own fixed footers, cookie bars and floating
+  launchers (chat bubbles, "back to top") while a drawer is open** — they sit above the page and would cover the
+  panel. React to the bubbling `nowo-ui:side-panel:open` / `nowo-ui:side-panel:close` events, or use CSS such as
+  `body:has(.nowo-ui-side-panel[data-drawer]:not([hidden])) .app-launcher { display: none; }`.
 
 Demo: `/kit/side-panel` in `demo/symfony8`.
 

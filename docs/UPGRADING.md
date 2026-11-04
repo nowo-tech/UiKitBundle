@@ -106,6 +106,21 @@
 
 ## Unreleased
 
+Planned as **2.27.1**, from **2.27.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+php bin/console assets:install   # nowo-ui.css changed
+```
+
+- **Side panel drawer height:** the overlay panel and the phone drawer now use `height: 100dvh` (fallback `100vh`)
+  instead of `100%`, and the body's bottom padding becomes `calc(1rem + env(safe-area-inset-bottom, 0px))`. Host CSS
+  that set the drawer's `height` / `bottom` itself should check the result; for the safe-area padding to count, the
+  viewport meta needs `viewport-fit=cover`. Hide fixed footers and floating launchers while a drawer is open (see
+  [USAGE](USAGE.md#side-panel-and-drawer-225)).
+- **`_menu` link items** no longer print `href`, `style` or `ping` from `attr` (any case). Put the link target in the
+  item's `href`, styles in CSS.
+
 ## To 2.27.0
 
 From **2.26.0**:

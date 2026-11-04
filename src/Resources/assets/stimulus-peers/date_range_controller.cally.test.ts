@@ -33,9 +33,8 @@ describe('date-range peer with Cally', () => {
     document.addEventListener('date-range:ready', ready);
 
     (app.getControllerForElementAndIdentifier(document.getElementById('d') as HTMLElement, 'date-range') as DateRangeController).open();
-    await settle();
-
-    expect(ready).toHaveBeenCalledTimes(1);
+    // The dynamic import of Cally takes as long as it takes (the module graph may be cold in a shuffled run).
+    await vi.waitFor(() => expect(ready).toHaveBeenCalledTimes(1));
     expect(customElements.get('calendar-range')).toBeDefined();
     const calendar = document.querySelector('calendar-range') as HTMLElement & { value: string };
     expect(calendar.getAttribute('months')).toBe('1');

@@ -297,7 +297,7 @@ final readonly class Action implements ArrayAccess
     {
         foreach ($attributes as $name => $value) {
             $name = (string) $name;
-            if (1 !== preg_match('/^[a-zA-Z_:][a-zA-Z0-9_:.-]*$/', $name) || str_starts_with(strtolower($name), 'on')) {
+            if (1 !== preg_match('/^[a-zA-Z_:][a-zA-Z0-9_:.-]*$/D', $name) || str_starts_with(strtolower($name), 'on')) {
                 throw new InvalidArgumentException(\sprintf('Invalid or unsafe attribute "%s" (no on* handlers: CSP).', $name));
             }
             if (null !== $value && !\is_scalar($value)) {
