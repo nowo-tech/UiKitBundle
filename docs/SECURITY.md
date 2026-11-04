@@ -59,9 +59,12 @@ The bundle does **not** expose CLI commands that mutate production data, file up
   not stop a `javascript:` URL, so hrefs are also scheme-checked (`Shell\SafeHref`): crumb hrefs, `home_href` and
   `page_actions` hash item hrefs keep only relative URLs, `#…`, `http`, `https` and `mailto`, read the way a browser
   reads them (case-insensitive, tabs and line breaks removed, leading controls trimmed); anything else is dropped.
-  Other host-supplied hrefs (`_menu` link items, actions) must still be router-generated or validated by the host.
+  The check is about the scheme, not the origin: protocol-relative `//host/path` and its backslash forms `/\host/path`
+  and `\\host/path` (browsers read `\` as `/` in http(s) URLs) pass as links to another host; validate the target
+  when links must stay same-origin. Other host-supplied hrefs (`_menu` link items, actions) must still be router-generated or validated by the host.
   Hash `attr` of `_menu` / `page_actions` items goes through `nowo_ui_html_attrs` (attribute names validated, `on*`
-  handlers refused, values escaped); button items keep only `data-*` / `aria-*`. The popover menu panel `id` is escaped
+  handlers refused, values escaped); button items keep only `data-*` / `aria-*`, and link items drop `href`, `style`
+  and `ping` from `attr` (2.27.1), so the checked `href` is the only one. The popover menu panel `id` is escaped
   (it was not, 2.4 – 2.26). The shells' `header_context` slot is host-trusted HTML (printed
   `|raw`, like `header_end`). The request attribute `_nowo_ui_header_presentation` only selects between two fixed
   values (anything else is ignored).

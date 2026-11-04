@@ -5729,7 +5729,9 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
   flex: 0 0 var(--nowo-ui-side-panel-width, 22rem);
   width: var(--nowo-ui-side-panel-width, 22rem);
   max-width: 100%;
+  /* 2.27.1: the dynamic viewport height (iOS Safari's toolbars), 100vh where dvh is unknown */
   max-height: 100vh;
+  max-height: 100dvh;
   position: sticky;
   top: 0;
   overflow: auto;
@@ -5789,6 +5791,8 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
 .nowo-ui-side-panel__body {
   flex: 1 1 auto;
   padding: 1rem;
+  /* 2.27.1: keep the last controls above the home indicator (needs viewport-fit=cover to be non-zero) */
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
 }
 
 .nowo-ui-side-panel__backdrop {
@@ -5803,7 +5807,9 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
   inset-block: 0;
   inset-inline-end: 0;
   width: min(100%, var(--nowo-ui-side-panel-width, 22rem));
-  height: 100%;
+  inset-block-end: auto;
+  height: 100vh;
+  height: 100dvh;
   max-height: none;
   border-radius: 0;
   border-block: 0;
@@ -5841,7 +5847,9 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
     inset-block: 0;
     inset-inline-end: 0;
     width: 100%;
-    height: 100%;
+    inset-block-end: auto;
+    height: 100vh;
+    height: 100dvh;
     max-height: none;
     border: 0;
     border-radius: 0;

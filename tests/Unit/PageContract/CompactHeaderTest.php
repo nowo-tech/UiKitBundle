@@ -21,6 +21,7 @@ use Nowo\UiKitBundle\View\BackLink;
 use Nowo\UiKitBundle\View\Confirm;
 use Nowo\UiKitBundle\View\Crumb;
 use Nowo\UiKitBundle\View\Label;
+use Nowo\UiKitBundle\View\Link;
 use Nowo\UiKitBundle\View\ListPage;
 use Nowo\UiKitBundle\View\PageHeader;
 use Nowo\UiKitBundle\View\PageStatus;
@@ -498,6 +499,18 @@ script:alert(4)', false];
             self::assertStringNotContainsString($dropped, $html);
         }
         self::assertStringContainsString('<a class="nowo-ui-menu__item" href="/docs" target="_blank" rel="noopener" data-x="1">Docs</a>', $html, 'link items keep their 2.3 attributes');
+    }
+
+    public function testLinkItemsDropHrefStyleAndPingFromAttr(): void
+    {
+        $twig = PageContractTwig::create();
+        $items = [['label' => 'Docs', 'href' => '/docs', 'attr' => ['HREF' => 'javascript:alert(1)', 'style' => 'color:red', 'Ping' => 'https://tracker.example', 'target' => '_blank', 'data-x' => '1']]];
+        $expected = '<a class="nowo-ui-menu__item" href="/docs" target="_blank" data-x="1">Docs</a>';
+        self::assertStringContainsString($expected, $twig->render('@NowoUiKitBundle/partials/_menu.html.twig', ['items' => $items]));
+        self::assertStringContainsString($expected, $twig->render('@NowoUiKitBundle/partials/_page_actions.html.twig', ['items' => $items]));
+        $link = $twig->render('@NowoUiKitBundle/partials/_menu.html.twig', ['items' => [new Link('Docs', '/docs', ['style' => 'x', 'data-y' => '2'])]]);
+        self::assertStringContainsString('<a class="nowo-ui-menu__item" href="/docs" data-y="2">Docs</a>', $link, 'View\\Link attributes too');
+        self::assertSame(1, substr_count($twig->render('@NowoUiKitBundle/partials/_menu.html.twig', ['items' => $items]), 'href='));
     }
 
     public function testUnrelatedPresentationVariablesAreIgnored(): void

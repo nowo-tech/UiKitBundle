@@ -109,17 +109,26 @@ test.describe('compact header (2.27)', () => {
     await page.waitForLoadState('networkidle');
     await expect(page.locator('.sf-toolbar, [id^="sfwdt"]')).toHaveCount(0); // no dev tool injects inline code here
     expect(await cspViolations(page)).toEqual([]);
-    // The watcher works: an inline script without the nonce is blocked and reported.
+    // The <meta> policy comes before every script of the page, the nonced theme boot included.
+    expect(await page.evaluate(() => {
+      const meta = document.querySelector('meta[http-equiv="Content-Security-Policy"]')!;
+      return [...document.querySelectorAll('script')].every((s) => meta.compareDocumentPosition(s) & Node.DOCUMENT_POSITION_FOLLOWING);
+    })).toBe(true);
+    // The watcher works: an inline style attribute and an inline script without the nonce are both blocked and reported.
     await expect
       .poll(async () => {
         await page.evaluate(() => {
+          document.body.insertAdjacentHTML('beforeend', `<div data-csp-probe style="color: red">${Date.now()}</div>`);
           const probe = document.createElement('script');
           probe.textContent = `window.cspProbe = ${Date.now()};`;
           document.body.append(probe);
         });
-        return (await cspViolations(page)).length;
+        const log = await cspViolations(page);
+        return ['style-src-attr', 'script-src'].every((directive) => log.some((line) => line.startsWith(directive)));
       })
-      .toBeGreaterThan(0);
+      .toBe(true);
+    expect(await page.evaluate(() => (window as unknown as { cspProbe?: number }).cspProbe)).toBeUndefined();
+    expect(await page.locator('[data-csp-probe]').first().evaluate((el) => getComputedStyle(el).color)).not.toBe('rgb(255, 0, 0)');
   });
 
   for (const width of [375, 320]) {
