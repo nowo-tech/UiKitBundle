@@ -152,6 +152,22 @@ changes, both in UPGRADING: the side panel drawer also makes the shell header an
 - Dialogs opened by `nowo-ui-dialog.js` register with the overlay registry (`kind: 'dialog'`, no shell inert: the top
   layer already does it).
 
+### Security
+
+- REQ-SEC-004 appendix ES (unreleased code, fixed before the tag):
+  - **ES-M1:** `X-Nowo-Redirect` targets with dot segments (`/.//evil.example`, `/..//`, `/%2e//`, `/%2E%2E//`,
+    `/a/..//`) passed both checks and the browser normalised them to a protocol-relative URL on another origin. The
+    client (`sameOriginPath()`) and the server (`RemoteDialogTarget::tryPath()`, also for reduced absolute URLs) now
+    refuse any `.` / `..` segment, raw or `%2e`-encoded (decoded once), and anything that decodes or resolves to `//…`.
+  - ES-L1: an owner removed from the DOM while open is released at once (the shell and the side panel's main column
+    no longer stay `inert`).
+  - ES-L2: submits use `FormData(form, submitter)` and honour `formaction` / `formmethod` / `formenctype`.
+  - ES-I1–I5: an action-less form posts to the dialog's URL; the fragment also loses `iframe[srcdoc]`,
+    `meta[http-equiv]`, `<base>`, `<object>` / `<embed>` and inline `on*` attributes; a close queued before a reopen
+    no longer tears the new dialog down; `convert_redirects` keeps the redirect's security headers;
+    `X-Nowo-Redirect` counts on 2xx answers only.
+- Dev dependency `symfony/yaml` 7.4.23 in `composer.lock`.
+
 ### Fixed
 
 - Order-dependent Vitest tests (`collapse_panel_controller.test.ts` failed under `--sequence.shuffle --sequence.seed=3`):

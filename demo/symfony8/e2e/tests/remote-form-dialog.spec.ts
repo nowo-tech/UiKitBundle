@@ -49,6 +49,27 @@ test.describe('remote form dialog (2.28)', () => {
     expect(csp).toEqual([]);
   });
 
+  test('a dot-segment X-Nowo-Redirect never navigates off-origin (REQ-SEC-004 ES-M1)', async ({ page }) => {
+    const offOrigin: string[] = [];
+    page.on('request', (request) => {
+      if (new URL(request.url()).hostname === 'evil.example') offOrigin.push(request.url());
+    });
+    await page.route((url) => url.hostname === 'evil.example', (route) => route.abort());
+    await page.goto('/kit/remote-form');
+    const origin = new URL(page.url()).origin;
+    for (const dotted of ['/.//evil.example/pwn', '/..//evil.example/pwn', '/%2e//evil.example/pwn', '/%2E%2E//evil.example/pwn', '/a/..//evil.example/pwn', '/.%2e//evil.example/pwn']) {
+      await page.route('**/kit/remote-form/new', (route) =>
+        route.request().method() === 'POST' ? route.fulfill({ status: 204, headers: { 'X-Nowo-Redirect': dotted } }) : route.fallback(),
+      );
+      await page.getByTestId('destination-add').click();
+      await page.getByTestId('destination-label').fill('x');
+      await Promise.all([page.waitForEvent('load'), page.getByTestId('destination-save').click()]);
+      expect(new URL(page.url()).origin).toBe(origin);
+      await page.unroute('**/kit/remote-form/new');
+    }
+    expect(offOrigin).toEqual([]);
+  });
+
   test('Escape closes, focus returns, and a reopened dialog has a fresh form', async ({ page }) => {
     await page.goto('/kit/remote-form');
     const add = page.getByTestId('destination-add');

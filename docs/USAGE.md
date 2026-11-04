@@ -1741,15 +1741,19 @@ public function edit(Request $request, Monitor $monitor, RemoteDialogResponder $
 | Step | Contract |
 | --- | --- |
 | Load | `GET <href>` with `X-Nowo-Dialog: 1`, `X-Requested-With: XMLHttpRequest`, `Accept: text/html`; `mode: 'same-origin'`, `credentials: 'same-origin'`, `redirect: 'manual'`. A `200` HTML **fragment** fills the body (a whole document, another status, a redirect or a network error closes the dialog and follows the link) |
-| Submit | Only `method="post"` forms with a same-origin action (others, and forms with `data-nowo-ui-remote-form-native`, submit normally). `FormData` includes the clicked submit button's `name=value` |
-| Saved | `204`, or any answer with a **valid** `X-Nowo-Redirect`: the cancelable `saved` event, then close and go there (reload without a valid target). A 3xx answer counts as saved without a target (the flash is still in the session, the reloaded page shows it) |
+| Submit | Only `method="post"` forms with a same-origin action (others, and forms with `data-nowo-ui-remote-form-native`, submit normally), like a native submit: `new FormData(form, submitter)`, and the submitter's `formaction` / `formmethod` / `formenctype` win (a `formaction` must be same-origin too; `formmethod="get"` or `formenctype="text/plain"` submit normally). A form without `action` posts to the URL loaded in the dialog, not to the host page |
+| Saved | `204`, or a **2xx** answer with a **valid** `X-Nowo-Redirect` (the header is ignored on other statuses): the cancelable `saved` event, then close and go there (reload without a valid target). A 3xx answer counts as saved without a target (the flash is still in the session, the reloaded page shows it) |
 | Invalid | `422` or a `200` fragment: re-rendered; focus on the first `[aria-invalid="true"]` (then `invalid_selector`), else the title |
 | Error | `401` / `403` / `5xx` / network: the typed form stays, with one `role="alert"` line on top |
 | Close | Escape (a Tom Select dropdown, popover or nested dialog inside closes first), the close button, `[data-nowo-ui-dialog-close]`, the backdrop only with `backdrop_close: true` (default `false`: a stray click never loses a typed form). The request is aborted, the body emptied (Stimulus controllers of the fragment disconnect) and focus returns to the opener |
 
 - **Redirect targets** are path-absolute same-origin URLs only: one leading `/`, no `//`, no backslash, no control
-  character, ≤ 2048 characters. `RemoteDialogResponder` reduces an absolute URL on the request's own origin to its
+  character, **no `.` / `..` segment** (also `%2e`-encoded, either case: browsers would normalise `/.//evil.example`
+  to `//evil.example`, another origin), nothing that decodes to `//…`, ≤ 2048 characters. `RemoteDialogResponder` reduces an absolute URL on the request's own origin to its
   path and throws on anything else; the client ignores an invalid header (and reloads).
+- **Fragment trust:** the dialog injects the server's own answer, with the same trust as the page. Before insertion it
+  drops `<script>`, `iframe[srcdoc]`, `meta[http-equiv]`, `<base>`, `<object>` / `<embed>` and every inline `on*`
+  attribute, but it is not a sanitizer: never render user HTML unescaped in a fragment, and keep a `script-src` CSP.
 - **`X-Nowo-Dialog` is not a security signal**: any page can send it. Never skip CSRF, authorization or validation
   because of it; it only selects the template and the success answer. Keep `Vary: X-Nowo-Dialog` on both modes
   (`RemoteDialog::vary()`; `RemoteDialogResponder` adds it to its answers).

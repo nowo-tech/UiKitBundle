@@ -64,6 +64,14 @@ final class RemoteDialogTest extends TestCase
         yield 'too long' => ['/'.str_repeat('a', RemoteDialogTarget::MAX_LENGTH), null];
         yield 'absolute with double-slash path' => ['https://app.example//evil.example', null];
         yield 'malformed' => ['https://', null];
+        // REQ-SEC-004 ES-M1: dot segments would normalise to //evil.example (another origin).
+        foreach (['/.//evil.example/x', '/..//evil.example/x', '/%2e//evil.example/x', '/%2E%2E//evil.example/x', '/a/..//evil.example/x', '/%2e%2E//evil.example/x', '/.%2e//evil.example/x', '/a/%2E/b', '/a/./b', '/a/..', '/.', '/%252e//evil.example/x', '/%2F%2Fevil.example', '/a%5c..%5cb', '/./?x=1'] as $dotted) {
+            yield 'dot segment '.$dotted => [$dotted, null];
+        }
+        yield 'absolute same origin with a dot segment' => ['https://app.example/.//evil.example/x', null];
+        yield 'absolute same origin with an encoded dot segment' => ['https://app.example/%2E%2E//evil.example', null];
+        yield 'dots inside a name' => ['/files/a..b/.well-known/x.y', '/files/a..b/.well-known/x.y'];
+        yield 'dots in the query only' => ['/x?next=/../evil#..', '/x?next=/../evil#..'];
     }
 
     #[DataProvider('targets')]
@@ -105,6 +113,12 @@ final class RemoteDialogTest extends TestCase
         self::assertTrue($responder->isDialog($this->dialogRequest()));
     }
 
+    public function testResponderRefusesDotSegmentTargets(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        (new RemoteDialogResponder($this->stack($this->dialogRequest())))->redirect('/a/..//evil.example/x');
+    }
+
     public function testResponderRefusesOtherOrigins(): void
     {
         $this->expectException(InvalidArgumentException::class);
@@ -130,17 +144,24 @@ final class RemoteDialogTest extends TestCase
         $listener = new RemoteDialogRedirectListener();
         $redirect = new RedirectResponse('/settings');
         $redirect->headers->setCookie(Cookie::create('flash', 'x'));
+        $redirect->headers->set('X-Frame-Options', 'DENY');
+        $redirect->headers->set('Content-Security-Policy', "default-src 'self'");
         $event = $this->event($this->dialogRequest(), $redirect);
         $listener($event);
         self::assertSame(204, $event->getResponse()->getStatusCode());
         self::assertSame('/settings', $event->getResponse()->headers->get('X-Nowo-Redirect'));
         self::assertCount(1, $event->getResponse()->headers->getCookies());
+        self::assertSame('DENY', $event->getResponse()->headers->get('X-Frame-Options'));
+        self::assertSame("default-src 'self'", $event->getResponse()->headers->get('Content-Security-Policy'));
+        self::assertNull($event->getResponse()->headers->get('Location'));
+        self::assertStringContainsString('no-store', (string) $event->getResponse()->headers->get('Cache-Control'));
 
         foreach ([
             $this->event(Request::create('https://app.example/form'), new RedirectResponse('/settings')),
             $this->event($this->dialogRequest(), new RedirectResponse('/settings'), HttpKernelInterface::SUB_REQUEST),
             $this->event($this->dialogRequest(), new Response('page')),
             $this->event($this->dialogRequest(), new RedirectResponse('https://evil.example/')),
+            $this->event($this->dialogRequest(), new RedirectResponse('/.//evil.example/x')),
         ] as $untouched) {
             $before = $untouched->getResponse();
             $listener($untouched);

@@ -54,6 +54,8 @@ const openers = new WeakMap<HTMLElement, HTMLElement>();
  */
 type InertState = { owners: Set<HTMLElement>; ours: boolean; hostTouched: boolean; observer: MutationObserver | null };
 const inertStates = new WeakMap<HTMLElement, InertState>();
+/** Main column of each panel (kept so a panel removed from the DOM can still release it). */
+const mains = new WeakMap<HTMLElement, HTMLElement>();
 /** Overlay handle of each panel while it is a drawer. */
 const overlays = new WeakMap<HTMLElement, OverlayHandle>();
 
@@ -65,7 +67,8 @@ export function closesOnBackdrop(panel: HTMLElement): boolean {
 /** Overlay registration follows the drawer state. */
 function syncOverlay(panel: HTMLElement, drawer: boolean): void {
   const handle = overlays.get(panel);
-  if (drawer && !handle) {
+  // A handle pruned by the registry (the panel left the DOM while open) is replaced on the next open.
+  if (drawer && (!handle || !handle.active())) {
     overlays.set(panel, overlayRegistry().acquire(panel, { kind: 'side-panel', closeOnBackdrop: closesOnBackdrop(panel) }));
   } else if (!drawer && handle) {
     overlays.delete(panel);
@@ -110,8 +113,14 @@ export function applyMode(panel: HTMLElement): void {
   if (backdrop) backdrop.hidden = !drawer;
   panel.toggleAttribute('data-drawer', drawer);
   syncOverlay(panel, drawer);
-  const main = panel.closest(CONTAINER)?.querySelector<HTMLElement>(MAIN);
+  const main = panel.closest(CONTAINER)?.querySelector<HTMLElement>(MAIN) ?? mains.get(panel) ?? null;
   if (!main) return;
+  mains.set(panel, main);
+  releaseMain(panel, main, drawer);
+}
+
+/** Adds or removes the panel from the owners of its main column's `inert` (removed: only what this script set). */
+function releaseMain(panel: HTMLElement, main: HTMLElement, drawer: boolean): void {
   let state = inertStates.get(main);
   if (drawer) {
     if (!state) {
@@ -322,6 +331,15 @@ function onKeydown(event: KeyboardEvent): void {
   }
 }
 
+/** A drawer removed from the DOM while open (the registry pruned it): lift what it held on its main column (ES-L1). */
+function onOverlayClose(event: Event): void {
+  const owner = (event as CustomEvent<{ owner?: unknown }>).detail?.owner;
+  if (!(owner instanceof HTMLElement) || owner.isConnected || !owner.matches(PANEL)) return;
+  overlays.delete(owner);
+  const main = mains.get(owner);
+  if (main) releaseMain(owner, main, false);
+}
+
 function onResize(): void {
   document.querySelectorAll<HTMLElement>(PANEL).forEach((panel) => applyMode(panel));
 }
@@ -359,6 +377,7 @@ export function bindNowoUiSidePanel(): void {
   document.addEventListener('click', onClick);
   document.addEventListener('keydown', onKeydown);
   window.addEventListener('resize', onResize);
+  document.addEventListener('nowo:overlay-close', onOverlayClose);
 }
 
 bindNowoUiSidePanel();

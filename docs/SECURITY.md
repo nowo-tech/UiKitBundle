@@ -71,18 +71,24 @@ The bundle does **not** expose CLI commands that mutate production data, file up
   values (anything else is ignored).
 - Remote form dialog (2.28): fetches use `mode: 'same-origin'`, `credentials: 'same-origin'`, `redirect: 'manual'`;
   openers and form actions on another origin are not intercepted (normal navigation). `X-Nowo-Redirect` is honoured
-  only as a path-absolute same-origin URL (one leading `/`, no `//`, no backslash, no control character, ≤ 2048
-  characters, absolute URLs refused); `RemoteDialogResponder` / `RemoteDialogTarget` apply the same rule server side
+  only on a 2xx answer and only as a path-absolute same-origin URL (one leading `/`, no `//`, no backslash, no control
+  character, no `.` / `..` segment raw or `%2e`-encoded, nothing that decodes to `//…`, ≤ 2048 characters, absolute
+  URLs refused; REQ-SEC-004 ES-M1: browsers normalise `/.//evil.example` to the protocol-relative `//evil.example`); `RemoteDialogResponder` / `RemoteDialogTarget` apply the same rule server side
   (an absolute URL on the request's own origin is reduced to its path, anything else throws), also for the
   non-dialog `RedirectResponse`, so the helper is never an open redirect. Only the server's own same-origin
-  `text/html` answer is injected (whole documents refused), parsed in an inert `<template>` with `<script>` removed;
+  `text/html` answer is injected (whole documents refused), parsed in an inert `<template>` with `<script>`,
+  `iframe[srcdoc]`, `meta[http-equiv]`, `<base>`, `<object>` / `<embed>` and inline `on*` attributes removed (defence
+  in depth, not a sanitizer);
   titles and messages are `textContent`. The fragment is host Twig output with autoescaping, at the same trust level
   as the page. `X-Nowo-Dialog` is **not** a security signal (any page can send it): CSRF stays the host form's own
   token, and hosts must never skip CSRF, authorization or validation because of the header. `Vary: X-Nowo-Dialog`
   keeps caches from mixing the two modes; the `204` answers are `no-store`. Closing aborts the request, so a late
-  answer never injects or navigates. Warnings name a rejected header, never its value.
+  answer never injects or navigates. Submits follow native semantics (`FormData(form, submitter)`, the submitter's
+  `formaction` / `formmethod` / `formenctype`, same-origin checked), so the server runs the action the user clicked.
+  `convert_redirects` keeps the redirect's security headers (`X-Frame-Options`, CSP…) and cookies on the 204. Warnings name a rejected header, never its value.
 - Overlay registry (2.28): it only toggles `inert` / `aria-hidden` and a root attribute, removes only what it set
-  (never an `inert` the host wrote), drops handles of removed owners and releases everything on `pagehide`, so an
+  (never an `inert` the host wrote), releases an owner removed from the DOM at once (a `childList` observer while overlays are open) and everything on
+  `pagehide`, so an
   error cannot leave the shell locked. The `nowo:overlay-*` events can be dispatched by any same-document script;
   they only hide or show chrome (no data, no permission).
 - Recipe defaults contain no secrets.

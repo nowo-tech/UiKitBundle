@@ -3,6 +3,8 @@ import {
   ALERT_ATTR,
   DEFAULT_SETTINGS,
   firstInvalid,
+  formDataWith,
+  hasUnsafeSegments,
   isFragment,
   isPlainClick,
   nestedLayerOwnsEscape,
@@ -12,6 +14,8 @@ import {
   RemoteFormSession,
   sameOriginHref,
   sameOriginPath,
+  submitTarget,
+  urlEncoded,
   type RemoteFormSettings,
 } from './nowo-ui-remote-form-core';
 
@@ -48,6 +52,83 @@ describe('remote form helpers', () => {
       expect(sameOriginPath(bad)).toBeNull();
     }
     expect(sameOriginPath('/%0d%0a')).toBe('/%0d%0a');
+  });
+
+  it('refuses dot segments that would normalise to another origin (REQ-SEC-004 ES-M1)', () => {
+    for (const dotted of [
+      '/.//evil.example/x',
+      '/..//evil.example/x',
+      '/%2e//evil.example/x',
+      '/%2E%2E//evil.example/x',
+      '/a/..//evil.example/x',
+      '/%2e%2E//evil.example/x',
+      '/.%2e//evil.example/x',
+      '/a/%2E/b',
+      '/a/./b',
+      '/a/..',
+      '/.',
+      '/%252e//evil.example/x',
+      '/%2F%2Fevil.example',
+      '/a%5c..%5cb',
+      '/./?x=1',
+      '/%E0%A4%A',
+    ]) {
+      expect(sameOriginPath(dotted), dotted).toBeNull();
+    }
+    expect(hasUnsafeSegments('/a/b')).toBe(false);
+    expect(sameOriginPath('/files/a..b/.well-known/x.y')).toBe('/files/a..b/.well-known/x.y');
+    expect(sameOriginPath('/x?next=/../evil#..')).toBe('/x?next=/../evil#..');
+  });
+
+  it('strips what could run or navigate from a fragment', () => {
+    const fragment = parseFragment(`<form onsubmit="x()"><input onfocus="y()" name="a"></form><iframe srcdoc="<script>1</script>"></iframe>
+      <iframe src="/frame"></iframe><meta http-equiv="refresh" content="0;url=https://evil.example"><base href="https://evil.example/">
+      <object data="x"></object><embed src="x"><img src="x" ONERROR="z()">`);
+    expect(fragment.querySelector('iframe[srcdoc], meta, base, object, embed')).toBeNull();
+    expect(fragment.querySelector('iframe[src="/frame"]')).not.toBeNull();
+    expect(fragment.querySelector('form')?.hasAttribute('onsubmit')).toBe(false);
+    expect(fragment.querySelector('input')?.hasAttribute('onfocus')).toBe(false);
+    expect(fragment.querySelector('img')?.attributes.length).toBe(1);
+  });
+
+  it('resolves submit targets and data like a native submit (ES-L2, ES-I1)', () => {
+    document.body.innerHTML = `<form id="f" method="post" action="/save"><input type="hidden" name="op" value="hidden">
+      <button id="plain" type="submit">Save</button>
+      <button id="again" type="submit" name="op" value="again">Save + new</button>
+      <button id="del" type="submit" name="del" value="1" formaction="/delete" formmethod="post" formenctype="application/x-www-form-urlencoded">Delete</button>
+      <button id="get" type="submit" formmethod="get">Search</button></form>
+      <form id="bare" method="post"></form>`;
+    const form = document.getElementById('f') as HTMLFormElement;
+    const button = (id: string): HTMLElement => document.getElementById(id) as HTMLElement;
+    expect(submitTarget(form, button('plain'), '/dialog')).toMatchObject({ action: `${window.location.origin}/save`, method: 'post' });
+    expect(submitTarget(form, button('del'), '/dialog')).toMatchObject({ action: `${window.location.origin}/delete`, method: 'post', enctype: 'application/x-www-form-urlencoded' });
+    expect(submitTarget(form, button('get'), '/dialog').method).toBe('get');
+    expect(submitTarget(document.getElementById('bare') as HTMLFormElement, null, '/dialog').action).toBe('/dialog');
+    expect(formDataWith(form, button('again')).getAll('op')).toEqual(['hidden', 'again']);
+    expect(formDataWith(form, button('plain')).getAll('op')).toEqual(['hidden']);
+    expect(formDataWith(form, null).getAll('op')).toEqual(['hidden']);
+    const encoded = urlEncoded(formDataWith(form, button('del')));
+    expect(encoded.get('del')).toBe('1');
+    const withFile = new FormData();
+    withFile.append('file', new File(['x'], 'a.txt'));
+    expect(urlEncoded(withFile).get('file')).toBe('a.txt');
+  });
+
+  it('falls back when FormData ignores or refuses the submitter', () => {
+    document.body.innerHTML = '<form id="f"><button id="b" name="go" value="1">Go</button></form>';
+    const Native = window.FormData;
+    class NoSubmitter extends Native {
+      constructor(form?: HTMLFormElement, submitter?: HTMLElement | null) {
+        if (submitter) throw new TypeError('unsupported');
+        super(form);
+      }
+    }
+    vi.stubGlobal('FormData', NoSubmitter);
+    try {
+      expect(formDataWith(document.getElementById('f') as HTMLFormElement, document.getElementById('b')).getAll('go')).toEqual(['1']);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it('resolves fetch targets on this origin only', () => {
@@ -293,10 +374,57 @@ describe('RemoteFormSession', () => {
       }
     });
 
-    it('follows a valid redirect header on any status', async () => {
+    it('follows a valid redirect header on a 2xx answer only (ES-I5)', async () => {
       vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply({ status: 200, headers: { 'X-Nowo-Redirect': '/done' } })));
       await submitForm(form());
       expect(assign).toHaveBeenCalledWith('/done');
+      assign.mockClear();
+      await openWith(reply({ body: '<form method="post" action="/form"></form>' }));
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply({ status: 500, headers: { 'X-Nowo-Redirect': '/done' } })));
+      await submitForm(form());
+      expect(assign).not.toHaveBeenCalled();
+      expect(body().querySelector('[role="alert"]')).not.toBeNull();
+    });
+
+    it('never navigates off-origin through a dot-segment redirect (ES-M1)', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      for (const dotted of ['/.//evil.example/x', '/..//evil.example/x', '/%2e//evil.example/x', '/%2E%2E//evil.example/x', '/a/..//evil.example/x']) {
+        await openWith(reply({ body: '<form method="post" action="/form"></form>' }));
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply({ status: 204, headers: { 'X-Nowo-Redirect': dotted } })));
+        await submitForm(form());
+      }
+      expect(assign).not.toHaveBeenCalled();
+      expect(reload).toHaveBeenCalledTimes(5);
+      warn.mockRestore();
+    });
+
+    it('honours the submitter: formaction, formmethod and the posted value (ES-L2)', async () => {
+      body().innerHTML = `<form method="post" action="/form"><input type="hidden" name="op" value="hidden">
+        <button id="again" type="submit" name="op" value="again">Again</button></form>`;
+      const fetchMock = vi.fn().mockResolvedValue(reply({ status: 204, headers: {} }));
+      vi.stubGlobal('fetch', fetchMock);
+      await submitForm(form(), document.getElementById('again'));
+      expect(((fetchMock.mock.calls[0] as [string, RequestInit])[1].body as FormData).getAll('op')).toEqual(['hidden', 'again']);
+      await openWith(reply({ body: '<form method="post" action="/form"><button id="del" type="submit" name="del" value="1" formaction="/delete" formenctype="application/x-www-form-urlencoded">Delete</button><button id="ext" type="submit" formaction="https://evil.test/x">Ext</button><button id="get" type="submit" formmethod="get">Get</button><button id="pt" type="submit" formenctype="text/plain">T</button></form>' }));
+      fetchMock.mockClear();
+      vi.stubGlobal('fetch', fetchMock);
+      await submitForm(form(), document.getElementById('del'));
+      const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(url).toBe(`${window.location.origin}/delete`);
+      expect((init.body as URLSearchParams).get('del')).toBe('1');
+      await openWith(reply({ body: '<form method="post" action="/form"><button id="ext" type="submit" formaction="https://evil.test/x">Ext</button><button id="get" type="submit" formmethod="get">Get</button><button id="pt" type="submit" formenctype="text/plain">T</button></form>' }));
+      for (const id of ['ext', 'get', 'pt']) {
+        const event = await submitForm(form(), document.getElementById(id));
+        expect(event.defaultPrevented, id).toBe(false);
+      }
+    });
+
+    it('posts an action-less form to the URL loaded in the dialog, not the host page (ES-I1)', async () => {
+      await openWith(reply({ body: '<form method="post"><button type="submit">Save</button></form>' }), '/dialog/form');
+      const fetchMock = vi.fn().mockResolvedValue(reply({ status: 204, headers: {} }));
+      vi.stubGlobal('fetch', fetchMock);
+      await submitForm(form());
+      expect((fetchMock.mock.calls[0] as [string, RequestInit])[0]).toBe(`${window.location.origin}/dialog/form`);
     });
 
     it('lets the host handle success (saved prevented): closes, no navigation', async () => {
@@ -419,6 +547,19 @@ describe('RemoteFormSession', () => {
     const second = new Event('cancel', { cancelable: true });
     dialog.dispatchEvent(second);
     expect(second.defaultPrevented).toBe(false);
+  });
+
+  it('a close queued before a reopen in the same task keeps the new session (ES-I3)', async () => {
+    await openWith(reply({ body: '<p>x</p>' }));
+    dialog.removeAttribute('open');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply({ body: '<p id="second">y</p>' })));
+    session.open('/form', opener(), 'Again');
+    dialog.dispatchEvent(new Event('close'));
+    await tick();
+    await tick();
+    expect(dialog.open).toBe(true);
+    expect(document.getElementById('second')).not.toBeNull();
+    expect(document.documentElement.getAttribute('data-nowo-overlay')).toBe('1');
   });
 
   it('empties the body on close and does not focus a removed opener', async () => {

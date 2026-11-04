@@ -134,6 +134,24 @@ describe('overlay registry', () => {
     expect(events[events.length - 1]?.type).toBe(CLOSE_EVENT);
   });
 
+  it('releases an owner removed from the DOM at once, without another registry call (ES-L1)', async () => {
+    const handle = registry.acquire(el('panel'), { kind: 'drawer' });
+    expect(handle.active()).toBe(true);
+    el('panel').remove();
+    await flush();
+    expect(el('hdr').hasAttribute('inert')).toBe(false);
+    expect(document.documentElement.hasAttribute(ROOT_ATTR)).toBe(false);
+    expect(handle.active()).toBe(false);
+    expect(events[events.length - 1]?.type).toBe(CLOSE_EVENT);
+    // Other DOM changes while an overlay is open change nothing.
+    const other = registry.acquire(el('main'), { kind: 'drawer' });
+    document.body.append(document.createElement('p'));
+    await flush();
+    expect(other.active()).toBe(true);
+    other.release();
+    expect(other.active()).toBe(false);
+  });
+
   it('gives the focus back when the last overlay closes and focus fell to the body', () => {
     const button = document.createElement('button');
     document.body.append(button);

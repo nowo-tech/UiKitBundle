@@ -12,6 +12,8 @@
  *   and an `inert` the host writes after ours is never lifted. Without `inert` support the same regions get
  *   `aria-hidden="true"` instead (marked the same way).
  * - `closeOnBackdrop` per kind: `dialog` / `host` false, `side-panel` / `drawer` true; owners ask the handle.
+ * - An owner removed from the DOM while open (Turbo frame, Stimulus replacement, host code) is released at once: while
+ *   depth > 0 a `childList` observer on the document prunes disconnected owners (no stuck shell, threat T9 / ES-L1).
  * - Every IIFE carries its own copy of this module, so the state lives on `window.NowoUiOverlay` (first copy wins).
  */
 
@@ -28,6 +30,8 @@ export interface OverlayHandle {
   readonly owner: Element;
   readonly closeOnBackdrop: boolean;
   readonly inertShell: boolean;
+  /** Whether the handle still counts (not released, owner not pruned). */
+  active(): boolean;
   release(): void;
 }
 
@@ -81,6 +85,8 @@ export function createOverlayRegistry(): OverlayRegistry {
   /** Regions we marked, with the observer that tells whether the host wrote the attribute since. */
   const marked = new Map<HTMLElement, MarkState>();
   let savedFocus: Element | null = null;
+  /** Watches removals while overlays are open, so a removed owner never leaves the shell inert. */
+  let removals: MutationObserver | null = null;
 
   const live = (): OverlayHandle[] => handles.filter((handle) => handle.owner.isConnected);
 
@@ -169,9 +175,25 @@ export function createOverlayRegistry(): OverlayRegistry {
     }
   };
 
+  const watchRemovals = (): void => {
+    if (handles.length > 0 && removals === null && typeof MutationObserver === 'function') {
+      removals = new MutationObserver(() => {
+        if (handles.some((handle) => !handle.owner.isConnected)) {
+          prune();
+          apply();
+        }
+      });
+      removals.observe(document.documentElement, { childList: true, subtree: true });
+    } else if (handles.length === 0 && removals !== null) {
+      removals.disconnect();
+      removals = null;
+    }
+  };
+
   const apply = (): void => {
     syncShell();
     syncRoot();
+    watchRemovals();
   };
 
   const registry: OverlayRegistry = {
@@ -189,6 +211,9 @@ export function createOverlayRegistry(): OverlayRegistry {
         owner,
         closeOnBackdrop: options.closeOnBackdrop ?? closeOnBackdropDefault(kind),
         inertShell: options.inertShell ?? true,
+        active(): boolean {
+          return !released && handles.includes(handle);
+        },
         release(): void {
           if (released) {
             return;

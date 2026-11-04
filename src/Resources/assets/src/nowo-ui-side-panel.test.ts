@@ -425,6 +425,37 @@ describe('nowo-ui-side-panel overlay (2.28)', () => {
     expect(el('hdr').hasAttribute('inert')).toBe(false);
   });
 
+  it('lifts the shell and main-column inert when an open drawer is removed from the DOM (ES-L1)', async () => {
+    mod.openPanel(el('drawer'));
+    expect(el('main').hasAttribute('inert')).toBe(true);
+    const main = el('main');
+    el('drawer').remove();
+    await new Promise((r) => setTimeout(r, 0));
+    expect(el('hdr').hasAttribute('inert')).toBe(false);
+    expect(main.hasAttribute('inert')).toBe(false);
+    expect(document.documentElement.hasAttribute('data-nowo-overlay')).toBe(false);
+  });
+
+  it('acquires again when a removed drawer comes back and opens', async () => {
+    const drawer = el('drawer');
+    const parent = drawer.parentElement as HTMLElement;
+    mod.openPanel(drawer);
+    drawer.remove();
+    await new Promise((r) => setTimeout(r, 0));
+    parent.prepend(drawer);
+    drawer.hidden = true;
+    mod.openPanel(drawer);
+    expect(el('hdr').hasAttribute('inert')).toBe(true);
+    mod.closePanel(drawer);
+    expect(el('hdr').hasAttribute('inert')).toBe(false);
+  });
+
+  it('ignores overlay-close events of other owners', () => {
+    document.dispatchEvent(new CustomEvent('nowo:overlay-close', { detail: { owner: el('main') } }));
+    document.dispatchEvent(new CustomEvent('nowo:overlay-close', { detail: {} }));
+    expect(el('main').hasAttribute('inert')).toBe(false);
+  });
+
   it('closes on a backdrop click unless closeOnBackdrop is off for the panel', () => {
     expect(mod.closesOnBackdrop(el('drawer'))).toBe(true);
     expect(mod.closesOnBackdrop(el('keep'))).toBe(false);

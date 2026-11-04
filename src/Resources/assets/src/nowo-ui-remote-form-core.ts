@@ -37,8 +37,26 @@ export const remoteNavigation = {
 };
 
 /**
+ * Whether a raw path (before `?` / `#`) holds a dot segment (`.`, `..`, or their `%2e` forms, either case), or turns
+ * into `//…` / `/\…` once decoded. Browsers normalise those segments, so `/.//evil.example` would resolve to
+ * `//evil.example` (protocol-relative, another origin): such targets are refused, never normalised (ES-M1).
+ */
+export function hasUnsafeSegments(rawPath: string): boolean {
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(rawPath);
+  } catch {
+    return true;
+  }
+  if (decoded.startsWith('//') || decoded.startsWith('/\\') || decoded.includes('\\')) {
+    return true;
+  }
+  return [rawPath, decoded].some((path) => path.split('/').some((segment) => /^(\.|%2e){1,2}$/i.test(segment)));
+}
+
+/**
  * A redirect target the dialog may follow: a path-absolute URL (one leading `/`, no `//`, no backslash, no control
- * character, at most 2048 characters) that stays on this origin. Returns path + query + hash, or null.
+ * character, no dot segment, at most 2048 characters) that stays on this origin. Returns path + query + hash, or null.
  */
 export function sameOriginPath(value: string | null | undefined): string | null {
   if (typeof value !== 'string' || value === '' || value.length > MAX_TARGET) {
@@ -48,9 +66,16 @@ export function sameOriginPath(value: string | null | undefined): string | null 
   if (!value.startsWith('/') || value.startsWith('//') || value.includes('\\') || /[\x00-\x1F\x7F]/.test(value)) {
     return null;
   }
+  const rawPath = value.split(/[?#]/, 1)[0] ?? '';
+  if (hasUnsafeSegments(rawPath)) {
+    return null;
+  }
   try {
     const url = new URL(value, window.location.origin);
-    return url.origin === window.location.origin ? `${url.pathname}${url.search}${url.hash}` : null;
+    if (url.origin !== window.location.origin || url.pathname.startsWith('//') || url.pathname.startsWith('/\\')) {
+      return null;
+    }
+    return `${url.pathname}${url.search}${url.hash}`;
   } catch {
     return null;
   }
@@ -78,12 +103,69 @@ export function isFragment(contentType: string | null, text: string): boolean {
   return !head.includes('<html') && !head.includes('<!doctype');
 }
 
-/** Parses server HTML in an inert template, drops <script> elements and returns the nodes to insert. */
+/** Elements dropped from a fragment before insertion: they run code or navigate on their own (ES-I2). */
+export const DROPPED_ELEMENTS = 'script, iframe[srcdoc], meta[http-equiv], base, object, embed';
+
+/**
+ * Parses server HTML in an inert template and strips what could run or navigate on insertion: <script>,
+ * `iframe[srcdoc]`, `meta[http-equiv]` (refresh), <base>, <object> / <embed>, and every inline `on*` handler. The
+ * fragment must still be the server's own trusted form (same trust as the page; keep a `script-src` CSP): this is
+ * defence in depth, not a sanitizer for user HTML.
+ */
 export function parseFragment(html: string): DocumentFragment {
   const template = document.createElement('template');
   template.innerHTML = html;
-  template.content.querySelectorAll('script').forEach((script) => script.remove());
+  template.content.querySelectorAll(DROPPED_ELEMENTS).forEach((element) => element.remove());
+  template.content.querySelectorAll('*').forEach((element) => {
+    Array.from(element.attributes).forEach((attribute) => {
+      if (attribute.name.toLowerCase().startsWith('on')) {
+        element.removeAttribute(attribute.name);
+      }
+    });
+  });
   return template.content;
+}
+
+/** The submit target of a form and its submitter: action, method and encoding, honouring `formaction` & co. */
+export interface SubmitTarget {
+  action: string | null;
+  method: string;
+  enctype: string;
+}
+
+/** Resolves where and how a submit goes (submitter `formaction` / `formmethod` / `formenctype` win, as natively). */
+export function submitTarget(form: HTMLFormElement, submitter: HTMLElement | null, fallbackAction: string | null): SubmitTarget {
+  const button = submitter instanceof HTMLButtonElement || submitter instanceof HTMLInputElement ? submitter : null;
+  const rawAction = button?.hasAttribute('formaction') ? button.getAttribute('formaction') : form.getAttribute('action');
+  const action =
+    rawAction === null || rawAction.trim() === ''
+      ? fallbackAction
+      : button?.hasAttribute('formaction')
+        ? button.formAction
+        : form.action;
+  const method = (button?.hasAttribute('formmethod') ? button.formMethod : form.method).toLowerCase();
+  const enctype = (button?.hasAttribute('formenctype') ? button.formEnctype : form.enctype).toLowerCase();
+  return { action, method, enctype };
+}
+
+/** FormData with the submitter's `name=value`, like a native submit (`new FormData(form, submitter)` when supported). */
+export function formDataWith(form: HTMLFormElement, submitter: HTMLElement | null): FormData {
+  const button = submitter instanceof HTMLButtonElement || submitter instanceof HTMLInputElement ? submitter : null;
+  if (button) {
+    try {
+      const native = new FormData(form, button);
+      if (button.name === '' || native.getAll(button.name).includes(button.value)) {
+        return native;
+      }
+    } catch {
+      // older engines: fall back below
+    }
+  }
+  const data = new FormData(form);
+  if (button && button.name !== '' && !button.disabled) {
+    data.append(button.name, button.value);
+  }
+  return data;
 }
 
 /** The first invalid control: `[aria-invalid="true"]`, then the host selector. */
@@ -252,11 +334,14 @@ export class RemoteFormSession {
   /** Handles a submit event that reached the dialog body. Returns whether it was intercepted. */
   async submit(event: Event): Promise<boolean> {
     const form = event.target;
-    if (!(form instanceof HTMLFormElement) || !this.dialog.open || form.hasAttribute(NATIVE_ATTR) || form.method.toLowerCase() !== 'post') {
+    if (!(form instanceof HTMLFormElement) || !this.dialog.open || form.hasAttribute(NATIVE_ATTR)) {
       return false;
     }
-    const action = sameOriginHref(form.getAttribute('action') === null ? window.location.href : form.action);
-    if (!action) {
+    const submitter = (event as SubmitEvent).submitter ?? null;
+    // An action-less form posts to the URL loaded in the dialog, not to the host page (ES-I1).
+    const target = submitTarget(form, submitter, this.url);
+    const action = sameOriginHref(target.action);
+    if (!action || target.method !== 'post' || target.enctype === 'text/plain') {
       return false;
     }
     event.preventDefault();
@@ -276,15 +361,13 @@ export class RemoteFormSession {
       button.disabled = true;
     });
     body.setAttribute('aria-busy', 'true');
-    const data = new FormData(form);
-    const submitter = (event as SubmitEvent).submitter;
-    if ((submitter instanceof HTMLButtonElement || submitter instanceof HTMLInputElement) && submitter.name !== '' && !data.has(submitter.name)) {
-      data.append(submitter.name, submitter.value);
-    }
+    const data = formDataWith(form, submitter);
+    const payload: FormData | URLSearchParams =
+      target.enctype === 'application/x-www-form-urlencoded' && submitter?.hasAttribute('formenctype') ? urlEncoded(data) : data;
     try {
       const response = await fetch(action, {
         method: 'POST',
-        body: data,
+        body: payload,
         headers: this.headers(),
         credentials: 'same-origin',
         mode: 'same-origin',
@@ -295,7 +378,9 @@ export class RemoteFormSession {
         return true;
       }
       const settings = this.settings();
-      const header = response.type === 'opaqueredirect' ? null : response.headers.get(settings.redirectHeader);
+      // X-Nowo-Redirect counts on a 2xx answer only (ES-I5).
+      const success = response.status >= 200 && response.status < 300;
+      const header = response.type === 'opaqueredirect' || !success ? null : response.headers.get(settings.redirectHeader);
       const redirect = sameOriginPath(header);
       if (header !== null && redirect === null) {
         console.warn(`UiKit remote form dialog: ignored an invalid ${settings.redirectHeader} header.`);
@@ -411,6 +496,10 @@ export class RemoteFormSession {
   }
 
   private closed(): void {
+    // A close event queued before a reopen in the same task must not tear down the new session (ES-I3).
+    if (this.dialog.open) {
+      return;
+    }
     this.controller?.abort();
     this.controller = null;
     this.busy = false;
@@ -434,6 +523,15 @@ export class RemoteFormSession {
   currentUrl(): string | null {
     return this.url;
   }
+}
+
+/** URL-encoded body of a FormData (file entries are sent by name only, as a native urlencoded submit does). */
+export function urlEncoded(data: FormData): URLSearchParams {
+  const params = new URLSearchParams();
+  data.forEach((value, name) => {
+    params.append(name, typeof value === 'string' ? value : value.name);
+  });
+  return params;
 }
 
 /** The title of an opener: an explicit title, else its accessible name, else its text. */

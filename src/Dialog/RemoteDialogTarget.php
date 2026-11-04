@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Redirect targets of the remote form dialog (2.28): a path-absolute URL (one leading `/`, no `//`, no backslash, no
- * control character, at most 2048 characters), or an absolute URL on the request's own scheme, host and port, which
+ * control character, no `.` / `..` segment, also `%2e`-encoded, at most 2048 characters), or an absolute URL on the request's own scheme, host and port, which
  * is reduced to its path, query and fragment. The client applies the same rule to `X-Nowo-Redirect`.
  *
  * @internal
@@ -31,6 +31,35 @@ final class RemoteDialogTarget
         return $path;
     }
 
+    /**
+     * Whether a raw path holds a dot segment (`.`, `..`, or their `%2e` forms, either case) or becomes `//…` / holds a
+     * backslash once decoded. Browsers normalise dot segments, so `/.//evil.example` resolves to `//evil.example`
+     * (another origin): such targets are refused, never normalised (REQ-SEC-004 ES-M1). Decoded once, both forms
+     * checked.
+     */
+    public static function hasUnsafeSegments(string $path): bool
+    {
+        $decoded = rawurldecode($path);
+        if (str_starts_with($decoded, '//') || str_contains($decoded, '\\')) {
+            return true;
+        }
+        foreach ([$path, $decoded] as $candidate) {
+            foreach (explode('/', $candidate) as $segment) {
+                if (1 === preg_match('/^(?:\.|%2e){1,2}$/i', $segment)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /** The path part of a path-absolute URL (before `?` / `#`). */
+    private static function rawPath(string $url): string
+    {
+        return (string) strtok($url, '?#');
+    }
+
     /** The same-origin path of a URL, or null. */
     public static function tryPath(string $url, ?Request $request): ?string
     {
@@ -38,7 +67,7 @@ final class RemoteDialogTarget
             return null;
         }
         if (str_starts_with($url, '/')) {
-            return str_starts_with($url, '//') ? null : $url;
+            return str_starts_with($url, '//') || self::hasUnsafeSegments(self::rawPath($url)) ? null : $url;
         }
         if (!$request instanceof Request) {
             return null;
@@ -54,7 +83,7 @@ final class RemoteDialogTarget
             return null;
         }
         $path = ($parts['path'] ?? '') === '' ? '/' : $parts['path'];
-        if (str_starts_with($path, '//')) {
+        if (str_starts_with($path, '//') || self::hasUnsafeSegments($path)) {
             return null;
         }
 

@@ -105,6 +105,23 @@ describe('remote-form-dialog peer', () => {
     expect(document.activeElement?.id).toBe('add');
   });
 
+  it('never follows a dot-segment X-Nowo-Redirect off-origin (REQ-SEC-004 ES-M1)', async () => {
+    await mount();
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    for (const dotted of ['/.//evil.example/x', '/..//evil.example/x', '/%2e//evil.example/x', '/%2E%2E//evil.example/x', '/a/..//evil.example/x', '/%2e%2E//evil.example/x']) {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(200, '<form method="post" action="/x"></form>')));
+      document.getElementById('add')!.click();
+      await tick();
+      await tick();
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(204, '', { 'X-Nowo-Redirect': dotted })));
+      body().querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      await tick();
+      await tick();
+    }
+    expect(navigation.assign).not.toHaveBeenCalled();
+    expect(navigation.reload).toHaveBeenCalledTimes(6);
+  });
+
   it('lets a listener prevent saved (the host handles success)', async () => {
     await mount();
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply(200, '<form method="post" action="/x"></form>')));
