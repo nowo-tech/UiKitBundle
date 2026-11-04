@@ -40,7 +40,8 @@ final class DetailPagePatternsBcTest extends TestCase
     {
         $file = \dirname(__DIR__, 2).'/Fixtures/bc-2.20/'.$name.'.html';
         self::assertFileExists($file);
-        self::assertSame(file_get_contents($file), self::renders()[$name](), $name.' must render exactly as UiKit 2.20 printed it');
+        // 2.26 adds js/nowo-ui-avatar.js to the default scripts (UPGRADING): the only line that may differ.
+        self::assertSame(file_get_contents($file), (string) preg_replace('#^[ \t]*<script src="[^"]*/js/nowo-ui-avatar\.js"[^>]*></script>\n#m', '', self::renders()[$name]()), $name.' must render exactly as UiKit 2.20 printed it');
     }
 
     /**

@@ -23,6 +23,7 @@ type Entry =
   | 'segmented'
   | 'tree'
   | 'side-panel'
+  | 'avatar'
   | 'autosubmit'
   | 'error-retry'
   | 'demo-peers';
@@ -279,6 +280,21 @@ const configs: Record<Entry, { build: object }> = {
         output: {
           format: 'iife' as const,
           entryFileNames: 'js/nowo-ui-side-panel.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  avatar: {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-avatar.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-avatar.js',
         },
       },
       minify: true,

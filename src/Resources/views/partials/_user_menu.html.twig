@@ -4,7 +4,9 @@
   Required-ish:
     - name: display name
     - email: secondary line (optional)
-    - initials OR avatar_src
+    - initials OR avatar_src (2.26: filtered by the avatar URL policy, see partials/_avatar.html.twig; the picture
+      goes over the initials and both avatars are decorative: the summary has its own label and the name is printed
+      in the panel)
 
   Optional:
     - links: [{ label, href, current?: bool }]
@@ -24,8 +26,9 @@
         <summary class="nowo-ui-user-menu__summary" aria-label="{{ account_label }}">
             {{ include('@NowoUiKitBundle/partials/_avatar.html.twig', {
                 initials: initials|default((name|default('?')|slice(0, 1))),
+                name: name|default(null),
                 src: avatar_src|default(null),
-                alt: name|default(''),
+                decorative: true,
                 framework: framework,
             }, false) }}
         </summary>
@@ -33,9 +36,10 @@
             <div class="nowo-ui-user-menu__identity">
                 {{ include('@NowoUiKitBundle/partials/_avatar.html.twig', {
                     initials: initials|default((name|default('?')|slice(0, 1))),
+                    name: name|default(null),
                     src: avatar_src|default(null),
                     size: 'sm',
-                    alt: name|default(''),
+                    decorative: true,
                     framework: framework,
                 }, false) }}
                 <div class="nowo-ui-user-menu__meta">

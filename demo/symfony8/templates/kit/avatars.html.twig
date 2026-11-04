@@ -1,0 +1,63 @@
+{#
+  UiKit 2.26 demo: the shared avatar partial. A picture goes over the initials, which hide only once it has loaded
+  (js/nowo-ui-avatar.js, in the default scripts); a broken URL falls back to the initials; URLs the policy rejects
+  render the initials only. The user menu shows the same picture through avatar_src.
+#}
+{% extends '@NowoUiKit/layout/document.html.twig' %}
+{% set nowo_ui_document_title = 'Avatars · UiKit 2.26' %}
+
+{% block nowo_ui_body %}
+    <a class="{{ nowo_ui_class('skip_link') }}" href="#main-content">Skip to main content</a>
+    {% set brand_html %}<a class="nowo-ui-header__brand kit-demo-brand" href="{{ path('kit_avatars') }}">Acme People</a>{% endset %}
+    {{ include(nowo_ui_partial('app_shell_open'), {
+        brand_html: brand_html,
+        aside_label: 'People',
+        aside_items: [
+            {label: 'Avatars', href: path('kit_avatars'), current: true},
+            {label: 'App shell', href: path('kit_shell')},
+        ],
+        name: 'Ada Lovelace',
+        email: 'ada@example.com',
+        avatar_src: picture,
+    }) }}
+        <main id="main-content" tabindex="-1" class="nowo-ui-content" data-testid="kit-avatars-main">
+            <section class="{{ nowo_ui_class('card') }}">
+                <div class="{{ nowo_ui_class('card_header') }}">
+                    <h1 class="{{ nowo_ui_class('card_title') }}">People</h1>
+                </div>
+                <div class="{{ nowo_ui_class('card_body') }}">
+                    <ul class="kit-demo-people" data-testid="kit-people">
+                        {% for person in people %}
+                            <li>
+                                {{ include('@NowoUiKitBundle/partials/_avatar.html.twig', {
+                                    name: person.name,
+                                    src: person.src,
+                                    size: 'sm',
+                                    decorative: true,
+                                    attr: {'data-testid': person.testid},
+                                }, with_context = false) }}
+                                <span>{{ person.name }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    <h2>Sizes, labelled (no name printed next to them)</h2>
+                    <p class="kit-demo-sizes" data-testid="kit-avatar-sizes">
+                        {% for size in ['xs', 'sm', null, 'lg'] %}
+                            {{ include('@NowoUiKitBundle/partials/_avatar.html.twig', {
+                                name: 'Ada Lovelace',
+                                src: picture,
+                                size: size,
+                                attr: {'data-testid': 'avatar-size-' ~ (size ?? 'default')},
+                            }, with_context = false) }}
+                        {% endfor %}
+                        {{ include('@NowoUiKitBundle/partials/_avatar.html.twig', {
+                            name: 'Grace Hopper',
+                            src: '/does-not-exist.webp',
+                            attr: {'data-testid': 'avatar-broken-labelled'},
+                        }, with_context = false) }}
+                    </p>
+                </div>
+            </section>
+        </main>
+    {{ include(nowo_ui_partial('app_shell_close')) }}
+{% endblock %}

@@ -592,10 +592,11 @@ final class ThemeSlots
     /**
      * UiKit runtime scripts printed by the `scripts` partial (`js/nowo-ui-<name>.js`, 2.2): what the document layout
      * loads, and what a host layout with its own script list must load ({{ include(nowo_ui_partial('scripts')) }}).
+     * 2.26: `avatar` (the picture fallback of partials/_avatar.html.twig).
      *
      * @var list<string>
      */
-    public const SCRIPTS = ['modal', 'confirm', 'dialog', 'toast', 'tabs', 'theme', 'popover', 'segmented', 'autosubmit'];
+    public const SCRIPTS = ['modal', 'confirm', 'dialog', 'toast', 'tabs', 'theme', 'popover', 'segmented', 'autosubmit', 'avatar'];
 
     /**
      * Partial name => default template (replaceable through `theme.partials`).
