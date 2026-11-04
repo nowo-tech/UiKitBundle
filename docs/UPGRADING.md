@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.25.0](#to-2250)
 - [To 2.24.0](#to-2240)
 - [To 2.23.1](#to-2231)
 - [To 2.23.0](#to-2230)
@@ -103,7 +104,9 @@
 
 ## Unreleased
 
-Target **2.26.0**, from **2.24.x** (or 2.25.x):
+### To 2.26.0
+
+From **2.25.0** (or 2.24.x: apply [To 2.25.0](#to-2250) too, it is additive):
 
 ```bash
 composer update nowo-tech/ui-kit-bundle
@@ -133,6 +136,21 @@ Behaviour changes of `partials/_avatar.html.twig` (and the user menu / shell `av
   keeps working in a hand-built Twig `Environment`. The `nowo_ui_avatar_url` filter is registered by the bundle (and
   by `PageContractTestCase`) for hosts that draw their own picture.
 - Overrides of `_avatar.html.twig` / `_user_menu.html.twig` keep working; compare them with the new markup.
+
+## To 2.25.0
+
+From **2.24.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+Additive and opt-in: the new side panel / drawer (partials `side_panel`, `side_panel_toggle`, `side_panel_container`,
+slots `side_panel*`, tokens `--nowo-ui-side-panel-*`) changes no existing partial, slot default or the default
+`scripts` list. To use it, load `js/nowo-ui-side-panel.js` on the page yourself (run `assets:install` after the update
+so the new script is published) and see [USAGE](USAGE.md#side-panel-and-drawer-225). Hosts that already render their
+own side panel with these classes (for example an interim WikiBundle partial) can switch to the partials without
+markup changes.
 
 ## To 2.24.0
 

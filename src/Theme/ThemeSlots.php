@@ -428,6 +428,30 @@ final class ThemeSlots
         'tree_item' => ['nowo-ui-tree__item', []],
         'tree_link' => ['nowo-ui-tree__link', []],
         'tree_group' => ['nowo-ui-tree__group', []],
+        // Side panel / drawer (2.25, partials `side_panel`, `side_panel_toggle`, `side_panel_container`): an inline column
+        // on desktop, an overlay full-height drawer at <= 767 px
+        'side_panel' => ['nowo-ui-side-panel', []],
+        'side_panel_header' => ['nowo-ui-side-panel__header', []],
+        'side_panel_title' => ['nowo-ui-side-panel__title', []],
+        'side_panel_close' => ['nowo-ui-btn nowo-ui-btn--icon nowo-ui-side-panel__close', [
+            'bootstrap' => 'btn btn-sm btn-outline-secondary',
+            'foundation' => 'button clear tiny',
+        ]],
+        'side_panel_body' => ['nowo-ui-side-panel__body', []],
+        'side_panel_backdrop' => ['nowo-ui-side-panel__backdrop', []],
+        'side_panel_toggle' => ['nowo-ui-btn nowo-ui-btn--secondary nowo-ui-side-panel-toggle', [
+            'bootstrap' => 'btn btn-outline-secondary',
+            'tailwind' => 'inline-flex items-center gap-1 font-medium px-3 py-1.5 text-sm border',
+            'foundation' => 'button secondary',
+        ]],
+        'side_panel_badge' => ['nowo-ui-badge nowo-ui-badge--primary nowo-ui-side-panel-toggle__badge', [
+            'bootstrap' => 'badge bg-primary-subtle text-primary-emphasis border border-primary-subtle',
+            'bootstrap4' => 'badge badge-primary',
+            'tailwind' => 'inline-flex border px-2 py-0.5 text-xs',
+            'foundation' => 'badge primary',
+        ]],
+        'side_panel_container' => ['nowo-ui-side-panel-container', []],
+        'side_panel_main' => ['nowo-ui-side-panel-container__main', []],
         'modal' => ['nowo-ui-modal', []],
         // _modal_shell internals (1.x markup: the Bootstrap structure classes modal-content / modal-header /
         // modal-body / modal-footer stay; the theme adds host classes and attributes)
@@ -615,6 +639,9 @@ final class ThemeSlots
         'segmented' => '@NowoUiKitBundle/partials/_segmented.html.twig',
         'section_form' => '@NowoUiKitBundle/page/_section_form.html.twig',
         'shell' => '@NowoUiKitBundle/partials/_shell.html.twig',
+        'side_panel' => '@NowoUiKitBundle/partials/_side_panel.html.twig',
+        'side_panel_container' => '@NowoUiKitBundle/partials/_side_panel_container.html.twig',
+        'side_panel_toggle' => '@NowoUiKitBundle/partials/_side_panel_toggle.html.twig',
         'sort_header' => '@NowoUiKitBundle/partials/_sort_header.html.twig',
         'stat_row' => '@NowoUiKitBundle/partials/_stat_row.html.twig',
         'table' => '@NowoUiKitBundle/partials/_table.html.twig',

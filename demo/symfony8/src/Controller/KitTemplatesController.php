@@ -44,6 +44,20 @@ final class KitTemplatesController extends AbstractController
     }
 
     /**
+     * UiKit 2.25: the side panel / drawer. `?panel=1` renders the comments panel open (the no-JavaScript state the toggle
+     * and the close link point to). The response forbids inline style attributes and handlers (CSP), which the e2e
+     * checks while it opens and closes the panels.
+     */
+    #[Route('/side-panel', name: 'kit_side_panel')]
+    public function sidePanel(Request $request): Response
+    {
+        $response = $this->render('kit/side_panel.html.twig', ['open' => '1' === $request->query->get('panel')]);
+        $response->headers->set('Content-Security-Policy', "style-src-attr 'none'; script-src-attr 'none'");
+
+        return $response;
+    }
+
+    /**
      * UiKit 2.22: a 1.x row-action POST hash with confirm_mode native on a page without Stimulus, i.e. without the
      * confirm-submit peer: no inline handler, js/nowo-ui-confirm.js warns once in the console and (2.23) falls back to
      * window.confirm() so the form never submits unconfirmed (docs/CONFIGURATION.md#row-actions-confirm-222).
