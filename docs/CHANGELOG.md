@@ -109,6 +109,10 @@ Planned as **2.27.1** (patch).
 
 - `_menu` link items (hashes and `View\Link`) drop `href`, `style` and `ping` from their `attr`, so the item's own
   href is the only link target and no inline style or tracking ping can be added through it (EH follow-up).
+- Attribute names ending in a line feed (`"style\n"`, `"ping\n"`, `"href\n"`, `"onclick\n"`) are refused: the name
+  pattern of `Theme` (theme attributes, `nowo_ui_html_attrs`, menu item `attr`) and of `Action::assertAttributes` now
+  uses the PCRE `D` modifier, so `$` no longer matches before a final `\n` — such a key slipped past the `on*` refusal
+  and the `href` / `style` / `ping` drop, and the browser read it as the bare attribute.
 - SECURITY.md names the backslash forms `/\host` and `\\host` next to protocol-relative `//host`: the compact header's
   href check is about the scheme, not the origin.
 

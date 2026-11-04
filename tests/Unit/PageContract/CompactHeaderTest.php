@@ -513,6 +513,47 @@ script:alert(4)', false];
         self::assertSame(1, substr_count($twig->render('@NowoUiKitBundle/partials/_menu.html.twig', ['items' => $items]), 'href='));
     }
 
+    /**
+     * @return iterable<string, array{0: string}>
+     */
+    public static function trailingNewlineNames(): iterable
+    {
+        foreach (["style\n", "ping\n", "href\n", "onclick\n"] as $name) {
+            yield json_encode($name, \JSON_THROW_ON_ERROR) => [$name];
+        }
+    }
+
+    /**
+     * A trailing line feed must not slip an attribute name past the name pattern (PCRE `$` matches before a final \n
+     * without the D modifier); the browser would read `style` / `ping` / `href` / `onclick`.
+     */
+    #[DataProvider('trailingNewlineNames')]
+    public function testAttributeNamesWithATrailingNewlineAreRefused(string $name): void
+    {
+        self::assertNotNull(Theme::attributeNameError($name));
+        try {
+            Action::assertAttributes([$name => 'x']);
+            self::fail('Action accepted '.json_encode($name));
+        } catch (InvalidArgumentException) {
+            self::addToAssertionCount(1);
+        }
+        $twig = PageContractTwig::create();
+        foreach ([['items' => [['label' => 'Docs', 'href' => '/docs', 'attr' => [$name => 'x']]]], ['items' => [['label' => 'Run', 'attr' => [$name => 'x']]]]] as $context) {
+            try {
+                $html = $twig->render('@NowoUiKitBundle/partials/_menu.html.twig', $context);
+                self::assertStringNotContainsString($name, $html, 'dropped, never printed');
+            } catch (RuntimeError $e) {
+                self::assertInstanceOf(InvalidArgumentException::class, $e->getPrevious());
+            }
+        }
+        try {
+            (new Theme())->renderAttributeMap([$name => 'x']);
+            self::fail('renderAttributeMap accepted '.json_encode($name));
+        } catch (InvalidArgumentException) {
+            self::addToAssertionCount(1);
+        }
+    }
+
     public function testUnrelatedPresentationVariablesAreIgnored(): void
     {
         $header = new PageHeader('Quotes', 'Intro');
