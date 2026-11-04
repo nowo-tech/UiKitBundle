@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.27.0] - 2026-11-04](#2270---2026-11-04)
 - [[2.26.0] - 2026-11-04](#2260---2026-11-04)
 - [[2.25.0] - 2026-11-04](#2250---2026-11-04)
 - [[2.24.0] - 2026-11-03](#2240---2026-11-03)
@@ -94,7 +95,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Planned as **2.27.0**: the compact header — the breadcrumb and the page actions in the top bar (compact header
+## [2.27.0] - 2026-11-04
+
+The compact header — the breadcrumb and the page actions in the top bar (compact header
 contract v1, approved by symfony-beacon). Opt-in and additive: with the new options left empty, the shells, the page
 header, the split header actions, `_menu` hash items with `href` and the `_scripts` output render byte-identical to
 2.26.0 (fixtures under `tests/Fixtures/bc-2.26`).
@@ -1866,7 +1869,7 @@ Supersedes 1.17.3: same runtime code and CSS, release gate hardened so the tagge
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.26.0...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.27.0...HEAD
 [1.10.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.4...v1.10.0
 [1.8.4]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.3...v1.8.4
 [1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0
