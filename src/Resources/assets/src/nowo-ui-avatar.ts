@@ -23,11 +23,11 @@ const failed = new Set<string>();
 /**
  * The PHP policy (`AvatarUrlPolicy::PATTERN`) in JavaScript: 1 to 2048 UTF-8 bytes without control characters,
  * whitespace, backslash, quotes, `<`, `>` or backtick, then a same-origin `/path` (not `//`) or `https://` with a host
- * free of userinfo and IPv6 brackets and an optional port from 0 to 65535. Both are tested against
- * tests/Fixtures/avatar/url-policy-cases.json.
+ * free of userinfo and IPv6 brackets and an optional port from 1 to 65535 without leading zeros. Both are tested
+ * against tests/Fixtures/avatar/url-policy-cases.json.
  */
 export const AVATAR_URL_PATTERN =
-  /^(?=[^\u0000- \u007f\\"'<>`]+$)(?:\/(?!\/)|https:\/\/[^/?#@:[\]]+(?::(?:6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[0-9]{1,4}))?(?:[/?#]|$))/i;
+  /^(?=[^\u0000- \u007f\\"'<>`]+$)(?:\/(?!\/)|https:\/\/[^/?#@:[\]]+(?::(?:6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[1-9][0-9]{0,3}))?(?:[/?#]|$))/i;
 
 const encoder = new TextEncoder();
 

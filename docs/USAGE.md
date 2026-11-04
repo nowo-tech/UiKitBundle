@@ -1577,8 +1577,9 @@ hides them once it has loaded.
 
 - **URL policy** (`Nowo\UiKitBundle\Avatar\AvatarUrlPolicy::sanitize()`, Twig filter `nowo_ui_avatar_url`): `https://`
   without userinfo, or a same-origin path starting with a single `/`. Rejected: `http:`, `javascript:`, `data:` (also
-  `data:image/…`), `blob:`, `//host`, IPv6-literal hosts, ports above 65535, backslashes, quotes, `<`, `>`, backtick,
-  control characters and whitespace (also a trailing line feed), more than 2048 bytes. `nowo-ui-avatar.js` applies the
+  `data:image/…`), `blob:`, `//host`, IPv6-literal hosts, ports outside 1–65535 or with a leading zero (`:0`, `:0443`),
+  backslashes, quotes, `<`, `>`, backtick, control characters and whitespace (also a trailing line feed), strings that
+  are not valid UTF-8, more than 2048 bytes. `nowo-ui-avatar.js` applies the
   same rules in the browser. Call the
   class in PHP when you build payloads; the partial applies the filter itself.
 - **The URL is the host's.** It should be stable for the page's lifetime and access-checked when the browser fetches it
