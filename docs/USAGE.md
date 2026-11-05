@@ -1429,6 +1429,22 @@ options are read only with `anatomy: true` (an explicit `true`): without it the 
 `title`, `status` or `size` an embed without `only` inherits from the page. Markup, classes and the sizes:
 [PAGE_CONTRACT](PAGE_CONTRACT.md#dialog-sizes-and-anatomy-229).
 
+**Nesting an anatomy dialog.** `anatomy` is an ordinary context variable: a `confirm_dialog` embedded **without
+`only`** inside the `body` / `footer` block of an anatomy `confirm_dialog` inherits `anatomy: true`, `title`,
+`status` and `size` from the outer `with` hash and renders as an anatomy with the outer title. Embed the inner dialog
+with `only` (passing what it needs), or pass `anatomy: false` (and its own `title`):
+
+```twig
+{% embed nowo_ui_partial('confirm_dialog') with {anatomy: true, title: 'Edit monitor', dialog_id: 'edit'} %}
+    {% block body %}
+        …
+        {% embed nowo_ui_partial('confirm_dialog') with {trigger_label: 'Delete', dialog_id: 'delete', bundle: bundle} only %}
+            {% block form %}…{% endblock %}
+        {% endembed %}
+    {% endblock %}
+{% endembed %}
+```
+
 <a id="app-shell-26"></a>
 ### App shell
 
@@ -1772,7 +1788,10 @@ public function edit(Request $request, Monitor $monitor, RemoteDialogResponder $
   `{% extends nowo_ui_dialog_request() ? '@NowoUiKit/layout/fragment.html.twig' : 'base.html.twig' %}` (the fragment
   layout prints only the `body` block). The fragment brings its own actions row (Save / Cancel with
   `data-nowo-ui-dialog-close`); since 2.29 that row (`[data-nowo-ui-dialog-actions]`, else the form's
-  `.nowo-ui-form__actions`) moves into the dialog footer, each control bound to the form with `form="…"`, so it stays
+  `.nowo-ui-form__actions`) moves into the dialog footer, each control bound to the form with `form="…"` (a form whose
+  id another element of the page already holds gets a generated id; since 2.29.1 its original id stays in
+  `data-nowo-ui-form-id`, so target `[data-nowo-ui-form-id="edit-form"]` rather than `#edit-form` in host CSS, scripts
+  and tests), so it stays
   visible while the body scrolls (`data-nowo-ui-dialog-keep-actions` on the form keeps it in place).
 - **Controllers that `redirectToRoute()`:** set `nowo_ui_kit.remote_dialog.convert_redirects: true` and a redirect
   answered to a main dialog request becomes `204` + `X-Nowo-Redirect` ([CONFIGURATION](CONFIGURATION.md#remote-dialog-228)).
@@ -1796,7 +1815,9 @@ and, when it has a name, `role="region"` + `aria-label` (the `table` partial's `
 `data-nowo-ui-scroll-label`, else the table's `aria-label` or caption). The attributes go away when it fits again;
 attributes the host wrote are never touched. Regions inserted later (list pagination "load more", dialog fragments)
 are covered by one `MutationObserver` and one `ResizeObserver`, throttled to an animation frame (no `resize`
-listener).
+listener). Since 2.29.1 a pass after a mutation or a resize syncs only the regions concerned (inserted regions, the
+region whose content changed, the region that resized); the whole document is scanned once, at start-up. Regions
+that leave the document are unobserved on the next pass, and an `aria-label` the script set follows the caption.
 
 ## Overlays and the shell (2.28)
 

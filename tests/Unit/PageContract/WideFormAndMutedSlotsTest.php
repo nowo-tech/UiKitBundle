@@ -34,8 +34,9 @@ final class WideFormAndMutedSlotsTest extends TestCase
     {
         $css = (string) file_get_contents(PageContractTwig::root().'/src/Resources/public/css/nowo-ui.unlayered.css');
 
-        self::assertSame(1, preg_match('/\.nowo-ui-input--wide \{\s*width: 100%;\s*max-width: 36rem;\s*\}/', $css));
-        self::assertSame(1, preg_match('/\.nowo-ui-input--full \{\s*width: 100%;\s*max-width: none;\s*\}/', $css));
+        // 2.29.1 (FK-I5): border-box, so a full-width field never overflows its container by its padding and border.
+        self::assertSame(1, preg_match('/\.nowo-ui-input--wide \{\s*box-sizing: border-box;\s*width: 100%;\s*max-width: 36rem;\s*\}/', $css));
+        self::assertSame(1, preg_match('/\.nowo-ui-input--full \{\s*box-sizing: border-box;\s*width: 100%;\s*max-width: none;\s*\}/', $css));
         self::assertLessThan(strpos($css, '.nowo-ui-input--wide {'), strpos($css, '.nowo-ui-input {'), 'modifiers come after the base rule');
         self::assertSame(1, preg_match('/\.nowo-ui-dialog__body--muted,\s*\.nowo-ui-confirm__body--muted \{\s*color: var\(--nowo-ui-muted\);/', $css));
     }

@@ -27,6 +27,8 @@ export const ALERT_ATTR = 'data-nowo-ui-remote-form-alert';
 export const NATIVE_ATTR = 'data-nowo-ui-remote-form-native';
 export const FOOTER_ATTR = 'data-nowo-ui-dialog-footer';
 export const ACTIONS_ATTR = 'data-nowo-ui-dialog-actions';
+/** The id a fragment form had before it was re-identified (2.29.1, audit FK-I7). */
+export const ORIGINAL_ID_ATTR = 'data-nowo-ui-form-id';
 export const KEEP_ACTIONS_ATTR = 'data-nowo-ui-dialog-keep-actions';
 const FORM_CONTROLS = 'button, input, select, textarea, output, fieldset, object';
 let formSequence = 0;
@@ -262,7 +264,8 @@ export function liftActions(body: HTMLElement, footer: HTMLElement | null): bool
 /**
  * Gives the form an id that resolves to it in its document (2.29): kept when `getElementById()` returns the form
  * itself, else a fresh `nowo-ui-remote-form-<n>` free in the document; the fragment's `form="<old id>"` references are
- * rebound to the new id.
+ * rebound to the new id. Since 2.29.1 the original id stays readable as `data-nowo-ui-form-id="<old id>"`, so host CSS,
+ * scripts and tests can target the form by it (audit FK-I7).
  */
 function ensureOwnFormId(form: HTMLFormElement, body: HTMLElement): void {
   const doc = form.ownerDocument;
@@ -277,6 +280,7 @@ function ensureOwnFormId(form: HTMLFormElement, body: HTMLElement): void {
   } while (doc.getElementById(id) !== null);
   form.id = id;
   if (old !== '') {
+    form.setAttribute(ORIGINAL_ID_ATTR, old);
     body.querySelectorAll<HTMLElement>('[form]').forEach((control) => {
       if (control.getAttribute('form') === old) {
         control.setAttribute('form', id);

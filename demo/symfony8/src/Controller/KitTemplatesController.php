@@ -10,6 +10,7 @@ use Nowo\UiKitBundle\Dialog\RemoteDialog;
 use Nowo\UiKitBundle\Dialog\RemoteDialogResponder;
 use Nowo\UiKitBundle\View\Pagination;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormError;
@@ -111,21 +112,31 @@ final class KitTemplatesController extends AbstractController
     #[Route('/dialogs', name: 'kit_dialogs', methods: ['GET', 'POST'])]
     public function dialogs(Request $request): Response
     {
-        $short = $this->createFormBuilder(null, ['action' => $this->generateUrl('kit_dialogs'), 'attr' => ['id' => 'medium-form']])
+        $short = $this->container->get('form.factory')->createNamedBuilder('medium', FormType::class, null, ['action' => $this->generateUrl('kit_dialogs'), 'attr' => ['id' => 'medium-form']])
             ->add('label', TextType::class, ['required' => false])
             ->add('channel', ChoiceType::class, ['choices' => ['Email' => 'email', 'Slack' => 'slack', 'Webhook' => 'webhook']])
             ->getForm();
-        $long = $this->createFormBuilder(null, ['action' => $this->generateUrl('kit_dialogs'), 'attr' => ['id' => 'long-form']]);
+        $long = $this->container->get('form.factory')->createNamedBuilder('long', FormType::class, null, ['action' => $this->generateUrl('kit_dialogs'), 'attr' => ['id' => 'long-form']]);
         foreach (['Name', 'Owner', 'Team', 'Project', 'Environment', 'Region', 'Endpoint', 'Method', 'Expected status', 'Keyword', 'Interval', 'Timeout', 'Retries', 'Escalation', 'Maintenance window', 'Runbook', 'Contact', 'Tags'] as $field) {
             $long->add(str_replace(' ', '_', strtolower($field)), TextType::class, ['required' => false, 'label' => $field]);
         }
         $long->add('notes', TextareaType::class, ['required' => false]);
+        $longForm = $long->getForm();
+
+        // 2.29.1 (audit FK-I5): the forms are handled (CSRF and validation) and a valid POST redirects (PRG); nothing is
+        // stored, the demo only shows "Submitted.".
+        foreach ([$short, $longForm] as $form) {
+            $form->handleRequest($request);
+            if ($form->isSubmitted() && $form->isValid()) {
+                return $this->redirectToRoute('kit_dialogs', ['submitted' => 1]);
+            }
+        }
 
         return $this->render('kit/dialogs.html.twig', [
             'medium_form' => $short->createView(),
-            'long_form' => $long->getForm()->createView(),
+            'long_form' => $longForm->createView(),
             'rows' => self::ROWS,
-            'submitted' => $request->isMethod('POST'),
+            'submitted' => $request->query->getBoolean('submitted'),
         ]);
     }
 

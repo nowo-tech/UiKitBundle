@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { MARK, overflows, regionName, schedule, syncRegion, syncRegions } from './nowo-ui-scroll-region';
+import { MARK, overflows, regionName, regionsOfMutations, schedule, syncRegion, syncRegions } from './nowo-ui-scroll-region';
 
 const size = (el: HTMLElement, scroll: number, client: number): void => {
   Object.defineProperty(el, 'scrollWidth', { configurable: true, get: () => scroll });
@@ -91,6 +91,89 @@ describe('nowo-ui-scroll-region (2.28, KIT-71)', () => {
       schedule();
       await frame();
       expect(document.getElementById('w')?.getAttribute('tabindex')).toBe('0');
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+  it('keeps a label it set in step with the caption (2.29.1)', async () => {
+    document.body.innerHTML = '<div id="w" data-nowo-ui-region="table"><table><caption>Old</caption></table></div>';
+    const wrap = document.getElementById('w') as HTMLElement;
+    size(wrap, 900, 300);
+    syncRegion(wrap);
+    expect(wrap.getAttribute('aria-label')).toBe('Old');
+    (wrap.querySelector('caption') as HTMLElement).textContent = 'New';
+    await frame();
+    expect(wrap.getAttribute('aria-label')).toBe('New');
+    (wrap.querySelector('caption') as HTMLElement).textContent = '';
+    syncRegion(wrap);
+    expect(wrap.getAttribute('aria-label')).toBe('New');
+
+    // A label the host wrote is never rewritten.
+    document.body.innerHTML = '<div id="h" data-nowo-ui-region="table" aria-label="Host"><table><caption>Caption</caption></table></div>';
+    const host = document.getElementById('h') as HTMLElement;
+    size(host, 900, 300);
+    syncRegion(host);
+    (host.querySelector('caption') as HTMLElement).textContent = 'Changed';
+    syncRegion(host);
+    expect(host.getAttribute('aria-label')).toBe('Host');
+  });
+
+  it('lists the regions a batch of mutations concerns', () => {
+    document.body.innerHTML = '<div id="r" data-nowo-ui-region="table"><table><caption>C</caption></table></div><p id="p">x</p>';
+    const region = document.getElementById('r') as HTMLElement;
+    const inserted = document.createElement('section');
+    inserted.innerHTML = '<div data-nowo-ui-scroll-region id="inner"></div>';
+    const records = [
+      { addedNodes: [inserted, document.createTextNode('t')], removedNodes: [], target: document.body },
+      { addedNodes: [], removedNodes: [document.createElement('i')], target: region.querySelector('caption') as Node },
+      { addedNodes: [region], removedNodes: [], target: (document.getElementById('p') as HTMLElement).firstChild as Node },
+    ] as unknown as MutationRecord[];
+    const { regions, removed } = regionsOfMutations(records);
+    expect(regions.map((r) => r.id)).toEqual(['inner', 'r', 'r']);
+    expect(removed).toBe(true);
+    expect(regionsOfMutations([]).removed).toBe(false);
+  });
+
+  it('unobserves regions that leave the document and follows a new first child (2.29.1, ES-I9)', async () => {
+    const observed = new Set<Element>();
+    let callback: (entries: Array<{ target: Element }>) => void = () => undefined;
+    class FakeResizeObserver {
+      constructor(cb: (entries: Array<{ target: Element }>) => void) { callback = cb; }
+      observe(el: Element): void { observed.add(el); }
+      unobserve(el: Element): void { observed.delete(el); }
+      disconnect(): void { observed.clear(); }
+    }
+    vi.stubGlobal('ResizeObserver', FakeResizeObserver);
+    vi.resetModules();
+    try {
+      const fresh = await import('./nowo-ui-scroll-region');
+      document.body.innerHTML = '<main id="m"></main>';
+      const wrap = document.createElement('div');
+      wrap.setAttribute('data-nowo-ui-region', 'table');
+      wrap.innerHTML = '<table aria-label="T"></table>';
+      document.getElementById('m')?.append(wrap);
+      await frame();
+      const table = wrap.firstElementChild as Element;
+      expect(observed.has(wrap) && observed.has(table)).toBe(true);
+      expect(fresh.watchedCount()).toBe(1);
+
+      // A resize of the child syncs its region only.
+      size(wrap, 900, 100);
+      callback([{ target: table }, { target: document.body }]);
+      await frame();
+      expect(wrap.getAttribute('tabindex')).toBe('0');
+
+      // A new first child replaces the old one in the observer.
+      const next = document.createElement('table');
+      wrap.replaceChildren(next);
+      await frame();
+      expect(observed.has(table)).toBe(false);
+      expect(observed.has(next)).toBe(true);
+
+      wrap.remove();
+      await frame();
+      expect(observed.size).toBe(0);
+      expect(fresh.watchedCount()).toBe(0);
     } finally {
       vi.unstubAllGlobals();
     }
