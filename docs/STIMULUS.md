@@ -38,6 +38,7 @@ Optional **Stimulus peer** TypeScript sources live under `src/Resources/assets/s
 - [Theme boot](#theme-boot)
 - [Locale / kebab](#locale--kebab)
 - [Remote form dialog (2.28)](#remote-form-dialog-228)
+- [Scroll regions (2.28)](#scroll-regions-228)
 - [Stimulus peers — import examples](#stimulus-peers--import-examples)
 - [Beacon attribute migration](#beacon-attribute-migration)
 
@@ -645,6 +646,12 @@ attributes). Contract and server side: [USAGE — Remote form dialog](USAGE.md#r
   {{ include(nowo_ui_partial('remote_form_dialog'), {id: 'destination-dialog', stimulus: true}) }}
 </section>
 ```
+
+## Scroll regions (2.28)
+
+IIFE only: `js/nowo-ui-scroll-region.js` (opt-in `script_names` entry `scroll-region`). Markup:
+`[data-nowo-ui-region="table"]` (the `table` partial) or `[data-nowo-ui-scroll-region]`, name from
+`data-nowo-ui-scroll-label`. See [USAGE](USAGE.md#focusable-scroll-regions-228).
 
 ## Stimulus peers — import examples
 

@@ -10,6 +10,8 @@ use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Theme\ThemeSlots;
 use Nowo\UiKitBundle\Twig\ThemeExtension;
 use Nowo\UiKitBundle\View\Action;
+use Nowo\UiKitBundle\View\Column;
+use Nowo\UiKitBundle\View\Table;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -61,6 +63,14 @@ final class RemoteFormDialogPartialTest extends TestCase
     {
         $html = PageContractTwig::create()->render('@NowoUiKitBundle/partials/_side_panel.html.twig', ['id' => 'p', 'title' => 'P', 'layout' => 'overlay', 'backdrop_close' => false]);
         self::assertStringContainsString(' hidden data-nowo-ui-side-panel-backdrop-close="false"', $html);
+    }
+
+    public function testTableScrollLabelIsOptIn(): void
+    {
+        $table = new Table([new Column('sku', 'SKU')], [['sku' => 'A-1']], caption: 'Lines');
+        $twig = PageContractTwig::create();
+        self::assertStringNotContainsString('data-nowo-ui-scroll-label', $twig->render('@NowoUiKitBundle/partials/_table.html.twig', ['table' => $table]));
+        self::assertStringContainsString('data-nowo-ui-responsive="cards" data-nowo-ui-scroll-label="Order lines"', $twig->render('@NowoUiKitBundle/partials/_table.html.twig', ['table' => $table, 'scroll_label' => 'Order lines']));
     }
 
     public function testMenuSemanticsMenuAndDisclosure(): void

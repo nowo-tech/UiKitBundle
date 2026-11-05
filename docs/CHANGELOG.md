@@ -139,6 +139,11 @@ changes, both in UPGRADING: the side panel drawer also makes the shell header an
 - **`menu_semantics`** on the `menu` partial and `nowo_ui_kit.theme.menu_semantics` (`null` default = 2.27 markup;
   `menu` = APG menu button with `role="menu"` / `menuitem` and Up / Down / Home / End roving focus in
   `nowo-ui-popover.js`; `disclosure` = no `aria-haspopup`). Popover menus with items only.
+- **Focusable scroll regions** (KIT-71, symfony-beacon audit 2026-11-05): opt-in `js/nowo-ui-scroll-region.js`
+  makes overflowing table wraps (`[data-nowo-ui-region="table"]`) and `[data-nowo-ui-scroll-region]` elements
+  `tabindex="0"` + `role="region"` + `aria-label` while they overflow, also for content inserted later
+  (`MutationObserver` + `ResizeObserver`, one pass per animation frame); `table` partial option `scroll_label`.
+- `RemoteDialogResponder::fragment(Response)` adds `Vary: X-Nowo-Dialog` (KIT-68).
 - **Layers as public API** (THEMING "Layers"): scale tokens `--nowo-ui-z-overlay` (1040), `--nowo-ui-z-modal` (1050),
   `--nowo-ui-z-popover` (1080), `--nowo-ui-z-toast` (1100), `--nowo-ui-z-loader` (1200) as fallbacks behind the
   existing specific tokens (`--nowo-ui-side-panel-z`, `--nowo-ui-menu-z-index`, `--nowo-ui-date-range-z`,
@@ -158,7 +163,8 @@ changes, both in UPGRADING: the side panel drawer also makes the shell header an
   - **ES-M1:** `X-Nowo-Redirect` targets with dot segments (`/.//evil.example`, `/..//`, `/%2e//`, `/%2E%2E//`,
     `/a/..//`) passed both checks and the browser normalised them to a protocol-relative URL on another origin. The
     client (`sameOriginPath()`) and the server (`RemoteDialogTarget::tryPath()`, also for reduced absolute URLs) now
-    refuse any `.` / `..` segment, raw or `%2e`-encoded (decoded once), and anything that decodes or resolves to `//…`.
+    refuse any `.` / `..` segment and any `%2e` (either case; decoded once), and anything that decodes or resolves to
+    `//…` (also KIT-68 of the symfony-beacon audit of 2026-11-05).
   - ES-L1: an owner removed from the DOM while open is released at once (the shell and the side panel's main column
     no longer stay `inert`).
   - ES-L2: submits use `FormData(form, submitter)` and honour `formaction` / `formmethod` / `formenctype`.

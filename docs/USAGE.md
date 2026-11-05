@@ -45,6 +45,7 @@
 - [Sidebar rail (opt-in)](#sidebar-rail-opt-in)
 - [Side panel and drawer (2.25)](#side-panel-and-drawer-225)
 - [Remote form dialog (2.28)](#remote-form-dialog-228)
+- [Focusable scroll regions (2.28)](#focusable-scroll-regions-228)
 - [Overlays and the shell (2.28)](#overlays-and-the-shell-228)
 - [Menu semantics (2.28)](#menu-semantics-228)
 - [Compact header (2.27)](#compact-header-227)
@@ -1748,7 +1749,7 @@ public function edit(Request $request, Monitor $monitor, RemoteDialogResponder $
 | Close | Escape (a Tom Select dropdown, popover or nested dialog inside closes first), the close button, `[data-nowo-ui-dialog-close]`, the backdrop only with `backdrop_close: true` (default `false`: a stray click never loses a typed form). The request is aborted, the body emptied (Stimulus controllers of the fragment disconnect) and focus returns to the opener |
 
 - **Redirect targets** are path-absolute same-origin URLs only: one leading `/`, no `//`, no backslash, no control
-  character, **no `.` / `..` segment** (also `%2e`-encoded, either case: browsers would normalise `/.//evil.example`
+  character, **no `.` / `..` segment and no `%2e` at all** (either case: browsers would normalise `/.//evil.example`
   to `//evil.example`, another origin), nothing that decodes to `//…`, ≤ 2048 characters. `RemoteDialogResponder` reduces an absolute URL on the request's own origin to its
   path and throws on anything else; the client ignores an invalid header (and reloads).
 - **Fragment trust:** the dialog injects the server's own answer, with the same trust as the page. Before insertion it
@@ -1771,6 +1772,18 @@ public function edit(Request $request, Monitor $monitor, RemoteDialogResponder $
 - **Phones** (≤ 40 rem): full screen; `--nowo-ui-remote-dialog-phone-inset` adds a gutter ([THEMING](THEMING.md#remote-form-dialog-228)).
 - **Partial options:** `id`, `stimulus`, `title`, `size` (default `lg`), `labels: {loading, error, load_error}`,
   `invalid_selector`, `follow_on_load_error` (default true), `backdrop_close` (default false), `attr`, `bundle`.
+
+## Focusable scroll regions (2.28)
+
+A table wrap (`[data-nowo-ui-region="table"]`, rendered by the `table` partial and the list scaffold) or any element
+with `data-nowo-ui-scroll-region` whose content overflows horizontally must be reachable by keyboard (axe
+`scrollable-region-focusable`). Load `js/nowo-ui-scroll-region.js` (opt-in:
+`script_names: nowo_ui_script_names()|merge(['scroll-region'])`): while a region overflows it gets `tabindex="0"`
+and, when it has a name, `role="region"` + `aria-label` (the `table` partial's `scroll_label` option →
+`data-nowo-ui-scroll-label`, else the table's `aria-label` or caption). The attributes go away when it fits again;
+attributes the host wrote are never touched. Regions inserted later (list pagination "load more", dialog fragments)
+are covered by one `MutationObserver` and one `ResizeObserver`, throttled to an animation frame (no `resize`
+listener).
 
 ## Overlays and the shell (2.28)
 
