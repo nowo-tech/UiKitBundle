@@ -4,7 +4,7 @@ import AxeBuilder from '@axe-core/playwright';
 /**
  * UiKit 2.28 on /kit/remote-form: the remote form dialog (IIFE driver) — open from a link with the dialog header,
  * 422 re-rendered with focus on the invalid field, 204 + X-Nowo-Redirect followed with the flash, Escape and focus
- * back (the saved label in the redirect target's query: the demo has no session), a fresh form on reopen, full screen on phones, the no-JavaScript page — and the overlay registry: the overlay
+ * back (the saved label in the redirect target's query: the demo has no session), a fresh form on reopen, the screen width with a 16 px gutter on phones (2.29), the actions in the footer, the no-JavaScript page — and the overlay registry: the overlay
  * side panel makes the marked header inert, sets html[data-nowo-overlay] and dispatches nowo:overlay-* events.
  * The page forbids inline style attributes and handlers (CSP).
  */
@@ -88,14 +88,26 @@ test.describe('remote form dialog (2.28)', () => {
     await expect(page.getByTestId('destination-dialog')).toBeHidden();
   });
 
-  test('full screen on phones, without horizontal scroll', async ({ page }) => {
+  test('screen width with the 16 px gutter on phones, without horizontal scroll (2.29)', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/kit/remote-form');
     await page.getByTestId('destination-add').click();
+    await expect(page.getByTestId('destination-label')).toBeVisible();
     const box = await page.getByTestId('destination-dialog').boundingBox();
-    expect(box?.width).toBeGreaterThanOrEqual(389);
-    expect(box?.height).toBeGreaterThanOrEqual(843);
+    expect(Math.round(box?.x ?? 0)).toBe(16);
+    expect(Math.round(box?.width ?? 0)).toBe(358);
+    expect(Math.round(box?.height ?? 0)).toBe(812);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  });
+
+  test('the form actions sit in the dialog footer, bound to the form (2.29)', async ({ page }) => {
+    await page.goto('/kit/remote-form');
+    await page.getByTestId('destination-add').click();
+    const save = page.locator('[data-testid="destination-dialog"] > footer [data-testid="destination-save"]');
+    await expect(save).toBeVisible();
+    const formId = await page.getByTestId('destination-form').getAttribute('id');
+    expect(formId).toBeTruthy();
+    await expect(save).toHaveAttribute('form', formId as string);
   });
 
   test('without JavaScript the link is the full form page', async ({ browser }) => {

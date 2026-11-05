@@ -1507,26 +1507,48 @@ a.nowo-ui-pagination__link:hover {
   opacity: 1;
 }
 
+/*
+ * --- Dialog sizes (2.29, owner rule "two sizes only") ---
+ * Every kit dialog has one of two sizes, set by public tokens a host overrides once on :root (no :root value is
+ * declared here, so a host value wins whatever the load order; other kits read the same tokens with the same
+ * fallbacks): medium (default: forms, choosers, steps) and wide (tables, two-column forms, guides, the remote form
+ * dialog). Width AND height belong to the size, not to the content: the body scrolls inside, the header and the
+ * footer stay. Only a plain yes / no confirmation (no field, list, table or fold) keeps its natural height.
+ *   --nowo-dialog-width-md   min(40rem, 100vw - 2rem)    --nowo-dialog-height-md   min(36rem, 100dvh - 2rem)
+ *   --nowo-dialog-width-wide min(56rem, 100vw - 2rem)    --nowo-dialog-height-wide min(52rem, 100dvh - 2rem)
+ * --nowo-ui-dialog-w / --nowo-ui-dialog-h are the resolved size of one dialog (internal; a modifier sets them).
+ * Legacy size modifiers map onto the two sizes: sm / md → medium, lg / xl → wide.
+ */
+.nowo-ui-dialog,
+.nowo-ui-confirm-dialog,
+.nowo-ui-confirm {
+  --nowo-ui-dialog-w: var(--nowo-dialog-width-md, min(40rem, 100vw - 2rem));
+  --nowo-ui-dialog-h: var(--nowo-dialog-height-md, min(36rem, 100dvh - 2rem));
+}
+
+.nowo-ui-dialog--lg,
+.nowo-ui-dialog--xl,
+.nowo-ui-dialog--wide,
+.nowo-ui-confirm-dialog--lg,
+.nowo-ui-confirm-dialog--xl,
+.nowo-ui-confirm-dialog--wide {
+  --nowo-ui-dialog-w: var(--nowo-dialog-width-wide, min(56rem, 100vw - 2rem));
+  --nowo-ui-dialog-h: var(--nowo-dialog-height-wide, min(52rem, 100dvh - 2rem));
+}
+
 /* --- Confirm dialog --- */
 .nowo-ui-confirm {
   /* Centred whatever the host reset does to <dialog> (Tailwind preflight sets margin: 0); a fixed width (2.2) so a
-     long message wraps instead of widening the dialog off-centre. */
+     long message wraps instead of widening the dialog off-centre. 2.29: the medium width for every size (sm / md /
+     lg); a yes / no confirmation keeps its natural height. --nowo-ui-confirm-width still wins when a host sets it. */
   box-sizing: border-box;
-  width: var(--nowo-ui-confirm-width, min(28rem, calc(100vw - 2rem)));
+  width: var(--nowo-ui-confirm-width, var(--nowo-ui-dialog-w));
   margin: auto;
   border: 0;
   padding: 0;
   background: transparent;
   max-width: calc(100vw - 2rem);
   max-height: calc(100dvh - 2rem);
-}
-
-.nowo-ui-confirm--sm {
-  --nowo-ui-confirm-width: min(22rem, calc(100vw - 2rem));
-}
-
-.nowo-ui-confirm--lg {
-  --nowo-ui-confirm-width: min(40rem, calc(100vw - 2rem));
 }
 
 .nowo-ui-confirm::backdrop {
@@ -1580,11 +1602,13 @@ a.nowo-ui-pagination__link:hover {
   right: 0.75rem;
 }
 
-/* Generic native dialog (partial `dialog`, 2.1): framework-free, the <dialog> is the panel */
+/* Generic native dialog (partial `dialog`, 2.1): framework-free, the <dialog> is the panel. 2.29: the dialog size
+   (medium by default; lg / xl / wide = wide), header and footer fixed, the body scrolls. */
 .nowo-ui-dialog {
   box-sizing: border-box;
-  width: min(32rem, calc(100vw - 2rem));
-  max-height: calc(100dvh - 2rem);
+  width: var(--nowo-ui-dialog-w);
+  max-width: calc(100vw - 2rem);
+  max-height: var(--nowo-ui-dialog-h);
   margin: auto;
   padding: 0;
   overflow: auto;
@@ -1603,16 +1627,31 @@ a.nowo-ui-pagination__link:hover {
   background: var(--nowo-ui-overlay, rgba(15, 23, 42, 0.45));
 }
 
-.nowo-ui-dialog--sm {
-  width: min(22rem, calc(100vw - 2rem));
+/* Centred dialogs (not the side panels): a flex column of the size's height; header and footer never scroll */
+.nowo-ui-dialog[open]:not(.nowo-ui-dialog--end):not(.nowo-ui-dialog--start),
+.nowo-ui-confirm-dialog--anatomy[open] {
+  display: flex;
+  flex-direction: column;
+  height: var(--nowo-ui-dialog-h);
+  overflow: hidden;
 }
 
-.nowo-ui-dialog--lg {
-  width: min(48rem, calc(100vw - 2rem));
+/* A plain yes / no confirmation (no field, list, table or fold) keeps its natural height (still capped by the size) */
+.nowo-ui-dialog[open]:not(.nowo-ui-dialog--end):not(.nowo-ui-dialog--start):not(.nowo-ui-dialog--remote-form):not(:has(input:not([type='hidden']), select, textarea, table, ul, ol, details)),
+.nowo-ui-confirm-dialog--anatomy[open]:not(:has(input:not([type='hidden']), select, textarea, table, ul, ol, details)) {
+  /* fit-content as the UA <dialog> (auto would stretch a modal dialog between its insets up to max-height) */
+  height: fit-content;
 }
 
-.nowo-ui-dialog--xl {
-  width: min(64rem, calc(100vw - 2rem));
+:is(.nowo-ui-dialog, .nowo-ui-confirm-dialog--anatomy) > :is(.nowo-ui-dialog__header, .nowo-ui-dialog__footer) {
+  flex: none;
+}
+
+:is(.nowo-ui-dialog, .nowo-ui-confirm-dialog--anatomy) > .nowo-ui-dialog__body {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
 }
 
 /* Side panel (dialog placement end / start, 2.12): full height, stuck to that edge, slides in; the size sets the width */
@@ -1698,6 +1737,16 @@ a.nowo-ui-pagination__link:hover {
   font-family: var(--nowo-ui-font-display, inherit);
   font-size: 1.1rem;
   font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* Title + inline status badge (2.29, `status` of the dialog / confirm_dialog partials) */
+.nowo-ui-dialog__title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+  min-width: 0;
 }
 
 .nowo-ui-dialog__close,
@@ -1743,6 +1792,11 @@ a.nowo-ui-pagination__link:hover {
   gap: 0.5rem;
   padding: 0.75rem 1.25rem 1rem;
   border-top: 1px solid var(--nowo-ui-border);
+}
+
+/* The empty footer of the remote form dialog until a fragment hands it its actions (2.29) */
+.nowo-ui-dialog__footer[hidden] {
+  display: none !important;
 }
 
 /* Message under the title (Confirm::messageInHeader / theme.confirm_message_in_header) */
@@ -3583,16 +3637,20 @@ button.nowo-ui-kebab__item.is-current {
   display: none !important;
 }
 
-/* Row detail dialog: the confirm dialog chrome, wider, scrollable content. */
+/* Row detail dialog: the confirm dialog chrome, scrollable content. 2.29: a list, so the medium size (width and
+   height), the content scrolls under the header. */
 .nowo-ui-row-detail .nowo-ui-row-detail__panel {
-  width: min(40rem, calc(100vw - 2rem));
-  max-height: calc(100dvh - 4rem);
+  width: 100%;
+  height: var(--nowo-ui-dialog-h);
+  max-height: var(--nowo-ui-dialog-h);
   display: flex;
   flex-direction: column;
 }
 
+
 .nowo-ui-row-detail__header {
   display: flex;
+  flex: none;
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.75rem;
@@ -3603,6 +3661,8 @@ button.nowo-ui-kebab__item.is-current {
 }
 
 .nowo-ui-row-detail__content {
+  flex: 1 1 auto;
+  min-height: 0;
   padding: 0.5rem 1.25rem 1.25rem;
   overflow-y: auto;
 }
@@ -5421,10 +5481,14 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
   margin-top: 1.25rem;
 }
 
-/* Confirm dialog wrapper (partial `confirm_dialog`): the native <dialog> box of the kit dialogs. */
+/* Confirm dialog wrapper (partial `confirm_dialog`): the native <dialog> box of the kit dialogs. 2.29: the dialog
+   width (medium; lg / xl / wide = wide). A free `form` panel with a field, list, table or fold is at least the size's
+   height (min-height: a host panel inside the box, e.g. a taller wide one, still fits); the anatomy (`anatomy: true`) has
+   exactly the size's height with only the body scrolling. */
 .nowo-ui-confirm-dialog {
   box-sizing: border-box;
-  width: min(32rem, calc(100vw - 2rem));
+  width: var(--nowo-ui-dialog-w);
+  max-width: calc(100vw - 2rem);
   max-height: calc(100dvh - 2rem);
   margin: auto;
   padding: 1.25rem;
@@ -5458,16 +5522,18 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
   box-shadow: none;
 }
 
-.nowo-ui-confirm-dialog--sm {
-  width: min(22rem, calc(100vw - 2rem));
+.nowo-ui-confirm-dialog[open]:not(.nowo-ui-confirm-dialog--plain):not(.nowo-ui-confirm-dialog--anatomy):has(input:not([type='hidden']), select, textarea, table, ul, ol, details) {
+  min-height: var(--nowo-ui-dialog-h);
 }
 
-.nowo-ui-confirm-dialog--lg {
-  width: min(48rem, calc(100vw - 2rem));
+/* Header / body / footer anatomy (2.29, `anatomy: true` of the confirm_dialog partial): the dialog classes, no box padding */
+.nowo-ui-confirm-dialog.nowo-ui-confirm-dialog--anatomy {
+  max-height: var(--nowo-ui-dialog-h);
+  padding: 0;
 }
 
-.nowo-ui-confirm-dialog--xl {
-  width: min(64rem, calc(100vw - 2rem));
+.nowo-ui-confirm-dialog--anatomy > .nowo-ui-dialog__footer:not(:has(*)) {
+  display: none;
 }
 
 /* App shell burger (@NowoUiKit/shell/_burger, icon: morph): the static glyph of the state paints before JS (menu when
@@ -6158,8 +6224,9 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
 
 /*
  * Remote form dialog (2.28, partials/_remote_form_dialog.html.twig, nowo-ui-remote-form-core.ts): the body is a flex
- * column that scrolls between the header and the fragment's own actions; full screen on phones (a gutter with
- * --nowo-ui-remote-dialog-phone-inset).
+ * column that scrolls between the header and the footer (2.29: the fragment's form actions are moved into the dialog
+ * footer); the wide size, and on phones the screen width with a 16 px gutter (--nowo-ui-remote-dialog-phone-inset,
+ * 1rem since 2.29; 0 = full screen).
  */
 .nowo-ui-dialog--remote-form[open] {
   display: flex;
@@ -6196,16 +6263,15 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
 
 @media (max-width: 40rem) {
   .nowo-ui-dialog--remote-form {
-    width: calc(100vw - 2 * var(--nowo-ui-remote-dialog-phone-inset, 0px));
+    --nowo-ui-dialog-w: calc(100vw - 2 * var(--nowo-ui-remote-dialog-phone-inset, 1rem));
+    --nowo-ui-dialog-h: calc(100dvh - 2 * var(--nowo-ui-remote-dialog-phone-inset, 1rem));
     max-width: none;
-    height: calc(100vh - 2 * var(--nowo-ui-remote-dialog-phone-inset, 0px));
-    height: calc(100dvh - 2 * var(--nowo-ui-remote-dialog-phone-inset, 0px));
-    max-height: none;
-    margin: var(--nowo-ui-remote-dialog-phone-inset, 0px);
-    border-radius: var(--nowo-ui-remote-dialog-phone-radius, 0);
+    margin: var(--nowo-ui-remote-dialog-phone-inset, 1rem);
+    border-radius: var(--nowo-ui-remote-dialog-phone-radius, var(--nowo-ui-modal-radius, var(--nowo-ui-radius)));
   }
 
-  .nowo-ui-dialog--remote-form > .nowo-ui-dialog__body {
+  .nowo-ui-dialog--remote-form > .nowo-ui-dialog__footer:last-child,
+  .nowo-ui-dialog--remote-form > .nowo-ui-dialog__body:has(+ .nowo-ui-dialog__footer[hidden]) {
     padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
   }
 }

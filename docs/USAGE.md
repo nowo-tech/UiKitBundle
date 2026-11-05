@@ -1419,6 +1419,16 @@ dialog also opens **without Stimulus** through `nowo-ui-confirm.js` — `[data-n
 Slots `confirm_dialog_root`, `confirm_dialog`, `confirm_dialog_trigger`. For an `Action` with a `View\Confirm` keep the
 `confirm` contract (`partials/_confirm.html.twig`); this wrapper is for dialogs whose body is a whole form.
 
+**Anatomy (2.29).** With **`anatomy: true`** the partial renders the kit dialog sections: header (`title` or
+`title_html` — trusted HTML, escape what you interpolate —, optional `status` badge, close ×), the `body` block (the
+only part that scrolls; it defaults to the `form` block) and the `footer` block (outside the body, always visible;
+Cancel then the one primary). Bind the form in the body to the submit in the footer with `form="…"`. `size: 'wide'`
+for tables, two-column forms and guides (medium by default); `close_label`, `dismissible`, `title_id` (the header
+`<h2>` id, default `<dialog_id>-title`, which `aria-labelledby` points to unless `aria_labelledby` is given). These
+options are read only with `anatomy: true` (an explicit `true`): without it the markup is the 2.28 one, whatever
+`title`, `status` or `size` an embed without `only` inherits from the page. Markup, classes and the sizes:
+[PAGE_CONTRACT](PAGE_CONTRACT.md#dialog-sizes-and-anatomy-229).
+
 <a id="app-shell-26"></a>
 ### App shell
 
@@ -1761,7 +1771,9 @@ public function edit(Request $request, Monitor $monitor, RemoteDialogResponder $
 - **Fragment template:** either a separate template (`RemoteDialogResponder::template()`), or one template with
   `{% extends nowo_ui_dialog_request() ? '@NowoUiKit/layout/fragment.html.twig' : 'base.html.twig' %}` (the fragment
   layout prints only the `body` block). The fragment brings its own actions row (Save / Cancel with
-  `data-nowo-ui-dialog-close`).
+  `data-nowo-ui-dialog-close`); since 2.29 that row (`[data-nowo-ui-dialog-actions]`, else the form's
+  `.nowo-ui-form__actions`) moves into the dialog footer, each control bound to the form with `form="…"`, so it stays
+  visible while the body scrolls (`data-nowo-ui-dialog-keep-actions` on the form keeps it in place).
 - **Controllers that `redirectToRoute()`:** set `nowo_ui_kit.remote_dialog.convert_redirects: true` and a redirect
   answered to a main dialog request becomes `204` + `X-Nowo-Redirect` ([CONFIGURATION](CONFIGURATION.md#remote-dialog-228)).
 - **Events** (bubbling, on the dialog): `nowo-ui:remote-form:loaded` `{url}`, `:invalid` `{status}`, `:saved`
@@ -1769,8 +1781,9 @@ public function edit(Request $request, Monitor $monitor, RemoteDialogResponder $
   place; the dialog still closes), `:failed` `{stage: 'load' | 'submit', status}`, `:closed`.
 - **Script:** `window.nowoUiOpenRemoteForm(dialogId, url, opener?)` opens one from code (a button whose URL is
   computed).
-- **Phones** (≤ 40 rem): full screen; `--nowo-ui-remote-dialog-phone-inset` adds a gutter ([THEMING](THEMING.md#remote-form-dialog-228)).
-- **Partial options:** `id`, `stimulus`, `title`, `size` (default `lg`), `labels: {loading, error, load_error}`,
+- **Size:** the wide dialog size; on phones (≤ 40 rem) the screen width with a 16 px gutter
+  (`--nowo-ui-remote-dialog-phone-inset`, `0` = full screen; [THEMING](THEMING.md#remote-form-dialog-228)).
+- **Partial options:** `id`, `stimulus`, `title`, `size` (default `lg` = wide; `md` for a short form), `labels: {loading, error, load_error}`,
   `invalid_selector`, `follow_on_load_error` (default true), `backdrop_close` (default false), `attr`, `bundle`.
 
 ## Focusable scroll regions (2.28)

@@ -1,10 +1,11 @@
-{# UiKit 2.28 demo: the destination form, as the dialog fragment and inside the full page. #}
+{# UiKit 2.28 demo: the destination form, as the dialog fragment and inside the full page (2.29: in the dialog its
+   actions move into the dialog footer; Cancel first, the one primary on the right). #}
 {% form_theme form '@NowoUiKit/form/nowo_ui_layout.html.twig' %}
 {{ form_start(form, {attr: {'data-testid': 'destination-form'}}) }}
     {{ form_row(form.label, {attr: {'data-testid': 'destination-label', autofocus: true}}) }}
     {{ form_row(form.channel) }}
     <div class="{{ nowo_ui_class('form_actions') }}">
-        <button type="submit" class="{{ nowo_ui_class('btn_primary') }}" data-testid="destination-save">Save</button>
         <a href="{{ path('kit_remote_form') }}" class="{{ nowo_ui_class('btn_secondary') }}" data-nowo-ui-dialog-close data-testid="destination-cancel">Cancel</a>
+        <button type="submit" class="{{ nowo_ui_class('btn_primary') }}" data-testid="destination-save">Save</button>
     </div>
 {{ form_end(form) }}

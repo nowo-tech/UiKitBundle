@@ -109,6 +109,49 @@
 
 ## Unreleased
 
+From **2.28.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+php bin/console assets:install   # nowo-ui.css, nowo-ui.unlayered.css and nowo-ui-dialog.js changed
+```
+
+Every existing option and block keeps working and renders the same markup (the 2.27 fixtures still match). The
+change is **visual**: dialogs now have one of two sizes ([PAGE_CONTRACT](PAGE_CONTRACT.md#dialog-sizes-and-anatomy-229)).
+
+| Dialog | 2.28 | Now |
+|--------|------|-----|
+| `dialog` (default / `sm`) | `min(32rem, …)` / `min(22rem, …)` wide, content height | medium: `min(40rem, 100vw − 2rem)` × `min(36rem, 100dvh − 2rem)` |
+| `dialog` `lg` / `xl` | `48rem` / `64rem` wide, content height | wide: `min(56rem, 100vw − 2rem)` × `min(52rem, 100dvh − 2rem)` |
+| `remote_form_dialog` (`lg`) | `48rem`, full screen on phones | wide; on phones the screen width with a 16 px gutter |
+| `confirm_dialog` (default / `--sm`, `--lg` / `--xl`) | `32rem` / `22rem`, `48rem` / `64rem` | medium width / wide width; with a field, list, table or fold at least the size's height |
+| `confirm` (View\Confirm, `sm` / default / `lg`) | `22rem` / `28rem` / `40rem` | medium width, natural height |
+| row detail dialog | `40rem`, content height | medium width and height |
+
+- **Height.** A centred `dialog` (not a side panel) is a flex column of the size's height: header and footer stay,
+  only `.nowo-ui-dialog__body` scrolls. A plain yes / no (no `input` other than hidden, `select`, `textarea`, `table`,
+  `ul`, `ol` or `details`) keeps its natural height. If you styled `.nowo-ui-dialog` as `display: block` or scrolled
+  the whole dialog, drop that.
+- **Old widths.** To keep a size of your own, set the tokens (all dialogs) or `--nowo-ui-dialog-w` /
+  `--nowo-ui-dialog-h` on one dialog; `--nowo-ui-confirm-width` still sets the `confirm` width.
+- **Remote form dialog.** The fragment's `.nowo-ui-form__actions` (or `[data-nowo-ui-dialog-actions]`) move into the
+  dialog footer and get `form="<form id>"` (an id is generated for an anonymous form, and for a form whose id another
+  element of the page already holds). A fragment script that looked up its buttons inside the form should use
+  `form.elements`. The moved row also **leaves the scope of anything attached to the form element**: a Stimulus
+  controller on the `<form>` (its targets and `data-action` on the buttons) and listeners delegated from the form no
+  longer see the buttons (`submit` still fires on the form). Put `data-nowo-ui-dialog-keep-actions` on such a form to
+  keep its actions in place, or move the controller to an element that contains the whole dialog. Full screen on
+  phones again: `--nowo-ui-remote-dialog-phone-inset: 0`.
+- **`confirm_dialog` is unchanged** unless you pass `anatomy: true`: a `title`, `status` or `size` in the context
+  (an embed without `only` sees the whole parent context) changes nothing, and no `aria-labelledby` is added.
+- **`status` of the `dialog` partial.** Only a `View\PageStatus` or a hash with a `label` draws a badge; any other
+  value (e.g. a `status` string of the page, inherited by an `include` / `embed` with context) is ignored. A hash
+  tone outside `success | danger | warning | neutral | info` renders `neutral`.
+
+Optional: move free `confirm_dialog` panels to the anatomy (`anatomy: true`, `title`, `body` / `footer` blocks — the
+`body` block defaults to your `form` block) so the footer stays outside the scrolling body, and use `size: 'wide'`
+for tables, two-column forms and guides.
+
 ## To 2.28.0
 
 From **2.27.2**:

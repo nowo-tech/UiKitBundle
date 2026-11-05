@@ -21,6 +21,7 @@ use Nowo\UiKitBundle\View\Crumb;
 use Nowo\UiKitBundle\View\HeaderActions;
 use Nowo\UiKitBundle\View\Label;
 use Nowo\UiKitBundle\View\PageHeader;
+use Nowo\UiKitBundle\View\PageStatus;
 use Nowo\UiKitBundle\View\ViewList;
 use Stringable;
 use Symfony\Component\Form\FormFactoryInterface;
@@ -148,6 +149,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             new TwigFunction('nowo_ui_safe_href', static fn (mixed $href): ?string => \is_string($href) ? SafeHref::filter($href) : null),
             new TwigFunction('nowo_ui_dialog_request', fn (): bool => RemoteDialog::isRequest($this->requestStack?->getCurrentRequest())),
             new TwigFunction('nowo_ui_remote_form_opener', self::remoteFormOpener(...)),
+            new TwigFunction('nowo_ui_dialog_status', PageStatus::fromOption(...)),
         ];
     }
 

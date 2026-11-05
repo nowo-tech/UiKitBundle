@@ -26,7 +26,34 @@
       `nowo-ui-confirm-dialog--plain` drops the kit box (background, border, shadow, padding, size) — 2.6.1
     - attr / dialog_attr: extra attributes of the wrapper / the dialog (no on*)
     - bundle: per-bundle theme exceptions
-  Blocks: trigger (the default button), form (the dialog body: a Symfony form_start / form_end or any panel).
+  Anatomy (2.29, opt-in with `anatomy: true`): the dialog renders the kit dialog sections instead of the free `form`
+  panel — header (title, optional status badge, close ×), body (the `body` block, the only part that scrolls) and
+  footer (the `footer` block, outside the body, always visible: Cancel / Close then the one primary, on the right). A
+  form in the body is bound to its submit in the footer with the `form` attribute:
+
+      {% embed nowo_ui_partial('confirm_dialog') with {anatomy: true, trigger_label: 'Edit', title: 'Edit monitor', dialog_id: 'edit-monitor'} %}
+          {% block body %}{{ form_start(form, {attr: {id: 'edit-monitor-form'}}) }}…{{ form_end(form) }}{% endblock %}
+          {% block footer %}
+              <button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-confirm-dialog-close>Cancel</button>
+              <button type="submit" form="edit-monitor-form" class="{{ nowo_ui_class('btn_primary') }}">Save</button>
+          {% endblock %}
+      {% endembed %}
+
+  Only with `anatomy: true` (an explicit true; any other value, missing or inherited from the context, keeps the
+  2.28 markup byte for byte, whatever `title`, `status` or `size` the context holds):
+    - title (string or View\Label) / title_html (trusted HTML printed raw — escape what you interpolate)
+    - status: View\PageStatus or a hash {label, tone (success | danger | warning | neutral | info; any other tone →
+      neutral), title, attributes}; any other value is ignored (no badge) — View\PageStatus::fromOption()
+    - size: md (default) | wide → the two dialog sizes (docs/PAGE_CONTRACT.md "Dialog sizes and anatomy"). A free
+      panel takes the sizes from its modifier: nowo-ui-confirm-dialog--sm → medium, --lg / --xl → wide. With a
+      field, list, table or fold the height is the size's; a plain yes / no keeps its natural height
+    - close_label (default action.close), dismissible (default true: the × button)
+    - title_id (default <dialog_id>-title, else a generated id): the id of the header <h2>; the dialog's
+      aria-labelledby points to it unless aria_labelledby is given. The anatomy always renders that <h2>; the `form`
+      block is not rendered (the `body` block's default is the `form` block, so an existing form panel moves into the
+      body as is)
+  Blocks: trigger (the default button), form (the free dialog content: a Symfony form_start / form_end or any panel),
+  body / footer (2.29, the anatomy sections, only with anatomy: true).
   Close: [data-confirm-dialog-close] (Stimulus) or [data-nowo-confirm-close] (kit runtime), Escape.
   Slots: confirm_dialog_root, confirm_dialog, confirm_dialog_trigger.
 #}
@@ -35,7 +62,10 @@
 {% set _dialog_id = dialog_id|default(null) %}
 {% set _open_on_connect = open_on_connect|default(false) in [true, 1, '1', 'true', 'TRUE'] %}
 {% set _expected = expected_value ?? null %}
-{% set _dialog_class = (nowo_ui_class('confirm_dialog', bundle) ~ ' ' ~ dialog_modifier|default(''))|trim %}
+{% set _anatomy = (anatomy ?? false) is same as(true) %}
+{% set _dialog_class = (nowo_ui_class('confirm_dialog', bundle) ~ (_anatomy and size|default('md') == 'wide' ? ' nowo-ui-confirm-dialog--wide') ~ (_anatomy ? ' nowo-ui-confirm-dialog--anatomy') ~ ' ' ~ dialog_modifier|default(''))|trim %}
+{% set _title_id = _anatomy ? (title_id|default(null) ?: ((_dialog_id ?? ('nowo-ui-confirm-dialog-' ~ random(100000, 999999))) ~ '-title')) : null %}
+{% set _labelledby = (aria_labelledby is defined and aria_labelledby) ? aria_labelledby : _title_id %}
 
 {% if not _only_dialog %}
 <div class="{{ nowo_ui_class('confirm_dialog_root', bundle) }}" data-controller="confirm-dialog"{% if _expected is not null %} data-confirm-dialog-expected-value="{{ _expected }}"{% endif %}{% if _open_on_connect %} data-confirm-dialog-open-on-connect-value="true"{% endif %}{{ nowo_ui_attrs('confirm_dialog_root', bundle, attr|default({})) }}>
@@ -45,8 +75,26 @@
         {% endif %}
     {% endblock %}
 {% endif %}
-<dialog class="{{ _dialog_class }}" data-confirm-dialog-target="dialog"{% if _dialog_id %} id="{{ _dialog_id }}" data-nowo-ui-confirm{% endif %}{% if dialog_testid|default(null) %} data-testid="{{ dialog_testid }}"{% endif %}{% if aria_labelledby is defined and aria_labelledby %} aria-labelledby="{{ aria_labelledby }}"{% endif %}{{ nowo_ui_attrs('confirm_dialog', bundle, dialog_attr|default({})) }}>
+<dialog class="{{ _dialog_class }}" data-confirm-dialog-target="dialog"{% if _dialog_id %} id="{{ _dialog_id }}" data-nowo-ui-confirm{% endif %}{% if dialog_testid|default(null) %} data-testid="{{ dialog_testid }}"{% endif %}{% if _labelledby %} aria-labelledby="{{ _labelledby }}"{% endif %}{{ nowo_ui_attrs('confirm_dialog', bundle, dialog_attr|default({})) }}>
+{% if _anatomy %}
+    {% set _status = nowo_ui_dialog_status(status ?? null) %}
+    {% set _close_label = close_label|default('action.close'|trans({}, 'NowoUiKitBundle')) %}
+    <header class="{{ nowo_ui_class('dialog_header', bundle) }}"{{ nowo_ui_attrs('dialog_header', bundle) }}>
+        {% if _status %}<div class="nowo-ui-dialog__title-row">{% endif %}<h2 class="{{ nowo_ui_class('dialog_title', bundle) }}" id="{{ _title_id }}"{{ nowo_ui_attrs('dialog_title', bundle) }}>{% if title_html|default(null) %}{{ title_html|raw }}{% else %}{{ title|default(null)|nowo_ui_trans }}{% endif %}</h2>{% if _status %}{{ include(nowo_ui_partial('page_status', bundle), {status: _status, bundle: bundle}, false)|trim|raw }}</div>{% endif %}
+
+        {% if dismissible ?? true %}
+            <button type="button" class="nowo-ui-dialog__close" data-confirm-dialog-close{% if _dialog_id %} data-nowo-confirm-close{% endif %} aria-label="{{ _close_label }}" title="{{ _close_label }}"><span aria-hidden="true">&times;</span></button>
+        {% endif %}
+    </header>
+    <div class="{{ nowo_ui_class('dialog_body', bundle) }}"{{ nowo_ui_attrs('dialog_body', bundle) }}>
+        {%- block body %}{{ block('form') }}{% endblock -%}
+    </div>
+    <footer class="{{ nowo_ui_class('dialog_footer', bundle) }}"{{ nowo_ui_attrs('dialog_footer', bundle) }}>
+        {%- block footer %}{% endblock -%}
+    </footer>
+{% else %}
     {% block form %}{% endblock %}
+{% endif %}
 </dialog>
 {% if not _only_dialog %}
 </div>
