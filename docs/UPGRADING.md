@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.30.0](#to-2300)
 - [To 2.29.1](#to-2291)
 - [To 2.29.0](#to-2290)
 - [To 2.28.0](#to-2280)
@@ -111,7 +112,9 @@
 
 ## Unreleased
 
-Planned **2.30.0** (minor), from **2.29.x**: `composer update nowo-tech/ui-kit-bundle`. No breaking change: without
+## To 2.30.0
+
+**2.30.0** (minor), from **2.29.x**: `composer update nowo-tech/ui-kit-bundle`. No breaking change: without
 `theme.pages.list.filters` (and the new `ListPage` arguments) list pages render byte-identical to 2.29.
 
 **Drop a `list_filters` partial override** that only copied the kit field loop to add a fold toggle, icon buttons or
