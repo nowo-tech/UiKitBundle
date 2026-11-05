@@ -100,8 +100,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 Unified dialog sizes and anatomy (owner rule, symfony-beacon `docs/identity/UI-PATTERNS.md` §16): two sizes only, set
 by public tokens other kits share, the body as the only scrolling part and the footer outside it. Markup of the
-existing options is unchanged (fixtures under `tests/Fixtures/bc-2.27` still match); the sizes change visually — see
-UPGRADING.
+existing options is unchanged (fixtures under `tests/Fixtures/bc-2.27` still match; `confirm_dialog` embeds without
+`only` stay byte-identical to 2.28 whatever `title`, `status` or `size` the context holds — fixtures
+`tests/Fixtures/bc-2.28`); the sizes change visually — see UPGRADING.
 
 ### Added
 
@@ -109,16 +110,24 @@ UPGRADING.
   (`min(36rem, 100dvh - 2rem)`), `--nowo-dialog-width-wide` (`min(56rem, 100vw - 2rem)`) and
   `--nowo-dialog-height-wide` (`min(52rem, 100dvh - 2rem)`). No `:root` value is declared: a host sets them once and
   every kit reads them with the same fallbacks.
-- `dialog` partial: `size: 'wide'` (`nowo-ui-dialog--wide`), `status` (a `View\PageStatus` or `{label, tone, title}`
-  badge next to the title, in `nowo-ui-dialog__title-row`) and `footer_target` (an empty hidden
-  `[data-nowo-ui-dialog-footer]` a script fills).
-- `confirm_dialog` partial: the **anatomy** — with `title` (or `title_html`) the dialog renders header (title,
-  `status`, close × with `aria-label`), body (`body` block, the only part that scrolls) and footer (`footer` block,
-  always visible; bind a form in the body to its submit with `form="…"`). Options `size: 'md' | 'wide'`,
-  `close_label`, `dismissible`, `title_id`.
+- `dialog` partial: `size: 'wide'` (`nowo-ui-dialog--wide`), `status` (a `View\PageStatus` or
+  `{label, tone, title, attributes}` badge next to the title, in `nowo-ui-dialog__title-row`) and `footer_target` (an
+  empty hidden `[data-nowo-ui-dialog-footer]` a script fills). A hash `tone` outside `PageStatus::TONES` (`primary`
+  included) renders `neutral`; any other `status` value (a string, a number, a hash without a `label` — e.g. a
+  `status` variable inherited from the template context) is **ignored** (no badge, no error).
+- `confirm_dialog` partial: the **anatomy**, an explicit opt-in with **`anatomy: true`** — the dialog renders header
+  (`title` / `title_html`, `status`, close × with `aria-label`), body (`body` block, the only part that scrolls; its
+  default is the `form` block) and footer (`footer` block, always visible; bind a form in the body to its submit with
+  `form="…"`). Options read only with `anatomy: true`: `title`, `title_html`, `status`, `size: 'md' | 'wide'`,
+  `close_label`, `dismissible`, `title_id`; `aria-labelledby` then points to the header `<h2>` (which the anatomy
+  always renders) unless `aria_labelledby` is given.
+- `View\PageStatus::fromOption()` and the Twig function `nowo_ui_dialog_status()`: the `status` option of both
+  partials, normalised as above.
 - Remote form dialog: the dialog has a footer and the fragment's form actions (`[data-nowo-ui-dialog-actions]`, else
   the form's `.nowo-ui-form__actions`) move into it, each control bound to the form with `form="…"`, so the submit
-  never scrolls away. Opt out per form with `data-nowo-ui-dialog-keep-actions`. New exports of
+  never scrolls away. A form whose id another element of the page already holds gets a generated id (and the
+  fragment's `form="<old id>"` references follow it); the actions move only if every bound control then resolves to
+  that form, else they stay in place. Opt out per form with `data-nowo-ui-dialog-keep-actions`. New exports of
   `nowo-ui-remote-form-core.ts`: `liftActions()`, `dialogFooter()`, `submitButtons()`.
 - `docs/PAGE_CONTRACT.md` "Dialog sizes and anatomy": the markup and classes every kit dialog follows.
 

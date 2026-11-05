@@ -238,6 +238,63 @@ describe('dialog footer (2.29)', () => {
     expect(liftActions(body, null)).toBe(false);
   });
 
+  it('gives the fragment form its own id when another form of the page holds it, and rebinds its references (FK-L1)', () => {
+    document.body.innerHTML = `<form id="edit" method="post" action="/page"><button id="page-save">Save</button></form><div id="b"><form id="edit" method="post" action="/x"><input name="n"><div class="nowo-ui-form__actions"><button id="save">Save</button><button type="button" id="bound" form="edit">Other</button></div></form></div><footer id="f" hidden></footer>`;
+    const body = document.getElementById('b') as HTMLElement;
+    const footer = document.getElementById('f') as HTMLElement;
+    const form = body.querySelector('form') as HTMLFormElement;
+    const page = document.body.querySelector('form') as HTMLFormElement;
+    expect(liftActions(body, footer)).toBe(true);
+    expect(form.id).toMatch(/^nowo-ui-remote-form-\d+$/);
+    expect(page.id).toBe('edit');
+    expect((footer.querySelector('#save') as HTMLButtonElement).form).toBe(form);
+    expect((footer.querySelector('#bound') as HTMLButtonElement).form).toBe(form);
+    expect(submitButtons(page).map((button) => button.id)).toEqual(['page-save']);
+    expect(submitButtons(form).map((button) => button.id)).toEqual(['save']);
+  });
+
+  it('gives the fragment form its own id when a non-form element of the page holds it (FK-L1)', () => {
+    document.body.innerHTML = `<div id="edit">not a form</div><div id="nowo-ui-remote-form-taken"></div><div id="b"><form id="edit" method="post" action="/x"><div class="nowo-ui-form__actions"><button id="save">Save</button></div></form></div><footer id="f" hidden></footer>`;
+    const body = document.getElementById('b') as HTMLElement;
+    const footer = document.getElementById('f') as HTMLElement;
+    const form = body.querySelector('form') as HTMLFormElement;
+    expect(liftActions(body, footer)).toBe(true);
+    expect(form.id).not.toBe('edit');
+    expect(document.querySelectorAll(`[id="${form.id}"]`)).toHaveLength(1);
+    expect((footer.querySelector('#save') as HTMLButtonElement).form).toBe(form);
+  });
+
+  it('skips a generated id another element already holds (FK-L1)', () => {
+    document.body.innerHTML = '<div id="b"><form><div class="nowo-ui-form__actions"><button id="probe">Save</button></div></form></div><footer id="f"></footer>';
+    const body = document.getElementById('b') as HTMLElement;
+    const footer = document.getElementById('f') as HTMLElement;
+    expect(liftActions(body, footer)).toBe(true);
+    const next = Number((body.querySelector('form') as HTMLFormElement).id.replace('nowo-ui-remote-form-', '')) + 1;
+    body.innerHTML = '<form><div class="nowo-ui-form__actions"><button id="save">Save</button></div></form>';
+    const taken = document.createElement('span');
+    taken.id = `nowo-ui-remote-form-${next}`;
+    document.body.append(taken);
+    expect(liftActions(body, footer)).toBe(true);
+    const form = body.querySelector('form') as HTMLFormElement;
+    expect(form.id).toBe(`nowo-ui-remote-form-${next + 1}`);
+    expect((footer.querySelector('#save') as HTMLButtonElement).form).toBe(form);
+  });
+
+  it('leaves the actions in place when the moved controls would not resolve to the form (FK-L1)', () => {
+    document.body.innerHTML = '<form id="edit" action="/page"></form><footer id="f"></footer>';
+    const footer = document.getElementById('f') as HTMLElement;
+    const body = document.createElement('div');
+    body.innerHTML = '<form id="edit" method="post" action="/x"><div class="nowo-ui-form__actions"><button id="save">Save</button><button type="button" id="own" form="other">Other</button></div></form>';
+    expect(liftActions(body, footer)).toBe(false);
+    expect(footer.hidden).toBe(true);
+    expect(footer.childNodes).toHaveLength(0);
+    const save = body.querySelector('.nowo-ui-form__actions #save') as HTMLButtonElement;
+    expect(save).not.toBeNull();
+    expect(save.hasAttribute('form')).toBe(false);
+    expect(save.form).toBe(body.querySelector('form'));
+    expect(body.querySelector('#own')?.getAttribute('form')).toBe('other');
+  });
+
   it('finds the footer among the dialog children only', () => {
     document.body.innerHTML = '<dialog id="d"><div><footer data-nowo-ui-dialog-footer id="nested"></footer></div><footer data-nowo-ui-dialog-footer id="own"></footer></dialog><dialog id="e"></dialog>';
     expect(dialogFooter(document.getElementById('d') as HTMLDialogElement)?.id).toBe('own');

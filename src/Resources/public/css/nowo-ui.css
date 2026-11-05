@@ -5498,7 +5498,7 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
 
 /* Confirm dialog wrapper (partial `confirm_dialog`): the native <dialog> box of the kit dialogs. 2.29: the dialog
    width (medium; lg / xl / wide = wide). A free `form` panel with a field, list, table or fold is at least the size's
-   height (min-height: a host panel inside the box, e.g. a taller wide one, still fits); the anatomy (`title`) has
+   height (min-height: a host panel inside the box, e.g. a taller wide one, still fits); the anatomy (`anatomy: true`) has
    exactly the size's height with only the body scrolling. */
 .nowo-ui-confirm-dialog {
   box-sizing: border-box;
@@ -5541,7 +5541,7 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
   min-height: var(--nowo-ui-dialog-h);
 }
 
-/* Header / body / footer anatomy (2.29, `title` of the confirm_dialog partial): the dialog classes, no box padding */
+/* Header / body / footer anatomy (2.29, `anatomy: true` of the confirm_dialog partial): the dialog classes, no box padding */
 .nowo-ui-confirm-dialog.nowo-ui-confirm-dialog--anatomy {
   max-height: var(--nowo-ui-dialog-h);
   padding: 0;

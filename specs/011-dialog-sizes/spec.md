@@ -26,13 +26,20 @@ and blocks render the same markup (fixtures `tests/Fixtures/bc-2.27`); the chang
   yes / no (no field, list, table or fold) keeps its natural height; side panels keep their own sizes.
 - **FR-DIALOG-ANATOMY-001** — Header (title, optional status badge `nowo-ui-dialog__title-row`, close × with
   `aria-label`), body (the only part that scrolls), footer (outside the body, always visible). `dialog` partial:
-  `size: 'wide'`, `status`, `footer_target`. `confirm_dialog` partial: `title` switches to the anatomy with `body` /
-  `footer` blocks, `size`, `status`, `close_label`, `dismissible`, `title_id`.
+  `size: 'wide'`, `status`, `footer_target`. `confirm_dialog` partial: `anatomy: true` (explicit opt-in) switches to
+  the anatomy with `body` (default: the `form` block) / `footer` blocks and reads `title` / `title_html`, `size`,
+  `status`, `close_label`, `dismissible`, `title_id`; `aria-labelledby` points to the header `<h2>` the anatomy always
+  renders. `status` (both partials): a `View\PageStatus` or a hash with a `label` (tone outside `PageStatus::TONES` →
+  `neutral`); anything else is ignored (`PageStatus::fromOption()`).
 - **FR-DIALOG-REMOTE-001** — The remote form dialog has a footer; the fragment's `[data-nowo-ui-dialog-actions]` (else
   the form's last `.nowo-ui-form__actions`) move into it, each control bound with `form="…"`; opt-out
-  `data-nowo-ui-dialog-keep-actions`; footer emptied on loading, load error and close. Phones: the screen width with a
+  `data-nowo-ui-dialog-keep-actions`; footer emptied on loading, load error and close. A form id that is not the
+  form's own in the document is replaced by a generated one (references rebound); the actions move only when every
+  bound control resolves to that form (`control.form === form`). Phones: the screen width with a
   16 px gutter (`--nowo-ui-remote-dialog-phone-inset` default `1rem`).
-- **FR-DIALOG-BC-001** — Focus trap, Escape and focus return unchanged; markup without the new options unchanged.
+- **FR-DIALOG-BC-001** — Focus trap, Escape and focus return unchanged; markup without the new options unchanged;
+  `confirm_dialog` without `anatomy: true` byte-identical to 2.28 even with `title` / `status` / `size` in the
+  context (`ConfirmDialogAnatomy229BcTest`, fixtures `tests/Fixtures/bc-2.28`).
 
 ## User Scenarios & Testing
 
@@ -40,4 +47,4 @@ and blocks render the same markup (fixtures `tests/Fixtures/bc-2.27`); the chang
 - **US-2** — A long form in a dialog: the body scrolls, Save stays visible in the footer at 1280 and 390 px. Tests:
   demo e2e `dialog-sizes.spec.ts`, Vitest `nowo-ui-remote-form-core.test.ts` (footer), `remote-form-dialog.spec.ts`.
 - **US-3** — Existing callers render byte-identical markup. Tests: `RemoteDialogOverlay228BcTest`,
-  `ConfirmDialogPartialTest`, `DialogPartialTest`.
+  `ConfirmDialogAnatomy229BcTest`, `ConfirmDialogPartialTest`, `DialogPartialTest`.

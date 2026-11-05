@@ -135,14 +135,22 @@ change is **visual**: dialogs now have one of two sizes ([PAGE_CONTRACT](PAGE_CO
 - **Old widths.** To keep a size of your own, set the tokens (all dialogs) or `--nowo-ui-dialog-w` /
   `--nowo-ui-dialog-h` on one dialog; `--nowo-ui-confirm-width` still sets the `confirm` width.
 - **Remote form dialog.** The fragment's `.nowo-ui-form__actions` (or `[data-nowo-ui-dialog-actions]`) move into the
-  dialog footer and get `form="<form id>"` (an id is generated for an anonymous form). A fragment script that looked
-  up its buttons inside the form should use `form.elements`; put `data-nowo-ui-dialog-keep-actions` on a form to keep
-  them in place. Full screen on phones again: `--nowo-ui-remote-dialog-phone-inset: 0`.
-- **`confirm_dialog` with `title`.** The `title` option now switches the partial to the anatomy (header / `body` /
-  `footer` blocks). If you passed a `title` variable for your own use **and** override the `form` block, rename it.
+  dialog footer and get `form="<form id>"` (an id is generated for an anonymous form, and for a form whose id another
+  element of the page already holds). A fragment script that looked up its buttons inside the form should use
+  `form.elements`. The moved row also **leaves the scope of anything attached to the form element**: a Stimulus
+  controller on the `<form>` (its targets and `data-action` on the buttons) and listeners delegated from the form no
+  longer see the buttons (`submit` still fires on the form). Put `data-nowo-ui-dialog-keep-actions` on such a form to
+  keep its actions in place, or move the controller to an element that contains the whole dialog. Full screen on
+  phones again: `--nowo-ui-remote-dialog-phone-inset: 0`.
+- **`confirm_dialog` is unchanged** unless you pass `anatomy: true`: a `title`, `status` or `size` in the context
+  (an embed without `only` sees the whole parent context) changes nothing, and no `aria-labelledby` is added.
+- **`status` of the `dialog` partial.** Only a `View\PageStatus` or a hash with a `label` draws a badge; any other
+  value (e.g. a `status` string of the page, inherited by an `include` / `embed` with context) is ignored. A hash
+  tone outside `success | danger | warning | neutral | info` renders `neutral`.
 
-Optional: move free `confirm_dialog` panels to the anatomy (`title` + `body` / `footer` blocks) so the footer stays
-outside the scrolling body, and use `size: 'wide'` for tables, two-column forms and guides.
+Optional: move free `confirm_dialog` panels to the anatomy (`anatomy: true`, `title`, `body` / `footer` blocks — the
+`body` block defaults to your `form` block) so the footer stays outside the scrolling body, and use `size: 'wide'`
+for tables, two-column forms and guides.
 
 ## To 2.28.0
 

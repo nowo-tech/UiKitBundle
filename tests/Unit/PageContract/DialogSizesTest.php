@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 
+use ArrayObject;
 use Nowo\UiKitBundle\Test\FrameworkClasses;
 use Nowo\UiKitBundle\View\PageStatus;
 use PHPUnit\Framework\TestCase;
@@ -64,6 +65,17 @@ TWIG;
         self::assertStringContainsString('<footer class="nowo-ui-dialog__footer"><b>x</b></footer>', $hash, 'a given footer wins over the target');
         self::assertStringNotContainsString('data-nowo-ui-dialog-footer', $hash);
 
+        foreach (['inherited string', 42, true, ['tone' => 'success'], ['label' => ''], new ArrayObject(['label' => 'x'])] as $notAStatus) {
+            self::assertSame(
+                PageContractTwig::create()->render('@NowoUiKitBundle/partials/_dialog.html.twig', ['id' => 's', 'title' => 'T']),
+                PageContractTwig::create()->render('@NowoUiKitBundle/partials/_dialog.html.twig', ['id' => 's', 'title' => 'T', 'status' => $notAStatus]),
+                'a status that is not a PageStatus nor a hash with a label is ignored (no 500)',
+            );
+        }
+        $unknown = PageContractTwig::create()->render('@NowoUiKitBundle/partials/_dialog.html.twig', ['id' => 'u', 'title' => 'T', 'status' => ['label' => 'Odd', 'tone' => 'bogus', 'title' => 'Since 2h', 'attributes' => ['data-x' => '1']]]);
+        self::assertStringContainsString('data-nowo-ui-page-status="neutral" title="Since 2h"', $unknown);
+        self::assertStringContainsString('data-x="1">Odd</span>', $unknown);
+
         $plain = PageContractTwig::create()->render('@NowoUiKitBundle/partials/_dialog.html.twig', ['id' => 'p', 'title' => 'T', 'size' => 'huge']);
         self::assertStringContainsString('<dialog id="p" class="nowo-ui-dialog" data-nowo-ui-dialog', $plain);
         self::assertStringNotContainsString('title-row', $plain);
@@ -81,7 +93,7 @@ TWIG;
     {
         $twig = PageContractTwig::create(['t' => self::ANATOMY]);
         $html = $twig->render('t', ['opts' => [
-            'trigger_label' => 'Edit', 'dialog_id' => 'edit', 'title' => 'Edit monitor', 'size' => 'wide', 'status' => ['label' => 'Up', 'tone' => 'success'],
+            'anatomy' => true, 'trigger_label' => 'Edit', 'dialog_id' => 'edit', 'title' => 'Edit monitor', 'size' => 'wide', 'status' => ['label' => 'Up', 'tone' => 'success'],
         ]]);
         self::assertStringContainsString('<dialog class="nowo-ui-confirm-dialog nowo-ui-confirm-dialog--wide nowo-ui-confirm-dialog--anatomy" data-confirm-dialog-target="dialog" id="edit" data-nowo-ui-confirm aria-labelledby="edit-title">', $html);
         self::assertStringContainsString('<h2 class="nowo-ui-dialog__title" id="edit-title">Edit monitor</h2>', $html);
@@ -90,20 +102,33 @@ TWIG;
         self::assertMatchesRegularExpression('#<div class="nowo-ui-dialog__body"><form id="edit-form" method="post" action="/edit"><input name="name"></form></div>\s*<footer class="nowo-ui-dialog__footer"><button type="button" data-confirm-dialog-close>Cancel</button><button type="submit" form="edit-form">Save</button></footer>#', $html);
         self::assertSame(1, substr_count($html, '<header'));
 
-        $generated = $twig->render('t', ['opts' => ['title' => 'T', 'dismissible' => false]]);
+        $generated = $twig->render('t', ['opts' => ['anatomy' => true, 'title' => 'T', 'dismissible' => false]]);
         self::assertMatchesRegularExpression('#aria-labelledby="(nowo-ui-confirm-dialog-\d+-title)">.*id="\1"#s', $generated);
         self::assertStringNotContainsString('nowo-ui-dialog__close', $generated);
         self::assertStringNotContainsString('data-nowo-confirm-close', $generated);
 
-        $own = $twig->render('t', ['opts' => ['title' => 'T', 'aria_labelledby' => 'mine', 'title_id' => 'tid']]);
+        $own = $twig->render('t', ['opts' => ['anatomy' => true, 'title' => 'T', 'aria_labelledby' => 'mine', 'title_id' => 'tid']]);
         self::assertStringContainsString('aria-labelledby="mine"', $own);
         self::assertStringContainsString('id="tid"', $own);
 
-        $legacy = $twig->render('t', ['opts' => ['size' => 'md']]);
+        $legacy = $twig->render('t', ['opts' => ['size' => 'wide', 'title' => 'T', 'status' => ['label' => 'Up'], 'title_id' => 'x']]);
         self::assertStringContainsString('<dialog class="nowo-ui-confirm-dialog" data-confirm-dialog-target="dialog">', $legacy);
-        self::assertStringNotContainsString('<header', $legacy, 'without a title the form block keeps its free panel');
+        self::assertStringNotContainsString('<header', $legacy, 'without anatomy: true the form block keeps its free panel, whatever title / size');
+        self::assertStringNotContainsString('aria-labelledby', $legacy);
+        foreach ([false, 'true', 1, null] as $notTrue) {
+            self::assertSame($legacy, $twig->render('t', ['opts' => ['anatomy' => $notTrue, 'size' => 'wide', 'title' => 'T']]), 'only an explicit true opts in');
+        }
 
-        preg_match_all('/class="([^"]*)"/', PageContractTwig::create(['t' => self::ANATOMY], [], 'tailwind')->render('t', ['opts' => ['title' => 'T']]), $m);
+        $html = $twig->render('t', ['opts' => ['anatomy' => true, 'title_html' => '<code>a&amp;b</code>', 'status' => 'inherited string']]);
+        self::assertStringContainsString('<h2 class="nowo-ui-dialog__title" id="', $html);
+        self::assertStringContainsString('"><code>a&amp;b</code></h2>', $html, 'title_html is trusted HTML printed raw');
+        self::assertStringNotContainsString('title-row', $html, 'a non-hash status is ignored');
+        self::assertStringNotContainsString('nowo-ui-confirm-dialog--wide', $html);
+
+        $toned = $twig->render('t', ['opts' => ['anatomy' => true, 'title' => 'T', 'status' => ['label' => 'Odd', 'tone' => 'primary']]]);
+        self::assertStringContainsString('data-nowo-ui-page-status="neutral">Odd</span>', $toned, 'a tone outside PageStatus::TONES is neutral');
+
+        preg_match_all('/class="([^"]*)"/', PageContractTwig::create(['t' => self::ANATOMY], [], 'tailwind')->render('t', ['opts' => ['anatomy' => true, 'title' => 'T']]), $m);
         self::assertSame([], FrameworkClasses::violations(preg_split('/\s+/', implode(' ', $m[1])) ?: [], 'tailwind'));
     }
 

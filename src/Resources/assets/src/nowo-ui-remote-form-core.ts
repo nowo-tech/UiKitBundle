@@ -215,10 +215,13 @@ export function nestedLayerOwnsEscape(dialog: HTMLDialogElement, active: Element
 /**
  * Moves the fragment's form actions into the dialog footer (2.29): the explicit `[data-nowo-ui-dialog-actions]`
  * container, else the last `.nowo-ui-form__actions` inside a form, unless its form carries
- * `data-nowo-ui-dialog-keep-actions`. Every form control moved is bound to that form with `form="<id>"` (an id is
- * generated for an anonymous form), so clicking the submit in the footer still submits the form in the body (and
- * the `submit` event still fires there). The footer is emptied and hidden first; it is shown only when it received
- * something. Returns whether actions were moved.
+ * `data-nowo-ui-dialog-keep-actions`. Every form control moved is bound to that form with `form="<id>"`, so clicking
+ * the submit in the footer still submits the form in the body (and the `submit` event still fires there). An
+ * anonymous form gets a generated id; so does a form whose id is not its own in the document (another element of the
+ * page holds it first), and the fragment's `form="<old id>"` references are rebound to the new id. The actions move
+ * only when every bound control then resolves to that form (`control.form === form`); otherwise they stay in place.
+ * The footer is emptied and hidden first; it is shown only when it received something. Returns whether actions were
+ * moved.
  */
 export function liftActions(body: HTMLElement, footer: HTMLElement | null): boolean {
   if (!footer) {
@@ -233,21 +236,53 @@ export function liftActions(body: HTMLElement, footer: HTMLElement | null): bool
     return false;
   }
   const form = actions.closest('form');
-  if (form && form.id === '') {
-    formSequence += 1;
-    form.id = `nowo-ui-remote-form-${formSequence}`;
-  }
+  const bound: HTMLElement[] = [];
   if (form) {
+    ensureOwnFormId(form, body);
     actions.querySelectorAll<HTMLElement>(FORM_CONTROLS).forEach((control) => {
       if (!control.hasAttribute('form')) {
         control.setAttribute('form', form.id);
+        bound.push(control);
       }
     });
   }
-  footer.append(...Array.from(actions.childNodes));
+  const nodes = Array.from(actions.childNodes);
+  footer.append(...nodes);
+  if (form && !bound.every((control) => (control as HTMLElement & { form?: HTMLFormElement | null }).form === form)) {
+    bound.forEach((control) => control.removeAttribute('form'));
+    actions.append(...nodes);
+    footer.hidden = true;
+    return false;
+  }
   actions.remove();
   footer.hidden = false;
   return true;
+}
+
+/**
+ * Gives the form an id that resolves to it in its document (2.29): kept when `getElementById()` returns the form
+ * itself, else a fresh `nowo-ui-remote-form-<n>` free in the document; the fragment's `form="<old id>"` references are
+ * rebound to the new id.
+ */
+function ensureOwnFormId(form: HTMLFormElement, body: HTMLElement): void {
+  const doc = form.ownerDocument;
+  const old = form.id;
+  if (old !== '' && (!form.isConnected || doc.getElementById(old) === form)) {
+    return;
+  }
+  let id: string;
+  do {
+    formSequence += 1;
+    id = `nowo-ui-remote-form-${formSequence}`;
+  } while (doc.getElementById(id) !== null);
+  form.id = id;
+  if (old !== '') {
+    body.querySelectorAll<HTMLElement>('[form]').forEach((control) => {
+      if (control.getAttribute('form') === old) {
+        control.setAttribute('form', id);
+      }
+    });
+  }
 }
 
 /** The footer of a remote form dialog (`[data-nowo-ui-dialog-footer]`, direct child), null without one. */

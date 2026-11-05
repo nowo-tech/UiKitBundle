@@ -18,8 +18,10 @@
       wide (nowo-ui-dialog--<size>). The height is the size's (the body scrolls, header and footer stay); a plain
       yes / no dialog (no field, list, table or fold) keeps its natural height
     - status (2.29): a status badge next to the title — View\PageStatus or a hash {label, tone (success | danger |
-      warning | neutral | info, default neutral), title}; rendered by the `page_status` partial inside a
-      `nowo-ui-dialog__title-row` (no wrapper without a status)
+      warning | neutral | info; any other tone → neutral), title, attributes}; rendered by the `page_status` partial
+      inside a `nowo-ui-dialog__title-row` (no wrapper without a status). Any other value (a string, a number, a hash
+      without a label — e.g. a `status` variable inherited from the context) is ignored: no badge, the 2.28 markup
+      (View\PageStatus::fromOption())
     - footer_target (2.29): true renders an empty, hidden footer (data-nowo-ui-dialog-footer) that a script fills —
       the remote form dialog moves the fragment's form actions into it
     - placement (2.12): center (default) | end | start — end / start make a full-height side panel that slides in from
@@ -31,7 +33,8 @@
     - close_label: accessible name of the close button (default action.close)
     - root_class (2.28): extra classes appended to the <dialog> (the `remote_form_dialog` partial adds its modifier)
     - attr: extra attributes of the <dialog>, merged over the `dialog` slot attributes
-    - title_html (2.2): rich title, printed raw (the caller escapes / builds it, e.g. a name in <code>); wins over
+    - title_html (2.2): rich title, trusted HTML printed raw — escape what you interpolate (e.g. a name in <code>
+      built with |e); wins over
       title. A Twig Markup `title` (e.g. a `{% set %}` capture) also prints unescaped
     - title_attr / body_attr (2.2): extra attributes of the title <h2> / the body <div>, merged over the
       dialog_title / dialog_body slot attributes (true = bare attribute, false / null = omitted, no on* handlers)
@@ -45,10 +48,7 @@
 {% set bundle = bundle|default(null) %}
 {% set _pt = nowo_ui_page_type|default(null) %}
 {% set _size = size|default('md') %}
-{% set _status = status|default(null) %}
-{% if _status is iterable %}
-    {% set _status = {label: _status.label, tone: _status.tone|default('neutral'), title: _status.title|default(null), attributes: _status.attributes|default({})} %}
-{% endif %}
+{% set _status = nowo_ui_dialog_status(status ?? null) %}
 {% set _placement = placement|default('center') %}
 {% set title = title|default(null) %}
 {% set _title = title.key is defined ? title.key|trans(title.params, title.domain) : title %}

@@ -532,10 +532,15 @@ UptimeMonitor, Wiki, Vault and any new kit follow it; a dialog that cannot is a 
 }) }}
 ```
 
-The `confirm_dialog` partial with `title` (Stimulus `confirm-dialog`; `body` / `footer` blocks):
+The `confirm_dialog` partial with `anatomy: true` (Stimulus `confirm-dialog`; `body` / `footer` blocks). The anatomy
+is an explicit opt-in: without `anatomy: true` the partial ignores `title`, `title_html`, `status`, `size`,
+`close_label`, `dismissible` and `title_id` (an embed without `only` inherits them from the page) and renders its free
+`form` panel exactly as in 2.28. `title_html` is trusted HTML printed raw — escape what you interpolate. `status` is a
+`View\PageStatus` or `{label, tone, title, attributes}` (a tone outside `PageStatus::TONES` → `neutral`; any other
+value is ignored):
 
 ```twig
-{% embed nowo_ui_partial('confirm_dialog') with {trigger_label: 'Edit', title: 'Edit monitor', dialog_id: 'edit-monitor', size: 'md'} %}
+{% embed nowo_ui_partial('confirm_dialog') with {anatomy: true, trigger_label: 'Edit', title: 'Edit monitor', dialog_id: 'edit-monitor', size: 'md'} %}
     {% block body %}{{ form_start(form, {attr: {id: 'edit-monitor-form'}}) }}{{ form_rest(form) }}{{ form_end(form, {render_rest: false}) }}{% endblock %}
     {% block footer %}
         <button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-confirm-dialog-close>Cancel</button>

@@ -1419,10 +1419,14 @@ dialog also opens **without Stimulus** through `nowo-ui-confirm.js` — `[data-n
 Slots `confirm_dialog_root`, `confirm_dialog`, `confirm_dialog_trigger`. For an `Action` with a `View\Confirm` keep the
 `confirm` contract (`partials/_confirm.html.twig`); this wrapper is for dialogs whose body is a whole form.
 
-**Anatomy (2.29).** With `title` (or `title_html`) the partial renders the kit dialog sections: header (title, optional
-`status` badge, close ×), the `body` block (the only part that scrolls) and the `footer` block (outside the body,
-always visible; Cancel then the one primary). Bind the form in the body to the submit in the footer with
-`form="…"`. `size: 'wide'` for tables, two-column forms and guides (medium by default). Markup, classes and the sizes:
+**Anatomy (2.29).** With **`anatomy: true`** the partial renders the kit dialog sections: header (`title` or
+`title_html` — trusted HTML, escape what you interpolate —, optional `status` badge, close ×), the `body` block (the
+only part that scrolls; it defaults to the `form` block) and the `footer` block (outside the body, always visible;
+Cancel then the one primary). Bind the form in the body to the submit in the footer with `form="…"`. `size: 'wide'`
+for tables, two-column forms and guides (medium by default); `close_label`, `dismissible`, `title_id` (the header
+`<h2>` id, default `<dialog_id>-title`, which `aria-labelledby` points to unless `aria_labelledby` is given). These
+options are read only with `anatomy: true` (an explicit `true`): without it the markup is the 2.28 one, whatever
+`title`, `status` or `size` an embed without `only` inherits from the page. Markup, classes and the sizes:
 [PAGE_CONTRACT](PAGE_CONTRACT.md#dialog-sizes-and-anatomy-229).
 
 <a id="app-shell-26"></a>

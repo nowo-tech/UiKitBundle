@@ -16,14 +16,14 @@
         <div class="{{ nowo_ui_class('form_actions') }}">
             <button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-nowo-ui-dialog-open="medium-dialog" data-testid="open-medium">Medium (form)</button>
             <button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-nowo-ui-dialog-open="wide-dialog" data-testid="open-wide">Wide (table)</button>
-            {% embed nowo_ui_partial('confirm_dialog') with {trigger_label: 'Confirm (yes / no)', title: 'Archive this monitor?', dialog_id: 'confirm-dialog', trigger_testid: 'open-confirm'} %}
+            {% embed nowo_ui_partial('confirm_dialog') with {anatomy: true, trigger_label: 'Confirm (yes / no)', title: 'Archive this monitor?', dialog_id: 'confirm-dialog', trigger_testid: 'open-confirm'} %}
                 {% block body %}<p>It stops checking and leaves the dashboard. You can restore it later.</p>{% endblock %}
                 {% block footer %}
                     <button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-nowo-confirm-close data-confirm-dialog-close>Cancel</button>
                     <button type="button" class="{{ nowo_ui_class('btn_danger_solid') }}" data-nowo-confirm-close>Archive</button>
                 {% endblock %}
             {% endembed %}
-            {% embed nowo_ui_partial('confirm_dialog') with {trigger_label: 'Long form', title: 'Edit monitor', status: {label: 'Paused', tone: 'warning'}, dialog_id: 'long-dialog', trigger_testid: 'open-long', long_form: long_form} %}
+            {% embed nowo_ui_partial('confirm_dialog') with {anatomy: true, trigger_label: 'Long form', title: 'Edit monitor', status: {label: 'Paused', tone: 'warning'}, dialog_id: 'long-dialog', trigger_testid: 'open-long', long_form: long_form} %}
                 {% block body %}
                     {{ form_start(long_form) }}
                         {{ form_rest(long_form) }}
