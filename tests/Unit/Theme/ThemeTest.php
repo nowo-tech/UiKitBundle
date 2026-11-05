@@ -225,6 +225,11 @@ final class ThemeTest extends TestCase
         self::assertNotNull(Theme::tokenError('primary', ['red']));
         self::assertNotNull(Theme::tokenError('primary', 'red; } body { x'));
         self::assertNotNull(Theme::tokenError('primary', '  '));
+        // 2.30 (audit GD-L1): a comment delimiter would swallow the rest of the token stylesheet
+        self::assertNotNull(Theme::tokenError('primary', 'red /*'));
+        self::assertNotNull(Theme::tokenError('primary', '*/ red'));
+        self::assertStringContainsString('"/*" and "*/" are not allowed', (string) Theme::tokenError('radius', '4px/* x */'));
+        self::assertNull(Theme::tokenError('radius', 'calc(1rem / 2 * 3)'));
         self::assertNull(Theme::classEntryError('a b'));
         self::assertNull(Theme::classEntryError(['a', 'b']));
         self::assertNull(Theme::classEntryError(['value' => ['a'], 'framework_defaults' => false]));

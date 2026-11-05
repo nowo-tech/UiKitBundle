@@ -139,6 +139,9 @@ Then remove `theme.partials.list_filters`. Notes:
 - With `display` set, the plain clear link (`ListPage::filtersClearHref`) follows it (2.29: always text).
 - The custom `grid` track list is a token: the host layout must print `nowo_ui_tokens()` (the kit layouts do).
 - Override `@NowoUiKitBundle/partials/_action.html.twig`? It now reads the optional `toolbar_class`.
+- `theme.tokens` / `tokens_dark` values (host and bundle) may no longer contain `/*` or `*/` (they opened a CSS comment
+  in the token stylesheet); such a value fails at container compile time.
+- The `filters-collapse` fold cookie keeps the 50 most recently folded pages.
 
 ## To 2.29.1
 

@@ -91,6 +91,8 @@ final class ListFiltersConfigurationTest extends TestCase
         yield 'unknown key' => [['theme' => ['pages' => ['list' => ['filters' => ['columns' => 3]]]]], 'Unrecognized option "columns"'];
         yield 'unsafe grid' => [['theme' => ['pages' => ['list' => ['filters' => ['grid' => 'repeat(2, 1fr); color: red']]]]], 'Invalid nowo_ui_kit.theme.pages.list.filters: grid "repeat(2, 1fr); color: red" must be auto-fit, auto-fill or a grid-template-columns track list'];
         yield 'grid url()' => [['theme' => ['pages' => ['list' => ['filters' => ['grid' => 'url(x)']]]]], 'grid "url(x)" must be'];
+        yield 'grid comment opener' => [['theme' => ['pages' => ['list' => ['filters' => ['grid' => '1fr /*']]]]], 'no /* or */'];
+        yield 'token comment opener' => [['theme' => ['tokens' => ['filters-grid-columns' => '1fr /*']]], '"/*" and "*/" are not allowed'];
         yield 'unbalanced grid' => [['theme' => ['pages' => ['list' => ['filters' => ['grid' => 'repeat(2, 1fr']]]]], 'grid "repeat(2, 1fr" must be'];
         yield 'bad cookie' => [['theme' => ['pages' => ['list' => ['filters' => ['fold' => ['cookie' => 'a;b']]]]]], 'fold.cookie "a;b" must be 1-64 letters'];
         yield 'bad cookie path' => [['theme' => ['pages' => ['list' => ['filters' => ['fold' => ['cookie_path' => 'admin']]]]]], 'fold.cookie_path "admin" must be an absolute URL path'];

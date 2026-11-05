@@ -34,10 +34,10 @@ final class ListFiltersOptionsTest extends TestCase
         self::assertSame('nowo-ui-filters--grid-auto-fit', $custom->gridClass('auto-fit'));
         self::assertSame('nowo-ui-filters--grid-auto-fill', $custom->gridClass('auto-fill'));
 
-        foreach (['repeat(3, 1fr)', 'minmax(0, 2fr) 1fr', 'repeat(auto-fill, minmax(calc(10rem + 2%), 1fr))', 'var(--app-tracks)', '10rem 1fr'] as $ok) {
+        foreach (['calc(10rem / 2 * 3) 1fr', 'repeat(3, 1fr)', 'minmax(0, 2fr) 1fr', 'repeat(auto-fill, minmax(calc(10rem + 2%), 1fr))', 'var(--app-tracks)', '10rem 1fr'] as $ok) {
             self::assertNull(ListFiltersOptions::gridError($ok), $ok);
         }
-        foreach (['', ' ', 'a;b', 'repeat(2, 1fr))(', ')(', 'url(x)', 'URL (x)', 'x{y}', 'a"b', "a'b", 'a\\b', str_repeat('1fr ', 60)] as $bad) {
+        foreach (['', ' ', 'a;b', 'repeat(2, 1fr))(', ')(', 'url(x)', 'URL (x)', 'x{y}', 'a"b', "a'b", 'a\\b', str_repeat('1fr ', 60), '1fr /*', '*/ 1fr', 'repeat(2, 1fr) /* x */', '1fr/*'] as $bad) {
             self::assertNotNull(ListFiltersOptions::gridError($bad), $bad);
         }
     }

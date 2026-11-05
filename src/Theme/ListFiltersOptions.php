@@ -45,7 +45,7 @@ final readonly class ListFiltersOptions
 
     /**
      * A track list: letters, digits, spaces and `. , % ( ) + * / -` only (repeat(), minmax(), min(), calc(), fr, rem,
-     * var(--x)…); at most 200 characters, balanced parentheses, no url().
+     * var(--x)…); at most 200 characters, balanced parentheses, no url(), no CSS comment delimiters (slash-star, star-slash).
      */
     private const GRID_PATTERN = '#^[A-Za-z0-9 .,%()+*/-]{1,200}$#D';
 
@@ -164,8 +164,9 @@ final readonly class ListFiltersOptions
         if (\in_array($grid, self::GRID_MODES, true)) {
             return null;
         }
-        $message = \sprintf('grid "%s" must be auto-fit, auto-fill or a grid-template-columns track list (letters, digits, spaces and . , %% ( ) + * / - only, at most 200 characters, balanced parentheses, no url()).', $grid);
-        if (1 !== preg_match(self::GRID_PATTERN, $grid) || 1 === preg_match('/url\s*\(/i', $grid) || '' === trim($grid)) {
+        $message = \sprintf('grid "%s" must be auto-fit, auto-fill or a grid-template-columns track list (letters, digits, spaces and . , %% ( ) + * / - only, at most 200 characters, balanced parentheses, no url(), no /* or */).', $grid);
+        // `/*` / `*/` would open or close a CSS comment inside the token stylesheet (audit GD-L1)
+        if (1 !== preg_match(self::GRID_PATTERN, $grid) || 1 === preg_match('/url\s*\(/i', $grid) || 1 === preg_match('#/\*|\*/#', $grid) || '' === trim($grid)) {
             return $message;
         }
         $depth = 0;

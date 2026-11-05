@@ -366,7 +366,7 @@ final readonly class Theme
 
     /**
      * Token stylesheet text ('' without tokens): host `:root` (+ light-only `:root:where(:not([data-theme=dark]))`
-     * for {@see self::LIGHT_ONLY_TOKENS}, 2.15.4) + `[data-theme="dark"]` blocks, then the bundle scopes. Values are validated at construction (no `{`, `}`, `;`, `<`, `>`). The host blocks have the same
+     * for {@see self::LIGHT_ONLY_TOKENS}, 2.15.4) + `[data-theme="dark"]` blocks, then the bundle scopes. Values are validated at construction (no `{`, `}`, `;`, `<`, `>`, `\`, CSS comment delimiters). The host blocks have the same
      * specificity as the appearance SPI blocks (`:root` / `[data-theme="dark"]`), so the appearance printed after
      * them (`nowo_ui_tokens()`) overrides the host defaults.
      */
@@ -421,8 +421,9 @@ final readonly class Theme
             return \sprintf('token "%s" must be a string or a number, %s given.', $name, get_debug_type($value));
         }
         $value = trim((string) $value);
-        if ('' === $value || 1 === preg_match('/[{};<>\\\\]/', $value)) {
-            return \sprintf('token "%s" has an empty or unsafe value ("{", "}", ";", "<", ">" and "\\" are not allowed).', $name);
+        // 2.30 (audit GD-L1): `/*` / `*/` would open or close a CSS comment and swallow the rest of the token stylesheet
+        if ('' === $value || 1 === preg_match('/[{};<>\\\\]/', $value) || 1 === preg_match('#/\*|\*/#', $value)) {
+            return \sprintf('token "%s" has an empty or unsafe value ("{", "}", ";", "<", ">", "\\", "/*" and "*/" are not allowed).', $name);
         }
 
         return null;

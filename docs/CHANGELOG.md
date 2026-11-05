@@ -120,6 +120,21 @@ Planned **2.30.0** (minor): list-filter host options, so a host draws its filter
 - Demo: the page-contract orders list uses the host options (fold toggle, track list, icon + text buttons) and registers
   the `filters-collapse` peer (`public/js/demo-peers.js`).
 
+### Security
+
+- REQ-SEC-004 audit GD (PR #66): `theme.tokens` / `tokens_dark` / bundle token values and the
+  `pages.list.filters.grid` track list refuse the CSS comment delimiters `/*` and `*/` (GD-L1: an unterminated
+  comment swallowed the rest of the token stylesheet). Host config only; a token value containing them now fails at
+  container compile time.
+
+### Fixed
+
+- `filters-collapse` peer: a malformed (not URI-decodable) fold cookie reads as empty and is rewritten on the next
+  toggle instead of blocking persistence (GD-I4); the cookie keeps the 50 most recently folded page keys
+  (`FILTERS_COLLAPSE_MAX_KEYS`, GD-I2).
+- Demo e2e: the default-theme confirm dialog width assertion follows the 2.29 unified sizes (medium, `min(40rem,
+  100vw - 2rem)`).
+
 ### Tests
 
 - `ListFilters230BcTest` (fixtures `tests/Fixtures/bc-2.29`, rendered by 2.29.1): list pages without the new options

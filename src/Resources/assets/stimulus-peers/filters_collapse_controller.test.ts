@@ -1,7 +1,7 @@
 import { Application } from '@hotwired/stimulus';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import FiltersCollapseController, { FILTERS_COLLAPSE_COOKIE, activeFilterCount, foldedKeys } from './filters_collapse_controller';
+import FiltersCollapseController, { FILTERS_COLLAPSE_COOKIE, FILTERS_COLLAPSE_MAX_KEYS, activeFilterCount, foldedKeys } from './filters_collapse_controller';
 import { setIconStateHandler } from './icon_state';
 
 const MESSAGES = { collapse: 'Hide filters', expand: 'Show filters', none: 'Filters', one: '1 active filter', many: '%count% active filters' };
@@ -147,6 +147,29 @@ describe('filters-collapse peer', () => {
       // the own property shadows jsdom's accessor; deleting it restores the real cookie jar
       delete (document as unknown as { cookie?: string }).cookie;
     }
+  });
+
+  it('reads a malformed cookie as empty and rewrites it on the next toggle (audit GD-I4)', async () => {
+    document.cookie = `${FILTERS_COLLAPSE_COOKIE}=%E0%A4%A; path=/`;
+    expect(foldedKeys()).toEqual([]);
+    const form = mount('<input name="q" value="a">', false, 'orders');
+    await tick();
+    const toggle = form.querySelector<HTMLButtonElement>('[data-filters-collapse-target="toggle"]') as HTMLButtonElement;
+    toggle.click();
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(foldedKeys()).toEqual(['orders']);
+  });
+
+  it('keeps only the most recently folded keys (audit GD-I2)', async () => {
+    const old = Array.from({ length: FILTERS_COLLAPSE_MAX_KEYS }, (_, i) => `route_${i}`);
+    document.cookie = `${FILTERS_COLLAPSE_COOKIE}=${encodeURIComponent(old.join(','))}; path=/`;
+    const form = mount('<input name="q" value="a">', false, 'newest');
+    await tick();
+    form.querySelector<HTMLButtonElement>('[data-filters-collapse-target="toggle"]')?.click();
+    const keys = foldedKeys();
+    expect(keys).toHaveLength(FILTERS_COLLAPSE_MAX_KEYS);
+    expect(keys[0]).toBe('route_1');
+    expect(keys[keys.length - 1]).toBe('newest');
   });
 
   it('counts the fields of one filter group (a date range) once', () => {

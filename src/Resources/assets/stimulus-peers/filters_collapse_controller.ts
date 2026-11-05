@@ -12,6 +12,7 @@
  *         (default `/`), `maxAge` (seconds, default one year),
  *         `messages` (`{collapse, expand, none, one, many}`; `many` gets `%count%`).
  * Actions: `filters-collapse#toggle`.
+ * Cookie (2.30): at most FILTERS_COLLAPSE_MAX_KEYS keys (the most recent); a malformed value is reset on the next toggle.
  * Root class: `is-collapsed`. Event: `filters-collapse:toggled` (`detail.collapsed`, `detail.key`, `detail.count`).
  */
 
@@ -21,16 +22,31 @@ import { syncIconState } from './icon_state';
 
 export const FILTERS_COLLAPSE_COOKIE = 'nowo_ui_filters_collapsed';
 
+/**
+ * 2.30: the cookie keeps at most this many folded page keys (the most recently folded ones), so it never grows past
+ * the browser's ~4 KB cookie limit (a write over the limit would be dropped silently).
+ */
+export const FILTERS_COLLAPSE_MAX_KEYS = 50;
+
 /** Fields that do not count as a filter (paging, CSRF, sort). */
 const IGNORED = /(^|\[)(page|per_page|_token|sort|dir)\]?$/;
 
 type Messages = { collapse?: string; expand?: string; none?: string; one?: string; many?: string };
 
-/** Page keys currently folded (from the cookie). */
+/**
+ * Page keys currently folded (from the cookie). 2.30: a malformed value (not URI-decodable) reads as empty, so the
+ * next toggle rewrites the cookie instead of failing on every click until it expires.
+ */
 export function foldedKeys(cookie: string = FILTERS_COLLAPSE_COOKIE): string[] {
   const raw = document.cookie.split('; ').find((part) => part.startsWith(`${cookie}=`))?.slice(cookie.length + 1) ?? '';
+  let value: string;
+  try {
+    value = decodeURIComponent(raw);
+  } catch {
+    return [];
+  }
 
-  return decodeURIComponent(raw).split(',').filter((key) => '' !== key);
+  return value.split(',').filter((key) => '' !== key);
 }
 
 /**
@@ -130,6 +146,6 @@ export default class FiltersCollapseController extends Controller<HTMLElement> {
     if (collapsed) {
       keys.push(this.keyValue);
     }
-    document.cookie = `${this.cookieValue}=${encodeURIComponent(keys.join(','))}; path=${this.cookiePathValue}; max-age=${this.maxAgeValue}; SameSite=Lax`;
+    document.cookie = `${this.cookieValue}=${encodeURIComponent(keys.slice(-FILTERS_COLLAPSE_MAX_KEYS).join(','))}; path=${this.cookiePathValue}; max-age=${this.maxAgeValue}; SameSite=Lax`;
   }
 }
