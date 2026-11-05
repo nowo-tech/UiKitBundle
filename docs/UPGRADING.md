@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.28.0](#to-2280)
 - [To 2.27.2](#to-2272)
 - [To 2.27.1](#to-2271)
 - [To 2.27.0](#to-2270)
@@ -108,7 +109,9 @@
 
 ## Unreleased
 
-From **2.27.2** (next minor: **2.28.0**):
+## To 2.28.0
+
+From **2.27.2**:
 
 ```bash
 composer update nowo-tech/ui-kit-bundle
