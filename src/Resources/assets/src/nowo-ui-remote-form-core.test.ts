@@ -246,6 +246,9 @@ describe('dialog footer (2.29)', () => {
     const page = document.body.querySelector('form') as HTMLFormElement;
     expect(liftActions(body, footer)).toBe(true);
     expect(form.id).toMatch(/^nowo-ui-remote-form-\d+$/);
+    // The original id stays readable for host CSS / scripts / tests (2.29.1, FK-I7); the page form keeps its own.
+    expect(form.getAttribute('data-nowo-ui-form-id')).toBe('edit');
+    expect(page.hasAttribute('data-nowo-ui-form-id')).toBe(false);
     expect(page.id).toBe('edit');
     expect((footer.querySelector('#save') as HTMLButtonElement).form).toBe(form);
     expect((footer.querySelector('#bound') as HTMLButtonElement).form).toBe(form);
@@ -260,6 +263,7 @@ describe('dialog footer (2.29)', () => {
     const form = body.querySelector('form') as HTMLFormElement;
     expect(liftActions(body, footer)).toBe(true);
     expect(form.id).not.toBe('edit');
+    expect(document.querySelector('[data-nowo-ui-form-id="edit"]')).toBe(form);
     expect(document.querySelectorAll(`[id="${form.id}"]`)).toHaveLength(1);
     expect((footer.querySelector('#save') as HTMLButtonElement).form).toBe(form);
   });

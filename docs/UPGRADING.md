@@ -110,6 +110,18 @@
 
 ## Unreleased
 
+Planned **2.29.1**. No configuration or template contract change.
+
+- `.nowo-ui-input--wide` / `.nowo-ui-input--full` are now `box-sizing: border-box`. Hosts with a global border-box
+  reset (Bootstrap, Tailwind) see no change; others get full-width fields that no longer overflow their container by
+  their padding and border.
+- A remote-form fragment form that is re-identified keeps its original id in `data-nowo-ui-form-id`: use
+  `[data-nowo-ui-form-id="…"]` instead of `#…` for host CSS / scripts / tests that must match it inside the dialog.
+- `js/nowo-ui-scroll-region.js` syncs only the regions a mutation or resize concerns. A host that relied on any DOM
+  mutation re-syncing every region can call `schedule()` (no argument) for a full pass.
+- Nest an anatomy `confirm_dialog` inside another with `only` (or `anatomy: false`), see
+  [USAGE](USAGE.md#confirm-dialog-26).
+
 ## To 2.29.0
 
 From **2.28.0**:

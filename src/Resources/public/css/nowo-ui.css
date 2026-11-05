@@ -233,13 +233,17 @@
   accent-color: var(--nowo-ui-accent, var(--nowo-ui-primary));
 }
 
-/* Wide / full-width inputs (slots input_wide / input_full, 2.1) */
+/* Wide / full-width inputs (slots input_wide / input_full, 2.1). 2.29.1: border-box, so width 100% includes the
+   padding and border and a full-width field (a textarea) never overflows its container on hosts without a global
+   box-sizing reset. */
 .nowo-ui-input--wide {
+  box-sizing: border-box;
   width: 100%;
   max-width: 36rem;
 }
 
 .nowo-ui-input--full {
+  box-sizing: border-box;
   width: 100%;
   max-width: none;
 }

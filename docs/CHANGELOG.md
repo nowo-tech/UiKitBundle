@@ -99,6 +99,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Planned **2.29.1** (patch): follow-ups of the REQ-SEC-004 audits of 2.28 (appendix ES) and 2.29 (appendix FK).
+
+### Fixed
+
+- **Scroll regions (KIT-71, audit ES-I9):** regions that leave the document are unobserved (with the first child the
+  `ResizeObserver` watched; a new first child replaces the old one), so long-lived pages with many "load more" or
+  dialog cycles no longer keep detached wraps alive. A pass after a mutation or a resize syncs only the regions
+  concerned instead of scanning the whole document; the full scan runs once at start-up. An `aria-label` the script
+  set follows the caption / label when it changes. New exports of `nowo-ui-scroll-region.ts`: `forgetDisconnected()`,
+  `watchedCount()`, `regionsOfMutations()`; `schedule()` takes optional regions.
+- **Full-width inputs overflowed their container (audit FK-I5):** the `input_wide` / `input_full` slots
+  (`.nowo-ui-input--wide` / `--full`) are `box-sizing: border-box`, so a full-width textarea stays inside a dialog
+  body on hosts without a global box-sizing reset.
+
+### Changed
+
+- **Remote form dialog (audit FK-I7):** a fragment form that gets a generated id keeps its original id in
+  `data-nowo-ui-form-id`, so host CSS, scripts and tests can still target it (`ORIGINAL_ID_ATTR` export).
+- Demo `/kit/dialogs` handles its forms (CSRF, validation) and redirects after a valid POST (audit FK-I5).
+
+### Documentation
+
+- USAGE: nest an anatomy `confirm_dialog` with `only` or pass `anatomy: false` (audit FK-I6); target re-identified
+  fragment forms by `data-nowo-ui-form-id` (FK-I7); scroll-region passes (ES-I9).
+- PAGE_CONTRACT "Dialog sizes and anatomy": a `View\Confirm` with its type-to-confirm input keeps its natural height
+  at the medium width (audit FK-I3, documented exception).
+
 ## [2.29.0] - 2026-11-05
 
 Unified dialog sizes and anatomy (owner rule, symfony-beacon `docs/identity/UI-PATTERNS.md` §16): two sizes only, set

@@ -65,6 +65,20 @@ for (const [width, height] of [[1280, 900], [390, 844]] as const) {
       await expect(page.getByTestId('long-save')).toBeInViewport();
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
       await shot(page, `long-form-${width}`);
+      // 2.29.1: a full-width field (the Notes textarea) stays inside the body's content box (border-box).
+      const notes = await page.locator('#long-dialog textarea').evaluate((node) => {
+        const host = node.closest('.nowo-ui-dialog__body') as HTMLElement;
+        const box = host.getBoundingClientRect();
+        return { right: node.getBoundingClientRect().right, limit: box.right - parseFloat(getComputedStyle(host).paddingRight) + 0.5 };
+      });
+      expect(notes.right).toBeLessThanOrEqual(notes.limit);
+    });
+
+    test('saving the long form posts, redirects and shows the status (2.29.1)', async ({ page }) => {
+      await open(page, 'open-long', 'long-dialog');
+      await page.getByTestId('long-save').click();
+      await expect(page).toHaveURL(/\/kit\/dialogs\?submitted=1$/);
+      await expect(page.getByRole('status')).toHaveText('Submitted.');
     });
   });
 }

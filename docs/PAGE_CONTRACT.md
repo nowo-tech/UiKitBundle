@@ -508,7 +508,11 @@ UptimeMonitor, Wiki, Vault and any new kit follow it; a dialog that cannot is a 
    | wide | `var(--nowo-dialog-width-wide, min(56rem, 100vw - 2rem))` | `var(--nowo-dialog-height-wide, min(52rem, 100dvh - 2rem))` | tables, two-column forms, guides, a form page loaded in a dialog |
 
    Width **and** height are the size's, so moving between dialogs or steps never jumps. Only a plain yes / no
-   confirmation (no field, list, table or `<details>`) keeps its natural height (capped by the size). At 390 px the
+   confirmation (no field, list, table or `<details>`) keeps its natural height (capped by the size). Exception
+   (2.29.1, audit FK-I3): a `View\Confirm` row-action confirmation with its type-to-confirm input is still a
+   confirmation, not a form, and keeps its natural height at the medium width for every `size` (`lg` was 40rem in 2.2,
+   the medium width now); a confirmation that needs more fields is a form dialog (`dialog` / `confirm_dialog` with
+   `anatomy: true`). At 390 px the
    dialog is the screen width minus the 16 px gutters and never scrolls sideways.
 2. **Header**: the title (`<h2>`, referenced by `aria-labelledby`), a status badge inline next to it when the object
    has a status, and the close button `×` with an `aria-label`.
