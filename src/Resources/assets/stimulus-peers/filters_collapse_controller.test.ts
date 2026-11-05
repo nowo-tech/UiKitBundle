@@ -119,6 +119,36 @@ describe('filters-collapse peer', () => {
     expect(foldedKeys()).toEqual([]);
   });
 
+  it('writes the cookie on the configured path with SameSite=Lax and keeps aria-controls (2.30 list scaffold markup)', async () => {
+    const writes: string[] = [];
+    // jsdom drops a cookie whose path is not the document's, so record the strings the peer writes instead.
+    Object.defineProperty(document, 'cookie', {
+      configurable: true,
+      get: () => '',
+      set: (value: string) => {
+        writes.push(value);
+      },
+    });
+    try {
+      const form = mount('<input name="q" value="a">', false, 'orders', 'data-filters-collapse-cookie-value="app_filters" data-filters-collapse-cookie-path-value="/admin"');
+      form.id = 'nowo-ui-filters-filters';
+      const toggle = form.querySelector<HTMLButtonElement>('[data-filters-collapse-target="toggle"]') as HTMLButtonElement;
+      toggle.setAttribute('aria-controls', form.id);
+      await tick();
+      toggle.click();
+      expect(writes).toEqual(['app_filters=orders; path=/admin; max-age=31536000; SameSite=Lax']);
+      expect(toggle.getAttribute('aria-controls')).toBe('nowo-ui-filters-filters');
+      expect(toggle.getAttribute('aria-expanded')).toBe('false');
+      toggle.click();
+      expect(toggle.getAttribute('aria-expanded')).toBe('true');
+      expect(writes).toHaveLength(2);
+      expect(writes[1]).toContain('; path=/admin; ');
+    } finally {
+      // the own property shadows jsdom's accessor; deleting it restores the real cookie jar
+      delete (document as unknown as { cookie?: string }).cookie;
+    }
+  });
+
   it('counts the fields of one filter group (a date range) once', () => {
     const form = mount(`
       <div role="group" data-nowo-ui-filter-group>

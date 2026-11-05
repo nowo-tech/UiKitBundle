@@ -111,6 +111,35 @@
 
 ## Unreleased
 
+Planned **2.30.0** (minor), from **2.29.x**: `composer update nowo-tech/ui-kit-bundle`. No breaking change: without
+`theme.pages.list.filters` (and the new `ListPage` arguments) list pages render byte-identical to 2.29.
+
+**Drop a `list_filters` partial override** that only copied the kit field loop to add a fold toggle, icon buttons or
+a grid: configure them instead ([USAGE](USAGE.md#list-scaffold-filter-options-230)), e.g.
+
+```yaml
+nowo_ui_kit:
+    theme:
+        pages:
+            list:
+                filters:
+                    display: icon
+                    submit_icon: 'tabler:filter'
+                    clear_icon: 'tabler:filter-off'
+                    submit_class: 'btn-primary btn-icon issue-filters__submit'
+                    clear_class: 'btn-ghost btn-icon issue-filters__clear'
+                    grid: 'repeat(auto-fill, minmax(min(100%, 13rem), 1fr))'
+                    fold: { enabled: true, cookie: beacon_filters_collapsed, testids: true }
+```
+
+Then remove `theme.partials.list_filters`. Notes:
+
+- The fold toggle needs the `filters-collapse` Stimulus peer (already registered by hosts that use
+  `partials/_filters_collapse.html.twig`). Keep the cookie name of hand-written cards so folded pages stay folded.
+- With `display` set, the plain clear link (`ListPage::filtersClearHref`) follows it (2.29: always text).
+- The custom `grid` track list is a token: the host layout must print `nowo_ui_tokens()` (the kit layouts do).
+- Override `@NowoUiKitBundle/partials/_action.html.twig`? It now reads the optional `toolbar_class`.
+
 ## To 2.29.1
 
 From **2.29.0**:

@@ -2318,12 +2318,23 @@ a.nowo-ui-pagination__link:hover {
 
 /* List-scaffold filters (2.2): fields on a regular responsive grid, the actions bottom-aligned with the inputs
    right after the last field (no empty gap); FilterField::width spans columns (lg = 2, full = the whole row).
-   Tokens: --nowo-ui-filters-field-min (12rem), --nowo-ui-filters-gap. */
+   Tokens: --nowo-ui-filters-field-min (12rem), --nowo-ui-filters-gap; 2.30: --nowo-ui-filters-grid-columns (the
+   whole track list, theme.pages.list.filters.grid; default auto-fit: a lone filter stretches across the card). */
 form.nowo-ui-filters[data-nowo-ui-region] {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--nowo-ui-filters-field-min, 12rem)), 1fr));
+  grid-template-columns: var(--nowo-ui-filters-grid-columns, repeat(auto-fit, minmax(min(100%, var(--nowo-ui-filters-field-min, 12rem)), 1fr)));
   align-items: end;
   gap: var(--nowo-ui-filters-gap, 0.75rem 1rem);
+}
+
+/* 2.30 grid modes (theme.pages.list.filters.grid / ListPage::filtersGrid): auto-fill keeps empty tracks, so a lone
+   filter keeps one track's width; auto-fit restores the default over a host track list. */
+form.nowo-ui-filters[data-nowo-ui-region].nowo-ui-filters--grid-auto-fill {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--nowo-ui-filters-field-min, 12rem)), 1fr));
+}
+
+form.nowo-ui-filters[data-nowo-ui-region].nowo-ui-filters--grid-auto-fit {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--nowo-ui-filters-field-min, 12rem)), 1fr));
 }
 
 form.nowo-ui-filters[data-nowo-ui-region] > .nowo-ui-filters__field {

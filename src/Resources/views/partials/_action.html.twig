@@ -14,6 +14,8 @@
       Action::display wins over both. Icon-only: icon (action.icon, else the kind icon) + visually-hidden label,
       aria-label / title, and the `btn_icon` slot in toolbar context
     - framework: css_framework override
+    - toolbar_class (2.30, toolbar context): host classes replacing the btn_<variant> slot classes (the
+      `nowo-ui-action--<kind>` hook and, icon-only, the btn_icon slot stay)
     - bundle: bundle name for per-bundle theme exceptions
     - confirm_external: true = an action with a Confirm prints only its toggle button (the dialog is rendered
       elsewhere with the same id, e.g. once after the list table)
@@ -57,6 +59,10 @@
         {% set class = nowo_ui_class('btn_' ~ (variant == 'neutral' ? 'secondary' : variant), bundle, framework) ~ ' nowo-ui-action--' ~ action.kind %}
     {% else %}
         {% set class = nowo_ui_theme.macroClasses('btn', ui.btn(variant, null, framework), bundle, _pt) ~ ' nowo-ui-action--' ~ action.kind %}
+    {% endif %}
+    {#- 2.30: toolbar_class (toolbar context) replaces the btn_<variant> classes, e.g. the list filters clear_class -#}
+    {% if context != 'row' and toolbar_class|default(null) is not empty %}
+        {% set class = toolbar_class ~ ' nowo-ui-action--' ~ action.kind %}
     {% endif %}
     {% if context != 'row' and display == 'icon' %}
         {% set class = class ~ ' ' ~ nowo_ui_class('btn_icon', bundle, framework) %}

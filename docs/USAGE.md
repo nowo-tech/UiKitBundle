@@ -11,6 +11,7 @@
 - [Page loader and page transitions](#page-loader-and-page-transitions)
 - [Open a modal on load (deep link)](#open-a-modal-on-load-deep-link)
 - [Filter bar and data table (opt-in)](#filter-bar-and-data-table-opt-in)
+- [List scaffold filter options (2.30)](#list-scaffold-filter-options-230)
 - [Sortable column headers (2.20)](#sortable-column-headers-220)
   - [Server-side lists](#server-side-lists)
   - [Client-side tables](#client-side-tables)
@@ -481,6 +482,56 @@ Recommended icon-only pair (1.17): **Filter** = funnel, **Clear filters** = funn
 } %}
 ```
 
+## List scaffold filter options (2.30)
+
+The list scaffold's filter card (`page/_list_filters.html.twig`, partial `list_filters`) takes host options from
+`nowo_ui_kit.theme.pages.list.filters` and per-call options from `ListPage`, so a host gets its filter card (fold
+toggle, icon-only buttons, grid) **without overriding the `list_filters` partial**. Unset, the output is byte-identical
+to 2.29 (`tests/Unit/PageContract/ListFilters230BcTest.php`, fixtures `tests/Fixtures/bc-2.29`).
+
+```yaml
+# config/packages/nowo_ui_kit.yaml — e.g. Symfony Beacon's filter card
+nowo_ui_kit:
+    theme:
+        pages:
+            list:
+                filters:
+                    display: icon                                   # text | icon | icon_text (null = 2.29)
+                    submit_icon: 'tabler:filter'                    # default filter
+                    clear_icon: 'tabler:filter-off'                 # default filter_off (plain clear link)
+                    submit_class: 'btn-primary btn-icon issue-filters__submit'
+                    clear_class: 'btn-ghost btn-icon issue-filters__clear'
+                    grid: 'repeat(auto-fill, minmax(min(100%, 13rem), 1fr))'   # or auto-fit (default) / auto-fill
+                    fold:
+                        enabled: true
+                        cookie: beacon_filters_collapsed            # default nowo_ui_filters_collapsed
+                        cookie_path: /                              # default /
+                        icons: { expanded: 'tabler:chevron-up', collapsed: 'tabler:chevron-down' }
+                        testids: true                               # filters-collapse-toggle / -summary
+                        morph: true                                 # <morph-icon> (assets/morphicons)
+```
+
+| Option | Effect |
+| --- | --- |
+| `display` | default of `ListPage::filtersDisplay` for the apply / clear / extra filter buttons (`ListPage::filtersDisplay` and `Action::display` win). Set, the plain clear link (`filtersClearHref`) follows it too (2.29: text only). Icon-only buttons keep a visually hidden label plus `aria-label` / `title` from the translations (`filters.apply`, `filters.clear`, or the Action label) and get the `btn_icon` slot; `icon_set: none` keeps text |
+| `submit_icon` / `clear_icon` | icons (names for `components/_icon.html.twig`) of the apply button and the plain clear link; `filtersSubmit->icon` wins |
+| `submit_class` / `clear_class` | host classes **replacing** the `btn_<variant>` slot classes of the apply button and of the clear button (plain link or `filtersClear` Action); the hooks `nowo-ui-filters__submit` / `nowo-ui-action--<kind>` and, icon-only, the `btn_icon` slot stay |
+| `grid` | `auto-fit` (default: a lone filter stretches across the card), `auto-fill` (modifier class `nowo-ui-filters--grid-auto-fill`: empty tracks keep their width) or a `grid-template-columns` track list, printed as the token `--nowo-ui-filters-grid-columns` by `nowo_ui_tokens()` (no inline style; validated: letters, digits, spaces and `. , % ( ) + * / -`, balanced parentheses, no `url()`, at most 200 characters). An explicit `theme.tokens.filters-grid-columns` wins |
+| `fold` | the fold toggle of `partials/_filters_collapse.html.twig` as the first child of the form: a `<button aria-expanded aria-controls="<form id>">` (the form gets `id="nowo-ui-filters-<form name>"` unless the `filters` slot attributes give one), the "N active filters" line while folded, the state in a cookie of page keys (`SameSite=Lax`, one year, no secrets) read on render so a folded card renders folded |
+
+Per call (`ListPage`, win over the host): `filtersFold` (`true` / `false`; null = `fold.enabled`), `filtersFoldKey`
+(the page key remembered in the cookie; default the current route; letters, digits, `_ . : -`), `filtersGrid`
+(`auto-fit` | `auto-fill`; a track list is host-only), `filtersDisplay`.
+
+```php
+new ListPage($header, $columns, $rows, $filters->createView(), filtersClearHref: $this->generateUrl('orders'),
+    filtersFold: true, filtersFoldKey: 'orders', filtersGrid: 'auto-fill');
+```
+
+The fold toggle needs the **`filters-collapse` Stimulus peer** registered in the host app
+(`app.register('filters-collapse', FiltersCollapseController)`, [STIMULUS.md](STIMULUS.md)). Without JavaScript the
+card renders open (the cookie is only ever written by the peer) and the button does nothing; the fields always submit.
+
 ## Sortable column headers (2.20)
 
 Click-to-sort headers for the list scaffold (`View\ListPage`), the `table` partial (`View\Table`), `listing_head` and
@@ -818,7 +869,8 @@ folded (no flash).
 ```
 
 Options: `fold_key` (default the current route; empty = not remembered), `fold_cookie` (default
-`nowo_ui_filters_collapsed`), `folded` (force the state), `filter_form` (FormView: counts non-empty / checked fields,
+`nowo_ui_filters_collapsed`), `fold_cookie_path` (2.30, default `/`), `controls` (2.30: id for `aria-controls`),
+`folded` (force the state), `filter_form` (FormView: counts non-empty / checked fields,
 skipping `page`, `per_page`, `_token`, `sort`, `dir` and hidden fields), `active_count` (count without a FormView),
 `morph`, `icons` (`expanded`, `collapsed`), `labels` (`collapse`, `expand`, `none`, `one`, `many` with `%count%`),
 `testids` (`filters-collapse-toggle`, `filters-collapse-summary`).

@@ -10,6 +10,8 @@
   Optional (prefixed names: an include inherits the page context):
     - fold_key: page key the state is remembered for (default: the current route; empty = not remembered)
     - fold_cookie: cookie name (default `nowo_ui_filters_collapsed`)
+    - fold_cookie_path (2.30): path of that cookie (default `/`; the peer's `cookiePath` value)
+    - controls (2.30): id of the element the toggle folds (`aria-controls`; the list scaffold passes its form id)
     - folded: force the initial state (default: from the cookie)
     - filter_form: Symfony FormView of the filters, used to count the active ones (non-empty / checked fields; 2.14:
       a multi-select once when anything is chosen, a checkbox list once per checked box, as the peer counts them;
@@ -61,9 +63,10 @@
 <div class="nowo-ui-filters-collapse{{ _collapsed ? ' is-collapsed' : '' }}" data-controller="filters-collapse"
     data-filters-collapse-key-value="{{ _key }}"
     {%- if _cookie != 'nowo_ui_filters_collapsed' %} data-filters-collapse-cookie-value="{{ _cookie }}"{% endif %}
+    {%- if fold_cookie_path|default('/') != '/' %} data-filters-collapse-cookie-path-value="{{ fold_cookie_path }}"{% endif %}
     data-filters-collapse-messages-value="{{ _labels|json_encode }}">
     <button type="button" class="nowo-ui-filters-collapse__toggle nowo-ui-corner-tab nowo-ui-corner-tab--under" data-filters-collapse-target="toggle" data-action="filters-collapse#toggle"
-        aria-expanded="{{ _collapsed ? 'false' : 'true' }}" aria-label="{{ _label }}" title="{{ _label }}"
+        aria-expanded="{{ _collapsed ? 'false' : 'true' }}"{% if controls|default('') is not empty %} aria-controls="{{ controls }}"{% endif %} aria-label="{{ _label }}" title="{{ _label }}"
         {%- if _testids %} data-testid="filters-collapse-toggle"{% endif %}>
         <span class="nowo-ui-filters-collapse__icon nowo-ui-filters-collapse__icon--expanded" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _icons.expanded, label: _labels.collapse}, false)|trim|raw }}</span>
         <span class="nowo-ui-filters-collapse__icon nowo-ui-filters-collapse__icon--collapsed" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _icons.collapsed, label: _labels.expand}, false)|trim|raw }}</span>

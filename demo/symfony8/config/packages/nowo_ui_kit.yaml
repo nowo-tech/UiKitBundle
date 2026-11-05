@@ -71,6 +71,17 @@ nowo_ui_kit:
             list:
                 attributes:
                     table: { data-acme-page: 'list' }
+                # UiKit 2.30 list-filter host options (no list_filters partial override): the fold toggle in the
+                # card corner (cookie acme_filters_collapsed; peer filters-collapse from public/js/demo-peers.js),
+                # a track list that keeps a lone filter one track wide, Filter / Clear with icon + text.
+                filters:
+                    display: icon_text
+                    clear_icon: filter_off
+                    grid: 'repeat(auto-fill, minmax(min(100%, 13rem), 1fr))'
+                    fold:
+                        enabled: true
+                        cookie: acme_filters_collapsed
+                        testids: true
             # Show pages: every label sits over its value (detail_item / detail_term / detail_value slots)
             show:
                 classes:

@@ -20,11 +20,32 @@
   plain link to page.filtersClearHref) and page.filterActions (through the `action` partial). page.filtersDisplay
   (icon | text | icon_text) sets the display of these buttons unless their Action has one; icon-only buttons keep a
   visually-hidden label + aria-label and get the `btn_icon` slot.
+
+  2.30 host options (`nowo_ui_kit.theme.pages.list.filters`, Theme\ListFiltersOptions; unset = the 2.29 output):
+    - display: default of page.filtersDisplay (set, the plain clear link follows the display too)
+    - submit_icon / clear_icon: icons of the apply button / plain clear link (default filter / filter_off)
+    - submit_class / clear_class: host classes replacing the btn_<variant> slot classes of the apply / clear buttons
+    - grid: auto-fit | auto-fill (modifier class nowo-ui-filters--grid-auto-fill) | a track list (the
+      --nowo-ui-filters-grid-columns token printed by nowo_ui_tokens(); no inline style); page.filtersGrid wins
+    - fold: {enabled, cookie, cookie_path, icons, testids, morph} — the partials/_filters_collapse.html.twig toggle as
+      the first child of the form (aria-controls = the form id; Stimulus peer filters-collapse; without JS the card
+      stays open); page.filtersFold / page.filtersFoldKey win
 #}
 {% set _b = bundle|default(page.bundle) %}
 {% set _pt = nowo_ui_page_type|default(null) %}
 {% set _field_class = nowo_ui_class('filters_field', _b) %}
-{{ form_start(page.filters, {attr: {class: nowo_ui_class('filters', _b), role: 'search', 'data-nowo-ui-filters': '', 'data-nowo-ui-region': region|default('filters')}|merge(nowo_ui_theme.attributesFor('filters', _b, {}, _pt))}) }}
+{% set _opts = nowo_ui_theme.listFilters() %}
+{% set _display = page.filtersDisplay ?? _opts.display %}
+{% set _fold = page.filtersFold ?? _opts.foldEnabled %}
+{% set _grid_class = _opts.gridClass(page.filtersGrid) %}
+{% set _form_attr = {class: nowo_ui_class('filters', _b) ~ (_grid_class ? ' ' ~ _grid_class), role: 'search', 'data-nowo-ui-filters': '', 'data-nowo-ui-region': region|default('filters')}|merge(nowo_ui_theme.attributesFor('filters', _b, {}, _pt)) %}
+{% if _fold and _form_attr.id is not defined %}
+    {% set _form_attr = _form_attr|merge({id: 'nowo-ui-filters-' ~ (page.filters.vars.id is not empty ? page.filters.vars.id : 'list')}) %}
+{% endif %}
+{{ form_start(page.filters, {attr: _form_attr}) }}
+    {%~ if _fold %}
+        {{ include('@NowoUiKitBundle/partials/_filters_collapse.html.twig', _opts.foldVariables()|merge({fold_key: page.filtersFoldKey, filter_form: page.filters, controls: _form_attr.id}), false) }}
+    {%~ endif %}
     {% for child in page.filters %}
         {% if not child.rendered %}
             {% set _field = page.filterFields[child.vars.name] ?? null %}
@@ -63,29 +84,39 @@
     <div class="{{ nowo_ui_class('filters_actions', _b) }}"{{ nowo_ui_attrs('filters_actions', _b) }}>
         {% set _submit = page.filtersSubmit %}
         {% set _submit_label = _submit and _submit.label is not null ? _submit.label|nowo_ui_trans : 'filters.apply'|trans({}, 'NowoUiKitBundle') %}
-        {% set _submit_display = _submit and _submit.display ? _submit.display : (page.filtersDisplay ?? (_submit and _submit.icon ? 'icon_text' : 'text')) %}
+        {% set _submit_display = _submit and _submit.display ? _submit.display : (_display ?? (_submit and _submit.icon ? 'icon_text' : 'text')) %}
         {% if nowo_ui_kit_icon_set|default('bootstrap-icons') == 'none' %}
             {% set _submit_display = 'text' %}
         {% endif %}
         {% set _submit_attrs = (_submit ? _submit.attributes : {})|merge(_submit_display == 'icon' ? {title: _submit_label, 'aria-label': _submit_label} : {}) %}
-        <button type="submit" class="{{ nowo_ui_class('btn_' ~ (_submit and _submit.variant in ['primary', 'secondary', 'danger', 'neutral'] ? (_submit.variant == 'neutral' ? 'secondary' : _submit.variant) : 'primary'), _b) }} nowo-ui-filters__submit{{ _submit_display == 'icon' ? ' ' ~ nowo_ui_class('btn_icon', _b) }}"{{ nowo_ui_html_attrs(_submit_attrs) }}>
+        {%~ set _submit_icon = _submit and _submit.icon ? _submit.icon : (_opts.submitIcon ?? 'filter') %}
+        <button type="submit" class="{{ _opts.submitClass ?? nowo_ui_class('btn_' ~ (_submit and _submit.variant in ['primary', 'secondary', 'danger', 'neutral'] ? (_submit.variant == 'neutral' ? 'secondary' : _submit.variant) : 'primary'), _b) }} nowo-ui-filters__submit{{ _submit_display == 'icon' ? ' ' ~ nowo_ui_class('btn_icon', _b) }}"{{ nowo_ui_html_attrs(_submit_attrs) }}>
             {%- if _submit_display == 'icon' -%}
-                {{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _submit and _submit.icon ? _submit.icon : 'filter', label: _submit_label}, false)|trim|raw }}
+                {{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _submit_icon, label: _submit_label}, false)|trim|raw }}
                 <span class="visually-hidden">{{ _submit_label }}</span>
             {%- elseif _submit_display == 'icon_text' -%}
-                {{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _submit and _submit.icon ? _submit.icon : 'filter', label: _submit_label}, false)|trim|raw }}
+                {{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _submit_icon, label: _submit_label}, false)|trim|raw }}
                 <span class="nowo-ui-action__label">{{ _submit_label }}</span>
             {%- else -%}
                 {{ _submit_label }}
             {%- endif -%}
         </button>
         {% if page.filtersClear %}
-            {{ include(nowo_ui_partial('action', _b), {action: page.filtersClear, context: 'toolbar', display: page.filtersDisplay, bundle: _b, nowo_ui_page_type: _pt}, false) }}
+            {{ include(nowo_ui_partial('action', _b), {action: page.filtersClear, context: 'toolbar', display: _display, bundle: _b, nowo_ui_page_type: _pt}|merge(_opts.clearClass is null ? {} : {toolbar_class: _opts.clearClass}), false) }}
         {% elseif page.filtersClearHref %}
-            <a class="{{ nowo_ui_class('btn_secondary', _b) }}" href="{{ page.filtersClearHref }}">{{ 'filters.clear'|trans({}, 'NowoUiKitBundle') }}</a>
+            {%~ set _clear_label = 'filters.clear'|trans({}, 'NowoUiKitBundle') %}
+            {%~ set _clear_display = _opts.display is null or nowo_ui_kit_icon_set|default('bootstrap-icons') == 'none' ? 'text' : _display %}
+            <a class="{{ _opts.clearClass ?? nowo_ui_class('btn_secondary', _b) }}{{ _clear_display == 'icon' ? ' ' ~ nowo_ui_class('btn_icon', _b) }}" href="{{ page.filtersClearHref }}"{% if _clear_display == 'icon' %} title="{{ _clear_label }}" aria-label="{{ _clear_label }}"{% endif %}>
+                {%- if _clear_display != 'text' -%}
+                    {{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _opts.clearIcon ?? 'filter_off', label: _clear_label}, false)|trim|raw }}
+                    <span class="{{ _clear_display == 'icon' ? 'visually-hidden' : 'nowo-ui-action__label' }}">{{ _clear_label }}</span>
+                {%- else -%}
+                    {{ _clear_label }}
+                {%- endif -%}
+            </a>
         {% endif %}
         {% for action in page.filterActions %}
-            {{ include(nowo_ui_partial('action', _b), {action: action, context: 'toolbar', display: page.filtersDisplay, bundle: _b, nowo_ui_page_type: _pt}, false) }}
+            {{ include(nowo_ui_partial('action', _b), {action: action, context: 'toolbar', display: _display, bundle: _b, nowo_ui_page_type: _pt}, false) }}
         {% endfor %}
         {% if header_actions|default([]) is not empty %}
             <div class="nowo-ui-filters__header-actions" data-nowo-ui-region="header-actions">

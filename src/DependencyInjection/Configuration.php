@@ -14,6 +14,7 @@ use Nowo\UiKitBundle\Enum\CssFramework;
 use Nowo\UiKitBundle\Enum\IconSet;
 use Nowo\UiKitBundle\Enum\RowActionsDisplay;
 use Nowo\UiKitBundle\Shell\HeaderPresentation;
+use Nowo\UiKitBundle\Theme\ListFiltersOptions;
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Theme\ThemeSlots;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
@@ -588,6 +589,15 @@ final class Configuration implements ConfigurationInterface
                             if ('list' !== (string) $page && isset($data['header_actions_in_filters'])) {
                                 throw new InvalidConfigurationException(\sprintf('Invalid nowo_ui_kit.theme.pages.%s.header_actions_in_filters: only the list page type takes it.', $page));
                             }
+                            if ('list' !== (string) $page && isset($data['filters'])) {
+                                throw new InvalidConfigurationException(\sprintf('Invalid nowo_ui_kit.theme.pages.%s.filters: only the list page type takes it.', $page));
+                            }
+                            if (isset($data['filters'])) {
+                                $error = ListFiltersOptions::error($data['filters']);
+                                if (null !== $error) {
+                                    throw new InvalidConfigurationException('Invalid nowo_ui_kit.theme.pages.list.filters: '.$error);
+                                }
+                            }
                         }
 
                         return $pages;
@@ -599,6 +609,54 @@ final class Configuration implements ConfigurationInterface
             ->children()
                 ->booleanNode('header_actions_in_filters')
                     ->info('list only: render the page-header actions at the end of the filter row instead of the page header (ListPage::headerActionsInFilters wins when set; unset = false).')
+                ->end()
+                ->arrayNode('filters')
+                    ->info('list only (2.30): host options of the list scaffold filters (page/_list_filters.html.twig). Unset = the 2.29 output.')
+                    ->children()
+                        ->enumNode('display')
+                            ->values([null, 'text', 'icon', 'icon_text'])
+                            ->defaultNull()
+                            ->info('Default display of the apply / clear / extra filter buttons (ListPage::filtersDisplay and Action::display win; set, the plain clear link follows it too). null = the 2.29 behaviour.')
+                        ->end()
+                        ->scalarNode('submit_icon')
+                            ->defaultNull()
+                            ->info('Icon of the apply button when it shows one (components/_icon.html.twig name; null = filter). ListPage::filtersSubmit->icon wins.')
+                        ->end()
+                        ->scalarNode('clear_icon')
+                            ->defaultNull()
+                            ->info('Icon of the plain clear link (ListPage::filtersClearHref) when it shows one (null = filter_off).')
+                        ->end()
+                        ->scalarNode('submit_class')
+                            ->defaultNull()
+                            ->info('Host classes of the apply button, replacing its btn_<variant> slot classes (nowo-ui-filters__submit and, icon-only, the btn_icon slot stay). null = the slot classes.')
+                        ->end()
+                        ->scalarNode('clear_class')
+                            ->defaultNull()
+                            ->info('Host classes of the clear button (plain link or ListPage::filtersClear Action), replacing its btn_<variant> slot classes. null = the slot classes.')
+                        ->end()
+                        ->scalarNode('grid')
+                            ->defaultValue(ListFiltersOptions::GRID_AUTO_FIT)
+                            ->info('Grid tracks of the filter fields: auto-fit (default: a lone filter stretches across the card), auto-fill (empty tracks keep their width) or a grid-template-columns track list such as "repeat(auto-fill, minmax(min(100%, 13rem), 1fr))" (printed as the --nowo-ui-filters-grid-columns token by nowo_ui_tokens(); no inline style).')
+                        ->end()
+                        ->arrayNode('fold')
+                            ->info('Fold toggle of the filters card (partials/_filters_collapse.html.twig, Stimulus peer filters-collapse). ListPage::filtersFold wins.')
+                            ->addDefaultsIfNotSet()
+                            ->children()
+                                ->booleanNode('enabled')->defaultFalse()->info('Render the fold toggle (the card renders open unless the cookie remembers it folded).')->end()
+                                ->scalarNode('cookie')->defaultValue(ListFiltersOptions::FOLD_COOKIE)->info('Cookie remembering the folded pages (comma-separated page keys; SameSite=Lax, no secrets).')->end()
+                                ->scalarNode('cookie_path')->defaultValue('/')->info('Path of that cookie.')->end()
+                                ->arrayNode('icons')
+                                    ->addDefaultsIfNotSet()
+                                    ->children()
+                                        ->scalarNode('expanded')->defaultValue('chevron_up')->info('Icon while the card is open.')->end()
+                                        ->scalarNode('collapsed')->defaultValue('chevron_down')->info('Icon while the card is folded.')->end()
+                                    ->end()
+                                ->end()
+                                ->booleanNode('testids')->defaultFalse()->info('data-testid filters-collapse-toggle / filters-collapse-summary.')->end()
+                                ->booleanNode('morph')->defaultFalse()->info('Add the <morph-icon> of assets/morphicons to the toggle.')->end()
+                            ->end()
+                        ->end()
+                    ->end()
                 ->end()
             ->end();
 
