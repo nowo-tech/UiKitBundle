@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.29.1](#to-2291)
 - [To 2.29.0](#to-2290)
 - [To 2.28.0](#to-2280)
 - [To 2.27.2](#to-2272)
@@ -110,7 +111,15 @@
 
 ## Unreleased
 
-Planned **2.29.1**. No configuration or template contract change.
+## To 2.29.1
+
+From **2.29.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+No configuration or template contract change.
 
 - `.nowo-ui-input--wide` / `.nowo-ui-input--full` are now `box-sizing: border-box`. Hosts with a global border-box
   reset (Bootstrap, Tailwind) see no change; others get full-width fields that no longer overflow their container by
