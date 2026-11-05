@@ -13,6 +13,7 @@
 - [Compact header (2.27)](#compact-header-227)
 - [Remote dialog (2.28)](#remote-dialog-228)
 - [Font preload (2.21)](#font-preload-221)
+- [List scaffold filters (2.30)](#list-scaffold-filters-230)
 - [Examples](#examples)
 
 ## Root keys
@@ -400,6 +401,29 @@ The manifest tags are memoized per process, keyed by the file's mtime + size (Fr
 derives from a build file only, and a new build replaces it on the next render). Font preloads are governed by the
 CSP `font-src` directive, not by a nonce, so the tags carry none; keep the fonts same-origin (or allowed by
 `font-src`) — `crossorigin` is required for font preloads even on the same origin.
+
+## List scaffold filters (2.30)
+
+`theme.pages.list.filters` (list page type only; rejected on other page types and under `theme.bundles`): host options
+of the list scaffold filter card. Unset (or any key at its default) = the 2.29 markup, byte for byte.
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `display` | enum\|null | `null` | `text`, `icon`, `icon_text`: default display of the apply / clear / extra filter buttons (`ListPage::filtersDisplay`, `Action::display` win); set, the plain clear link follows it |
+| `submit_icon` | string\|null | `null` (= `filter`) | icon of the apply button when it shows one |
+| `clear_icon` | string\|null | `null` (= `filter_off`) | icon of the plain clear link (`filtersClearHref`) when it shows one |
+| `submit_class` | string\|null | `null` | host classes replacing the apply button's `btn_<variant>` slot classes |
+| `clear_class` | string\|null | `null` | host classes replacing the clear button's `btn_<variant>` slot classes (plain link or `filtersClear` Action) |
+| `grid` | string | `auto-fit` | `auto-fit`, `auto-fill` or a safe `grid-template-columns` track list (token `--nowo-ui-filters-grid-columns`, printed by `nowo_ui_tokens()`) |
+| `fold.enabled` | bool | `false` | render the fold toggle (`ListPage::filtersFold` wins) |
+| `fold.cookie` | string | `nowo_ui_filters_collapsed` | cookie of folded page keys (1-64 of `A-Z a-z 0-9 _ -`) |
+| `fold.cookie_path` | string | `/` | its path (absolute URL path) |
+| `fold.icons.expanded` / `fold.icons.collapsed` | string | `chevron_up` / `chevron_down` | toggle icons |
+| `fold.testids` | bool | `false` | `data-testid` `filters-collapse-toggle` / `filters-collapse-summary` |
+| `fold.morph` | bool | `false` | add the `<morph-icon>` to the toggle |
+
+Icons: canonical names or set-specific ones (`tabler:filter`; letters, digits, `_ : . -`). Class lists: printable
+characters (printed escaped). Usage and per-call options: [USAGE](USAGE.md#list-scaffold-filter-options-230).
 
 ## Examples
 

@@ -3,6 +3,9 @@
    table) and the optional "Placed" column its priority. #}
 {% extends '@NowoUiKit/page/list.html.twig' %}
 
+{#- 2.30: the filters fold toggle (theme.pages.list.filters.fold) is driven by the filters-collapse peer -#}
+{% block nowo_ui_scripts %}{{ parent() }}<script src="{{ asset('js/demo-peers.js') }}" defer></script>{% endblock %}
+
 {% block nowo_ui_list_row %}
     {% set _b = page.bundle %}
     {% set _status = {paid: 'badge_success', pending: 'badge_warning', shipped: 'badge_info', refunded: 'badge_neutral'} %}

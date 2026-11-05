@@ -291,7 +291,9 @@ test.describe('page contract — validation round 3 (REQ-UI-003)', () => {
     await expect(dialog.locator('h2')).toHaveText('Delete order #1042?');
     await expect(dialog.locator('.nowo-ui-confirm__submit')).toHaveClass(/btn-danger/);
     const box = await dialog.boundingBox();
-    expect(Math.round(box!.width)).toBeLessThanOrEqual(448);
+    // UiKit 2.29 unified dialog sizes: a confirm is medium, min(40rem, 100vw - 2rem)
+    const viewport = page.viewportSize()!.width;
+    expect(Math.round(box!.width)).toBeLessThanOrEqual(Math.min(640, viewport - 32));
     await dialog.getByRole('button', { name: 'Close' }).click();
     await expect(dialog).toHaveCount(0);
   });

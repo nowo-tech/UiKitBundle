@@ -19,6 +19,7 @@ two token blocks of `nowo-ui.css`. A host theme is a short `:root` block.
 - [Tabs](#tabs)
 - [Pagination](#pagination)
 - [Lists](#lists)
+- [List filters grid (2.30)](#list-filters-grid-230)
 - [Cards, navigation, progress](#cards-navigation-progress)
 - [Detail pages (2.21)](#detail-pages-221)
 - [Compact header (2.27)](#compact-header-227)
@@ -249,6 +250,19 @@ lays out as a row on every stack (zero-specificity rule; Bootstrap's own `.pagin
 | `--nowo-ui-list-item-border` | `var(--nowo-ui-list-border)` (row separator) |
 | `--nowo-ui-list-item-bg` | `transparent` |
 | `--nowo-ui-list-item-hover-bg` | `var(--nowo-ui-list-item-bg)` (no hover by default) |
+
+## List filters grid (2.30)
+
+The list scaffold filter fields sit on `grid-template-columns: var(--nowo-ui-filters-grid-columns, repeat(auto-fit,
+minmax(min(100%, var(--nowo-ui-filters-field-min, 12rem)), 1fr)))`.
+
+| Token / class | Default | Notes |
+|-------|---------|-------|
+| `--nowo-ui-filters-grid-columns` | unset (auto-fit) | the whole track list; set it with `theme.pages.list.filters.grid: '<track list>'` (validated) or `theme.tokens.filters-grid-columns` (wins) |
+| `--nowo-ui-filters-field-min` | `12rem` | minimum track width of the auto-fit / auto-fill modes |
+| `--nowo-ui-filters-gap` | `0.75rem 1rem` | grid gap |
+| `.nowo-ui-filters--grid-auto-fill` | — | `grid: auto-fill` / `ListPage::filtersGrid: 'auto-fill'`: empty tracks keep their width, so a lone filter does not stretch |
+| `.nowo-ui-filters--grid-auto-fit` | — | `ListPage::filtersGrid: 'auto-fit'` over a host track list |
 
 ## Cards, navigation, progress
 

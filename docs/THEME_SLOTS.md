@@ -533,7 +533,7 @@ Every partial also receives `nowo_ui_page_type` from the scaffolds. Internal tem
 
 `theme.tokens` (light, on `:root`) and `theme.tokens_dark` (on `[data-theme="dark"]`) are emitted by
 `nowo_ui_theme_tokens()` (or `nowo_ui_tokens()`, below) as `--nowo-ui-<name>`. Keys are written without the prefix (`primary`) or with it
-(`--nowo-ui-primary`); names are `[a-z0-9-]`, values may not contain `{ } ; < >`. Since 2.15.4 a `tokens` entry for a palette token with a UiKit dark default (`Theme::LIGHT_ONLY_TOKENS`: the base
+(`--nowo-ui-primary`); names are `[a-z0-9-]`, values may not contain `{ } ; < > \` nor (2.30) the comment delimiters `/*` / `*/`. Since 2.15.4 a `tokens` entry for a palette token with a UiKit dark default (`Theme::LIGHT_ONLY_TOKENS`: the base
 colour tokens below) is printed on `:root:where(:not([data-theme=dark]))`, so it applies in light mode only and
 dark mode keeps the UiKit dark default unless `tokens_dark` sets it (repeat a value in `tokens_dark` to keep it in
 both modes). Other tokens (radii, fonts, metrics, component tokens) apply in both modes. Bundle `tokens` follow the
@@ -574,6 +574,7 @@ tokens are the host defaults; the appearance (user-chosen) overrides them. Both 
 | `framework_defaults` | overrides `theme.framework_defaults` on that page type (unset = inherit) |
 | `attributes` | **merge** over the host attributes of that slot; bundle attributes merge over them |
 | `header_actions_in_filters` | `list` only (bool, default `false`): the list scaffold renders the page-header actions at the end of the filter row (when the page has filters); `ListPage::headerActionsInFilters` wins when set |
+| `filters` *(2.30)* | `list` only (map; unset = the 2.29 output): `display`, `submit_icon`, `clear_icon`, `submit_class`, `clear_class`, `grid`, `fold` — host options of the list scaffold filter card ([USAGE](USAGE.md#list-scaffold-filter-options-230), [CONFIGURATION](CONFIGURATION.md#list-scaffold-filters-230)) |
 
 Precedence: **bundle page slot > bundle slot > bundle page > bundle > page-type slot > page type > host slot > host**
 (classes: the most specific entry replaces the others; attributes: merged host → page type → bundle → bundle page
@@ -605,7 +606,7 @@ selected by the `bundle` argument / the view model's `bundle`:
 | `attributes` | **merge** over the host attributes of that slot (`false` / `null` removes a host attribute) |
 | `partials` | **replace** the host (or UiKit) partial for that bundle |
 | `tokens`, `tokens_dark` | **scoped** to `[data-nowo-ui-bundle="<Bundle>"]` (the layouts put that attribute on `<main>` from `nowo_ui_bundle`) |
-| `pages.<type>` *(2.1)* | per-bundle variation by page type: `classes` (replace every other entry of the slot on that bundle's pages of that type), `framework_defaults` (overrides the bundle setting there), `attributes` (merge last, before the call site); no `partials`, `tokens` or `header_actions_in_filters` |
+| `pages.<type>` *(2.1)* | per-bundle variation by page type: `classes` (replace every other entry of the slot on that bundle's pages of that type), `framework_defaults` (overrides the bundle setting there), `attributes` (merge last, before the call site); no `partials`, `tokens`, `header_actions_in_filters` or `filters` |
 
 ```yaml
 nowo_ui_kit:
@@ -647,6 +648,7 @@ nowo_ui_kit:
     pages:
       <list|show|form|settings|dashboard|confirm|wizard|auth>: { framework_defaults: bool, classes: …, attributes: … }
       list: { header_actions_in_filters: bool }   # list page type only
+      list: { filters: { display, submit_icon, clear_icon, submit_class, clear_class, grid, fold: { enabled, cookie, cookie_path, icons, testids, morph } } }   # 2.30, list only
 ```
 
 ## Contract-test allow-lists

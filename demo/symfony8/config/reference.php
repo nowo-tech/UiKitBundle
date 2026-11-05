@@ -902,6 +902,25 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *             classes?: array<string, mixed>,
  *             attributes?: array<string, array<string, mixed>>,
  *             header_actions_in_filters?: bool|Param, // list only: render the page-header actions at the end of the filter row instead of the page header (ListPage::headerActionsInFilters wins when set; unset = false).
+ *             filters?: array{ // list only (2.30): host options of the list scaffold filters (page/_list_filters.html.twig). Unset = the 2.29 output.
+ *                 display?: null|"text"|"icon"|"icon_text"|Param, // Default display of the apply / clear / extra filter buttons (ListPage::filtersDisplay and Action::display win; set, the plain clear link follows it too). null = the 2.29 behaviour. // Default: null
+ *                 submit_icon?: scalar|Param|null, // Icon of the apply button when it shows one (components/_icon.html.twig name; null = filter). ListPage::filtersSubmit->icon wins. // Default: null
+ *                 clear_icon?: scalar|Param|null, // Icon of the plain clear link (ListPage::filtersClearHref) when it shows one (null = filter_off). // Default: null
+ *                 submit_class?: scalar|Param|null, // Host classes of the apply button, replacing its btn_<variant> slot classes (nowo-ui-filters__submit and, icon-only, the btn_icon slot stay). null = the slot classes. // Default: null
+ *                 clear_class?: scalar|Param|null, // Host classes of the clear button (plain link or ListPage::filtersClear Action), replacing its btn_<variant> slot classes. null = the slot classes. // Default: null
+ *                 grid?: scalar|Param|null, // Grid tracks of the filter fields: auto-fit (default: a lone filter stretches across the card), auto-fill (empty tracks keep their width) or a grid-template-columns track list such as "repeat(auto-fill, minmax(min(100%, 13rem), 1fr))" (printed as the --nowo-ui-filters-grid-columns token by nowo_ui_tokens(); no inline style). // Default: "auto-fit"
+ *                 fold?: array{ // Fold toggle of the filters card (partials/_filters_collapse.html.twig, Stimulus peer filters-collapse). ListPage::filtersFold wins.
+ *                     enabled?: bool|Param, // Render the fold toggle (the card renders open unless the cookie remembers it folded). // Default: false
+ *                     cookie?: scalar|Param|null, // Cookie remembering the folded pages (comma-separated page keys; SameSite=Lax, no secrets). // Default: "nowo_ui_filters_collapsed"
+ *                     cookie_path?: scalar|Param|null, // Path of that cookie. // Default: "/"
+ *                     icons?: array{
+ *                         expanded?: scalar|Param|null, // Icon while the card is open. // Default: "chevron_up"
+ *                         collapsed?: scalar|Param|null, // Icon while the card is folded. // Default: "chevron_down"
+ *                     },
+ *                     testids?: bool|Param, // data-testid filters-collapse-toggle / filters-collapse-summary. // Default: false
+ *                     morph?: bool|Param, // Add the <morph-icon> of assets/morphicons to the toggle. // Default: false
+ *                 },
+ *             },
  *         }>,
  *     },
  *     error_pages?: array{ // Kit error pages (2.6): templates/bundles/TwigBundle/Exception/error.html.twig = {% extends '@NowoUiKit/error/status.html.twig' %}.

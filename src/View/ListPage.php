@@ -7,6 +7,7 @@ namespace Nowo\UiKitBundle\View;
 use InvalidArgumentException;
 use LogicException;
 use Nowo\UiKitBundle\Listing\SortRequest;
+use Nowo\UiKitBundle\Theme\ListFiltersOptions;
 use Symfony\Component\Form\FormView;
 
 /**
@@ -32,6 +33,9 @@ use Symfony\Component\Form\FormView;
  * the controller (whitelist, `sort` / `dir` parameters); header links keep the filters and rows per page and go back to
  * page 1 (the pagination's page parameter). `clientSort` (2.20): sort the rendered rows in the browser (Stimulus peer
  * `table-sort`) — only for lists rendered whole (a pagination with more than one page is rejected).
+ * 2.30 per-call filter options over the host's `theme.pages.list.filters`: `filtersFold` (true / false: render the
+ * fold toggle of the filters card or not; null = `fold.enabled`), `filtersFoldKey` (page key the fold state is
+ * remembered for; default the current route) and `filtersGrid` (`auto-fit` | `auto-fill`; null = the host `grid`).
  */
 final readonly class ListPage
 {
@@ -40,6 +44,9 @@ final readonly class ListPage
 
     /** Position of the row-actions column (2.2). */
     public const ACTIONS_POSITIONS = ['start', 'end'];
+
+    /** Page key of the filters fold state (2.30): one entry of a comma-separated cookie, so no "," / ";" / spaces. */
+    private const FOLD_KEY_PATTERN = '/^[A-Za-z0-9_.:-]{1,128}$/D';
 
     /** @var list<Column> */
     public array $columns;
@@ -99,7 +106,16 @@ final readonly class ListPage
         public bool $captionVisible = true,
         ?SortRequest $sorting = null,
         public bool $clientSort = false,
+        public ?bool $filtersFold = null,
+        public ?string $filtersFoldKey = null,
+        public ?string $filtersGrid = null,
     ) {
+        if (null !== $filtersGrid && !\in_array($filtersGrid, ListFiltersOptions::GRID_MODES, true)) {
+            throw new InvalidArgumentException(\sprintf('Invalid ListPage filtersGrid "%s" (%s).', $filtersGrid, implode('|', ListFiltersOptions::GRID_MODES)));
+        }
+        if (null !== $filtersFoldKey && 1 !== preg_match(self::FOLD_KEY_PATTERN, $filtersFoldKey)) {
+            throw new InvalidArgumentException(\sprintf('Invalid ListPage filtersFoldKey "%s" (1-128 letters, digits, "_", ".", ":" or "-").', $filtersFoldKey));
+        }
         if (!\in_array($actionsPosition, self::ACTIONS_POSITIONS, true)) {
             throw new InvalidArgumentException(\sprintf('Invalid ListPage actionsPosition "%s" (%s).', $actionsPosition, implode('|', self::ACTIONS_POSITIONS)));
         }

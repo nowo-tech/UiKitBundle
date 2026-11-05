@@ -100,6 +100,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Planned **2.30.0** (minor): list-filter host options, so a host draws its filter card without overriding the
+`list_filters` partial (Symfony Beacon OVERRIDES-INVENTORY B2b). See [UPGRADING](UPGRADING.md#unreleased).
+
+### Added
+
+- **`nowo_ui_kit.theme.pages.list.filters`** (list page type only, `Theme\ListFiltersOptions`, `Theme::listFilters()`):
+  `display` (default display of the apply / clear / extra filter buttons; the plain clear link follows it once set),
+  `submit_icon` / `clear_icon`, `submit_class` / `clear_class` (host classes replacing the `btn_<variant>` classes),
+  `grid` (`auto-fit` default, `auto-fill` via `nowo-ui-filters--grid-auto-fill`, or a validated track list printed as
+  the `--nowo-ui-filters-grid-columns` token — no inline style) and `fold` (`enabled`, `cookie`, `cookie_path`, `icons`,
+  `testids`, `morph`): the `_filters_collapse` toggle as the first child of the filters form, `aria-controls` = the form
+  id (`nowo-ui-filters-<form name>` unless the `filters` slot attributes give one).
+- **`ListPage::filtersFold`, `filtersFoldKey`, `filtersGrid`**: per-call counterparts (win over the host options).
+- `partials/_filters_collapse.html.twig`: `fold_cookie_path` (the peer's `cookiePath` value) and `controls`
+  (`aria-controls`); `partials/_action.html.twig`: `toolbar_class` (toolbar context, replaces the `btn_<variant>`
+  classes).
+- nowo-ui.css: `--nowo-ui-filters-grid-columns`, `.nowo-ui-filters--grid-auto-fill`, `.nowo-ui-filters--grid-auto-fit`.
+- Demo: the page-contract orders list uses the host options (fold toggle, track list, icon + text buttons) and registers
+  the `filters-collapse` peer (`public/js/demo-peers.js`).
+
+### Security
+
+- REQ-SEC-004 audit GD (PR #66): `theme.tokens` / `tokens_dark` / bundle token values and the
+  `pages.list.filters.grid` track list refuse the CSS comment delimiters `/*` and `*/` (GD-L1: an unterminated
+  comment swallowed the rest of the token stylesheet). Host config only; a token value containing them now fails at
+  container compile time.
+
+### Fixed
+
+- `filters-collapse` peer: a malformed (not URI-decodable) fold cookie reads as empty and is rewritten on the next
+  toggle instead of blocking persistence (GD-I4); the cookie keeps the 50 most recently folded page keys
+  (`FILTERS_COLLAPSE_MAX_KEYS`, GD-I2).
+- Demo e2e: the default-theme confirm dialog width assertion follows the 2.29 unified sizes (medium, `min(40rem,
+  100vw - 2rem)`).
+
+### Tests
+
+- `ListFilters230BcTest` (fixtures `tests/Fixtures/bc-2.29`, rendered by 2.29.1): list pages without the new options
+  print byte-identical to 2.29 in Bootstrap 5, Tailwind and custom; config tree, options, rendering and peer tests.
+
 ## [2.29.1] - 2026-11-05
 
 Patch release. See [UPGRADING](UPGRADING.md#to-2291).

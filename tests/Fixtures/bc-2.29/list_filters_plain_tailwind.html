@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Orders</title>
+            <script src="/bundles/nowouikit/js/nowo-ui-theme-boot.js" data-nowo-ui-theme-boot></script>
+
+                    <link rel="stylesheet" href="/bundles/nowouikit/css/nowo-ui.css">
+    </head>
+<body class="nowo-ui-body">
+            <div class="nowo-ui-page nowo-ui-page--admin">
+                <main class="nowo-ui-content" id="nowo-ui-content">
+                            <div class="nowo-ui-page-header flex flex-wrap items-start justify-between gap-2 mb-3" data-nowo-ui-region="header">
+    <div class="nowo-ui-page-header__text">            
+                                <h1 class="nowo-ui-page-header__title text-xl font-semibold mb-1">Orders</h1>
+            </div>
+        </div>
+
+
+                                                                                <div class="nowo-ui-flash nowo-ui-flash--success px-4 py-3 text-sm mb-2 border" role="alert">Saved.</div>
+    
+                                <section class="nowo-ui-list-page" data-nowo-ui-page="list">
+                                    <form name="filters" method="get" class="nowo-ui-filters nowo-ui-search grid gap-3 mb-4" role="search" data-nowo-ui-filters="" data-nowo-ui-region="filters">
+                                                                                                                                                                                                                    <div class="nowo-ui-filters__field"><label for="filters_q">Q</label><input type="search" id="filters_q" name="filters[q]" class="nowo-ui-input block w-full max-w-xs border px-3 py-1.5 text-sm" value="abc" /></div>
+                                                                                                                                                                                                                                                                        <div class="nowo-ui-filters__field"><label for="filters_status">Status</label><select id="filters_status" name="filters[status]" class="nowo-ui-input"><option value="">Any</option><option value="open">Open</option></select></div>
+                                                                                                                                                                                <div class="nowo-ui-filters__field"><label for="filters_mine">Mine</label><input type="checkbox" id="filters_mine" name="filters[mine]" value="1" /></div>
+                <div class="nowo-ui-filters__actions flex flex-wrap items-end gap-2">
+                                                <button type="submit" class="nowo-ui-btn nowo-ui-btn--primary inline-flex items-center gap-1 font-medium px-3 py-1.5 text-sm nowo-ui-filters__submit">Apply</button>
+                    <a class="nowo-ui-btn nowo-ui-btn--secondary inline-flex items-center gap-1 font-medium px-3 py-1.5 text-sm border" href="/orders">Clear</a>
+                            </div>
+</form>
+
+                                                                                                                                                <div class="nowo-ui-table-wrap overflow-x-auto" data-nowo-ui-region="table" data-nowo-ui-responsive="cards">
+    <table class="nowo-ui-table nowo-ui-table--striped min-w-full text-sm text-left nowo-ui-table--cards" aria-label="Orders">
+                <thead class="nowo-ui-table__head">
+            <tr class="nowo-ui-table__head-row">
+                                                                                                                                                                <th scope="col" class="nowo-ui-table__head-cell nowo-ui-cell--start">name</th>
+                                                                                                    </tr>
+        </thead>
+        <tbody>
+                            <tr class="nowo-ui-table__row">
+                                                                                                                                                                        <td class="nowo-ui-table__cell nowo-ui-cell--start" data-label="name">A</td>
+                                                                                                                        </tr>
+                    </tbody>
+    </table>
+</div>
+
+                                </section>
+        </main>
+            </div>
+                            <script src="/bundles/nowouikit/js/nowo-ui-modal.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-confirm.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-dialog.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-toast.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-tabs.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-theme.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-popover.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-segmented.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-autosubmit.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-avatar.js" defer></script>
+
+            </body>
+</html>

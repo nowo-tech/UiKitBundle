@@ -72,6 +72,9 @@ final readonly class Theme
     /** `pages.list.header_actions_in_filters`: list header actions at the end of the filter row (default false). */
     private bool $listHeaderActionsInFilters;
 
+    /** `pages.list.filters` (2.30): host options of the list scaffold filters. */
+    private ListFiltersOptions $listFilters;
+
     /**
      * A class entry is a class string, a list of classes, or `{value: string|list, framework_defaults: bool}`.
      *
@@ -82,7 +85,7 @@ final readonly class Theme
      * @param array<string, string>                                    $tokensDark             dark-mode tokens
      * @param array<string, array<string, mixed>>                      $bundles                bundle => {classes, framework_defaults, attributes, partials, tokens, tokens_dark, pages: page type => {classes, framework_defaults, attributes}}
      * @param bool                                                     $frameworkDefaults      false = semantic + host classes only, for every slot
-     * @param array<string, array<string, mixed>>                      $pages                  page type ({@see ThemeSlots::PAGE_TYPES}) => {classes, framework_defaults, attributes}; `list` also takes `header_actions_in_filters` (bool)
+     * @param array<string, array<string, mixed>>                      $pages                  page type ({@see ThemeSlots::PAGE_TYPES}) => {classes, framework_defaults, attributes}; `list` also takes `header_actions_in_filters` (bool) and `filters` (2.30, {@see ListFiltersOptions})
      * @param bool                                                     $confirmMessageInHeader confirm dialogs / page render the message inside the header (`Confirm::$messageInHeader` wins when set)
      * @param bool                                                     $popoverMenus           2.4: menu / kebab partials render their panel as a native [popover] (top layer) by default
      * @param bool                                                     $formErrorsAfterWidget  2.10: the UiKit form theme prints a field's errors after its widget (default: Symfony's order, before)
@@ -109,6 +112,7 @@ final readonly class Theme
         $this->classes = $this->normalizeClasses($classes, 'classes');
         $this->pages = $this->normalizePages($pages, 'pages');
         $this->listHeaderActionsInFilters = $this->listHeaderActionsInFiltersOption($pages);
+        $this->listFilters = $this->listFiltersOption($pages);
         $normalized = [];
         foreach ($bundles as $bundle => $data) {
             $this->assertBundleName((string) $bundle);
@@ -348,7 +352,7 @@ final readonly class Theme
 
     public function hasTokens(): bool
     {
-        if ([] !== $this->tokens || [] !== $this->tokensDark) {
+        if ([] !== $this->tokens || [] !== $this->tokensDark || null !== $this->listFilters->gridColumns()) {
             return true;
         }
         foreach ($this->bundles as $bundle) {
@@ -362,7 +366,7 @@ final readonly class Theme
 
     /**
      * Token stylesheet text ('' without tokens): host `:root` (+ light-only `:root:where(:not([data-theme=dark]))`
-     * for {@see self::LIGHT_ONLY_TOKENS}, 2.15.4) + `[data-theme="dark"]` blocks, then the bundle scopes. Values are validated at construction (no `{`, `}`, `;`, `<`, `>`). The host blocks have the same
+     * for {@see self::LIGHT_ONLY_TOKENS}, 2.15.4) + `[data-theme="dark"]` blocks, then the bundle scopes. Values are validated at construction (no `{`, `}`, `;`, `<`, `>`, `\`, CSS comment delimiters). The host blocks have the same
      * specificity as the appearance SPI blocks (`:root` / `[data-theme="dark"]`), so the appearance printed after
      * them (`nowo_ui_tokens()`) overrides the host defaults.
      */
@@ -370,6 +374,11 @@ final readonly class Theme
     {
         $blocks = [];
         [$shared, $light] = $this->splitLightOnly($this->tokens);
+        $gridColumns = $this->listFilters->gridColumns();
+        if (null !== $gridColumns && !isset($this->tokens[ListFiltersOptions::GRID_TOKEN]) && !isset($this->tokens['--nowo-ui-'.ListFiltersOptions::GRID_TOKEN])) {
+            // 2.30: `pages.list.filters.grid` track list (an explicit `tokens` entry wins)
+            $shared[ListFiltersOptions::GRID_TOKEN] = $gridColumns;
+        }
         $blocks[] = $this->block(':root', $shared);
         $blocks[] = $this->block(self::LIGHT_ROOT, $light);
         $blocks[] = $this->block('[data-theme="dark"]', $this->tokensDark);
@@ -412,8 +421,9 @@ final readonly class Theme
             return \sprintf('token "%s" must be a string or a number, %s given.', $name, get_debug_type($value));
         }
         $value = trim((string) $value);
-        if ('' === $value || 1 === preg_match('/[{};<>\\\\]/', $value)) {
-            return \sprintf('token "%s" has an empty or unsafe value ("{", "}", ";", "<", ">" and "\\" are not allowed).', $name);
+        // 2.30 (audit GD-L1): `/*` / `*/` would open or close a CSS comment and swallow the rest of the token stylesheet
+        if ('' === $value || 1 === preg_match('/[{};<>\\\\]/', $value) || 1 === preg_match('#/\*|\*/#', $value)) {
+            return \sprintf('token "%s" has an empty or unsafe value ("{", "}", ";", "<", ">", "\\", "/*" and "*/" are not allowed).', $name);
         }
 
         return null;
@@ -590,6 +600,14 @@ final readonly class Theme
     }
 
     /**
+     * Host options of the list scaffold filters (`theme.pages.list.filters`, 2.30; defaults = the 2.29 output).
+     */
+    public function listFilters(): ListFiltersOptions
+    {
+        return $this->listFilters;
+    }
+
+    /**
      * Whether confirm dialogs and the full-page confirm render the message inside the header, under the title
      * (`theme.confirm_message_in_header`; `Confirm::$messageInHeader` wins when set).
      */
@@ -632,6 +650,27 @@ final readonly class Theme
         }
 
         return true === ($pages['list']['header_actions_in_filters'] ?? null);
+    }
+
+    /**
+     * @param array<string, array<string, mixed>> $pages
+     */
+    private function listFiltersOption(array $pages): ListFiltersOptions
+    {
+        foreach ($pages as $page => $data) {
+            if (isset($data['filters']) && 'list' !== (string) $page) {
+                throw new InvalidArgumentException(\sprintf('Invalid UiKit theme pages.%s.filters: on the list page type only.', $page));
+            }
+        }
+        $config = $pages['list']['filters'] ?? [];
+        if (!\is_array($config)) {
+            throw new InvalidArgumentException('Invalid UiKit theme pages.list.filters: a map is expected.');
+        }
+        try {
+            return ListFiltersOptions::fromConfig($config);
+        } catch (InvalidArgumentException $e) {
+            throw new InvalidArgumentException('Invalid UiKit theme pages.list.filters: '.$e->getMessage(), 0, $e);
+        }
     }
 
     /**
