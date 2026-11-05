@@ -14,6 +14,11 @@
  *   `data-layout="overlay"`): backdrop shown, the container's `[data-nowo-ui-side-panel-main]` inert while any drawer of
  *   it is open (only an `inert` this script set is removed again, and not when the host wrote it since), Tab cycles
  *   inside.
+ * - 2.28 overlay: while a drawer, the panel registers with the overlay registry (nowo-ui-overlay.ts, kind
+ *   `side-panel`): the shell header and aside (and host regions marked `data-nowo-ui-overlay-region`) are inert too,
+ *   `<html data-nowo-overlay>` is set and `nowo:overlay-open` / `nowo:overlay-close` are dispatched (no `role="dialog"`:
+ *   ARIA in HTML does not allow it on <aside>; the inert outside is what makes the drawer modal). A backdrop click closes it unless the panel has
+ *   `data-nowo-ui-side-panel-backdrop-close="false"` (closeOnBackdrop, default true for drawers).
  * - Optional shortcut per toggle (`data-nowo-ui-side-panel-shortcut`, e.g. `Alt+Shift+C`; none by default).
  * - Events (bubbling, on the panel, after the change): `nowo-ui:side-panel:open` / `nowo-ui:side-panel:close`
  *   `{ id, source }` — the host persists the state from them.
@@ -36,6 +41,8 @@ export type SidePanelSource = 'toggle' | 'close' | 'escape' | 'backdrop' | 'shor
 export type OpenOptions = { focus?: HTMLElement | string | false; source?: SidePanelSource; opener?: HTMLElement | null };
 export type Shortcut = { ctrl: boolean; alt: boolean; shift: boolean; meta: boolean; key: string };
 
+import { overlayRegistry, type OverlayHandle } from './nowo-ui-overlay';
+
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
 
@@ -47,6 +54,27 @@ const openers = new WeakMap<HTMLElement, HTMLElement>();
  */
 type InertState = { owners: Set<HTMLElement>; ours: boolean; hostTouched: boolean; observer: MutationObserver | null };
 const inertStates = new WeakMap<HTMLElement, InertState>();
+/** Main column of each panel (kept so a panel removed from the DOM can still release it). */
+const mains = new WeakMap<HTMLElement, HTMLElement>();
+/** Overlay handle of each panel while it is a drawer. */
+const overlays = new WeakMap<HTMLElement, OverlayHandle>();
+
+/** Whether a backdrop click closes the panel (closeOnBackdrop of the `side-panel` kind, default true). */
+export function closesOnBackdrop(panel: HTMLElement): boolean {
+  return panel.getAttribute('data-nowo-ui-side-panel-backdrop-close') !== 'false';
+}
+
+/** Overlay registration follows the drawer state. */
+function syncOverlay(panel: HTMLElement, drawer: boolean): void {
+  const handle = overlays.get(panel);
+  // A handle pruned by the registry (the panel left the DOM while open) is replaced on the next open.
+  if (drawer && (!handle || !handle.active())) {
+    overlays.set(panel, overlayRegistry().acquire(panel, { kind: 'side-panel', closeOnBackdrop: closesOnBackdrop(panel) }));
+  } else if (!drawer && handle) {
+    overlays.delete(panel);
+    handle.release();
+  }
+}
 
 /** The panel with this id, or null. */
 export function panelById(id: string): HTMLElement | null {
@@ -84,8 +112,15 @@ export function applyMode(panel: HTMLElement): void {
   const backdrop = companion(BACKDROP, panel);
   if (backdrop) backdrop.hidden = !drawer;
   panel.toggleAttribute('data-drawer', drawer);
-  const main = panel.closest(CONTAINER)?.querySelector<HTMLElement>(MAIN);
+  syncOverlay(panel, drawer);
+  const main = panel.closest(CONTAINER)?.querySelector<HTMLElement>(MAIN) ?? mains.get(panel) ?? null;
   if (!main) return;
+  mains.set(panel, main);
+  releaseMain(panel, main, drawer);
+}
+
+/** Adds or removes the panel from the owners of its main column's `inert` (removed: only what this script set). */
+function releaseMain(panel: HTMLElement, main: HTMLElement, drawer: boolean): void {
   let state = inertStates.get(main);
   if (drawer) {
     if (!state) {
@@ -250,7 +285,7 @@ function onClick(event: MouseEvent): void {
   }
   const backdrop = target.closest<HTMLElement>(BACKDROP);
   const owner = backdrop ? panelById(backdrop.getAttribute('data-for') ?? '') : null;
-  if (owner) closePanel(owner, 'backdrop');
+  if (owner && closesOnBackdrop(owner)) closePanel(owner, 'backdrop');
 }
 
 function onKeydown(event: KeyboardEvent): void {
@@ -296,6 +331,15 @@ function onKeydown(event: KeyboardEvent): void {
   }
 }
 
+/** A drawer removed from the DOM while open (the registry pruned it): lift what it held on its main column (ES-L1). */
+function onOverlayClose(event: Event): void {
+  const owner = (event as CustomEvent<{ owner?: unknown }>).detail?.owner;
+  if (!(owner instanceof HTMLElement) || owner.isConnected || !owner.matches(PANEL)) return;
+  overlays.delete(owner);
+  const main = mains.get(owner);
+  if (main) releaseMain(owner, main, false);
+}
+
 function onResize(): void {
   document.querySelectorAll<HTMLElement>(PANEL).forEach((panel) => applyMode(panel));
 }
@@ -333,6 +377,7 @@ export function bindNowoUiSidePanel(): void {
   document.addEventListener('click', onClick);
   document.addEventListener('keydown', onKeydown);
   window.addEventListener('resize', onResize);
+  document.addEventListener('nowo:overlay-close', onOverlayClose);
 }
 
 bindNowoUiSidePanel();

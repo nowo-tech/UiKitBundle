@@ -32,6 +32,11 @@
       scroll / resize / item click, and Escape closes it before a surrounding dialog. Root
       [data-nowo-ui-popover-menu], toggle [data-nowo-ui-popover-trigger] (aria-expanded), panel
       [data-nowo-ui-popover-panel] (id = "<id>-panel", or a random one without `id`). `open` is ignored.
+    - menu_semantics (2.28; default theme.menu_semantics, null): ARIA of popover menus with items. null = as 2.27
+      (toggle aria-haspopup="menu", plain list). 'menu' = APG menu button: toggle aria-haspopup="menu" +
+      aria-controls, panel role="menu" (labelled by the toggle), li role="none", items role="menuitem" (Action entries
+      get it from nowo-ui-popover.js), Up / Down / Home / End roving focus. 'disclosure' = no aria-haspopup, toggle
+      aria-controls the panel (a list of links and buttons). Ignored for <details> menus and `content` panels.
 #}
 {% set _b = bundle|default(null) %}
 {% set _pt = nowo_ui_page_type|default(null) %}
@@ -45,9 +50,11 @@
 {% set _content = content|default(null) %}
 {% set _t = nowo_ui_theme|default(null) %}
 {% set _popover = popover ?? (_t ? _t.popoverMenus() : false) %}
+{% set _ms = menu_semantics ?? (_t and _t.menuSemantics is defined ? _t.menuSemantics() : null) %}
+{% set _ms = _popover and _content is null and _ms in ['menu', 'disclosure'] ? _ms : null %}
 {% if _popover %}
     {% set _panel_id = (id|default(null) ?: 'nowo-ui-menu-' ~ random()) ~ '-panel' %}
-    {% set _panel_attrs = ' id="' ~ _panel_id|e('html_attr') ~ '" popover data-nowo-ui-popover-panel' %}
+    {% set _panel_attrs = ' id="' ~ _panel_id|e('html_attr') ~ '" popover data-nowo-ui-popover-panel' ~ (_ms == 'menu' ? ' role="menu" aria-labelledby="' ~ (_panel_id ~ '-toggle')|e('html_attr') ~ '"') %}
 {% else %}
     {% set _panel_attrs = '' %}
 {% endif %}
@@ -78,24 +85,24 @@
                         {% set _href = item.href ?? (item.route ? path(item.route, item.params) : null) %}
                         {% if _href and not item.isPost() and not item.confirm and not item.dialogId and not item.modalId and not item.disabled %}
                             {% set _danger = item.resolvedVariant() == 'danger' %}
-                            <li><a class="{{ nowo_ui_class('menu_item', _b) }}{{ _danger ? ' nowo-ui-menu__item--danger' }}" href="{{ _href }}"{{ nowo_ui_attrs('menu_item', _b) }}{{ nowo_ui_html_attrs(item.attributes) }}>{{ item.label is not null ? item.label|nowo_ui_trans : ('action.' ~ item.kind)|trans({}, 'NowoUiKitBundle') }}</a></li>
+                            <li{% if _ms == 'menu' %} role="none"{% endif %}><a class="{{ nowo_ui_class('menu_item', _b) }}{{ _danger ? ' nowo-ui-menu__item--danger' }}" href="{{ _href }}"{% if _ms == 'menu' %} role="menuitem" tabindex="-1"{% endif %}{{ nowo_ui_attrs('menu_item', _b) }}{{ nowo_ui_html_attrs(item.attributes) }}>{{ item.label is not null ? item.label|nowo_ui_trans : ('action.' ~ item.kind)|trans({}, 'NowoUiKitBundle') }}</a></li>
                         {% else %}
-                            <li class="nowo-ui-menu__entry{{ _menu_items ? ' nowo-ui-menu__entry--item' }}">{{ include(nowo_ui_partial('action', _b), {action: item, context: 'toolbar', display: 'text', bundle: _b, confirm_external: confirm_external|default(false), menu_item: _menu_items, nowo_ui_page_type: _pt}, false) }}</li>
+                            <li class="nowo-ui-menu__entry{{ _menu_items ? ' nowo-ui-menu__entry--item' }}"{% if _ms == 'menu' %} role="none"{% endif %}>{{ include(nowo_ui_partial('action', _b), {action: item, context: 'toolbar', display: 'text', bundle: _b, confirm_external: confirm_external|default(false), menu_item: _menu_items, nowo_ui_page_type: _pt}, false) }}</li>
                         {% endif %}
                     {% endif %}
                 {% else %}
                     {# View\Link or hash #}
                     {% set _current = item.current|default(false) %}
                     {% set _attrs = item.attributes ?? item.attr ?? {} %}{% set _item_href = item.href ?? null %}{% set _item_icon = (item.icon ?? null) and nowo_ui_kit_icon_set|default('bootstrap-icons') != 'none' ? item.icon : null %}{% set _item_class = nowo_ui_class('menu_item', _b) ~ (item.danger|default(false) ? ' nowo-ui-menu__item--danger') ~ (_current ? ' is-current') ~ (_item_icon ? ' nowo-ui-menu__item--icon') %}{% set _item_inner %}{% if _item_icon %}{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _item_icon, label: ''}, false)|trim|raw }}{% endif %}{{ item.label|nowo_ui_trans }}{% endset %}
-                    <li>{% if _item_href is not null %}<a class="{{ _item_class }}" href="{{ _item_href }}"{% if _current %} aria-current="page"{% endif %}{{ nowo_ui_attrs('menu_item', _b) }}{{ nowo_ui_html_attrs(_attrs|filter((v, k) => (k|lower) not in ['href', 'style', 'ping'])) }}>{{ _item_inner }}</a>{% else %}<button type="button" class="{{ _item_class }}"{{ nowo_ui_attrs('menu_item', _b) }}{{ nowo_ui_html_attrs(_attrs|filter((v, k) => (k|lower) starts with 'data-' or (k|lower) starts with 'aria-' or (k|lower) starts with 'on')) }} data-nowo-ui-menu-button>{{ _item_inner }}</button>{% endif %}</li>
+                    <li{% if _ms == 'menu' %} role="none"{% endif %}>{% if _item_href is not null %}<a class="{{ _item_class }}" href="{{ _item_href }}"{% if _current %} aria-current="page"{% endif %}{% if _ms == 'menu' %} role="menuitem" tabindex="-1"{% endif %}{{ nowo_ui_attrs('menu_item', _b) }}{{ nowo_ui_html_attrs(_attrs|filter((v, k) => (k|lower) not in ['href', 'style', 'ping'])) }}>{{ _item_inner }}</a>{% else %}<button type="button" class="{{ _item_class }}"{% if _ms == 'menu' %} role="menuitem" tabindex="-1"{% endif %}{{ nowo_ui_attrs('menu_item', _b) }}{{ nowo_ui_html_attrs(_attrs|filter((v, k) => (k|lower) starts with 'data-' or (k|lower) starts with 'aria-' or (k|lower) starts with 'on')) }} data-nowo-ui-menu-button>{{ _item_inner }}</button>{% endif %}</li>
                 {% endif %}
             {% endfor %}
         </ul>
     {% endif %}
 {% endset %}
 {% if _popover %}
-<div class="{{ nowo_ui_class('menu', _b) }} nowo-ui-menu--{{ _align }} nowo-ui-menu--popover{{ root_class|default('') ? ' ' ~ root_class }}" data-nowo-ui-menu data-nowo-ui-popover-menu{% if id|default(null) %} id="{{ id }}"{% endif %}{{ nowo_ui_attrs('menu', _b) }}{{ nowo_ui_html_attrs(attr|default({})) }}>
-    <button type="button" class="{{ _toggle_class }}" popovertarget="{{ _panel_id }}" aria-haspopup="menu" aria-expanded="false" data-nowo-ui-popover-trigger{% if _display == 'icon' %} aria-label="{{ _label }}" title="{{ _label }}"{% endif %}{{ nowo_ui_attrs('menu_toggle', _b) }}{{ nowo_ui_html_attrs(toggle_attr|default({})) }}>{{ _toggle_inner }}</button>
+<div class="{{ nowo_ui_class('menu', _b) }} nowo-ui-menu--{{ _align }} nowo-ui-menu--popover{{ root_class|default('') ? ' ' ~ root_class }}" data-nowo-ui-menu data-nowo-ui-popover-menu{% if _ms %} data-nowo-ui-menu-semantics="{{ _ms }}"{% endif %}{% if id|default(null) %} id="{{ id }}"{% endif %}{{ nowo_ui_attrs('menu', _b) }}{{ nowo_ui_html_attrs(attr|default({})) }}>
+    <button type="button" class="{{ _toggle_class }}" popovertarget="{{ _panel_id }}"{% if _ms == 'menu' %} id="{{ _panel_id }}-toggle"{% endif %}{% if _ms != 'disclosure' %} aria-haspopup="menu"{% endif %} aria-expanded="false"{% if _ms %} aria-controls="{{ _panel_id }}"{% endif %} data-nowo-ui-popover-trigger{% if _display == 'icon' %} aria-label="{{ _label }}" title="{{ _label }}"{% endif %}{{ nowo_ui_attrs('menu_toggle', _b) }}{{ nowo_ui_html_attrs(toggle_attr|default({})) }}>{{ _toggle_inner }}</button>
     {{ _panel }}
 </div>
 {% else %}

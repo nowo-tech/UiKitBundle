@@ -5,7 +5,11 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Form\CsrfOnlyType;
+use App\Form\DemoDestinationType;
+use Nowo\UiKitBundle\Dialog\RemoteDialog;
+use Nowo\UiKitBundle\Dialog\RemoteDialogResponder;
 use Nowo\UiKitBundle\View\Pagination;
+use Symfony\Component\Form\FormError;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -55,6 +59,45 @@ final class KitTemplatesController extends AbstractController
         $response->headers->set('Content-Security-Policy', "style-src-attr 'none'; script-src-attr 'none'");
 
         return $response;
+    }
+
+    /**
+     * UiKit 2.28: the remote form dialog (IIFE driver) and the overlay registry. The list page opens the form page
+     * (/kit/remote-form/new) in a dialog; without JavaScript, or opened directly, it is a normal page. The response
+     * forbids inline style attributes and handlers (CSP).
+     */
+    #[Route('/remote-form', name: 'kit_remote_form')]
+    public function remoteForm(Request $request): Response
+    {
+        $response = $this->render('kit/remote_form.html.twig', ['saved' => $request->query->getString('saved')]);
+        $response->headers->set('Content-Security-Policy', "style-src-attr 'none'; script-src-attr 'none'");
+
+        return $response;
+    }
+
+    /**
+     * The form page of the remote form dialog: the fragment for `X-Nowo-Dialog: 1`, 422 when invalid (a required
+     * label), 204 + X-Nowo-Redirect once saved (through RemoteDialogResponder), a redirect without the header.
+     */
+    #[Route('/remote-form/new', name: 'kit_remote_form_new', methods: ['GET', 'POST'])]
+    public function remoteFormNew(Request $request, RemoteDialogResponder $dialog): Response
+    {
+        $form = $this->createForm(DemoDestinationType::class, null, ['action' => $this->generateUrl('kit_remote_form_new')]);
+        $form->handleRequest($request);
+        if ($form->isSubmitted()) {
+            $label = trim((string) $form->get('label')->getData());
+            if ('' === $label) {
+                $form->get('label')->addError(new FormError('Enter a label.'));
+            } elseif ($form->isValid()) {
+                // The demo has no session (no flash bag): the saved label travels in the query of the redirect target.
+                return $dialog->redirectToRoute('kit_remote_form', ['saved' => $label]);
+            }
+        }
+
+        $response = $this->render($dialog->template('kit/remote_form_new.html.twig', 'kit/_remote_form_fields.html.twig'), ['form' => $form->createView()]);
+        $response->headers->set('Content-Security-Policy', "style-src-attr 'none'; script-src-attr 'none'");
+
+        return RemoteDialog::vary($response);
     }
 
     /**

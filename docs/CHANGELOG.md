@@ -97,6 +97,91 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Remote form dialog, the overlay registry and the public layer scale (contract v1.0 with symfony-beacon, 2026-11-04).
+Opt-in in the markup: with the new options left out, the `menu` partial, the `dialog` partial, the side panel partials
+and the `_scripts` output render byte-identical to 2.27.2 (fixtures under `tests/Fixtures/bc-2.27`). Two behaviour
+changes, both in UPGRADING: the side panel drawer also makes the shell header and aside `inert`, and every UiKit dialog / drawer now dispatches `nowo:overlay-*` and sets `html[data-nowo-overlay]`.
+
+### Added
+
+- **Remote form dialog**: a form page loaded into a native `<dialog>` and posted back with `fetch`
+  (`nowo-ui-remote-form-core.ts`). `GET` with `X-Nowo-Dialog: 1` (+ `X-Requested-With`, `Accept: text/html`),
+  `mode: 'same-origin'`, `redirect: 'manual'`; `422` / HTML fragments re-render the body and focus the first invalid
+  control; `204` or a valid `X-Nowo-Redirect` dispatch the cancelable `saved` event, then close and follow (reload
+  without a valid target); errors keep the typed form with a `role="alert"` line; a failed load follows the opener's
+  link. Closing aborts the request, empties the body (Stimulus controllers of the fragment disconnect) and returns
+  focus to the opener; Escape inside a Tom Select dropdown, popover or nested dialog closes that first. The clicked
+  submit button's `name=value` is posted. Only `method="post"` forms with a same-origin action are intercepted.
+  - IIFE mode of `js/nowo-ui-dialog.js`: openers with `data-nowo-ui-dialog-src` **and** `data-nowo-ui-dialog-form`;
+    events `nowo-ui:remote-form:loaded|invalid|saved|failed|closed`; `window.nowoUiOpenRemoteForm(id, url, opener?)`.
+  - Stimulus peer **`remote-form-dialog`** (`stimulus-peers/remote_form_dialog_controller.ts`; targets `dialog`,
+    `title`, `body`; values `loading`, `error`, `loadError`, `requestHeader`, `redirectHeader`, `invalidSelector`,
+    `followOnLoadError`, `closeOnBackdrop`; actions `open`, `close`, `submit`), symfony-beacon's attributes.
+  - Partial **`remote_form_dialog`** (`partials/_remote_form_dialog.html.twig`, both drivers; `backdrop_close`
+    default `false`); full screen on phones (≤ 40 rem, token `--nowo-ui-remote-dialog-phone-inset` /
+    `--nowo-ui-remote-dialog-phone-radius`).
+  - Server side: `Nowo\UiKitBundle\Dialog\RemoteDialog` (`REQUEST_HEADER`, `REDIRECT_HEADER`, `isRequest()`,
+    `vary()`), the autowirable **`RemoteDialogResponder`** (`redirect()` / `redirectToRoute()`: `204` +
+    `X-Nowo-Redirect` + `Vary` + `no-store` for dialog requests, a `RedirectResponse` otherwise; `template()`), and
+    the opt-in `kernel.response` listener **`nowo_ui_kit.remote_dialog.convert_redirects`**. Redirect targets are
+    same-origin paths only (`RemoteDialogTarget`).
+  - Twig `nowo_ui_dialog_request()`, `nowo_ui_remote_form_opener(dialog_id, title?, stimulus?, src?)` and the
+    fragment layout `@NowoUiKit/layout/fragment.html.twig`.
+  - `dialog` partial option `root_class`.
+  - Translation keys `remote_form_dialog.loading`, `.load_failed`, `.save_failed` (7 locales).
+- **Overlay registry** `window.NowoUiOverlay` (`js/nowo-ui-overlay.js`, also bundled into the dialog and side-panel
+  scripts): `acquire(owner, {kind, inertShell, closeOnBackdrop})` → handle with `release()`; `<html data-nowo-overlay>`
+  while overlays are open; `nowo:overlay-open` / `nowo:overlay-close` on `document` (`{depth, kind, owner}`); shell
+  regions (`[data-nowo-ui-shell] > header`, `[data-nowo-ui-aside]`, host `[data-nowo-ui-overlay-region]`) made
+  `inert` while a drawer is open, removing only what it set (`aria-hidden` where `inert` is unsupported);
+  `closeOnBackdrop` per kind (`dialog` / `host` false, `side-panel` / `drawer` true).
+- Side panel option **`backdrop_close`** (default `true`; `false` renders `data-nowo-ui-side-panel-backdrop-close="false"`).
+- **`menu_semantics`** on the `menu` partial and `nowo_ui_kit.theme.menu_semantics` (`null` default = 2.27 markup;
+  `menu` = APG menu button with `role="menu"` / `menuitem` and Up / Down / Home / End roving focus in
+  `nowo-ui-popover.js`; `disclosure` = no `aria-haspopup`). Popover menus with items only.
+- **Focusable scroll regions** (KIT-71, symfony-beacon audit 2026-11-05): opt-in `js/nowo-ui-scroll-region.js`
+  makes overflowing table wraps (`[data-nowo-ui-region="table"]`) and `[data-nowo-ui-scroll-region]` elements
+  `tabindex="0"` + `role="region"` + `aria-label` while they overflow, also for content inserted later
+  (`MutationObserver` + `ResizeObserver`, one pass per animation frame); `table` partial option `scroll_label`.
+- `RemoteDialogResponder::fragment(Response)` adds `Vary: X-Nowo-Dialog` (KIT-68).
+- **Layers as public API** (THEMING "Layers"): scale tokens `--nowo-ui-z-overlay` (1040), `--nowo-ui-z-modal` (1050),
+  `--nowo-ui-z-popover` (1080), `--nowo-ui-z-toast` (1100), `--nowo-ui-z-loader` (1200) as fallbacks behind the
+  existing specific tokens (`--nowo-ui-side-panel-z`, `--nowo-ui-menu-z-index`, `--nowo-ui-date-range-z`,
+  `--nowo-ui-multi-select-z`); `--nowo-ui-edge-tab-z` (74) documented as public. No `:root` value added.
+
+### Changed
+
+- **Side panel drawer** (overlay layout, or ≤ 767 px): registers with the overlay registry, so the shell header and
+  aside become `inert` too (only the main column was). The `aside` keeps its own role (ARIA in HTML does not allow
+  `role="dialog"` on `<aside>`); the inert outside is what makes the drawer modal.
+- Dialogs opened by `nowo-ui-dialog.js` register with the overlay registry (`kind: 'dialog'`, no shell inert: the top
+  layer already does it).
+
+### Security
+
+- REQ-SEC-004 appendix ES (unreleased code, fixed before the tag):
+  - **ES-M1:** `X-Nowo-Redirect` targets with dot segments (`/.//evil.example`, `/..//`, `/%2e//`, `/%2E%2E//`,
+    `/a/..//`) passed both checks and the browser normalised them to a protocol-relative URL on another origin. The
+    client (`sameOriginPath()`) and the server (`RemoteDialogTarget::tryPath()`, also for reduced absolute URLs) now
+    refuse any `.` / `..` segment and any `%2e` (either case; decoded once), and anything that decodes or resolves to
+    `//…` (also KIT-68 of the symfony-beacon audit of 2026-11-05).
+  - ES-L1: an owner removed from the DOM while open is released at once (the shell and the side panel's main column
+    no longer stay `inert`).
+  - ES-L2: submits use `FormData(form, submitter)` and honour `formaction` / `formmethod` / `formenctype`.
+  - ES-I1–I5: an action-less form posts to the dialog's URL; the fragment also loses `iframe[srcdoc]`,
+    `meta[http-equiv]`, `<base>`, `<object>` / `<embed>` and inline `on*` attributes; a close queued before a reopen
+    no longer tears the new dialog down; `convert_redirects` keeps the redirect's security headers;
+    `X-Nowo-Redirect` counts on 2xx answers only.
+- Dev dependency `symfony/yaml` 7.4.23 in `composer.lock`.
+
+### Fixed
+
+- Order-dependent Vitest tests (`collapse_panel_controller.test.ts` failed under `--sequence.shuffle --sequence.seed=3`):
+  happy-dom binds `Storage` methods on first access, so a `Storage.prototype` spy was either ignored or captured for
+  the rest of the file depending on test order. The storage-failure tests of the collapse-panel peer, the sidebar core
+  and the theme toggle stub the `window.localStorage` getter instead, and CI runs Vitest shuffled with seeds 1, 2, 3
+  and 42.
+
 ## [2.27.2] - 2026-11-04
 
 ### Fixed

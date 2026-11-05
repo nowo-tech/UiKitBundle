@@ -139,9 +139,13 @@ describe('nowo-ui-theme', () => {
   });
 
   it('survives localStorage failures', () => {
-    const spy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-      throw new Error('quota');
-    });
+    // Getter spy (happy-dom binds Storage methods on first access, so a Storage.prototype spy depends on test order).
+    const spy = vi.spyOn(window, 'localStorage', 'get').mockReturnValue({
+      getItem: () => null,
+      setItem: () => {
+        throw new Error('quota');
+      },
+    } as unknown as Storage);
     mod.setTheme('dark');
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
     spy.mockRestore();

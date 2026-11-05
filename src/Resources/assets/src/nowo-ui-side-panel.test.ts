@@ -366,3 +366,104 @@ describe('nowo-ui-side-panel', () => {
     add.mockRestore();
   });
 });
+
+describe('nowo-ui-side-panel overlay (2.28)', () => {
+  const SHELL = `
+    <div data-nowo-ui-shell>
+      <header id="hdr"><a href="/">Home</a></header>
+      <aside id="nav" data-nowo-ui-aside><a href="/x">X</a></aside>
+      <div class="nowo-ui-main">
+        <button type="button" id="tog" aria-controls="drawer" data-nowo-ui-side-panel-toggle>Open</button>
+        <div data-nowo-ui-side-panel-container>
+          <div data-nowo-ui-side-panel-main id="main"><p>Main</p></div>
+          <aside id="drawer" data-nowo-ui-side-panel data-layout="overlay" hidden><h2 id="drawer-title" tabindex="-1">D</h2><button id="in">x</button></aside>
+          <div data-nowo-ui-side-panel-backdrop data-for="drawer" id="bd" hidden></div>
+        </div>
+        <aside id="keep" data-nowo-ui-side-panel data-layout="overlay" data-nowo-ui-side-panel-backdrop-close="false" hidden><h2 id="keep-title" tabindex="-1">K</h2></aside>
+        <div data-nowo-ui-side-panel-backdrop data-for="keep" id="bd2" hidden></div>
+      </div>
+    </div>`;
+
+  beforeEach(() => {
+    document.body.innerHTML = SHELL;
+    setDrawer(false);
+    mod.bindNowoUiSidePanel();
+  });
+
+  afterEach(() => {
+    window.NowoUiOverlay?.releaseAll();
+    document.body.innerHTML = '';
+  });
+
+  it('makes the shell header and aside inert and sets the overlay marker while a drawer (no role on the aside)', () => {
+    const opened: number[] = [];
+    const onOpen = (e: Event): void => {
+      opened.push((e as CustomEvent<{ depth: number }>).detail.depth);
+    };
+    document.addEventListener('nowo:overlay-open', onOpen);
+    mod.openPanel(el('drawer'));
+    document.removeEventListener('nowo:overlay-open', onOpen);
+    expect(opened).toEqual([1]);
+    expect(el('hdr').hasAttribute('inert')).toBe(true);
+    expect(el('nav').hasAttribute('inert')).toBe(true);
+    expect(el('main').hasAttribute('inert')).toBe(true);
+    expect(el('drawer').hasAttribute('role')).toBe(false);
+    expect(document.documentElement.getAttribute('data-nowo-overlay')).toBe('1');
+    mod.closePanel(el('drawer'));
+    expect(el('hdr').hasAttribute('inert')).toBe(false);
+    expect(el('nav').hasAttribute('inert')).toBe(false);
+    expect(document.documentElement.hasAttribute('data-nowo-overlay')).toBe(false);
+  });
+
+  it('releases when an inline panel stops being a drawer on resize', () => {
+    el('drawer').setAttribute('data-layout', 'inline');
+    setDrawer(true);
+    mod.openPanel(el('drawer'));
+    expect(el('hdr').hasAttribute('inert')).toBe(true);
+    setDrawer(false);
+    window.dispatchEvent(new Event('resize'));
+    expect(el('hdr').hasAttribute('inert')).toBe(false);
+  });
+
+  it('lifts the shell and main-column inert when an open drawer is removed from the DOM (ES-L1)', async () => {
+    mod.openPanel(el('drawer'));
+    expect(el('main').hasAttribute('inert')).toBe(true);
+    const main = el('main');
+    el('drawer').remove();
+    await new Promise((r) => setTimeout(r, 0));
+    expect(el('hdr').hasAttribute('inert')).toBe(false);
+    expect(main.hasAttribute('inert')).toBe(false);
+    expect(document.documentElement.hasAttribute('data-nowo-overlay')).toBe(false);
+  });
+
+  it('acquires again when a removed drawer comes back and opens', async () => {
+    const drawer = el('drawer');
+    const parent = drawer.parentElement as HTMLElement;
+    mod.openPanel(drawer);
+    drawer.remove();
+    await new Promise((r) => setTimeout(r, 0));
+    parent.prepend(drawer);
+    drawer.hidden = true;
+    mod.openPanel(drawer);
+    expect(el('hdr').hasAttribute('inert')).toBe(true);
+    mod.closePanel(drawer);
+    expect(el('hdr').hasAttribute('inert')).toBe(false);
+  });
+
+  it('ignores overlay-close events of other owners', () => {
+    document.dispatchEvent(new CustomEvent('nowo:overlay-close', { detail: { owner: el('main') } }));
+    document.dispatchEvent(new CustomEvent('nowo:overlay-close', { detail: {} }));
+    expect(el('main').hasAttribute('inert')).toBe(false);
+  });
+
+  it('closes on a backdrop click unless closeOnBackdrop is off for the panel', () => {
+    expect(mod.closesOnBackdrop(el('drawer'))).toBe(true);
+    expect(mod.closesOnBackdrop(el('keep'))).toBe(false);
+    mod.openPanel(el('drawer'));
+    click(el('bd'));
+    expect(el('drawer').hidden).toBe(true);
+    mod.openPanel(el('keep'));
+    click(el('bd2'));
+    expect(el('keep').hidden).toBe(false);
+  });
+});

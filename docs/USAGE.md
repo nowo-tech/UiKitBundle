@@ -44,6 +44,10 @@
   - [Avatars (2.26)](#avatars-226)
 - [Sidebar rail (opt-in)](#sidebar-rail-opt-in)
 - [Side panel and drawer (2.25)](#side-panel-and-drawer-225)
+- [Remote form dialog (2.28)](#remote-form-dialog-228)
+- [Focusable scroll regions (2.28)](#focusable-scroll-regions-228)
+- [Overlays and the shell (2.28)](#overlays-and-the-shell-228)
+- [Menu semantics (2.28)](#menu-semantics-228)
 - [Compact header (2.27)](#compact-header-227)
 - [Overriding templates (REQ-TWIG-001)](#overriding-templates-req-twig-001)
 - [Override vs upgrade](#override-vs-upgrade)
@@ -1686,6 +1690,11 @@ page (it is not in the default `scripts` list).
   an icon, or whose icon the icon set cannot draw, does not have it.
 - **Theming:** slots `side_panel*` ([THEME_SLOTS](THEME_SLOTS.md)) and the `--nowo-ui-side-panel-*` tokens
   ([THEMING](THEMING.md)); no inline styles or handlers (strict CSP).
+- **Overlay (2.28):** while a drawer, the panel registers with the overlay registry
+  ([Overlays and the shell](#overlays-and-the-shell-228)): besides the main column, the shell header and aside (and
+  regions marked `data-nowo-ui-overlay-region`) are `inert` (the `aside` keeps its landmark role: `role="dialog"` is
+  not allowed on `<aside>`), `<html data-nowo-overlay>` is set and `nowo:overlay-open` / `nowo:overlay-close` are dispatched. A backdrop click
+  closes it; `backdrop_close: false` keeps it open (Escape and the close control still close).
 - **Phones (2.27.1):** the drawer is `100dvh` high (`100vh` where `dvh` is unknown), so iOS Safari's toolbars no longer
   cover its last controls, and the body adds `env(safe-area-inset-bottom)` to its bottom padding (non-zero only with
   `<meta name="viewport" content="…, viewport-fit=cover">`). **Hide your own fixed footers, cookie bars and floating
@@ -1694,6 +1703,131 @@ page (it is not in the default `scripts` list).
   `body:has(.nowo-ui-side-panel[data-drawer]:not([hidden])) .app-launcher { display: none; }`.
 
 Demo: `/kit/side-panel` in `demo/symfony8`.
+
+## Remote form dialog (2.28)
+
+A form page opened in a native `<dialog>` and posted back with `fetch`: the opener is a plain link to the full page
+(the no-JavaScript path and the deep link), the dialog loads that page as a fragment, re-renders it on `422`, and
+follows the server once saved. Two drivers share one core (`nowo-ui-remote-form-core.ts`): the IIFE
+`js/nowo-ui-dialog.js` (in the default `scripts` list) and the `remote-form-dialog` Stimulus peer
+([STIMULUS](STIMULUS.md#remote-form-dialog-228)).
+
+```twig
+{# IIFE driver #}
+<a href="{{ path('monitor_edit', {id: monitor.id}) }}"
+   {{- nowo_ui_html_attrs(nowo_ui_remote_form_opener('monitor-dialog', 'Edit monitor', false, path('monitor_edit', {id: monitor.id}))) }}>Edit</a>
+{{ include(nowo_ui_partial('remote_form_dialog'), {id: 'monitor-dialog', attr: {'data-testid': 'monitor-dialog'}}) }}
+```
+
+Server side (one URL, two modes):
+
+```php
+use Nowo\UiKitBundle\Dialog\RemoteDialog;
+use Nowo\UiKitBundle\Dialog\RemoteDialogResponder;
+
+public function edit(Request $request, Monitor $monitor, RemoteDialogResponder $dialog): Response
+{
+    $form = $this->createForm(MonitorType::class, $monitor)->handleRequest($request);
+    if ($form->isSubmitted() && $form->isValid()) {
+        // …save, add the flash…
+        return $dialog->redirectToRoute('monitor_show', ['id' => $monitor->getId()]);   // 204 + X-Nowo-Redirect in the dialog
+    }
+
+    return RemoteDialog::vary($this->render($dialog->template('monitor/edit.html.twig', 'monitor/_edit_form.html.twig'), [
+        'form' => $form,
+    ]));   // render() answers 422 for an invalid submitted form, in both modes
+}
+```
+
+| Step | Contract |
+| --- | --- |
+| Load | `GET <href>` with `X-Nowo-Dialog: 1`, `X-Requested-With: XMLHttpRequest`, `Accept: text/html`; `mode: 'same-origin'`, `credentials: 'same-origin'`, `redirect: 'manual'`. A `200` HTML **fragment** fills the body (a whole document, another status, a redirect or a network error closes the dialog and follows the link) |
+| Submit | Only `method="post"` forms with a same-origin action (others, and forms with `data-nowo-ui-remote-form-native`, submit normally), like a native submit: `new FormData(form, submitter)`, and the submitter's `formaction` / `formmethod` / `formenctype` win (a `formaction` must be same-origin too; `formmethod="get"` or `formenctype="text/plain"` submit normally). A form without `action` posts to the URL loaded in the dialog, not to the host page |
+| Saved | `204`, or a **2xx** answer with a **valid** `X-Nowo-Redirect` (the header is ignored on other statuses): the cancelable `saved` event, then close and go there (reload without a valid target). A 3xx answer counts as saved without a target (the flash is still in the session, the reloaded page shows it) |
+| Invalid | `422` or a `200` fragment: re-rendered; focus on the first `[aria-invalid="true"]` (then `invalid_selector`), else the title |
+| Error | `401` / `403` / `5xx` / network: the typed form stays, with one `role="alert"` line on top |
+| Close | Escape (a Tom Select dropdown, popover or nested dialog inside closes first), the close button, `[data-nowo-ui-dialog-close]`, the backdrop only with `backdrop_close: true` (default `false`: a stray click never loses a typed form). The request is aborted, the body emptied (Stimulus controllers of the fragment disconnect) and focus returns to the opener |
+
+- **Redirect targets** are path-absolute same-origin URLs only: one leading `/`, no `//`, no backslash, no control
+  character, **no `.` / `..` segment and no `%2e` at all** (either case: browsers would normalise `/.//evil.example`
+  to `//evil.example`, another origin), nothing that decodes to `//…`, ≤ 2048 characters. `RemoteDialogResponder` reduces an absolute URL on the request's own origin to its
+  path and throws on anything else; the client ignores an invalid header (and reloads).
+- **Fragment trust:** the dialog injects the server's own answer, with the same trust as the page. Before insertion it
+  drops `<script>`, `iframe[srcdoc]`, `meta[http-equiv]`, `<base>`, `<object>` / `<embed>` and every inline `on*`
+  attribute, but it is not a sanitizer: never render user HTML unescaped in a fragment, and keep a `script-src` CSP.
+- **`X-Nowo-Dialog` is not a security signal**: any page can send it. Never skip CSRF, authorization or validation
+  because of it; it only selects the template and the success answer. Keep `Vary: X-Nowo-Dialog` on both modes
+  (`RemoteDialog::vary()`; `RemoteDialogResponder` adds it to its answers).
+- **Fragment template:** either a separate template (`RemoteDialogResponder::template()`), or one template with
+  `{% extends nowo_ui_dialog_request() ? '@NowoUiKit/layout/fragment.html.twig' : 'base.html.twig' %}` (the fragment
+  layout prints only the `body` block). The fragment brings its own actions row (Save / Cancel with
+  `data-nowo-ui-dialog-close`).
+- **Controllers that `redirectToRoute()`:** set `nowo_ui_kit.remote_dialog.convert_redirects: true` and a redirect
+  answered to a main dialog request becomes `204` + `X-Nowo-Redirect` ([CONFIGURATION](CONFIGURATION.md#remote-dialog-228)).
+- **Events** (bubbling, on the dialog): `nowo-ui:remote-form:loaded` `{url}`, `:invalid` `{status}`, `:saved`
+  `{redirect, status}` (**cancelable**: `preventDefault()` to handle success yourself, e.g. refresh a dashboard in
+  place; the dialog still closes), `:failed` `{stage: 'load' | 'submit', status}`, `:closed`.
+- **Script:** `window.nowoUiOpenRemoteForm(dialogId, url, opener?)` opens one from code (a button whose URL is
+  computed).
+- **Phones** (≤ 40 rem): full screen; `--nowo-ui-remote-dialog-phone-inset` adds a gutter ([THEMING](THEMING.md#remote-form-dialog-228)).
+- **Partial options:** `id`, `stimulus`, `title`, `size` (default `lg`), `labels: {loading, error, load_error}`,
+  `invalid_selector`, `follow_on_load_error` (default true), `backdrop_close` (default false), `attr`, `bundle`.
+
+## Focusable scroll regions (2.28)
+
+A table wrap (`[data-nowo-ui-region="table"]`, rendered by the `table` partial and the list scaffold) or any element
+with `data-nowo-ui-scroll-region` whose content overflows horizontally must be reachable by keyboard (axe
+`scrollable-region-focusable`). Load `js/nowo-ui-scroll-region.js` (opt-in:
+`script_names: nowo_ui_script_names()|merge(['scroll-region'])`): while a region overflows it gets `tabindex="0"`
+and, when it has a name, `role="region"` + `aria-label` (the `table` partial's `scroll_label` option →
+`data-nowo-ui-scroll-label`, else the table's `aria-label` or caption). The attributes go away when it fits again;
+attributes the host wrote are never touched. Regions inserted later (list pagination "load more", dialog fragments)
+are covered by one `MutationObserver` and one `ResizeObserver`, throttled to an animation frame (no `resize`
+listener).
+
+## Overlays and the shell (2.28)
+
+`js/nowo-ui-overlay.js` (also bundled into `nowo-ui-dialog.js` and `nowo-ui-side-panel.js`) keeps one count of the
+modal overlays open on the page, shared by UiKit, host scripts and other bundles:
+
+```js
+const handle = window.NowoUiOverlay.acquire(drawerElement, { kind: 'drawer' });   // on open
+handle.release();                                                                   // on close (idempotent)
+```
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `kind` | `host` | `dialog` \| `side-panel` \| `drawer` \| `host` |
+| `inertShell` | `true` | While the handle lives, every shell region (`[data-nowo-ui-shell] > header`, `[data-nowo-ui-aside]`, `[data-nowo-ui-overlay-region]`) that neither contains nor is inside an owner gets `inert` (+ `data-nowo-ui-overlay-inert`). `false` for top-layer dialogs (the browser already makes the page inert) |
+| `closeOnBackdrop` | per kind: `dialog` / `host` `false`, `side-panel` / `drawer` `true` | Read back as `handle.closeOnBackdrop`; the owner closes on a backdrop click only when it is true |
+
+- **Events** on `document` after each change: `nowo:overlay-open` / `nowo:overlay-close`, `detail: {depth, kind,
+  owner}` (`depth` after the change; `close` with `depth: 0` = every overlay closed). The names are a DOM contract
+  between nowo bundles (ChatKit's dock listens), not a `nowo-ui:` event.
+- **Root marker:** `<html data-nowo-overlay="<depth>">` while depth > 0, for CSS such as
+  `html[data-nowo-overlay] .site-footer { visibility: hidden; }`.
+- **Owners in 2.28:** every dialog opened by `nowo-ui-dialog.js` (`kind: 'dialog'`), the remote form dialog, and the
+  side panel while it is a drawer (`kind: 'side-panel'`).
+- **Host regions:** mark your own header / sidebar / footer with `data-nowo-ui-overlay-region` to make them inert under
+  drawers. Never mark toast stacks or live regions (an inert live region is not announced).
+- **Safety:** only attributes the registry wrote are removed; an `inert` the host set before, or wrote while an overlay
+  was open, stays. Handles of owners removed from the DOM are dropped on the next change, and `pagehide` releases all.
+  Without `inert` support the same regions get `aria-hidden="true"`.
+- **Layers:** see [THEMING — Layers](THEMING.md#layers-public-api-228).
+
+## Menu semantics (2.28)
+
+`menu_semantics` on the `menu` partial (or `nowo_ui_kit.theme.menu_semantics`) sets the ARIA of **popover** menus with
+items (`<details>` menus and free `content` panels are left alone):
+
+| Value | Markup |
+| --- | --- |
+| `null` (default) | As 2.27: toggle `aria-haspopup="menu"`, a plain list |
+| `menu` | APG menu button: toggle `aria-haspopup="menu"` + `aria-controls`, panel `role="menu"` labelled by the toggle, `li role="none"`, items `role="menuitem"` `tabindex="-1"`; `nowo-ui-popover.js` adds ArrowDown / ArrowUp on the toggle (open on the first / last item), ArrowDown / ArrowUp / Home / End roving focus, Tab closes |
+| `disclosure` | No `aria-haspopup`; toggle `aria-controls` the panel (a list of links and buttons) |
+
+Use `menu` for action menus (`page_actions`, the split header's "more"), `disclosure` for navigation lists. UiKit 3.0
+will default to `disclosure`.
 
 ## Compact header (2.27)
 

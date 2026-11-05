@@ -50,6 +50,12 @@ jobs:
       - name: Vitest with coverage
         run: pnpm run test:coverage | tee coverage-ts.txt
 
+      - name: Vitest in shuffled order (fixed seeds; catches order-dependent tests)
+        run: |
+          for seed in 1 2 3 42; do
+            pnpm exec vitest run --sequence.shuffle --sequence.seed="$seed" --reporter=dot
+          done
+
       - name: Print TS coverage summary
         run: |
           chmod +x .scripts/ts-coverage-percent.sh

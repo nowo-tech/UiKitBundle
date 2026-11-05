@@ -26,8 +26,8 @@ describe('collapse-panel peer', () => {
   afterEach(() => {
     application.stop();
     document.body.innerHTML = '';
-    localStorage.clear();
     vi.restoreAllMocks();
+    localStorage.clear();
   });
 
   it('starts collapsed from the server default and does not persist on connect', async () => {
@@ -95,17 +95,23 @@ describe('collapse-panel peer', () => {
   });
 
   it('tolerates localStorage read/write failures', async () => {
-    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
-      throw new Error('blocked');
-    });
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-      throw new Error('quota');
-    });
+    // A getter spy, not Storage.prototype: happy-dom binds Storage methods on first access, so a prototype spy that
+    // runs first (--sequence.shuffle, e.g. seed 3) was captured for every later test of this file and broke them.
+    const blocked = {
+      getItem: () => {
+        throw new Error('blocked');
+      },
+      setItem: () => {
+        throw new Error('quota');
+      },
+    } as unknown as Storage;
+    const getter = vi.spyOn(window, 'localStorage', 'get').mockReturnValue(blocked);
     const root = await mount(`
       <div data-controller="collapse-panel" data-collapse-panel-id-value="x">
         <div data-collapse-panel-target="body">content</div>
       </div>`);
     expect(() => controllerFor(root).toggle()).not.toThrow();
     expect(root.classList.contains('is-collapsed')).toBe(true);
+    expect(getter).toHaveBeenCalled();
   });
 });

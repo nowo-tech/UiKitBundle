@@ -22,6 +22,8 @@ two token blocks of `nowo-ui.css`. A host theme is a short `:root` block.
 - [Cards, navigation, progress](#cards-navigation-progress)
 - [Detail pages (2.21)](#detail-pages-221)
 - [Compact header (2.27)](#compact-header-227)
+- [Layers (public API, 2.28)](#layers-public-api-228)
+- [Remote form dialog (2.28)](#remote-form-dialog-228)
 - [Corner tabs, edge tabs, scrollbars (1.17)](#corner-tabs-edge-tabs-scrollbars-117)
 - [Default-theme polish tokens (2.2)](#default-theme-polish-tokens-22)
 - [Layout and metrics tokens](#layout-and-metrics-tokens)
@@ -259,7 +261,7 @@ lays out as a row on every stack (zero-specificity rule; Bootstrap's own `.pagin
 | `--nowo-ui-side-panel-border` | `var(--nowo-ui-border)` |
 | `--nowo-ui-side-panel-shadow` | `0 0 1.5rem rgb(0 0 0 / 25%)` (drawer only) |
 | `--nowo-ui-side-panel-backdrop` | `rgb(0 0 0 / 40%)` |
-| `--nowo-ui-side-panel-z` | `1040` (backdrop; the drawer is one above) |
+| `--nowo-ui-side-panel-z` | `var(--nowo-ui-z-overlay, 1040)` (backdrop; the drawer is one above; [Layers](#layers-public-api-228)) |
 | `--nowo-ui-tree-badge-text` | `color-mix(in srgb, var(--nowo-ui-muted) 85%, var(--nowo-ui-text))` (2.24: `tree` badges; keeps 4.5:1 on the tinted current row) |
 | `--nowo-ui-nav-active-bg` | `color-mix(in srgb, var(--nowo-ui-primary) 12%, transparent)` (current aside link) |
 | `--nowo-ui-nav-active-text` | `var(--nowo-ui-primary)` |
@@ -290,6 +292,43 @@ The top-bar slot of the shells (`header_context`) and its partials `header_conte
 | `--nowo-ui-header-crumbs-panel-border` | `var(--nowo-ui-border)` |
 | `--nowo-ui-header-crumbs-panel-shadow` | `0 8px 24px rgb(15 23 42 / 12%)`; dark `0 8px 24px rgb(0 0 0 / 45%)` |
 | `--nowo-ui-main-padding-top-compact` | `0.75rem` (top padding of `.nowo-ui-main` under a filled bar) |
+
+## Layers (public API, 2.28)
+
+The stacking order of the kit is a **public API** since 2.28: the values below are stable for 2.x (changing one is a
+minor with an UPGRADING entry). Every kit rule reads a token with the number as its last fallback, and no `:root`
+value is declared, so the cascade is unchanged; a host maps its own scale once (e.g.
+`--nowo-ui-z-overlay: var(--app-z-overlay)`). The specific token wins over the scale token
+(`var(--nowo-ui-side-panel-z, var(--nowo-ui-z-overlay, 1040))`).
+
+| Layer | Token | Default | Used by |
+|-------|-------|---------|---------|
+| Shell aside | — | `30` (rail peek `45`, phone `60`) | `.nowo-ui-aside` (internal) |
+| Shell header | — | `40` | `.nowo-ui-header` (internal) |
+| Header menus | — | `50` | user menu, kebab, locale switcher (internal) |
+| Chat dock (ChatKitBundle) | `--nowo-chat-z-index` | `60` | ChatKit's floating dock (documented by ChatKit) |
+| Page-edge tabs | `--nowo-ui-edge-tab-z` | `74` | `.nowo-ui-edge-tab__link`; closed edge drawers |
+| Skip link | — | `1000` | `.nowo-ui-skip-link` |
+| Overlay | `--nowo-ui-z-overlay` (`--nowo-ui-side-panel-z` wins) | `1040` | side panel backdrop; the drawer is `+1` (`1041`) |
+| Modal (non-top-layer) | `--nowo-ui-z-modal` (`--nowo-ui-menu-z-index` wins for menus) | `1050` | legacy Bootstrap `modal_shell`, `menu` popover fallback |
+| Popovers over modals | `--nowo-ui-z-popover` (`--nowo-ui-date-range-z`, `--nowo-ui-multi-select-z` win) | `1080` | calendar, multi-select panel (inline fallbacks) |
+| Toasts | `--nowo-ui-z-toast` | `1100` | `.nowo-ui-toast-stack` |
+| Page loader | `--nowo-ui-z-loader` | `1200` | `.nowo-ui-page-loader` |
+
+**Top layer.** A native `<dialog>` opened with `showModal()` (`dialog`, `confirm`, `remote_form_dialog`) and a
+`[popover]` panel render in the browser's top layer, above every `z-index`, in opening order. The table applies to
+everything else. Rule of thumb for host chrome: what must stay usable over an open drawer is top layer or ≥ `1050`;
+what an open drawer must cover is below `1040`, or hides on `html[data-nowo-overlay]` (the overlay registry's root
+marker, see [USAGE](USAGE.md#overlays-and-the-shell-228)).
+
+## Remote form dialog (2.28)
+
+| Token | Default |
+|-------|---------|
+| `--nowo-ui-remote-dialog-phone-inset` | `0px` (gutter around the dialog on phones, ≤ 40 rem; `0` = full screen) |
+| `--nowo-ui-remote-dialog-phone-radius` | `0` (corner radius on phones; set it with a gutter) |
+
+The status line and the alert use `--nowo-ui-muted` and `--nowo-ui-danger-text` (falls back to `--nowo-ui-danger`).
 
 ## Detail pages (2.21)
 
@@ -329,7 +368,7 @@ Opt-in chrome ([USAGE.md — Host chrome](USAGE.md#host-chrome-117-opt-in)); not
 | `--nowo-ui-edge-tab-top` | `calc(var(--nowo-ui-header-height, 3.5rem) + 0.75rem)` | `.nowo-ui-edge-tab__link` top of slot 0 |
 | `--nowo-ui-edge-tab-step` | `3.25rem` | offset per `slot` |
 | `--nowo-ui-edge-tab-slot` | `0` | set by `data-nowo-ui-edge-tab-slot` (1–3); a number, multiplied by the step |
-| `--nowo-ui-edge-tab-z` | `74` | edge tab z-index |
+| `--nowo-ui-edge-tab-z` | `74` | edge tab z-index ([Layers](#layers-public-api-228), public API since 2.28) |
 | `--nowo-ui-scrollbar-size` | `6px` | thin scrollbars (`.nowo-ui-thin-scroll`, `html[data-nowo-ui-thin-scrollbars]`) |
 | `--nowo-ui-scrollbar-thumb` | `color-mix(in srgb, var(--nowo-ui-text) 28%, transparent)` | thumb (and Firefox `scrollbar-color`) |
 | `--nowo-ui-scrollbar-thumb-hover` | `color-mix(in srgb, var(--nowo-ui-text) 45%, transparent)` | thumb on hover |

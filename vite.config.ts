@@ -27,6 +27,8 @@ type Entry =
   | 'header-crumbs'
   | 'autosubmit'
   | 'error-retry'
+  | 'overlay'
+  | 'scroll-region'
   | 'demo-peers';
 
 const entry = process.env.VITE_ENTRY as Entry | undefined;
@@ -221,6 +223,36 @@ const configs: Record<Entry, { build: object }> = {
         output: {
           format: 'iife' as const,
           entryFileNames: 'js/nowo-ui-dialog.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  overlay: {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-overlay.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-overlay.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  'scroll-region': {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-scroll-region.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-scroll-region.js',
         },
       },
       minify: true,

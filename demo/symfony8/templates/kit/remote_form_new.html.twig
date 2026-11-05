@@ -1,0 +1,10 @@
+{# UiKit 2.28 demo: the full form page (no-JavaScript path and deep link of the remote form dialog). #}
+{% extends '@NowoUiKit/layout/document.html.twig' %}
+{% set nowo_ui_document_title = 'New destination · UiKit 2.28' %}
+
+{% block nowo_ui_body %}
+    <main id="main-content" class="nowo-ui-content" data-testid="destination-page">
+        <h1>New destination</h1>
+        {{ include('kit/_remote_form_fields.html.twig') }}
+    </main>
+{% endblock %}
