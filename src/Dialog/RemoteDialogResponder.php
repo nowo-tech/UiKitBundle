@@ -61,6 +61,12 @@ final readonly class RemoteDialogResponder
         return $this->redirect($this->urls->generate($route, $parameters), $status, $request);
     }
 
+    /** Marks a page / fragment answer of a two-mode URL: adds `Vary: X-Nowo-Dialog` (KIT-68). */
+    public function fragment(Response $response): Response
+    {
+        return RemoteDialog::vary($response);
+    }
+
     /** The fragment template for a dialog request, else the page template. */
     public function template(string $page, string $fragment, ?Request $request = null): string
     {

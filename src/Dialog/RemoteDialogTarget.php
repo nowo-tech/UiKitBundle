@@ -39,6 +39,10 @@ final class RemoteDialogTarget
      */
     public static function hasUnsafeSegments(string $path): bool
     {
+        // An encoded dot has no business in a redirect path (KIT-68): refused anywhere, either case.
+        if (false !== stripos($path, '%2e')) {
+            return true;
+        }
         $decoded = rawurldecode($path);
         if (str_starts_with($decoded, '//') || str_contains($decoded, '\\')) {
             return true;

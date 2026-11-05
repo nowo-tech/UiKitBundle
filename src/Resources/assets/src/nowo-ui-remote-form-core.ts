@@ -42,6 +42,10 @@ export const remoteNavigation = {
  * `//evil.example` (protocol-relative, another origin): such targets are refused, never normalised (ES-M1).
  */
 export function hasUnsafeSegments(rawPath: string): boolean {
+  // An encoded dot has no business in a redirect path (KIT-68): refused anywhere, either case.
+  if (/%2e/i.test(rawPath)) {
+    return true;
+  }
   let decoded: string;
   try {
     decoded = decodeURIComponent(rawPath);

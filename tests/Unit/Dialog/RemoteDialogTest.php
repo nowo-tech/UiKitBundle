@@ -65,7 +65,7 @@ final class RemoteDialogTest extends TestCase
         yield 'absolute with double-slash path' => ['https://app.example//evil.example', null];
         yield 'malformed' => ['https://', null];
         // REQ-SEC-004 ES-M1: dot segments would normalise to //evil.example (another origin).
-        foreach (['/.//evil.example/x', '/..//evil.example/x', '/%2e//evil.example/x', '/%2E%2E//evil.example/x', '/a/..//evil.example/x', '/%2e%2E//evil.example/x', '/.%2e//evil.example/x', '/a/%2E/b', '/a/./b', '/a/..', '/.', '/%252e//evil.example/x', '/%2F%2Fevil.example', '/a%5c..%5cb', '/./?x=1'] as $dotted) {
+        foreach (['/.//evil.example/x', '/..//evil.example/x', '/%2e//evil.example/x', '/%2E%2E//evil.example/x', '/a/..//evil.example/x', '/%2e%2E//evil.example/x', '/.%2e//evil.example/x', '/a/%2E/b', '/a/./b', '/a/..', '/.', '/%252e//evil.example/x', '/%2F%2Fevil.example', '/a%5c..%5cb', '/./?x=1', '/files/a%2Eb', '/x%2etxt'] as $dotted) {
             yield 'dot segment '.$dotted => [$dotted, null];
         }
         yield 'absolute same origin with a dot segment' => ['https://app.example/.//evil.example/x', null];
@@ -111,6 +111,13 @@ final class RemoteDialogTest extends TestCase
         self::assertContains('X-Nowo-Dialog', $response->getVary());
         self::assertSame('page.html.twig', $responder->template('page.html.twig', '_fragment.html.twig'));
         self::assertTrue($responder->isDialog($this->dialogRequest()));
+    }
+
+    public function testResponderFragmentAddsVary(): void
+    {
+        $response = (new RemoteDialogResponder())->fragment(new Response('<form></form>', 422));
+        self::assertContains('X-Nowo-Dialog', $response->getVary());
+        self::assertSame(422, $response->getStatusCode());
     }
 
     public function testResponderRefusesDotSegmentTargets(): void

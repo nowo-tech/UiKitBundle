@@ -72,6 +72,8 @@ describe('remote form helpers', () => {
       '/a%5c..%5cb',
       '/./?x=1',
       '/%E0%A4%A',
+      '/files/a%2Eb',
+      '/x%2etxt',
     ]) {
       expect(sameOriginPath(dotted), dotted).toBeNull();
     }
