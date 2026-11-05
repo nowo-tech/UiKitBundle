@@ -26,6 +26,8 @@ Normative spec: REQ-UI-003 in `BUNDLES_FULL_SPECS_DETAILS.md` · design and migr
 - [View models](#view-models)
 - [Partials](#partials)
 - [Template contract](#template-contract)
+  - [Dialogs](#dialogs)
+    - [Dialog sizes and anatomy (2.29)](#dialog-sizes-and-anatomy-229)
   - [UiKit 2.2 additions](#uikit-22-additions)
 - [Tokens and CSS](#tokens-and-css)
   - [Token precedence](#token-precedence)
@@ -479,7 +481,7 @@ of an icon-only action is the visible text the override chooses to print.
 
 The **`dialog` partial** (2.1, `nowo_ui_partial('dialog', bundle)`) is a framework-free native `<dialog>`: header
 (title + close button), body, optional footer; slots `dialog`, `dialog_header`, `dialog_title`, `dialog_body`,
-`dialog_footer`; inputs `id`, `title`, `body`, `footer`, `size` (`sm`/`md`/`lg`/`xl`), `body_muted`, `dismissible`,
+`dialog_footer`; inputs `id`, `title`, `body`, `footer`, `size` (`md`/`wide`; 2.1 `sm`/`lg`/`xl` map onto them), `status`, `body_muted`, `dismissible`,
 `backdrop_close`, `close_label`, `attr`. Any element with `data-nowo-ui-dialog-open="<id>"` opens it
 (`js/nowo-ui-dialog.js`, loaded by the UiKit document layout — host layouts add it to their script list);
 `[data-nowo-ui-dialog-close]`, Escape, `<form method="dialog">` and a backdrop click close it, and focus returns to
@@ -491,6 +493,108 @@ keep the `confirm` contract (`View\Confirm`).
 <button type="button" class="{{ nowo_ui_class('btn_secondary', bundle) }}" data-nowo-ui-dialog-open="payload-42">Payload</button>
 {{ include(nowo_ui_partial('dialog', bundle), {id: 'payload-42', title: 'Payload', size: 'lg', body: payload_html, bundle: bundle}) }}
 ```
+
+#### Dialog sizes and anatomy (2.29)
+
+**Rule for every kit dialog** (owner rule, symfony-beacon `docs/identity/UI-PATTERNS.md` §16): TaskBoard, Yopass,
+UptimeMonitor, Wiki, Vault and any new kit follow it; a dialog that cannot is a bug of that kit.
+
+1. **Two sizes only**, from shared tokens a host sets once ([THEMING](THEMING.md#dialog-sizes-229)); never a width,
+   height or padding of your own:
+
+   | Size | Width | Height | For |
+   |------|-------|--------|-----|
+   | medium (default) | `var(--nowo-dialog-width-md, min(40rem, 100vw - 2rem))` | `var(--nowo-dialog-height-md, min(36rem, 100dvh - 2rem))` | forms, choosers, steps, confirmations |
+   | wide | `var(--nowo-dialog-width-wide, min(56rem, 100vw - 2rem))` | `var(--nowo-dialog-height-wide, min(52rem, 100dvh - 2rem))` | tables, two-column forms, guides, a form page loaded in a dialog |
+
+   Width **and** height are the size's, so moving between dialogs or steps never jumps. Only a plain yes / no
+   confirmation (no field, list, table or `<details>`) keeps its natural height (capped by the size). At 390 px the
+   dialog is the screen width minus the 16 px gutters and never scrolls sideways.
+2. **Header**: the title (`<h2>`, referenced by `aria-labelledby`), a status badge inline next to it when the object
+   has a status, and the close button `×` with an `aria-label`.
+3. **Body**: the only part that scrolls.
+4. **Footer**: outside the body, always visible. Exactly one primary, on the right (last in the DOM); Cancel / Close
+   beside it as secondary; a destructive confirmation uses the danger primary. A form in the body is bound to its
+   submit in the footer with `form="<form id>"` — the actions never live inside the scrolling form.
+5. **Behaviour**: native `<dialog>` opened with `showModal()`; focus moves in, Tab cycles inside, Escape and Cancel
+   close it and focus returns to the opener (the UiKit runtimes do this).
+
+**Use the UiKit partials** (preferred). The `dialog` partial (`size: 'md' | 'wide'`, `status`, `footer`):
+
+```twig
+{% set _footer %}
+    <button type="button" class="{{ nowo_ui_class('btn_secondary', bundle) }}" data-nowo-ui-dialog-close>{{ 'action.cancel'|trans({}, 'NowoUiKitBundle') }}</button>
+    <button type="submit" form="monitor-form" class="{{ nowo_ui_class('btn_primary', bundle) }}">{{ 'action.save'|trans({}, 'NowoUiKitBundle') }}</button>
+{% endset %}
+{{ include(nowo_ui_partial('dialog', bundle), {
+    id: 'monitor-dialog', title: 'Edit monitor', size: 'wide', status: {label: 'Paused', tone: 'warning'},
+    body: form_html, footer: _footer, bundle: bundle,
+}) }}
+```
+
+The `confirm_dialog` partial with `title` (Stimulus `confirm-dialog`; `body` / `footer` blocks):
+
+```twig
+{% embed nowo_ui_partial('confirm_dialog') with {trigger_label: 'Edit', title: 'Edit monitor', dialog_id: 'edit-monitor', size: 'md'} %}
+    {% block body %}{{ form_start(form, {attr: {id: 'edit-monitor-form'}}) }}{{ form_rest(form) }}{{ form_end(form, {render_rest: false}) }}{% endblock %}
+    {% block footer %}
+        <button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-confirm-dialog-close>Cancel</button>
+        <button type="submit" form="edit-monitor-form" class="{{ nowo_ui_class('btn_primary') }}">Save</button>
+    {% endblock %}
+{% endembed %}
+```
+
+A form page opened in a dialog uses the `remote_form_dialog` partial (wide); its `.nowo-ui-form__actions` (or a
+`[data-nowo-ui-dialog-actions]` container) move into the dialog footer by themselves.
+
+**Own markup** (a kit that renders its own `<dialog>`): the same classes, which carry the sizes and the scrolling
+whenever UiKit's stylesheet is loaded. Size modifiers: none (medium) or `nowo-ui-dialog--wide`; `--sm` / `--lg` /
+`--xl` are the 2.1 names, mapped onto medium / wide / wide.
+
+```html
+<dialog id="d" class="nowo-ui-dialog nowo-ui-dialog--wide" aria-labelledby="d-title" data-nowo-ui-dialog>
+  <header class="nowo-ui-dialog__header">
+    <div class="nowo-ui-dialog__title-row">            <!-- only with a status badge -->
+      <h2 class="nowo-ui-dialog__title" id="d-title">Import tasks</h2>
+      <span class="nowo-ui-page-status nowo-ui-badge nowo-ui-badge--success">Connected</span>
+    </div>
+    <button type="button" class="nowo-ui-dialog__close" data-nowo-ui-dialog-close aria-label="Close"><span aria-hidden="true">&times;</span></button>
+  </header>
+  <div class="nowo-ui-dialog__body">
+    <form id="d-form" method="post" action="…">…</form>
+  </div>
+  <footer class="nowo-ui-dialog__footer">
+    <button type="button" class="nowo-ui-btn nowo-ui-btn--secondary" data-nowo-ui-dialog-close>Cancel</button>
+    <button type="submit" form="d-form" class="nowo-ui-btn nowo-ui-btn--primary">Import</button>
+  </footer>
+</dialog>
+```
+
+Classes: `nowo-ui-dialog` (+ `--wide`), `nowo-ui-dialog__header`, `nowo-ui-dialog__title-row`, `nowo-ui-dialog__title`,
+`nowo-ui-dialog__close`, `nowo-ui-dialog__body`, `nowo-ui-dialog__footer` (use theme slots `dialog*`, `btn_*` and
+`badge_<tone>` through `nowo_ui_class()` in Twig). `js/nowo-ui-dialog.js` opens it (`data-nowo-ui-dialog-open="d"`)
+and handles Escape, close buttons and focus return.
+
+**A kit that keeps its own classes or Bootstrap's `.modal`** reads the same tokens with the same fallbacks:
+
+```css
+.my-kit-dialog { /* the <dialog>, or Bootstrap's .modal-dialog */
+  width: var(--nowo-dialog-width-md, min(40rem, 100vw - 2rem));
+  max-width: calc(100vw - 2rem);
+  height: var(--nowo-dialog-height-md, min(36rem, 100dvh - 2rem));
+  display: flex; flex-direction: column;            /* [open] for a <dialog>; .modal-content for Bootstrap */
+}
+.my-kit-dialog--wide {
+  width: var(--nowo-dialog-width-wide, min(56rem, 100vw - 2rem));
+  height: var(--nowo-dialog-height-wide, min(52rem, 100dvh - 2rem));
+}
+.my-kit-dialog__header, .my-kit-dialog__footer { flex: none; }
+.my-kit-dialog__body { flex: 1 1 auto; min-height: 0; overflow: auto; }
+.my-kit-dialog:not(:has(input:not([type='hidden']), select, textarea, table, ul, ol, details)) { height: auto; }
+```
+
+Bootstrap `.modal`: put the size on `.modal-dialog` (`margin: 1rem auto`), use `.modal-dialog-scrollable` so
+`.modal-body` scrolls, and keep the actions in `.modal-footer` bound to the form with `form="…"`.
 
 ### UiKit 2.2 additions
 

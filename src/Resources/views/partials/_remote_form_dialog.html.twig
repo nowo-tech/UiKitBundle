@@ -9,14 +9,18 @@
       data-nowo-ui-dialog-src="<url>" and data-nowo-ui-dialog-form (see nowo_ui_remote_form_opener()); the settings
       are attributes of the dialog.
   The server answers the fragment for `X-Nowo-Dialog: 1`, 422 when invalid, 204 + X-Nowo-Redirect once saved
-  (Nowo\UiKitBundle\Dialog\RemoteDialogResponder). Full screen on phones (token --nowo-ui-remote-dialog-phone-inset).
+  (Nowo\UiKitBundle\Dialog\RemoteDialogResponder). 2.29: the wide dialog size, and on phones the screen width with a
+  16 px gutter (token --nowo-ui-remote-dialog-phone-inset, 0 = full screen); the dialog has a footer
+  (data-nowo-ui-dialog-footer) and the fragment's form actions (`[data-nowo-ui-dialog-actions]`, else the form's
+  `.nowo-ui-form__actions`) move into it, each control bound to the form with `form="…"`, so the submit never scrolls
+  away (opt out per form: data-nowo-ui-dialog-keep-actions).
 
   Required:
     - id
   Optional:
     - stimulus (bool, default false)
     - title (View\Label|string): initial title (the opener's title replaces it)
-    - size: sm | md | lg (default) | xl
+    - size: lg (default) — the wide size since 2.29, like wide / xl; md / sm = the medium size
     - labels: {loading, error, load_error} (View\Label|string; defaults remote_form_dialog.loading / .save_failed /
       .load_failed) — IIFE driver
     - invalid_selector: extra selector of the first invalid control after [aria-invalid="true"] — IIFE driver
@@ -51,6 +55,7 @@
     id: id,
     title: _title,
     size: size|default('lg'),
+    footer_target: true,
     backdrop_close: backdrop_close|default(false),
     root_class: 'nowo-ui-dialog--remote-form',
     attr: _attr,

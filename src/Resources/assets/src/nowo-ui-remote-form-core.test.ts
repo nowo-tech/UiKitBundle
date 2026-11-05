@@ -2,11 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   ALERT_ATTR,
   DEFAULT_SETTINGS,
+  dialogFooter,
   firstInvalid,
   formDataWith,
   hasUnsafeSegments,
   isFragment,
   isPlainClick,
+  liftActions,
   nestedLayerOwnsEscape,
   openerTitle,
   parseFragment,
@@ -14,6 +16,7 @@ import {
   RemoteFormSession,
   sameOriginHref,
   sameOriginPath,
+  submitButtons,
   submitTarget,
   urlEncoded,
   type RemoteFormSettings,
@@ -191,6 +194,57 @@ describe('remote form helpers', () => {
   });
 });
 
+describe('dialog footer (2.29)', () => {
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  it('moves the form actions into the footer and binds them to the form', () => {
+    document.body.innerHTML = `<div id="b"><form method="post" action="/x"><input name="n"><div class="nowo-ui-form__actions d-flex"><a href="/back" id="cancel">Cancel</a><button id="save">Save</button><button type="button" id="other" form="own">Other</button></div></form></div><footer id="f" hidden>stale</footer>`;
+    const body = document.getElementById('b') as HTMLElement;
+    const footer = document.getElementById('f') as HTMLElement;
+    expect(liftActions(body, footer)).toBe(true);
+    const form = body.querySelector('form') as HTMLFormElement;
+    expect(form.id).toMatch(/^nowo-ui-remote-form-\d+$/);
+    expect(footer.hidden).toBe(false);
+    expect(Array.from(footer.children).map((child) => child.id)).toEqual(['cancel', 'save', 'other']);
+    expect(footer.textContent).not.toContain('stale');
+    expect(document.getElementById('save')?.getAttribute('form')).toBe(form.id);
+    expect(document.getElementById('other')?.getAttribute('form')).toBe('own');
+    expect(document.getElementById('cancel')?.hasAttribute('form')).toBe(false);
+    expect(body.querySelector('.nowo-ui-form__actions')).toBeNull();
+    expect(submitButtons(form).map((button) => button.id)).toEqual(['save']);
+  });
+
+  it('prefers the explicit actions container, keeps a form id and honours the opt-out', () => {
+    document.body.innerHTML = `<div id="b"><form id="mine" method="post"><div class="nowo-ui-form__actions"><button id="inner">Inner</button></div><div data-nowo-ui-dialog-actions><button id="explicit">Go</button></div></form></div><footer id="f"></footer>`;
+    const body = document.getElementById('b') as HTMLElement;
+    const footer = document.getElementById('f') as HTMLElement;
+    expect(liftActions(body, footer)).toBe(true);
+    expect(footer.querySelector('#explicit')?.getAttribute('form')).toBe('mine');
+    expect(body.querySelector('#inner')).not.toBeNull();
+
+    body.innerHTML = '<form data-nowo-ui-dialog-keep-actions><div class="nowo-ui-form__actions"><button>Save</button></div></form>';
+    expect(liftActions(body, footer)).toBe(false);
+    expect(footer.hidden).toBe(true);
+    expect(footer.childNodes).toHaveLength(0);
+
+    body.innerHTML = '<div data-nowo-ui-dialog-actions><a href="/x">Close</a></div><form><div class="nowo-ui-form__actions"></div></form>';
+    expect(liftActions(body, footer)).toBe(true);
+    expect(footer.querySelector('a')?.hasAttribute('form')).toBe(false);
+
+    body.innerHTML = '<form><div class="nowo-ui-form__actions"></div></form>';
+    expect(liftActions(body, footer)).toBe(false);
+    expect(liftActions(body, null)).toBe(false);
+  });
+
+  it('finds the footer among the dialog children only', () => {
+    document.body.innerHTML = '<dialog id="d"><div><footer data-nowo-ui-dialog-footer id="nested"></footer></div><footer data-nowo-ui-dialog-footer id="own"></footer></dialog><dialog id="e"></dialog>';
+    expect(dialogFooter(document.getElementById('d') as HTMLDialogElement)?.id).toBe('own');
+    expect(dialogFooter(document.getElementById('e') as HTMLDialogElement)).toBeNull();
+  });
+});
+
 describe('RemoteFormSession', () => {
   let dialog: HTMLDialogElement;
   let session: RemoteFormSession;
@@ -270,6 +324,51 @@ describe('RemoteFormSession', () => {
     expect(document.activeElement?.id).toBe('f');
     expect(events[0]).toEqual(['loaded', { url: `${window.location.origin}/form` }, false]);
     expect(session.currentUrl()).toBe(`${window.location.origin}/form`);
+  });
+
+  it('fills the footer with the fragment actions, submits through them and empties it on reload and close (2.29)', async () => {
+    const footer = document.createElement('footer');
+    footer.setAttribute('data-nowo-ui-dialog-footer', '');
+    footer.hidden = true;
+    dialog.append(footer);
+    await openWith(reply({ body: '<form method="post" action="/form"><input name="name" value="A"><div class="nowo-ui-form__actions"><button type="submit" id="save" name="go" value="1">Save</button></div></form>' }));
+    expect(footer.hidden).toBe(false);
+    const save = footer.querySelector('#save') as HTMLButtonElement;
+    expect(save).not.toBeNull();
+    const form = body().querySelector('form') as HTMLFormElement;
+    expect(save.form).toBe(form);
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply({ status: 422, body: '<form method="post" action="/form"><input name="name" aria-invalid="true"><div class="nowo-ui-form__actions"><button type="submit" id="save2">Save</button></div></form>' })));
+    const event = new Event('submit', { bubbles: true, cancelable: true }) as SubmitEvent;
+    Object.defineProperty(event, 'submitter', { value: save });
+    form.dispatchEvent(event);
+    expect(save.disabled).toBe(true);
+    await tick();
+    await tick();
+    expect(event.defaultPrevented).toBe(true);
+    expect(footer.querySelector('#save')).toBeNull();
+    expect(footer.querySelector('#save2')).not.toBeNull();
+    session.open('/form', opener(), 'Edit');
+    expect(footer.hidden).toBe(true);
+    expect(footer.childNodes).toHaveLength(0);
+    await tick();
+    await tick();
+    dialog.close();
+    expect(footer.hidden).toBe(true);
+    expect(footer.childNodes).toHaveLength(0);
+  });
+
+  it('empties the footer when a load fails and the dialog stays open (2.29)', async () => {
+    const footer = document.createElement('footer');
+    footer.setAttribute('data-nowo-ui-dialog-footer', '');
+    dialog.append(footer);
+    settings.followOnLoadError = false;
+    await openWith(reply({ body: '<form method="post" action="/form"><div class="nowo-ui-form__actions"><button>Save</button></div></form>' }));
+    expect(footer.hidden).toBe(false);
+    await openWith(reply({ status: 500 }));
+    expect(dialog.open).toBe(true);
+    expect(body().querySelector('[role="alert"]')).not.toBeNull();
+    expect(footer.hidden).toBe(true);
+    expect(footer.childNodes).toHaveLength(0);
   });
 
   it('uses renamed headers', async () => {

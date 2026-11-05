@@ -1,0 +1,65 @@
+{#
+  UiKit 2.29 demo: the two dialog sizes (medium, wide) and the anatomy — header (title, status badge, close),
+  body (the only part that scrolls), footer (outside the body, always visible, one primary on the right).
+#}
+{% extends '@NowoUiKit/layout/document.html.twig' %}
+{% set nowo_ui_document_title = 'Dialog sizes · UiKit 2.29' %}
+{% form_theme medium_form '@NowoUiKit/form/nowo_ui_layout.html.twig' %}
+{% form_theme long_form '@NowoUiKit/form/nowo_ui_layout.html.twig' %}
+
+{% block nowo_ui_body %}
+    <main id="main-content" class="nowo-ui-content" data-testid="dialogs-demo">
+        <h1>Dialog sizes</h1>
+        {% if submitted %}<p role="status">Submitted.</p>{% endif %}
+        <p>Two sizes only: medium <code>min(40rem, 100vw - 2rem) × min(36rem, 100dvh - 2rem)</code> and wide
+            <code>min(56rem, 100vw - 2rem) × min(52rem, 100dvh - 2rem)</code>.</p>
+        <div class="{{ nowo_ui_class('form_actions') }}">
+            <button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-nowo-ui-dialog-open="medium-dialog" data-testid="open-medium">Medium (form)</button>
+            <button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-nowo-ui-dialog-open="wide-dialog" data-testid="open-wide">Wide (table)</button>
+            {% embed nowo_ui_partial('confirm_dialog') with {trigger_label: 'Confirm (yes / no)', title: 'Archive this monitor?', dialog_id: 'confirm-dialog', trigger_testid: 'open-confirm'} %}
+                {% block body %}<p>It stops checking and leaves the dashboard. You can restore it later.</p>{% endblock %}
+                {% block footer %}
+                    <button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-nowo-confirm-close data-confirm-dialog-close>Cancel</button>
+                    <button type="button" class="{{ nowo_ui_class('btn_danger_solid') }}" data-nowo-confirm-close>Archive</button>
+                {% endblock %}
+            {% endembed %}
+            {% embed nowo_ui_partial('confirm_dialog') with {trigger_label: 'Long form', title: 'Edit monitor', status: {label: 'Paused', tone: 'warning'}, dialog_id: 'long-dialog', trigger_testid: 'open-long', long_form: long_form} %}
+                {% block body %}
+                    {{ form_start(long_form) }}
+                        {{ form_rest(long_form) }}
+                    {{ form_end(long_form, {render_rest: false}) }}
+                {% endblock %}
+                {% block footer %}
+                    <button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-nowo-confirm-close data-confirm-dialog-close>Cancel</button>
+                    <button type="submit" form="long-form" class="{{ nowo_ui_class('btn_primary') }}" data-testid="long-save">Save</button>
+                {% endblock %}
+            {% endembed %}
+            <a class="{{ nowo_ui_class('btn_secondary') }}" href="{{ path('kit_remote_form') }}">Remote form dialog</a>
+        </div>
+    </main>
+
+    {% set _medium_body %}
+        {{ form_start(medium_form) }}
+            {{ form_rest(medium_form) }}
+        {{ form_end(medium_form, {render_rest: false}) }}
+    {% endset %}
+    {% set _medium_footer %}
+        <button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-nowo-ui-dialog-close>Cancel</button>
+        <button type="submit" form="medium-form" class="{{ nowo_ui_class('btn_primary') }}">Save</button>
+    {% endset %}
+    {{ include(nowo_ui_partial('dialog'), {id: 'medium-dialog', title: 'New destination', body: _medium_body, footer: _medium_footer}) }}
+
+    {% set _wide_body %}
+        <table class="{{ nowo_ui_class('table') }}">
+            <thead><tr><th scope="col">Document</th><th scope="col">Customer</th><th scope="col">Amount</th><th scope="col">Status</th></tr></thead>
+            <tbody>
+            {% for row in rows %}
+                <tr><td>{{ row }}</td><td>Customer {{ loop.index }}</td><td>{{ (loop.index * 137.5)|number_format(2) }} €</td><td>{{ loop.index is odd ? 'Paid' : 'Open' }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endset %}
+    {% set _wide_footer %}<button type="button" class="{{ nowo_ui_class('btn_primary') }}" data-nowo-ui-dialog-close>Close</button>{% endset %}
+    {{ include(nowo_ui_partial('dialog'), {id: 'wide-dialog', title: 'Invoices', size: 'wide', status: {label: 'Synced', tone: 'success'}, body: _wide_body, footer: _wide_footer}) }}
+{% endblock %}
+

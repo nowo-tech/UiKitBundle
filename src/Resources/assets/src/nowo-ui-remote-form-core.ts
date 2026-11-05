@@ -11,6 +11,10 @@
  *   errors → keep the typed form with a `role="alert"` line;
  * - close: abort the request, empty the body (Stimulus controllers of the fragment disconnect), release the overlay,
  *   return focus to the opener.
+ * - footer (2.29): when the dialog has a `[data-nowo-ui-dialog-footer]` (partial `remote_form_dialog`), the fragment's
+ *   form actions (`[data-nowo-ui-dialog-actions]`, else the last `.nowo-ui-form__actions` of a form) move into it and
+ *   each control there is bound to its form with `form="…"`, so the submit stays visible while the body scrolls; a
+ *   form with `data-nowo-ui-dialog-keep-actions` keeps them in place.
  * Redirect targets are path-absolute same-origin URLs only (never absolute, never `//` or `\`). Titles and messages
  * are `textContent`; the server's fragment is parsed in an inert <template> and its <script> elements are dropped.
  */
@@ -21,6 +25,11 @@ export const REQUEST_HEADER = 'X-Nowo-Dialog';
 export const REDIRECT_HEADER = 'X-Nowo-Redirect';
 export const ALERT_ATTR = 'data-nowo-ui-remote-form-alert';
 export const NATIVE_ATTR = 'data-nowo-ui-remote-form-native';
+export const FOOTER_ATTR = 'data-nowo-ui-dialog-footer';
+export const ACTIONS_ATTR = 'data-nowo-ui-dialog-actions';
+export const KEEP_ACTIONS_ATTR = 'data-nowo-ui-dialog-keep-actions';
+const FORM_CONTROLS = 'button, input, select, textarea, output, fieldset, object';
+let formSequence = 0;
 const MAX_TARGET = 2048;
 const SNIFF = 1024;
 
@@ -203,6 +212,57 @@ export function nestedLayerOwnsEscape(dialog: HTMLDialogElement, active: Element
   return (layer !== null && dialog.contains(layer)) || (inner !== null && inner !== dialog);
 }
 
+/**
+ * Moves the fragment's form actions into the dialog footer (2.29): the explicit `[data-nowo-ui-dialog-actions]`
+ * container, else the last `.nowo-ui-form__actions` inside a form, unless its form carries
+ * `data-nowo-ui-dialog-keep-actions`. Every form control moved is bound to that form with `form="<id>"` (an id is
+ * generated for an anonymous form), so clicking the submit in the footer still submits the form in the body (and
+ * the `submit` event still fires there). The footer is emptied and hidden first; it is shown only when it received
+ * something. Returns whether actions were moved.
+ */
+export function liftActions(body: HTMLElement, footer: HTMLElement | null): boolean {
+  if (!footer) {
+    return false;
+  }
+  footer.replaceChildren();
+  footer.hidden = true;
+  const explicit = body.querySelector<HTMLElement>(`[${ACTIONS_ATTR}]`);
+  const candidates = explicit ? [explicit] : Array.from(body.querySelectorAll<HTMLElement>('form .nowo-ui-form__actions'));
+  const actions = candidates.filter((element) => !element.closest(`[${KEEP_ACTIONS_ATTR}]`)).pop();
+  if (!actions || !actions.hasChildNodes()) {
+    return false;
+  }
+  const form = actions.closest('form');
+  if (form && form.id === '') {
+    formSequence += 1;
+    form.id = `nowo-ui-remote-form-${formSequence}`;
+  }
+  if (form) {
+    actions.querySelectorAll<HTMLElement>(FORM_CONTROLS).forEach((control) => {
+      if (!control.hasAttribute('form')) {
+        control.setAttribute('form', form.id);
+      }
+    });
+  }
+  footer.append(...Array.from(actions.childNodes));
+  actions.remove();
+  footer.hidden = false;
+  return true;
+}
+
+/** The footer of a remote form dialog (`[data-nowo-ui-dialog-footer]`, direct child), null without one. */
+export function dialogFooter(dialog: HTMLDialogElement): HTMLElement | null {
+  return Array.from(dialog.children).find((child): child is HTMLElement => child instanceof HTMLElement && child.hasAttribute(FOOTER_ATTR)) ?? null;
+}
+
+/** The enabled submit buttons of a form, including those bound to it with `form="…"` outside it (the footer). */
+export function submitButtons(form: HTMLFormElement): Array<HTMLButtonElement | HTMLInputElement> {
+  return Array.from(form.elements).filter(
+    (element): element is HTMLButtonElement | HTMLInputElement =>
+      ((element instanceof HTMLButtonElement && element.type === 'submit') || (element instanceof HTMLInputElement && element.type === 'submit')) && !element.disabled,
+  );
+}
+
 export interface RemoteFormSettings {
   loading: string;
   error: string;
@@ -360,7 +420,7 @@ export class RemoteFormSession {
     this.controller?.abort();
     const controller = new AbortController();
     this.controller = controller;
-    const buttons = Array.from(form.querySelectorAll<HTMLButtonElement | HTMLInputElement>('button[type="submit"], button:not([type]), input[type="submit"]')).filter((button) => !button.disabled);
+    const buttons = submitButtons(form);
     buttons.forEach((button) => {
       button.disabled = true;
     });
@@ -453,6 +513,7 @@ export class RemoteFormSession {
         this.close();
         remoteNavigation.assign(fallback);
       } else if (body) {
+        this.clearFooter();
         body.removeAttribute('aria-busy');
         body.replaceChildren();
         this.alert(body, true);
@@ -476,9 +537,20 @@ export class RemoteFormSession {
   private inject(body: HTMLElement, html: string): void {
     body.replaceChildren(parseFragment(html));
     body.removeAttribute('aria-busy');
+    liftActions(body, dialogFooter(this.dialog));
+  }
+
+  /** Empties and hides the footer (loading, load error, close). */
+  private clearFooter(): void {
+    const footer = dialogFooter(this.dialog);
+    if (footer) {
+      footer.replaceChildren();
+      footer.hidden = true;
+    }
   }
 
   private message(body: HTMLElement, text: string): void {
+    this.clearFooter();
     const paragraph = document.createElement('p');
     paragraph.className = 'nowo-ui-remote-form__status';
     paragraph.setAttribute('role', 'status');
@@ -512,6 +584,7 @@ export class RemoteFormSession {
       body.replaceChildren();
       body.removeAttribute('aria-busy');
     }
+    this.clearFooter();
     const opener = this.opener;
     this.opener = null;
     this.url = null;

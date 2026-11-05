@@ -98,6 +98,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Unified dialog sizes and anatomy (owner rule, symfony-beacon `docs/identity/UI-PATTERNS.md` §16): two sizes only, set
+by public tokens other kits share, the body as the only scrolling part and the footer outside it. Markup of the
+existing options is unchanged (fixtures under `tests/Fixtures/bc-2.27` still match); the sizes change visually — see
+UPGRADING.
+
+### Added
+
+- **Dialog size tokens** `--nowo-dialog-width-md` (`min(40rem, 100vw - 2rem)`), `--nowo-dialog-height-md`
+  (`min(36rem, 100dvh - 2rem)`), `--nowo-dialog-width-wide` (`min(56rem, 100vw - 2rem)`) and
+  `--nowo-dialog-height-wide` (`min(52rem, 100dvh - 2rem)`). No `:root` value is declared: a host sets them once and
+  every kit reads them with the same fallbacks.
+- `dialog` partial: `size: 'wide'` (`nowo-ui-dialog--wide`), `status` (a `View\PageStatus` or `{label, tone, title}`
+  badge next to the title, in `nowo-ui-dialog__title-row`) and `footer_target` (an empty hidden
+  `[data-nowo-ui-dialog-footer]` a script fills).
+- `confirm_dialog` partial: the **anatomy** — with `title` (or `title_html`) the dialog renders header (title,
+  `status`, close × with `aria-label`), body (`body` block, the only part that scrolls) and footer (`footer` block,
+  always visible; bind a form in the body to its submit with `form="…"`). Options `size: 'md' | 'wide'`,
+  `close_label`, `dismissible`, `title_id`.
+- Remote form dialog: the dialog has a footer and the fragment's form actions (`[data-nowo-ui-dialog-actions]`, else
+  the form's `.nowo-ui-form__actions`) move into it, each control bound to the form with `form="…"`, so the submit
+  never scrolls away. Opt out per form with `data-nowo-ui-dialog-keep-actions`. New exports of
+  `nowo-ui-remote-form-core.ts`: `liftActions()`, `dialogFooter()`, `submitButtons()`.
+- `docs/PAGE_CONTRACT.md` "Dialog sizes and anatomy": the markup and classes every kit dialog follows.
+
+### Changed
+
+- Sizes: `dialog` and `confirm_dialog` are medium by default; the legacy modifiers map onto the two sizes — `sm` /
+  `md` → medium, `lg` / `xl` → wide (the remote form dialog, `lg` by default, is wide). The centred `dialog` (not the
+  side panels) has the size's **height**, with header and footer fixed and the body scrolling; a plain yes / no (no
+  field, list, table or fold) keeps its natural height. The `confirm` dialog (View\Confirm) takes the medium width
+  for every size and keeps its natural height. The row detail dialog is medium (width and height).
+- Remote form dialog on phones (≤ 40 rem): the screen width with a 16 px gutter by default
+  (`--nowo-ui-remote-dialog-phone-inset` now defaults to `1rem`, the radius to the modal radius); `0` keeps the full
+  screen of 2.28.
+- A free `confirm_dialog` `form` panel with a field, list, table or fold is at least the size's height.
+
 ## [2.28.0] - 2026-11-05
 
 Remote form dialog, the overlay registry and the public layer scale (contract v1.0 with symfony-beacon, 2026-11-04).

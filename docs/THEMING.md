@@ -23,6 +23,7 @@ two token blocks of `nowo-ui.css`. A host theme is a short `:root` block.
 - [Detail pages (2.21)](#detail-pages-221)
 - [Compact header (2.27)](#compact-header-227)
 - [Layers (public API, 2.28)](#layers-public-api-228)
+- [Dialog sizes (2.29)](#dialog-sizes-229)
 - [Remote form dialog (2.28)](#remote-form-dialog-228)
 - [Corner tabs, edge tabs, scrollbars (1.17)](#corner-tabs-edge-tabs-scrollbars-117)
 - [Default-theme polish tokens (2.2)](#default-theme-polish-tokens-22)
@@ -321,12 +322,37 @@ everything else. Rule of thumb for host chrome: what must stay usable over an op
 what an open drawer must cover is below `1040`, or hides on `html[data-nowo-overlay]` (the overlay registry's root
 marker, see [USAGE](USAGE.md#overlays-and-the-shell-228)).
 
+## Dialog sizes (2.29)
+
+Two sizes for every kit dialog (owner rule; markup and classes in
+[PAGE_CONTRACT](PAGE_CONTRACT.md#dialog-sizes-and-anatomy-229)). The tokens are **shared by every nowo-tech kit**
+(hence the `--nowo-dialog-*` prefix) and, like the layers, have **no `:root` value**: each rule reads them with the
+default as fallback, so a host sets them once on `:root` and it wins whatever the load order.
+
+| Token | Default | Used for |
+|-------|---------|----------|
+| `--nowo-dialog-width-md` | `min(40rem, 100vw - 2rem)` | medium (default): forms, choosers, steps, confirmations |
+| `--nowo-dialog-height-md` | `min(36rem, 100dvh - 2rem)` | |
+| `--nowo-dialog-width-wide` | `min(56rem, 100vw - 2rem)` | wide: tables, two-column forms, guides, the remote form dialog |
+| `--nowo-dialog-height-wide` | `min(52rem, 100dvh - 2rem)` | |
+| `--nowo-ui-dialog-w` / `--nowo-ui-dialog-h` | the size of the dialog (set by `.nowo-ui-dialog`, `.nowo-ui-confirm-dialog`, `.nowo-ui-confirm` and the `--lg` / `--xl` / `--wide` modifiers) | one dialog's resolved size; set them on a single dialog to override it |
+
+Width **and** height belong to the size: the body scrolls inside, header and footer stay. Only a plain yes / no
+confirmation (no field, list, table or fold) keeps its natural height, capped by the size. At 390 px both sizes are the
+screen width minus the 16 px gutters.
+
+```css
+:root {
+  --nowo-dialog-width-md: min(42rem, 100vw - 2rem); /* every kit's medium dialogs */
+}
+```
+
 ## Remote form dialog (2.28)
 
 | Token | Default |
 |-------|---------|
-| `--nowo-ui-remote-dialog-phone-inset` | `0px` (gutter around the dialog on phones, ≤ 40 rem; `0` = full screen) |
-| `--nowo-ui-remote-dialog-phone-radius` | `0` (corner radius on phones; set it with a gutter) |
+| `--nowo-ui-remote-dialog-phone-inset` | `1rem` since 2.29 (gutter around the dialog on phones, ≤ 40 rem; `0` = full screen, the 2.28 default) |
+| `--nowo-ui-remote-dialog-phone-radius` | the modal radius since 2.29 (corner radius on phones; `0` with a zero inset) |
 
 The status line and the alert use `--nowo-ui-muted` and `--nowo-ui-danger-text` (falls back to `--nowo-ui-danger`).
 

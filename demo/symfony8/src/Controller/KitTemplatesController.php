@@ -9,6 +9,9 @@ use App\Form\DemoDestinationType;
 use Nowo\UiKitBundle\Dialog\RemoteDialog;
 use Nowo\UiKitBundle\Dialog\RemoteDialogResponder;
 use Nowo\UiKitBundle\View\Pagination;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormError;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -98,6 +101,32 @@ final class KitTemplatesController extends AbstractController
         $response->headers->set('Content-Security-Policy', "style-src-attr 'none'; script-src-attr 'none'");
 
         return RemoteDialog::vary($response);
+    }
+
+    /**
+     * UiKit 2.29: the two dialog sizes and the dialog anatomy — a medium form, a wide table, a plain yes / no
+     * confirmation (natural height) and a long form whose submit sits in the footer (`form="…"`), outside the scrolling
+     * body.
+     */
+    #[Route('/dialogs', name: 'kit_dialogs', methods: ['GET', 'POST'])]
+    public function dialogs(Request $request): Response
+    {
+        $short = $this->createFormBuilder(null, ['action' => $this->generateUrl('kit_dialogs'), 'attr' => ['id' => 'medium-form']])
+            ->add('label', TextType::class, ['required' => false])
+            ->add('channel', ChoiceType::class, ['choices' => ['Email' => 'email', 'Slack' => 'slack', 'Webhook' => 'webhook']])
+            ->getForm();
+        $long = $this->createFormBuilder(null, ['action' => $this->generateUrl('kit_dialogs'), 'attr' => ['id' => 'long-form']]);
+        foreach (['Name', 'Owner', 'Team', 'Project', 'Environment', 'Region', 'Endpoint', 'Method', 'Expected status', 'Keyword', 'Interval', 'Timeout', 'Retries', 'Escalation', 'Maintenance window', 'Runbook', 'Contact', 'Tags'] as $field) {
+            $long->add(str_replace(' ', '_', strtolower($field)), TextType::class, ['required' => false, 'label' => $field]);
+        }
+        $long->add('notes', TextareaType::class, ['required' => false]);
+
+        return $this->render('kit/dialogs.html.twig', [
+            'medium_form' => $short->createView(),
+            'long_form' => $long->getForm()->createView(),
+            'rows' => self::ROWS,
+            'submitted' => $request->isMethod('POST'),
+        ]);
     }
 
     /**
