@@ -185,6 +185,47 @@ describe('remote form helpers', () => {
       expect(inner.querySelector('meta')).toBeNull();
     });
 
+    // `getAttribute` is left to the browser e2e (fragment-filter.spec.ts): happy-dom itself calls it on the form.
+    describe.each(['attributes', 'removeAttribute', 'getAttributeNames', 'remove', 'matches', 'localName', 'tagName', 'children', 'parentNode', 'querySelectorAll', 'content'])(
+      'GT-L3: a form control named %s',
+      (name) => {
+        const form = `<form class="c" onsubmit="x()" onfocusin="x()" action="javascript:x()"><input name="${name}" autofocus><button formaction="javascript:x()">go</button></form>`;
+        const names = (element: Element): string[] => Element.prototype.getAttributeNames.call(element);
+
+        // happy-dom has no named properties on a form: behave as browsers do, for the control this block names.
+        beforeEach(() => {
+          Object.defineProperty(HTMLFormElement.prototype, name, {
+            configurable: true,
+            get(this: HTMLFormElement) {
+              return Element.prototype.querySelector.call(this, `[name="${name}"]`);
+            },
+          });
+        });
+        afterEach(() => {
+          delete (HTMLFormElement.prototype as unknown as Record<string, unknown>)[name];
+        });
+
+        it('does not hide the form from the filter', () => {
+          const element = parseFragment(form).querySelector('.c') as Element;
+          expect(names(element)).toEqual(['class']);
+          expect(element.querySelector('button')?.hasAttribute('formaction')).toBe(false);
+          expect(element.querySelector('input')?.getAttribute('name')).toBe(name);
+        });
+
+        it('does not hide it inside a nested template', () => {
+          const outer = (parseFragment(`<template id="o"><template id="i">${form}</template>${form}</template>`).querySelector('#o') as HTMLTemplateElement).content;
+          expect(names(outer.querySelector('form.c') as Element)).toEqual(['class']);
+          const inner = (outer.querySelector('#i') as HTMLTemplateElement).content;
+          expect(names(inner.querySelector('.c') as Element)).toEqual(['class']);
+        });
+
+        it('keeps the legitimate attributes of such a form', () => {
+          const element = parseFragment(`<form class="c" method="post" action="/save"><input name="${name}"></form>`).querySelector('.c') as Element;
+          expect(names(element)).toEqual(['class', 'method', 'action']);
+        });
+      },
+    );
+
     it('leaves an ordinary form fragment untouched (no behaviour change for legitimate content)', () => {
       const html = `<div id="c" data-title="T"><form method="post" action="/save" class="f"><input type="hidden" name="_token" value="abc"><label for="n">N</label><input id="n" name="n" required autofocus>
         <a href="/help" target="_blank" rel="noopener">Help</a><template id="row"><div class="row"><input name="r[__name__]"></div></template><div class="a"><button type="submit">Save</button><button type="button" data-nowo-ui-dialog-close>Cancel</button></div></form></div>`;

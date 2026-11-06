@@ -1966,7 +1966,8 @@ public function edit(Request $request, Monitor $monitor, RemoteDialogResponder $
 - **Fragment trust:** the dialog injects the server's own answer, with the same trust as the page. Before insertion it
   drops `<script>`, `iframe[srcdoc]`, an `<iframe>` whose `src` is not http(s), `meta[http-equiv]`, `<base>`, `<object>`
   / `<embed>`, every inline `on*` attribute, `javascript:` / `vbscript:` values of `href`, `xlink:href`, `action` and
-  `formaction`, and SVG `<animate>` / `<set>` of `href`, also inside nested `<template>` content. The plain
+  `formaction`, and SVG `<animate>` / `<set>` of `href`, also inside nested `<template>` content and on a form with a
+  control named like a DOM property (`attributes`…). The plain
   `data-nowo-ui-dialog-src` path applies the same filter since 2.33. It is not a sanitizer: never render user HTML
   unescaped in a fragment. Other-origin frames, forms, images and stylesheets stay, because hosts embed maps and
   payment forms, so limit them with your CSP. `script-src` without `'unsafe-inline'` is the one that stops script;

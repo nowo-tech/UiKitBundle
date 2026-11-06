@@ -90,6 +90,30 @@ for (const mode of ['form', 'plain'] as const) {
       });
     }
 
+    for (const name of ['attributes', 'removeAttribute', 'getAttributeNames', 'getAttribute', 'remove', 'matches', 'localName', 'tagName', 'children', 'parentNode', 'querySelectorAll', 'content']) {
+      test(`GT-L3: a control named ${name} does not hide a form`, async ({ page }) => {
+        const form = (id: string) => `<form id="${id}" onfocusin="${run}" onsubmit="${run}" action="javascript:${run}"><input name="${name}" autofocus><button id="${id}-go">go</button></form>`;
+        const { beacons } = await prepare(page, html(`${form('gt-c')}<template id="gt-t">${form('gt-n')}<template id="gt-i">${form('gt-d')}</template></template>`));
+        await openFragment(page, mode);
+        // No locators from here on: Playwright's own engine reads form.matches, getAttribute and parentNode.
+        await page.waitForFunction(() => document.querySelector('[data-testid="gt-ok"]') !== null);
+        // Through the prototype: the test must not be fooled by the same control.
+        const seen = await page.evaluate(() => {
+          const names = (element: Element | null | undefined) => Element.prototype.getAttributeNames.call(element as Element);
+          const outer = (document.getElementById('gt-t') as HTMLTemplateElement).content;
+          const inner = (outer.querySelector('#gt-i') as HTMLTemplateElement).content;
+          return [names(document.getElementById('gt-c')), names(outer.querySelector('#gt-n')), names(inner.querySelector('#gt-d'))];
+        });
+        expect(seen).toEqual([['id'], ['id'], ['id']]);
+        await page.evaluate(() => {
+          HTMLElement.prototype.focus.call(document.querySelector('#gt-c input') as HTMLElement);
+          HTMLElement.prototype.click.call(document.getElementById('gt-c-go') as HTMLElement);
+        });
+        await page.waitForTimeout(300);
+        expect(beacons()).toBe(0);
+      });
+    }
+
     test('a legitimate form fragment works: fields, other-origin link, http(s) frame', async ({ page }) => {
       await prepare(page, html('<form method="post" action="/kit/remote-form/new"><label for="gt-n">Name</label><input id="gt-n" name="n"><a id="gt-a" href="mailto:a@example.com">mail</a><iframe id="gt-f" src="/kit/remote-form/new"></iframe><button type="submit">Save</button></form>'));
       await openFragment(page, mode);

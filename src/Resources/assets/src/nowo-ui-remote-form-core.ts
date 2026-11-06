@@ -139,6 +139,12 @@ const CLICK_URL_ATTRIBUTES = ['href', 'xlink:href', 'action', 'formaction'];
 /** Schemes refused on those attributes. `mailto:`, `tel:` and `data:` images stay: they run nothing in the page. */
 const SCRIPT_SCHEMES = ['javascript:', 'vbscript:'];
 
+/**
+ * The DOM calls of the filter, never read from the element: a <form> exposes its controls as properties, so a control
+ * named `attributes` or `removeAttribute` hides the real one and the form would pass unfiltered (GT-L3).
+ */
+const dom = Element.prototype;
+
 /** The scheme of a URL as the browser reads it (blanks, tabs and case handled by the parser), null when unparsable. */
 function urlScheme(value: string): string | null {
   try {
@@ -150,7 +156,7 @@ function urlScheme(value: string): string | null {
 
 /** An <iframe> whose `src` is not http(s) (`javascript:` runs on insertion, `data:` runs in its own origin). */
 function isUnsafeFrame(element: Element): boolean {
-  const src = element.localName === 'iframe' ? element.getAttribute('src') : null;
+  const src = dom.matches.call(element, 'iframe') ? dom.getAttribute.call(element, 'src') : null;
   if (src === null) {
     return false;
   }
@@ -160,26 +166,26 @@ function isUnsafeFrame(element: Element): boolean {
 
 /** An SVG <animate> / <set> that writes a link's `href`: its `to`, `from`, `by` or `values` become the URL on click. */
 function isHrefAnimation(element: Element): boolean {
-  return (element.localName === 'animate' || element.localName === 'set') && /^\s*(?:[\w-]+:)?href\s*$/i.test(element.getAttribute('attributeName') ?? '');
+  return dom.matches.call(element, 'animate, set') && /^\s*(?:[\w-]+:)?href\s*$/i.test(dom.getAttribute.call(element, 'attributeName') ?? '');
 }
 
 function sanitizeFragment(root: DocumentFragment): void {
-  root.querySelectorAll(DROPPED_ELEMENTS).forEach((element) => element.remove());
+  root.querySelectorAll(DROPPED_ELEMENTS).forEach((element) => dom.remove.call(element));
   root.querySelectorAll('*').forEach((element) => {
     if (isUnsafeFrame(element) || isHrefAnimation(element)) {
-      element.remove();
+      dom.remove.call(element);
       return;
     }
-    Array.from(element.attributes).forEach((attribute) => {
-      const name = attribute.name.toLowerCase();
-      if (name.startsWith('on') || (CLICK_URL_ATTRIBUTES.includes(name) && SCRIPT_SCHEMES.includes(urlScheme(attribute.value) ?? ''))) {
-        element.removeAttribute(attribute.name);
+    dom.getAttributeNames.call(element).forEach((attribute) => {
+      const name = attribute.toLowerCase();
+      if (name.startsWith('on') || (CLICK_URL_ATTRIBUTES.includes(name) && SCRIPT_SCHEMES.includes(urlScheme(dom.getAttribute.call(element, attribute) ?? '') ?? ''))) {
+        dom.removeAttribute.call(element, attribute);
       }
     });
-    // querySelectorAll does not enter a <template>: a host script may clone its content later (SVG <template> has none).
-    const nested = (element as HTMLTemplateElement).content;
-    if (element.localName === 'template' && nested) {
-      sanitizeFragment(nested);
+    // querySelectorAll does not enter a <template>: a host script may clone its content later. An SVG <template> is not
+    // an HTMLTemplateElement and has no content; its children are already in this walk.
+    if (element instanceof HTMLTemplateElement) {
+      sanitizeFragment(element.content);
     }
   });
 }

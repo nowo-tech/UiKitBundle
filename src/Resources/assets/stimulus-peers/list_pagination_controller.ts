@@ -77,13 +77,15 @@ const URL_ATTRIBUTES = ['href', 'src', 'action', 'formaction', 'xlink:href', 'da
  * Kit markup (rows, confirm dialogs, pager links) carries none of them, so it imports unchanged.
  */
 export function sanitizeImported(root: Element): void {
-  root.querySelectorAll('script').forEach((script) => script.remove());
-  [root, ...Array.from(root.querySelectorAll('*'))].forEach((el) => {
-    Array.from(el.attributes).forEach((attr) => {
-      const name = attr.name.toLowerCase();
-      const unsafeUrl = URL_ATTRIBUTES.includes(name) && /^(?:javascript|vbscript):/i.test(attr.value.replace(/[\u0000-\u0020\u007f]+/g, ''));
+  // Through the prototype: on a <form>, a control named `attributes` or `removeAttribute` hides the real one (GT-L3).
+  const dom = Element.prototype;
+  dom.querySelectorAll.call(root, 'script').forEach((script) => script.remove());
+  [root, ...Array.from(dom.querySelectorAll.call(root, '*'))].forEach((el) => {
+    dom.getAttributeNames.call(el).forEach((attr) => {
+      const name = attr.toLowerCase();
+      const unsafeUrl = URL_ATTRIBUTES.includes(name) && /^(?:javascript|vbscript):/i.test((dom.getAttribute.call(el, attr) ?? '').replace(/[\u0000-\u0020\u007f]+/g, ''));
       if (name.startsWith('on') || name === 'srcdoc' || unsafeUrl) {
-        el.removeAttribute(attr.name);
+        dom.removeAttribute.call(el, attr);
       }
     });
   });

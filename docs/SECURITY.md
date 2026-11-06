@@ -88,7 +88,7 @@ The bundle does **not** expose CLI commands that mutate production data, file up
   answer never injects or navigates. Submits follow native semantics (`FormData(form, submitter)`, the submitter's
   `formaction` / `formmethod` / `formenctype`, same-origin checked), so the server runs the action the user clicked.
   `convert_redirects` keeps the redirect's security headers (`X-Frame-Options`, CSP…) and cookies on the 204. Warnings name a rejected header, never its value.
-- Remote dialog steps and fragments (2.33, audit Appendix GT, **re-verification pending**):
+- Remote dialog steps and fragments (2.33, audit Appendix GT):
   - `X-Nowo-Dialog-Location` is honoured only on a 2xx answer and under the same rule as `X-Nowo-Redirect`; an invalid
     value is ignored with a warning and never fetched. A load follows at most 5 steps in a row, then warns. The counter
     resets on open and on a user submit.
@@ -101,7 +101,8 @@ The bundle does **not** expose CLI commands that mutate production data, file up
     `data-nowo-ui-dialog-src` path: `<script>`, `iframe[srcdoc]`, an `<iframe>` whose `src` is not http(s) (read with
     the URL parser), `meta[http-equiv]`, `<base>`, `<object>`, `<embed>`, `on*`, `javascript:` / `vbscript:` values of
     `href`, `xlink:href`, `action`, `formaction`, and SVG `<animate>` / `<set>` of `href`, recursively through nested
-    `<template>` content. The plain path now also uses `mode: 'same-origin'` (a redirect to another origin fails), http(s)
+    `<template>` content. The filter reads attributes through `Element.prototype`, so a form control named `attributes`
+    or `removeAttribute` cannot hide its form. The plain path now also uses `mode: 'same-origin'` (a redirect to another origin fails), http(s)
     sources only, and inserts only `text/html` fragments; `text/plain`, JSON and whole documents follow the opener's link
     instead.
   - **Not covered by the filter, on purpose:** other-origin frames, forms, images, stylesheets and links, which hosts use
@@ -124,13 +125,13 @@ The bundle does **not** expose CLI commands that mutate production data, file up
 
 | Field | Value |
 | ----- | ----- |
-| **Date** | 2026-08-04 |
-| **Method** | Cursor static security pass (`src/`, Twig, TS/JS, Flex recipe, demos, SECURITY docs) |
+| **Date** | 2026-11-06 |
+| **Method** | Independent audit Appendix GT: code read and browser PoC in three engines, re-verified 2026-11-06 |
 | **Overall risk** | **Low** |
 | **Grade** | **Pass (good)** |
-| **Open residuals** | Host must not feed UGC into `|raw` slots; embedders must apply their own `access_control` around admin chrome |
+| **Open residuals** | Host must not feed UGC into `|raw` slots; embedders must apply their own `access_control` around admin chrome; other-origin frames, forms and subresources are left to the host's CSP |
 
-2.33.0: the independent audit (Appendix GT, 2026-11-06, head `b681913`) reported no High or Critical, 2 Low and 5 Info. The fixes above are in this version; **re-verification pending**, so this table keeps the last completed audit until the auditor grades them.
+2.33.0: independent audit Appendix GT (2026-11-06), re-verified 2026-11-06: **Pass (good)**, overall risk **Low**; no Critical, High or Medium. GT-L1, GT-L2, GT-L3 and GT-I1..I5 are fixed. Other-origin frames, forms and subresources are left to the host's CSP.
 
 ## Secrets and cryptography
 

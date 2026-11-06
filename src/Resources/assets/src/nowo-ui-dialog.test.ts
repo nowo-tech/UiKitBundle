@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import * as mod from './nowo-ui-dialog';
 
 function polyfill(dialog: HTMLDialogElement): void {
@@ -220,6 +220,26 @@ describe('nowo-ui-dialog remote content', () => {
       expect(body(dialog).querySelector('meta, iframe, script, base, object, embed')).toBeNull();
       expect(body(dialog).querySelector('#i')?.hasAttribute('onerror')).toBe(false);
       expect(body(dialog).querySelector('#l')?.hasAttribute('href')).toBe(false);
+    });
+
+    it.each(['attributes', 'removeAttribute', 'getAttributeNames'])('GT-L3: a form control named %s does not hide the form', async (name) => {
+      // happy-dom has no named properties on a form: behave as browsers do.
+      Object.defineProperty(HTMLFormElement.prototype, name, {
+        configurable: true,
+        get(this: HTMLFormElement) {
+          return Element.prototype.querySelector.call(this, `[name="${name}"]`);
+        },
+      });
+      onTestFinished(() => {
+        delete (HTMLFormElement.prototype as unknown as Record<string, unknown>)[name];
+      });
+      const form = `<form class="c" onfocusin="x()" action="javascript:x()"><input name="${name}" autofocus></form>`;
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(htmlReply(`${form}<template id="t">${form}</template>`)));
+      const dialog = document.getElementById('r1') as HTMLDialogElement;
+      expect(await mod.loadDialogContent(dialog, '/x')).toBe(true);
+      const names = (element: Element): string[] => Element.prototype.getAttributeNames.call(element);
+      expect(names(body(dialog).querySelector('.c') as Element)).toEqual(['class']);
+      expect(names((body(dialog).querySelector('#t') as HTMLTemplateElement).content.querySelector('.c') as Element)).toEqual(['class']);
     });
 
     it('keeps the form partial of a dashboard (BreadcrumbKit shape) as it was', async () => {

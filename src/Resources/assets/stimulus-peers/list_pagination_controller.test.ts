@@ -278,6 +278,24 @@ describe('list-pagination peer, hostile responses', () => {
     sanitizeImported(el);
     expect(el.outerHTML).toBe('<div><form><button formaction="/ok">ok</button></form></div>');
   });
+
+  it.each(['attributes', 'removeAttribute', 'getAttributeNames'])('a form control named %s does not hide the form (GT-L3)', (name) => {
+    // happy-dom has no named properties on a form: behave as browsers do.
+    Object.defineProperty(HTMLFormElement.prototype, name, {
+      configurable: true,
+      get(this: HTMLFormElement) {
+        return Element.prototype.querySelector.call(this, `[name="${name}"]`);
+      },
+    });
+    try {
+      const el = document.createElement('div');
+      el.innerHTML = `<form class="c" onsubmit="x()" action="javascript:x()"><input name="${name}"></form>`;
+      sanitizeImported(el);
+      expect(Element.prototype.getAttributeNames.call(el.querySelector('.c') as Element)).toEqual(['class']);
+    } finally {
+      delete (HTMLFormElement.prototype as unknown as Record<string, unknown>)[name];
+    }
+  });
 });
 
 describe('list-pagination peer, responsive mode', () => {

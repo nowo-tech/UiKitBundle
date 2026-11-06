@@ -150,10 +150,14 @@ output is unchanged (markup byte for byte, the BC fixtures untouched).
 
 Findings of the independent audit Appendix GT (2026-11-06). All need a host mistake first (HTML injection into a
 fragment, an open redirect, user text at the source URL) or are configuration errors; none works alone in the default
-configuration. Re-verification pending.
+configuration. Re-verified 2026-11-06: Pass (good), overall risk Low.
 
 - **Fragment filter (GT-L1, Low):** `parseFragment()` removes an `<iframe>` whose `src` is not http(s), read with the URL
   parser, so ` java&#9;script:`, mixed case and `data:` are caught. It ran on insertion, without a click.
+- **Form controls hiding a form from the filter (GT-L3, Low):** on a `<form>`, a control named `attributes` hid the
+  attribute list, so `<form onfocusin="…"><input name="attributes" autofocus></form>` ran without a click and
+  `action="javascript:…"` survived. `parseFragment()` and the list pagination's `sanitizeImported()` now use
+  `Element.prototype` calls that a control name cannot shadow, also inside nested `<template>` content.
 - **Plain `data-nowo-ui-dialog-src` path (GT-L2, Low):** `loadDialogContent()` now uses the fragment filter, inserts only
   `text/html` fragments or an empty answer, and fetches http(s) sources with `mode: 'same-origin'`, so a redirect to
   another origin fails. `<meta http-equiv=refresh>`, `on*`, `srcdoc`, `<base>`, `<object>` and `<embed>` no longer take
