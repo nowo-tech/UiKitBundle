@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.31.0] - 2026-11-06](#2310---2026-11-06)
 - [[2.30.0] - 2026-11-05](#2300---2026-11-05)
 - [[2.29.1] - 2026-11-05](#2291---2026-11-05)
 - [[2.29.0] - 2026-11-05](#2290---2026-11-05)
@@ -100,6 +101,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [2.31.0] - 2026-11-06
+
+Dialog rule v2: dialogs take their content height by default (`theme.dialog.height: content|size`), header and footer get a tinted chrome, `askConfirm()` gains a × that cancels, and `View\Confirm` renders with the dialog anatomy. CI now fails when built assets drift from source.
 
 Planned **2.31.0** (minor): dialog rule v2 (owner decision D-20261105-54, Symfony Beacon) — the height of every kit
 dialog follows its content, and the JS confirm gets the header close button. A **visual default change**: see
@@ -2148,7 +2153,7 @@ Supersedes 1.17.3: same runtime code and CSS, release gate hardened so the tagge
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.30.0...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.31.0...HEAD
 [1.10.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.4...v1.10.0
 [1.8.4]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.3...v1.8.4
 [1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0

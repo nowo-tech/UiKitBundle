@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.31.0](#to-2310)
 - [To 2.30.0](#to-2300)
 - [To 2.29.1](#to-2291)
 - [To 2.29.0](#to-2290)
@@ -111,6 +112,8 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.31.0
 
 **2.31.0** (minor), from **2.30.x**: `composer update nowo-tech/ui-kit-bundle`. No markup change (2.27 – 2.30
 fixtures byte-identical), but a **visual default change** (dialog rule v2, owner decision D-20261105-54):
