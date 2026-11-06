@@ -153,7 +153,8 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | `View/AreaNav.php` | Area navigation tab bar of a bundle area | FR-AREANAV-001 |
 | `View/AreaNavItem.php` | One area tab (2.17 `icon`) | FR-AREANAV-001, FR-TABS-001 |
 | `View/ListPage.php` | List scaffold model: filters, table, row actions, pagination, empty state, 2.20 `sorting` / `clientSort` | FR-LIST-001, FR-SORT-002 |
-| `View/Table.php` | Data table model (columns, rows, caption, sort, responsive cards) | FR-LIST-001, FR-SORT-002 |
+| `View/SafeAttributes.php` | 2.34: check of the per-element attribute options (no on*, style, srcdoc, unsafe URLs) | FR-SEC-001 |
+| `View/Table.php` | Data table model (columns, rows, caption, sort, responsive cards, 2.34 `rowAttributes`) | FR-LIST-001, FR-SORT-002 |
 | `View/Column.php` | Table column (priority, required, 2.20 sort key / first / type / value key) | FR-LIST-001, FR-SORT-002 |
 | `View/FilterField.php` | Filter field options (width, row attributes) | FR-LIST-001 |
 | `View/EmptyState.php` | Empty state of a list | FR-LIST-001 |

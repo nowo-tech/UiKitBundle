@@ -136,6 +136,8 @@ final class ThemeSlots
         // Row-actions body cell (alignment: ListPage::actionsAlign → nowo-ui-cell--<align> on head and cell)
         'table_actions_cell' => ['nowo-ui-table__actions', []],
         'table_row' => ['nowo-ui-table__row', []],
+        // 2.34: the <tfoot> of the `table` partial, printed only when the foot has content.
+        'table_foot' => ['nowo-ui-table__foot', []],
         'table_cell' => ['nowo-ui-table__cell', []],
         // Default list cell without a value (null / ''): added to table_cell, the cell prints a muted "—"
         'table_cell_muted' => ['nowo-ui-table__cell--muted', [
@@ -479,6 +481,8 @@ final class ThemeSlots
         'dialog' => ['nowo-ui-dialog', []],
         'dialog_header' => ['nowo-ui-dialog__header', []],
         'dialog_title' => ['nowo-ui-dialog__title', []],
+        // 2.34: the back arrow of the `dialog` partial (`back_href`).
+        'dialog_back' => ['nowo-ui-dialog__back', []],
         'dialog_body' => ['nowo-ui-dialog__body', []],
         // Muted dialog body text (dialog partial `body_muted`), added to dialog_body; framework-free
         'dialog_body_muted' => ['nowo-ui-dialog__body--muted', []],

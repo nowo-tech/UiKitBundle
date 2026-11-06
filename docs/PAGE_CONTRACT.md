@@ -655,7 +655,9 @@ primary token with `css/nowo-ui-tom-select.css` (docs/THEMING.md).
 (`{{ include(nowo_ui_partial('table', bundle), {table: lines}, false) }}`, or `{% embed %}` it and override
 `nowo_ui_table_row`). The actions column header is visible by default (`actionsLabelVisible: false` hides it
 visually), `actionsPosition: 'start'` puts the column first, `captionVisible: false` hides the caption visually,
-`Column::align` applies to the header cell too.
+`Column::align` applies to the header cell too. 2.34: `rowAttributes` adds attributes to each `<tr>`, and the block
+`nowo_ui_table_foot` (`nowo_ui_list_foot` on the list scaffold) adds a `<tfoot>`; see
+[USAGE](USAGE.md#small-element-options-234).
 
 **Sortable headers (2.20).** `Table` / `ListPage` take `sorting:` (a `Listing\SortRequest` read in the controller:
 whitelist, `sort` / `dir`) — sortable columns link to the next order with the current query and page 1, the sorted

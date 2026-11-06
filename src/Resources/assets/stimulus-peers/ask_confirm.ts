@@ -39,6 +39,29 @@ export interface ConfirmOptions {
   closeLabel?: string | undefined;
 }
 
+/**
+ * A property of `document` from its prototype chain (audit HG-I7): an injected `<img name="body">` becomes an own property
+ * of the document and hides the real one, so the dialog would land inside it, invisible, with the promise never answered.
+ */
+function documentProperty(name: string): PropertyDescriptor | undefined {
+  for (let proto = Object.getPrototypeOf(document); proto !== null; proto = Object.getPrototypeOf(proto)) {
+    const descriptor = Object.getOwnPropertyDescriptor(proto, name);
+    if (descriptor) {
+      return descriptor;
+    }
+  }
+
+  return undefined;
+}
+
+function documentPart(part: 'documentElement' | 'body'): HTMLElement {
+  return documentProperty(part)?.get?.call(document) as HTMLElement;
+}
+
+function create<K extends keyof HTMLElementTagNameMap>(tag: K): HTMLElementTagNameMap[K] {
+  return documentProperty('createElement')?.value.call(document, tag) as HTMLElementTagNameMap[K];
+}
+
 export const KIT_CONFIRM_CLASSES: ConfirmClasses = {
   dialog: 'nowo-ui-confirm',
   panel: 'nowo-ui-confirm__panel',
@@ -57,7 +80,7 @@ export const KIT_CONFIRM_CLASSES: ConfirmClasses = {
  * NowoUiKitBundle `confirm.ok` / `confirm.cancel` messages), with English fallbacks.
  */
 export function pageConfirmLabels(): { confirm: string; cancel: string } {
-  const root = document.documentElement;
+  const root = documentPart('documentElement');
 
   return {
     confirm: root.dataset.confirmOk || 'Confirm',
@@ -70,7 +93,7 @@ export function pageConfirmLabels(): { confirm: string; cancel: string } {
  * message), with an English fallback.
  */
 export function pageConfirmCloseLabel(): string {
-  return document.documentElement.dataset.confirmClose || 'Close';
+  return documentPart('documentElement').dataset.confirmClose || 'Close';
 }
 
 /**
@@ -78,7 +101,7 @@ export function pageConfirmCloseLabel(): string {
  * exactly "false" or "0" (any other value, empty included, keeps the ×).
  */
 export function pageConfirmDismissible(): boolean {
-  const value = document.documentElement.dataset.confirmDismissible;
+  const value = documentPart('documentElement').dataset.confirmDismissible;
 
   return value !== 'false' && value !== '0';
 }
@@ -89,16 +112,16 @@ export function askConfirm(message: string, options: ConfirmOptions = {}): Promi
   const classes = { ...KIT_CONFIRM_CLASSES, ...options.classes };
   const labels = { ...pageConfirmLabels(), ...pick(options) };
 
-  const dialog = document.createElement('dialog');
+  const dialog = create('dialog');
   dialog.className = classes.dialog;
   const titleId = `nowo-ui-ask-confirm-${++sequence}`;
   dialog.setAttribute('aria-labelledby', titleId);
 
-  const panel = document.createElement('div');
+  const panel = create('div');
   panel.className = classes.panel;
-  const header = document.createElement('div');
+  const header = create('div');
   header.className = classes.header;
-  const title = document.createElement('h2');
+  const title = create('h2');
   title.id = titleId;
   title.className = classes.title;
   title.textContent = options.title ?? message;
@@ -106,37 +129,37 @@ export function askConfirm(message: string, options: ConfirmOptions = {}): Promi
   let close: HTMLButtonElement | null = null;
   if (options.dismissible ?? pageConfirmDismissible()) {
     const closeLabel = options.closeLabel || pageConfirmCloseLabel();
-    close = document.createElement('button');
+    close = create('button');
     close.type = 'button';
     close.className = classes.close ?? 'nowo-ui-confirm__close';
     close.setAttribute('aria-label', closeLabel);
     close.title = closeLabel;
-    const glyph = document.createElement('span');
+    const glyph = create('span');
     glyph.setAttribute('aria-hidden', 'true');
     glyph.textContent = '\u00d7';
     close.append(glyph);
     header.append(close);
   }
   if (options.title) {
-    const body = document.createElement('p');
+    const body = create('p');
     body.className = classes.body;
     body.textContent = message;
     header.append(body);
   }
-  const actions = document.createElement('div');
+  const actions = create('div');
   actions.className = classes.actions;
-  const cancel = document.createElement('button');
+  const cancel = create('button');
   cancel.type = 'button';
   cancel.className = classes.cancel;
   cancel.textContent = labels.cancel;
-  const confirm = document.createElement('button');
+  const confirm = create('button');
   confirm.type = 'button';
   confirm.className = options.danger ? classes.danger : classes.confirm;
   confirm.textContent = labels.confirm;
   actions.append(cancel, confirm);
   panel.append(header, actions);
   dialog.append(panel);
-  document.body.append(dialog);
+  documentPart('body').append(dialog);
 
   return new Promise<boolean>((resolve) => {
     let answered = false;
