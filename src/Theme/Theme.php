@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\UiKitBundle\Theme;
 
 use InvalidArgumentException;
+use Nowo\UiKitBundle\Shell\SafeHref;
 use Stringable;
 
 /**
@@ -369,6 +370,15 @@ final readonly class Theme
         }
 
         return $html;
+    }
+
+    /**
+     * Whether a link target runs script when followed (2.34, {@see SafeHref::runsScript()}), for templates: the `tree`
+     * and `back_link` partials, the second of which also renders without this bundle's Twig extension.
+     */
+    public function hrefRunsScript(mixed $href): bool
+    {
+        return SafeHref::runsScript($href);
     }
 
     /**

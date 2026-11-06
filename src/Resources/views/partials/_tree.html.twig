@@ -6,20 +6,27 @@
   Slots: tree (root), tree_item (each li), tree_link (the treeitem link), tree_group (child lists).
 
   Required:
-    - nodes: list of hashes {id, label (View\Label|string), href, current?, expanded?, children? (nodes),
+    - nodes: list of hashes {id, label (View\Label|string), href (2.34: a javascript:, vbscript:, data: or blob: value
+      prints "#"; other schemes, such as tel:, stay; no origin check), current?, expanded?, children? (nodes),
       has_children? (true without children: lazy), children_url? (JSON children, see the script), icon? (text, e.g. an
-      emoji), badge? (string)}
+      emoji), badge? (string), link_attr? and item_attr? (2.34: extra attributes of the link / the li, `class` added to
+      the slot classes, checked by nowo_ui_safe_attrs(): no on*, style, srcdoc or unsafe URLs; the attributes the
+      treeview owns, such as href, role, tabindex, aria-level and the data-nowo-ui-tree-* hooks, stay the partial's)}
     - label (View\Label|string): accessible name of the tree
   Optional:
     - movable (bool): Alt+arrows and drag and drop emit nowo-ui:tree:move / nowo-ui:tree:drop (the host moves)
     - actions_template: template included after each link with {node} (e.g. "+" and "⋯" buttons; give them
       tabindex="-1" and a keyboard shortcut so the tree keeps one tab stop)
+    - leading_template (2.34): template included inside the link before the label with {node} (e.g. a check icon: node.icon
+      is plain text). It is inside the link: no interactive content
     - attr: root attributes (no on*; attr.id is the tree id that prefixes the group ids), bundle
   The current node's ancestors are always expanded (2.24), so the current item is visible and is the tab stop.
+  Lazy children (children_url) are built by the script from JSON: link_attr, item_attr and leading_template apply to
+  server-rendered nodes only.
 #}
 {% set _b = bundle|default(null) %}
 {# 2.24: every group id is prefixed with the tree id (attr.id, or a generated one) — unique across trees on a page #}
 {% set _tree_id = (attr|default({})).id ?? ('nowo-ui-tree-' ~ random(100000000, 999999999)) %}
 <ul class="{{ nowo_ui_class('tree', _b) }}" id="{{ _tree_id }}" role="tree" aria-label="{{ label|nowo_ui_trans }}" data-nowo-ui-tree{% if movable|default(false) %} data-nowo-ui-tree-movable{% endif %}{{ nowo_ui_attrs('tree', _b) }}{{ nowo_ui_html_attrs((attr|default({}))|filter((v, k) => k != 'id')) }}>
-    {{ include('@NowoUiKitBundle/partials/_tree_items.html.twig', {tree_id: _tree_id, nodes: nodes, level: 1, tab_first: not nowo_ui_tree_has_current(nodes), actions_template: actions_template|default(null), movable: movable|default(false), bundle: _b}, false) }}
+    {{ include('@NowoUiKitBundle/partials/_tree_items.html.twig', {tree_id: _tree_id, nodes: nodes, level: 1, tab_first: not nowo_ui_tree_has_current(nodes), actions_template: actions_template|default(null), leading_template: leading_template|default(null), movable: movable|default(false), bundle: _b}, false) }}
 </ul>

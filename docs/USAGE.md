@@ -47,6 +47,7 @@
 - [Sidebar rail (opt-in)](#sidebar-rail-opt-in)
 - [Side panel and drawer (2.25)](#side-panel-and-drawer-225)
 - [Remote form dialog (2.28)](#remote-form-dialog-228)
+- [Small element options (2.34)](#small-element-options-234)
 - [Focusable scroll regions (2.28)](#focusable-scroll-regions-228)
 - [Overlays and the shell (2.28)](#overlays-and-the-shell-228)
 - [Menu semantics (2.28)](#menu-semantics-228)
@@ -2062,6 +2063,47 @@ nowo_ui_kit:
 
 Names are header tokens (letters, digits, `-`, starting with a letter, ≤ 64 characters), three different names; the
 client falls back to the default for anything else.
+
+## Small element options (2.34)
+
+Hooks for pages that move their own markup to kit partials and must keep their classes, `data-*` hooks and test ids. All
+opt-in. Each `*_attr` is a map like `attr`: `true` = bare attribute, `false` and
+`null` = omitted, and `class` is added to the slot classes. They are checked by `nowo_ui_safe_attrs()`: `on*`, `style`,
+`srcdoc` throw; a value that runs script (`javascript:`, `vbscript:`, `data:`, `blob:`) is dropped; attributes the partial owns are dropped. See [SECURITY](SECURITY.md).
+
+**Table rows and foot.** `rowAttributes` on `View\Table` or `ListPage`, per render like `rowActions`; the foot is a block
+of `<tr>` rows, with no `<tfoot>` while it is empty:
+
+```php
+new ListPage($header, $columns, $tasks, rowAttributes: static fn (Task $task, int|string $key): array => [
+    'class' => 'nowo-task-list__row',
+    'data-task-id' => $task->getId(),
+]);
+```
+
+```twig
+{% embed nowo_ui_partial('table', bundle) with {table: lines, foot_attr: {'data-testid': 'totals'}} %}
+    {% block nowo_ui_table_foot %}<tr><th scope="row">{{ 'total'|trans }}</th><td>{{ sum }}</td></tr>{% endblock %}
+{% endembed %}
+```
+
+On the list scaffold the block is `nowo_ui_list_foot`; `foot_html` passes pre-rendered rows. In card mode the foot stacks
+as one block under the cards.
+
+**Tree nodes.** `node.link_attr` and `node.item_attr` reach the link and the `li`; the treeview's own attributes (`href`,
+`role`, `tabindex`, `aria-level`…) stay. `leading_template` is included inside the link, before the label, with `{node}`:
+markup such as a check icon, nothing interactive. Lazy children (`children_url`) are built by the script from JSON, so
+these three apply to server-rendered nodes only.
+
+**Dialog.** `header_attr`, `footer_attr`, and `back_href` + `back_label` (default `action.back`): an arrow before the title,
+slot `dialog_back`. It is a link to a URL and leaves the dialog: it does not load an earlier step of a remote form dialog
+into the same dialog. An unsafe URL prints no arrow. It checks the scheme, not the origin (`//host` and `/\host` pass):
+validate any value taken from the request (`?back=`, the referer). `remote_form_dialog` takes `placement: end | start`, a side panel: full
+height at that edge, the whole screen on a phone. It does not forward the other options.
+
+**Progress.** `value` + `max` next to `percent` (`percent` wins); `max` <= 0 or a missing one stays indeterminate. The text
+shows the rounded percentage: pass `show_value: false` if a script updates the meter, because the text does not follow it.
+`label_visible: false` hides the label visually and keeps it as the accessible name. `meter_attr` reaches the `<progress>`.
 
 ## Focusable scroll regions (2.28)
 

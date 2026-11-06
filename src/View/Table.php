@@ -29,6 +29,8 @@ use Nowo\UiKitBundle\Listing\SortRequest;
  * the row-actions column (header visible by default, `end` aligned, last). `responsive`: `cards` | `scroll`.
  * Accessible name: the caption when there is one (visible or visually hidden), else `label` as `aria-label` (the list
  * scaffold passes the page title).
+ * `rowAttributes` (2.34): a callable `fn (mixed $row, int|string $key): array` — extra attributes of each `<tr>`, checked
+ * by {@see SafeAttributes}; `class` is merged after the `table_row` slot.
  */
 final readonly class Table
 {
@@ -56,11 +58,14 @@ final readonly class Table
 
     private ?Closure $rowActionsFactory;
 
+    private ?Closure $rowAttributesFactory;
+
     /**
      * @param iterable<Column>                                                 $columns
      * @param iterable<mixed>                                                  $rows
      * @param (callable(mixed, int|string): iterable<Action>)|iterable<Action> $rowActions
-     * @param array<string, string|int|float|bool|null>                        $attributes extra attributes of the <table> (no on* handlers)
+     * @param array<string, string|int|float|bool|null>                        $attributes    extra attributes of the <table> (no on* handlers)
+     * @param (callable(mixed, int|string): array<string, mixed>)|null         $rowAttributes
      */
     public function __construct(
         iterable $columns = [],
@@ -80,7 +85,9 @@ final readonly class Table
         public Label|string|null $label = null,
         ?SortRequest $sorting = null,
         public bool $clientSort = false,
+        ?callable $rowAttributes = null,
     ) {
+        $this->rowAttributesFactory = null === $rowAttributes ? null : $rowAttributes(...);
         if (!\in_array($actionsAlign, Column::ALIGNS, true)) {
             throw new InvalidArgumentException(\sprintf('Invalid Table actionsAlign "%s" (%s).', $actionsAlign, implode('|', Column::ALIGNS)));
         }
@@ -130,6 +137,20 @@ final readonly class Table
         }
 
         return array_map(static fn (Action $action): Action => $action->confirm instanceof Confirm && null === $action->confirmScope ? $action->withConfirmScope($key) : $action, $actions);
+    }
+
+    /**
+     * Extra attributes of one row's `<tr>` (2.34), checked by {@see SafeAttributes}; empty without `rowAttributes`.
+     *
+     * @return array<string, string|int|float|bool>
+     */
+    public function rowAttributes(mixed $row, int|string $key = 0): array
+    {
+        if (null === $this->rowAttributesFactory) {
+            return [];
+        }
+
+        return SafeAttributes::of(($this->rowAttributesFactory)($row, $key));
     }
 
     /**

@@ -179,6 +179,14 @@ The same dialog is available to your own code: `askConfirm(message, { danger, ti
 dismissible, closeLabel })` from `stimulus-peers/ask_confirm.ts` returns a `Promise<boolean>`; `KIT_CONFIRM_CLASSES`
 lists the default classes (`nowo-ui-confirm*`, `nowo-ui-btn*`).
 
+**Without the peers (2.34).** `window.nowoUiAskConfirm(message, options)` is the same function, from `js/nowo-ui-confirm.js`
+(in the default `scripts`), same options and answer. Use it for an action whose target is only known at runtime; a form
+known when rendering takes `View\Confirm`. The script may not be loaded, so treat a missing function as "not confirmed":
+
+```js
+if (await window.nowoUiAskConfirm?.('Delete this link?', { danger: true })) { /* the host writes */ }
+```
+
 **Close button (2.31, dialog rule v2).** The header has a × after the title (like the `confirm` / `confirm_dialog`
 partials); it cancels (`false`). Its accessible name (`aria-label` and `title`) is `closeLabel`, else
 `<html data-confirm-close="…">`, else "Close"; its class is `classes.close` (kit default `nowo-ui-confirm__close`,

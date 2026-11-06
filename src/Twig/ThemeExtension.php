@@ -24,6 +24,7 @@ use Nowo\UiKitBundle\View\HeaderActions;
 use Nowo\UiKitBundle\View\Label;
 use Nowo\UiKitBundle\View\PageHeader;
 use Nowo\UiKitBundle\View\PageStatus;
+use Nowo\UiKitBundle\View\SafeAttributes;
 use Nowo\UiKitBundle\View\ViewList;
 use Stringable;
 use Symfony\Component\Form\FormFactoryInterface;
@@ -45,6 +46,9 @@ use Twig\TwigFunction;
  *   scaffolds set; `defaults: false` (2.3, host-only mode) leaves the UiKit framework defaults out
  * - `nowo_ui_attrs(slot, bundle = null, extra = {}, page = null)` — escaped attribute string of a slot
  * - `nowo_ui_html_attrs(attributes)` — escaped attribute string of a plain map (page model `attributes`)
+ * - `nowo_ui_safe_attrs(attributes, reserved = [])` (2.34) — the checked map of a per-element option
+ *   ({@see SafeAttributes}: no on*, `style`, `srcdoc` or unsafe URL schemes), `class` kept for the caller to merge;
+ *   `nowo_ui_attrs_without_class(attributes)` is that map without `class`
  * - `nowo_ui_partial(name, bundle = null)` — template of a (possibly host-replaced) UiKit partial
  * - `nowo_ui_script_names()` — the UiKit runtime scripts the `scripts` partial prints (2.2)
  * - `nowo_ui_theme_tokens(nonce = null)` — `<style data-nowo-ui-theme-tokens>` with the host tokens ('' without)
@@ -138,8 +142,11 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             new TwigFunction('nowo_ui_class', $this->slotClass(...), ['needs_context' => true]),
             new TwigFunction('nowo_ui_attrs', $this->slotAttributes(...), ['needs_context' => true, 'is_safe' => ['html']]),
             new TwigFunction('nowo_ui_html_attrs', $this->theme->renderAttributeMap(...), ['is_safe' => ['html']]),
+            new TwigFunction('nowo_ui_safe_attrs', SafeAttributes::of(...)),
+            new TwigFunction('nowo_ui_attrs_without_class', SafeAttributes::withoutClass(...)),
             new TwigFunction('nowo_ui_partial', $this->theme->partial(...)),
             new TwigFunction('nowo_ui_script_names', static fn (): array => ThemeSlots::SCRIPTS),
+            new TwigFunction('nowo_ui_progress_amount', self::progressAmount(...)),
             new TwigFunction('nowo_ui_tree_has_current', self::treeHasCurrent(...)),
             new TwigFunction('nowo_ui_tree_group_id', self::treeGroupId(...)),
             new TwigFunction('nowo_ui_theme_tokens', $this->tokens(...), ['is_safe' => ['html']]),
@@ -168,6 +175,22 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             new TwigFunction('nowo_ui_remote_form_opener', self::remoteFormOpener(...)),
             new TwigFunction('nowo_ui_dialog_status', PageStatus::fromOption(...)),
         ];
+    }
+
+    /**
+     * The `progress` partial's absolute amount (2.34): the value clamped to 0..max and the rounded percentage; null
+     * unless both are finite numbers and max is above 0 (the meter stays indeterminate).
+     *
+     * @return array{value: int|float, max: int|float, percent: int}|null
+     */
+    public static function progressAmount(mixed $value, mixed $max): ?array
+    {
+        if (!is_numeric($value) || !is_numeric($max) || !is_finite((float) $value) || !is_finite((float) $max) || (float) $max <= 0.0) {
+            return null;
+        }
+        $value = max(0, min(0 + $max, 0 + $value));
+
+        return ['value' => $value, 'max' => 0 + $max, 'percent' => (int) round($value / (0 + $max) * 100)];
     }
 
     /**

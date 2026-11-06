@@ -116,6 +116,36 @@
 
 ## Unreleased
 
+No markup or configuration change by default (the BC fixtures still match); every addition is opt-in. Details in
+[USAGE](USAGE.md#small-element-options-234).
+
+### Template contract
+
+- New options of the partials: `table` (`foot_html`, `foot_attr`, block `nowo_ui_table_foot`), `tree` (`node.link_attr`,
+  `node.item_attr`, `leading_template`), `dialog` (`footer_attr`, `header_attr`, `back_href`, `back_label`),
+  `remote_form_dialog` (`placement`), `progress` (`value`, `max`, `label_visible`, `meter_attr`). New list scaffold block
+  `nowo_ui_list_foot`. New slots `table_foot` and `dialog_back`.
+- **A host that replaced one of these partials** keeps working and ignores the new options until it adds them. A replaced
+  `table` partial does not print `Table::$rowAttributes` or the foot.
+- **A partial included without `only` inherits its context.** `value` and `max` are both needed, and `percent` wins, so a
+  lone `value` in scope changes nothing. A page that has **both** `value` and `max` in scope and includes `progress` with no
+  `percent` and without `only` now gets a determinate meter: pass `indeterminate: true`, or include with `only`. Besides
+  `value` + `max`, the new names `back_href`, `back_label`, `header_attr`, `footer_attr`, `foot_html`, `foot_attr`,
+  `meter_attr`, `label_visible` and `leading_template`, and `placement` on `remote_form_dialog`, are picked up from the
+  including page. If a page already uses one of them for something else, include with `only`.
+
+The new `*_attr` options are stricter than `attr`: `on*`, `style` and `srcdoc` throw, and a value that runs script is dropped. See
+[SECURITY](SECURITY.md).
+
+### Output that changes, for unsafe values only
+
+- **`tree`:** a `node.href` with the scheme `javascript:`, `vbscript:`, `data:` or `blob:` now prints `href="#"`.
+- **`back_link` and `View\BackLink`:** the same schemes now print no link at all.
+
+Every other value prints exactly as before: paths, `http`, `https`, `mailto`, `tel`, `sms`, `ftp`, app schemes, `//host`, an
+empty value. These two places check less than `nowo_ui_safe_href()`, so that no working link disappears. Neither checks the
+origin: validate a value taken from the request (`?back=`, the referer).
+
 ## To 2.33.1
 
 From **2.33.0**:
