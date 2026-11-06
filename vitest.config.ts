@@ -33,6 +33,7 @@ export default defineConfig({
         'src/Resources/assets/stimulus-peers/tabs_controller.ts',
         'src/Resources/assets/morphicons/index.ts',
         'src/Resources/assets/stimulus-peers/temporary_reveal_controller.ts',
+        'src/Resources/assets/src/nowo-ui-button-label.ts',
         'src/Resources/assets/stimulus-peers/visible_when_controller.ts',
       ],
       exclude: ['**/*.test.ts', '**/node_modules/**'],

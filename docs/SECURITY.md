@@ -36,6 +36,7 @@ If you discover a security-related issue, please report it privately (e.g. by em
 | **Remote dialog steps (2.33)** | Response header `X-Nowo-Dialog-Location`, opt-in `remote_dialog.step_routes`, `RemoteDialogRedirectEvent`, configurable names `remote_dialog.{request,redirect,location}_header`; each step load is one more fragment insertion |
 | **Plain remote dialog content (2.2)** | `data-nowo-ui-dialog-src` (`Action::$dialogId` + `href`): a same-origin fragment fetched into a `<dialog>` |
 | **Translations** | Domain `NowoUiKitBundle` strings rendered in Twig |
+| **Action icons (opt-in)** | `nowo_ui_kit.action_icons` / `action_variants`: host configuration, checked against `[prefix:]name` and `primary\|secondary\|danger` at container build; the names reach a `class` attribute (auto-escaped) or `ux_icon()`. Not request data. |
 
 The bundle does **not** expose CLI commands that mutate production data, file uploads, or cookie writers. The only outbound HTTP integration is the opt-in release check (off by default).
 
@@ -124,6 +125,8 @@ The bundle does **not** expose CLI commands that mutate production data, file up
 - **FrankenPHP worker:** runtime PHP services (`ReleaseUpdateChecker`, `ReleaseStatusController`, routing helpers) are `readonly` / stateless — no per-request mutable state; safe with kernel not reset between requests ([FRANKENPHP-WORKER-AUDIT.md](FRANKENPHP-WORKER-AUDIT.md)).
 
 ## AI security audit (REQ-SEC-004)
+
+Unreleased (`action_icons`, `action_variants`, new action kinds): audit status **re-verification pending**; an independent auditor runs after this change.
 
 | Field | Value |
 | ----- | ----- |

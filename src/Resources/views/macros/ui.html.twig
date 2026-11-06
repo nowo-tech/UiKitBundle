@@ -180,6 +180,9 @@ nowo-ui-badge{% if variant %} nowo-ui-badge--{{ variant }}{% endif %}
 {%- set k = kind|default('edit') -%}
 {%- set v = variant -%}
 {%- if v is null or v is same as(false) or v == '' -%}
+  {%- set v = nowo_ui_kit_action_variants[k]|default(null) -%}
+{%- endif -%}
+{%- if v is null or v is same as(false) or v == '' -%}
   {%- if k == 'delete' -%}
     {%- set v = 'danger' -%}
   {%- elseif k in ['create', 'save'] -%}

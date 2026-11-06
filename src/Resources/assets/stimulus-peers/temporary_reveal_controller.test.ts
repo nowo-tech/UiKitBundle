@@ -210,3 +210,36 @@ describe('temporary-reveal controller', () => {
     expect(document.querySelector('code')!.textContent).toBe('•'.repeat(18));
   });
 });
+
+describe('temporary-reveal toggle keeps its icon', () => {
+  let application: Application;
+
+  afterEach(() => {
+    application.stop();
+    document.body.innerHTML = '';
+  });
+
+  it('updates only the label node, also when the secret is cleared', async () => {
+    document.body.innerHTML = `
+      <div data-controller="temporary-reveal" data-temporary-reveal-secret-value="s3cret-value" data-temporary-reveal-duration-value="0"
+        data-temporary-reveal-show-label-value="Show" data-temporary-reveal-hide-label-value="Hide" data-temporary-reveal-clear-on-hide-value="true">
+        <code data-temporary-reveal-target="display"></code>
+        <button type="button" data-temporary-reveal-target="toggle" data-action="click->temporary-reveal#toggle"><i class="ti ti-eye"></i><span class="nowo-ui-action__label">Show</span></button>
+      </div>`;
+    application = Application.start();
+    application.register('temporary-reveal', TemporaryRevealController);
+    await Promise.resolve();
+    const button = document.querySelector('button') as HTMLButtonElement;
+
+    button.click();
+    expect(button.querySelector('i.ti-eye')).not.toBeNull();
+    expect(button.querySelector('.nowo-ui-action__label')?.textContent).toBe('Hide');
+    expect(button.getAttribute('aria-label')).toBe('Hide');
+    expect(button.getAttribute('aria-pressed')).toBe('true');
+
+    button.click();
+    expect(button.querySelector('i.ti-eye')).not.toBeNull();
+    expect(button.querySelector('.nowo-ui-action__label')?.textContent).toBe('Hidden');
+    expect(button.getAttribute('aria-label')).toBe('Hidden');
+  });
+});

@@ -116,6 +116,20 @@
 
 ## Unreleased
 
+Nothing to do unless you opt in. To set one icon per action, add `nowo_ui_kit.action_icons` (and `action_variants` if your
+standard differs from the kit defaults): see [ROW_ACTIONS.md](ROW_ACTIONS.md#one-icon-per-action).
+
+- Setting a kind in `action_icons` also draws its icon on toolbar `Action`s without one and in menu items: check those
+  places. Hosts that use `row_actions_display: icon_text` should set it together with `action_icons`, not before, or kit
+  kinds draw their default (`bi:*` under `ux_icon`) until then.
+- Copy and Show / Hide buttons with an icon now keep it. Hosts that re-add the icon by hand after these controllers run can
+  drop that code. Mark a host label with `data-nowo-ui-label` if the button has several text nodes.
+- Under `icon_set: ux_icon`, import the icons you name (`bin/console ux:icons:import`): a missing one fails as any other
+  missing UX icon does, unless `ux_icons.ignore_not_found` is on.
+- A free `_icon` name that equals a new kind (`refresh`, `archive`, `pause`, `resume`, `download`, `import`, `send`, `reset`,
+  `move`, `hide`, `run`, `stop`, ...) now draws that kind's default. Hosts that replace `components/_icon.html.twig` keep
+  their template and should add the new kinds and read `nowo_ui_kit_action_icons`.
+
 ## To 2.33.1
 
 From **2.33.0**:

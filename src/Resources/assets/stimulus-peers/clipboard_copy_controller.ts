@@ -11,6 +11,7 @@
  */
 
 import { Controller } from '@hotwired/stimulus';
+import { setButtonLabel } from '../src/nowo-ui-button-label';
 
 export default class extends Controller {
   static override values = {
@@ -111,7 +112,7 @@ export default class extends Controller {
       return;
     }
 
-    target.textContent = this.doneLabelValue;
+    setButtonLabel(target, this.doneLabelValue);
     target.setAttribute('aria-label', this.doneLabelValue);
 
     if (this.resetTimer !== null) {
@@ -119,7 +120,7 @@ export default class extends Controller {
     }
 
     this.resetTimer = window.setTimeout(() => {
-      target.textContent = this.labelValue;
+      setButtonLabel(target, this.labelValue);
       target.setAttribute('aria-label', this.labelValue);
       this.resetTimer = null;
     }, 1600);

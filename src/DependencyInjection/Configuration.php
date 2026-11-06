@@ -20,6 +20,7 @@ use Nowo\UiKitBundle\Shell\SidebarLayout;
 use Nowo\UiKitBundle\Theme\ListFiltersOptions;
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Theme\ThemeSlots;
+use Nowo\UiKitBundle\Twig\ActionIconsExtension;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\NodeBuilder;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
@@ -56,6 +57,40 @@ final class Configuration implements ConfigurationInterface
                     ->values(['inline', 'native', 'dialog'])
                     ->defaultValue('inline')
                     ->info('confirm_message of 1.x row_actions POST hashes (2.22, REQ-UI-003): inline = onsubmit="return confirm(…)" (default, unchanged markup); native | dialog = no inline handler, the confirm-submit Stimulus peer asks (window.confirm or the kit <dialog>). native / dialog need the confirm-submit peer registered.')
+                ->end()
+                ->arrayNode('action_icons')
+                    ->info('Opt-in: canonical kind → icon name "[prefix:]name" (e.g. delete: tabler:trash). Every use of the kind follows it, chrome included; an explicit icon on an action wins. ux_icon draws it as written; tabler-icons / bootstrap-icons need their own prefix or none (else the kit default); svg_inline and none keep the kit default. Also shows the kind icon on toolbar actions and menu items. See docs/ROW_ACTIONS.md.')
+                    ->useAttributeAsKey('kind', false)
+                    ->normalizeKeys(false)
+                    ->scalarPrototype()->end()
+                    ->defaultValue([])
+                    ->validate()
+                        ->always(static function (array $map): array {
+                            $error = self::findInvalidActionIcon($map);
+                            if (null !== $error) {
+                                throw new InvalidConfigurationException('Invalid nowo_ui_kit.action_icons: '.$error);
+                            }
+
+                            return $map;
+                        })
+                    ->end()
+                ->end()
+                ->arrayNode('action_variants')
+                    ->info('Opt-in: canonical kind → button variant (primary|secondary|danger) for actions without an explicit variant (e.g. create: secondary keeps a filled primary out of table rows, filter: secondary for the filter submit). Action::create() sets primary explicitly and keeps it. See docs/ROW_ACTIONS.md.')
+                    ->useAttributeAsKey('kind', false)
+                    ->normalizeKeys(false)
+                    ->scalarPrototype()->end()
+                    ->defaultValue([])
+                    ->validate()
+                        ->always(static function (array $map): array {
+                            $error = self::findInvalidActionVariant($map);
+                            if (null !== $error) {
+                                throw new InvalidConfigurationException('Invalid nowo_ui_kit.action_variants: '.$error);
+                            }
+
+                            return $map;
+                        })
+                    ->end()
                 ->end()
                 ->arrayNode('panel_path_rewrites')
                     ->info('Map of legacy path prefix → new prefix (e.g. /admin/blog: /panel/blog). Rewrites route paths (longest prefix first) and adds 301 redirects for legacy request paths. Empty = disabled.')
@@ -854,6 +889,40 @@ final class Configuration implements ConfigurationInterface
         if (!ThemeSlots::has($slot)) {
             throw new InvalidConfigurationException(\sprintf('Unknown nowo_ui_kit.%s slot "%s" (known: %s).', $path, $slot, implode(', ', ThemeSlots::names())));
         }
+    }
+
+    /**
+     * @param array<array-key, mixed> $map
+     */
+    private static function findInvalidActionIcon(array $map): ?string
+    {
+        foreach ($map as $kind => $icon) {
+            if (!\in_array($kind, ActionIconsExtension::kinds(), true)) {
+                return \sprintf('unknown kind "%s" (%s).', $kind, implode('|', ActionIconsExtension::kinds()));
+            }
+            if (!\is_string($icon) || 1 !== preg_match(ActionIconsExtension::NAME_PATTERN, $icon)) {
+                return \sprintf('kind "%s": expected an icon name "[prefix:]name" with lowercase letters, digits and single hyphens (e.g. "tabler:trash", "bi:pencil"), got %s.', $kind, json_encode($icon));
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<array-key, mixed> $map
+     */
+    private static function findInvalidActionVariant(array $map): ?string
+    {
+        foreach ($map as $kind => $variant) {
+            if (!\in_array($kind, ActionIconsExtension::kinds(), true)) {
+                return \sprintf('unknown kind "%s" (%s).', $kind, implode('|', ActionIconsExtension::kinds()));
+            }
+            if (!\in_array($variant, ActionIconsExtension::VARIANTS, true)) {
+                return \sprintf('kind "%s": expected %s, got %s.', $kind, implode('|', ActionIconsExtension::VARIANTS), json_encode($variant));
+            }
+        }
+
+        return null;
     }
 
     /**

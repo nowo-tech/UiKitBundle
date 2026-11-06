@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Goal](#goal)
+- [One icon per action](#one-icon-per-action)
 - [Canonical kinds](#canonical-kinds)
 - [Display modes](#display-modes)
 - [Partial API](#partial-api)
@@ -31,10 +32,131 @@
 | `export` | `secondary` | download | `action.export` |
 | `filter` | `secondary` | funnel | `action.filter` |
 | `prev` / `next` / `close` | `secondary` | chevrons / x | matching `action.*` |
+| `extend` / `revoke` / `refresh` / `archive` / `pause` / `resume` / `download` / `import` / `send` / `sign_in` / `sign_out` / `reset` / `mark_done` / `mark_all_done` / `move` / `enable` / `disable` / `hide` / `run` / `retry` / `stop` | `secondary` | see [One icon per action](#one-icon-per-action) | matching `action.*` |
 
 CSS class always: `nowo-ui-action nowo-ui-action--{kind}` (BEM `--`, **not** `nowo-ui-action-edit`).
 
 Override with `variant` / `icon` / `label` on the action hash when needed. Domain-only glyphs: set `icon` to a free name (or UX icon) and keep `kind` for the semantic style (`edit`, `view`, …).
+
+## One icon per action
+
+**Bundles pass a kind, never an icon name, for actions.** The host sets the icon of each kind once, in
+`nowo_ui_kit.action_icons`, and every use follows it, kit chrome included. No bundle needs an option of its own. An
+explicit `icon` on an action still wins; it is for glyphs of the domain that no kind covers.
+
+Recommended standard (Symfony Beacon `docs/identity/UI-PATTERNS.md` section 4), for hosts that opt in:
+
+| Action | Kind | Icon | Variant | Notes |
+|--------|------|------|---------|-------|
+| Create, add | `create` | `tabler:plus` | primary when it is the page's main action, else secondary | `Action::create()` = primary; `action_variants.create: secondary` for the rest |
+| Edit | `edit` | `tabler:pencil` | secondary | |
+| View, open a preview, show a value | `view` | `tabler:eye` | secondary | |
+| Hide a value | `hide` | `tabler:eye-off` | secondary | toggle partner of `view` (pass the label) |
+| Share | `share` | `tabler:share` | secondary | |
+| Copy | `copy` | `tabler:copy` | secondary | |
+| Export | `export` | `tabler:download` | secondary | |
+| Download | `download` | `tabler:download` | secondary | same glyph as `export`, own label |
+| Import, upload | `import` | `tabler:upload` | secondary | |
+| Refresh, rotate | `refresh` | `tabler:refresh` | secondary | rotating a token asks for confirmation |
+| Retry | `retry` | `tabler:refresh` | secondary | |
+| Run | `run` | `tabler:player-play` | secondary | |
+| Stop a timer | `stop` | `tabler:player-stop` | secondary | not danger: it deletes nothing |
+| Pause / Resume | `pause` / `resume` | `tabler:player-pause` / `tabler:player-play` | secondary | |
+| Extend (a date, an expiry) | `extend` | `tabler:clock-plus` | secondary | |
+| Revoke (access, a member, a token, a link) | `revoke` | `tabler:user-off` | secondary | with confirmation; removing a member is `revoke` |
+| Archive | `archive` | `tabler:archive` | secondary | |
+| Filter | `filter` | `tabler:filter` | secondary | a filter's submit is not primary: `action_variants.filter: secondary` |
+| Clear filters | `filter_off` | `tabler:filter-off` | secondary | |
+| Close, dismiss, remove a chip | `close` | `tabler:x` | secondary | never for deleting data |
+| Cancel | `cancel` | `tabler:x` | secondary | |
+| Delete, empty, delete all, anonymise | `delete` | `tabler:trash` | danger | with confirmation |
+| Save | `save` | `tabler:device-floppy` | primary | the form's main action |
+| Send, send a test | `send` | `tabler:send` | secondary | |
+| Sign in / Sign out | `sign_in` / `sign_out` | `tabler:login` / `tabler:logout` | secondary | |
+| Reset to defaults, undo | `reset` | `tabler:arrow-back-up` | secondary | |
+| Mark done, read or accepted | `mark_done` | `tabler:check` | secondary | |
+| Mark all done | `mark_all_done` | `tabler:checks` | secondary | |
+| Move, transfer | `move` | `tabler:arrows-exchange` | secondary | |
+| Enable / Disable | `enable` / `disable` | `tabler:power` | secondary | one toggle, the label changes |
+
+**Rule:** a filled primary never goes in a table row. Whether an action asks for confirmation stays with the caller
+(`Confirm`, `confirm_id`, `confirm_message`); the table says which ones must.
+
+Configuration for that table:
+
+```yaml
+nowo_ui_kit:
+    icon_set: ux_icon
+    row_actions_display: icon_text # set it together with action_icons, not before: until then kit kinds draw bi:*
+    action_icons:
+        create: 'tabler:plus'
+        edit: 'tabler:pencil'
+        view: 'tabler:eye'
+        hide: 'tabler:eye-off'
+        share: 'tabler:share'
+        copy: 'tabler:copy'
+        export: 'tabler:download'
+        download: 'tabler:download'
+        import: 'tabler:upload'
+        refresh: 'tabler:refresh'
+        retry: 'tabler:refresh'
+        run: 'tabler:player-play'
+        stop: 'tabler:player-stop'
+        pause: 'tabler:player-pause'
+        resume: 'tabler:player-play'
+        extend: 'tabler:clock-plus'
+        revoke: 'tabler:user-off'
+        archive: 'tabler:archive'
+        filter: 'tabler:filter'
+        filter_off: 'tabler:filter-off'
+        close: 'tabler:x'
+        cancel: 'tabler:x'
+        delete: 'tabler:trash'
+        save: 'tabler:device-floppy'
+        send: 'tabler:send'
+        sign_in: 'tabler:login'
+        sign_out: 'tabler:logout'
+        reset: 'tabler:arrow-back-up'
+        mark_done: 'tabler:check'
+        mark_all_done: 'tabler:checks'
+        move: 'tabler:arrows-exchange'
+        enable: 'tabler:power'
+        disable: 'tabler:power'
+    action_variants:
+        create: secondary # Action::create() stays primary for the page's main action
+        filter: secondary # the filter bar's submit
+```
+
+What `action_icons` does under each `icon_set`:
+
+| `icon_set` | `tabler:x` | `bi:x` | other prefix | bare `x` |
+|------------|-----------|--------|--------------|----------|
+| `ux_icon` | `ux_icon('tabler:x')` | `ux_icon('bi:x')` | `ux_icon` with the name as written | `ux_icon('x')` (a local icon) |
+| `tabler-icons` | `ti ti-x` | kit default of the kind | kit default | `ti ti-x` |
+| `bootstrap-icons` | kit default of the kind | `bi bi-x` | kit default | `bi bi-x` |
+| `svg_inline` | kit default | kit default | kit default | kit default |
+| `none` | the label | the label | the label | the label |
+
+A name the set cannot draw never fails: the kind keeps its kit default, so a config written for `ux_icon` is harmless
+under the others. Under `ux_icon` a well-formed name of an icon that does not exist behaves as symfony/ux-icons decides
+for any icon: it raises `IconNotFoundException` unless `ux_icons.ignore_not_found` is on. The build checks the grammar, not
+that the icon exists; import the table with `bin/console ux:icons:import` and open a page per kind once.
+
+**Setting a kind in `action_icons` also shows its icon where it was text:** a toolbar `Action` of that kind without an
+icon of its own now defaults to `icon_text`, and a menu item of that kind draws the icon (so *Delete* in the more menu has
+its trash); a menu item with its own icon draws it once the map is not empty, and a 1.x hash in `_row_actions` with
+`menu: true` draws the icon of a mapped kind. An explicit `display` still wins, and without the option all of these stay
+text.
+
+`action_variants` (kind → `primary` | `secondary` | `danger`) applies only where an action has no explicit variant. It is
+needed for two rows, because the kit's defaults differ from the table and cannot change for other hosts: `create` (kit
+default primary, also in a row) and the filter submit (kit default primary; the key `filter` drives it). All other rows
+already match: the kit paints `edit`, `view` and the rest as secondary (`View\Action` resolves them as `neutral`, painted
+like secondary with its own row slot `action_neutral`), `delete` as danger, `save` as primary.
+
+What the map cannot do, by design of "explicit wins": `Action::create()` sets `primary` explicitly, so in a row it stays
+primary; use `new Action('create', ...)` there. And do not map `save: secondary` to keep it out of rows, since forms that
+use `new Action('save')` would follow it; give the row action an explicit variant.
 
 ## Display modes
 

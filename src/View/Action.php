@@ -47,7 +47,7 @@ use Symfony\Component\Form\FormView;
 final readonly class Action implements ArrayAccess
 {
     /** Canonical kinds (REQ-UI-003) plus the 1.x row-action kinds (docs/ROW_ACTIONS.md). */
-    public const KINDS = ['create', 'edit', 'delete', 'view', 'export', 'import', 'custom', 'copy', 'save', 'cancel', 'restore', 'share', 'config', 'filter', 'prev', 'next', 'close'];
+    public const KINDS = ['create', 'edit', 'delete', 'view', 'export', 'import', 'custom', 'copy', 'save', 'cancel', 'restore', 'share', 'config', 'filter', 'prev', 'next', 'close', 'extend', 'revoke', 'refresh', 'archive', 'pause', 'resume', 'download', 'send', 'sign_in', 'sign_out', 'reset', 'mark_done', 'mark_all_done', 'move', 'enable', 'disable', 'hide', 'run', 'retry', 'stop'];
 
     /** `neutral` = the default of kinds without a variant of their own (painted like secondary, own row slot). */
     public const VARIANTS = ['primary', 'secondary', 'danger', 'neutral', 'outline', 'link'];

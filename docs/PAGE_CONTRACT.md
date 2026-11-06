@@ -337,9 +337,11 @@ are printed on the scaffold root next to `data-nowo-ui-page` — e.g. `['data-te
 from the objects too.
 
 `Action` kinds: `create`, `edit`, `delete`, `view`, `export`, `import`, `custom`, `copy`, `save`, `cancel`, `restore`,
-`share`, `config`, `filter`, `prev`, `next`, `close`; variants `primary`, `secondary`, `danger`, `neutral`, `outline`,
+`share`, `config`, `filter`, `prev`, `next`, `close`, `extend`, `revoke`, `refresh`, `archive`, `pause`, `resume`, `download`,
+`send`, `sign_in`, `sign_out`, `reset`, `mark_done`, `mark_all_done`, `move`, `enable`, `disable`, `hide`, `run`, `retry`, `stop`; variants `primary`, `secondary`, `danger`, `neutral`, `outline`,
 `link` — `resolvedVariant()`: explicit, else `danger` (delete), `primary` (create / save), `neutral` (any other kind;
-painted like secondary, toolbar `btn_secondary`).
+painted like secondary, toolbar `btn_secondary`); a host's `nowo_ui_kit.action_variants` goes before those defaults in the
+templates.
 Non-GET actions render a POST form through `form_start` / `form_end` (REQ-TWIG-005): the CSRF-only `FormView` in
 `form`, else (2.18) a nameless CSRF-only form that UiKit builds from `csrfToken` / `csrfField` (`Form\ActionCsrfType`,
 Twig `nowo_ui_action_form(action)`; same `_token` name and value). Without symfony/form the 2.17 raw form is a

@@ -30,7 +30,7 @@
                   (drives nowo-ui-action--{kind}, default btn variant, default icon + i18n key action.{kind})
     href          GET link or POST form action URL
     label         visible / aria label (default: action.{kind}|trans NowoUiKitBundle)
-    icon          override icon name for _icon (default: kind)
+    icon          override icon name for _icon (default: kind, which follows nowo_ui_kit.action_icons)
     variant       override btn variant (primary|secondary|danger|…)
     method        GET (default) | POST
     tag           auto (default) | a | button | form
@@ -64,7 +64,7 @@
         {% elseif action.view is defined and action.view %}
             {% set _menu_items = _menu_items|merge([action.view]) %}
         {% elseif (action.visible is not defined or action.visible) and action.href|default(null) and (action.method|default('GET'))|upper == 'GET' %}
-            {% set _menu_items = _menu_items|merge([{label: action.label|default(('action.' ~ action.kind|default('edit'))|trans({}, 'NowoUiKitBundle')), href: action.href, danger: action.kind|default('') == 'delete', attr: action.attr|default({})}]) %}
+            {% set _menu_items = _menu_items|merge([{label: action.label|default(('action.' ~ action.kind|default('edit'))|trans({}, 'NowoUiKitBundle')), href: action.href, danger: action.kind|default('') == 'delete', attr: action.attr|default({})}|merge(nowo_ui_kit_action_icons[action.kind|default('edit')] is defined ? {icon: action.icon|default(action.kind|default('edit'))} : {})]) %}
         {% endif %}
     {% endfor %}
 <div class="{{ _t ? _t.macroClasses('row_actions', _root ~ ' nowo-ui-row-actions--menu', bundle, _pt) : _root ~ ' nowo-ui-row-actions--menu' }}"{{ _t ? _t.renderAttributes('row_actions', bundle, {}, _pt)|raw }}>
@@ -93,7 +93,7 @@
             {% set _hash_variant = action.variant|default(null) == 'neutral' ? null : action.variant|default(null) %}
             {% set class = _t ? _t.macroClasses('action', ui.action(kind, framework, _hash_variant), bundle, _pt) : ui.action(kind, framework, _hash_variant) %}
             {% if _t %}
-                {% set _variant = action.variant|default(null) ?: (kind == 'delete' ? 'danger' : (kind in ['create', 'save'] ? 'primary' : 'neutral')) %}
+                {% set _variant = action.variant|default(null) ?: nowo_ui_kit_action_variants[kind]|default(null) ?: (kind == 'delete' ? 'danger' : (kind in ['create', 'save'] ? 'primary' : 'neutral')) %}
                 {% set _variant_extra = _variant in ['primary', 'secondary', 'danger', 'neutral'] ? _t.extraClasses('action_' ~ _variant, bundle, _pt) : '' %}
                 {% set class = class ~ (_variant_extra ? ' ' ~ _variant_extra) %}
             {% endif %}
