@@ -73,6 +73,33 @@ export function sanitizeFragment(root: DocumentFragment, extra?: AttributeRule):
   root.querySelectorAll('*').forEach((element) => filterElement(element, extra));
 }
 
+const elementsOf = (root: Element | DocumentFragment): Element[] =>
+  root instanceof Element ? [root, ...Element.prototype.querySelectorAll.call(root, '*')] : [...DocumentFragment.prototype.querySelectorAll.call(root, '*')];
+
+/**
+ * `document.importNode()` for a filtered node from an inert document. In Chromium and WebKit a `style` attribute that arrives
+ * by cloning skips the page's CSP, so a fetched `style=` would apply under `style-src-attr 'none'`. Each attribute is set in
+ * the page's document instead, where the policy decides as for any other script. The source loses its `style` attributes.
+ */
+export function importForPage<T extends Node>(node: T): T {
+  if (!(node instanceof Element || node instanceof DocumentFragment)) {
+    return Document.prototype.importNode.call(document, node, true) as T;
+  }
+  const dom = Element.prototype;
+  const styles = new Map<number, string>();
+  elementsOf(node).forEach((element, index) => {
+    const value = dom.getAttribute.call(element, 'style');
+    if (value !== null) {
+      styles.set(index, value);
+      dom.removeAttribute.call(element, 'style');
+    }
+  });
+  const copy = Document.prototype.importNode.call(document, node, true) as Element | DocumentFragment;
+  const copies = elementsOf(copy);
+  styles.forEach((value, index) => dom.setAttribute.call(copies[index]!, 'style', value));
+  return copy as unknown as T;
+}
+
 /**
  * Filters an element and its descendants. False when the element itself had to go (a <base>, a `meta` refresh…): it is
  * then detached and the caller must not insert it.

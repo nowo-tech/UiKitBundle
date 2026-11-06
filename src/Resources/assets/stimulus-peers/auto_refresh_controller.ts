@@ -19,7 +19,7 @@
  */
 
 import { Controller } from '@hotwired/stimulus';
-import { sanitizeFragment } from '../src/nowo-ui-fragment-filter';
+import { importForPage, sanitizeFragment } from '../src/nowo-ui-fragment-filter';
 
 export const AUTO_REFRESH_MIN_INTERVAL_MS = 2_000;
 
@@ -121,7 +121,7 @@ export default class extends Controller<HTMLElement> {
         const id = dom.getAttribute.call(region, 'id');
         const fresh = id ? freshRegion(html, id) : null;
         if (fresh) {
-          dom.replaceWith.call(region, document.importNode(fresh, true));
+          dom.replaceWith.call(region, importForPage(fresh));
           swapped += 1;
         }
       });

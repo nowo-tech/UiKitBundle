@@ -107,6 +107,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Security
+
+- **A `style` attribute in fetched HTML skipped the page's CSP (Chromium, WebKit; `auto-refresh` since 1.12, `list-pagination` since 2.23):** `list-pagination` and `auto-refresh`
+  copied fetched rows and regions with `document.importNode()`, and a cloned `style` attribute applied under
+  `style-src-attr 'none'`. Each attribute is now set in the page's document, so the policy decides. Pages without such a policy
+  see no change. Found while auditing `sortable` (HH-M3).
+
 ## [2.35.0] - 2026-11-06
 
 ### Added

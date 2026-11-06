@@ -32,7 +32,7 @@
  */
 
 import { Controller } from '@hotwired/stimulus';
-import { sanitizeElement } from '../src/nowo-ui-fragment-filter';
+import { importForPage, sanitizeElement } from '../src/nowo-ui-fragment-filter';
 
 export type PaginationMode = 'pager' | 'infinite';
 
@@ -221,7 +221,7 @@ export class ListPaginationController extends Controller {
     const appended: Element[] = [];
     if (incoming && sanitizeImported(incoming)) {
       Array.from(incoming.children).forEach((child) => {
-        const row = document.importNode(child, true);
+        const row = importForPage(child);
         rows.appendChild(row);
         appended.push(row);
       });
@@ -241,7 +241,7 @@ export class ListPaginationController extends Controller {
         const mine = this.element.querySelector(selector);
         const theirs = nextRoot.querySelector(selector);
         if (mine && theirs && sanitizeImported(theirs)) {
-          mine.replaceChildren(...Array.from(theirs.childNodes).map((node) => document.importNode(node, true)));
+          mine.replaceChildren(...Array.from(theirs.childNodes).map((node) => importForPage(node)));
         }
       }
     }
@@ -270,7 +270,7 @@ export class ListPaginationController extends Controller {
     }
     dialogs.forEach((dialog) => {
       if (sanitizeImported(dialog)) {
-        target?.appendChild(document.importNode(dialog, true));
+        target?.appendChild(importForPage(dialog));
       }
     });
   }

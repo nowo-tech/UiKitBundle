@@ -120,6 +120,10 @@
 
 ## Unreleased
 
+**`list-pagination` and `auto-refresh`:** on a page whose CSP forbids `style` attributes, a `style=` in a fetched row or region is now
+blocked in Chromium and WebKit too, as it always was in Firefox and for the first page. If such a row looked right only because of this,
+move the style to a class. Pages without such a policy see no change.
+
 ## To 2.35.0
 
 From **2.34.0**:
