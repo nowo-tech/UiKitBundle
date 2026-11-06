@@ -8,6 +8,8 @@ use App\Form\CsrfOnlyType;
 use App\Form\DemoDestinationType;
 use Nowo\UiKitBundle\Dialog\RemoteDialog;
 use Nowo\UiKitBundle\Dialog\RemoteDialogResponder;
+use Nowo\UiKitBundle\View\Action;
+use Nowo\UiKitBundle\View\Confirm;
 use Nowo\UiKitBundle\View\Pagination;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
@@ -137,6 +139,10 @@ final class KitTemplatesController extends AbstractController
             'long_form' => $longForm->createView(),
             'rows' => self::ROWS,
             'submitted' => $request->query->getBoolean('submitted'),
+            // 2.31 (dialog rule v2): View\Confirm dialogs (partial `confirm`) on the dialog anatomy; demo token only.
+            'archive_confirm' => new Confirm('Archive this monitor?', 'It stops checking and leaves the dashboard. You can restore it later.', 'Archive', variant: 'primary', id: 'archive-monitor'),
+            'delete_confirm' => new Confirm('Delete monitor?', 'The monitor "API health" and its 90 days of history will be deleted. This cannot be undone.', 'Delete monitor', id: 'delete-monitor', expectedValue: 'api-health'),
+            'confirm_action' => Action::delete($this->generateUrl('kit_dialogs'), 'demo-token'),
         ]);
     }
 

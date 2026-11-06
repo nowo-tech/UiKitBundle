@@ -1593,6 +1593,45 @@ a.nowo-ui-pagination__link:hover {
   padding: 1rem 1.25rem 0.5rem;
 }
 
+/*
+ * 2.31 (dialog rule v2): the confirm <dialog> (partial `confirm`, View\Confirm row / page actions; the release and row
+ * detail dialogs; askConfirm()) has the dialog anatomy with its own classes: a tinted header (title, ×) with a divider,
+ * the body (message; type-to-confirm right under it) that alone scrolls, a tinted footer outside the body (Cancel, then
+ * the one primary). Medium width; the content's height capped at --nowo-ui-dialog-max-h. The full-page confirm
+ * (page/confirm) keeps its own layout.
+ */
+.nowo-ui-confirm > .nowo-ui-confirm__panel {
+  display: flex;
+  flex-direction: column;
+  max-height: var(--nowo-ui-dialog-max-h);
+}
+
+.nowo-ui-confirm > .nowo-ui-confirm__panel > :is(.nowo-ui-confirm__header, .nowo-ui-confirm__expect, .nowo-ui-confirm__footer) {
+  flex: none;
+}
+
+.nowo-ui-confirm > .nowo-ui-confirm__panel > .nowo-ui-confirm__header {
+  padding-bottom: 0.875rem;
+  border-bottom: 1px solid var(--nowo-ui-border);
+  background: var(--nowo-ui-dialog-chrome-bg, color-mix(in srgb, var(--nowo-ui-text) 4%, var(--nowo-ui-surface)));
+}
+
+.nowo-ui-confirm > .nowo-ui-confirm__panel > .nowo-ui-confirm__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding-top: 1rem;
+  overflow: auto;
+}
+
+/* Type-to-confirm without a body (message in the header): the body's top padding */
+.nowo-ui-confirm > .nowo-ui-confirm__panel > .nowo-ui-confirm__header + .nowo-ui-confirm__expect {
+  padding-top: 1rem;
+}
+
+.nowo-ui-confirm > .nowo-ui-confirm__panel > .nowo-ui-confirm__footer {
+  background: var(--nowo-ui-dialog-chrome-bg, color-mix(in srgb, var(--nowo-ui-text) 4%, var(--nowo-ui-surface)));
+}
+
 .nowo-ui-confirm__title {
   margin: 0;
   font-family: var(--nowo-ui-font-display, inherit);
@@ -1678,6 +1717,22 @@ a.nowo-ui-pagination__link:hover {
   min-width: 0;
   min-height: 0;
   overflow: auto;
+}
+
+/* 2.31 (dialog rule v2): tinted header (with a divider) and footer around the body, the TaskBoard "Create board"
+   anatomy; --nowo-ui-dialog-chrome-bg (no :root value) sets the tint, the confirm dialog reads it too. */
+:is(.nowo-ui-dialog, .nowo-ui-confirm-dialog--anatomy) > .nowo-ui-dialog__header {
+  padding-bottom: 0.875rem;
+  border-bottom: 1px solid var(--nowo-ui-border);
+  background: var(--nowo-ui-dialog-chrome-bg, color-mix(in srgb, var(--nowo-ui-text) 4%, var(--nowo-ui-surface)));
+}
+
+:is(.nowo-ui-dialog, .nowo-ui-confirm-dialog--anatomy) > .nowo-ui-dialog__header + .nowo-ui-dialog__body {
+  padding-top: 1rem;
+}
+
+:is(.nowo-ui-dialog, .nowo-ui-confirm-dialog--anatomy) > .nowo-ui-dialog__footer {
+  background: var(--nowo-ui-dialog-chrome-bg, color-mix(in srgb, var(--nowo-ui-text) 4%, var(--nowo-ui-surface)));
 }
 
 /* Side panel (dialog placement end / start, 2.12): full height, stuck to that edge, slides in; the size sets the width */
@@ -1845,6 +1900,7 @@ a.nowo-ui-pagination__link:hover {
 }
 
 .nowo-ui-confirm__expect-input {
+  box-sizing: border-box; /* 2.31: 100% includes its padding and border (it overflowed the dialog's right padding) */
   width: 100%;
   max-width: none;
 }

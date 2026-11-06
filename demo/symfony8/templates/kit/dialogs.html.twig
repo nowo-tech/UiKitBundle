@@ -44,10 +44,14 @@
             {% endembed %}
             <a class="{{ nowo_ui_class('btn_secondary') }}" href="{{ path('kit_remote_form') }}">Remote form dialog</a>
         </div>
-        <form method="get" action="{{ path('kit_dialogs') }}" data-controller="confirm-submit" data-confirm-submit-mode-value="dialog" data-confirm-submit-message-value="Reset the demo filters?" data-confirm-submit-danger-value="false">
-            <input type="hidden" name="submitted" value="1">
-            <button type="submit" class="{{ nowo_ui_class('btn_secondary') }}" data-action="click->confirm-submit#confirm" data-testid="open-ask-confirm">JS confirm (askConfirm)</button>
-        </form>
+        {# confirm-submit on a plain button (no form: REQ-TWIG-005); Confirm replays the click, which does nothing here #}
+        <p><button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-controller="confirm-submit" data-confirm-submit-mode-value="dialog" data-confirm-submit-message-value="Reset the demo filters?" data-confirm-submit-danger-value="false" data-action="click->confirm-submit#confirm" data-testid="open-ask-confirm">JS confirm (askConfirm)</button></p>
+        <div class="{{ nowo_ui_class('form_actions') }}">
+            <button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-nowo-confirm-open data-nowo-confirm-target="archive-monitor" data-testid="open-view-confirm">View\Confirm (primary)</button>
+            <button type="button" class="{{ nowo_ui_class('btn_danger') }}" data-nowo-confirm-open data-nowo-confirm-target="delete-monitor" data-testid="open-view-confirm-expect">View\Confirm (danger, type to confirm)</button>
+        </div>
+        {{ include(nowo_ui_partial('confirm'), {confirm: archive_confirm, action: confirm_action}) }}
+        {{ include(nowo_ui_partial('confirm'), {confirm: delete_confirm, action: confirm_action}) }}
     </main>
 
     {% set _medium_body %}

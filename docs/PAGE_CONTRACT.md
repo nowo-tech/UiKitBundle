@@ -528,6 +528,11 @@ dialog that cannot is a bug of that kit.
 5. **Behaviour**: native `<dialog>` opened with `showModal()`; focus moves in, Tab cycles inside, Escape and Cancel
    close it and focus returns to the opener (the UiKit runtimes do this).
 
+**`View\Confirm` confirmations** (partial `confirm`, 2.31) follow the same anatomy with their own classes: header
+(`nowo-ui-confirm__header`: title, ×), body (`__body`: message; `__expect`, the type-to-confirm input, right under
+it), footer (`__footer`: Cancel, then the confirm button posting the CSRF form — solid danger when destructive); medium
+width, height = content, tinted header and footer. No override needed.
+
 **Use the UiKit partials** (preferred). The `dialog` partial (`size: 'md' | 'wide'`, `status`, `footer`):
 
 ```twig

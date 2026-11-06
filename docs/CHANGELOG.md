@@ -113,6 +113,16 @@ dialog follows its content, and the JS confirm gets the header close button. A *
   body scrolls, header and footer always visible. 2.29 / 2.30 gave every dialog with a field, list, table or fold the
   size's height. Widths, tokens and markup are unchanged (the 2.27 / 2.28 / 2.29 markup fixtures are byte-identical).
   A free `confirm_dialog` panel (no anatomy) is no longer at least the size's height.
+- **`View\Confirm` dialogs on the dialog anatomy** (partial `confirm`: row / page action confirmations such as
+  UptimeMonitor *Delete monitor*, Wiki, Yopass; also the release and row detail dialogs and `askConfirm()`): a tinted
+  header with the title and ×, then a divider; the body with the message, and the type-to-confirm input right under
+  it, is the only part that scrolls; a tinted footer outside the body holds Cancel and then the single primary
+  (solid danger for a destructive confirm). The width is medium and the height follows the content, capped. This is
+  CSS only: the markup, ids, `nowo-ui-confirm__*` classes, CSRF forms and `nowo-ui-confirm.js` behaviour are
+  unchanged. WikiBundle can drop its `manage/_confirm_dialog.html.twig` override.
+- **Tinted dialog header and footer**: the `dialog` partial and the `confirm_dialog` anatomy get the same chrome:
+  a tinted header with a divider and a tinted footer. The tint comes from `--nowo-ui-dialog-chrome-bg`, which has no
+  `:root` value. Its default is `color-mix(in srgb, var(--nowo-ui-text) 4%, var(--nowo-ui-surface))`.
 
 ### Added
 

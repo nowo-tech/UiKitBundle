@@ -110,6 +110,57 @@ for (const [width, height] of [[1280, 900], [390, 844]] as const) {
       await expect(page.getByRole('status')).toHaveText('Submitted.');
     });
 
+    test('View\\Confirm on the dialog anatomy: tinted header and footer, content height (2.31)', async ({ page }) => {
+      await page.goto('/kit/dialogs');
+      await page.getByTestId('open-view-confirm').click();
+      const dialog = page.locator('dialog#archive-monitor');
+      await expect(dialog).toBeVisible();
+      const parts = await dialog.evaluate((node) => {
+        const panel = node.querySelector('.nowo-ui-confirm__panel') as HTMLElement;
+        const pick = (selector: string) => {
+          const el = panel.querySelector(`:scope > ${selector}`) as HTMLElement;
+          const r = el.getBoundingClientRect();
+          return { top: r.top, bottom: r.bottom, height: r.height, bg: getComputedStyle(el).backgroundColor, border: getComputedStyle(el).borderBottomWidth };
+        };
+        return {
+          dialog: node.getBoundingClientRect().toJSON() as DOMRect,
+          panelBg: getComputedStyle(panel).backgroundColor,
+          header: pick('.nowo-ui-confirm__header'),
+          body: pick('.nowo-ui-confirm__body'),
+          footer: pick('.nowo-ui-confirm__footer'),
+        };
+      });
+      expect(Math.round(parts.dialog.width)).toBe(md.w);
+      expect(parts.dialog.height).toBeLessThan(md.h);
+      expect(parts.header.bg).not.toBe(parts.panelBg);
+      expect(parts.footer.bg).toBe(parts.header.bg);
+      expect(parts.header.border).toBe('1px');
+      expect(parts.header.bottom).toBeLessThanOrEqual(parts.body.top + 1);
+      expect(parts.body.bottom).toBeLessThanOrEqual(parts.footer.top + 1);
+      await expect(dialog.locator('.nowo-ui-confirm__header').getByRole('button', { name: 'Close' })).toBeVisible();
+      const buttons = dialog.locator('.nowo-ui-confirm__footer button');
+      await expect(buttons).toHaveText(['Cancel', 'Archive']);
+      await shot(page, `view-confirm-${width}`);
+      await dialog.locator('.nowo-ui-confirm__header').getByRole('button', { name: 'Close' }).click();
+      await expect(dialog).toBeHidden();
+
+      await page.getByTestId('open-view-confirm-expect').click();
+      const danger = page.locator('dialog#delete-monitor');
+      await expect(danger).toBeVisible();
+      const submit = danger.locator('.nowo-ui-confirm__submit');
+      await expect(submit).toHaveClass(/nowo-ui-btn--solid/);
+      await expect(submit).toBeDisabled();
+      await danger.locator('#delete-monitor-expected').fill('api-health');
+      await expect(submit).toBeEnabled();
+      const box = await danger.evaluate((node) => node.getBoundingClientRect().toJSON() as DOMRect);
+      expect(Math.round(box.width)).toBe(md.w);
+      expect(box.height).toBeLessThan(md.h);
+      await expect(submit).toBeInViewport();
+      await shot(page, `view-confirm-expect-${width}`);
+      await page.keyboard.press('Escape');
+      await expect(danger).toBeHidden();
+    });
+
     test('JS confirm (askConfirm): natural height, close button (×) cancels (2.31)', async ({ page }) => {
       await page.goto('/kit/dialogs');
       await page.getByTestId('open-ask-confirm').click();
@@ -128,7 +179,7 @@ for (const [width, height] of [[1280, 900], [390, 844]] as const) {
       expect(xBox.y).toBeLessThan(box.y + 48);
       await shot(page, `ask-confirm-${width}`);
       await close.click();
-      await expect(page.locator('dialog.nowo-ui-confirm')).toHaveCount(0);
+      await expect(page.locator('dialog.nowo-ui-confirm:not([id])')).toHaveCount(0); // askConfirm's dialog is removed (the View\Confirm ones stay)
       await expect(page).toHaveURL(/\/kit\/dialogs$/);
     });
   });
