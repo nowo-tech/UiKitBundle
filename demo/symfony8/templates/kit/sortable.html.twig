@@ -1,0 +1,89 @@
+{#
+  UiKit 2.35 demo: js/nowo-ui-sortable.js. A board: columns (scope "columns", dragged by their header handle, x axis)
+  holding card lists (scope "cards", whole card by long press on touch; the column is a drop zone). A horizontal list
+  with handles below. "Refused card" is refused by the page script; "Failing card" is moved, then reverted as if the
+  write had failed. Fixtures only.
+#}
+{% extends '@NowoUiKit/layout/document.html.twig' %}
+{% set nowo_ui_document_title = 'Sortable · UiKit 2.35' %}
+
+{% block nowo_ui_styles %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/sortable-demo.css') }}">
+{% endblock %}
+
+{% block nowo_ui_body %}
+    <main id="main-content" class="nowo-ui-content" data-testid="sortable-demo">
+        <h1>Sortable</h1>
+        <p id="sortable-help">Drag, or press Alt with the arrow keys on a focused card or handle. Escape cancels a drag.</p>
+
+        <div class="kit-sortable-board"
+             data-testid="board"
+             data-nowo-ui-sortable="columns"
+             data-nowo-ui-sortable-list="board"
+             data-nowo-ui-sortable-list-label="the board"
+             data-nowo-ui-sortable-axis="x"
+             data-nowo-ui-sortable-labels="{{ {moved: '%label% moved to place %position% of %count%.'}|json_encode }}">
+            {% for column in columns %}
+                <section class="kit-sortable-column"
+                         data-testid="column-{{ column.id }}"
+                         data-nowo-ui-sortable-item="{{ column.id }}"
+                         data-nowo-ui-sortable-label="{{ column.title }}"
+                         data-nowo-ui-sortable-zone>
+                    <h2 class="kit-sortable-column__head">
+                        <button type="button" class="kit-sortable-handle" data-nowo-ui-sortable-handle
+                                data-testid="handle-{{ column.id }}"
+                                aria-label="Move column {{ column.title }}" aria-describedby="sortable-help"
+                                aria-keyshortcuts="Alt+ArrowLeft Alt+ArrowRight">⠿</button>
+                        {{ column.title }}
+                    </h2>
+                    <ul class="kit-sortable-cards"
+                        data-testid="list-{{ column.id }}"
+                        data-nowo-ui-sortable="cards"
+                        data-nowo-ui-sortable-list="{{ column.id }}"
+                        data-nowo-ui-sortable-list-label="{{ column.title }}">
+                        {% for card in column.cards %}
+                            <li class="kit-sortable-card"
+                                tabindex="0"
+                                data-testid="card-{{ card.id }}"
+                                data-nowo-ui-sortable-item="{{ card.id }}"
+                                aria-describedby="sortable-help"
+                                aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown Alt+ArrowLeft Alt+ArrowRight"
+                                {% if card.refuse ?? false %}data-demo-refuse{% endif %}
+                                {% if card.fail ?? false %}data-demo-fail{% endif %}>
+                                {{ card.title }}
+                                <a href="#{{ card.id }}" data-testid="link-{{ card.id }}">details</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </section>
+            {% endfor %}
+        </div>
+
+        <h2>Horizontal list with handles</h2>
+        <ol class="kit-sortable-steps"
+            data-testid="steps"
+            data-nowo-ui-sortable="steps"
+            data-nowo-ui-sortable-list="steps"
+            data-nowo-ui-sortable-axis="x">
+            {% for step in steps %}
+                <li class="kit-sortable-step" data-testid="step-{{ step|lower }}" data-nowo-ui-sortable-item="{{ step|lower }}" data-nowo-ui-sortable-label="{{ step }}">
+                    <button type="button" class="kit-sortable-handle" data-nowo-ui-sortable-handle
+                            data-testid="step-handle-{{ step|lower }}"
+                            aria-label="Move {{ step }}" aria-describedby="sortable-help"
+                            aria-keyshortcuts="Alt+ArrowLeft Alt+ArrowRight">⠿</button>
+                    {{ step }}
+                </li>
+            {% endfor %}
+        </ol>
+
+        <h2>Event log</h2>
+        <ol data-testid="log" class="kit-sortable-log"></ol>
+    </main>
+{% endblock %}
+
+{% block nowo_ui_scripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/nowo-ui-sortable.js', 'nowo_ui_kit') }}" defer></script>
+    <script src="{{ asset('js/sortable-demo.js') }}" defer></script>
+{% endblock %}

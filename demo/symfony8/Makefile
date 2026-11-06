@@ -1,7 +1,7 @@
 # Makefile for Symfony 8.0 Demo (Ui Kit Bundle)
 # Run from this directory: make up, make install, etc.
 
-.PHONY: help up down build install shell logs test test-coverage cache-clear update-bundle ensure-up restart test-e2e demo-screenshots
+.PHONY: help up down build install shell logs test test-coverage cache-clear update-bundle ensure-up restart test-e2e test-e2e-sortable demo-screenshots
 
 help:
 	@echo "Symfony 8.0 Demo - Ui Kit Bundle"
@@ -17,6 +17,7 @@ help:
 	@echo "  make cache-clear    Clear Symfony cache"
 	@echo "  make update-bundle  Update nowo-tech/ui-kit-bundle and clear cache"
 	@echo "  make test-e2e       Playwright e2e of the page contract host-theme demo (REQ-DEMO-013)"
+	@echo "  make test-e2e-sortable  Sortable e2e: Chromium, Firefox, WebKit, and touch input in Chromium"
 	@echo "  make demo-screenshots  Refresh docs/images/demo/page-contract-*.webp via Playwright"
 	@echo ""
 
@@ -82,6 +83,16 @@ test-e2e: ensure-up
 		-e DEMO_BASE_URL=http://127.0.0.1:$$PORT \
 		$(PLAYWRIGHT_IMAGE) \
 		bash -lc 'npm install --no-fund --no-audit && npx playwright test --project=chromium'
+
+# UiKit 2.35 sortable in Chromium, Firefox and WebKit, and touch input in Chromium. A hang cannot hold the machine: deadline.
+test-e2e-sortable: ensure-up
+	@mkdir -p e2e/node_modules
+	@PORT=$$(grep -E '^PORT=' .env 2>/dev/null | cut -d= -f2 | tr -d '\r'); PORT=$${PORT:-8092}; \
+	timeout $${E2E_DEADLINE:-420} docker run --rm --init --network host \
+		-v "$(CURDIR)/e2e:/e2e" -w /e2e \
+		-e DEMO_BASE_URL=http://127.0.0.1:$$PORT \
+		$(PLAYWRIGHT_IMAGE) \
+		bash -lc 'npm install --no-fund --no-audit && npx playwright test sortable --workers=1 --global-timeout=360000 --project=chromium --project=firefox --project=webkit --project=chromium-touch'
 
 demo-screenshots: ensure-up
 	@mkdir -p ../../docs/images/demo e2e/node_modules

@@ -48,6 +48,7 @@
 - [Side panel and drawer (2.25)](#side-panel-and-drawer-225)
 - [Remote form dialog (2.28)](#remote-form-dialog-228)
 - [Focusable scroll regions (2.28)](#focusable-scroll-regions-228)
+- [Sortable (2.35)](#sortable-235)
 - [Overlays and the shell (2.28)](#overlays-and-the-shell-228)
 - [Menu semantics (2.28)](#menu-semantics-228)
 - [Compact header (2.27)](#compact-header-227)
@@ -2076,6 +2077,155 @@ are covered by one `MutationObserver` and one `ResizeObserver`, throttled to an 
 listener). Since 2.29.1 a pass after a mutation or a resize syncs only the regions concerned (inserted regions, the
 region whose content changed, the region that resized); the whole document is scanned once, at start-up. Regions
 that leave the document are unobserved on the next pass, and an `aria-label` the script set follows the caption.
+
+## Sortable (2.35)
+
+Reorder by pointer, touch and keyboard, within a list and between lists, over markup you own: kanban cards and columns,
+a settings list, table rows. There is no partial and no third-party library. Load the script on the page (opt-in, not
+in `nowo_ui_script_names()`):
+
+```twig
+{{ include(nowo_ui_partial('scripts'), {script_names: nowo_ui_script_names()|merge(['sortable'])}) }}
+{# or, in a page's nowo_ui_scripts block #}
+<script src="{{ asset('js/nowo-ui-sortable.js', 'nowo_ui_kit') }}" defer></script>
+```
+
+### Markup
+
+| Attribute | On | Meaning |
+|-----------|-----|---------|
+| `data-nowo-ui-sortable="<scope>"` | root | Lists move items with every list whose root has the same scope, also across roots. Scopes let cards and columns nest on one board |
+| `data-nowo-ui-sortable-list="<id>"` | list | May be the same element as the root. Its items are the nearest ones: a nested list keeps its own |
+| `data-nowo-ui-sortable-item="<id>"` | item | The item, or something in it, must be focusable for the keyboard (see [the contract](#sortable-accessibility-contract)) |
+| `data-nowo-ui-sortable-handle` | inside an item | Optional. With a handle only the handle drags, and on touch it drags at once. Also the class `nowo-ui-sortable__handle` for the look alone |
+| `data-nowo-ui-sortable-axis="x\|y"` | list or its root | Default `y`. Lists are one row or one column; a wrapping grid is not supported |
+| `data-nowo-ui-sortable-zone` | around a list | A wider drop area standing for the list inside it, such as a kanban column around its card list |
+| `data-nowo-ui-sortable-disabled` | root, list or item | Nothing drags from it or lands in it |
+| `data-nowo-ui-sortable-ignore` | inside an item | No drag starts here. Buttons, form fields, labels, `summary`, `[role="button"]` and editable content already behave so; links do not, so a card whose title is a link still drags |
+| `data-nowo-ui-sortable-label`, `data-nowo-ui-sortable-list-label` | item, list | Names in announcements. Default: the item's text (first 80 characters), the list's id |
+| `data-nowo-ui-sortable-labels` | root | JSON wording, below |
+
+```twig
+<div data-nowo-ui-sortable="columns" data-nowo-ui-sortable-list="board" data-nowo-ui-sortable-axis="x" class="board">
+  <section data-nowo-ui-sortable-item="{{ column.id }}" data-nowo-ui-sortable-label="{{ column.title }}" data-nowo-ui-sortable-zone>
+    <h2><button type="button" data-nowo-ui-sortable-handle aria-label="Move {{ column.title }}"
+                aria-keyshortcuts="Alt+ArrowLeft Alt+ArrowRight">⠿</button> {{ column.title }}</h2>
+    <ul data-nowo-ui-sortable="cards" data-nowo-ui-sortable-list="{{ column.id }}" data-nowo-ui-sortable-list-label="{{ column.title }}">
+      <li tabindex="0" data-nowo-ui-sortable-item="{{ card.id }}">{{ card.title }}</li>
+    </ul>
+  </section>
+</div>
+```
+
+Content in a list that is not an item stays where it is: after the last item, an item is placed right behind that item.
+In a list with no items, an item is appended to the list, so keep "add" buttons and empty messages outside the list
+(they can be inside the zone). An empty list needs a `min-height` of your own unless a zone surrounds it.
+
+### Events: the host does the write
+
+Bubbling `CustomEvent`s on the root of the destination list. With roots per column, listen on a common ancestor.
+
+| Event | Cancelable | `detail` |
+|-------|------------|----------|
+| `nowo-ui:sortable:start` | yes, stops the drag | `{scope, id, listId, index, source}` (pointer only) |
+| `nowo-ui:sortable:move` | yes, refuses the move | `{scope, id, listId, fromListId, index, fromIndex, source: 'pointer'\|'keyboard', item}`, before the DOM changes |
+| `nowo-ui:sortable:moved` | no | the same, plus `revert()`, after the DOM changed |
+| `nowo-ui:sortable:cancel` | no | `{scope, id, listId, index, source, reason: 'escape'\|'refused'\|'lost'\|'same-place'}`, on the source's root. A pointer `start` is always followed by `moved` or `cancel`; a refused keyboard move has neither |
+| `nowo-ui:sortable:reverted` | no | the `move` detail, on the origin's root |
+
+`index` is the place among the other items of the list, so it is the final position. Refuse a move on `move`, which is
+synchronous. Do the write on `moved`, and on failure put the item back:
+
+```js
+document.addEventListener('nowo-ui:sortable:moved', async ({ detail }) => {
+  const res = await fetch(url, { method: 'POST', body: new URLSearchParams({ list: detail.listId, position: detail.index, _token: token }) });
+  if (!res.ok) detail.revert();
+});
+```
+
+`revert()` restores the place, keeps focus and announces. It returns `false`, doing nothing, when it was already used,
+when the same item has moved again since (a late failure must not undo a newer move; reload instead), or when the item
+or its list left the page. A morph or a Turbo render during a drag cancels it (`reason: 'lost'`).
+
+### Keyboard
+
+Alt+Up / Alt+Down move within the list; Alt+Left / Alt+Right go to the previous / next list of the scope, in document
+order, keeping the position where it can. On an `x` list the two swap, and Left and Right follow `dir="rtl"`. There is
+no "grab" mode, and each press is one move. Keys do nothing inside form fields and editable content.
+
+### Touch
+
+- **Handle:** `touch-action: none`, so it drags at once and never scrolls the page. Make it at least 24 by 24 CSS px.
+- **Whole item:** a long press (250 ms) starts the drag. If the finger moves first (more than 8 px), the browser scrolls
+  as usual and no drag starts; once a drag runs, scrolling is refused.
+- **Auto-scroll:** near the edge of any scrolling ancestor, then of the page, in both directions.
+- Prefer a handle where items fill the screen. Text in a whole-item card cannot be selected on a touch screen, because
+  the long press belongs to the drag.
+
+### Sortable accessibility contract
+
+**The kit does:**
+
+- Alt+arrows on the focused item or anything focusable in it; focus stays on the same element across the move.
+- A polite live region (`[data-nowo-ui-sortable-live]`, `role="status"`) next to the root announces the grab, each
+  move, a cancel, a refusal, a revert and the end of the list. `window.nowoUiAnnounceSortable(root, text)` speaks in it.
+- Escape cancels a drag and does not reach a dialog around it.
+- The placeholder and the moving copy are `aria-hidden`; the copy is `inert`.
+
+**You do:**
+
+- Make something in each item focusable: `tabindex="0"` on the item or, better, a `<button>` handle with an
+  `aria-label`.
+- Tell people the shortcut: visible help or `aria-describedby`, plus `aria-keyshortcuts` on the focusable element.
+- **Give a way to move that does not need dragging (WCAG 2.5.7):** a status select, a move menu or up / down buttons. Alt
+  keys do not exist for a pointer-only user on a phone. This component does not draw one.
+- Pass translated wording: `data-nowo-ui-sortable-labels` takes the keys `grabbed`, `moved`, `movedToList`, `cancelled`,
+  `refused`, `reverted`, `edge`, with `%label%`, and for the two move messages `%position%`, `%count%`, `%list%`. Default
+  wording is English. Text is written with `textContent`, never as HTML.
+
+### Theming and hooks
+
+Tokens `--nowo-ui-sortable-drop-bg`, `--nowo-ui-sortable-drop-line`, `--nowo-ui-sortable-ghost-shadow`,
+`--nowo-ui-sortable-z` ([THEMING](THEMING.md)). Classes: `.is-dragging` on the item (the kit takes it out of the flow, and
+it stays rendered and focusable), `.is-drop-target` on the list under the pointer, `.nowo-ui-sortable__placeholder`,
+`.nowo-ui-sortable__ghost`, `.nowo-ui-sortable__handle`; `html[data-nowo-ui-sortable-active]` during a drag. No framework
+defaults, so every `css_framework` behaves alike.
+
+**CSP:** no `style=` in markup and no inline script or handler. Size and position of the placeholder and the copy go
+through the CSSOM, which `style-src-attr 'none'` allows.
+
+**The copy** is a clone of the item without `id`, `name`, `form`, `for`, `tabindex`, `on*`, `data-controller`,
+`data-action`, `data-turbo*`, `data-*-target`, `data-*-outlet` and `data-nowo-ui-*`, and without scripts, frames, media
+and templates. It is inserted in the item's own parent, so `.list > .card` rules keep applying, and with
+`position: fixed`, so an ancestor with `overflow` does not clip it. An ancestor with `transform` or `contain: paint`
+does clip it. Rules on `:last-child` may see it during a drag.
+
+**Limits:** light DOM only, not inside a shadow root. One row or column per list. A dragged table row's copy does not
+keep the column widths.
+
+### Testing on a real device
+
+The automated tests send real touch input in Chromium only (emulation of a Pixel 7, through its input pipeline), and
+synthetic events in Firefox and WebKit, which prove the script's logic and nothing about those engines' gestures. Nothing
+here has been run on a phone. Before relying on drag on touch, check `/kit/sortable` in `demo/symfony8` on **iPhone
+Safari**, **Android Chrome** and, if you support it, **Firefox for Android**:
+
+1. Swipe vertically starting on a card: the list scrolls, no drag starts. Do it fast and slowly.
+2. Swipe sideways starting on a card: the board scrolls, no drag starts.
+3. Hold a card still for about a quarter of a second: the copy appears under the finger. No link preview, callout,
+   text selection, magnifier or context menu appears, also when holding on the card's link.
+4. Keep moving without lifting: the page does not scroll with the finger and the address bar does not move.
+5. Drag to another column: the placeholder follows. Hold at the screen edge: the board brings the next column in. Hold at
+   the bottom edge of a long column: it scrolls.
+6. Drop: the card lands where the placeholder was, and the card's link does not open.
+7. Drag a column by its handle, and a step by its handle: the drag starts at once, with no long press.
+8. Tap a card's link: it opens. Tap a handle: nothing moves.
+9. While dragging, put a second finger down, or lock the phone and come back: no copy or placeholder stays behind.
+10. With VoiceOver and TalkBack on: the announcements are heard, and the move has a route without dragging.
+
+If 1, 3 or 4 fail on a device, use handles and keep the non-drag route as the main path there.
+
+Demo: `/kit/sortable` in `demo/symfony8`; `make -C demo/symfony8 test-e2e-sortable`.
 
 ## Overlays and the shell (2.28)
 
