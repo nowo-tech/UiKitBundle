@@ -143,6 +143,8 @@ describe('nowo-ui-sortable', () => {
     document.dispatchEvent(new Event('turbo:before-render'));
     listeners.splice(0).forEach(([type, fn]) => document.removeEventListener(type, fn));
     pointer('pointercancel', document.body, 0, 0);
+    pointer('pointerdown', document.body, 0, 0); // a press clears a click guard left by this test's drag, as on a real page
+    pointer('pointerup', document.body, 0, 0);
     restoreSizes();
     document.body.innerHTML = '';
     delete (Element.prototype as unknown as { checkVisibility?: unknown }).checkVisibility;
