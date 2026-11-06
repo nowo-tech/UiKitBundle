@@ -115,6 +115,27 @@
 
 ## Unreleased
 
+Security fixes, no markup or configuration change. Three behaviours change, only for hosts in these cases:
+
+- **`auto-refresh` peer:**
+  - A `url` value on another origin, or a polled URL that redirects there, stops working: the view stays as it was. Serve
+    it from the same origin. There is no option to allow another origin.
+  - Refreshed regions go through the fragment filter, so after the first refresh they lose inline `on*` handlers,
+    `<script>` (also `type="application/json"` data blocks), `<object>`, `<embed>`, `<base>`, `meta[http-equiv]`,
+    `iframe[srcdoc]`, non-http(s) iframes and `javascript:` URLs. Move handlers to Stimulus actions, and data blocks to
+    `data-*` attributes or outside the region.
+- **`list-pagination` peer:** appended rows, confirm dialogs and pager links also lose `<object>`, `<embed>`, `<base>`,
+  `meta[http-equiv]`, non-http(s) iframes and SVG animations of `href`, and `on*` and `<script>` inside `<template>`
+  content. Kit rows have none of them. `sanitizeImported()` now returns a boolean; code that ignores it still works unless
+  the root element itself is dropped.
+- **Remote form dialogs:** a hand-written form with a control named `action`, `method`, `enctype`,
+  `hasAttribute` or `getAttribute` now posts through the dialog like any other form, instead of a full-page native POST.
+  If the host relied on that, add `data-nowo-ui-remote-form-native` to the form. Symfony named forms (`form[action]`) are
+  not affected.
+
+Hosts that copied a peer file alone must also copy `src/nowo-ui-fragment-filter.ts`; see
+[STIMULUS.md](STIMULUS.md#auto-refresh-stimulus-peer-only). Re-exporting from `vendor/` needs nothing.
+
 ## To 2.33.0
 
 From **2.32.x**: `composer update nowo-tech/ui-kit-bundle`. No markup change by default (the BC fixtures still

@@ -104,6 +104,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Security
+
+Leftovers of audit Appendix GT. Audited 2026-11-06: Pass (good), overall risk Low; nothing above Info open.
+
+- **`auto-refresh` same-origin and filtered (GT-L4, Low):** a `url` on another origin, or a polled URL redirecting there,
+  put that origin's region in the host page, and its `<img onerror>` ran with no click. A `url` on another origin, or not
+  http(s), is now refused with one console warning and no request; the fetch uses `mode: 'same-origin'`; each region goes
+  through the fragment filter while it is still in the response's inert document. After the first refresh, regions lose `<script>`, including `type="application/json"` data blocks, and inline `on*`: see UPGRADING.
+- **`list-pagination` shares the fragment filter (GT-I6, Info):** `sanitizeImported()` also removes `meta[http-equiv]`,
+  `<base>`, `<object>`, `<embed>`, non-http(s) iframes and SVG animations of `href`, and enters nested `<template>`
+  content. It keeps its stricter rules (`srcdoc`, script URLs of `src`, `data`, `poster`). It now returns `false` when
+  the root element itself was dropped.
+
+### Changed
+
+- New `nowo-ui-fragment-filter.ts`: the filter of `parseFragment()`, now shared with the two peers above, whose output
+  for the dialogs is unchanged. `DROPPED_ELEMENTS` is still exported by the remote form core.
+- **Form controls named like form properties (GT-I7, Info):** `submitTarget()`, `submitButtons()`, `liftActions()` and
+  `submit()` read through the prototypes. A form with a control named `action`, `method`, `enctype`, `hasAttribute` or `getAttribute` now posts through the dialog, where it fell back to a full-page native POST; one named `elements` keeps its submit buttons disabled while saving; one with `ownerDocument` and lifted actions now opens, where it failed.
+
+### Fixed
+
+- **Import without a DOM (GT-I8, Info):** `nowo-ui-remote-form-core.ts` read `Element.prototype` at module load and
+  `nowo-ui-overlay.ts` touched `window`, so a server-side import or a Node test environment threw `ReferenceError`.
+
 ## [2.33.0] - 2026-11-06
 
 Symfony Beacon override requests UI-1…UI-5 (`docs/ops/OVERRIDES-INVENTORY.md`, UiKit group). All opt-in; the default

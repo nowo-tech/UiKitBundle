@@ -388,7 +388,7 @@ fonts painted above the fold.
 ### Stimulus peers
 
 - **FR-PEER-001**: Stimulus peers (`stimulus-peers/*.ts`, catalogue in `stimulus-peers/README.md`) are type-checked and covered by Vitest; `confirm-submit` supports form `submit` and single-button `click` hooks plus `blocked`.
-- **FR-PEER-002**: Stimulus peer `auto-refresh` (`auto_refresh_controller.ts`): values `interval` (default 10000 ms, floor 2000) and `url`; targets `toggle` (`aria-pressed`) and `status`; replaces id-carrying `[data-auto-refresh-region]` from a same-origin GET; skips hidden tabs, paused state and overlapping requests; dispatches `auto-refresh:refreshed`. Gated at 100% Vitest coverage.
+- **FR-PEER-002**: Stimulus peer `auto-refresh` (`auto_refresh_controller.ts`): values `interval` (default 10000 ms, floor 2000) and `url`; targets `toggle` (`aria-pressed`) and `status`; replaces id-carrying `[data-auto-refresh-region]` from a same-origin GET (`mode: 'same-origin'`, a `url` on another origin refused, each region through the fragment filter); skips hidden tabs, paused state and overlapping requests; dispatches `auto-refresh:refreshed`. Gated at 100% Vitest coverage.
 - **FR-PEER-003** (1.15): `collapse-panel` keeps each panel's open state in one localStorage map; server default without saved state.
 - **FR-PEER-004** (1.15): `temporary-reveal` shows a masked secret (URL credentials or whole value) temporarily, then auto-hides and purges copy attributes.
 - **FR-PEER-005** (1.15): `datatable` enhances server-rendered tables with DataTables Responsive (optional peer dependencies; host loads the stylesheets).

@@ -11,6 +11,7 @@ import {
   isPlainClick,
   liftActions,
   MAX_STEPS,
+  NATIVE_ATTR,
   nestedLayerOwnsEscape,
   openerTitle,
   parseFragment,
@@ -47,6 +48,20 @@ type Reply = { status?: number; type?: string; headers?: Record<string, string>;
 
 export function reply({ status = 200, type = 'basic', headers = { 'content-type': 'text/html; charset=UTF-8' }, body = '' }: Reply = {}): Response {
   return { status, type, ok: status >= 200 && status < 300, headers: new Headers(headers), text: () => Promise.resolve(body) } as unknown as Response;
+}
+
+/**
+ * What a browser does for a control named like a form property (happy-dom does not): the control wins over the DOM's
+ * own property. happy-dom calls hasAttribute, getAttribute and setAttribute on `this` itself, so those three cannot be
+ * shadowed here. All names were checked with real shadowing in Chromium, Firefox and WebKit before this was released.
+ */
+function shadow(form: HTMLFormElement, ...names: string[]): void {
+  names.forEach((name) => {
+    const control = document.createElement('input');
+    control.name = name;
+    Element.prototype.append.call(form, control);
+    Object.defineProperty(form, name, { configurable: true, value: control });
+  });
 }
 
 describe('remote form helpers', () => {
@@ -340,6 +355,43 @@ describe('remote form helpers', () => {
 describe('dialog footer (2.29)', () => {
   afterEach(() => {
     document.body.innerHTML = '';
+  });
+
+  describe('controls named like form properties (GT-I7)', () => {
+    it('still lifts the actions with a shadowed id, ownerDocument, isConnected or closest', () => {
+      document.body.innerHTML = '<div id="b"><form id="f"><div class="nowo-ui-form__actions"><button type="submit" id="go">Go</button></div></form></div><footer id="foot" hidden></footer>';
+      const form = document.getElementById('f') as HTMLFormElement;
+      shadow(form, 'id', 'ownerDocument', 'isConnected', 'closest');
+      const footer = document.getElementById('foot') as HTMLElement;
+      expect(liftActions(document.getElementById('b') as HTMLElement, footer)).toBe(true);
+      expect(footer.querySelector('#go')?.getAttribute('form')).toBe('f');
+    });
+
+    it('gives an anonymous form an id through the prototype', () => {
+      document.body.innerHTML = '<div id="b"><form><div class="nowo-ui-form__actions"><button type="submit" id="go">Go</button></div></form></div><footer id="foot" hidden></footer>';
+      const form = document.querySelector('form') as HTMLFormElement;
+      shadow(form, 'id');
+      expect(liftActions(document.getElementById('b') as HTMLElement, document.getElementById('foot'))).toBe(true);
+      const id = Element.prototype.getAttribute.call(form, 'id') as string;
+      expect(id).toMatch(/^nowo-ui-remote-form-\d+$/);
+      expect(document.getElementById('go')?.getAttribute('form')).toBe(id);
+    });
+
+    it('lifts a form that is its own actions block', () => {
+      document.body.innerHTML = '<div id="b"><form id="f" data-nowo-ui-dialog-actions><button type="submit" id="go">Go</button></form></div><footer id="foot" hidden></footer>';
+      const form = document.getElementById('f') as HTMLFormElement;
+      shadow(form, 'closest', 'querySelectorAll', 'childNodes', 'remove', 'append');
+      expect(liftActions(document.getElementById('b') as HTMLElement, document.getElementById('foot'))).toBe(true);
+      expect(document.getElementById('foot')?.querySelector('#go')).not.toBeNull();
+    });
+
+    it('resolves the submit target and the submit buttons', () => {
+      document.body.innerHTML = '<form method="post" action="/save" enctype="multipart/form-data"><button type="submit" id="go">Go</button></form>';
+      const form = document.querySelector('form') as HTMLFormElement;
+      shadow(form, 'action', 'method', 'enctype', 'elements');
+      expect(submitTarget(form, null, null)).toEqual({ action: `${window.location.origin}/save`, method: 'post', enctype: 'multipart/form-data' });
+      expect(submitButtons(form).map((button) => button.id)).toEqual(['go']);
+    });
   });
 
   it('moves the form actions into the footer and binds them to the form', () => {
@@ -664,6 +716,27 @@ describe('RemoteFormSession', () => {
       expect(assign).toHaveBeenCalledWith('/settings?tab=alerts');
       expect(dialog.open).toBe(false);
       expect(events.find(([name]) => name === 'saved')).toEqual(['saved', { redirect: '/settings?tab=alerts', status: 204 }, true]);
+    });
+
+    it.each(['action', 'method', 'enctype', 'elements'])('stays in the dialog with a control named %s (GT-I7)', async (name) => {
+      shadow(form(), name);
+      const fetchMock = vi.fn().mockResolvedValue(reply({ status: 204, headers: {} }));
+      vi.stubGlobal('fetch', fetchMock);
+      const event = await submitForm(form());
+      expect(event.defaultPrevented).toBe(true);
+      expect(fetchMock.mock.calls[0]?.[0]).toBe(`${window.location.origin}/form`);
+      expect((fetchMock.mock.calls[0] as [string, RequestInit])[1]).toMatchObject({ method: 'POST', mode: 'same-origin' });
+    });
+
+    it('does not ask the form itself for the native marker, which a control could shadow (GT-I7)', async () => {
+      await openWith(reply({ body: '<form method="post" action="/form" data-nowo-ui-remote-form-native></form>' }));
+      const own = vi.spyOn(form(), 'hasAttribute');
+      const fetchMock = vi.fn();
+      vi.stubGlobal('fetch', fetchMock);
+      const event = await submitForm(form());
+      expect(event.defaultPrevented).toBe(false);
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(own).not.toHaveBeenCalledWith(NATIVE_ATTR);
     });
 
     it('reloads on 204 without a header, on an invalid header and on a 3xx', async () => {

@@ -438,6 +438,7 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | `Resources/assets/stimulus-peers/README.md` | Peer catalogue (identifier ↔ kit IIFE) | FR-PEER-001 |
 | `Resources/assets/stimulus-peers/ask_confirm.ts` | 2.8: promise-based `askConfirm()` in a native dialog | FR-PEER-001, FR-CONFIRM-001 |
 | `Resources/assets/stimulus-peers/auto_refresh_controller.ts` | `auto-refresh`: periodic region re-render | FR-PEER-002 |
+| `Resources/assets/src/nowo-ui-fragment-filter.ts` | Fragment filter shared by `parseFragment()`, `auto-refresh` and `list-pagination` | FR-PEER-002, FR-PAGINATION-002 |
 | `Resources/assets/stimulus-peers/clipboard_copy_controller.ts` | `clipboard-copy` | FR-PEER-001, FR-CLIPBOARD-001 |
 | `Resources/assets/stimulus-peers/collapse_panel_controller.ts` | 1.15: `collapse-panel` (state in a localStorage map) | FR-PEER-003 |
 | `Resources/assets/stimulus-peers/confirm_dialog_controller.ts` | `confirm-dialog` (typed confirmation, body portal) | FR-PEER-001, FR-CONFIRM-001 |

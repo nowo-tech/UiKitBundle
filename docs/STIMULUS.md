@@ -227,9 +227,18 @@ Stimulus peer: identifier `release-status` (`release_status_controller.ts`). Put
 
 ## Auto refresh (Stimulus peer only)
 
-No kit IIFE. Periodically re-renders server regions of the current page: `GET` of the current URL or of the `url` value (not origin-checked: keep it same-origin)
-(header `X-Requested-With: auto-refresh`), then every `[data-auto-refresh-region]` **with an id** inside the controller
-root is replaced by the element with the same id in the response. Paused while the tab is hidden or after the toggle.
+No kit IIFE. Periodically re-renders server regions of the current page: same-origin `GET` of the current URL or of the
+`url` value (header `X-Requested-With: auto-refresh`), then every `[data-auto-refresh-region]` **with an id** inside the
+controller root is replaced by the element with the same id in the response. Paused while the tab is hidden or after the
+toggle.
+
+Same-origin is enforced (audit GT-L4). A `url` on another origin, or not http(s), sends nothing and warns once in the
+console. The request uses `mode: 'same-origin'`: a redirect to another origin fails and the current view stays, while a
+same-origin redirect still works. Each region goes through the fragment filter before it is imported, the same one as
+remote form dialogs ([USAGE](USAGE.md), "Fragment trust"): no `<script>` (a `type="application/json"` data block
+included), `iframe[srcdoc]`, non-http(s) `<iframe>`, `meta[http-equiv]`, `<base>`, `<object>`, `<embed>`, `on*`,
+`javascript:` URLs or SVG animations of `href`. If the region element itself is one of those, the old one stays. Links,
+forms, images, SVG and Stimulus attributes are untouched.
 
 | Stimulus | Role |
 |----------|------|
@@ -380,7 +389,9 @@ partials for `View\Pagination::withMode('infinite' | 'responsive')` (never for t
 `[data-nowo-ui-pagination-more]`, the live region `[data-nowo-ui-pagination-status]`. Rows: `[data-nowo-ui-list-rows]`
 in the nearest ancestor. Runtime state: `data-nowo-ui-pagination-active` (`pager` | `infinite`),
 `data-nowo-ui-pagination-loading`, `aria-busy` on the rows. Event: `nowo-ui:rows-appended` on the rows region (bubbles;
-detail `{rows, page, url}`). Request header `X-Nowo-Ui-Pagination: 1`. See [USAGE](USAGE.md#pagination-modes-223).
+detail `{rows, page, url}`). Request header `X-Nowo-Ui-Pagination: 1`. Imported rows, confirm dialogs and pager links go
+through the fragment filter (audit GT-I6), nested `<template>` content included, plus `srcdoc` and script URLs of `src`,
+`data` and `poster`. See [USAGE](USAGE.md#pagination-modes-223).
 
 ## Visible when (2.23)
 
@@ -754,7 +765,7 @@ app.register('responsive-table', createLazyController(() => import('../vendor/no
 app.register('filters-collapse', createLazyController(() => import('../vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/filters_collapse_controller')));
 ```
 
-`release_status_controller.ts` imports `../src/nowo-ui-release-core.ts`, so keep the vendor directory layout intact (do not copy the peer file alone).
+`release_status_controller.ts` imports `../src/nowo-ui-release-core.ts`, and `auto_refresh_controller.ts` and `list_pagination_controller.ts` import `../src/nowo-ui-fragment-filter.ts`, so keep the vendor directory layout intact (do not copy the peer file alone).
 
 Peers are covered by Vitest (`stimulus-peers/*.test.ts`) and type-checked with `pnpm run typecheck`.
 
