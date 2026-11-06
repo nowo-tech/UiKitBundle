@@ -42,7 +42,8 @@
       dialog_header slot attributes; `class` is added to the slot classes. Checked by nowo_ui_safe_attrs() (no on*,
       style, srcdoc or unsafe URLs)
     - back_href (2.34): a back arrow (<a>, slot dialog_back) before the title. A link to a URL: it leaves the dialog. An
-      unsafe URL (javascript:, data:…, nowo_ui_safe_href()) prints no arrow
+      unsafe URL (javascript:, data:…, nowo_ui_safe_href()) prints no arrow. It checks the scheme, not the origin (//host
+      and /\host pass): validate any value taken from the request (?back=, the referer)
     - back_label (2.34; View\Label|string): accessible name of the arrow (default action.back)
   Replace one dialog by another (2.2): an opener inside an open dialog with data-nowo-ui-dialog-replace closes the
   enclosing dialog first and hands its focus-return target over (focus goes back to the element that opened the

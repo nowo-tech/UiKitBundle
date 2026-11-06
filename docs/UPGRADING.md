@@ -129,10 +129,22 @@ No markup or configuration change by default (the BC fixtures still match); ever
   `table` partial does not print `Table::$rowAttributes` or the foot.
 - **A partial included without `only` inherits its context.** `value` and `max` are both needed, and `percent` wins, so a
   lone `value` in scope changes nothing. A page that has **both** `value` and `max` in scope and includes `progress` with no
-  `percent` and without `only` now gets a determinate meter: pass `indeterminate: true`, or include with `only`.
+  `percent` and without `only` now gets a determinate meter: pass `indeterminate: true`, or include with `only`. Besides
+  `value` + `max`, the new names `back_href`, `back_label`, `header_attr`, `footer_attr`, `foot_html`, `foot_attr`,
+  `meter_attr`, `label_visible` and `leading_template`, and `placement` on `remote_form_dialog`, are picked up from the
+  including page. If a page already uses one of them for something else, include with `only`.
 
-The new `*_attr` options are stricter than `attr`: `on*`, `style`, `srcdoc` and a `javascript:` URL throw. See
+The new `*_attr` options are stricter than `attr`: `on*`, `style` and `srcdoc` throw, and an unsafe URL value is dropped. See
 [SECURITY](SECURITY.md).
+
+### Output that changes, for unsafe values only
+
+- **`tree`:** a `node.href` with the scheme `javascript:`, `vbscript:`, `data:` or `blob:` now prints `href="#"`.
+- **`back_link` and `View\BackLink`:** the same schemes now print no link at all.
+
+Every other value prints exactly as before: paths, `http`, `https`, `mailto`, `tel`, `sms`, `ftp`, app schemes, `//host`, an
+empty value. These two places check less than `nowo_ui_safe_href()`, so that no working link disappears. Neither checks the
+origin: validate a value taken from the request (`?back=`, the referer).
 
 ## To 2.33.1
 

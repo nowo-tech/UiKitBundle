@@ -61,4 +61,20 @@ test.describe('UiKit 2.34 small options', () => {
     await page.locator('dialog.nowo-ui-confirm').getByRole('button', { name: 'Delete', exact: true }).click();
     expect(await answer).toBe(true);
   });
+
+  test('window.nowoUiAskConfirm is not moved by an injected <img name="body"> (audit HG-I7)', async ({ page }) => {
+    await page.goto('/kit/small-options');
+    await page.evaluate(() => {
+      for (const name of ['body', 'documentElement', 'createElement']) {
+        const img = Document.prototype.createElement.call(document, 'img');
+        img.setAttribute('name', name);
+        Object.getOwnPropertyDescriptor(Document.prototype, 'body')!.get!.call(document).append(img);
+      }
+    });
+    const answer = page.evaluate(() => window.nowoUiAskConfirm!('Delete this link?', { confirm: 'Delete', cancel: 'Keep' }));
+    const dialog = page.locator('dialog.nowo-ui-confirm');
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole('button', { name: 'Delete', exact: true }).click();
+    expect(await answer).toBe(true);
+  });
 });

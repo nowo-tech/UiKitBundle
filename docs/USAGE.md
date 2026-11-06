@@ -2069,7 +2069,7 @@ client falls back to the default for anything else.
 Hooks for pages that move their own markup to kit partials and must keep their classes, `data-*` hooks and test ids. All
 opt-in. Each `*_attr` is a map like `attr`: `true` = bare attribute, `false` and
 `null` = omitted, and `class` is added to the slot classes. They are checked by `nowo_ui_safe_attrs()`: `on*`, `style`,
-`srcdoc` and an unsafe URL throw; attributes the partial owns are dropped. See [SECURITY](SECURITY.md).
+`srcdoc` throw; an unsafe URL value is dropped; attributes the partial owns are dropped. See [SECURITY](SECURITY.md).
 
 **Table rows and foot.** `rowAttributes` on `View\Table` or `ListPage`, per render like `rowActions`; the foot is a block
 of `<tr>` rows, with no `<tfoot>` while it is empty:
@@ -2097,7 +2097,8 @@ these three apply to server-rendered nodes only.
 
 **Dialog.** `header_attr`, `footer_attr`, and `back_href` + `back_label` (default `action.back`): an arrow before the title,
 slot `dialog_back`. It is a link to a URL and leaves the dialog: it does not load an earlier step of a remote form dialog
-into the same dialog. An unsafe URL prints no arrow. `remote_form_dialog` takes `placement: end | start`, a side panel: full
+into the same dialog. An unsafe URL prints no arrow. It checks the scheme, not the origin (`//host` and `/\host` pass):
+validate any value taken from the request (`?back=`, the referer). `remote_form_dialog` takes `placement: end | start`, a side panel: full
 height at that edge, the whole screen on a phone. It does not forward the other options.
 
 **Progress.** `value` + `max` next to `percent` (`percent` wins); `max` <= 0 or a missing one stays indeterminate. The text

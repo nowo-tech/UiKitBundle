@@ -5,13 +5,16 @@ declare(strict_types=1);
 namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 
 use InvalidArgumentException;
+use Nowo\UiKitBundle\Shell\SafeHref;
 use Nowo\UiKitBundle\Twig\ThemeExtension;
+use Nowo\UiKitBundle\View\BackLink;
 use Nowo\UiKitBundle\View\Column;
 use Nowo\UiKitBundle\View\ListPage;
 use Nowo\UiKitBundle\View\PageHeader;
 use Nowo\UiKitBundle\View\Table;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Stringable;
 use Throwable;
 use Twig\Environment;
 use TypeError;
@@ -73,7 +76,6 @@ final class SmallOptions234Test extends TestCase
     public static function badRowAttributes(): iterable
     {
         yield 'handler' => [['onclick' => 'x()']];
-        yield 'javascript url' => [['data-url' => 'javascript:x()']];
         yield 'style' => [['style' => 'color:red']];
     }
 
@@ -85,6 +87,44 @@ final class SmallOptions234Test extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
         self::table(static fn (): array => $attributes)->rowAttributes(['name' => 'One'], 'first');
+    }
+
+    /**
+     * HG-M1: a value comes from data. One stored value must not take the whole list down for every viewer.
+     *
+     * @return iterable<string, array{0: string}>
+     */
+    public static function storedBadUrls(): iterable
+    {
+        yield 'javascript' => ['javascript:alert(1)'];
+        yield 'tel' => ['tel:+34600000000'];
+        yield 'ftp' => ['ftp://example.test/x'];
+        yield 'app scheme' => ['slack://channel'];
+        yield 'data image' => ['data:image/png;base64,AAAA'];
+        yield 'text' => ['JavaScript: the good parts'];
+    }
+
+    #[DataProvider('storedBadUrls')]
+    public function testAStoredBadUrlInTheTablePartialDropsOnlyThatAttribute(string $stored): void
+    {
+        $rows = ['first' => ['name' => 'One', 'link' => '/ok'], 'second' => ['name' => 'Two', 'link' => $stored]];
+        $table = new Table([new Column('name', 'Name')], $rows, label: 'Rows', rowAttributes: static fn (array $row): array => ['data-link-url' => $row['link'], 'data-name' => $row['name']]);
+        $html = self::twig()->render(self::PARTIALS.'_table.html.twig', ['table' => $table]);
+
+        self::assertStringContainsString('<tr class="nowo-ui-table__row" data-link-url="/ok" data-name="One">', $html);
+        self::assertStringContainsString('<tr class="nowo-ui-table__row" data-name="Two">', $html);
+        self::assertStringNotContainsString(htmlspecialchars($stored), $html);
+    }
+
+    #[DataProvider('storedBadUrls')]
+    public function testAStoredBadUrlInTheListScaffoldDropsOnlyThatAttribute(string $stored): void
+    {
+        $rows = [['name' => 'One', 'link' => '/ok'], ['name' => 'Two', 'link' => $stored]];
+        $page = new ListPage(new PageHeader('Rows'), [new Column('name', 'Name')], $rows, rowAttributes: static fn (array $row): array => ['data-link-url' => $row['link'], 'data-name' => $row['name']]);
+        $html = self::twig()->render('@NowoUiKit/page/list.html.twig', ['page' => $page]);
+
+        self::assertStringContainsString('<tr class="nowo-ui-table__row" data-link-url="/ok" data-name="One">', $html);
+        self::assertStringContainsString('<tr class="nowo-ui-table__row" data-name="Two">', $html);
     }
 
     public function testRowAttributesMustBeAnArray(): void
@@ -124,6 +164,16 @@ TWIG;
         self::assertStringContainsString('<tfoot class="nowo-ui-table__foot"><tr><th>Sum</th></tr></tfoot>', $html);
     }
 
+    /**
+     * HG-I6: a plain string is not trusted markup; only a `{% set %}` capture (as the list scaffold passes) prints as is.
+     */
+    public function testFootHtmlEscapesAPlainString(): void
+    {
+        $html = self::twig()->render(self::PARTIALS.'_table.html.twig', ['table' => self::table(), 'foot_html' => '<tr onclick="x()"><td>Sum</td></tr>']);
+        self::assertStringContainsString('&lt;tr onclick=&quot;x()&quot;&gt;', $html);
+        self::assertStringNotContainsString('<tr onclick', $html);
+    }
+
     public function testFootAttrIsChecked(): void
     {
         $this->assertTwigRefuses(self::PARTIALS.'_table.html.twig', ['table' => self::table(), 'foot_html' => 'x', 'foot_attr' => ['onclick' => 'x()']]);
@@ -151,17 +201,89 @@ TWIG;
         self::assertSame(1, substr_count($html, 'data-nowo-ui-tree-node="a"'));
     }
 
+    public function testATreeNodeWithAStoredBadUrlKeepsTheTreeWorking(): void
+    {
+        $html = self::twig()->render(self::PARTIALS.'_tree.html.twig', ['label' => 'T', 'attr' => ['id' => 't'], 'nodes' => [[
+            'id' => 'a', 'label' => 'A', 'href' => '/a',
+            'link_attr' => ['data-task-panel-url' => 'javascript:x()', 'data-keep' => '1'],
+            'item_attr' => ['data-src' => ' JAVASCRIPT:x()', 'data-keep-item' => '1'],
+        ]]]);
+        self::assertStringContainsString('data-keep="1"', $html);
+        self::assertStringContainsString('data-keep-item="1"', $html);
+        self::assertStringContainsString('href="/a" role="treeitem" data-nowo-ui-tree-item', $html);
+        self::assertStringNotContainsString('JAVASCRIPT', $html);
+        self::assertStringNotContainsString('javascript', $html);
+    }
+
+    /**
+     * HG-I4: the script's hooks stay the partial's: a toggle or a children URL on a leaf would change what the tree does.
+     */
+    public function testTreeHooksCannotBeSetThroughTheOptions(): void
+    {
+        foreach (['data-nowo-ui-tree-toggle', 'data-nowo-ui-tree-children-url', 'data-nowo-ui-tree-movable', 'DATA-NOWO-UI-TREE-DROP', 'data-nowo-ui-tree'] as $hook) {
+            $html = self::twig()->render(self::PARTIALS.'_tree.html.twig', ['label' => 'T', 'attr' => ['id' => 't'], 'nodes' => [[
+                'id' => 'a', 'label' => 'A', 'href' => '/a', 'link_attr' => [$hook => '/x'], 'item_attr' => [$hook => '/x'],
+            ]]]);
+            self::assertStringNotContainsString($hook.'="/x"', $html, $hook);
+        }
+    }
+
+    /**
+     * HG-L2: only what runs script changes; everything a host could legitimately link to stays as it was.
+     *
+     * @return iterable<string, array{0: string}>
+     */
+    public static function scriptHrefs(): iterable
+    {
+        yield 'javascript' => ['javascript:alert(1)'];
+        yield 'mixed case' => ['JaVaScRiPt:alert(1)'];
+        yield 'tab' => ["java\tscript:alert(1)"];
+        yield 'leading space' => ['  javascript:alert(1)'];
+        yield 'vbscript' => ['vbscript:x'];
+        yield 'data' => ['data:text/html,<script>x()</script>'];
+        yield 'blob' => ['blob:https://example.test/1'];
+    }
+
+    public function testRunsScriptReadsStringsOnly(): void
+    {
+        self::assertFalse(SafeHref::runsScript(null));
+        self::assertFalse(SafeHref::runsScript(7));
+        self::assertFalse(SafeHref::runsScript(''));
+        self::assertFalse(SafeHref::runsScript('tel:+34600000000'));
+        self::assertTrue(SafeHref::runsScript(new class implements Stringable {
+            public function __toString(): string
+            {
+                return 'javascript:x';
+            }
+        }));
+    }
+
+    #[DataProvider('scriptHrefs')]
+    public function testATreeNodeThatRunsScriptLinksNowhere(string $href): void
+    {
+        $html = self::twig()->render(self::PARTIALS.'_tree.html.twig', ['label' => 'T', 'attr' => ['id' => 't'], 'nodes' => [['id' => 'a', 'label' => 'A', 'href' => $href]]]);
+        self::assertStringContainsString('href="#" role="treeitem"', $html);
+        self::assertStringNotContainsString('script:', $html);
+    }
+
+    #[DataProvider('scriptHrefs')]
+    public function testABackLinkThatRunsScriptPrintsNoLink(string $href): void
+    {
+        self::assertStringNotContainsString('<a', self::twig()->render(self::PARTIALS.'_back_link.html.twig', ['href' => $href, 'label' => 'Back']));
+        $html = self::twig()->render(self::PARTIALS.'_page_header.html.twig', ['header' => new PageHeader('Title', back: new BackLink($href, 'Back to list'))]);
+        self::assertStringNotContainsString('Back to list', $html);
+        self::assertStringContainsString('Title', $html);
+    }
+
     /**
      * @return iterable<string, array{0: string, 1: array<string, mixed>}>
      */
     public static function badNodeAttributes(): iterable
     {
         yield 'link handler' => ['link_attr', ['onclick' => 'x()']];
-        yield 'link javascript' => ['link_attr', ['data-task-panel-url' => 'javascript:x()']];
-        yield 'link reserved href, unsafe' => ['link_attr', ['href' => 'javascript:x()']];
         yield 'link style' => ['link_attr', ['style' => 'color:red']];
         yield 'item handler' => ['item_attr', ['onfocus' => 'x()']];
-        yield 'item javascript' => ['item_attr', ['data-src' => ' JAVASCRIPT:x()']];
+        yield 'item style' => ['item_attr', ['style' => 'color:red']];
     }
 
     /**
@@ -225,7 +347,6 @@ TWIG;
     public static function badDialogAttributes(): iterable
     {
         yield 'footer handler' => ['footer_attr', ['onclick' => 'x()']];
-        yield 'footer javascript' => ['footer_attr', ['data-url' => 'javascript:x()']];
         yield 'header handler' => ['header_attr', ['onclick' => 'x()']];
         yield 'header style' => ['header_attr', ['style' => 'x']];
     }
@@ -330,7 +451,6 @@ TWIG;
     public static function badMeterAttributes(): iterable
     {
         yield 'handler' => [['onclick' => 'x()']];
-        yield 'javascript' => [['data-progress-url-value' => 'javascript:x()']];
         yield 'style' => [['style' => 'width:1%']];
     }
 

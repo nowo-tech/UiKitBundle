@@ -121,8 +121,22 @@ default output is unchanged (markup byte for byte, the BC fixtures untouched, ne
 - **Dialog hooks:** `footer_attr`, `header_attr`, `back_href` and `back_label` (back arrow before the title, new slot
   `dialog_back`). `remote_form_dialog` forwards `placement`, and as a side panel it takes the whole phone screen.
 - **Progress:** `value` + `max` next to `percent`, `label_visible: false`, `meter_attr`.
-- **`View\SafeAttributes`** and the Twig function `nowo_ui_safe_attrs()`: the check of the new attribute options. Refuses
-  `on*`, `style`, `srcdoc` and unsafe URL schemes in attributes that hold a URL; see [SECURITY](SECURITY.md).
+- **`View\SafeAttributes`** and the Twig function `nowo_ui_safe_attrs()`: the check of the new attribute options.
+  Refuses `on*`, `style` and `srcdoc` (exception); an unsafe URL value in an attribute that holds a URL is dropped, not
+  printed. See [SECURITY](SECURITY.md).
+- **`SafeHref::runsScript()`**, also `nowo_ui_theme.hrefRunsScript()` in templates.
+
+### Security
+
+Audit Appendix HG; re-verification pending.
+
+- **`tree` `node.href` (HG-L2, Low; since 2.24):** a `javascript:`, `vbscript:`, `data:` or `blob:` value now prints `href="#"`.
+  It ran on click unless the host's CSP stopped it.
+- **`back_link` and `View\BackLink` `href` (HG-L3, Low; since 2.7):** the same schemes now print no link.
+- Other values print as before; see [UPGRADING](UPGRADING.md#unreleased).
+- **`window.nowoUiAskConfirm` and `askConfirm()` (HG-I7, Info):** read `document.body`, `documentElement` and
+  `createElement` through the prototype, so an injected `<img name="body">` cannot hide the dialog and leave the question
+  unanswered.
 
 ## [2.33.1] - 2026-11-06
 

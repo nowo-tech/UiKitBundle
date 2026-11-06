@@ -8,8 +8,8 @@
     {# 2.24: a parent of the current node is always expanded (visible current item, reachable tab stop) #}
     {% set _expanded = _is_parent and (node.expanded|default(false) or nowo_ui_tree_has_current(_children)) %}
     {% set _group_id = nowo_ui_tree_group_id(tree_id, node.id) %}
-    {%- set _item_attr = nowo_ui_safe_attrs(node.item_attr|default({}), ['role', 'data-nowo-ui-tree-node']) %}
-    {%- set _link_attr = nowo_ui_safe_attrs(node.link_attr|default({}), ['href', 'role', 'tabindex', 'draggable', 'aria-level', 'aria-setsize', 'aria-posinset', 'aria-expanded', 'aria-owns', 'aria-current', 'data-nowo-ui-tree-item']) %}
+    {%- set _item_attr = nowo_ui_safe_attrs(node.item_attr|default({}), ['role', 'data-nowo-ui-tree', 'data-nowo-ui-tree-item', 'data-nowo-ui-tree-node', 'data-nowo-ui-tree-toggle', 'data-nowo-ui-tree-children-url', 'data-nowo-ui-tree-movable', 'data-nowo-ui-tree-drop', 'data-nowo-ui-tree-live', 'data-nowo-ui-tree-ready']) %}
+    {%- set _link_attr = nowo_ui_safe_attrs(node.link_attr|default({}), ['href', 'role', 'tabindex', 'draggable', 'aria-level', 'aria-setsize', 'aria-posinset', 'aria-expanded', 'aria-owns', 'aria-current', 'data-nowo-ui-tree', 'data-nowo-ui-tree-item', 'data-nowo-ui-tree-node', 'data-nowo-ui-tree-toggle', 'data-nowo-ui-tree-children-url', 'data-nowo-ui-tree-movable', 'data-nowo-ui-tree-drop', 'data-nowo-ui-tree-live', 'data-nowo-ui-tree-ready']) %}
     <li class="{{ nowo_ui_class('tree_item', bundle) }}{{ _item_attr.class is defined ? ' ' ~ _item_attr.class }}" role="none" data-nowo-ui-tree-node="{{ node.id }}"{{ nowo_ui_attrs('tree_item', bundle, nowo_ui_attrs_without_class(_item_attr)) }}>
         <div class="nowo-ui-tree__row{{ node.current|default(false) ? ' is-current' }}">
             {%- if _is_parent -%}
@@ -17,7 +17,7 @@
             {%- else -%}
                 <span class="nowo-ui-tree__spacer" aria-hidden="true"></span>
             {%- endif -%}
-            <a class="{{ nowo_ui_class('tree_link', bundle) }}{{ _link_attr.class is defined ? ' ' ~ _link_attr.class }}" href="{{ node.href }}" role="treeitem" data-nowo-ui-tree-item tabindex="{{ node.current|default(false) or (tab_first and loop.first and level == 1) ? '0' : '-1' }}" aria-level="{{ level }}" aria-setsize="{{ nodes|length }}" aria-posinset="{{ loop.index }}"{% if _is_parent %} aria-expanded="{{ _expanded ? 'true' : 'false' }}" aria-owns="{{ _group_id }}"{% endif %}{% if node.current|default(false) %} aria-current="page"{% endif %}{% if movable %} draggable="true"{% endif %}{{ nowo_ui_attrs('tree_link', bundle, nowo_ui_attrs_without_class(_link_attr)) }}>
+            <a class="{{ nowo_ui_class('tree_link', bundle) }}{{ _link_attr.class is defined ? ' ' ~ _link_attr.class }}" href="{{ nowo_ui_theme.hrefRunsScript(node.href) ? '#' : node.href }}" role="treeitem" data-nowo-ui-tree-item tabindex="{{ node.current|default(false) or (tab_first and loop.first and level == 1) ? '0' : '-1' }}" aria-level="{{ level }}" aria-setsize="{{ nodes|length }}" aria-posinset="{{ loop.index }}"{% if _is_parent %} aria-expanded="{{ _expanded ? 'true' : 'false' }}" aria-owns="{{ _group_id }}"{% endif %}{% if node.current|default(false) %} aria-current="page"{% endif %}{% if movable %} draggable="true"{% endif %}{{ nowo_ui_attrs('tree_link', bundle, nowo_ui_attrs_without_class(_link_attr)) }}>
                 {%- if leading_template %}{{ include(leading_template, {node: node}, false) }}{% endif -%}
                 {%- if node.icon|default(null) is not null %}<span class="nowo-ui-tree__icon" aria-hidden="true">{{ node.icon }}</span>{% endif -%}
                 <span class="nowo-ui-tree__label">{{ node.label|nowo_ui_trans }}</span>

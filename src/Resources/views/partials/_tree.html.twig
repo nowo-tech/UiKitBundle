@@ -6,7 +6,8 @@
   Slots: tree (root), tree_item (each li), tree_link (the treeitem link), tree_group (child lists).
 
   Required:
-    - nodes: list of hashes {id, label (View\Label|string), href, current?, expanded?, children? (nodes),
+    - nodes: list of hashes {id, label (View\Label|string), href (2.34: a javascript:, vbscript:, data: or blob: value
+      prints "#"; other schemes, such as tel:, stay; no origin check), current?, expanded?, children? (nodes),
       has_children? (true without children: lazy), children_url? (JSON children, see the script), icon? (text, e.g. an
       emoji), badge? (string), link_attr? and item_attr? (2.34: extra attributes of the link / the li, `class` added to
       the slot classes, checked by nowo_ui_safe_attrs(): no on*, style, srcdoc or unsafe URLs; the attributes the

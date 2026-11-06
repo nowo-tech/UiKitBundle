@@ -16,7 +16,9 @@ use PHPUnit\Framework\TestCase;
  * progress `value` + `max` / `label_visible` / `meter_attr`) render byte-identical to UiKit 2.33.1. The fixtures under
  * tests/Fixtures/bc-2.33 were rendered by the 2.33.1 templates (commit 283a46d) from exactly these scenarios; no
  * whitespace normalisation. The `inherited` scenarios include a partial with the parent context, the way a host page
- * does without `only`: a lone `value` in scope (a form block) must not turn an indeterminate meter determinate.
+ * does without `only`: a lone `value` in scope (a form block) must not turn an indeterminate meter determinate. The
+ * `*_schemes` scenarios hold the 2.34 href checks of `tree` and `back_link` to values that do not run script: every
+ * scheme a host could link to prints exactly as in 2.33.1.
  */
 final class SmallOptions234BcTest extends TestCase
 {
@@ -63,6 +65,23 @@ final class SmallOptions234BcTest extends TestCase
             'remote_form_dialog_stimulus' => static fn (): string => $render('_remote_form_dialog.html.twig', ['id' => 'r2', 'stimulus' => true, 'size' => 'md']),
             'tree' => static fn (): string => $render('_tree.html.twig', ['nodes' => $nodes, 'label' => 'Pages', 'movable' => true, 'attr' => ['id' => 'pages']]),
             'tree_actions' => static fn (): string => PageContractTwig::create(['actions' => '<button type="button" tabindex="-1">{{ node.id }}</button>'])->render($partials.'_tree.html.twig', ['nodes' => $nodes, 'label' => 'Pages', 'actions_template' => 'actions', 'attr' => ['id' => 'pages']]),
+            'tree_link_schemes' => static fn (): string => $render('_tree.html.twig', ['label' => 'Links', 'attr' => ['id' => 'links'], 'nodes' => [
+                ['id' => 'tel', 'label' => 'Call', 'href' => 'tel:+34600000000'],
+                ['id' => 'sms', 'label' => 'Text', 'href' => 'sms:+34600000000'],
+                ['id' => 'mail', 'label' => 'Mail', 'href' => 'mailto:a@example.test?subject=x&y=1'],
+                ['id' => 'ftp', 'label' => 'Files', 'href' => 'ftp://example.test/x'],
+                ['id' => 'app', 'label' => 'Chat', 'href' => 'slack://channel'],
+                ['id' => 'https', 'label' => 'Site', 'href' => 'https://example.test/a?b=1&c=2#d'],
+                ['id' => 'proto', 'label' => 'Other', 'href' => '//example.test/x'],
+                ['id' => 'rel', 'label' => 'Rel', 'href' => '../up'],
+                ['id' => 'hash', 'label' => 'Here', 'href' => '#x'],
+                ['id' => 'empty', 'label' => 'Empty', 'href' => ''],
+                ['id' => 'text', 'label' => 'Text', 'href' => 'javascript'],
+            ]]),
+            'back_link_schemes' => static fn (): string => implode('|', array_map(
+                static fn (string $href): string => $render('_back_link.html.twig', ['href' => $href, 'label' => 'Back <b>', 'testid' => 'back']),
+                ['/orders', 'https://example.test/a?b=1&c=2', 'mailto:a@example.test', 'tel:+34600000000', 'sms:+34600000000', 'ftp://example.test/x', '//example.test/x', '', '#x'],
+            )),
             'table' => static fn (): string => $render('_table.html.twig', ['table' => new Table([new Column('name', 'Name')], [['name' => 'One'], ['name' => '']], label: 'Rows')]),
             'progress_percent' => static fn (): string => $render('_progress.html.twig', ['percent' => 140, 'label' => 'Copying', 'id' => 'p1', 'attr' => ['data-testid' => 'p1']]),
             'progress_no_value_text' => static fn (): string => $render('_progress.html.twig', ['percent' => 0, 'show_value' => false, 'id' => 'p2']),
