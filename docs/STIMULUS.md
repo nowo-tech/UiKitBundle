@@ -183,7 +183,8 @@ lists the default classes (`nowo-ui-confirm*`, `nowo-ui-btn*`).
 partials); it cancels (`false`). Its accessible name (`aria-label` and `title`) is `closeLabel`, else
 `<html data-confirm-close="…">`, else "Close"; its class is `classes.close` (kit default `nowo-ui-confirm__close`,
 absolutely placed at the top right of the panel). `dismissible: false` drops it for one call,
-`<html data-confirm-dismissible="false">` for the page. Focus still starts on Cancel.
+`<html data-confirm-dismissible="false">` for the page — only the exact values `"false"` and `"0"` turn it off; any
+other value (empty, `"no"`, `"False"`…) keeps the ×. Focus still starts on Cancel.
 
 ```twig
 <html data-confirm-ok="…" data-confirm-cancel="…"

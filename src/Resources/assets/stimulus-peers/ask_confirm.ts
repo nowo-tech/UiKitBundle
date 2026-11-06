@@ -7,7 +7,7 @@
  * 2.31 (dialog rule v2): a close button (×) in the header, after the title, like the `confirm` / `confirm_dialog`
  * partials (`dismissible`, default true). It cancels (resolves false). Its accessible name is `closeLabel`, else
  * `<html data-confirm-close="…">` (e.g. the NowoUiKitBundle `action.close` message), else "Close". Turn it off per
- * call (`dismissible: false`) or for the page (`<html data-confirm-dismissible="false">`).
+ * call (`dismissible: false`) or for the page (`<html data-confirm-dismissible="false">`; only "false" or "0" turn it off).
  *
  *   import { askConfirm, pageConfirmLabels } from '…/stimulus-peers/ask_confirm';
  *   if (await askConfirm('Delete this key?', { ...pageConfirmLabels(), danger: true })) { … }
@@ -73,9 +73,14 @@ export function pageConfirmCloseLabel(): string {
   return document.documentElement.dataset.confirmClose || 'Close';
 }
 
-/** Whether the confirm dialog shows its close button by default (2.31): true unless `<html data-confirm-dismissible="false">`. */
+/**
+ * Whether the confirm dialog shows its close button by default (2.31): true unless `<html data-confirm-dismissible>` is
+ * exactly "false" or "0" (any other value, empty included, keeps the ×).
+ */
 export function pageConfirmDismissible(): boolean {
-  return document.documentElement.dataset.confirmDismissible !== 'false';
+  const value = document.documentElement.dataset.confirmDismissible;
+
+  return value !== 'false' && value !== '0';
 }
 
 let sequence = 0;

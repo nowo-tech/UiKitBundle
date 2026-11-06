@@ -62,7 +62,10 @@ jobs:
           ./.scripts/ts-coverage-percent.sh coverage-ts.txt
 
       - name: Build
-        run: pnpm run build
+        run: pnpm run build && pnpm run build:demo-peers
+
+      - name: Built assets are committed (no drift between sources and src/Resources/public, demo-peers.js)
+        run: git diff --exit-code -- src/Resources/public src/Resources/views/inline demo/symfony8/public/js
 
   test:
     name: PHP ${{ matrix.php }} - Symfony ${{ matrix.symfony }}

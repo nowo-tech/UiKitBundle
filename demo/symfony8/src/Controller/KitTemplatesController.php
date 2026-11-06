@@ -139,7 +139,9 @@ final class KitTemplatesController extends AbstractController
             'long_form' => $longForm->createView(),
             'rows' => self::ROWS,
             'submitted' => $request->query->getBoolean('submitted'),
-            // 2.31 (dialog rule v2): View\Confirm dialogs (partial `confirm`) on the dialog anatomy; demo token only.
+            // 2.31 (dialog rule v2): View\Confirm dialogs (partial `confirm`) on the dialog anatomy. Demo only, do not
+            // copy: a literal CSRF token and a POST target that does nothing; a real action uses a CSRF-only form
+            // (Action::form / nowo_ui_action_form()) and its own route.
             'archive_confirm' => new Confirm('Archive this monitor?', 'It stops checking and leaves the dashboard. You can restore it later.', 'Archive', variant: 'primary', id: 'archive-monitor'),
             'delete_confirm' => new Confirm('Delete monitor?', 'The monitor "API health" and its 90 days of history will be deleted. This cannot be undone.', 'Delete monitor', id: 'delete-monitor', expectedValue: 'api-health'),
             'confirm_action' => Action::delete($this->generateUrl('kit_dialogs'), 'demo-token'),

@@ -131,7 +131,7 @@ dialog follows its content, and the JS confirm gets the header close button. A *
   (`Theme::dialogHeight()`, `Theme::DIALOG_HEIGHTS`). The token can also be set by hand (on `:root` or one dialog).
 - **`askConfirm()` close button (×)** (`stimulus-peers/ask_confirm.ts`, also used by `confirm-submit` in dialog
   mode): after the title in the header, cancels (resolves `false`); options `dismissible` (default true, or
-  `<html data-confirm-dismissible="false">` for the page) and `closeLabel` (default `<html data-confirm-close>`, e.g.
+  `<html data-confirm-dismissible="false">` or `"0"` for the page; any other value keeps it) and `closeLabel` (default `<html data-confirm-close>`, e.g.
   `action.close`, else "Close"); class `close` in `ConfirmClasses` (optional; kit default `nowo-ui-confirm__close`).
   New helpers `pageConfirmCloseLabel()`, `pageConfirmDismissible()`.
 - Demo `/kit/dialogs`: content-height dialogs, `?height=size` for the 2.30 height, a JS confirm (`confirm-submit`

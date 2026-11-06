@@ -45,11 +45,11 @@ TWIG;
             // header and the footer stay; --nowo-ui-dialog-fill: 1 (theme.dialog.height: size) gives the size's height back,
             // except to a plain yes / no (always natural).
             self::assertStringContainsString('--nowo-ui-dialog-max-h: min(var(--nowo-ui-dialog-h), 100dvh - 2rem);', $css, $file);
-            self::assertMatchesRegularExpression('/\.nowo-ui-dialog\[open\]:not\(\.nowo-ui-dialog--end\):not\(\.nowo-ui-dialog--start\),\s*\.nowo-ui-confirm-dialog--anatomy\[open\] \{[^}]*display: flex;[^}]*height: fit-content;\s*min-height: calc\(var\(--nowo-ui-dialog-max-h\) \* var\(--nowo-ui-dialog-fill, 0\)\);/', $css, $file);
+            self::assertMatchesRegularExpression('/\.nowo-ui-dialog\[open\]:not\(\.nowo-ui-dialog--end\):not\(\.nowo-ui-dialog--start\),\s*\.nowo-ui-confirm-dialog--anatomy\[open\] \{[^}]*display: flex;[^}]*height: fit-content;\s*min-height: calc\(var\(--nowo-ui-dialog-max-h\) \* clamp\(0, var\(--nowo-ui-dialog-fill, 0\), 1\)\);/', $css, $file);
             self::assertMatchesRegularExpression('/\n\.nowo-ui-dialog \{[^}]*max-height: var\(--nowo-ui-dialog-max-h\);/', $css, $file);
             self::assertMatchesRegularExpression('/\.nowo-ui-confirm-dialog\.nowo-ui-confirm-dialog--anatomy \{\s*max-height: var\(--nowo-ui-dialog-max-h\);/', $css, $file);
             self::assertMatchesRegularExpression("/:not\\(:has\\(input:not\\(\\[type='hidden'\\]\\), select, textarea, table, ul, ol, details\\)\\) \\{\\s*min-height: 0;/", $css, $file);
-            self::assertMatchesRegularExpression('/\.nowo-ui-row-detail \.nowo-ui-row-detail__panel \{[^}]*height: auto;\s*min-height: calc\(var\(--nowo-ui-dialog-max-h\) \* var\(--nowo-ui-dialog-fill, 0\)\);\s*max-height: var\(--nowo-ui-dialog-max-h\);/', $css, $file);
+            self::assertMatchesRegularExpression('/\.nowo-ui-row-detail \.nowo-ui-row-detail__panel \{[^}]*height: auto;\s*min-height: calc\(var\(--nowo-ui-dialog-max-h\) \* clamp\(0, var\(--nowo-ui-dialog-fill, 0\), 1\)\);\s*max-height: var\(--nowo-ui-dialog-max-h\);/', $css, $file);
             self::assertDoesNotMatchRegularExpression('/^\s*(min-|max-)?height: var\(--nowo-ui-dialog-h\);/m', $css, $file.': no fixed size height left');
             self::assertDoesNotMatchRegularExpression('/^\s*--nowo-ui-dialog-fill\s*:/m', $css, $file.': no fill value (theme.dialog.height: size prints it)');
             self::assertMatchesRegularExpression('/> \.nowo-ui-dialog__body \{[^}]*flex: 1 1 auto;[^}]*min-height: 0;[^}]*overflow: auto;/', $css, $file);

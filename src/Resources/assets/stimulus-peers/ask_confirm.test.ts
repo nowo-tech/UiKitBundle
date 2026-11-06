@@ -118,6 +118,12 @@ describe('askConfirm', () => {
     expect(dialog().querySelector('.nowo-ui-confirm__close')).not.toBeNull();
     button('Cancel').click();
     await expect(forced).resolves.toBe(false);
+    document.documentElement.dataset.confirmDismissible = '0';
+    expect(pageConfirmDismissible()).toBe(false);
+    for (const keeps of ['', 'no', 'off', 'False']) {
+      document.documentElement.dataset.confirmDismissible = keeps;
+      expect(pageConfirmDismissible()).toBe(true);
+    }
     delete document.documentElement.dataset.confirmDismissible;
   });
 

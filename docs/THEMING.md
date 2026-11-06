@@ -352,7 +352,7 @@ default as fallback, so a host sets them once on `:root` and it wins whatever th
 | `--nowo-ui-dialog-w` / `--nowo-ui-dialog-h` | the size of the dialog (set by `.nowo-ui-dialog`, `.nowo-ui-confirm-dialog`, `.nowo-ui-confirm` and the `--lg` / `--xl` / `--wide` modifiers) | one dialog's resolved size; set them on a single dialog to override it |
 | `--nowo-ui-dialog-max-h` | `min(var(--nowo-ui-dialog-h), 100dvh - 2rem)` (2.31) | the height cap of one dialog |
 | `--nowo-ui-dialog-chrome-bg` | `color-mix(in srgb, var(--nowo-ui-text) 4%, var(--nowo-ui-surface))` (2.31, no `:root` value) | background of the dialog header and footer (`dialog`, `confirm_dialog` anatomy, `confirm`) |
-| `--nowo-ui-dialog-fill` | unset = `0` (2.31) | `1` = a dialog with a field, list, table or fold has the size's height (2.29 / 2.30); printed on `:root` by `theme.dialog.height: size` |
+| `--nowo-ui-dialog-fill` | unset = `0` (2.31; clamped to 0 – 1) | `1` = a dialog with a field, list, table or fold has the size's height (2.29 / 2.30); printed on `:root` by `theme.dialog.height: size` |
 
 The width belongs to the size. **The height follows the content** (2.31, dialog rule v2): capped at
 `--nowo-ui-dialog-max-h`, the body scrolls inside, header and footer stay. `nowo_ui_kit.theme.dialog.height: size`

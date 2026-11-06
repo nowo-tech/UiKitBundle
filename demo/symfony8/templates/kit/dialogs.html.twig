@@ -11,6 +11,8 @@
 {% form_theme long_form '@NowoUiKit/form/nowo_ui_layout.html.twig' %}
 
 {% block nowo_ui_head %}
+    {#- Demo only, do not copy: an inline <style> switched by a query parameter (no CSP nonce). A host sets
+        nowo_ui_kit.theme.dialog.height: size, or --nowo-ui-dialog-fill in its own stylesheet. -#}
     {%- if app.request.query.get('height') == 'size' %}<style>:root { --nowo-ui-dialog-fill: 1; }</style>{% endif -%}
 {% endblock %}
 
@@ -44,7 +46,8 @@
             {% endembed %}
             <a class="{{ nowo_ui_class('btn_secondary') }}" href="{{ path('kit_remote_form') }}">Remote form dialog</a>
         </div>
-        {# confirm-submit on a plain button (no form: REQ-TWIG-005); Confirm replays the click, which does nothing here #}
+        {# Demo only, do not copy: confirm-submit on a plain button (no form: REQ-TWIG-005); Confirm replays the click,
+           which does nothing here. A real host puts it on a form built with the Form component (docs/STIMULUS.md). #}
         <p><button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-controller="confirm-submit" data-confirm-submit-mode-value="dialog" data-confirm-submit-message-value="Reset the demo filters?" data-confirm-submit-danger-value="false" data-action="click->confirm-submit#confirm" data-testid="open-ask-confirm">JS confirm (askConfirm)</button></p>
         <div class="{{ nowo_ui_class('form_actions') }}">
             <button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-nowo-confirm-open data-nowo-confirm-target="archive-monitor" data-testid="open-view-confirm">View\Confirm (primary)</button>

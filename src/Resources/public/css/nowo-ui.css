@@ -1698,7 +1698,7 @@ a.nowo-ui-pagination__link:hover {
   display: flex;
   flex-direction: column;
   height: fit-content;
-  min-height: calc(var(--nowo-ui-dialog-max-h) * var(--nowo-ui-dialog-fill, 0));
+  min-height: calc(var(--nowo-ui-dialog-max-h) * clamp(0, var(--nowo-ui-dialog-fill, 0), 1));
   overflow: hidden;
 }
 
@@ -3735,7 +3735,7 @@ button.nowo-ui-kebab__item.is-current {
 .nowo-ui-row-detail .nowo-ui-row-detail__panel {
   width: 100%;
   height: auto;
-  min-height: calc(var(--nowo-ui-dialog-max-h) * var(--nowo-ui-dialog-fill, 0));
+  min-height: calc(var(--nowo-ui-dialog-max-h) * clamp(0, var(--nowo-ui-dialog-fill, 0), 1));
   max-height: var(--nowo-ui-dialog-max-h);
   display: flex;
   flex-direction: column;
@@ -5618,7 +5618,7 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
 }
 
 .nowo-ui-confirm-dialog[open]:not(.nowo-ui-confirm-dialog--plain):not(.nowo-ui-confirm-dialog--anatomy):has(input:not([type='hidden']), select, textarea, table, ul, ol, details) {
-  min-height: calc(var(--nowo-ui-dialog-h) * var(--nowo-ui-dialog-fill, 0));
+  min-height: calc(var(--nowo-ui-dialog-h) * clamp(0, var(--nowo-ui-dialog-fill, 0), 1));
 }
 
 /* Header / body / footer anatomy (2.29, `anatomy: true` of the confirm_dialog partial): the dialog classes, no box padding */

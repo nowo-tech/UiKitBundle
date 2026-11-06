@@ -142,7 +142,8 @@ fixtures byte-identical), but a **visual default change** (dialog rule v2, owner
   `manage/_confirm_dialog.html.twig`) can go.
 - **The JS confirm (`askConfirm`, `confirm-submit` in dialog mode) has a close button (×)** after the title, which
   cancels. Print its accessible name once on `<html data-confirm-close="{{ 'action.close'|trans({}, 'NowoUiKitBundle') }}">`
-  (English "Close" otherwise); turn it off with `dismissible: false` or `<html data-confirm-dismissible="false">`. A
+  (English "Close" otherwise); turn it off with `dismissible: false` or `<html data-confirm-dismissible="false">` (only `"false"` or `"0"`; any other
+  value keeps it). A
   host class map (`classes`) can add `close: '…'` (otherwise the × has the kit class `nowo-ui-confirm__close`).
 
 ## To 2.30.0
