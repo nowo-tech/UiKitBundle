@@ -27,6 +27,11 @@
     - testids (default false): data-testid `listing-customizer`, `listing-customizer-toggle`,
       `listing-customizer-apply`, `listing-customizer-reset`, `listing-ignored-filters`
     - bundle: per-bundle theme exceptions
+    - scopes (2.33): several layouts edited in one panel (e.g. "My layout" / "Project default"), a list of
+      {key, label, stored (bool), columns, filters (the ListingItem lists of clientState()), save_url, reset_url,
+      params (merged into the JSON body), save_confirm, reset_confirm}; a scope selector is shown on top of the panel,
+      Apply / Reset send `{"scope": key, ...params}` with the layout to the scope's URL (else save_url). scope: the
+      key selected first (default: the first). Without scopes the markup is unchanged.
   Slots: listing_customizer (root), listing_customizer_toggle, listing_customizer_tabs, listing_customizer_tab,
   listing_customizer_panel, listing_customizer_list, listing_customizer_actions, listing_notice, btn_primary,
   btn_secondary, btn_link, muted; the dialog slots.
@@ -64,6 +69,29 @@
     confirmOk: 'listing.reset'|trans({}, 'NowoUiKitBundle'),
     cancel: 'action.cancel'|trans({}, 'NowoUiKitBundle'),
 } %}
+{% set _scopes = scopes|default([]) %}
+{% if _scopes is not empty %}
+    {% set _messages = _messages|merge({
+        stored: 'listing.scope_stored'|trans({}, 'NowoUiKitBundle'),
+        inherited: 'listing.scope_inherited'|trans({}, 'NowoUiKitBundle'),
+        discardConfirm: 'listing.scope_discard_confirm'|trans({}, 'NowoUiKitBundle'),
+    }) %}
+    {% set _scope_values = [] %}
+    {% for _s in _scopes %}
+        {% set _scope_values = _scope_values|merge([{
+            key: _s.key,
+            label: _s.label|default(_s.key)|nowo_ui_trans,
+            stored: _s.stored|default(false),
+            columns: _s.columns|default([]),
+            filters: _s.filters|default([]),
+        }|merge(_s.save_url|default('') ? {saveUrl: _s.save_url} : {})
+         |merge(_s.reset_url|default('') ? {resetUrl: _s.reset_url} : {})
+         |merge(_s.params|default({}) is not empty ? {params: _s.params} : {})
+         |merge(_s.save_confirm|default(null) ? {saveConfirm: _s.save_confirm|nowo_ui_trans} : {})
+         |merge(_s.reset_confirm|default(null) ? {resetConfirm: _s.reset_confirm|nowo_ui_trans} : {})]) %}
+    {% endfor %}
+    {% set _scope_key = scope|default(_scopes|first.key) %}
+{% endif %}
 {% set _both = listing.hasColumns and listing.hasFilters %}
 <div class="{{ nowo_ui_class('listing_customizer', bundle) }}" data-controller="listing-customizer"
     {{- ' ' }}data-listing-customizer-state-value="{{ listing.clientState|json_encode }}"
@@ -73,6 +101,7 @@
     {%- if save_method|default('') %} data-listing-customizer-method-value="{{ save_method }}"{% endif %}
     {%- if reset_method|default('') %} data-listing-customizer-reset-method-value="{{ reset_method }}"{% endif %}
     {{- ' ' }}data-listing-customizer-messages-value="{{ _messages|json_encode }}"
+    {%- if _scopes is not empty %} data-listing-customizer-scopes-value="{{ _scope_values|json_encode }}" data-listing-customizer-scope-value="{{ _scope_key }}"{% endif %}
     {%- if _testids %} data-testid="listing-customizer"{% endif %}
     {{- nowo_ui_attrs('listing_customizer', bundle, attr|default({})) }}>
     {% if listing.ignoredFilters is not empty %}
@@ -110,9 +139,21 @@
         footer: _footer,
         bundle: bundle,
         attr: {'data-listing-customizer-target': 'dialog'},
-        _lc: {listing: listing, id: _id, labels: _labels, icons: _icons, both: _both},
+        _lc: {listing: listing, id: _id, labels: _labels, icons: _icons, both: _both, scopes: _scopes is not empty ? _scope_values : [], scope: _scope_key|default(null), scope_label: 'listing.scope'|trans({}, 'NowoUiKitBundle')},
     } only %}
         {% block nowo_ui_dialog_body %}
+            {% if _lc.scopes is not empty %}
+                <div class="nowo-ui-listing-customizer__scope">
+                    <label class="nowo-ui-listing-customizer__scope-label" for="{{ _lc.id }}-scope">{{ _lc.scope_label }}</label>
+                    {# twig-005-ignore: nameless scope switcher outside any form, never submitted (the peer reads its value) #}
+                    <select id="{{ _lc.id }}-scope" class="{{ nowo_ui_class('input', bundle) }}" data-listing-customizer-target="scope" data-action="listing-customizer#changeScope">
+                        {% for _s in _lc.scopes %}
+                            <option value="{{ _s.key }}"{% if _s.key == _lc.scope %} selected{% endif %}>{{ _s.label }}</option>
+                        {% endfor %}
+                    </select>
+                    <p class="{{ nowo_ui_class('muted', bundle) }}" data-listing-customizer-target="scopeState" aria-live="polite"></p>
+                </div>
+            {% endif %}
             {% if _lc.both %}
                 <div class="{{ nowo_ui_class('listing_customizer_tabs', bundle) }}" role="tablist" aria-label="{{ _lc.labels.title }}"{{ nowo_ui_attrs('listing_customizer_tabs', bundle) }}>
                     {% for _panel in ['columns', 'filters'] %}

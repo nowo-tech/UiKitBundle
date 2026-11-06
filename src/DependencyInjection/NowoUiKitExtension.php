@@ -12,6 +12,7 @@ use Nowo\UiKitBundle\Appearance\AppearancePresetProviderInterface;
 use Nowo\UiKitBundle\Appearance\AppearancePresetRegistry;
 use Nowo\UiKitBundle\Appearance\AppearanceProviderInterface;
 use Nowo\UiKitBundle\Appearance\ConfigAppearanceProvider;
+use Nowo\UiKitBundle\Dialog\RemoteDialogHeaders;
 use Nowo\UiKitBundle\Dialog\RemoteDialogRedirectListener;
 use Nowo\UiKitBundle\Dialog\RemoteDialogResponder;
 use Nowo\UiKitBundle\Enum\CssFramework;
@@ -100,7 +101,12 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
             return;
         }
 
-        $config = $this->processConfiguration(new Configuration(), $container->getExtensionConfig($this->getAlias()));
+        $configs = $container->getExtensionConfig($this->getAlias());
+        // 2.33 (UI-5): release_check.enabled / current_version may be container parameters or env placeholders
+        // ("%app.update_check%", "%env(bool:X)%"), which are not resolved yet here: they are kept raw for the Twig
+        // global (TwigBundle resolves them) and left out of this early validation (load() validates them resolved).
+        $releaseCheck = $this->rawReleaseCheck($configs);
+        $config = $this->processConfiguration(new Configuration(), $this->withoutRuntimeReleaseCheck($configs));
         $fw = CssFramework::from($config['css_framework'])->normalized()->value;
 
         $twig = [
@@ -109,10 +115,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
                 'nowo_ui_kit_icon_set' => $config['icon_set'],
                 'nowo_ui_kit_row_actions_display' => $config['row_actions_display'],
                 'nowo_ui_kit_row_actions_confirm' => $config['row_actions_confirm'],
-                'nowo_ui_kit_release_check' => [
-                    'enabled' => $config['release_check']['enabled'],
-                    'current_version' => $config['release_check']['current_version'],
-                ],
+                'nowo_ui_kit_release_check' => $releaseCheck,
                 'nowo_ui_kit_shell' => $config['shell'],
             ],
         ];
@@ -121,6 +124,57 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
             $twig['form_themes'] = [self::DATE_RANGE_FORM_THEME];
         }
         $container->prependExtensionConfig('twig', $twig);
+    }
+
+    /**
+     * The `release_check.enabled` / `current_version` of the raw configs (the last one set wins, as when merged), with
+     * the defaults `false` / `''`. Values stay as written: a bool, a version, or a `%parameter%` / `%env()%` string.
+     *
+     * @param array<int, array<string, mixed>> $configs
+     *
+     * @return array{enabled: mixed, current_version: mixed}
+     */
+    private function rawReleaseCheck(array $configs): array
+    {
+        $values = ['enabled' => false, 'current_version' => ''];
+        foreach ($configs as $config) {
+            $releaseCheck = $config['release_check'] ?? null;
+            if (!\is_array($releaseCheck)) {
+                continue;
+            }
+            foreach (['enabled', 'current_version'] as $key) {
+                if (\array_key_exists($key, $releaseCheck)) {
+                    $values[$key] = $releaseCheck[$key];
+                }
+            }
+        }
+
+        return $values;
+    }
+
+    /**
+     * The raw configs without `release_check.enabled` / `current_version` written as `%…%` strings (validated in load(),
+     * once parameters are resolved).
+     *
+     * @param array<int, array<string, mixed>> $configs
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function withoutRuntimeReleaseCheck(array $configs): array
+    {
+        foreach ($configs as $index => $config) {
+            if (!isset($config['release_check']) || !\is_array($config['release_check'])) {
+                continue;
+            }
+            foreach (['enabled', 'current_version'] as $key) {
+                $value = $config['release_check'][$key] ?? null;
+                if (\is_string($value) && str_contains($value, '%')) {
+                    unset($configs[$index]['release_check'][$key]);
+                }
+            }
+        }
+
+        return $configs;
     }
 
     /**
@@ -140,7 +194,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
         $container->setParameter('nowo_ui_kit.panel_path_rewrites', $rewrites);
         $this->registerPanelPathRewrites($container, $rewrites);
 
-        /** @var array{enabled: bool, github_repo: string, current_version: string, cache_ttl: int, default_branch: string, user_agent: string, timeout: float, releases_timeout: float} $releaseCheck */
+        /** @var array{enabled: bool|string, github_repo: string, current_version: string, cache_ttl: int, default_branch: string, user_agent: string, timeout: float, releases_timeout: float} $releaseCheck */
         $releaseCheck = $config['release_check'];
         $container->setParameter('nowo_ui_kit.release_check.enabled', $releaseCheck['enabled']);
         $container->setParameter('nowo_ui_kit.release_check.github_repo', $releaseCheck['github_repo']);
@@ -242,6 +296,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
             ->setArgument('$fontPreload', $this->registerFontPreload($container, $config))
             ->setArgument('$header', $config['header'])
             ->setArgument('$sidebarLayout', $config['shell']['sidebar_layout'])
+            ->setArgument('$remoteDialogHeaders', new Reference('nowo_ui_kit.remote_dialog_headers'))
             ->addTag('twig.extension');
 
         $this->registerRemoteDialog($container, $config);
@@ -256,18 +311,31 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
      */
     private function registerRemoteDialog(ContainerBuilder $container, array $config): void
     {
+        /** @var array{convert_redirects: bool, step_routes: list<string>, request_header: string, redirect_header: string, location_header: string} $remoteDialog */
+        $remoteDialog = $config['remote_dialog'];
+        $container->register('nowo_ui_kit.remote_dialog_headers', RemoteDialogHeaders::class)
+            ->setArguments([$remoteDialog['request_header'], $remoteDialog['redirect_header'], $remoteDialog['location_header']]);
+        $container->setAlias(RemoteDialogHeaders::class, 'nowo_ui_kit.remote_dialog_headers');
+        $headers = new Reference('nowo_ui_kit.remote_dialog_headers');
+
         $container->register('nowo_ui_kit.remote_dialog_responder', RemoteDialogResponder::class)
             ->setArguments([
                 new Reference('request_stack', ContainerInterface::NULL_ON_INVALID_REFERENCE),
                 new Reference('router', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                $headers,
             ])
             ->setPublic(true);
         $container->setAlias(RemoteDialogResponder::class, 'nowo_ui_kit.remote_dialog_responder')->setPublic(true);
 
-        /** @var array{convert_redirects: bool} $remoteDialog */
-        $remoteDialog = $config['remote_dialog'];
-        if ($remoteDialog['convert_redirects']) {
+        // 2.33: also for step routes alone (convert_redirects off), with the RemoteDialogRedirectEvent hook.
+        if ($remoteDialog['convert_redirects'] || [] !== $remoteDialog['step_routes']) {
             $container->register('nowo_ui_kit.remote_dialog_redirect_listener', RemoteDialogRedirectListener::class)
+                ->setArguments([
+                    $headers,
+                    $remoteDialog['convert_redirects'],
+                    $remoteDialog['step_routes'],
+                    new Reference('event_dispatcher', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                ])
                 ->addTag('kernel.event_listener', ['event' => 'kernel.response', 'priority' => -10]);
         }
     }
@@ -418,7 +486,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
      * The controller is always registered (404 while disabled) so an imported route never breaks;
      * the checker (HTTP client + cache) only when enabled.
      *
-     * @param array{enabled: bool, github_repo: string, current_version: string, cache_ttl: int, default_branch: string, user_agent: string, timeout: float, releases_timeout: float} $releaseCheck
+     * @param array{enabled: bool|string, github_repo: string, current_version: string, cache_ttl: int, default_branch: string, user_agent: string, timeout: float, releases_timeout: float} $releaseCheck
      */
     private function registerReleaseCheck(ContainerBuilder $container, array $releaseCheck): void
     {
@@ -428,7 +496,8 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
         // The attribute route's _controller is the class name: resolve it to the explicit service (REQ-SF-004).
         $container->setAlias(ReleaseStatusController::class, 'nowo_ui_kit.release_status_controller')->setPublic(true);
 
-        if (!$releaseCheck['enabled']) {
+        // A literal false registers nothing; an env placeholder registers the checker, which reads it at runtime.
+        if (false === $releaseCheck['enabled']) {
             return;
         }
 
@@ -442,7 +511,8 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
                 new Reference('cache.app'),
                 $releaseCheck['current_version'],
                 $releaseCheck['github_repo'],
-                true,
+                // 2.33 (UI-5): a parameter / env placeholder stays a runtime value (false = the check is skipped).
+                $releaseCheck['enabled'],
                 $releaseCheck['cache_ttl'],
                 $releaseCheck['user_agent'],
                 $releaseCheck['default_branch'],

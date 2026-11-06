@@ -15,8 +15,10 @@ use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use Symfony\Component\Config\Loader\DelegatingLoader;
 use Symfony\Component\Config\Loader\LoaderResolver;
+use Symfony\Component\DependencyInjection\Compiler\MergeExtensionConfigurationPass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
+use Symfony\Component\DependencyInjection\ParameterBag\EnvPlaceholderParameterBag;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Yaml\Yaml;
 
@@ -257,6 +259,49 @@ final class NowoUiKitExtensionTest extends TestCase
 
         $globals = $container->getExtensionConfig('twig')[0]['globals'] ?? [];
         self::assertSame(['enabled' => true, 'current_version' => 'v9.9.9'], $globals['nowo_ui_kit_release_check'] ?? null);
+    }
+
+    public function testReleaseCheckAcceptsParametersAndEnvPlaceholders(): void
+    {
+        // 2.33 (UI-5): prepend() runs before parameters resolve; the raw references reach the Twig global.
+        $container = new ContainerBuilder();
+        $container->registerExtension(new class extends Extension {
+            public function getAlias(): string
+            {
+                return 'twig';
+            }
+
+            public function load(array $configs, ContainerBuilder $container): void
+            {
+            }
+        });
+        $container->prependExtensionConfig(Configuration::ALIAS, [
+            'release_check' => ['enabled' => '%env(bool:APP_UPDATE_CHECK)%', 'github_repo' => 'acme/app', 'current_version' => '%app.version%'],
+        ]);
+        (new NowoUiKitExtension(static fn (): bool => true))->prepend($container);
+        $globals = $container->getExtensionConfig('twig')[0]['globals'] ?? [];
+        self::assertSame(['enabled' => '%env(bool:APP_UPDATE_CHECK)%', 'current_version' => '%app.version%'], $globals['nowo_ui_kit_release_check'] ?? null);
+
+        // load() gets resolved parameters: a false parameter registers no checker.
+        $container = new ContainerBuilder();
+        (new NowoUiKitExtension(static fn (): bool => true))->load([['release_check' => ['enabled' => false, 'current_version' => '1.0.0']]], $container);
+        self::assertFalse($container->hasDefinition('nowo_ui_kit.release_update_checker'));
+
+        // Through the real merge pass: a parameter resolves before load(), an env placeholder stays a runtime value.
+        foreach (['%app.update_check%' => false, '%env(bool:APP_UPDATE_CHECK)%' => null] as $enabled => $expected) {
+            $container = new ContainerBuilder(new EnvPlaceholderParameterBag(['app.update_check' => false, 'app.version' => '1.2.3']));
+            $container->registerExtension(new NowoUiKitExtension(static fn (): bool => true));
+            $container->loadFromExtension(Configuration::ALIAS, ['release_check' => ['enabled' => $enabled, 'github_repo' => 'acme/app', 'current_version' => '%app.version%']]);
+            (new MergeExtensionConfigurationPass())->process($container);
+            self::assertSame('1.2.3', $container->getParameter('nowo_ui_kit.release_check.current_version'));
+            if (false === $expected) {
+                self::assertFalse($container->hasDefinition('nowo_ui_kit.release_update_checker'));
+                continue;
+            }
+            $argument = $container->getDefinition('nowo_ui_kit.release_update_checker')->getArgument(4);
+            self::assertIsString($argument);
+            self::assertStringContainsString('APP_UPDATE_CHECK', (string) $container->resolveEnvPlaceholders($argument, '%%env(%s)%%'));
+        }
     }
 
     public function testRouteFileIsAThinAttributeImportOfTheStatusController(): void

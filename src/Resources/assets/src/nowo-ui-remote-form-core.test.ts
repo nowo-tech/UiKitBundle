@@ -7,8 +7,10 @@ import {
   formDataWith,
   hasUnsafeSegments,
   isFragment,
+  headerName,
   isPlainClick,
   liftActions,
+  MAX_STEPS,
   nestedLayerOwnsEscape,
   openerTitle,
   parseFragment,
@@ -48,6 +50,13 @@ export function reply({ status = 200, type = 'basic', headers = { 'content-type'
 }
 
 describe('remote form helpers', () => {
+  it('headerName keeps header tokens only (2.33)', () => {
+    expect(headerName('X-Beacon-Dialog', 'X-Nowo-Dialog')).toBe('X-Beacon-Dialog');
+    for (const bad of [null, undefined, '', 'X Beacon', 'X:y', 'X-\r\nSet-Cookie', '-X', 'X'.repeat(65)]) {
+      expect(headerName(bad, 'X-Nowo-Dialog')).toBe('X-Nowo-Dialog');
+    }
+  });
+
   it('accepts only same-origin path-absolute redirect targets', () => {
     expect(sameOriginPath('/a?b=1#c')).toBe('/a?b=1#c');
     expect(sameOriginPath('/')).toBe('/');
@@ -94,6 +103,140 @@ describe('remote form helpers', () => {
     expect(fragment.querySelector('form')?.hasAttribute('onsubmit')).toBe(false);
     expect(fragment.querySelector('input')?.hasAttribute('onfocus')).toBe(false);
     expect(fragment.querySelector('img')?.attributes.length).toBe(1);
+  });
+
+  describe('fragment filter (audit GT)', () => {
+    it.each([
+      ['plain', '<iframe src="javascript:alert(1)"></iframe>'],
+      ['tab and blank', '<iframe src=" java&#9;script:alert(1)"></iframe>'],
+      ['newline', '<iframe src="java&#10;script:alert(1)"></iframe>'],
+      ['mixed case', '<IFRAME SRC="JaVaScRiPt:alert(1)"></IFRAME>'],
+      ['inside foreignObject', '<svg><foreignObject><iframe src="javascript:alert(1)"></iframe></foreignObject></svg>'],
+      ['data', '<iframe src="data:text/html,<script>alert(1)</script>"></iframe>'],
+      ['about', '<iframe src="about:blank"></iframe>'],
+      ['unparsable', '<iframe src="http://["></iframe>'],
+    ])('GT-L1: removes an iframe whose src is not http(s): %s', (_name, html) => {
+      const fragment = parseFragment(`<p>x</p>${html}`);
+      expect(fragment.querySelector('iframe')).toBeNull();
+      expect(fragment.querySelector('p')?.textContent).toBe('x');
+    });
+
+    it.each([
+      ['relative', '<iframe src="/frame"></iframe>'],
+      ['empty', '<iframe src=""></iframe>'],
+      ['other origin', '<iframe src="https://maps.example/embed"></iframe>'],
+      ['protocol relative', '<iframe src="//maps.example/embed"></iframe>'],
+      ['no src', '<iframe name="target"></iframe>'],
+    ])('GT-L1: keeps a legitimate iframe: %s', (_name, html) => {
+      expect(parseFragment(html).querySelector('iframe')).not.toBeNull();
+    });
+
+    it.each([
+      ['a', '<a id="t" href="javascript:alert(1)">x</a>', 'href'],
+      ['a obfuscated', '<a id="t" href=" java&#9;script:alert(1)">x</a>', 'href'],
+      ['a vbscript', '<a id="t" href="VBScript:x">x</a>', 'href'],
+      ['area', '<map><area id="t" href="javascript:alert(1)"></map>', 'href'],
+      ['svg a', '<svg><a id="t" href="javascript:alert(1)"><rect></rect></a></svg>', 'href'],
+      ['svg a xlink', '<svg><a id="t" xlink:href="javascript:alert(1)"><rect></rect></a></svg>', 'xlink:href'],
+      ['form', '<form id="t" method="post" action="javascript:alert(1)"></form>', 'action'],
+      ['button', '<form><button id="t" formaction="javascript:alert(1)">x</button></form>', 'formaction'],
+      ['input', '<form><input id="t" type="submit" formaction="javascript:alert(1)"></form>', 'formaction'],
+    ])('GT-I1: strips a script URL: %s', (_name, html, attribute) => {
+      const element = parseFragment(html).querySelector('#t');
+      expect(element).not.toBeNull();
+      expect(element?.hasAttribute(attribute)).toBe(false);
+    });
+
+    it.each([
+      ['relative', '/x'],
+      ['query', '?a=javascript:b'],
+      ['hash', '#javascript:b'],
+      ['other origin', 'https://other.example/x'],
+      ['mailto', 'mailto:a@example.com'],
+      ['tel', 'tel:+34600000000'],
+      ['data image', 'data:image/png;base64,AAAA'],
+      ['unparsable', 'http://['],
+    ])('GT-I1: keeps a legitimate URL: %s', (_name, url) => {
+      const fragment = parseFragment(`<a id="a" href="${url}">x</a><form id="f" action="${url}"><button id="b" formaction="${url}">x</button></form>`);
+      expect(fragment.querySelector('#a')?.getAttribute('href')).toBe(url);
+      expect(fragment.querySelector('#f')?.getAttribute('action')).toBe(url);
+      expect(fragment.querySelector('#b')?.getAttribute('formaction')).toBe(url);
+    });
+
+    it('GT-I1: removes SVG animations of href and keeps the others', () => {
+      const fragment = parseFragment(`<svg><a id="a"><animate attributeName="href" to="javascript:alert(1)"></animate><set attributeName="xlink:href" to="javascript:alert(1)"></set>
+        <animate attributeName=" HREF " values="/x;javascript:alert(1)"></animate><rect><animate id="keep" attributeName="x" to="1"></animate><set id="keep2" attributeName="fill" to="red"></set></rect></a></svg>`);
+      expect(fragment.querySelectorAll('animate').length).toBe(1);
+      expect(fragment.querySelectorAll('set').length).toBe(1);
+      expect(fragment.querySelector('#keep')).not.toBeNull();
+      expect(fragment.querySelector('#keep2')).not.toBeNull();
+    });
+
+    it('GT-I1: filters nested template content at any depth', () => {
+      const fragment = parseFragment(`<template id="t1"><img id="i" src="/x" onerror="x()"><script>x()</script><a id="l" href="javascript:x()">x</a>
+        <iframe src="javascript:x()"></iframe><template id="t2"><button id="b" onclick="x()">x</button><meta http-equiv="refresh" content="0"></template></template>`);
+      const outer = (fragment.querySelector('#t1') as HTMLTemplateElement).content;
+      expect(outer.querySelector('#i')?.hasAttribute('onerror')).toBe(false);
+      expect(outer.querySelector('#i')?.getAttribute('src')).toBe('/x');
+      expect(outer.querySelector('script, iframe')).toBeNull();
+      expect(outer.querySelector('#l')?.hasAttribute('href')).toBe(false);
+      const inner = (outer.querySelector('#t2') as HTMLTemplateElement).content;
+      expect(inner.querySelector('#b')?.hasAttribute('onclick')).toBe(false);
+      expect(inner.querySelector('meta')).toBeNull();
+    });
+
+    // `getAttribute` is left to the browser e2e (fragment-filter.spec.ts): happy-dom itself calls it on the form.
+    describe.each(['attributes', 'removeAttribute', 'getAttributeNames', 'remove', 'matches', 'localName', 'tagName', 'children', 'parentNode', 'querySelectorAll', 'content'])(
+      'GT-L3: a form control named %s',
+      (name) => {
+        const form = `<form class="c" onsubmit="x()" onfocusin="x()" action="javascript:x()"><input name="${name}" autofocus><button formaction="javascript:x()">go</button></form>`;
+        const names = (element: Element): string[] => Element.prototype.getAttributeNames.call(element);
+
+        // happy-dom has no named properties on a form: behave as browsers do, for the control this block names.
+        beforeEach(() => {
+          Object.defineProperty(HTMLFormElement.prototype, name, {
+            configurable: true,
+            get(this: HTMLFormElement) {
+              return Element.prototype.querySelector.call(this, `[name="${name}"]`);
+            },
+          });
+        });
+        afterEach(() => {
+          delete (HTMLFormElement.prototype as unknown as Record<string, unknown>)[name];
+        });
+
+        it('does not hide the form from the filter', () => {
+          const element = parseFragment(form).querySelector('.c') as Element;
+          expect(names(element)).toEqual(['class']);
+          expect(element.querySelector('button')?.hasAttribute('formaction')).toBe(false);
+          expect(element.querySelector('input')?.getAttribute('name')).toBe(name);
+        });
+
+        it('does not hide it inside a nested template', () => {
+          const outer = (parseFragment(`<template id="o"><template id="i">${form}</template>${form}</template>`).querySelector('#o') as HTMLTemplateElement).content;
+          expect(names(outer.querySelector('form.c') as Element)).toEqual(['class']);
+          const inner = (outer.querySelector('#i') as HTMLTemplateElement).content;
+          expect(names(inner.querySelector('.c') as Element)).toEqual(['class']);
+        });
+
+        it('keeps the legitimate attributes of such a form', () => {
+          const element = parseFragment(`<form class="c" method="post" action="/save"><input name="${name}"></form>`).querySelector('.c') as Element;
+          expect(names(element)).toEqual(['class', 'method', 'action']);
+        });
+      },
+    );
+
+    it('leaves an ordinary form fragment untouched (no behaviour change for legitimate content)', () => {
+      const html = `<div id="c" data-title="T"><form method="post" action="/save" class="f"><input type="hidden" name="_token" value="abc"><label for="n">N</label><input id="n" name="n" required autofocus>
+        <a href="/help" target="_blank" rel="noopener">Help</a><template id="row"><div class="row"><input name="r[__name__]"></div></template><div class="a"><button type="submit">Save</button><button type="button" data-nowo-ui-dialog-close>Cancel</button></div></form></div>`;
+      const reference = document.createElement('template');
+      reference.innerHTML = html;
+      const wrapper = document.createElement('div');
+      wrapper.append(parseFragment(html));
+      const expected = document.createElement('div');
+      expected.append(reference.content);
+      expect(wrapper.innerHTML).toBe(expected.innerHTML);
+    });
   });
 
   it('resolves submit targets and data like a native submit (ES-L2, ES-I1)', () => {
@@ -675,6 +818,146 @@ describe('RemoteFormSession', () => {
       expect(await session.submit(new Event('submit'))).toBe(false);
       session.close();
       expect(await session.submit(Object.assign(new Event('submit'), {}))).toBe(false);
+    });
+  });
+
+  describe('steps (2.33, X-Nowo-Dialog-Location)', () => {
+    const form = (): HTMLFormElement => body().querySelector('form') as HTMLFormElement;
+
+    beforeEach(async () => {
+      await openWith(reply({ body: '<form method="post" action="/connect"><input name="token" value="t"><button type="submit" id="save">Save</button></form>' }));
+    });
+
+    it('loads the next step into the same dialog, without closing or navigating', async () => {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce(reply({ status: 204, headers: { 'X-Nowo-Dialog-Location': '/connect/lists?board=7', 'X-Nowo-Redirect': '/elsewhere' } }))
+        .mockResolvedValueOnce(reply({ body: '<form method="post"><select name="list" autofocus id="list"></select><button type="submit">Link</button></form>' }));
+      vi.stubGlobal('fetch', fetchMock);
+      await submitForm(form());
+      await tick();
+      await tick();
+      expect(dialog.open).toBe(true);
+      expect(assign).not.toHaveBeenCalled();
+      expect(reload).not.toHaveBeenCalled();
+      const [url, init] = fetchMock.mock.calls[1] as [string, RequestInit];
+      expect(url).toBe(`${window.location.origin}/connect/lists?board=7`);
+      expect(init).toMatchObject({ mode: 'same-origin', redirect: 'manual', credentials: 'same-origin' });
+      expect(init.headers).toMatchObject({ 'X-Nowo-Dialog': '1' });
+      expect(document.activeElement?.id).toBe('list');
+      expect(document.getElementById('d-title')?.textContent).toBe('Edit');
+      expect(events.find(([name]) => name === 'step')).toEqual(['step', { url: '/connect/lists?board=7', status: 204 }, true]);
+      expect(events.some(([name]) => name === 'saved')).toBe(false);
+      expect(session.currentUrl()).toBe(`${window.location.origin}/connect/lists?board=7`);
+      // An action-less form of the step posts to the step URL.
+      fetchMock.mockReset();
+      fetchMock.mockResolvedValue(reply({ status: 204, headers: { 'X-Nowo-Redirect': '/board/7' } }));
+      await submitForm(form());
+      expect((fetchMock.mock.calls[0] as [string, RequestInit])[0]).toBe(`${window.location.origin}/connect/lists?board=7`);
+      expect(assign).toHaveBeenCalledWith('/board/7');
+    });
+
+    it('a prevented step event leaves the dialog as it is', async () => {
+      prevent.add('step');
+      const fetchMock = vi.fn().mockResolvedValue(reply({ status: 204, headers: { 'X-Nowo-Dialog-Location': '/connect/lists' } }));
+      vi.stubGlobal('fetch', fetchMock);
+      await submitForm(form());
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(dialog.open).toBe(true);
+      expect(assign).not.toHaveBeenCalled();
+      expect(reload).not.toHaveBeenCalled();
+    });
+
+    it('never loads another origin: an invalid location is ignored (warned) and the answer handled without it', async () => {
+      for (const bad of ['https://evil.example/x', '//evil.example/x', '/\\evil.example', '/.//evil.example/x', '/%2e%2e//evil.example', 'javascript:alert(1)', '/a\nb']) {
+        await openWith(reply({ body: '<form method="post" action="/connect"></form>' }));
+        reload.mockClear();
+        assign.mockClear();
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+        const fetchMock = vi.fn().mockResolvedValue(reply({ status: 204, headers: { 'X-Nowo-Dialog-Location': bad } }));
+        vi.stubGlobal('fetch', fetchMock);
+        await submitForm(form());
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        expect(reload).toHaveBeenCalledTimes(1);
+        expect(assign).not.toHaveBeenCalled();
+        warn.mockRestore();
+      }
+    });
+
+    it('ignores the location of a non-2xx answer', async () => {
+      const fetchMock = vi.fn().mockResolvedValue(reply({ status: 500, headers: { 'X-Nowo-Dialog-Location': '/connect/lists' } }));
+      vi.stubGlobal('fetch', fetchMock);
+      await submitForm(form());
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(body().querySelector(`[${ALERT_ATTR}]`)).not.toBeNull();
+    });
+
+    it('a step whose load fails follows it as a full page', async () => {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce(reply({ status: 204, headers: { 'X-Nowo-Dialog-Location': '/connect/lists' } }))
+        .mockResolvedValueOnce(reply({ status: 500 }));
+      vi.stubGlobal('fetch', fetchMock);
+      await submitForm(form());
+      await tick();
+      await tick();
+      expect(assign).toHaveBeenCalledWith('/connect/lists');
+      expect(dialog.open).toBe(false);
+    });
+
+    it('uses the configured location header name', async () => {
+      settings = { ...settings, locationHeader: 'X-Beacon-Dialog-Location', requestHeader: 'X-Beacon-Dialog' };
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce(reply({ status: 204, headers: { 'X-Nowo-Dialog-Location': '/ignored', 'X-Beacon-Dialog-Location': '/connect/lists' } }))
+        .mockResolvedValueOnce(reply({ body: '<p id="lists">Lists</p>' }));
+      vi.stubGlobal('fetch', fetchMock);
+      await submitForm(form());
+      await tick();
+      await tick();
+      expect((fetchMock.mock.calls[1] as [string, RequestInit])[0]).toBe(`${window.location.origin}/connect/lists`);
+      expect((fetchMock.mock.calls[1] as [string, RequestInit])[1].headers).toMatchObject({ 'X-Beacon-Dialog': '1' });
+      expect(document.getElementById('lists')).not.toBeNull();
+    });
+  });
+
+  describe('steps on load (2.33)', () => {
+    it('a load answered with a step follows it, at most MAX_STEPS times in a row', async () => {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce(reply({ status: 204, headers: { 'X-Nowo-Dialog-Location': '/token' } }))
+        .mockResolvedValueOnce(reply({ body: '<p id="token">Token</p>' }));
+      vi.stubGlobal('fetch', fetchMock);
+      session.open('/connect', opener(), 'Connect');
+      for (let i = 0; i < 6; i += 1) await tick();
+      expect(document.getElementById('token')).not.toBeNull();
+      expect(session.currentUrl()).toBe(`${window.location.origin}/token`);
+
+      const loop = vi.fn().mockResolvedValue(reply({ status: 204, headers: { 'X-Nowo-Dialog-Location': '/loop' } }));
+      vi.stubGlobal('fetch', loop);
+      session.open('/loop', opener(), 'Loop');
+      for (let i = 0; i < 30; i += 1) await tick();
+      expect(loop).toHaveBeenCalledTimes(MAX_STEPS + 1);
+      expect(assign).toHaveBeenCalledWith('/loop');
+    });
+
+    it('warns when a step chain passes the cap, and only then (GT-I4)', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply({ status: 204, headers: { 'X-Nowo-Dialog-Location': '/loop' } })));
+      session.open('/loop', opener(), 'Loop');
+      for (let i = 0; i < 30; i += 1) await tick();
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn.mock.calls[0]?.[0]).toContain(`after ${MAX_STEPS} in a row`);
+
+      warn.mockClear();
+      const chain = vi.fn();
+      for (let i = 0; i < MAX_STEPS; i += 1) chain.mockResolvedValueOnce(reply({ status: 204, headers: { 'X-Nowo-Dialog-Location': '/next' } }));
+      chain.mockResolvedValueOnce(reply({ body: '<p id="last">Last</p>' }));
+      vi.stubGlobal('fetch', chain);
+      session.open('/next', opener(), 'Chain');
+      for (let i = 0; i < 30; i += 1) await tick();
+      expect(document.getElementById('last')).not.toBeNull();
+      expect(warn).not.toHaveBeenCalled();
     });
   });
 

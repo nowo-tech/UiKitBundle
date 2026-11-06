@@ -6,6 +6,7 @@ namespace Nowo\UiKitBundle\Twig;
 
 use InvalidArgumentException;
 use Nowo\UiKitBundle\Dialog\RemoteDialog;
+use Nowo\UiKitBundle\Dialog\RemoteDialogHeaders;
 use Nowo\UiKitBundle\Form\ActionCsrfType;
 use Nowo\UiKitBundle\Form\UiFormViews;
 use Nowo\UiKitBundle\Form\VisibleWhen;
@@ -124,6 +125,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
         private readonly ?FontPreload $fontPreload = null,
         array $header = ['presentation' => 'standard', 'compact_actions' => 'page'],
         string $sidebarLayout = 'below-header',
+        private readonly ?RemoteDialogHeaders $remoteDialogHeaders = null,
     ) {
         $this->uiForms = new UiFormViews($actionForms);
         $this->presentationResolver = new HeaderPresentationResolver($requestStack, $header['presentation'], $header['compact_actions']);
@@ -160,7 +162,9 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             new TwigFunction('nowo_ui_header_crumbs', $this->headerCrumbs(...), ['needs_environment' => true]),
             new TwigFunction('nowo_ui_safe_href', static fn (mixed $href): ?string => \is_string($href) ? SafeHref::filter($href) : null),
             new TwigFunction('nowo_ui_safe_image_src', static fn (mixed $src): ?string => \is_string($src) ? SafeHref::filterImage($src) : null),
-            new TwigFunction('nowo_ui_dialog_request', fn (): bool => RemoteDialog::isRequest($this->requestStack?->getCurrentRequest())),
+            new TwigFunction('nowo_ui_dialog_request', fn (): bool => RemoteDialog::isRequest($this->requestStack?->getCurrentRequest(), $this->remoteDialogHeaders)),
+            // 2.33: the dialog attributes of configured (non-default) header names; empty with the defaults.
+            new TwigFunction('nowo_ui_remote_dialog_attrs', fn (): array => ($this->remoteDialogHeaders ?? RemoteDialogHeaders::defaults())->dialogAttributes()),
             new TwigFunction('nowo_ui_remote_form_opener', self::remoteFormOpener(...)),
             new TwigFunction('nowo_ui_dialog_status', PageStatus::fromOption(...)),
         ];

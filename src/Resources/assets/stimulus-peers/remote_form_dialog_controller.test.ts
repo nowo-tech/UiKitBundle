@@ -137,6 +137,40 @@ describe('remote-form-dialog peer', () => {
     expect(dialog().open).toBe(false);
   });
 
+  it('falls back to the header names printed on the dialog, and follows a step answer (2.33)', async () => {
+    await mount();
+    dialog().setAttribute('data-nowo-ui-remote-form-request-header', 'X-Beacon-Dialog');
+    dialog().setAttribute('data-nowo-ui-remote-form-location-header', 'X-Beacon-Dialog-Location');
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(reply(200, '<form method="post" action="/connect"></form>'))
+      .mockResolvedValueOnce(reply(204, '', { 'X-Beacon-Dialog-Location': '/connect/lists' }))
+      .mockResolvedValueOnce(reply(200, '<p id="lists">Lists</p>'));
+    vi.stubGlobal('fetch', fetchMock);
+    const step = vi.fn();
+    root().addEventListener('remote-form-dialog:step', step);
+    document.getElementById('add')!.click();
+    await tick();
+    await tick();
+    expect((fetchMock.mock.calls[0] as [string, RequestInit])[1].headers).toMatchObject({ 'X-Beacon-Dialog': '1' });
+    body().querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    for (let i = 0; i < 6; i += 1) await tick();
+    expect(document.getElementById('lists')).not.toBeNull();
+    expect(dialog().open).toBe(true);
+    expect((step.mock.calls[0]?.[0] as CustomEvent).detail).toEqual({ url: '/connect/lists', status: 204 });
+    expect(navigation.assign).not.toHaveBeenCalled();
+  });
+
+  it('a controller value wins over the dialog attribute (2.33)', async () => {
+    await mount('data-remote-form-dialog-request-header-value="X-Own-Dialog"');
+    dialog().setAttribute('data-nowo-ui-remote-form-request-header', 'X-Beacon-Dialog');
+    const fetchMock = vi.fn().mockResolvedValue(reply(200, '<p>x</p>'));
+    vi.stubGlobal('fetch', fetchMock);
+    document.getElementById('add')!.click();
+    await tick();
+    expect((fetchMock.mock.calls[0] as [string, RequestInit])[1].headers).toMatchObject({ 'X-Own-Dialog': '1' });
+  });
+
   it('reads renamed headers, invalid selector, load error and backdrop values', async () => {
     await mount(`data-remote-form-dialog-request-header-value="X-Beacon-Dialog" data-remote-form-dialog-redirect-header-value="X-Beacon-Redirect"
       data-remote-form-dialog-invalid-selector-value=".has-error input" data-remote-form-dialog-follow-on-load-error-value="false"

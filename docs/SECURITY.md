@@ -33,6 +33,8 @@ If you discover a security-related issue, please report it privately (e.g. by em
 | **Release check (opt-in)** | Public `GET /_nowo-ui/release/status` (only when the host imports the route; 404 while disabled) + outbound `GET https://api.github.com/repos/{owner}/{name}/releases[/latest]` (fixed host, `owner/name` regex, 5–8 s timeout, no redirects, cached) |
 | **Frontend JS** | IIFEs: `nowo-ui-modal.js`, `nowo-ui-shell.js`, `nowo-ui-toast.js`, `nowo-ui-confirm.js`, `nowo-ui-page-loader.js`, `nowo-ui-theme.js`, `nowo-ui-orb.js`, `nowo-ui-clipboard.js`, `nowo-ui-tabs.js`, `nowo-ui-release.js`, `nowo-ui-dialog.js`, `nowo-ui-overlay.js`, `nowo-ui-side-panel.js` (DOM / canvas; clipboard, release and the dialog may `fetch` same-origin URLs; 2.28: the remote form dialog posts host forms back with `fetch`) |
 | **Remote form dialog (2.28)** | Request header `X-Nowo-Dialog`, response header `X-Nowo-Redirect`, `RemoteDialogResponder`, opt-in `RemoteDialogRedirectListener` |
+| **Remote dialog steps (2.33)** | Response header `X-Nowo-Dialog-Location`, opt-in `remote_dialog.step_routes`, `RemoteDialogRedirectEvent`, configurable names `remote_dialog.{request,redirect,location}_header`; each step load is one more fragment insertion |
+| **Plain remote dialog content (2.2)** | `data-nowo-ui-dialog-src` (`Action::$dialogId` + `href`): a same-origin fragment fetched into a `<dialog>` |
 | **Translations** | Domain `NowoUiKitBundle` strings rendered in Twig |
 
 The bundle does **not** expose CLI commands that mutate production data, file uploads, or cookie writers. The only outbound HTTP integration is the opt-in release check (off by default).
@@ -86,6 +88,31 @@ The bundle does **not** expose CLI commands that mutate production data, file up
   answer never injects or navigates. Submits follow native semantics (`FormData(form, submitter)`, the submitter's
   `formaction` / `formmethod` / `formenctype`, same-origin checked), so the server runs the action the user clicked.
   `convert_redirects` keeps the redirect's security headers (`X-Frame-Options`, CSP…) and cookies on the 204. Warnings name a rejected header, never its value.
+- Remote dialog steps and fragments (2.33, audit Appendix GT):
+  - `X-Nowo-Dialog-Location` is honoured only on a 2xx answer and under the same rule as `X-Nowo-Redirect`; an invalid
+    value is ignored with a warning and never fetched. A load follows at most 5 steps in a row, then warns. The counter
+    resets on open and on a user submit.
+  - `step_routes` patterns are validated at compile time (letters, digits, `_`, `.`, `-`, `*`) and compiled with
+    `preg_quote`. `RemoteDialogRedirectEvent::setPath()` validates again, so a listener cannot set another origin or a
+    control character.
+  - The configurable header names are validated tokens (no CRLF), three different names, and since this version not a
+    standard HTTP name (`RemoteDialogHeaders::invalid()`). They are configuration, not a security signal.
+  - Fragment filter, used by every fragment of the remote form path and, since this version, of the plain
+    `data-nowo-ui-dialog-src` path: `<script>`, `iframe[srcdoc]`, an `<iframe>` whose `src` is not http(s) (read with
+    the URL parser), `meta[http-equiv]`, `<base>`, `<object>`, `<embed>`, `on*`, `javascript:` / `vbscript:` values of
+    `href`, `xlink:href`, `action`, `formaction`, and SVG `<animate>` / `<set>` of `href`, recursively through nested
+    `<template>` content. The filter reads attributes through `Element.prototype`, so a form control named `attributes`
+    or `removeAttribute` cannot hide its form. The plain path now also uses `mode: 'same-origin'` (a redirect to another origin fails), http(s)
+    sources only, and inserts only `text/html` fragments; `text/plain`, JSON and whole documents follow the opener's link
+    instead.
+  - **Not covered by the filter, on purpose:** other-origin frames, forms, images, stylesheets and links, which hosts use
+    legitimately. Neither is markup in attributes that a host script turns into HTML later (`data-prototype`). The filter
+    is defence in depth, not a sanitizer for user HTML, so an injection into a fragment still needs a CSP: `script-src`
+    without `'unsafe-inline'` (`script-src-attr 'none'` alone does not stop inline script), `frame-src`, `form-action`,
+    `img-src`, `style-src`, `connect-src`, `object-src 'none'`, `base-uri 'none'`.
+  - Listing customizer scopes: every save, reset and token request is same-origin (`mode: 'same-origin'`, `url`,
+    `tokenUrl` and scope URLs checked), so the CSRF token does not follow a redirect to another origin. The scope key is
+    client-set: the host must authorise it.
 - Overlay registry (2.28): it only toggles `inert` / `aria-hidden` and a root attribute, removes only what it set
   (never an `inert` the host wrote), releases an owner removed from the DOM at once (a `childList` observer while overlays are open) and everything on
   `pagehide`, so an
@@ -98,11 +125,13 @@ The bundle does **not** expose CLI commands that mutate production data, file up
 
 | Field | Value |
 | ----- | ----- |
-| **Date** | 2026-08-04 |
-| **Method** | Cursor static security pass (`src/`, Twig, TS/JS, Flex recipe, demos, SECURITY docs) |
+| **Date** | 2026-11-06 |
+| **Method** | Independent audit Appendix GT: code read and browser PoC in three engines, re-verified 2026-11-06 |
 | **Overall risk** | **Low** |
 | **Grade** | **Pass (good)** |
-| **Open residuals** | Host must not feed UGC into `|raw` slots; embedders must apply their own `access_control` around admin chrome |
+| **Open residuals** | Host must not feed UGC into `|raw` slots; embedders must apply their own `access_control` around admin chrome; other-origin frames, forms and subresources are left to the host's CSP; `auto-refresh` `url` must stay same-origin (GT-L4) |
+
+2.33.0: independent audit Appendix GT (2026-11-06), re-verified 2026-11-06: **Pass (good)**, overall risk **Low**; no Critical, High or Medium. GT-L1, GT-L2, GT-L3 and GT-I1..I5 are fixed. Open: GT-L4 (Low), the `auto-refresh` peer does not check the origin of `url`, follows redirects and inserts regions unfiltered, so keep `url` same-origin and set `script-src` and `connect-src`; GT-I6 (Info), `sanitizeImported()` is narrower than the fragment filter. Other-origin frames, forms and subresources are left to the host's CSP.
 
 ## Secrets and cryptography
 

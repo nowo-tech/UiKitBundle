@@ -21,6 +21,10 @@
         {% set _new = path('kit_remote_form_new') %}
         <a href="{{ _new }}" class="{{ nowo_ui_class('btn_primary') }}" data-testid="destination-add"
             {{- nowo_ui_html_attrs(nowo_ui_remote_form_opener('destination-dialog', 'New destination', false, _new)) }}>Add destination</a>
+        {# 2.33: a two-step flow in the same dialog (204 + X-Nowo-Dialog-Location between the steps) #}
+        {% set _wizard = path('kit_remote_form_wizard') %}
+        <a href="{{ _wizard }}" class="{{ nowo_ui_class('btn_secondary') }}" data-testid="wizard-add"
+            {{- nowo_ui_html_attrs(nowo_ui_remote_form_opener('destination-dialog', 'New destination (wizard)', false, _wizard)) }}>Add with wizard</a>
     </main>
     {{ include(nowo_ui_partial('remote_form_dialog'), {id: 'destination-dialog', invalid_selector: '.is-invalid', attr: {'data-testid': 'destination-dialog'}}) }}
     {{ include('@NowoUiKitBundle/partials/_side_panel.html.twig', {id: 'demo-help', title: 'Help', layout: 'overlay', content_template: 'kit/_remote_form_help.html.twig', attr: {'data-testid': 'help-panel'}}) }}

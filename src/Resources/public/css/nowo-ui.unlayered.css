@@ -341,9 +341,16 @@
 
 .nowo-ui-row-actions {
   display: flex;
-  gap: 0.25rem;
+  gap: var(--nowo-ui-row-actions-gap, 0.25rem);
   align-items: center;
   flex-wrap: wrap;
+}
+
+/* 2.33 (UI-4): icon-only row actions as squares of --nowo-ui-row-action-size when a host sets it (else as before) */
+.nowo-ui-row-actions--icon .nowo-ui-action.nowo-ui-btn--sm {
+  inline-size: var(--nowo-ui-row-action-size, auto);
+  min-inline-size: var(--nowo-ui-row-action-size, auto);
+  block-size: var(--nowo-ui-row-action-size, auto);
 }
 
 .nowo-ui-row-actions__form {
@@ -669,7 +676,7 @@ body.nowo-modal-open {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.25rem;
+  gap: var(--nowo-ui-pagination-gap, 0.25rem);
 }
 
 /* The partial's <ul class="pagination"> lays out as a row on every stack (zero specificity: Bootstrap wins). */
@@ -677,7 +684,7 @@ body.nowo-modal-open {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.25rem;
+  gap: var(--nowo-ui-pagination-gap, 0.25rem);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -4316,6 +4323,18 @@ button.nowo-ui-edge-tab__link {
   color: var(--nowo-ui-primary);
 }
 
+/* 2.33 (UI-3): the scope selector of a scoped customizer, on top of the panel */
+.nowo-ui-listing-customizer__scope {
+  display: grid;
+  gap: 0.35rem;
+  margin-block-end: 0.75rem;
+}
+
+.nowo-ui-listing-customizer__scope > p {
+  margin: 0;
+  font-size: 0.8125rem;
+}
+
 .nowo-ui-listing-customizer__status {
   flex: 1 1 100%;
   min-height: 1.25rem;
@@ -5843,6 +5862,26 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
 
 .nowo-ui-burger__morph {
   display: inline-flex;
+}
+
+/* 2.33 (UI-4) morph swap for host toggles: a static icon (.nowo-ui-morph-swap__static) until the morph-icon is
+ * hydrated, then only the morph-icon (.nowo-ui-morph-swap__morph, a real box of --nowo-ui-morph-size). The host element
+ * carries .nowo-ui-morph-swap; the morphicons helpers add .is-morph-ready. !important inside the kit layer, so hosts
+ * need none (a layered !important beats an unlayered one). */
+.nowo-ui-morph-swap .nowo-ui-morph-swap__morph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  inline-size: var(--nowo-ui-morph-size, 1em);
+  block-size: var(--nowo-ui-morph-size, 1em);
+  color: inherit;
+  line-height: 0;
+}
+
+.nowo-ui-morph-swap.is-morph-ready .nowo-ui-morph-swap__static,
+.nowo-ui-morph-swap:not(.is-morph-ready) .nowo-ui-morph-swap__morph {
+  display: none !important;
 }
 
 /* Compact pagination (View\Pagination variant `compact`): « Page n of m » + per-page select. */

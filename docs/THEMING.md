@@ -550,7 +550,11 @@ until set).
 | `--nowo-ui-badge-danger-bg` / `--nowo-ui-badge-danger-border` / `--nowo-ui-badge-danger-text` | the `--nowo-ui-danger-*` palette | `.nowo-ui-badge--danger`, `--error` |
 | `--nowo-ui-table-head-font-weight` | `bold` | `.nowo-ui-table > thead > tr > th` |
 | `--nowo-ui-table-head-letter-spacing` | *unset* | `.nowo-ui-table` header (with `--nowo-ui-table-head-transform`, `--nowo-ui-table-head-font-size`) |
-| `--nowo-ui-pagination-size` | `2rem` wide, `auto` tall | `.nowo-ui-pagination__link` min width / height |
+| `--nowo-ui-pagination-size` | `2rem` wide, `auto` tall | `.nowo-ui-pagination__link` min width / height (the pagination item size) |
+| `--nowo-ui-pagination-gap` | `0.25rem` | 2.33: gap between the pagination items (`.nowo-ui-pagination__nav`, its `ul.pagination`) |
+| `--nowo-ui-row-actions-gap` | `0.25rem` | 2.33: gap between the row actions (`.nowo-ui-row-actions`) |
+| `--nowo-ui-row-action-size` | *unset* | 2.33: icon-only row actions (`.nowo-ui-row-actions--icon .nowo-ui-action.nowo-ui-btn--sm`) as squares of this size |
+| `--nowo-ui-morph-size` | `1em` | 2.33: the morph-icon box of a [morph swap](#morph-swap-233) |
 | `--nowo-ui-pagination-py` / `--nowo-ui-pagination-px` | `0.25rem` / `0.5rem` | `.nowo-ui-pagination__link` padding |
 | `--nowo-ui-pagination-font-size` | `0.875rem` | `.nowo-ui-pagination__link` |
 | `--nowo-ui-pagination-font-weight` / `--nowo-ui-pagination-line-height` | *unset* | `.nowo-ui-pagination__link` |
@@ -564,6 +568,22 @@ apply to `.nowo-ui-table` (they were read by `.nowo-ui-data-table` only).
 
 **Pill tabs.** Add `nowo-ui-tabs--pill` to the `tabs` slot (`theme.classes.tabs`): each tab is a bordered pill
 (`--nowo-ui-tab-radius`, active border `--nowo-ui-tab-active-border`) instead of the underline.
+
+### Morph swap (2.33)
+
+A host toggle that pairs a static icon with a `<morph-icon>` (theme toggle, sidebar burger of its own…) gets the kit's
+swap without its own `display: … !important`: class `nowo-ui-morph-swap` on the toggle, `nowo-ui-morph-swap__static`
+on the static icon(s), `nowo-ui-morph-swap__morph` on the `<morph-icon>`. Before hydration only the static icon
+paints; once the morphicons helpers add `is-morph-ready`, only the morph-icon (a real `inline-flex` box of
+`--nowo-ui-morph-size`). The rules use `!important` inside the `nowo-ui` layer, which beats unlayered host
+`!important`, so a host keeps only its own state rules (which static icon shows for which state).
+
+```html
+<button type="button" class="app-theme-toggle nowo-ui-morph-swap">
+  <svg class="nowo-ui-morph-swap__static app-icon--moon">…</svg>
+  <morph-icon class="nowo-ui-morph-swap__morph" data-theme-morph aria-hidden="true"></morph-icon>
+</button>
+```
 
 ## CSS framework notes
 

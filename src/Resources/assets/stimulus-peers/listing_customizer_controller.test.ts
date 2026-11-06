@@ -1,7 +1,7 @@
 import { Application } from '@hotwired/stimulus';
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 
-import ListingCustomizerController, { formatMessage, moveItem, toPayload, type ListingClientState } from './listing_customizer_controller';
+import ListingCustomizerController, { formatMessage, moveItem, scopeUrl, toPayload, type ListingClientState } from './listing_customizer_controller';
 import { deleteListingCookie, patchListingCookie, readListingCookie, writeListingCookie } from './listing_cookie';
 
 const COOKIE = 'nowo_ui_listing_invoices_index';
@@ -446,6 +446,7 @@ describe('listing-customizer peer', () => {
     expect(fetchFn).toHaveBeenCalledWith('/prefs/invoices', {
       method: 'PUT',
       credentials: 'same-origin',
+      mode: 'same-origin',
       headers: { Accept: 'application/json', 'X-CSRF-TOKEN': 'tok', 'Content-Type': 'application/json' },
       body: JSON.stringify({ columns: toPayload(state().columns), filters: toPayload(state().filters, false) }),
     });
@@ -458,6 +459,7 @@ describe('listing-customizer peer', () => {
     expect(fetchFn).toHaveBeenLastCalledWith('/prefs/invoices', {
       method: 'DELETE',
       credentials: 'same-origin',
+      mode: 'same-origin',
       headers: { Accept: 'application/json', 'X-CSRF-TOKEN': 'tok' },
     });
     expect(reload).toHaveBeenCalledTimes(2);
@@ -518,6 +520,25 @@ describe('listing-customizer peer', () => {
       expect(fetchFn).toHaveBeenCalledTimes(2);
       expect(document.querySelector('[data-listing-customizer-target="status"]')?.textContent).toBe('Expired');
     }
+  });
+
+  it('does not call a token URL on another origin (GT-I3)', async () => {
+    const fetchFn = vi.fn(async () => ({ ok: false, status: 403 }));
+    vi.stubGlobal('fetch', fetchFn);
+    const root = await mount({ url: '/prefs/invoices', 'token-url': 'https://evil.example/token' });
+    await controller(root).apply();
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+    expect((fetchFn.mock.calls[0] as unknown as [string])[0]).toBe('/prefs/invoices');
+    expect(document.querySelector('[data-listing-customizer-target="status"]')?.textContent).toBe('Expired');
+  });
+
+  it('refreshes the token same-origin only (GT-I3)', async () => {
+    const fetchFn = vi.fn(async (url: string) => ('/prefs/token' === url ? { ok: true, status: 200, json: async () => ({ token: 'fresh' }) } : { ok: false, status: 403 }));
+    vi.stubGlobal('fetch', fetchFn);
+    const root = await mount({ url: '/prefs/invoices', 'token-url': '/prefs/token' });
+    await controller(root).apply();
+    expect((fetchFn.mock.calls[1] as unknown as [string, RequestInit])[1]).toMatchObject({ mode: 'same-origin', credentials: 'same-origin' });
+    expect((fetchFn.mock.calls[2] as unknown as [string, RequestInit])[1]).toMatchObject({ mode: 'same-origin' });
   });
 
   it('works without tabs, status or buttons and with an empty state', async () => {
@@ -583,5 +604,212 @@ describe('base controller edge cases', () => {
     tag.dispatchEvent(new Event('change'));
     expect(root.hasAttribute('data-listing-dirty')).toBe(true);
     expect(root.querySelector('[data-listing-customizer-target="status"]')).toBeNull();
+  });
+});
+
+describe('scopes (2.33)', () => {
+  const personal = {
+    key: 'personal',
+    label: 'My layout',
+    stored: true,
+    columns: [
+      { key: 'number', label: 'Number', required: true, visible: true },
+      { key: 'total', label: 'Total', required: false, visible: true },
+    ],
+    filters: [{ key: 'q', label: 'Search', required: false, visible: true }],
+    params: { project: 'p7' },
+  };
+  const project = {
+    key: 'project',
+    label: 'Project default',
+    stored: false,
+    columns: [
+      { key: 'total', label: 'Total', required: false, visible: true },
+      { key: 'number', label: 'Number', required: true, visible: true },
+    ],
+    filters: [],
+    saveUrl: '/prefs/project',
+    resetUrl: '/prefs/project/reset',
+    params: { project: 'p7' },
+    saveConfirm: 'Save for everyone?',
+    resetConfirm: 'Reset the project default?',
+  };
+  const scopedMessages = { ...MESSAGES, stored: 'Saved here.', inherited: 'Inherited.', discardConfirm: 'Discard?' };
+
+  async function mountScoped(scopes: unknown[], scope = '', url = '/prefs/me'): Promise<HTMLElement> {
+    document.body.innerHTML = `
+      <div data-controller="listing-customizer" data-listing-customizer-state-value='${JSON.stringify(state())}'
+           data-listing-customizer-messages-value='${JSON.stringify(scopedMessages)}'
+           data-listing-customizer-url-value="${url}" data-listing-customizer-token-value="tok"
+           data-listing-customizer-scopes-value='${JSON.stringify(scopes)}' data-listing-customizer-scope-value="${scope}">
+        <button type="button" id="edge" data-listing-customizer-target="toggle" data-action="listing-customizer#toggle">edge</button>
+        <dialog data-listing-customizer-target="dialog">
+          <select data-listing-customizer-target="scope" data-action="listing-customizer#changeScope">
+            ${(scopes as Array<{ key: string; label: string }>).map((s) => `<option value="${s.key}">${s.label}</option>`).join('')}
+          </select>
+          <p data-listing-customizer-target="scopeState"></p>
+          <section data-panel="columns" data-listing-customizer-target="panel"><ul data-kind="columns" data-listing-customizer-target="list"></ul></section>
+          <section data-panel="filters" data-listing-customizer-target="panel"><ul data-kind="filters" data-listing-customizer-target="list"></ul></section>
+          <p data-listing-customizer-target="status"></p>
+          <button type="button" data-listing-customizer-target="resetButton" data-action="listing-customizer#reset">Reset</button>
+          <button type="button" data-listing-customizer-target="applyButton" data-action="listing-customizer#apply">Apply</button>
+        </dialog>
+      </div>`;
+    await tick();
+    return document.querySelector('[data-controller]') as HTMLElement;
+  }
+
+  const select = (): HTMLSelectElement => document.querySelector('select') as HTMLSelectElement;
+  const state_ = (): string => document.querySelector('[data-listing-customizer-target="scopeState"]')?.textContent ?? '';
+  const ok = (): Response => ({ ok: true, status: 204 }) as Response;
+
+  it('loads the selected scope (value, then the first) with its stored state', async () => {
+    await mountScoped([personal, project], 'project');
+    expect(select().value).toBe('project');
+    expect(keys('columns')).toEqual(['total', 'number']);
+    expect(state_()).toBe('Inherited.');
+    expect(button('[data-listing-customizer-target="resetButton"]').disabled).toBe(true);
+    await mountScoped([personal, project]);
+    expect(select().value).toBe('personal');
+    expect(keys('columns')).toEqual(['number', 'total']);
+    expect(state_()).toBe('Saved here.');
+    expect(button('[data-listing-customizer-target="resetButton"]').disabled).toBe(false);
+  });
+
+  it('switches scope, asking before unapplied edits are discarded', async () => {
+    const root = await mountScoped([personal, project]);
+    const scoped = vi.fn();
+    root.addEventListener('listing-customizer:scope-changed', scoped);
+    select().value = 'project';
+    select().dispatchEvent(new Event('change'));
+    await tick();
+    expect(keys('columns')).toEqual(['total', 'number']);
+    expect(scoped.mock.calls[0]?.[0].detail).toEqual({ scope: 'project' });
+
+    row('columns', 'total').querySelector<HTMLButtonElement>('button[data-move="down"]')?.click();
+    expect(root.hasAttribute('data-listing-dirty')).toBe(true);
+    select().value = 'personal';
+    select().dispatchEvent(new Event('change'));
+    await answer(false);
+    expect(select().value).toBe('project');
+    expect(keys('columns')).toEqual(['number', 'total']);
+
+    select().dispatchEvent(new Event('change'));
+    select().value = 'personal';
+    select().dispatchEvent(new Event('change'));
+    await answer(true);
+    await tick();
+    expect(select().value).toBe('personal');
+    expect(root.hasAttribute('data-listing-dirty')).toBe(false);
+  });
+
+  it('applies to the scope URL with the scope and its params, after its confirm', async () => {
+    const fetchFn = vi.fn(async () => ok());
+    vi.stubGlobal('fetch', fetchFn);
+    const root = await mountScoped([personal, project], 'project');
+    const saved = vi.fn();
+    root.addEventListener('listing-customizer:saved', saved);
+    row('columns', 'total').querySelector<HTMLButtonElement>('button[data-move="down"]')?.click();
+    button('[data-listing-customizer-target="applyButton"]').click();
+    await answer(false);
+    expect(fetchFn).not.toHaveBeenCalled();
+    button('[data-listing-customizer-target="applyButton"]').click();
+    await answer(true);
+    await tick();
+    const [url, init] = fetchFn.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe(`${window.location.origin}/prefs/project`);
+    expect(init.method).toBe('PUT');
+    expect(JSON.parse(String(init.body))).toEqual({
+      project: 'p7',
+      scope: 'project',
+      columns: [
+        { key: 'number', visible: true },
+        { key: 'total', visible: true },
+      ],
+      filters: [],
+    });
+    expect(saved.mock.calls[0]?.[0].detail.scope).toBe('project');
+    expect(reload).toHaveBeenCalled();
+  });
+
+  it('a scope without its own URL saves to the listing url; reset sends the scope in the body', async () => {
+    const fetchFn = vi.fn(async () => ok());
+    vi.stubGlobal('fetch', fetchFn);
+    await mountScoped([personal, project]);
+    row('columns', 'total').querySelector<HTMLButtonElement>('button[data-move="up"]')?.click();
+    button('[data-listing-customizer-target="applyButton"]').click();
+    await tick();
+    await tick();
+    expect((fetchFn.mock.calls[0] as unknown as [string])[0]).toBe('/prefs/me');
+    fetchFn.mockClear();
+    button('[data-listing-customizer-target="resetButton"]').click();
+    await answer(true);
+    await tick();
+    const [url, init] = fetchFn.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('/prefs/me');
+    expect(init.method).toBe('DELETE');
+    expect(JSON.parse(String(init.body))).toEqual({ project: 'p7', scope: 'personal' });
+  });
+
+  it('the reset of a scope uses its reset URL and confirm text', async () => {
+    const fetchFn = vi.fn(async () => ok());
+    vi.stubGlobal('fetch', fetchFn);
+    await mountScoped([personal, { ...project, stored: true }], 'project');
+    button('[data-listing-customizer-target="resetButton"]').click();
+    await tick();
+    expect(document.querySelector('dialog.nowo-ui-confirm')?.textContent).toContain('Reset the project default?');
+    await answer(true);
+    await tick();
+    expect((fetchFn.mock.calls[0] as unknown as [string])[0]).toBe(`${window.location.origin}/prefs/project/reset`);
+  });
+
+  it('never sends the token to another origin', async () => {
+    const fetchFn = vi.fn(async () => ok());
+    vi.stubGlobal('fetch', fetchFn);
+    const root = await mountScoped([{ ...personal, saveUrl: 'https://evil.example/save' }]);
+    const failed = vi.fn();
+    root.addEventListener('listing-customizer:save-failed', failed);
+    row('columns', 'total').querySelector<HTMLButtonElement>('button[data-move="up"]')?.click();
+    button('[data-listing-customizer-target="applyButton"]').click();
+    await tick();
+    button('[data-listing-customizer-target="resetButton"]').click();
+    await answer(true);
+    expect(fetchFn).not.toHaveBeenCalled();
+    expect(failed).toHaveBeenCalledTimes(2);
+    expect(scopeUrl('', '/fallback')).toBe('/fallback');
+    expect(scopeUrl('http://[bad', '/fallback')).toBeNull();
+  });
+
+  it('refuses a same-origin URL that is not http(s) (GT-I3)', () => {
+    expect(scopeUrl(`blob:${window.location.origin}/x`, '/fallback')).toBeNull();
+    expect(scopeUrl('javascript:alert(1)', '/fallback')).toBeNull();
+    expect(scopeUrl('/own', '/fallback')).toBe(`${window.location.origin}/own`);
+  });
+
+  it('never sends the token to a listing url on another origin, with or without a scope (GT-I3)', async () => {
+    const fetchFn = vi.fn(async () => ok());
+    vi.stubGlobal('fetch', fetchFn);
+    const root = await mountScoped([personal], '', 'https://evil.example/save');
+    const failed = vi.fn();
+    root.addEventListener('listing-customizer:save-failed', failed);
+    row('columns', 'total').querySelector<HTMLButtonElement>('button[data-move="up"]')?.click();
+    button('[data-listing-customizer-target="applyButton"]').click();
+    await tick();
+    expect(fetchFn).not.toHaveBeenCalled();
+    expect(failed).toHaveBeenCalledTimes(1);
+    expect(failed.mock.calls[0]?.[0].detail.message).toBe(scopedMessages.saveError);
+  });
+
+  it('ignores scopes without a key, and toggle opens then closes the panel', async () => {
+    await mountScoped([{ label: 'No key' }, personal]);
+    expect(keys('columns')).toEqual(['number', 'total']);
+    const dialog = document.querySelector('dialog') as HTMLDialogElement;
+    dialog.close = function close(this: HTMLDialogElement) {
+      this.removeAttribute('open');
+    };
+    button('#edge').click();
+    expect(dialog.open).toBe(true);
+    button('#edge').click();
+    expect(dialog.open).toBe(false);
   });
 });

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import * as mod from './nowo-ui-dialog';
 
 function polyfill(dialog: HTMLDialogElement): void {
@@ -15,6 +15,11 @@ function polyfill(dialog: HTMLDialogElement): void {
       return this.hasAttribute('open');
     },
   });
+}
+
+/** A plain-path answer: an HTML fragment unless told otherwise. */
+function htmlReply(text: string, contentType = 'text/html; charset=UTF-8'): { ok: boolean; status: number; headers: Headers; text: () => Promise<string> } {
+  return { ok: true, status: 200, headers: new Headers({ 'content-type': contentType }), text: () => Promise.resolve(text) };
 }
 
 function click(el: Element, init: MouseEventInit = {}): MouseEvent {
@@ -185,7 +190,7 @@ describe('nowo-ui-dialog remote content', () => {
   });
 
   it('fetches same-origin HTML into the body and dispatches nowo-ui:dialog-loaded', async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, text: () => Promise.resolve('<form id="loaded"></form>') });
+    const fetchMock = vi.fn().mockResolvedValue(htmlReply('<form id="loaded"></form>'));
     vi.stubGlobal('fetch', fetchMock);
     const dialog = document.getElementById('r1') as HTMLDialogElement;
     const loaded = new Promise<CustomEvent>((resolve) => dialog.addEventListener('nowo-ui:dialog-loaded', (e) => resolve(e as CustomEvent)));
@@ -195,7 +200,101 @@ describe('nowo-ui-dialog remote content', () => {
     expect(detail.url).toBe(`${window.location.origin}/items/7/edit?modal=1`);
     expect(dialog.querySelector('#loaded')).not.toBeNull();
     expect(dialog.querySelector('.nowo-ui-dialog__body')?.hasAttribute('aria-busy')).toBe(false);
-    expect(fetchMock.mock.calls[0][1]).toMatchObject({ credentials: 'same-origin' });
+    expect(fetchMock.mock.calls[0][1]).toMatchObject({ credentials: 'same-origin', mode: 'same-origin' });
+  });
+
+  describe('plain path filter (audit GT-L2)', () => {
+    const body = (dialog: HTMLDialogElement): Element => dialog.querySelector('.nowo-ui-dialog__body') as Element;
+
+    it('removes what could run or navigate', async () => {
+      vi.stubGlobal(
+        'fetch',
+        vi.fn().mockResolvedValue(
+          htmlReply(`<p id="ok">x</p><meta http-equiv="refresh" content="0;url=https://evil.example/"><iframe srcdoc="<script>x()</script>"></iframe><iframe src="javascript:x()"></iframe>
+            <img id="i" src="/x" onerror="x()"><script>x()</script><base href="https://evil.example/"><object data="x"></object><embed src="x"><a id="l" href="javascript:x()">x</a>`),
+        ),
+      );
+      const dialog = document.getElementById('r1') as HTMLDialogElement;
+      expect(await mod.loadDialogContent(dialog, '/x')).toBe(true);
+      expect(body(dialog).querySelector('#ok')).not.toBeNull();
+      expect(body(dialog).querySelector('meta, iframe, script, base, object, embed')).toBeNull();
+      expect(body(dialog).querySelector('#i')?.hasAttribute('onerror')).toBe(false);
+      expect(body(dialog).querySelector('#l')?.hasAttribute('href')).toBe(false);
+    });
+
+    it.each(['attributes', 'removeAttribute', 'getAttributeNames'])('GT-L3: a form control named %s does not hide the form', async (name) => {
+      // happy-dom has no named properties on a form: behave as browsers do.
+      Object.defineProperty(HTMLFormElement.prototype, name, {
+        configurable: true,
+        get(this: HTMLFormElement) {
+          return Element.prototype.querySelector.call(this, `[name="${name}"]`);
+        },
+      });
+      onTestFinished(() => {
+        delete (HTMLFormElement.prototype as unknown as Record<string, unknown>)[name];
+      });
+      const form = `<form class="c" onfocusin="x()" action="javascript:x()"><input name="${name}" autofocus></form>`;
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(htmlReply(`${form}<template id="t">${form}</template>`)));
+      const dialog = document.getElementById('r1') as HTMLDialogElement;
+      expect(await mod.loadDialogContent(dialog, '/x')).toBe(true);
+      const names = (element: Element): string[] => Element.prototype.getAttributeNames.call(element);
+      expect(names(body(dialog).querySelector('.c') as Element)).toEqual(['class']);
+      expect(names((body(dialog).querySelector('#t') as HTMLTemplateElement).content.querySelector('.c') as Element)).toEqual(['class']);
+    });
+
+    it('keeps the form partial of a dashboard (BreadcrumbKit shape) as it was', async () => {
+      const partial = `<div id="modal-bk-collection-form-container" data-bk-dialog-title="New collection"><form name="c" method="post" action="/admin/collections/new" class="nowo-ui-form"><div><label for="c_code" class="required">Code</label><input type="text" id="c_code" name="c[code]" required="required" maxlength="64"></div><input type="hidden" id="c__token" name="c[_token]" value="abc"><div class="nowo-ui-form__actions"><button type="submit" class="nowo-ui-btn">Create</button><button type="button" class="nowo-ui-btn" data-nowo-ui-dialog-close="">Cancel</button></div></form></div>`;
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(htmlReply(partial, 'text/html; charset=UTF-8')));
+      const dialog = document.getElementById('r1') as HTMLDialogElement;
+      const loaded = vi.fn();
+      dialog.addEventListener('nowo-ui:dialog-loaded', loaded);
+      expect(await mod.loadDialogContent(dialog, '/admin/collections/new')).toBe(true);
+      expect(body(dialog).innerHTML).toBe(partial);
+      expect(loaded).toHaveBeenCalledTimes(1);
+    });
+
+    it('an empty answer still empties the body', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, status: 204, headers: new Headers(), text: () => Promise.resolve('') }));
+      const dialog = document.getElementById('r1') as HTMLDialogElement;
+      body(dialog).innerHTML = '<p>old</p>';
+      expect(await mod.loadDialogContent(dialog, '/x')).toBe(true);
+      expect(body(dialog).childNodes.length).toBe(0);
+    });
+
+    it.each([
+      ['text/plain', '<img src=x onerror=x()>'],
+      ['application/json', '{"name":"<img src=x onerror=x()>"}'],
+      ['application/xhtml+xml', '<p>x</p>'],
+      ['text/html', '<!doctype html><html><body>page</body></html>'],
+      ['text/html', '<html><body>page</body></html>'],
+    ])('does not insert %s %s: it follows the fallback link', async (type, text) => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(htmlReply(text, type)));
+      const assign = vi.spyOn(mod.navigation, 'assign').mockImplementation(() => undefined);
+      const dialog = document.getElementById('r1') as HTMLDialogElement;
+      body(dialog).innerHTML = '<p id="old">old</p>';
+      mod.openDialog(dialog);
+      expect(await mod.loadDialogContent(dialog, '/x', '/items/7/edit')).toBe(false);
+      expect(body(dialog).querySelector('#old')).not.toBeNull();
+      expect(assign).toHaveBeenCalledWith('/items/7/edit');
+    });
+
+    it('a failed fetch (a redirect to another origin under same-origin mode) follows the fallback link', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
+      const assign = vi.spyOn(mod.navigation, 'assign').mockImplementation(() => undefined);
+      expect(await mod.loadDialogContent(document.getElementById('r1') as HTMLDialogElement, '/x', '/items/7/edit')).toBe(false);
+      expect(assign).toHaveBeenCalledWith('/items/7/edit');
+    });
+
+    it('limits sources to http(s) on this origin', async () => {
+      const fetchMock = vi.fn();
+      vi.stubGlobal('fetch', fetchMock);
+      for (const src of ['javascript:alert(1)', 'data:text/html,x', `blob:${window.location.origin}/x`, 'https://evil.example/x', '//evil.example/x']) {
+        expect(mod.sameOriginUrl(src)).toBeNull();
+        expect(await mod.loadDialogContent(document.getElementById('r1') as HTMLDialogElement, src)).toBe(false);
+      }
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(mod.sameOriginUrl('/x')).toBe(`${window.location.origin}/x`);
+    });
   });
 
   it('follows the fallback href when the request fails, and refuses other origins or missing bodies', async () => {
@@ -285,7 +384,37 @@ describe('nowo-ui-dialog remote form mode (2.28)', () => {
     const settings = mod.remoteFormSettings(document.getElementById('rf') as HTMLDialogElement);
     expect(settings).toMatchObject({ loading: 'Loading', error: 'Failed', loadError: 'Load failed', invalidSelector: '.err input', followOnLoadError: false, closeOnBackdrop: false });
     const plain = mod.remoteFormSettings(document.getElementById('plain2') as HTMLDialogElement);
-    expect(plain).toMatchObject({ loading: '', followOnLoadError: true });
+    expect(plain).toMatchObject({ loading: '', followOnLoadError: true, requestHeader: 'X-Nowo-Dialog', redirectHeader: 'X-Nowo-Redirect', locationHeader: 'X-Nowo-Dialog-Location' });
+  });
+
+  it('reads configured header names from the dialog, ignoring invalid ones (2.33)', () => {
+    const dialog = document.getElementById('plain2') as HTMLDialogElement;
+    dialog.setAttribute('data-nowo-ui-remote-form-request-header', 'X-Beacon-Dialog');
+    dialog.setAttribute('data-nowo-ui-remote-form-redirect-header', 'X-Beacon-Redirect');
+    dialog.setAttribute('data-nowo-ui-remote-form-location-header', 'X-Beacon-Dialog-Location');
+    expect(mod.remoteFormSettings(dialog)).toMatchObject({ requestHeader: 'X-Beacon-Dialog', redirectHeader: 'X-Beacon-Redirect', locationHeader: 'X-Beacon-Dialog-Location' });
+    dialog.setAttribute('data-nowo-ui-remote-form-location-header', 'X: y\r\nSet-Cookie');
+    expect(mod.remoteFormSettings(dialog).locationHeader).toBe('X-Nowo-Dialog-Location');
+  });
+
+  it('loads a step answer into the same dialog and emits nowo-ui:remote-form:step (2.33)', async () => {
+    const dialog = document.getElementById('rf') as HTMLDialogElement;
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(reply(200, '<form method="post" action="/connect"><button type="submit" id="s1">Next</button></form>'))
+      .mockResolvedValueOnce(reply(204, '', { 'X-Nowo-Dialog-Location': '/connect/lists' }))
+      .mockResolvedValueOnce(reply(200, '<p id="lists">Lists</p>'));
+    vi.stubGlobal('fetch', fetchMock);
+    const step = vi.fn();
+    dialog.addEventListener('nowo-ui:remote-form:step', step);
+    expect(mod.openRemoteForm('rf', '/connect')).toBe(true);
+    await tick();
+    await tick();
+    dialog.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    for (let i = 0; i < 6; i += 1) await tick();
+    expect(dialog.open).toBe(true);
+    expect(document.getElementById('lists')).not.toBeNull();
+    expect((step.mock.calls[0]?.[0] as CustomEvent).detail).toEqual({ url: '/connect/lists', status: 204 });
   });
 
   it('opens the remote form from an opener, posts back and emits nowo-ui:remote-form:* events', async () => {

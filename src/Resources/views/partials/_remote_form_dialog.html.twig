@@ -9,7 +9,9 @@
       data-nowo-ui-dialog-src="<url>" and data-nowo-ui-dialog-form (see nowo_ui_remote_form_opener()); the settings
       are attributes of the dialog.
   The server answers the fragment for `X-Nowo-Dialog: 1`, 422 when invalid, 204 + X-Nowo-Redirect once saved
-  (Nowo\UiKitBundle\Dialog\RemoteDialogResponder). 2.29: the wide dialog size, and on phones the screen width with a
+  (Nowo\UiKitBundle\Dialog\RemoteDialogResponder); 2.33: 204 + X-Nowo-Dialog-Location loads the next step of a
+  multi-step flow into the same dialog. Header names configured under nowo_ui_kit.remote_dialog (*_header) are printed
+  as data-nowo-ui-remote-form-{request,redirect,location}-header on the <dialog> (both drivers read them). 2.29: the wide dialog size, and on phones the screen width with a
   16 px gutter (token --nowo-ui-remote-dialog-phone-inset, 0 = full screen); the dialog has a footer
   (data-nowo-ui-dialog-footer) and the fragment's form actions (`[data-nowo-ui-dialog-actions]`, else the form's
   `.nowo-ui-form__actions`) move into it, each control bound to the form with `form="…"`, so the submit never scrolls
@@ -48,7 +50,8 @@
         'data-nowo-ui-remote-form-follow-on-load-error': (follow_on_load_error ?? true) ? null : 'false',
     }) %}
 {% endif %}
-{% set _attr = _attr|merge(attr|default({})) %}
+{#- 2.33: configured (non-default) header names (nowo_ui_kit.remote_dialog.*_header); nothing with the defaults -#}
+{% set _attr = _attr|merge(nowo_ui_remote_dialog_attrs())|merge(attr|default({})) %}
 {% set _title_attr = {tabindex: '-1'}|merge(_stimulus ? {'data-remote-form-dialog-target': 'title'} : {}) %}
 {% set _body_attr = {'data-nowo-ui-dialog-body': true}|merge(_stimulus ? {'data-remote-form-dialog-target': 'body', 'data-action': 'submit->remote-form-dialog#submit'} : {}) %}
 {{ include(nowo_ui_partial('dialog', _b), {

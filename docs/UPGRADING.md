@@ -114,6 +114,47 @@
 
 ## Unreleased
 
+From **2.32.x**: `composer update nowo-tech/ui-kit-bundle`. No markup change by default (the BC fixtures still
+match); every addition is opt-in:
+
+- **Multi-step remote form dialogs:** answer a step with `RemoteDialogResponder::step()` / `stepToRoute()`
+  (`204` + `X-Nowo-Dialog-Location`), or list redirect-only routes in `nowo_ui_kit.remote_dialog.step_routes`; tune
+  per redirect with a `RemoteDialogRedirectEvent` listener. See [USAGE](USAGE.md#multi-step-flows-233).
+- **Own header names:** `nowo_ui_kit.remote_dialog.request_header` / `redirect_header` / `location_header`. A host
+  with its own copy of the dialog (e.g. Symfony Beacon's `remote_form_dialog_controller.ts` with `X-Beacon-*`) sets
+  the three names, re-exports the kit peer (`export { default } from '…/vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/remote_form_dialog_controller'`)
+  and deletes its copy; its redirect → `204` listener reduces to `step_routes` plus, if needed, a
+  `RemoteDialogRedirectEvent` listener for route-specific answers.
+- **Native `<dialog>` modals** in `nowo-ui-modal.js`: a host bridge that called `showModal()` / `close()` on
+  `.nowo-ui-modal-open` changes, re-bound triggers or portaled the dialogs can go.
+- **Listing customizer scopes:** `scopes` / `scope` on the partial (or the peer values) replace a host controller that
+  switched between personal and shared layouts. The request body of a scoped save gains `scope` and the scope
+  `params`.
+- **Tokens:** `--nowo-ui-row-actions-gap`, `--nowo-ui-row-action-size`, `--nowo-ui-pagination-gap`, and the
+  `nowo-ui-morph-swap` classes replace host `!important` rules for row action / pagination density and morph swaps.
+- **`release_check.enabled: '%env(bool:…)%'`** (or a parameter) now works: a host that redefined
+  `nowo_ui_kit.release_update_checker` to pass its own `enabled` flag can drop the redefinition.
+- **Behaviour note:** the peer and the IIFE driver now ignore header names that are not header tokens (letters,
+  digits, `-`) and use the defaults instead.
+
+**Security hardening (audit Appendix GT).** Normal server fragments are unaffected. These cases change:
+
+- **Plain `data-nowo-ui-dialog-src`:** the answer must be a `text/html` fragment (or empty). A whole document
+  (`<!doctype` / `<html` in the first 1024 characters), `text/plain`, JSON or `application/xhtml+xml` is no longer
+  inserted: the dialog closes and the opener's link is followed, or, without a link, the body stays as it was. Answer
+  with a fragment, as the remote form dialog already requires. Inline `on*` handlers, `<script>`, `<base>`, `<object>`,
+  `<embed>`, `iframe[srcdoc]` and `meta[http-equiv]` in that answer are now removed: use delegated listeners or Stimulus.
+  A `src` that redirects to another origin, or a `blob:` `src`, now fails the same way.
+- **Both dialog paths:** an `<iframe>` with `about:blank`, `data:` or `blob:` as `src` is removed; one without `src` stays.
+  `javascript:` links and form actions lose the attribute. `mailto:`, `tel:` and `data:` image links stay.
+- **`remote_dialog.*_header`:** a standard HTTP name now fails at compile time; pick a name of your own (`X-Acme-Dialog`).
+- **Listing customizer:** a `save_url`, `reset_url` or `token_url` on another origin, or one that redirects to another
+  origin, now reports the save error. Such a setup never sent cookies (`credentials: 'same-origin'`). Serve those
+  endpoints from the page's origin. **Authorise each scope key on the server** (USAGE "Scopes").
+- **CSP:** the filter is defence in depth, and `script-src-attr 'none'` alone does not stop `javascript:` URLs. Set
+  `script-src` without `'unsafe-inline'`, plus the directives listed in [USAGE](USAGE.md#remote-form-dialog-228)
+  "Fragment trust".
+
 ## To 2.32.0
 
 **2.32.0** (minor), from **2.31.x**: `composer update nowo-tech/ui-kit-bundle`. No markup change by default: the app

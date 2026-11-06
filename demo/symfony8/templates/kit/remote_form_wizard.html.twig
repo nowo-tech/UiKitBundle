@@ -1,0 +1,10 @@
+{# UiKit 2.33 demo: the full page of a wizard step (no-JavaScript path and deep link of the remote form dialog). #}
+{% extends '@NowoUiKit/layout/document.html.twig' %}
+{% set nowo_ui_document_title = 'New destination (wizard) · UiKit 2.33' %}
+
+{% block nowo_ui_body %}
+    <main id="main-content" class="nowo-ui-content" data-testid="wizard-page">
+        <h1>New destination</h1>
+        {{ include('kit/_remote_form_wizard_step.html.twig') }}
+    </main>
+{% endblock %}

@@ -16,6 +16,7 @@ use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormError;
+use Symfony\Component\Form\FormView;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -62,7 +63,7 @@ final class KitTemplatesController extends AbstractController
     public function sidePanel(Request $request): Response
     {
         $response = $this->render('kit/side_panel.html.twig', ['open' => '1' === $request->query->get('panel')]);
-        $response->headers->set('Content-Security-Policy', "style-src-attr 'none'; script-src-attr 'none'");
+        $response->headers->set('Content-Security-Policy', "script-src 'self'; style-src-attr 'none'; script-src-attr 'none'");
 
         return $response;
     }
@@ -76,7 +77,7 @@ final class KitTemplatesController extends AbstractController
     public function remoteForm(Request $request): Response
     {
         $response = $this->render('kit/remote_form.html.twig', ['saved' => $request->query->getString('saved')]);
-        $response->headers->set('Content-Security-Policy', "style-src-attr 'none'; script-src-attr 'none'");
+        $response->headers->set('Content-Security-Policy', "script-src 'self'; style-src-attr 'none'; script-src-attr 'none'");
 
         return $response;
     }
@@ -101,9 +102,57 @@ final class KitTemplatesController extends AbstractController
         }
 
         $response = $this->render($dialog->template('kit/remote_form_new.html.twig', 'kit/_remote_form_fields.html.twig'), ['form' => $form->createView()]);
-        $response->headers->set('Content-Security-Policy', "style-src-attr 'none'; script-src-attr 'none'");
+        $response->headers->set('Content-Security-Policy', "script-src 'self'; style-src-attr 'none'; script-src-attr 'none'");
 
         return RemoteDialog::vary($response);
+    }
+
+    /**
+     * UiKit 2.33 (UI-1): a two-step flow in the same remote form dialog. Step 1 answers `204` +
+     * `X-Nowo-Dialog-Location` (RemoteDialogResponder::stepToRoute()), so the dialog stays open and loads step 2; step 2
+     * answers `204` + `X-Nowo-Redirect` and the dialog closes. Without the dialog header both are plain redirects.
+     */
+    #[Route('/remote-form/wizard', name: 'kit_remote_form_wizard', methods: ['GET', 'POST'])]
+    public function remoteFormWizard(Request $request, RemoteDialogResponder $dialog): Response
+    {
+        $form = $this->container->get('form.factory')->createNamedBuilder('wizard', FormType::class, null, ['action' => $this->generateUrl('kit_remote_form_wizard')])
+            ->add('label', TextType::class, ['required' => false, 'label' => 'Label'])
+            ->getForm();
+        $form->handleRequest($request);
+        if ($form->isSubmitted()) {
+            $label = trim((string) $form->get('label')->getData());
+            if ('' === $label) {
+                $form->get('label')->addError(new FormError('Enter a label.'));
+            } elseif ($form->isValid()) {
+                return $dialog->stepToRoute('kit_remote_form_wizard_channel', ['label' => $label]);
+            }
+        }
+
+        return $this->wizardStep($dialog, $form->createView(), 1, '');
+    }
+
+    #[Route('/remote-form/wizard/channel', name: 'kit_remote_form_wizard_channel', methods: ['GET', 'POST'])]
+    public function remoteFormWizardChannel(Request $request, RemoteDialogResponder $dialog): Response
+    {
+        $label = $request->query->getString('label');
+        // No `action`: in the dialog an action-less form posts to the step URL the dialog loaded (query included).
+        $form = $this->container->get('form.factory')->createNamedBuilder('wizard_channel', FormType::class)
+            ->add('channel', ChoiceType::class, ['choices' => ['Email' => 'email', 'Slack' => 'slack'], 'label' => 'Channel'])
+            ->getForm();
+        $form->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            return $dialog->redirectToRoute('kit_remote_form', ['saved' => \sprintf('%s (%s)', $label, (string) $form->get('channel')->getData())]);
+        }
+
+        return $this->wizardStep($dialog, $form->createView(), 2, $label);
+    }
+
+    private function wizardStep(RemoteDialogResponder $dialog, FormView $form, int $step, string $label): Response
+    {
+        $response = $this->render($dialog->template('kit/remote_form_wizard.html.twig', 'kit/_remote_form_wizard_step.html.twig'), ['form' => $form, 'step' => $step, 'label' => $label]);
+        $response->headers->set('Content-Security-Policy', "script-src 'self'; style-src-attr 'none'; script-src-attr 'none'");
+
+        return $dialog->fragment($response);
     }
 
     /**
