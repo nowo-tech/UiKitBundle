@@ -497,19 +497,23 @@ keep the `confirm` contract (`View\Confirm`).
 
 #### Dialog sizes and anatomy (2.29)
 
-**Rule for every kit dialog** (owner rule, symfony-beacon `docs/identity/UI-PATTERNS.md` §16): TaskBoard, Yopass,
-UptimeMonitor, Wiki, Vault and any new kit follow it; a dialog that cannot is a bug of that kit.
+**Rule for every kit dialog** (owner rule, symfony-beacon `docs/identity/UI-PATTERNS.md` §16; height: dialog rule v2,
+owner decision D-20261105-54, UiKit 2.31): TaskBoard, Yopass, UptimeMonitor, Wiki, Vault and any new kit follow it; a
+dialog that cannot is a bug of that kit.
 
 1. **Two sizes only**, from shared tokens a host sets once ([THEMING](THEMING.md#dialog-sizes-229)); never a width,
    height or padding of your own:
 
-   | Size | Width | Height | For |
-   |------|-------|--------|-----|
-   | medium (default) | `var(--nowo-dialog-width-md, min(40rem, 100vw - 2rem))` | `var(--nowo-dialog-height-md, min(36rem, 100dvh - 2rem))` | forms, choosers, steps, confirmations |
-   | wide | `var(--nowo-dialog-width-wide, min(56rem, 100vw - 2rem))` | `var(--nowo-dialog-height-wide, min(52rem, 100dvh - 2rem))` | tables, two-column forms, guides, a form page loaded in a dialog |
+   | Size | Width | Height cap | For |
+   |------|-------|------------|-----|
+   | medium (default) | `var(--nowo-dialog-width-md, min(40rem, 100vw - 2rem))` | `min(var(--nowo-dialog-height-md, min(36rem, 100dvh - 2rem)), 100dvh - 2rem)` | forms, choosers, steps, confirmations |
+   | wide | `var(--nowo-dialog-width-wide, min(56rem, 100vw - 2rem))` | `min(var(--nowo-dialog-height-wide, min(52rem, 100dvh - 2rem)), 100dvh - 2rem)` | tables, two-column forms, guides, a form page loaded in a dialog |
 
-   Width **and** height are the size's, so moving between dialogs or steps never jumps. Only a plain yes / no
-   confirmation (no field, list, table or `<details>`) keeps its natural height (capped by the size). Exception
+   The width is the size's. **The height follows the content** (2.31): `height: fit-content` with the size's height
+   as `max-height`, so a short chooser has no empty area and a long form scrolls its body while the header and the
+   footer stay in view. A kit never sets a fixed height of its own. `nowo_ui_kit.theme.dialog.height: size` (or
+   `--nowo-ui-dialog-fill: 1`) restores the 2.29 / 2.30 rule — width **and** height the size's for a dialog with a
+   field, list, table or `<details>`; a plain yes / no confirmation keeps its natural height in both modes. Exception
    (2.29.1, audit FK-I3): a `View\Confirm` row-action confirmation with its type-to-confirm input is still a
    confirmation, not a form, and keeps its natural height at the medium width for every `size` (`lg` was 40rem in 2.2,
    the medium width now); a confirmation that needs more fields is a form dialog (`dialog` / `confirm_dialog` with
@@ -523,6 +527,11 @@ UptimeMonitor, Wiki, Vault and any new kit follow it; a dialog that cannot is a 
    submit in the footer with `form="<form id>"` — the actions never live inside the scrolling form.
 5. **Behaviour**: native `<dialog>` opened with `showModal()`; focus moves in, Tab cycles inside, Escape and Cancel
    close it and focus returns to the opener (the UiKit runtimes do this).
+
+**`View\Confirm` confirmations** (partial `confirm`, 2.31) follow the same anatomy with their own classes: header
+(`nowo-ui-confirm__header`: title, ×), body (`__body`: message; `__expect`, the type-to-confirm input, right under
+it), footer (`__footer`: Cancel, then the confirm button posting the CSRF form — solid danger when destructive); medium
+width, height = content, tinted header and footer. No override needed.
 
 **Use the UiKit partials** (preferred). The `dialog` partial (`size: 'md' | 'wide'`, `status`, `footer`):
 
@@ -591,16 +600,16 @@ and handles Escape, close buttons and focus return.
 .my-kit-dialog { /* the <dialog>, or Bootstrap's .modal-dialog */
   width: var(--nowo-dialog-width-md, min(40rem, 100vw - 2rem));
   max-width: calc(100vw - 2rem);
-  height: var(--nowo-dialog-height-md, min(36rem, 100dvh - 2rem));
+  height: fit-content;                              /* 2.31: the content's height (not auto: a modal <dialog> would stretch) */
+  max-height: min(var(--nowo-dialog-height-md, min(36rem, 100dvh - 2rem)), 100dvh - 2rem);
   display: flex; flex-direction: column;            /* [open] for a <dialog>; .modal-content for Bootstrap */
 }
 .my-kit-dialog--wide {
   width: var(--nowo-dialog-width-wide, min(56rem, 100vw - 2rem));
-  height: var(--nowo-dialog-height-wide, min(52rem, 100dvh - 2rem));
+  max-height: min(var(--nowo-dialog-height-wide, min(52rem, 100dvh - 2rem)), 100dvh - 2rem);
 }
 .my-kit-dialog__header, .my-kit-dialog__footer { flex: none; }
 .my-kit-dialog__body { flex: 1 1 auto; min-height: 0; overflow: auto; }
-.my-kit-dialog:not(:has(input:not([type='hidden']), select, textarea, table, ul, ol, details)) { height: auto; }
 ```
 
 Bootstrap `.modal`: put the size on `.modal-dialog` (`margin: 1rem auto`), use `.modal-dialog-scrollable` so

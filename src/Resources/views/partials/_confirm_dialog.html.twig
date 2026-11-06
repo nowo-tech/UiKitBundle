@@ -46,7 +46,8 @@
       neutral), title, attributes}; any other value is ignored (no badge) — View\PageStatus::fromOption()
     - size: md (default) | wide → the two dialog sizes (docs/PAGE_CONTRACT.md "Dialog sizes and anatomy"). A free
       panel takes the sizes from its modifier: nowo-ui-confirm-dialog--sm → medium, --lg / --xl → wide. With a
-      field, list, table or fold the height is the size's; a plain yes / no keeps its natural height
+      field, list, table or fold the height is the content's, capped at the size's (2.31; theme.dialog.height: size =
+      the size's height); a plain yes / no keeps its natural height
     - close_label (default action.close), dismissible (default true: the × button)
     - title_id (default <dialog_id>-title, else a generated id): the id of the header <h2>; the dialog's
       aria-labelledby points to it unless aria_labelledby is given. The anatomy always renders that <h2>; the `form`

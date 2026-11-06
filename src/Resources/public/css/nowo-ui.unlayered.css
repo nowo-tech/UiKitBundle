@@ -1512,15 +1512,17 @@ a.nowo-ui-pagination__link:hover {
 }
 
 /*
- * --- Dialog sizes (2.29, owner rule "two sizes only") ---
+ * --- Dialog sizes (2.29, owner rule "two sizes only"; 2.31 dialog rule v2: the height follows the content) ---
  * Every kit dialog has one of two sizes, set by public tokens a host overrides once on :root (no :root value is
  * declared here, so a host value wins whatever the load order; other kits read the same tokens with the same
  * fallbacks): medium (default: forms, choosers, steps) and wide (tables, two-column forms, guides, the remote form
- * dialog). Width AND height belong to the size, not to the content: the body scrolls inside, the header and the
- * footer stay. Only a plain yes / no confirmation (no field, list, table or fold) keeps its natural height.
+ * dialog). The width belongs to the size. 2.31: the height is the content's, capped at min(the size's height token,
+ * 100dvh - 2rem) (--nowo-ui-dialog-max-h): the body scrolls inside, the header and the footer stay.
  *   --nowo-dialog-width-md   min(40rem, 100vw - 2rem)    --nowo-dialog-height-md   min(36rem, 100dvh - 2rem)
  *   --nowo-dialog-width-wide min(56rem, 100vw - 2rem)    --nowo-dialog-height-wide min(52rem, 100dvh - 2rem)
  * --nowo-ui-dialog-w / --nowo-ui-dialog-h are the resolved size of one dialog (internal; a modifier sets them).
+ * --nowo-ui-dialog-fill (2.31, no :root value; `theme.dialog.height: size` prints 1 on :root): 1 gives every dialog
+ * with a field, list, table or fold the size's height again (the 2.29 / 2.30 rule), 0 / unset = the content's height.
  * Legacy size modifiers map onto the two sizes: sm / md → medium, lg / xl → wide.
  */
 .nowo-ui-dialog,
@@ -1528,6 +1530,7 @@ a.nowo-ui-pagination__link:hover {
 .nowo-ui-confirm {
   --nowo-ui-dialog-w: var(--nowo-dialog-width-md, min(40rem, 100vw - 2rem));
   --nowo-ui-dialog-h: var(--nowo-dialog-height-md, min(36rem, 100dvh - 2rem));
+  --nowo-ui-dialog-max-h: min(var(--nowo-ui-dialog-h), 100dvh - 2rem);
 }
 
 .nowo-ui-dialog--lg,
@@ -1575,6 +1578,45 @@ a.nowo-ui-pagination__link:hover {
   padding: 1rem 1.25rem 0.5rem;
 }
 
+/*
+ * 2.31 (dialog rule v2): the confirm <dialog> (partial `confirm`, View\Confirm row / page actions; the release and row
+ * detail dialogs; askConfirm()) has the dialog anatomy with its own classes: a tinted header (title, ×) with a divider,
+ * the body (message; type-to-confirm right under it) that alone scrolls, a tinted footer outside the body (Cancel, then
+ * the one primary). Medium width; the content's height capped at --nowo-ui-dialog-max-h. The full-page confirm
+ * (page/confirm) keeps its own layout.
+ */
+.nowo-ui-confirm > .nowo-ui-confirm__panel {
+  display: flex;
+  flex-direction: column;
+  max-height: var(--nowo-ui-dialog-max-h);
+}
+
+.nowo-ui-confirm > .nowo-ui-confirm__panel > :is(.nowo-ui-confirm__header, .nowo-ui-confirm__expect, .nowo-ui-confirm__footer) {
+  flex: none;
+}
+
+.nowo-ui-confirm > .nowo-ui-confirm__panel > .nowo-ui-confirm__header {
+  padding-bottom: 0.875rem;
+  border-bottom: 1px solid var(--nowo-ui-border);
+  background: var(--nowo-ui-dialog-chrome-bg, color-mix(in srgb, var(--nowo-ui-text) 4%, var(--nowo-ui-surface)));
+}
+
+.nowo-ui-confirm > .nowo-ui-confirm__panel > .nowo-ui-confirm__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding-top: 1rem;
+  overflow: auto;
+}
+
+/* Type-to-confirm without a body (message in the header): the body's top padding */
+.nowo-ui-confirm > .nowo-ui-confirm__panel > .nowo-ui-confirm__header + .nowo-ui-confirm__expect {
+  padding-top: 1rem;
+}
+
+.nowo-ui-confirm > .nowo-ui-confirm__panel > .nowo-ui-confirm__footer {
+  background: var(--nowo-ui-dialog-chrome-bg, color-mix(in srgb, var(--nowo-ui-text) 4%, var(--nowo-ui-surface)));
+}
+
 .nowo-ui-confirm__title {
   margin: 0;
   font-family: var(--nowo-ui-font-display, inherit);
@@ -1606,13 +1648,14 @@ a.nowo-ui-pagination__link:hover {
   right: 0.75rem;
 }
 
-/* Generic native dialog (partial `dialog`, 2.1): framework-free, the <dialog> is the panel. 2.29: the dialog size
-   (medium by default; lg / xl / wide = wide), header and footer fixed, the body scrolls. */
+/* Generic native dialog (partial `dialog`, 2.1): framework-free, the <dialog> is the panel. 2.29: the dialog width
+   (medium by default; lg / xl / wide = wide), header and footer fixed, the body scrolls; 2.31: the content's height,
+   capped. */
 .nowo-ui-dialog {
   box-sizing: border-box;
   width: var(--nowo-ui-dialog-w);
   max-width: calc(100vw - 2rem);
-  max-height: var(--nowo-ui-dialog-h);
+  max-height: var(--nowo-ui-dialog-max-h);
   margin: auto;
   padding: 0;
   overflow: auto;
@@ -1631,20 +1674,23 @@ a.nowo-ui-pagination__link:hover {
   background: var(--nowo-ui-overlay, rgba(15, 23, 42, 0.45));
 }
 
-/* Centred dialogs (not the side panels): a flex column of the size's height; header and footer never scroll */
+/* Centred dialogs (not the side panels): a flex column; header and footer never scroll. 2.31 (dialog rule v2): the
+   content's height, capped at min(the size's height, 100dvh - 2rem); fit-content as the UA <dialog> (auto would stretch
+   a modal dialog between its insets up to max-height). With --nowo-ui-dialog-fill: 1 (`theme.dialog.height: size`) the
+   min-height gives the size's height back (2.29 / 2.30). */
 .nowo-ui-dialog[open]:not(.nowo-ui-dialog--end):not(.nowo-ui-dialog--start),
 .nowo-ui-confirm-dialog--anatomy[open] {
   display: flex;
   flex-direction: column;
-  height: var(--nowo-ui-dialog-h);
+  height: fit-content;
+  min-height: calc(var(--nowo-ui-dialog-max-h) * clamp(0, var(--nowo-ui-dialog-fill, 0), 1));
   overflow: hidden;
 }
 
-/* A plain yes / no confirmation (no field, list, table or fold) keeps its natural height (still capped by the size) */
+/* A plain yes / no confirmation (no field, list, table or fold) always keeps its natural height (capped by the size) */
 .nowo-ui-dialog[open]:not(.nowo-ui-dialog--end):not(.nowo-ui-dialog--start):not(.nowo-ui-dialog--remote-form):not(:has(input:not([type='hidden']), select, textarea, table, ul, ol, details)),
 .nowo-ui-confirm-dialog--anatomy[open]:not(:has(input:not([type='hidden']), select, textarea, table, ul, ol, details)) {
-  /* fit-content as the UA <dialog> (auto would stretch a modal dialog between its insets up to max-height) */
-  height: fit-content;
+  min-height: 0;
 }
 
 :is(.nowo-ui-dialog, .nowo-ui-confirm-dialog--anatomy) > :is(.nowo-ui-dialog__header, .nowo-ui-dialog__footer) {
@@ -1656,6 +1702,22 @@ a.nowo-ui-pagination__link:hover {
   min-width: 0;
   min-height: 0;
   overflow: auto;
+}
+
+/* 2.31 (dialog rule v2): tinted header (with a divider) and footer around the body, the TaskBoard "Create board"
+   anatomy; --nowo-ui-dialog-chrome-bg (no :root value) sets the tint, the confirm dialog reads it too. */
+:is(.nowo-ui-dialog, .nowo-ui-confirm-dialog--anatomy) > .nowo-ui-dialog__header {
+  padding-bottom: 0.875rem;
+  border-bottom: 1px solid var(--nowo-ui-border);
+  background: var(--nowo-ui-dialog-chrome-bg, color-mix(in srgb, var(--nowo-ui-text) 4%, var(--nowo-ui-surface)));
+}
+
+:is(.nowo-ui-dialog, .nowo-ui-confirm-dialog--anatomy) > .nowo-ui-dialog__header + .nowo-ui-dialog__body {
+  padding-top: 1rem;
+}
+
+:is(.nowo-ui-dialog, .nowo-ui-confirm-dialog--anatomy) > .nowo-ui-dialog__footer {
+  background: var(--nowo-ui-dialog-chrome-bg, color-mix(in srgb, var(--nowo-ui-text) 4%, var(--nowo-ui-surface)));
 }
 
 /* Side panel (dialog placement end / start, 2.12): full height, stuck to that edge, slides in; the size sets the width */
@@ -1823,6 +1885,7 @@ a.nowo-ui-pagination__link:hover {
 }
 
 .nowo-ui-confirm__expect-input {
+  box-sizing: border-box; /* 2.31: 100% includes its padding and border (it overflowed the dialog's right padding) */
   width: 100%;
   max-width: none;
 }
@@ -3652,12 +3715,13 @@ button.nowo-ui-kebab__item.is-current {
   display: none !important;
 }
 
-/* Row detail dialog: the confirm dialog chrome, scrollable content. 2.29: a list, so the medium size (width and
-   height), the content scrolls under the header. */
+/* Row detail dialog: the confirm dialog chrome, scrollable content. 2.29: the medium width; 2.31: the content's
+   height, capped (the size's height with --nowo-ui-dialog-fill: 1), the content scrolls under the header. */
 .nowo-ui-row-detail .nowo-ui-row-detail__panel {
   width: 100%;
-  height: var(--nowo-ui-dialog-h);
-  max-height: var(--nowo-ui-dialog-h);
+  height: auto;
+  min-height: calc(var(--nowo-ui-dialog-max-h) * clamp(0, var(--nowo-ui-dialog-fill, 0), 1));
+  max-height: var(--nowo-ui-dialog-max-h);
   display: flex;
   flex-direction: column;
 }
@@ -5497,9 +5561,10 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
 }
 
 /* Confirm dialog wrapper (partial `confirm_dialog`): the native <dialog> box of the kit dialogs. 2.29: the dialog
-   width (medium; lg / xl / wide = wide). A free `form` panel with a field, list, table or fold is at least the size's
-   height (min-height: a host panel inside the box, e.g. a taller wide one, still fits); the anatomy (`anatomy: true`) has
-   exactly the size's height with only the body scrolling. */
+   width (medium; lg / xl / wide = wide). 2.31: the content's height; a free `form` panel scrolls as a whole under
+   100dvh - 2rem, the anatomy (`anatomy: true`) is capped at the size's height with only the body scrolling. With the
+   fill token at 1 (2.29 / 2.30) a free panel with a field, list, table or fold is at least the size's height
+   (min-height: a host panel inside the box, e.g. a taller wide one, still fits) and the anatomy has exactly it. */
 .nowo-ui-confirm-dialog {
   box-sizing: border-box;
   width: var(--nowo-ui-dialog-w);
@@ -5538,12 +5603,12 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
 }
 
 .nowo-ui-confirm-dialog[open]:not(.nowo-ui-confirm-dialog--plain):not(.nowo-ui-confirm-dialog--anatomy):has(input:not([type='hidden']), select, textarea, table, ul, ol, details) {
-  min-height: var(--nowo-ui-dialog-h);
+  min-height: calc(var(--nowo-ui-dialog-h) * clamp(0, var(--nowo-ui-dialog-fill, 0), 1));
 }
 
 /* Header / body / footer anatomy (2.29, `anatomy: true` of the confirm_dialog partial): the dialog classes, no box padding */
 .nowo-ui-confirm-dialog.nowo-ui-confirm-dialog--anatomy {
-  max-height: var(--nowo-ui-dialog-h);
+  max-height: var(--nowo-ui-dialog-max-h);
   padding: 0;
 }
 
@@ -6280,6 +6345,7 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
   .nowo-ui-dialog--remote-form {
     --nowo-ui-dialog-w: calc(100vw - 2 * var(--nowo-ui-remote-dialog-phone-inset, 1rem));
     --nowo-ui-dialog-h: calc(100dvh - 2 * var(--nowo-ui-remote-dialog-phone-inset, 1rem));
+    --nowo-ui-dialog-max-h: var(--nowo-ui-dialog-h);
     max-width: none;
     margin: var(--nowo-ui-remote-dialog-phone-inset, 1rem);
     border-radius: var(--nowo-ui-remote-dialog-phone-radius, var(--nowo-ui-modal-radius, var(--nowo-ui-radius)));

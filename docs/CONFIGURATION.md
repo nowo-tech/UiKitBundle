@@ -364,12 +364,15 @@ nowo_ui_kit:
         convert_redirects: false   # true: RedirectResponse → 204 + X-Nowo-Redirect for dialog requests
     theme:
         menu_semantics: null       # null | menu | disclosure (popover menus with items; USAGE "Menu semantics")
+        dialog:
+            height: content        # 2.31: content | size (THEMING "Dialog sizes")
 ```
 
 | Key | Default | Description |
 |-----|---------|-------------|
 | `remote_dialog.convert_redirects` | `false` | A `kernel.response` listener (priority -10, main requests only) turns a `RedirectResponse` answered to a request with `X-Nowo-Dialog: 1` into `204` + `X-Nowo-Redirect` + `Vary`, when its target is a same-origin path; other answers are left alone. Without it, use `Nowo\UiKitBundle\Dialog\RemoteDialogResponder` (always registered, autowirable) |
 | `theme.menu_semantics` | `null` | Default ARIA of popover menus with items: `null` = 2.27 markup, `menu` = APG menu button, `disclosure` = no `aria-haspopup`. The `menu` partial option wins |
+| `theme.dialog.height` | `content` | 2.31 (dialog rule v2): `content` = every kit dialog is as tall as its content, capped at `min(size height token, 100dvh - 2rem)`, only the body scrolls; `size` = the 2.29 / 2.30 size's height for a dialog with a field, list, table or fold (prints `--nowo-ui-dialog-fill: 1` with the theme tokens). Markup is the same either way |
 
 ## Font preload (2.21)
 

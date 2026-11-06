@@ -112,6 +112,40 @@
 
 ## Unreleased
 
+**2.31.0** (minor), from **2.30.x**: `composer update nowo-tech/ui-kit-bundle`. No markup change (2.27 – 2.30
+fixtures byte-identical), but a **visual default change** (dialog rule v2, owner decision D-20261105-54):
+
+- **Dialogs are as tall as their content**, capped at `min(--nowo-dialog-height-md | -wide, 100dvh - 2rem)`; only the
+  body scrolls, header and footer stay. 2.29 / 2.30 gave a dialog with a field, list, table or fold the size's
+  height (36rem / 52rem) even when its content was shorter. Applies to the `dialog` partial (centred), the
+  `confirm_dialog` anatomy, the `remote_form_dialog` (also on phones: the 16 px gutter / `--nowo-ui-remote-dialog-phone-inset`
+  is kept, the height follows the content) and the row detail dialog. To keep the 2.29 / 2.30 height:
+
+  ```yaml
+  nowo_ui_kit:
+      theme:
+          dialog:
+              height: size   # default: content
+  ```
+
+  (or `:root { --nowo-ui-dialog-fill: 1; }` in a host stylesheet when the layout does not print the theme tokens).
+- **Host overrides that only made the kit dialogs content-height can go** — e.g. `height: fit-content` /
+  `height: auto` + `max-height: var(--nowo-dialog-height-*)` on `.nowo-ui-dialog`, `.nowo-ui-confirm-dialog--anatomy`
+  or `.nowo-ui-row-detail__panel`.
+- **Confirmations (`View\Confirm`, partial `confirm`) and dialogs have tinted chrome**: header (title, ×) with a
+  divider, body (message, type-to-confirm) that alone scrolls, tinted footer (Cancel, one primary). CSS only — the
+  `nowo-ui-confirm__panel` / `__header` / `__title` / `__body` / `__message` / `__expect` / `__footer` / `__close`
+  classes, ids, `data-nowo-confirm-*` hooks and CSRF forms are unchanged, so host rules on them keep matching. If you
+  styled `.nowo-ui-confirm__header` / `__footer` (or `.nowo-ui-dialog__header` / `__footer`) yourself, check the new
+  `background` / `border-bottom`: set `--nowo-ui-dialog-chrome-bg` (e.g. `transparent` for the 2.30 look) instead of
+  overriding them. A bundle override of the `confirm` partial that only rebuilt this anatomy (WikiBundle
+  `manage/_confirm_dialog.html.twig`) can go.
+- **The JS confirm (`askConfirm`, `confirm-submit` in dialog mode) has a close button (×)** after the title, which
+  cancels. Print its accessible name once on `<html data-confirm-close="{{ 'action.close'|trans({}, 'NowoUiKitBundle') }}">`
+  (English "Close" otherwise); turn it off with `dismissible: false` or `<html data-confirm-dismissible="false">` (only `"false"` or `"0"`; any other
+  value keeps it). A
+  host class map (`classes`) can add `close: '…'` (otherwise the × has the kit class `nowo-ui-confirm__close`).
+
 ## To 2.30.0
 
 **2.30.0** (minor), from **2.29.x**: `composer update nowo-tech/ui-kit-bundle`. No breaking change: without

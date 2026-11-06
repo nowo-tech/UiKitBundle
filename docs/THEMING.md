@@ -350,10 +350,14 @@ default as fallback, so a host sets them once on `:root` and it wins whatever th
 | `--nowo-dialog-width-wide` | `min(56rem, 100vw - 2rem)` | wide: tables, two-column forms, guides, the remote form dialog |
 | `--nowo-dialog-height-wide` | `min(52rem, 100dvh - 2rem)` | |
 | `--nowo-ui-dialog-w` / `--nowo-ui-dialog-h` | the size of the dialog (set by `.nowo-ui-dialog`, `.nowo-ui-confirm-dialog`, `.nowo-ui-confirm` and the `--lg` / `--xl` / `--wide` modifiers) | one dialog's resolved size; set them on a single dialog to override it |
+| `--nowo-ui-dialog-max-h` | `min(var(--nowo-ui-dialog-h), 100dvh - 2rem)` (2.31) | the height cap of one dialog |
+| `--nowo-ui-dialog-chrome-bg` | `color-mix(in srgb, var(--nowo-ui-text) 4%, var(--nowo-ui-surface))` (2.31, no `:root` value) | background of the dialog header and footer (`dialog`, `confirm_dialog` anatomy, `confirm`) |
+| `--nowo-ui-dialog-fill` | unset = `0` (2.31; clamped to 0 – 1) | `1` = a dialog with a field, list, table or fold has the size's height (2.29 / 2.30); printed on `:root` by `theme.dialog.height: size` |
 
-Width **and** height belong to the size: the body scrolls inside, header and footer stay. Only a plain yes / no
-confirmation (no field, list, table or fold) keeps its natural height, capped by the size. At 390 px both sizes are the
-screen width minus the 16 px gutters.
+The width belongs to the size. **The height follows the content** (2.31, dialog rule v2): capped at
+`--nowo-ui-dialog-max-h`, the body scrolls inside, header and footer stay. `nowo_ui_kit.theme.dialog.height: size`
+(default `content`) keeps the 2.29 / 2.30 height instead; a plain yes / no confirmation (no field, list, table or fold)
+keeps its natural height either way. At 390 px both sizes are the screen width minus the 16 px gutters.
 
 ```css
 :root {

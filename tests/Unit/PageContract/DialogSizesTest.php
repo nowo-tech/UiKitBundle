@@ -41,9 +41,17 @@ TWIG;
             self::assertMatchesRegularExpression('/\.nowo-ui-dialog--lg,\s*\.nowo-ui-dialog--xl,\s*\.nowo-ui-dialog--wide,\s*\.nowo-ui-confirm-dialog--lg,\s*\.nowo-ui-confirm-dialog--xl,\s*\.nowo-ui-confirm-dialog--wide \{/', $css, $file);
             self::assertDoesNotMatchRegularExpression('/^\.nowo-ui-(confirm-)?dialog--sm \{/m', $css, $file);
             self::assertDoesNotMatchRegularExpression('/^\.nowo-ui-confirm--(sm|lg) \{/m', $css, $file);
-            // The size's height, the body scrolls, the header and the footer stay; a plain yes / no is natural.
-            self::assertMatchesRegularExpression('/\.nowo-ui-dialog\[open\]:not\(\.nowo-ui-dialog--end\):not\(\.nowo-ui-dialog--start\),\s*\.nowo-ui-confirm-dialog--anatomy\[open\] \{[^}]*display: flex;[^}]*height: var\(--nowo-ui-dialog-h\);/', $css, $file);
-            self::assertMatchesRegularExpression("/:not\\(:has\\(input:not\\(\\[type='hidden'\\]\\), select, textarea, table, ul, ol, details\\)\\) \\{[^}]*height: fit-content;/", $css, $file);
+            // 2.31 (dialog rule v2): the content's height capped at min(size height, 100dvh - 2rem), the body scrolls, the
+            // header and the footer stay; --nowo-ui-dialog-fill: 1 (theme.dialog.height: size) gives the size's height back,
+            // except to a plain yes / no (always natural).
+            self::assertStringContainsString('--nowo-ui-dialog-max-h: min(var(--nowo-ui-dialog-h), 100dvh - 2rem);', $css, $file);
+            self::assertMatchesRegularExpression('/\.nowo-ui-dialog\[open\]:not\(\.nowo-ui-dialog--end\):not\(\.nowo-ui-dialog--start\),\s*\.nowo-ui-confirm-dialog--anatomy\[open\] \{[^}]*display: flex;[^}]*height: fit-content;\s*min-height: calc\(var\(--nowo-ui-dialog-max-h\) \* clamp\(0, var\(--nowo-ui-dialog-fill, 0\), 1\)\);/', $css, $file);
+            self::assertMatchesRegularExpression('/\n\.nowo-ui-dialog \{[^}]*max-height: var\(--nowo-ui-dialog-max-h\);/', $css, $file);
+            self::assertMatchesRegularExpression('/\.nowo-ui-confirm-dialog\.nowo-ui-confirm-dialog--anatomy \{\s*max-height: var\(--nowo-ui-dialog-max-h\);/', $css, $file);
+            self::assertMatchesRegularExpression("/:not\\(:has\\(input:not\\(\\[type='hidden'\\]\\), select, textarea, table, ul, ol, details\\)\\) \\{\\s*min-height: 0;/", $css, $file);
+            self::assertMatchesRegularExpression('/\.nowo-ui-row-detail \.nowo-ui-row-detail__panel \{[^}]*height: auto;\s*min-height: calc\(var\(--nowo-ui-dialog-max-h\) \* clamp\(0, var\(--nowo-ui-dialog-fill, 0\), 1\)\);\s*max-height: var\(--nowo-ui-dialog-max-h\);/', $css, $file);
+            self::assertDoesNotMatchRegularExpression('/^\s*(min-|max-)?height: var\(--nowo-ui-dialog-h\);/m', $css, $file.': no fixed size height left');
+            self::assertDoesNotMatchRegularExpression('/^\s*--nowo-ui-dialog-fill\s*:/m', $css, $file.': no fill value (theme.dialog.height: size prints it)');
             self::assertMatchesRegularExpression('/> \.nowo-ui-dialog__body \{[^}]*flex: 1 1 auto;[^}]*min-height: 0;[^}]*overflow: auto;/', $css, $file);
             self::assertMatchesRegularExpression('/\.nowo-ui-dialog__footer\[hidden\] \{\s*display: none !important;/', $css, $file);
             // Phones: the remote form dialog keeps the 16 px gutter by default.

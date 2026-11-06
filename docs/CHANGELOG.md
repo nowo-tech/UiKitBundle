@@ -101,6 +101,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Planned **2.31.0** (minor): dialog rule v2 (owner decision D-20261105-54, Symfony Beacon) — the height of every kit
+dialog follows its content, and the JS confirm gets the header close button. A **visual default change**: see
+[UPGRADING](UPGRADING.md#unreleased) (one line of config keeps the 2.29 / 2.30 height).
+
+### Changed
+
+- **Dialog height = content** (nowo-ui.css): the centred `dialog` partial, the `confirm_dialog` anatomy
+  (`anatomy: true`), the `remote_form_dialog`, the row detail dialog and own markup on the `nowo-ui-dialog*` classes
+  are as tall as their content, capped at `min(size height token, 100dvh - 2rem)` (`--nowo-ui-dialog-max-h`); only the
+  body scrolls, header and footer always visible. 2.29 / 2.30 gave every dialog with a field, list, table or fold the
+  size's height. Widths, tokens and markup are unchanged (the 2.27 / 2.28 / 2.29 markup fixtures are byte-identical).
+  A free `confirm_dialog` panel (no anatomy) is no longer at least the size's height.
+- **`View\Confirm` dialogs on the dialog anatomy** (partial `confirm`: row / page action confirmations such as
+  UptimeMonitor *Delete monitor*, Wiki, Yopass; also the release and row detail dialogs and `askConfirm()`): a tinted
+  header with the title and ×, then a divider; the body with the message, and the type-to-confirm input right under
+  it, is the only part that scrolls; a tinted footer outside the body holds Cancel and then the single primary
+  (solid danger for a destructive confirm). The width is medium and the height follows the content, capped. This is
+  CSS only: the markup, ids, `nowo-ui-confirm__*` classes, CSRF forms and `nowo-ui-confirm.js` behaviour are
+  unchanged. WikiBundle can drop its `manage/_confirm_dialog.html.twig` override.
+- **Tinted dialog header and footer**: the `dialog` partial and the `confirm_dialog` anatomy get the same chrome:
+  a tinted header with a divider and a tinted footer. The tint comes from `--nowo-ui-dialog-chrome-bg`, which has no
+  `:root` value. Its default is `color-mix(in srgb, var(--nowo-ui-text) 4%, var(--nowo-ui-surface))`.
+
+### Added
+
+- **`nowo_ui_kit.theme.dialog.height`**: `content` (default) | `size`. `size` prints `--nowo-ui-dialog-fill: 1` on
+  `:root` through `nowo_ui_theme_css()` / the document layout tokens, which gives the 2.29 / 2.30 height back
+  (`Theme::dialogHeight()`, `Theme::DIALOG_HEIGHTS`). The token can also be set by hand (on `:root` or one dialog).
+- **`askConfirm()` close button (×)** (`stimulus-peers/ask_confirm.ts`, also used by `confirm-submit` in dialog
+  mode): after the title in the header, cancels (resolves `false`); options `dismissible` (default true, or
+  `<html data-confirm-dismissible="false">` or `"0"` for the page; any other value keeps it) and `closeLabel` (default `<html data-confirm-close>`, e.g.
+  `action.close`, else "Close"); class `close` in `ConfirmClasses` (optional; kit default `nowo-ui-confirm__close`).
+  New helpers `pageConfirmCloseLabel()`, `pageConfirmDismissible()`.
+- Demo `/kit/dialogs`: content-height dialogs, `?height=size` for the 2.30 height, a JS confirm (`confirm-submit`
+  dialog mode); e2e `dialog-sizes.spec.ts` / `page-contract.spec.ts` assert the content height and the ×.
+
 ## [2.30.0] - 2026-11-05
 
 Planned **2.30.0** (minor): list-filter host options, so a host draws its filter card without overriding the

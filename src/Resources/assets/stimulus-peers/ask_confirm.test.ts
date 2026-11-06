@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { askConfirm, pageConfirmLabels } from './ask_confirm';
+import { askConfirm, pageConfirmCloseLabel, pageConfirmDismissible, pageConfirmLabels } from './ask_confirm';
 
 const labels = { confirm: 'Reset', cancel: 'Cancel' };
 const dialog = (): HTMLDialogElement => document.querySelector('dialog.nowo-ui-confirm')!;
@@ -61,10 +61,70 @@ describe('askConfirm', () => {
     expect(document.querySelector('dialog')!.className).toBe('confirm-dialog');
     const yes = Array.from(document.querySelectorAll<HTMLButtonElement>('dialog button')).find((b) => b.textContent === 'Sí')!;
     expect(yes.className).toBe('btn-primary');
-    expect(Array.from(document.querySelectorAll('dialog button')).map((b) => b.textContent)).toEqual(['Cancel', 'Sí']);
+    expect(Array.from(document.querySelectorAll('dialog button')).map((b) => b.textContent)).toEqual(['×', 'Cancel', 'Sí']);
+    // A 2.30 class map without `close` keeps the kit class for the ×.
+    expect(document.querySelector('dialog button')!.className).toBe('nowo-ui-confirm__close');
     yes.click();
     await expect(answer).resolves.toBe(true);
     delete document.documentElement.dataset.confirmOk;
+  });
+
+  it('renders the close button (×) after the title by default, labelled and cancelling (2.31)', async () => {
+    const answer = askConfirm('Reset?', { ...labels, title: 'Reset layout' });
+    const header = dialog().querySelector('.nowo-ui-confirm__header')!;
+    expect(Array.from(header.children).map((el) => el.className)).toEqual(['nowo-ui-confirm__title', 'nowo-ui-confirm__close', 'nowo-ui-confirm__body']);
+    const close = header.querySelector<HTMLButtonElement>('button.nowo-ui-confirm__close')!;
+    expect(close.type).toBe('button');
+    expect(close.getAttribute('aria-label')).toBe('Close');
+    expect(close.title).toBe('Close');
+    expect(close.innerHTML).toBe('<span aria-hidden="true">×</span>');
+    // Focus still starts on Cancel (audit A11Y-03), not on the ×.
+    expect(document.activeElement).toBe(button('Cancel'));
+    close.click();
+    await expect(answer).resolves.toBe(false);
+    expect(document.querySelector('dialog')).toBeNull();
+  });
+
+  it('takes the close label and class from the options or the page, and can drop the × (2.31)', async () => {
+    expect(pageConfirmCloseLabel()).toBe('Close');
+    expect(pageConfirmDismissible()).toBe(true);
+    document.documentElement.dataset.confirmClose = 'Cerrar';
+    const page = askConfirm('A?', { ...labels, classes: { close: 'btn-ghost confirm-dialog__close' } });
+    let close = dialog().querySelector<HTMLButtonElement>('.confirm-dialog__close')!;
+    expect(close.className).toBe('btn-ghost confirm-dialog__close');
+    expect(close.getAttribute('aria-label')).toBe('Cerrar');
+    close.click();
+    await expect(page).resolves.toBe(false);
+
+    const own = askConfirm('B?', { ...labels, closeLabel: 'Dismiss' });
+    close = dialog().querySelector<HTMLButtonElement>('.nowo-ui-confirm__close')!;
+    expect(close.getAttribute('aria-label')).toBe('Dismiss');
+    button('Reset').click();
+    await expect(own).resolves.toBe(true);
+    delete document.documentElement.dataset.confirmClose;
+
+    const off = askConfirm('C?', { ...labels, dismissible: false });
+    expect(dialog().querySelector('.nowo-ui-confirm__close')).toBeNull();
+    button('Cancel').click();
+    await expect(off).resolves.toBe(false);
+
+    document.documentElement.dataset.confirmDismissible = 'false';
+    expect(pageConfirmDismissible()).toBe(false);
+    const pageOff = askConfirm('D?', labels);
+    expect(dialog().querySelector('.nowo-ui-confirm__close')).toBeNull();
+    button('Cancel').click();
+    await expect(pageOff).resolves.toBe(false);
+    const forced = askConfirm('E?', { ...labels, dismissible: true });
+    expect(dialog().querySelector('.nowo-ui-confirm__close')).not.toBeNull();
+    button('Cancel').click();
+    await expect(forced).resolves.toBe(false);
+    document.documentElement.dataset.confirmDismissible = '0';
+    expect(pageConfirmDismissible()).toBe(false);
+    for (const keeps of ['', 'no', 'off', 'False']) {
+      document.documentElement.dataset.confirmDismissible = keeps;
+      expect(pageConfirmDismissible()).toBe(true);
+    }
+    delete document.documentElement.dataset.confirmDismissible;
   });
 
   it('uses the native modal API when the engine has it', async () => {
