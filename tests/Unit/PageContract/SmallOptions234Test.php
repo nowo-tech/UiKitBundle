@@ -97,9 +97,8 @@ final class SmallOptions234Test extends TestCase
     public static function storedBadUrls(): iterable
     {
         yield 'javascript' => ['javascript:alert(1)'];
-        yield 'tel' => ['tel:+34600000000'];
-        yield 'ftp' => ['ftp://example.test/x'];
-        yield 'app scheme' => ['slack://channel'];
+        yield 'vbscript' => ['vbscript:x'];
+        yield 'blob' => ['blob:https://example.test/1'];
         yield 'data image' => ['data:image/png;base64,AAAA'];
         yield 'text' => ['JavaScript: the good parts'];
     }
@@ -125,6 +124,16 @@ final class SmallOptions234Test extends TestCase
 
         self::assertStringContainsString('<tr class="nowo-ui-table__row" data-link-url="/ok" data-name="One">', $html);
         self::assertStringContainsString('<tr class="nowo-ui-table__row" data-name="Two">', $html);
+    }
+
+    /**
+     * HG-L4: a value that runs nothing stays, in the same attribute.
+     */
+    public function testAStoredLinkThatRunsNothingIsKept(): void
+    {
+        $table = new Table([new Column('name', 'Name')], [['name' => 'One']], label: 'Rows', rowAttributes: static fn (): array => ['data-link-url' => 'tel:+34600000000', 'data-location' => 'Madrid: centro']);
+        $html = self::twig()->render(self::PARTIALS.'_table.html.twig', ['table' => $table]);
+        self::assertStringContainsString('<tr class="nowo-ui-table__row" data-link-url="tel:+34600000000" data-location="Madrid: centro">', $html);
     }
 
     public function testRowAttributesMustBeAnArray(): void

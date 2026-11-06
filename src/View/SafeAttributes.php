@@ -14,11 +14,12 @@ use Nowo\UiKitBundle\Shell\SafeHref;
  *
  * - **Names are written in code, so a bad one throws:** on* handlers, an invalid name, `style` (the kit prints no inline
  *   style: CSP) and `srcdoc`.
- * - **Values come from data, so a bad one is dropped (audit HG-M1):** a `javascript:` URL, or any other scheme
- *   {@see SafeHref} does not allow, in an attribute that holds a URL is not printed, and one stored value never takes a
- *   page down. Those attributes are `href`, `xlink:href`, `src`, `action`, `formaction`, `data`, `poster`, `background`,
+ * - **Values come from data, so a bad one is dropped (audit HG-M1, HG-L4):** a value that runs script (`javascript:`,
+ *   `vbscript:`, `data:`, `blob:`; {@see SafeHref::runsScript()}) in an attribute that holds a URL is not printed, and
+ *   one stored value never takes a page down. Those attributes are `href`, `xlink:href`, `src`, `action`, `formaction`, `data`, `poster`, `background`,
  *   `cite`, `ping`, `data-redirect`, `data-location`, and `data-*` attributes whose name ends in `href`, `src`, `url`
- *   (also glued, `data-nexturl`), `uri`, `link` or `path`, also with a Stimulus `-value` suffix. Relative values pass.
+ *   (also glued, `data-nexturl`), `uri`, `link` or `path`, also with a Stimulus `-value` suffix. Other values pass,
+ *   `tel:`, app schemes and text such as `Madrid: centro` included.
  *   Other attributes hold text, so `data-title="JavaScript: the good parts"` passes.
  *
  * `data-action`, `data-controller` and framework attributes such as `hx-*` take any value: never map user data to them.
@@ -50,7 +51,7 @@ final class SafeAttributes
             if (!\is_scalar($value) || false === $value || \in_array($lower, $reserved, true)) {
                 continue;
             }
-            if (\is_string($value) && 1 === preg_match(self::URL_ATTRIBUTE, $lower) && !SafeHref::isSafe($value) && '' !== trim($value)) {
+            if (\is_string($value) && 1 === preg_match(self::URL_ATTRIBUTE, $lower) && SafeHref::runsScript($value)) {
                 continue;
             }
             $safe['class' === $lower ? 'class' : $name] = $value;

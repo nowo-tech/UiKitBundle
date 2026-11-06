@@ -134,7 +134,7 @@ No markup or configuration change by default (the BC fixtures still match); ever
   `meter_attr`, `label_visible` and `leading_template`, and `placement` on `remote_form_dialog`, are picked up from the
   including page. If a page already uses one of them for something else, include with `only`.
 
-The new `*_attr` options are stricter than `attr`: `on*`, `style` and `srcdoc` throw, and an unsafe URL value is dropped. See
+The new `*_attr` options are stricter than `attr`: `on*`, `style` and `srcdoc` throw, and a value that runs script is dropped. See
 [SECURITY](SECURITY.md).
 
 ### Output that changes, for unsafe values only

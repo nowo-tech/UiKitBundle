@@ -2069,7 +2069,7 @@ client falls back to the default for anything else.
 Hooks for pages that move their own markup to kit partials and must keep their classes, `data-*` hooks and test ids. All
 opt-in. Each `*_attr` is a map like `attr`: `true` = bare attribute, `false` and
 `null` = omitted, and `class` is added to the slot classes. They are checked by `nowo_ui_safe_attrs()`: `on*`, `style`,
-`srcdoc` throw; an unsafe URL value is dropped; attributes the partial owns are dropped. See [SECURITY](SECURITY.md).
+`srcdoc` throw; a value that runs script (`javascript:`, `vbscript:`, `data:`, `blob:`) is dropped; attributes the partial owns are dropped. See [SECURITY](SECURITY.md).
 
 **Table rows and foot.** `rowAttributes` on `View\Table` or `ListPage`, per render like `rowActions`; the foot is a block
 of `<tr>` rows, with no `<tfoot>` while it is empty:

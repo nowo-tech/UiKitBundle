@@ -52,9 +52,6 @@ final class SafeAttributesTest extends TestCase
         yield 'vbscript' => ['src', 'vbscript:x'];
         yield 'data url' => ['src', 'data:text/html,x'];
         yield 'data image' => ['data-image-url', 'data:image/png;base64,AAAA'];
-        yield 'tel' => ['data-link-url', 'tel:+34600000000'];
-        yield 'ftp' => ['data-file-href', 'ftp://example.test/x'];
-        yield 'app scheme' => ['data-chat-url', 'slack://channel'];
         yield 'text in a url attribute' => ['data-url', 'JavaScript: the good parts'];
         yield 'xlink' => ['xlink:href', 'javascript:x'];
         yield 'formaction' => ['formaction', 'javascript:x'];
@@ -67,7 +64,8 @@ final class SafeAttributesTest extends TestCase
         yield 'stimulus url value' => ['data-progress-url-value', 'javascript:x'];
         yield 'glued url' => ['data-nexturl', 'javascript:x'];
         yield 'uri' => ['data-next-uri', 'javascript:x'];
-        yield 'link' => ['data-row-link', 'javascript:x'];
+        yield 'link' => ['data-link', 'javascript:x'];
+        yield 'blob' => ['data-row-link', 'blob:https://example.test/1'];
         yield 'path' => ['data-path', 'javascript:x'];
         yield 'path value' => ['data-x-path-value', 'javascript:x'];
         yield 'redirect' => ['data-redirect', 'javascript:x'];
@@ -93,8 +91,16 @@ final class SafeAttributesTest extends TestCase
             'data-redirect' => '/after',
             'data-location' => 'Madrid',
             'data-time-path' => '12:30',
+            // HG-L4: only what runs script is dropped; these run nothing.
+            'data-link-url' => 'tel:+34600000000',
+            'data-sms-href' => 'sms:+34600000000',
+            'data-file-href' => 'ftp://example.test/x',
+            'data-chat-url' => 'slack://channel',
+            'data-place-path' => 'C:\\Users',
+            'data-read-link' => 'Read: intro',
         ];
         self::assertSame($attributes, SafeAttributes::of($attributes));
+        self::assertSame(['data-location' => 'Madrid: centro'], SafeAttributes::of(['data-location' => 'Madrid: centro']));
     }
 
     public function testTextIsNotAUrl(): void

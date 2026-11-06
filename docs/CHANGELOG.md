@@ -122,13 +122,13 @@ default output is unchanged (markup byte for byte, the BC fixtures untouched, ne
   `dialog_back`). `remote_form_dialog` forwards `placement`, and as a side panel it takes the whole phone screen.
 - **Progress:** `value` + `max` next to `percent`, `label_visible: false`, `meter_attr`.
 - **`View\SafeAttributes`** and the Twig function `nowo_ui_safe_attrs()`: the check of the new attribute options.
-  Refuses `on*`, `style` and `srcdoc` (exception); an unsafe URL value in an attribute that holds a URL is dropped, not
-  printed. See [SECURITY](SECURITY.md).
+  Refuses `on*`, `style` and `srcdoc` (exception); a value that runs script (`javascript:`, `vbscript:`, `data:`, `blob:`) in
+  an attribute that holds a URL is dropped, not printed. See [SECURITY](SECURITY.md).
 - **`SafeHref::runsScript()`**, also `nowo_ui_theme.hrefRunsScript()` in templates.
 
 ### Security
 
-Audit Appendix HG; re-verification pending.
+Audit Appendix HG (2026-11-06): Pass (good), overall risk Low.
 
 - **`tree` `node.href` (HG-L2, Low; since 2.24):** a `javascript:`, `vbscript:`, `data:` or `blob:` value now prints `href="#"`.
   It ran on click unless the host's CSP stopped it.
