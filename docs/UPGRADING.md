@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.35.0](#to-2350)
 - [To 2.34.0](#to-2340)
   - [Template contract](#template-contract)
   - [Output that changes, for unsafe values only](#output-that-changes-for-unsafe-values-only)
@@ -118,6 +119,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.35.0
+
+From **2.34.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 Nothing to do unless you opt in. To set one icon per action, add `nowo_ui_kit.action_icons` (and `action_variants` if your
 standard differs from the kit defaults): see [ROW_ACTIONS.md](ROW_ACTIONS.md#one-icon-per-action).
