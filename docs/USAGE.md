@@ -49,7 +49,7 @@
 - [Remote form dialog (2.28)](#remote-form-dialog-228)
 - [Small element options (2.34)](#small-element-options-234)
 - [Focusable scroll regions (2.28)](#focusable-scroll-regions-228)
-- [Sortable ](#sortable)
+- [Sortable](#sortable)
 - [Overlays and the shell (2.28)](#overlays-and-the-shell-228)
 - [Menu semantics (2.28)](#menu-semantics-228)
 - [Compact header (2.27)](#compact-header-227)
@@ -2128,7 +2128,7 @@ listener). Since 2.29.1 a pass after a mutation or a resize syncs only the regio
 region whose content changed, the region that resized); the whole document is scanned once, at start-up. Regions
 that leave the document are unobserved on the next pass, and an `aria-label` the script set follows the caption.
 
-## Sortable 
+## Sortable
 
 Reorder by pointer, touch and keyboard, within a list and between lists, over markup you own: kanban cards and columns,
 a settings list, table rows. There is no partial and no third-party library. Load the script on the page (opt-in, not
@@ -2151,7 +2151,7 @@ in `nowo_ui_script_names()`):
 | `data-nowo-ui-sortable-axis="x\|y"` | list or its root | Default `y`. Lists are one row or one column; a wrapping grid is not supported |
 | `data-nowo-ui-sortable-zone` | around a list | A wider drop area standing for the list inside it, such as a kanban column around its card list |
 | `data-nowo-ui-sortable-disabled` | root, list or item | Nothing drags from it or lands in it |
-| `data-nowo-ui-sortable-move="up\|down\|first\|last\|prev-list\|next-list"` | a `<button>` you draw inside an item | Moves its item without a drag, through the same refusal, events, focus and announcements (`source: 'button'`). The route for WCAG 2.5.7, below. `up` and `down` mean earlier and later in the list, also on an `x` list. The kit draws nothing |
+| `data-nowo-ui-sortable-move="up\|down\|first\|last\|prev-list\|next-list"` | a `<button>` you draw inside an item | Only on a real `<button>`. Moves its item without a drag, through the same refusal, events, focus and announcements (`source: 'button'`). The route for WCAG 2.5.7, below. `up` and `down` mean earlier and later in the list, also on an `x` list. The kit draws nothing |
 | `data-nowo-ui-sortable-ignore` | inside an item | No drag starts here. Buttons, form fields, labels, `summary`, `[role="button"]` and editable content already behave so; links do not, so a card whose title is a link still drags |
 | `data-nowo-ui-sortable-label`, `data-nowo-ui-sortable-list-label` | item, list | Names in announcements. Default: the item's text (first 80 characters), the list's id |
 | `data-nowo-ui-sortable-labels` | root | JSON wording, below |
@@ -2224,7 +2224,7 @@ A Turbo page render or a removed item cancels a drag (`reason: 'lost'`). A morph
 
 **A scope is a name, not a boundary.** Any list on the page with the same scope accepts items, including lists in another part of the page. Use a different scope, or separate pages, for anything that must not mix, such as data of different tenants. `move` is the place to refuse in the page, and the server is the place that counts.
 
-**User content.** Strip `data-nowo-ui-sortable*`, `name` and `id` from any user HTML rendered on a page that loads this script, and do not render it inside an item unsanitized. A planted attribute can add a drop target, shift the positions you receive, or stop the component working. A sanitizer that allows `data-*` by default is not enough on its own.
+**User content.** Strip `data-nowo-ui-sortable*`, `name` and `id` from any user HTML rendered on a page that loads this script, and do not render it inside an item unsanitized. A planted attribute can add a drop target, shift the positions you receive, or stop the component working. A sanitizer that allows `data-*` by default is not enough on its own. This includes `data-nowo-ui-sortable-move`: a planted one on a `<button>` moves the real item on one click.
 
 ### Keyboard
 
@@ -2236,6 +2236,8 @@ Keys and move buttons skip a list the user cannot reach: not rendered (`hidden`,
 `<details>`, another tab panel, `visibility: hidden`), inside `inert`, or outside the modal `<dialog>` the item is in. When none
 is left, the item stays and the edge message is announced. A list with `display: contents` has no box and counts as not rendered.
 
+A list collapsed with `height: 0`, clipped, off-screen or only `aria-hidden` still counts as reachable: use `hidden` for a collapsed list, or refuse on `move`.
+
 ### Touch
 
 - **Handle:** `touch-action: none`, so it drags at once and never scrolls the page. Make it at least 24 by 24 CSS px.
@@ -2244,9 +2246,8 @@ is left, the item stays and the edge message is announced. A list with `display:
 - **Auto-scroll:** near the edge of any scrolling ancestor, then of the page, in both directions.
 - Prefer a handle where items fill the screen. Text in a whole-item card cannot be selected, on a touch screen or with a
   mouse, because the press belongs to the drag.
-- A gesture cannot get stuck: its end is read in the capture phase on `window`, with the last finger lifting, a mouse moving
-  with no button, or a new press of the same pointer type as further signals. A component can still keep a drag from
-  starting by stopping `pointerdown`.
+- A gesture ends even if a component stops `pointerup`. If everything is stopped, the next press clears it. A component can
+  still keep a drag from starting by stopping `pointerdown`.
 
 ### Sortable accessibility contract
 
@@ -2270,7 +2271,7 @@ is left, the item stays and the edge message is announced. A list with `display:
 - Pass translated wording: `data-nowo-ui-sortable-labels` takes the keys `grabbed`, `moved`, `movedToList`, `cancelled`,
   `refused`, `reverted`, `edge`, with `%label%`, and for the two move messages `%position%`, `%count%`, `%list%`. Default
   wording is English. Text is written with `textContent`, never as HTML. The default name is the item's `textContent`, so text
-  hidden in a card can be announced: set `data-nowo-ui-sortable-label` where that matters.
+  hidden in a card can be announced, and so can the text of move buttons: set `data-nowo-ui-sortable-label` where that matters.
 
 ### Theming and hooks
 
@@ -2281,13 +2282,15 @@ it stays rendered and focusable), `.is-drop-target` on the list under the pointe
 defaults, so every `css_framework` behaves alike.
 
 **CSP:** no `style=` in markup and no inline script or handler. Size and position of the placeholder and the copy go
-through the CSSOM, which `style-src-attr 'none'` allows. The copy never receives a `style` attribute from the original: only
-declarations the browser applied there are copied, through the CSSOM, so a `style` attribute your policy blocked stays blocked.
+through the CSSOM, which `style-src-attr 'none'` allows. The copy is never a clone, because in Chromium and WebKit cloning an
+element makes a `style` attribute your policy blocked apply, on the clone and on the original, until the page reloads. Any
+other script that clones such an element has that effect, so do not rely on `style-src-attr` alone to neutralize user content:
+strip `style` from it too.
 
-**The copy** is built in a document with no browsing context, so nothing in it fetches, plays or runs while it is built. Custom
-elements and shadow hosts become plain elements, keeping their light children: an element that draws itself shows blank during
-the drag. Scripts, frames, media, styles and templates are removed, and an item that is itself one becomes an empty box. Also
-removed: `id`, `name`, `form`, `for`, `style`, `tabindex`, `on*`, `formaction`, `ping`, `command`, `commandfor`, `popover*`,
+**The copy** is built node by node in a document with no browsing context, so nothing in it fetches, plays or runs while it is
+built. It costs more than a clone: on a card of 2,000 elements the drag started 36 to 86 ms after the threshold, depending on the browser, against under 3 ms for a clone (desktop, once per drag, not measured on a phone). A normal card does not notice. Custom elements become plain elements,
+keeping their light children, and shadow trees are left out, so an element that draws itself shows blank during the drag. Scripts, frames, media, styles and templates are removed, and an item that is itself one becomes an empty box. Also
+left out: `id`, `name`, `form`, `for`, `style`, `is`, `tabindex`, `on*`, `formaction`, `ping`, `command`, `commandfor`, `popover*`,
 `x-*`, `hx-*`, `v-*`, `ng-*`, `wire:*`, `data-controller`, `data-action`, `data-turbo*`, `data-hx-*`, `data-x-*`, `data-bs-*`,
 `data-live-*`, `data-*-target`, `data-*-outlet` and `data-nowo-*`. Images stay, so an image in a card is requested again unless
 it is cached. The copy is inserted in the item's own parent, so `.list > .card` rules keep applying, and with
@@ -2301,7 +2304,7 @@ keep the column widths.
 
 - Focus moving to an unrelated `<iframe>` cancels a drag in Chromium and WebKit (`reason: 'lost'`). The item stays. Passing the pointer over an iframe does not.
 - `@media (any-pointer: coarse)` turns off the text selection and callout on whole items, so that also applies with a mouse on a touch laptop.
-- The script is about 5.5 KB gzipped, loaded only by pages that opt in.
+- The script is about 6.7 KB gzipped, loaded only by pages that opt in.
 - Not run: Alpine and htmx around the copy (their attributes are removed, but a library that watches for new nodes will see one), Live Component morphs, a real screen reader.
 
 ### Testing on a real device
@@ -2332,7 +2335,7 @@ Safari**, **Android Chrome** and, if you support it, **Firefox for Android**:
 16. Drag from near the screen edge on Android with gesture navigation, and rotate the phone mid-drag: no copy or placeholder stays behind.
 17. With VoiceOver and TalkBack: activate a link in a card right after moving another card; it opens.
 
-If 1, 3 or 4 fail on a device, use handles and keep the non-drag route as the main path there. On iPhone, the likely fix for 4 is in the kit, not in your page: report it. Steps 13 and 14 need a card of your own, as the demo has no such card.
+If 1, 3 or 4 fail on a device, use handles and keep the non-drag route as the main path there. On iPhone, the likely fix for 4 is in the kit, not in your page: report it. Steps 13, 14 and 15 use the "Rich card" on the same page: it has a text field, audio that loops, and an image.
 
 Demo: `/kit/sortable` in `demo/symfony8`; `make -C demo/symfony8 test-e2e-sortable`.
 

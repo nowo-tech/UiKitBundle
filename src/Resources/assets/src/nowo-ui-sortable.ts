@@ -409,6 +409,10 @@ function onTouchEnd(event: TouchEvent): void {
   }
   const gesture = pending;
   const state = drag;
+  // An unrelated finger lifting says nothing about a pen.
+  if ((gesture ?? state)?.pointerType !== 'touch') {
+    return;
+  }
   window.setTimeout(() => {
     if (pending && pending === gesture) {
       clearPending();
@@ -460,58 +464,76 @@ const inlineStyle = (el: Element): CSSStyleDeclaration | null => {
 };
 
 /**
- * A copy of the item to follow the pointer. It is built in a document with no browsing context, where nothing fetches,
- * plays or upgrades, and only clean nodes reach the page: no custom element or shadow host runs (HH-L1), and only inline
- * declarations the browser really applied to the original are copied, so a `style` attribute the CSP blocked stays
- * blocked (HH-L2). Attributes other scripts look for are removed, so nothing in it can act, submit or be found.
+ * One node of the copy, built by hand. Never a clone: in Chromium and WebKit, cloning an element whose `style` attribute the
+ * CSP blocked also makes that style live on the original, until the page reloads (HH-M3). Built in a document with no
+ * browsing context, where nothing fetches, plays or upgrades, and never with `is`, so no custom element runs (HH-L1,
+ * HH-DL3). Shadow trees are not walked. `style` is not copied as an attribute: only the declarations the browser really
+ * holds for the original go across, so a blocked attribute stays blocked. Other attributes scripts look for are left out.
  */
+function copyElement(original: Element, scratch: Document, isRoot: boolean): Element | null {
+  const dropped = matches(original, GHOST_DROP);
+  if (dropped && !isRoot) {
+    return null;
+  }
+  const localName = Reflect.get(Element.prototype, 'localName', original) as string;
+  const namespace = Reflect.get(Element.prototype, 'namespaceURI', original) as string | null;
+  const plain = dropped || localName.includes('-');
+  const copy = plain
+    ? Document.prototype.createElementNS.call(scratch, 'http://www.w3.org/1999/xhtml', isRoot ? 'div' : 'span')
+    : Document.prototype.createElementNS.call(scratch, namespace, localName);
+  for (const name of Element.prototype.getAttributeNames.call(original)) {
+    if (GHOST_STRIP.test(name) || (dropped && name !== 'class')) {
+      continue;
+    }
+    const attr = Element.prototype.getAttributeNode.call(original, name);
+    try {
+      copy.setAttributeNS(attr?.namespaceURI ?? null, name, attr?.value ?? '');
+    } catch {
+      // A name the parser allows and the DOM API does not (`[x]`): the copy is only a picture, so go without it.
+    }
+  }
+  if (!dropped) {
+    for (let child = Reflect.get(Node.prototype, 'firstChild', original) as Node | null; child; child = Reflect.get(Node.prototype, 'nextSibling', child) as Node | null) {
+      const type = Reflect.get(Node.prototype, 'nodeType', child) as number;
+      if (type === Node.TEXT_NODE) {
+        copy.appendChild(Document.prototype.createTextNode.call(scratch, Reflect.get(CharacterData.prototype, 'data', child) as string));
+      } else if (type === Node.ELEMENT_NODE) {
+        const part = copyElement(child as Element, scratch, false);
+        if (part) {
+          copy.appendChild(part);
+        }
+      }
+    }
+  }
+  copyFormState(original, copy);
+  const from = inlineStyle(original);
+  const to = inlineStyle(copy);
+  if (from && to) {
+    for (let i = 0; i < from.length; i++) {
+      const name = from.item(i);
+      to.setProperty(name, from.getPropertyValue(name), from.getPropertyPriority(name));
+    }
+  }
+  return copy;
+}
+
+/** What a field shows lives in properties, which attributes do not carry. For the look only: nothing here has a name. */
+function copyFormState(original: Element, copy: Element): void {
+  if (original instanceof HTMLInputElement && copy instanceof HTMLInputElement) {
+    if ((Reflect.get(HTMLInputElement.prototype, 'type', original) as string) !== 'file') {
+      copy.value = Reflect.get(HTMLInputElement.prototype, 'value', original) as string;
+    }
+    copy.checked = Reflect.get(HTMLInputElement.prototype, 'checked', original) as boolean;
+  } else if (original instanceof HTMLTextAreaElement && copy instanceof HTMLTextAreaElement) {
+    copy.value = Reflect.get(HTMLTextAreaElement.prototype, 'value', original) as string;
+  } else if (original instanceof HTMLSelectElement && copy instanceof HTMLSelectElement) {
+    copy.selectedIndex = Reflect.get(HTMLSelectElement.prototype, 'selectedIndex', original) as number;
+  }
+}
+
 function buildGhost(item: HTMLElement, rect: DOMRect): HTMLElement {
   const scratch = documentMember<DOMImplementation>('implementation').createHTMLDocument('');
-  let ghost = Document.prototype.importNode.call(scratch, item, true) as HTMLElement;
-  const originals = [item, ...queryAll(item, '*')];
-  const pairs = [ghost, ...queryAll(ghost, '*')].map((copy, index) => ({ copy, original: originals[index] }));
-  queryAll(ghost, GHOST_DROP).forEach(removeNode);
-  const kept = pairs.filter(({ copy }) => contains(ghost, copy));
-  for (const pair of kept) {
-    const el = pair.copy;
-    Element.prototype.getAttributeNames.call(el).forEach((name) => {
-      if (GHOST_STRIP.test(name)) {
-        Element.prototype.removeAttribute.call(el, name);
-      }
-    });
-    const tag = tagOf(el);
-    const shadow = Reflect.get(Element.prototype, 'shadowRoot', el) as ShadowRoot | null;
-    if (tag.includes('-') || shadow || (el === ghost && matches(el, GHOST_DROP))) {
-      const plain = scratch.createElement(el === ghost ? 'div' : tag.includes('-') ? 'span' : tag);
-      // An item that is itself media or a frame leaves an empty box; a custom element or shadow host keeps its light content.
-      const empty = el === ghost && matches(el, GHOST_DROP);
-      Element.prototype.getAttributeNames.call(el)
-        .filter((name) => !empty || name === 'class')
-        .forEach((name) => {
-          plain.setAttribute(name, Element.prototype.getAttribute.call(el, name) ?? '');
-        });
-      if (!empty) {
-        plain.append(...(Reflect.get(Node.prototype, 'childNodes', el) as NodeListOf<ChildNode>));
-      }
-      const parent = parentOf(el);
-      if (parent) {
-        Node.prototype.replaceChild.call(parent, plain, el);
-      } else {
-        ghost = plain;
-      }
-      pair.copy = plain;
-    }
-  }
-  for (const { copy, original } of kept) {
-    const from = original ? inlineStyle(original) : null;
-    const to = inlineStyle(copy);
-    if (from && to) {
-      for (let i = 0; i < from.length; i++) {
-        const name = from.item(i);
-        to.setProperty(name, from.getPropertyValue(name), from.getPropertyPriority(name));
-      }
-    }
-  }
+  const ghost = copyElement(item, scratch, true) as HTMLElement;
   ghost.classList.add('nowo-ui-sortable__ghost');
   ghost.setAttribute('aria-hidden', 'true');
   ghost.setAttribute('inert', '');
@@ -641,6 +663,8 @@ function update(state: Drag): void {
       insert(parent, state.ghost, null);
     }
   }
+  // A morph that keeps the item strips what it does not know; `add` changes nothing when the class is there.
+  classes(state.item).add('is-dragging');
   positionGhost(state);
   placePlaceholder(state);
 }
@@ -745,6 +769,11 @@ function startDrag(gesture: Pending, x: number, y: number): void {
   window.clearTimeout(gesture.timer);
   pending = null;
   prepareRegions(scope);
+  // Something moved the item since the press: the gesture no longer describes the page.
+  if (fromIndex < 0) {
+    removeTouchGuard();
+    return;
+  }
   if (!isConnected(item) || !emit(root, 'nowo-ui:sortable:start', { scope, id: idOf(item), listId: listIdOf(list), index: fromIndex, source: 'pointer' }, true)) {
     removeTouchGuard();
     return;
@@ -890,9 +919,12 @@ function drop(state: Drag): void {
   });
 }
 
-function onPointerDown(event: PointerEvent): void {
-  swallowClicksUntil = 0;
-  if (event.isPrimary !== false && (drag || pending)) {
+/**
+ * Any press at all, in capture on `window`, so a component stopping `pointerdown` changes neither of these: a real click
+ * is never swallowed by a guard from an earlier drag, and a release that never came is noticed (HH-DI1).
+ */
+function onAnyPress(event: PointerEvent): void {
+  if (event.isPrimary !== false) {
     // There is one primary pointer of a type at a time, so a new press means the release of the old one never came.
     if (pending && pending.pointerType === event.pointerType) {
       clearPending();
@@ -901,6 +933,10 @@ function onPointerDown(event: PointerEvent): void {
       cancelDrag('lost');
     }
   }
+  swallowClicksUntil = 0;
+}
+
+function onPointerDown(event: PointerEvent): void {
   if (pending || drag || event.isPrimary === false || event.button !== 0 || event.ctrlKey || !(event.target instanceof Element)) {
     return;
   }
@@ -1078,7 +1114,7 @@ function runMove(item: HTMLElement, list: HTMLElement, root: HTMLElement, action
 }
 
 function onKeydown(event: KeyboardEvent): void {
-  if (!event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.defaultPrevented || drag || !(event.target instanceof Element)) {
+  if (!event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.defaultPrevented || drag || pending || !(event.target instanceof Element)) {
     return;
   }
   const target = event.target;
@@ -1104,10 +1140,12 @@ const BUTTON_ACTIONS: Record<string, MoveAction> = {
 
 /** A host-drawn `data-nowo-ui-sortable-move` button: the route that needs no drag (WCAG 2.5.7). */
 function onMoveButton(event: MouseEvent): void {
-  if (event.defaultPrevented || drag || !(event.target instanceof Element)) {
+  if (event.defaultPrevented || drag || pending || !(event.target instanceof Element)) {
     return;
   }
-  const button = closest(event.target, MOVE);
+  // Only a real button: a planted attribute on a paragraph or a link must not move the item on a click (HH-DL1).
+  const found = closest(event.target, MOVE);
+  const button = found && matches(found, 'button') ? found : null;
   const item = button ? itemFrom(button) : null;
   const list = item ? listOf(item) : null;
   const root = list ? rootOf(list) : null;
@@ -1172,6 +1210,7 @@ export function bindNowoUiSortable(): void {
   }
   bound = true;
   // Pressing stays stoppable, so a component can keep a drag from starting. Everything after it is not.
+  listen(documentMember<Window>('defaultView'), 'pointerdown', onAnyPress, true);
   listen(document, 'pointerdown', onPointerDown);
   listen(documentMember<Window>('defaultView'), 'pointermove', onPointerMove, true);
   listen(documentMember<Window>('defaultView'), 'pointerup', onPointerUp, true);

@@ -93,6 +93,34 @@
             {% endfor %}
         </ol>
 
+        <h2>Cards for device testing</h2>
+        <ul class="kit-sortable-cards kit-sortable-device"
+            data-testid="list-device"
+            data-nowo-ui-sortable="device"
+            data-nowo-ui-sortable-list="device"
+            data-nowo-ui-sortable-list-label="Device testing">
+            <li class="kit-sortable-card" tabindex="0" data-testid="card-rich" data-nowo-ui-sortable-item="rich" data-nowo-ui-sortable-label="Rich card" aria-describedby="sortable-help">
+                <img src="{{ asset('images/avatar-ada.svg') }}" alt="Ada" width="48" height="48" data-testid="rich-image">
+                {# twig-005-ignore: nameless field for the device checklist, outside any form, never submitted #}
+                <input type="text" aria-label="A text field in a card" data-testid="rich-field">
+                <audio controls loop src="{{ asset('media/tone.wav') }}" data-testid="rich-audio"></audio>
+                <a href="#rich" data-testid="link-rich">details</a>
+            </li>
+            <li class="kit-sortable-card" tabindex="0" data-testid="card-plain" data-nowo-ui-sortable-item="plain" data-nowo-ui-sortable-label="Plain card" aria-describedby="sortable-help">
+                Plain card
+                <span class="kit-sortable-moves">
+                    <button type="button" class="kit-sortable-move" data-nowo-ui-sortable-move="up" aria-label="Move Plain card up">↑</button>
+                    <button type="button" class="kit-sortable-move" data-nowo-ui-sortable-move="down" aria-label="Move Plain card down">↓</button>
+                </span>
+            </li>
+            {% if blocked %}
+                <li class="kit-sortable-card" tabindex="0" data-testid="card-blocked" data-nowo-ui-sortable-item="blocked" data-nowo-ui-sortable-label="Blocked card">
+                    Blocked style
+                    <a href="#evil" data-testid="link-blocked" style="position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:9999;background:url(/kit-e2e-exfil.png);color:rgb(255,0,0)">a link</a>
+                </li>
+            {% endif %}
+        </ul>
+
         <h2>Event log</h2>
         <ol data-testid="log" class="kit-sortable-log"></ol>
     </main>

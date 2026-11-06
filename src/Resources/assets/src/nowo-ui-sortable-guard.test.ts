@@ -6,13 +6,13 @@ describe('the double-load guard', () => {
     (window as unknown as Record<string, unknown>).nowoUiAnnounceSortable = document.createElement('a');
     const add = vi.spyOn(EventTarget.prototype, 'addEventListener');
     await import('./nowo-ui-sortable');
-    const bound = add.mock.calls.filter(([type]) => type === 'pointerdown').length;
+    const bound = add.mock.calls.filter(([type]) => type === 'pointerup').length;
     expect(bound).toBe(1);
     expect(typeof window.nowoUiAnnounceSortable).toBe('function');
 
     vi.resetModules();
     await import('./nowo-ui-sortable');
-    expect(add.mock.calls.filter(([type]) => type === 'pointerdown').length).toBe(1);
+    expect(add.mock.calls.filter(([type]) => type === 'pointerup').length).toBe(1);
     add.mockRestore();
   });
 });

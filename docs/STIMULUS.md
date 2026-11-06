@@ -39,7 +39,7 @@ Optional **Stimulus peer** TypeScript sources live under `src/Resources/assets/s
 - [Locale / kebab](#locale--kebab)
 - [Remote form dialog (2.28)](#remote-form-dialog-228)
 - [Scroll regions (2.28)](#scroll-regions-228)
-- [Sortable ](#sortable)
+- [Sortable](#sortable)
 - [Stimulus peers — import examples](#stimulus-peers--import-examples)
 - [Beacon attribute migration](#beacon-attribute-migration)
 
@@ -689,7 +689,7 @@ IIFE only: `js/nowo-ui-scroll-region.js` (opt-in `script_names` entry `scroll-re
 `[data-nowo-ui-region="table"]` (the `table` partial) or `[data-nowo-ui-scroll-region]`, name from
 `data-nowo-ui-scroll-label`. See [USAGE](USAGE.md#focusable-scroll-regions-228).
 
-## Sortable 
+## Sortable
 
 IIFE only, no peer: `js/nowo-ui-sortable.js` (opt-in `script_names` entry `sortable`). Markup:
 `[data-nowo-ui-sortable]`, `[data-nowo-ui-sortable-list]`, `[data-nowo-ui-sortable-item]`, optional

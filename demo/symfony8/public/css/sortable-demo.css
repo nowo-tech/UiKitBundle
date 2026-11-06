@@ -82,3 +82,7 @@
   border: 1px solid var(--nowo-ui-border);
   border-radius: var(--nowo-ui-radius);
 }
+.kit-sortable-device {
+  max-width: 32rem;
+  overflow: visible;
+}

@@ -437,22 +437,89 @@ test.describe('sortable', () => {
     await page.mouse.up();
   });
 
-  test('HH-L2: a style attribute the CSP blocked stays blocked on the copy', async ({ page }) => {
+  test('HH-M3: a served style attribute the CSP blocked stays blocked, on the copy and on the original, for good', async ({ page }) => {
     const leaked: string[] = [];
     await page.route('**/kit-e2e-exfil.png', (route) => {
       leaked.push(route.request().url());
       return route.abort();
     });
-    await page.goto('/kit/sortable');
-    await page.getByTestId('card-t1').evaluate((card) => card.setAttribute('style', 'background: url(/kit-e2e-exfil.png); color: rgb(255, 0, 0)'));
-    await dragOver(page, page.getByTestId('card-t1'), page.getByTestId('card-t3'));
+    const response = await page.goto('/kit/sortable?blocked=1');
+    expect(await response!.text()).toContain('style="position:fixed'); // the attribute is really served
+    // Inside the real item: the copy keeps the test id.
+    const original = page.locator('[data-nowo-ui-sortable-item="blocked"] [data-testid="link-blocked"]');
+    const read = (): Promise<{ position: string; length: number; hit: string | null }> =>
+      original.evaluate((link: HTMLElement) => ({
+        position: getComputedStyle(link).position,
+        length: link.style.length,
+        hit: document.elementFromPoint(innerWidth / 2, innerHeight / 2)?.getAttribute('data-testid') ?? null,
+      }));
+    const check = async (): Promise<void> => {
+      const now = await read();
+      expect(now.position).toBe('static');
+      expect(now.length).toBe(0);
+      expect(now.hit).not.toBe('link-blocked');
+    };
+    // No read of the style before the drag: a browser fills it in once, lazily, and a read here would hide the effect.
+    const card = page.locator('[data-nowo-ui-sortable-item="blocked"]');
+    await dragOver(page, card, page.getByTestId('card-rich'), 0.1);
     const ghost = page.locator('.nowo-ui-sortable__ghost');
     await expect(ghost).toHaveCount(1);
-    await expect(ghost).not.toHaveCSS('color', 'rgb(255, 0, 0)');
-    expect(await ghost.evaluate((el) => el.getAttribute('style') ?? '')).not.toContain('exfil');
+    await check();
+    const copy = ghost.locator('a');
+    await expect(copy).not.toHaveCSS('position', 'fixed');
+    await expect(copy).not.toHaveCSS('color', 'rgb(255, 0, 0)');
+    expect(await copy.getAttribute('style')).toBeNull();
     await page.waitForTimeout(150);
     await page.mouse.up();
+    expect(await cardsIn(page, 'device')).toEqual(['blocked', 'rich', 'plain']);
+    await page.waitForTimeout(150);
+    await check();
     expect(leaked).toEqual([]);
+  });
+
+  test('the copy of a big card keeps its look and says what it costs', async ({ page }, info) => {
+    await page.goto('/kit/sortable');
+    const costs = await page.getByTestId('card-t1').evaluate((card: HTMLElement) => {
+      for (let i = 0; i < 1000; i++) {
+        const row = document.createElement('div');
+        const cell = document.createElement('span');
+        cell.textContent = `cell ${i}`;
+        cell.dataset.n = String(i);
+        cell.style.setProperty('--n', String(i));
+        row.append(cell);
+        card.append(row);
+      }
+      const start = performance.now();
+      card.cloneNode(true);
+      return { nodes: card.querySelectorAll('*').length, cloneMs: performance.now() - start };
+    });
+    await page.evaluate(() => {
+      const w = window as unknown as { startAt: number; shown: number };
+      document.addEventListener('nowo-ui:sortable:start', () => {
+        w.startAt = performance.now();
+        queueMicrotask(() => undefined);
+      });
+      new MutationObserver((records) => {
+        if (records.some((r) => [...r.addedNodes].some((n) => (n as Element).classList?.contains('nowo-ui-sortable__ghost'))) && !w.shown) w.shown = performance.now();
+      }).observe(document.body, { childList: true, subtree: true });
+    });
+    // Near its top: the middle of this card is far below the screen.
+    await page.getByTestId('card-t1').evaluate((card) => card.scrollIntoView({ block: 'start', behavior: 'instant' }));
+    const box = (await page.getByTestId('card-t1').boundingBox())!;
+    await page.mouse.move(box.x + 16, box.y + 12);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 18, box.y + 30, { steps: 3 });
+    const ghost = page.locator('.nowo-ui-sortable__ghost');
+    await expect(ghost).toHaveCount(1);
+    const pairs = await ghost.evaluate((el) => [...el.querySelectorAll<HTMLElement>('[data-n]')].filter((c) => c.style.getPropertyValue('--n') === c.dataset.n).length);
+    expect(pairs).toBe(1000);
+    const buildMs = await page.evaluate(() => {
+      const w = window as unknown as { startAt: number; shown: number };
+      return w.shown - w.startAt;
+    });
+    console.log(`COST ${info.project.name}: ${costs.nodes} nodes, drag start ${buildMs.toFixed(1)} ms, cloneNode alone ${costs.cloneMs.toFixed(1)} ms`);
+    await page.keyboard.press('Escape');
+    await page.mouse.up();
   });
 
   test('HH-L3: an item planted in a card has no place, and nothing lands inside a card', async ({ page }) => {
@@ -507,6 +574,47 @@ test.describe('sortable', () => {
     const columns = await page.getByTestId('board').locator('> [data-nowo-ui-sortable-item]').evaluateAll((els) => els.map((el) => el.getAttribute('data-nowo-ui-sortable-item')));
     expect(columns).toEqual(['doing', 'todo', 'done']);
     expect(await csp()).toEqual([]);
+  });
+
+  test('HH-DL1: the move attribute on anything but a button does nothing', async ({ page }) => {
+    await page.goto('/kit/sortable');
+    await page.getByTestId('card-t1').evaluate((card) => {
+      const span = document.createElement('span');
+      span.textContent = 'planted';
+      span.setAttribute('data-testid', 'planted-move');
+      span.setAttribute('data-nowo-ui-sortable-move', 'down');
+      card.append(span);
+    });
+    await page.getByTestId('planted-move').click();
+    expect((await cardsIn(page, 'todo'))[0]).toBe('t1');
+    await expect(log(page)).not.toContainText('move cards');
+  });
+
+  test('HH-DL2: Alt+arrow during a press leaves no stale gesture', async ({ page }) => {
+    await page.goto('/kit/sortable');
+    const start = await grip(page.getByTestId('card-t1'));
+    await page.mouse.move(start.x, start.y);
+    await page.mouse.down();
+    await page.keyboard.press('Alt+ArrowRight');
+    expect((await cardsIn(page, 'todo'))[0]).toBe('t1');
+    await page.mouse.up();
+  });
+
+  test('checklist cards: the field in a whole-item card takes focus and typing, the image does not start a native drag', async ({ page }) => {
+    await page.goto('/kit/sortable');
+    const field = page.getByTestId('rich-field');
+    await field.click();
+    await page.keyboard.type('typed');
+    await expect(field).toHaveValue('typed');
+    await expect(page.locator('.nowo-ui-sortable__ghost')).toHaveCount(0);
+    await dragOver(page, page.getByTestId('rich-image'), page.getByTestId('card-plain'), 0.9);
+    const ghost = page.locator('.nowo-ui-sortable__ghost');
+    await expect(ghost).toHaveCount(1);
+    await expect(ghost.locator('input')).toHaveValue('typed');
+    await expect(ghost.locator('audio')).toHaveCount(0);
+    await page.mouse.up();
+    expect(await cardsIn(page, 'device')).toEqual(['plain', 'rich']);
+    await expect(field).toHaveValue('typed');
   });
 
   test('synthetic touch events (logic only, proves nothing about the engine gesture): long press, then move and drop', async ({ page }) => {

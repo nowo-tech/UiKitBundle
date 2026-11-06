@@ -1286,7 +1286,7 @@ describe('nowo-ui-sortable', () => {
     });
 
     it('a failure while building the copy still ends in cancel, and the page scrolls', () => {
-      vi.spyOn(Document.prototype, 'importNode').mockImplementation(() => {
+      vi.spyOn(Document.prototype, 'createElementNS').mockImplementation(() => {
         throw new Error('boom');
       });
       vi.spyOn(console, 'error').mockImplementation(() => undefined);
@@ -1417,6 +1417,149 @@ describe('nowo-ui-sortable', () => {
       pointer('pointerdown', el('a1-down'), 10, 110);
       pointer('pointermove', el('a1-down'), 10, 170);
       expect(leftovers()).toBe(0);
+    });
+  });
+
+  describe('the copy is built by hand (HH-M3)', () => {
+    const ghostOf = (): HTMLElement => document.querySelector<HTMLElement>('.nowo-ui-sortable__ghost')!;
+
+    it('never clones: a clone is what makes a blocked style live on the original', () => {
+      const clone = vi.spyOn(Node.prototype, 'cloneNode');
+      const importNode = vi.spyOn(Document.prototype, 'importNode');
+      el('b1').insertAdjacentHTML('beforeend', '<i class="x"><b>deep</b></i>');
+      clone.mockClear();
+      importNode.mockClear();
+      dragTo(el('b1'), el('c'), 410, 110);
+      expect(leftovers()).toBe(2);
+      expect(clone).not.toHaveBeenCalled();
+      expect(importNode).not.toHaveBeenCalled();
+      expect(ghostOf().querySelector('i.x b')!.textContent).toBe('deep');
+    });
+
+    it('customized built-ins stay plain: the is attribute never reaches the copy', () => {
+      el('b1').insertAdjacentHTML('beforeend', '<div is="x-li" class="kept">z</div>');
+      dragTo(el('b1'), el('c'), 410, 110);
+      const copy = ghostOf().querySelector('div.kept')!;
+      expect(copy.hasAttribute('is')).toBe(false);
+    });
+
+    it('on a large card every declaration lands on its own element', () => {
+      const parts: string[] = [];
+      for (let i = 0; i < 300; i++) {
+        parts.push(`<div class="row" data-n="${i}"><span class="c" data-n="${i}">t${i}</span>${i % 7 === 0 ? '<script type="text/plain">x</script><x-part>y</x-part>' : ''}</div>`);
+      }
+      el('b1').insertAdjacentHTML('beforeend', parts.join(''));
+      el('b1').querySelectorAll<HTMLElement>('.c').forEach((c) => c.style.setProperty('--n', c.getAttribute('data-n')!));
+      dragTo(el('b1'), el('c'), 410, 110);
+      const copies = [...ghostOf().querySelectorAll<HTMLElement>('.c')];
+      expect(copies).toHaveLength(300);
+      copies.forEach((c) => expect(c.style.getPropertyValue('--n')).toBe(c.getAttribute('data-n')));
+      expect(ghostOf().querySelector('script, x-part')).toBeNull();
+    });
+
+    it('keeps what a field shows, svg namespaces and text, and skips an attribute the DOM refuses', () => {
+      el('b1').innerHTML = `<input id="typed" value="old"><input id="box" type="checkbox"><input id="up" type="file"><textarea id="ta"></textarea>
+        <select id="sel"><option>a</option><option>b</option></select><svg viewBox="0 0 1 1"><use href="#x"></use></svg>text<!-- no comment -->`;
+      (el('typed') as HTMLInputElement).value = 'typed';
+      (el('box') as HTMLInputElement).checked = true;
+      (el('ta') as HTMLTextAreaElement).value = 'long text';
+      (el('sel') as HTMLSelectElement).selectedIndex = 1;
+      const refused = vi.spyOn(Element.prototype, 'setAttributeNS').mockImplementationOnce(() => {
+        throw new DOMException('bad name', 'InvalidCharacterError');
+      });
+      dragTo(el('b1'), el('c'), 410, 110);
+      refused.mockRestore();
+      const ghost = ghostOf();
+      const inputs = ghost.querySelectorAll('input');
+      expect(inputs[0]!.value).toBe('typed');
+      expect(inputs[1]!.checked).toBe(true);
+      expect(ghost.querySelector('textarea')!.value).toBe('long text');
+      expect(ghost.querySelector('select')!.selectedIndex).toBe(1);
+      expect(ghost.querySelector('svg')!.namespaceURI).toBe('http://www.w3.org/2000/svg');
+      expect(ghost.textContent).toContain('text');
+      expect(ghost.innerHTML).not.toContain('no comment');
+    });
+  });
+
+  describe('delta fixes', () => {
+    const press = (id: string): MouseEvent => {
+      const event = new MouseEvent('click', { bubbles: true, cancelable: true, detail: 1 });
+      el(id).dispatchEvent(event);
+      return event;
+    };
+
+    it.each(['a', 'div', 'span'])('HH-DL1: the move attribute on a <%s> does nothing', (tag) => {
+      el('a1').insertAdjacentHTML('beforeend', `<${tag} id="planted-move" href="#x" data-nowo-ui-sortable-move="down">p</${tag}>`);
+      const event = press('planted-move');
+      expect(event.defaultPrevented).toBe(false);
+      expect(ids('a')).toEqual(['a1', 'a2', 'a3']);
+      expect(events).toEqual([]);
+    });
+
+    it('HH-DL1: a click inside a real move button still moves', () => {
+      el('a1').insertAdjacentHTML('beforeend', '<button type="button" data-nowo-ui-sortable-move="down"><i id="in-button">v</i></button>');
+      press('in-button');
+      expect(ids('a')).toEqual(['a2', 'a1', 'a3']);
+    });
+
+    it('HH-DL2: keys and buttons wait while a press is pending, so the gesture stays true', () => {
+      el('a1').insertAdjacentHTML('beforeend', '<button type="button" id="next" data-nowo-ui-sortable-move="next-list">n</button>');
+      pointer('pointerdown', el('a1'), 10, 110);
+      alt(el('a1'), 'ArrowRight');
+      el('next').click();
+      expect(ids('a')[0]).toBe('a1');
+      under = () => el('b');
+      pointer('pointermove', el('a1'), 210, 90);
+      drop(el('a1'), 210, 90);
+      expect(events.find((e) => e.type === 'moved')!.detail).toMatchObject({ fromListId: 'a', fromIndex: 0, listId: 'b' });
+    });
+
+    it('HH-DL2: an item moved away during a press starts nothing', () => {
+      pointer('pointerdown', el('a1'), 10, 110);
+      el('b').append(el('a1'));
+      under = () => el('b');
+      pointer('pointermove', el('a1'), 210, 90);
+      expect(events).toEqual([]);
+      expect(leftovers()).toBe(0);
+      pointer('pointerup', el('a1'), 210, 90);
+    });
+
+    it('HH-DI1: a component stopping pointerdown loses no real click, and a stale drag still ends', () => {
+      const stop = (e: Event): void => e.stopPropagation();
+      dragTo(el('a1'), el('b'), 210, 90);
+      window.dispatchEvent(new Event('blur')); // the long guard, with no release seen
+      el('add-a').addEventListener('pointerdown', stop);
+      pointer('pointerdown', el('add-a'), 0, 0);
+      const click = press('add-a');
+      expect(click.defaultPrevented).toBe(false);
+
+      dragTo(el('a2'), el('b'), 210, 90);
+      expect(leftovers()).toBe(2);
+      pointer('pointerdown', el('add-a'), 0, 0, { pointerId: 9 });
+      el('add-a').removeEventListener('pointerdown', stop);
+      expect(leftovers()).toBe(0);
+    });
+
+    it('a morph that strips is-dragging: the next move puts it back', () => {
+      dragTo(el('a1'), el('b'), 210, 90);
+      el('a1').classList.remove('is-dragging');
+      pointer('pointermove', el('a1'), 212, 90);
+      expect(el('a1').classList.contains('is-dragging')).toBe(true);
+    });
+
+    it('HH-DI5: an unrelated finger lifting does not end a pen drag', () => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+      under = () => el('h');
+      const pen = { pointerType: 'pen' };
+      pointer('pointerdown', el('h1-handle'), 510, 110, pen);
+      pointer('pointermove', el('h1-handle'), 590, 110, pen);
+      expect(leftovers()).toBe(2);
+      const event = new Event('touchend', { bubbles: true });
+      Object.defineProperty(event, 'touches', { value: [] });
+      window.dispatchEvent(event);
+      vi.advanceTimersByTime(1000);
+      expect(leftovers()).toBe(2);
+      drop(el('h1-handle'), 590, 110);
     });
   });
 
