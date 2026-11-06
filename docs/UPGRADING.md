@@ -3,6 +3,9 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.34.0](#to-2340)
+  - [Template contract](#template-contract)
+  - [Output that changes, for unsafe values only](#output-that-changes-for-unsafe-values-only)
 - [To 2.33.1](#to-2331)
 - [To 2.33.0](#to-2330)
 - [To 2.32.0](#to-2320)
@@ -70,7 +73,7 @@
 - [To 2.1.0](#to-210)
 - [To 2.0.1](#to-201)
 - [To 2.0.0](#to-200)
-  - [Template contract](#template-contract)
+  - [Template contract](#template-contract-1)
 - [To 1.17.5](#to-1175)
 - [To 1.17.4](#to-1174)
 - [To 1.17.3](#to-1173)
@@ -115,6 +118,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.34.0
+
+From **2.33.1**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 No markup or configuration change by default (the BC fixtures still match); every addition is opt-in. Details in
 [USAGE](USAGE.md#small-element-options-234).

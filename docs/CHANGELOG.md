@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.34.0] - 2026-11-06](#2340---2026-11-06)
 - [[2.33.1] - 2026-11-06](#2331---2026-11-06)
 - [[2.33.0] - 2026-11-06](#2330---2026-11-06)
 - [[2.32.0] - 2026-11-06](#2320---2026-11-06)
@@ -105,6 +106,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [2.34.0] - 2026-11-06
+
 Small options for the TaskBoard migration and other bundles (`TASKBOARD_UIKIT_MAP_2026-11-06.md`, K2..K6). All opt-in; the
 default output is unchanged (markup byte for byte, the BC fixtures untouched, new fixtures `bc-2.33`).
 
@@ -133,7 +136,7 @@ Audit Appendix HG (2026-11-06): Pass (good), overall risk Low.
 - **`tree` `node.href` (HG-L2, Low; since 2.24):** a `javascript:`, `vbscript:`, `data:` or `blob:` value now prints `href="#"`.
   It ran on click unless the host's CSP stopped it.
 - **`back_link` and `View\BackLink` `href` (HG-L3, Low; since 2.7):** the same schemes now print no link.
-- Other values print as before; see [UPGRADING](UPGRADING.md#unreleased).
+- Other values print as before; see [UPGRADING](UPGRADING.md#to-2340).
 - **`window.nowoUiAskConfirm` and `askConfirm()` (HG-I7, Info):** read `document.body`, `documentElement` and
   `createElement` through the prototype, so an injected `<img name="body">` cannot hide the dialog and leave the question
   unanswered.
@@ -2337,7 +2340,7 @@ Supersedes 1.17.3: same runtime code and CSS, release gate hardened so the tagge
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.33.1...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.34.0...HEAD
 [1.10.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.4...v1.10.0
 [1.8.4]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.3...v1.8.4
 [1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0
