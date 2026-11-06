@@ -12,7 +12,10 @@
   Blocks (defaults: the brand_html / brand, header_end, header_context, aside_html, main and footer_html options):
     nowo_ui_shell_brand, nowo_ui_shell_header_actions, nowo_ui_shell_header_context (2.27: the compact header slot
     between start and end; blank = none), nowo_ui_shell_aside (empty = aside_items + aside_label),
-    nowo_ui_shell_main, nowo_ui_shell_footer (empty = the UiKit footer partial).
+    nowo_ui_shell_main, nowo_ui_shell_footer (empty = the UiKit footer partial), nowo_ui_shell_aside_brand (2.32: the
+    brand of the full-height layout's aside head; empty = aside_brand_html, then the brand parts / brand_html / brand).
+  Like brand_html and aside_html, the blocks and the *_html options are trusted HTML printed raw: never user, tenant or
+  other stored input.
   A base layout whose page {% block body %} must stay uncaptured includes the two halves instead.
 #}
 {% set bundle = bundle|default(null) %}
@@ -22,6 +25,7 @@
 {% set _aside %}{% block nowo_ui_shell_aside %}{{ aside_html|default('')|raw }}{% endblock %}{% endset %}
 {% set _main %}{% block nowo_ui_shell_main %}{{ main|default('')|raw }}{% endblock %}{% endset %}
 {% set _footer %}{% block nowo_ui_shell_footer %}{{ footer_html|default('')|raw }}{% endblock %}{% endset %}
-{{ include(nowo_ui_partial('app_shell_open', bundle), {brand_html: _brand|trim, header_end: _header_end|trim, header_context: _header_context|trim, aside_html: _aside|trim}) }}
+{% set _aside_brand %}{% block nowo_ui_shell_aside_brand %}{{ aside_brand_html|default('')|raw }}{% endblock %}{% endset %}
+{{ include(nowo_ui_partial('app_shell_open', bundle), {brand_html: _brand|trim, header_end: _header_end|trim, header_context: _header_context|trim, aside_html: _aside|trim, aside_brand_html: _aside_brand|trim}) }}
 {{ _main }}
 {{ include(nowo_ui_partial('app_shell_close', bundle), {footer_html: _footer|trim}) }}

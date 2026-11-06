@@ -24,7 +24,7 @@ final class KitTemplatesConfigurationTest extends TestCase
         $config = $this->process([]);
 
         self::assertSame(ErrorPageExtension::defaults(), $config['error_pages']);
-        self::assertSame(['kit_styles' => true, 'sidebar_cookie' => null, 'sidebar_hidden_value' => 'collapsed', 'sidebar_rail_value' => 'rail', 'sidebar_storage' => null], $config['shell']);
+        self::assertSame(['kit_styles' => true, 'sidebar_cookie' => null, 'sidebar_hidden_value' => 'collapsed', 'sidebar_rail_value' => 'rail', 'sidebar_storage' => null, 'sidebar_layout' => 'below-header', 'brand' => ['name' => null, 'href' => null, 'icon_src' => null], 'hover_expand' => false], $config['shell']);
     }
 
     public function testFullErrorPagesAndShellConfig(): void

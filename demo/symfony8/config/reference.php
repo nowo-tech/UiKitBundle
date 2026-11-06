@@ -954,6 +954,13 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         sidebar_hidden_value?: scalar|Param|null, // Cookie value of the hidden aside. // Default: "collapsed"
  *         sidebar_rail_value?: scalar|Param|null, // Cookie value of the icons-only rail. // Default: "rail"
  *         sidebar_storage?: scalar|Param|null, // localStorage key of the aside mode (data-nowo-ui-sidebar-storage on the shell root; kit_styles + rail only). // Default: null
+ *         sidebar_layout?: "below-header"|"full-height"|Param, // 2.32: below-header (default, the 2.31 markup byte for byte) | full-height: on desktop the aside runs from the top edge with the burger and the brand in its head (aside_brand_html / brand_icon_html + brand_name / brand_html), the header and the footer start at its right edge. The app_shell_open option sidebar_layout, then the request attribute _nowo_ui_sidebar_layout, win over it. // Default: "below-header"
+ *         brand?: array{ // 2.32: the shell brand from config (no template override): the aside head of the full-height layout, and the header brand when a page passes neither brand_html nor brand. The app_shell_open options brand_name / brand_href / brand_icon_src / brand_icon_html / aside_brand_html win.
+ *             name?: scalar|Param|null, // Brand name (text); the icons-only rail hides it and keeps it as the link name. // Default: null
+ *             href?: scalar|Param|null, // Brand link: relative, http, https or mailto (validated when the container compiles; javascript:, data: and other schemes are refused). // Default: null
+ *             icon_src?: scalar|Param|null, // Brand icon image URL (e.g. /images/logo.svg; prefer same-origin or https), rendered as <img> in every aside mode; without it the name's initial. Relative, http or https only (validated when the container compiles). // Default: null
+ *         },
+ *         hover_expand?: bool|Param, // 2.32: with kit_styles and rail_mode, the icons-only rail widens over the page while the pointer or the keyboard focus is on it (data-nowo-ui-sidebar-hover-expand on the shell root, is-aside-peek set by nowo-ui-shell.js). The app_shell_open option hover_expand wins. // Default: false
  *     },
  * }
  * @psalm-type WebProfilerConfig = array{

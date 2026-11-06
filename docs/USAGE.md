@@ -39,6 +39,7 @@
   - [Error pages](#error-pages-26)
   - [Confirm dialog](#confirm-dialog-26)
   - [App shell](#app-shell-26)
+  - [Full-height sidebar layout (2.32)](#full-height-sidebar-layout-232)
   - [Compact pagination](#compact-pagination-26)
 - [Pre-paint theme boot](#pre-paint-theme-boot)
 - [App chrome](#app-chrome-aside-avatar-user-menu-footer)
@@ -1534,7 +1535,91 @@ script sets `kit_styles: false` and maps its classes / hooks on the slots `app_s
 `app_header_start`, `app_header_context`, `app_header_end`, `app_brand`, `app_burger`, `app_burger_icon`, `app_burger_morph`, `app_aside`,
 `app_aside_inner`, `app_aside_label`, `app_aside_nav`, `app_main`, `app_backdrop` (classes and attributes, e.g.
 `attributes.app_burger: {data-sidebar-toggle: true}`). Root state classes: `is-sidebar-collapsed`, `is-sidebar-rail`,
-`is-full-width` / `is-content-width` (+ `is-aside-collapsed` / `is-aside-rail` with kit styles).
+`is-full-width` / `is-content-width` (+ `is-aside-collapsed` / `is-aside-rail` with kit styles); 2.32:
+`is-sidebar-full-height` and the slots `app_aside_head`, `app_aside_brand`, `app_aside_brand_icon`,
+`app_aside_brand_name` — see [Full-height sidebar layout](#full-height-sidebar-layout-232).
+
+<a id="full-height-sidebar-layout-232"></a>
+### Full-height sidebar layout (2.32)
+
+The app shell has two desktop layouts: `below-header` (default; the header across the top, the aside under it, the
+footer under both — the 2.31 markup, byte for byte) and `full-height` (the aside from the top edge to the bottom, with
+the burger and the brand in its head; the header and the footer start at the aside's right edge). Below 901 px both are
+the same phone layout: off-canvas aside, burger and brand in the header.
+
+Pick it, first match wins: the `sidebar_layout` option of `app_shell_open` / `app_shell`, the request attribute
+`_nowo_ui_sidebar_layout` (`SidebarLayout::ATTRIBUTE`), then `nowo_ui_kit.shell.sidebar_layout`. A per-user preference
+is a `kernel.request` listener (request scope, safe in FrankenPHP workers) or the option. Set the attribute from a
+listener, not as a route placeholder or route default (the router copies those into the request attributes, so the URL
+would choose the layout):
+
+```php
+use Nowo\UiKitBundle\Shell\SidebarLayout;
+
+$request->attributes->set(SidebarLayout::ATTRIBUTE, $user->prefersFullHeightSidebar() ? 'full-height' : 'below-header');
+```
+
+```twig
+{{ include(nowo_ui_partial('app_shell_open'), {
+    sidebar_layout: app.user.sidebarLayout,          {# or leave it to the request attribute / config #}
+    brand_html: brand_html,                          {# header brand (phones, hidden aside) #}
+    brand_icon_html: ux_icon('tabler:radar'),        {# aside brand: icon (every mode) … #}
+    brand_name: 'Beacon',                            {# … and name (hidden in the icons-only rail) #}
+    brand_href: path('dashboard'),
+    rail_mode: true,
+    hover_expand: true,
+    aside_html: aside_html,
+}) }}
+```
+
+`nowo_ui_sidebar_layout(layout = null)` returns the resolved layout (e.g. to add a class to `<html>`).
+
+**Markup in `full-height`.** The root gets `is-sidebar-full-height` and `data-nowo-ui-sidebar-layout="full-height"`.
+The aside starts with an aside head (slot `app_aside_head`, `nowo-ui-aside-head` with kit styles, hook
+`data-nowo-ui-aside-head`): a second burger — the same `app_shell_burger` partial with the same `burger_*` options,
+labels and morph glyphs; `nowo-ui-shell.js` keeps every `[data-nowo-ui-burger]` of the shell in sync and moves the focus
+to the burger that is shown after a click hides the clicked one — and the aside brand (slot `app_aside_brand`, hook
+`data-nowo-ui-aside-brand`). The header keeps its burger and brand; the kit CSS hides the header start on desktop while
+the aside shows (expanded or rail) and shows it again when the aside is hidden.
+
+> **Trusted HTML.** `brand_html`, `aside_html`, `aside_brand_html`, `brand_icon_html` and the `nowo_ui_shell_brand` /
+> `nowo_ui_shell_aside` / `nowo_ui_shell_aside_brand` blocks are printed raw (`|raw`). Pass only markup your own
+> templates build — never user, tenant or other stored input. A logo someone uploads goes to `brand_icon_src` (an
+> `<img src>`, where scripts inside an SVG do not run; relative, http or https only) and a name to `brand_name` /
+> `brand` (always escaped). Never paste uploaded SVG markup into `brand_icon_html`.
+
+**The aside brand**, first match: `aside_brand_html` (or the `nowo_ui_shell_aside_brand` block of `app_shell`; mark the
+part the rail hides with the class `nowo-ui-aside-brand__name`), then the parts `brand_icon_html` (HTML) or
+`brand_icon_src` (image URL) + `brand_name` + `brand_href` (defaults: `nowo_ui_kit.shell.brand.icon_src` / `name` /
+`href`; without an icon the name's initial; slots `app_aside_brand_icon` / `app_aside_brand_name`), then `brand_html`,
+then `brand` (its initial as the icon). With no `brand_html` / `brand`, the parts also fill the header brand, so
+`nowo_ui_kit.shell.brand` alone brands every page without a template override.
+
+**Geometry (kit styles, 901 px and up).** Grid areas `"aside header" "aside main" "aside footer"`, so the header and the
+footer follow the aside's slide and rail width. Expanded: the burger (centred on the rail's icon column) and the brand
+icon + name on one row the height of the header. Icons-only rail: the burger's row, then the icon under it; the name is
+visually hidden (it stays the link's accessible name). Hidden: the header starts at 0 with its burger and brand. The
+aside head is sticky, so the burger stays reachable on long pages. A host's fixed footer or fixed bar follows the aside
+with `inset-inline-start: var(--nowo-ui-shell-inset-start)` (the aside width in this layout on desktop, else 0).
+
+**Hover-expanded rail** (`hover_expand: true` or `nowo_ui_kit.shell.hover_expand`, with `rail_mode` and kit styles):
+pointer (after 120 ms) or keyboard focus on the rail adds `is-aside-peek`: the panel widens to
+`--nowo-ui-aside-peek-width` over the page (the grid column keeps the rail width, so nothing moves) and over the header
+in the full-height layout (z-index 45 > the header's 40), carrying its own burger; the brand icon stays where the rail
+had it and the name shows. Leaving it (220 ms), Escape or any mode change ends it; touch never peeks. It works in both
+layouts.
+
+Demo: `/demo/sidebar-layout` (`?layout=`, `?mode=expanded|rail|hidden`, `?hover=1`, `?footer=fixed`,
+`?header=compact`).
+
+| Full height, expanded | Icons-only rail | Hover-expanded rail |
+|---|---|---|
+| ![Full-height layout, expanded](images/demo/kit-sidebar-full-height-expanded-light.webp) | ![Full-height layout, icons-only rail (dark)](images/demo/kit-sidebar-full-height-rail-dark.webp) | ![Full-height layout, hover-expanded rail over the header](images/demo/kit-sidebar-full-height-hover-light.webp) |
+
+**Host shells (`kit_styles: false`).** The template prints the same markup with the slot classes and hooks; the
+geometry is the host's CSS (the kit CSS keys on the kit classes). Map `app_aside_head`, `app_aside_brand`,
+`app_aside_brand_icon` / `app_aside_brand_name` like the other `app_*` slots and key the layout on
+`[data-nowo-ui-sidebar-layout='full-height']` (or `.is-sidebar-full-height`) instead of a host attribute.
 
 <a id="compact-pagination-26"></a>
 ### Compact pagination

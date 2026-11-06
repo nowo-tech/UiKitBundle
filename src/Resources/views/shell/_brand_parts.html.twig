@@ -1,0 +1,29 @@
+{#
+  Internal (2.32): a brand made of an icon and a name, for the aside head of the full-height sidebar layout (slot
+  app_aside_brand) and for the header brand when only the parts are given (slot app_brand). The icon is
+  icon_html, else an <img> of icon_src (alt="": the name names the brand), else the name's initial. Hosts fill it
+  through the app_shell_open options or nowo_ui_kit.shell.brand, never by overriding this file.
+
+  Options: slot, kit_class, hook (adds data-nowo-ui-aside-brand), name, href (already filtered by nowo_ui_safe_href),
+  icon_html, icon_src, kit, bundle.
+#}
+{% set _name = name is null ? '' : name ~ '' %}
+{% set _icon_class = nowo_ui_class('app_aside_brand_icon', bundle) ~ (kit ? ' nowo-ui-aside-brand__icon') %}
+{% set _inner %}
+    {%- if icon_html -%}
+        <span class="{{ _icon_class }}" aria-hidden="true">{{ icon_html|raw }}</span>
+    {%- elseif icon_src -%}
+        <span class="{{ _icon_class }}" aria-hidden="true"><img src="{{ icon_src }}" alt="" width="28" height="28"></span>
+    {%- elseif _name is not same as('') -%}
+        <span class="{{ _icon_class }}{{ kit ? ' nowo-ui-aside-brand__icon--initial' }}" aria-hidden="true">{{ _name|trim|first|upper }}</span>
+    {%- endif -%}
+    {%- if _name is not same as('') -%}
+        <span class="{{ nowo_ui_class('app_aside_brand_name', bundle) }}{{ kit ? ' nowo-ui-aside-brand__name' }}">{{ _name }}</span>
+    {%- endif -%}
+{% endset %}
+{% set _class = nowo_ui_class(slot, bundle) ~ (kit ? ' ' ~ kit_class) %}
+{% if href %}
+<a class="{{ _class }}" href="{{ href }}"{{ hook|default(false) ? ' data-nowo-ui-aside-brand' }}{{ nowo_ui_attrs(slot, bundle) }}>{{ _inner }}</a>
+{% else %}
+<strong class="{{ _class }}"{{ hook|default(false) ? ' data-nowo-ui-aside-brand' }}{{ nowo_ui_attrs(slot, bundle) }}>{{ _inner }}</strong>
+{% endif %}

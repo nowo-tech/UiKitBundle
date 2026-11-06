@@ -25,7 +25,34 @@ final class SafeHref
         return null !== $href && self::isSafe($href) ? $href : null;
     }
 
+    /** Schemes of an image source (2.32, `isSafeImage()`): no `mailto`. */
+    public const IMAGE_SCHEMES = ['http', 'https'];
+
     public static function isSafe(string $href): bool
+    {
+        return self::allows($href, self::SCHEMES);
+    }
+
+    /**
+     * An image source (2.32: the shell brand icon): relative, `http` or `https` — the link check without `mailto`.
+     */
+    public static function isSafeImage(string $src): bool
+    {
+        return self::allows($src, self::IMAGE_SCHEMES);
+    }
+
+    /**
+     * `isSafeImage()` as a filter: the value when it passes, else null.
+     */
+    public static function filterImage(?string $src): ?string
+    {
+        return null !== $src && self::isSafeImage($src) ? $src : null;
+    }
+
+    /**
+     * @param list<string> $schemes
+     */
+    private static function allows(string $href, array $schemes): bool
     {
         $normalised = trim((string) preg_replace('/[\t\n\r]/', '', $href), "\x00..\x20");
         if ('' === $normalised) {
@@ -35,6 +62,6 @@ final class SafeHref
             return true;
         }
 
-        return \in_array(strtolower($match[1]), self::SCHEMES, true);
+        return \in_array(strtolower($match[1]), $schemes, true);
     }
 }

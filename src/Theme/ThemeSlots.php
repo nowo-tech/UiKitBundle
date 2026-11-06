@@ -584,6 +584,12 @@ final class ThemeSlots
         'app_aside_inner' => ['nowo-ui-app-shell__aside-inner', []],
         'app_aside_label' => ['nowo-ui-app-shell__aside-label', []],
         'app_aside_nav' => ['nowo-ui-app-shell__aside-nav', []],
+        // 2.32 full-height sidebar layout: the aside head (second burger + brand), the aside brand and its icon / name
+        // parts (the parts also fill the header brand when only brand_icon_* / brand_name are given)
+        'app_aside_head' => ['nowo-ui-app-shell__aside-head', []],
+        'app_aside_brand' => ['nowo-ui-app-shell__aside-brand', []],
+        'app_aside_brand_icon' => ['nowo-ui-app-shell__brand-icon', []],
+        'app_aside_brand_name' => ['nowo-ui-app-shell__brand-name', []],
         'app_main' => ['nowo-ui-app-shell__main', []],
         'app_backdrop' => ['nowo-ui-app-shell__backdrop', []],
         // Listing customizer (partial `listing_customizer`): Stimulus `listing-customizer` root, its opener (page-edge

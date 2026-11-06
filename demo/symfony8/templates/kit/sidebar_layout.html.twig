@@ -1,0 +1,69 @@
+{#
+  UiKit 2.32 demo: the app shell's sidebar layout (KitSidebarLayoutController). The layout comes from the request
+  attribute _nowo_ui_sidebar_layout; the brand from the brand parts (brand_icon_html + brand_name + brand_href), which
+  fill both the aside head and the header; no template override and no layout CSS of its own (the demo stylesheet only
+  pins the footer for ?footer=fixed and draws the logo).
+#}
+{% extends '@NowoUiKit/layout/document.html.twig' %}
+{% set nowo_ui_document_title = 'Sidebar layout · UiKit 2.32' %}
+
+{% block nowo_ui_styles %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/sidebar-layout-demo.css') }}">
+{% endblock %}
+
+{% block nowo_ui_body %}
+    <a class="{{ nowo_ui_class('skip_link') }}" href="#main-content">Skip to main content</a>
+    {% set logo %}<svg class="kit-sidebar-demo__logo" viewBox="0 0 24 24" width="24" height="24" focusable="false"><rect x="2" y="2" width="20" height="20" rx="6" fill="currentColor"/><path d="M7 15.5 12 7l5 8.5H7Z" fill="#fff"/></svg>{% endset %}
+    {% set header_end %}
+        <a class="{{ nowo_ui_class('btn_secondary') }}" href="{{ path('kit_sidebar_layout', query|merge({layout: nowo_ui_sidebar_layout() == 'full-height' ? 'below-header' : 'full-height'})) }}" data-testid="switch-layout">{{ nowo_ui_sidebar_layout() == 'full-height' ? 'Below header' : 'Full height' }}</a>
+        {{ include('@NowoUiKitBundle/partials/_theme_toggle.html.twig', {compact: true}) }}
+    {% endset %}
+    {% set header_context = compact ? include(nowo_ui_partial('header_context'), {
+        home_href: path('nowo_ui_kit_kitchen_sink'),
+        crumbs: [{label: 'Billing', href: path('kit_sidebar_layout', query)}, {label: 'Invoices'}],
+        attr: {'data-testid': 'header-context'},
+    }) : '' %}
+    {{ include(nowo_ui_partial('app_shell_open'), {
+        brand_icon_html: logo,
+        brand_name: 'Acme Billing',
+        brand_href: path('kit_sidebar_layout', query),
+        header_end: header_end,
+        header_context: header_context,
+        aside_label: 'Billing',
+        aside_items: [
+            {label: 'Invoices', href: path('kit_sidebar_layout', query), current: true},
+            {label: 'Customers', href: path('kit_sidebar_layout', query|merge({at: 'customers'}))},
+            {label: 'Reports', href: path('kit_sidebar_layout', query|merge({at: 'reports'}))},
+            {label: 'Settings', href: path('kit_sidebar_layout', query|merge({at: 'settings'}))},
+        ],
+        rail_mode: true,
+        rail: mode == 'rail',
+        collapsed: mode == 'hidden',
+        hover_expand: hover,
+        name: 'Ada Lovelace',
+        initials: 'AL',
+        email: 'ada@example.com',
+        burger_icon: 'morph',
+        shell_attr: {'data-nowo-ui-sidebar-default': mode, 'data-testid': 'shell', 'data-demo-footer': footer_fixed ? 'fixed' : null},
+    }) }}
+        <main id="main-content" tabindex="-1" class="nowo-ui-content" data-testid="sidebar-layout-main">
+            <section class="{{ nowo_ui_class('card') }}">
+                <div class="{{ nowo_ui_class('card_header') }}">
+                    <h1 class="{{ nowo_ui_class('card_title') }}">Invoices</h1>
+                </div>
+                <div class="{{ nowo_ui_class('card_body') }}">
+                    <p>Layout <strong data-testid="layout">{{ nowo_ui_sidebar_layout() }}</strong>, aside <strong>{{ mode }}</strong>{{ hover ? ', hover expand on' }}{{ footer_fixed ? ', fixed footer' }}.</p>
+                    <ul class="kit-demo-rows" data-testid="kit-rows">
+                        {% for row in rows %}<li>{{ row }}</li>{% endfor %}
+                    </ul>
+                </div>
+            </section>
+        </main>
+    {{ include(nowo_ui_partial('app_shell_close'), {footer_copyright: '© Acme', footer_links: [{label: 'Privacy', href: path('kit_sidebar_layout', query|merge({at: 'privacy'}))}]}) }}
+{% endblock %}
+
+{% block nowo_ui_scripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/nowo-ui-shell.js', 'nowo_ui_kit') }}" defer></script>
+{% endblock %}

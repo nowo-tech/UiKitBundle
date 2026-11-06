@@ -241,6 +241,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
             ->setArgument('$actionForms', $actionForms)
             ->setArgument('$fontPreload', $this->registerFontPreload($container, $config))
             ->setArgument('$header', $config['header'])
+            ->setArgument('$sidebarLayout', $config['shell']['sidebar_layout'])
             ->addTag('twig.extension');
 
         $this->registerRemoteDialog($container, $config);

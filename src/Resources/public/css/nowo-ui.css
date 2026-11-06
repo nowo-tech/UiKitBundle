@@ -1466,6 +1466,209 @@ a.nowo-ui-pagination__link:hover {
   display: flex !important;
 }
 
+/* --- Hover-expanded rail (opt-in, 2.32) ---
+ * `data-nowo-ui-sidebar-hover-expand` on a rail shell + `nowo-ui-shell.js`: while the pointer or the keyboard focus is on
+ * the icons-only rail, `is-aside-peek` widens the panel over the page (the grid column keeps the rail width, so nothing
+ * moves) and shows the labels; leaving it goes back to icons. Width: `--nowo-ui-aside-peek-width` (default 15.5rem).
+ */
+@media (min-width: 901px) {
+  .nowo-ui-shell.is-aside-rail.is-aside-peek .nowo-ui-aside {
+    position: relative;
+    overflow: hidden;
+    overflow: clip;
+    z-index: 45;
+    justify-self: start;
+    width: var(--nowo-ui-aside-peek-width, 15.5rem);
+    box-shadow: 12px 0 32px rgba(15, 23, 42, 0.18);
+  }
+
+  .nowo-ui-shell.is-aside-rail.is-aside-peek .nowo-ui-aside__inner {
+    box-sizing: border-box;
+    width: var(--nowo-ui-aside-peek-width, 15.5rem);
+    padding-inline: 0.75rem;
+  }
+
+  .nowo-ui-shell.is-aside-rail.is-aside-peek .nowo-ui-aside__label {
+    display: block !important;
+  }
+
+  .nowo-ui-shell.is-aside-rail.is-aside-peek .nowo-ui-aside__chevron {
+    display: inline-block !important;
+  }
+
+  .nowo-ui-shell.is-aside-rail.is-aside-peek :is(.nowo-ui-aside__link, .nowo-ui-aside__group-toggle) {
+    font-size: 0.875rem;
+  }
+
+  .nowo-ui-shell.is-aside-rail.is-aside-peek .nowo-ui-aside__link {
+    justify-content: flex-start;
+  }
+
+  .nowo-ui-shell.is-aside-rail.is-aside-peek .nowo-ui-aside__group-toggle {
+    justify-content: space-between;
+  }
+
+  .nowo-ui-shell.is-aside-rail.is-aside-peek [data-nowo-ui-rail-initial]::before,
+  .nowo-ui-shell.is-aside-rail.is-aside-peek [data-nowo-ui-rail-label]::after {
+    content: none;
+  }
+}
+
+/* --- Full-height sidebar layout (opt-in, 2.32) ---
+ * `nowo_ui_kit.shell.sidebar_layout: full-height` (or the `sidebar_layout` option / the `_nowo_ui_sidebar_layout`
+ * request attribute): `data-nowo-ui-sidebar-layout="full-height"` on the shell. Desktop only (901px and up): the aside
+ * runs from the top edge to the bottom, the header and the footer start at its right edge (grid areas, so they follow
+ * its slide / rail width), and the aside head carries the burger (centred on the nav icons' column) and the brand —
+ * expanded: icon and name on the burger's row; icons-only rail: the icon under the burger, the name visually hidden
+ * (still the link's name); hover-expanded rail: the panel goes over the header with its own burger, the icon stays and
+ * the name shows. While the aside shows, the header's own burger and brand are hidden; a hidden aside gives them back.
+ * Phones keep the off-canvas aside with the burger and the brand in the header. A host's fixed footer follows the aside
+ * with `inset-inline-start: var(--nowo-ui-shell-inset-start)` (0 except in this layout on desktop).
+ */
+.nowo-ui-shell {
+  --nowo-ui-shell-inset-start: 0px;
+}
+
+.nowo-ui-aside-head {
+  display: none;
+}
+
+.nowo-ui-aside-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+  color: var(--nowo-ui-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.nowo-ui-aside-brand__icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--nowo-ui-aside-brand-icon-size, 1.75rem);
+  height: var(--nowo-ui-aside-brand-icon-size, 1.75rem);
+  overflow: hidden;
+}
+
+.nowo-ui-aside-brand__icon > :is(img, svg) {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.nowo-ui-aside-brand__icon--initial {
+  border-radius: var(--nowo-ui-radius);
+  background: var(--nowo-ui-primary);
+  color: var(--nowo-ui-primary-contrast);
+  font-size: 0.875rem;
+  line-height: 1;
+}
+
+.nowo-ui-aside-brand__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (min-width: 901px) {
+  .nowo-ui-shell[data-nowo-ui-sidebar-layout='full-height'] {
+    --nowo-ui-shell-inset-start: var(--nowo-ui-aside-width);
+    grid-template-areas:
+      "aside header"
+      "aside main"
+      "aside footer";
+  }
+
+  .nowo-ui-shell[data-nowo-ui-sidebar-layout='full-height'] > .nowo-ui-aside {
+    overflow: hidden;
+    overflow: clip;
+  }
+
+  .nowo-ui-shell[data-nowo-ui-sidebar-layout='full-height'].is-aside-rail > .nowo-ui-aside {
+    overflow: visible;
+  }
+
+  .nowo-ui-shell[data-nowo-ui-sidebar-layout='full-height'].is-aside-rail.is-aside-peek > .nowo-ui-aside {
+    overflow: hidden;
+    overflow: clip;
+  }
+
+  .nowo-ui-shell[data-nowo-ui-sidebar-layout='full-height'] > .nowo-ui-aside > .nowo-ui-aside__inner {
+    height: auto;
+  }
+
+  /* The header's burger and brand only while the aside is hidden; its end keeps the right edge. */
+  .nowo-ui-shell[data-nowo-ui-sidebar-layout='full-height']:not(.is-aside-collapsed) > .nowo-ui-header > .nowo-ui-header__start {
+    display: none;
+  }
+
+  .nowo-ui-shell[data-nowo-ui-sidebar-layout='full-height'] > .nowo-ui-header > .nowo-ui-header__end {
+    margin-inline-start: auto;
+  }
+
+  /* Expanded: one row the height of the header — the burger (centred on the rail's icon column), then the brand. */
+  .nowo-ui-shell[data-nowo-ui-sidebar-layout='full-height'] .nowo-ui-aside-head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: var(--nowo-ui-header-height);
+    align-items: center;
+    column-gap: 0.65rem;
+    box-sizing: border-box;
+    width: var(--nowo-ui-aside-peek-width, 15.5rem);
+    padding-inline: calc((var(--nowo-ui-aside-rail-width) - 2.25rem) / 2) 0.75rem;
+    background: var(--nowo-ui-surface);
+    transition: opacity calc(var(--nowo-ui-aside-duration) * 0.75) var(--nowo-ui-aside-ease);
+  }
+
+  .nowo-ui-shell[data-nowo-ui-sidebar-layout='full-height'].is-aside-collapsed .nowo-ui-aside-head {
+    visibility: hidden;
+    opacity: 0;
+  }
+
+  /* Icons-only rail (and its hover-expanded panel): the burger's row, then the icon under it on the same column. */
+  .nowo-ui-shell[data-nowo-ui-sidebar-layout='full-height'].is-aside-rail .nowo-ui-aside-head {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: var(--nowo-ui-header-height) auto;
+    width: 100%;
+    padding-bottom: 0.5rem;
+  }
+
+  .nowo-ui-shell[data-nowo-ui-sidebar-layout='full-height'].is-aside-rail .nowo-ui-aside-head > .nowo-ui-burger {
+    justify-self: start;
+  }
+
+  .nowo-ui-shell[data-nowo-ui-sidebar-layout='full-height'].is-aside-rail .nowo-ui-aside-head > .nowo-ui-aside-brand {
+    justify-self: start;
+    padding-inline-start: calc((2.25rem - var(--nowo-ui-aside-brand-icon-size, 1.75rem)) / 2);
+  }
+
+  /* A host brand without the name class (aside_brand_html / brand_html) is cut to the icon column. */
+  .nowo-ui-shell[data-nowo-ui-sidebar-layout='full-height'].is-aside-rail:not(.is-aside-peek) .nowo-ui-aside-head > .nowo-ui-aside-brand {
+    max-width: 2.25rem;
+    overflow: hidden;
+  }
+
+  .nowo-ui-shell[data-nowo-ui-sidebar-layout='full-height'].is-aside-rail:not(.is-aside-peek) .nowo-ui-aside-head .nowo-ui-aside-brand__name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .nowo-ui-shell[data-nowo-ui-sidebar-layout='full-height'].is-aside-rail.is-aside-peek .nowo-ui-aside-head {
+    width: var(--nowo-ui-aside-peek-width, 15.5rem);
+  }
+}
+
 /* --- Toasts --- */
 .nowo-ui-toast-stack {
   position: fixed;
