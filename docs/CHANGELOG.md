@@ -107,7 +107,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 Configurable full-height sidebar (`shell.sidebar_layout: below-header|full-height`, per-request override), aside brand slot from config (`shell.brand.*`, validated URLs), optional hover-expanded rail (`shell.hover_expand`). Default output unchanged.
 
-Planned **2.32.0** (minor): configurable full-height sidebar layout of the app shell (Symfony Beacon request
+Minor release: configurable full-height sidebar layout of the app shell (Symfony Beacon request
 2026-11-06, `BUNDLES-REQUESTS/2026-11-06-uikit-sidebar-layout.md`). Opt-in; the default output is unchanged.
 
 ### Added
