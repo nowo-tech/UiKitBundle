@@ -39,7 +39,7 @@ export const ZONE = '[data-nowo-ui-sortable-zone]';
 const DISABLED = '[data-nowo-ui-sortable-disabled]';
 const LIVE = 'data-nowo-ui-sortable-live';
 const ACTIVE = 'data-nowo-ui-sortable-active';
-const CONTROLS = 'button, input, select, textarea, label, summary, [role="button"], [contenteditable]:not([contenteditable="false"]), [data-nowo-ui-sortable-ignore]';
+const CONTROLS = 'button, input, select, textarea, label, summary, audio, video, [role="button"], [contenteditable]:not([contenteditable="false"]), [data-nowo-ui-sortable-ignore]';
 const EDITABLE = 'input, select, textarea, [contenteditable]:not([contenteditable="false"])';
 export const MOVE = '[data-nowo-ui-sortable-move]';
 const GHOST_DROP = 'script, iframe, frame, object, embed, video, audio, template, dialog, link, style, meta, base, fencedframe, portal';

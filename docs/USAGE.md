@@ -2152,7 +2152,7 @@ in `nowo_ui_script_names()`):
 | `data-nowo-ui-sortable-zone` | around a list | A wider drop area standing for the list inside it, such as a kanban column around its card list |
 | `data-nowo-ui-sortable-disabled` | root, list or item | Nothing drags from it or lands in it |
 | `data-nowo-ui-sortable-move="up\|down\|first\|last\|prev-list\|next-list"` | a `<button>` you draw inside an item | Only on a real `<button>`. Moves its item without a drag, through the same refusal, events, focus and announcements (`source: 'button'`). The route for WCAG 2.5.7, below. `up` and `down` mean earlier and later in the list, also on an `x` list. The kit draws nothing |
-| `data-nowo-ui-sortable-ignore` | inside an item | No drag starts here. Buttons, form fields, labels, `summary`, `[role="button"]` and editable content already behave so; links do not, so a card whose title is a link still drags |
+| `data-nowo-ui-sortable-ignore` | inside an item | No drag starts here. Buttons, form fields, labels, `summary`, native `audio` and `video`, `[role="button"]` and editable content already behave so; links do not, so a card whose title is a link still drags |
 | `data-nowo-ui-sortable-label`, `data-nowo-ui-sortable-list-label` | item, list | Names in announcements. Default: the item's text (first 80 characters), the list's id |
 | `data-nowo-ui-sortable-labels` | root | JSON wording, below |
 

@@ -345,6 +345,16 @@ describe('nowo-ui-sortable', () => {
       expect(leftovers()).toBe(0);
     });
 
+    it.each(['audio', 'video'])('HH-EL1: pressing and moving on a native <%s> scrubs, it starts no drag', (tag) => {
+      el('a1').insertAdjacentHTML('beforeend', `<${tag} id="media" controls></${tag}>`);
+      pointer('pointerdown', el('media'), 10, 110);
+      under = () => el('b');
+      pointer('pointermove', el('media'), 60, 110);
+      expect(leftovers()).toBe(0);
+      expect(events).toEqual([]);
+      pointer('pointerup', el('media'), 60, 110);
+    });
+
     it('a link in the item drags, and the click after the drop is swallowed', () => {
       dragTo(el('link'), el('a'), 10, 170);
       drop(el('link'), 10, 170);

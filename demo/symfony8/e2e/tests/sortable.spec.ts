@@ -427,7 +427,8 @@ test.describe('sortable', () => {
     await page.waitForTimeout(200);
     const before = await page.evaluate(() => (window as unknown as { probes: number }).probes);
     const fetched = media.length;
-    await dragOver(page, page.getByTestId('card-t1'), page.getByTestId('card-t3'));
+    // By its link: the middle of the card is now the media, which does not start a drag.
+    await dragOver(page, page.getByTestId('link-t1'), page.getByTestId('card-t3'));
     await expect(page.locator('.nowo-ui-sortable__ghost')).toHaveCount(1);
     await expect(page.locator('.nowo-ui-sortable__ghost kit-e2e-probe, .nowo-ui-sortable__ghost video, .nowo-ui-sortable__ghost audio')).toHaveCount(0);
     await page.waitForTimeout(200);
@@ -597,6 +598,67 @@ test.describe('sortable', () => {
     await page.mouse.down();
     await page.keyboard.press('Alt+ArrowRight');
     expect((await cardsIn(page, 'todo'))[0]).toBe('t1');
+    await page.mouse.up();
+  });
+
+  test('HH-EL1: pressing and moving on audio controls scrubs, it starts no drag', async ({ page }) => {
+    await page.goto('/kit/sortable');
+    const start = await centre(page.getByTestId('rich-audio'));
+    await page.mouse.move(start.x, start.y);
+    await page.mouse.down();
+    await page.mouse.move(start.x + 40, start.y, { steps: 6 });
+    await expect(page.locator('.nowo-ui-sortable__ghost')).toHaveCount(0);
+    await page.mouse.up();
+    await expect(log(page)).not.toContainText('start device');
+  });
+
+  test('HH-DL3: a customized built-in in a card does not run again in the copy', async ({ page, browserName }) => {
+    test.skip(browserName === 'webkit', 'WebKit has no customized built-in elements');
+    const fetched: string[] = [];
+    await page.route('**/kit-e2e-builtin', (route) => {
+      fetched.push(route.request().url());
+      return route.fulfill({ status: 204 });
+    });
+    await page.goto('/kit/sortable');
+    await page.evaluate(() => {
+      const w = window as unknown as { built: number; connected: number };
+      w.built = 0;
+      w.connected = 0;
+      customElements.define(
+        'kit-e2e-builtin',
+        class extends HTMLDivElement {
+          constructor() {
+            super();
+            w.built += 1;
+          }
+
+          connectedCallback(): void {
+            w.connected += 1;
+            void fetch('/kit-e2e-builtin');
+          }
+        },
+        { extends: 'div' },
+      );
+      const part = document.createElement('div', { is: 'kit-e2e-builtin' });
+      part.setAttribute('is', 'kit-e2e-builtin');
+      part.textContent = 'built in';
+      document.querySelector('[data-testid="card-t1"]')!.append(part);
+    });
+    const counts = (): Promise<number[]> => page.evaluate(() => {
+      const w = window as unknown as { built: number; connected: number };
+      return [w.built, w.connected];
+    });
+    await expect.poll(() => fetched.length).toBe(1);
+    expect(await counts()).toEqual([1, 1]);
+    await dragOver(page, page.getByTestId('card-t1'), page.getByTestId('card-t3'));
+    const ghost = page.locator('.nowo-ui-sortable__ghost');
+    await expect(ghost).toHaveCount(1);
+    await expect(ghost.locator('[is]')).toHaveCount(0);
+    await page.waitForTimeout(150);
+    // Before the drop: the drop moves the real element, which rightly runs its callback.
+    expect(await counts()).toEqual([1, 1]);
+    expect(fetched.length).toBe(1);
+    await page.keyboard.press('Escape');
     await page.mouse.up();
   });
 
