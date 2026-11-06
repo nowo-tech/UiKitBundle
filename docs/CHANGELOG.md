@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.32.0] - 2026-11-06](#2320---2026-11-06)
 - [[2.31.0] - 2026-11-06](#2310---2026-11-06)
 - [[2.30.0] - 2026-11-05](#2300---2026-11-05)
 - [[2.29.1] - 2026-11-05](#2291---2026-11-05)
@@ -102,6 +103,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [2.32.0] - 2026-11-06
+
+Configurable full-height sidebar (`shell.sidebar_layout: below-header|full-height`, per-request override), aside brand slot from config (`shell.brand.*`, validated URLs), optional hover-expanded rail (`shell.hover_expand`). Default output unchanged.
+
 Planned **2.32.0** (minor): configurable full-height sidebar layout of the app shell (Symfony Beacon request
 2026-11-06, `BUNDLES-REQUESTS/2026-11-06-uikit-sidebar-layout.md`). Opt-in; the default output is unchanged.
 
@@ -141,7 +146,6 @@ Planned **2.32.0** (minor): configurable full-height sidebar layout of the app s
 - `nowo-ui-shell.js`: a two-mode (non-rail) shell keeps `aria-expanded` of every `[data-nowo-ui-burger]` in sync (it
   updated the first one only); after a burger click hides the focused burger, the focus moves to the burger now shown.
   The hover-expanded rail closes when the pointer leaves after a mouse click inside it; keyboard focus keeps it open.
-
 
 ## [2.31.0] - 2026-11-06
 
@@ -2194,7 +2198,7 @@ Supersedes 1.17.3: same runtime code and CSS, release gate hardened so the tagge
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.31.0...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.32.0...HEAD
 [1.10.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.4...v1.10.0
 [1.8.4]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.3...v1.8.4
 [1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0

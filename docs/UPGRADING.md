@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.32.0](#to-2320)
 - [To 2.31.0](#to-2310)
 - [To 2.30.0](#to-2300)
 - [To 2.29.1](#to-2291)
@@ -112,6 +113,8 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.32.0
 
 **2.32.0** (minor), from **2.31.x**: `composer update nowo-tech/ui-kit-bundle`. No markup change by default: the app
 shell renders byte-identical to 2.31 (`below-header`; the 2.26 shell fixtures still match). New, opt-in:
