@@ -9,7 +9,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 /**
- * 2.35: `sortable` is behaviour only (no partial, no slot). It stays opt-in, ships as a built IIFE, and writes no HTML.
+ * `sortable` is behaviour only (no partial, no slot). It stays opt-in, ships as a built IIFE, and writes no HTML.
  * The behaviour itself is covered by nowo-ui-sortable.test.ts and the demo's e2e.
  */
 final class SortableContractTest extends TestCase

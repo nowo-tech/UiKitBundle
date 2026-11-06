@@ -6615,7 +6615,7 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
 }
 
 /*
- * Sortable (2.35, js/nowo-ui-sortable.js, behaviour only): a handle drags on touch without scrolling; a whole item needs
+ * Sortable (js/nowo-ui-sortable.js, behaviour only): a handle drags on touch without scrolling; a whole item needs
  * a long press, so a swipe on it still scrolls. The dragged item leaves the flow but stays rendered and focusable until
  * the drop; `!important` because a host rule outside the layer must not bring it back mid-drag.
  */
@@ -6660,8 +6660,8 @@ html[data-nowo-ui-sortable-active] * {
   -webkit-user-select: none;
   user-select: none;
 }
-@media (pointer: coarse) {
-  /* iOS would open its link and selection callout during the long press. */
+@media (any-pointer: coarse) {
+  /* iOS would open its link and selection callout during the long press. `any-`: a touch laptop's first pointer is fine. */
   [data-nowo-ui-sortable-item]:not(:has([data-nowo-ui-sortable-handle])) {
     -webkit-touch-callout: none;
     -webkit-user-select: none;

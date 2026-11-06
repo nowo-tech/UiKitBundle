@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { LONG_PRESS_MS, announceSortable, axisOf, bindNowoUiSortable, formatSortable, itemsOf } from './nowo-ui-sortable';
+import { LONG_PRESS_MS, announceSortable, axisOf, bindNowoUiSortable, formatSortable, isReachable, itemsOf } from './nowo-ui-sortable';
 
 const MARKUP = `
 <div data-testid="host">
@@ -54,8 +54,37 @@ function layout(): void {
 
 let under: () => Element | null;
 
+// On the prototype: the module reads them there (HH-L4). happy-dom has no layout, and not all of them.
+const SIZES: Record<string, number> = { scrollHeight: 1000, clientHeight: 400, scrollWidth: 400, clientWidth: 400 };
+const realSizes = new Map<string, PropertyDescriptor | undefined>();
+
+function fakeSizes(scroller: Element): void {
+  for (const [name, value] of Object.entries(SIZES)) {
+    if (!realSizes.has(name)) {
+      realSizes.set(name, Object.getOwnPropertyDescriptor(Element.prototype, name));
+    }
+    Object.defineProperty(Element.prototype, name, {
+      configurable: true,
+      get(this: Element) {
+        return this === scroller ? value : 0;
+      },
+    });
+  }
+}
+
+function restoreSizes(): void {
+  for (const [name, descriptor] of realSizes) {
+    if (descriptor) {
+      Object.defineProperty(Element.prototype, name, descriptor);
+    } else {
+      delete (Element.prototype as unknown as Record<string, unknown>)[name];
+    }
+  }
+  realSizes.clear();
+}
+
 function pointer(type: string, target: Element, x: number, y: number, init: Record<string, unknown> = {}): PointerEvent {
-  const event = new PointerEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, pointerId: 1, pointerType: 'mouse', button: 0, isPrimary: true, ...init } as PointerEventInit);
+  const event = new PointerEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, pointerId: 1, pointerType: 'mouse', button: 0, buttons: 1, isPrimary: true, ...init } as PointerEventInit);
   target.dispatchEvent(event);
   return event;
 }
@@ -95,7 +124,16 @@ describe('nowo-ui-sortable', () => {
     layout();
     events = [];
     under = () => null;
-    (document as unknown as { elementFromPoint: () => Element | null }).elementFromPoint = () => under();
+    // On the prototype, as a browser has it: the module never reads it from the document itself (HH-L4).
+    Object.defineProperty(Document.prototype, 'elementFromPoint', { configurable: true, value: () => under() });
+    // happy-dom does no layout: rendered means no [hidden] around it. The fallback has its own test.
+    Object.defineProperty(Element.prototype, 'checkVisibility', {
+      configurable: true,
+      value(this: Element) {
+        return this.closest('[hidden]') === null;
+      },
+    });
+    el('a1').dispatchEvent(new FocusEvent('focusin', { bubbles: true })); // the live region exists, as after a first focus
     for (const type of ['start', 'move', 'moved', 'cancel', 'reverted']) {
       listen(`nowo-ui:sortable:${type}`, (e) => events.push({ type, detail: (e as CustomEvent).detail }));
     }
@@ -104,7 +142,10 @@ describe('nowo-ui-sortable', () => {
   afterEach(() => {
     document.dispatchEvent(new Event('turbo:before-render'));
     listeners.splice(0).forEach(([type, fn]) => document.removeEventListener(type, fn));
+    pointer('pointercancel', document.body, 0, 0);
+    restoreSizes();
     document.body.innerHTML = '';
+    delete (Element.prototype as unknown as { checkVisibility?: unknown }).checkVisibility;
     vi.restoreAllMocks();
     vi.useRealTimers();
   });
@@ -232,11 +273,11 @@ describe('nowo-ui-sortable', () => {
       expect(live()).toContain('cancelled');
 
       pointer('pointerup', el('a1'), 210, 90);
-      const click = new MouseEvent('click', { bubbles: true, cancelable: true });
+      const click = new MouseEvent('click', { bubbles: true, cancelable: true, detail: 1 });
       el('link').dispatchEvent(click);
       expect(click.defaultPrevented).toBe(true);
       // Only that one click.
-      const next = new MouseEvent('click', { bubbles: true, cancelable: true });
+      const next = new MouseEvent('click', { bubbles: true, cancelable: true, detail: 1 });
       el('link').dispatchEvent(next);
       expect(next.defaultPrevented).toBe(false);
     });
@@ -248,9 +289,9 @@ describe('nowo-ui-sortable', () => {
         () => window.dispatchEvent(new Event('blur')),
         () => window.dispatchEvent(new Event('pagehide')),
         () => {
-          vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+          const spy = vi.spyOn(Document.prototype, 'visibilityState', 'get').mockReturnValue('hidden');
           document.dispatchEvent(new Event('visibilitychange'));
-          vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+          spy.mockRestore();
         },
       ]) {
         events.length = 0;
@@ -306,7 +347,7 @@ describe('nowo-ui-sortable', () => {
       dragTo(el('link'), el('a'), 10, 170);
       drop(el('link'), 10, 170);
       expect(ids('a')).toEqual(['a2', 'a1', 'a3']);
-      const click = new MouseEvent('click', { bubbles: true, cancelable: true });
+      const click = new MouseEvent('click', { bubbles: true, cancelable: true, detail: 1 });
       el('link').dispatchEvent(click);
       expect(click.defaultPrevented).toBe(true);
     });
@@ -364,7 +405,7 @@ describe('nowo-ui-sortable', () => {
 
     it('a second pointer changes nothing', () => {
       dragTo(el('a1'), el('b'), 210, 90);
-      pointer('pointerdown', el('a2'), 10, 150, { pointerId: 2 });
+      pointer('pointerdown', el('a2'), 10, 150, { pointerId: 2, isPrimary: false });
       pointer('pointermove', el('a2'), 400, 400, { pointerId: 2 });
       pointer('pointerup', el('a2'), 400, 400, { pointerId: 2 });
       pointer('pointercancel', el('a2'), 400, 400, { pointerId: 2 });
@@ -426,7 +467,7 @@ describe('nowo-ui-sortable', () => {
       pointer('pointerup', el('a1'), 10, 110, touch);
       vi.advanceTimersByTime(LONG_PRESS_MS * 2);
       expect(leftovers()).toBe(0);
-      const click = new MouseEvent('click', { bubbles: true, cancelable: true });
+      const click = new MouseEvent('click', { bubbles: true, cancelable: true, detail: 1 });
       el('a1').dispatchEvent(click);
       expect(click.defaultPrevented).toBe(false);
     });
@@ -462,10 +503,7 @@ describe('nowo-ui-sortable', () => {
 
     const scrollable = (scroller: HTMLElement, top: number, scrollBy: ReturnType<typeof vi.fn>): void => {
       rects.set(scroller, rect(0, 0, 400, 400));
-      Object.defineProperty(scroller, 'scrollHeight', { configurable: true, value: 1000 });
-      Object.defineProperty(scroller, 'clientHeight', { configurable: true, value: 400 });
-      Object.defineProperty(scroller, 'scrollWidth', { configurable: true, value: 400 });
-      Object.defineProperty(scroller, 'clientWidth', { configurable: true, value: 400 });
+      fakeSizes(scroller);
       scroller.scrollTop = top;
       Element.prototype.scrollBy = scrollBy as unknown as typeof Element.prototype.scrollBy;
       const real = window.getComputedStyle.bind(window);
@@ -703,6 +741,683 @@ describe('nowo-ui-sortable', () => {
     });
   });
 
+  describe('a gesture always ends (HH-M1)', () => {
+    const touch = { pointerType: 'touch' };
+    const scrollRefused = (target: Element = document.body): boolean => {
+      const event = new Event('touchmove', { bubbles: true, cancelable: true });
+      target.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+
+    it.each(['pointerup', 'pointermove', 'pointercancel'])('%s stopped on the way to the document still reaches it', (type) => {
+      const stop = (e: Event): void => e.stopPropagation();
+      el('host' as string)?.addEventListener(type, stop);
+      document.body.addEventListener(type, stop);
+      dragTo(el('a1'), el('b'), 210, 90);
+      if (type === 'pointermove') {
+        expect(leftovers()).toBe(2);
+      }
+      if (type === 'pointercancel') {
+        pointer('pointercancel', el('a1'), 210, 90);
+      } else {
+        drop(el('a1'), 210, 90);
+      }
+      document.body.removeEventListener(type, stop);
+      expect(leftovers()).toBe(0);
+      expect(scrollRefused()).toBe(false);
+    });
+
+    it('a stopped pointerup: the drop commits and the page scrolls again', () => {
+      const stop = (e: Event): void => e.stopPropagation();
+      el('a1').addEventListener('pointerup', stop);
+      pointer('pointerdown', el('a1'), 10, 110, touch);
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+      pointer('pointerup', el('a1'), 10, 110, touch);
+      vi.useRealTimers();
+      expect(leftovers()).toBe(0);
+      expect(scrollRefused()).toBe(false);
+      el('a1').removeEventListener('pointerup', stop);
+    });
+
+    it('a tap whose pointerup is stopped starts no drag after the long press time', () => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+      const stop = (e: Event): void => e.stopPropagation();
+      el('a1').addEventListener('pointerup', stop);
+      pointer('pointerdown', el('a1'), 10, 110, touch);
+      pointer('pointerup', el('a1'), 10, 110, touch);
+      vi.advanceTimersByTime(LONG_PRESS_MS * 2);
+      expect(leftovers()).toBe(0);
+      expect(events).toEqual([]);
+      expect(scrollRefused()).toBe(false);
+    });
+
+    it('the last finger lifted with no pointerup at all ends a pending press and a drag', () => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+      const lift = (touches: unknown[]): void => {
+        const event = new Event('touchend', { bubbles: true });
+        Object.defineProperty(event, 'touches', { value: touches });
+        window.dispatchEvent(event);
+      };
+      pointer('pointerdown', el('a1'), 10, 110, touch);
+      lift([]);
+      vi.advanceTimersByTime(LONG_PRESS_MS * 2);
+      expect(leftovers()).toBe(0);
+
+      under = () => el('b');
+      pointer('pointerdown', el('h1-handle'), 510, 110, touch);
+      under = () => el('h');
+      pointer('pointermove', el('h1-handle'), 590, 110, touch);
+      expect(leftovers()).toBe(2);
+      lift([{}]); // another finger is still down
+      vi.advanceTimersByTime(1000);
+      expect(leftovers()).toBe(2);
+      lift([]);
+      expect(leftovers()).toBe(2); // the pointerup may still be on its way
+      vi.advanceTimersByTime(1000);
+      expect(leftovers()).toBe(0);
+      expect(events[events.length - 1]).toMatchObject({ type: 'cancel', detail: { reason: 'lost' } });
+      expect(scrollRefused()).toBe(false);
+    });
+
+    it('a pointerup right before touchend is a normal drop, not a cancel', () => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+      under = () => el('h');
+      pointer('pointerdown', el('h1-handle'), 510, 110, touch);
+      pointer('pointermove', el('h1-handle'), 590, 110, touch);
+      const event = new Event('touchend', { bubbles: true });
+      Object.defineProperty(event, 'touches', { value: [] });
+      window.dispatchEvent(event); // an engine that sends them the other way round
+      drop(el('h1-handle'), 590, 110);
+      vi.advanceTimersByTime(1000);
+      expect(events[events.length - 1]!.type).toBe('moved');
+    });
+
+    it('a mouse moving with no button down was released elsewhere: the drag cancels', () => {
+      dragTo(el('a1'), el('b'), 210, 90);
+      pointer('pointermove', el('a1'), 220, 90, { buttons: 0 });
+      expect(leftovers()).toBe(0);
+      expect(events[events.length - 1]).toMatchObject({ type: 'cancel', detail: { reason: 'lost' } });
+      const click = new MouseEvent('click', { bubbles: true, cancelable: true, detail: 1 });
+      el('link').dispatchEvent(click);
+      expect(click.defaultPrevented).toBe(false);
+      pointer('pointerdown', el('a1'), 10, 110);
+      pointer('pointermove', el('a1'), 10, 170, { buttons: 0 });
+      expect(leftovers()).toBe(0);
+    });
+
+    it('a new primary press recovers from a release that never came, and starts its own gesture', () => {
+      dragTo(el('a1'), el('b'), 210, 90);
+      expect(leftovers()).toBe(2);
+      pointer('pointerdown', el('a2'), 10, 150, { pointerId: 9 });
+      expect(leftovers()).toBe(0);
+      expect(events[events.length - 1]).toMatchObject({ type: 'cancel', detail: { id: 'a1', reason: 'lost' } });
+      under = () => el('b');
+      pointer('pointermove', el('a2'), 210, 90, { pointerId: 9 });
+      expect(leftovers()).toBe(2);
+      drop(el('a2'), 210, 90);
+      pointer('pointerup', el('a2'), 210, 90, { pointerId: 9 });
+      expect(ids('b')).toEqual(['a2', 'b1']);
+    });
+
+    it('a mouse press does not end a touch drag, or the other way round', () => {
+      under = () => el('h');
+      pointer('pointerdown', el('h1-handle'), 510, 110, touch);
+      pointer('pointermove', el('h1-handle'), 590, 110, touch);
+      pointer('pointerdown', el('a2'), 10, 150, { pointerId: 9 });
+      expect(leftovers()).toBe(2);
+      drop(el('h1-handle'), 590, 110);
+      pointer('pointerdown', el('a1'), 10, 110, { pointerId: 3 });
+      pointer('pointerdown', el('a2'), 10, 150, { ...touch, pointerId: 4 });
+      pointer('pointerup', el('a1'), 10, 110, { pointerId: 3 });
+      expect(leftovers()).toBe(0);
+    });
+
+    it('a pending press is dropped by a new press of its type', () => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+      pointer('pointerdown', el('a1'), 10, 110, touch);
+      pointer('pointerdown', document.body, 10, 110, { ...touch, pointerId: 2 });
+      vi.advanceTimersByTime(LONG_PRESS_MS * 2);
+      expect(leftovers()).toBe(0);
+      expect(scrollRefused()).toBe(false);
+    });
+
+    it('an error during a drag ends it, and the page scrolls again', () => {
+      const errors = vi.fn();
+      window.addEventListener('error', errors);
+      vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      dragTo(el('a1'), el('b'), 210, 90);
+      under = () => {
+        throw new Error('boom');
+      };
+      try {
+        pointer('pointermove', el('a1'), 215, 90);
+      } catch {
+        // Depends on how the DOM reports a listener's error.
+      }
+      window.removeEventListener('error', errors);
+      expect(leftovers()).toBe(0);
+      expect(events[events.length - 1]).toMatchObject({ type: 'cancel', detail: { reason: 'lost' } });
+      expect(scrollRefused()).toBe(false);
+    });
+
+    it('Escape during a press ends it: nothing starts on what Escape closes', () => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+      pointer('pointerdown', el('a1'), 10, 110, touch);
+      const escape = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+      el('a1').dispatchEvent(escape);
+      expect(escape.defaultPrevented).toBe(false);
+      vi.advanceTimersByTime(LONG_PRESS_MS * 2);
+      expect(leftovers()).toBe(0);
+    });
+
+    it.each(['elementFromPoint', 'removeEventListener', 'addEventListener', 'createElement', 'documentElement', 'scrollingElement', 'body', 'activeElement', 'visibilityState', 'implementation', 'importNode'])(
+      '<img name="%s"> in the page does not stop anything (HH-L4)',
+      (name) => {
+        vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+        const img = document.createElement('img');
+        Object.defineProperty(document, name, { configurable: true, value: img });
+        try {
+          pointer('pointerdown', el('a1'), 10, 110, touch);
+          vi.advanceTimersByTime(LONG_PRESS_MS);
+          expect(leftovers()).toBe(2);
+          expect(scrollRefused(el('a1'))).toBe(true);
+          under = () => el('b');
+          pointer('pointermove', el('a1'), 210, 90, touch);
+          pointer('pointerup', el('a1'), 210, 90, touch);
+          expect(ids('b')).toEqual(['a1', 'b1']);
+          expect(events[events.length - 1]!.type).toBe('moved');
+          expect(scrollRefused(el('a1'))).toBe(false);
+          // The keyboard route across lists.
+          alt(el('a2'), 'ArrowRight');
+          expect(ids('b')).toContain('a2');
+        } finally {
+          delete (document as unknown as Record<string, unknown>)[name];
+        }
+      },
+    );
+
+    it('a form used as a scroll container still auto-scrolls (HH-L4)', () => {
+      el('zone-a').remove();
+      document.querySelector('[data-testid="host"]')!.insertAdjacentHTML(
+        'beforeend',
+        `<div data-nowo-ui-sortable="forms"><form id="scroller" data-nowo-ui-sortable-list="f">
+          <input name="scrollTop"><input name="scrollHeight"><input name="clientHeight"><input name="scrollLeft"><input name="scrollWidth"><input name="clientWidth">
+          <div id="f1" data-nowo-ui-sortable-item="f1">f</div>
+        </form></div>`,
+      );
+      rects.set(el('scroller'), rect(0, 0, 400, 400));
+      fakeSizes(el('scroller'));
+      const real = window.getComputedStyle.bind(window);
+      vi.spyOn(window, 'getComputedStyle').mockImplementation((target) => (target === el('scroller') ? ({ ...real(target), overflowX: 'visible', overflowY: 'auto', direction: 'ltr' } as CSSStyleDeclaration) : real(target)));
+      const scrollBy = vi.fn();
+      const original = Element.prototype.scrollBy;
+      Element.prototype.scrollBy = scrollBy as unknown as typeof Element.prototype.scrollBy;
+      const frames: FrameRequestCallback[] = [];
+      vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => frames.push(cb));
+      under = () => el('scroller');
+      pointer('pointerdown', el('f1'), 200, 200);
+      pointer('pointermove', el('f1'), 200, 395);
+      frames.shift()!(performance.now() + 16);
+      expect(scrollBy).toHaveBeenCalled();
+      drop(el('f1'), 200, 395);
+      Element.prototype.scrollBy = original;
+    });
+  });
+
+  describe('only lists the user can reach (HH-M2)', () => {
+    it('a keyboard move skips a hidden list and goes on to the next one', () => {
+      el('b').setAttribute('hidden', '');
+      el('a1').focus();
+      alt(el('a1'), 'ArrowRight');
+      expect(ids('b')).toEqual(['b1']);
+      expect(ids('c')).toEqual(['a1']);
+      expect(document.activeElement).toBe(el('a1'));
+    });
+
+    it('with no list left, it says so and writes nothing', () => {
+      el('b').setAttribute('hidden', '');
+      el('c').closest('div')!.setAttribute('data-keep', '');
+      el('c').setAttribute('hidden', '');
+      el('a1').focus();
+      alt(el('a1'), 'ArrowRight');
+      expect(ids('a')).toEqual(['a1', 'a2', 'a3']);
+      expect(events).toEqual([]);
+      expect(live()).toContain('cannot move further');
+      expect(document.activeElement).toBe(el('a1'));
+    });
+
+    it('skips an inert list, and one inside an inert part', () => {
+      el('b').setAttribute('inert', '');
+      alt(el('a1'), 'ArrowRight');
+      expect(ids('b')).toEqual(['b1']);
+      expect(ids('c')).toEqual(['a1']);
+      el('b').removeAttribute('inert');
+      const wrapper = document.createElement('div');
+      wrapper.setAttribute('inert', '');
+      el('b').before(wrapper);
+      wrapper.append(el('b'));
+      alt(el('a1'), 'ArrowLeft');
+      expect(ids('a')).toContain('a1');
+      expect(ids('b')).toEqual(['b1']);
+    });
+
+    it('without checkVisibility, it falls back to boxes and the visibility property', () => {
+      delete (Element.prototype as unknown as { checkVisibility?: unknown }).checkVisibility;
+      const spy = vi.spyOn(Element.prototype, 'getClientRects').mockImplementation(function (this: Element) {
+        return (this.id === 'b' ? [] : [rect(0, 0, 1, 1)]) as unknown as DOMRectList;
+      });
+      alt(el('a1'), 'ArrowRight');
+      expect(ids('b')).toEqual(['b1']);
+      expect(ids('c')).toEqual(['a1']);
+      spy.mockRestore();
+    });
+
+    it('a zone does not stand for a hidden list', () => {
+      el('a').setAttribute('hidden', '');
+      dragTo(el('b1'), el('head-a'), 10, 400);
+      expect(el('a').classList.contains('is-drop-target')).toBe(false);
+      drop(el('b1'), 10, 400);
+      expect(ids('a')).toEqual(['a1', 'a2', 'a3']);
+    });
+
+    it('the module exports the check, modal rule included where the DOM can tell', () => {
+      expect(isReachable(el('b'), el('a1'))).toBe(true);
+      const closestSpy = vi.spyOn(Element.prototype, 'closest').mockImplementation(function (this: Element, selector: string) {
+        if (selector === 'dialog:modal') {
+          return this.id === 'a1' ? el('board') : null;
+        }
+        return null;
+      });
+      expect(isReachable(el('b'), el('a1'))).toBe(false);
+      closestSpy.mockRestore();
+    });
+  });
+
+  describe('the copy runs nothing (HH-L1, HH-L2)', () => {
+    const ghostOf = (): HTMLElement => document.querySelector<HTMLElement>('.nowo-ui-sortable__ghost')!;
+
+    it('a custom element in the item does not run again, and its look stays as a plain span', () => {
+      let connected = 0;
+      if (!customElements.get('x-sortable-probe')) {
+        customElements.define(
+          'x-sortable-probe',
+          class extends HTMLElement {
+            connectedCallback(): void {
+              connected++;
+            }
+          },
+        );
+      }
+      el('b1').insertAdjacentHTML('beforeend', '<x-sortable-probe class="kept"><b>text</b></x-sortable-probe>');
+      const before = connected;
+      dragTo(el('b1'), el('c'), 410, 110);
+      expect(connected).toBe(before);
+      expect(ghostOf().querySelector('x-sortable-probe')).toBeNull();
+      expect(ghostOf().querySelector('span.kept b')!.textContent).toBe('text');
+    });
+
+    it('an item that is itself a custom element or media becomes a plain box', () => {
+      el('b').insertAdjacentHTML('beforeend', '<video id="v1" data-nowo-ui-sortable-item="v1" src="/x.mp4" autoplay><source src="/y.mp4"></video><x-other id="x1" data-nowo-ui-sortable-item="x1" class="kept">z</x-other>');
+      for (const id of ['v1', 'x1']) {
+        dragTo(el(id), el('c'), 410, 110);
+        expect(ghostOf().tagName).toBe('DIV');
+        expect(ghostOf().querySelector('source')).toBeNull();
+        expect(ghostOf().hasAttribute('src')).toBe(false);
+        pointer('pointercancel', el(id), 0, 0);
+      }
+    });
+
+    it('strips the hooks other libraries look for', () => {
+      el('b1').innerHTML = '<span id="hooked" x-init="a" x-data="b" hx-get="/c" data-hx-get="/d" command="e" commandfor="f" formaction="/g" ping="/h" data-bs-toggle="i" data-turbo-frame="j" data-live-id="k" is="l" data-keep="yes" class="kept">t</span>';
+      dragTo(el('b1'), el('c'), 410, 110);
+      expect(ghostOf().querySelector('span')!.getAttributeNames().sort()).toEqual(['class', 'data-keep']);
+    });
+
+    it('declarations go through the CSSOM: the attribute itself never reaches the copy', () => {
+      el('b1').style.setProperty('--card-accent', 'red');
+      el('b1').insertAdjacentHTML('beforeend', '<i id="styled"></i>');
+      el('styled').style.setProperty('color', 'blue', 'important');
+      dragTo(el('b1'), el('c'), 410, 110);
+      expect(ghostOf().style.getPropertyValue('--card-accent')).toBe('red');
+      const copy = ghostOf().querySelector('i')!;
+      expect(copy.style.getPropertyValue('color')).toBe('blue');
+      expect(copy.style.getPropertyPriority('color')).toBe('important');
+    });
+
+    it('a style attribute with no applied declaration leaves the copy without it', () => {
+      el('b1').insertAdjacentHTML('beforeend', '<i id="blocked" style="position:fixed;background:url(/exfil.png)"></i>');
+      // What a browser reports for an attribute its CSP blocked: the attribute is there, the declarations are not.
+      const real = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'style')!;
+      Object.defineProperty(HTMLElement.prototype, 'style', {
+        configurable: true,
+        get(this: HTMLElement) {
+          const style = real.get!.call(this) as CSSStyleDeclaration;
+          return this.id === 'blocked' ? ({ length: 0, item: () => '' } as unknown as CSSStyleDeclaration) : style;
+        },
+      });
+      try {
+        dragTo(el('b1'), el('c'), 410, 110);
+        const copy = ghostOf().querySelector('i')!;
+        expect(copy.getAttribute('style') ?? '').toBe('');
+      } finally {
+        Object.defineProperty(HTMLElement.prototype, 'style', real);
+      }
+    });
+  });
+
+  describe('planted attributes (HH-L3)', () => {
+    beforeEach(() => {
+      el('a2').insertAdjacentHTML('beforeend', '<span id="planted" data-nowo-ui-sortable-item="planted" tabindex="0">p</span>');
+    });
+
+    it('an item planted inside a card is not counted, so the positions stay true', () => {
+      expect(ids('a')).toEqual(['a1', 'a2', 'a3']);
+      alt(el('a3'), 'ArrowUp');
+      expect(events[0]!.detail).toMatchObject({ id: 'a3', index: 1, fromIndex: 2 });
+      expect(el('a').children[1]!.id).toBe('a3');
+    });
+
+    it('nothing lands inside a card', () => {
+      dragTo(el('a1'), el('a'), 10, 170);
+      drop(el('a1'), 10, 170);
+      expect(el('a1').parentElement!.id).toBe('a');
+      alt(el('a1'), 'ArrowDown');
+      expect(el('a1').parentElement!.id).toBe('a');
+    });
+
+    it('pressing or focusing it acts on the real card', () => {
+      dragTo(el('planted'), el('b'), 210, 90);
+      drop(el('planted'), 210, 90);
+      expect(events.find((e) => e.type === 'moved')!.detail.id).toBe('a2');
+      expect(ids('b')).toEqual(['a2', 'b1']);
+      events.length = 0;
+      alt(el('planted'), 'ArrowDown');
+      expect(events[0]!.detail.id).toBe('a2');
+    });
+
+    it('a list planted in the dragged item is never a destination, by pointer or key', () => {
+      el('a1').insertAdjacentHTML('beforeend', '<ul id="own" data-nowo-ui-sortable-list="own"></ul>');
+      dragTo(el('a1'), el('own'), 10, 110);
+      expect(el('own').classList.contains('is-drop-target')).toBe(false);
+      drop(el('a1'), 10, 110);
+      expect(el('own').contains(el('a1'))).toBe(false);
+      alt(el('a1'), 'ArrowLeft');
+      expect(el('own').contains(el('a1'))).toBe(false);
+    });
+  });
+
+  describe('the click guard (HH-L5)', () => {
+    const bareClick = (target: Element): boolean => {
+      const event = new MouseEvent('click', { bubbles: true, cancelable: true, detail: 0 });
+      target.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+    const pointerClick = (target: Element): boolean => {
+      const event = new MouseEvent('click', { bubbles: true, cancelable: true, detail: 1 });
+      target.dispatchEvent(event);
+      return event.defaultPrevented;
+    };
+
+    it('Enter on a button or a scripted click after Escape is not swallowed', () => {
+      dragTo(el('a1'), el('b'), 210, 90);
+      el('a1').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+      expect(bareClick(el('btn'))).toBe(false);
+      expect(pointerClick(el('btn'))).toBe(true); // the release click is still swallowed
+    });
+
+    it('button.click() in a moved listener works after a pointer drop', () => {
+      const clicked = vi.fn();
+      el('add-a').addEventListener('click', clicked);
+      listen('nowo-ui:sortable:moved', () => el('add-a').click());
+      dragTo(el('a1'), el('a'), 10, 170);
+      drop(el('a1'), 10, 170);
+      expect(clicked).toHaveBeenCalledTimes(1);
+    });
+
+    it.each([
+      ['blur', () => window.dispatchEvent(new Event('blur'))],
+      ['Turbo', () => document.dispatchEvent(new Event('turbo:before-render'))],
+    ])('a cancel by %s with the button down: the late release does not follow a link that is the item', (_name, end) => {
+      const now = vi.spyOn(performance, 'now');
+      now.mockReturnValue(1000);
+      dragTo(el('a1'), el('b'), 210, 90);
+      end();
+      now.mockReturnValue(3000);
+      pointer('pointerup', el('a1'), 210, 90);
+      expect(pointerClick(el('link'))).toBe(true);
+      expect(pointerClick(el('link'))).toBe(false); // only that one
+    });
+
+    it('the guard ends by itself when the release never comes', () => {
+      const now = vi.spyOn(performance, 'now');
+      now.mockReturnValue(1000);
+      dragTo(el('a1'), el('b'), 210, 90);
+      window.dispatchEvent(new Event('blur'));
+      now.mockReturnValue(1000 + 11_000);
+      expect(pointerClick(el('link'))).toBe(false);
+    });
+
+    it('a pointer cancelled by the browser leaves no guard', () => {
+      dragTo(el('a1'), el('b'), 210, 90);
+      pointer('pointercancel', el('a1'), 210, 90);
+      expect(pointerClick(el('link'))).toBe(false);
+    });
+  });
+
+  describe('revert() edge cases (HH-L6)', () => {
+    const lastRevert = (): (() => boolean) => events.filter((e) => e.type === 'moved').slice(-1)[0]!.detail.revert as () => boolean;
+
+    it('refuses while the same item is being dragged or pressed, and the drop then tells the truth', () => {
+      alt(el('a1'), 'ArrowRight');
+      const revert = lastRevert();
+      dragTo(el('a1'), el('c'), 410, 110);
+      expect(revert()).toBe(false);
+      drop(el('a1'), 410, 110);
+      expect(events.filter((e) => e.type === 'moved').slice(-1)[0]!.detail).toMatchObject({ listId: 'c', fromListId: 'b' });
+
+      alt(el('a2'), 'ArrowRight');
+      const pressed = lastRevert();
+      pointer('pointerdown', el('a2'), 10, 110);
+      expect(pressed()).toBe(false);
+      pointer('pointerup', el('a2'), 10, 110);
+      expect(pressed()).toBe(true);
+    });
+
+    it('another item being dragged does not stop it', () => {
+      alt(el('a1'), 'ArrowRight');
+      const revert = lastRevert();
+      dragTo(el('a2'), el('c'), 410, 110);
+      expect(revert()).toBe(true);
+      expect(ids('a')[0]).toBe('a1');
+    });
+
+    it('returns false, never throws, when its origin list is now inside the item', () => {
+      alt(el('a1'), 'ArrowRight');
+      const revert = lastRevert();
+      el('a1').append(el('a'));
+      expect(() => revert()).not.toThrow();
+      expect(revert()).toBe(false);
+    });
+
+    it('a synchronous revert has the last word in the live region', () => {
+      listen('nowo-ui:sortable:moved', (e) => (e as CustomEvent).detail.revert());
+      alt(el('a1'), 'ArrowDown');
+      expect(ids('a')).toEqual(['a1', 'a2', 'a3']);
+      expect(live()).toContain('undone');
+    });
+
+    it('refuses when the page moved the item elsewhere, or the origin was disabled since', () => {
+      alt(el('a1'), 'ArrowRight');
+      const moved = lastRevert();
+      el('c').append(el('a1'));
+      expect(moved()).toBe(false);
+      expect(ids('c')).toEqual(['a1']);
+
+      alt(el('a2'), 'ArrowRight');
+      const disabled = lastRevert();
+      el('a').setAttribute('data-nowo-ui-sortable-disabled', '');
+      expect(disabled()).toBe(false);
+    });
+  });
+
+  describe('events reach their listeners (HH-L7)', () => {
+    it('cancel reaches a listener on the document when the root has left the page', () => {
+      dragTo(el('a1'), el('b'), 210, 90);
+      const item = el('a1');
+      el('board').remove();
+      pointer('pointermove', document.body, 220, 90);
+      expect(item.isConnected).toBe(false);
+      expect(events[events.length - 1]).toMatchObject({ type: 'cancel', detail: { id: 'a1', scope: 'cards', reason: 'lost' } });
+      expect(leftovers()).toBe(0);
+    });
+
+    it('with a still pointer, the next frame notices that the item has gone', () => {
+      const frames: FrameRequestCallback[] = [];
+      vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => frames.push(cb));
+      dragTo(el('a1'), el('b'), 210, 90);
+      el('a1').remove();
+      expect(document.documentElement.hasAttribute('data-nowo-ui-sortable-active')).toBe(true);
+      frames.shift()!(performance.now() + 16);
+      expect(document.documentElement.hasAttribute('data-nowo-ui-sortable-active')).toBe(false);
+      expect(leftovers()).toBe(0);
+      expect(events[events.length - 1]).toMatchObject({ type: 'cancel', detail: { reason: 'lost' } });
+    });
+
+    it('a failure while building the copy still ends in cancel, and the page scrolls', () => {
+      vi.spyOn(Document.prototype, 'importNode').mockImplementation(() => {
+        throw new Error('boom');
+      });
+      vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      try {
+        pointer('pointerdown', el('h1-handle'), 510, 110, { pointerType: 'touch' });
+        pointer('pointermove', el('h1-handle'), 590, 110, { pointerType: 'touch' });
+      } catch {
+        // Depends on how the DOM reports a listener's error.
+      }
+      expect(events.map((e) => e.type)).toEqual(['start', 'cancel']);
+      const touch = new Event('touchmove', { bubbles: true, cancelable: true });
+      document.body.dispatchEvent(touch);
+      expect(touch.defaultPrevented).toBe(false);
+    });
+  });
+
+  describe('live regions (HH-L9)', () => {
+    it('focus prepares the region of every root of the scope, before the first move there', () => {
+      document.body.innerHTML = `
+        <div id="p1"><ul id="l1" data-nowo-ui-sortable="s" data-nowo-ui-sortable-list="l1"><li id="i1" data-nowo-ui-sortable-item="i1" tabindex="0">x</li></ul></div>
+        <div id="p2"><ul id="l2" data-nowo-ui-sortable="s" data-nowo-ui-sortable-list="l2"></ul></div>
+        <div id="p3"><ul id="l3" data-nowo-ui-sortable="other" data-nowo-ui-sortable-list="l3"></ul></div>`;
+      el('i1').dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+      expect(el('p1').querySelector(':scope > [data-nowo-ui-sortable-live]')).not.toBeNull();
+      expect(el('p2').querySelector(':scope > [data-nowo-ui-sortable-live]')!.textContent).toBe('');
+      expect(el('p3').querySelector('[data-nowo-ui-sortable-live]')).toBeNull();
+      alt(el('i1'), 'ArrowRight');
+      expect(el('p2').querySelector('[data-nowo-ui-sortable-live]')!.textContent).toContain('moved to l2');
+    });
+
+    it('a region created right now speaks a moment later, and says the latest message', () => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+      document.querySelector('[data-nowo-ui-sortable-live]')!.remove();
+      announceSortable(el('board'), 'first');
+      const region = document.querySelector('[data-nowo-ui-sortable-live]')!;
+      expect(region.textContent).toBe('');
+      announceSortable(el('board'), 'second');
+      expect(region.textContent).toBe('');
+      vi.advanceTimersByTime(200);
+      expect(region.textContent).toBe('second');
+      announceSortable(el('board'), 'third');
+      expect(region.textContent).toBe('third');
+    });
+  });
+
+  describe('move buttons (WCAG 2.5.7)', () => {
+    const buttons = (id: string): void => {
+      el(id).insertAdjacentHTML(
+        'beforeend',
+        ['up', 'down', 'first', 'last', 'prev-list', 'next-list', 'sideways'].map((m) => `<button type="button" id="${id}-${m}" data-nowo-ui-sortable-move="${m}">${m}</button>`).join(''),
+      );
+    };
+    const press = (id: string): MouseEvent => {
+      const event = new MouseEvent('click', { bubbles: true, cancelable: true, detail: 1 });
+      el(id).dispatchEvent(event);
+      return event;
+    };
+
+    it('up, down, first and last move within the list and keep focus', () => {
+      buttons('a2');
+      el('a2-down').focus();
+      expect(press('a2-down').defaultPrevented).toBe(true);
+      expect(ids('a')).toEqual(['a1', 'a3', 'a2']);
+      expect(document.activeElement).toBe(el('a2-down'));
+      expect(events[0]!.detail).toMatchObject({ source: 'button', id: 'a2', index: 2, fromIndex: 1 });
+      expect(typeof events[1]!.detail.revert).toBe('function');
+      expect(live()).toContain('3/3');
+      press('a2-first');
+      expect(ids('a')).toEqual(['a2', 'a1', 'a3']);
+      press('a2-last');
+      expect(ids('a')).toEqual(['a1', 'a3', 'a2']);
+      press('a2-up');
+      expect(ids('a')).toEqual(['a1', 'a2', 'a3']);
+    });
+
+    it('prev-list and next-list go across, skipping lists it cannot reach', () => {
+      buttons('a2');
+      el('b').setAttribute('hidden', '');
+      press('a2-next-list');
+      expect(ids('c')).toEqual(['a2']);
+      press('a2-prev-list');
+      expect(ids('a')).toContain('a2');
+    });
+
+    it('at an edge it says so and fires nothing', () => {
+      buttons('a1');
+      press('a1-up');
+      press('a1-first');
+      press('a1-prev-list');
+      expect(events).toEqual([]);
+      expect(ids('a')).toEqual(['a1', 'a2', 'a3']);
+      expect(live()).toContain('cannot move further');
+    });
+
+    it('a listener can refuse, and revert() undoes it', () => {
+      buttons('a1');
+      const refuse = (e: Event): void => e.preventDefault();
+      document.addEventListener('nowo-ui:sortable:move', refuse);
+      press('a1-down');
+      document.removeEventListener('nowo-ui:sortable:move', refuse);
+      expect(ids('a')).toEqual(['a1', 'a2', 'a3']);
+      expect(live()).toContain('cannot be moved there');
+      press('a1-down');
+      (events[events.length - 1]!.detail.revert as () => boolean)();
+      expect(ids('a')).toEqual(['a1', 'a2', 'a3']);
+    });
+
+    it('an unknown value, a disabled item, a handled click or a running drag do nothing', () => {
+      buttons('a1');
+      expect(press('a1-sideways').defaultPrevented).toBe(false);
+      const stop = (e: Event): void => e.preventDefault();
+      el('a1-down').addEventListener('click', stop);
+      press('a1-down');
+      el('a1-down').removeEventListener('click', stop);
+      expect(ids('a')).toEqual(['a1', 'a2', 'a3']);
+      buttons('b1');
+      el('b1').setAttribute('data-nowo-ui-sortable-disabled', '');
+      press('b1-next-list');
+      expect(ids('b')).toEqual(['b1']);
+      el('b1').removeAttribute('data-nowo-ui-sortable-disabled');
+      dragTo(el('a2'), el('b'), 210, 90);
+      el('a1-down').click();
+      expect(ids('a')).toEqual(['a1', 'a2', 'a3']);
+    });
+
+    it('pressing one never starts a drag', () => {
+      buttons('a1');
+      pointer('pointerdown', el('a1-down'), 10, 110);
+      pointer('pointermove', el('a1-down'), 10, 170);
+      expect(leftovers()).toBe(0);
+    });
+  });
+
   describe('helpers', () => {
     it('itemsOf leaves out items of nested lists', () => {
       el('b1').innerHTML = '<ul id="nested" data-nowo-ui-sortable-list="n"><li id="n1" data-nowo-ui-sortable-item="n1">n</li></ul>';
@@ -757,6 +1472,7 @@ describe('nowo-ui-sortable', () => {
       const root = el('board');
       announceSortable(root, '<b>same</b>');
       const region = document.querySelector<HTMLElement>('[data-nowo-ui-sortable-live]')!;
+      expect(region.textContent).toBe('<b>same</b>');
       expect(region.getAttribute('role')).toBe('status');
       expect(region.querySelector('b')).toBeNull();
       const first = region.textContent;
@@ -772,7 +1488,7 @@ describe('nowo-ui-sortable', () => {
     });
 
     it('focus on an item prepares the region before the first message', () => {
-      expect(document.querySelector('[data-nowo-ui-sortable-live]')).toBeNull();
+      document.querySelector('[data-nowo-ui-sortable-live]')!.remove();
       el('a1').dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
       expect(document.querySelector('[data-nowo-ui-sortable-live]')).not.toBeNull();
     });

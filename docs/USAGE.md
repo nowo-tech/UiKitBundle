@@ -48,7 +48,7 @@
 - [Side panel and drawer (2.25)](#side-panel-and-drawer-225)
 - [Remote form dialog (2.28)](#remote-form-dialog-228)
 - [Focusable scroll regions (2.28)](#focusable-scroll-regions-228)
-- [Sortable (2.35)](#sortable-235)
+- [Sortable ](#sortable)
 - [Overlays and the shell (2.28)](#overlays-and-the-shell-228)
 - [Menu semantics (2.28)](#menu-semantics-228)
 - [Compact header (2.27)](#compact-header-227)
@@ -2078,7 +2078,7 @@ listener). Since 2.29.1 a pass after a mutation or a resize syncs only the regio
 region whose content changed, the region that resized); the whole document is scanned once, at start-up. Regions
 that leave the document are unobserved on the next pass, and an `aria-label` the script set follows the caption.
 
-## Sortable (2.35)
+## Sortable 
 
 Reorder by pointer, touch and keyboard, within a list and between lists, over markup you own: kanban cards and columns,
 a settings list, table rows. There is no partial and no third-party library. Load the script on the page (opt-in, not
@@ -2101,6 +2101,7 @@ in `nowo_ui_script_names()`):
 | `data-nowo-ui-sortable-axis="x\|y"` | list or its root | Default `y`. Lists are one row or one column; a wrapping grid is not supported |
 | `data-nowo-ui-sortable-zone` | around a list | A wider drop area standing for the list inside it, such as a kanban column around its card list |
 | `data-nowo-ui-sortable-disabled` | root, list or item | Nothing drags from it or lands in it |
+| `data-nowo-ui-sortable-move="up\|down\|first\|last\|prev-list\|next-list"` | a `<button>` you draw inside an item | Moves its item without a drag, through the same refusal, events, focus and announcements (`source: 'button'`). The route for WCAG 2.5.7, below. `up` and `down` mean earlier and later in the list, also on an `x` list. The kit draws nothing |
 | `data-nowo-ui-sortable-ignore` | inside an item | No drag starts here. Buttons, form fields, labels, `summary`, `[role="button"]` and editable content already behave so; links do not, so a card whose title is a link still drags |
 | `data-nowo-ui-sortable-label`, `data-nowo-ui-sortable-list-label` | item, list | Names in announcements. Default: the item's text (first 80 characters), the list's id |
 | `data-nowo-ui-sortable-labels` | root | JSON wording, below |
@@ -2121,6 +2122,16 @@ Content in a list that is not an item stays where it is: after the last item, an
 In a list with no items, an item is appended to the list, so keep "add" buttons and empty messages outside the list
 (they can be inside the zone). An empty list needs a `min-height` of your own unless a zone surrounds it.
 
+An item inside another item of the same list does not count as an item: it has no position, nothing lands next to it, and
+pressing or focusing it acts on the outer item. A real nested list inside an item (a tree) keeps its own items.
+
+**Table rows:** put the list on the `<tbody>`, not the `<table>`. `Table::$rowAttributes` (2.34) can set the item attributes on a
+`<tr>`, but the `table` partial has no attribute for the `<tbody>`. With the list on the `<table>`, an item moved into an empty
+body is appended after the `<tfoot>`. Use your own table markup for a sortable table until the partial has such an option.
+
+**Trees:** do not combine this with a `movable` `tree`, even though `item_attr` (2.34) makes it possible. The tree has its own
+Alt+arrow handling and `draggable`, and both would act.
+
 ### Events: the host does the write
 
 Bubbling `CustomEvent`s on the root of the destination list. With roots per column, listen on a common ancestor.
@@ -2128,24 +2139,42 @@ Bubbling `CustomEvent`s on the root of the destination list. With roots per colu
 | Event | Cancelable | `detail` |
 |-------|------------|----------|
 | `nowo-ui:sortable:start` | yes, stops the drag | `{scope, id, listId, index, source}` (pointer only) |
-| `nowo-ui:sortable:move` | yes, refuses the move | `{scope, id, listId, fromListId, index, fromIndex, source: 'pointer'\|'keyboard', item}`, before the DOM changes |
+| `nowo-ui:sortable:move` | yes, refuses the move | `{scope, id, listId, fromListId, index, fromIndex, source: 'pointer'\|'keyboard'\|'button', item}`, before the DOM changes |
 | `nowo-ui:sortable:moved` | no | the same, plus `revert()`, after the DOM changed |
-| `nowo-ui:sortable:cancel` | no | `{scope, id, listId, index, source, reason: 'escape'\|'refused'\|'lost'\|'same-place'}`, on the source's root. A pointer `start` is always followed by `moved` or `cancel`; a refused keyboard move has neither |
+| `nowo-ui:sortable:cancel` | no | `{scope, id, listId, index, source, reason: 'escape'\|'refused'\|'lost'\|'same-place'}`, on the source's root, or on `<html>` when that root has left the page, so listen on an ancestor or the document. A pointer `start` is always followed by `moved` or `cancel`; a refused keyboard or button move has neither |
 | `nowo-ui:sortable:reverted` | no | the `move` detail, on the origin's root |
 
 `index` is the place among the other items of the list, so it is the final position. Refuse a move on `move`, which is
-synchronous. Do the write on `moved`, and on failure put the item back:
+synchronous, so it cannot wait for anything: to ask with `window.nowoUiAskConfirm` (2.34), let the move happen, confirm on
+`moved`, and `revert()` on a no. Do the write on `moved`, and on failure put the item back:
 
 ```js
 document.addEventListener('nowo-ui:sortable:moved', async ({ detail }) => {
-  const res = await fetch(url, { method: 'POST', body: new URLSearchParams({ list: detail.listId, position: detail.index, _token: token }) });
-  if (!res.ok) detail.revert();
+  let ok = false;
+  try {
+    const res = await fetch(url, { method: 'POST', body: new URLSearchParams({ id: detail.id, list: detail.listId, position: detail.index, _token: token }) });
+    ok = res.ok;
+  } catch {
+    // A network failure is a failed write.
+  }
+  if (!ok && !detail.revert()) {
+    location.reload(); // The page moved on since: only the server knows the order now.
+  }
 });
 ```
 
-`revert()` restores the place, keeps focus and announces. It returns `false`, doing nothing, when it was already used,
-when the same item has moved again since (a late failure must not undo a newer move; reload instead), or when the item
-or its list left the page. A morph or a Turbo render during a drag cancels it (`reason: 'lost'`).
+`revert()` restores the place, keeps focus and announces. It returns `false`, doing nothing, when it was already used; when
+the same item has moved again since, or is being pressed or dragged now; when something else moved the item from where this
+move put it; when the item or its list left the page; when the origin list is now inside the item or is disabled. Each of
+those means the page no longer matches what the server has: reload.
+
+A Turbo page render or a removed item cancels a drag (`reason: 'lost'`). A morph that keeps the item, such as a Turbo Stream with `method="morph"` or a frame render, does not: the drag goes on and the drop commits. Pause such updates between `start` and `moved` or `cancel`.
+
+**The server decides.** Every value in these events comes from attributes in the page, and any script can dispatch them. They say what the user seems to want, nothing more. For each write, your endpoint must check CSRF, check that the user may edit the item and both lists, check that the item is really in `fromListId`, and clamp `index` to the current list. Never treat `scope`, a list id or an item id as proof of access.
+
+**A scope is a name, not a boundary.** Any list on the page with the same scope accepts items, including lists in another part of the page. Use a different scope, or separate pages, for anything that must not mix, such as data of different tenants. `move` is the place to refuse in the page, and the server is the place that counts.
+
+**User content.** Strip `data-nowo-ui-sortable*`, `name` and `id` from any user HTML rendered on a page that loads this script, and do not render it inside an item unsanitized. A planted attribute can add a drop target, shift the positions you receive, or stop the component working. A sanitizer that allows `data-*` by default is not enough on its own.
 
 ### Keyboard
 
@@ -2153,22 +2182,31 @@ Alt+Up / Alt+Down move within the list; Alt+Left / Alt+Right go to the previous 
 order, keeping the position where it can. On an `x` list the two swap, and Left and Right follow `dir="rtl"`. There is
 no "grab" mode, and each press is one move. Keys do nothing inside form fields and editable content.
 
+Keys and move buttons skip a list the user cannot reach: not rendered (`hidden`, `display: none`, a closed `<dialog>` or
+`<details>`, another tab panel, `visibility: hidden`), inside `inert`, or outside the modal `<dialog>` the item is in. When none
+is left, the item stays and the edge message is announced. A list with `display: contents` has no box and counts as not rendered.
+
 ### Touch
 
 - **Handle:** `touch-action: none`, so it drags at once and never scrolls the page. Make it at least 24 by 24 CSS px.
 - **Whole item:** a long press (250 ms) starts the drag. If the finger moves first (more than 8 px), the browser scrolls
   as usual and no drag starts; once a drag runs, scrolling is refused.
 - **Auto-scroll:** near the edge of any scrolling ancestor, then of the page, in both directions.
-- Prefer a handle where items fill the screen. Text in a whole-item card cannot be selected on a touch screen, because
-  the long press belongs to the drag.
+- Prefer a handle where items fill the screen. Text in a whole-item card cannot be selected, on a touch screen or with a
+  mouse, because the press belongs to the drag.
+- A gesture cannot get stuck: its end is read in the capture phase on `window`, with the last finger lifting, a mouse moving
+  with no button, or a new press of the same pointer type as further signals. A component can still keep a drag from
+  starting by stopping `pointerdown`.
 
 ### Sortable accessibility contract
 
 **The kit does:**
 
 - Alt+arrows on the focused item or anything focusable in it; focus stays on the same element across the move.
-- A polite live region (`[data-nowo-ui-sortable-live]`, `role="status"`) next to the root announces the grab, each
-  move, a cancel, a refusal, a revert and the end of the list. `window.nowoUiAnnounceSortable(root, text)` speaks in it.
+- A polite live region (`[data-nowo-ui-sortable-live]`, `role="status"`) next to each root announces the grab, each
+  move, a cancel, a refusal, a revert and the end of the list. The regions of a scope are created when an item takes focus; one
+  created later speaks a moment after. `window.nowoUiAnnounceSortable(root, text)` speaks in it.
+- `data-nowo-ui-sortable-move` buttons you draw run a move with no drag.
 - Escape cancels a drag and does not reach a dialog around it.
 - The placeholder and the moving copy are `aria-hidden`; the copy is `inert`.
 
@@ -2177,11 +2215,12 @@ no "grab" mode, and each press is one move. Keys do nothing inside form fields a
 - Make something in each item focusable: `tabindex="0"` on the item or, better, a `<button>` handle with an
   `aria-label`.
 - Tell people the shortcut: visible help or `aria-describedby`, plus `aria-keyshortcuts` on the focusable element.
-- **Give a way to move that does not need dragging (WCAG 2.5.7):** a status select, a move menu or up / down buttons. Alt
-  keys do not exist for a pointer-only user on a phone. This component does not draw one.
+- **Give a way to move that does not need dragging (WCAG 2.5.7):** `data-nowo-ui-sortable-move` buttons, or a status select or a
+  move menu of your own. The component does not draw one. Alt keys do not exist for a pointer-only user on a phone. A page without a non-drag way to move does not meet WCAG 2.5.7, whatever this component does.
 - Pass translated wording: `data-nowo-ui-sortable-labels` takes the keys `grabbed`, `moved`, `movedToList`, `cancelled`,
   `refused`, `reverted`, `edge`, with `%label%`, and for the two move messages `%position%`, `%count%`, `%list%`. Default
-  wording is English. Text is written with `textContent`, never as HTML.
+  wording is English. Text is written with `textContent`, never as HTML. The default name is the item's `textContent`, so text
+  hidden in a card can be announced: set `data-nowo-ui-sortable-label` where that matters.
 
 ### Theming and hooks
 
@@ -2192,22 +2231,35 @@ it stays rendered and focusable), `.is-drop-target` on the list under the pointe
 defaults, so every `css_framework` behaves alike.
 
 **CSP:** no `style=` in markup and no inline script or handler. Size and position of the placeholder and the copy go
-through the CSSOM, which `style-src-attr 'none'` allows.
+through the CSSOM, which `style-src-attr 'none'` allows. The copy never receives a `style` attribute from the original: only
+declarations the browser applied there are copied, through the CSSOM, so a `style` attribute your policy blocked stays blocked.
 
-**The copy** is a clone of the item without `id`, `name`, `form`, `for`, `tabindex`, `on*`, `data-controller`,
-`data-action`, `data-turbo*`, `data-*-target`, `data-*-outlet` and `data-nowo-ui-*`, and without scripts, frames, media
-and templates. It is inserted in the item's own parent, so `.list > .card` rules keep applying, and with
+**The copy** is built in a document with no browsing context, so nothing in it fetches, plays or runs while it is built. Custom
+elements and shadow hosts become plain elements, keeping their light children: an element that draws itself shows blank during
+the drag. Scripts, frames, media, styles and templates are removed, and an item that is itself one becomes an empty box. Also
+removed: `id`, `name`, `form`, `for`, `style`, `tabindex`, `on*`, `formaction`, `ping`, `command`, `commandfor`, `popover*`,
+`x-*`, `hx-*`, `v-*`, `ng-*`, `wire:*`, `data-controller`, `data-action`, `data-turbo*`, `data-hx-*`, `data-x-*`, `data-bs-*`,
+`data-live-*`, `data-*-target`, `data-*-outlet` and `data-nowo-*`. Images stay, so an image in a card is requested again unless
+it is cached. The copy is inserted in the item's own parent, so `.list > .card` rules keep applying, and with
 `position: fixed`, so an ancestor with `overflow` does not clip it. An ancestor with `transform` or `contain: paint`
 does clip it. Rules on `:last-child` may see it during a drag.
 
 **Limits:** light DOM only, not inside a shadow root. One row or column per list. A dragged table row's copy does not
 keep the column widths.
 
+**Worth knowing:**
+
+- Focus moving to an unrelated `<iframe>` cancels a drag in Chromium and WebKit (`reason: 'lost'`). The item stays. Passing the pointer over an iframe does not.
+- `@media (any-pointer: coarse)` turns off the text selection and callout on whole items, so that also applies with a mouse on a touch laptop.
+- The script is about 5.5 KB gzipped, loaded only by pages that opt in.
+- Not run: Alpine and htmx around the copy (their attributes are removed, but a library that watches for new nodes will see one), Live Component morphs, a real screen reader.
+
 ### Testing on a real device
 
 The automated tests send real touch input in Chromium only (emulation of a Pixel 7, through its input pipeline), and
 synthetic events in Firefox and WebKit, which prove the script's logic and nothing about those engines' gestures. Nothing
-here has been run on a phone. Before relying on drag on touch, check `/kit/sortable` in `demo/symfony8` on **iPhone
+here has been run on a phone. The biggest open risk is iPhone and the scroll guard, which is attached when the press starts:
+WebKit may decide too early whether a touch can be stopped. Before relying on drag on touch, check `/kit/sortable` in `demo/symfony8` on **iPhone
 Safari**, **Android Chrome** and, if you support it, **Firefox for Android**:
 
 1. Swipe vertically starting on a card: the list scrolls, no drag starts. Do it fast and slowly.
@@ -2221,9 +2273,16 @@ Safari**, **Android Chrome** and, if you support it, **Firefox for Android**:
 7. Drag a column by its handle, and a step by its handle: the drag starts at once, with no long press.
 8. Tap a card's link: it opens. Tap a handle: nothing moves.
 9. While dragging, put a second finger down, or lock the phone and come back: no copy or placeholder stays behind.
-10. With VoiceOver and TalkBack on: the announcements are heard, and the move has a route without dragging.
+10. With VoiceOver and TalkBack: the announcements are heard, and the arrow buttons on a card, a column and a step move it, with focus staying on the button.
+11. After each of steps 1 to 9, swipe the page: it still scrolls. A copy left on screen or a page that will not scroll is a failure.
+12. Tap a card, then swipe at once. No copy appears after a quarter of a second.
+13. On iPhone: a card with a text field in it (whole item, no handle). The field still takes focus and typing.
+14. On iPhone: a card with audio or a video that plays. Nothing keeps playing after a drag.
+15. On iPad, with and without a trackpad, and on a touch laptop: repeat steps 1, 3 and 4. A link or image in a card must not start the system's own drag.
+16. Drag from near the screen edge on Android with gesture navigation, and rotate the phone mid-drag: no copy or placeholder stays behind.
+17. With VoiceOver and TalkBack: activate a link in a card right after moving another card; it opens.
 
-If 1, 3 or 4 fail on a device, use handles and keep the non-drag route as the main path there.
+If 1, 3 or 4 fail on a device, use handles and keep the non-drag route as the main path there. On iPhone, the likely fix for 4 is in the kit, not in your page: report it. Steps 13 and 14 need a card of your own, as the demo has no such card.
 
 Demo: `/kit/sortable` in `demo/symfony8`; `make -C demo/symfony8 test-e2e-sortable`.
 

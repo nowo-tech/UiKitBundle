@@ -118,7 +118,7 @@
 
 **Template contract:** additive. New opt-in script `js/nowo-ui-sortable.js` and new CSS rules that match only
 `data-nowo-ui-sortable*` attributes and `nowo-ui-sortable*` classes. Pages that do not use them print the same markup,
-and `nowo_ui_script_names()` is unchanged. To use it, see [USAGE](USAGE.md#sortable-235). A page that uses it must offer a
+and `nowo_ui_script_names()` is unchanged. To use it, see [USAGE](USAGE.md#sortable). A page that uses it must offer a
 way to move that does not need dragging (WCAG 2.5.7), and should be checked on real phones with the checklist there.
 
 ## To 2.33.1

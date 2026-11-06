@@ -1,4 +1,4 @@
-/* UiKit 2.35 demo: layout of the sortable page (no inline styles: the page forbids them). */
+/* UiKit sortable demo: layout of the sortable page (no inline styles: the page forbids them). */
 .kit-sortable-board {
   display: flex;
   align-items: stretch;
@@ -61,4 +61,24 @@
 .kit-sortable-log {
   font-family: monospace;
   font-size: 0.875rem;
+}
+.kit-sortable-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+}
+.kit-sortable-moves {
+  display: flex;
+  gap: 0.25rem;
+  margin-inline-start: auto;
+}
+.kit-sortable-move {
+  min-width: 1.75rem;
+  min-height: 1.75rem;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  border: 1px solid var(--nowo-ui-border);
+  border-radius: var(--nowo-ui-radius);
 }

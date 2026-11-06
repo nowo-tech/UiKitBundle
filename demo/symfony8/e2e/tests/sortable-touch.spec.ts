@@ -1,7 +1,7 @@
 import { test, expect, type Page, type CDPSession, type Locator } from '@playwright/test';
 
 /**
- * UiKit 2.35 sortable with touch input, Chromium only (project `chromium-touch`, Pixel 7 emulation). CDP's
+ * UiKit sortable with touch input, Chromium only (project `chromium-touch`, Pixel 7 emulation). CDP's
  * Input.dispatchTouchEvent goes through Blink's real input pipeline: touch-action, gesture detection, scrolling,
  * pointercancel and touchmove cancelling all run.
  *
@@ -25,6 +25,30 @@ async function centre(locator: Locator): Promise<Point> {
   return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
 }
 
+/** Near the start of an element: the middle of a card may be one of its buttons. */
+async function grip(locator: Locator): Promise<Point> {
+  await locator.scrollIntoViewIfNeeded();
+  const box = await locator.boundingBox();
+  if (!box) throw new Error('no box');
+  return { x: box.x + Math.min(16, box.width / 2), y: box.y + box.height / 2 };
+}
+
+/**
+ * Whether a swipe that starts on the page's help text, outside every item and handle, really moves the page now. Measured on
+ * the screen: on this emulated phone the wide board can make the layout as tall as the page, so the visual viewport pans and
+ * `window.scrollY` stays 0.
+ */
+async function pageScrolls(page: Page, send: Awaited<ReturnType<typeof touch>>): Promise<boolean> {
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+  const help = page.locator('#sortable-help');
+  const start = await centre(help);
+  await send('touchStart', start);
+  await glide(send, start, { x: start.x, y: Math.max(start.y - 80, 2) });
+  await send('touchEnd');
+  await page.waitForTimeout(150);
+  return start.y - (await help.boundingBox())!.y > 20;
+}
+
 const cardsIn = (page: Page, column: string): Promise<(string | null)[]> =>
   page.getByTestId(`list-${column}`).locator('> [data-nowo-ui-sortable-item]').evaluateAll((els) => els.map((el) => el.getAttribute('data-nowo-ui-sortable-item')));
 
@@ -34,7 +58,7 @@ async function glide(send: Awaited<ReturnType<typeof touch>>, from: Point, to: P
   }
 }
 
-test.describe('sortable with touch input (2.35)', () => {
+test.describe('sortable with touch input', () => {
   test.beforeAll(async ({ browser }) => {
     const page = await browser.newPage();
     await page.goto('/kit/sortable');
@@ -47,7 +71,7 @@ test.describe('sortable with touch input (2.35)', () => {
     const send = await touch(page);
     const list = page.getByTestId('list-todo');
     expect(await list.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true);
-    const from = await centre(page.getByTestId('card-t3'));
+    const from = await grip(page.getByTestId('card-t3'));
     await send('touchStart', from);
     await glide(send, from, { x: from.x, y: from.y - 120 });
     await send('touchEnd');
@@ -61,9 +85,9 @@ test.describe('sortable with touch input (2.35)', () => {
     const send = await touch(page);
     const board = page.getByTestId('board');
     const list = page.getByTestId('list-todo');
-    const from = await centre(page.getByTestId('card-t1'));
+    const from = await grip(page.getByTestId('card-t1'));
     const width = page.viewportSize()!.width;
-    const pageScroll = await page.evaluate(() => window.scrollY);
+    const pageAt = (await page.locator('h1').boundingBox())!.y;
     await send('touchStart', from);
     await page.waitForTimeout(350);
     await expect(page.locator('.nowo-ui-sortable__ghost')).toHaveCount(1);
@@ -73,7 +97,7 @@ test.describe('sortable with touch input (2.35)', () => {
     await expect.poll(() => board.evaluate((el) => el.scrollLeft), { timeout: 5_000 }).toBeGreaterThan(200);
     // The finger moved but the gesture never scrolled what the drag refuses to: the list and the page stayed.
     expect(await list.evaluate((el) => el.scrollTop)).toBe(0);
-    expect(await page.evaluate(() => window.scrollY)).toBe(pageScroll);
+    expect((await page.locator('h1').boundingBox())!.y).toBe(pageAt);
     await send('touchEnd');
     await expect(page.locator('.nowo-ui-sortable__ghost')).toHaveCount(0);
     expect(await cardsIn(page, 'todo')).not.toContain('t1');
@@ -83,7 +107,7 @@ test.describe('sortable with touch input (2.35)', () => {
   test('a handle drags at once, with no long press and no page scroll', async ({ page }) => {
     await page.goto('/kit/sortable');
     const send = await touch(page);
-    const from = await centre(page.getByTestId('step-handle-draft'));
+    const from = await grip(page.getByTestId('step-handle-draft'));
     const to = await centre(page.getByTestId('step-publish'));
     const before = await page.evaluate(() => window.scrollY);
     await send('touchStart', from);
@@ -93,6 +117,60 @@ test.describe('sortable with touch input (2.35)', () => {
     expect(await page.evaluate(() => window.scrollY)).toBe(before);
     const order = await page.getByTestId('steps').locator('> li').evaluateAll((els) => els.map((el) => el.getAttribute('data-nowo-ui-sortable-item')));
     expect(order).toEqual(['review', 'publish', 'draft']);
+  });
+
+  test('HH-M1: a tap whose pointerup a component stops starts no drag, and the page still scrolls', async ({ page }) => {
+    await page.goto('/kit/sortable');
+    const send = await touch(page);
+    await page.evaluate(() => document.body.addEventListener('pointerup', (e) => e.stopPropagation()));
+    const from = await grip(page.getByTestId('card-t1'));
+    await send('touchStart', from);
+    await send('touchEnd');
+    await page.waitForTimeout(400);
+    await expect(page.locator('.nowo-ui-sortable__ghost')).toHaveCount(0);
+    expect(await pageScrolls(page, send)).toBe(true);
+  });
+
+  test('HH-M1: a drag whose pointerup a component stops ends at the drop, and the page scrolls again', async ({ page }) => {
+    await page.goto('/kit/sortable');
+    const send = await touch(page);
+    await page.evaluate(() => document.body.addEventListener('pointerup', (e) => e.stopPropagation()));
+    const from = await grip(page.getByTestId('step-handle-draft'));
+    const to = await centre(page.getByTestId('step-publish'));
+    await send('touchStart', from);
+    await glide(send, from, { x: to.x + 20, y: to.y });
+    await expect(page.locator('.nowo-ui-sortable__ghost')).toHaveCount(1);
+    await send('touchEnd');
+    await expect(page.locator('.nowo-ui-sortable__ghost')).toHaveCount(0);
+    await expect(page.getByTestId('log')).toContainText('moved steps draft');
+    expect(await pageScrolls(page, send)).toBe(true);
+  });
+
+  for (const name of ['elementFromPoint', 'removeEventListener']) {
+    test(`HH-M1: <img name="${name}">: the drop commits with moved, and the page scrolls again`, async ({ page }) => {
+      await page.goto('/kit/sortable');
+      const send = await touch(page);
+      await page.evaluate((n) => {
+        const img = document.createElement('img');
+        img.name = n;
+        document.body.append(img);
+      }, name);
+      const from = await grip(page.getByTestId('step-handle-draft'));
+      const to = await centre(page.getByTestId('step-publish'));
+      await send('touchStart', from);
+      await glide(send, from, { x: to.x + 20, y: to.y });
+      await send('touchEnd');
+      await expect(page.locator('.nowo-ui-sortable__ghost')).toHaveCount(0);
+      await expect(page.getByTestId('log')).toContainText('moved steps draft');
+      expect(await pageScrolls(page, send)).toBe(true);
+    });
+  }
+
+  test('the arrow buttons work by tap', async ({ page }) => {
+    await page.goto('/kit/sortable');
+    await page.getByTestId('move-t1-down').tap();
+    expect((await cardsIn(page, 'todo')).slice(0, 2)).toEqual(['t2', 't1']);
+    await expect(page.getByTestId('log')).toContainText('moved cards t1 todo todo 1 0 button');
   });
 
   test('a tap on a link in a card follows it', async ({ page }) => {
@@ -107,7 +185,7 @@ test.describe('sortable with touch input (2.35)', () => {
     const send = await touch(page);
     const list = page.getByTestId('list-todo');
     const box = (await list.boundingBox())!;
-    const from = await centre(page.getByTestId('card-t1'));
+    const from = await grip(page.getByTestId('card-t1'));
     await send('touchStart', from);
     await page.waitForTimeout(350);
     await glide(send, from, { x: box.x + box.width / 2, y: box.y + box.height - 4 });

@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- * UiKit 2.35 demo: js/nowo-ui-sortable.js on a small board (cards and columns on one page) and a horizontal list.
+ * UiKit demo: js/nowo-ui-sortable.js on a small board (cards and columns on one page) and a horizontal list.
  * Fixtures only: the "write" is simulated in the page script. The response forbids inline style attributes, inline
  * scripts and inline handlers (CSP), which the e2e checks while it drags.
  */

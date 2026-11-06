@@ -278,7 +278,7 @@ minmax(min(100%, var(--nowo-ui-filters-field-min, 12rem)), 1fr)))`.
 | `--nowo-ui-side-panel-shadow` | `0 0 1.5rem rgb(0 0 0 / 25%)` (drawer only) |
 | `--nowo-ui-side-panel-backdrop` | `rgb(0 0 0 / 40%)` |
 | `--nowo-ui-side-panel-z` | `var(--nowo-ui-z-overlay, 1040)` (backdrop; the drawer is one above; [Layers](#layers-public-api-228)) |
-| `--nowo-ui-sortable-drop-bg` | `color-mix(in srgb, var(--nowo-ui-primary) 10%, transparent)` (2.35: `sortable` placeholder) |
+| `--nowo-ui-sortable-drop-bg` | `color-mix(in srgb, var(--nowo-ui-primary) 10%, transparent)` (`sortable` placeholder) |
 | `--nowo-ui-sortable-drop-line` | `var(--nowo-ui-primary)` (placeholder border; outline of the list under the pointer) |
 | `--nowo-ui-sortable-ghost-shadow` | `0 0.5rem 1.5rem rgb(0 0 0 / 25%)` (the copy following the pointer) |
 | `--nowo-ui-sortable-z` | `var(--nowo-ui-z-popover, 1080)` (the copy; [Layers](#layers-public-api-228)) |

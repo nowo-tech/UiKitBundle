@@ -39,7 +39,7 @@ export default defineConfig({
       testMatch: /.*\.spec\.ts/,
       testIgnore: /screenshots\.spec\.ts|sortable-touch\.spec\.ts/,
     },
-    // UiKit 2.35 sortable: the other engines, and touch input in Chromium (make test-e2e-sortable).
+    // UiKit sortable: the other engines, and touch input in Chromium (make test-e2e-sortable).
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },

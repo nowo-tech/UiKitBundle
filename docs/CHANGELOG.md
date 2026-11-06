@@ -109,11 +109,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - **`sortable` (new component, opt-in):** `js/nowo-ui-sortable.js` reorders by pointer, touch and keyboard, within a list
   and between lists, over host markup (`data-nowo-ui-sortable`, `-list`, `-item`, `-handle`, `-axis`, `-zone`,
-  `-disabled`, `-ignore`, `-label`, `-list-label`, `-labels`). No partial, no Stimulus peer, no third-party library, not
+  `-disabled`, `-ignore`, `-move`, `-label`, `-list-label`, `-labels`). `data-nowo-ui-sortable-move` on a button you draw runs a
+  move with no drag (WCAG 2.5.7). No partial, no Stimulus peer, no third-party library, not
   in `ThemeSlots::SCRIPTS`. Placeholder, moving copy, auto-scroll, long press on whole items so a swipe still scrolls,
   Alt+arrows with focus kept and a live region. Events `nowo-ui:sortable:start`, `:move` (cancelable, before the DOM
   changes), `:moved` (with `detail.revert()` for a failed write), `:cancel`, `:reverted`. Tokens
-  `--nowo-ui-sortable-drop-bg`, `-drop-line`, `-ghost-shadow`, `-z`. See [USAGE](USAGE.md#sortable-235), which has the
+  `--nowo-ui-sortable-drop-bg`, `-drop-line`, `-ghost-shadow`, `-z`. See [USAGE](USAGE.md#sortable), which has the
   accessibility contract and a checklist for real devices: touch was tested only by emulation.
 
 ## [2.33.1] - 2026-11-06
