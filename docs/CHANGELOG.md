@@ -109,10 +109,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Security
 
-- **A `style` attribute in fetched HTML skipped the page's CSP (Chromium, WebKit; `auto-refresh` since 1.12, `list-pagination` since 2.23):** `list-pagination` and `auto-refresh`
-  copied fetched rows and regions with `document.importNode()`, and a cloned `style` attribute applied under
-  `style-src-attr 'none'`. Each attribute is now set in the page's document, so the policy decides. Pages without such a policy
-  see no change. Found while auditing `sortable` (HH-M3).
+- **A `style` attribute in fetched HTML skipped the page's CSP.** Chromium and WebKit: `list-pagination` (since 2.23) and `auto-refresh` (since 1.12), through `document.importNode()`. WebKit only: fetched dialogs (remote form since 2.28, `data-nowo-ui-dialog-src` since 2.33), because moving parsed content had the same effect. Each attribute is now set in the page's document, so the policy decides. Pages without such a policy see no change. It needs `style=` to reach same-origin fetched HTML, and runs no script. Found while auditing `sortable` (HH-M3).
 
 ## [2.35.0] - 2026-11-06
 

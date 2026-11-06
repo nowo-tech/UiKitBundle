@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { importForPage } from './nowo-ui-fragment-filter';
+import { parseFragment } from './nowo-ui-remote-form-core';
 
 /**
  * In Chromium and WebKit a `style` attribute that arrives by cloning skips the page's CSP: `demo/symfony8/e2e/tests/imported-style.spec.ts`
@@ -23,7 +24,7 @@ describe('importForPage', () => {
     });
     const set = vi.spyOn(Element.prototype, 'setAttribute');
     const copy = importForPage(source);
-    expect(seenAtClone[0]).not.toContain('style');
+    expect(seenAtClone[0]).not.toContain(' style=');
     expect(copy.ownerDocument).toBe(document);
     expect(set.mock.calls.filter(([name]) => name === 'style').map(([, value]) => value)).toEqual(['color: red', 'color: blue', 'color: green']);
     expect(copy.getAttribute('style')).toBe('color: red');
@@ -56,5 +57,48 @@ describe('importForPage', () => {
     const copy = importForPage(doc.getElementById('f')!);
     expect(Element.prototype.getAttribute.call(copy, 'style')).toBe('color: red');
     expect(Element.prototype.querySelector.call(copy, '[name="removeAttribute"]')!.getAttribute('style')).toBe('color: blue');
+  });
+
+  it('parseFragment goes through it: in the page, with the attribute set there, and still filtered', () => {
+    const set = vi.spyOn(Element.prototype, 'setAttribute');
+    const fragment = parseFragment('<div style="color: red" onclick="x()">a<b style="color: blue"></b></div>');
+    expect(set.mock.calls.filter(([name]) => name === 'style').map(([, value]) => value)).toEqual(['color: red', 'color: blue']);
+    const div = fragment.firstElementChild!;
+    expect(div.ownerDocument).toBe(document);
+    expect(div.getAttribute('style')).toBe('color: red');
+    expect(div.hasAttribute('onclick')).toBe(false);
+    expect(div.querySelector('b')!.getAttribute('style')).toBe('color: blue');
+  });
+
+  it('HH-BL1: a custom element whose constructor adds children does not shift any style', () => {
+    if (!customElements.get('x-grow-import')) {
+      customElements.define(
+        'x-grow-import',
+        class extends HTMLElement {
+          constructor() {
+            super();
+            const added = document.createElement('i');
+            added.className = 'added';
+            this.prepend(added);
+          }
+        },
+      );
+    }
+    const doc = parsed('<div id="a"><x-grow-import id="g" style="color: red"></x-grow-import><p id="after" style="color: blue"></p><p id="sib" style="color: green"></p></div>');
+    const copy = importForPage(doc.getElementById('a')!);
+    const styleOf = (selector: string): string | null | undefined => copy.querySelector(selector)?.getAttribute('style');
+    expect(styleOf('#g')).toBe('color: red');
+    expect(styleOf('#after')).toBe('color: blue');
+    expect(styleOf('#sib')).toBe('color: green');
+    expect(styleOf('.added')).toBeNull();
+    expect(copy.querySelector('[data-nowo-ui-import-style]')).toBeNull();
+  });
+
+  it('a mark that came in the fetched HTML picks nothing', () => {
+    const doc = parsed('<div id="a"><p id="forged" data-nowo-ui-import-style="0"></p><p id="real" style="color: red"></p></div>');
+    const copy = importForPage(doc.getElementById('a')!);
+    expect(copy.querySelector('#forged')!.hasAttribute('style')).toBe(false);
+    expect(copy.querySelector('#forged')!.hasAttribute('data-nowo-ui-import-style')).toBe(false);
+    expect(copy.querySelector('#real')!.getAttribute('style')).toBe('color: red');
   });
 });

@@ -39,6 +39,12 @@ export default defineConfig({
       testMatch: /.*\.spec\.ts/,
       testIgnore: /screenshots\.spec\.ts/,
     },
+    // Fetched HTML under a CSP: WebKit let more through than Chromium, so it runs in both.
+    {
+      name: 'imported-style-webkit',
+      use: { ...devices['Desktop Safari'] },
+      testMatch: /imported-style\.spec\.ts/,
+    },
     {
       name: 'screenshots',
       use: { ...devices['Desktop Chrome'] },
