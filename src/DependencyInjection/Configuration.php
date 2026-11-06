@@ -10,6 +10,7 @@ use Nowo\UiKitBundle\Appearance\AppearancePreset;
 use Nowo\UiKitBundle\Appearance\BorderStrength;
 use Nowo\UiKitBundle\Appearance\BuiltInAppearancePresets;
 use Nowo\UiKitBundle\Appearance\CornerStyle;
+use Nowo\UiKitBundle\Dialog\RemoteDialogHeaders;
 use Nowo\UiKitBundle\Enum\CssFramework;
 use Nowo\UiKitBundle\Enum\IconSet;
 use Nowo\UiKitBundle\Enum\RowActionsDisplay;
@@ -79,7 +80,7 @@ final class Configuration implements ConfigurationInterface
                     ->children()
                         ->booleanNode('enabled')
                             ->defaultFalse()
-                            ->info('Register the checker service + controller. Also import @NowoUiKitBundle/Resources/config/routes/release_check.yaml.')
+                            ->info('Register the checker service + controller. Also import @NowoUiKitBundle/Resources/config/routes/release_check.yaml. Since 2.33 also a container parameter or "%env(bool:…)%" (false at runtime = the check is skipped and the endpoint answers 404).')
                         ->end()
                         ->scalarNode('github_repo')
                             ->defaultValue('')
@@ -358,6 +359,38 @@ final class Configuration implements ConfigurationInterface
                             ->defaultFalse()
                             ->info('Turn a RedirectResponse answered to a dialog request (X-Nowo-Dialog: 1, main request) into 204 + X-Nowo-Redirect when its Location is a same-origin path, so redirectToRoute() controllers work in the dialog without code changes.')
                         ->end()
+                        ->arrayNode('step_routes')
+                            ->info('2.33: route names (`*` = any characters, e.g. "*_board_connection*") whose redirects, answered to a dialog request, become a step (204 + X-Nowo-Dialog-Location: the dialog stays open and loads the target, same-origin paths only). Every answer of these routes varies on the request header. Works with convert_redirects on or off; a Nowo\\UiKitBundle\\Dialog\\RemoteDialogRedirectEvent listener can change the answer per redirect.')
+                            ->scalarPrototype()
+                                ->validate()
+                                    ->ifTrue(static fn (mixed $route): bool => !\is_string($route) || 1 !== preg_match('/^[A-Za-z0-9_.*-]+$/', $route))
+                                    ->thenInvalid('A remote_dialog.step_routes entry is a route name of letters, digits, "_", ".", "-" and "*" (any characters), %s given.')
+                                ->end()
+                            ->end()
+                            ->defaultValue([])
+                        ->end()
+                        ->scalarNode('request_header')
+                            ->defaultValue(RemoteDialogHeaders::DEFAULT_REQUEST)
+                            ->info('2.33: request header the dialog sends with "1" (both drivers, RemoteDialogResponder, the redirect listener, nowo_ui_dialog_request()).')
+                        ->end()
+                        ->scalarNode('redirect_header')
+                            ->defaultValue(RemoteDialogHeaders::DEFAULT_REDIRECT)
+                            ->info('2.33: response header of the success answer (204 + <path>: the dialog closes and the page goes there).')
+                        ->end()
+                        ->scalarNode('location_header')
+                            ->defaultValue(RemoteDialogHeaders::DEFAULT_LOCATION)
+                            ->info('2.33: response header of the step answer (204 + <path>: the dialog stays open and loads the next step).')
+                        ->end()
+                    ->end()
+                    ->validate()
+                        ->always(static function (array $dialog): array {
+                            $error = RemoteDialogHeaders::invalid((string) $dialog['request_header'], (string) $dialog['redirect_header'], (string) $dialog['location_header']);
+                            if (null !== $error) {
+                                throw new InvalidConfigurationException('Invalid nowo_ui_kit.remote_dialog: '.$error);
+                            }
+
+                            return $dialog;
+                        })
                     ->end()
                 ->end()
                 ->append($this->themeNode())

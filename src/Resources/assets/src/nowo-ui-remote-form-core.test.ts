@@ -7,8 +7,10 @@ import {
   formDataWith,
   hasUnsafeSegments,
   isFragment,
+  headerName,
   isPlainClick,
   liftActions,
+  MAX_STEPS,
   nestedLayerOwnsEscape,
   openerTitle,
   parseFragment,
@@ -48,6 +50,13 @@ export function reply({ status = 200, type = 'basic', headers = { 'content-type'
 }
 
 describe('remote form helpers', () => {
+  it('headerName keeps header tokens only (2.33)', () => {
+    expect(headerName('X-Beacon-Dialog', 'X-Nowo-Dialog')).toBe('X-Beacon-Dialog');
+    for (const bad of [null, undefined, '', 'X Beacon', 'X:y', 'X-\r\nSet-Cookie', '-X', 'X'.repeat(65)]) {
+      expect(headerName(bad, 'X-Nowo-Dialog')).toBe('X-Nowo-Dialog');
+    }
+  });
+
   it('accepts only same-origin path-absolute redirect targets', () => {
     expect(sameOriginPath('/a?b=1#c')).toBe('/a?b=1#c');
     expect(sameOriginPath('/')).toBe('/');
@@ -675,6 +684,127 @@ describe('RemoteFormSession', () => {
       expect(await session.submit(new Event('submit'))).toBe(false);
       session.close();
       expect(await session.submit(Object.assign(new Event('submit'), {}))).toBe(false);
+    });
+  });
+
+  describe('steps (2.33, X-Nowo-Dialog-Location)', () => {
+    const form = (): HTMLFormElement => body().querySelector('form') as HTMLFormElement;
+
+    beforeEach(async () => {
+      await openWith(reply({ body: '<form method="post" action="/connect"><input name="token" value="t"><button type="submit" id="save">Save</button></form>' }));
+    });
+
+    it('loads the next step into the same dialog, without closing or navigating', async () => {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce(reply({ status: 204, headers: { 'X-Nowo-Dialog-Location': '/connect/lists?board=7', 'X-Nowo-Redirect': '/elsewhere' } }))
+        .mockResolvedValueOnce(reply({ body: '<form method="post"><select name="list" autofocus id="list"></select><button type="submit">Link</button></form>' }));
+      vi.stubGlobal('fetch', fetchMock);
+      await submitForm(form());
+      await tick();
+      await tick();
+      expect(dialog.open).toBe(true);
+      expect(assign).not.toHaveBeenCalled();
+      expect(reload).not.toHaveBeenCalled();
+      const [url, init] = fetchMock.mock.calls[1] as [string, RequestInit];
+      expect(url).toBe(`${window.location.origin}/connect/lists?board=7`);
+      expect(init).toMatchObject({ mode: 'same-origin', redirect: 'manual', credentials: 'same-origin' });
+      expect(init.headers).toMatchObject({ 'X-Nowo-Dialog': '1' });
+      expect(document.activeElement?.id).toBe('list');
+      expect(document.getElementById('d-title')?.textContent).toBe('Edit');
+      expect(events.find(([name]) => name === 'step')).toEqual(['step', { url: '/connect/lists?board=7', status: 204 }, true]);
+      expect(events.some(([name]) => name === 'saved')).toBe(false);
+      expect(session.currentUrl()).toBe(`${window.location.origin}/connect/lists?board=7`);
+      // An action-less form of the step posts to the step URL.
+      fetchMock.mockReset();
+      fetchMock.mockResolvedValue(reply({ status: 204, headers: { 'X-Nowo-Redirect': '/board/7' } }));
+      await submitForm(form());
+      expect((fetchMock.mock.calls[0] as [string, RequestInit])[0]).toBe(`${window.location.origin}/connect/lists?board=7`);
+      expect(assign).toHaveBeenCalledWith('/board/7');
+    });
+
+    it('a prevented step event leaves the dialog as it is', async () => {
+      prevent.add('step');
+      const fetchMock = vi.fn().mockResolvedValue(reply({ status: 204, headers: { 'X-Nowo-Dialog-Location': '/connect/lists' } }));
+      vi.stubGlobal('fetch', fetchMock);
+      await submitForm(form());
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(dialog.open).toBe(true);
+      expect(assign).not.toHaveBeenCalled();
+      expect(reload).not.toHaveBeenCalled();
+    });
+
+    it('never loads another origin: an invalid location is ignored (warned) and the answer handled without it', async () => {
+      for (const bad of ['https://evil.example/x', '//evil.example/x', '/\\evil.example', '/.//evil.example/x', '/%2e%2e//evil.example', 'javascript:alert(1)', '/a\nb']) {
+        await openWith(reply({ body: '<form method="post" action="/connect"></form>' }));
+        reload.mockClear();
+        assign.mockClear();
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+        const fetchMock = vi.fn().mockResolvedValue(reply({ status: 204, headers: { 'X-Nowo-Dialog-Location': bad } }));
+        vi.stubGlobal('fetch', fetchMock);
+        await submitForm(form());
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        expect(reload).toHaveBeenCalledTimes(1);
+        expect(assign).not.toHaveBeenCalled();
+        warn.mockRestore();
+      }
+    });
+
+    it('ignores the location of a non-2xx answer', async () => {
+      const fetchMock = vi.fn().mockResolvedValue(reply({ status: 500, headers: { 'X-Nowo-Dialog-Location': '/connect/lists' } }));
+      vi.stubGlobal('fetch', fetchMock);
+      await submitForm(form());
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(body().querySelector(`[${ALERT_ATTR}]`)).not.toBeNull();
+    });
+
+    it('a step whose load fails follows it as a full page', async () => {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce(reply({ status: 204, headers: { 'X-Nowo-Dialog-Location': '/connect/lists' } }))
+        .mockResolvedValueOnce(reply({ status: 500 }));
+      vi.stubGlobal('fetch', fetchMock);
+      await submitForm(form());
+      await tick();
+      await tick();
+      expect(assign).toHaveBeenCalledWith('/connect/lists');
+      expect(dialog.open).toBe(false);
+    });
+
+    it('uses the configured location header name', async () => {
+      settings = { ...settings, locationHeader: 'X-Beacon-Dialog-Location', requestHeader: 'X-Beacon-Dialog' };
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce(reply({ status: 204, headers: { 'X-Nowo-Dialog-Location': '/ignored', 'X-Beacon-Dialog-Location': '/connect/lists' } }))
+        .mockResolvedValueOnce(reply({ body: '<p id="lists">Lists</p>' }));
+      vi.stubGlobal('fetch', fetchMock);
+      await submitForm(form());
+      await tick();
+      await tick();
+      expect((fetchMock.mock.calls[1] as [string, RequestInit])[0]).toBe(`${window.location.origin}/connect/lists`);
+      expect((fetchMock.mock.calls[1] as [string, RequestInit])[1].headers).toMatchObject({ 'X-Beacon-Dialog': '1' });
+      expect(document.getElementById('lists')).not.toBeNull();
+    });
+  });
+
+  describe('steps on load (2.33)', () => {
+    it('a load answered with a step follows it, at most MAX_STEPS times in a row', async () => {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValueOnce(reply({ status: 204, headers: { 'X-Nowo-Dialog-Location': '/token' } }))
+        .mockResolvedValueOnce(reply({ body: '<p id="token">Token</p>' }));
+      vi.stubGlobal('fetch', fetchMock);
+      session.open('/connect', opener(), 'Connect');
+      for (let i = 0; i < 6; i += 1) await tick();
+      expect(document.getElementById('token')).not.toBeNull();
+      expect(session.currentUrl()).toBe(`${window.location.origin}/token`);
+
+      const loop = vi.fn().mockResolvedValue(reply({ status: 204, headers: { 'X-Nowo-Dialog-Location': '/loop' } }));
+      vi.stubGlobal('fetch', loop);
+      session.open('/loop', opener(), 'Loop');
+      for (let i = 0; i < 30; i += 1) await tick();
+      expect(loop).toHaveBeenCalledTimes(MAX_STEPS + 1);
+      expect(assign).toHaveBeenCalledWith('/loop');
     });
   });
 

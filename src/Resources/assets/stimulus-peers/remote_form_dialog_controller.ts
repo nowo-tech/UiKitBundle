@@ -6,19 +6,24 @@
  * Targets: `dialog` (the <dialog>), `title` (its heading, `tabindex="-1"`), `body` (receives the fragment; carries
  *          `data-action="submit->remote-form-dialog#submit"`).
  * Values: `loading`, `error`, `loadError` (texts), `requestHeader` (default X-Nowo-Dialog), `redirectHeader` (default
- *         X-Nowo-Redirect), `invalidSelector` (after `[aria-invalid="true"]`), `followOnLoadError` (default true),
- *         `closeOnBackdrop` (default false: a stray click must not lose a typed form).
+ *         X-Nowo-Redirect), `locationHeader` (2.33, default X-Nowo-Dialog-Location), `invalidSelector` (after
+ *         `[aria-invalid="true"]`), `followOnLoadError` (default true), `closeOnBackdrop` (default false: a stray
+ *         click must not lose a typed form). A header value not set on the controller falls back to the dialog
+ *         target's `data-nowo-ui-remote-form-*-header` (printed by the partial for configured names), then the default.
  * Actions: `open` (on an opener link: `href` = the full page, `data-remote-form-dialog-title` optional), `close`,
  *          `submit`.
  * Events: `remote-form-dialog:loaded` {url}, `:invalid` {status}, `:saved` {redirect, status} (cancelable: prevent it
- *         to handle success yourself; the dialog still closes), `:failed` {stage, status}, `:closed`.
+ *         to handle success yourself; the dialog still closes), `:step` {url, status} (2.33, a 204 + location answer:
+ *         the next step loads into the same dialog; cancelable), `:failed` {stage, status}, `:closed`.
  * The partial `partials/_remote_form_dialog.html.twig` (`stimulus: true`) renders the dialog with these targets.
  */
 
 import { Controller } from '@hotwired/stimulus';
 import {
   DEFAULT_SETTINGS,
+  headerName,
   isPlainClick,
+  LOCATION_HEADER,
   openerTitle,
   REDIRECT_HEADER,
   RemoteFormSession,
@@ -37,6 +42,7 @@ export default class extends Controller<HTMLElement> {
     loadError: { type: String, default: '' },
     requestHeader: { type: String, default: REQUEST_HEADER },
     redirectHeader: { type: String, default: REDIRECT_HEADER },
+    locationHeader: { type: String, default: LOCATION_HEADER },
     invalidSelector: { type: String, default: '' },
     followOnLoadError: { type: Boolean, default: true },
     closeOnBackdrop: { type: Boolean, default: false },
@@ -52,6 +58,7 @@ export default class extends Controller<HTMLElement> {
   declare readonly loadErrorValue: string;
   declare readonly requestHeaderValue: string;
   declare readonly redirectHeaderValue: string;
+  declare readonly locationHeaderValue: string;
   declare readonly invalidSelectorValue: string;
   declare readonly followOnLoadErrorValue: boolean;
   declare readonly closeOnBackdropValue: boolean;
@@ -94,14 +101,24 @@ export default class extends Controller<HTMLElement> {
     void this.session?.submit(event);
   }
 
+  /** A header name: the controller value when set, else the dialog's `data-nowo-ui-remote-form-<role>-header`, else the default. */
+  private header(value: string, role: 'request' | 'redirect' | 'location', fallback: string): string {
+    // `has…Value` is always true for a value with a default: the attribute itself says whether the host set it.
+    if (value !== '' && this.element.hasAttribute(`data-${this.identifier}-${role}-header-value`)) {
+      return headerName(value, fallback);
+    }
+    return headerName(this.dialogTarget.getAttribute(`data-nowo-ui-remote-form-${role}-header`), fallback);
+  }
+
   private settings(): RemoteFormSettings {
     return {
       ...DEFAULT_SETTINGS,
       loading: this.loadingValue,
       error: this.errorValue,
       loadError: this.loadErrorValue,
-      requestHeader: this.requestHeaderValue || REQUEST_HEADER,
-      redirectHeader: this.redirectHeaderValue || REDIRECT_HEADER,
+      requestHeader: this.header(this.requestHeaderValue, 'request', REQUEST_HEADER),
+      redirectHeader: this.header(this.redirectHeaderValue, 'redirect', REDIRECT_HEADER),
+      locationHeader: this.header(this.locationHeaderValue, 'location', LOCATION_HEADER),
       invalidSelector: this.invalidSelectorValue,
       followOnLoadError: this.followOnLoadErrorValue,
       closeOnBackdrop: this.closeOnBackdropValue,

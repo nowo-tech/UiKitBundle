@@ -390,6 +390,16 @@ It renders a single `<style>` with the request `csp_nonce` (or `nonce:`), so it 
 without cross-document View Transitions (e.g. Firefox today) navigate as usual; `prefers-reduced-motion: reduce`
 disables it.
 
+## Native `<dialog>` modals in `nowo-ui-modal.js` (2.33)
+
+`js/nowo-ui-modal.js` (the `modal_shell` stacks without Bootstrap) also drives a modal whose root is a native
+`<dialog class="nowo-ui-modal">`: opening adds `nowo-ui-modal-open` **and** calls `showModal()` (top layer, `::backdrop`,
+native Escape — no portal to `<body>` needed), closing calls `close()`, a native close (Escape, `method="dialog"`)
+removes the class, and focus returns to the trigger. A trigger names its modal with `data-nowo-modal-target="<id>"` or,
+without it, `data-nowo-modal-open="<id>"` (a leading `#` is ignored; a trigger whose modal is missing keeps its
+default action). The document listeners are bound once per page even when the script is loaded twice (IIFE + a host
+bundle). `<div>` roots behave as before.
+
 ## Open a modal on load (deep link)
 
 Links such as `/admin/items?new=1` can land on the list with the create form already open, without inline JS.
@@ -1173,6 +1183,41 @@ Then pass the save endpoint to the partials:
 
 The endpoint validates the body with `ListingLayoutMerger::normalizeLayout($registry->get($key), $payload)` (null =
 400) and stores the result; the responsive table takes its own `save_url` for the mode as before.
+
+### Scopes (2.33)
+
+One panel can edit several layouts of the same listing — e.g. *My layout* and *Project default* — with a scope
+selector on top. Pass the scopes (each with its own lists, from `clientState()` of a view built for that scope) and
+the initial one:
+
+```twig
+{% include nowo_ui_partial('listing_customizer') with {
+    listing: listing,
+    save_url: path('app_listing_preferences', {key: listing.listingKey}),
+    save_token: csrf_token('listing_preferences'),
+    scope: 'personal',
+    scopes: [
+        {key: 'personal', label: 'listing.scope.personal', stored: personal.layout.stored,
+         columns: personal.clientState.columns, filters: personal.clientState.filters, params: {project: project.id}},
+        {key: 'project', label: 'listing.scope.project', stored: shared.layout.stored,
+         columns: shared.clientState.columns, filters: shared.clientState.filters, params: {project: project.id},
+         save_url: path('app_listing_project_default', {key: listing.listingKey}),
+         save_confirm: 'listing.scope.project_save_confirm', reset_confirm: 'listing.scope.project_reset_confirm'},
+    ],
+} only %}
+```
+
+- Apply sends `{...params, "scope": key, "columns": […], "filters": […]}` to the scope's `save_url` (else `save_url`);
+  Reset sends `{...params, "scope": key}` to `reset_url` (else the save URL) with `reset_method`. A scope URL on another
+  origin is refused (the request carries the CSRF token).
+- `save_confirm` / `reset_confirm` (labels) ask first; switching scope with unapplied changes asks
+  `listing.scope_discard_confirm`. The state line shows `listing.scope_stored` / `listing.scope_inherited`.
+- Peer values `scopes` / `scope`, targets `scope` / `scopeState`, action `listing-customizer#changeScope`, event
+  `listing-customizer:scope-changed`; `listing-customizer:saved` also carries `detail.scope`. `#toggle` opens or closes
+  the panel (an edge tab that also closes it).
+- Presentation: the edge tab (`toggle: edge`) and the end-placed side panel are the kit's drawer; a host drawer of its
+  own is not needed for scopes.
+- Without `scopes` the markup and the peer behave exactly as before.
 ### Multi-select filter (2.14)
 
 A filter that takes several values (policy status, policy type…) as **chips** with a remove button and a search
@@ -1941,6 +1986,70 @@ public function edit(Request $request, Monitor $monitor, RemoteDialogResponder $
   (`--nowo-ui-remote-dialog-phone-inset`, `0` = full screen; [THEMING](THEMING.md#remote-form-dialog-228)).
 - **Partial options:** `id`, `stimulus`, `title`, `size` (default `lg` = wide; `md` for a short form), `labels: {loading, error, load_error}`,
   `invalid_selector`, `follow_on_load_error` (default true), `backdrop_close` (default false), `attr`, `bundle`.
+
+### Multi-step flows (2.33)
+
+A flow of several forms (connect a provider → pick a list → link) stays in **one** dialog: a step answers `204` +
+`X-Nowo-Dialog-Location: <path>` and the dialog loads that path in place, keeping its title, opener and overlay; the
+last step answers the usual `204` + `X-Nowo-Redirect` and the dialog closes. Without the dialog header the same
+actions answer plain redirects, so the full-page flow is unchanged.
+
+```php
+// step 1: the token is saved, go on to the list choice inside the dialog
+return $dialog->stepToRoute('connection_lists', ['board' => $board->getId()]);   // 204 + X-Nowo-Dialog-Location
+// last step
+return $dialog->redirectToRoute('board_show', ['id' => $board->getId()]);       // 204 + X-Nowo-Redirect
+```
+
+| | Contract |
+| --- | --- |
+| Step answer | A **2xx** answer to a submit with a **valid** `X-Nowo-Dialog-Location` (same rule as `X-Nowo-Redirect`: path-absolute, same origin, no `//`, backslash, control character, dot segment or `%2e`, ≤ 2048 characters). It wins over `X-Nowo-Redirect`. First the cancelable `step` event `{url, status}`; then the loading line and a `GET` of the path with the dialog headers (`mode: 'same-origin'`, `redirect: 'manual'`), handled as a load (a failed load follows the path as a full page). An action-less form of the step posts to the step URL |
+| Invalid location | Ignored with a console warning: the answer is handled as without it (a `204` reloads the page). Never fetched, never navigated to |
+| Step on load | A load (`GET`) answered with a step follows it too, at most 5 times in a row (`MAX_STEPS`, then the opener's link is followed as a page), so a step that answers itself cannot loop |
+| Events | `nowo-ui:remote-form:step` (IIFE) / `remote-form-dialog:step` (peer), cancelable: `preventDefault()` keeps the dialog as it is |
+
+**Redirect-only controllers (other bundles).** List their routes in `remote_dialog.step_routes` (route names, `*` =
+any characters) and their redirects answered to a dialog request become steps; every answer of those routes varies on
+the request header. `convert_redirects` keeps turning the other redirects into the closing answer. Per redirect, a
+listener of `Nowo\UiKitBundle\Dialog\RemoteDialogRedirectEvent` reads the request, the redirect and the proposed answer
+(`step`, `redirect` or null = left as a redirect) and can change it or its path (re-validated: same origin only):
+
+```yaml
+nowo_ui_kit:
+    remote_dialog:
+        step_routes: ['*_board_connection', '*_board_connection_containers', '*_task_provider_token']
+```
+
+```php
+#[AsEventListener]
+public function __invoke(RemoteDialogRedirectEvent $event): void
+{
+    // The link step closes the dialog on the board instead of loading the next step.
+    if (str_ends_with((string) $event->getRequest()->attributes->get('_route'), '_board_connection_link')) {
+        $event->setAnswer(RemoteDialogRedirectEvent::ANSWER_REDIRECT);
+        $event->setPath($this->urls->generate('board_show', ['id' => $event->getRequest()->attributes->get('boardId')]));
+    }
+}
+```
+
+### Header names (2.33)
+
+A host that already speaks its own names sets them once; the responder, the redirect listener,
+`nowo_ui_dialog_request()`, `RemoteDialog::isRequest()` (given the `RemoteDialogHeaders` service) and both drivers use
+them (the partial prints `data-nowo-ui-remote-form-{request,redirect,location}-header` on the `<dialog>` for the names
+that differ from the defaults, so the default markup is unchanged; a peer value such as
+`data-remote-form-dialog-request-header-value` still wins):
+
+```yaml
+nowo_ui_kit:
+    remote_dialog:
+        request_header: X-Acme-Dialog            # default X-Nowo-Dialog
+        redirect_header: X-Acme-Redirect         # default X-Nowo-Redirect
+        location_header: X-Acme-Dialog-Location  # default X-Nowo-Dialog-Location
+```
+
+Names are header tokens (letters, digits, `-`, starting with a letter, ≤ 64 characters), three different names; the
+client falls back to the default for anything else.
 
 ## Focusable scroll regions (2.28)
 

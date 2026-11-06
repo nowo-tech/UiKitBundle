@@ -1,0 +1,14 @@
+{# UiKit 2.33 demo: one step of the two-step remote form dialog flow (fragment and full page). #}
+{% form_theme form '@NowoUiKit/form/nowo_ui_layout.html.twig' %}
+<p data-testid="wizard-step">Step {{ step }} of 2{% if label %}: {{ label }}{% endif %}</p>
+{{ form_start(form, {attr: {'data-testid': 'wizard-form-' ~ step}}) }}
+    {% if step == 1 %}
+        {{ form_row(form.label, {attr: {'data-testid': 'wizard-label', autofocus: true}}) }}
+    {% else %}
+        {{ form_row(form.channel, {attr: {'data-testid': 'wizard-channel', autofocus: true}}) }}
+    {% endif %}
+    <div class="{{ nowo_ui_class('form_actions') }}">
+        <a href="{{ path('kit_remote_form') }}" class="{{ nowo_ui_class('btn_secondary') }}" data-nowo-ui-dialog-close data-testid="wizard-cancel">Cancel</a>
+        <button type="submit" class="{{ nowo_ui_class('btn_primary') }}" data-testid="wizard-next">{{ step == 1 ? 'Next' : 'Save' }}</button>
+    </div>
+{{ form_end(form) }}

@@ -14,7 +14,9 @@
  * Remote form (2.28): an opener with [data-nowo-ui-dialog-src] AND [data-nowo-ui-dialog-form] runs the remote form
  * dialog of nowo-ui-remote-form-core.ts instead (form posted back with fetch, 422 re-rendered, 204 + X-Nowo-Redirect
  * followed; events nowo-ui:remote-form:loaded|invalid|saved|failed|closed on the dialog). Settings from the dialog:
- * data-nowo-ui-remote-form-loading / -error / -invalid / -follow-on-load-error, data-nowo-ui-dialog-backdrop-close.
+ * data-nowo-ui-remote-form-loading / -error / -invalid / -follow-on-load-error, data-nowo-ui-dialog-backdrop-close,
+ * and (2.33) -request-header / -redirect-header / -location-header. A 204 + X-Nowo-Dialog-Location answer loads the
+ * next step into the same dialog (event nowo-ui:remote-form:step).
  * `window.nowoUiOpenRemoteForm(id, url, opener?)` opens one from script.
  * Overlay (2.28): every dialog opened here registers with the overlay registry (nowo-ui-overlay.ts: `nowo:overlay-*`
  * events, html[data-nowo-overlay]) until it closes.
@@ -24,7 +26,17 @@
  */
 
 import { overlayRegistry, type OverlayHandle } from './nowo-ui-overlay';
-import { DEFAULT_SETTINGS, isPlainClick, openerTitle, RemoteFormSession, type RemoteFormSettings } from './nowo-ui-remote-form-core';
+import {
+  DEFAULT_SETTINGS,
+  headerName,
+  isPlainClick,
+  LOCATION_HEADER,
+  openerTitle,
+  REDIRECT_HEADER,
+  RemoteFormSession,
+  REQUEST_HEADER,
+  type RemoteFormSettings,
+} from './nowo-ui-remote-form-core';
 
 declare global {
   interface Window {
@@ -112,6 +124,19 @@ export function remoteFormSettings(dialog: HTMLDialogElement): RemoteFormSetting
     invalidSelector: dialog.getAttribute('data-nowo-ui-remote-form-invalid') ?? '',
     followOnLoadError: dialog.getAttribute('data-nowo-ui-remote-form-follow-on-load-error') !== 'false',
     closeOnBackdrop: dialog.hasAttribute('data-nowo-ui-dialog-backdrop-close'),
+    ...dialogHeaderSettings(dialog),
+  };
+}
+
+/**
+ * 2.33: the header names of a remote form dialog from `data-nowo-ui-remote-form-{request,redirect,location}-header`
+ * (printed by the partial for names configured under `nowo_ui_kit.remote_dialog`), else the defaults.
+ */
+export function dialogHeaderSettings(dialog: Element): Pick<RemoteFormSettings, 'requestHeader' | 'redirectHeader' | 'locationHeader'> {
+  return {
+    requestHeader: headerName(dialog.getAttribute('data-nowo-ui-remote-form-request-header'), REQUEST_HEADER),
+    redirectHeader: headerName(dialog.getAttribute('data-nowo-ui-remote-form-redirect-header'), REDIRECT_HEADER),
+    locationHeader: headerName(dialog.getAttribute('data-nowo-ui-remote-form-location-header'), LOCATION_HEADER),
   };
 }
 

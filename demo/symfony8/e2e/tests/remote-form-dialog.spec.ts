@@ -146,4 +146,76 @@ test.describe('remote form dialog (2.28)', () => {
     await expect(page.getByTestId('remote-form-header')).not.toHaveAttribute('inert', /.*/);
     expect(await page.evaluate(() => (window as unknown as { overlayLog: string[] }).overlayLog)).toEqual(['open:1:side-panel', 'close:0:side-panel']);
   });
+
+  test('a multi-step flow: 204 + X-Nowo-Dialog-Location loads the next step in the same dialog (2.33)', async ({ page }) => {
+    await page.route('**/_wdt/**', (route) => route.abort());
+    const csp = await watchCsp(page);
+    const answers: { url: string; status: number; location: string | null }[] = [];
+    page.on('response', (response) => {
+      if (response.url().includes('/kit/remote-form/wizard')) {
+        answers.push({ url: response.url(), status: response.status(), location: response.headers()['x-nowo-dialog-location'] ?? null });
+      }
+    });
+    await page.goto('/kit/remote-form');
+    const opener = page.getByTestId('wizard-add');
+    await opener.click();
+    const dialog = page.getByTestId('destination-dialog');
+    await expect(dialog.locator('h2')).toHaveText('New destination (wizard)');
+    await expect(page.getByTestId('wizard-step')).toHaveText('Step 1 of 2');
+
+    await page.getByTestId('wizard-next').click();
+    await expect(dialog.locator('[aria-invalid="true"]')).toBeFocused();
+
+    await page.getByTestId('wizard-label').fill('Ops');
+    await page.getByTestId('wizard-next').click();
+    await expect(page.getByTestId('wizard-step')).toHaveText('Step 2 of 2: Ops');
+    await expect(dialog).toBeVisible();
+    await expect(page).toHaveURL(/\/kit\/remote-form$/);
+    await expect(dialog.locator('h2')).toHaveText('New destination (wizard)');
+    await expect(page.getByTestId('wizard-channel')).toBeFocused();
+    expect(answers.find((a) => a.status === 204)?.location).toBe('/kit/remote-form/wizard/channel?label=Ops');
+
+    await page.getByTestId('wizard-channel').selectOption('slack');
+    await page.getByTestId('wizard-next').click();
+    await expect(page.getByTestId('flash')).toHaveText('Destination "Ops (slack)" saved.');
+    await expect(dialog).toBeHidden();
+    expect(csp).toEqual([]);
+  });
+
+  test('a step location on another origin is never loaded (2.33)', async ({ page }) => {
+    const offOrigin: string[] = [];
+    page.on('request', (request) => {
+      if (new URL(request.url()).hostname === 'evil.example') offOrigin.push(request.url());
+    });
+    await page.route((url) => url.hostname === 'evil.example', (route) => route.abort());
+    await page.goto('/kit/remote-form');
+    const origin = new URL(page.url()).origin;
+    for (const bad of ['https://evil.example/step', '//evil.example/step', '/.//evil.example/step', '/%2e%2e//evil.example/step', '/\\evil.example/step']) {
+      await page.route('**/kit/remote-form/wizard', (route) =>
+        route.request().method() === 'POST' ? route.fulfill({ status: 204, headers: { 'X-Nowo-Dialog-Location': bad } }) : route.fallback(),
+      );
+      await page.getByTestId('wizard-add').click();
+      await page.getByTestId('wizard-label').fill('x');
+      // An invalid location is ignored: a 204 without a valid header reloads the page.
+      await Promise.all([page.waitForEvent('load'), page.getByTestId('wizard-next').click()]);
+      expect(new URL(page.url()).origin).toBe(origin);
+      await page.unroute('**/kit/remote-form/wizard');
+    }
+    expect(offOrigin).toEqual([]);
+  });
+
+  test('without JavaScript the wizard steps are full pages (2.33)', async ({ browser }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    await page.goto('/kit/remote-form');
+    await page.getByTestId('wizard-add').click();
+    await expect(page.getByTestId('wizard-page')).toBeVisible();
+    await page.getByTestId('wizard-label').fill('Plain');
+    await page.getByTestId('wizard-next').click();
+    await expect(page).toHaveURL(/\/kit\/remote-form\/wizard\/channel\?label=Plain$/);
+    await page.getByTestId('wizard-channel').selectOption('email');
+    await page.getByTestId('wizard-next').click();
+    await expect(page.getByTestId('flash')).toHaveText('Destination "Plain (email)" saved.');
+    await context.close();
+  });
 });

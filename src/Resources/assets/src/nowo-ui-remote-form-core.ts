@@ -11,6 +11,10 @@
  *   errors → keep the typed form with a `role="alert"` line;
  * - close: abort the request, empty the body (Stimulus controllers of the fragment disconnect), release the overlay,
  *   return focus to the opener.
+ * - step (2.33): a 2xx answer with a valid `X-Nowo-Dialog-Location` (name configurable) keeps the dialog open and
+ *   loads that same-origin path into it (cancelable `step` event first), as `open` does: the next step of a
+ *   multi-step flow. It wins over `X-Nowo-Redirect`; an invalid value is ignored (warned) and the answer is handled
+ *   as without it. A load (GET) answered with a step follows it too, at most MAX_STEPS times in a row (no loop).
  * - footer (2.29): when the dialog has a `[data-nowo-ui-dialog-footer]` (partial `remote_form_dialog`), the fragment's
  *   form actions (`[data-nowo-ui-dialog-actions]`, else the last `.nowo-ui-form__actions` of a form) move into it and
  *   each control there is bound to its form with `form="…"`, so the submit stays visible while the body scrolls; a
@@ -23,6 +27,10 @@ import { overlayRegistry, type OverlayHandle } from './nowo-ui-overlay';
 
 export const REQUEST_HEADER = 'X-Nowo-Dialog';
 export const REDIRECT_HEADER = 'X-Nowo-Redirect';
+/** 2.33: `204` + this header = the next step, loaded into the same dialog. */
+export const LOCATION_HEADER = 'X-Nowo-Dialog-Location';
+/** 2.33: steps a load may follow in a row without a submit in between (a GET answering a step to itself loops). */
+export const MAX_STEPS = 5;
 export const ALERT_ATTR = 'data-nowo-ui-remote-form-alert';
 export const NATIVE_ATTR = 'data-nowo-ui-remote-form-native';
 export const FOOTER_ATTR = 'data-nowo-ui-dialog-footer';
@@ -35,7 +43,12 @@ let formSequence = 0;
 const MAX_TARGET = 2048;
 const SNIFF = 1024;
 
-export type RemoteFormEvent = 'loaded' | 'invalid' | 'saved' | 'failed' | 'closed';
+export type RemoteFormEvent = 'loaded' | 'invalid' | 'saved' | 'step' | 'failed' | 'closed';
+
+/** 2.33: a header name the dialog may use (letters, digits, `-`; at most 64 characters), else the fallback. */
+export function headerName(value: string | null | undefined, fallback: string): string {
+  return typeof value === 'string' && /^[A-Za-z][A-Za-z0-9-]{0,63}$/.test(value) ? value : fallback;
+}
 
 /** Page navigation (separate object so tests can observe it). */
 export const remoteNavigation = {
@@ -309,6 +322,8 @@ export interface RemoteFormSettings {
   loadError: string;
   requestHeader: string;
   redirectHeader: string;
+  /** 2.33: header of the step answer (default X-Nowo-Dialog-Location). */
+  locationHeader: string;
   invalidSelector: string;
   followOnLoadError: boolean;
   closeOnBackdrop: boolean;
@@ -320,6 +335,7 @@ export const DEFAULT_SETTINGS: RemoteFormSettings = {
   loadError: '',
   requestHeader: REQUEST_HEADER,
   redirectHeader: REDIRECT_HEADER,
+  locationHeader: LOCATION_HEADER,
   invalidSelector: '',
   followOnLoadError: true,
   closeOnBackdrop: false,
@@ -338,6 +354,7 @@ export class RemoteFormSession {
   private busy = false;
   private overlay: OverlayHandle | null = null;
   private url: string | null = null;
+  private steps = 0;
   private readonly onClose = (): void => this.closed();
   private readonly onCancel = (event: Event): void => {
     if (nestedLayerOwnsEscape(this.dialog, document.activeElement)) {
@@ -408,6 +425,7 @@ export class RemoteFormSession {
     this.controller = controller;
     this.opener = opener;
     this.url = url;
+    this.steps = 0;
     const title = this.title();
     if (title) {
       title.textContent = titleText;
@@ -465,6 +483,7 @@ export class RemoteFormSession {
     });
     body.setAttribute('aria-busy', 'true');
     const data = formDataWith(form, submitter);
+    let nextStep: { url: string; status: number } | null = null;
     const payload: FormData | URLSearchParams =
       target.enctype === 'application/x-www-form-urlencoded' && submitter?.hasAttribute('formenctype') ? urlEncoded(data) : data;
     try {
@@ -483,6 +502,13 @@ export class RemoteFormSession {
       const settings = this.settings();
       // X-Nowo-Redirect counts on a 2xx answer only (ES-I5).
       const success = response.status >= 200 && response.status < 300;
+      // 2.33: a step answer (2xx + X-Nowo-Dialog-Location) loads the next step into this dialog.
+      const next = response.type === 'opaqueredirect' || !success ? null : this.stepTarget(response);
+      if (next !== null) {
+        // Run once the submit state is released (finally below), so the loading state of the step stays.
+        nextStep = { url: next, status: response.status };
+        return true;
+      }
       const header = response.type === 'opaqueredirect' || !success ? null : response.headers.get(settings.redirectHeader);
       const redirect = sameOriginPath(header);
       if (header !== null && redirect === null) {
@@ -516,6 +542,10 @@ export class RemoteFormSession {
       buttons.forEach((button) => {
         button.disabled = false;
       });
+      if (nextStep !== null) {
+        this.steps = 0;
+        this.step(nextStep.url, nextStep.status, body);
+      }
     }
     return true;
   }
@@ -529,6 +559,12 @@ export class RemoteFormSession {
     try {
       const response = await fetch(url, { headers: this.headers(), credentials: 'same-origin', mode: 'same-origin', redirect: 'manual', signal });
       if (signal.aborted) {
+        return;
+      }
+      const next = response.status >= 200 && response.status < 300 && this.steps < MAX_STEPS ? this.stepTarget(response) : null;
+      if (next !== null) {
+        this.steps += 1;
+        this.step(next, response.status, body);
         return;
       }
       const text = response.status === 200 ? await response.text() : '';
@@ -558,6 +594,38 @@ export class RemoteFormSession {
         this.alert(body, true);
       }
     }
+  }
+
+  /** The valid step target of an answer (`X-Nowo-Dialog-Location`), null without one; an invalid value is warned. */
+  private stepTarget(response: Response): string | null {
+    const name = this.settings().locationHeader;
+    const raw = response.headers.get(name);
+    const target = sameOriginPath(raw);
+    if (raw !== null && target === null) {
+      console.warn(`UiKit remote form dialog: ignored an invalid ${name} header.`);
+    }
+    return target;
+  }
+
+  /**
+   * 2.33: the next step of the flow. A cancelable `step` event (`{url, status}`) first; then the dialog keeps its
+   * title and opener, shows the loading line and loads the target (same-origin path, already validated) in place. An
+   * action-less form of that step posts to it. A failed load follows the target as a full page (followOnLoadError).
+   */
+  private step(target: string, status: number, body: HTMLElement | null): void {
+    if (!this.emit('step', { url: target, status }, true)) {
+      return;
+    }
+    const url = sameOriginHref(target);
+    if (!url || !body) {
+      return;
+    }
+    this.controller?.abort();
+    const controller = new AbortController();
+    this.controller = controller;
+    this.url = url;
+    this.message(body, this.settings().loading);
+    void this.load(url, controller.signal, target);
   }
 
   private saved(redirect: string | null, status: number): void {

@@ -116,6 +116,8 @@ nowo_ui_kit:
         enabled: true
         github_repo: 'acme/my-app'          # public owner/name
         current_version: '%app.version%'     # clean x.y.z (optional leading v)
+        # 2.33: enabled also takes a parameter or an env var, e.g. '%app.update_check%' or '%env(bool:APP_UPDATE_CHECK)%'
+        # (false at runtime: the check is skipped, the endpoint answers 404, the footer button is hidden)
         # cache_ttl: 43200                   # seconds (min 60), cache.app
         # default_branch: main               # compare target when already up to date
         # user_agent: nowo-ui-kit-release-check
@@ -371,6 +373,10 @@ nowo_ui_kit:
 nowo_ui_kit:
     remote_dialog:
         convert_redirects: false   # true: RedirectResponse → 204 + X-Nowo-Redirect for dialog requests
+        step_routes: []            # 2.33: route names (* = any) whose redirects become 204 + X-Nowo-Dialog-Location
+        request_header: X-Nowo-Dialog            # 2.33
+        redirect_header: X-Nowo-Redirect         # 2.33
+        location_header: X-Nowo-Dialog-Location  # 2.33
     theme:
         menu_semantics: null       # null | menu | disclosure (popover menus with items; USAGE "Menu semantics")
         dialog:
@@ -380,6 +386,8 @@ nowo_ui_kit:
 | Key | Default | Description |
 |-----|---------|-------------|
 | `remote_dialog.convert_redirects` | `false` | A `kernel.response` listener (priority -10, main requests only) turns a `RedirectResponse` answered to a request with `X-Nowo-Dialog: 1` into `204` + `X-Nowo-Redirect` + `Vary`, when its target is a same-origin path; other answers are left alone. Without it, use `Nowo\UiKitBundle\Dialog\RemoteDialogResponder` (always registered, autowirable) |
+| `remote_dialog.step_routes` | `[]` | 2.33: route names (`*` = any characters; letters, digits, `_ . - *`) whose redirects, answered to a main dialog request with a same-origin target, become `204` + `X-Nowo-Dialog-Location` (the next step, loaded into the same dialog). Every answer of these routes gets `Vary: <request header>`. Registers the listener also with `convert_redirects: false`. A `Nowo\UiKitBundle\Dialog\RemoteDialogRedirectEvent` listener can change the answer (`step` / `redirect` / null) or its path (re-validated) per redirect ([USAGE](USAGE.md#multi-step-flows-233)) |
+| `remote_dialog.request_header` / `redirect_header` / `location_header` | `X-Nowo-Dialog` / `X-Nowo-Redirect` / `X-Nowo-Dialog-Location` | 2.33: the header names of the contract, read by `RemoteDialogResponder`, the listener, `nowo_ui_dialog_request()` and both drivers (the partial prints the non-default ones on the `<dialog>`). Header tokens (letters, digits, `-`, ≤ 64 characters), three different names; anything else fails at compile time. Service `Nowo\UiKitBundle\Dialog\RemoteDialogHeaders` |
 | `theme.menu_semantics` | `null` | Default ARIA of popover menus with items: `null` = 2.27 markup, `menu` = APG menu button, `disclosure` = no `aria-haspopup`. The `menu` partial option wins |
 | `theme.dialog.height` | `content` | 2.31 (dialog rule v2): `content` = every kit dialog is as tall as its content, capped at `min(size height token, 100dvh - 2rem)`, only the body scrolls; `size` = the 2.29 / 2.30 size's height for a dialog with a field, list, table or fold (prints `--nowo-ui-dialog-fill: 1` with the theme tokens). Markup is the same either way |
 

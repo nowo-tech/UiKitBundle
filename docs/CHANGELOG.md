@@ -103,6 +103,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Symfony Beacon override requests UI-1…UI-5 (`docs/ops/OVERRIDES-INVENTORY.md`, UiKit group). All opt-in; the default
+output is unchanged (markup byte for byte, the BC fixtures untouched).
+
+### Added
+
+- **Remote form dialog steps (UI-1):** a 2xx answer with a valid `X-Nowo-Dialog-Location: <path>` keeps the dialog
+  open and loads that same-origin path into it (the next step of a multi-step flow; cancelable `step` event
+  `{url, status}`; it wins over `X-Nowo-Redirect`). An invalid value (another origin, `//`, backslash, control
+  character, dot segment, `%2e`, > 2048 characters) is ignored with a warning, never fetched. A load answered with a
+  step follows it at most 5 times in a row. Server side: `RemoteDialogResponder::step()` / `stepToRoute()` (a
+  redirect without the dialog header), `RemoteDialogResponder::dialogStep()`, `RemoteDialog::LOCATION_HEADER`.
+- **`nowo_ui_kit.remote_dialog.step_routes`** (UI-1): route names (`*` = any characters) whose redirects become step
+  answers for dialog requests (also with `convert_redirects: false`); their answers vary on the request header.
+  **`Nowo\UiKitBundle\Dialog\RemoteDialogRedirectEvent`**: per redirect, a listener can change the answer
+  (`step` / `redirect` / null) or its path (re-validated, same origin only).
+- **`nowo_ui_kit.remote_dialog.request_header` / `redirect_header` / `location_header`** (UI-1, defaults
+  `X-Nowo-Dialog` / `X-Nowo-Redirect` / `X-Nowo-Dialog-Location`; validated header tokens, three different names):
+  read by `RemoteDialogResponder`, the redirect listener, `nowo_ui_dialog_request()` and both drivers. The
+  `remote_form_dialog` partial prints the non-default names as `data-nowo-ui-remote-form-*-header` on the `<dialog>`
+  (Twig `nowo_ui_remote_dialog_attrs()`); the peer reads them when its own values are not set and gains the
+  `locationHeader` value. Service `Nowo\UiKitBundle\Dialog\RemoteDialogHeaders`.
+- **Native `<dialog>` in `nowo-ui-modal.js` (UI-2):** a `<dialog class="nowo-ui-modal">` root opens with
+  `showModal()` and closes with `close()`; a native close removes `nowo-ui-modal-open`, focus returns to the trigger;
+  `data-nowo-modal-open="<id>"` works without `data-nowo-modal-target`; listeners bound once per page even when the
+  script runs twice.
+- **Listing customizer scopes (UI-3):** partial options `scopes` / `scope` and peer values `scopes` / `scope` (targets
+  `scope`, `scopeState`, action `#changeScope`, event `scope-changed`): several layouts in one panel, each saved to its
+  own URL with `{scope, ...params}`, per-scope confirms, a confirm before discarding unapplied edits; peer action
+  `#toggle`. Translations `listing.scope*` (7 locales).
+- **Density tokens (UI-4):** `--nowo-ui-row-actions-gap`, `--nowo-ui-row-action-size`, `--nowo-ui-pagination-gap`;
+  the morph swap classes `nowo-ui-morph-swap` / `__static` / `__morph` (+ `--nowo-ui-morph-size`), so host toggles
+  need no `display: … !important`.
+
+### Changed
+
+- **`release_check.enabled` / `current_version` accept container parameters and env placeholders (UI-5):**
+  `prepend()` no longer validates them before parameters resolve (the Twig global keeps the raw reference, TwigBundle
+  resolves it); `load()` passes `enabled` to `ReleaseUpdateChecker` (an env placeholder registers the checker, which
+  skips the check when it resolves to false).
+- The `remote-form-dialog` peer and the IIFE driver accept header names that are header tokens only (others fall back
+  to the default).
+
 ## [2.32.0] - 2026-11-06
 
 Configurable full-height sidebar (`shell.sidebar_layout: below-header|full-height`, per-request override), aside brand slot from config (`shell.brand.*`, validated URLs), optional hover-expanded rail (`shell.hover_expand`). Default output unchanged.

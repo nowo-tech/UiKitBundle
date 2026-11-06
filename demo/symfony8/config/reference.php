@@ -788,7 +788,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     row_actions_confirm?: "inline"|"native"|"dialog"|Param, // confirm_message of 1.x row_actions POST hashes (2.22, REQ-UI-003): inline = onsubmit="return confirm(…)" (default, unchanged markup); native | dialog = no inline handler, the confirm-submit Stimulus peer asks (window.confirm or the kit <dialog>). native / dialog need the confirm-submit peer registered. // Default: "inline"
  *     panel_path_rewrites?: array<string, scalar|Param|null>,
  *     release_check?: array{ // Optional GitHub release-version checker (footer dialog + JSON endpoint). Off by default.
- *         enabled?: bool|Param, // Register the checker service + controller. Also import @NowoUiKitBundle/Resources/config/routes/release_check.yaml. // Default: false
+ *         enabled?: bool|Param, // Register the checker service + controller. Also import @NowoUiKitBundle/Resources/config/routes/release_check.yaml. Since 2.33 also a container parameter or "%env(bool:…)%" (false at runtime = the check is skipped and the endpoint answers 404). // Default: false
  *         github_repo?: scalar|Param|null, // Public GitHub repository "owner/name" whose releases are compared (e.g. nowo-tech/my-app). // Default: ""
  *         current_version?: scalar|Param|null, // Installed version label, clean semver x.y.z with optional "v" (e.g. "%app.version%"). Non-semver values skip the check. // Default: ""
  *         cache_ttl?: int|Param, // Seconds to cache the GitHub answer (cache.app). Default 12h. // Default: 43200
@@ -872,6 +872,10 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     },
  *     remote_dialog?: array{ // 2.28 remote form dialog (X-Nowo-Dialog requests).
  *         convert_redirects?: bool|Param, // Turn a RedirectResponse answered to a dialog request (X-Nowo-Dialog: 1, main request) into 204 + X-Nowo-Redirect when its Location is a same-origin path, so redirectToRoute() controllers work in the dialog without code changes. // Default: false
+ *         step_routes?: list<scalar|Param|null>,
+ *         request_header?: scalar|Param|null, // 2.33: request header the dialog sends with "1" (both drivers, RemoteDialogResponder, the redirect listener, nowo_ui_dialog_request()). // Default: "X-Nowo-Dialog"
+ *         redirect_header?: scalar|Param|null, // 2.33: response header of the success answer (204 + <path>: the dialog closes and the page goes there). // Default: "X-Nowo-Redirect"
+ *         location_header?: scalar|Param|null, // 2.33: response header of the step answer (204 + <path>: the dialog stays open and loads the next step). // Default: "X-Nowo-Dialog-Location"
  *     },
  *     theme?: array{ // Global theme (REQ-UI-003): semantic slot classes / attributes, partial overrides and --nowo-ui-* tokens, configured once for every bundle.
  *         framework_defaults?: bool|Param, // false = slots print the semantic nowo-ui-* class and the host classes only (no UiKit framework defaults such as btn / badge / card). Per slot: classes.<slot>: {value: …, framework_defaults: false}. // Default: true

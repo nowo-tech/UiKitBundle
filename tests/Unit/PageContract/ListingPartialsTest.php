@@ -132,6 +132,32 @@ final class ListingPartialsTest extends TestCase
         self::assertStringContainsString('data-testid="listing-customizer-toggle"', $slot);
     }
 
+    public function testScopesAddTheSelectorAndValuesOnly(): void
+    {
+        $default = $this->render("{% include nowo_ui_partial('listing_customizer') with {listing: listing} only %}", ['listing' => $this->view()]);
+        self::assertStringNotContainsString('scopes-value', $default);
+        self::assertStringNotContainsString('nowo-ui-listing-customizer__scope', $default);
+        self::assertStringNotContainsString('discardConfirm', $default);
+
+        $html = $this->render(
+            "{% include nowo_ui_partial('listing_customizer') with {listing: listing, save_url: '/prefs/me', scope: 'project', scopes: [
+                {key: 'personal', label: 'My layout', stored: true, columns: listing.clientState.columns, filters: []},
+                {key: 'project', label: 'Project default', save_url: '/prefs/project', reset_url: '/prefs/project/reset', params: {project: 'p7'}, save_confirm: 'Save for all?', reset_confirm: 'Reset all?'},
+            ]} only %}",
+            ['listing' => $this->view()],
+        );
+        self::assertStringContainsString('data-listing-customizer-scope-value="project"', $html);
+        self::assertStringContainsString('&quot;saveUrl&quot;:&quot;\\/prefs\\/project&quot;', $html);
+        self::assertStringContainsString('&quot;params&quot;:{&quot;project&quot;:&quot;p7&quot;}', $html);
+        self::assertStringContainsString('&quot;saveConfirm&quot;:&quot;Save for all?&quot;', $html);
+        self::assertStringContainsString('&quot;discardConfirm&quot;:', $html);
+        self::assertStringContainsString('data-listing-customizer-target="scope" data-action="listing-customizer#changeScope"', $html);
+        self::assertStringContainsString('<option value="personal">My layout</option>', $html);
+        self::assertStringContainsString('<option value="project" selected>Project default</option>', $html);
+        self::assertStringContainsString('data-listing-customizer-target="scopeState"', $html);
+        self::assertStringNotContainsString('&quot;resetUrl&quot;:&quot;&quot;', $html);
+    }
+
     public function testServerStoreAndSinglePanel(): void
     {
         $definition = new class implements ListingDefinitionInterface {
@@ -255,7 +281,7 @@ final class ListingPartialsTest extends TestCase
         $root = PageContractTwig::root();
         $en = Yaml::parseFile($root.'/src/Resources/translations/NowoUiKitBundle.en.yaml');
         $keys = array_values(array_filter(array_keys($en), static fn (string $k): bool => str_starts_with($k, 'listing.')));
-        self::assertCount(23, $keys);
+        self::assertCount(27, $keys);
         foreach (glob($root.'/src/Resources/translations/NowoUiKitBundle.*.yaml') ?: [] as $file) {
             $catalogue = Yaml::parseFile($file);
             foreach ($keys as $key) {

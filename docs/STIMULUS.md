@@ -404,9 +404,10 @@ No kit IIFE. Column / filter editor of a customizable listing — markup from `p
 | `data-listing-customizer-token-value` / `-token-url-value` | CSRF token / GET URL answering `{"token": "…"}` (one refresh on 403) |
 | `data-listing-customizer-method-value` / `-reset-method-value` | HTTP methods (default `PUT` / `DELETE`) |
 | `data-listing-customizer-messages-value` | `{required, moveUp, moveDown, stack, dragHandle, moved, unsaved, saving, saveError, tooLarge, sessionExpired, resetConfirm, confirmOk, cancel}` (`moved` gets `%label%`, `%position%`, `%count%`) |
-| targets `dialog`, `toggle` (optional), `tabButton` (`data-panel`), `panel` (`data-panel`), `list` (`data-kind="columns\|filters"`), `status`, `resetButton`, `applyButton` | |
+| targets `dialog`, `toggle` (optional), `tabButton` (`data-panel`), `panel` (`data-panel`), `list` (`data-kind="columns\|filters"`), `status`, `resetButton`, `applyButton`, `scope` (2.33, `<select>`), `scopeState` (2.33) | |
+| `data-listing-customizer-scopes-value` / `-scope-value` (2.33) | `[{key, label, stored, columns, filters, saveUrl?, resetUrl?, params?, saveConfirm?, resetConfirm?}]` and the initial key: one layout per scope ([USAGE](USAGE.md#scopes-233)); messages `stored`, `inherited`, `discardConfirm` |
 | `<template data-listing-customizer-icon="grip\|up\|down\|stack">` | Icons cloned into every editor row |
-| `data-action="listing-customizer#open"` / `#openFilters` / `#close` / `#selectTab` / `keydown->listing-customizer#tabKeydown` / `#apply` / `#reset` | |
+| `data-action="listing-customizer#open"` / `#openFilters` / `#close` / `#toggle` (2.33) / `#selectTab` / `keydown->listing-customizer#tabKeydown` / `#apply` / `#reset` / `#changeScope` (2.33) | |
 
 Rows are rendered by the peer: checkbox (required: checked, disabled), drag handle (HTML5 drag and drop within one
 list), *stack under previous* toggle (columns, `aria-pressed`), up / down buttons; Alt+ArrowUp / Alt+ArrowDown on a
@@ -645,12 +646,12 @@ attributes). Contract and server side: [USAGE — Remote form dialog](USAGE.md#r
 |------|------|-------|
 | Target | `dialog`, `title`, `body` | The `remote_form_dialog` partial with `stimulus: true` renders them; the body carries `data-action="submit->remote-form-dialog#submit"` |
 | Value | `loading`, `error`, `loadError` | Texts (status line, save alert, load alert) |
-| Value | `requestHeader` / `redirectHeader` | Default `X-Nowo-Dialog` / `X-Nowo-Redirect` (renaming is a migration aid only) |
+| Value | `requestHeader` / `redirectHeader` / `locationHeader` (2.33) | Default `X-Nowo-Dialog` / `X-Nowo-Redirect` / `X-Nowo-Dialog-Location`. Not set on the controller: the dialog target's `data-nowo-ui-remote-form-*-header` (printed by the partial for names configured under `nowo_ui_kit.remote_dialog`), then the default. Header tokens only |
 | Value | `invalidSelector` | Extra "first invalid control" selector after `[aria-invalid="true"]` |
 | Value | `followOnLoadError` | Default `true`: a failed load follows the opener's link |
 | Value | `closeOnBackdrop` | Default `false` |
 | Action | `open` (on an opener link: `href`, optional `data-remote-form-dialog-title`), `close`, `submit` | Modified clicks (Ctrl / Cmd / Shift / middle) keep the browser's new tab |
-| Event | `remote-form-dialog:loaded`, `:invalid`, `:saved` (cancelable), `:failed`, `:closed` | Same details as the IIFE events |
+| Event | `remote-form-dialog:loaded`, `:invalid`, `:saved` (cancelable), `:step` (2.33, cancelable, `{url, status}`), `:failed`, `:closed` | Same details as the IIFE events; `:step` = a `204` + `X-Nowo-Dialog-Location` answer, the next step loads into the same dialog ([USAGE](USAGE.md#multi-step-flows-233)) |
 
 ```html
 <section data-controller="remote-form-dialog" data-remote-form-dialog-loading-value="Loading…" data-remote-form-dialog-error-value="Could not save.">

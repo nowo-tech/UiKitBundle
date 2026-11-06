@@ -114,6 +114,29 @@
 
 ## Unreleased
 
+From **2.32.x**: `composer update nowo-tech/ui-kit-bundle`. No markup change by default (the BC fixtures still
+match); every addition is opt-in:
+
+- **Multi-step remote form dialogs:** answer a step with `RemoteDialogResponder::step()` / `stepToRoute()`
+  (`204` + `X-Nowo-Dialog-Location`), or list redirect-only routes in `nowo_ui_kit.remote_dialog.step_routes`; tune
+  per redirect with a `RemoteDialogRedirectEvent` listener. See [USAGE](USAGE.md#multi-step-flows-233).
+- **Own header names:** `nowo_ui_kit.remote_dialog.request_header` / `redirect_header` / `location_header`. A host
+  with its own copy of the dialog (e.g. Symfony Beacon's `remote_form_dialog_controller.ts` with `X-Beacon-*`) sets
+  the three names, re-exports the kit peer (`export { default } from '…/vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/stimulus-peers/remote_form_dialog_controller'`)
+  and deletes its copy; its redirect → `204` listener reduces to `step_routes` plus, if needed, a
+  `RemoteDialogRedirectEvent` listener for route-specific answers.
+- **Native `<dialog>` modals** in `nowo-ui-modal.js`: a host bridge that called `showModal()` / `close()` on
+  `.nowo-ui-modal-open` changes, re-bound triggers or portaled the dialogs can go.
+- **Listing customizer scopes:** `scopes` / `scope` on the partial (or the peer values) replace a host controller that
+  switched between personal and shared layouts. The request body of a scoped save gains `scope` and the scope
+  `params`.
+- **Tokens:** `--nowo-ui-row-actions-gap`, `--nowo-ui-row-action-size`, `--nowo-ui-pagination-gap`, and the
+  `nowo-ui-morph-swap` classes replace host `!important` rules for row action / pagination density and morph swaps.
+- **`release_check.enabled: '%env(bool:…)%'`** (or a parameter) now works: a host that redefined
+  `nowo_ui_kit.release_update_checker` to pass its own `enabled` flag can drop the redefinition.
+- **Behaviour note:** the peer and the IIFE driver now ignore header names that are not header tokens (letters,
+  digits, `-`) and use the defaults instead.
+
 ## To 2.32.0
 
 **2.32.0** (minor), from **2.31.x**: `composer update nowo-tech/ui-kit-bundle`. No markup change by default: the app

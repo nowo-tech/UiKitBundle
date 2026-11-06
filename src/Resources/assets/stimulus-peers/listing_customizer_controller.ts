@@ -13,17 +13,26 @@
  * Reset sends `resetMethod` (default DELETE) without a body; a 403 refreshes the token once from `tokenUrl`. Then the
  * page reloads so the server renders the new layout. Reset asks first (`askConfirm`).
  *
+ * Scopes (2.33, UI-3): with a `scopes` value (`[{key, label, stored, columns, filters, saveUrl?, resetUrl?, params?,
+ * saveConfirm?, resetConfirm?}]`) the editor holds one layout per scope (e.g. "My layout" / "Project default") and a
+ * `scope` target (`<select>`, action `listing-customizer#changeScope`) switches between them; switching with unapplied
+ * changes asks `messages.discardConfirm` first. Apply / Reset send to the scope's `saveUrl` / `resetUrl` (else `url`)
+ * with `{"scope": key, ...params}` in the body (Reset too), after the scope's `saveConfirm` / `resetConfirm` when set.
+ * The `scopeState` target shows `messages.stored` / `messages.inherited`. Without scopes nothing changes.
+ *
  * Identifier: `listing-customizer`
  * Targets: `dialog` (the side panel `<dialog>`), `toggle` (opener, optional), `tabButton`, `panel`, `list`
- *          (`data-kind="columns|filters"`), `status`, `resetButton`, `applyButton`.
+ *          (`data-kind="columns|filters"`), `status`, `resetButton`, `applyButton`, `scope`, `scopeState` (2.33).
  * Values: `state` (`{listingKey, stored, mode, columns, filters}`), `cookie`, `cookiePath` (default `/`),
  *         `cookieMaxAge` (default one year), `url`, `token`, `tokenUrl`, `method` (default `PUT`), `resetMethod`
  *         (default `DELETE`), `messages` (`{required, moveUp, moveDown, stack, dragHandle, moved, unsaved, saving,
  *         saveError, tooLarge, sessionExpired, resetConfirm, confirmOk, cancel}`).
- * Actions: `listing-customizer#open`, `#openFilters`, `#close`, `#selectTab`, `#tabKeydown`, `#apply`, `#reset`.
+ * Actions: `listing-customizer#open`, `#openFilters`, `#close`, `#toggle` (2.33), `#selectTab`, `#tabKeydown`, `#apply`,
+ *          `#reset`, `#changeScope` (2.33).
  * Root attribute: `data-listing-dirty` while the editor holds unapplied changes.
- * Events: `listing-customizer:saved` (`detail.layout`, before the reload; cancelable: preventDefault() skips the
- *         reload), `listing-customizer:save-failed` (`detail.message`).
+ * Events: `listing-customizer:saved` (`detail.layout`, `detail.scope` with scopes; before the reload; cancelable:
+ *         preventDefault() skips the reload), `listing-customizer:save-failed` (`detail.message`),
+ *         `listing-customizer:scope-changed` (`detail.scope`, 2.33).
  */
 
 import { Controller } from '@hotwired/stimulus';
@@ -47,6 +56,20 @@ export type ListingClientState = {
   mode: string | null;
   columns: ListingItem[];
   filters: ListingItem[];
+};
+
+/** One editable layout of a scoped customizer (2.33). */
+export type ListingScope = {
+  key: string;
+  label?: string;
+  stored?: boolean;
+  columns?: ListingItem[];
+  filters?: ListingItem[];
+  saveUrl?: string;
+  resetUrl?: string;
+  params?: Record<string, unknown>;
+  saveConfirm?: string;
+  resetConfirm?: string;
 };
 
 type Kind = 'columns' | 'filters';
@@ -83,8 +106,24 @@ export function toPayload(items: ListingItem[], mergeable = true): ListingPayloa
   }));
 }
 
+/**
+ * The URL a scope saves to (2.33): its own URL when it is on this origin (the request carries the CSRF token), the
+ * listing `url` when it has none, null for another origin.
+ */
+export function scopeUrl(own: string | undefined, fallback: string): string | null {
+  if (typeof own !== 'string' || own === '') {
+    return fallback;
+  }
+  try {
+    const url = new URL(own, window.location.href);
+    return url.origin === window.location.origin ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
 export default class ListingCustomizerController extends Controller<HTMLElement> {
-  static override targets = ['dialog', 'toggle', 'tabButton', 'panel', 'list', 'status', 'resetButton', 'applyButton'];
+  static override targets = ['dialog', 'toggle', 'tabButton', 'panel', 'list', 'status', 'resetButton', 'applyButton', 'scope', 'scopeState'];
 
   static override values = {
     state: { type: Object, default: {} },
@@ -97,6 +136,8 @@ export default class ListingCustomizerController extends Controller<HTMLElement>
     method: { type: String, default: 'PUT' },
     resetMethod: { type: String, default: 'DELETE' },
     messages: { type: Object, default: {} },
+    scopes: { type: Array, default: [] },
+    scope: { type: String, default: '' },
   };
 
   declare readonly hasDialogTarget: boolean;
@@ -112,6 +153,10 @@ export default class ListingCustomizerController extends Controller<HTMLElement>
   declare readonly resetButtonTarget: HTMLButtonElement;
   declare readonly hasApplyButtonTarget: boolean;
   declare readonly applyButtonTarget: HTMLButtonElement;
+  declare readonly hasScopeTarget: boolean;
+  declare readonly scopeTarget: HTMLSelectElement;
+  declare readonly hasScopeStateTarget: boolean;
+  declare readonly scopeStateTarget: HTMLElement;
 
   declare readonly stateValue: Partial<ListingClientState>;
   declare readonly cookieValue: string;
@@ -123,20 +168,97 @@ export default class ListingCustomizerController extends Controller<HTMLElement>
   declare readonly methodValue: string;
   declare readonly resetMethodValue: string;
   declare readonly messagesValue: Record<string, string>;
+  declare readonly scopesValue: ListingScope[];
+  declare readonly scopeValue: string;
 
   private working: Record<Kind, ListingItem[]> = { columns: [], filters: [] };
   private pristine = '';
   private dragging: { kind: Kind; index: number } | null = null;
   private busy = false;
+  /** The scope loaded in the editor (2.33), '' without scopes. */
+  private loadedScope = '';
 
   override connect(): void {
+    const initial = this.scopes().length > 0 ? this.initialScope() : null;
+    if (initial !== null) {
+      this.loadScope(initial);
+      return;
+    }
+    this.load(this.stateValue.columns ?? [], this.stateValue.filters ?? []);
+  }
+
+  /** Edge tab or button: opens the side panel, or closes it when it is open (2.33). */
+  toggle(event?: Event): void {
+    if (this.hasDialogTarget && this.dialogTarget.open) {
+      this.close();
+    } else {
+      this.open(event);
+    }
+  }
+
+  /** The `<select>` of scopes changed (2.33): unapplied edits are discarded only after `messages.discardConfirm`. */
+  async changeScope(): Promise<void> {
+    const next = this.findScope(this.hasScopeTarget ? this.scopeTarget.value : '');
+    if (next === null || next.key === this.loadedScope) {
+      return;
+    }
+    if (this.isDirty() && !(await this.ask(this.messagesValue.discardConfirm ?? ''))) {
+      if (this.hasScopeTarget) {
+        this.scopeTarget.value = this.loadedScope;
+      }
+      return;
+    }
+    this.loadScope(next);
+    this.dispatch('scope-changed', { detail: { scope: next.key } });
+  }
+
+  /** The scopes of a scoped customizer (entries without a key are ignored). */
+  private scopes(): ListingScope[] {
+    return Array.isArray(this.scopesValue) ? this.scopesValue.filter((scope) => typeof scope?.key === 'string' && scope.key !== '') : [];
+  }
+
+  private findScope(key: string): ListingScope | null {
+    return this.scopes().find((scope) => scope.key === key) ?? null;
+  }
+
+  private initialScope(): ListingScope | null {
+    return this.findScope(this.scopeValue) ?? this.findScope(this.hasScopeTarget ? this.scopeTarget.value : '') ?? this.scopes()[0] ?? null;
+  }
+
+  private currentScope(): ListingScope | null {
+    return this.loadedScope === '' ? null : this.findScope(this.loadedScope);
+  }
+
+  private loadScope(scope: ListingScope): void {
+    this.loadedScope = scope.key;
+    if (this.hasScopeTarget) {
+      this.scopeTarget.value = scope.key;
+    }
+    if (this.hasScopeStateTarget) {
+      this.scopeStateTarget.textContent = (scope.stored ? this.messagesValue.stored : this.messagesValue.inherited) ?? '';
+    }
+    this.load(scope.columns ?? [], scope.filters ?? []);
+    this.setStatus('', false);
+  }
+
+  private load(columns: ListingItem[], filters: ListingItem[]): void {
     this.working = {
-      columns: (this.stateValue.columns ?? []).map((item) => ({ ...item })),
-      filters: (this.stateValue.filters ?? []).map((item) => ({ ...item })),
+      columns: columns.map((item) => ({ ...item })),
+      filters: filters.map((item) => ({ ...item })),
     };
     this.pristine = this.serialize();
     this.renderLists();
     this.refresh();
+  }
+
+  /** Whether a layout is stored for what the editor shows (the loaded scope, else the listing state). */
+  private stored(): boolean {
+    const scope = this.currentScope();
+    return scope === null ? Boolean(this.stateValue.stored) : Boolean(scope.stored);
+  }
+
+  private ask(message: string): Promise<boolean> {
+    return askConfirm(message, { confirm: this.messagesValue.confirmOk, cancel: this.messagesValue.cancel });
   }
 
   /** Opens the side panel (through `nowo-ui-dialog.js` when loaded, so focus returns to the opener). */
@@ -190,6 +312,23 @@ export default class ListingCustomizerController extends Controller<HTMLElement>
       return;
     }
     const layout = { columns: toPayload(this.working.columns), filters: toPayload(this.working.filters, false) };
+    const scope = this.currentScope();
+    if (scope !== null) {
+      if (scope.saveConfirm && !(await this.ask(scope.saveConfirm))) {
+        return;
+      }
+      const url = scopeUrl(scope.saveUrl, this.urlValue);
+      if (null === url) {
+        this.failed(this.messagesValue.saveError ?? '');
+
+        return;
+      }
+      if ('' !== url) {
+        await this.send(this.methodValue, { ...(scope.params ?? {}), scope: scope.key, ...layout }, layout, url);
+
+        return;
+      }
+    }
     if ('' !== this.urlValue) {
       await this.send(this.methodValue, layout, layout);
 
@@ -208,6 +347,18 @@ export default class ListingCustomizerController extends Controller<HTMLElement>
 
   async reset(): Promise<void> {
     if (this.busy || !(await this.confirmReset())) {
+      return;
+    }
+    const scope = this.currentScope();
+    const resetUrl = scope === null ? '' : scopeUrl(scope.resetUrl || scope.saveUrl, this.urlValue);
+    if (null === resetUrl) {
+      this.failed(this.messagesValue.saveError ?? '');
+
+      return;
+    }
+    if (scope !== null && '' !== resetUrl) {
+      await this.send(this.resetMethodValue, { ...(scope.params ?? {}), scope: scope.key }, null, resetUrl);
+
       return;
     }
     if ('' !== this.urlValue) {
@@ -236,7 +387,8 @@ export default class ListingCustomizerController extends Controller<HTMLElement>
   }
 
   private done(layout: { columns: ListingPayloadItem[]; filters: ListingPayloadItem[] } | null): void {
-    const event = this.dispatch('saved', { detail: { layout }, cancelable: true });
+    const detail = this.loadedScope === '' ? { layout } : { layout, scope: this.loadedScope };
+    const event = this.dispatch('saved', { detail, cancelable: true });
     if (!event.defaultPrevented) {
       this.reload();
     }
@@ -248,13 +400,18 @@ export default class ListingCustomizerController extends Controller<HTMLElement>
     this.dispatch('save-failed', { detail: { message } });
   }
 
-  private async send(method: string, body: unknown, layout: { columns: ListingPayloadItem[]; filters: ListingPayloadItem[] } | null): Promise<void> {
+  private async send(
+    method: string,
+    body: unknown,
+    layout: { columns: ListingPayloadItem[]; filters: ListingPayloadItem[] } | null,
+    url: string = this.urlValue,
+  ): Promise<void> {
     this.setBusy(true);
     this.setStatus(this.messagesValue.saving ?? '', false);
     try {
-      let response = await this.request(method, body);
+      let response = await this.request(method, body, url);
       if (403 === response.status && (await this.refreshToken())) {
-        response = await this.request(method, body);
+        response = await this.request(method, body, url);
       }
       if (!response.ok) {
         this.failed((403 === response.status ? this.messagesValue.sessionExpired : this.messagesValue.saveError) ?? '');
@@ -270,13 +427,13 @@ export default class ListingCustomizerController extends Controller<HTMLElement>
     this.done(layout);
   }
 
-  private request(method: string, body: unknown): Promise<Response> {
+  private request(method: string, body: unknown, url: string): Promise<Response> {
     const headers: Record<string, string> = { Accept: 'application/json', 'X-CSRF-TOKEN': this.tokenValue };
     if (null !== body) {
       headers['Content-Type'] = 'application/json';
     }
 
-    return fetch(this.urlValue, {
+    return fetch(url, {
       method,
       credentials: 'same-origin',
       headers,
@@ -303,7 +460,7 @@ export default class ListingCustomizerController extends Controller<HTMLElement>
   }
 
   private confirmReset(): Promise<boolean> {
-    return askConfirm(this.messagesValue.resetConfirm ?? '', { confirm: this.messagesValue.confirmOk, cancel: this.messagesValue.cancel });
+    return this.ask(this.currentScope()?.resetConfirm || this.messagesValue.resetConfirm || '');
   }
 
   /** One request at a time; Apply only with changes, Reset only with a stored layout. */
@@ -328,7 +485,7 @@ export default class ListingCustomizerController extends Controller<HTMLElement>
       this.applyButtonTarget.disabled = this.busy || !dirty;
     }
     if (this.hasResetButtonTarget) {
-      this.resetButtonTarget.disabled = this.busy || !this.stateValue.stored;
+      this.resetButtonTarget.disabled = this.busy || !this.stored();
     }
   }
 

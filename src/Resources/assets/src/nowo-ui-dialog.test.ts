@@ -285,7 +285,37 @@ describe('nowo-ui-dialog remote form mode (2.28)', () => {
     const settings = mod.remoteFormSettings(document.getElementById('rf') as HTMLDialogElement);
     expect(settings).toMatchObject({ loading: 'Loading', error: 'Failed', loadError: 'Load failed', invalidSelector: '.err input', followOnLoadError: false, closeOnBackdrop: false });
     const plain = mod.remoteFormSettings(document.getElementById('plain2') as HTMLDialogElement);
-    expect(plain).toMatchObject({ loading: '', followOnLoadError: true });
+    expect(plain).toMatchObject({ loading: '', followOnLoadError: true, requestHeader: 'X-Nowo-Dialog', redirectHeader: 'X-Nowo-Redirect', locationHeader: 'X-Nowo-Dialog-Location' });
+  });
+
+  it('reads configured header names from the dialog, ignoring invalid ones (2.33)', () => {
+    const dialog = document.getElementById('plain2') as HTMLDialogElement;
+    dialog.setAttribute('data-nowo-ui-remote-form-request-header', 'X-Beacon-Dialog');
+    dialog.setAttribute('data-nowo-ui-remote-form-redirect-header', 'X-Beacon-Redirect');
+    dialog.setAttribute('data-nowo-ui-remote-form-location-header', 'X-Beacon-Dialog-Location');
+    expect(mod.remoteFormSettings(dialog)).toMatchObject({ requestHeader: 'X-Beacon-Dialog', redirectHeader: 'X-Beacon-Redirect', locationHeader: 'X-Beacon-Dialog-Location' });
+    dialog.setAttribute('data-nowo-ui-remote-form-location-header', 'X: y\r\nSet-Cookie');
+    expect(mod.remoteFormSettings(dialog).locationHeader).toBe('X-Nowo-Dialog-Location');
+  });
+
+  it('loads a step answer into the same dialog and emits nowo-ui:remote-form:step (2.33)', async () => {
+    const dialog = document.getElementById('rf') as HTMLDialogElement;
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(reply(200, '<form method="post" action="/connect"><button type="submit" id="s1">Next</button></form>'))
+      .mockResolvedValueOnce(reply(204, '', { 'X-Nowo-Dialog-Location': '/connect/lists' }))
+      .mockResolvedValueOnce(reply(200, '<p id="lists">Lists</p>'));
+    vi.stubGlobal('fetch', fetchMock);
+    const step = vi.fn();
+    dialog.addEventListener('nowo-ui:remote-form:step', step);
+    expect(mod.openRemoteForm('rf', '/connect')).toBe(true);
+    await tick();
+    await tick();
+    dialog.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    for (let i = 0; i < 6; i += 1) await tick();
+    expect(dialog.open).toBe(true);
+    expect(document.getElementById('lists')).not.toBeNull();
+    expect((step.mock.calls[0]?.[0] as CustomEvent).detail).toEqual({ url: '/connect/lists', status: 204 });
   });
 
   it('opens the remote form from an opener, posts back and emits nowo-ui:remote-form:* events', async () => {

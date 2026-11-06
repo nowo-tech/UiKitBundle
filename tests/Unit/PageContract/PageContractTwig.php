@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 
+use Nowo\UiKitBundle\Dialog\RemoteDialogHeaders;
 use Nowo\UiKitBundle\Theme\FontPreload;
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Twig\ErrorPageExtension;
@@ -65,6 +66,7 @@ final class PageContractTwig
         ?FontPreload $fontPreload = null,
         ?array $header = null,
         string $sidebarLayout = 'below-header',
+        ?RemoteDialogHeaders $remoteDialogHeaders = null,
     ): Environment {
         $views = self::root().'/src/Resources/views';
         $fs = new FilesystemLoader();
@@ -103,6 +105,7 @@ final class PageContractTwig
             fontPreload: $fontPreload,
             header: $header ?? ['presentation' => 'standard', 'compact_actions' => 'page'],
             sidebarLayout: $sidebarLayout,
+            remoteDialogHeaders: $remoteDialogHeaders,
         ));
         $twig->addExtension(new ErrorPageExtension($errorPages, $translator, $requestStack));
         if (null !== $shell) {
