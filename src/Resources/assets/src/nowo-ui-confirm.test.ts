@@ -43,6 +43,39 @@ describe('nowo-ui-confirm', () => {
     expect(dialog.open).toBe(false);
   });
 
+  describe('window.nowoUiAskConfirm (2.34)', () => {
+    const kitDialog = (): HTMLDialogElement => document.querySelector('dialog.nowo-ui-confirm') as HTMLDialogElement;
+    const button = (text: string): HTMLButtonElement =>
+      Array.from(kitDialog().querySelectorAll('button')).find((b) => b.textContent === text) as HTMLButtonElement;
+
+    afterEach(() => {
+      delete document.documentElement.dataset.confirmOk;
+      delete document.documentElement.dataset.confirmCancel;
+    });
+
+    it('is exposed and resolves true on confirm, with the page labels', async () => {
+      document.documentElement.dataset.confirmOk = 'Confirmar';
+      document.documentElement.dataset.confirmCancel = 'Cancelar';
+      const answer = window.nowoUiAskConfirm!('Delete the link?', { danger: true, title: 'Delete' });
+      expect(kitDialog().querySelector('h2')!.textContent).toBe('Delete');
+      expect(kitDialog().querySelector('.nowo-ui-confirm__body')!.textContent).toBe('Delete the link?');
+      expect(button('Confirmar').className).toBe('nowo-ui-btn nowo-ui-btn--danger');
+      expect(document.activeElement).toBe(button('Cancelar'));
+      button('Confirmar').click();
+      await expect(answer).resolves.toBe(true);
+      expect(kitDialog()).toBeNull();
+    });
+
+    it('resolves false on cancel; a message is text, never markup', async () => {
+      const answer = window.nowoUiAskConfirm!('<img src=x onerror=x()>', { danger: false, confirm: 'Leave', cancel: 'Stay', closeLabel: 'Shut' });
+      expect(kitDialog().querySelector('img')).toBeNull();
+      expect(button('Leave').className).toBe('nowo-ui-btn nowo-ui-btn--primary');
+      expect(kitDialog().querySelector('[aria-label="Shut"]')).not.toBeNull();
+      button('Stay').click();
+      await expect(answer).resolves.toBe(false);
+    });
+  });
+
   it('ignores missing ids and null', () => {
     mod.openConfirm(null);
     mod.openConfirm('missing');

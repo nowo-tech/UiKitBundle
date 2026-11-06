@@ -36,6 +36,7 @@ use Symfony\Component\Form\FormView;
  * 2.30 per-call filter options over the host's `theme.pages.list.filters`: `filtersFold` (true / false: render the
  * fold toggle of the filters card or not; null = `fold.enabled`), `filtersFoldKey` (page key the fold state is
  * remembered for; default the current route) and `filtersGrid` (`auto-fit` | `auto-fill`; null = the host `grid`).
+ * `rowAttributes` (2.34): extra attributes of each `<tr>`, see {@see Table}.
  */
 final readonly class ListPage
 {
@@ -76,6 +77,7 @@ final readonly class ListPage
      * @param iterable<FilterField>                                            $filterFields  per-field filter options (placeholder, width, classes)
      * @param iterable<Action>                                                 $filterActions extra actions after apply / clear
      * @param array<string, string|int|float|bool|null>                        $attributes    extra attributes of the scaffold root (data-testid…; no on* handlers)
+     * @param (callable(mixed, int|string): array<string, mixed>)|null         $rowAttributes
      */
     public function __construct(
         public PageHeader $header,
@@ -109,6 +111,7 @@ final readonly class ListPage
         public ?bool $filtersFold = null,
         public ?string $filtersFoldKey = null,
         public ?string $filtersGrid = null,
+        ?callable $rowAttributes = null,
     ) {
         if (null !== $filtersGrid && !\in_array($filtersGrid, ListFiltersOptions::GRID_MODES, true)) {
             throw new InvalidArgumentException(\sprintf('Invalid ListPage filtersGrid "%s" (%s).', $filtersGrid, implode('|', ListFiltersOptions::GRID_MODES)));
@@ -150,7 +153,7 @@ final readonly class ListPage
         if ($pagination instanceof Pagination) {
             $sorting = $sorting->withPageParam($pagination->pageParam);
         }
-        $this->table = new Table($this->columns, $this->rows, $rowActions, $caption, $captionVisible, null, 'asc', $actionsLabel, $actionsLabelVisible, $actionsAlign, $actionsPosition, $responsive, $bundle, sorting: $sorting, clientSort: $clientSort);
+        $this->table = new Table($this->columns, $this->rows, $rowActions, $caption, $captionVisible, null, 'asc', $actionsLabel, $actionsLabelVisible, $actionsAlign, $actionsPosition, $responsive, $bundle, sorting: $sorting, clientSort: $clientSort, rowAttributes: $rowAttributes);
         $this->sort = $this->table->sort;
         $this->direction = $this->table->direction;
     }

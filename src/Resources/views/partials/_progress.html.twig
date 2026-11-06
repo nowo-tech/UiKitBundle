@@ -5,20 +5,32 @@
 
   Optional:
     - percent: 0–100 (clamped); null = indeterminate
+    - value + max (2.34): an absolute amount when there is no percent (`max` > 0, both numeric; value clamped to
+      0..max): the meter prints them as they are (a script can update it) and the text shows the rounded percentage.
+      Without both, or with max <= 0 (nothing to count yet), it stays indeterminate. A script that updates the meter
+      should also pass show_value: false, as the text does not follow it
     - indeterminate: true forces the indeterminate state
     - label: string or View\Label (translated); default progress.label
+    - label_visible (2.34): false hides the label visually; it stays the <progress>'s accessible name
     - show_value: false hides the "40 %" text (default true when determinate)
     - id: id of the <progress> (default nowo-ui-progress: pass one per meter when a page shows several); attr: extra attributes of the wrapper
+    - meter_attr (2.34): extra attributes of the <progress>, merged over the progress_meter slot attributes; `class` is
+      added to the slot classes; id, max and value stay the partial's. Checked by nowo_ui_safe_attrs() (no on*, style,
+      srcdoc or unsafe URLs)
     - bundle
   Slots: progress (wrapper), progress_meter (<progress>).
 #}
 {% set bundle = bundle|default(null) %}
-{% set _indeterminate = indeterminate|default(false) or percent|default(null) is null %}
-{% set _value = _indeterminate ? null : max(0, min(100, percent)) %}
+{#- 2.34: value and max are both needed, so a lone `value` inherited from the context (a form block) changes nothing -#}
+{% set _amount = percent|default(null) is null ? nowo_ui_progress_amount(value ?? null, max ?? null) : null %}
+{% set _indeterminate = indeterminate|default(false) or (percent|default(null) is null and _amount is null) %}
+{% set _meter_value = _indeterminate ? null : (_amount ? _amount.value : max(0, min(100, percent))) %}
+{% set _value = _amount and not _indeterminate ? _amount.percent : _meter_value %}
+{% set _meter_attr = nowo_ui_safe_attrs(meter_attr|default({}), ['id', 'max', 'value']) %}
 {% set _label = label|default(null) is null ? 'progress.label'|trans({}, 'NowoUiKitBundle') : label|nowo_ui_trans %}
 {% set _id = id|default('nowo-ui-progress') %}
 <div class="{{ nowo_ui_class('progress', bundle) }}{{ _indeterminate ? ' nowo-ui-progress-field--indeterminate' }}"{{ nowo_ui_attrs('progress', bundle, attr|default({})) }}>
-    <label class="nowo-ui-progress-field__label" for="{{ _id }}">{{ _label }}</label>
-    <progress id="{{ _id }}" class="{{ nowo_ui_class('progress_meter', bundle) }}" max="100"{% if not _indeterminate %} value="{{ _value }}"{% endif %}{{ nowo_ui_attrs('progress_meter', bundle) }}>{{ _indeterminate ? _label : _value ~ ' %' }}</progress>
+    <label class="nowo-ui-progress-field__label{{ (label_visible ?? true) ? '' : ' visually-hidden' }}" for="{{ _id }}">{{ _label }}</label>
+    <progress id="{{ _id }}" class="{{ nowo_ui_class('progress_meter', bundle) }}{{ _meter_attr.class is defined ? ' ' ~ _meter_attr.class }}" max="{{ _amount ? _amount.max : 100 }}"{% if not _indeterminate %} value="{{ _meter_value }}"{% endif %}{{ nowo_ui_attrs('progress_meter', bundle, nowo_ui_attrs_without_class(_meter_attr)) }}>{{ _indeterminate ? _label : _value ~ ' %' }}</progress>
     {% if not _indeterminate and show_value ?? true %}<span class="nowo-ui-progress-field__value" aria-hidden="true">{{ _value }} %</span>{% endif %}
 </div>

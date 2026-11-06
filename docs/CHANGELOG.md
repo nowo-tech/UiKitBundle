@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.34.0] - 2026-11-06](#2340---2026-11-06)
 - [[2.33.1] - 2026-11-06](#2331---2026-11-06)
 - [[2.33.0] - 2026-11-06](#2330---2026-11-06)
 - [[2.32.0] - 2026-11-06](#2320---2026-11-06)
@@ -116,6 +117,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   changes), `:moved` (with `detail.revert()` for a failed write), `:cancel`, `:reverted`. Tokens
   `--nowo-ui-sortable-drop-bg`, `-drop-line`, `-ghost-shadow`, `-z`. See [USAGE](USAGE.md#sortable), which has the
   accessibility contract and a checklist for real devices: touch was tested only by emulation.
+
+## [2.34.0] - 2026-11-06
+
+Small options for the TaskBoard migration and other bundles (`TASKBOARD_UIKIT_MAP_2026-11-06.md`, K2..K6). All opt-in; the
+default output is unchanged (markup byte for byte, the BC fixtures untouched, new fixtures `bc-2.33`).
+
+### Added
+
+- **`window.nowoUiAskConfirm(message, options)`** (`js/nowo-ui-confirm.js`, in the default `scripts`): `askConfirm()` for
+  code without the Stimulus peers. A `Promise<boolean>` and a kit `<dialog>`, for actions whose target is only known at
+  runtime.
+- **Table row attributes and foot:** `View\Table::$rowAttributes` and `ListPage::$rowAttributes`
+  (`fn (row, key): array`, `class` merged after the `table_row` slot); block `nowo_ui_table_foot`, options `foot_html` and
+  `foot_attr`, slot `table_foot`, and block `nowo_ui_list_foot` on the list scaffold. No `<tfoot>` while the foot is empty.
+- **Tree node hooks:** `node.link_attr`, `node.item_attr`, `leading_template` (inside the link, before the label, with
+  `{node}`). Server-rendered nodes only, not lazy children.
+- **Dialog hooks:** `footer_attr`, `header_attr`, `back_href` and `back_label` (back arrow before the title, new slot
+  `dialog_back`). `remote_form_dialog` forwards `placement`, and as a side panel it takes the whole phone screen.
+- **Progress:** `value` + `max` next to `percent`, `label_visible: false`, `meter_attr`.
+- **`View\SafeAttributes`** and the Twig function `nowo_ui_safe_attrs()`: the check of the new attribute options.
+  Refuses `on*`, `style` and `srcdoc` (exception); a value that runs script (`javascript:`, `vbscript:`, `data:`, `blob:`) in
+  an attribute that holds a URL is dropped, not printed. See [SECURITY](SECURITY.md).
+- **`SafeHref::runsScript()`**, also `nowo_ui_theme.hrefRunsScript()` in templates.
+
+### Security
+
+Audit Appendix HG (2026-11-06): Pass (good), overall risk Low.
+
+- **`tree` `node.href` (HG-L2, Low; since 2.24):** a `javascript:`, `vbscript:`, `data:` or `blob:` value now prints `href="#"`.
+  It ran on click unless the host's CSP stopped it.
+- **`back_link` and `View\BackLink` `href` (HG-L3, Low; since 2.7):** the same schemes now print no link.
+- Other values print as before; see [UPGRADING](UPGRADING.md#to-2340).
+- **`window.nowoUiAskConfirm` and `askConfirm()` (HG-I7, Info):** read `document.body`, `documentElement` and
+  `createElement` through the prototype, so an injected `<img name="body">` cannot hide the dialog and leave the question
+  unanswered.
 
 ## [2.33.1] - 2026-11-06
 
@@ -2316,7 +2352,7 @@ Supersedes 1.17.3: same runtime code and CSS, release gate hardened so the tagge
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.33.1...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.34.0...HEAD
 [1.10.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.4...v1.10.0
 [1.8.4]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.3...v1.8.4
 [1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0

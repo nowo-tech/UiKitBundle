@@ -8,11 +8,15 @@
   Optional: icon (default `prev`; any name of the configured icon set, e.g. `tabler:arrow-left` with ux_icon), class,
   testid, bundle (per-bundle theme exceptions). Theme slot `back_link`. With `icon_set: none` (2.15.4) no icon is
   printed: that set renders an icon as its label text, which would repeat the label.
+  2.34: a javascript:, vbscript:, data: or blob: href prints no link. Other schemes stay, and the origin is not checked:
+  validate a value taken from the request (?back=, the referer).
 #}
 {% set _t = nowo_ui_theme|default(null) %}
 {% set _label = label.key is defined ? label.key|trans(label.params, label.domain) : label %}
 {% set _class = (_t ? _t.classFor('back_link', bundle|default(null)) : 'nowo-ui-back-link') ~ (class|default('') ? ' ' ~ class : '') %}
+{% if not (_t and _t.hrefRunsScript(href)) %}
 <a href="{{ href }}" class="{{ _class }}"{% if testid|default('') %} data-testid="{{ testid }}"{% endif %}>
     {% if nowo_ui_kit_icon_set|default('bootstrap-icons') != 'none' %}<span class="nowo-ui-back-link__icon" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: icon|default('prev'), label: _label}, false)|trim|raw }}</span>
     {% endif %}<span>{{ _label }}</span>
 </a>
+{% endif %}

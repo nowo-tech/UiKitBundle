@@ -2016,6 +2016,41 @@ a.nowo-ui-pagination__link:hover {
   overflow-wrap: anywhere;
 }
 
+/* Back arrow before the title (2.34, `back_href` of the dialog partial): the title takes the width, the × stays at the end */
+.nowo-ui-dialog__back {
+  flex: none;
+  margin: -0.25rem 0 0 -0.5rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--nowo-ui-radius);
+  color: var(--nowo-ui-muted);
+  font-size: 1.35rem;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.nowo-ui-dialog__back:dir(rtl) {
+  margin: -0.25rem -0.5rem 0 0;
+}
+
+.nowo-ui-dialog__back:dir(rtl) > span {
+  display: inline-block;
+  transform: scaleX(-1);
+}
+
+.nowo-ui-dialog__back:hover {
+  color: var(--nowo-ui-text);
+}
+
+.nowo-ui-dialog__back:focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline-offset: 2px;
+}
+
+.nowo-ui-dialog__back + * {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 /* Title + inline status badge (2.29, `status` of the dialog / confirm_dialog partials) */
 .nowo-ui-dialog__title-row {
   display: flex;
@@ -5229,6 +5264,26 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
     border-bottom: 0;
   }
 
+  /* 2.34: the <tfoot> of the `table` partial stacks as one block under the cards, its cells side by side */
+  .nowo-ui-table--cards > tfoot {
+    display: block;
+    width: 100%;
+  }
+
+  .nowo-ui-table--cards > tfoot > tr {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.25rem 0.75rem;
+    padding: 0.25rem 0.75rem;
+  }
+
+  .nowo-ui-table--cards > tfoot > tr > :is(td, th) {
+    display: block;
+    padding: 0.25rem 0;
+    overflow-wrap: anywhere;
+  }
+
   .nowo-ui-table--cards > tbody > tr > td[data-label]::before {
     content: attr(data-label);
     color: var(--nowo-ui-muted);
@@ -6591,6 +6646,13 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
     max-width: none;
     margin: var(--nowo-ui-remote-dialog-phone-inset, 1rem);
     border-radius: var(--nowo-ui-remote-dialog-phone-radius, var(--nowo-ui-modal-radius, var(--nowo-ui-radius)));
+  }
+
+  /* 2.34: a remote form side panel (`placement`) keeps the whole screen: the gutter is the centred dialog's */
+  .nowo-ui-dialog--remote-form:is(.nowo-ui-dialog--end, .nowo-ui-dialog--start) {
+    max-width: 100vw;
+    margin: 0;
+    border-radius: 0;
   }
 
   .nowo-ui-dialog--remote-form > .nowo-ui-dialog__footer:last-child,

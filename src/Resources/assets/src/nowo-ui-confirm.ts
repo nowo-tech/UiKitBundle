@@ -16,12 +16,19 @@
  * Fail closed (2.23, audit CK L1): such a form submitting while no peer is connected (peer not registered, host bundle
  * not loaded, or a submit before Stimulus connected) asks with `window.confirm(message)` instead and cancels the submit
  * when the user declines — it never submits unconfirmed. Once the peer is connected it confirms and this stays out.
+ *
+ * Runtime question (2.34): `window.nowoUiAskConfirm(message, { danger, title, confirm, cancel, closeLabel, … })` is
+ * `askConfirm()` of `stimulus-peers/ask_confirm.ts` for code without the peers: a `Promise<boolean>`, a kit `<dialog>`
+ * built when asked, for actions whose target is only known at runtime.
  */
+
+import { askConfirm, type ConfirmOptions } from '../stimulus-peers/ask_confirm';
 
 declare global {
   interface Window {
     nowoUiOpenConfirm?: (id: string | HTMLDialogElement | null) => void;
     nowoUiCloseConfirm?: (el: HTMLDialogElement | null) => void;
+    nowoUiAskConfirm?: (message: string, options?: ConfirmOptions) => Promise<boolean>;
   }
 }
 
@@ -183,6 +190,7 @@ export function bindNowoUiConfirm(): void {
   syncAllExpected(document);
   window.nowoUiOpenConfirm = openConfirm;
   window.nowoUiCloseConfirm = closeConfirm;
+  window.nowoUiAskConfirm = askConfirm;
 }
 
 bindNowoUiConfirm();

@@ -12,6 +12,29 @@ describe('askConfirm', () => {
     document.body.innerHTML = '';
   });
 
+  it('is not moved by elements that clobber document properties (audit HG-I7)', async () => {
+    const realBody = document.body;
+    const clobbered = document.createElement('img');
+    realBody.append(clobbered);
+    // A named <img> or <form> becomes an own property of the document and hides the prototype's. `documentElement` is not
+    // here because happy-dom's own `body` getter reads it; the demo e2e clobbers all three in real browsers.
+    for (const name of ['body', 'createElement']) {
+      Object.defineProperty(document, name, { value: clobbered, configurable: true });
+    }
+    try {
+      const answer = askConfirm('Delete?', { confirm: 'Reset', cancel: 'Cancel' });
+      const shown = realBody.querySelector('dialog.nowo-ui-confirm')!;
+      expect(shown.parentElement).toBe(realBody);
+      expect(clobbered.querySelector('dialog')).toBeNull();
+      (Array.from(shown.querySelectorAll('button')).find((b) => b.textContent === 'Reset') as HTMLButtonElement).click();
+      await expect(answer).resolves.toBe(true);
+    } finally {
+      for (const name of ['body', 'createElement']) {
+        delete (document as unknown as Record<string, unknown>)[name];
+      }
+    }
+  });
+
   it('resolves true on confirm and removes the dialog', async () => {
     const answer = askConfirm('Reset this layout?', labels);
     expect(dialog().getAttribute('aria-labelledby')).toBe(dialog().querySelector('h2')!.id);
