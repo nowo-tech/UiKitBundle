@@ -76,7 +76,16 @@ final class ActionIconsKernelTest extends TestCase
         yield 'empty name' => [['action_icons' => ['edit' => '']], 'action_icons'];
         yield 'unknown kind' => [['action_icons' => ['edti' => 'tabler:pencil']], 'unknown kind "edti"'];
         yield 'unknown variant' => [['action_variants' => ['edit' => 'neutral']], 'action_variants'];
+        yield 'delete without danger' => [['action_variants' => ['delete' => 'secondary']], 'delete'];
+        yield 'delete as primary' => [['action_variants' => ['delete' => 'primary']], 'delete'];
         yield 'unknown variant kind' => [['action_variants' => ['edti' => 'primary']], 'unknown kind "edti"'];
+    }
+
+    public function testDeleteMayBeMappedToDanger(): void
+    {
+        $twig = $this->twig(true, ['action_variants' => ['delete' => 'danger']]);
+
+        self::assertStringContainsString('btn-outline-danger', $twig->render('@NowoUiKitBundle/partials/_row_actions.html.twig', ['actions' => [['kind' => 'delete', 'href' => '/d']]]));
     }
 
     /**

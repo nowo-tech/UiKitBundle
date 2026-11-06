@@ -2,51 +2,136 @@
  * Change the label of a button without touching its icon.
  *
  * Text-only button: the whole text is replaced, as `textContent` always did. With child elements only the label changes:
- * the kit's label nodes (`.nowo-ui-action__label`, `.visually-hidden`, the `.nowo-ui-icon--text` of icon_set none) or a
- * host's `[data-nowo-ui-label]`, else the first text outside an `<svg>`. An icon-only button gets no visible text; its
- * accessible name stays with the caller's `aria-label`. `title`, when there is one on a button with children, follows.
+ * the first match of a host's `[data-nowo-ui-label]`, the kit's `.nowo-ui-action__label`, `.nowo-ui-icon--text` or
+ * `.visually-hidden`; else the last text that is not in an icon, a badge or an `aria-hidden` node. An icon-only button
+ * gets no visible text; its accessible name stays with the caller's `aria-label`. A `title` follows only when it mirrors
+ * the label; any other `title` is a hint and stays.
  *
- * Everything goes through the prototypes, so a `<form>` target with inputs named `querySelector` and the like
- * cannot clobber these calls.
+ * Calls go through the prototypes, so a `<form>` target with controls named `querySelector` and the like cannot
+ * clobber them.
  */
 
-const LABEL_SELECTOR = '[data-nowo-ui-label], .nowo-ui-action__label, .visually-hidden, .nowo-ui-icon--text';
+const LABEL_SELECTORS = ['[data-nowo-ui-label]', '.nowo-ui-action__label', '.nowo-ui-icon--text', '.visually-hidden'];
+const NOT_A_LABEL = 'svg, i, .badge, [aria-hidden="true"], [class*="material-"]';
+const ICON = 'svg, i, .nowo-ui-icon';
+const SVG_TEXT = 'svg title, svg desc, svg text';
 
-/** The `textContent` setter from the prototype chain: a named form control cannot shadow it. */
-function setText(node: Node, value: string): void {
-  let proto: object | null = Object.getPrototypeOf(node);
-  while (proto !== null) {
-    const setter = Object.getOwnPropertyDescriptor(proto, 'textContent')?.set;
-    if (setter) {
-      setter.call(node, value);
-      return;
+const proto = Element.prototype;
+
+/** The accessor from the prototype chain: a named form control cannot shadow it. */
+function accessor(node: Node, name: string): PropertyDescriptor | undefined {
+  let current: object | null = Object.getPrototypeOf(node);
+  while (current !== null) {
+    const descriptor = Object.getOwnPropertyDescriptor(current, name);
+    if (descriptor) {
+      return descriptor;
     }
-    proto = Object.getPrototypeOf(proto);
+    current = Object.getPrototypeOf(current);
   }
+  return undefined;
+}
+
+function setText(node: Node, value: string): void {
+  accessor(node, 'textContent')?.set?.call(node, value);
+}
+
+function getText(node: Node): string {
+  return String(accessor(node, 'textContent')?.get?.call(node) ?? '');
+}
+
+function childNodes(node: Node): Node[] {
+  return Array.from(accessor(node, 'childNodes')?.get?.call(node) as NodeListOf<Node>);
+}
+
+function hasChildElement(button: Element): boolean {
+  return proto.querySelector.call(button, '*') !== null;
+}
+
+function findLabel(button: Element): Element | null {
+  for (const selector of LABEL_SELECTORS) {
+    const label = proto.querySelector.call(button, selector);
+    if (label !== null) {
+      return label;
+    }
+  }
+  return null;
+}
+
+/** Whether the text node sits in an icon, a badge or an aria-hidden node inside the button. */
+function isOutsideLabel(text: Text, button: Element): boolean {
+  let element = text.parentElement;
+  while (element !== null && element !== button) {
+    if (proto.matches.call(element, NOT_A_LABEL)) {
+      return true;
+    }
+    element = element.parentElement;
+  }
+  return false;
+}
+
+function findLastText(button: Element): Text | null {
+  const walker = document.createTreeWalker(button, NodeFilter.SHOW_TEXT);
+  let last: Text | null = null;
+  while (walker.nextNode()) {
+    const text = walker.currentNode as Text;
+    if (text.data.trim() !== '' && !isOutsideLabel(text, button)) {
+      last = text;
+    }
+  }
+  return last;
 }
 
 export function setButtonLabel(button: HTMLElement, label: string): void {
-  if (Element.prototype.querySelector.call(button, '*') === null) {
+  if (!hasChildElement(button)) {
     setText(button, label);
     return;
   }
 
-  if (Element.prototype.hasAttribute.call(button, 'title')) {
-    Element.prototype.setAttribute.call(button, 'title', label);
+  const node = findLabel(button);
+  const text = node === null ? findLastText(button) : null;
+  const current = node !== null ? getText(node).trim() : text?.data.trim();
+
+  const title = proto.getAttribute.call(button, 'title');
+  if (title !== null && (title === current || title === proto.getAttribute.call(button, 'aria-label'))) {
+    proto.setAttribute.call(button, 'title', label);
   }
 
-  const nodes = Element.prototype.querySelectorAll.call(button, LABEL_SELECTOR);
-  if (nodes.length > 0) {
-    nodes.forEach((node) => setText(node, label));
-    return;
+  if (node !== null) {
+    setText(node, label);
+  } else if (text !== null) {
+    text.data = text.data.replace(text.data.trim(), () => label);
   }
+}
 
-  const walker = document.createTreeWalker(button, NodeFilter.SHOW_TEXT);
-  while (walker.nextNode()) {
-    const node = walker.currentNode as Text;
-    if (node.data.trim() !== '' && node.parentElement?.closest('svg') == null) {
-      node.data = label;
+function isIcon(element: Element): boolean {
+  return proto.matches.call(element, ICON) || (proto.querySelector.call(element, ICON) !== null && getText(element).trim() === '');
+}
+
+/**
+ * For a button that must no longer hold anything but its chrome (a cleared secret): remove every child other than the
+ * icon and one label node, and any text inside an inline SVG, then set the label. A text-only button ends up as the
+ * label alone; an icon-only button stays without visible text unless something with text was removed.
+ */
+export function keepOnlyIconAndLabel(button: HTMLElement, label: string): void {
+  const node = findLabel(button);
+  let removedText = false;
+
+  childNodes(button).forEach((child) => {
+    if (child === node || (child instanceof Element && isIcon(child))) {
       return;
     }
+    removedText = removedText || getText(child).trim() !== '';
+    Node.prototype.removeChild.call(button, child);
+  });
+  proto.querySelectorAll.call(button, SVG_TEXT).forEach((svgText) => svgText.remove());
+
+  if (node !== null && node.parentNode !== button) {
+    Node.prototype.appendChild.call(button, node);
   }
+
+  if (node === null && removedText && hasChildElement(button)) {
+    Node.prototype.appendChild.call(button, document.createTextNode(label));
+    return;
+  }
+  setButtonLabel(button, label);
 }

@@ -86,7 +86,8 @@ nowo_ui_kit:
 One icon per action, set once in the kit; bundles pass a kind, never an icon name. Both maps are empty by default and
 the output is then unchanged. Keys are canonical kinds; names follow the grammar of the other kits
 (`[prefix:]name`: lowercase letters, digits, single hyphens). An unknown kind, a bad name or an unknown variant fails the
-container build. Values are plain strings: no environment placeholders.
+container build, and so does `action_variants.delete` with anything but `danger`. Values are plain strings: no environment
+placeholders. Under `ux_icon`, import the icons you name: `ux:icons:lock` does not see them.
 
 ```yaml
 nowo_ui_kit:

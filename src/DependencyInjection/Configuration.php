@@ -76,7 +76,7 @@ final class Configuration implements ConfigurationInterface
                     ->end()
                 ->end()
                 ->arrayNode('action_variants')
-                    ->info('Opt-in: canonical kind → button variant (primary|secondary|danger) for actions without an explicit variant (e.g. create: secondary keeps a filled primary out of table rows, filter: secondary for the filter submit). Action::create() sets primary explicitly and keeps it. See docs/ROW_ACTIONS.md.')
+                    ->info('Opt-in: canonical kind → button variant (primary|secondary|danger) for actions without an explicit variant (e.g. create: secondary keeps a filled primary out of table rows, filter: secondary for the filter submit). Action::create() sets primary explicitly and keeps it; delete stays danger, any other value is refused. See docs/ROW_ACTIONS.md.')
                     ->useAttributeAsKey('kind', false)
                     ->normalizeKeys(false)
                     ->scalarPrototype()->end()
@@ -916,6 +916,9 @@ final class Configuration implements ConfigurationInterface
         foreach ($map as $kind => $variant) {
             if (!\in_array($kind, ActionIconsExtension::kinds(), true)) {
                 return \sprintf('unknown kind "%s" (%s).', $kind, implode('|', ActionIconsExtension::kinds()));
+            }
+            if ('delete' === $kind && 'danger' !== $variant) {
+                return \sprintf('kind "delete" stays danger, got %s; one action can still set an explicit variant.', json_encode($variant));
             }
             if (!\in_array($variant, ActionIconsExtension::VARIANTS, true)) {
                 return \sprintf('kind "%s": expected %s, got %s.', $kind, implode('|', ActionIconsExtension::VARIANTS), json_encode($variant));

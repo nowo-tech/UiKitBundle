@@ -6,8 +6,12 @@ namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 
 use Nowo\UiKitBundle\Twig\ActionIconsExtension;
 use Nowo\UiKitBundle\View\Action;
+use Nowo\UiKitBundle\View\Column;
+use Nowo\UiKitBundle\View\ListPage;
+use Nowo\UiKitBundle\View\PageHeader;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Yaml\Yaml;
 use Twig\Environment;
 
@@ -252,6 +256,42 @@ final class ActionIconsTest extends TestCase
         $html = $twig->render(self::ROW, ['actions' => [['kind' => 'create', 'href' => '/c']]]);
         self::assertStringContainsString('host-secondary', $html);
         self::assertStringNotContainsString('host-primary', $html);
+    }
+
+    public function testRowHashMenuFollowsTheVariantMap(): void
+    {
+        $vars = ['actions' => [['kind' => 'revoke', 'href' => '/r']], 'menu' => true, 'popover' => false];
+
+        self::assertStringNotContainsString('nowo-ui-menu__item--danger', self::twig()->render(self::ROW, $vars));
+        self::assertStringContainsString('nowo-ui-menu__item--danger', self::twig(variants: ['revoke' => 'danger'])->render(self::ROW, $vars));
+        $explicit = ['actions' => [['kind' => 'revoke', 'href' => '/r', 'variant' => 'secondary']], 'menu' => true, 'popover' => false];
+        self::assertStringNotContainsString('nowo-ui-menu__item--danger', self::twig(variants: ['revoke' => 'danger'])->render(self::ROW, $explicit));
+    }
+
+    public function testMenuGetActionDangerClassFollowsTheVariantMap(): void
+    {
+        $vars = ['items' => [new Action('revoke', 'Revoke', '/r')], 'id' => 'm', 'label' => 'More', 'menu_items' => true];
+
+        self::assertStringNotContainsString('nowo-ui-menu__item--danger', self::twig()->render(self::MENU, $vars));
+        self::assertStringContainsString('nowo-ui-menu__item--danger', self::twig(variants: ['revoke' => 'danger'])->render(self::MENU, $vars));
+        $explicit = ['items' => [new Action('revoke', 'Revoke', '/r', variant: 'secondary')], 'id' => 'm', 'label' => 'More', 'menu_items' => true];
+        self::assertStringNotContainsString('nowo-ui-menu__item--danger', self::twig(variants: ['revoke' => 'danger'])->render(self::MENU, $explicit));
+    }
+
+    public function testListFiltersSubmitFollowsTheVariantMap(): void
+    {
+        $form = PageContractTwig::forms()->createNamedBuilder('f')->add('q', TextType::class)->getForm()->createView();
+        $page = new ListPage(new PageHeader('Orders'), [new Column('name')], [['name' => 'A']], $form);
+        $partial = '@NowoUiKit/page/_list_filters.html.twig';
+        $submit = static fn (string $html): string => (string) preg_replace('/.*(<button type="submit"[^>]*>).*/s', '$1', $html);
+
+        self::assertStringContainsString('btn-primary', $submit(self::twig()->render($partial, ['page' => $page])));
+        $mapped = $submit(self::twig(variants: ['filter' => 'secondary'])->render($partial, ['page' => $page]));
+        self::assertStringContainsString('btn-outline-secondary', $mapped);
+        self::assertStringNotContainsString('btn-primary', $mapped);
+
+        $explicit = new ListPage(new PageHeader('Orders'), [new Column('name')], [['name' => 'A']], $form, filtersSubmit: new Action('filter', 'Go', variant: 'primary'));
+        self::assertStringContainsString('btn-primary', $submit(self::twig(variants: ['filter' => 'secondary'])->render($partial, ['page' => $explicit])));
     }
 
     public function testFilterSubmitFollowsTheVariantMap(): void

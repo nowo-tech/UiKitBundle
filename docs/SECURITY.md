@@ -126,7 +126,7 @@ The bundle does **not** expose CLI commands that mutate production data, file up
 
 ## AI security audit (REQ-SEC-004)
 
-Unreleased (`action_icons`, `action_variants`, new action kinds): audit status **re-verification pending**; an independent auditor runs after this change.
+`action_icons`, `action_variants`, new action kinds: independent audit Appendix HJ (2026-11-06): **Pass (good)**, overall risk **Low**. Icon names are host configuration, checked at build. `action_variants` cannot change `delete`, which stays danger. A kind does not add a confirmation: destructive actions need `Action::delete()` or an explicit `Confirm`. `setButtonLabel` writes text only; `temporary-reveal` with `clearOnHide` leaves only the toggle's icon and label.
 
 | Field | Value |
 | ----- | ----- |

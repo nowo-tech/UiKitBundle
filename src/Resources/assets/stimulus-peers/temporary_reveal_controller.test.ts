@@ -243,3 +243,31 @@ describe('temporary-reveal toggle keeps its icon', () => {
     expect(button.getAttribute('aria-label')).toBe('Hidden');
   });
 });
+
+describe('temporary-reveal clearOnHide strips the toggle', () => {
+  let application: Application;
+
+  afterEach(() => {
+    application.stop();
+    document.body.innerHTML = '';
+  });
+
+  it('leaves no other child of the toggle after the clear (HJ-L1)', async () => {
+    document.body.innerHTML = `
+      <div data-controller="temporary-reveal" data-temporary-reveal-secret-value="s3cret-value" data-temporary-reveal-duration-value="0" data-temporary-reveal-clear-on-hide-value="true">
+        <code data-temporary-reveal-target="display"></code>
+        <button type="button" data-temporary-reveal-target="toggle" data-action="click->temporary-reveal#toggle"><i class="ti ti-eye"></i><span class="nowo-ui-action__label">Show</span><code>S3CR3T</code></button>
+      </div>`;
+    application = Application.start();
+    application.register('temporary-reveal', TemporaryRevealController);
+    await Promise.resolve();
+    const button = document.querySelector('button') as HTMLButtonElement;
+
+    button.click();
+    button.click();
+
+    expect(document.body.innerHTML).not.toContain('S3CR3T');
+    expect(button.querySelector('i.ti-eye')).not.toBeNull();
+    expect(button.querySelector('.nowo-ui-action__label')?.textContent).toBe('Hidden');
+  });
+});

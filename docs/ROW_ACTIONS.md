@@ -138,9 +138,11 @@ What `action_icons` does under each `icon_set`:
 | `none` | the label | the label | the label | the label |
 
 A name the set cannot draw never fails: the kind keeps its kit default, so a config written for `ux_icon` is harmless
-under the others. Under `ux_icon` a well-formed name of an icon that does not exist behaves as symfony/ux-icons decides
-for any icon: it raises `IconNotFoundException` unless `ux_icons.ignore_not_found` is on. The build checks the grammar, not
-that the icon exists; import the table with `bin/console ux:icons:import` and open a page per kind once.
+under the others. Under `ux_icon` the build checks the grammar, not that the icon exists, since it may be local or on-demand.
+Import the icons you name with `bin/console ux:icons:import`: `ux:icons:lock` does **not** see names written only in
+`action_icons`. A wrong or missing name throws `IconNotFoundException` (a 500 on every page with that kind, chrome included)
+unless `ux_icons.ignore_not_found` is on, which prints nothing and logs a warning; with `on_demand` on, it also calls Iconify
+on every render. Render each mapped kind in one smoke test.
 
 **Setting a kind in `action_icons` also shows its icon where it was text:** a toolbar `Action` of that kind without an
 icon of its own now defaults to `icon_text`, and a menu item of that kind draws the icon (so *Delete* in the more menu has
@@ -148,14 +150,17 @@ its trash); a menu item with its own icon draws it once the map is not empty, an
 `menu: true` draws the icon of a mapped kind. An explicit `display` still wins, and without the option all of these stay
 text.
 
-`action_variants` (kind → `primary` | `secondary` | `danger`) applies only where an action has no explicit variant. It is
+`action_variants` (kind → `primary` | `secondary` | `danger`; `delete` stays danger, any other value is refused at build)
+applies only where an action has no explicit variant. It is
 needed for two rows, because the kit's defaults differ from the table and cannot change for other hosts: `create` (kit
 default primary, also in a row) and the filter submit (kit default primary; the key `filter` drives it). All other rows
 already match: the kit paints `edit`, `view` and the rest as secondary (`View\Action` resolves them as `neutral`, painted
 like secondary with its own row slot `action_neutral`), `delete` as danger, `save` as primary.
 
-What the map cannot do, by design of "explicit wins": `Action::create()` sets `primary` explicitly, so in a row it stays
-primary; use `new Action('create', ...)` there. And do not map `save: secondary` to keep it out of rows, since forms that
+`Action::create()` sets `primary` explicitly and keeps it, so use `new Action('create', …)` in a row. A kind does not add a
+confirmation.
+
+Do not map `save: secondary` to keep it out of rows, since forms that
 use `new Action('save')` would follow it; give the row action an explicit variant.
 
 ## Display modes

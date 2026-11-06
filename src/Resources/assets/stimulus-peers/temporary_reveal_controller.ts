@@ -1,5 +1,5 @@
 import { Controller } from '@hotwired/stimulus';
-import { setButtonLabel } from '../src/nowo-ui-button-label';
+import { keepOnlyIconAndLabel, setButtonLabel } from '../src/nowo-ui-button-label';
 
 const COPY_ATTRIBUTES = ['data-clipboard-copy-text-value', 'data-nowo-ui-clipboard-text'];
 const COPY_SELECTOR = COPY_ATTRIBUTES.map((name) => `[${name}]`).join(', ');
@@ -140,7 +140,7 @@ export default class extends Controller {
       this.toggleTarget.setAttribute('disabled', 'true');
       this.toggleTarget.setAttribute('aria-disabled', 'true');
       this.toggleTarget.setAttribute('aria-pressed', 'false');
-      setButtonLabel(this.toggleTarget, this.clearedLabelValue);
+      keepOnlyIconAndLabel(this.toggleTarget, this.clearedLabelValue);
       this.toggleTarget.setAttribute('aria-label', this.clearedLabelValue);
     }
   }

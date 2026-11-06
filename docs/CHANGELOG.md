@@ -113,7 +113,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   draw keeps the kit default, and `svg_inline` / `none` ignore the map. Setting a kind also draws its icon on toolbar
   `Action`s without an icon and on menu items, which stay text without the option.
 - **`nowo_ui_kit.action_variants`** (opt-in, kind → `primary` | `secondary` | `danger`): the variant of a kind when the
-  action has no explicit one; the key `filter` also drives the default of the filter submit.
+  action has no explicit one; the key `filter` also drives the default of the filter submit. `delete` stays danger: any other
+  value is refused at build.
 - Canonical kinds, with defaults in every icon set, labels in all 7 locales and in `Action::KINDS`: `extend`, `revoke`,
   `refresh`, `archive`, `pause`, `resume`, `download`, `send`, `sign_in`, `sign_out`, `reset`, `mark_done`, `mark_all_done`,
   `move`, `enable`, `disable`, `hide`, `run`, `retry`, `stop`. `import`, already an `Action` kind with a label, gets its
@@ -124,15 +125,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - `nowo-ui-clipboard.js`, the `clipboard-copy` peer and the `temporary-reveal` peer replaced the whole content of a button
   with `textContent`, so a button with an icon lost it after the first use (Copy, Show / Hide). They now update only the
-  label node (`[data-nowo-ui-label]`, `.nowo-ui-action__label`, `.visually-hidden`, else the button's text), and `title` if the
-  button has an icon and a title; `aria-label` as before. A text-only button renders as before; an icon-only button keeps
-  no visible text.
+  first label node (`[data-nowo-ui-label]`, `.nowo-ui-action__label`, `.nowo-ui-icon--text`, `.visually-hidden`, else the last
+  text outside an icon, badge or `aria-hidden` node), a `title` only when it mirrors the label, and `aria-label` as before. A
+  text-only button renders as before; an icon-only button keeps no visible text. With `clearOnHide`, `temporary-reveal` leaves
+  only the toggle's icon and label.
 
 ### Changed
 
-- `_icon` names that were free strings and are kinds now draw the kind's default where they drew something else: under
-  `svg_inline` the eye fallback; under `bootstrap-icons` / `ux_icon` / `tabler-icons` names that do not exist in the set,
-  such as `bi bi-import`, `bi:refresh` or `ti ti-pause`. Kinds that existed before are byte-identical.
+- `_icon` names that were free strings and are kinds now draw the kind's default: under `svg_inline` instead of the eye
+  fallback; under `bootstrap-icons`, `ux_icon`, `tabler-icons` for names the set does not have, such as `bi bi-import`,
+  `bi:refresh`, `ti ti-pause`. The one name that did exist is `ti ti-run`, now `ti ti-player-play`. Kinds that existed before
+  are byte-identical. A menu item with the free name `refresh` under `bootstrap-icons` keeps `bi bi-refresh` until the next
+  major.
 
 ## [2.33.1] - 2026-11-06
 
