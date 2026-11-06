@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.33.1](#to-2331)
 - [To 2.33.0](#to-2330)
 - [To 2.32.0](#to-2320)
 - [To 2.31.0](#to-2310)
@@ -114,6 +115,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.33.1
+
+From **2.33.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 Security fixes, no markup or configuration change. Three behaviours change, only for hosts in these cases:
 
