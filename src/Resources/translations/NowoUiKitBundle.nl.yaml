@@ -20,6 +20,26 @@ action.config: Instellingen
 action.export: Exporteren
 action.filter: Filteren
 action.more: Meer acties
+action.extend: "Verlengen"
+action.revoke: "Intrekken"
+action.refresh: "Vernieuwen"
+action.archive: "Archiveren"
+action.pause: "Pauzeren"
+action.resume: "Hervatten"
+action.download: "Downloaden"
+action.send: "Verzenden"
+action.sign_in: "Aanmelden"
+action.sign_out: "Afmelden"
+action.reset: "Herstellen"
+action.mark_done: "Markeren als klaar"
+action.mark_all_done: "Alles markeren als klaar"
+action.move: "Verplaatsen"
+action.enable: "Inschakelen"
+action.disable: "Uitschakelen"
+action.hide: "Verbergen"
+action.run: "Uitvoeren"
+action.retry: "Opnieuw proberen"
+action.stop: "Stoppen"
 empty.default: Geen items gevonden.
 tabs.nav: Secties
 nav.aside: Navigatie

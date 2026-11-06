@@ -36,6 +36,7 @@ use Nowo\UiKitBundle\Routing\PanelPathRewriter;
 use Nowo\UiKitBundle\Routing\PanelPathRewritingLoader;
 use Nowo\UiKitBundle\Theme\FontPreload;
 use Nowo\UiKitBundle\Theme\Theme;
+use Nowo\UiKitBundle\Twig\ActionIconsExtension;
 use Nowo\UiKitBundle\Twig\AppearanceExtension;
 use Nowo\UiKitBundle\Twig\AreaNavExtension;
 use Nowo\UiKitBundle\Twig\AvatarExtension;
@@ -225,6 +226,13 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
 
         // 2.26: nowo_ui_avatar_url (the avatar URL policy of partials/_avatar.html.twig).
         $container->register('nowo_ui_kit.avatar_twig_extension', AvatarExtension::class)
+            ->addTag('twig.extension');
+
+        // A service, not a Twig config global: it sees the processed config whatever the bundle order.
+        $container->setParameter('nowo_ui_kit.action_icons', $config['action_icons']);
+        $container->setParameter('nowo_ui_kit.action_variants', $config['action_variants']);
+        $container->register('nowo_ui_kit.action_icons_twig_extension', ActionIconsExtension::class)
+            ->setArguments([$config['action_icons'], $config['action_variants']])
             ->addTag('twig.extension');
 
         $this->registerPageContract($container, $fw, $config);

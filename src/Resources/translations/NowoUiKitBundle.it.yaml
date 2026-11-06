@@ -20,6 +20,26 @@ action.config: Impostazioni
 action.export: Esporta
 action.filter: Filtra
 action.more: Altre azioni
+action.extend: "Estendi"
+action.revoke: "Revoca"
+action.refresh: "Aggiorna"
+action.archive: "Archivia"
+action.pause: "Metti in pausa"
+action.resume: "Riprendi"
+action.download: "Scarica"
+action.send: "Invia"
+action.sign_in: "Accedi"
+action.sign_out: "Esci"
+action.reset: "Reimposta"
+action.mark_done: "Segna come fatto"
+action.mark_all_done: "Segna tutto come fatto"
+action.move: "Sposta"
+action.enable: "Attiva"
+action.disable: "Disattiva"
+action.hide: "Nascondi"
+action.run: "Esegui"
+action.retry: "Riprova"
+action.stop: "Ferma"
 empty.default: Nessun elemento trovato.
 tabs.nav: Sezioni
 nav.aside: Navigazione

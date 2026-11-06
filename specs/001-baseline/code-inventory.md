@@ -127,6 +127,7 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | Source file | Spec section | Requirement IDs |
 | --- | --- | --- |
 | `Twig/ThemeExtension.php` | Page contract Twig API: `nowo_ui_class` / `attrs` / `partial` / `tokens` / `page_header` / `script_names` / `action_form` / `form` / `form_hidden` / `header_actions` / `font_preload` / `visible_when` (2.23), filters `nowo_ui_trans` / `nowo_ui_translatable` | FR-THEME-002, FR-PAGEHEADER-001, FR-SCRIPTS-001, FR-FORM-001, FR-FORM-002, FR-HEADERACTIONS-001, FR-FONTPRELOAD-001, FR-I18N-002, FR-VISIBLEWHEN-001 |
+| `Twig/ActionIconsExtension.php` | Globals `nowo_ui_kit_action_icons` / `nowo_ui_kit_action_variants` from `action_icons` / `action_variants`, name grammar, kind list | FR-THEME-002 |
 | `Twig/AppearanceExtension.php` | `nowo_ui_appearance()`, `_css()`, `_style(nonce)`, `_presets(mode)` (only when appearance is enabled) | FR-APPEARANCE-005 |
 | `Twig/AreaNavExtension.php` | `nowo_ui_area_nav(area, context)` | FR-AREANAV-001 |
 | `Twig/ErrorPageExtension.php` | `nowo_ui_error_page()`, `nowo_ui_error_text()`, global `nowo_ui_error_pages`; 2.23 path-only retry URI (`pathOnly()`) | FR-ERROR-001, FR-SEC-223 |

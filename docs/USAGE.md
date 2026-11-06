@@ -783,6 +783,14 @@ three optional Stimulus peers — nothing changes for markup that does not use t
 `components/_icon.html.twig` (`nowo_ui_kit.icon_set`), so every partial works without JS; the peers add the
 behaviour and the optional [morphicons module](#morphicons-animated-icons) animates the icons.
 
+Canonical kinds of `components/_icon.html.twig` (REQ-UI-001): `edit`, `delete`, `view`, `copy`, `create`, `save`, `cancel`,
+`restore`, `share`, `config`, `export`, `filter`, `prev`, `next`, `close`, `filter_off`, `scroll_horizontal`, `rows`,
+`chevron_up`, `chevron_down`, `chevron_right`, `chevron_left`, `book`, `sliders`, `grip`, `stack`, `tour`, `sort`, `sort_asc`,
+`sort_desc`, `more`, `home`, `grid`, `extend`, `revoke`, `refresh`, `archive`, `pause`, `resume`, `download`, `import`,
+`send`, `sign_in`, `sign_out`, `reset`, `mark_done`, `mark_all_done`, `move`, `enable`, `disable`, `hide`, `run`, `retry`,
+`stop`. **For actions, bundles pass a kind, never an icon name**; the host sets the icons once with
+`nowo_ui_kit.action_icons`. The recommended table is in [ROW_ACTIONS.md](ROW_ACTIONS.md#one-icon-per-action).
+
 New canonical icon kinds (all icon sets): `filter_off`, `scroll_horizontal`, `rows`, `chevron_up`, `chevron_down`,
 `chevron_right`, `book`. Every partial below accepts an `icons` hash to use set-specific names instead (e.g.
 `tabler:arrows-horizontal` with `icon_set: ux_icon`).
