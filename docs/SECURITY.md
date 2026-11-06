@@ -37,6 +37,7 @@ If you discover a security-related issue, please report it privately (e.g. by em
 | **Plain remote dialog content (2.2)** | `data-nowo-ui-dialog-src` (`Action::$dialogId` + `href`): a same-origin fragment fetched into a `<dialog>` |
 | **Element attribute options (2.34)** | `Table::$rowAttributes`, `node.link_attr`, `node.item_attr`, `footer_attr`, `header_attr`, `foot_attr`, `meter_attr`, `back_href`: host-supplied attribute maps and a link target |
 | **Translations** | Domain `NowoUiKitBundle` strings rendered in Twig |
+| **Action icons (opt-in)** | `nowo_ui_kit.action_icons` / `action_variants`: host configuration, checked against `[prefix:]name` and `primary\|secondary\|danger` at container build; the names reach a `class` attribute (auto-escaped) or `ux_icon()`. Not request data. |
 
 The bundle does **not** expose CLI commands that mutate production data, file uploads, or cookie writers. The only outbound HTTP integration is the opt-in release check (off by default).
 
@@ -125,6 +126,8 @@ The bundle does **not** expose CLI commands that mutate production data, file up
 - **FrankenPHP worker:** runtime PHP services (`ReleaseUpdateChecker`, `ReleaseStatusController`, routing helpers) are `readonly` / stateless — no per-request mutable state; safe with kernel not reset between requests ([FRANKENPHP-WORKER-AUDIT.md](FRANKENPHP-WORKER-AUDIT.md)).
 
 ## AI security audit (REQ-SEC-004)
+
+`action_icons`, `action_variants`, new action kinds: independent audit Appendix HJ (2026-11-06): **Pass (good)**, overall risk **Low**. Icon names are host configuration, checked at build. `action_variants` cannot change `delete`, which stays danger. A kind does not add a confirmation: destructive actions need `Action::delete()` or an explicit `Confirm`. `setButtonLabel` writes text only; `temporary-reveal` with `clearOnHide` removes everything from the toggle but its icon and label, so never put a secret in the toggle's icon or in an attribute of the toggle or its children: those stay.
 
 | Field | Value |
 | ----- | ----- |

@@ -204,3 +204,32 @@ describe('nowo-ui-clipboard', () => {
     expect(navigator.clipboard.writeText).not.toHaveBeenCalled();
   });
 });
+
+describe('nowo-ui-clipboard flash keeps the icon', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    mockClipboard(vi.fn().mockResolvedValue(undefined));
+    mod.bindNowoUiClipboard();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    document.body.innerHTML = '';
+    vi.restoreAllMocks();
+  });
+
+  it('updates only the label node and the accessible name', async () => {
+    document.body.innerHTML = `<button type="button" title="Copy" aria-label="Copy" data-nowo-ui-clipboard data-nowo-ui-clipboard-text="x"
+      data-nowo-ui-clipboard-label="Copy" data-nowo-ui-clipboard-done-label="Copied"><i class="ti ti-copy"></i><span class="visually-hidden">Copy</span></button>`;
+    const btn = document.querySelector('button')!;
+    btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    await Promise.resolve();
+    expect(btn.querySelector('i.ti-copy')).not.toBeNull();
+    expect(btn.querySelector('.visually-hidden')!.textContent).toBe('Copied');
+    expect(btn.getAttribute('aria-label')).toBe('Copied');
+    vi.advanceTimersByTime(1600);
+    expect(btn.querySelector('i.ti-copy')).not.toBeNull();
+    expect(btn.querySelector('.visually-hidden')!.textContent).toBe('Copy');
+    expect(btn.getAttribute('aria-label')).toBe('Copy');
+  });
+});

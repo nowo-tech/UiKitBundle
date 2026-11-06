@@ -5,6 +5,8 @@
  * Flash label: data-nowo-ui-clipboard-label / data-nowo-ui-clipboard-done-label
  */
 
+import { setButtonLabel } from './nowo-ui-button-label';
+
 declare global {
   interface Window {
     nowoUiCopyText?: (value: string, flashTarget?: HTMLElement | null) => Promise<boolean>;
@@ -30,10 +32,10 @@ function flashDone(target: HTMLElement, label: string, doneLabel: string): void 
   if (prev) {
     window.clearTimeout(Number.parseInt(prev, 10));
   }
-  target.textContent = doneLabel;
+  setButtonLabel(target, doneLabel);
   target.setAttribute('aria-label', doneLabel);
   const id = window.setTimeout(() => {
-    target.textContent = label;
+    setButtonLabel(target, label);
     target.setAttribute('aria-label', label);
     target.removeAttribute('data-nowo-ui-clipboard-flash-timer');
   }, FLASH_MS);

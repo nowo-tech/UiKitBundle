@@ -22,6 +22,11 @@
     - menu_item (2.21): true = drawn as an item of a `menu` panel (slot menu_item, `nowo-ui-menu__item--danger` for
       danger actions) instead of a toolbar button — the `menu` partial passes it with `menu_items: true`
 
+  With nowo_ui_kit.action_icons set for its kind, an Action without an icon of its own draws the kind's icon in a toolbar
+  (default display icon_text) and in a menu item; a menu item with its own icon draws it once the map is not empty.
+  Without the option both stay text, as before. nowo_ui_kit.action_variants: the variant of a kind when the action has
+  no explicit one.
+
   Non-GET actions submit a POST form (CSRF-only FormView when given, else csrf token field); actions with a
   Confirm open the UiKit confirm <dialog>, whose confirm button submits. Action::fallbackHref (2.1) adds a
   <noscript> link to that URL (e.g. a page/confirm page) next to the dialog toggle. Action::dialogId (2.2) renders a
@@ -42,7 +47,7 @@
     {% set display = 'icon' %}
 {% endif %}
 {% if action.visible %}
-    {% set display = action.display ?? (context == 'row' ? display : (_context_display ?? (action.icon ? 'icon_text' : 'text'))) %}
+    {% set display = action.display ?? (context == 'row' ? display : (_context_display ?? (action.icon or nowo_ui_kit_action_icons[action.kind] is defined ? 'icon_text' : 'text'))) %}
     {#- icon_set none: no icon to show, so every action is text-only (an icon-only action would print its label as the
         "icon" next to the visually-hidden one, icon_text the label twice) -#}
     {% if nowo_ui_kit_icon_set|default('bootstrap-icons') == 'none' %}
@@ -50,7 +55,7 @@
     {% endif %}
     {% set label = action.label is not null ? action.label|nowo_ui_trans : ('action.' ~ action.kind)|trans({}, 'NowoUiKitBundle') %}
     {% set href = action.href ?? (action.route ? path(action.route, action.params) : null) %}
-    {% set variant = action.resolvedVariant() %}
+    {% set variant = action.variant ?: nowo_ui_kit_action_variants[action.kind]|default(action.resolvedVariant()) %}
     {% if context == 'row' %}
         {% set class = nowo_ui_theme.macroClasses('action', ui.action(action.kind, framework, variant == 'neutral' ? null : action.variant), bundle, _pt) %}
         {% set _variant_extra = variant in ['primary', 'secondary', 'danger', 'neutral'] ? nowo_ui_theme.extraClasses('action_' ~ variant, bundle, _pt) : '' %}
@@ -68,7 +73,7 @@
         {% set class = class ~ ' ' ~ nowo_ui_class('btn_icon', bundle, framework) %}
     {% endif %}
     {%~ if menu_item|default(false) %}
-        {%~ set display = 'text' %}
+        {%~ set display = nowo_ui_kit_icon_set|default('bootstrap-icons') != 'none' and (nowo_ui_kit_action_icons[action.kind] is defined or (action.icon and nowo_ui_kit_action_icons|default({}) is not empty)) ? 'icon_text' : 'text' %}
         {%~ set class = nowo_ui_class('menu_item', bundle, framework) ~ (variant == 'danger' ? ' nowo-ui-menu__item--danger') ~ ' nowo-ui-action--' ~ action.kind %}
     {%~ endif %}
     {% set inner %}

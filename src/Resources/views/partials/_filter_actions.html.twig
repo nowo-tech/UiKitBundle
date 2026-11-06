@@ -28,7 +28,7 @@
     {% set _submit_label = submit_label|default('filters.apply'|trans({}, 'NowoUiKitBundle')) %}
     {% set _submit_icon = submit_icon|default('') %}
     {% set _submit_icon_only = _icon_only and _submit_icon is not empty %}
-    <button type="submit" class="{{ submit_class|default(ui.btn('primary', null, framework)) }} nowo-ui-filter-bar__submit{% if _submit_icon_only %} nowo-ui-filter-bar__action--icon-only{% endif %}"
+    <button type="submit" class="{{ submit_class|default(ui.btn(nowo_ui_kit_action_variants.filter|default('primary'), null, framework)) }} nowo-ui-filter-bar__submit{% if _submit_icon_only %} nowo-ui-filter-bar__action--icon-only{% endif %}"
         {%- if _submit_icon_only %} title="{{ _submit_label }}" aria-label="{{ _submit_label }}"{% endif %}>
         {%- if _submit_icon is not empty -%}
             {{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _submit_icon, label: _submit_label}, false)|trim|raw }}

@@ -4,6 +4,7 @@
 
 - [Root keys](#root-keys)
 - [Row actions confirm (2.22)](#row-actions-confirm-222)
+- [Action icons and variants](#action-icons-and-variants)
 - [Panel path rewrites](#panel-path-rewrites)
 - [Release check](#release-check)
 - [Appearance](#appearance)
@@ -26,6 +27,8 @@ Alias: **`nowo_ui_kit`**
 | `icon_set` | enum | `bootstrap-icons` | `bootstrap-icons`, `tabler-icons`, `ux_icon`, `svg_inline`, `none` — how glyphs are drawn |
 | `row_actions_display` | enum | `icon` | Table/list row actions: `icon` (glyph + visually hidden label), `text` (visible label only), `icon_text` (glyph + visible label) |
 | `row_actions_confirm` | enum | `inline` | How `confirm_message` of 1.x `_row_actions` POST hashes asks (since 2.22.0): `inline` (`onsubmit="return confirm(…)"`, unchanged markup), `native` / `dialog` (no inline handler: the `confirm-submit` Stimulus peer asks with `window.confirm()` / the kit `<dialog>`). See [ROW_ACTIONS.md](ROW_ACTIONS.md#confirm-contract-for-post-hashes-222) |
+| `action_icons` | map | `{}` | Opt-in: canonical kind → icon name `[prefix:]name`. Every use of the kind follows it, chrome included. See [Action icons](#action-icons-and-variants) |
+| `action_variants` | map | `{}` | Opt-in: canonical kind → `primary` \| `secondary` \| `danger`, for actions without an explicit variant. See [Action icons](#action-icons-and-variants) |
 | `panel_path_rewrites` | map | `{}` | Legacy path prefix → new prefix (e.g. `/admin/blog: /panel/blog`). Empty = feature disabled (since 1.9.0) |
 | `release_check` | map | `enabled: false` | Optional GitHub release-version checker (footer dialog + JSON endpoint). See [Release check](#release-check) |
 | `appearance` | map | `enabled: false` | Optional site appearance SPI: presets, `--nowo-ui-*` token emitter, Twig functions, optional form (since 1.16.0). See [Appearance](#appearance) |
@@ -77,6 +80,64 @@ nowo_ui_kit:
   handler that returns `false` (the peer never asks).
 - **Default**: `inline` output is byte-identical to 2.21 (`tests/Unit/PageContract/RowActionsConfirmBcTest.php`,
   fixtures `tests/Fixtures/bc-2.21`); hosts that do not set the key see no change.
+
+## Action icons and variants
+
+One icon per action, set once in the kit; bundles pass a kind, never an icon name. Both maps are empty by default and
+the output is then unchanged. Keys are canonical kinds; names follow the grammar of the other kits
+(`[prefix:]name`: lowercase letters, digits, single hyphens). An unknown kind, a bad name or an unknown variant fails the
+container build, and so does `action_variants.delete` with anything but `danger`. Values are plain strings: no environment
+placeholders. Under `ux_icon`, import the icons you name: `ux:icons:lock` does not see them.
+
+```yaml
+nowo_ui_kit:
+    icon_set: ux_icon
+    row_actions_display: icon_text # set it together with action_icons, not before: until then kit kinds draw bi:*
+    action_icons:
+        create: 'tabler:plus'
+        edit: 'tabler:pencil'
+        view: 'tabler:eye'
+        hide: 'tabler:eye-off'
+        share: 'tabler:share'
+        copy: 'tabler:copy'
+        export: 'tabler:download'
+        download: 'tabler:download'
+        import: 'tabler:upload'
+        refresh: 'tabler:refresh'
+        retry: 'tabler:refresh'
+        run: 'tabler:player-play'
+        stop: 'tabler:player-stop'
+        pause: 'tabler:player-pause'
+        resume: 'tabler:player-play'
+        extend: 'tabler:clock-plus'
+        revoke: 'tabler:user-off'
+        archive: 'tabler:archive'
+        filter: 'tabler:filter'
+        filter_off: 'tabler:filter-off'
+        close: 'tabler:x'
+        cancel: 'tabler:x'
+        delete: 'tabler:trash'
+        save: 'tabler:device-floppy'
+        send: 'tabler:send'
+        sign_in: 'tabler:login'
+        sign_out: 'tabler:logout'
+        reset: 'tabler:arrow-back-up'
+        mark_done: 'tabler:check'
+        mark_all_done: 'tabler:checks'
+        move: 'tabler:arrows-exchange'
+        enable: 'tabler:power'
+        disable: 'tabler:power'
+    action_variants:
+        create: secondary # Action::create() stays primary for the page's main action
+        filter: secondary # the filter bar's submit
+```
+
+Under `icon_set: tabler-icons` / `bootstrap-icons` a name of another set falls back to the kit default of the kind;
+`svg_inline` and `none` ignore the map. Twig globals: `nowo_ui_kit_action_icons`, `nowo_ui_kit_action_variants`
+(from a service, so the bundle order does not matter). The per-set table, the recommended standard and what the map also
+switches on (the kind's icon on toolbar actions and menu items) are in
+[ROW_ACTIONS.md](ROW_ACTIONS.md#one-icon-per-action). Hosts that replace `components/_icon.html.twig` keep their
+template and must read the map themselves.
 
 ## Panel path rewrites
 
