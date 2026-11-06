@@ -252,6 +252,24 @@ describe('temporary-reveal clearOnHide strips the toggle', () => {
     document.body.innerHTML = '';
   });
 
+  it('resets the toggle to the label when the value is still in it after the clear (HJ-I8)', async () => {
+    document.body.innerHTML = `
+      <div data-controller="temporary-reveal" data-temporary-reveal-secret-value="s3cret-value" data-temporary-reveal-duration-value="0" data-temporary-reveal-clear-on-hide-value="true">
+        <code data-temporary-reveal-target="display"></code>
+        <button type="button" data-temporary-reveal-target="toggle" data-action="click->temporary-reveal#toggle"><i class="x">s3cret-value</i><span class="nowo-ui-action__label">Show</span></button>
+      </div>`;
+    application = Application.start();
+    application.register('temporary-reveal', TemporaryRevealController);
+    await Promise.resolve();
+    const button = document.querySelector('button') as HTMLButtonElement;
+
+    button.click();
+    button.click();
+
+    expect(button.innerHTML).toBe('Hidden');
+    expect(document.body.innerHTML).not.toContain('s3cret-value');
+  });
+
   it('leaves no other child of the toggle after the clear (HJ-L1)', async () => {
     document.body.innerHTML = `
       <div data-controller="temporary-reveal" data-temporary-reveal-secret-value="s3cret-value" data-temporary-reveal-duration-value="0" data-temporary-reveal-clear-on-hide-value="true">

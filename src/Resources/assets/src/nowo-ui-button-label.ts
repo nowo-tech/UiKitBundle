@@ -8,15 +8,13 @@
  * the label; any other `title` is a hint and stays.
  *
  * Calls go through the prototypes, so a `<form>` target with controls named `querySelector` and the like cannot
- * clobber them.
+ * clobber them. The prototypes are read inside the functions: importing this module must not touch the DOM (GT-I8).
  */
 
 const LABEL_SELECTORS = ['[data-nowo-ui-label]', '.nowo-ui-action__label', '.nowo-ui-icon--text', '.visually-hidden'];
 const NOT_A_LABEL = 'svg, i, .badge, [aria-hidden="true"], [class*="material-"]';
 const ICON = 'svg, i, .nowo-ui-icon';
 const SVG_TEXT = 'svg title, svg desc, svg text';
-
-const proto = Element.prototype;
 
 /** The accessor from the prototype chain: a named form control cannot shadow it. */
 function accessor(node: Node, name: string): PropertyDescriptor | undefined {
@@ -44,12 +42,12 @@ function childNodes(node: Node): Node[] {
 }
 
 function hasChildElement(button: Element): boolean {
-  return proto.querySelector.call(button, '*') !== null;
+  return Element.prototype.querySelector.call(button, '*') !== null;
 }
 
 function findLabel(button: Element): Element | null {
   for (const selector of LABEL_SELECTORS) {
-    const label = proto.querySelector.call(button, selector);
+    const label = Element.prototype.querySelector.call(button, selector);
     if (label !== null) {
       return label;
     }
@@ -61,7 +59,7 @@ function findLabel(button: Element): Element | null {
 function isOutsideLabel(text: Text, button: Element): boolean {
   let element = text.parentElement;
   while (element !== null && element !== button) {
-    if (proto.matches.call(element, NOT_A_LABEL)) {
+    if (Element.prototype.matches.call(element, NOT_A_LABEL)) {
       return true;
     }
     element = element.parentElement;
@@ -91,9 +89,9 @@ export function setButtonLabel(button: HTMLElement, label: string): void {
   const text = node === null ? findLastText(button) : null;
   const current = node !== null ? getText(node).trim() : text?.data.trim();
 
-  const title = proto.getAttribute.call(button, 'title');
-  if (title !== null && (title === current || title === proto.getAttribute.call(button, 'aria-label'))) {
-    proto.setAttribute.call(button, 'title', label);
+  const title = Element.prototype.getAttribute.call(button, 'title');
+  if (title !== null && (title === current || title === Element.prototype.getAttribute.call(button, 'aria-label'))) {
+    Element.prototype.setAttribute.call(button, 'title', label);
   }
 
   if (node !== null) {
@@ -104,7 +102,7 @@ export function setButtonLabel(button: HTMLElement, label: string): void {
 }
 
 function isIcon(element: Element): boolean {
-  return proto.matches.call(element, ICON) || (proto.querySelector.call(element, ICON) !== null && getText(element).trim() === '');
+  return Element.prototype.matches.call(element, ICON) || (Element.prototype.querySelector.call(element, ICON) !== null && getText(element).trim() === '');
 }
 
 /**
@@ -123,7 +121,7 @@ export function keepOnlyIconAndLabel(button: HTMLElement, label: string): void {
     removedText = removedText || getText(child).trim() !== '';
     Node.prototype.removeChild.call(button, child);
   });
-  proto.querySelectorAll.call(button, SVG_TEXT).forEach((svgText) => svgText.remove());
+  Element.prototype.querySelectorAll.call(button, SVG_TEXT).forEach((svgText) => svgText.remove());
 
   if (node !== null && node.parentNode !== button) {
     Node.prototype.appendChild.call(button, node);

@@ -65,7 +65,7 @@ Script: `js/nowo-ui-clipboard.js` → `window.nowoUiCopyText(text, flashTarget?)
 Stimulus peer: identifier `clipboard-copy` (`clipboard_copy_controller.ts`).
 
 Both the IIFE and the peer update only the label node of a button with an icon (`[data-nowo-ui-label]`, `.nowo-ui-action__label`,
-`.visually-hidden`, else its last text outside an icon or badge); the icon stays. Mark other labels with `data-nowo-ui-label`. `temporary-reveal` does the same on its toggle.
+`.nowo-ui-icon--text`, `.visually-hidden`, else its last text outside an icon or badge); the icon stays. Mark other labels with `data-nowo-ui-label`. `temporary-reveal` does the same on its toggle.
 
 ## Tabs
 

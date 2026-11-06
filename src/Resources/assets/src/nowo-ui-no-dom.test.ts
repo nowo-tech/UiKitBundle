@@ -12,6 +12,9 @@ describe('importing without a DOM', () => {
     ['remote form core', () => import('./nowo-ui-remote-form-core')],
     ['auto-refresh peer', () => import('../stimulus-peers/auto_refresh_controller')],
     ['list-pagination peer', () => import('../stimulus-peers/list_pagination_controller')],
+    ['button label', () => import('./nowo-ui-button-label')],
+    ['temporary-reveal peer', () => import('../stimulus-peers/temporary_reveal_controller')],
+    ['clipboard-copy peer', () => import('../stimulus-peers/clipboard_copy_controller')],
   ])('%s imports', async (_name, load) => {
     await expect(load()).resolves.toBeDefined();
   });

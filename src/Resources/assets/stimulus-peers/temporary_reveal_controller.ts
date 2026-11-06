@@ -118,6 +118,7 @@ export default class extends Controller {
   }
 
   private purgeSecretFromDom(): void {
+    const secret = this.secretValue.trim();
     this.cleared = true;
     this.secretValue = '';
     this.element.removeAttribute(`data-${this.identifier}-secret-value`);
@@ -141,6 +142,9 @@ export default class extends Controller {
       this.toggleTarget.setAttribute('aria-disabled', 'true');
       this.toggleTarget.setAttribute('aria-pressed', 'false');
       keepOnlyIconAndLabel(this.toggleTarget, this.clearedLabelValue);
+      if ('' !== secret && (this.toggleTarget.textContent ?? '').includes(secret)) {
+        this.toggleTarget.textContent = this.clearedLabelValue;
+      }
       this.toggleTarget.setAttribute('aria-label', this.clearedLabelValue);
     }
   }
