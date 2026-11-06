@@ -128,7 +128,7 @@ Security fixes, no markup or configuration change. Three behaviours change, only
   `meta[http-equiv]`, non-http(s) iframes and SVG animations of `href`, and `on*` and `<script>` inside `<template>`
   content. Kit rows have none of them. `sanitizeImported()` now returns a boolean; code that ignores it still works unless
   the root element itself is dropped.
-- **Remote form dialogs:** a hand-written form with a control named `action`, `method`, `enctype`, `elements`,
+- **Remote form dialogs:** a hand-written form with a control named `action`, `method`, `enctype`,
   `hasAttribute` or `getAttribute` now posts through the dialog like any other form, instead of a full-page native POST.
   If the host relied on that, add `data-nowo-ui-remote-form-native` to the form. Symfony named forms (`form[action]`) are
   not affected.
