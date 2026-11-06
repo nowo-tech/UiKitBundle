@@ -145,6 +145,7 @@
             {% if _lc.scopes is not empty %}
                 <div class="nowo-ui-listing-customizer__scope">
                     <label class="nowo-ui-listing-customizer__scope-label" for="{{ _lc.id }}-scope">{{ _lc.scope_label }}</label>
+                    {# twig-005-ignore: nameless scope switcher outside any form, never submitted (the peer reads its value) #}
                     <select id="{{ _lc.id }}-scope" class="{{ nowo_ui_class('input', bundle) }}" data-listing-customizer-target="scope" data-action="listing-customizer#changeScope">
                         {% for _s in _lc.scopes %}
                             <option value="{{ _s.key }}"{% if _s.key == _lc.scope %} selected{% endif %}>{{ _s.label }}</option>

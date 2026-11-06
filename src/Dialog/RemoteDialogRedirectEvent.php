@@ -59,7 +59,7 @@ final class RemoteDialogRedirectEvent extends Event
      */
     public function setPath(string $url): void
     {
-        $this->path = RemoteDialogTarget::path($url, $this->request);
+        $this->path = RemoteDialogTarget::path($url, $this->request); // @igor-ignore — a per-redirect event object (new instance per dispatch), not a shared service
     }
 
     /** `redirect`, `step` or null (left as a redirect). */
@@ -76,6 +76,6 @@ final class RemoteDialogRedirectEvent extends Event
         if (null !== $answer && self::ANSWER_REDIRECT !== $answer && self::ANSWER_STEP !== $answer) {
             throw new InvalidArgumentException(\sprintf('A remote dialog answer is "%s", "%s" or null, "%s" given.', self::ANSWER_REDIRECT, self::ANSWER_STEP, $answer));
         }
-        $this->answer = $answer;
+        $this->answer = $answer; // @igor-ignore — a per-redirect event object (new instance per dispatch), not a shared service
     }
 }
