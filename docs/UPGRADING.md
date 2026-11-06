@@ -113,6 +113,27 @@
 
 ## Unreleased
 
+**2.32.0** (minor), from **2.31.x**: `composer update nowo-tech/ui-kit-bundle`. No markup change by default: the app
+shell renders byte-identical to 2.31 (`below-header`; the 2.26 shell fixtures still match). New, opt-in:
+
+- **Full-height sidebar layout:** `nowo_ui_kit.shell.sidebar_layout: full-height`, or per request the option
+  `sidebar_layout` / the request attribute `_nowo_ui_sidebar_layout` (e.g. from a user preference). See
+  [USAGE](USAGE.md#full-height-sidebar-layout-232).
+- **Brand from config:** `nowo_ui_kit.shell.brand.{name, href, icon_src}`, or the options `aside_brand_html`,
+  `brand_icon_html` / `brand_icon_src`, `brand_name`, `brand_href`.
+- **Hover-expanded rail:** `nowo_ui_kit.shell.hover_expand: true` (or the option `hover_expand`) with `rail_mode`.
+
+Hosts that built this layout themselves (e.g. Symfony Beacon's `_sidebar-layout.scss` and the brand + second burger
+inside `aside_html`) can drop the extra markup: pass `sidebar_layout` (or set the request attribute) and the brand as
+`aside_brand_html` / `brand_*`; the kit prints the aside head with the burger. With `kit_styles: true` the kit CSS does
+the geometry (header / footer offset, burger spot, brand rows, name hidden in the rail, peek over the header); with
+`kit_styles: false` the host keeps only its geometry rules, keyed on `[data-nowo-ui-sidebar-layout='full-height']` and
+the `app_aside_head` / `app_aside_brand` slot classes, and no longer needs a `position: fixed` burger. A fixed footer
+follows the aside with `inset-inline-start: var(--nowo-ui-shell-inset-start)`.
+
+Template overrides of `shell/_open.html.twig` must add the aside head to support the new layout; overrides of
+`shell/_burger.html.twig` are rendered twice in `full-height` (header and aside head).
+
 ## To 2.31.0
 
 **2.31.0** (minor), from **2.30.x**: `composer update nowo-tech/ui-kit-bundle`. No markup change (2.27 – 2.30

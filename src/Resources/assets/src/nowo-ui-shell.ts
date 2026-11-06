@@ -7,6 +7,12 @@
  * mode is persisted (localStorage + optional cookie). Key names: `data-nowo-ui-sidebar-storage`,
  * `data-nowo-ui-sidebar-cookie`, `data-nowo-ui-sidebar-hidden-value`, `data-nowo-ui-sidebar-default`
  * (server / account default). See `nowo-ui-sidebar-core.ts`.
+ *
+ * Hover-expanded rail (2.32): with `data-nowo-ui-sidebar-hover-expand` on a rail shell, the pointer or the keyboard
+ * focus on the icons-only rail adds `is-aside-peek` (the kit CSS widens the panel over the page); leaving it, Escape or
+ * any mode change removes it. Short delays keep a pointer that only crosses the rail from opening it; touch never peeks.
+ * Every `[data-nowo-ui-burger]` of a shell (the header's and, in the full-height layout, the aside head's) is kept in
+ * sync.
  */
 
 import {
@@ -59,19 +65,80 @@ export function toggleAside(shell: HTMLElement | null, forceOpen?: boolean): voi
   if (!shell) {
     return;
   }
-  const btn = shell.querySelector('[data-nowo-ui-burger]');
+  const burgers = shell.querySelectorAll('[data-nowo-ui-burger]');
   if (isDesktop()) {
     const collapsed = typeof forceOpen === 'boolean' ? !forceOpen : !shell.classList.contains('is-aside-collapsed');
     shell.classList.toggle('is-aside-collapsed', collapsed);
     shell.classList.remove('is-aside-open-mobile');
     document.body.classList.remove('nowo-ui-aside-open');
-    setExpanded(btn, !collapsed);
+    burgers.forEach((btn) => setExpanded(btn, !collapsed));
     return;
   }
   const open = typeof forceOpen === 'boolean' ? forceOpen : !shell.classList.contains('is-aside-open-mobile');
   shell.classList.toggle('is-aside-open-mobile', open);
   document.body.classList.toggle('nowo-ui-aside-open', open);
-  setExpanded(btn, open);
+  burgers.forEach((btn) => setExpanded(btn, open));
+}
+
+export const PEEK_CLASS = 'is-aside-peek';
+export const PEEK_OPEN_DELAY_MS = 120;
+export const PEEK_CLOSE_DELAY_MS = 220;
+
+/** Whether the shell may peek now: hover expand on, the icons-only rail, desktop. */
+export function canPeek(shell: HTMLElement): boolean {
+  return (
+    shell.hasAttribute('data-nowo-ui-sidebar-hover-expand') &&
+    shell.classList.contains('is-aside-rail') &&
+    !isMobileSidebar(sidebarOptionsFrom(shell))
+  );
+}
+
+/** Wires the hover expand of a shell's aside once; returns false when there is nothing to bind or it already is. */
+export function bindSidebarPeek(shell: HTMLElement): boolean {
+  const aside = shell.querySelector('[data-nowo-ui-aside]');
+  if (!(aside instanceof HTMLElement) || !shell.hasAttribute('data-nowo-ui-sidebar-hover-expand') || aside.hasAttribute('data-nowo-ui-peek-bound')) {
+    return false;
+  }
+  aside.setAttribute('data-nowo-ui-peek-bound', '');
+  let timer: number | undefined;
+  const schedule = (open: boolean, delay: number): void => {
+    window.clearTimeout(timer);
+    timer = window.setTimeout(() => {
+      shell.classList.toggle(PEEK_CLASS, open && canPeek(shell));
+    }, delay);
+  };
+
+  aside.addEventListener('pointerenter', (event: PointerEvent) => {
+    if (event.pointerType !== 'touch' && canPeek(shell)) {
+      schedule(true, PEEK_OPEN_DELAY_MS);
+    }
+  });
+  aside.addEventListener('pointerleave', () => {
+    if (!aside.contains(document.activeElement)) {
+      schedule(false, PEEK_CLOSE_DELAY_MS);
+    }
+  });
+  aside.addEventListener('focusin', () => {
+    if (canPeek(shell)) {
+      schedule(true, 0);
+    }
+  });
+  aside.addEventListener('focusout', (event: FocusEvent) => {
+    if (!(event.relatedTarget instanceof Node && aside.contains(event.relatedTarget))) {
+      schedule(false, PEEK_CLOSE_DELAY_MS);
+    }
+  });
+  aside.addEventListener('keydown', (event: KeyboardEvent) => {
+    if (event.key === 'Escape' && shell.classList.contains(PEEK_CLASS)) {
+      window.clearTimeout(timer);
+      shell.classList.remove(PEEK_CLASS);
+    }
+  });
+  shell.addEventListener('nowo-ui:sidebar-mode', () => {
+    window.clearTimeout(timer);
+  });
+
+  return true;
 }
 
 function isRailShell(shell: HTMLElement | null): shell is HTMLElement {
@@ -99,6 +166,7 @@ export function setSidebarMode(shell: HTMLElement | null, mode: SidebarMode, per
   const mobile = isMobileSidebar(options);
   const selector = shell.getAttribute('data-nowo-ui-sidebar-rail-labels') || SIDEBAR_KIT_RAIL_LABEL_SELECTOR;
   applySidebarShellState(shell, mode, mobile, { railLabelSelector: selector });
+  shell.classList.remove(PEEK_CLASS);
   document.body.classList.toggle('nowo-ui-aside-open', mobile && mode !== 'hidden');
   shell.querySelectorAll('[data-nowo-ui-burger]').forEach((btn) => {
     if (btn instanceof HTMLElement) {
@@ -217,6 +285,24 @@ function applyStoredMainWidth(shell: HTMLElement): void {
   syncWidthToggleUi(shell, currentMainWidth(shell));
 }
 
+function isShown(el: Element): boolean {
+  return el.getClientRects().length > 0 && window.getComputedStyle(el).visibility !== 'hidden';
+}
+
+/**
+ * The full-height layout has two burgers (header and aside head) and shows one at a time: when the focused one has just
+ * been hidden by its own click, the focus moves to the one now shown, so a keyboard user never lands on <body>.
+ */
+export function keepBurgerFocus(shell: HTMLElement | null, burger: Element): void {
+  if (!shell || document.activeElement !== burger || isShown(burger)) {
+    return;
+  }
+  const other = Array.from(shell.querySelectorAll('[data-nowo-ui-burger]')).find((el) => el !== burger && isShown(el));
+  if (other instanceof HTMLElement) {
+    other.focus();
+  }
+}
+
 function onDocumentClick(event: MouseEvent): void {
   const target = event.target;
   if (!(target instanceof Element)) {
@@ -232,6 +318,7 @@ function onDocumentClick(event: MouseEvent): void {
     } else {
       toggleAside(shell);
     }
+    keepBurgerFocus(shell, burger);
     return;
   }
 
@@ -340,6 +427,7 @@ export function bindNowoUiShell(): void {
       applyStoredMainWidth(el);
       if (isRailShell(el)) {
         initSidebarRail(el);
+        bindSidebarPeek(el);
       }
     }
   });

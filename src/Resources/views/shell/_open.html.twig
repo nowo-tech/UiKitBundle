@@ -30,12 +30,26 @@
       app_header_context, + nowo-ui-header__context with kit styles, hook data-nowo-ui-header-context) — typically
       the `header_context` partial (page actions, home link, compact breadcrumb). Only rendered when not blank; then
       the root gets has-header-context. Empty or whitespace = the 2.26 markup, byte for byte
+    - sidebar_layout (2.32): below-header (default: nowo_ui_kit.shell.sidebar_layout, overridden per request by the
+      request attribute _nowo_ui_sidebar_layout; below-header = the 2.31 markup, byte for byte) | full-height: the root
+      gets is-sidebar-full-height + data-nowo-ui-sidebar-layout="full-height" and the aside an aside head (slot
+      app_aside_head, + nowo-ui-aside-head with kit styles, hook data-nowo-ui-aside-head) with a second burger (same
+      partial and options) and the aside brand (slot app_aside_brand, hook data-nowo-ui-aside-brand). The header keeps
+      its burger and brand for phones and for a hidden aside; the kit CSS hides them on desktop while the aside shows
+    - aside brand (2.32, full-height only), first match: aside_brand_html (HTML; mark the name with the class
+      nowo-ui-aside-brand__name so the icons-only rail hides it), else brand_icon_html (HTML) / brand_icon_src (image
+      URL) + brand_name (text) + brand_href (defaults: nowo_ui_kit.shell.brand.icon_src / name / href), else brand_html,
+      else brand (its initial as the icon). The parts (slots app_aside_brand_icon / app_aside_brand_name) also fill the
+      header brand when neither brand_html nor brand is given
+    - hover_expand (2.32; default nowo_ui_kit.shell.hover_expand): with kit styles and rail_mode, the icons-only rail
+      widens over the page on hover / focus (data-nowo-ui-sidebar-hover-expand; nowo-ui-shell.js sets is-aside-peek)
     - bundle: per-bundle theme exceptions
   Root state classes: is-sidebar-collapsed, is-sidebar-rail, is-full-width / is-content-width (+ is-aside-collapsed /
   is-aside-rail with kit styles, the classes nowo-ui-shell.js toggles). Hooks: data-nowo-ui-shell, data-nowo-ui-aside,
   data-nowo-ui-burger, data-nowo-ui-aside-backdrop.
   Slots: app_shell, app_header, app_header_start, app_header_context (2.27), app_header_end, app_brand, app_aside, app_aside_inner,
-  app_aside_label, app_aside_nav, app_main (+ app_burger… in the burger, app_backdrop in the closing half).
+  app_aside_label, app_aside_nav, app_main (+ app_burger… in the burger, app_backdrop in the closing half); 2.32:
+  app_aside_head, app_aside_brand, app_aside_brand_icon, app_aside_brand_name.
 #}
 {% set bundle = bundle|default(null) %}
 {% set _cfg = nowo_ui_kit_shell|default({}) %}
@@ -50,6 +64,10 @@
 {% set _state = (_full ? 'is-full-width' : 'is-content-width')
     ~ (_collapsed ? ' is-sidebar-collapsed' ~ (_kit ? ' is-aside-collapsed') : '')
     ~ (_rail ? ' is-sidebar-rail' ~ (_kit ? ' is-aside-rail') : '') %}
+{% set _full_height = nowo_ui_sidebar_layout(sidebar_layout ?? null) == 'full-height' %}
+{% if _full_height %}
+    {% set _state = _state ~ ' is-sidebar-full-height' %}
+{% endif %}
 {% set _root_attr = {}|merge(attr|default({}))|merge(shell_attr|default({})) %}
 {% if _kit and _rail_mode %}
     {% set _root_attr = {
@@ -58,33 +76,46 @@
         'data-nowo-ui-sidebar-cookie': _cfg.sidebar_cookie|default(null),
         'data-nowo-ui-sidebar-hidden-value': _cfg.sidebar_cookie|default(null) ? (_cfg.sidebar_hidden_value ?? 'collapsed') : null,
         'data-nowo-ui-sidebar-mode': _collapsed ? 'hidden' : (_rail ? 'rail' : 'expanded'),
+        'data-nowo-ui-sidebar-hover-expand': (hover_expand ?? (_cfg.hover_expand ?? false)) ? true : null,
     }|merge(_root_attr) %}
 {% endif %}
+{% if _full_height %}
+    {% set _root_attr = {'data-nowo-ui-sidebar-layout': 'full-height'}|merge(_root_attr) %}
+{% endif %}
+{% set _burger = {
+    controls: aside_id,
+    expanded: not _collapsed,
+    rail: _rail,
+    rail_mode: _rail_mode,
+    kit_styles: _kit,
+    label: burger_label|default(null),
+    label_expand: burger_label_expand|default(null),
+    label_rail: burger_label_rail|default(null),
+    label_hide: burger_label_hide|default(null),
+    label_attr_names: burger_label_attr_names|default({}),
+    attr: burger_attr|default({}),
+    icon: burger_icon|default('svg'),
+    static_icons: burger_static_icons|default(['open', 'close']),
+    bundle: bundle,
+} %}
+{% set _brand_cfg = _cfg.brand|default({}) %}
+{% set _brand_name = brand_name ?? (_brand_cfg.name ?? null) %}
+{% set _brand_href = nowo_ui_safe_href(brand_href ?? (_brand_cfg.href ?? null)) %}
+{% set _brand_icon_src = nowo_ui_safe_href(brand_icon_src ?? (_brand_cfg.icon_src ?? null)) %}
+{% set _brand_icon = brand_icon_html ?? null %}
+{% set _has_brand_parts = _brand_icon or _brand_icon_src or (_brand_name is not null and _brand_name is not same as('')) %}
 {% set aside_label = aside_label|default('nav.aside'|trans({}, 'NowoUiKitBundle')) %}
 {% set _header_context = header_context is defined and header_context ? header_context|trim : '' %}
 <div class="{{ nowo_ui_class('app_shell', bundle) }}{{ _kit ? ' nowo-ui-shell' }} {{ _state }}{{ _header_context is not same as('') ? ' has-header-context' }}" data-nowo-ui-shell{{ nowo_ui_attrs('app_shell', bundle, _root_attr) }}>
     <header class="{{ nowo_ui_class('app_header', bundle) }}{{ _kit ? ' nowo-ui-header' }}"{{ nowo_ui_attrs('app_header', bundle) }}>
         <div class="{{ nowo_ui_class('app_header_start', bundle) }}{{ _kit ? ' nowo-ui-header__start' }}"{{ nowo_ui_attrs('app_header_start', bundle) }}>
-            {{ include(nowo_ui_partial('app_shell_burger', bundle), {
-                controls: aside_id,
-                expanded: not _collapsed,
-                rail: _rail,
-                rail_mode: _rail_mode,
-                kit_styles: _kit,
-                label: burger_label|default(null),
-                label_expand: burger_label_expand|default(null),
-                label_rail: burger_label_rail|default(null),
-                label_hide: burger_label_hide|default(null),
-                label_attr_names: burger_label_attr_names|default({}),
-                attr: burger_attr|default({}),
-                icon: burger_icon|default('svg'),
-                static_icons: burger_static_icons|default(['open', 'close']),
-                bundle: bundle,
-            }, false) }}
+            {{ include(nowo_ui_partial('app_shell_burger', bundle), _burger, false) }}
             {% if brand_html is defined and brand_html %}
                 {{ brand_html|raw }}
             {% elseif brand is defined and brand %}
                 <strong class="{{ nowo_ui_class('app_brand', bundle) }}{{ _kit ? ' nowo-ui-header__brand' }}"{{ nowo_ui_attrs('app_brand', bundle) }}>{{ brand }}</strong>
+            {% elseif _has_brand_parts %}
+                {{ include('@NowoUiKitBundle/shell/_brand_parts.html.twig', {slot: 'app_brand', kit_class: 'nowo-ui-header__brand nowo-ui-aside-brand', name: _brand_name, href: _brand_href, icon_html: _brand_icon, icon_src: _brand_icon_src, kit: _kit, bundle: bundle}, false) }}
             {% endif %}
         </div>
 {% if _header_context is not same as('') %}
@@ -113,6 +144,20 @@
     </header>
 
     <aside id="{{ aside_id }}" class="{{ nowo_ui_class('app_aside', bundle) }}{{ _kit ? ' nowo-ui-aside' }}" data-nowo-ui-aside aria-label="{{ aside_label }}"{{ nowo_ui_attrs('app_aside', bundle) }}>
+{% if _full_height %}
+        <div class="{{ nowo_ui_class('app_aside_head', bundle) }}{{ _kit ? ' nowo-ui-aside-head' }}" data-nowo-ui-aside-head{{ nowo_ui_attrs('app_aside_head', bundle) }}>
+            {{ include(nowo_ui_partial('app_shell_burger', bundle), _burger, false) }}
+            {% if aside_brand_html is defined and aside_brand_html %}
+                <div class="{{ nowo_ui_class('app_aside_brand', bundle) }}{{ _kit ? ' nowo-ui-aside-brand' }}" data-nowo-ui-aside-brand{{ nowo_ui_attrs('app_aside_brand', bundle) }}>{{ aside_brand_html|raw }}</div>
+            {% elseif _has_brand_parts %}
+                {{ include('@NowoUiKitBundle/shell/_brand_parts.html.twig', {slot: 'app_aside_brand', kit_class: 'nowo-ui-aside-brand', hook: true, name: _brand_name, href: _brand_href, icon_html: _brand_icon, icon_src: _brand_icon_src, kit: _kit, bundle: bundle}, false) }}
+            {% elseif brand_html is defined and brand_html %}
+                <div class="{{ nowo_ui_class('app_aside_brand', bundle) }}{{ _kit ? ' nowo-ui-aside-brand' }}" data-nowo-ui-aside-brand{{ nowo_ui_attrs('app_aside_brand', bundle) }}>{{ brand_html|raw }}</div>
+            {% elseif brand is defined and brand %}
+                {{ include('@NowoUiKitBundle/shell/_brand_parts.html.twig', {slot: 'app_aside_brand', kit_class: 'nowo-ui-aside-brand', hook: true, name: brand, href: null, icon_html: null, icon_src: null, kit: _kit, bundle: bundle}, false) }}
+            {% endif %}
+        </div>
+{% endif %}
         {% if aside_html is defined and aside_html %}
             {{ aside_html|raw }}
         {% else %}

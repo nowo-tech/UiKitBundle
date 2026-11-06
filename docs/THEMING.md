@@ -23,6 +23,7 @@ two token blocks of `nowo-ui.css`. A host theme is a short `:root` block.
 - [Cards, navigation, progress](#cards-navigation-progress)
 - [Detail pages (2.21)](#detail-pages-221)
 - [Compact header (2.27)](#compact-header-227)
+- [Full-height sidebar layout (2.32)](#full-height-sidebar-layout-232)
 - [Layers (public API, 2.28)](#layers-public-api-228)
 - [Dialog sizes (2.29)](#dialog-sizes-229)
 - [Remote form dialog (2.28)](#remote-form-dialog-228)
@@ -308,6 +309,29 @@ The top-bar slot of the shells (`header_context`) and its partials `header_conte
 | `--nowo-ui-header-crumbs-panel-shadow` | `0 8px 24px rgb(15 23 42 / 12%)`; dark `0 8px 24px rgb(0 0 0 / 45%)` |
 | `--nowo-ui-main-padding-top-compact` | `0.75rem` (top padding of `.nowo-ui-main` under a filled bar) |
 
+<a id="full-height-sidebar-layout-232"></a>
+
+## Full-height sidebar layout (2.32)
+
+`nowo_ui_kit.shell.sidebar_layout: full-height` (or the `sidebar_layout` option / the `_nowo_ui_sidebar_layout` request
+attribute; [USAGE](USAGE.md#full-height-sidebar-layout-232)) puts the aside from the top edge to the bottom on desktop
+(901 px and up), with the burger and the brand in its head; the header and the footer start at its right edge. Every
+colour comes from the base tokens (`--nowo-ui-surface`, `--nowo-ui-border`, `--nowo-ui-text`, `--nowo-ui-primary` /
+`--nowo-ui-primary-contrast` for the initial icon), so light / dark and host `tokens` need nothing new. Hooks to style:
+`[data-nowo-ui-sidebar-layout='full-height']` / `.is-sidebar-full-height` on the shell, `.nowo-ui-aside-head`,
+`.nowo-ui-aside-brand`, `.nowo-ui-aside-brand__icon` (`--initial` for the letter), `.nowo-ui-aside-brand__name`, and
+`.is-aside-peek` for the hover-expanded rail (both layouts).
+
+| Token | Default | Used by |
+|-------|---------|---------|
+| `--nowo-ui-aside-peek-width` | `15.5rem` | the hover-expanded rail and the full-height aside head |
+| `--nowo-ui-aside-brand-icon-size` | `1.75rem` | the aside brand icon box |
+| `--nowo-ui-shell-inset-start` | `0px` (the aside width in this layout on desktop) | a host's fixed footer / bar: `inset-inline-start: var(--nowo-ui-shell-inset-start)` |
+
+The burger keeps its spot in every mode: centred on the icons-only rail's column (`(--nowo-ui-aside-rail-width -
+2.25rem) / 2` from the aside's start edge), in a row `--nowo-ui-header-height` tall. Phones keep the 2.31 off-canvas
+aside, header burger and header brand.
+
 ## Layers (public API, 2.28)
 
 The stacking order of the kit is a **public API** since 2.28: the values below are stable for 2.x (changing one is a
@@ -490,6 +514,9 @@ rail width, default `3.75rem`)*, `--nowo-ui-aside-duration`,
 `--nowo-ui-aside-ease`, `--nowo-ui-header-height`, `--nowo-ui-content-max-width`,
 `--nowo-ui-control-height`, `--nowo-ui-control-height-compact`, `--nowo-ui-filter-control-height`,
 `--nowo-ui-orb-size`, `--nowo-ui-page-loader-corner-bottom`, `--nowo-ui-page-loader-corner-left`.
+
+App shell tokens added in 2.32: `--nowo-ui-aside-peek-width`, `--nowo-ui-aside-brand-icon-size`,
+`--nowo-ui-shell-inset-start` (see [Full-height sidebar layout](#full-height-sidebar-layout-232)).
 
 Since 2.11 `--nowo-ui-control-height` also sets the minimum height of `.nowo-ui-btn` and `.nowo-ui-input` (it used
 to feed the filter rows only). See [Density tokens](#density-tokens-211) for the per-component metrics.

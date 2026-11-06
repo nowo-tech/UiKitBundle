@@ -1,0 +1,25 @@
+/* UiKit 2.32 sidebar layout demo (/demo/sidebar-layout). The layout itself is the kit's (nowo-ui.css); this file only
+   pins the footer for ?footer=fixed — a host's fixed footer follows the aside through --nowo-ui-shell-inset-start — and
+   colours the demo logo. The demo loads no CSS reset: drop the browser's body margin as a host's base styles would. */
+body {
+  margin: 0;
+}
+
+.kit-sidebar-demo__logo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  color: var(--nowo-ui-primary);
+}
+
+[data-demo-footer='fixed'] > .nowo-ui-footer {
+  position: fixed;
+  bottom: 0;
+  inset-inline: var(--nowo-ui-shell-inset-start, 0px) 0;
+  z-index: 30;
+  transition: inset-inline-start var(--nowo-ui-aside-duration) var(--nowo-ui-aside-ease);
+}
+
+[data-demo-footer='fixed'] > .nowo-ui-main {
+  padding-bottom: 4.5rem;
+}

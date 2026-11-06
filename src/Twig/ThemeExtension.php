@@ -13,6 +13,7 @@ use Nowo\UiKitBundle\Shell\HeaderCrumbs;
 use Nowo\UiKitBundle\Shell\HeaderPresentation;
 use Nowo\UiKitBundle\Shell\HeaderPresentationResolver;
 use Nowo\UiKitBundle\Shell\SafeHref;
+use Nowo\UiKitBundle\Shell\SidebarLayoutResolver;
 use Nowo\UiKitBundle\Theme\FontPreload;
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Theme\ThemeSlots;
@@ -58,6 +59,9 @@ use Twig\TwigFunction;
  *   `presentation` (`standard` | `compact`; anything else is ignored) defaults to {@see self::headerPresentation()}
  * - `nowo_ui_header_presentation(presentation = null)` (2.27) — the resolved page-header presentation of the request
  *   ({@see HeaderPresentation}: a valid option, else the request attribute, else `nowo_ui_kit.header.presentation`)
+ * - `nowo_ui_sidebar_layout(layout = null)` (2.32) — the app shell's sidebar layout of the request (`below-header` |
+ *   `full-height`: a valid option, else the request attribute `_nowo_ui_sidebar_layout`, else
+ *   `nowo_ui_kit.shell.sidebar_layout`)
  * - `nowo_ui_safe_href(href)` (2.27) — the href when its scheme is safe ({@see SafeHref}: relative, http, https,
  *   mailto), else null
  * - `nowo_ui_breadcrumb_kit_trail(collection = null, context_key = '')` (2.27) — BreadcrumbKit's `breadcrumb_trail()`
@@ -94,15 +98,18 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
 
     private readonly HeaderPresentationResolver $presentationResolver;
 
+    private readonly SidebarLayoutResolver $sidebarLayoutResolver;
+
     /** Public page-header contract (2.3): what the scaffolds render in `nowo_ui_page_header`. */
     public const PAGE_HEADER_TEMPLATE = '@NowoUiKitBundle/page/_page_header.html.twig';
 
     /**
      * @param array{admin: string, guest: string}                                  $layouts
-     * @param array{breadcrumb_kit: bool, collection: string|null, enabled?: bool} $breadcrumbs `enabled` (2.3.1, default true): false = no breadcrumb trail in page headers
-     * @param FormFactoryInterface|null                                            $actionForms standalone factory of the CSRF-only action forms (2.18; core types only, so no host type extension changes them); null = a new one per call
-     * @param FontPreload|null                                                     $fontPreload font preload tags (2.21, `nowo_ui_kit.font_preload`); null = none
-     * @param array{presentation: string, compact_actions: string}                 $header      2.27 `nowo_ui_kit.header`: default presentation, where `header.actions` go in compact (`page` | `bar`)
+     * @param array{breadcrumb_kit: bool, collection: string|null, enabled?: bool} $breadcrumbs   `enabled` (2.3.1, default true): false = no breadcrumb trail in page headers
+     * @param FormFactoryInterface|null                                            $actionForms   standalone factory of the CSRF-only action forms (2.18; core types only, so no host type extension changes them); null = a new one per call
+     * @param FontPreload|null                                                     $fontPreload   font preload tags (2.21, `nowo_ui_kit.font_preload`); null = none
+     * @param array{presentation: string, compact_actions: string}                 $header        2.27 `nowo_ui_kit.header`: default presentation, where `header.actions` go in compact (`page` | `bar`)
+     * @param string                                                               $sidebarLayout 2.32 `nowo_ui_kit.shell.sidebar_layout`: `below-header` | `full-height`
      */
     public function __construct(
         private readonly Theme $theme,
@@ -114,9 +121,11 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
         private readonly ?FormFactoryInterface $actionForms = null,
         private readonly ?FontPreload $fontPreload = null,
         array $header = ['presentation' => 'standard', 'compact_actions' => 'page'],
+        string $sidebarLayout = 'below-header',
     ) {
         $this->uiForms = new UiFormViews($actionForms);
         $this->presentationResolver = new HeaderPresentationResolver($requestStack, $header['presentation'], $header['compact_actions']);
+        $this->sidebarLayoutResolver = new SidebarLayoutResolver($requestStack, $sidebarLayout);
     }
 
     public function getFunctions(): array
@@ -144,6 +153,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             new TwigFunction('nowo_ui_visible_when', VisibleWhen::attributes(...)),
             new TwigFunction('nowo_ui_font_preload', fn (): string => $this->fontPreload?->tags() ?? '', ['is_safe' => ['html']]),
             new TwigFunction('nowo_ui_header_presentation', $this->headerPresentation(...)),
+            new TwigFunction('nowo_ui_sidebar_layout', $this->sidebarLayout(...)),
             new TwigFunction('nowo_ui_breadcrumb_kit_trail', $this->breadcrumbKitTrail(...), ['needs_environment' => true]),
             new TwigFunction('nowo_ui_header_crumbs', $this->headerCrumbs(...), ['needs_environment' => true]),
             new TwigFunction('nowo_ui_safe_href', static fn (mixed $href): ?string => \is_string($href) ? SafeHref::filter($href) : null),
@@ -364,6 +374,16 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
     public function headerPresentation(mixed $presentation = null): string
     {
         return $this->presentationResolver->resolve($presentation);
+    }
+
+    /**
+     * `nowo_ui_sidebar_layout(layout = null)` (2.32): the app shell's sidebar layout of the request
+     * ({@see SidebarLayout}: a valid `layout`, else the request attribute `_nowo_ui_sidebar_layout`, else
+     * `nowo_ui_kit.shell.sidebar_layout`): `below-header` | `full-height`.
+     */
+    public function sidebarLayout(mixed $layout = null): string
+    {
+        return $this->sidebarLayoutResolver->resolve($layout);
     }
 
     /**

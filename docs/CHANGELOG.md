@@ -102,6 +102,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Planned **2.32.0** (minor): configurable full-height sidebar layout of the app shell (Symfony Beacon request
+2026-11-06, `BUNDLES-REQUESTS/2026-11-06-uikit-sidebar-layout.md`). Opt-in; the default output is unchanged.
+
+### Added
+
+- **`nowo_ui_kit.shell.sidebar_layout: below-header | full-height`** (default `below-header`, the 2.31 markup byte for
+  byte). Per request: the `app_shell_open` / `app_shell` option `sidebar_layout`, then the request attribute
+  `_nowo_ui_sidebar_layout` (`Shell\SidebarLayout::ATTRIBUTE`); `Shell\SidebarLayoutResolver` and the Twig function
+  `nowo_ui_sidebar_layout(layout = null)` resolve it. In `full-height` the root gets `is-sidebar-full-height` +
+  `data-nowo-ui-sidebar-layout="full-height"` and the aside an aside head (slot `app_aside_head`, hook
+  `data-nowo-ui-aside-head`) with a second burger (same partial and options) and the aside brand (slot
+  `app_aside_brand`, hook `data-nowo-ui-aside-brand`). Kit CSS (901 px and up): the aside from the top edge, the header
+  and the footer at its right edge (grid areas, following the slide / rail width), the burger centred on the rail's
+  icon column; expanded: brand icon + name on the burger's row; icons-only rail: the icon under the burger, the name
+  visually hidden; hidden aside: the header burger and brand come back. Phones unchanged.
+- **Aside brand without template overrides:** `aside_brand_html` (block `nowo_ui_shell_aside_brand` of `app_shell`;
+  class `nowo-ui-aside-brand__name` marks what the rail hides), or the parts `brand_icon_html` / `brand_icon_src` +
+  `brand_name` + `brand_href`, defaulting to the new config **`nowo_ui_kit.shell.brand.{name, href, icon_src}`**; the
+  parts also fill an otherwise empty header brand. Slots `app_aside_brand_icon`, `app_aside_brand_name`.
+- **Hover-expanded rail** (`hover_expand` option / **`nowo_ui_kit.shell.hover_expand`**, kit styles + `rail_mode`):
+  `data-nowo-ui-sidebar-hover-expand`; `nowo-ui-shell.js` adds `is-aside-peek` on hover (120 ms) or keyboard focus and
+  removes it on leave (220 ms), Escape or a mode change; the panel widens over the page (and over the header in the
+  full-height layout, carrying its burger) without moving the content. Both layouts.
+- Tokens `--nowo-ui-aside-peek-width`, `--nowo-ui-aside-brand-icon-size`, `--nowo-ui-shell-inset-start` (for a host's
+  fixed footer).
+- Demo `/demo/sidebar-layout` (`?layout=`, `?mode=`, `?hover=`, `?footer=fixed`) with Playwright geometry / axe checks
+  and screenshots at 1280 and 390 px.
+
+### Changed
+
+- `nowo-ui-shell.js`: a two-mode (non-rail) shell keeps `aria-expanded` of every `[data-nowo-ui-burger]` in sync (it
+  updated the first one only); after a burger click hides the focused burger, the focus moves to the burger now shown.
+
+
 ## [2.31.0] - 2026-11-06
 
 Dialog rule v2: dialogs take their content height by default (`theme.dialog.height: content|size`), header and footer get a tinted chrome, `askConfirm()` gains a × that cancels, and `View\Confirm` renders with the dialog anatomy. CI now fails when built assets drift from source.
