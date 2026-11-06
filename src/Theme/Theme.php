@@ -31,6 +31,12 @@ final readonly class Theme
     /** 2.28: values of `theme.menu_semantics` (null = 2.27 markup). */
     public const MENU_SEMANTICS = ['menu', 'disclosure'];
 
+    /** 2.31: values of `theme.dialog.height` (content = dialog rule v2, the default; size = the 2.29 / 2.30 height). */
+    public const DIALOG_HEIGHTS = ['content', 'size'];
+
+    /** 2.31: the token `theme.dialog.height: size` prints on `:root` (1 = the size's height). */
+    public const DIALOG_FILL_TOKEN = 'dialog-fill';
+
     private const ATTRIBUTE_NAME = '/^[a-zA-Z_:][a-zA-Z0-9_:.-]*$/D';
 
     /**
@@ -90,6 +96,7 @@ final readonly class Theme
      * @param bool                                                     $popoverMenus           2.4: menu / kebab partials render their panel as a native [popover] (top layer) by default
      * @param bool                                                     $formErrorsAfterWidget  2.10: the UiKit form theme prints a field's errors after its widget (default: Symfony's order, before)
      * @param string|null                                              $menuSemantics          2.28: default ARIA of popover menus (`menu` partial option `menu_semantics`); null = as 2.27
+     * @param string                                                   $dialogHeight           2.31: `content` (default) = dialogs as tall as their content, capped; `size` = the size's height (2.29 / 2.30)
      */
     public function __construct(
         private string $framework = 'bootstrap5',
@@ -105,9 +112,13 @@ final readonly class Theme
         private bool $popoverMenus = false,
         private bool $formErrorsAfterWidget = false,
         private ?string $menuSemantics = null,
+        private string $dialogHeight = 'content',
     ) {
         if (null !== $menuSemantics && !\in_array($menuSemantics, self::MENU_SEMANTICS, true)) {
             throw new InvalidArgumentException(\sprintf('Invalid UiKit theme menu_semantics "%s": use null, "menu" or "disclosure".', $menuSemantics));
+        }
+        if (!\in_array($dialogHeight, self::DIALOG_HEIGHTS, true)) {
+            throw new InvalidArgumentException(\sprintf('Invalid UiKit theme dialog.height "%s": use "content" or "size".', $dialogHeight));
         }
         $this->classes = $this->normalizeClasses($classes, 'classes');
         $this->pages = $this->normalizePages($pages, 'pages');
@@ -191,7 +202,28 @@ final readonly class Theme
         /** @var array<string, array<string, mixed>> $pages */
         $pages = $theme['pages'] ?? [];
 
-        return new self($framework, $classes, $attributes, $partials, $tokens, $tokensDark, $bundles, false !== ($theme['framework_defaults'] ?? true), $pages, true === ($theme['confirm_message_in_header'] ?? false), true === ($theme['popover_menus'] ?? false), true === ($theme['form_errors_after_widget'] ?? false), self::menuSemanticsOption($theme['menu_semantics'] ?? null));
+        return new self($framework, $classes, $attributes, $partials, $tokens, $tokensDark, $bundles, false !== ($theme['framework_defaults'] ?? true), $pages, true === ($theme['confirm_message_in_header'] ?? false), true === ($theme['popover_menus'] ?? false), true === ($theme['form_errors_after_widget'] ?? false), self::menuSemanticsOption($theme['menu_semantics'] ?? null), self::dialogHeightOption($theme['dialog'] ?? null));
+    }
+
+    /**
+     * `theme.dialog.height` from the processed config (2.31; missing = `content`).
+     */
+    private static function dialogHeightOption(mixed $dialog): string
+    {
+        $height = \is_array($dialog) ? ($dialog['height'] ?? 'content') : 'content';
+        if (!\is_string($height) || !\in_array($height, self::DIALOG_HEIGHTS, true)) {
+            throw new InvalidArgumentException(\sprintf('Invalid UiKit theme dialog.height "%s": use "content" or "size".', \is_string($height) ? $height : get_debug_type($height)));
+        }
+
+        return $height;
+    }
+
+    /**
+     * Height of the kit dialogs (`theme.dialog.height`, 2.31): `content` (default, dialog rule v2) or `size` (2.29 / 2.30).
+     */
+    public function dialogHeight(): string
+    {
+        return $this->dialogHeight;
     }
 
     /**
@@ -352,7 +384,7 @@ final readonly class Theme
 
     public function hasTokens(): bool
     {
-        if ([] !== $this->tokens || [] !== $this->tokensDark || null !== $this->listFilters->gridColumns()) {
+        if ([] !== $this->tokens || [] !== $this->tokensDark || null !== $this->listFilters->gridColumns() || 'size' === $this->dialogHeight) {
             return true;
         }
         foreach ($this->bundles as $bundle) {
@@ -378,6 +410,10 @@ final readonly class Theme
         if (null !== $gridColumns && !isset($this->tokens[ListFiltersOptions::GRID_TOKEN]) && !isset($this->tokens['--nowo-ui-'.ListFiltersOptions::GRID_TOKEN])) {
             // 2.30: `pages.list.filters.grid` track list (an explicit `tokens` entry wins)
             $shared[ListFiltersOptions::GRID_TOKEN] = $gridColumns;
+        }
+        if ('size' === $this->dialogHeight && !isset($this->tokens[self::DIALOG_FILL_TOKEN]) && !isset($this->tokens['--nowo-ui-'.self::DIALOG_FILL_TOKEN])) {
+            // 2.31: `dialog.height: size` keeps the 2.29 / 2.30 dialog height (an explicit `tokens` entry wins)
+            $shared[self::DIALOG_FILL_TOKEN] = '1';
         }
         $blocks[] = $this->block(':root', $shared);
         $blocks[] = $this->block(self::LIGHT_ROOT, $light);

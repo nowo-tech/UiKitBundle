@@ -101,6 +101,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Planned **2.31.0** (minor): dialog rule v2 (owner decision D-20261105-54, Symfony Beacon) — the height of every kit
+dialog follows its content, and the JS confirm gets the header close button. A **visual default change**: see
+[UPGRADING](UPGRADING.md#unreleased) (one line of config keeps the 2.29 / 2.30 height).
+
+### Changed
+
+- **Dialog height = content** (nowo-ui.css): the centred `dialog` partial, the `confirm_dialog` anatomy
+  (`anatomy: true`), the `remote_form_dialog`, the row detail dialog and own markup on the `nowo-ui-dialog*` classes
+  are as tall as their content, capped at `min(size height token, 100dvh - 2rem)` (`--nowo-ui-dialog-max-h`); only the
+  body scrolls, header and footer always visible. 2.29 / 2.30 gave every dialog with a field, list, table or fold the
+  size's height. Widths, tokens and markup are unchanged (the 2.27 / 2.28 / 2.29 markup fixtures are byte-identical).
+  A free `confirm_dialog` panel (no anatomy) is no longer at least the size's height.
+
+### Added
+
+- **`nowo_ui_kit.theme.dialog.height`**: `content` (default) | `size`. `size` prints `--nowo-ui-dialog-fill: 1` on
+  `:root` through `nowo_ui_theme_css()` / the document layout tokens, which gives the 2.29 / 2.30 height back
+  (`Theme::dialogHeight()`, `Theme::DIALOG_HEIGHTS`). The token can also be set by hand (on `:root` or one dialog).
+- **`askConfirm()` close button (×)** (`stimulus-peers/ask_confirm.ts`, also used by `confirm-submit` in dialog
+  mode): after the title in the header, cancels (resolves `false`); options `dismissible` (default true, or
+  `<html data-confirm-dismissible="false">` for the page) and `closeLabel` (default `<html data-confirm-close>`, e.g.
+  `action.close`, else "Close"); class `close` in `ConfirmClasses` (optional; kit default `nowo-ui-confirm__close`).
+  New helpers `pageConfirmCloseLabel()`, `pageConfirmDismissible()`.
+- Demo `/kit/dialogs`: content-height dialogs, `?height=size` for the 2.30 height, a JS confirm (`confirm-submit`
+  dialog mode); e2e `dialog-sizes.spec.ts` / `page-contract.spec.ts` assert the content height and the ×.
+
 ## [2.30.0] - 2026-11-05
 
 Planned **2.30.0** (minor): list-filter host options, so a host draws its filter card without overriding the

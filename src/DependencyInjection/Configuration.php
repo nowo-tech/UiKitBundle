@@ -535,6 +535,17 @@ final class Configuration implements ConfigurationInterface
                 ->values([null, 'menu', 'disclosure'])
                 ->defaultNull()
                 ->info('2.28: ARIA of popover menus with items. null (default) = as 2.27; menu = APG menu button (role="menu" / menuitem, arrow keys in nowo-ui-popover.js); disclosure = no aria-haspopup. The menu partial option `menu_semantics` wins.')
+            ->end()
+            ->arrayNode('dialog')
+                ->info('2.31: kit dialog options (docs/THEMING.md#dialog-sizes-229).')
+                ->addDefaultsIfNotSet()
+                ->children()
+                    ->enumNode('height')
+                        ->values(Theme::DIALOG_HEIGHTS)
+                        ->defaultValue('content')
+                        ->info('2.31: content (default, dialog rule v2) = a dialog is as tall as its content, capped at min(the size\'s height token, 100dvh - 2rem), only the body scrolls; size = every dialog with a field, list, table or fold has the size\'s height (2.29 / 2.30), printed as --nowo-ui-dialog-fill: 1 by nowo_ui_theme_css().')
+                    ->end()
+                ->end()
             ->end();
         $bundles = $children
             ->arrayNode('bundles')

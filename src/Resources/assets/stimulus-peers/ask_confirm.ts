@@ -4,6 +4,11 @@
  * `danger` paints Confirm as a destructive button. The markup uses the kit confirm classes (`nowo-ui-confirm*`, the
  * same as partials/_confirm.html.twig); pass `classes` to use your own.
  *
+ * 2.31 (dialog rule v2): a close button (×) in the header, after the title, like the `confirm` / `confirm_dialog`
+ * partials (`dismissible`, default true). It cancels (resolves false). Its accessible name is `closeLabel`, else
+ * `<html data-confirm-close="…">` (e.g. the NowoUiKitBundle `action.close` message), else "Close". Turn it off per
+ * call (`dismissible: false`) or for the page (`<html data-confirm-dismissible="false">`).
+ *
  *   import { askConfirm, pageConfirmLabels } from '…/stimulus-peers/ask_confirm';
  *   if (await askConfirm('Delete this key?', { ...pageConfirmLabels(), danger: true })) { … }
  */
@@ -17,6 +22,8 @@ export interface ConfirmClasses {
   cancel: string;
   confirm: string;
   danger: string;
+  /** 2.31: the close button (×) of the header. Optional so a 2.30 host class map still type-checks. */
+  close?: string;
 }
 
 export interface ConfirmOptions {
@@ -26,6 +33,10 @@ export interface ConfirmOptions {
   title?: string | undefined;
   danger?: boolean | undefined;
   classes?: Partial<ConfirmClasses> | undefined;
+  /** 2.31: the close button (×) in the header; default `<html data-confirm-dismissible>` ("false" turns it off), else true. */
+  dismissible?: boolean | undefined;
+  /** 2.31: accessible name of the close button; default {@link pageConfirmCloseLabel}. */
+  closeLabel?: string | undefined;
 }
 
 export const KIT_CONFIRM_CLASSES: ConfirmClasses = {
@@ -38,6 +49,7 @@ export const KIT_CONFIRM_CLASSES: ConfirmClasses = {
   cancel: 'nowo-ui-btn',
   confirm: 'nowo-ui-btn nowo-ui-btn--primary',
   danger: 'nowo-ui-btn nowo-ui-btn--danger',
+  close: 'nowo-ui-confirm__close',
 };
 
 /**
@@ -51,6 +63,19 @@ export function pageConfirmLabels(): { confirm: string; cancel: string } {
     confirm: root.dataset.confirmOk || 'Confirm',
     cancel: root.dataset.confirmCancel || 'Cancel',
   };
+}
+
+/**
+ * Accessible name of the close button (2.31): `<html data-confirm-close="…">` (e.g. the NowoUiKitBundle `action.close`
+ * message), with an English fallback.
+ */
+export function pageConfirmCloseLabel(): string {
+  return document.documentElement.dataset.confirmClose || 'Close';
+}
+
+/** Whether the confirm dialog shows its close button by default (2.31): true unless `<html data-confirm-dismissible="false">`. */
+export function pageConfirmDismissible(): boolean {
+  return document.documentElement.dataset.confirmDismissible !== 'false';
 }
 
 let sequence = 0;
@@ -73,6 +98,20 @@ export function askConfirm(message: string, options: ConfirmOptions = {}): Promi
   title.className = classes.title;
   title.textContent = options.title ?? message;
   header.append(title);
+  let close: HTMLButtonElement | null = null;
+  if (options.dismissible ?? pageConfirmDismissible()) {
+    const closeLabel = options.closeLabel || pageConfirmCloseLabel();
+    close = document.createElement('button');
+    close.type = 'button';
+    close.className = classes.close ?? 'nowo-ui-confirm__close';
+    close.setAttribute('aria-label', closeLabel);
+    close.title = closeLabel;
+    const glyph = document.createElement('span');
+    glyph.setAttribute('aria-hidden', 'true');
+    glyph.textContent = '\u00d7';
+    close.append(glyph);
+    header.append(close);
+  }
   if (options.title) {
     const body = document.createElement('p');
     body.className = classes.body;
@@ -109,6 +148,7 @@ export function askConfirm(message: string, options: ConfirmOptions = {}): Promi
     };
     confirm.addEventListener('click', () => finish(true));
     cancel.addEventListener('click', () => finish(false));
+    close?.addEventListener('click', () => finish(false));
     // Escape fires `cancel`, then `close`; a backdrop click lands on the <dialog> itself.
     dialog.addEventListener('close', () => finish(false));
     dialog.addEventListener('click', (event) => {

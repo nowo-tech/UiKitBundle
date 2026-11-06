@@ -294,6 +294,8 @@ test.describe('page contract — validation round 3 (REQ-UI-003)', () => {
     // UiKit 2.29 unified dialog sizes: a confirm is medium, min(40rem, 100vw - 2rem)
     const viewport = page.viewportSize()!.width;
     expect(Math.round(box!.width)).toBeLessThanOrEqual(Math.min(640, viewport - 32));
+    // 2.31: a confirmation keeps its natural height, under the medium cap
+    expect(box!.height).toBeLessThan(Math.min(576, page.viewportSize()!.height - 32));
     await dialog.getByRole('button', { name: 'Close' }).click();
     await expect(dialog).toHaveCount(0);
   });
@@ -315,6 +317,19 @@ test.describe('page contract — validation round 3 (REQ-UI-003)', () => {
     await opener.click();
     await expect(dialog).toBeVisible();
     await expect(dialog.locator('.nowo-ui-dialog__title')).toHaveText('Restock schedule');
+    // 2.31 (dialog rule v2): the medium width, the content's height (header + body + footer, no empty area), capped.
+    const size = await dialog.evaluate((node) => {
+      const part = (selector: string): number => (node.querySelector(`:scope > ${selector}`) as HTMLElement | null)?.getBoundingClientRect().height ?? 0;
+      return {
+        width: node.getBoundingClientRect().width,
+        height: node.getBoundingClientRect().height,
+        sum: part('.nowo-ui-dialog__header') + part('.nowo-ui-dialog__body') + part('.nowo-ui-dialog__footer'),
+        viewport: { width: window.innerWidth, height: window.innerHeight },
+      };
+    });
+    expect(Math.round(size.width)).toBe(Math.min(640, size.viewport.width - 32));
+    expect(size.height).toBeLessThan(Math.min(576, size.viewport.height - 32));
+    expect(Math.abs(size.height - size.sum)).toBeLessThanOrEqual(2);
     await dialog.getByRole('button', { name: 'Got it' }).click();
     await expect(dialog).toBeHidden();
     await expect(opener).toBeFocused();

@@ -175,9 +175,20 @@ export default createConfirmSubmitController({
       data-confirm-cancel="{{ 'action.cancel'|trans({}, 'NowoUiKitBundle') }}">
 ```
 
-The same dialog is available to your own code: `askConfirm(message, { danger, title, confirm, cancel, classes })`
-from `stimulus-peers/ask_confirm.ts` returns a `Promise<boolean>`; `KIT_CONFIRM_CLASSES` lists the default classes
-(`nowo-ui-confirm*`, `nowo-ui-btn*`).
+The same dialog is available to your own code: `askConfirm(message, { danger, title, confirm, cancel, classes,
+dismissible, closeLabel })` from `stimulus-peers/ask_confirm.ts` returns a `Promise<boolean>`; `KIT_CONFIRM_CLASSES`
+lists the default classes (`nowo-ui-confirm*`, `nowo-ui-btn*`).
+
+**Close button (2.31, dialog rule v2).** The header has a × after the title (like the `confirm` / `confirm_dialog`
+partials); it cancels (`false`). Its accessible name (`aria-label` and `title`) is `closeLabel`, else
+`<html data-confirm-close="…">`, else "Close"; its class is `classes.close` (kit default `nowo-ui-confirm__close`,
+absolutely placed at the top right of the panel). `dismissible: false` drops it for one call,
+`<html data-confirm-dismissible="false">` for the page. Focus still starts on Cancel.
+
+```twig
+<html data-confirm-ok="…" data-confirm-cancel="…"
+      data-confirm-close="{{ 'action.close'|trans({}, 'NowoUiKitBundle') }}">
+```
 
 ## Page loader
 

@@ -15,8 +15,8 @@
     - size: md (default) | wide (2.29) → the two dialog sizes (docs/PAGE_CONTRACT.md "Dialog sizes and anatomy"):
       medium min(40rem, 100vw - 2rem) × min(36rem, 100dvh - 2rem), wide min(56rem, …) × min(52rem, …), tokens
       --nowo-dialog-{width,height}-{md,wide}. The 2.1 values keep their class and map onto them: sm → medium, lg / xl →
-      wide (nowo-ui-dialog--<size>). The height is the size's (the body scrolls, header and footer stay); a plain
-      yes / no dialog (no field, list, table or fold) keeps its natural height
+      wide (nowo-ui-dialog--<size>). 2.31: the height is the content's, capped at the size's (the body scrolls, header
+      and footer stay); theme.dialog.height: size gives a dialog with a field, list, table or fold the size's height
     - status (2.29): a status badge next to the title — View\PageStatus or a hash {label, tone (success | danger |
       warning | neutral | info; any other tone → neutral), title, attributes}; rendered by the `page_status` partial
       inside a `nowo-ui-dialog__title-row` (no wrapper without a status). Any other value (a string, a number, a hash
