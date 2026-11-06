@@ -23,6 +23,8 @@
     - stimulus (bool, default false)
     - title (View\Label|string): initial title (the opener's title replaces it)
     - size: lg (default) — the wide size since 2.29, like wide / xl; md / sm = the medium size
+    - placement (2.34): center (default) | end | start — the `dialog` partial's side panel (full height, at that edge;
+      on phones the whole screen, without the 16 px gutter of the centred dialog)
     - labels: {loading, error, load_error} (View\Label|string; defaults remote_form_dialog.loading / .save_failed /
       .load_failed) — IIFE driver
     - invalid_selector: extra selector of the first invalid control after [aria-invalid="true"] — IIFE driver
@@ -58,6 +60,7 @@
     id: id,
     title: _title,
     size: size|default('lg'),
+    placement: placement|default('center'),
     footer_target: true,
     backdrop_close: backdrop_close|default(false),
     root_class: 'nowo-ui-dialog--remote-form',

@@ -1,0 +1,50 @@
+{#
+  UiKit 2.34 demo: the small options. Table `rowAttributes` and foot, tree `link_attr` / `item_attr` /
+  `leading_template`, dialog `header_attr` / `footer_attr` / `back_href`, `remote_form_dialog` `placement`, progress
+  `value` + `max` / `label_visible` / `meter_attr`. window.nowoUiAskConfirm has no markup; see docs/STIMULUS.md.
+#}
+{% extends '@NowoUiKit/layout/document.html.twig' %}
+{% set nowo_ui_document_title = 'Small options · UiKit 2.34' %}
+
+{% block nowo_ui_body %}
+    <main id="main-content" class="nowo-ui-content" data-testid="small-options-demo">
+        <h1>Small options</h1>
+
+        <h2>Table: row attributes and foot</h2>
+        {% embed nowo_ui_partial('table') with {table: table, foot_attr: {'data-testid': 'demo-foot'}} only %}
+            {% block nowo_ui_table_foot %}<tr><th scope="row">Total</th><td class="nowo-ui-cell--end">8</td></tr>{% endblock %}
+        {% endembed %}
+
+        <h2>Tree: node hooks</h2>
+        {{ include(nowo_ui_partial('tree'), {
+            label: 'Subtasks',
+            leading_template: 'kit/_small_options_check.html.twig',
+            attr: {id: 'demo-tree'},
+            nodes: [
+                {id: 'a', label: 'Plan', href: '#a', done: true, expanded: true, item_attr: {class: 'is-done'}, link_attr: {'data-title': 'JavaScript: plan', 'data-testid': 'tree-link'}, children: [
+                    {id: 'a1', label: 'Write it', href: '#a1'},
+                ]},
+            ],
+        }) }}
+
+        <h2>Dialog: hooks and back arrow</h2>
+        <button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-nowo-ui-dialog-open="demo-back" data-testid="open-back">Dialog with a back arrow</button>
+        {{ include(nowo_ui_partial('dialog'), {
+            id: 'demo-back',
+            title: 'Second step',
+            body: '<p>The arrow is a link to a URL.</p>',
+            footer: '<button type="button" class="nowo-ui-btn" data-nowo-ui-dialog-close>Close</button>',
+            back_href: path('kit_small_options'),
+            header_attr: {'data-testid': 'demo-header'},
+            footer_attr: {class: 'demo-actions', 'data-testid': 'demo-footer'},
+        }) }}
+
+        <h2>Remote form dialog: side panel</h2>
+        <a class="{{ nowo_ui_class('btn_secondary') }}" href="{{ path('kit_remote_form_new') }}" data-testid="open-panel"{{ nowo_ui_html_attrs(nowo_ui_remote_form_opener('demo-panel', 'New destination')) }}>Open as a side panel</a>
+        {{ include(nowo_ui_partial('remote_form_dialog'), {id: 'demo-panel', placement: 'end'}) }}
+
+        <h2>Progress: an absolute amount</h2>
+        {{ include(nowo_ui_partial('progress'), {value: 3, max: 5, label: 'Imported', id: 'demo-amount', meter_attr: {class: 'demo-meter', 'data-testid': 'demo-meter'}}) }}
+        {{ include(nowo_ui_partial('progress'), {percent: 40, label: 'Hidden label', label_visible: false, id: 'demo-hidden'}) }}
+    </main>
+{% endblock %}

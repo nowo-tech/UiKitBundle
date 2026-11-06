@@ -9,8 +9,10 @@ use App\Form\DemoDestinationType;
 use Nowo\UiKitBundle\Dialog\RemoteDialog;
 use Nowo\UiKitBundle\Dialog\RemoteDialogResponder;
 use Nowo\UiKitBundle\View\Action;
+use Nowo\UiKitBundle\View\Column;
 use Nowo\UiKitBundle\View\Confirm;
 use Nowo\UiKitBundle\View\Pagination;
+use Nowo\UiKitBundle\View\Table;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
@@ -63,6 +65,26 @@ final class KitTemplatesController extends AbstractController
     public function sidePanel(Request $request): Response
     {
         $response = $this->render('kit/side_panel.html.twig', ['open' => '1' === $request->query->get('panel')]);
+        $response->headers->set('Content-Security-Policy', "script-src 'self'; style-src-attr 'none'; script-src-attr 'none'");
+
+        return $response;
+    }
+
+    /**
+     * UiKit 2.34: the small options — table row attributes and foot, tree hooks, dialog hooks and back arrow, the remote
+     * form dialog as a side panel, progress with an absolute amount. The response forbids inline style attributes and
+     * handlers (CSP); window.nowoUiAskConfirm is exercised by e2e/tests/small-options.spec.ts on this page.
+     */
+    #[Route('/small-options', name: 'kit_small_options')]
+    public function smallOptions(): Response
+    {
+        $table = new Table(
+            [new Column('name', 'Task'), new Column('hours', 'Hours', align: 'end')],
+            [['id' => 1, 'name' => 'Draft', 'hours' => 3], ['id' => 2, 'name' => 'Review', 'hours' => 5]],
+            label: 'Tasks',
+            rowAttributes: static fn (array $row): array => ['class' => 'demo-row', 'data-testid' => 'demo-row', 'data-task-id' => $row['id']],
+        );
+        $response = $this->render('kit/small_options.html.twig', ['table' => $table]);
         $response->headers->set('Content-Security-Policy', "script-src 'self'; style-src-attr 'none'; script-src-attr 'none'");
 
         return $response;

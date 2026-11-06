@@ -105,6 +105,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Small options for the TaskBoard migration and other bundles (`TASKBOARD_UIKIT_MAP_2026-11-06.md`, K2..K6). All opt-in; the
+default output is unchanged (markup byte for byte, the BC fixtures untouched, new fixtures `bc-2.33`).
+
+### Added
+
+- **`window.nowoUiAskConfirm(message, options)`** (`js/nowo-ui-confirm.js`, in the default `scripts`): `askConfirm()` for
+  code without the Stimulus peers. A `Promise<boolean>` and a kit `<dialog>`, for actions whose target is only known at
+  runtime.
+- **Table row attributes and foot:** `View\Table::$rowAttributes` and `ListPage::$rowAttributes`
+  (`fn (row, key): array`, `class` merged after the `table_row` slot); block `nowo_ui_table_foot`, options `foot_html` and
+  `foot_attr`, slot `table_foot`, and block `nowo_ui_list_foot` on the list scaffold. No `<tfoot>` while the foot is empty.
+- **Tree node hooks:** `node.link_attr`, `node.item_attr`, `leading_template` (inside the link, before the label, with
+  `{node}`). Server-rendered nodes only, not lazy children.
+- **Dialog hooks:** `footer_attr`, `header_attr`, `back_href` and `back_label` (back arrow before the title, new slot
+  `dialog_back`). `remote_form_dialog` forwards `placement`, and as a side panel it takes the whole phone screen.
+- **Progress:** `value` + `max` next to `percent`, `label_visible: false`, `meter_attr`.
+- **`View\SafeAttributes`** and the Twig function `nowo_ui_safe_attrs()`: the check of the new attribute options. Refuses
+  `on*`, `style`, `srcdoc` and unsafe URL schemes in attributes that hold a URL; see [SECURITY](SECURITY.md).
+
 ## [2.33.1] - 2026-11-06
 
 ### Security

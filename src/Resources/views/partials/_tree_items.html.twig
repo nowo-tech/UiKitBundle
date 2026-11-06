@@ -1,6 +1,6 @@
 {#
   One level of the `tree` partial (recursive). Variables: tree_id, nodes, level (1-based), tab_first (the first item gets
-  tabindex 0 when no item is current), actions_template, movable, bundle.
+  tabindex 0 when no item is current), actions_template, leading_template, movable, bundle.
 #}
 {% for node in nodes %}
     {% set _children = node.children|default([]) %}
@@ -8,14 +8,17 @@
     {# 2.24: a parent of the current node is always expanded (visible current item, reachable tab stop) #}
     {% set _expanded = _is_parent and (node.expanded|default(false) or nowo_ui_tree_has_current(_children)) %}
     {% set _group_id = nowo_ui_tree_group_id(tree_id, node.id) %}
-    <li class="{{ nowo_ui_class('tree_item', bundle) }}" role="none" data-nowo-ui-tree-node="{{ node.id }}"{{ nowo_ui_attrs('tree_item', bundle) }}>
+    {%- set _item_attr = nowo_ui_safe_attrs(node.item_attr|default({}), ['role', 'data-nowo-ui-tree-node']) %}
+    {%- set _link_attr = nowo_ui_safe_attrs(node.link_attr|default({}), ['href', 'role', 'tabindex', 'draggable', 'aria-level', 'aria-setsize', 'aria-posinset', 'aria-expanded', 'aria-owns', 'aria-current', 'data-nowo-ui-tree-item']) %}
+    <li class="{{ nowo_ui_class('tree_item', bundle) }}{{ _item_attr.class is defined ? ' ' ~ _item_attr.class }}" role="none" data-nowo-ui-tree-node="{{ node.id }}"{{ nowo_ui_attrs('tree_item', bundle, nowo_ui_attrs_without_class(_item_attr)) }}>
         <div class="nowo-ui-tree__row{{ node.current|default(false) ? ' is-current' }}">
             {%- if _is_parent -%}
                 <span class="nowo-ui-tree__toggle" aria-hidden="true" data-nowo-ui-tree-toggle></span>
             {%- else -%}
                 <span class="nowo-ui-tree__spacer" aria-hidden="true"></span>
             {%- endif -%}
-            <a class="{{ nowo_ui_class('tree_link', bundle) }}" href="{{ node.href }}" role="treeitem" data-nowo-ui-tree-item tabindex="{{ node.current|default(false) or (tab_first and loop.first and level == 1) ? '0' : '-1' }}" aria-level="{{ level }}" aria-setsize="{{ nodes|length }}" aria-posinset="{{ loop.index }}"{% if _is_parent %} aria-expanded="{{ _expanded ? 'true' : 'false' }}" aria-owns="{{ _group_id }}"{% endif %}{% if node.current|default(false) %} aria-current="page"{% endif %}{% if movable %} draggable="true"{% endif %}{{ nowo_ui_attrs('tree_link', bundle) }}>
+            <a class="{{ nowo_ui_class('tree_link', bundle) }}{{ _link_attr.class is defined ? ' ' ~ _link_attr.class }}" href="{{ node.href }}" role="treeitem" data-nowo-ui-tree-item tabindex="{{ node.current|default(false) or (tab_first and loop.first and level == 1) ? '0' : '-1' }}" aria-level="{{ level }}" aria-setsize="{{ nodes|length }}" aria-posinset="{{ loop.index }}"{% if _is_parent %} aria-expanded="{{ _expanded ? 'true' : 'false' }}" aria-owns="{{ _group_id }}"{% endif %}{% if node.current|default(false) %} aria-current="page"{% endif %}{% if movable %} draggable="true"{% endif %}{{ nowo_ui_attrs('tree_link', bundle, nowo_ui_attrs_without_class(_link_attr)) }}>
+                {%- if leading_template %}{{ include(leading_template, {node: node}, false) }}{% endif -%}
                 {%- if node.icon|default(null) is not null %}<span class="nowo-ui-tree__icon" aria-hidden="true">{{ node.icon }}</span>{% endif -%}
                 <span class="nowo-ui-tree__label">{{ node.label|nowo_ui_trans }}</span>
                 {%- if node.badge|default(null) is not null %}<span class="nowo-ui-tree__badge">{{ node.badge }}</span>{% endif -%}
@@ -24,7 +27,7 @@
         </div>
         {%- if _is_parent %}
             <ul class="{{ nowo_ui_class('tree_group', bundle) }}" role="group" id="{{ _group_id }}"{% if not _expanded %} hidden{% endif %}{% if _children is empty and node.children_url|default(null) %} data-nowo-ui-tree-children-url="{{ node.children_url }}"{% endif %}{{ nowo_ui_attrs('tree_group', bundle) }}>
-                {%- if _children is not empty %}{{ include('@NowoUiKitBundle/partials/_tree_items.html.twig', {tree_id: tree_id, nodes: _children, level: level + 1, tab_first: false, actions_template: actions_template, movable: movable, bundle: bundle}, false) }}{% endif -%}
+                {%- if _children is not empty %}{{ include('@NowoUiKitBundle/partials/_tree_items.html.twig', {tree_id: tree_id, nodes: _children, level: level + 1, tab_first: false, actions_template: actions_template, leading_template: leading_template, movable: movable, bundle: bundle}, false) }}{% endif -%}
             </ul>
         {%- endif %}
     </li>
