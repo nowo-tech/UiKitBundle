@@ -6,6 +6,11 @@
  * CSP-safe (no inline script, no eval), paused while the tab is hidden or when the user clicks
  * the toggle. Regions without an id are never replaced.
  *
+ * Same-origin is enforced (2.33.1, audit GT-L4): a `url` on another origin, or not http(s), is refused
+ * with one console warning and no request; `mode: 'same-origin'` makes a redirect to another origin
+ * fail, and the view stays. Same-origin redirects still work. Each region goes through the fragment
+ * filter (docs/STIMULUS.md) before it is imported: no `<script>`, `on*`, `<object>`, `<embed>`…
+ *
  * Identifier: `auto-refresh`
  * Values: `interval` (ms, default 10000, floor 2000), `url` (default: current location).
  * Targets: `toggle` (button, gets `aria-pressed`), `status` (gets the last refresh time).
@@ -14,8 +19,34 @@
  */
 
 import { Controller } from '@hotwired/stimulus';
+import { sanitizeFragment } from '../src/nowo-ui-fragment-filter';
 
 export const AUTO_REFRESH_MIN_INTERVAL_MS = 2_000;
+
+/** Whether a `url` value may be polled: http(s) on this origin, resolved as `fetch` resolves it. */
+export function isPollableUrl(value: string, base: string = document.baseURI): boolean {
+  try {
+    const url = new URL(value, base);
+    return url.origin === window.location.origin && (url.protocol === 'http:' || url.protocol === 'https:');
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The filtered copy of a region, still in the response's inert document (an <img> copied into the live document
+ * loads, and runs its `onerror`, before it is ever inserted). Null without one, or when the filter dropped it.
+ */
+function freshRegion(html: Document, id: string): Element | null {
+  const fresh = html.getElementById(id);
+  if (!fresh) {
+    return null;
+  }
+  const holder = html.createDocumentFragment();
+  holder.append(html.importNode(fresh, true));
+  sanitizeFragment(holder);
+  return holder.firstElementChild;
+}
 
 export default class extends Controller<HTMLElement> {
   static override values = {
@@ -35,6 +66,7 @@ export default class extends Controller<HTMLElement> {
   private timer: ReturnType<typeof setInterval> | null = null;
   private paused = false;
   private inFlight = false;
+  private warned = false;
 
   override connect(): void {
     this.timer = setInterval(
@@ -65,21 +97,31 @@ export default class extends Controller<HTMLElement> {
     if (this.paused || this.inFlight || 'hidden' === document.visibilityState) {
       return;
     }
+    if (this.urlValue !== '' && !isPollableUrl(this.urlValue)) {
+      if (!this.warned) {
+        this.warned = true;
+        console.warn('UiKit auto-refresh: refused a url value on another origin.');
+      }
+      return;
+    }
     this.inFlight = true;
     try {
       const response = await fetch(this.urlValue !== '' ? this.urlValue : window.location.href, {
         credentials: 'same-origin',
+        mode: 'same-origin',
         headers: { Accept: 'text/html', 'X-Requested-With': 'auto-refresh' },
       });
       if (!response.ok) {
         return;
       }
       const html = new DOMParser().parseFromString(await response.text(), 'text/html');
+      const dom = Element.prototype;
       let swapped = 0;
       this.element.querySelectorAll<HTMLElement>('[data-auto-refresh-region]').forEach((region) => {
-        const fresh = region.id ? html.getElementById(region.id) : null;
+        const id = dom.getAttribute.call(region, 'id');
+        const fresh = id ? freshRegion(html, id) : null;
         if (fresh) {
-          region.replaceWith(document.importNode(fresh, true));
+          dom.replaceWith.call(region, document.importNode(fresh, true));
           swapped += 1;
         }
       });

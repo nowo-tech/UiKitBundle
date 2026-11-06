@@ -298,6 +298,71 @@ describe('list-pagination peer, hostile responses', () => {
   });
 });
 
+// GT-I6: the same rules as the fragment filter, nested templates included.
+describe('list-pagination peer, fragment filter rules', () => {
+  const row = (cell: string): string => `<tr class="row"><td data-label="Name">${cell}</td></tr>`;
+  const load = async (rows: string, after = ''): Promise<void> => {
+    await mount(pageHtml(1, 3));
+    const hostile = `<div data-nowo-ui-region="table"><table><tbody data-nowo-ui-list-rows>${rows}</tbody></table></div>${after}`;
+    fetchMock.mockResolvedValueOnce({ ok: true, status: 200, type: 'basic', url: `${window.location.origin}/monitors?page=2`, text: async () => hostile });
+    FakeObserver.trigger();
+    await flush();
+  };
+
+  it.each([
+    ['a meta refresh', '<meta http-equiv="refresh" content="0;url=https://evil.example/">', 'meta'],
+    ['a base', '<base href="https://evil.example/">', 'base'],
+    ['an object', '<object data="https://evil.example/"></object>', 'object'],
+    ['an embed', '<embed src="https://evil.example/">', 'embed'],
+    ['a data: iframe', '<iframe src="data:text/html,x"></iframe>', 'iframe'],
+    ['an href animation', '<svg><a><animate attributeName="href" to="javascript:x()"></animate></a></svg>', 'animate'],
+  ])('drops %s from a row', async (_name, markup, selector) => {
+    await load(row(`kept${markup}`));
+    expect(rowTexts()).toContain('kept');
+    expect(document.querySelector(`[data-nowo-ui-list-rows] ${selector}`)).toBeNull();
+  });
+
+  it('cleans nested templates', () => {
+    const root = document.createElement('div');
+    root.innerHTML = '<template><img src="x" onerror="x()"><template><a href="javascript:x()" onclick="x()">a</a><iframe srcdoc="x"></iframe></template></template>';
+    expect(sanitizeImported(root)).toBe(true);
+    const outer = root.querySelector('template') as HTMLTemplateElement;
+    expect(outer.content.querySelector('img')?.getAttributeNames()).toEqual(['src']);
+    const inner = (outer.content.querySelector('template') as HTMLTemplateElement).content;
+    expect(inner.querySelector('a')?.getAttributeNames()).toEqual([]);
+    expect(inner.querySelector('iframe')?.getAttributeNames()).toEqual([]);
+  });
+
+  it('removes script URLs of the extra attributes it always covered', () => {
+    const root = document.createElement('div');
+    root.innerHTML = '<video poster=" java\tscript:x()"></video><img src="javascript:x()" alt="a">';
+    sanitizeImported(root);
+    expect(root.querySelector('video')?.hasAttribute('poster')).toBe(false);
+    expect(root.querySelector('img')?.getAttributeNames()).toEqual(['alt']);
+  });
+
+  it('does not import a root the filter dropped: rows region, confirm dialog, pager', async () => {
+    const after = '<div data-nowo-ui-region="confirms"><base id="confirm-base" href="https://evil.example/"><dialog id="confirm-ok"></dialog></div>';
+    await mount(pageHtml(1, 3));
+    const hostile = `<object data-nowo-ui-list-rows><tr><td>imported</td></tr></object>${after}<div data-nowo-ui-pagination-mode="infinite"><object class="nowo-ui-pagination__info"><b>imported</b></object></div>`;
+    fetchMock.mockResolvedValueOnce({ ok: true, status: 200, type: 'basic', url: `${window.location.origin}/monitors?page=2`, text: async () => hostile });
+    FakeObserver.trigger();
+    await flush();
+    expect(rowTexts()).toEqual(['p1-r1', 'p1-r2']);
+    expect(document.getElementById('confirm-base')).toBeNull();
+    expect(document.getElementById('confirm-ok')).not.toBeNull();
+    expect(document.querySelector('.nowo-ui-pagination__info')?.textContent).toBe('Showing page 1');
+  });
+
+  it('leaves the rows, links, forms and dialogs of a real list as the server wrote them', async () => {
+    const legit = '<tr class="row" data-id="2"><td data-label="Name"><a href="/monitors/2?tab=a#x" title="t">p2</a> <a href="mailto:a@example.test">m</a></td><td><img src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" alt=""><svg viewBox="0 0 1 1"><use href="#i"></use><animate attributeName="opacity" to="1"></animate></svg></td><td><form method="post" action="/monitors/2/delete" data-controller="confirm-submit"><input type="hidden" name="_token" value="placeholder"><button type="submit" formaction="/monitors/2/archive">Go</button></form><iframe src="https://example.test/embed" title="e"></iframe><template><b>kept</b></template></td></tr>';
+    const dialog = '<dialog id="confirm-p2" data-nowo-ui-confirm=""><button type="button" data-nowo-confirm-close="">Cancel</button><a href="/delete/2">Go</a></dialog>';
+    await load(legit, `<div data-nowo-ui-region="confirms">${dialog}</div>`);
+    expect(document.querySelector('[data-nowo-ui-list-rows] > tr[data-id="2"]')?.outerHTML).toBe(legit);
+    expect(document.getElementById('confirm-p2')?.outerHTML).toBe(dialog);
+  });
+});
+
 describe('list-pagination peer, responsive mode', () => {
   it('switches between pager and infinite on media change and keeps the appended rows', async () => {
     const media = fakeMedia(true);

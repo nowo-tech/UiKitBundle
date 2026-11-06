@@ -20,8 +20,8 @@
  * "N more rows loaded" in the live region and dispatches `nowo-ui:rows-appended` (bubbles; detail `{rows, page, url}`)
  * on the rows region so other scripts can initialise the new rows (Stimulus connects controllers by itself). Focus
  * stays on the button; when the last page is in, it moves to the first appended row. Only same-origin URLs load;
- * redirects are refused (`redirect: 'error'`) and a non-`basic` or off-origin response is rejected; imported nodes
- * lose `<script>`, `on*`, `srcdoc` and `javascript:` URLs (audit CS L1).
+ * redirects are refused (`redirect: 'error'`) and a non-`basic` or off-origin response is rejected; imported nodes go
+ * through the fragment filter (audit CS L1, GT-I6), see sanitizeImported().
  *
  * In `responsive` mode `-narrow` applies while `-query` matches, `-wide` otherwise, switched live on matchMedia
  * change. Going back to `pager` stops loading, shows the links again and keeps the rows already appended. The mode in
@@ -32,6 +32,7 @@
  */
 
 import { Controller } from '@hotwired/stimulus';
+import { sanitizeElement } from '../src/nowo-ui-fragment-filter';
 
 export type PaginationMode = 'pager' | 'infinite';
 
@@ -71,24 +72,20 @@ export function sameOriginUrl(href: string | null, base: string = window.locatio
 
 const URL_ATTRIBUTES = ['href', 'src', 'action', 'formaction', 'xlink:href', 'data', 'poster'];
 
+/** What this peer removes on top of the fragment filter: `srcdoc` (the frame stays, empty) and script URLs of more attributes. */
+function unsafeImportedAttribute(name: string, value: string): boolean {
+  return name === 'srcdoc' || (URL_ATTRIBUTES.includes(name) && /^(?:javascript|vbscript):/i.test(value.replace(/[\u0000-\u0020\u007f]+/g, '')));
+}
+
 /**
- * Defence in depth for imported markup (2.23, audit CS L1/I1): removes `<script>`, every `on*` attribute, `srcdoc`
- * and `javascript:` / `vbscript:` URLs (control characters and blanks ignored, any case) under `root`, root included.
- * Kit markup (rows, confirm dialogs, pager links) carries none of them, so it imports unchanged.
+ * Defence in depth for imported markup (2.23, audit CS L1/I1; 2.33.1, GT-I6): the fragment filter's rules under `root`,
+ * root included, nested <template> content too (`<script>`, a non-http(s) `<iframe>`, `meta[http-equiv]`, `<base>`,
+ * `<object>`, `<embed>`, `on*`, SVG animations of `href`), plus `srcdoc` and `javascript:` / `vbscript:` URLs of
+ * URL_ATTRIBUTES (control characters and blanks ignored, any case). Kit markup (rows, confirm dialogs, pager links)
+ * carries none of them, so it imports unchanged. False when `root` itself had to go: do not import it.
  */
-export function sanitizeImported(root: Element): void {
-  // Through the prototype: on a <form>, a control named `attributes` or `removeAttribute` hides the real one (GT-L3).
-  const dom = Element.prototype;
-  dom.querySelectorAll.call(root, 'script').forEach((script) => script.remove());
-  [root, ...Array.from(dom.querySelectorAll.call(root, '*'))].forEach((el) => {
-    dom.getAttributeNames.call(el).forEach((attr) => {
-      const name = attr.toLowerCase();
-      const unsafeUrl = URL_ATTRIBUTES.includes(name) && /^(?:javascript|vbscript):/i.test((dom.getAttribute.call(el, attr) ?? '').replace(/[\u0000-\u0020\u007f]+/g, ''));
-      if (name.startsWith('on') || name === 'srcdoc' || unsafeUrl) {
-        dom.removeAttribute.call(el, attr);
-      }
-    });
-  });
+export function sanitizeImported(root: Element): boolean {
+  return sanitizeElement(root, unsafeImportedAttribute);
 }
 
 /** Whether a fetched response is a plain same-origin one (no cross-origin redirect, not opaque / CORS). */
@@ -222,8 +219,7 @@ export class ListPaginationController extends Controller {
     const index = Array.from(document.querySelectorAll(ROWS_SELECTOR)).indexOf(rows);
     const incoming = doc.querySelectorAll(ROWS_SELECTOR)[Math.max(0, index)];
     const appended: Element[] = [];
-    if (incoming) {
-      sanitizeImported(incoming);
+    if (incoming && sanitizeImported(incoming)) {
       Array.from(incoming.children).forEach((child) => {
         const row = document.importNode(child, true);
         rows.appendChild(row);
@@ -244,8 +240,7 @@ export class ListPaginationController extends Controller {
       for (const selector of ['.nowo-ui-pagination__nav', '.nowo-ui-pagination__info']) {
         const mine = this.element.querySelector(selector);
         const theirs = nextRoot.querySelector(selector);
-        if (mine && theirs) {
-          sanitizeImported(theirs);
+        if (mine && theirs && sanitizeImported(theirs)) {
           mine.replaceChildren(...Array.from(theirs.childNodes).map((node) => document.importNode(node, true)));
         }
       }
@@ -274,8 +269,9 @@ export class ListPaginationController extends Controller {
       wrap.after(target);
     }
     dialogs.forEach((dialog) => {
-      sanitizeImported(dialog);
-      target?.appendChild(document.importNode(dialog, true));
+      if (sanitizeImported(dialog)) {
+        target?.appendChild(document.importNode(dialog, true));
+      }
     });
   }
 

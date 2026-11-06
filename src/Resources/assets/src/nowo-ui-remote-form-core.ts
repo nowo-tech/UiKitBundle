@@ -23,7 +23,10 @@
  * are `textContent`; the server's fragment goes through parseFragment() before insertion.
  */
 
+import { sanitizeFragment } from './nowo-ui-fragment-filter';
 import { overlayRegistry, type OverlayHandle } from './nowo-ui-overlay';
+
+export { DROPPED_ELEMENTS } from './nowo-ui-fragment-filter';
 
 export const REQUEST_HEADER = 'X-Nowo-Dialog';
 export const REDIRECT_HEADER = 'X-Nowo-Redirect';
@@ -131,71 +134,12 @@ export function isFragment(contentType: string | null, text: string): boolean {
   return !head.includes('<html') && !head.includes('<!doctype');
 }
 
-/** Elements dropped from a fragment before insertion: they run code or navigate on their own (ES-I2). */
-export const DROPPED_ELEMENTS = 'script, iframe[srcdoc], meta[http-equiv], base, object, embed';
-
-/** Attributes that run a `javascript:` URL when the link or the form is used. */
-const CLICK_URL_ATTRIBUTES = ['href', 'xlink:href', 'action', 'formaction'];
-/** Schemes refused on those attributes. `mailto:`, `tel:` and `data:` images stay: they run nothing in the page. */
-const SCRIPT_SCHEMES = ['javascript:', 'vbscript:'];
-
-/**
- * The DOM calls of the filter, never read from the element: a <form> exposes its controls as properties, so a control
- * named `attributes` or `removeAttribute` hides the real one and the form would pass unfiltered (GT-L3).
- */
-const dom = Element.prototype;
-
-/** The scheme of a URL as the browser reads it (blanks, tabs and case handled by the parser), null when unparsable. */
-function urlScheme(value: string): string | null {
-  try {
-    return new URL(value, window.location.href).protocol;
-  } catch {
-    return null;
-  }
-}
-
-/** An <iframe> whose `src` is not http(s) (`javascript:` runs on insertion, `data:` runs in its own origin). */
-function isUnsafeFrame(element: Element): boolean {
-  const src = dom.matches.call(element, 'iframe') ? dom.getAttribute.call(element, 'src') : null;
-  if (src === null) {
-    return false;
-  }
-  const scheme = urlScheme(src);
-  return scheme !== 'http:' && scheme !== 'https:';
-}
-
-/** An SVG <animate> / <set> that writes a link's `href`: its `to`, `from`, `by` or `values` become the URL on click. */
-function isHrefAnimation(element: Element): boolean {
-  return dom.matches.call(element, 'animate, set') && /^\s*(?:[\w-]+:)?href\s*$/i.test(dom.getAttribute.call(element, 'attributeName') ?? '');
-}
-
-function sanitizeFragment(root: DocumentFragment): void {
-  root.querySelectorAll(DROPPED_ELEMENTS).forEach((element) => dom.remove.call(element));
-  root.querySelectorAll('*').forEach((element) => {
-    if (isUnsafeFrame(element) || isHrefAnimation(element)) {
-      dom.remove.call(element);
-      return;
-    }
-    dom.getAttributeNames.call(element).forEach((attribute) => {
-      const name = attribute.toLowerCase();
-      if (name.startsWith('on') || (CLICK_URL_ATTRIBUTES.includes(name) && SCRIPT_SCHEMES.includes(urlScheme(dom.getAttribute.call(element, attribute) ?? '') ?? ''))) {
-        dom.removeAttribute.call(element, attribute);
-      }
-    });
-    // querySelectorAll does not enter a <template>: a host script may clone its content later. An SVG <template> is not
-    // an HTMLTemplateElement and has no content; its children are already in this walk.
-    if (element instanceof HTMLTemplateElement) {
-      sanitizeFragment(element.content);
-    }
-  });
-}
-
 /**
  * Parses server HTML in an inert template and strips what could run or navigate by itself: <script>, `iframe[srcdoc]`,
  * an <iframe> whose `src` is not http(s), `meta[http-equiv]` (refresh), <base>, <object> / <embed>, every inline `on*`
  * handler, `javascript:` / `vbscript:` URLs of links and form actions, and SVG animations of `href`, also inside nested
- * <template> content. The fragment must still be the server's own trusted form (same trust as the page): this is
- * defence in depth, not a sanitizer for user HTML. Other-origin frames, forms, images and stylesheets stay, because
+ * <template> content (nowo-ui-fragment-filter.ts). The fragment must still be the server's own trusted form (same
+ * trust as the page): this is defence in depth, not a sanitizer for user HTML. Other-origin frames, forms, images and stylesheets stay, because
  * hosts use them: `frame-src`, `form-action`, `img-src` and `style-src` limit those (docs/USAGE.md "Fragment trust").
  */
 export function parseFragment(html: string): DocumentFragment {
@@ -203,6 +147,20 @@ export function parseFragment(html: string): DocumentFragment {
   template.innerHTML = html;
   sanitizeFragment(template.content);
   return template.content;
+}
+
+/**
+ * A form's own property. On a <form>, a control named `action`, `method` or `elements` is what `form.action` returns
+ * (named properties win over the DOM's), so the getter is called on the prototype; the Element and Node calls below
+ * read the same way (GT-I7).
+ */
+function formProperty<K extends 'action' | 'method' | 'enctype' | 'elements'>(form: HTMLFormElement, name: K): HTMLFormElement[K] {
+  return Reflect.get(HTMLFormElement.prototype, name, form) as HTMLFormElement[K];
+}
+
+/** A Node property of an element that may be a <form> (see formProperty). */
+function nodeProperty<K extends 'childNodes' | 'isConnected' | 'ownerDocument'>(node: Element, name: K): Node[K] {
+  return Reflect.get(Node.prototype, name, node) as Node[K];
 }
 
 /** The submit target of a form and its submitter: action, method and encoding, honouring `formaction` & co. */
@@ -215,15 +173,15 @@ export interface SubmitTarget {
 /** Resolves where and how a submit goes (submitter `formaction` / `formmethod` / `formenctype` win, as natively). */
 export function submitTarget(form: HTMLFormElement, submitter: HTMLElement | null, fallbackAction: string | null): SubmitTarget {
   const button = submitter instanceof HTMLButtonElement || submitter instanceof HTMLInputElement ? submitter : null;
-  const rawAction = button?.hasAttribute('formaction') ? button.getAttribute('formaction') : form.getAttribute('action');
+  const rawAction = button?.hasAttribute('formaction') ? button.getAttribute('formaction') : Element.prototype.getAttribute.call(form, 'action');
   const action =
     rawAction === null || rawAction.trim() === ''
       ? fallbackAction
       : button?.hasAttribute('formaction')
         ? button.formAction
-        : form.action;
-  const method = (button?.hasAttribute('formmethod') ? button.formMethod : form.method).toLowerCase();
-  const enctype = (button?.hasAttribute('formenctype') ? button.formEnctype : form.enctype).toLowerCase();
+        : formProperty(form, 'action');
+  const method = (button?.hasAttribute('formmethod') ? button.formMethod : formProperty(form, 'method')).toLowerCase();
+  const enctype = (button?.hasAttribute('formenctype') ? button.formEnctype : formProperty(form, 'enctype')).toLowerCase();
   return { action, method, enctype };
 }
 
@@ -295,32 +253,33 @@ export function liftActions(body: HTMLElement, footer: HTMLElement | null): bool
   }
   footer.replaceChildren();
   footer.hidden = true;
+  const dom = Element.prototype;
   const explicit = body.querySelector<HTMLElement>(`[${ACTIONS_ATTR}]`);
   const candidates = explicit ? [explicit] : Array.from(body.querySelectorAll<HTMLElement>('form .nowo-ui-form__actions'));
-  const actions = candidates.filter((element) => !element.closest(`[${KEEP_ACTIONS_ATTR}]`)).pop();
-  if (!actions || !actions.hasChildNodes()) {
+  const actions = candidates.filter((element) => !dom.closest.call(element, `[${KEEP_ACTIONS_ATTR}]`)).pop();
+  if (!actions || nodeProperty(actions, 'childNodes').length === 0) {
     return false;
   }
-  const form = actions.closest('form');
+  const form = dom.closest.call(actions, 'form') as HTMLFormElement | null;
   const bound: HTMLElement[] = [];
   if (form) {
-    ensureOwnFormId(form, body);
-    actions.querySelectorAll<HTMLElement>(FORM_CONTROLS).forEach((control) => {
+    const id = ensureOwnFormId(form, body);
+    (dom.querySelectorAll.call(actions, FORM_CONTROLS) as NodeListOf<HTMLElement>).forEach((control) => {
       if (!control.hasAttribute('form')) {
-        control.setAttribute('form', form.id);
+        control.setAttribute('form', id);
         bound.push(control);
       }
     });
   }
-  const nodes = Array.from(actions.childNodes);
+  const nodes = Array.from(nodeProperty(actions, 'childNodes'));
   footer.append(...nodes);
   if (form && !bound.every((control) => (control as HTMLElement & { form?: HTMLFormElement | null }).form === form)) {
     bound.forEach((control) => control.removeAttribute('form'));
-    actions.append(...nodes);
+    dom.append.call(actions, ...nodes);
     footer.hidden = true;
     return false;
   }
-  actions.remove();
+  dom.remove.call(actions);
   footer.hidden = false;
   return true;
 }
@@ -329,28 +288,30 @@ export function liftActions(body: HTMLElement, footer: HTMLElement | null): bool
  * Gives the form an id that resolves to it in its document (2.29): kept when `getElementById()` returns the form
  * itself, else a fresh `nowo-ui-remote-form-<n>` free in the document; the fragment's `form="<old id>"` references are
  * rebound to the new id. Since 2.29.1 the original id stays readable as `data-nowo-ui-form-id="<old id>"`, so host CSS,
- * scripts and tests can target the form by it (audit FK-I7).
+ * scripts and tests can target the form by it (audit FK-I7). Returns the id in force.
  */
-function ensureOwnFormId(form: HTMLFormElement, body: HTMLElement): void {
-  const doc = form.ownerDocument;
-  const old = form.id;
-  if (old !== '' && (!form.isConnected || doc.getElementById(old) === form)) {
-    return;
+function ensureOwnFormId(form: HTMLFormElement, body: HTMLElement): string {
+  const dom = Element.prototype;
+  const doc = nodeProperty(form, 'ownerDocument') as Document;
+  const old = dom.getAttribute.call(form, 'id') ?? '';
+  if (old !== '' && (!nodeProperty(form, 'isConnected') || doc.getElementById(old) === form)) {
+    return old;
   }
   let id: string;
   do {
     formSequence += 1;
     id = `nowo-ui-remote-form-${formSequence}`;
   } while (doc.getElementById(id) !== null);
-  form.id = id;
+  dom.setAttribute.call(form, 'id', id);
   if (old !== '') {
-    form.setAttribute(ORIGINAL_ID_ATTR, old);
+    dom.setAttribute.call(form, ORIGINAL_ID_ATTR, old);
     body.querySelectorAll<HTMLElement>('[form]').forEach((control) => {
       if (control.getAttribute('form') === old) {
         control.setAttribute('form', id);
       }
     });
   }
+  return id;
 }
 
 /** The footer of a remote form dialog (`[data-nowo-ui-dialog-footer]`, direct child), null without one. */
@@ -360,7 +321,7 @@ export function dialogFooter(dialog: HTMLDialogElement): HTMLElement | null {
 
 /** The enabled submit buttons of a form, including those bound to it with `form="…"` outside it (the footer). */
 export function submitButtons(form: HTMLFormElement): Array<HTMLButtonElement | HTMLInputElement> {
-  return Array.from(form.elements).filter(
+  return Array.from(formProperty(form, 'elements')).filter(
     (element): element is HTMLButtonElement | HTMLInputElement =>
       ((element instanceof HTMLButtonElement && element.type === 'submit') || (element instanceof HTMLInputElement && element.type === 'submit')) && !element.disabled,
   );
@@ -506,7 +467,7 @@ export class RemoteFormSession {
   /** Handles a submit event that reached the dialog body. Returns whether it was intercepted. */
   async submit(event: Event): Promise<boolean> {
     const form = event.target;
-    if (!(form instanceof HTMLFormElement) || !this.dialog.open || form.hasAttribute(NATIVE_ATTR)) {
+    if (!(form instanceof HTMLFormElement) || !this.dialog.open || Element.prototype.hasAttribute.call(form, NATIVE_ATTR)) {
       return false;
     }
     const submitter = (event as SubmitEvent).submitter ?? null;

@@ -102,7 +102,9 @@ The bundle does **not** expose CLI commands that mutate production data, file up
     the URL parser), `meta[http-equiv]`, `<base>`, `<object>`, `<embed>`, `on*`, `javascript:` / `vbscript:` values of
     `href`, `xlink:href`, `action`, `formaction`, and SVG `<animate>` / `<set>` of `href`, recursively through nested
     `<template>` content. The filter reads attributes through `Element.prototype`, so a form control named `attributes`
-    or `removeAttribute` cannot hide its form. The plain path now also uses `mode: 'same-origin'` (a redirect to another origin fails), http(s)
+    or `removeAttribute` cannot hide its form. The same filter (`nowo-ui-fragment-filter.ts`) covers each region of the
+    `auto-refresh` peer and everything the `list-pagination` peer imports, which also removes `srcdoc` and script URLs of
+    `src`, `data` and `poster` (audit GT-L4, GT-I6). The plain path now also uses `mode: 'same-origin'` (a redirect to another origin fails), http(s)
     sources only, and inserts only `text/html` fragments; `text/plain`, JSON and whole documents follow the opener's link
     instead.
   - **Not covered by the filter, on purpose:** other-origin frames, forms, images, stylesheets and links, which hosts use
@@ -126,12 +128,14 @@ The bundle does **not** expose CLI commands that mutate production data, file up
 | Field | Value |
 | ----- | ----- |
 | **Date** | 2026-11-06 |
-| **Method** | Independent audit Appendix GT: code read and browser PoC in three engines, re-verified 2026-11-06 |
+| **Method** | Independent audit Appendix GT: code read and browser PoC in three engines, re-verified 2026-11-06. **The GT-L4, GT-I6, GT-I7 and GT-I8 fixes after 2.33.0: re-verification pending** |
 | **Overall risk** | **Low** |
 | **Grade** | **Pass (good)** |
-| **Open residuals** | Host must not feed UGC into `|raw` slots; embedders must apply their own `access_control` around admin chrome; other-origin frames, forms and subresources are left to the host's CSP; `auto-refresh` `url` must stay same-origin (GT-L4) |
+| **Open residuals** | Host must not feed UGC into `|raw` slots; embedders must apply their own `access_control` around admin chrome; other-origin frames, forms and subresources are left to the host's CSP |
 
-2.33.0: independent audit Appendix GT (2026-11-06), re-verified 2026-11-06: **Pass (good)**, overall risk **Low**; no Critical, High or Medium. GT-L1, GT-L2, GT-L3 and GT-I1..I5 are fixed. Open: GT-L4 (Low), the `auto-refresh` peer does not check the origin of `url`, follows redirects and inserts regions unfiltered, so keep `url` same-origin and set `script-src` and `connect-src`; GT-I6 (Info), `sanitizeImported()` is narrower than the fragment filter. Other-origin frames, forms and subresources are left to the host's CSP.
+2.33.0: independent audit Appendix GT (2026-11-06), re-verified 2026-11-06: **Pass (good)**, overall risk **Low**; no Critical, High or Medium. GT-L1, GT-L2, GT-L3 and GT-I1..I5 are fixed. Open at the 2.33.0 tag: GT-L4 (Low), the `auto-refresh` peer did not check the origin of `url`, followed redirects and inserted regions unfiltered; GT-I6 (Info), `sanitizeImported()` was narrower than the fragment filter; both fixed after it, below. Other-origin frames, forms and subresources are left to the host's CSP.
+
+After 2.33.0 (re-verification pending): GT-L4 (Low) is fixed in code: the `auto-refresh` peer refuses a `url` on another origin, uses `mode: 'same-origin'` and filters each region. GT-I6 (Info) is fixed: `sanitizeImported()` applies the fragment filter's rules. GT-I7 (Info) is fixed: the form helpers (`submitTarget()`, `liftActions()`, `submit()`) read through the prototypes, so a form with a control named `action`, `method`, `enctype`, `hasAttribute` or similar stays in the dialog. GT-I8 (Info) is fixed: importing the modules no longer touches the DOM. Known limits: an imported region or row may still load other-origin images, frames and stylesheets, which the host's CSP limits; `focus()` on a `[autofocus]` or `[aria-invalid="true"]` element that is itself a `<form>` with a control named `focus` still fails, and the dialog then follows its failure path.
 
 ## Secrets and cryptography
 

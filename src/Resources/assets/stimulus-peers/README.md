@@ -13,7 +13,7 @@ They are **not** built into the kit IIFEs. Prefer the no-build scripts under `sr
 | `toast_stack_controller.ts` | `toast-stack` | `nowo-ui-toast.js` |
 | `tabs_controller.ts` | `tabs` | `nowo-ui-tabs.js` |
 | `release_status_controller.ts` | `release-status` | `nowo-ui-release.js` (imports `../src/nowo-ui-release-core.ts`) |
-| `auto_refresh_controller.ts` | `auto-refresh` | — (peer only) |
+| `auto_refresh_controller.ts` | `auto-refresh` | — (peer only; imports `../src/nowo-ui-fragment-filter.ts`) |
 | `temporary_reveal_controller.ts` | `temporary-reveal` | — (peer only, 1.15) |
 | `collapse_panel_controller.ts` | `collapse-panel` | — (peer only, 1.15) |
 | `datatable_controller.ts` | `datatable` | — (peer only, 1.15; needs the optional `datatables.net-dt` + `datatables.net-responsive-dt`) |

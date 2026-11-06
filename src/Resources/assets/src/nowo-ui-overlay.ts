@@ -268,4 +268,7 @@ export function overlayRegistry(): OverlayRegistry {
   return window.NowoUiOverlay;
 }
 
-overlayRegistry();
+// Not on a server-side import or in a Node test environment (GT-I8).
+if (typeof window !== 'undefined') {
+  overlayRegistry();
+}

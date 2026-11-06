@@ -745,7 +745,8 @@ $pagination = Pagination::fromRequest($request, $total)->withMode('responsive', 
   appended. Phone "cards" mode applies to the appended rows like to the first ones.
 - The fetch carries `X-Nowo-Ui-Pagination: 1` and `Accept: text/html`; only same-origin next URLs load, redirects
   are refused (`redirect: 'error'`) and a non-`basic` / off-origin response is rejected. Imported rows, dialogs and
-  links lose `<script>`, `on*` attributes, `srcdoc` and `javascript:` URLs.
+  links go through the fragment filter ("Fragment trust" below), nested `<template>` content included, and also lose
+  `srcdoc` and script URLs of `src`, `data` and `poster`.
 
 ## Provider-dependent fields (2.23)
 
@@ -1973,7 +1974,7 @@ public function edit(Request $request, Monitor $monitor, RemoteDialogResponder $
   payment forms, so limit them with your CSP. `script-src` without `'unsafe-inline'` is the one that stops script;
   `script-src-attr 'none'` alone is not enough. Then `frame-src`, `form-action`, `img-src`, `style-src`, `connect-src`,
   `object-src 'none'` and `base-uri 'none'`. Markup a host script builds later from a `data-prototype` attribute is not
-  covered: the filter sees it as text.
+  covered: the filter sees it as text. The `auto-refresh` and `list-pagination` peers use the same filter.
 - **`X-Nowo-Dialog` is not a security signal**: any page can send it. Never skip CSRF, authorization or validation
   because of it; it only selects the template and the success answer. Keep `Vary: X-Nowo-Dialog` on both modes
   (`RemoteDialog::vary()`; `RemoteDialogResponder` adds it to its answers).
