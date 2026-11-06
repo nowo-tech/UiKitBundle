@@ -14,7 +14,8 @@ use InvalidArgumentException;
  * responder, the redirect listener, `nowo_ui_dialog_request()` and the `remote_form_dialog` partial read them.
  *
  * Names are HTTP header tokens of letters, digits and `-` (at most 64 characters), all three different
- * (case-insensitive). Immutable.
+ * (case-insensitive), and not a standard HTTP name the contract would overwrite or break (`Accept`, `Authorization`,
+ * `Cache-Control`, `Cookie`…). Immutable.
  */
 final readonly class RemoteDialogHeaders
 {
@@ -26,8 +27,24 @@ final readonly class RemoteDialogHeaders
 
     private const NAME = '/^[A-Za-z][A-Za-z0-9-]{0,63}$/';
 
+    /** Standard request and response names, lower case: taking one over breaks that header or the dialog. */
+    private const RESERVED = [
+        'accept', 'accept-charset', 'accept-encoding', 'accept-language', 'accept-ranges', 'age', 'allow', 'authorization',
+        'cache-control', 'connection', 'content-disposition', 'content-encoding', 'content-language', 'content-length',
+        'content-location', 'content-range', 'content-security-policy', 'content-security-policy-report-only', 'content-type',
+        'cookie', 'date', 'dnt', 'etag', 'expect', 'expires', 'forwarded', 'from', 'host', 'keep-alive', 'last-modified',
+        'link', 'location', 'max-forwards', 'origin', 'permissions-policy', 'pragma', 'priority', 'range', 'referer',
+        'referrer-policy', 'refresh', 'retry-after', 'server', 'set-cookie', 'strict-transport-security', 'te', 'trailer',
+        'transfer-encoding', 'upgrade', 'upgrade-insecure-requests', 'user-agent', 'vary', 'via', 'warning',
+        'www-authenticate', 'x-content-type-options', 'x-csrf-token', 'x-frame-options', 'x-http-method-override',
+        'x-real-ip', 'x-requested-with', 'x-xsrf-token',
+    ];
+
+    /** Families of standard names, lower case. */
+    private const RESERVED_PREFIXES = ['access-control-', 'cross-origin-', 'if-', 'proxy-', 'sec-', 'x-forwarded-'];
+
     /**
-     * @throws InvalidArgumentException when a name is not a header token or two names are the same
+     * @throws InvalidArgumentException when a name is not a header token, is a reserved name, or two names are the same
      */
     public function __construct(
         public string $request = self::DEFAULT_REQUEST,
@@ -74,11 +91,29 @@ final readonly class RemoteDialogHeaders
             if (1 !== preg_match(self::NAME, $name)) {
                 return \sprintf('The remote dialog %s header "%s" must be a header name of letters, digits and "-" (at most 64 characters, starting with a letter).', $role, $name);
             }
+            if (self::isReserved($name)) {
+                return \sprintf('The remote dialog %s header "%s" is a standard HTTP header name; use a name of your own, like "X-Acme-Dialog".', $role, $name);
+            }
         }
         if (3 !== \count(array_unique(array_map(strtolower(...), [$request, $redirect, $location])))) {
             return 'The remote dialog request, redirect and location headers must be three different names.';
         }
 
         return null;
+    }
+
+    private static function isReserved(string $name): bool
+    {
+        $name = strtolower($name);
+        if (\in_array($name, self::RESERVED, true)) {
+            return true;
+        }
+        foreach (self::RESERVED_PREFIXES as $prefix) {
+            if (str_starts_with($name, $prefix)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

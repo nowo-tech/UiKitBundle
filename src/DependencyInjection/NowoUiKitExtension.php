@@ -105,8 +105,8 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
         // 2.33 (UI-5): release_check.enabled / current_version may be container parameters or env placeholders
         // ("%app.update_check%", "%env(bool:X)%"), which are not resolved yet here: they are kept raw for the Twig
         // global (TwigBundle resolves them) and left out of this early validation (load() validates them resolved).
-        $releaseCheck = self::rawReleaseCheck($configs);
-        $config = $this->processConfiguration(new Configuration(), self::withoutRuntimeReleaseCheck($configs));
+        $releaseCheck = $this->rawReleaseCheck($configs);
+        $config = $this->processConfiguration(new Configuration(), $this->withoutRuntimeReleaseCheck($configs));
         $fw = CssFramework::from($config['css_framework'])->normalized()->value;
 
         $twig = [
@@ -134,7 +134,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
      *
      * @return array{enabled: mixed, current_version: mixed}
      */
-    private static function rawReleaseCheck(array $configs): array
+    private function rawReleaseCheck(array $configs): array
     {
         $values = ['enabled' => false, 'current_version' => ''];
         foreach ($configs as $config) {
@@ -160,7 +160,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
      *
      * @return array<int, array<string, mixed>>
      */
-    private static function withoutRuntimeReleaseCheck(array $configs): array
+    private function withoutRuntimeReleaseCheck(array $configs): array
     {
         foreach ($configs as $index => $config) {
             if (!isset($config['release_check']) || !\is_array($config['release_check'])) {

@@ -6,11 +6,13 @@
  * Focus returns to the opener on close. No inline handlers (CSP).
  * Replace (2.2): an opener with [data-nowo-ui-dialog-replace] inside an open dialog closes that dialog first and
  * hands its focus-return target over to the new one (focus goes back to whatever opened the first dialog).
- * Remote content (2.2): an opener with [data-nowo-ui-dialog-src="<url>"] fetches that URL (same origin only,
- * credentials same-origin, header X-Requested-With) into the dialog body ([data-nowo-ui-dialog-body] or
- * .nowo-ui-dialog__body; aria-busy while loading) and dispatches `nowo-ui:dialog-loaded` (detail {url}) on the
- * dialog. The fetched HTML is inserted as markup only (scripts do not run: CSP-safe); behaviour comes from delegated
- * listeners / Stimulus. On a failed request the opener's href (the no-JS fallback) is followed.
+ * Remote content (2.2): an opener with [data-nowo-ui-dialog-src="<url>"] fetches that URL (http(s) on this origin,
+ * `mode: 'same-origin'`, so a redirect to another origin fails; credentials same-origin, header X-Requested-With) into
+ * the dialog body ([data-nowo-ui-dialog-body] or .nowo-ui-dialog__body; aria-busy while loading) and dispatches
+ * `nowo-ui:dialog-loaded` (detail {url}) on the dialog. Since 2.33 only a `text/html` fragment (or an empty answer) is
+ * inserted, after parseFragment() of nowo-ui-remote-form-core.ts: defence in depth for the server's own markup, not a
+ * sanitizer for user HTML, so keep a `script-src` CSP. Behaviour comes from delegated listeners / Stimulus. On a failed
+ * request or any other answer the opener's href (the no-JS fallback) is followed.
  * Remote form (2.28): an opener with [data-nowo-ui-dialog-src] AND [data-nowo-ui-dialog-form] runs the remote form
  * dialog of nowo-ui-remote-form-core.ts instead (form posted back with fetch, 422 re-rendered, 204 + X-Nowo-Redirect
  * followed; events nowo-ui:remote-form:loaded|invalid|saved|failed|closed on the dialog). Settings from the dialog:
@@ -29,12 +31,15 @@ import { overlayRegistry, type OverlayHandle } from './nowo-ui-overlay';
 import {
   DEFAULT_SETTINGS,
   headerName,
+  isFragment,
   isPlainClick,
   LOCATION_HEADER,
   openerTitle,
+  parseFragment,
   REDIRECT_HEADER,
   RemoteFormSession,
   REQUEST_HEADER,
+  sameOriginHref,
   type RemoteFormSettings,
 } from './nowo-ui-remote-form-core';
 
@@ -168,14 +173,9 @@ export function openRemoteForm(id: string | HTMLDialogElement | null, url: strin
   return remoteSession(dialog).open(url, opener, title);
 }
 
-/** Same-origin absolute URL of a dialog source, null for another origin or an invalid URL. */
+/** Same-origin absolute http(s) URL of a dialog source, null for another origin or scheme, or an invalid URL. */
 export function sameOriginUrl(src: string): string | null {
-  try {
-    const url = new URL(src, window.location.href);
-    return url.origin === window.location.origin ? url.href : null;
-  } catch {
-    return null;
-  }
+  return sameOriginHref(src);
 }
 
 /** Follows a URL (separate function so tests can observe it). */
@@ -196,11 +196,15 @@ export async function loadDialogContent(dialog: HTMLDialogElement, src: string, 
   }
   body.setAttribute('aria-busy', 'true');
   try {
-    const response = await fetch(url, { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'text/html' } });
+    const response = await fetch(url, { credentials: 'same-origin', mode: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'text/html' } });
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
-    body.innerHTML = await response.text();
+    const text = await response.text();
+    if (text !== '' && !isFragment(response.headers.get('content-type'), text)) {
+      throw new Error('Not an HTML fragment');
+    }
+    body.replaceChildren(parseFragment(text));
     body.removeAttribute('aria-busy');
     dialog.dispatchEvent(new CustomEvent('nowo-ui:dialog-loaded', { bubbles: true, detail: { url } }));
     return true;

@@ -63,7 +63,7 @@ final class KitTemplatesController extends AbstractController
     public function sidePanel(Request $request): Response
     {
         $response = $this->render('kit/side_panel.html.twig', ['open' => '1' === $request->query->get('panel')]);
-        $response->headers->set('Content-Security-Policy', "style-src-attr 'none'; script-src-attr 'none'");
+        $response->headers->set('Content-Security-Policy', "script-src 'self'; style-src-attr 'none'; script-src-attr 'none'");
 
         return $response;
     }
@@ -77,7 +77,7 @@ final class KitTemplatesController extends AbstractController
     public function remoteForm(Request $request): Response
     {
         $response = $this->render('kit/remote_form.html.twig', ['saved' => $request->query->getString('saved')]);
-        $response->headers->set('Content-Security-Policy', "style-src-attr 'none'; script-src-attr 'none'");
+        $response->headers->set('Content-Security-Policy', "script-src 'self'; style-src-attr 'none'; script-src-attr 'none'");
 
         return $response;
     }
@@ -102,7 +102,7 @@ final class KitTemplatesController extends AbstractController
         }
 
         $response = $this->render($dialog->template('kit/remote_form_new.html.twig', 'kit/_remote_form_fields.html.twig'), ['form' => $form->createView()]);
-        $response->headers->set('Content-Security-Policy', "style-src-attr 'none'; script-src-attr 'none'");
+        $response->headers->set('Content-Security-Policy', "script-src 'self'; style-src-attr 'none'; script-src-attr 'none'");
 
         return RemoteDialog::vary($response);
     }
@@ -150,7 +150,7 @@ final class KitTemplatesController extends AbstractController
     private function wizardStep(RemoteDialogResponder $dialog, FormView $form, int $step, string $label): Response
     {
         $response = $this->render($dialog->template('kit/remote_form_wizard.html.twig', 'kit/_remote_form_wizard_step.html.twig'), ['form' => $form, 'step' => $step, 'label' => $label]);
-        $response->headers->set('Content-Security-Policy', "style-src-attr 'none'; script-src-attr 'none'");
+        $response->headers->set('Content-Security-Policy', "script-src 'self'; style-src-attr 'none'; script-src-attr 'none'");
 
         return $dialog->fragment($response);
     }

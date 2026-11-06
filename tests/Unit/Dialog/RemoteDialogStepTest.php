@@ -64,6 +64,16 @@ final class RemoteDialogStepTest extends TestCase
         yield 'leading dash' => ['-X', 'X-Nowo-Redirect', 'X-Nowo-Dialog-Location'];
         yield 'too long' => [str_repeat('X', 65), 'X-Nowo-Redirect', 'X-Nowo-Dialog-Location'];
         yield 'same names' => ['X-Nowo-Dialog', 'x-nowo-dialog', 'X-Nowo-Dialog-Location'];
+        yield 'reserved request: Accept' => ['Accept', 'X-Nowo-Redirect', 'X-Nowo-Dialog-Location'];
+        yield 'reserved request: Authorization, any case' => ['AUTHORIZATION', 'X-Nowo-Redirect', 'X-Nowo-Dialog-Location'];
+        yield 'reserved request: Cookie' => ['cookie', 'X-Nowo-Redirect', 'X-Nowo-Dialog-Location'];
+        yield 'reserved request: X-Requested-With' => ['X-Requested-With', 'X-Nowo-Redirect', 'X-Nowo-Dialog-Location'];
+        yield 'reserved redirect: Cache-Control' => ['X-Nowo-Dialog', 'Cache-Control', 'X-Nowo-Dialog-Location'];
+        yield 'reserved redirect: Location' => ['X-Nowo-Dialog', 'Location', 'X-Nowo-Dialog-Location'];
+        yield 'reserved location: Set-Cookie' => ['X-Nowo-Dialog', 'X-Nowo-Redirect', 'Set-Cookie'];
+        yield 'reserved prefix: Sec-' => ['Sec-Fetch-Mode', 'X-Nowo-Redirect', 'X-Nowo-Dialog-Location'];
+        yield 'reserved prefix: If-' => ['If-None-Match', 'X-Nowo-Redirect', 'X-Nowo-Dialog-Location'];
+        yield 'reserved prefix: X-Forwarded-' => ['X-Nowo-Dialog', 'X-Forwarded-Host', 'X-Nowo-Dialog-Location'];
     }
 
     #[DataProvider('invalidHeaders')]
@@ -299,6 +309,7 @@ final class RemoteDialogStepTest extends TestCase
     {
         yield 'bad header' => [['request_header' => "X-A\r\nB"]];
         yield 'duplicate headers' => [['redirect_header' => 'X-Nowo-Dialog']];
+        yield 'reserved header' => [['request_header' => 'Authorization']];
         yield 'bad route pattern' => [['step_routes' => ['a b']]];
         yield 'regex route pattern' => [['step_routes' => ['/.*/']]];
     }
@@ -328,7 +339,7 @@ final class RemoteDialogStepTest extends TestCase
 
         $request = Request::create('/x');
         $request->headers->set('X-Beacon-Dialog', '1');
-        $twig = PageContractTwig::create(request: $request, remoteDialogHeaders: $headers, templates: ['t' => '{{ nowo_ui_dialog_request() ? "dialog" : "page" }}']);
+        $twig = PageContractTwig::create(templates: ['t' => '{{ nowo_ui_dialog_request() ? "dialog" : "page" }}'], request: $request, remoteDialogHeaders: $headers);
         self::assertSame('dialog', $twig->render('t'));
     }
 

@@ -137,6 +137,24 @@ match); every addition is opt-in:
 - **Behaviour note:** the peer and the IIFE driver now ignore header names that are not header tokens (letters,
   digits, `-`) and use the defaults instead.
 
+**Security hardening (audit Appendix GT).** Normal server fragments are unaffected. These cases change:
+
+- **Plain `data-nowo-ui-dialog-src`:** the answer must be a `text/html` fragment (or empty). A whole document
+  (`<!doctype` / `<html` in the first 1024 characters), `text/plain`, JSON or `application/xhtml+xml` is no longer
+  inserted: the dialog closes and the opener's link is followed, or, without a link, the body stays as it was. Answer
+  with a fragment, as the remote form dialog already requires. Inline `on*` handlers, `<script>`, `<base>`, `<object>`,
+  `<embed>`, `iframe[srcdoc]` and `meta[http-equiv]` in that answer are now removed: use delegated listeners or Stimulus.
+  A `src` that redirects to another origin, or a `blob:` `src`, now fails the same way.
+- **Both dialog paths:** an `<iframe>` with `about:blank`, `data:` or `blob:` as `src` is removed; one without `src` stays.
+  `javascript:` links and form actions lose the attribute. `mailto:`, `tel:` and `data:` image links stay.
+- **`remote_dialog.*_header`:** a standard HTTP name now fails at compile time; pick a name of your own (`X-Acme-Dialog`).
+- **Listing customizer:** a `save_url`, `reset_url` or `token_url` on another origin, or one that redirects to another
+  origin, now reports the save error. Such a setup never sent cookies (`credentials: 'same-origin'`). Serve those
+  endpoints from the page's origin. **Authorise each scope key on the server** (USAGE "Scopes").
+- **CSP:** the filter is defence in depth, and `script-src-attr 'none'` alone does not stop `javascript:` URLs. Set
+  `script-src` without `'unsafe-inline'`, plus the directives listed in [USAGE](USAGE.md#remote-form-dialog-228)
+  "Fragment trust".
+
 ## To 2.32.0
 
 **2.32.0** (minor), from **2.31.x**: `composer update nowo-tech/ui-kit-bundle`. No markup change by default: the app

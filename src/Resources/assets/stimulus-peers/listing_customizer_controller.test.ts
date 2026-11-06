@@ -446,6 +446,7 @@ describe('listing-customizer peer', () => {
     expect(fetchFn).toHaveBeenCalledWith('/prefs/invoices', {
       method: 'PUT',
       credentials: 'same-origin',
+      mode: 'same-origin',
       headers: { Accept: 'application/json', 'X-CSRF-TOKEN': 'tok', 'Content-Type': 'application/json' },
       body: JSON.stringify({ columns: toPayload(state().columns), filters: toPayload(state().filters, false) }),
     });
@@ -458,6 +459,7 @@ describe('listing-customizer peer', () => {
     expect(fetchFn).toHaveBeenLastCalledWith('/prefs/invoices', {
       method: 'DELETE',
       credentials: 'same-origin',
+      mode: 'same-origin',
       headers: { Accept: 'application/json', 'X-CSRF-TOKEN': 'tok' },
     });
     expect(reload).toHaveBeenCalledTimes(2);
@@ -518,6 +520,25 @@ describe('listing-customizer peer', () => {
       expect(fetchFn).toHaveBeenCalledTimes(2);
       expect(document.querySelector('[data-listing-customizer-target="status"]')?.textContent).toBe('Expired');
     }
+  });
+
+  it('does not call a token URL on another origin (GT-I3)', async () => {
+    const fetchFn = vi.fn(async () => ({ ok: false, status: 403 }));
+    vi.stubGlobal('fetch', fetchFn);
+    const root = await mount({ url: '/prefs/invoices', 'token-url': 'https://evil.example/token' });
+    await controller(root).apply();
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+    expect((fetchFn.mock.calls[0] as unknown as [string])[0]).toBe('/prefs/invoices');
+    expect(document.querySelector('[data-listing-customizer-target="status"]')?.textContent).toBe('Expired');
+  });
+
+  it('refreshes the token same-origin only (GT-I3)', async () => {
+    const fetchFn = vi.fn(async (url: string) => ('/prefs/token' === url ? { ok: true, status: 200, json: async () => ({ token: 'fresh' }) } : { ok: false, status: 403 }));
+    vi.stubGlobal('fetch', fetchFn);
+    const root = await mount({ url: '/prefs/invoices', 'token-url': '/prefs/token' });
+    await controller(root).apply();
+    expect((fetchFn.mock.calls[1] as unknown as [string, RequestInit])[1]).toMatchObject({ mode: 'same-origin', credentials: 'same-origin' });
+    expect((fetchFn.mock.calls[2] as unknown as [string, RequestInit])[1]).toMatchObject({ mode: 'same-origin' });
   });
 
   it('works without tabs, status or buttons and with an empty state', async () => {
@@ -757,6 +778,26 @@ describe('scopes (2.33)', () => {
     expect(failed).toHaveBeenCalledTimes(2);
     expect(scopeUrl('', '/fallback')).toBe('/fallback');
     expect(scopeUrl('http://[bad', '/fallback')).toBeNull();
+  });
+
+  it('refuses a same-origin URL that is not http(s) (GT-I3)', () => {
+    expect(scopeUrl(`blob:${window.location.origin}/x`, '/fallback')).toBeNull();
+    expect(scopeUrl('javascript:alert(1)', '/fallback')).toBeNull();
+    expect(scopeUrl('/own', '/fallback')).toBe(`${window.location.origin}/own`);
+  });
+
+  it('never sends the token to a listing url on another origin, with or without a scope (GT-I3)', async () => {
+    const fetchFn = vi.fn(async () => ok());
+    vi.stubGlobal('fetch', fetchFn);
+    const root = await mountScoped([personal], '', 'https://evil.example/save');
+    const failed = vi.fn();
+    root.addEventListener('listing-customizer:save-failed', failed);
+    row('columns', 'total').querySelector<HTMLButtonElement>('button[data-move="up"]')?.click();
+    button('[data-listing-customizer-target="applyButton"]').click();
+    await tick();
+    expect(fetchFn).not.toHaveBeenCalled();
+    expect(failed).toHaveBeenCalledTimes(1);
+    expect(failed.mock.calls[0]?.[0].detail.message).toBe(scopedMessages.saveError);
   });
 
   it('ignores scopes without a key, and toggle opens then closes the panel', async () => {

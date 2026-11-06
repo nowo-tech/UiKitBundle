@@ -105,6 +105,99 @@ describe('remote form helpers', () => {
     expect(fragment.querySelector('img')?.attributes.length).toBe(1);
   });
 
+  describe('fragment filter (audit GT)', () => {
+    it.each([
+      ['plain', '<iframe src="javascript:alert(1)"></iframe>'],
+      ['tab and blank', '<iframe src=" java&#9;script:alert(1)"></iframe>'],
+      ['newline', '<iframe src="java&#10;script:alert(1)"></iframe>'],
+      ['mixed case', '<IFRAME SRC="JaVaScRiPt:alert(1)"></IFRAME>'],
+      ['inside foreignObject', '<svg><foreignObject><iframe src="javascript:alert(1)"></iframe></foreignObject></svg>'],
+      ['data', '<iframe src="data:text/html,<script>alert(1)</script>"></iframe>'],
+      ['about', '<iframe src="about:blank"></iframe>'],
+      ['unparsable', '<iframe src="http://["></iframe>'],
+    ])('GT-L1: removes an iframe whose src is not http(s): %s', (_name, html) => {
+      const fragment = parseFragment(`<p>x</p>${html}`);
+      expect(fragment.querySelector('iframe')).toBeNull();
+      expect(fragment.querySelector('p')?.textContent).toBe('x');
+    });
+
+    it.each([
+      ['relative', '<iframe src="/frame"></iframe>'],
+      ['empty', '<iframe src=""></iframe>'],
+      ['other origin', '<iframe src="https://maps.example/embed"></iframe>'],
+      ['protocol relative', '<iframe src="//maps.example/embed"></iframe>'],
+      ['no src', '<iframe name="target"></iframe>'],
+    ])('GT-L1: keeps a legitimate iframe: %s', (_name, html) => {
+      expect(parseFragment(html).querySelector('iframe')).not.toBeNull();
+    });
+
+    it.each([
+      ['a', '<a id="t" href="javascript:alert(1)">x</a>', 'href'],
+      ['a obfuscated', '<a id="t" href=" java&#9;script:alert(1)">x</a>', 'href'],
+      ['a vbscript', '<a id="t" href="VBScript:x">x</a>', 'href'],
+      ['area', '<map><area id="t" href="javascript:alert(1)"></map>', 'href'],
+      ['svg a', '<svg><a id="t" href="javascript:alert(1)"><rect></rect></a></svg>', 'href'],
+      ['svg a xlink', '<svg><a id="t" xlink:href="javascript:alert(1)"><rect></rect></a></svg>', 'xlink:href'],
+      ['form', '<form id="t" method="post" action="javascript:alert(1)"></form>', 'action'],
+      ['button', '<form><button id="t" formaction="javascript:alert(1)">x</button></form>', 'formaction'],
+      ['input', '<form><input id="t" type="submit" formaction="javascript:alert(1)"></form>', 'formaction'],
+    ])('GT-I1: strips a script URL: %s', (_name, html, attribute) => {
+      const element = parseFragment(html).querySelector('#t');
+      expect(element).not.toBeNull();
+      expect(element?.hasAttribute(attribute)).toBe(false);
+    });
+
+    it.each([
+      ['relative', '/x'],
+      ['query', '?a=javascript:b'],
+      ['hash', '#javascript:b'],
+      ['other origin', 'https://other.example/x'],
+      ['mailto', 'mailto:a@example.com'],
+      ['tel', 'tel:+34600000000'],
+      ['data image', 'data:image/png;base64,AAAA'],
+      ['unparsable', 'http://['],
+    ])('GT-I1: keeps a legitimate URL: %s', (_name, url) => {
+      const fragment = parseFragment(`<a id="a" href="${url}">x</a><form id="f" action="${url}"><button id="b" formaction="${url}">x</button></form>`);
+      expect(fragment.querySelector('#a')?.getAttribute('href')).toBe(url);
+      expect(fragment.querySelector('#f')?.getAttribute('action')).toBe(url);
+      expect(fragment.querySelector('#b')?.getAttribute('formaction')).toBe(url);
+    });
+
+    it('GT-I1: removes SVG animations of href and keeps the others', () => {
+      const fragment = parseFragment(`<svg><a id="a"><animate attributeName="href" to="javascript:alert(1)"></animate><set attributeName="xlink:href" to="javascript:alert(1)"></set>
+        <animate attributeName=" HREF " values="/x;javascript:alert(1)"></animate><rect><animate id="keep" attributeName="x" to="1"></animate><set id="keep2" attributeName="fill" to="red"></set></rect></a></svg>`);
+      expect(fragment.querySelectorAll('animate').length).toBe(1);
+      expect(fragment.querySelectorAll('set').length).toBe(1);
+      expect(fragment.querySelector('#keep')).not.toBeNull();
+      expect(fragment.querySelector('#keep2')).not.toBeNull();
+    });
+
+    it('GT-I1: filters nested template content at any depth', () => {
+      const fragment = parseFragment(`<template id="t1"><img id="i" src="/x" onerror="x()"><script>x()</script><a id="l" href="javascript:x()">x</a>
+        <iframe src="javascript:x()"></iframe><template id="t2"><button id="b" onclick="x()">x</button><meta http-equiv="refresh" content="0"></template></template>`);
+      const outer = (fragment.querySelector('#t1') as HTMLTemplateElement).content;
+      expect(outer.querySelector('#i')?.hasAttribute('onerror')).toBe(false);
+      expect(outer.querySelector('#i')?.getAttribute('src')).toBe('/x');
+      expect(outer.querySelector('script, iframe')).toBeNull();
+      expect(outer.querySelector('#l')?.hasAttribute('href')).toBe(false);
+      const inner = (outer.querySelector('#t2') as HTMLTemplateElement).content;
+      expect(inner.querySelector('#b')?.hasAttribute('onclick')).toBe(false);
+      expect(inner.querySelector('meta')).toBeNull();
+    });
+
+    it('leaves an ordinary form fragment untouched (no behaviour change for legitimate content)', () => {
+      const html = `<div id="c" data-title="T"><form method="post" action="/save" class="f"><input type="hidden" name="_token" value="abc"><label for="n">N</label><input id="n" name="n" required autofocus>
+        <a href="/help" target="_blank" rel="noopener">Help</a><template id="row"><div class="row"><input name="r[__name__]"></div></template><div class="a"><button type="submit">Save</button><button type="button" data-nowo-ui-dialog-close>Cancel</button></div></form></div>`;
+      const reference = document.createElement('template');
+      reference.innerHTML = html;
+      const wrapper = document.createElement('div');
+      wrapper.append(parseFragment(html));
+      const expected = document.createElement('div');
+      expected.append(reference.content);
+      expect(wrapper.innerHTML).toBe(expected.innerHTML);
+    });
+  });
+
   it('resolves submit targets and data like a native submit (ES-L2, ES-I1)', () => {
     document.body.innerHTML = `<form id="f" method="post" action="/save"><input type="hidden" name="op" value="hidden">
       <button id="plain" type="submit">Save</button>
@@ -805,6 +898,25 @@ describe('RemoteFormSession', () => {
       for (let i = 0; i < 30; i += 1) await tick();
       expect(loop).toHaveBeenCalledTimes(MAX_STEPS + 1);
       expect(assign).toHaveBeenCalledWith('/loop');
+    });
+
+    it('warns when a step chain passes the cap, and only then (GT-I4)', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply({ status: 204, headers: { 'X-Nowo-Dialog-Location': '/loop' } })));
+      session.open('/loop', opener(), 'Loop');
+      for (let i = 0; i < 30; i += 1) await tick();
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn.mock.calls[0]?.[0]).toContain(`after ${MAX_STEPS} in a row`);
+
+      warn.mockClear();
+      const chain = vi.fn();
+      for (let i = 0; i < MAX_STEPS; i += 1) chain.mockResolvedValueOnce(reply({ status: 204, headers: { 'X-Nowo-Dialog-Location': '/next' } }));
+      chain.mockResolvedValueOnce(reply({ body: '<p id="last">Last</p>' }));
+      vi.stubGlobal('fetch', chain);
+      session.open('/next', opener(), 'Chain');
+      for (let i = 0; i < 30; i += 1) await tick();
+      expect(document.getElementById('last')).not.toBeNull();
+      expect(warn).not.toHaveBeenCalled();
     });
   });
 

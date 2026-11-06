@@ -107,8 +107,9 @@ export function toPayload(items: ListingItem[], mergeable = true): ListingPayloa
 }
 
 /**
- * The URL a scope saves to (2.33): its own URL when it is on this origin (the request carries the CSRF token), the
- * listing `url` when it has none, null for another origin.
+ * The URL a scope saves to (2.33): its own URL when it is http(s) on this origin (the request carries the CSRF token),
+ * the listing `url` when it has none, null for another origin or scheme. `send()` and `refreshToken()` apply the same
+ * check to the listing `url` and `tokenUrl`.
  */
 export function scopeUrl(own: string | undefined, fallback: string): string | null {
   if (typeof own !== 'string' || own === '') {
@@ -116,7 +117,7 @@ export function scopeUrl(own: string | undefined, fallback: string): string | nu
   }
   try {
     const url = new URL(own, window.location.href);
-    return url.origin === window.location.origin ? url.href : null;
+    return url.origin === window.location.origin && (url.protocol === 'http:' || url.protocol === 'https:') ? url.href : null;
   } catch {
     return null;
   }
@@ -406,6 +407,11 @@ export default class ListingCustomizerController extends Controller<HTMLElement>
     layout: { columns: ListingPayloadItem[]; filters: ListingPayloadItem[] } | null,
     url: string = this.urlValue,
   ): Promise<void> {
+    if (null === scopeUrl(url, '')) {
+      this.failed(this.messagesValue.saveError ?? '');
+
+      return;
+    }
     this.setBusy(true);
     this.setStatus(this.messagesValue.saving ?? '', false);
     try {
@@ -436,17 +442,19 @@ export default class ListingCustomizerController extends Controller<HTMLElement>
     return fetch(url, {
       method,
       credentials: 'same-origin',
+      // A redirect to another origin fails instead of carrying the CSRF token there.
+      mode: 'same-origin',
       headers,
       ...(null !== body ? { body: JSON.stringify(body) } : {}),
     });
   }
 
   private async refreshToken(): Promise<boolean> {
-    if ('' === this.tokenUrlValue) {
+    if (!scopeUrl(this.tokenUrlValue, '')) {
       return false;
     }
     try {
-      const response = await fetch(this.tokenUrlValue, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
+      const response = await fetch(this.tokenUrlValue, { credentials: 'same-origin', mode: 'same-origin', headers: { Accept: 'application/json' } });
       const token = response.ok ? ((await response.json()) as { token?: unknown }).token : null;
       if ('string' !== typeof token || '' === token) {
         return false;

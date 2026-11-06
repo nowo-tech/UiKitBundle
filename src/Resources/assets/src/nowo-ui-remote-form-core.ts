@@ -20,7 +20,7 @@
  *   each control there is bound to its form with `form="…"`, so the submit stays visible while the body scrolls; a
  *   form with `data-nowo-ui-dialog-keep-actions` keeps them in place.
  * Redirect targets are path-absolute same-origin URLs only (never absolute, never `//` or `\`). Titles and messages
- * are `textContent`; the server's fragment is parsed in an inert <template> and its <script> elements are dropped.
+ * are `textContent`; the server's fragment goes through parseFragment() before insertion.
  */
 
 import { overlayRegistry, type OverlayHandle } from './nowo-ui-overlay';
@@ -134,23 +134,68 @@ export function isFragment(contentType: string | null, text: string): boolean {
 /** Elements dropped from a fragment before insertion: they run code or navigate on their own (ES-I2). */
 export const DROPPED_ELEMENTS = 'script, iframe[srcdoc], meta[http-equiv], base, object, embed';
 
+/** Attributes that run a `javascript:` URL when the link or the form is used. */
+const CLICK_URL_ATTRIBUTES = ['href', 'xlink:href', 'action', 'formaction'];
+/** Schemes refused on those attributes. `mailto:`, `tel:` and `data:` images stay: they run nothing in the page. */
+const SCRIPT_SCHEMES = ['javascript:', 'vbscript:'];
+
+/** The scheme of a URL as the browser reads it (blanks, tabs and case handled by the parser), null when unparsable. */
+function urlScheme(value: string): string | null {
+  try {
+    return new URL(value, window.location.href).protocol;
+  } catch {
+    return null;
+  }
+}
+
+/** An <iframe> whose `src` is not http(s) (`javascript:` runs on insertion, `data:` runs in its own origin). */
+function isUnsafeFrame(element: Element): boolean {
+  const src = element.localName === 'iframe' ? element.getAttribute('src') : null;
+  if (src === null) {
+    return false;
+  }
+  const scheme = urlScheme(src);
+  return scheme !== 'http:' && scheme !== 'https:';
+}
+
+/** An SVG <animate> / <set> that writes a link's `href`: its `to`, `from`, `by` or `values` become the URL on click. */
+function isHrefAnimation(element: Element): boolean {
+  return (element.localName === 'animate' || element.localName === 'set') && /^\s*(?:[\w-]+:)?href\s*$/i.test(element.getAttribute('attributeName') ?? '');
+}
+
+function sanitizeFragment(root: DocumentFragment): void {
+  root.querySelectorAll(DROPPED_ELEMENTS).forEach((element) => element.remove());
+  root.querySelectorAll('*').forEach((element) => {
+    if (isUnsafeFrame(element) || isHrefAnimation(element)) {
+      element.remove();
+      return;
+    }
+    Array.from(element.attributes).forEach((attribute) => {
+      const name = attribute.name.toLowerCase();
+      if (name.startsWith('on') || (CLICK_URL_ATTRIBUTES.includes(name) && SCRIPT_SCHEMES.includes(urlScheme(attribute.value) ?? ''))) {
+        element.removeAttribute(attribute.name);
+      }
+    });
+    // querySelectorAll does not enter a <template>: a host script may clone its content later (SVG <template> has none).
+    const nested = (element as HTMLTemplateElement).content;
+    if (element.localName === 'template' && nested) {
+      sanitizeFragment(nested);
+    }
+  });
+}
+
 /**
- * Parses server HTML in an inert template and strips what could run or navigate on insertion: <script>,
- * `iframe[srcdoc]`, `meta[http-equiv]` (refresh), <base>, <object> / <embed>, and every inline `on*` handler. The
- * fragment must still be the server's own trusted form (same trust as the page; keep a `script-src` CSP): this is
- * defence in depth, not a sanitizer for user HTML.
+ * Parses server HTML in an inert template and strips what could run or navigate by itself: <script>, `iframe[srcdoc]`,
+ * an <iframe> whose `src` is not http(s), `meta[http-equiv]` (refresh), <base>, <object> / <embed>, every inline `on*`
+ * handler, `javascript:` / `vbscript:` URLs of links and form actions, and SVG animations of `href`, also inside nested
+ * <template> content. The fragment must still be the server's own trusted form (same trust as the page): this is
+ * defence in depth, not a sanitizer for user HTML. Other-origin frames, forms, images and stylesheets stay, because
+ * hosts use them: `frame-src`, `form-action`, `img-src` and `style-src` limit those (docs/USAGE.md "Fragment trust").
  */
 export function parseFragment(html: string): DocumentFragment {
   const template = document.createElement('template');
   template.innerHTML = html;
-  template.content.querySelectorAll(DROPPED_ELEMENTS).forEach((element) => element.remove());
-  template.content.querySelectorAll('*').forEach((element) => {
-    Array.from(element.attributes).forEach((attribute) => {
-      if (attribute.name.toLowerCase().startsWith('on')) {
-        element.removeAttribute(attribute.name);
-      }
-    });
-  });
+  sanitizeFragment(template.content);
   return template.content;
 }
 
@@ -561,7 +606,11 @@ export class RemoteFormSession {
       if (signal.aborted) {
         return;
       }
-      const next = response.status >= 200 && response.status < 300 && this.steps < MAX_STEPS ? this.stepTarget(response) : null;
+      const success = response.status >= 200 && response.status < 300;
+      if (success && this.steps >= MAX_STEPS && response.headers.has(this.settings().locationHeader)) {
+        console.warn(`UiKit remote form dialog: stopped following steps after ${MAX_STEPS} in a row without a submit.`);
+      }
+      const next = success && this.steps < MAX_STEPS ? this.stepTarget(response) : null;
       if (next !== null) {
         this.steps += 1;
         this.step(next, response.status, body);

@@ -144,6 +144,32 @@ output is unchanged (markup byte for byte, the BC fixtures untouched).
   skips the check when it resolves to false).
 - The `remote-form-dialog` peer and the IIFE driver accept header names that are header tokens only (others fall back
   to the default).
+- A chain of remote dialog steps that passes the cap now logs a console warning (GT-I4).
+
+### Security
+
+Findings of the independent audit Appendix GT (2026-11-06). All need a host mistake first (HTML injection into a
+fragment, an open redirect, user text at the source URL) or are configuration errors; none works alone in the default
+configuration. Re-verification pending.
+
+- **Fragment filter (GT-L1, Low):** `parseFragment()` removes an `<iframe>` whose `src` is not http(s), read with the URL
+  parser, so ` java&#9;script:`, mixed case and `data:` are caught. It ran on insertion, without a click.
+- **Plain `data-nowo-ui-dialog-src` path (GT-L2, Low):** `loadDialogContent()` now uses the fragment filter, inserts only
+  `text/html` fragments or an empty answer, and fetches http(s) sources with `mode: 'same-origin'`, so a redirect to
+  another origin fails. `<meta http-equiv=refresh>`, `on*`, `srcdoc`, `<base>`, `<object>` and `<embed>` no longer take
+  effect there. The module comment and PAGE_CONTRACT no longer claim it was CSP-safe by itself.
+- **Click-time URLs and nested templates (GT-I1):** the filter removes `javascript:` / `vbscript:` values of `href`,
+  `xlink:href`, `action` and `formaction`, removes SVG `<animate>` / `<set>` of `href`, and also runs inside nested
+  `<template>` content. Other-origin frames, forms and subresources stay, because hosts use them: USAGE and SECURITY now
+  list the CSP directives that limit them.
+- **Reserved header names (GT-I2):** `RemoteDialogHeaders::invalid()` refuses standard HTTP names (`Accept`,
+  `Authorization`, `Cache-Control`, `Cookie`, `Location`, `Sec-*`…) for `remote_dialog.*_header`.
+- **Listing customizer (GT-I3):** both fetches use `mode: 'same-origin'`, so `X-CSRF-TOKEN` no longer follows a redirect
+  to another origin; the listing `url` and `tokenUrl` get the same origin check as scope URLs, which now also refuses
+  non-http(s) same-origin URLs such as `blob:`. USAGE says the server must authorise each scope key.
+- **`docs/SECURITY.md` (GT-I5):** covers `X-Nowo-Dialog-Location`, `step_routes`, `RemoteDialogRedirectEvent`, the
+  configurable header names and the limits of the filter.
+- **Demo (not shipped):** the policy of the remote form and side panel pages gains `script-src 'self'`.
 
 ## [2.32.0] - 2026-11-06
 

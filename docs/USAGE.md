@@ -1209,7 +1209,10 @@ the initial one:
 
 - Apply sends `{...params, "scope": key, "columns": […], "filters": […]}` to the scope's `save_url` (else `save_url`);
   Reset sends `{...params, "scope": key}` to `reset_url` (else the save URL) with `reset_method`. A scope URL on another
-  origin is refused (the request carries the CSRF token).
+  origin is refused (the request carries the CSRF token), and so are a listing `url` or `token_url` on another origin;
+  all of them use `mode: 'same-origin'`, so a redirect to another origin fails. The token and the scope key are the same
+  for every scope and the key in the body is client-set, so **the server must authorise each key for the current user**
+  (who may save the "Project default").
 - `save_confirm` / `reset_confirm` (labels) ask first; switching scope with unapplied changes asks
   `listing.scope_discard_confirm`. The state line shows `listing.scope_stored` / `listing.scope_inherited`.
 - Peer values `scopes` / `scope`, targets `scope` / `scopeState`, action `listing-customizer#changeScope`, event
@@ -1961,8 +1964,15 @@ public function edit(Request $request, Monitor $monitor, RemoteDialogResponder $
   to `//evil.example`, another origin), nothing that decodes to `//…`, ≤ 2048 characters. `RemoteDialogResponder` reduces an absolute URL on the request's own origin to its
   path and throws on anything else; the client ignores an invalid header (and reloads).
 - **Fragment trust:** the dialog injects the server's own answer, with the same trust as the page. Before insertion it
-  drops `<script>`, `iframe[srcdoc]`, `meta[http-equiv]`, `<base>`, `<object>` / `<embed>` and every inline `on*`
-  attribute, but it is not a sanitizer: never render user HTML unescaped in a fragment, and keep a `script-src` CSP.
+  drops `<script>`, `iframe[srcdoc]`, an `<iframe>` whose `src` is not http(s), `meta[http-equiv]`, `<base>`, `<object>`
+  / `<embed>`, every inline `on*` attribute, `javascript:` / `vbscript:` values of `href`, `xlink:href`, `action` and
+  `formaction`, and SVG `<animate>` / `<set>` of `href`, also inside nested `<template>` content. The plain
+  `data-nowo-ui-dialog-src` path applies the same filter since 2.33. It is not a sanitizer: never render user HTML
+  unescaped in a fragment. Other-origin frames, forms, images and stylesheets stay, because hosts embed maps and
+  payment forms, so limit them with your CSP. `script-src` without `'unsafe-inline'` is the one that stops script;
+  `script-src-attr 'none'` alone is not enough. Then `frame-src`, `form-action`, `img-src`, `style-src`, `connect-src`,
+  `object-src 'none'` and `base-uri 'none'`. Markup a host script builds later from a `data-prototype` attribute is not
+  covered: the filter sees it as text.
 - **`X-Nowo-Dialog` is not a security signal**: any page can send it. Never skip CSRF, authorization or validation
   because of it; it only selects the template and the success answer. Keep `Vary: X-Nowo-Dialog` on both modes
   (`RemoteDialog::vary()`; `RemoteDialogResponder` adds it to its answers).
@@ -2005,7 +2015,7 @@ return $dialog->redirectToRoute('board_show', ['id' => $board->getId()]);       
 | --- | --- |
 | Step answer | A **2xx** answer to a submit with a **valid** `X-Nowo-Dialog-Location` (same rule as `X-Nowo-Redirect`: path-absolute, same origin, no `//`, backslash, control character, dot segment or `%2e`, ≤ 2048 characters). It wins over `X-Nowo-Redirect`. First the cancelable `step` event `{url, status}`; then the loading line and a `GET` of the path with the dialog headers (`mode: 'same-origin'`, `redirect: 'manual'`), handled as a load (a failed load follows the path as a full page). An action-less form of the step posts to the step URL |
 | Invalid location | Ignored with a console warning: the answer is handled as without it (a `204` reloads the page). Never fetched, never navigated to |
-| Step on load | A load (`GET`) answered with a step follows it too, at most 5 times in a row (`MAX_STEPS`, then the opener's link is followed as a page), so a step that answers itself cannot loop |
+| Step on load | A load (`GET`) answered with a step follows it too, at most 5 times in a row (`MAX_STEPS`, then a console warning and the opener's link is followed as a page), so a step that answers itself cannot loop |
 | Events | `nowo-ui:remote-form:step` (IIFE) / `remote-form-dialog:step` (peer), cancelable: `preventDefault()` keeps the dialog as it is |
 
 **Redirect-only controllers (other bundles).** List their routes in `remote_dialog.step_routes` (route names, `*` =

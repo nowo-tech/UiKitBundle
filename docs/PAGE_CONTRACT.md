@@ -620,10 +620,13 @@ Bootstrap `.modal`: put the size on `.modal-dialog` (`margin: 1rem auto`), use `
 **Dialogs.** `title_html` (rich title, printed raw — escape what you interpolate) and `title_attr` / `body_attr`
 (attributes of the title / body, merged over the `dialog_title` / `dialog_body` slot attributes). `Action::$dialogId`
 renders a `<button type="button" data-nowo-ui-dialog-open="<id>" aria-haspopup="dialog" aria-controls="<id>">`; with an
-`href` as well it renders a link whose URL is **fetched into the dialog body** (`data-nowo-ui-dialog-src`, same origin
-only, `X-Requested-With: XMLHttpRequest`) — the link is the no-JS fallback and is followed when the request fails;
-the dialog then dispatches `nowo-ui:dialog-loaded` (`detail.url`). Fetched HTML is inserted as markup (scripts do not
-run): wire behaviour through delegated listeners or Stimulus. **Swap** one dialog for another with
+`href` as well it renders a link whose URL is **fetched into the dialog body** (`data-nowo-ui-dialog-src`, http(s) on
+the same origin, `mode: 'same-origin'`, `X-Requested-With: XMLHttpRequest`) — the link is the no-JS fallback and is
+followed when the request fails or the answer is not an HTML fragment; the dialog then dispatches
+`nowo-ui:dialog-loaded` (`detail.url`). Since 2.33 the answer must be a `text/html` fragment (not a whole document) and
+goes through the same filter as the remote form dialog ([USAGE](USAGE.md#remote-form-dialog-228), "Fragment trust"):
+defence in depth for the server's own markup, not a sanitizer for user HTML, so keep a `script-src` CSP. Wire behaviour
+through delegated listeners or Stimulus. **Swap** one dialog for another with
 `data-nowo-ui-dialog-replace` on an opener inside the open dialog: the first dialog closes and hands its focus-return
 target to the second (Escape on the second returns focus to whatever opened the first).
 
