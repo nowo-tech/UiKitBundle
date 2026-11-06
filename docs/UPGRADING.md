@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.33.0](#to-2330)
 - [To 2.32.0](#to-2320)
 - [To 2.31.0](#to-2310)
 - [To 2.30.0](#to-2300)
@@ -113,6 +114,8 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.33.0
 
 From **2.32.x**: `composer update nowo-tech/ui-kit-bundle`. No markup change by default (the BC fixtures still
 match); every addition is opt-in:
