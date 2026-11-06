@@ -119,8 +119,11 @@ shell renders byte-identical to 2.31 (`below-header`; the 2.26 shell fixtures st
 - **Full-height sidebar layout:** `nowo_ui_kit.shell.sidebar_layout: full-height`, or per request the option
   `sidebar_layout` / the request attribute `_nowo_ui_sidebar_layout` (e.g. from a user preference). See
   [USAGE](USAGE.md#full-height-sidebar-layout-232).
-- **Brand from config:** `nowo_ui_kit.shell.brand.{name, href, icon_src}`, or the options `aside_brand_html`,
-  `brand_icon_html` / `brand_icon_src`, `brand_name`, `brand_href`.
+- **Brand from config:** `nowo_ui_kit.shell.brand.{name, href, icon_src}` (validated at compile time: `href`
+  relative / http / https / mailto, `icon_src` relative / http / https), or the options `aside_brand_html`,
+  `brand_icon_html` / `brand_icon_src`, `brand_name`, `brand_href`. The `*_html` options — like the existing
+  `brand_html` / `aside_html` — are trusted HTML printed raw: never pass user or tenant input (uploaded logos go to
+  `brand_icon_src`, names to `brand_name`).
 - **Hover-expanded rail:** `nowo_ui_kit.shell.hover_expand: true` (or the option `hover_expand`) with `rail_mode`.
 
 Hosts that built this layout themselves (e.g. Symfony Beacon's `_sidebar-layout.scss` and the brand + second burger

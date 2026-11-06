@@ -326,7 +326,7 @@ colour comes from the base tokens (`--nowo-ui-surface`, `--nowo-ui-border`, `--n
 |-------|---------|---------|
 | `--nowo-ui-aside-peek-width` | `15.5rem` | the hover-expanded rail and the full-height aside head |
 | `--nowo-ui-aside-brand-icon-size` | `1.75rem` | the aside brand icon box |
-| `--nowo-ui-shell-inset-start` | `0px` (the aside width in this layout on desktop) | a host's fixed footer / bar: `inset-inline-start: var(--nowo-ui-shell-inset-start)` |
+| `--nowo-ui-shell-inset-start` | `0px` (the aside width in this layout on desktop) | read-only output token set by the shell (a host value is shadowed inside it): a host's fixed footer / bar reads it with `inset-inline-start: var(--nowo-ui-shell-inset-start)` |
 
 The burger keeps its spot in every mode: centred on the icons-only rail's column (`(--nowo-ui-aside-rail-width -
 2.25rem) / 2` from the aside's start edge), in a row `--nowo-ui-header-height` tall. Phones keep the 2.31 off-canvas

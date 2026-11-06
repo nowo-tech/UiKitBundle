@@ -14,6 +14,8 @@
     between start and end; blank = none), nowo_ui_shell_aside (empty = aside_items + aside_label),
     nowo_ui_shell_main, nowo_ui_shell_footer (empty = the UiKit footer partial), nowo_ui_shell_aside_brand (2.32: the
     brand of the full-height layout's aside head; empty = aside_brand_html, then the brand parts / brand_html / brand).
+  Like brand_html and aside_html, the blocks and the *_html options are trusted HTML printed raw: never user, tenant or
+  other stored input.
   A base layout whose page {% block body %} must stay uncaptured includes the two halves instead.
 #}
 {% set bundle = bundle|default(null) %}

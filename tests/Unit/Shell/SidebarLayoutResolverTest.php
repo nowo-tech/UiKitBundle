@@ -6,8 +6,10 @@ namespace Nowo\UiKitBundle\Tests\Unit\Shell;
 
 use Nowo\UiKitBundle\DependencyInjection\Configuration;
 use Nowo\UiKitBundle\DependencyInjection\NowoUiKitExtension;
+use Nowo\UiKitBundle\Shell\SafeHref;
 use Nowo\UiKitBundle\Shell\SidebarLayout;
 use Nowo\UiKitBundle\Shell\SidebarLayoutResolver;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
@@ -96,5 +98,50 @@ final class SidebarLayoutResolverTest extends TestCase
 
         $this->expectException(InvalidConfigurationException::class);
         $processor->processConfiguration(new Configuration(), [['shell' => ['sidebar_layout' => 'top']]]);
+    }
+
+    /**
+     * @return iterable<string, array{0: array<string, mixed>, 1: string}>
+     */
+    public static function invalidBrand(): iterable
+    {
+        yield 'javascript href' => [['href' => 'javascript:alert(1)'], 'brand.href'];
+        yield 'mixed-case javascript href with a tab' => [['href' => "JaVa\tScRiPt:alert(1)"], 'brand.href'];
+        yield 'data href' => [['href' => 'data:text/html,x'], 'brand.href'];
+        yield 'blank href' => [['href' => '  '], 'brand.href'];
+        yield 'array href' => [['href' => ['/']], 'brand.href'];
+        yield 'javascript icon' => [['icon_src' => 'javascript:x'], 'brand.icon_src'];
+        yield 'data icon' => [['icon_src' => 'data:image/svg+xml,<svg onload=alert(1)>'], 'brand.icon_src'];
+        yield 'mailto icon' => [['icon_src' => 'mailto:a@b.c'], 'brand.icon_src'];
+    }
+
+    /**
+     * GP-I1: unsafe brand URLs fail the container compile instead of being dropped silently at render.
+     *
+     * @param array<string, mixed> $brand
+     */
+    #[DataProvider('invalidBrand')]
+    public function testUnsafeBrandUrlsFailTheCompile(array $brand, string $message): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage($message);
+        (new Processor())->processConfiguration(new Configuration(), [['shell' => ['brand' => $brand]]]);
+    }
+
+    public function testSafeBrandUrlsAndImageFilter(): void
+    {
+        $config = (new Processor())->processConfiguration(new Configuration(), [['shell' => ['brand' => ['href' => 'mailto:hi@acme.test', 'icon_src' => 'https://cdn.acme.test/logo.svg']]]]);
+        self::assertSame('mailto:hi@acme.test', $config['shell']['brand']['href']);
+        self::assertSame('https://cdn.acme.test/logo.svg', $config['shell']['brand']['icon_src']);
+
+        self::assertTrue(SafeHref::isSafeImage('/images/logo.svg'));
+        self::assertTrue(SafeHref::isSafeImage('HTTPS://acme.test/l.png'));
+        self::assertFalse(SafeHref::isSafeImage('mailto:a@b.c'));
+        self::assertFalse(SafeHref::isSafeImage("java\nscript:x"));
+        self::assertFalse(SafeHref::isSafeImage(''));
+        self::assertSame('/l.png', SafeHref::filterImage('/l.png'));
+        self::assertNull(SafeHref::filterImage('data:image/png;base64,AA'));
+        self::assertNull(SafeHref::filterImage(null));
+        self::assertTrue(SafeHref::isSafe('mailto:a@b.c'), 'links keep mailto');
     }
 }

@@ -10,7 +10,8 @@
  *
  * Hover-expanded rail (2.32): with `data-nowo-ui-sidebar-hover-expand` on a rail shell, the pointer or the keyboard
  * focus on the icons-only rail adds `is-aside-peek` (the kit CSS widens the panel over the page); leaving it, Escape or
- * any mode change removes it. Short delays keep a pointer that only crosses the rail from opening it; touch never peeks.
+ * any mode change removes it. The pointer leaving closes it even after a click inside (a focused button); keyboard
+ * focus inside keeps it open. Short delays keep a pointer that only crosses the rail from opening it; touch never peeks.
  * Every `[data-nowo-ui-burger]` of a shell (the header's and, in the full-height layout, the aside head's) is kept in
  * sync.
  */
@@ -101,6 +102,10 @@ export function bindSidebarPeek(shell: HTMLElement): boolean {
   }
   aside.setAttribute('data-nowo-ui-peek-bound', '');
   let timer: number | undefined;
+  // Whether the focus inside the panel came from a pointer (a click): then leaving with the pointer closes the peek;
+  // keyboard focus keeps it open until the focus leaves or Escape.
+  let pointerFocus = false;
+  let pointerPressed = false;
   const schedule = (open: boolean, delay: number): void => {
     window.clearTimeout(timer);
     timer = window.setTimeout(() => {
@@ -113,12 +118,22 @@ export function bindSidebarPeek(shell: HTMLElement): boolean {
       schedule(true, PEEK_OPEN_DELAY_MS);
     }
   });
+  aside.addEventListener('pointerdown', () => {
+    pointerPressed = true;
+    pointerFocus = true;
+  });
+  aside.addEventListener('pointerup', () => {
+    pointerPressed = false;
+  });
   aside.addEventListener('pointerleave', () => {
-    if (!aside.contains(document.activeElement)) {
+    pointerPressed = false;
+    if (pointerFocus || !aside.contains(document.activeElement)) {
       schedule(false, PEEK_CLOSE_DELAY_MS);
     }
   });
   aside.addEventListener('focusin', () => {
+    // A focus move without a pointer press (Tab, a script) is keyboard focus.
+    pointerFocus = pointerPressed;
     if (canPeek(shell)) {
       schedule(true, 0);
     }
@@ -129,6 +144,7 @@ export function bindSidebarPeek(shell: HTMLElement): boolean {
     }
   });
   aside.addEventListener('keydown', (event: KeyboardEvent) => {
+    pointerFocus = false;
     if (event.key === 'Escape' && shell.classList.contains(PEEK_CLASS)) {
       window.clearTimeout(timer);
       shell.classList.remove(PEEK_CLASS);

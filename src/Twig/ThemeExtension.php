@@ -62,6 +62,8 @@ use Twig\TwigFunction;
  * - `nowo_ui_sidebar_layout(layout = null)` (2.32) — the app shell's sidebar layout of the request (`below-header` |
  *   `full-height`: a valid option, else the request attribute `_nowo_ui_sidebar_layout`, else
  *   `nowo_ui_kit.shell.sidebar_layout`)
+ * - `nowo_ui_safe_image_src(src)` (2.32) — the image source when it is relative, http or https ({@see SafeHref::isSafeImage()}),
+ *   else null
  * - `nowo_ui_safe_href(href)` (2.27) — the href when its scheme is safe ({@see SafeHref}: relative, http, https,
  *   mailto), else null
  * - `nowo_ui_breadcrumb_kit_trail(collection = null, context_key = '')` (2.27) — BreadcrumbKit's `breadcrumb_trail()`
@@ -157,6 +159,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             new TwigFunction('nowo_ui_breadcrumb_kit_trail', $this->breadcrumbKitTrail(...), ['needs_environment' => true]),
             new TwigFunction('nowo_ui_header_crumbs', $this->headerCrumbs(...), ['needs_environment' => true]),
             new TwigFunction('nowo_ui_safe_href', static fn (mixed $href): ?string => \is_string($href) ? SafeHref::filter($href) : null),
+            new TwigFunction('nowo_ui_safe_image_src', static fn (mixed $src): ?string => \is_string($src) ? SafeHref::filterImage($src) : null),
             new TwigFunction('nowo_ui_dialog_request', fn (): bool => RemoteDialog::isRequest($this->requestStack?->getCurrentRequest())),
             new TwigFunction('nowo_ui_remote_form_opener', self::remoteFormOpener(...)),
             new TwigFunction('nowo_ui_dialog_status', PageStatus::fromOption(...)),

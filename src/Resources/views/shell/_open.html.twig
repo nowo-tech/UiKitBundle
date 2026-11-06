@@ -9,13 +9,17 @@
 
   `app_shell` (shell/_shell.html.twig) composes both halves with blocks instead.
 
+  Options marked "trusted HTML" are printed raw (|raw): pass only markup the host builds itself, never user, tenant or
+  other stored input (a tenant logo goes to brand_icon_src, rendered as <img> where SVG scripts do not run; a tenant
+  name goes to brand_name or brand, which are escaped).
+
   Options:
-    - brand_html (HTML) / brand (text): header brand (slot app_brand for the text)
+    - brand_html (trusted HTML) / brand (text): header brand (slot app_brand for the text)
     - header_end (HTML): header actions — global search, theme toggle, locale switcher, user menu…
     - show_user_menu + name, email, initials, avatar_src, user_links, logout_href, logout_path, logout_csrf: the UiKit
       user menu at the end of the header (default: when name or initials are given); 2.26: avatar_src goes through the
       avatar URL policy (https:// or a same-origin /path; anything else shows the initials)
-    - aside_html (HTML): the whole aside content, or aside_items ({label, href, current, children…}) + aside_label
+    - aside_html (trusted HTML): the whole aside content, or aside_items ({label, href, current, children…}) + aside_label
     - aside_id (default nowo-ui-aside), aside_label (aria-label; default nav.aside)
     - collapsed / rail: the server-rendered desktop aside state; when not passed they come from the cookie
       nowo_ui_kit.shell.sidebar_cookie (= sidebar_hidden_value → collapsed, = sidebar_rail_value → rail)
@@ -36,10 +40,11 @@
       app_aside_head, + nowo-ui-aside-head with kit styles, hook data-nowo-ui-aside-head) with a second burger (same
       partial and options) and the aside brand (slot app_aside_brand, hook data-nowo-ui-aside-brand). The header keeps
       its burger and brand for phones and for a hidden aside; the kit CSS hides them on desktop while the aside shows
-    - aside brand (2.32, full-height only), first match: aside_brand_html (HTML; mark the name with the class
-      nowo-ui-aside-brand__name so the icons-only rail hides it), else brand_icon_html (HTML) / brand_icon_src (image
-      URL) + brand_name (text) + brand_href (defaults: nowo_ui_kit.shell.brand.icon_src / name / href), else brand_html,
-      else brand (its initial as the icon). The parts (slots app_aside_brand_icon / app_aside_brand_name) also fill the
+    - aside brand (2.32, full-height only), first match: aside_brand_html (trusted HTML; mark the name with the class
+      nowo-ui-aside-brand__name so the icons-only rail hides it), else brand_icon_html (trusted HTML) / brand_icon_src
+      (image URL: relative, http or https, else dropped; rendered as <img alt="">) + brand_name (text, escaped) +
+      brand_href (relative, http, https or mailto, else no link) (defaults: nowo_ui_kit.shell.brand.icon_src / name /
+      href), else brand_html, else brand (its initial as the icon). The parts (slots app_aside_brand_icon / app_aside_brand_name) also fill the
       header brand when neither brand_html nor brand is given
     - hover_expand (2.32; default nowo_ui_kit.shell.hover_expand): with kit styles and rail_mode, the icons-only rail
       widens over the page on hover / focus (data-nowo-ui-sidebar-hover-expand; nowo-ui-shell.js sets is-aside-peek)
@@ -101,7 +106,7 @@
 {% set _brand_cfg = _cfg.brand|default({}) %}
 {% set _brand_name = brand_name ?? (_brand_cfg.name ?? null) %}
 {% set _brand_href = nowo_ui_safe_href(brand_href ?? (_brand_cfg.href ?? null)) %}
-{% set _brand_icon_src = nowo_ui_safe_href(brand_icon_src ?? (_brand_cfg.icon_src ?? null)) %}
+{% set _brand_icon_src = nowo_ui_safe_image_src(brand_icon_src ?? (_brand_cfg.icon_src ?? null)) %}
 {% set _brand_icon = brand_icon_html ?? null %}
 {% set _has_brand_parts = _brand_icon or _brand_icon_src or (_brand_name is not null and _brand_name is not same as('')) %}
 {% set aside_label = aside_label|default('nav.aside'|trans({}, 'NowoUiKitBundle')) %}

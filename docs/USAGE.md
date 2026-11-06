@@ -1549,7 +1549,9 @@ the same phone layout: off-canvas aside, burger and brand in the header.
 
 Pick it, first match wins: the `sidebar_layout` option of `app_shell_open` / `app_shell`, the request attribute
 `_nowo_ui_sidebar_layout` (`SidebarLayout::ATTRIBUTE`), then `nowo_ui_kit.shell.sidebar_layout`. A per-user preference
-is a `kernel.request` listener (request scope, safe in FrankenPHP workers) or the option:
+is a `kernel.request` listener (request scope, safe in FrankenPHP workers) or the option. Set the attribute from a
+listener, not as a route placeholder or route default (the router copies those into the request attributes, so the URL
+would choose the layout):
 
 ```php
 use Nowo\UiKitBundle\Shell\SidebarLayout;
@@ -1579,6 +1581,12 @@ labels and morph glyphs; `nowo-ui-shell.js` keeps every `[data-nowo-ui-burger]` 
 to the burger that is shown after a click hides the clicked one — and the aside brand (slot `app_aside_brand`, hook
 `data-nowo-ui-aside-brand`). The header keeps its burger and brand; the kit CSS hides the header start on desktop while
 the aside shows (expanded or rail) and shows it again when the aside is hidden.
+
+> **Trusted HTML.** `brand_html`, `aside_html`, `aside_brand_html`, `brand_icon_html` and the `nowo_ui_shell_brand` /
+> `nowo_ui_shell_aside` / `nowo_ui_shell_aside_brand` blocks are printed raw (`|raw`). Pass only markup your own
+> templates build — never user, tenant or other stored input. A logo someone uploads goes to `brand_icon_src` (an
+> `<img src>`, where scripts inside an SVG do not run; relative, http or https only) and a name to `brand_name` /
+> `brand` (always escaped). Never paste uploaded SVG markup into `brand_icon_html`.
 
 **The aside brand**, first match: `aside_brand_html` (or the `nowo_ui_shell_aside_brand` block of `app_shell`; mark the
 part the rail hides with the class `nowo-ui-aside-brand__name`), then the parts `brand_icon_html` (HTML) or

@@ -120,7 +120,13 @@ Planned **2.32.0** (minor): configurable full-height sidebar layout of the app s
 - **Aside brand without template overrides:** `aside_brand_html` (block `nowo_ui_shell_aside_brand` of `app_shell`;
   class `nowo-ui-aside-brand__name` marks what the rail hides), or the parts `brand_icon_html` / `brand_icon_src` +
   `brand_name` + `brand_href`, defaulting to the new config **`nowo_ui_kit.shell.brand.{name, href, icon_src}`**; the
-  parts also fill an otherwise empty header brand. Slots `app_aside_brand_icon`, `app_aside_brand_name`.
+  parts also fill an otherwise empty header brand. Slots `app_aside_brand_icon`, `app_aside_brand_name`. `brand_name`
+  is escaped; `shell.brand.href` (relative, http, https, mailto) and `shell.brand.icon_src` (relative, http, https) are
+  validated when the container compiles, and the options go through the same filters at render (Twig
+  `nowo_ui_safe_image_src()`, `SafeHref::isSafeImage()`). **`aside_brand_html`, `brand_icon_html` and the
+  `nowo_ui_shell_aside_brand` block are trusted HTML printed raw**, like `brand_html` / `aside_html` (now documented
+  as such): never user or tenant input — an uploaded logo goes to `brand_icon_src` (an `<img>`, where SVG scripts do
+  not run), a name to `brand_name`.
 - **Hover-expanded rail** (`hover_expand` option / **`nowo_ui_kit.shell.hover_expand`**, kit styles + `rail_mode`):
   `data-nowo-ui-sidebar-hover-expand`; `nowo-ui-shell.js` adds `is-aside-peek` on hover (120 ms) or keyboard focus and
   removes it on leave (220 ms), Escape or a mode change; the panel widens over the page (and over the header in the
@@ -134,6 +140,7 @@ Planned **2.32.0** (minor): configurable full-height sidebar layout of the app s
 
 - `nowo-ui-shell.js`: a two-mode (non-rail) shell keeps `aria-expanded` of every `[data-nowo-ui-burger]` in sync (it
   updated the first one only); after a burger click hides the focused burger, the focus moves to the burger now shown.
+  The hover-expanded rail closes when the pointer leaves after a mouse click inside it; keyboard focus keeps it open.
 
 
 ## [2.31.0] - 2026-11-06

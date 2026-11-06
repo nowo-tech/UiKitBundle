@@ -14,6 +14,7 @@ use Nowo\UiKitBundle\Enum\CssFramework;
 use Nowo\UiKitBundle\Enum\IconSet;
 use Nowo\UiKitBundle\Enum\RowActionsDisplay;
 use Nowo\UiKitBundle\Shell\HeaderPresentation;
+use Nowo\UiKitBundle\Shell\SafeHref;
 use Nowo\UiKitBundle\Shell\SidebarLayout;
 use Nowo\UiKitBundle\Theme\ListFiltersOptions;
 use Nowo\UiKitBundle\Theme\Theme;
@@ -500,8 +501,22 @@ final class Configuration implements ConfigurationInterface
                     ->addDefaultsIfNotSet()
                     ->children()
                         ->scalarNode('name')->defaultNull()->info('Brand name (text); the icons-only rail hides it and keeps it as the link name.')->end()
-                        ->scalarNode('href')->defaultNull()->info('Brand link (relative, http, https or mailto; anything else is dropped).')->end()
-                        ->scalarNode('icon_src')->defaultNull()->info('Brand icon image URL (e.g. /images/logo.svg), shown in every aside mode; without it the name\'s initial.')->end()
+                        ->scalarNode('href')
+                            ->defaultNull()
+                            ->info('Brand link: relative, http, https or mailto (validated when the container compiles; javascript:, data: and other schemes are refused).')
+                            ->validate()
+                                ->ifTrue(static fn (mixed $v): bool => null !== $v && (!\is_string($v) || !SafeHref::isSafe($v)))
+                                ->thenInvalid('Invalid nowo_ui_kit.shell.brand.href %s: use a relative URL or an http, https or mailto one.')
+                            ->end()
+                        ->end()
+                        ->scalarNode('icon_src')
+                            ->defaultNull()
+                            ->info('Brand icon image URL (e.g. /images/logo.svg; prefer same-origin or https), rendered as <img> in every aside mode; without it the name\'s initial. Relative, http or https only (validated when the container compiles).')
+                            ->validate()
+                                ->ifTrue(static fn (mixed $v): bool => null !== $v && (!\is_string($v) || !SafeHref::isSafeImage($v)))
+                                ->thenInvalid('Invalid nowo_ui_kit.shell.brand.icon_src %s: use a relative URL or an http or https one.')
+                            ->end()
+                        ->end()
                     ->end()
                 ->end()
                 ->booleanNode('hover_expand')

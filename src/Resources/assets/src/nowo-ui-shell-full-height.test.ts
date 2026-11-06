@@ -158,6 +158,43 @@ describe('nowo-ui-shell full-height layout and hover expand (2.32)', () => {
     expect(shell().classList.contains(mod.PEEK_CLASS)).toBe(false);
   });
 
+  it('closes when the pointer leaves after a click inside; keyboard focus keeps it open (GP-I3)', () => {
+    mod.bindNowoUiShell();
+    const link = document.getElementById('link')!;
+    const press = (type: 'pointerdown' | 'pointerup') => link.dispatchEvent(new Event(type, { bubbles: true }));
+
+    // mouse: hover, press (focus moves in during the press), release, leave → closes although the focus is inside
+    pointer('pointerenter');
+    vi.advanceTimersByTime(mod.PEEK_OPEN_DELAY_MS);
+    press('pointerdown');
+    link.focus();
+    link.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+    press('pointerup');
+    vi.advanceTimersByTime(0);
+    expect(shell().classList.contains(mod.PEEK_CLASS)).toBe(true);
+    pointer('pointerleave');
+    vi.advanceTimersByTime(mod.PEEK_CLOSE_DELAY_MS);
+    expect(shell().classList.contains(mod.PEEK_CLASS)).toBe(false);
+
+    // a key pressed inside makes the focus keyboard focus again: the pointer leaving keeps the peek
+    link.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    link.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+    vi.advanceTimersByTime(0);
+    pointer('pointerenter');
+    pointer('pointerleave');
+    vi.advanceTimersByTime(mod.PEEK_CLOSE_DELAY_MS);
+    expect(shell().classList.contains(mod.PEEK_CLASS)).toBe(true);
+
+    // a press that ends outside the panel (drag) does not leave a stale pressed state behind
+    press('pointerdown');
+    pointer('pointerleave');
+    link.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+    vi.advanceTimersByTime(mod.PEEK_CLOSE_DELAY_MS);
+    pointer('pointerleave');
+    vi.advanceTimersByTime(mod.PEEK_CLOSE_DELAY_MS);
+    expect(shell().classList.contains(mod.PEEK_CLASS)).toBe(true);
+  });
+
   it('a mode change ends the peek and cancels a pending one', () => {
     mod.bindNowoUiShell();
     shell().classList.add(mod.PEEK_CLASS);

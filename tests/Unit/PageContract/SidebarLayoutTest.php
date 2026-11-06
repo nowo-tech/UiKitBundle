@@ -7,6 +7,7 @@ namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Twig\Environment;
+use Twig\Markup;
 
 /**
  * 2.32 full-height sidebar layout of the app shell: root hooks, the aside head (second burger, same partial and
@@ -111,6 +112,40 @@ TWIG], $theme, request: $request, shell: $shell, sidebarLayout: $sidebarLayout);
         $below = $this->render([], 'below-header', null, $shell);
         self::assertStringContainsString('<a class="nowo-ui-app-shell__brand nowo-ui-header__brand nowo-ui-aside-brand" href="/dashboard">', $below);
         self::assertStringNotContainsString('data-nowo-ui-aside-head', $below);
+    }
+
+    /**
+     * GP-I2: the text and URL brand inputs are escaped — a name is text even when it arrives as Markup, and a quote
+     * cannot break out of href / src. GP-I1 at render: an image source keeps no mailto:.
+     */
+    public function testBrandInputsAreEscaped(): void
+    {
+        $html = self::render([
+            'sidebar_layout' => 'full-height',
+            'brand_name' => '<script>alert(1)</script>"Acme"',
+            'brand_href' => '/x" onmouseover="alert(1)',
+            'brand_icon_src' => '/logo.svg" onerror="alert(1)',
+        ]);
+        self::assertStringNotContainsString('<script>alert(1)</script>', $html);
+        self::assertStringContainsString('<span class="nowo-ui-app-shell__brand-name nowo-ui-aside-brand__name">&lt;script&gt;alert(1)&lt;/script&gt;&quot;Acme&quot;</span>', $html);
+        self::assertStringContainsString('href="/x&quot; onmouseover=&quot;alert(1)"', $html);
+        self::assertStringContainsString('<img src="/logo.svg&quot; onerror=&quot;alert(1)" alt=""', $html);
+        self::assertStringNotContainsString('" onmouseover="', $html);
+        self::assertStringNotContainsString('" onerror="', $html);
+
+        $markup = self::twig()->render('t', ['opts' => ['sidebar_layout' => 'full-height', 'brand_name' => new Markup('<b onclick="x()">Acme</b>', 'UTF-8')]]);
+        self::assertStringContainsString('&lt;b onclick=&quot;x()&quot;&gt;Acme&lt;/b&gt;', $markup);
+        self::assertStringNotContainsString('<b onclick', $markup);
+        self::assertStringContainsString('nowo-ui-aside-brand__icon--initial" aria-hidden="true">&lt;</span>', $markup, 'the initial is escaped too');
+
+        $config = self::render(['sidebar_layout' => 'full-height'], 'below-header', null, self::SHELL + ['brand' => ['name' => '<i>Acme</i>', 'href' => '/" x="', 'icon_src' => null]]);
+        self::assertStringContainsString('&lt;i&gt;Acme&lt;/i&gt;', $config);
+        self::assertStringContainsString('href="/&quot; x=&quot;"', $config);
+
+        $mailto = self::render(['sidebar_layout' => 'full-height', 'brand_name' => 'Acme', 'brand_icon_src' => 'mailto:a@b.c', 'brand_href' => 'mailto:a@b.c']);
+        self::assertStringNotContainsString('<img', $mailto, 'an image source is relative, http or https');
+        self::assertStringContainsString('href="mailto:a@b.c"', $mailto, 'a mailto link is fine');
+        self::assertStringNotContainsString('src="data:', self::render(['sidebar_layout' => 'full-height', 'brand_name' => 'Acme', 'brand_icon_src' => 'data:image/svg+xml,<svg onload=alert(1)>']));
     }
 
     public function testCollapsedRailAndHoverExpand(): void
