@@ -129,9 +129,9 @@ The bundle does **not** expose CLI commands that mutate production data, file up
 | **Method** | Independent audit Appendix GT: code read and browser PoC in three engines, re-verified 2026-11-06 |
 | **Overall risk** | **Low** |
 | **Grade** | **Pass (good)** |
-| **Open residuals** | Host must not feed UGC into `|raw` slots; embedders must apply their own `access_control` around admin chrome; other-origin frames, forms and subresources are left to the host's CSP |
+| **Open residuals** | Host must not feed UGC into `|raw` slots; embedders must apply their own `access_control` around admin chrome; other-origin frames, forms and subresources are left to the host's CSP; `auto-refresh` `url` must stay same-origin (GT-L4) |
 
-2.33.0: independent audit Appendix GT (2026-11-06), re-verified 2026-11-06: **Pass (good)**, overall risk **Low**; no Critical, High or Medium. GT-L1, GT-L2, GT-L3 and GT-I1..I5 are fixed. Other-origin frames, forms and subresources are left to the host's CSP.
+2.33.0: independent audit Appendix GT (2026-11-06), re-verified 2026-11-06: **Pass (good)**, overall risk **Low**; no Critical, High or Medium. GT-L1, GT-L2, GT-L3 and GT-I1..I5 are fixed. Open: GT-L4 (Low), the `auto-refresh` peer does not check the origin of `url`, follows redirects and inserts regions unfiltered, so keep `url` same-origin and set `script-src` and `connect-src`; GT-I6 (Info), `sanitizeImported()` is narrower than the fragment filter. Other-origin frames, forms and subresources are left to the host's CSP.
 
 ## Secrets and cryptography
 

@@ -227,7 +227,7 @@ Stimulus peer: identifier `release-status` (`release_status_controller.ts`). Put
 
 ## Auto refresh (Stimulus peer only)
 
-No kit IIFE. Periodically re-renders server regions of the current page: same-origin `GET` of the current URL
+No kit IIFE. Periodically re-renders server regions of the current page: `GET` of the current URL or of the `url` value (not origin-checked: keep it same-origin)
 (header `X-Requested-With: auto-refresh`), then every `[data-auto-refresh-region]` **with an id** inside the controller
 root is replaced by the element with the same id in the response. Paused while the tab is hidden or after the toggle.
 

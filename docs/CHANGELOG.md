@@ -156,8 +156,11 @@ configuration. Re-verified 2026-11-06: Pass (good), overall risk Low.
   parser, so ` java&#9;script:`, mixed case and `data:` are caught. It ran on insertion, without a click.
 - **Form controls hiding a form from the filter (GT-L3, Low):** on a `<form>`, a control named `attributes` hid the
   attribute list, so `<form onfocusin="…"><input name="attributes" autofocus></form>` ran without a click and
-  `action="javascript:…"` survived. `parseFragment()` and the list pagination's `sanitizeImported()` now use
-  `Element.prototype` calls that a control name cannot shadow, also inside nested `<template>` content.
+  `action="javascript:…"` survived. `parseFragment()` (also inside nested `<template>` content) and the list pagination's
+  `sanitizeImported()` now use `Element.prototype` calls that a control name cannot shadow.
+- **Known limits, unchanged in this version:** the `auto-refresh` peer does not check the origin of `url`, follows
+  redirects and inserts regions unfiltered (GT-L4, Low): keep `url` same-origin and set `script-src` and `connect-src`.
+  The list pagination's `sanitizeImported()` is narrower than the fragment filter (GT-I6, Info).
 - **Plain `data-nowo-ui-dialog-src` path (GT-L2, Low):** `loadDialogContent()` now uses the fragment filter, inserts only
   `text/html` fragments or an empty answer, and fetches http(s) sources with `mode: 'same-origin'`, so a redirect to
   another origin fails. `<meta http-equiv=refresh>`, `on*`, `srcdoc`, `<base>`, `<object>` and `<embed>` no longer take
