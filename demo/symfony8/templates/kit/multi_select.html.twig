@@ -9,12 +9,7 @@
 {% block nowo_ui_body %}
     <main id="main-content" class="nowo-ui-content">
         <h1>Multi-select</h1>
-        <label for="status">Status</label>
-        <select id="status" name="status[]" multiple placeholder="Any" data-controller="multi-select" data-testid="status">
-            <option value="active">Active</option>
-            <option value="cancelled">Cancelled</option>
-            <option value="pending">Pending</option>
-        </select>
+        {{ form(form) }}
     </main>
 {% endblock %}
 
