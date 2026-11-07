@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.36.0](#to-2360)
 - [To 2.35.0](#to-2350)
 - [To 2.34.0](#to-2340)
   - [Template contract](#template-contract)
@@ -123,6 +124,23 @@
 **`list-pagination` and `auto-refresh`, and fetched dialogs in Safari:** on a page whose CSP forbids `style` attributes, a `style=` in a fetched row or region is now
 blocked in those browsers too, as it always was in Firefox and for the first page. If such a row looked right only because of this,
 move the style to a class. Pages without such a policy see no change.
+
+**Fetched dialogs:** content now enters the page's document just before insertion. An image starts loading at that point, and a custom element in the fragment upgrades there: its constructor runs before it is connected and without its `style` attribute, which arrives afterwards. Code in `connectedCallback` sees no change.
+
+## To 2.36.0
+
+From **2.35.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+**Template contract:** additive. New opt-in script `js/nowo-ui-sortable.js` and new CSS rules that match only
+`data-nowo-ui-sortable*` attributes and `nowo-ui-sortable*` classes. Pages that do not use them print the same markup,
+and `nowo_ui_script_names()` is unchanged. To use it, see [USAGE](USAGE.md#sortable). A page that uses it must offer a
+way to move that does not need dragging (WCAG 2.5.7), and should be checked on real phones with the checklist there.
+
+**Not run on a real device.** Touch was tested only by emulation in Chromium, and this release is opt-in on that basis. On touch screens, use handles and keep a route that needs no drag until the checklist in USAGE has been run on your devices.
 
 ## To 2.35.0
 

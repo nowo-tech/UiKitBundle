@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.36.0] - 2026-11-07](#2360---2026-11-07)
 - [[2.35.0] - 2026-11-06](#2350---2026-11-06)
 - [[2.34.0] - 2026-11-06](#2340---2026-11-06)
 - [[2.33.1] - 2026-11-06](#2331---2026-11-06)
@@ -110,6 +111,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Security
 
 - **A `style` attribute in fetched HTML skipped the page's CSP.** Chromium and WebKit: `list-pagination` (since 2.23) and `auto-refresh` (since 1.12), through `document.importNode()`. WebKit only: fetched dialogs (remote form since 2.28, `data-nowo-ui-dialog-src` since 2.33), because moving parsed content had the same effect. Each attribute is now set in the page's document, so the policy decides. Pages without such a policy see no change. It needs `style=` to reach same-origin fetched HTML, and runs no script. Found while auditing `sortable` (HH-M3).
+
+## [2.36.0] - 2026-11-07
+
+### Added
+
+- **`sortable` (new component, opt-in):** `js/nowo-ui-sortable.js` reorders by pointer, touch and keyboard, within a list
+  and between lists, over host markup (`data-nowo-ui-sortable`, `-list`, `-item`, `-handle`, `-axis`, `-zone`,
+  `-disabled`, `-ignore`, `-move`, `-label`, `-list-label`, `-labels`). `data-nowo-ui-sortable-move` on a button you draw runs a
+  move with no drag (WCAG 2.5.7). No partial, no Stimulus peer, no third-party library, not
+  in `ThemeSlots::SCRIPTS`. Placeholder, moving copy, auto-scroll, long press on whole items so a swipe still scrolls,
+  Alt+arrows with focus kept and a live region. Events `nowo-ui:sortable:start`, `:move` (cancelable, before the DOM
+  changes), `:moved` (with `detail.revert()` for a failed write), `:cancel`, `:reverted`. Tokens
+  `--nowo-ui-sortable-drop-bg`, `-drop-line`, `-ghost-shadow`, `-z`. See [USAGE](USAGE.md#sortable), which has the
+  accessibility contract and a checklist for real devices: touch was tested only by emulation.
+  **Not run on a real device.** Touch was tested only by emulation in Chromium, and this release is opt-in on that basis. On touch screens, use handles and keep a route that needs no drag until the checklist in USAGE has been run on your devices.
 
 ## [2.35.0] - 2026-11-06
 
@@ -2380,7 +2396,7 @@ Supersedes 1.17.3: same runtime code and CSS, release gate hardened so the tagge
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.35.0...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.36.0...HEAD
 [1.10.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.4...v1.10.0
 [1.8.4]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.3...v1.8.4
 [1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0

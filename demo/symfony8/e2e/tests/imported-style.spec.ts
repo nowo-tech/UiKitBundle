@@ -114,6 +114,8 @@ test.describe('a style attribute in fetched HTML', () => {
     await expectBlocked(page, '[data-imported-nav]');
     await expectBlocked(page, '[data-imported-info]');
     await expectBlocked(page, '[data-imported-confirm]');
+    // The peer may still be loading the next page when the test ends.
+    await page.unrouteAll({ behavior: 'ignoreErrors' });
   });
 
   test('with no such policy each style still applies, on its own element, past a growing custom element', async ({ page }) => {

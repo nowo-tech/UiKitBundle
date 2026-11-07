@@ -54,7 +54,7 @@ final class ActionIconsTest extends TestCase
      * @param array<string, string> $icons
      * @param array<string, string> $variants
      */
-    private static function twig(string $set = 'bootstrap-icons', array $icons = [], array $variants = [], string $framework = 'bootstrap5'): Environment
+    private function twig(string $set = 'bootstrap-icons', array $icons = [], array $variants = [], string $framework = 'bootstrap5'): Environment
     {
         return ActionIconsBcTest::twig($set, $framework, ['nowo_ui_kit_action_icons' => $icons, 'nowo_ui_kit_action_variants' => $variants]);
     }
@@ -131,7 +131,7 @@ final class ActionIconsTest extends TestCase
     #[DataProvider('overrides')]
     public function testOverrideUnderEachIconSet(string $set, string $icon, string $expected): void
     {
-        $html = self::twig($set, ['delete' => $icon])->render(self::ICON, ['name' => 'delete', 'label' => 'L']);
+        $html = $this->twig($set, ['delete' => $icon])->render(self::ICON, ['name' => 'delete', 'label' => 'L']);
 
         self::assertStringContainsString($expected, $html);
     }
@@ -140,13 +140,13 @@ final class ActionIconsTest extends TestCase
     {
         self::assertSame(
             ActionIconsBcTest::twig('svg_inline')->render(self::ICON, ['name' => 'delete']),
-            self::twig('svg_inline', ['delete' => 'tabler:trash'])->render(self::ICON, ['name' => 'delete']),
+            $this->twig('svg_inline', ['delete' => 'tabler:trash'])->render(self::ICON, ['name' => 'delete']),
         );
     }
 
     public function testOverrideReachesRowActionsAndChrome(): void
     {
-        $twig = self::twig('ux_icon', ['edit' => 'tabler:pencil', 'prev' => 'tabler:arrow-left']);
+        $twig = $this->twig('ux_icon', ['edit' => 'tabler:pencil', 'prev' => 'tabler:arrow-left']);
 
         $row = $twig->render(self::ROW, ['actions' => [['kind' => 'edit', 'href' => '/e']]]);
         self::assertStringContainsString('name="tabler:pencil"', $row);
@@ -156,7 +156,7 @@ final class ActionIconsTest extends TestCase
 
     public function testExplicitIconOnAnActionWins(): void
     {
-        $twig = self::twig('ux_icon', ['edit' => 'tabler:pencil']);
+        $twig = $this->twig('ux_icon', ['edit' => 'tabler:pencil']);
 
         self::assertStringContainsString('name="tabler:eye"', $twig->render(self::ROW, ['actions' => [['kind' => 'edit', 'href' => '/e', 'icon' => 'tabler:eye']]]));
         $object = $twig->render(self::ACTION, ['action' => new Action('edit', 'L', '/e', icon: 'tabler:eye')]);
@@ -168,23 +168,23 @@ final class ActionIconsTest extends TestCase
     {
         $action = new Action('edit', 'Edit it', '/e');
 
-        $off = self::twig('ux_icon')->render(self::ACTION, ['action' => $action]);
+        $off = $this->twig('ux_icon')->render(self::ACTION, ['action' => $action]);
         self::assertStringNotContainsString('<ux-icon', $off);
 
-        $otherKind = self::twig('ux_icon', ['view' => 'tabler:eye'])->render(self::ACTION, ['action' => $action]);
+        $otherKind = $this->twig('ux_icon', ['view' => 'tabler:eye'])->render(self::ACTION, ['action' => $action]);
         self::assertSame($off, $otherKind);
 
-        $on = self::twig('ux_icon', ['edit' => 'tabler:pencil'])->render(self::ACTION, ['action' => $action]);
+        $on = $this->twig('ux_icon', ['edit' => 'tabler:pencil'])->render(self::ACTION, ['action' => $action]);
         self::assertStringContainsString('name="tabler:pencil"', $on);
         self::assertStringContainsString('Edit it', $on);
 
-        $none = self::twig('none', ['edit' => 'tabler:pencil'])->render(self::ACTION, ['action' => $action]);
+        $none = $this->twig('none', ['edit' => 'tabler:pencil'])->render(self::ACTION, ['action' => $action]);
         self::assertStringNotContainsString('nowo-ui-icon--text', $none);
     }
 
     public function testExplicitToolbarDisplayStillWins(): void
     {
-        $twig = self::twig('ux_icon', ['edit' => 'tabler:pencil']);
+        $twig = $this->twig('ux_icon', ['edit' => 'tabler:pencil']);
 
         self::assertStringNotContainsString('<ux-icon', $twig->render(self::ACTION, ['action' => new Action('edit', 'L', '/e'), 'display' => 'text']));
         self::assertStringNotContainsString('<ux-icon', $twig->render(self::ACTION, ['action' => new Action('edit', 'L', '/e', display: 'text')]));
@@ -194,20 +194,20 @@ final class ActionIconsTest extends TestCase
     {
         $vars = ['items' => [Action::delete('/d', 'tok', label: 'Delete'), new Action('view', 'See', '/v', icon: 'tabler:eye')], 'id' => 'm', 'label' => 'More', 'menu_items' => true, 'confirm_external' => true];
 
-        $off = self::twig('ux_icon')->render(self::MENU, $vars);
+        $off = $this->twig('ux_icon')->render(self::MENU, $vars);
         self::assertStringNotContainsString('tabler:trash', $off);
         self::assertStringNotContainsString('tabler:eye', $off, 'without the option a menu item stays text, even with its own icon');
 
-        $on = self::twig('ux_icon', ['delete' => 'tabler:trash'])->render(self::MENU, $vars);
+        $on = $this->twig('ux_icon', ['delete' => 'tabler:trash'])->render(self::MENU, $vars);
         self::assertStringContainsString('name="tabler:trash"', $on);
         self::assertStringContainsString('name="tabler:eye"', $on);
         self::assertStringContainsString('nowo-ui-menu__item--danger', $on);
         // A plain GET action has its own link branch in the menu.
-        $link = self::twig('ux_icon', ['edit' => 'tabler:pencil'])->render(self::MENU, ['items' => [new Action('edit', 'Edit', '/e')], 'id' => 'm', 'label' => 'More', 'menu_items' => true]);
+        $link = $this->twig('ux_icon', ['edit' => 'tabler:pencil'])->render(self::MENU, ['items' => [new Action('edit', 'Edit', '/e')], 'id' => 'm', 'label' => 'More', 'menu_items' => true]);
         self::assertStringContainsString('name="tabler:pencil"', $link);
-        self::assertStringNotContainsString('tabler:pencil', self::twig('ux_icon')->render(self::MENU, ['items' => [new Action('edit', 'Edit', '/e')], 'id' => 'm', 'label' => 'More', 'menu_items' => true]));
+        self::assertStringNotContainsString('tabler:pencil', $this->twig('ux_icon')->render(self::MENU, ['items' => [new Action('edit', 'Edit', '/e')], 'id' => 'm', 'label' => 'More', 'menu_items' => true]));
 
-        $none = self::twig('none', ['delete' => 'tabler:trash'])->render(self::MENU, $vars);
+        $none = $this->twig('none', ['delete' => 'tabler:trash'])->render(self::MENU, $vars);
         self::assertStringNotContainsString('tabler:trash', $none);
         self::assertStringNotContainsString('nowo-ui-icon--text', $none, 'icon_set none keeps the text-only item');
     }
@@ -216,23 +216,23 @@ final class ActionIconsTest extends TestCase
     {
         $vars = ['actions' => [['kind' => 'delete', 'href' => '/d']], 'menu' => true, 'popover' => false];
 
-        self::assertStringNotContainsString('tabler:trash', self::twig('ux_icon')->render(self::ROW, $vars));
-        self::assertStringContainsString('name="tabler:trash"', self::twig('ux_icon', ['delete' => 'tabler:trash'])->render(self::ROW, $vars));
+        self::assertStringNotContainsString('tabler:trash', $this->twig('ux_icon')->render(self::ROW, $vars));
+        self::assertStringContainsString('name="tabler:trash"', $this->twig('ux_icon', ['delete' => 'tabler:trash'])->render(self::ROW, $vars));
     }
 
     public function testMenuHashKeepsFreeRefreshNameUntilOptedIn(): void
     {
         $vars = ['items' => [['label' => 'Reload', 'icon' => 'refresh', 'action' => 'list#refresh']], 'id' => 'm', 'label' => 'More'];
 
-        self::assertStringContainsString('bi bi-refresh', self::twig()->render(self::MENU, $vars));
-        self::assertStringContainsString('bi bi-arrow-clockwise', self::twig()->render(self::ICON, ['name' => 'refresh']));
-        self::assertStringContainsString('bi bi-arrow-clockwise', self::twig(icons: ['refresh' => 'tabler:refresh'])->render(self::MENU, $vars));
-        self::assertStringContainsString('bi bi-arrow-repeat', self::twig(icons: ['refresh' => 'bi:arrow-repeat'])->render(self::MENU, $vars));
+        self::assertStringContainsString('bi bi-refresh', $this->twig()->render(self::MENU, $vars));
+        self::assertStringContainsString('bi bi-arrow-clockwise', $this->twig()->render(self::ICON, ['name' => 'refresh']));
+        self::assertStringContainsString('bi bi-arrow-clockwise', $this->twig(icons: ['refresh' => 'tabler:refresh'])->render(self::MENU, $vars));
+        self::assertStringContainsString('bi bi-arrow-repeat', $this->twig(icons: ['refresh' => 'bi:arrow-repeat'])->render(self::MENU, $vars));
     }
 
     public function testVariantMapAppliesWhereNoVariantIsExplicit(): void
     {
-        $twig = self::twig(variants: ['create' => 'secondary', 'view' => 'danger']);
+        $twig = $this->twig(variants: ['create' => 'secondary', 'view' => 'danger']);
 
         $hash = $twig->render(self::ROW, ['actions' => [['kind' => 'create', 'href' => '/c']]]);
         self::assertStringContainsString('btn-outline-secondary', $hash);
@@ -262,20 +262,20 @@ final class ActionIconsTest extends TestCase
     {
         $vars = ['actions' => [['kind' => 'revoke', 'href' => '/r']], 'menu' => true, 'popover' => false];
 
-        self::assertStringNotContainsString('nowo-ui-menu__item--danger', self::twig()->render(self::ROW, $vars));
-        self::assertStringContainsString('nowo-ui-menu__item--danger', self::twig(variants: ['revoke' => 'danger'])->render(self::ROW, $vars));
+        self::assertStringNotContainsString('nowo-ui-menu__item--danger', $this->twig()->render(self::ROW, $vars));
+        self::assertStringContainsString('nowo-ui-menu__item--danger', $this->twig(variants: ['revoke' => 'danger'])->render(self::ROW, $vars));
         $explicit = ['actions' => [['kind' => 'revoke', 'href' => '/r', 'variant' => 'secondary']], 'menu' => true, 'popover' => false];
-        self::assertStringNotContainsString('nowo-ui-menu__item--danger', self::twig(variants: ['revoke' => 'danger'])->render(self::ROW, $explicit));
+        self::assertStringNotContainsString('nowo-ui-menu__item--danger', $this->twig(variants: ['revoke' => 'danger'])->render(self::ROW, $explicit));
     }
 
     public function testMenuGetActionDangerClassFollowsTheVariantMap(): void
     {
         $vars = ['items' => [new Action('revoke', 'Revoke', '/r')], 'id' => 'm', 'label' => 'More', 'menu_items' => true];
 
-        self::assertStringNotContainsString('nowo-ui-menu__item--danger', self::twig()->render(self::MENU, $vars));
-        self::assertStringContainsString('nowo-ui-menu__item--danger', self::twig(variants: ['revoke' => 'danger'])->render(self::MENU, $vars));
+        self::assertStringNotContainsString('nowo-ui-menu__item--danger', $this->twig()->render(self::MENU, $vars));
+        self::assertStringContainsString('nowo-ui-menu__item--danger', $this->twig(variants: ['revoke' => 'danger'])->render(self::MENU, $vars));
         $explicit = ['items' => [new Action('revoke', 'Revoke', '/r', variant: 'secondary')], 'id' => 'm', 'label' => 'More', 'menu_items' => true];
-        self::assertStringNotContainsString('nowo-ui-menu__item--danger', self::twig(variants: ['revoke' => 'danger'])->render(self::MENU, $explicit));
+        self::assertStringNotContainsString('nowo-ui-menu__item--danger', $this->twig(variants: ['revoke' => 'danger'])->render(self::MENU, $explicit));
     }
 
     public function testListFiltersSubmitFollowsTheVariantMap(): void
@@ -285,23 +285,23 @@ final class ActionIconsTest extends TestCase
         $partial = '@NowoUiKit/page/_list_filters.html.twig';
         $submit = static fn (string $html): string => (string) preg_replace('/.*(<button type="submit"[^>]*>).*/s', '$1', $html);
 
-        self::assertStringContainsString('btn-primary', $submit(self::twig()->render($partial, ['page' => $page])));
-        $mapped = $submit(self::twig(variants: ['filter' => 'secondary'])->render($partial, ['page' => $page]));
+        self::assertStringContainsString('btn-primary', $submit($this->twig()->render($partial, ['page' => $page])));
+        $mapped = $submit($this->twig(variants: ['filter' => 'secondary'])->render($partial, ['page' => $page]));
         self::assertStringContainsString('btn-outline-secondary', $mapped);
         self::assertStringNotContainsString('btn-primary', $mapped);
 
         $explicit = new ListPage(new PageHeader('Orders'), [new Column('name')], [['name' => 'A']], $form, filtersSubmit: new Action('filter', 'Go', variant: 'primary'));
-        self::assertStringContainsString('btn-primary', $submit(self::twig(variants: ['filter' => 'secondary'])->render($partial, ['page' => $explicit])));
+        self::assertStringContainsString('btn-primary', $submit($this->twig(variants: ['filter' => 'secondary'])->render($partial, ['page' => $explicit])));
     }
 
     public function testFilterSubmitFollowsTheVariantMap(): void
     {
         $partial = '@NowoUiKitBundle/partials/_filter_actions.html.twig';
 
-        self::assertStringContainsString('btn-primary', self::twig()->render($partial, ['submit_icon' => 'filter']));
-        $html = self::twig(variants: ['filter' => 'secondary'])->render($partial, ['submit_icon' => 'filter']);
+        self::assertStringContainsString('btn-primary', $this->twig()->render($partial, ['submit_icon' => 'filter']));
+        $html = $this->twig(variants: ['filter' => 'secondary'])->render($partial, ['submit_icon' => 'filter']);
         self::assertStringContainsString('btn-outline-secondary', $html);
         self::assertStringNotContainsString('btn-primary', $html);
-        self::assertStringContainsString('host', self::twig(variants: ['filter' => 'secondary'])->render($partial, ['submit_class' => 'host']));
+        self::assertStringContainsString('host', $this->twig(variants: ['filter' => 'secondary'])->render($partial, ['submit_class' => 'host']));
     }
 }
