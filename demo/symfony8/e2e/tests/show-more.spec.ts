@@ -39,11 +39,21 @@ test.describe('show more', () => {
     await expect(page.getByTestId('show-short').locator('[data-nowo-ui-show-more-toggle]')).toBeHidden();
   });
 
-  test('focus on a link in the fold opens it', async ({ page }) => {
+  test('HR-L9: focus on a visible link leaves it folded; focus on a clipped one opens it, and it is seen', async ({ page }) => {
     await page.goto(PAGE);
-    await page.getByTestId('show-long').getByRole('button', { name: 'Show more' }).waitFor();
+    const root = page.getByTestId('show-long');
+    await root.getByRole('button', { name: 'Show more' }).waitFor();
     await page.getByTestId('inner-link').focus();
-    await expect(page.getByTestId('show-long').getByRole('button', { name: 'Show less' })).toBeVisible();
+    await expect(root.getByRole('button', { name: 'Show more' })).toBeVisible();
+    const clipped = page.getByTestId('clipped-link');
+    await clipped.focus();
+    await expect(root.getByRole('button', { name: 'Show less' })).toBeVisible();
+    await expect(clipped).toBeInViewport();
+    const rects = await clipped.evaluate((el) => {
+      const content = el.closest('[data-nowo-ui-show-more-content]')!.getBoundingClientRect();
+      return { link: el.getBoundingClientRect().bottom, content: content.bottom };
+    });
+    expect(rects.link).toBeLessThanOrEqual(rects.content + 1);
   });
 
   test('a narrower window that makes the text overflow brings the button', async ({ page }) => {

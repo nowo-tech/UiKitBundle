@@ -32,4 +32,15 @@ final class KitEmojiShowMoreController extends AbstractController
 
         return $response;
     }
+
+    /**
+     * A fragment for the kit's remote form dialog, whose body scrolls: the e2e opens the picker there, in the dialog TaskBoard uses.
+     */
+    #[Route('/kit/emoji-show-more/fragment', name: 'kit_emoji_show_more_fragment', methods: ['GET'])]
+    public function fragment(): Response
+    {
+        $form = $this->createFormBuilder()->add('icon', EmojiPickerType::class, ['label' => 'Board icon', 'required' => false])->getForm();
+
+        return $this->render('kit/_emoji_dialog_fragment.html.twig', ['form' => $form->createView()]);
+    }
 }

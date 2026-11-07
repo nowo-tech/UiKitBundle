@@ -92,7 +92,6 @@ describe('nowo-ui-emoji-picker', () => {
     expect(key('ArrowDown').defaultPrevented).toBe(true);
     expect(active()).toBe(EMOJI[0]![0]);
     expect(el('search').getAttribute('aria-activedescendant')).toBe(document.querySelector('.is-active')!.id);
-    expect(document.querySelector('.is-active')!.getAttribute('aria-selected')).toBe('true');
     key('ArrowRight');
     expect(active()).toBe(EMOJI[1]![0]);
     key('ArrowDown');
@@ -178,10 +177,11 @@ describe('nowo-ui-emoji-picker', () => {
     expect(document.activeElement).toBe(el('toggle'));
   });
 
-  it('Tab closes and leaves focus to the browser; a click outside closes', () => {
+  it('HR-L4: Tab closes and focus goes back to the toggle, in every browser; a click outside closes', () => {
     openPicker(el('root'));
-    expect(key('Tab').defaultPrevented).toBe(false);
+    expect(key('Tab').defaultPrevented).toBe(true);
     expect(el('panel').hidden).toBe(true);
+    expect(document.activeElement).toBe(el('toggle'));
     openPicker(el('root'));
     el('outside').click();
     expect(el('panel').hidden).toBe(true);
@@ -210,10 +210,133 @@ describe('nowo-ui-emoji-picker', () => {
     expect(el<HTMLInputElement>('search').value).toBe('two words');
   });
 
-  it('marks the current value in the grid', () => {
+  it('HR-L8: marks the current value in the grid, for a screen reader too', () => {
     el<HTMLInputElement>('field').value = '🚀';
     openPicker(el('root'));
-    expect(document.querySelector('.is-selected')?.textContent).toBe('🚀');
+    const selected = document.querySelector('.is-selected');
+    expect(selected?.textContent).toBe('🚀');
+    expect(selected?.getAttribute('aria-selected')).toBe('true');
+    expect(document.querySelectorAll('[aria-selected="true"]')).toHaveLength(1);
+    key('ArrowDown');
+    expect(document.querySelectorAll('[aria-selected="true"]')).toHaveLength(1);
+    expect(document.querySelector('.is-active')?.getAttribute('aria-selected')).toBe('false');
+  });
+
+  it('HR-L3: Left and Right go as they look in RTL', () => {
+    openPicker(el('root'));
+    const rtl = vi.spyOn(window, 'getComputedStyle').mockImplementation(() => ({ direction: 'rtl' }) as CSSStyleDeclaration);
+    key('ArrowDown');
+    key('ArrowLeft');
+    expect(active()).toBe(EMOJI[1]![0]);
+    key('ArrowRight');
+    expect(active()).toBe(EMOJI[0]![0]);
+    rtl.mockRestore();
+  });
+
+  it('HR-L4: a press on the panel keeps focus in the box, and Escape works from the page too', () => {
+    openPicker(el('root'));
+    const press = new Event('pointerdown', { bubbles: true, cancelable: true });
+    el('status').dispatchEvent(press);
+    expect(press.defaultPrevented).toBe(true);
+    const inBox = new Event('pointerdown', { bubbles: true, cancelable: true });
+    el('search').dispatchEvent(inBox);
+    expect(inBox.defaultPrevented).toBe(false);
+    const escape = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+    document.body.dispatchEvent(escape);
+    expect(escape.defaultPrevented).toBe(true);
+    expect(el('panel').hidden).toBe(true);
+    expect(document.activeElement).toBe(el('toggle'));
+    const after = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+    document.body.dispatchEvent(after);
+    expect(after.defaultPrevented).toBe(false);
+  });
+
+  it('HR-I6: a key during composition belongs to the input method', () => {
+    openPicker(el('root'));
+    const enter = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true, isComposing: true });
+    el('search').dispatchEvent(enter);
+    expect(enter.defaultPrevented).toBe(false);
+    expect(el('panel').hidden).toBe(false);
+  });
+
+  it('HR-L5: a morph that puts hidden back on the toggle does not keep it hidden', async () => {
+    el('toggle').setAttribute('hidden', '');
+    await vi.waitFor(() => expect(el('toggle').hidden).toBe(false));
+  });
+
+  it('HR-L5: a toggle that must stay hidden does not loop', async () => {
+    el<HTMLInputElement>('field').disabled = true;
+    const set = vi.spyOn(el('toggle'), 'hidden', 'set');
+    revealToggles();
+    el('toggle').setAttribute('hidden', '');
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(set.mock.calls.length).toBeLessThanOrEqual(1);
+    expect(el('toggle').hidden).toBe(true);
+  });
+
+  describe('HR-M1: the panel stays reachable', () => {
+    const place = (field: Partial<DOMRect>, size = { width: 320, height: 300 }, view = { width: 1000, height: 700 }): { left: string; top: string; maxHeight: string } => {
+      vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(view.width);
+      vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(view.height);
+      vi.spyOn(Element.prototype, 'getBoundingClientRect').mockReturnValue({ left: 0, right: 0, top: 0, bottom: 0, width: 0, height: 0, x: 0, y: 0, toJSON: () => ({}), ...field } as DOMRect);
+      Object.defineProperty(el('panel'), 'offsetWidth', { configurable: true, value: size.width });
+      Object.defineProperty(el('panel'), 'offsetHeight', { configurable: true, value: size.height });
+      openPicker(el('root'));
+      const { style } = el('panel');
+      return { left: style.left, top: style.top, maxHeight: style.maxHeight };
+    };
+
+    it('a narrow field at the start edge keeps it on screen', () => {
+      expect(place({ left: 0, right: 120, top: 100, bottom: 130 }).left).toBe('8px');
+    });
+
+    it('flips above the field at the bottom of the viewport', () => {
+      expect(place({ left: 400, right: 800, top: 640, bottom: 670 }).top).toBe(`${640 - 4 - 300}px`);
+    });
+
+    it('with room neither above nor below, stays inside the viewport with its height limited', () => {
+      const placed = place({ left: 0, right: 100, top: 100, bottom: 130 }, { width: 320, height: 300 }, { width: 360, height: 320 });
+      expect(placed.top).toBe('12px');
+      expect(placed.maxHeight).toBe('304px');
+      expect(placed.left).toBe('8px');
+    });
+
+    it('uses the top layer where there is one, and leaves it on close', () => {
+      el('panel').setAttribute('popover', 'manual');
+      const show = vi.fn();
+      const hide = vi.fn();
+      Object.assign(el('panel'), { showPopover: show, hidePopover: hide });
+      openPicker(el('root'));
+      expect(show).toHaveBeenCalledTimes(1);
+      closePicker(el('root'), false);
+      expect(hide).toHaveBeenCalledTimes(1);
+    });
+
+    it('a failing top layer call changes nothing else', () => {
+      el('panel').setAttribute('popover', 'manual');
+      const fail = (): void => {
+        throw new DOMException('no', 'InvalidStateError');
+      };
+      Object.assign(el('panel'), { showPopover: fail, hidePopover: fail });
+      openPicker(el('root'));
+      expect(el('panel').hidden).toBe(false);
+      closePicker(el('root'), false);
+      expect(el('panel').hidden).toBe(true);
+    });
+
+    it('follows the page while open, not the grid, and stops on close', () => {
+      place({ left: 400, right: 800, top: 100, bottom: 130 });
+      const rect = vi.spyOn(Element.prototype, 'getBoundingClientRect');
+      rect.mockReturnValue({ left: 400, right: 800, top: 200, bottom: 230, width: 400, height: 30, x: 400, y: 200, toJSON: () => ({}) } as DOMRect);
+      el('grid').dispatchEvent(new Event('scroll', { bubbles: true }));
+      expect(el('panel').style.top).toBe('134px');
+      window.dispatchEvent(new Event('resize'));
+      expect(el('panel').style.top).toBe('234px');
+      closePicker(el('root'), false);
+      rect.mockReturnValue({ left: 400, right: 800, top: 300, bottom: 330, width: 400, height: 30, x: 400, y: 300, toJSON: () => ({}) } as DOMRect);
+      window.dispatchEvent(new Event('resize'));
+      expect(el('panel').style.top).toBe('234px');
+    });
   });
 
   it('labels and table: a host table replaces the list, as text; broken ones leave the defaults', () => {
@@ -236,6 +359,18 @@ describe('nowo-ui-emoji-picker', () => {
     el('root').setAttribute('data-nowo-ui-emoji-picker-labels', '{"results":5}');
     openPicker(el('root'));
     expect(el('status').textContent).toBe(`${EMOJI.length} results`);
+  });
+
+  it('HR-L7: an image named querySelectorAll in the document does not stop the toggles', () => {
+    const img = document.createElement('img');
+    Object.defineProperty(document, 'querySelectorAll', { configurable: true, value: img });
+    el('toggle').hidden = true;
+    try {
+      revealToggles();
+      expect(el('toggle').hidden).toBe(false);
+    } finally {
+      delete (document as unknown as Record<string, unknown>).querySelectorAll;
+    }
   });
 
   it('a form with controls named like DOM members hides nothing', () => {

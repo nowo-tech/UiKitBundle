@@ -4,16 +4,21 @@
  * the form's value; the panel adds nothing to the submit. See the partial `emoji_picker` and `EmojiPickerType`.
  *
  * Accessibility: APG combobox with a grid popup. Focus stays in the search box and `aria-activedescendant` names the active cell, so
- * the panel is one tab stop. Arrows move in the grid, Home and End in the row, Enter picks the active cell (with none, the first
- * result), Escape and Tab close, and focus goes back to the toggle. A polite status says how many results there are.
+ * the panel is one tab stop. Arrows move in the grid (Left and Right as they look, in RTL too), Home and End in the row, Enter picks the
+ * active cell (with none, the first result), Escape and Tab close, and focus goes back to the toggle. `aria-selected` marks the
+ * field's current value. A polite status says how many results there are.
+ *
+ * Position: the panel is a `[popover]` in the top layer, so no ancestor's overflow clips it, the remote form dialog's body included.
+ * It is measured on open and on scroll or resize, flipped above the field when there is no room below, and kept inside the viewport.
  *
  * Events: bubbling, cancelable `nowo-ui:emoji-picker:pick` {emoji, name} before the value is set; then native `input` and `change`
  * on the input. One grapheme: picking sets exactly one, and typed or pasted text is cut to its first on `change`.
  *
- * DOM APIs only, `textContent` only; delegated listeners, safe with morphing and fragments inserted later. No style attribute: the
- * panel is positioned by CSS. Importing touches no DOM. Members are read through the prototypes (GT-L3, HH-L4).
+ * DOM APIs only, `textContent` only; delegated listeners, safe with morphing and fragments inserted later. No style attribute:
+ * coordinates go through the CSSOM. Importing touches no DOM. Members are read through the prototypes (GT-L3, HH-L4).
  */
 import { EMOJI } from './nowo-ui-emoji-table';
+import { EDGE_PX, placeBeside } from './nowo-ui-popover-core';
 
 export const ROOT = '[data-nowo-ui-emoji-picker]';
 const TOGGLE = '[data-nowo-ui-emoji-picker-toggle]';
@@ -131,7 +136,7 @@ function renderGrid(root: HTMLElement): void {
     cell.className = emoji === selected ? 'nowo-ui-emoji-picker__cell is-selected' : 'nowo-ui-emoji-picker__cell';
     cell.setAttribute('role', 'gridcell');
     cell.setAttribute('aria-label', name);
-    cell.setAttribute('aria-selected', 'false');
+    cell.setAttribute('aria-selected', emoji === selected ? 'true' : 'false');
     cell.setAttribute('title', name);
     cell.setAttribute('data-nowo-ui-emoji-picker-cell', name);
     cell.textContent = emoji;
@@ -149,7 +154,6 @@ function renderGrid(root: HTMLElement): void {
 function setActive(root: HTMLElement, cell: HTMLElement | null): void {
   queryAll(root, `${CELL}.is-active`).forEach((other) => {
     other.classList.remove('is-active');
-    other.setAttribute('aria-selected', 'false');
   });
   const search = query(root, SEARCH);
   if (!cell) {
@@ -157,10 +161,34 @@ function setActive(root: HTMLElement, cell: HTMLElement | null): void {
     return;
   }
   cell.classList.add('is-active');
-  cell.setAttribute('aria-selected', 'true');
   search?.setAttribute('aria-activedescendant', cell.id);
   cell.scrollIntoView?.({ block: 'nearest' });
 }
+
+/** The picker whose panel is open and whose position follows the page. One at a time. */
+let placed: HTMLElement | null = null;
+
+function place(root: HTMLElement): void {
+  const panel = query(root, PANEL);
+  if (panel) {
+    panel.style.setProperty('max-height', `${Math.max(0, window.innerHeight - 2 * EDGE_PX)}px`);
+    placeBeside(root, panel, { keepInside: true });
+  }
+}
+
+function onViewportChange(event: Event): void {
+  // The grid's own scrolling moves nothing.
+  if (placed && !(event.target instanceof Element && closest(event.target, PANEL))) {
+    place(placed);
+  }
+}
+
+const viewListeners = (add: boolean): void => {
+  const change = add ? EventTarget.prototype.addEventListener : EventTarget.prototype.removeEventListener;
+  const view = Reflect.get(Document.prototype, 'defaultView', document) as Window;
+  change.call(view, 'scroll', onViewportChange as EventListener, true);
+  change.call(view, 'resize', onViewportChange as EventListener);
+};
 
 export function closePicker(root: HTMLElement, refocus: boolean): void {
   const panel = query(root, PANEL);
@@ -168,7 +196,18 @@ export function closePicker(root: HTMLElement, refocus: boolean): void {
   if (!panel || panel.hidden) {
     return;
   }
+  if (typeof panel.hidePopover === 'function' && panel.hasAttribute('popover')) {
+    try {
+      panel.hidePopover();
+    } catch {
+      // Already hidden: a morph took it out of the top layer.
+    }
+  }
   panel.hidden = true;
+  if (placed === root) {
+    placed = null;
+    viewListeners(false);
+  }
   toggle?.setAttribute('aria-expanded', 'false');
   query(root, SEARCH)?.setAttribute('aria-expanded', 'false');
   if (refocus) {
@@ -197,6 +236,17 @@ export function openPicker(root: HTMLElement): void {
   query(root, TOGGLE)?.setAttribute('aria-expanded', 'true');
   search.setAttribute('aria-expanded', 'true');
   renderGrid(root);
+  // Top layer where there is one; without it, the panel is `position: fixed` under the page's other layers.
+  if (typeof panel.showPopover === 'function' && panel.hasAttribute('popover')) {
+    try {
+      panel.showPopover();
+    } catch {
+      // Not connected, or already open after a morph.
+    }
+  }
+  place(root);
+  placed = root;
+  viewListeners(true);
   search.focus();
 }
 
@@ -238,22 +288,42 @@ export function nextIndex(key: string, index: number, count: number, columns = C
   }
 }
 
+function openRootFor(target: EventTarget | null): HTMLElement | null {
+  const inside = target instanceof Element ? closest(target, ROOT) : null;
+  if (inside) {
+    const panel = query(inside, PANEL);
+    return panel && !panel.hidden ? inside : null;
+  }
+  // Focus fell out of the panel, to the page itself: the open picker still owns Escape.
+  const onPage = target === document || target === Reflect.get(Document.prototype, 'body', document) || target === Reflect.get(Document.prototype, 'documentElement', document);
+  return onPage ? placed : null;
+}
+
 function onKeydown(event: KeyboardEvent): void {
-  const target = event.target;
-  const search = target instanceof Element && Element.prototype.matches.call(target, SEARCH) ? target : null;
-  const root = search ? closest(search, ROOT) : null;
+  if (event.isComposing) {
+    return; // Enter and the arrows belong to the input method.
+  }
+  const root = openRootFor(event.target);
   if (!root) {
     return;
   }
-  const cells = queryAll(root, CELL);
-  const index = cells.findIndex((cell) => cell.classList.contains('is-active'));
   if (event.key === 'Escape') {
     // Capture phase: this Escape closes the panel, not the dialog around it.
     event.preventDefault();
     event.stopPropagation();
     closePicker(root, true);
-  } else if (event.key === 'Tab') {
-    closePicker(root, false);
+    return;
+  }
+  const search = event.target instanceof Element && Element.prototype.matches.call(event.target, SEARCH) ? event.target : null;
+  if (!search) {
+    return;
+  }
+  const cells = queryAll(root, CELL);
+  const index = cells.findIndex((cell) => cell.classList.contains('is-active'));
+  if (event.key === 'Tab') {
+    // Explicit: the browser's own move starts from a box about to be hidden, and Firefox then lands on the page.
+    event.preventDefault();
+    closePicker(root, true);
   } else if (event.key === 'Enter') {
     event.preventDefault(); // never the surrounding form
     const cell = cells[index] ?? cells[0];
@@ -263,7 +333,9 @@ function onKeydown(event: KeyboardEvent): void {
   } else if (event.key === 'ArrowUp' || event.key === 'ArrowDown' || (index >= 0 && ['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key))) {
     // Left, Right, Home and End belong to the text in the box until the grid is entered.
     event.preventDefault();
-    setActive(root, cells[nextIndex(event.key, index, cells.length)] ?? null);
+    const rtl = window.getComputedStyle(root).direction === 'rtl';
+    const key = rtl && event.key === 'ArrowLeft' ? 'ArrowRight' : rtl && event.key === 'ArrowRight' ? 'ArrowLeft' : event.key;
+    setActive(root, cells[nextIndex(key, index, cells.length)] ?? null);
   }
 }
 
@@ -291,8 +363,8 @@ function onChange(event: Event): void {
 }
 
 function onPointerDown(event: Event): void {
-  // A press on a cell must not take focus from the search box.
-  if (event.target instanceof Element && closest(event.target, GRID)) {
+  // A press anywhere in the panel but the box itself must not take focus from the box.
+  if (event.target instanceof Element && closest(event.target, PANEL) && !Element.prototype.matches.call(event.target, SEARCH)) {
     event.preventDefault();
   }
 }
@@ -322,13 +394,19 @@ function onClick(event: MouseEvent): void {
   closeAll(root);
 }
 
+function revealToggle(toggle: HTMLElement): void {
+  const root = closest(toggle, ROOT);
+  const hide = !(root && isUsable(fieldOf(root)));
+  // Only when it changes: the observer below watches this attribute.
+  if (toggle.hidden !== hide) {
+    toggle.hidden = hide;
+  }
+}
+
 /** Shows the toggle of every usable picker: until then the field is a plain input. */
 export function revealToggles(scope: ParentNode = document): void {
-  const all = scope instanceof Element ? queryAll(scope, TOGGLE) : ([...scope.querySelectorAll(TOGGLE)] as HTMLElement[]);
-  all.forEach((toggle) => {
-    const root = closest(toggle, ROOT);
-    toggle.hidden = !(root && isUsable(fieldOf(root)));
-  });
+  const all = scope instanceof Element ? queryAll(scope, TOGGLE) : ([...Document.prototype.querySelectorAll.call(document, TOGGLE)] as HTMLElement[]);
+  all.forEach(revealToggle);
 }
 
 let bound = false;
@@ -348,16 +426,22 @@ export function bindNowoUiEmojiPicker(): void {
   } else {
     revealToggles();
   }
-  // Fields that arrive later: a remote form dialog, a Turbo frame, a morph. Only what was added is looked at.
+  // Fields that arrive later (a remote form dialog, a Turbo frame) and a morph that puts the server's `hidden` back on a toggle.
   new MutationObserver((records) => {
     for (const record of records) {
+      if (record.type === 'attributes') {
+        if (record.target instanceof Element && Element.prototype.matches.call(record.target, TOGGLE)) {
+          revealToggle(record.target as HTMLElement);
+        }
+        continue;
+      }
       record.addedNodes.forEach((node) => {
         if (node instanceof Element) {
-          revealToggles(node.parentElement ?? node);
+          revealToggles((Reflect.get(Node.prototype, 'parentElement', node) as Element | null) ?? node);
         }
       });
     }
-  }).observe(document, { childList: true, subtree: true });
+  }).observe(document, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden'] });
 }
 
 // A second copy of the script must not bind again. A symbol: an element with some id cannot turn this off.

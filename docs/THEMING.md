@@ -280,7 +280,7 @@ minmax(min(100%, var(--nowo-ui-filters-field-min, 12rem)), 1fr)))`.
 | `--nowo-ui-side-panel-z` | `var(--nowo-ui-z-overlay, 1040)` (backdrop; the drawer is one above; [Layers](#layers-public-api-228)) |
 | `--nowo-ui-emoji-picker-width` | `20rem` (`emoji_picker` panel; never wider than the screen) |
 | `--nowo-ui-emoji-picker-height` | `14rem` (the grid, which scrolls past it) |
-| `--nowo-ui-emoji-picker-z` | `var(--nowo-ui-z-popover, 1080)` (the panel; [Layers](#layers-public-api-228)) |
+| `--nowo-ui-emoji-picker-z` | `var(--nowo-ui-z-popover, 1080)` (the panel without the Popover API; with it, the top layer; [Layers](#layers-public-api-228)) |
 | `--nowo-ui-sortable-drop-bg` | `color-mix(in srgb, var(--nowo-ui-primary) 10%, transparent)` (`sortable` placeholder) |
 | `--nowo-ui-sortable-drop-line` | `var(--nowo-ui-primary)` (placeholder border; outline of the list under the pointer) |
 | `--nowo-ui-sortable-ghost-shadow` | `0 0.5rem 1.5rem rgb(0 0 0 / 25%)` (the copy following the pointer) |
@@ -358,7 +358,7 @@ value is declared, so the cascade is unchanged; a host maps its own scale once (
 | Overlay | `--nowo-ui-z-overlay` (`--nowo-ui-side-panel-z` wins) | `1040` | side panel backdrop; the drawer is `+1` (`1041`) |
 | Modal (non-top-layer) | `--nowo-ui-z-modal` (`--nowo-ui-menu-z-index` wins for menus) | `1050` | legacy Bootstrap `modal_shell`, `menu` popover fallback |
 | Popovers over modals | `--nowo-ui-z-popover` (`--nowo-ui-date-range-z`, `--nowo-ui-multi-select-z` win) | `1080` | calendar, multi-select panel (inline fallbacks) |
-| Emoji picker panel | `--nowo-ui-emoji-picker-z` (`--nowo-ui-z-popover` below it) | `1080` | the open panel |
+| Emoji picker panel | `--nowo-ui-emoji-picker-z` (`--nowo-ui-z-popover` below it) | `1080` | the open panel without the Popover API; with it, the top layer |
 | Sortable copy | `--nowo-ui-sortable-z` (`--nowo-ui-z-popover` below it) | `1080` | the dragged copy; inside a modal `<dialog>` it stays in the top layer with its parent |
 | Toasts | `--nowo-ui-z-toast` | `1100` | `.nowo-ui-toast-stack` |
 | Page loader | `--nowo-ui-z-loader` | `1200` | `.nowo-ui-page-loader` |

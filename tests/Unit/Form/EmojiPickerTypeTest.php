@@ -31,6 +31,9 @@ final class EmojiPickerTypeTest extends TestCase
         yield 'family' => ['👨‍👩‍👧‍👦', true];
         yield 'flag' => ['🇪🇸', true];
         yield 'keycap' => ['1️⃣', true];
+        yield 'England' => ["\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}", true];
+        yield 'a format character alone' => ["\u{200B}", false];
+        yield 'a right-to-left override alone' => ["\u{202E}", false];
         yield 'letter' => ['a', true];
         yield 'two emoji' => ['🚀🚀', false];
         yield 'two letters' => ['ab', false];
@@ -56,6 +59,45 @@ final class EmojiPickerTypeTest extends TestCase
         self::assertTrue($submit(null));
         self::assertTrue($submit(''));
         self::assertFalse($submit('🚀🚀'));
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function subdivisionFlags(): iterable
+    {
+        yield 'England' => ["\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}"];
+        yield 'Scotland' => ["\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}"];
+        yield 'Wales' => ["\u{1F3F4}\u{E0067}\u{E0062}\u{E0077}\u{E006C}\u{E0073}\u{E007F}"];
+    }
+
+    #[DataProvider('subdivisionFlags')]
+    public function testHrL1ASubdivisionFlagIsStoredWhole(string $flag): void
+    {
+        $form = $this->factory()->create(EmojiPickerType::class)->submit($flag);
+
+        self::assertTrue($form->isValid());
+        self::assertSame($flag, $form->getData());
+    }
+
+    public function testHrL1OnlyWhitespaceIsStripped(): void
+    {
+        $form = $this->factory()->create(EmojiPickerType::class)->submit("  \u{00A0}🚀\n");
+
+        self::assertTrue($form->isValid());
+        self::assertSame('🚀', $form->getData());
+        self::assertSame('', (string) $this->factory()->create(EmojiPickerType::class)->submit('   ')->getData());
+        self::assertFalse($this->factory()->create(EmojiPickerType::class)->submit("\xFF")->isValid());
+    }
+
+    public function testHrL2TheLengthIsLimitedOnTheServer(): void
+    {
+        $zalgo = 'Z'.str_repeat("\u{0301}", 100_000);
+        self::assertTrue(EmojiPickerType::isOneGrapheme($zalgo), 'one grapheme can be any length');
+        self::assertFalse($this->factory()->create(EmojiPickerType::class)->submit($zalgo)->isValid());
+        self::assertFalse($this->factory()->create(EmojiPickerType::class, null, ['max_bytes' => 3])->submit('🚀')->isValid());
+        self::assertTrue($this->factory()->create(EmojiPickerType::class, null, ['max_bytes' => 4])->submit('🚀')->isValid());
+        self::assertTrue($this->factory()->create(EmojiPickerType::class)->submit('👨‍👩‍👧‍👦')->isValid());
     }
 
     public function testTheErrorIsTranslatedAndHasAFallback(): void

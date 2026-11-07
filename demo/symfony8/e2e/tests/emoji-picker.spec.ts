@@ -112,6 +112,161 @@ test.describe('emoji picker', () => {
     });
   });
 
+  test.describe('HR-M1: the panel is always reachable', () => {
+    // The debug toolbar would sit on a field at the bottom of the window.
+    test.beforeEach(async ({ page }) => {
+      await page.route('**/_wdt/**', (route) => route.abort());
+    });
+
+    async function expectReachable(page: Page): Promise<void> {
+      await expect(panel(page)).toBeVisible();
+      const view = page.viewportSize()!;
+      const box = (await panel(page).boundingBox())!;
+      expect(box.x).toBeGreaterThanOrEqual(0);
+      expect(box.y).toBeGreaterThanOrEqual(0);
+      expect(box.x + box.width).toBeLessThanOrEqual(view.width);
+      expect(box.y + box.height).toBeLessThanOrEqual(view.height);
+      // Really on top where it is: what the pointer would hit.
+      const hit = await page.evaluate(() => {
+        const at = (el: Element): boolean => {
+          const r = el.getBoundingClientRect();
+          const found = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+          return !!found && (found === el || el.contains(found));
+        };
+        return { search: at(document.querySelector('[data-nowo-ui-emoji-picker-search]')!), cell: at(document.querySelector('[role="gridcell"]')!) };
+      });
+      expect(hit).toEqual({ search: true, cell: true });
+      await page.locator('[role="gridcell"][aria-label="grin"]').click();
+      await expect(panel(page)).toBeHidden();
+    }
+
+    /** The picker's root as a 120 px wide box, fixed at one spot on the screen. */
+    const fixField = (page: Page, where: 'top-left' | 'bottom' | 'bottom-right') =>
+      page.evaluate((spot) => {
+        const root = document.querySelector<HTMLElement>('[data-nowo-ui-emoji-picker]')!;
+        const { style } = root;
+        style.setProperty('position', 'fixed');
+        style.setProperty('width', '120px');
+        style.setProperty('z-index', '5');
+        style.setProperty(spot === 'top-left' ? 'top' : 'bottom', '0');
+        style.setProperty(spot === 'bottom-right' ? 'right' : 'left', '0');
+      }, where);
+
+    test('a 120 px field at the left', async ({ page }) => {
+      await page.goto(PAGE);
+      await fixField(page, 'top-left');
+      await toggle(page).click();
+      await expectReachable(page);
+      await expect(field(page)).toHaveValue('😁');
+    });
+
+    test('a field at the bottom of the viewport opens above it', async ({ page }) => {
+      await page.goto(PAGE);
+      await fixField(page, 'bottom');
+      await toggle(page).click();
+      const fieldBox = (await field(page).boundingBox())!;
+      const box = (await panel(page).boundingBox())!;
+      expect(box.y + box.height).toBeLessThanOrEqual(fieldBox.y);
+      await expectReachable(page);
+    });
+
+    test('a phone-sized window, with little height too', async ({ page }) => {
+      await page.setViewportSize({ width: 320, height: 300 });
+      await page.goto(PAGE);
+      await fixField(page, 'bottom-right');
+      await toggle(page).click();
+      await expectReachable(page);
+    });
+
+    test('the kit\'s remote form dialog, whose body scrolls', async ({ page }) => {
+      await page.setViewportSize({ width: 1000, height: 420 }); // a short body, as on a laptop with a long form
+      await page.goto('/kit/remote-form');
+      await page.evaluate(() => {
+        const opener = document.createElement('a');
+        opener.id = 'open-it';
+        opener.href = '/kit/emoji-show-more/fragment';
+        opener.textContent = 'open';
+        opener.setAttribute('data-nowo-ui-dialog-open', 'destination-dialog');
+        opener.setAttribute('data-nowo-ui-dialog-src', '/kit/emoji-show-more/fragment');
+        opener.setAttribute('data-nowo-ui-dialog-form', '');
+        document.querySelector('main')?.append(opener);
+      });
+      await page.locator('#open-it').click();
+      const inDialog = page.locator('#destination-dialog [data-nowo-ui-emoji-picker-toggle]');
+      await expect(inDialog).toBeVisible();
+      const body = page.locator('#destination-dialog [data-nowo-ui-dialog-body]');
+      const before = await body.evaluate((el) => ({ scrollHeight: el.scrollHeight, overflow: getComputedStyle(el).overflowY }));
+      expect(before.overflow).toMatch(/auto|scroll/);
+      await inDialog.click();
+      await expect(panel(page)).toBeVisible();
+      await expect(search(page)).toBeFocused();
+      expect((await body.evaluate((el) => el.scrollHeight))).toBe(before.scrollHeight); // the panel does not grow the body
+      expect(await body.evaluate((el) => el.scrollTop)).toBe(0); // and does not make it scroll
+      // No part of it is cut off by the body: the search box and the last cell are really on top.
+      expect(await page.evaluate(() => {
+        const cells = document.querySelectorAll('[role="gridcell"]');
+        const last = cells[Math.min(15, cells.length - 1)]!.getBoundingClientRect();
+        const found = document.elementFromPoint(last.left + last.width / 2, last.top + last.height / 2);
+        return found?.getAttribute('role');
+      })).toBe('gridcell');
+      await page.keyboard.press('ArrowDown');
+      await expectReachable(page);
+      await expect(page.locator('#destination-dialog')).toHaveAttribute('open', '');
+      await expect(page.locator('#destination-dialog input[type="text"]').first()).toHaveValue('😁');
+      // And Escape belongs to the panel there.
+      await inDialog.click();
+      await page.keyboard.press('Escape');
+      await expect(panel(page)).toBeHidden();
+      await expect(page.locator('#destination-dialog')).toHaveAttribute('open', '');
+    });
+  });
+
+  test('HR-L3: in RTL, ArrowRight moves to the right on screen', async ({ page }) => {
+    await page.goto(PAGE);
+    await page.evaluate(() => document.documentElement.setAttribute('dir', 'rtl'));
+    await toggle(page).click();
+    await page.keyboard.press('ArrowDown');
+    const x = (): Promise<number> => page.locator('[role="gridcell"].is-active').evaluate((el) => el.getBoundingClientRect().left);
+    await page.keyboard.press('ArrowLeft');
+    const first = await x();
+    await page.keyboard.press('ArrowRight');
+    expect(await x()).toBeGreaterThan(first);
+  });
+
+  test('HR-L4: a click on the panel keeps focus in the box, Escape then closes it; Tab goes to the toggle in every engine', async ({ page }) => {
+    await page.goto(PAGE);
+    await toggle(page).click();
+    await page.locator('[data-nowo-ui-emoji-picker-status]').click();
+    await expect(search(page)).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(panel(page)).toBeHidden();
+    await expect(toggle(page)).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(search(page)).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(panel(page)).toBeHidden();
+    await expect(toggle(page)).toBeFocused();
+  });
+
+  test('HR-L5: a morph that puts hidden back on the toggle does not keep it hidden', async ({ page }) => {
+    await page.goto(PAGE);
+    await expect(toggle(page)).toBeVisible();
+    await toggle(page).evaluate((el) => el.setAttribute('hidden', ''));
+    await expect(toggle(page)).toBeVisible();
+  });
+
+  test('HR-L8: the current value is selected for a screen reader, and visible in forced colours', async ({ page, browserName }) => {
+    await page.goto(PAGE);
+    await field(page).fill('🚀');
+    await toggle(page).click();
+    const current = page.locator('[role="gridcell"][aria-selected="true"]');
+    await expect(current).toHaveCount(1);
+    await expect(current).toHaveText('🚀');
+    test.skip(browserName !== 'chromium', 'Playwright emulates forced colours in Chromium');
+    await page.emulateMedia({ forcedColors: 'active' });
+    expect(await current.evaluate((el) => getComputedStyle(el).borderTopWidth)).toBe('2px');
+  });
+
   test('axe: no violations with the panel closed and open', async ({ page }) => {
     await page.goto(PAGE);
     const scope = '[data-testid="emoji-form"]';

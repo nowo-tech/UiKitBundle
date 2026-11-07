@@ -2149,7 +2149,8 @@ form's actions move into the footer.
   itself, so your listener does the work.
 - **Name it:** with an icon, give it an `aria-label`. It is one more stop in the header's tab order. The class `nowo-ui-dialog__back` is added; for
   another slot value, print `nowo_ui_class('dialog_back')` as above.
-- **With `back_href`:** the header's arrow hides while a lifted button is there, and shows again after.
+- **With `back_href`:** the header's arrow hides while a lifted button is there, and shows again after. An arrow you hid yourself stays hidden.
+- **Only the first marked button is looked at:** if that one is not `type="button"`, a later one is not lifted. `autofocus` on it is ignored, as the title takes focus after a load.
 
 ## Emoji picker
 
@@ -2164,12 +2165,12 @@ $builder->add('icon', EmojiPickerType::class, ['label' => 'Board icon', 'require
 {{ include(nowo_ui_partial('scripts'), {script_names: nowo_ui_script_names()|merge(['emoji-picker'])}) }}
 ```
 
-Options: `emojis` (a list of `[name, emoji]` replacing the table), `labels` (`open`, `search`, `results` with `%count%`, `none`), `bundle`. For a
+Options: `emojis` (a list of `[name, emoji]` replacing the table), `labels` (`open`, `search`, `results` with `%count%`, `none`), `max_bytes`, `bundle`. For a
 field of yours, wrap it: `{{ include(nowo_ui_partial('emoji_picker'), {id: 'icon_picker', input: form_widget(form.icon)}) }}`; `input` is trusted HTML.
 
 **One grapheme.** A flag, a family, a keycap and a skin tone count as one. Picking sets one, and the browser cuts typed or pasted text to its first on
-`change`. `EmojiPickerType` checks on the server: empty, or exactly one user-perceived character that is not whitespace or a control character. A letter
-passes: use a constraint of yours to accept only emoji. With the partial around your own field, the server check is yours.
+`change`. `EmojiPickerType` checks on the server: empty, or exactly one user-perceived character that does not start with whitespace, a control or a format character, in at most `max_bytes` bytes (default 64). A letter
+or a blank-looking character passes: use a constraint of yours to accept only emoji, and size your column for the limit. `trim` is off by default, because Symfony's trim would strip the tag characters of the England, Scotland and Wales flags, and only whitespace around the value is stripped. With the partial around your own field, the server check is yours.
 
 **The table** is `nowo-ui-emoji-table.ts`, 40 emoji with English names, under 1 KB, the same list as MilkdownEditorBundle's `:` trigger (same author, MIT;
 plain Unicode text, no third-party data set). It is bundled only into `js/nowo-ui-emoji-picker.js`, about 3 KB gzipped, which only pages that opt in load.
@@ -2178,10 +2179,12 @@ The search looks at the English names and the character. For more emoji or other
 **Event:** bubbling, cancelable `nowo-ui:emoji-picker:pick` `{emoji, name}` before the value is set, then native `input` and `change` on the field.
 
 **Accessibility contract.** The kit does: an APG combobox with a grid popup, so the panel is one tab stop, with focus in the search box and `aria-activedescendant` on the active cell.
-Up and Down move in the grid; once in it, Left, Right, Home and End do too. Enter picks the active cell, or the first result, and never submits the form. Escape closes the panel, not a dialog around it. Tab closes.
-Focus returns to the toggle. A polite status says how many results there are. You do: give the field a label, and pass translated `labels`. The grid's names are English.
+Up and Down move in the grid; once in it, Left, Right, Home and End do too, with Left and Right as they look in right-to-left text. Enter picks the active cell, or the first result, and never submits the form. Escape closes the panel, not a dialog around it. Tab closes.
+Focus returns to the toggle in both cases. `aria-selected` marks the field's current value, with a border in forced colours. A polite status says how many results there are. You do: give the field a label, and pass translated `labels`. The grid's names are English.
 
-**Limits:** the panel is positioned by CSS under the field, inside its parent: an ancestor with `overflow: hidden` clips it. No recently used list, no categories, no skin tone choice.
+**Position:** the panel is a `[popover]` in the top layer, so no ancestor's overflow clips it, the remote form dialog's body included. It is measured when it opens and on scroll or resize, opens above the field when there is no room below, and stays inside the viewport. Without the Popover API it is `position: fixed` under `--nowo-ui-emoji-picker-z`.
+
+**Limits:** no recently used list, no categories, no skin tone choice. Nothing was run on a phone or with a real screen reader.
 
 Tokens: `--nowo-ui-emoji-picker-width`, `--nowo-ui-emoji-picker-height`, `--nowo-ui-emoji-picker-z`. Slots `emoji_picker*`. Demo: `/kit/emoji-show-more`.
 
@@ -2198,7 +2201,7 @@ Options: `lines` (1 to 6, default 3), `labels` (`more`, `less`), `attr`, `conten
 before you pass it**, as above.
 
 The fold is CSS only (`line-clamp`), so there is no style attribute. The button appears only when the text overflows, and follows a change of width. It has `aria-expanded` and `aria-controls`, and keeps focus when it opens and folds.
-Focus entering the clipped part, a link in the text, opens the fold, so nothing focusable is out of sight. In print the whole text shows. Event: bubbling `nowo-ui:show-more:toggle` `{expanded}`. Slots `show_more*`.
+Focus reaching something clipped, a link in the hidden lines, opens the fold, so nothing focusable is out of sight. Focus on a link that already shows leaves it folded, so a click on it does not shift the layout. In print the whole text shows. Event: bubbling `nowo-ui:show-more:toggle` `{expanded}`. Slots `show_more*`.
 
 ## Sortable
 

@@ -58,6 +58,7 @@ logs:
 	@$(call run-compose,logs -f)
 
 test: ensure-up
+	@$(call run-compose,exec -T -e COMPOSER_MEMORY_LIMIT=-1 php composer install --no-interaction)
 	@$(call run-compose,exec -e APP_ENV=test php composer test)
 
 test-coverage: ensure-up

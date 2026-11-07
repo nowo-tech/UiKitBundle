@@ -6738,19 +6738,28 @@ html[data-nowo-ui-sortable-active] * {
   align-items: center;
   gap: 0.25rem;
 }
+.nowo-ui-emoji-picker > input {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+}
+.nowo-ui-emoji-picker__toggle {
+  flex: none;
+}
 .nowo-ui-emoji-picker__toggle[hidden],
 .nowo-ui-emoji-picker__panel[hidden] {
   display: none !important;
 }
 .nowo-ui-emoji-picker__panel {
-  position: absolute;
-  top: 100%;
-  inset-inline-end: 0;
+  position: fixed;
+  inset: auto;
   z-index: var(--nowo-ui-emoji-picker-z, var(--nowo-ui-z-popover, 1080));
   box-sizing: border-box;
-  width: min(var(--nowo-ui-emoji-picker-width, 20rem), 90vw);
+  display: flex;
+  flex-direction: column;
+  width: min(var(--nowo-ui-emoji-picker-width, 20rem), calc(100vw - 1rem));
   padding: 0.5rem;
-  margin-top: 0.25rem;
+  margin: 0;
   background: var(--nowo-ui-surface);
   color: var(--nowo-ui-text);
   border: 1px solid var(--nowo-ui-border);
@@ -6758,6 +6767,8 @@ html[data-nowo-ui-sortable-active] * {
   box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 25%);
 }
 .nowo-ui-emoji-picker__grid {
+  flex: 0 1 auto;
+  min-height: 0;
   max-height: var(--nowo-ui-emoji-picker-height, 14rem);
   margin-top: 0.5rem;
   overflow-y: auto;
@@ -6785,6 +6796,11 @@ html[data-nowo-ui-sortable-active] * {
 .nowo-ui-emoji-picker__cell.is-active {
   outline: 2px solid var(--nowo-ui-primary);
   outline-offset: -2px;
+}
+@media (forced-colors: active) {
+  .nowo-ui-emoji-picker__cell.is-selected {
+    border: 2px solid CanvasText;
+  }
 }
 .nowo-ui-emoji-picker__status {
   margin: 0.25rem 0 0;

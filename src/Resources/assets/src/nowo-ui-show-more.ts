@@ -2,10 +2,11 @@
  * Show more (`js/nowo-ui-show-more.js`, opt-in: add `show-more` to `script_names`, partial `show_more`): text folded after a number of
  * lines, with a real button. Without this script the whole text shows and the button stays hidden. The fold is CSS only (`line-clamp`
  * under `[data-nowo-ui-show-more-ready]`), so there is no style attribute. The button appears only when the text really overflows, and
- * goes when the width changes so that it fits. Focus entering a clipped part (a link in the text) opens the fold, so nothing focusable
- * is out of sight. Event: bubbling `nowo-ui:show-more:toggle` {expanded}.
+ * goes when the width changes so that it fits. Focus reaching something clipped (a link in the hidden lines) opens the fold, so nothing
+ * focusable is out of sight; focus on what already shows leaves it folded, so a click on a visible link does not shift the layout. Event: bubbling `nowo-ui:show-more:toggle` {expanded}.
  *
- * Delegated listeners; one `MutationObserver` for content inserted later and one `ResizeObserver`. Importing touches no DOM.
+ * Delegated listeners; one `MutationObserver` for content inserted later and one `ResizeObserver`. Importing touches no DOM. Members are
+ * read through the prototypes: a named control or image cannot hide them.
  */
 export const ROOT = '[data-nowo-ui-show-more]';
 const CONTENT = '[data-nowo-ui-show-more-content]';
@@ -14,6 +15,7 @@ const READY = 'data-nowo-ui-show-more-ready';
 
 const closest = (el: Element, selector: string): HTMLElement | null => Element.prototype.closest.call(el, selector) as HTMLElement | null;
 const query = (el: Element, selector: string): HTMLElement | null => Element.prototype.querySelector.call(el, selector) as HTMLElement | null;
+const box = (el: Element): DOMRect => Element.prototype.getBoundingClientRect.call(el);
 const listen = (target: EventTarget, type: string, handler: (event: never) => void): void => {
   EventTarget.prototype.addEventListener.call(target, type, handler as EventListener);
 };
@@ -63,10 +65,14 @@ export function syncBlock(root: HTMLElement): void {
 }
 
 export function syncAll(scope: ParentNode = document): void {
-  if (scope instanceof Element && Element.prototype.matches.call(scope, ROOT)) {
-    syncBlock(scope as HTMLElement);
+  if (scope instanceof Element) {
+    if (Element.prototype.matches.call(scope, ROOT)) {
+      syncBlock(scope as HTMLElement);
+    }
+    (Element.prototype.querySelectorAll.call(scope, ROOT) as NodeListOf<HTMLElement>).forEach(syncBlock);
+  } else {
+    (Document.prototype.querySelectorAll.call(document, ROOT) as NodeListOf<HTMLElement>).forEach(syncBlock);
   }
-  scope.querySelectorAll<HTMLElement>(ROOT).forEach(syncBlock);
 }
 
 function onClick(event: MouseEvent): void {
@@ -78,11 +84,19 @@ function onClick(event: MouseEvent): void {
   }
 }
 
+/** Whether an element in a fold is out of sight. A browser may already have scrolled the fold to show it. */
+export function isClipped(target: Element, content: HTMLElement): boolean {
+  const inner = box(target);
+  const outer = box(content);
+  return content.scrollTop > 0 || inner.top < outer.top - 1 || inner.bottom > outer.bottom + 1;
+}
+
 function onFocusIn(event: FocusEvent): void {
-  const content = event.target instanceof Element ? closest(event.target, CONTENT) : null;
+  const target = event.target instanceof Element ? event.target : null;
+  const content = target ? closest(target, CONTENT) : null;
   const root = content ? closest(content, ROOT) : null;
   const toggle = root ? query(root, TOGGLE) : null;
-  if (root && toggle && !toggle.hidden && !isExpanded(root)) {
+  if (target && content && root && toggle && !toggle.hidden && !isExpanded(root) && isClipped(target, content)) {
     setExpanded(root, true);
   }
 }

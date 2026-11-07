@@ -410,6 +410,19 @@ describe('dialog back button', () => {
     expect(document.getElementById('back')).toBeNull();
   });
 
+  it('HR-L6: never unhides an arrow the host hid itself', () => {
+    const { dialog, body } = setup('<p>no back</p>', '<a id="host" class="nowo-ui-dialog__back" href="/up" hidden>↑</a>');
+    clearBack(dialog);
+    expect((document.getElementById('host') as HTMLElement).hidden).toBe(true);
+    liftBack(body, dialog);
+    expect((document.getElementById('host') as HTMLElement).hidden).toBe(true);
+    body.innerHTML = '<button type="button" data-nowo-ui-dialog-back>B</button>';
+    liftBack(body, dialog);
+    clearBack(dialog);
+    expect((document.getElementById('host') as HTMLElement).hidden).toBe(true);
+    expect(document.getElementById('host')?.hasAttribute('data-nowo-ui-dialog-back-hid')).toBe(false);
+  });
+
   it('a form in the fragment with controls named like DOM members hides nothing', () => {
     const { dialog, body, header } = setup('<form id="f"><input name="querySelector"><input name="closest"><button id="back" type="button" data-nowo-ui-dialog-back>B</button></form>');
     expect(liftBack(body, dialog)).toBe(true);

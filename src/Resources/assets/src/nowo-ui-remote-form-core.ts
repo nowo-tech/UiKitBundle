@@ -286,6 +286,7 @@ export function liftActions(body: HTMLElement, footer: HTMLElement | null): bool
 
 const BACK_ATTR = 'data-nowo-ui-dialog-back';
 const BACK_LIFTED_ATTR = 'data-nowo-ui-dialog-back-lifted';
+const BACK_HID_ATTR = 'data-nowo-ui-dialog-back-hid';
 
 /** The dialog's own `<header>`. */
 function dialogHeader(dialog: HTMLDialogElement): HTMLElement | null {
@@ -300,8 +301,10 @@ export function clearBack(dialog: HTMLDialogElement): void {
   }
   const dom = Element.prototype;
   (dom.querySelectorAll.call(header, `[${BACK_LIFTED_ATTR}]`) as NodeListOf<Element>).forEach((lifted) => dom.remove.call(lifted));
-  (dom.querySelectorAll.call(header, 'a.nowo-ui-dialog__back[hidden]') as NodeListOf<HTMLElement>).forEach((arrow) => {
+  // Only what liftBack hid: this runs on every load, and a host may have hidden an arrow of its own.
+  (dom.querySelectorAll.call(header, `a.nowo-ui-dialog__back[${BACK_HID_ATTR}]`) as NodeListOf<HTMLElement>).forEach((arrow) => {
     arrow.hidden = false;
+    arrow.removeAttribute(BACK_HID_ATTR);
   });
 }
 
@@ -320,8 +323,9 @@ export function liftBack(body: HTMLElement, dialog: HTMLDialogElement): boolean 
   if (!header || !back || dom.getAttribute.call(back, 'type') !== 'button') {
     return false;
   }
-  (dom.querySelectorAll.call(header, 'a.nowo-ui-dialog__back') as NodeListOf<HTMLElement>).forEach((arrow) => {
+  (dom.querySelectorAll.call(header, 'a.nowo-ui-dialog__back:not([hidden])') as NodeListOf<HTMLElement>).forEach((arrow) => {
     arrow.hidden = true;
+    arrow.setAttribute(BACK_HID_ATTR, '');
   });
   back.classList.add('nowo-ui-dialog__back');
   back.setAttribute(BACK_LIFTED_ATTR, '');

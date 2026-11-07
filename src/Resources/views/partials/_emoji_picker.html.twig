@@ -23,7 +23,7 @@
     {%- if emojis|default(null) %} data-nowo-ui-emoji-picker-table="{{ emojis|json_encode }}"{% endif %}{{ nowo_ui_attrs('emoji_picker', _b, _attr|filter((v, k) => k != 'class')) }}>
     {{- input|raw -}}
     <button type="button" class="{{ nowo_ui_class('emoji_picker_toggle', _b) }}" data-nowo-ui-emoji-picker-toggle aria-label="{{ _text.open }}" title="{{ _text.open }}" aria-haspopup="dialog" aria-expanded="false" aria-controls="{{ id }}-panel" hidden{{ nowo_ui_attrs('emoji_picker_toggle', _b) }}><span aria-hidden="true">🙂</span></button>
-    <div id="{{ id }}-panel" class="{{ nowo_ui_class('emoji_picker_panel', _b) }}" data-nowo-ui-emoji-picker-panel role="dialog" aria-label="{{ _text.open }}" hidden{{ nowo_ui_attrs('emoji_picker_panel', _b) }}>
+    <div id="{{ id }}-panel" class="{{ nowo_ui_class('emoji_picker_panel', _b) }}" data-nowo-ui-emoji-picker-panel role="dialog" aria-label="{{ _text.open }}" popover="manual" hidden{{ nowo_ui_attrs('emoji_picker_panel', _b) }}>
         {# twig-005-ignore: nameless search box of the picker, never submitted #}
         <input type="search" class="{{ nowo_ui_class('emoji_picker_search', _b) }}" data-nowo-ui-emoji-picker-search role="combobox" aria-label="{{ _text.search }}" placeholder="{{ _text.search }}" aria-autocomplete="list" aria-haspopup="grid" aria-expanded="false" aria-controls="{{ id }}-grid" autocomplete="off"{{ nowo_ui_attrs('emoji_picker_search', _b) }}>
         <div id="{{ id }}-grid" class="{{ nowo_ui_class('emoji_picker_grid', _b) }}" data-nowo-ui-emoji-picker-grid role="grid" aria-label="{{ _text.open }}"{{ nowo_ui_attrs('emoji_picker_grid', _b) }}></div>

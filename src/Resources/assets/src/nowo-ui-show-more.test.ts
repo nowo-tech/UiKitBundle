@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { bindNowoUiShowMore, setExpanded, syncAll, syncBlock } from './nowo-ui-show-more';
+import { bindNowoUiShowMore, isClipped, setExpanded, syncAll, syncBlock } from './nowo-ui-show-more';
 
 const MARKUP = `
 <div id="root" class="nowo-ui-show-more--lines-3" data-nowo-ui-show-more>
@@ -15,7 +15,20 @@ function overflow(id: string, overflows: boolean): void {
   Object.defineProperty(el(id), 'clientHeight', { configurable: true, value: 60 });
 }
 
+const rect = (top: number, bottom: number): DOMRect => ({ top, bottom, left: 0, right: 100, width: 100, height: bottom - top, x: 0, y: top, toJSON: () => ({}) }) as DOMRect;
+
+/** Where the link is, against the fold's 0 to 60 px. */
+function linkAt(top: number, bottom: number): void {
+  vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
+    return this.id === 'content' ? rect(0, 60) : rect(top, bottom);
+  });
+}
+
 describe('nowo-ui-show-more', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   beforeEach(() => {
     document.body.innerHTML = MARKUP;
     bindNowoUiShowMore();
@@ -62,7 +75,26 @@ describe('nowo-ui-show-more', () => {
     expect(el('toggle').hidden).toBe(false);
   });
 
-  it('focus entering the fold opens it, so nothing focusable is out of sight', () => {
+  it('HR-L9: focus on a visible link leaves the fold alone', () => {
+    linkAt(10, 30);
+    el('link').dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+    expect(el('toggle').getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('HR-L9: isClipped sees below, above, and a fold the browser has scrolled', () => {
+    linkAt(10, 30);
+    expect(isClipped(el('link'), el('content'))).toBe(false);
+    linkAt(100, 120);
+    expect(isClipped(el('link'), el('content'))).toBe(true);
+    linkAt(-40, -20);
+    expect(isClipped(el('link'), el('content'))).toBe(true);
+    linkAt(10, 30);
+    el('content').scrollTop = 40;
+    expect(isClipped(el('link'), el('content'))).toBe(true);
+  });
+
+  it('focus reaching something clipped opens the fold, so nothing focusable is out of sight', () => {
+    linkAt(100, 120);
     el('link').dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
     expect(el('toggle').getAttribute('aria-expanded')).toBe('true');
     el('link').dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
@@ -70,6 +102,7 @@ describe('nowo-ui-show-more', () => {
   });
 
   it('with nothing clipped, focus changes nothing', () => {
+    linkAt(100, 120);
     overflow('content', false);
     syncBlock(el('root'));
     el('link').dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
@@ -98,5 +131,26 @@ describe('nowo-ui-show-more', () => {
     expect(el('t').textContent).toBe('same');
     el('t').click();
     expect(el('t').getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('HR-L7: a form named querySelectorAll in a batch does not stop a fold inserted with it', () => {
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `<form id="bad"><input name="querySelectorAll"><input name="matches"></form>${MARKUP.replace(/id="/g, 'id="next-')}`;
+    document.body.append(wrap);
+    expect(() => syncAll(el('bad'))).not.toThrow();
+    syncAll(wrap);
+    expect(el('next-root').hasAttribute('data-nowo-ui-show-more-ready')).toBe(true);
+  });
+
+  it('HR-L7: an image named querySelectorAll in the document does not stop the folds', () => {
+    const img = document.createElement('img');
+    Object.defineProperty(document, 'querySelectorAll', { configurable: true, value: img });
+    el('root').removeAttribute('data-nowo-ui-show-more-ready');
+    try {
+      syncAll();
+      expect(el('root').hasAttribute('data-nowo-ui-show-more-ready')).toBe(true);
+    } finally {
+      delete (document as unknown as Record<string, unknown>).querySelectorAll;
+    }
   });
 });

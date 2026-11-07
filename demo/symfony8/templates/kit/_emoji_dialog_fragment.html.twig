@@ -1,0 +1,5 @@
+{# UiKit demo: a remote form dialog fragment with an emoji picker field and enough lines to make the dialog's body scroll. #}
+{{ form_start(form, {attr: {'data-testid': 'emoji-dialog-form'}}) }}
+{{ form_row(form.icon) }}
+{% for line in 1..20 %}<p>Line {{ line }} of a long form.</p>{% endfor %}
+{{ form_end(form) }}
