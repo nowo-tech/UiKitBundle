@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use Nowo\UiKitBundle\Form\DateRangeType;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
@@ -12,7 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- * The `multi-select` peer on its own page, for the panel's motion. The page forbids style attributes. Fixtures only.
+ * The `multi-select` and `date-range` peers on their own page, for their panels' motion. The page forbids style attributes. Fixtures only.
  */
 final class KitMultiSelectController extends AbstractController
 {
@@ -27,6 +28,7 @@ final class KitMultiSelectController extends AbstractController
                 'nowo_ui_multi_select' => true,
                 'choices' => ['Active' => 'active', 'Cancelled' => 'cancelled', 'Pending' => 'pending'],
             ])
+            ->add('created', DateRangeType::class, ['label' => 'Created', 'required' => false])
             ->getForm();
         $response = $this->render('kit/multi_select.html.twig', ['form' => $form->createView()]);
         $response->headers->set('Content-Security-Policy', "script-src 'self'; style-src-attr 'none'; script-src-attr 'none'");

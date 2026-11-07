@@ -179,3 +179,85 @@ describe('nowo-ui-motion-core', () => {
     });
   });
 });
+
+describe('keys and Turbo during a fade', () => {
+  const modal = (): HTMLDialogElement => {
+    const dialog = document.createElement('dialog');
+    dialog.className = 'nowo-ui-dialog';
+    dialog.innerHTML = '<button type="submit">Save</button>';
+    document.body.append(dialog);
+    const matches = Element.prototype.matches;
+    vi.spyOn(Element.prototype, 'matches').mockImplementation(function (this: Element, selector: string) {
+      return selector === ':modal' ? this === dialog : matches.call(this, selector);
+    });
+    return dialog;
+  };
+
+  const fading = (): void => {
+    vi.spyOn(window, 'getComputedStyle').mockReturnValue({ transitionDuration: '150ms', transitionDelay: '0s' } as CSSStyleDeclaration);
+  };
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+    document.body.innerHTML = '';
+  });
+
+  it('a closing modal dialog is inert and drops focus, then no longer inert when it closes', () => {
+    vi.useFakeTimers();
+    const dialog = modal();
+    const button = dialog.querySelector('button')!;
+    button.focus();
+    fading();
+    const close = vi.fn();
+    closeWithEffect(dialog, close);
+    expect(dialog.hasAttribute('inert')).toBe(true);
+    expect(document.activeElement).not.toBe(button);
+    vi.advanceTimersByTime(300);
+    expect(close).toHaveBeenCalledOnce();
+    expect(dialog.hasAttribute('inert')).toBe(false);
+  });
+
+  it('with no transition it is never inert, and keeps its focus until the close', () => {
+    const dialog = modal();
+    const button = dialog.querySelector('button')!;
+    button.focus();
+    vi.spyOn(window, 'getComputedStyle').mockReturnValue({ transitionDuration: '0s', transitionDelay: '0s' } as CSSStyleDeclaration);
+    const seen: Array<Element | null> = [];
+    closeWithEffect(dialog, () => seen.push(document.activeElement));
+    expect(seen).toEqual([button]);
+    expect(dialog.hasAttribute('inert')).toBe(false);
+  });
+
+  it('a dialog that is not modal, or a panel, is not made inert', () => {
+    vi.useFakeTimers();
+    const dialog = document.createElement('dialog');
+    const panel = document.createElement('div');
+    document.body.append(dialog, panel);
+    fading();
+    closeWithEffect(dialog, () => undefined);
+    closeWithEffect(panel, () => undefined);
+    expect(dialog.hasAttribute('inert')).toBe(false);
+    expect(panel.hasAttribute('inert')).toBe(false);
+    vi.advanceTimersByTime(300);
+  });
+
+  it('turbo:before-cache ends every running fade, once', () => {
+    vi.useFakeTimers();
+    const first = document.createElement('div');
+    const second = document.createElement('div');
+    document.body.append(first, second);
+    fading();
+    const closeFirst = vi.fn();
+    const closeSecond = vi.fn();
+    closeWithEffect(first, closeFirst);
+    closeWithEffect(second, closeSecond);
+    document.dispatchEvent(new Event('turbo:before-cache'));
+    expect(closeFirst).toHaveBeenCalledOnce();
+    expect(closeSecond).toHaveBeenCalledOnce();
+    expect(first.hasAttribute(CLOSING_ATTR)).toBe(false);
+    expect(isClosing(second)).toBe(false);
+    vi.advanceTimersByTime(300);
+    expect(closeFirst).toHaveBeenCalledOnce();
+  });
+});

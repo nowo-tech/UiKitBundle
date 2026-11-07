@@ -3,7 +3,7 @@
  * WebKit cannot for the top layer and Firefox cannot at all. So the kit's own closes wait here: `data-nowo-ui-closing` starts the fade
  * (`--nowo-ui-motion-*`), and the real `close()`, `hidePopover()` or `hidden` runs when it ends, so the fade shows in every engine. With
  * no transition (`0ms`, or a page without the kit's CSS) it all happens at once. If `transitionend` never fires, a timer does it.
- * Importing touches no DOM.
+ * A modal dialog takes no keys while it fades, and no fade reaches a Turbo snapshot. Importing touches no DOM.
  */
 const SLACK_MS = 50;
 
@@ -53,34 +53,85 @@ export function afterEffect(element: Element, done: () => void): () => void {
 
 export const CLOSING_ATTR = 'data-nowo-ui-closing';
 
-const running = new WeakMap<Element, () => void>();
+const RUNNING_KEY = Symbol.for('nowo-ui.motion.running');
+const TURBO_KEY = Symbol.for('nowo-ui.motion.turbo');
+
+/** Running fades, one list per page: each script of the kit bundles its own copy of this module. */
+function running(): Map<Element, () => void> {
+  const page = window as unknown as Record<symbol, Map<Element, () => void> | undefined>;
+  page[RUNNING_KEY] ??= new Map();
+  return page[RUNNING_KEY];
+}
 
 /** Whether an element is fading out: closed as far as a user is concerned, though not yet in the DOM's state. */
 export function isClosing(element: Element): boolean {
-  return running.has(element);
+  return running().has(element);
+}
+
+/** Ends every fade at once. */
+function finishAllClosing(): void {
+  [...running().values()].forEach((finish) => finish());
+}
+
+/** A snapshot taken during a fade would bring back, on Back, an open dialog that no longer has a fade to end it. */
+function bindTurbo(): void {
+  const page = window as unknown as Record<symbol, unknown>;
+  if (!page[TURBO_KEY]) {
+    page[TURBO_KEY] = true;
+    EventTarget.prototype.addEventListener.call(document, 'turbo:before-cache', finishAllClosing);
+  }
+}
+
+function isModal(element: Element): boolean {
+  try {
+    return element instanceof HTMLDialogElement && Element.prototype.matches.call(element, ':modal');
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * A modal dialog takes no keys during its fade: Enter must not submit what Escape just cancelled. `close()` still returns focus, as it
+ * does for any modal dialog wherever focus is. A dialog opened with `show()` keeps its focus, because only its focus brings it back.
+ */
+function takeNoKeys(dialog: Element): void {
+  Element.prototype.setAttribute.call(dialog, 'inert', '');
+  const active = document.activeElement;
+  if (active instanceof HTMLElement && Node.prototype.contains.call(dialog, active)) {
+    active.blur();
+  }
 }
 
 /** Starts the fade, then runs `close`. A second call during the fade does nothing. */
 export function closeWithEffect(element: Element, close: () => void): void {
-  if (running.has(element)) {
+  const fades = running();
+  if (fades.has(element)) {
     return;
   }
+  bindTurbo();
+  const modal = isModal(element);
   Element.prototype.setAttribute.call(element, CLOSING_ATTR, '');
   let done = false;
   const now = afterEffect(element, () => {
     done = true;
-    running.delete(element);
+    fades.delete(element);
     Element.prototype.removeAttribute.call(element, CLOSING_ATTR);
+    if (modal) {
+      Element.prototype.removeAttribute.call(element, 'inert');
+    }
     close();
   });
   if (!done) {
-    running.set(element, now);
+    fades.set(element, now);
+    if (modal) {
+      takeNoKeys(element);
+    }
   }
 }
 
 /** Ends a fade at once, for an element about to open again. */
 export function finishClosing(element: Element): void {
-  running.get(element)?.();
+  running().get(element)?.();
 }
 
 const DIALOGS = ':is(.nowo-ui-dialog:not(.nowo-ui-dialog--end, .nowo-ui-dialog--start), .nowo-ui-confirm-dialog, .nowo-ui-confirm)';

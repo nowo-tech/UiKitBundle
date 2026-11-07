@@ -361,6 +361,8 @@ One scale for opening and closing, so that no surface is abrupt or slow. Set the
 
 **How a close works.** The kit's own closes (buttons, Escape, a backdrop click, `nowoUiCloseDialog`) set `data-nowo-ui-closing`, which starts the fade, and run the real `close()`, `hidePopover()` or `hidden` when it ends, with a timer in case `transitionend` never fires. So focus returns, the `close` event fires and `dialog.open` turns false up to 150 ms later than before. With the durations at `0ms`, or without the kit's CSS, it all happens at once, in the same task as before. Opening again during a fade ends the fade first. A test should wait for the closed state, or set the durations to `0ms`.
 
+While it fades, a modal dialog is `inert`, so it takes no keys, and `close()` still returns focus. A click on a menu's toggle during its fade opens the menu. Every fade ends on `turbo:before-cache`, so that no snapshot holds one.
+
 **Closes the kit does not run:** a host's own `dialog.close()`, a `popovertarget` button closing its popover and a light dismiss run at once, and only CSS can keep them painted, through `transition-behavior: allow-discrete`. That works in Chromium. WebKit does it for an element that is not in the top layer, and Firefox does not do it at all, so there they close at once. `collapse-panel` and filters collapse use this CSS path too.
 
 **Where it applies:** centred dialogs and their backdrop, row detail, kebab, kit menu and popover, page actions, date range panel, emoji picker panel, `collapse-panel`, filters collapse, and the `multi-select` panel, on the small scale. `nowo-ui-multi-select.css` also works without `nowo-ui.css`, so it carries the same values as fallbacks, and an `80ms` fade under `prefers-reduced-motion`.

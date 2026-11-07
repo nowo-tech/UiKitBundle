@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { closeWithEffect } from './nowo-ui-motion-core';
 import * as mod from './nowo-ui-popover';
 
 function toggle(panel: HTMLElement, newState: 'open' | 'closed'): void {
@@ -301,5 +302,25 @@ describe('nowo-ui-popover APG menu (2.28 menu_semantics: menu)', () => {
     const plain = document.getElementById('plain-t')!;
     plain.focus();
     expect(key(plain, 'ArrowDown').defaultPrevented).toBe(false);
+  });
+});
+
+describe('a toggle clicked during the fade', () => {
+  it('ends the fade first, so that the browser opens the panel', () => {
+    vi.useFakeTimers();
+    document.body.innerHTML = '<div data-nowo-ui-popover-menu><button data-nowo-ui-popover-trigger popovertarget="fade-panel"></button><ul id="fade-panel" data-nowo-ui-popover-panel popover></ul></div>';
+    const panel = document.getElementById('fade-panel')!;
+    const trigger = document.querySelector<HTMLElement>('[popovertarget]')!;
+    const hide = vi.fn();
+    panel.hidePopover = hide;
+    vi.spyOn(window, 'getComputedStyle').mockReturnValue({ transitionDuration: '110ms', transitionDelay: '0s' } as CSSStyleDeclaration);
+    closeWithEffect(panel, hide);
+    expect(panel.hasAttribute('data-nowo-ui-closing')).toBe(true);
+    trigger.click();
+    expect(hide).toHaveBeenCalledOnce();
+    expect(panel.hasAttribute('data-nowo-ui-closing')).toBe(false);
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+    document.body.innerHTML = '';
   });
 });

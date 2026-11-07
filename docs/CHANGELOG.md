@@ -112,7 +112,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
-- **Motion tokens:** `--nowo-ui-motion-small`, `-small-close`, `-medium`, `-medium-close`, `-ease-out`, `-ease-in`, `-lift`, `-scale`. Dialogs and their backdrop, row detail, menus and popovers, the date range, emoji picker and `multi-select` panels, `collapse-panel` and filters collapse now animate opening and closing through them; tabs and the icon-tab tooltip opening only. `prefers-reduced-motion` and `html[data-motion]` keep a short fade. The kit's own closes wait for the fade, with a timer as a fallback. See [THEMING](THEMING.md#motion).
+- **Motion tokens:** `--nowo-ui-motion-small`, `-small-close`, `-medium`, `-medium-close`, `-ease-out`, `-ease-in`, `-lift`, `-scale`. Dialogs and their backdrop, row detail, menus and popovers, the date range, emoji picker and `multi-select` panels, `collapse-panel` and filters collapse now animate opening and closing through them; tabs and the icon-tab tooltip opening only. `prefers-reduced-motion` and `html[data-motion]` keep a short fade. The kit's own closes wait for the fade, with a timer as a fallback. A closing modal dialog is `inert`, and fades end on `turbo:before-cache`. See [THEMING](THEMING.md#motion).
 
 ### Fixed
 

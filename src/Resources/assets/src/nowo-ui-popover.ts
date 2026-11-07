@@ -22,7 +22,7 @@
 export const ROOT = '[data-nowo-ui-popover-menu]';
 export const TRIGGER = '[data-nowo-ui-popover-trigger]';
 export const PANEL = '[data-nowo-ui-popover-panel]';
-import { closeWithEffect } from './nowo-ui-motion-core';
+import { closeWithEffect, finishClosing, isClosing } from './nowo-ui-motion-core';
 import { placeBeside } from './nowo-ui-popover-core';
 
 export { EDGE_PX, GAP_PX } from './nowo-ui-popover-core';
@@ -258,6 +258,16 @@ function onClick(event: MouseEvent): void {
   closePopover(panel);
 }
 
+/** A toggle clicked during its menu's fade means open: the fade ends first, so that the browser's own toggle opens the panel. */
+function onTriggerClick(event: MouseEvent): void {
+  const target = event.target;
+  const trigger = target instanceof Element ? target.closest('[popovertarget]') : null;
+  const panel = document.getElementById(trigger?.getAttribute('popovertarget') ?? '');
+  if (panel?.matches(PANEL) && isClosing(panel)) {
+    finishClosing(panel);
+  }
+}
+
 let bound = false;
 
 export function bindNowoUiPopover(): void {
@@ -269,6 +279,7 @@ export function bindNowoUiPopover(): void {
   // before a surrounding dialog handles the key.
   document.addEventListener('toggle', onToggle, true);
   document.addEventListener('keydown', onKeydown, true);
+  document.addEventListener('click', onTriggerClick, true);
   document.addEventListener('click', onClick);
 }
 

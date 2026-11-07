@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { test, expect, type Locator, type Page } from '@playwright/test';
 
 /**
@@ -99,6 +100,140 @@ test.describe('motion', () => {
     await expect.poll(() => panel.evaluate((el) => (el as HTMLElement).hidden)).toBe(true);
     await toggle.click();
     await expect(panel).toBeVisible();
+  });
+
+  test.describe('a Turbo visit during a close', () => {
+    /** Loads the page with real Turbo. A close and a visit in the same task: the snapshot is taken during the fade. */
+    async function withTurbo(page: Page, path: string): Promise<void> {
+      await page.route('**/nowo-e2e-turbo.js', (route) =>
+        route.fulfill({ contentType: 'text/javascript', body: readFileSync('node_modules/@hotwired/turbo/dist/turbo.es2017-umd.js') }),
+      );
+      await noTooling(page);
+      await page.goto(path);
+      await page.addScriptTag({ url: '/nowo-e2e-turbo.js' });
+      await page.waitForFunction(() => 'Turbo' in window);
+      // Turbo takes its snapshot once the next page arrived: a long fade keeps that inside it, whatever the machine's speed.
+      await page.addStyleTag({ content: ':root { --nowo-ui-motion-small-close: 4s; --nowo-ui-motion-medium-close: 4s; }' });
+    }
+
+    async function visitAndBack(page: Page, path: string, close: string): Promise<void> {
+      const fading = await page.evaluate((code) => {
+        new Function(code)();
+        (window as unknown as { Turbo: { visit: (url: string) => void } }).Turbo.visit('/kit/remote-form');
+        return document.querySelector('[data-nowo-ui-closing]') !== null;
+      }, close);
+      expect(fading).toBe(true);
+      await page.getByTestId('destination-add').waitFor();
+      await page.goBack();
+      await page.waitForURL(`**${path}`);
+    }
+
+    test('Back brings a closed confirm dialog, and its opener works', async ({ page }) => {
+      await withTurbo(page, '/kit/shell');
+      await page.getByTestId('void-trigger').click();
+      const dialog = page.locator('dialog#void-1042');
+      await expect(dialog).toHaveAttribute('open', '');
+      await visitAndBack(page, '/kit/shell', "window.nowoUiCloseConfirm(document.querySelector('#void-1042'))");
+      await expect(dialog).not.toHaveAttribute('open', '');
+      await expect(dialog).not.toHaveAttribute('data-nowo-ui-closing');
+      await page.getByTestId('void-trigger').click();
+      await expect(dialog).toHaveJSProperty('open', true);
+      expect(await dialog.evaluate((el) => el.matches(':modal'))).toBe(true);
+      await expect.poll(() => dialog.evaluate((el) => getComputedStyle(el).opacity)).toBe('1');
+    });
+
+    test('Back brings a closed popover menu, and its toggle works', async ({ page }) => {
+      await withTurbo(page, '/page-contract/orders/1042');
+      const toggle = page.locator('[data-nowo-ui-header-more] [data-nowo-ui-popover-trigger]');
+      const panel = page.locator('#nowo-ui-header-more-panel');
+      await toggle.click();
+      await expect(panel).toBeVisible();
+      await expect(toggle).toHaveAttribute('aria-expanded', 'true'); // set on `toggle`, which is what lets the runtime close it
+      await visitAndBack(page, '/page-contract/orders/1042', "document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))");
+      await expect(panel).toBeHidden();
+      await expect(panel).not.toHaveAttribute('data-nowo-ui-closing');
+      await toggle.click();
+      await expect(panel).toBeVisible();
+      await expect.poll(() => panel.evaluate((el) => getComputedStyle(el).opacity)).toBe('1');
+    });
+
+    test('Back brings a closed date range panel, and its control works', async ({ page }) => {
+      await withTurbo(page, '/kit/multi-select');
+      const root = page.locator('[data-controller~="date-range"]');
+      const panel = root.locator('.nowo-ui-date-range__panel').last();
+      const control = root.locator('.nowo-ui-date-range__control, [aria-haspopup]');
+      await control.first().click();
+      await expect(panel).toBeVisible();
+      await expect(panel.locator('calendar-range')).toBeAttached();
+      await expect(root).toHaveClass(/is-open/);
+      await visitAndBack(page, '/kit/multi-select', "document.querySelector('.nowo-ui-date-range__panel [data-date-range-done], .nowo-ui-date-range__done').click()");
+      await expect(panel).toBeHidden();
+      await expect(page.locator('.nowo-ui-date-range__panel[data-nowo-ui-closing]')).toHaveCount(0);
+      // The peer's enhanced markup is in the snapshot too, so Back shows a second control: the live one is the last.
+      await control.last().click();
+      const shown = page.locator('.nowo-ui-date-range__panel:popover-open');
+      await expect(shown).toHaveCount(1);
+      await expect.poll(() => shown.evaluate((el) => getComputedStyle(el).opacity)).toBe('1');
+    });
+  });
+
+  test.describe('keys during the fade', () => {
+    test('Escape then Enter does not submit the confirm dialog, and focus returns', async ({ page }) => {
+      await noTooling(page);
+      await page.goto('/kit/shell');
+      await page.evaluate(() => {
+        (window as unknown as { submits: number }).submits = 0;
+        document.addEventListener('submit', (event) => {
+          (window as unknown as { submits: number }).submits++;
+          event.preventDefault();
+        }, true);
+      });
+      await page.getByTestId('void-trigger').click();
+      const dialog = page.locator('dialog#void-1042');
+      await expect(dialog).toHaveAttribute('open', '');
+      await expect.poll(() => dialog.evaluate((el) => getComputedStyle(el).opacity)).toBe('1');
+      await dialog.locator('button[type="submit"]').focus();
+      await page.keyboard.press('Escape');
+      await page.keyboard.press('Enter');
+      await expect(dialog).not.toHaveAttribute('open', '');
+      expect(await page.evaluate(() => (window as unknown as { submits: number }).submits)).toBe(0);
+      await expect(dialog).not.toHaveAttribute('inert');
+      await expect(page.getByTestId('void-trigger')).toBeFocused();
+    });
+
+    test('Escape then Enter in a remote form field does not POST', async ({ page }) => {
+      const dialog = await openRemoteDialog(page);
+      const posts: string[] = [];
+      page.on('request', (request) => {
+        if (request.method() === 'POST') posts.push(request.url());
+      });
+      await expect.poll(() => dialog.evaluate((el) => getComputedStyle(el).opacity)).toBe('1');
+      await dialog.locator('input:not([type="hidden"])').first().focus();
+      await page.keyboard.press('Escape');
+      await page.keyboard.press('Enter');
+      await expect(dialog).not.toHaveAttribute('open', '');
+      await page.waitForTimeout(250);
+      expect(posts).toEqual([]);
+      await expect(page.getByTestId('destination-add')).toBeFocused();
+    });
+  });
+
+  test('clicking a menu toggle during its fade opens the menu', async ({ page }) => {
+    await noTooling(page);
+    await page.goto('/page-contract/orders/1042');
+    const toggle = page.locator('[data-nowo-ui-header-more] [data-nowo-ui-popover-trigger]');
+    const panel = page.locator('#nowo-ui-header-more-panel');
+    await toggle.click();
+    await expect(panel).toBeVisible();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await toggle.evaluate((el) => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+      (el as HTMLElement).click();
+    });
+    await page.waitForTimeout(300);
+    await expect(panel).toBeVisible();
+    await expect(panel).not.toHaveAttribute('data-nowo-ui-closing');
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
   });
 
   test.describe('the multi-select panel', () => {
