@@ -195,6 +195,8 @@ test.describe('emoji picker', () => {
       const inDialog = page.locator('#destination-dialog [data-nowo-ui-emoji-picker-toggle]');
       await expect(inDialog).toBeVisible();
       const body = page.locator('#destination-dialog [data-nowo-ui-dialog-body]');
+      // The size the audit measured for this body, fixed so that a panel inside it could not fit, whatever the window.
+      await body.evaluate((el: HTMLElement) => el.style.setProperty('max-height', '140px'));
       const before = await body.evaluate((el) => ({ scrollHeight: el.scrollHeight, overflow: getComputedStyle(el).overflowY }));
       expect(before.overflow).toMatch(/auto|scroll/);
       await inDialog.click();
