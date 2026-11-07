@@ -2182,7 +2182,7 @@ The search looks at the English names and the character. For more emoji or other
 Up and Down move in the grid; once in it, Left, Right, Home and End do too, with Left and Right as they look in right-to-left text. Enter picks the active cell, or the first result, and never submits the form. Escape closes the panel, not a dialog around it. Tab closes.
 Focus returns to the toggle in both cases. `aria-selected` marks the field's current value, with a border in forced colours. A polite status says how many results there are. You do: give the field a label, and pass translated `labels`. The grid's names are English.
 
-**Position:** the panel is a `[popover]` in the top layer, so no ancestor's overflow clips it, the remote form dialog's body included. It is measured when it opens and on scroll or resize, opens above the field when there is no room below, and stays inside the viewport. Without the Popover API it is `position: fixed` under `--nowo-ui-emoji-picker-z`.
+**Position:** the panel is a `[popover]` in the top layer, so no ancestor's overflow clips it, the remote form dialog's body included. It is measured when it opens and on scroll or resize, opens above the field when there is no room below, and stays inside the viewport. Without the Popover API it is `position: fixed` under `--nowo-ui-emoji-picker-z`. There, an ancestor with `transform` moves it away from the field.
 
 **Limits:** no recently used list, no categories, no skin tone choice. Nothing was run on a phone or with a real screen reader.
 
