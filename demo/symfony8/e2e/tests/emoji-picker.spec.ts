@@ -206,7 +206,8 @@ test.describe('emoji picker', () => {
       const corners = await page.evaluate(() => {
         const open = document.querySelector('[data-nowo-ui-emoji-picker-panel]') as HTMLElement;
         const r = open.getBoundingClientRect();
-        return [[r.left + 3, r.top + 3], [r.right - 3, r.top + 3], [r.left + 3, r.bottom - 3], [r.right - 3, r.bottom - 3]].map(([x, y]) => {
+        // Inside the rounded corners.
+        return [[r.left + 10, r.top + 10], [r.right - 10, r.top + 10], [r.left + 10, r.bottom - 10], [r.right - 10, r.bottom - 10]].map(([x, y]) => {
           const found = document.elementFromPoint(x!, y!);
           return !!found && open.contains(found);
         });
