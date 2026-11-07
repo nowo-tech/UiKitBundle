@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.36.0](#to-2360)
 - [To 2.35.0](#to-2350)
 - [To 2.34.0](#to-2340)
   - [Template contract](#template-contract)
@@ -119,6 +120,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.36.0
+
+From **2.35.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 **Template contract:** additive. New opt-in script `js/nowo-ui-sortable.js` and new CSS rules that match only
 `data-nowo-ui-sortable*` attributes and `nowo-ui-sortable*` classes. Pages that do not use them print the same markup,
