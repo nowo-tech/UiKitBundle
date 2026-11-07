@@ -116,6 +116,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **Table cards on a phone:** a card `td` is now `box-sizing: border-box`, so its padding no longer overflows the row, and its `::before` label has `pointer-events: none`, so it no longer catches taps meant for the value.
 - **Emoji picker:** Escape is no longer swallowed by a picker that has left the page (HR-DI1).
 - **Popover menus:** in WebKit, the first Escape in a dialog opened from a menu was taken by the menu, which the browser had already closed.
 

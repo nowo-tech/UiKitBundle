@@ -5252,6 +5252,7 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
   }
 
   .nowo-ui-table--cards > tbody > tr > td {
+    box-sizing: border-box; /* its width is 100%, and its padding must stay inside */
     display: grid;
     grid-template-columns: minmax(6rem, 40%) minmax(0, 1fr);
     gap: 0.75rem;
@@ -5286,6 +5287,7 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
 
   .nowo-ui-table--cards > tbody > tr > td[data-label]::before {
     content: attr(data-label);
+    pointer-events: none; /* drawn over the row's start: taps belong to the value */
     color: var(--nowo-ui-muted);
     font-weight: 600;
   }

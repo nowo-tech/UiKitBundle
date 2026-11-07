@@ -324,3 +324,37 @@ describe('a toggle clicked during the fade', () => {
     document.body.innerHTML = '';
   });
 });
+
+describe('choosing an item moves focus to the toggle', () => {
+  const menu = (): { panel: HTMLElement; trigger: HTMLElement; item: HTMLElement; other: HTMLElement } => {
+    document.body.innerHTML = '<div data-nowo-ui-popover-menu><button data-nowo-ui-popover-trigger popovertarget="item-panel"></button><ul id="item-panel" data-nowo-ui-popover-panel popover><li><button data-nowo-ui-menu-button></button></li></ul></div><input id="other">';
+    const panel = document.getElementById('item-panel')!;
+    panel.hidePopover = vi.fn();
+    panel.dispatchEvent(Object.assign(new Event('toggle'), { newState: 'open' }));
+    return {
+      panel,
+      trigger: document.querySelector<HTMLElement>('[popovertarget]')!,
+      item: panel.querySelector<HTMLElement>('button')!,
+      other: document.getElementById('other')!,
+    };
+  };
+
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  it('when focus is on the item', () => {
+    const { trigger, item } = menu();
+    item.focus();
+    item.click();
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  it('but not when a handler already moved it', () => {
+    const { item, other } = menu();
+    item.addEventListener('click', () => other.focus());
+    item.focus();
+    item.click();
+    expect(document.activeElement).toBe(other);
+  });
+});

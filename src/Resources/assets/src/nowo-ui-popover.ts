@@ -256,6 +256,10 @@ function onClick(event: MouseEvent): void {
     return;
   }
   closePopover(panel);
+  // As Escape does: a second Enter must not reach this item during the fade. A handler that already moved focus keeps it.
+  if (panel.contains(document.activeElement)) {
+    triggerOf(panel)?.focus();
+  }
 }
 
 /** A toggle clicked during its menu's fade means open: the fade ends first, so that the browser's own toggle opens the panel. */

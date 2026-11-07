@@ -218,6 +218,32 @@ test.describe('motion', () => {
     });
   });
 
+  test('Enter twice on a menu item activates it once, and focus is on the toggle at once', async ({ page }) => {
+    await noTooling(page);
+    await page.goto('/page-contract/orders/1042');
+    await page.addStyleTag({ content: ':root { --nowo-ui-motion-small-close: 2s; }' }); // both presses fall inside the fade
+    const toggle = page.locator('[data-nowo-ui-header-more] [data-nowo-ui-popover-trigger]');
+    const panel = page.locator('#nowo-ui-header-more-panel');
+    const item = panel.locator('a[href], button[type="submit"], button[data-nowo-ui-menu-button]').first();
+    await page.evaluate(() => {
+      (window as unknown as { activated: number }).activated = 0;
+      document.addEventListener('click', (event) => {
+        if ((event.target as Element).closest('#nowo-ui-header-more-panel')) {
+          (window as unknown as { activated: number }).activated++;
+          event.preventDefault();
+        }
+      }, true);
+    });
+    await toggle.click();
+    await expect(panel).toBeVisible();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await item.focus();
+    await page.keyboard.press('Enter');
+    expect(await toggle.evaluate((el) => document.activeElement === el)).toBe(true);
+    await page.keyboard.press('Enter');
+    expect(await page.evaluate(() => (window as unknown as { activated: number }).activated)).toBe(1);
+  });
+
   test('clicking a menu toggle during its fade opens the menu', async ({ page }) => {
     await noTooling(page);
     await page.goto('/page-contract/orders/1042');
