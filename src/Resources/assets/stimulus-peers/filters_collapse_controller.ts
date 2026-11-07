@@ -104,6 +104,8 @@ export default class FiltersCollapseController extends Controller<HTMLElement> {
   declare readonly messagesValue: Messages;
 
   override connect(): void {
+    // From here on a reveal fades in; the first paint of the page does not.
+    this.element.setAttribute('data-nowo-ui-motion-ready', '');
     // Server-rendered state: only paint the icon (no visual change).
     syncIconState('filters-collapse', this.toggleTarget, this.isCollapsed() ? 'collapsed' : 'expanded', false);
   }

@@ -44,6 +44,8 @@ export default class extends Controller<HTMLElement> {
 
   override connect(): void {
     this.apply(this.resolveOpen(), false);
+    // From here on a reveal fades in; restoring the saved state at load does not.
+    this.bodyTarget.setAttribute('data-nowo-ui-motion-ready', '');
   }
 
   toggle(event?: Event): void {

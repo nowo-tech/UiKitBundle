@@ -175,6 +175,17 @@ describe('nowo-ui-popover', () => {
     expect(mod.isOpen(panel)).toBe(true);
   });
 
+  it('a panel the browser closed without a toggle event does not take the Escape (WebKit, a modal opening from the menu)', () => {
+    panel.showPopover = vi.fn();
+    toggle(panel, 'open');
+    expect(mod.isOpen(panel)).toBe(true);
+    trigger.focus();
+    const event = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+    document.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+    expect(mod.isOpen(panel)).toBe(false);
+  });
+
   it('lets a dialog opened from the menu close first on Escape', () => {
     toggle(panel, 'open');
     const input = document.getElementById('inner-input') as HTMLInputElement;

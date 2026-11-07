@@ -4026,7 +4026,7 @@ button.nowo-ui-kebab__item.is-current {
 
 @media (prefers-reduced-motion: no-preference) {
   .nowo-ui-row-detail[open] .nowo-ui-row-detail__panel {
-    animation: nowo-ui-row-detail-in 0.16s ease-out;
+    animation: nowo-ui-row-detail-in var(--nowo-ui-motion-medium) var(--nowo-ui-motion-ease-out);
   }
 }
 
@@ -6833,5 +6833,248 @@ html[data-nowo-ui-sortable-active] * {
   }
   .nowo-ui-show-more__toggle {
     display: none !important;
+  }
+}
+
+/*
+ * Motion: one scale for opening and closing (docs/THEMING.md, "Motion"). Zero specificity, so a host's value wins wherever it sets it.
+ * Closing is CSS only: state changes at once (`close()`, `hidden`, `hidePopover()`), so focus, Escape, the top layer and scripts see it
+ * closed, and `transition-behavior: allow-discrete` keeps it painted while it fades. A browser without it closes at once. No
+ * `!important` here. The state rules' `display: none !important` stay: a running transition overrides them, and they still win at rest.
+ */
+:where(:root) {
+  --nowo-ui-motion-small: 150ms;
+  --nowo-ui-motion-small-close: 110ms;
+  --nowo-ui-motion-medium: 200ms;
+  --nowo-ui-motion-medium-close: 150ms;
+  --nowo-ui-motion-ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --nowo-ui-motion-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --nowo-ui-motion-lift: 4px;
+  --nowo-ui-motion-scale: 0.98;
+}
+
+/* Reduced motion keeps a short fade and no movement. */
+@media (prefers-reduced-motion: reduce) {
+  :where(:root) {
+    --nowo-ui-motion-small: 80ms;
+    --nowo-ui-motion-small-close: 80ms;
+    --nowo-ui-motion-medium: 80ms;
+    --nowo-ui-motion-medium-close: 80ms;
+    --nowo-ui-motion-lift: 0px;
+    --nowo-ui-motion-scale: 1;
+  }
+}
+
+:where([data-motion='reduce']) {
+  --nowo-ui-motion-small: 80ms;
+  --nowo-ui-motion-small-close: 80ms;
+  --nowo-ui-motion-medium: 80ms;
+  --nowo-ui-motion-medium-close: 80ms;
+  --nowo-ui-motion-lift: 0px;
+  --nowo-ui-motion-scale: 1;
+}
+
+:where([data-motion='full']) {
+  --nowo-ui-motion-small: 150ms;
+  --nowo-ui-motion-small-close: 110ms;
+  --nowo-ui-motion-medium: 200ms;
+  --nowo-ui-motion-medium-close: 150ms;
+  --nowo-ui-motion-lift: 4px;
+  --nowo-ui-motion-scale: 0.98;
+}
+
+/* Centred dialogs and their backdrop. While it closes a dialog is no longer modal, so it keeps its place and layout here. */
+:is(.nowo-ui-dialog:not(.nowo-ui-dialog--end, .nowo-ui-dialog--start), .nowo-ui-confirm-dialog, .nowo-ui-confirm) {
+  transition-property: opacity, transform, overlay, display;
+  transition-duration: var(--nowo-ui-motion-medium-close);
+  transition-timing-function: var(--nowo-ui-motion-ease-in);
+  transition-behavior: allow-discrete;
+}
+
+:is(.nowo-ui-dialog:not(.nowo-ui-dialog--end, .nowo-ui-dialog--start), .nowo-ui-confirm-dialog, .nowo-ui-confirm):not([open]) {
+  position: fixed;
+  inset: 0;
+  opacity: 0;
+  transform: scale(var(--nowo-ui-motion-scale));
+}
+
+.nowo-ui-dialog:not(.nowo-ui-dialog--end, .nowo-ui-dialog--start):not([open]),
+.nowo-ui-confirm-dialog--anatomy:not([open]) {
+  flex-direction: column;
+  height: fit-content;
+  min-height: calc(var(--nowo-ui-dialog-max-h) * clamp(0, var(--nowo-ui-dialog-fill, 0), 1));
+  overflow: hidden;
+}
+
+.nowo-ui-dialog:not(.nowo-ui-dialog--end, .nowo-ui-dialog--start, .nowo-ui-dialog--remote-form):not([open]):not(:has(input:not([type='hidden']), select, textarea, table, ul, ol, details)),
+.nowo-ui-confirm-dialog--anatomy:not([open]):not(:has(input:not([type='hidden']), select, textarea, table, ul, ol, details)) {
+  min-height: 0;
+}
+
+:is(.nowo-ui-dialog:not(.nowo-ui-dialog--end, .nowo-ui-dialog--start), .nowo-ui-confirm-dialog, .nowo-ui-confirm)[open] {
+  opacity: 1;
+  transform: none;
+  transition-duration: var(--nowo-ui-motion-medium);
+  transition-timing-function: var(--nowo-ui-motion-ease-out);
+}
+
+@starting-style {
+  :is(.nowo-ui-dialog:not(.nowo-ui-dialog--end, .nowo-ui-dialog--start), .nowo-ui-confirm-dialog, .nowo-ui-confirm)[open] {
+    opacity: 0;
+    transform: scale(var(--nowo-ui-motion-scale));
+  }
+}
+
+:is(.nowo-ui-dialog:not(.nowo-ui-dialog--end, .nowo-ui-dialog--start), .nowo-ui-confirm-dialog, .nowo-ui-confirm)::backdrop {
+  opacity: 0;
+  transition-property: opacity, overlay, display;
+  transition-duration: var(--nowo-ui-motion-medium-close);
+  transition-timing-function: var(--nowo-ui-motion-ease-in);
+  transition-behavior: allow-discrete;
+}
+
+:is(.nowo-ui-dialog:not(.nowo-ui-dialog--end, .nowo-ui-dialog--start), .nowo-ui-confirm-dialog, .nowo-ui-confirm)[open]::backdrop {
+  opacity: 1;
+  transition-duration: var(--nowo-ui-motion-medium);
+  transition-timing-function: var(--nowo-ui-motion-ease-out);
+}
+
+@starting-style {
+  :is(.nowo-ui-dialog:not(.nowo-ui-dialog--end, .nowo-ui-dialog--start), .nowo-ui-confirm-dialog, .nowo-ui-confirm)[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+/* The kit's own closes fade under this mark, then really close (nowo-ui-motion-core.ts). */
+:is(.nowo-ui-dialog:not(.nowo-ui-dialog--end, .nowo-ui-dialog--start), .nowo-ui-confirm-dialog, .nowo-ui-confirm)[open][data-nowo-ui-closing] {
+  opacity: 0;
+  transform: scale(var(--nowo-ui-motion-scale));
+  pointer-events: none;
+  transition-duration: var(--nowo-ui-motion-medium-close);
+  transition-timing-function: var(--nowo-ui-motion-ease-in);
+}
+
+:is(.nowo-ui-dialog:not(.nowo-ui-dialog--end, .nowo-ui-dialog--start), .nowo-ui-confirm-dialog, .nowo-ui-confirm)[open][data-nowo-ui-closing]::backdrop {
+  opacity: 0;
+  transition-duration: var(--nowo-ui-motion-medium-close);
+  transition-timing-function: var(--nowo-ui-motion-ease-in);
+}
+
+/* Menus, popovers and panels in the top layer: kebab, kit menu, page actions, date range, emoji picker. */
+:is(.nowo-ui-menu__panel, .nowo-ui-popover, .nowo-ui-kebab__menu)[popover],
+.nowo-ui-date-range__panel,
+.nowo-ui-emoji-picker__panel {
+  transition-property: opacity, transform, overlay, display;
+  transition-duration: var(--nowo-ui-motion-small-close);
+  transition-timing-function: var(--nowo-ui-motion-ease-in);
+  transition-behavior: allow-discrete;
+}
+
+@supports selector(:popover-open) {
+  :is(.nowo-ui-menu__panel, .nowo-ui-popover, .nowo-ui-kebab__menu)[popover]:not(:popover-open),
+  :is(.nowo-ui-date-range__panel, .nowo-ui-emoji-picker__panel)[popover]:not(:popover-open) {
+    opacity: 0;
+    transform: translateY(var(--nowo-ui-motion-lift));
+  }
+
+  :is(.nowo-ui-menu__panel, .nowo-ui-popover, .nowo-ui-kebab__menu, .nowo-ui-date-range__panel, .nowo-ui-emoji-picker__panel)[popover]:popover-open {
+    opacity: 1;
+    transform: none;
+    transition-duration: var(--nowo-ui-motion-small);
+    transition-timing-function: var(--nowo-ui-motion-ease-out);
+  }
+
+  @starting-style {
+    :is(.nowo-ui-menu__panel, .nowo-ui-popover, .nowo-ui-kebab__menu, .nowo-ui-date-range__panel, .nowo-ui-emoji-picker__panel)[popover]:popover-open {
+      opacity: 0;
+      transform: translateY(var(--nowo-ui-motion-lift));
+    }
+  }
+}
+
+/* The kit's own closes of these panels: after the rules above, which they must beat. */
+:is(.nowo-ui-menu__panel, .nowo-ui-popover, .nowo-ui-kebab__menu, .nowo-ui-date-range__panel, .nowo-ui-emoji-picker__panel)[data-nowo-ui-closing][data-nowo-ui-closing] {
+  opacity: 0;
+  transform: translateY(var(--nowo-ui-motion-lift));
+  pointer-events: none;
+  transition-duration: var(--nowo-ui-motion-small-close);
+  transition-timing-function: var(--nowo-ui-motion-ease-in);
+}
+
+/* The same panels where there is no Popover API: `hidden` decides. */
+:is(.nowo-ui-date-range__panel, .nowo-ui-emoji-picker__panel)[hidden] {
+  opacity: 0;
+}
+
+/* Menus on <details>: the content stays while it fades where the browser has ::details-content. */
+details:not([open]) > :is(.nowo-ui-menu__panel, .nowo-ui-popover, .nowo-ui-kebab__menu) {
+  opacity: 0;
+  transform: translateY(var(--nowo-ui-motion-lift));
+}
+
+details > :is(.nowo-ui-menu__panel, .nowo-ui-popover, .nowo-ui-kebab__menu) {
+  transition: opacity var(--nowo-ui-motion-small-close) var(--nowo-ui-motion-ease-in), transform var(--nowo-ui-motion-small-close) var(--nowo-ui-motion-ease-in);
+}
+
+details[open] > :is(.nowo-ui-menu__panel, .nowo-ui-popover, .nowo-ui-kebab__menu) {
+  opacity: 1;
+  transform: none;
+  transition-duration: var(--nowo-ui-motion-small);
+  transition-timing-function: var(--nowo-ui-motion-ease-out);
+}
+
+@starting-style {
+  details[open] > :is(.nowo-ui-menu__panel, .nowo-ui-popover, .nowo-ui-kebab__menu) {
+    opacity: 0;
+    transform: translateY(var(--nowo-ui-motion-lift));
+  }
+}
+
+:is(.nowo-ui-menu, .nowo-ui-kebab__details)::details-content {
+  transition: content-visibility var(--nowo-ui-motion-small-close) allow-discrete;
+}
+
+/* Panels: tabs fade in; the old panel goes at once, as two panels at the same time would stack. */
+:is([data-nowo-ui-tabs-ready] > [data-nowo-ui-tabs-panel], [data-tabs-target='tab'][data-state='active']) {
+  transition: opacity var(--nowo-ui-motion-small) var(--nowo-ui-motion-ease-out);
+}
+
+@starting-style {
+  :is([data-nowo-ui-tabs-ready] > [data-nowo-ui-tabs-panel], [data-tabs-target='tab'][data-state='active']) {
+    opacity: 0;
+  }
+}
+
+/* collapse-panel and filters collapse: fade, then the space goes. Not at first paint. */
+[data-collapse-panel-target='body'][data-nowo-ui-motion-ready],
+form:has(> .nowo-ui-filters-collapse[data-nowo-ui-motion-ready]) > :not(.nowo-ui-filters-collapse) {
+  transition-property: opacity, display;
+  transition-duration: var(--nowo-ui-motion-small);
+  transition-timing-function: var(--nowo-ui-motion-ease-out);
+  transition-behavior: allow-discrete;
+}
+
+[data-collapse-panel-target='body'][data-nowo-ui-motion-ready][hidden],
+form:has(> .nowo-ui-filters-collapse.is-collapsed[data-nowo-ui-motion-ready]) > :not(.nowo-ui-filters-collapse) {
+  opacity: 0;
+  transition-duration: var(--nowo-ui-motion-small-close);
+  transition-timing-function: var(--nowo-ui-motion-ease-in);
+}
+
+@starting-style {
+  [data-collapse-panel-target='body'][data-nowo-ui-motion-ready]:not([hidden]),
+  form:has(> .nowo-ui-filters-collapse[data-nowo-ui-motion-ready]:not(.is-collapsed)) > :not(.nowo-ui-filters-collapse) {
+    opacity: 0;
+  }
+}
+
+/* The icon-tab tooltip fades in; it has no element to stay on when it goes. */
+[data-tab-style='icon'] .nowo-ui-tabs__item[data-rail-label]:not(.nowo-ui-tabs__item--active, .is-active, [aria-current='page']):is(:hover, :focus-visible)::after {
+  transition: opacity var(--nowo-ui-motion-small) var(--nowo-ui-motion-ease-out);
+}
+
+@starting-style {
+  [data-tab-style='icon'] .nowo-ui-tabs__item[data-rail-label]:not(.nowo-ui-tabs__item--active, .is-active, [aria-current='page']):is(:hover, :focus-visible)::after {
+    opacity: 0;
   }
 }

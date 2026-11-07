@@ -10,6 +10,7 @@
  */
 
 import { Controller } from '@hotwired/stimulus';
+import { closeDialogWithEffect, finishClosing } from '../src/nowo-ui-motion-core';
 
 export default class extends Controller {
   static override targets = ['dialog', 'confirmInput', 'submit'];
@@ -83,6 +84,7 @@ export default class extends Controller {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         try {
+          finishClosing(dialog);
           if (!dialog.open) {
             if (typeof window.nowoUiOpenConfirm === 'function') {
               window.nowoUiOpenConfirm(dialog);
@@ -108,7 +110,7 @@ export default class extends Controller {
       window.nowoUiCloseConfirm(dialog);
       return;
     }
-    dialog.close();
+    closeDialogWithEffect(dialog);
   }
 
   syncSubmit(): void {

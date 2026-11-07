@@ -22,6 +22,7 @@
 export const ROOT = '[data-nowo-ui-popover-menu]';
 export const TRIGGER = '[data-nowo-ui-popover-trigger]';
 export const PANEL = '[data-nowo-ui-popover-panel]';
+import { closeWithEffect } from './nowo-ui-motion-core';
 import { placeBeside } from './nowo-ui-popover-core';
 
 export { EDGE_PX, GAP_PX } from './nowo-ui-popover-core';
@@ -112,11 +113,13 @@ export function closePopover(panel: HTMLElement): void {
     return;
   }
   if (typeof panel.hidePopover === 'function') {
-    try {
-      panel.hidePopover();
-    } catch {
-      // already hidden (InvalidStateError)
-    }
+    closeWithEffect(panel, () => {
+      try {
+        panel.hidePopover();
+      } catch {
+        // already hidden (InvalidStateError)
+      }
+    });
   }
   forget(panel);
 }
@@ -131,6 +134,11 @@ function forget(panel: HTMLElement): void {
     window.removeEventListener('scroll', onMove, true);
     window.removeEventListener('resize', onMove);
   }
+}
+
+/** Whether the browser still shows a panel. Without the Popover API it cannot tell: then this runtime's own list decides. */
+function isShown(panel: HTMLElement): boolean {
+  return typeof panel.showPopover !== 'function' || panel.matches(':popover-open');
 }
 
 /** Whether a panel is currently open through this runtime. */
@@ -211,10 +219,15 @@ function onKeydown(event: KeyboardEvent): void {
   if (onMenuKeydown(event)) {
     return;
   }
-  if (event.key !== 'Escape' || openPanels.length === 0) {
+  if (event.key !== 'Escape') {
     return;
   }
-  const panel = openPanels[openPanels.length - 1];
+  // A panel the browser closed without a `toggle` reaching us (WebKit, on a modal opening from the menu) must not take this Escape.
+  [...openPanels].filter((open) => !isShown(open)).forEach(forget);
+  if (openPanels.length === 0) {
+    return;
+  }
+  const panel = openPanels[openPanels.length - 1]!;
   const active = document.activeElement;
   // A dialog opened from inside the menu (confirm) is on top: let it close first.
   const innerDialog = active instanceof Element ? active.closest('dialog[open]') : null;

@@ -12,6 +12,7 @@
  *   import { askConfirm, pageConfirmLabels } from '…/stimulus-peers/ask_confirm';
  *   if (await askConfirm('Delete this key?', { ...pageConfirmLabels(), danger: true })) { … }
  */
+import { closeWithEffect } from '../src/nowo-ui-motion-core';
 export interface ConfirmClasses {
   dialog: string;
   panel: string;
@@ -169,9 +170,13 @@ export function askConfirm(message: string, options: ConfirmOptions = {}): Promi
       }
       answered = true;
       if (dialog.open && typeof dialog.close === 'function') {
-        dialog.close();
+        closeWithEffect(dialog, () => {
+          dialog.close();
+          dialog.remove();
+        });
+      } else {
+        dialog.remove();
       }
-      dialog.remove();
       resolve(value);
     };
     confirm.addEventListener('click', () => finish(true));

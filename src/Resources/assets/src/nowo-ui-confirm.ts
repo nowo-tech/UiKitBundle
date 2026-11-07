@@ -22,6 +22,7 @@
  * built when asked, for actions whose target is only known at runtime.
  */
 
+import { bindMotion, closeDialogWithEffect, finishClosing } from './nowo-ui-motion-core';
 import { askConfirm, type ConfirmOptions } from '../stimulus-peers/ask_confirm';
 
 declare global {
@@ -78,6 +79,7 @@ export function openConfirm(id: string | HTMLDialogElement | null): void {
   if (!dialog || typeof dialog.showModal !== 'function') {
     return;
   }
+  finishClosing(dialog);
   if (!dialog.open) {
     const input = resetExpected(dialog);
     dialog.showModal();
@@ -90,7 +92,7 @@ export function closeConfirm(el: HTMLDialogElement | null): void {
     return;
   }
   if (el.open) {
-    el.close();
+    closeDialogWithEffect(el);
   }
 }
 
@@ -184,6 +186,7 @@ export function bindNowoUiConfirm(): void {
     return;
   }
   confirmBound = true;
+  bindMotion();
   document.addEventListener('click', onDocumentClick);
   document.addEventListener('input', onDocumentInput);
   document.addEventListener('submit', warnMissingConfirmPeer, true);
