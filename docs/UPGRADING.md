@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.37.0](#to-2370)
 - [To 2.36.1](#to-2361)
 - [To 2.36.0](#to-2360)
 - [To 2.35.0](#to-2350)
@@ -121,6 +122,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.37.0
+
+From **2.36.1**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 **Template contract:** additive. New partials `emoji_picker` and `show_more`, ten new slots, new opt-in scripts `js/nowo-ui-emoji-picker.js` and `js/nowo-ui-show-more.js`, new CSS rules that match only the new classes and attributes, and one more form theme in `twig.form_themes`, which defines only `nowo_ui_emoji_picker_*` blocks. Pages that do not use them print the same markup. A fragment's `[data-nowo-ui-dialog-back]` only moves if a fragment has the attribute.
 
