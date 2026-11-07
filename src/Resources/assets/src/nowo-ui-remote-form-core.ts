@@ -23,7 +23,7 @@
  * are `textContent`; the server's fragment goes through parseFragment() before insertion.
  */
 
-import { sanitizeFragment } from './nowo-ui-fragment-filter';
+import { importForPage, sanitizeFragment } from './nowo-ui-fragment-filter';
 import { overlayRegistry, type OverlayHandle } from './nowo-ui-overlay';
 
 export { DROPPED_ELEMENTS } from './nowo-ui-fragment-filter';
@@ -146,7 +146,7 @@ export function parseFragment(html: string): DocumentFragment {
   const template = document.createElement('template');
   template.innerHTML = html;
   sanitizeFragment(template.content);
-  return template.content;
+  return importForPage(template.content);
 }
 
 /**

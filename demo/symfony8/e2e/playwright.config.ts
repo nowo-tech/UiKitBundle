@@ -55,6 +55,12 @@ export default defineConfig({
       use: { ...devices['Pixel 7'] },
       testMatch: /sortable-touch\.spec\.ts/,
     },
+    // Fetched HTML under a CSP: WebKit let more through than Chromium, so it runs in both.
+    {
+      name: 'imported-style-webkit',
+      use: { ...devices['Desktop Safari'] },
+      testMatch: /imported-style\.spec\.ts/,
+    },
     {
       name: 'screenshots',
       use: { ...devices['Desktop Chrome'] },

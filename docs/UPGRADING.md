@@ -121,6 +121,12 @@
 
 ## Unreleased
 
+**`list-pagination` and `auto-refresh`, and fetched dialogs in Safari:** on a page whose CSP forbids `style` attributes, a `style=` in a fetched row or region is now
+blocked in those browsers too, as it always was in Firefox and for the first page. If such a row looked right only because of this,
+move the style to a class. Pages without such a policy see no change.
+
+**Fetched dialogs:** content now enters the page's document just before insertion. An image starts loading at that point, and a custom element in the fragment upgrades there: its constructor runs before it is connected and without its `style` attribute, which arrives afterwards. Code in `connectedCallback` sees no change.
+
 ## To 2.36.0
 
 From **2.35.0**:

@@ -197,7 +197,7 @@ describe('auto-refresh', () => {
     });
 
     it('never builds the region in the live document before filtering', async () => {
-      const importNode = vi.spyOn(document, 'importNode');
+      const importNode = vi.spyOn(Document.prototype, 'importNode');
       await swap('<div id="r"><img src="/i.png" onerror="x()"></div>');
       expect(importNode).toHaveBeenCalledTimes(1);
       expect((importNode.mock.calls[0]?.[0] as Element).querySelector('img')?.hasAttribute('onerror')).toBe(false);

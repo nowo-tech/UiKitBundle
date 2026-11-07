@@ -73,6 +73,42 @@ export function sanitizeFragment(root: DocumentFragment, extra?: AttributeRule):
   root.querySelectorAll('*').forEach((element) => filterElement(element, extra));
 }
 
+const STYLE_MARK = 'data-nowo-ui-import-style';
+
+const queryIn = (root: Element | DocumentFragment, selector: string): Element[] =>
+  root instanceof Element ? [...(Element.prototype.matches.call(root, selector) ? [root] : []), ...Element.prototype.querySelectorAll.call(root, selector)] : [...DocumentFragment.prototype.querySelectorAll.call(root, selector)];
+
+/**
+ * `document.importNode()` for a filtered node from an inert document. In Chromium and WebKit a `style` attribute that arrives
+ * by cloning skips the page's CSP, and in WebKit one that arrives by moving parsed content does too, so a fetched `style=`
+ * would apply under `style-src-attr 'none'`. Each attribute is set in the page's document instead, where the policy decides as
+ * for any other script. Elements are found by a temporary mark, not counted: `importNode` runs custom element constructors, and
+ * one that adds children would shift every later position. The source is left without `style` attributes.
+ */
+export function importForPage<T extends Node>(node: T): T {
+  if (!(node instanceof Element || node instanceof DocumentFragment)) {
+    return Document.prototype.importNode.call(document, node, true) as T;
+  }
+  const dom = Element.prototype;
+  // A mark that came with the fetched HTML would pick another element's style.
+  queryIn(node, `[${STYLE_MARK}]`).forEach((element) => dom.removeAttribute.call(element, STYLE_MARK));
+  const styles: string[] = [];
+  queryIn(node, '[style]').forEach((element) => {
+    dom.setAttribute.call(element, STYLE_MARK, String(styles.length));
+    styles.push(dom.getAttribute.call(element, 'style') ?? '');
+    dom.removeAttribute.call(element, 'style');
+  });
+  const copy = Document.prototype.importNode.call(document, node, true) as Element | DocumentFragment;
+  queryIn(copy, `[${STYLE_MARK}]`).forEach((element) => {
+    const value = styles[Number(dom.getAttribute.call(element, STYLE_MARK))];
+    dom.removeAttribute.call(element, STYLE_MARK);
+    if (value !== undefined) {
+      dom.setAttribute.call(element, 'style', value);
+    }
+  });
+  return copy as unknown as T;
+}
+
 /**
  * Filters an element and its descendants. False when the element itself had to go (a <base>, a `meta` refresh…): it is
  * then detached and the caller must not insert it.
