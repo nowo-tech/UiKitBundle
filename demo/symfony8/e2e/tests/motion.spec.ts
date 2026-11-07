@@ -101,6 +101,88 @@ test.describe('motion', () => {
     await expect(panel).toBeVisible();
   });
 
+  test.describe('the multi-select panel', () => {
+    async function openPanel(page: Page): Promise<{ panel: Locator; csp: string[] }> {
+      const csp: string[] = [];
+      page.on('console', (msg) => {
+        // Tom Select writes the panel's styles: none of them may hit the page's style-src-attr 'none'.
+        if (/inline style/i.test(msg.text())) csp.push(msg.text());
+      });
+      await noTooling(page);
+      await page.goto('/kit/multi-select');
+      await page.locator('.ts-control').click();
+      const panel = page.locator('.nowo-ui-multi-select__dropdown');
+      await expect(panel).toBeVisible();
+      return { panel, csp };
+    }
+
+    test('fades both ways on the small scale, and focus stays in the control', async ({ page }) => {
+      const { panel, csp } = await openPanel(page);
+      await expect.poll(() => panel.evaluate((el) => getComputedStyle(el).opacity)).toBe('1');
+      expect(await panel.evaluate((el) => getComputedStyle(el).transitionDuration)).toContain('0.15s');
+
+      const closing = await page.evaluate(() => {
+        const input = document.querySelector<HTMLInputElement>('.ts-control input')!;
+        input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, bubbles: true, cancelable: true } as KeyboardEventInit));
+        const el = document.querySelector<HTMLElement>('.nowo-ui-multi-select__dropdown')!;
+        return {
+          closing: el.hasAttribute('data-nowo-ui-closing'),
+          display: getComputedStyle(el).display,
+          duration: getComputedStyle(el).transitionDuration,
+          props: el.getAnimations().map((a) => (a as CSSTransition).transitionProperty),
+          expanded: input.getAttribute('aria-expanded'),
+          focus: document.activeElement === input,
+        };
+      });
+      expect(closing.closing).toBe(true);
+      expect(closing.display).toBe('block');
+      expect(closing.duration).toContain('0.11s');
+      expect(closing.props).toContain('opacity');
+      expect(closing.expanded).toBe('false');
+      expect(closing.focus).toBe(true);
+      await expect(panel).toBeHidden();
+      await expect(panel).not.toHaveAttribute('data-nowo-ui-closing');
+      expect(csp).toEqual([]);
+    });
+
+    test('a choice still lands in the select, and the panel opens again after a close', async ({ page }) => {
+      const { panel } = await openPanel(page);
+      await panel.locator('.option', { hasText: 'Pending' }).click();
+      await expect(page.locator('.ts-control .item')).toHaveText(/Pending/);
+      expect(await page.locator('#status').evaluate((el) => [...(el as HTMLSelectElement).selectedOptions].map((o) => o.value))).toEqual(['pending']);
+      await page.locator('h1').click();
+      await expect(panel).toBeHidden();
+      await page.locator('.ts-control').click();
+      await expect(panel).toBeVisible();
+      await expect.poll(() => panel.evaluate((el) => getComputedStyle(el).opacity)).toBe('1');
+    });
+
+    test('opening again during the fade keeps it open', async ({ page }) => {
+      const { panel } = await openPanel(page);
+      await page.evaluate(() => {
+        const ts = (document.querySelector('#status') as unknown as { tomselect: { close: () => void; open: () => void } }).tomselect;
+        ts.close();
+        ts.open();
+      });
+      await page.waitForTimeout(300);
+      await expect(panel).toBeVisible();
+      await expect(panel).not.toHaveAttribute('data-nowo-ui-closing');
+    });
+
+    test('reduced motion keeps a short fade without movement, and 0ms closes in the same task', async ({ page }) => {
+      await page.emulateMedia({ reducedMotion: 'reduce' });
+      const { panel } = await openPanel(page);
+      await expect.poll(() => panel.evaluate((el) => getComputedStyle(el).opacity)).toBe('1');
+      expect(await panel.evaluate((el) => getComputedStyle(el).transitionDuration)).toContain('0.08s');
+      await page.addStyleTag({ content: ':root { --nowo-ui-motion-small: 0ms; --nowo-ui-motion-small-close: 0ms; }' });
+      const display = await page.evaluate(() => {
+        (document.querySelector('#status') as unknown as { tomselect: { close: () => void } }).tomselect.close();
+        return getComputedStyle(document.querySelector('.nowo-ui-multi-select__dropdown')!).display;
+      });
+      expect(display).toBe('none');
+    });
+  });
+
   test('the more menu (popover) fades on Escape, and a confirm opened from it closes on the first Escape', async ({ page }) => {
     await noTooling(page);
     await page.goto('/page-contract/orders/1042');

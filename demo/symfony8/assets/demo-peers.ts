@@ -8,10 +8,12 @@ import { Application } from '@hotwired/stimulus';
 import ConfirmSubmitController from '../../../src/Resources/assets/stimulus-peers/confirm_submit_controller';
 import FiltersCollapseController from '../../../src/Resources/assets/stimulus-peers/filters_collapse_controller';
 import ListPaginationController from '../../../src/Resources/assets/stimulus-peers/list_pagination_controller';
+import MultiSelectController from '../../../src/Resources/assets/stimulus-peers/multi_select_controller';
 import VisibleWhenController from '../../../src/Resources/assets/stimulus-peers/visible_when_controller';
 
 const app = Application.start();
 app.register('confirm-submit', ConfirmSubmitController);
 app.register('filters-collapse', FiltersCollapseController);
 app.register('list-pagination', ListPaginationController);
+app.register('multi-select', MultiSelectController);
 app.register('visible-when', VisibleWhenController);

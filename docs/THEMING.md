@@ -363,7 +363,7 @@ One scale for opening and closing, so that no surface is abrupt or slow. Set the
 
 **Closes the kit does not run:** a host's own `dialog.close()`, a `popovertarget` button closing its popover and a light dismiss run at once, and only CSS can keep them painted, through `transition-behavior: allow-discrete`. That works in Chromium. WebKit does it for an element that is not in the top layer, and Firefox does not do it at all, so there they close at once. `collapse-panel` and filters collapse use this CSS path too.
 
-**Where it applies:** centred dialogs and their backdrop, row detail, kebab, kit menu and popover, page actions, date range panel, emoji picker panel, `collapse-panel`, filters collapse.
+**Where it applies:** centred dialogs and their backdrop, row detail, kebab, kit menu and popover, page actions, date range panel, emoji picker panel, `collapse-panel`, filters collapse, and the `multi-select` panel, on the small scale. `nowo-ui-multi-select.css` also works without `nowo-ui.css`, so it carries the same values as fallbacks, and an `80ms` fade under `prefers-reduced-motion`.
 
 **Opening only:**
 - Tabs fade in. The old panel goes at once, as two panels at the same time would stack.

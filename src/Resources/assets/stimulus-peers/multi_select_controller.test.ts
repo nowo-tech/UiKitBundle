@@ -234,3 +234,85 @@ describe('multi-select peer', () => {
     document.removeEventListener('throwing-multi-select:unavailable', unavailable);
   });
 });
+
+describe('multi-select panel motion', () => {
+  type Handlers = Record<string, (dropdown: HTMLElement) => void>;
+  let fakeApp: Application;
+
+  /** A Tom Select stand-in that records its event subscriptions. */
+  const start = async (): Promise<{ handlers: Handlers; instance: { isOpen: boolean }; dropdown: HTMLElement }> => {
+    const handlers: Handlers = {};
+    const instance = {
+      wrapper: document.createElement('div'),
+      items: [],
+      isOpen: false,
+      on: (event: string, callback: (dropdown: HTMLElement) => void) => {
+        handlers[event] = callback;
+      },
+      destroy: () => undefined,
+    };
+    class Fake extends MultiSelectController {
+      protected override tomSelectFactory(): Promise<TomSelectConstructor> {
+        return Promise.resolve(
+          class {
+            constructor() {
+              return instance;
+            }
+          } as unknown as TomSelectConstructor,
+        );
+      }
+    }
+    document.body.innerHTML = '<select multiple data-controller="fake-multi"></select>';
+    fakeApp = Application.start();
+    fakeApp.register('fake-multi', Fake);
+    await settle();
+    const dropdown = document.createElement('div');
+    document.body.append(dropdown);
+    return { handlers, instance, dropdown };
+  };
+
+  const withDuration = (duration: string): void => {
+    vi.spyOn(window, 'getComputedStyle').mockReturnValue({ transitionDuration: duration, transitionDelay: '0s' } as CSSStyleDeclaration);
+  };
+
+  afterEach(() => {
+    fakeApp.stop();
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+  });
+
+  it('with no transition the panel is hidden in the same task', async () => {
+    const { handlers, dropdown } = await start();
+    withDuration('0s');
+    dropdown.style.display = 'none';
+    handlers.dropdown_close!(dropdown);
+    expect(dropdown.style.display).toBe('none');
+    expect(dropdown.hasAttribute('data-nowo-ui-closing')).toBe(false);
+  });
+
+  it('stays painted for the fade and is hidden after it, also when transitionend never fires', async () => {
+    const { handlers, dropdown } = await start();
+    withDuration('110ms');
+    vi.useFakeTimers();
+    dropdown.style.display = 'none';
+    handlers.dropdown_close!(dropdown);
+    expect(dropdown.style.display).toBe('block');
+    expect(dropdown.hasAttribute('data-nowo-ui-closing')).toBe(true);
+    vi.advanceTimersByTime(200);
+    expect(dropdown.style.display).toBe('none');
+    expect(dropdown.hasAttribute('data-nowo-ui-closing')).toBe(false);
+  });
+
+  it('opening again during the fade keeps the panel shown', async () => {
+    const { handlers, instance, dropdown } = await start();
+    withDuration('110ms');
+    vi.useFakeTimers();
+    handlers.dropdown_close!(dropdown);
+    instance.isOpen = true;
+    handlers.dropdown_open!(dropdown);
+    expect(dropdown.style.display).toBe('block');
+    expect(dropdown.hasAttribute('data-nowo-ui-closing')).toBe(false);
+    vi.advanceTimersByTime(200);
+    expect(dropdown.style.display).toBe('block');
+  });
+});

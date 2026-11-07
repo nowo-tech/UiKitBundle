@@ -60,6 +60,19 @@ final class MotionCssTest extends TestCase
         self::assertLessThan(strpos($block, "[data-motion='full']"), strpos($block, 'prefers-reduced-motion: reduce'), 'an explicit setting comes after the system one');
     }
 
+    public function testTheMultiSelectPanelUsesTheSmallScaleWithItsOwnFallbacks(): void
+    {
+        $css = (string) file_get_contents(__DIR__.'/../../src/Resources/public/css/nowo-ui-multi-select.css');
+        $panel = substr($css, (int) strpos($css, '/* Dropdown (attached'), (int) strpos($css, '.ts-dropdown.nowo-ui-multi-select__dropdown .ts-dropdown-content') - (int) strpos($css, '/* Dropdown (attached'));
+
+        foreach (['small, 150ms', 'small-close, 110ms', 'ease-out, cubic-bezier(0.2, 0, 0, 1)', 'ease-in, cubic-bezier(0.4, 0, 1, 1)', 'lift, 4px'] as $token) {
+            self::assertStringContainsString('var(--nowo-ui-motion-'.$token.')', $panel);
+        }
+        self::assertStringContainsString('[data-nowo-ui-closing]', $panel);
+        self::assertStringNotContainsString('!important', $panel);
+        self::assertStringContainsString('var(--nowo-ui-motion-small-close, 80ms)', substr($css, (int) strrpos($css, '@media (prefers-reduced-motion: reduce)')));
+    }
+
     /**
      * @return iterable<string, array{string}>
      */

@@ -9,6 +9,8 @@
  * Tokens: --nowo-ui-multi-select-max-height (dropdown list, 16rem), --nowo-ui-multi-select-z (dropdown, 1080),
  * --nowo-ui-multi-select-shadow (dropdown),
  * --nowo-ui-chip-bg / -border / -text / -radius (chips), plus the input tokens (--nowo-ui-input-*).
+ * The dropdown opens and closes on the small motion scale (--nowo-ui-motion-*, docs/THEMING.md), with fallbacks here
+ * because this file also works without nowo-ui.css.
  */
 
 /* Hidden native select once enhanced (still submitted with the form). */
@@ -202,6 +204,24 @@ select.ts-hidden-accessible {
   color: var(--nowo-ui-text, #0f172a);
   font-size: var(--nowo-ui-input-font-size, 0.875rem);
   box-shadow: var(--nowo-ui-multi-select-shadow, var(--nowo-ui-shadow-popover, 0 10px 28px rgba(15, 23, 42, 0.12)));
+  transition: opacity var(--nowo-ui-motion-small, 150ms) var(--nowo-ui-motion-ease-out, cubic-bezier(0.2, 0, 0, 1)),
+    transform var(--nowo-ui-motion-small, 150ms) var(--nowo-ui-motion-ease-out, cubic-bezier(0.2, 0, 0, 1));
+}
+
+@starting-style {
+  .ts-dropdown.nowo-ui-multi-select__dropdown {
+    opacity: 0;
+    transform: translateY(calc(-1 * var(--nowo-ui-motion-lift, 4px)));
+  }
+}
+
+/* The peer shows the panel again for this fade, then hides it (multi_select_controller.ts). */
+.ts-dropdown.nowo-ui-multi-select__dropdown[data-nowo-ui-closing] {
+  opacity: 0;
+  transform: translateY(calc(-1 * var(--nowo-ui-motion-lift, 4px)));
+  pointer-events: none;
+  transition-duration: var(--nowo-ui-motion-small-close, 110ms);
+  transition-timing-function: var(--nowo-ui-motion-ease-in, cubic-bezier(0.4, 0, 1, 1));
 }
 
 .ts-dropdown.nowo-ui-multi-select__dropdown .ts-dropdown-content {
@@ -259,5 +279,21 @@ select.ts-hidden-accessible {
 
   .ts-dropdown.nowo-ui-multi-select__dropdown .ts-dropdown-content {
     scroll-behavior: auto;
+  }
+
+  /* The same scale when nowo-ui.css set it, and at most a short fade when it did not. */
+  .ts-dropdown.nowo-ui-multi-select__dropdown {
+    transition-duration: var(--nowo-ui-motion-small, 80ms);
+  }
+
+  @starting-style {
+    .ts-dropdown.nowo-ui-multi-select__dropdown {
+      transform: translateY(calc(-1 * var(--nowo-ui-motion-lift, 0px)));
+    }
+  }
+
+  .ts-dropdown.nowo-ui-multi-select__dropdown[data-nowo-ui-closing] {
+    transform: translateY(calc(-1 * var(--nowo-ui-motion-lift, 0px)));
+    transition-duration: var(--nowo-ui-motion-small-close, 80ms);
   }
 }

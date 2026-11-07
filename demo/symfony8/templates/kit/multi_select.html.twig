@@ -1,0 +1,21 @@
+{#
+  The `multi-select` peer (Tom Select, public/js/demo-peers.js) with its standalone stylesheet.
+#}
+{% extends '@NowoUiKit/layout/document.html.twig' %}
+{% set nowo_ui_document_title = 'Multi-select · UiKit' %}
+
+{% block nowo_ui_styles %}{{ parent() }}<link rel="stylesheet" href="{{ asset('css/nowo-ui-multi-select.css', 'nowo_ui_kit') }}">{% endblock %}
+
+{% block nowo_ui_body %}
+    <main id="main-content" class="nowo-ui-content">
+        <h1>Multi-select</h1>
+        <label for="status">Status</label>
+        <select id="status" name="status[]" multiple placeholder="Any" data-controller="multi-select" data-testid="status">
+            <option value="active">Active</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="pending">Pending</option>
+        </select>
+    </main>
+{% endblock %}
+
+{% block nowo_ui_scripts %}{{ parent() }}<script src="{{ asset('js/demo-peers.js') }}" defer></script>{% endblock %}
