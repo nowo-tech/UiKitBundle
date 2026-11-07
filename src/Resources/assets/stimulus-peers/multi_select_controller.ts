@@ -26,12 +26,17 @@
  */
 
 import { Controller } from '@hotwired/stimulus';
+import { closeWithEffect, finishClosing } from '../src/nowo-ui-motion-core';
 
 /** The part of a Tom Select instance the peer uses. */
 export type TomSelectInstance = {
   wrapper: HTMLElement;
   /** Values of the chosen items. */
   items: string[];
+  /** Whether the dropdown is open. */
+  isOpen?: boolean;
+  /** Subscribes to an event (a host's own constructor may not have it: then the panel closes at once). */
+  on?: (event: string, callback: (dropdown: HTMLElement) => void) => void;
   destroy: () => void;
 };
 
@@ -122,6 +127,22 @@ export default class MultiSelectController extends Controller<HTMLElement> {
     return module.default;
   }
 
+  /**
+   * Tom Select hides the panel as it closes: it is shown again for the fade (`--nowo-ui-motion-small-close`), then hidden, unless it
+   * opened again meanwhile. With no transition this all happens in the same task.
+   */
+  private bindMotion(instance: TomSelectInstance): void {
+    instance.on?.('dropdown_close', (dropdown) => {
+      dropdown.style.display = 'block';
+      closeWithEffect(dropdown, () => {
+        if (!instance.isOpen) {
+          dropdown.style.display = 'none';
+        }
+      });
+    });
+    instance.on?.('dropdown_open', finishClosing);
+  }
+
   private dropdownParent(select: HTMLSelectElement): string | null {
     const mode = this.dropdownParentValue;
     if ('body' === mode) {
@@ -155,6 +176,7 @@ export default class MultiSelectController extends Controller<HTMLElement> {
       return;
     }
     instances.set(select, instance);
+    this.bindMotion(instance);
     // Tom Select copies the select's classes onto its wrapper: they stay on the (hidden) select only.
     const own = new Set(['ts-wrapper', 'nowo-ui-multi-select']);
     for (const name of [...select.classList]) {

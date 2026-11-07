@@ -1,0 +1,16 @@
+{#
+  The `multi-select` (Tom Select) and `date-range` (Cally) peers, public/js/demo-peers.js, with their stylesheets.
+#}
+{% extends '@NowoUiKit/layout/document.html.twig' %}
+{% set nowo_ui_document_title = 'Multi-select · UiKit' %}
+
+{% block nowo_ui_styles %}{{ parent() }}<link rel="stylesheet" href="{{ asset('css/nowo-ui-multi-select.css', 'nowo_ui_kit') }}">{% endblock %}
+
+{% block nowo_ui_body %}
+    <main id="main-content" class="nowo-ui-content">
+        <h1>Multi-select</h1>
+        {{ form(form) }}
+    </main>
+{% endblock %}
+
+{% block nowo_ui_scripts %}{{ parent() }}<script src="{{ asset('js/demo-peers.js') }}" defer></script>{% endblock %}

@@ -395,6 +395,7 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | `Resources/assets/src/nowo-ui-toast.ts` | Toast dismiss + auto-hide | FR-JS-001 |
 | `Resources/assets/src/nowo-ui-emoji-picker.ts` | Opt-in emoji picker over a text input (`nowo-ui-emoji-table.ts`: its table) | FR-JS-001 |
 | `Resources/assets/src/nowo-ui-show-more.ts` | Opt-in line-clamp fold with a real button | FR-JS-001 |
+| `Resources/assets/src/nowo-ui-motion-core.ts` | Closing with an effect: fade, then the real close, with a fallback timer | FR-JS-001 |
 | `Resources/assets/src/nowo-ui-sortable.ts` | Opt-in reorder by pointer, touch and keyboard over host markup | FR-JS-001 |
 | `Resources/assets/src/nowo-ui-confirm.ts` | Native confirm dialog open / close, type-to-confirm; 2.22 missing-peer warning, 2.23 `window.confirm` fail-closed fallback | FR-JS-001, FR-CONFIRM-001, FR-SEC-223 |
 | `Resources/assets/src/nowo-ui-page-loader.ts` | Page loader overlay | FR-JS-001, FR-LOADER-001 |

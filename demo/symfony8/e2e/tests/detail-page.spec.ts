@@ -107,6 +107,8 @@ for (const [view, path] of views) {
       expect(closed.violations).toEqual([]);
       await page.locator('[data-nowo-ui-header-more] [data-nowo-ui-popover-trigger]').click();
       await expect(page.locator('#nowo-ui-header-more-panel')).toBeVisible();
+      // Contrast is measured on the final colours, not during the fade.
+      await page.evaluate(() => Promise.all(document.getAnimations().filter((a) => a instanceof CSSTransition).map((a) => a.finished.catch(() => undefined))));
       const open = await new AxeBuilder({ page }).include('#nowo-ui-header-more-panel').analyze();
       expect(open.violations).toEqual([]);
     });

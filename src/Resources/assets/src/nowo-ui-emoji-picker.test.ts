@@ -251,6 +251,14 @@ describe('nowo-ui-emoji-picker', () => {
     expect(after.defaultPrevented).toBe(false);
   });
 
+  it('HR-DI1: Escape is not swallowed by a picker that left the page', () => {
+    openPicker(el('root'));
+    el('root').remove();
+    const escape = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+    document.body.dispatchEvent(escape);
+    expect(escape.defaultPrevented).toBe(false);
+  });
+
   it('HR-I6: a key during composition belongs to the input method', () => {
     openPicker(el('root'));
     const enter = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true, isComposing: true });

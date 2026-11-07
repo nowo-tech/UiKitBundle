@@ -83,7 +83,8 @@ test.describe('page contract — validation follow-ups (REQ-UI-003)', () => {
     const value = page.locator('.nowo-ui-kpi__value.acme-kpi-value').first();
     await expect(value).toBeVisible();
     // nowo-ui.css sets 1.5rem (24px) on .nowo-ui-kpi__value; the host utility sets 1.9rem
-    expect(await value.evaluate((el) => getComputedStyle(el).fontSize)).toBe('30.4px');
+    // Firefox gives 30.4063px.
+    expect(Number.parseFloat(await value.evaluate((el) => getComputedStyle(el).fontSize))).toBeCloseTo(30.4, 1);
     // the kit still beats the base layer: the confirm dialog keeps its centred, padded panel
     const layers = await page.evaluate(() => [...document.styleSheets].some((sheet) => {
       try {
@@ -310,6 +311,7 @@ test.describe('page contract — validation round 3 (REQ-UI-003)', () => {
   });
 
   test('dashboard: generic native dialog opens, closes and returns focus', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' }); // the size below is read as the dialog opens, without its scale
     await page.goto('/page-contract/dashboard');
     const opener = page.getByRole('button', { name: 'Restock details' });
     const dialog = page.locator('dialog#restock-dialog');

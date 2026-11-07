@@ -23,6 +23,9 @@ const toggle = (page: Page) => page.locator('[data-nowo-ui-emoji-picker-toggle]'
 const search = (page: Page) => page.locator('[data-nowo-ui-emoji-picker-search]');
 const panel = (page: Page) => page.locator('[data-nowo-ui-emoji-picker-panel]');
 
+/** Lets running transitions end: a box or a colour read during one is not the final one. */
+const settled = (page: Page): Promise<unknown> => page.evaluate(() => Promise.all(document.getAnimations().filter((a) => a instanceof CSSTransition).map((a) => a.finished.catch(() => undefined))));
+
 test.describe('emoji picker', () => {
   test('keyboard only: open, search, arrows, Enter, focus back, and the server takes it', async ({ page }) => {
     const csp = await watchCsp(page);
@@ -120,6 +123,7 @@ test.describe('emoji picker', () => {
 
     async function expectReachable(page: Page): Promise<void> {
       await expect(panel(page)).toBeVisible();
+      await settled(page);
       const view = page.viewportSize()!;
       const box = (await panel(page).boundingBox())!;
       expect(box.x).toBeGreaterThanOrEqual(0);
@@ -164,6 +168,7 @@ test.describe('emoji picker', () => {
       await page.goto(PAGE);
       await fixField(page, 'bottom');
       await toggle(page).click();
+      await settled(page);
       const fieldBox = (await field(page).boundingBox())!;
       const box = (await panel(page).boundingBox())!;
       expect(box.y + box.height).toBeLessThanOrEqual(fieldBox.y);
@@ -197,13 +202,15 @@ test.describe('emoji picker', () => {
       const body = page.locator('#destination-dialog [data-nowo-ui-dialog-body]');
       // The size the audit measured for this body, fixed so that a panel inside it could not fit, whatever the window.
       await body.evaluate((el: HTMLElement) => el.style.setProperty('max-height', '140px'));
-      const before = await body.evaluate((el) => ({ scrollHeight: el.scrollHeight, overflow: getComputedStyle(el).overflowY }));
+      await inDialog.scrollIntoViewIfNeeded();
+      const before = await body.evaluate((el) => ({ scrollHeight: el.scrollHeight, scrollTop: el.scrollTop, overflow: getComputedStyle(el).overflowY }));
       expect(before.overflow).toMatch(/auto|scroll/);
       await inDialog.click();
       await expect(panel(page)).toBeVisible();
       await expect(search(page)).toBeFocused();
       expect((await body.evaluate((el) => el.scrollHeight))).toBe(before.scrollHeight); // the panel does not grow the body
-      expect(await body.evaluate((el) => el.scrollTop)).toBe(0); // and does not make it scroll
+      await settled(page);
+      expect(await body.evaluate((el) => el.scrollTop)).toBe(before.scrollTop); // and does not make it scroll
       // No part of it is cut off by the body: each corner of the panel is the panel, before anything scrolls.
       const corners = await page.evaluate(() => {
         const open = document.querySelector('[data-nowo-ui-emoji-picker-panel]') as HTMLElement;
@@ -279,6 +286,7 @@ test.describe('emoji picker', () => {
     expect((await new AxeBuilder({ page }).include(scope).analyze()).violations).toEqual([]);
     await toggle(page).click();
     await page.keyboard.press('ArrowDown');
+    await settled(page); // contrast is measured on the final colours, not during the fade
     expect((await new AxeBuilder({ page }).include(scope).analyze()).violations).toEqual([]);
   });
 });

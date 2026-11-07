@@ -25,7 +25,8 @@ async function shot(page: Page, name: string): Promise<void> {
 
 for (const [width, height] of [[1280, 900], [390, 844]] as const) {
   test.describe(`dialog sizes at ${width} px`, () => {
-    test.use({ viewport: { width, height } });
+    // Sizes are read while a dialog could still be scaling in: no scale under reduced motion.
+    test.use({ viewport: { width, height }, reducedMotion: 'reduce' });
 
     const md = { w: Math.min(640, width - 32), h: Math.min(576, height - 32) };
     const wide = { w: Math.min(896, width - 32), h: Math.min(832, height - 32) };
