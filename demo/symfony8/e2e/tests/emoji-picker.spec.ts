@@ -202,13 +202,16 @@ test.describe('emoji picker', () => {
       await expect(search(page)).toBeFocused();
       expect((await body.evaluate((el) => el.scrollHeight))).toBe(before.scrollHeight); // the panel does not grow the body
       expect(await body.evaluate((el) => el.scrollTop)).toBe(0); // and does not make it scroll
-      // No part of it is cut off by the body: the search box and the last cell are really on top.
-      expect(await page.evaluate(() => {
-        const cells = document.querySelectorAll('[role="gridcell"]');
-        const last = cells[Math.min(15, cells.length - 1)]!.getBoundingClientRect();
-        const found = document.elementFromPoint(last.left + last.width / 2, last.top + last.height / 2);
-        return found?.getAttribute('role');
-      })).toBe('gridcell');
+      // No part of it is cut off by the body: each corner of the panel is the panel, before anything scrolls.
+      const corners = await page.evaluate(() => {
+        const open = document.querySelector('[data-nowo-ui-emoji-picker-panel]') as HTMLElement;
+        const r = open.getBoundingClientRect();
+        return [[r.left + 3, r.top + 3], [r.right - 3, r.top + 3], [r.left + 3, r.bottom - 3], [r.right - 3, r.bottom - 3]].map(([x, y]) => {
+          const found = document.elementFromPoint(x!, y!);
+          return !!found && open.contains(found);
+        });
+      });
+      expect(corners).toEqual([true, true, true, true]);
       await page.keyboard.press('ArrowDown');
       await expectReachable(page);
       await expect(page.locator('#destination-dialog')).toHaveAttribute('open', '');
