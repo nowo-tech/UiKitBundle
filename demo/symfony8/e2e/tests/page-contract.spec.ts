@@ -310,6 +310,7 @@ test.describe('page contract — validation round 3 (REQ-UI-003)', () => {
   });
 
   test('dashboard: generic native dialog opens, closes and returns focus', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' }); // the size below is read as the dialog opens, without its scale
     await page.goto('/page-contract/dashboard');
     const opener = page.getByRole('button', { name: 'Restock details' });
     const dialog = page.locator('dialog#restock-dialog');
