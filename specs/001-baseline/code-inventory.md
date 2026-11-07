@@ -76,6 +76,7 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | `Form/UiFormViews.php` | 2.19: builds the partial form views on a standalone factory (core types only, own theme) | FR-FORM-002 |
 | `Form/AppearanceType.php` | Optional appearance admin form (`with_brand` / `with_colors` / `with_footer`) | FR-APPEARANCE-006 |
 | `Form/AppearancePaletteType.php` | The seven colours of one mode as a sub-form | FR-APPEARANCE-006 |
+| `Form/EmojiPickerType.php` | Emoji picker field: text input, one grapheme checked on the server | FR-FORM-001 |
 | `Form/DateRangeType.php` | 2.15: date-range filter field (two native dates, host-chosen `from_name` / `to_name`) | FR-DATERANGE-001 |
 | `Form/DateRangeRequestHandler.php` | 2.15.1: request handler decorator — a URL carrying only a range submits the nameless filter form | FR-DATERANGE-001 |
 | `Form/DateRangeSubmitExtension.php` | 2.15: moves the flat sibling from / to parameters onto the date-range child before submit | FR-DATERANGE-001 |
@@ -287,6 +288,9 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | `Resources/views/partials/_header_actions.html.twig` | 2.21: split header actions (icons, primary, "more" menu) | FR-HEADERACTIONS-001 |
 | `Resources/views/partials/_confirm.html.twig` | Accessible confirm `<dialog>` | FR-CONFIRM-001, FR-PARTIAL-001 |
 | `Resources/views/partials/_confirm_dialog.html.twig` | 2.6: Stimulus `confirm-dialog` wrapper | FR-CONFIRM-001 |
+| `Resources/views/partials/_emoji_picker.html.twig` | Emoji picker wrapper around a text input | FR-PARTIAL-001 |
+| `Resources/views/partials/_show_more.html.twig` | Show more fold | FR-PARTIAL-001 |
+| `Resources/views/form/nowo_ui_emoji_picker.html.twig` | Emoji picker field's form block | FR-FORM-001 |
 | `Resources/views/partials/_dialog.html.twig` | 2.1: generic native dialog (2.12 side-panel placement) | FR-DIALOG-001 |
 | `Resources/views/partials/_modal_shell.html.twig` | Generic modal shell (Bootstrap-JS compatible) | FR-PARTIAL-001, FR-JS-001 |
 | `Resources/views/partials/_open_modal_on_load.html.twig` | Open-modal-on-load JSON island | FR-OPENMODAL-001 |
@@ -389,6 +393,8 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | `Resources/assets/src/nowo-ui-shell.ts` | Shell: burger, aside, backdrop, width toggle, opt-in rail | FR-JS-001, FR-SIDEBAR-001 |
 | `Resources/assets/src/nowo-ui-sidebar-core.ts` | 1.15: side-effect-free three-mode sidebar helpers | FR-SIDEBAR-001 |
 | `Resources/assets/src/nowo-ui-toast.ts` | Toast dismiss + auto-hide | FR-JS-001 |
+| `Resources/assets/src/nowo-ui-emoji-picker.ts` | Opt-in emoji picker over a text input (`nowo-ui-emoji-table.ts`: its table) | FR-JS-001 |
+| `Resources/assets/src/nowo-ui-show-more.ts` | Opt-in line-clamp fold with a real button | FR-JS-001 |
 | `Resources/assets/src/nowo-ui-sortable.ts` | Opt-in reorder by pointer, touch and keyboard over host markup | FR-JS-001 |
 | `Resources/assets/src/nowo-ui-confirm.ts` | Native confirm dialog open / close, type-to-confirm; 2.22 missing-peer warning, 2.23 `window.confirm` fail-closed fallback | FR-JS-001, FR-CONFIRM-001, FR-SEC-223 |
 | `Resources/assets/src/nowo-ui-page-loader.ts` | Page loader overlay | FR-JS-001, FR-LOADER-001 |

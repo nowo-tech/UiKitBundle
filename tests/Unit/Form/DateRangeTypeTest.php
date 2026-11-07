@@ -290,7 +290,7 @@ final class DateRangeTypeTest extends TestCase
         });
         $prepend->prependExtensionConfig(Configuration::ALIAS, []);
         (new NowoUiKitExtension())->prepend($prepend);
-        self::assertSame([NowoUiKitExtension::DATE_RANGE_FORM_THEME], $prepend->getExtensionConfig('twig')[0]['form_themes'] ?? null);
+        self::assertSame([NowoUiKitExtension::DATE_RANGE_FORM_THEME, NowoUiKitExtension::EMOJI_PICKER_FORM_THEME], $prepend->getExtensionConfig('twig')[0]['form_themes'] ?? null);
     }
 
     public function testATextSiblingIsNotARange(): void

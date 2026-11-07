@@ -1,0 +1,47 @@
+{#
+  UiKit demo: the emoji picker field (EmojiPickerType, js/nowo-ui-emoji-picker.js) and the show more fold (partial show_more,
+  js/nowo-ui-show-more.js). The meta tag repeats the CSP of the response: the debug toolbar can strip that header in worker mode.
+#}
+{% extends '@NowoUiKit/layout/document.html.twig' %}
+{% set nowo_ui_document_title = 'Emoji picker and show more · UiKit' %}
+
+{% block nowo_ui_head %}
+    <meta http-equiv="Content-Security-Policy" content="style-src-attr 'none'; script-src-attr 'none'">
+{% endblock %}
+
+{% block nowo_ui_body %}
+    <main id="main-content" class="nowo-ui-content" data-testid="emoji-show-more-demo">
+        <h1>Emoji picker and show more</h1>
+        {% if saved is not null %}<p role="status" data-testid="saved">Saved: {{ saved }}</p>{% endif %}
+        <div class="kit-emoji-demo-form" data-testid="emoji-form">
+            {{ form_start(form) }}
+            {{ form_row(form.icon) }}
+            {{ form_row(form.save) }}
+            {{ form_end(form) }}
+        </div>
+
+        <h2>Board description</h2>
+        <div class="kit-show-more-demo">
+            {{ include(nowo_ui_partial('show_more'), {
+                id: 'long-text',
+                attr: {'data-testid': 'show-long'},
+                content: '<p>This board holds the work of the release. <a href="#long-text" data-testid="inner-link">Read the plan</a>. Every card has an owner and a date. Cards move from left to right as the work goes on, and nothing moves back without a comment. A card in review waits for one person. A card that is blocked says why. At the end of each week the team looks at what is left and moves it, or closes it. Old cards stay in the archive, where they can be searched.</p>',
+            }, false) }}
+        </div>
+        <h2>A short description</h2>
+        <div class="kit-show-more-demo">
+            {{ include(nowo_ui_partial('show_more'), {id: 'short-text', attr: {'data-testid': 'show-short'}, content: '<p>Short.</p>'}, false) }}
+        </div>
+    </main>
+{% endblock %}
+
+{% block nowo_ui_styles %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/emoji-show-more-demo.css') }}">
+{% endblock %}
+
+{% block nowo_ui_scripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/nowo-ui-emoji-picker.js', 'nowo_ui_kit') }}" defer></script>
+    <script src="{{ asset('js/nowo-ui-show-more.js', 'nowo_ui_kit') }}" defer></script>
+{% endblock %}

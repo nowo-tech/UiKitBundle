@@ -6715,3 +6715,107 @@ html[data-nowo-ui-sortable-active] * {
     user-select: none;
   }
 }
+
+/* Emoji picker (partial `emoji_picker`, js/nowo-ui-emoji-picker.js): without the script, only the input shows. */
+.nowo-ui-emoji-picker {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.nowo-ui-emoji-picker__toggle[hidden],
+.nowo-ui-emoji-picker__panel[hidden] {
+  display: none !important;
+}
+.nowo-ui-emoji-picker__panel {
+  position: absolute;
+  top: 100%;
+  inset-inline-end: 0;
+  z-index: var(--nowo-ui-emoji-picker-z, var(--nowo-ui-z-popover, 1080));
+  box-sizing: border-box;
+  width: min(var(--nowo-ui-emoji-picker-width, 20rem), 90vw);
+  padding: 0.5rem;
+  margin-top: 0.25rem;
+  background: var(--nowo-ui-surface);
+  color: var(--nowo-ui-text);
+  border: 1px solid var(--nowo-ui-border);
+  border-radius: var(--nowo-ui-radius);
+  box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 25%);
+}
+.nowo-ui-emoji-picker__grid {
+  max-height: var(--nowo-ui-emoji-picker-height, 14rem);
+  margin-top: 0.5rem;
+  overflow-y: auto;
+}
+.nowo-ui-emoji-picker__row {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+}
+.nowo-ui-emoji-picker__cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: var(--nowo-ui-radius);
+}
+.nowo-ui-emoji-picker__cell:hover {
+  background: color-mix(in srgb, var(--nowo-ui-primary) 10%, transparent);
+}
+.nowo-ui-emoji-picker__cell.is-selected {
+  background: color-mix(in srgb, var(--nowo-ui-primary) 15%, transparent);
+}
+.nowo-ui-emoji-picker__cell.is-active {
+  outline: 2px solid var(--nowo-ui-primary);
+  outline-offset: -2px;
+}
+.nowo-ui-emoji-picker__status {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  color: color-mix(in srgb, var(--nowo-ui-muted) 85%, var(--nowo-ui-text));
+}
+
+/* Show more (partial `show_more`, js/nowo-ui-show-more.js): the fold exists only once the script runs. */
+[data-nowo-ui-show-more-ready]:not(.is-expanded) > .nowo-ui-show-more__content {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.nowo-ui-show-more--lines-1[data-nowo-ui-show-more-ready]:not(.is-expanded) > .nowo-ui-show-more__content {
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+}
+.nowo-ui-show-more--lines-2[data-nowo-ui-show-more-ready]:not(.is-expanded) > .nowo-ui-show-more__content {
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+.nowo-ui-show-more--lines-3[data-nowo-ui-show-more-ready]:not(.is-expanded) > .nowo-ui-show-more__content {
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+.nowo-ui-show-more--lines-4[data-nowo-ui-show-more-ready]:not(.is-expanded) > .nowo-ui-show-more__content {
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+}
+.nowo-ui-show-more--lines-5[data-nowo-ui-show-more-ready]:not(.is-expanded) > .nowo-ui-show-more__content {
+  -webkit-line-clamp: 5;
+  line-clamp: 5;
+}
+.nowo-ui-show-more--lines-6[data-nowo-ui-show-more-ready]:not(.is-expanded) > .nowo-ui-show-more__content {
+  -webkit-line-clamp: 6;
+  line-clamp: 6;
+}
+.nowo-ui-show-more__toggle[hidden] {
+  display: none !important;
+}
+@media print {
+  [data-nowo-ui-show-more-ready]:not(.is-expanded) > .nowo-ui-show-more__content {
+    display: block;
+    overflow: visible;
+  }
+  .nowo-ui-show-more__toggle {
+    display: none !important;
+  }
+}

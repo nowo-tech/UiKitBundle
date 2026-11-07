@@ -1,0 +1,32 @@
+{#
+  Emoji picker (theme partial `emoji_picker`): a text input with a toggle, a search box and a grid. Load js/nowo-ui-emoji-picker.js
+  (opt-in: script_names: nowo_ui_script_names()|merge(['emoji-picker'])). Without it the field is a plain text input and the toggle
+  and panel stay hidden. EmojiPickerType renders this for you; use it directly around any text field of yours.
+  Slots: emoji_picker (root), emoji_picker_toggle, emoji_picker_panel, emoji_picker_search, emoji_picker_grid, emoji_picker_status.
+
+  Required:
+    - id: base of the panel's ids
+    - input: the text input as trusted HTML (form_widget(form.icon))
+  Optional:
+    - emojis: list of [name, emoji], replaces the built-in table
+    - labels: {open, search, results, none} (View\Label|string; defaults emoji_picker.*; `results` has %count%)
+    - attr: root attributes (no on*), bundle
+#}
+{% set _b = bundle|default(null) %}
+{% set _labels = labels|default({}) %}
+{% set _text = {} %}
+{% for _name in ['open', 'search', 'results', 'none'] %}
+    {% set _text = _text|merge({(_name): _labels[_name] is defined ? _labels[_name]|nowo_ui_trans : ('emoji_picker.' ~ _name)|trans({}, 'NowoUiKitBundle')}) %}
+{% endfor %}
+{% set _attr = nowo_ui_safe_attrs(attr|default({})) %}
+<div class="{{ nowo_ui_class('emoji_picker', _b) }}{{ _attr.class is defined ? ' ' ~ _attr.class }}" data-nowo-ui-emoji-picker data-nowo-ui-emoji-picker-labels="{{ {results: _text.results, none: _text.none}|json_encode }}"
+    {%- if emojis|default(null) %} data-nowo-ui-emoji-picker-table="{{ emojis|json_encode }}"{% endif %}{{ nowo_ui_attrs('emoji_picker', _b, _attr|filter((v, k) => k != 'class')) }}>
+    {{- input|raw -}}
+    <button type="button" class="{{ nowo_ui_class('emoji_picker_toggle', _b) }}" data-nowo-ui-emoji-picker-toggle aria-label="{{ _text.open }}" title="{{ _text.open }}" aria-haspopup="dialog" aria-expanded="false" aria-controls="{{ id }}-panel" hidden{{ nowo_ui_attrs('emoji_picker_toggle', _b) }}><span aria-hidden="true">🙂</span></button>
+    <div id="{{ id }}-panel" class="{{ nowo_ui_class('emoji_picker_panel', _b) }}" data-nowo-ui-emoji-picker-panel role="dialog" aria-label="{{ _text.open }}" hidden{{ nowo_ui_attrs('emoji_picker_panel', _b) }}>
+        {# twig-005-ignore: nameless search box of the picker, never submitted #}
+        <input type="search" class="{{ nowo_ui_class('emoji_picker_search', _b) }}" data-nowo-ui-emoji-picker-search role="combobox" aria-label="{{ _text.search }}" placeholder="{{ _text.search }}" aria-autocomplete="list" aria-haspopup="grid" aria-expanded="false" aria-controls="{{ id }}-grid" autocomplete="off"{{ nowo_ui_attrs('emoji_picker_search', _b) }}>
+        <div id="{{ id }}-grid" class="{{ nowo_ui_class('emoji_picker_grid', _b) }}" data-nowo-ui-emoji-picker-grid role="grid" aria-label="{{ _text.open }}"{{ nowo_ui_attrs('emoji_picker_grid', _b) }}></div>
+        <p class="{{ nowo_ui_class('emoji_picker_status', _b) }}" data-nowo-ui-emoji-picker-status role="status"{{ nowo_ui_attrs('emoji_picker_status', _b) }}></p>
+    </div>
+</div>

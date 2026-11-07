@@ -284,6 +284,51 @@ export function liftActions(body: HTMLElement, footer: HTMLElement | null): bool
   return true;
 }
 
+const BACK_ATTR = 'data-nowo-ui-dialog-back';
+const BACK_LIFTED_ATTR = 'data-nowo-ui-dialog-back-lifted';
+
+/** The dialog's own `<header>`. */
+function dialogHeader(dialog: HTMLDialogElement): HTMLElement | null {
+  return Array.from(dialog.children).find((child): child is HTMLElement => child instanceof HTMLElement && child.tagName === 'HEADER') ?? null;
+}
+
+/** Takes a lifted back button out of the header, and shows the header's own `back_href` arrow again. */
+export function clearBack(dialog: HTMLDialogElement): void {
+  const header = dialogHeader(dialog);
+  if (!header) {
+    return;
+  }
+  const dom = Element.prototype;
+  (dom.querySelectorAll.call(header, `[${BACK_LIFTED_ATTR}]`) as NodeListOf<Element>).forEach((lifted) => dom.remove.call(lifted));
+  (dom.querySelectorAll.call(header, 'a.nowo-ui-dialog__back[hidden]') as NodeListOf<HTMLElement>).forEach((arrow) => {
+    arrow.hidden = false;
+  });
+}
+
+/**
+ * Moves a fragment's `[data-nowo-ui-dialog-back]` into the header, before the title, as `liftActions` does for the footer.
+ * Only a `<button type="button">`: it submits nothing and goes nowhere by itself, and anything else stays where it is. The
+ * element itself moves, so listeners on it stay; a listener delegated on the fragment does not see it any more. The
+ * button goes when the body is next replaced, and a new fragment brings its own. The header's `back_href` arrow hides while
+ * it is there. Returns whether a button was moved.
+ */
+export function liftBack(body: HTMLElement, dialog: HTMLDialogElement): boolean {
+  clearBack(dialog);
+  const header = dialogHeader(dialog);
+  const dom = Element.prototype;
+  const back = dom.querySelector.call(body, `button[${BACK_ATTR}]`) as HTMLButtonElement | null;
+  if (!header || !back || dom.getAttribute.call(back, 'type') !== 'button') {
+    return false;
+  }
+  (dom.querySelectorAll.call(header, 'a.nowo-ui-dialog__back') as NodeListOf<HTMLElement>).forEach((arrow) => {
+    arrow.hidden = true;
+  });
+  back.classList.add('nowo-ui-dialog__back');
+  back.setAttribute(BACK_LIFTED_ATTR, '');
+  dom.prepend.call(header, back);
+  return true;
+}
+
 /**
  * Gives the form an id that resolves to it in its document (2.29): kept when `getElementById()` returns the form
  * itself, else a fresh `nowo-ui-remote-form-<n>` free in the document; the fragment's `form="<old id>"` references are
@@ -661,10 +706,12 @@ export class RemoteFormSession {
     body.replaceChildren(parseFragment(html));
     body.removeAttribute('aria-busy');
     liftActions(body, dialogFooter(this.dialog));
+    liftBack(body, this.dialog);
   }
 
-  /** Empties and hides the footer (loading, load error, close). */
+  /** Empties and hides the footer, and takes a lifted back button out of the header (loading, load error, close). */
   private clearFooter(): void {
+    clearBack(this.dialog);
     const footer = dialogFooter(this.dialog);
     if (footer) {
       footer.replaceChildren();
