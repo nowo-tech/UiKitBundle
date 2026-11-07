@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.38.0](#to-2380)
 - [To 2.37.0](#to-2370)
 - [To 2.36.1](#to-2361)
 - [To 2.36.0](#to-2360)
@@ -122,6 +123,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.38.0
+
+From **2.37.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 **Visible change: opening and closing now animate.** Markup is unchanged. The kit's own closes now wait for the fade: `dialog.open` turns false, focus returns and the `close` event fires up to 150 ms later (80 ms under reduced motion). A test reading those right after a click should wait for them, as Playwright's `expect` does, or set the four duration tokens to `0ms`, which also turns the effect off for users and makes it all happen at once ([THEMING](THEMING.md#motion)). Sizes read during the first 200 ms of opening a dialog include its `0.98` scale.
 
