@@ -1,0 +1,1246 @@
+/**
+ * Sortable (`js/nowo-ui-sortable.js`, opt-in: add `sortable` to `script_names`): reorder by pointer, touch and
+ * keyboard, within a list and between lists, over markup the host owns. No partial and no third-party library.
+ *
+ * Markup: `[data-nowo-ui-sortable="<scope>"]` (root), `[data-nowo-ui-sortable-list="<id>"]`,
+ * `[data-nowo-ui-sortable-item="<id>"]`, optional `[data-nowo-ui-sortable-handle]`. Lists move items with every list
+ * whose root has the same scope, so cards and columns nest on one board. A root and a list may be the same element.
+ * Optional: `data-nowo-ui-sortable-axis="x|y"` (root or list), `data-nowo-ui-sortable-labels` (JSON, root),
+ * `data-nowo-ui-sortable-label` (item name), `data-nowo-ui-sortable-list-label` (list name),
+ * `data-nowo-ui-sortable-zone` (a wider drop area around one list), `data-nowo-ui-sortable-disabled`,
+ * `data-nowo-ui-sortable-ignore` (no drag starts here), `data-nowo-ui-sortable-move="up|down|first|last|prev-list|next-list"`
+ * (a host-drawn button that moves its item: the route that needs no drag, WCAG 2.5.7).
+ *
+ * Events (bubbling CustomEvents on the root of the destination list; the host does the write):
+ * - `nowo-ui:sortable:start` (cancelable, pointer only) {scope, id, listId, index, source}
+ * - `nowo-ui:sortable:move` (cancelable, before the DOM changes)
+ *   {scope, id, listId, fromListId, index, fromIndex, source: pointer|keyboard|button, item}
+ * - `nowo-ui:sortable:moved` (after) the same, plus `revert(): boolean` for a failed write
+ * - `nowo-ui:sortable:cancel` {scope, id, listId, index, source, reason: escape|refused|lost|same-place}, on the source's
+ *   root, or on `<html>` when that root has left the page
+ * - `nowo-ui:sortable:reverted` {scope, id, listId, fromListId, index, fromIndex, source, item}
+ *
+ * The dragged item stays where it is until the commit: a placeholder shows the destination and a clone follows the
+ * pointer, so a cancel only has to remove those two. Touch: a handle (`touch-action: none`) drags at once; a whole item
+ * drags after a long press, so a swipe that starts on it still scrolls the page.
+ *
+ * Attributes, DOM calls and document members go through the prototypes: a `<form>` used as an item may have a control
+ * named `closest` or `getAttribute` (GT-L3), and `<img name="elementFromPoint">` hides that member of the document (HH-L4).
+ * Importing touches no DOM (GT-I8). Listeners are delegated, and the end of a gesture is read in the capture phase on
+ * `window`, so nothing on the page can stop it (HH-M1). No state is kept on the markup. A Turbo page render or a removed
+ * item cancels a drag; a morph that keeps the item does not. Size and position go through the CSSOM (strict CSP).
+ */
+
+export const ROOT = '[data-nowo-ui-sortable]';
+export const LIST = '[data-nowo-ui-sortable-list]';
+export const ITEM = '[data-nowo-ui-sortable-item]';
+export const HANDLE = '[data-nowo-ui-sortable-handle]';
+export const ZONE = '[data-nowo-ui-sortable-zone]';
+const DISABLED = '[data-nowo-ui-sortable-disabled]';
+const LIVE = 'data-nowo-ui-sortable-live';
+const ACTIVE = 'data-nowo-ui-sortable-active';
+const CONTROLS = 'button, input, select, textarea, label, summary, audio, video, [role="button"], [contenteditable]:not([contenteditable="false"]), [data-nowo-ui-sortable-ignore]';
+const EDITABLE = 'input, select, textarea, [contenteditable]:not([contenteditable="false"])';
+export const MOVE = '[data-nowo-ui-sortable-move]';
+const GHOST_DROP = 'script, iframe, frame, object, embed, video, audio, template, dialog, link, style, meta, base, fencedframe, portal';
+const GHOST_STRIP =
+  /^(id|name|form|for|style|is|autofocus|tabindex|draggable|contenteditable|popover|popovertarget|popovertargetaction|command|commandfor|formaction|ping|srcdoc|slot|on.*|x-.*|hx-.*|v-.*|ng-.*|wire:.*|@.*|:.*|data-(controller|action|turbo.*|hx-.*|x-.*|bs-.*|live-.*|nowo-.*|.*-target|.*-outlet))$/;
+
+/** Movement before a mouse or a handle starts a drag. */
+export const DRAG_THRESHOLD = 4;
+/** Long press before a touch on a whole item starts a drag. */
+export const LONG_PRESS_MS = 250;
+/** Finger movement that turns a long press into a scroll. */
+export const TOUCH_SLOP = 8;
+const SCROLL_EDGE = 48;
+const SCROLL_MAX = 14;
+/** How long a click is swallowed after a drag (the click the release itself produces). */
+const CLICK_GUARD_MS = 400;
+/** The same while the button is still down after a cancel. Bounded: the release may never reach this page. */
+const RELEASE_GUARD_MS = 10_000;
+/** A finger lifted with no `pointerup` seen by then ended without one. */
+const TOUCH_END_GRACE_MS = 50;
+/** A region just created needs a moment in the tree, or a screen reader may miss its first message. */
+const LIVE_DELAY_MS = 100;
+
+export type SortableSource = 'pointer' | 'keyboard' | 'button';
+export type SortableCancelReason = 'escape' | 'refused' | 'lost' | 'same-place';
+export type SortableMoveDetail = {
+  scope: string;
+  id: string;
+  listId: string;
+  fromListId: string;
+  index: number;
+  fromIndex: number;
+  source: SortableSource;
+  item: HTMLElement;
+};
+export type SortableMovedDetail = SortableMoveDetail & { revert: () => boolean };
+
+const DEFAULT_LABELS = {
+  grabbed: '%label% grabbed.',
+  moved: '%label% moved to position %position% of %count%.',
+  movedToList: '%label% moved to %list%, position %position% of %count%.',
+  cancelled: 'Move of %label% cancelled.',
+  refused: '%label% cannot be moved there.',
+  reverted: 'Move of %label% undone.',
+  edge: '%label% cannot move further.',
+};
+type LabelKey = keyof typeof DEFAULT_LABELS;
+
+const getAttr = (el: Element, name: string): string | null => Element.prototype.getAttribute.call(el, name);
+const closest = (el: Element, selector: string): HTMLElement | null => Element.prototype.closest.call(el, selector) as HTMLElement | null;
+const matches = (el: Element, selector: string): boolean => Element.prototype.matches.call(el, selector);
+const queryAll = (el: Element, selector: string): HTMLElement[] => [...Element.prototype.querySelectorAll.call(el, selector)] as HTMLElement[];
+const contains = (outer: Node, inner: Node | null): boolean => Node.prototype.contains.call(outer, inner);
+const parentOf = (el: Node): HTMLElement | null => Reflect.get(Node.prototype, 'parentElement', el) as HTMLElement | null;
+const nextOf = (el: Node): ChildNode | null => Reflect.get(Node.prototype, 'nextSibling', el) as ChildNode | null;
+const tagOf = (el: Element): string => (Reflect.get(Element.prototype, 'tagName', el) as string).toUpperCase();
+const isConnected = (el: Node): boolean => Reflect.get(Node.prototype, 'isConnected', el) as boolean;
+const box = (el: Element): DOMRect => Element.prototype.getBoundingClientRect.call(el);
+const classes = (el: Element): DOMTokenList => Reflect.get(Element.prototype, 'classList', el) as DOMTokenList;
+const scrollElementBy = (el: Element, left: number, top: number): void => {
+  (Element.prototype.scrollBy as (options: ScrollToOptions) => void).call(el, { left, top, behavior: 'instant' });
+};
+const removeNode = (el: Element): void => Element.prototype.remove.call(el);
+const insert = (parent: Node, node: Node, before: Node | null): void => {
+  Node.prototype.insertBefore.call(parent, node, before);
+};
+const metric = (el: Element, name: 'scrollWidth' | 'clientWidth' | 'scrollHeight' | 'clientHeight' | 'scrollLeft' | 'scrollTop'): number => Reflect.get(Element.prototype, name, el) as number;
+// Named access on the document and the window can hide these members, so none is read from the objects themselves.
+const elementAtPoint = (x: number, y: number): HTMLElement | null => Document.prototype.elementFromPoint.call(document, x, y) as HTMLElement | null;
+const queryDocument = (selector: string): HTMLElement[] => [...Document.prototype.querySelectorAll.call(document, selector)] as HTMLElement[];
+const createElement = (tag: string): HTMLElement => Document.prototype.createElement.call(document, tag);
+const documentMember = <T>(name: 'documentElement' | 'scrollingElement' | 'body' | 'activeElement' | 'visibilityState' | 'implementation' | 'defaultView'): T => Reflect.get(Document.prototype, name, document) as T;
+const listen = (target: EventTarget, type: string, handler: (event: never) => void, options?: AddEventListenerOptions | boolean): void => {
+  EventTarget.prototype.addEventListener.call(target, type, handler as EventListener, options);
+};
+const unlisten = (target: EventTarget, type: string, handler: (event: never) => void, options?: EventListenerOptions | boolean): void => {
+  EventTarget.prototype.removeEventListener.call(target, type, handler as EventListener, options);
+};
+const emit = (target: Element, name: string, detail: unknown, cancelable = false): boolean =>
+  EventTarget.prototype.dispatchEvent.call(target, new CustomEvent(name, { bubbles: true, cancelable, detail }));
+
+const listOf = (item: Element): HTMLElement | null => {
+  const parent = parentOf(item);
+  return parent ? closest(parent, LIST) : null;
+};
+const rootOf = (el: Element): HTMLElement | null => closest(el, ROOT);
+const scopeOf = (list: Element): string | null => {
+  const root = rootOf(list);
+  return root ? getAttr(root, 'data-nowo-ui-sortable') : null;
+};
+const isDisabled = (el: Element): boolean => closest(el, DISABLED) !== null;
+const idOf = (item: Element): string => getAttr(item, 'data-nowo-ui-sortable-item') ?? '';
+const listIdOf = (list: Element): string => getAttr(list, 'data-nowo-ui-sortable-list') ?? '';
+const isRtl = (el: Element): boolean => window.getComputedStyle(el).direction === 'rtl';
+
+/** An item inside another item of the same list has no place of its own: nothing is ever put between its parent's parts. */
+const isNestedInItem = (item: HTMLElement, list: HTMLElement): boolean => {
+  const parent = parentOf(item);
+  const outer = parent ? closest(parent, ITEM) : null;
+  return outer !== null && outer !== list && contains(list, outer);
+};
+
+/** The items of one list in document order, without those of nested lists or nested in another item (HH-L3). */
+export function itemsOf(list: HTMLElement): HTMLElement[] {
+  return queryAll(list, ITEM).filter((item) => listOf(item) === list && !isNestedInItem(item, list));
+}
+
+/** The innermost real item around an element. */
+function itemFrom(target: Element): HTMLElement | null {
+  let el = closest(target, ITEM);
+  while (el) {
+    const list = listOf(el);
+    if (list && !isNestedInItem(el, list)) {
+      return el;
+    }
+    const parent = parentOf(el);
+    el = parent ? closest(parent, ITEM) : null;
+  }
+  return null;
+}
+
+const modalOf = (el: Element): HTMLElement | null => {
+  try {
+    return closest(el, 'dialog:modal');
+  } catch {
+    return null; // A browser without the selector has no way to tell: treat every list as in the page.
+  }
+};
+
+/** Whether the user can see and reach a list from where the item is now: rendered, not inert, same modal (HH-M2). */
+export function isReachable(list: HTMLElement, item: HTMLElement): boolean {
+  const visible =
+    typeof Element.prototype.checkVisibility === 'function'
+      ? Element.prototype.checkVisibility.call(list, { visibilityProperty: true })
+      : Element.prototype.getClientRects.call(list).length > 0 && window.getComputedStyle(list).visibility !== 'hidden';
+  return visible && closest(list, '[inert]') === null && modalOf(list) === modalOf(item);
+}
+
+/** The axis of a list: its own attribute, else its root's, else `y`. */
+export function axisOf(list: HTMLElement): 'x' | 'y' {
+  // Not the nearest ancestor with the attribute: a card list inside an x board of columns is still a y list.
+  const root = rootOf(list);
+  return (getAttr(list, 'data-nowo-ui-sortable-axis') ?? (root ? getAttr(root, 'data-nowo-ui-sortable-axis') : null)) === 'x' ? 'x' : 'y';
+}
+
+function labelsOf(root: Element | null): typeof DEFAULT_LABELS {
+  const labels = { ...DEFAULT_LABELS };
+  const raw = root ? getAttr(root, 'data-nowo-ui-sortable-labels') : null;
+  if (!raw) {
+    return labels;
+  }
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object') {
+      for (const key of Object.keys(DEFAULT_LABELS) as LabelKey[]) {
+        const value = Object.prototype.hasOwnProperty.call(parsed, key) ? (parsed as Record<string, unknown>)[key] : undefined;
+        if (typeof value === 'string') {
+          labels[key] = value;
+        }
+      }
+    }
+  } catch {
+    // A broken attribute leaves the default wording.
+  }
+  return labels;
+}
+
+/** Fills `%name%` placeholders in one pass, so a value holding `%count%` stays text. */
+export function formatSortable(template: string, params: Record<string, string | number>): string {
+  return template.replace(/%(\w+)%/g, (whole, name: string) => (Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : whole));
+}
+
+function itemLabel(item: Element): string {
+  const explicit = getAttr(item, 'data-nowo-ui-sortable-label');
+  if (explicit !== null && explicit.trim() !== '') {
+    return explicit.trim();
+  }
+  const text = (Reflect.get(Node.prototype, 'textContent', item) as string | null ?? '').replace(/\s+/g, ' ').trim();
+  return text.length > 80 ? `${text.slice(0, 80)}…` : text;
+}
+
+const listLabel = (list: Element): string => {
+  const explicit = getAttr(list, 'data-nowo-ui-sortable-list-label');
+  return explicit !== null && explicit.trim() !== '' ? explicit.trim() : listIdOf(list);
+};
+
+function liveRegion(root: HTMLElement): { live: HTMLElement; created: boolean } {
+  // A <div> is not valid inside a table or a list, so the region goes after the outermost such parent.
+  let anchor = root;
+  for (let parent = parentOf(anchor); parent && /^(TABLE|THEAD|TBODY|TFOOT|TR|UL|OL|DL)$/.test(tagOf(parent)); parent = parentOf(anchor)) {
+    anchor = parent;
+  }
+  const parent = parentOf(anchor);
+  const found = parent ? queryAll(parent, `:scope > [${LIVE}]`)[0] : undefined;
+  if (found) {
+    return { live: found, created: false };
+  }
+  const live = createElement('div');
+  live.className = 'visually-hidden nowo-ui-sortable__live';
+  live.setAttribute(LIVE, '');
+  live.setAttribute('role', 'status');
+  live.setAttribute('aria-atomic', 'true');
+  insert(parent ?? documentMember<HTMLElement>('body'), live, parent ? nextOf(anchor) : null);
+  return { live, created: true };
+}
+
+/** The region of every root of a scope must exist before the first message: a move may land in any of them (HH-L9). */
+function prepareRegions(scope: string | null): void {
+  queryDocument(ROOT)
+    .filter((root) => getAttr(root, 'data-nowo-ui-sortable') === scope)
+    .forEach((root) => liveRegion(root));
+}
+
+const waitingSpeech = new WeakMap<HTMLElement, string>();
+
+/** Says `text` in the polite live region next to the root. A region created just now speaks a moment later. */
+export function announceSortable(root: HTMLElement, text: string): void {
+  const { live, created } = liveRegion(root);
+  if (created || waitingSpeech.has(live)) {
+    if (!waitingSpeech.has(live)) {
+      window.setTimeout(() => {
+        live.textContent = waitingSpeech.get(live) ?? '';
+        waitingSpeech.delete(live);
+      }, LIVE_DELAY_MS);
+    }
+    waitingSpeech.set(live, text);
+    return;
+  }
+  // A repeated message must change, or a screen reader stays silent.
+  live.textContent = live.textContent === text ? `${text}\u00A0` : text;
+}
+
+function say(root: HTMLElement | null, key: LabelKey, item: HTMLElement, extra: Record<string, string | number> = {}): void {
+  if (root) {
+    announceSortable(root, formatSortable(labelsOf(root)[key], { label: itemLabel(item), ...extra }));
+  }
+}
+
+/** Puts `item` at `index` among the other items of `list`. */
+function insertAt(list: HTMLElement, item: HTMLElement, index: number): void {
+  const others = itemsOf(list).filter((other) => other !== item);
+  const target = others[index];
+  const last = others[others.length - 1];
+  if (target) {
+    insert(parentOf(target)!, item, target);
+  } else if (last) {
+    insert(parentOf(last)!, item, nextOf(last));
+  } else {
+    insert(list, item, null);
+  }
+}
+
+/** Runs a DOM move and gives focus back to whatever had it inside the item (a move blurs it). */
+function keepingFocus(item: HTMLElement, move: () => void, preventScroll: boolean): void {
+  const active = documentMember<Element | null>('activeElement');
+  const had = active instanceof HTMLElement && contains(item, active);
+  move();
+  if (had && documentMember<Element | null>('activeElement') !== active) {
+    HTMLElement.prototype.focus.call(active, { preventScroll });
+  }
+}
+
+type Origin = { list: HTMLElement; index: number; parent: Node; next: Node | null };
+
+/** The latest committed move of each item: a late `revert()` of an older one must not undo the newer one. */
+const latestMove = new WeakMap<HTMLElement, number>();
+let moveCounter = 0;
+
+function commit(item: HTMLElement, detail: SortableMoveDetail, origin: Origin, toList: HTMLElement, place: () => void): void {
+  const seq = ++moveCounter;
+  latestMove.set(item, seq);
+  keepingFocus(item, place, detail.source === 'pointer');
+  let reverted = false;
+  const revert = (): boolean => {
+    // `false` whenever putting it back would not be the undo of this move (HH-L6).
+    if (
+      reverted ||
+      latestMove.get(item) !== seq ||
+      drag?.item === item ||
+      pending?.item === item ||
+      !isConnected(item) ||
+      !isConnected(origin.list) ||
+      listOf(item) !== toList ||
+      contains(item, origin.list) ||
+      contains(item, origin.parent) ||
+      isDisabled(origin.list)
+    ) {
+      return false;
+    }
+    reverted = true;
+    latestMove.delete(item);
+    keepingFocus(
+      item,
+      () => {
+        const next = origin.next && parentOf(origin.next) === origin.parent ? origin.next : null;
+        if (isConnected(origin.parent)) {
+          insert(origin.parent, item, next);
+        }
+        if (listOf(item) !== origin.list || itemsOf(origin.list).indexOf(item) !== origin.index) {
+          insertAt(origin.list, item, origin.index);
+        }
+      },
+      false,
+    );
+    const originRoot = rootOf(origin.list);
+    say(originRoot, 'reverted', item);
+    if (originRoot) {
+      emit(originRoot, 'nowo-ui:sortable:reverted', { ...detail });
+    }
+    return true;
+  };
+  const root = rootOf(toList);
+  // Before the event: a listener's synchronous revert() must have the last word in the live region.
+  say(root, toList === origin.list ? 'moved' : 'movedToList', item, { position: detail.index + 1, count: itemsOf(toList).length, list: listLabel(toList) });
+  if (root) {
+    emit(root, 'nowo-ui:sortable:moved', { ...detail, revert } satisfies SortableMovedDetail);
+  }
+}
+
+type Pending = {
+  pointerId: number;
+  pointerType: string;
+  item: HTMLElement;
+  list: HTMLElement;
+  root: HTMLElement;
+  immediate: boolean;
+  startX: number;
+  startY: number;
+  timer: number | undefined;
+};
+
+type Drag = {
+  pointerId: number;
+  pointerType: string;
+  item: HTMLElement;
+  root: HTMLElement;
+  scope: string;
+  origin: Origin;
+  ghost: HTMLElement;
+  placeholder: HTMLElement;
+  list: HTMLElement | null;
+  x: number;
+  y: number;
+  offsetX: number;
+  offsetY: number;
+  originX: number;
+  originY: number;
+  frame: number;
+  lastFrame: number;
+};
+
+let pending: Pending | null = null;
+let drag: Drag | null = null;
+let swallowClicksUntil = 0;
+
+/** Prevents scrolling once a drag runs. Non-passive, and only attached for a gesture on an item. */
+function onTouchMove(event: TouchEvent): void {
+  if (drag && event.cancelable) {
+    event.preventDefault();
+  }
+}
+
+/** The second signal that no finger is down, in case something swallowed the `pointerup`. */
+function onTouchEnd(event: TouchEvent): void {
+  if (event.touches.length > 0) {
+    return;
+  }
+  const gesture = pending;
+  const state = drag;
+  // An unrelated finger lifting says nothing about a pen.
+  if ((gesture ?? state)?.pointerType !== 'touch') {
+    return;
+  }
+  window.setTimeout(() => {
+    if (pending && pending === gesture) {
+      clearPending();
+    }
+    if (drag && drag === state) {
+      cancelDrag('lost');
+    }
+  }, TOUCH_END_GRACE_MS);
+}
+
+function addTouchGuard(): void {
+  listen(document, 'touchmove', onTouchMove, { passive: false });
+  listen(documentMember<Window>('defaultView'), 'touchend', onTouchEnd, true);
+  listen(documentMember<Window>('defaultView'), 'touchcancel', onTouchEnd, true);
+}
+
+function removeTouchGuard(): void {
+  unlisten(document, 'touchmove', onTouchMove);
+  unlisten(documentMember<Window>('defaultView'), 'touchend', onTouchEnd, true);
+  unlisten(documentMember<Window>('defaultView'), 'touchcancel', onTouchEnd, true);
+}
+
+function clearPending(): void {
+  if (pending) {
+    window.clearTimeout(pending.timer);
+    pending = null;
+  }
+  if (!drag) {
+    removeTouchGuard();
+  }
+}
+
+/** Whatever goes wrong in a gesture, the page must not stay stuck in it (HH-M1). */
+function guarded(run: () => void): void {
+  try {
+    run();
+  } catch (error) {
+    clearPending();
+    cancelDrag('lost');
+    throw error;
+  }
+}
+
+const inlineStyle = (el: Element): CSSStyleDeclaration | null => {
+  if (el instanceof HTMLElement) {
+    return Reflect.get(HTMLElement.prototype, 'style', el) as CSSStyleDeclaration;
+  }
+  return el instanceof SVGElement ? (Reflect.get(SVGElement.prototype, 'style', el) as CSSStyleDeclaration) : null;
+};
+
+/**
+ * One node of the copy, built by hand. Never a clone: in Chromium and WebKit, cloning an element whose `style` attribute the
+ * CSP blocked also makes that style live on the original, until the page reloads (HH-M3). Built in a document with no
+ * browsing context, where nothing fetches, plays or upgrades, and never with `is`, so no custom element runs (HH-L1,
+ * HH-DL3). Shadow trees are not walked. `style` is not copied as an attribute: only the declarations the browser really
+ * holds for the original go across, so a blocked attribute stays blocked. Other attributes scripts look for are left out.
+ */
+function copyElement(original: Element, scratch: Document, isRoot: boolean): Element | null {
+  const dropped = matches(original, GHOST_DROP);
+  if (dropped && !isRoot) {
+    return null;
+  }
+  const localName = Reflect.get(Element.prototype, 'localName', original) as string;
+  const namespace = Reflect.get(Element.prototype, 'namespaceURI', original) as string | null;
+  const plain = dropped || localName.includes('-');
+  const copy = plain
+    ? Document.prototype.createElementNS.call(scratch, 'http://www.w3.org/1999/xhtml', isRoot ? 'div' : 'span')
+    : Document.prototype.createElementNS.call(scratch, namespace, localName);
+  for (const name of Element.prototype.getAttributeNames.call(original)) {
+    if (GHOST_STRIP.test(name) || (dropped && name !== 'class')) {
+      continue;
+    }
+    const attr = Element.prototype.getAttributeNode.call(original, name);
+    try {
+      copy.setAttributeNS(attr?.namespaceURI ?? null, name, attr?.value ?? '');
+    } catch {
+      // A name the parser allows and the DOM API does not (`[x]`): the copy is only a picture, so go without it.
+    }
+  }
+  if (!dropped) {
+    for (let child = Reflect.get(Node.prototype, 'firstChild', original) as Node | null; child; child = Reflect.get(Node.prototype, 'nextSibling', child) as Node | null) {
+      const type = Reflect.get(Node.prototype, 'nodeType', child) as number;
+      if (type === Node.TEXT_NODE) {
+        copy.appendChild(Document.prototype.createTextNode.call(scratch, Reflect.get(CharacterData.prototype, 'data', child) as string));
+      } else if (type === Node.ELEMENT_NODE) {
+        const part = copyElement(child as Element, scratch, false);
+        if (part) {
+          copy.appendChild(part);
+        }
+      }
+    }
+  }
+  copyFormState(original, copy);
+  const from = inlineStyle(original);
+  const to = inlineStyle(copy);
+  if (from && to) {
+    for (let i = 0; i < from.length; i++) {
+      const name = from.item(i);
+      to.setProperty(name, from.getPropertyValue(name), from.getPropertyPriority(name));
+    }
+  }
+  return copy;
+}
+
+/** What a field shows lives in properties, which attributes do not carry. For the look only: nothing here has a name. */
+function copyFormState(original: Element, copy: Element): void {
+  if (original instanceof HTMLInputElement && copy instanceof HTMLInputElement) {
+    if ((Reflect.get(HTMLInputElement.prototype, 'type', original) as string) !== 'file') {
+      copy.value = Reflect.get(HTMLInputElement.prototype, 'value', original) as string;
+    }
+    copy.checked = Reflect.get(HTMLInputElement.prototype, 'checked', original) as boolean;
+  } else if (original instanceof HTMLTextAreaElement && copy instanceof HTMLTextAreaElement) {
+    copy.value = Reflect.get(HTMLTextAreaElement.prototype, 'value', original) as string;
+  } else if (original instanceof HTMLSelectElement && copy instanceof HTMLSelectElement) {
+    copy.selectedIndex = Reflect.get(HTMLSelectElement.prototype, 'selectedIndex', original) as number;
+  }
+}
+
+function buildGhost(item: HTMLElement, rect: DOMRect): HTMLElement {
+  const scratch = documentMember<DOMImplementation>('implementation').createHTMLDocument('');
+  const ghost = copyElement(item, scratch, true) as HTMLElement;
+  ghost.classList.add('nowo-ui-sortable__ghost');
+  ghost.setAttribute('aria-hidden', 'true');
+  ghost.setAttribute('inert', '');
+  const { style } = ghost;
+  style.setProperty('position', 'fixed');
+  style.setProperty('left', '0');
+  style.setProperty('top', '0');
+  style.setProperty('margin', '0');
+  style.setProperty('box-sizing', 'border-box');
+  style.setProperty('width', `${rect.width}px`);
+  style.setProperty('height', `${rect.height}px`);
+  style.setProperty('pointer-events', 'none');
+  return ghost;
+}
+
+function buildPlaceholder(item: HTMLElement, rect: DOMRect, axis: 'x' | 'y'): HTMLElement {
+  const tag = tagOf(item);
+  const placeholder = createElement(tag === 'LI' || tag === 'TR' ? tag : 'DIV');
+  placeholder.className = 'nowo-ui-sortable__placeholder';
+  placeholder.setAttribute('aria-hidden', 'true');
+  if (tag === 'TR') {
+    const cell = createElement('td') as HTMLTableCellElement;
+    cell.colSpan = 100;
+    placeholder.append(cell);
+  }
+  const margins = window.getComputedStyle(item);
+  placeholder.style.setProperty('margin-top', margins.marginTop);
+  placeholder.style.setProperty('margin-right', margins.marginRight);
+  placeholder.style.setProperty('margin-bottom', margins.marginBottom);
+  placeholder.style.setProperty('margin-left', margins.marginLeft);
+  placeholder.style.setProperty('height', `${rect.height}px`);
+  if (axis === 'x') {
+    placeholder.style.setProperty('width', `${rect.width}px`);
+    placeholder.style.setProperty('flex', '0 0 auto');
+  }
+  return placeholder;
+}
+
+function positionGhost(state: Drag): void {
+  state.ghost.style.setProperty('transform', `translate3d(${state.x - state.offsetX - state.originX}px, ${state.y - state.offsetY - state.originY}px, 0)`);
+}
+
+function setTargetList(state: Drag, list: HTMLElement | null): void {
+  if (state.list !== list) {
+    if (state.list) {
+      classes(state.list).remove('is-drop-target');
+    }
+    if (list) {
+      classes(list).add('is-drop-target');
+    }
+    state.list = list;
+  }
+}
+
+/** The list of this scope under a point. A zone stands for the list inside it. */
+function listAt(state: Drag): HTMLElement | null {
+  const accepts = (list: HTMLElement): boolean => scopeOf(list) === state.scope && !contains(state.item, list);
+  for (let el = elementAtPoint(state.x, state.y); el; el = parentOf(el)) {
+    if (matches(el, LIST) && accepts(el)) {
+      return isDisabled(el) ? null : el;
+    }
+    if (matches(el, ZONE)) {
+      // A zone's hidden list (a collapsed part, another tab) cannot be under the pointer: only a visible one stands for it.
+      const inner = queryAll(el, LIST).find((list) => accepts(list) && isReachable(list, state.item));
+      if (inner) {
+        return isDisabled(inner) ? null : inner;
+      }
+    }
+  }
+  return null;
+}
+
+/** Moves the placeholder under the pointer, touching the DOM only when its place changes. */
+function placePlaceholder(state: Drag): void {
+  const list = listAt(state);
+  if (!list) {
+    setTargetList(state, null);
+    return;
+  }
+  setTargetList(state, list);
+  const others = itemsOf(list).filter((item) => item !== state.item);
+  const horizontal = axisOf(list) === 'x';
+  const rtl = horizontal && isRtl(list);
+  const before =
+    others.find((item) => {
+      const rect = box(item);
+      if (!horizontal) {
+        return state.y < rect.top + rect.height / 2;
+      }
+      const middle = rect.left + rect.width / 2;
+      return rtl ? state.x > middle : state.x < middle;
+    }) ?? null;
+  const { placeholder } = state;
+  const skip = (el: Element | null, step: 'nextElementSibling' | 'previousElementSibling'): Element | null => {
+    let current = el;
+    while (current && (current === state.item || current === state.ghost)) {
+      current = Reflect.get(Element.prototype, step, current) as Element | null;
+    }
+    return current;
+  };
+  const inPlace = before
+    ? skip(placeholder.nextElementSibling, 'nextElementSibling') === before
+    : others.length > 0
+      ? skip(placeholder.previousElementSibling, 'previousElementSibling') === others[others.length - 1] && isConnected(placeholder)
+      : parentOf(placeholder) === list;
+  if (inPlace && isConnected(placeholder)) {
+    return;
+  }
+  if (before) {
+    insert(parentOf(before)!, placeholder, before);
+  } else if (others.length > 0) {
+    const last = others[others.length - 1]!;
+    insert(parentOf(last)!, placeholder, nextOf(last));
+  } else {
+    insert(list, placeholder, null);
+  }
+}
+
+function update(state: Drag): void {
+  if (!isConnected(state.item)) {
+    cancelDrag('lost', true);
+    return;
+  }
+  if (!isConnected(state.ghost)) {
+    const parent = parentOf(state.item);
+    if (parent) {
+      insert(parent, state.ghost, null);
+    }
+  }
+  // A morph that keeps the item strips what it does not know; `add` changes nothing when the class is there.
+  classes(state.item).add('is-dragging');
+  positionGhost(state);
+  placePlaceholder(state);
+}
+
+function scrollAmount(pointer: number, start: number, end: number, ms: number): number {
+  const edge = Math.min(SCROLL_EDGE, (end - start) / 4);
+  if (edge <= 0) {
+    return 0;
+  }
+  const speed = (distance: number): number => (SCROLL_MAX * (1 - Math.max(distance, 0) / edge) * ms) / 16;
+  if (pointer < start + edge) {
+    return -speed(pointer - start);
+  }
+  return pointer > end - edge ? speed(end - pointer) : 0;
+}
+
+const ancestorsOf = (start: Element | null): HTMLElement[] => {
+  const chain: HTMLElement[] = [];
+  for (let el = start as HTMLElement | null; el; el = parentOf(el)) {
+    chain.push(el);
+  }
+  return chain;
+};
+
+/**
+ * Scrolls the nearest container that can still scroll towards the edge the pointer is near. Containers under the pointer
+ * come first, then those around the placeholder: a finger at the screen edge is often just past a padded board, and the
+ * board must still bring in the next column.
+ */
+function autoScroll(state: Drag, ms: number): boolean {
+  const page = documentMember<Element | null>('scrollingElement');
+  const body = documentMember<HTMLElement | null>('body');
+  let doneX = false;
+  let doneY = false;
+  const near = (pointer: number, start: number, end: number): boolean => pointer >= start - SCROLL_EDGE && pointer <= end + SCROLL_EDGE;
+  const candidates = new Set([...ancestorsOf(elementAtPoint(state.x, state.y)), ...ancestorsOf(state.placeholder)]);
+  for (const el of candidates) {
+    if (doneX && doneY) {
+      break;
+    }
+    if (el === page || el === body) {
+      continue;
+    }
+    const style = window.getComputedStyle(el);
+    const rect = box(el);
+    const alongX = near(state.x, rect.left, rect.right) && state.y >= rect.top && state.y <= rect.bottom;
+    const alongY = near(state.y, rect.top, rect.bottom) && state.x >= rect.left && state.x <= rect.right;
+    const dx: number = !doneX && alongX && /auto|scroll|overlay/.test(style.overflowX) && metric(el, 'scrollWidth') > metric(el, 'clientWidth') ? scrollAmount(state.x, rect.left, rect.right, ms) : 0;
+    const dy: number = !doneY && alongY && /auto|scroll|overlay/.test(style.overflowY) && metric(el, 'scrollHeight') > metric(el, 'clientHeight') ? scrollAmount(state.y, rect.top, rect.bottom, ms) : 0;
+    const canX: boolean = dx < 0 ? metric(el, 'scrollLeft') > 0 : metric(el, 'scrollLeft') + metric(el, 'clientWidth') < metric(el, 'scrollWidth');
+    const canY: boolean = dy < 0 ? metric(el, 'scrollTop') > 0 : metric(el, 'scrollTop') + metric(el, 'clientHeight') < metric(el, 'scrollHeight');
+    if ((dx !== 0 && canX) || (dy !== 0 && canY)) {
+      scrollElementBy(el, canX ? dx : 0, canY ? dy : 0);
+      doneX ||= dx !== 0 && canX;
+      doneY ||= dy !== 0 && canY;
+    }
+  }
+  let scrolled = doneX || doneY;
+  if (page && !(doneX && doneY)) {
+    const locked = (el: Element): boolean => window.getComputedStyle(el).overflowY === 'hidden';
+    if (!locked(page) && !(body && locked(body))) {
+      const dx: number = doneX ? 0 : scrollAmount(state.x, 0, window.innerWidth, ms);
+      const dy: number = doneY ? 0 : scrollAmount(state.y, 0, window.innerHeight, ms);
+      const canX = dx !== 0 && (dx < 0 ? metric(page, 'scrollLeft') > 0 : metric(page, 'scrollLeft') + metric(page, 'clientWidth') < metric(page, 'scrollWidth'));
+      const canY = dy !== 0 && (dy < 0 ? metric(page, 'scrollTop') > 0 : metric(page, 'scrollTop') + metric(page, 'clientHeight') < metric(page, 'scrollHeight'));
+      if (canX || canY) {
+        scrollElementBy(page, canX ? dx : 0, canY ? dy : 0);
+        scrolled = true;
+      }
+    }
+  }
+  return scrolled;
+}
+
+function onFrame(now: number): void {
+  const state = drag;
+  if (!state) {
+    return;
+  }
+  guarded(() => {
+    // With a still pointer, no other event would notice that the item has gone.
+    if (!isConnected(state.item)) {
+      cancelDrag('lost', true);
+      return;
+    }
+    const ms = Math.min(now - state.lastFrame, 50);
+    state.lastFrame = now;
+    if (ms > 0 && autoScroll(state, ms)) {
+      update(state);
+    }
+    if (drag === state) {
+      state.frame = window.requestAnimationFrame(onFrame);
+    }
+  });
+}
+
+function startDrag(gesture: Pending, x: number, y: number): void {
+  const { item, list, root, pointerId, pointerType } = gesture;
+  const scope = getAttr(root, 'data-nowo-ui-sortable') ?? '';
+  const fromIndex = itemsOf(list).indexOf(item);
+  // Not clearPending(): the scroll guard must stay attached for the rest of this gesture.
+  window.clearTimeout(gesture.timer);
+  pending = null;
+  prepareRegions(scope);
+  // Something moved the item since the press: the gesture no longer describes the page.
+  if (fromIndex < 0) {
+    removeTouchGuard();
+    return;
+  }
+  if (!isConnected(item) || !emit(root, 'nowo-ui:sortable:start', { scope, id: idOf(item), listId: listIdOf(list), index: fromIndex, source: 'pointer' }, true)) {
+    removeTouchGuard();
+    return;
+  }
+  const rect = box(item);
+  const parent = parentOf(item)!;
+  const origin: Origin = { list, index: fromIndex, parent, next: nextOf(item) };
+  let ghost: HTMLElement;
+  let placeholder: HTMLElement;
+  try {
+    ghost = buildGhost(item, rect);
+    placeholder = buildPlaceholder(item, rect, axisOf(list));
+  } catch (error) {
+    removeTouchGuard();
+    emitCancel(root, item, list, fromIndex, 'lost');
+    throw error;
+  }
+  insert(parent, placeholder, item);
+  insert(parent, ghost, null);
+  classes(item).add('is-dragging');
+  Element.prototype.setAttribute.call(documentMember<Element>('documentElement'), ACTIVE, '');
+  if (pointerType === 'mouse') {
+    try {
+      Element.prototype.setPointerCapture.call(item, pointerId);
+    } catch {
+      // The pointer is already gone: the release still reaches the document.
+    }
+  }
+  // Where a fixed box at 0,0 really lands (an ancestor with a transform moves its containing block).
+  const fixedAt = box(ghost);
+  drag = {
+    pointerId,
+    pointerType,
+    item,
+    root,
+    scope,
+    origin,
+    ghost,
+    placeholder,
+    list: null,
+    x,
+    y,
+    offsetX: gesture.startX - rect.left,
+    offsetY: gesture.startY - rect.top,
+    originX: fixedAt.left,
+    originY: fixedAt.top,
+    frame: 0,
+    lastFrame: performance.now(),
+  };
+  drag.frame = window.requestAnimationFrame(onFrame);
+  say(root, 'grabbed', item);
+  update(drag);
+}
+
+/** Removes everything the drag added. The item is where it was, unless a commit already moved it. */
+function cleanup(state: Drag): void {
+  // First of all: whatever fails below, the page scrolls again and the next gesture starts.
+  drag = null;
+  removeTouchGuard();
+  swallowClicksUntil = performance.now() + CLICK_GUARD_MS;
+  window.cancelAnimationFrame(state.frame);
+  setTargetList(state, null);
+  removeNode(state.ghost);
+  removeNode(state.placeholder);
+  classes(state.item).remove('is-dragging');
+  Element.prototype.removeAttribute.call(documentMember<Element>('documentElement'), ACTIVE);
+}
+
+/** On the source's root, or on `<html>` when a morph took the root away: a listener up the tree must still hear it. */
+function emitCancel(root: HTMLElement, item: HTMLElement, list: HTMLElement, index: number, reason: SortableCancelReason): void {
+  emit(isConnected(root) ? root : documentMember<Element>('documentElement'), 'nowo-ui:sortable:cancel', {
+    scope: getAttr(root, 'data-nowo-ui-sortable') ?? '',
+    id: idOf(item),
+    listId: listIdOf(list),
+    index,
+    source: 'pointer',
+    reason,
+  });
+}
+
+/** `stillDown`: the button or finger is still on the screen, so a click may yet follow the release. */
+function cancelDrag(reason: SortableCancelReason, stillDown = false): void {
+  const state = drag;
+  if (!state) {
+    return;
+  }
+  cleanup(state);
+  if (stillDown) {
+    swallowClicksUntil = performance.now() + RELEASE_GUARD_MS;
+  }
+  emitCancel(state.root, state.item, state.origin.list, state.origin.index, reason);
+  if (reason === 'escape') {
+    say(state.root, 'cancelled', state.item);
+  } else if (reason === 'refused') {
+    say(state.root, 'refused', state.item);
+  }
+}
+
+function drop(state: Drag): void {
+  update(state);
+  if (drag !== state) {
+    return;
+  }
+  const { item, placeholder, origin } = state;
+  const parent = parentOf(placeholder);
+  const toList = parent ? closest(parent, LIST) : null;
+  if (!toList || !parent || !isConnected(placeholder)) {
+    cancelDrag('lost');
+    return;
+  }
+  const others = itemsOf(toList).filter((other) => other !== item);
+  const following = others.findIndex((other) => Node.prototype.compareDocumentPosition.call(placeholder, other) & Node.DOCUMENT_POSITION_FOLLOWING);
+  const index = following === -1 ? others.length : following;
+  if (toList === origin.list && index === origin.index) {
+    cancelDrag('same-place');
+    return;
+  }
+  const detail: SortableMoveDetail = {
+    scope: state.scope,
+    id: idOf(item),
+    listId: listIdOf(toList),
+    fromListId: listIdOf(origin.list),
+    index,
+    fromIndex: origin.index,
+    source: 'pointer',
+    item,
+  };
+  if (!emit(rootOf(toList) ?? state.root, 'nowo-ui:sortable:move', detail, true)) {
+    cancelDrag('refused');
+    return;
+  }
+  // A listener may have replaced the markup.
+  if (!isConnected(item) || !isConnected(placeholder)) {
+    cancelDrag('lost');
+    return;
+  }
+  commit(item, detail, origin, toList, () => {
+    try {
+      insert(parentOf(placeholder)!, item, placeholder);
+    } finally {
+      cleanup(state);
+    }
+  });
+}
+
+/**
+ * Any press at all, in capture on `window`, so a component stopping `pointerdown` changes neither of these: a real click
+ * is never swallowed by a guard from an earlier drag, and a release that never came is noticed (HH-DI1).
+ */
+function onAnyPress(event: PointerEvent): void {
+  if (event.isPrimary !== false) {
+    // There is one primary pointer of a type at a time, so a new press means the release of the old one never came.
+    if (pending && pending.pointerType === event.pointerType) {
+      clearPending();
+    }
+    if (drag && drag.pointerType === event.pointerType) {
+      cancelDrag('lost');
+    }
+  }
+  swallowClicksUntil = 0;
+}
+
+function onPointerDown(event: PointerEvent): void {
+  if (pending || drag || event.isPrimary === false || event.button !== 0 || event.ctrlKey || !(event.target instanceof Element)) {
+    return;
+  }
+  const target = event.target;
+  const item = itemFrom(target);
+  const list = item ? listOf(item) : null;
+  const root = list ? rootOf(list) : null;
+  if (!item || !list || !root || isDisabled(item)) {
+    return;
+  }
+  const ownHandles = queryAll(item, HANDLE).filter((handle) => closest(handle, ITEM) === item);
+  const handle = closest(target, HANDLE);
+  const onHandle = handle !== null && closest(handle, ITEM) === item;
+  if (ownHandles.length > 0 && !onHandle) {
+    return;
+  }
+  // A control inside the item or the handle keeps its job; a handle that is itself a button still drags.
+  const control = closest(target, CONTROLS);
+  if (control && control !== item && contains(item, control) && !(onHandle && contains(control, handle))) {
+    return;
+  }
+  pending = {
+    pointerId: event.pointerId,
+    pointerType: event.pointerType,
+    item,
+    list,
+    root,
+    immediate: event.pointerType === 'mouse' || onHandle,
+    startX: event.clientX,
+    startY: event.clientY,
+    timer: undefined,
+  };
+  if (event.pointerType !== 'mouse') {
+    addTouchGuard();
+  }
+  if (!pending.immediate) {
+    const gesture = pending;
+    gesture.timer = window.setTimeout(() => {
+      if (pending === gesture) {
+        guarded(() => startDrag(gesture, gesture.startX, gesture.startY));
+      }
+    }, LONG_PRESS_MS);
+  }
+}
+
+function onPointerMove(event: PointerEvent): void {
+  // A mouse moving with no button pressed was released where this page could not see it.
+  const released = event.pointerType === 'mouse' && event.buttons === 0;
+  if (drag) {
+    if (event.pointerId === drag.pointerId) {
+      if (released) {
+        cancelDrag('lost');
+        swallowClicksUntil = 0;
+        return;
+      }
+      const state = drag;
+      state.x = event.clientX;
+      state.y = event.clientY;
+      guarded(() => update(state));
+    }
+    return;
+  }
+  if (!pending || event.pointerId !== pending.pointerId) {
+    return;
+  }
+  if (released) {
+    clearPending();
+    return;
+  }
+  const gesture = pending;
+  const distance = Math.hypot(event.clientX - gesture.startX, event.clientY - gesture.startY);
+  if (gesture.immediate) {
+    if (distance >= DRAG_THRESHOLD) {
+      guarded(() => startDrag(gesture, event.clientX, event.clientY));
+    }
+  } else if (distance > TOUCH_SLOP) {
+    // The finger moved before the long press ended: this gesture is a scroll.
+    clearPending();
+  }
+}
+
+function onPointerUp(event: PointerEvent): void {
+  if (pending && event.pointerId === pending.pointerId) {
+    clearPending();
+  } else if (drag && event.pointerId === drag.pointerId) {
+    const state = drag;
+    state.x = event.clientX;
+    state.y = event.clientY;
+    guarded(() => drop(state));
+  }
+  // The release has happened: only the click it produces is left to swallow.
+  swallowClicksUntil = Math.min(swallowClicksUntil, performance.now() + CLICK_GUARD_MS);
+}
+
+function onPointerCancel(event: PointerEvent): void {
+  if (pending && event.pointerId === pending.pointerId) {
+    clearPending();
+  } else if (drag && event.pointerId === drag.pointerId) {
+    cancelDrag('lost');
+    swallowClicksUntil = 0; // No click follows a cancelled pointer.
+  }
+}
+
+function onEscape(event: KeyboardEvent): void {
+  if (event.key !== 'Escape') {
+    return;
+  }
+  if (drag) {
+    // Capture phase: Escape ends the drag, not the dialog around it.
+    event.preventDefault();
+    event.stopPropagation();
+    cancelDrag('escape', true);
+  } else if (pending) {
+    // Nothing shows yet, so Escape still belongs to the page; a drag must not start on what it closes.
+    clearPending();
+  }
+}
+
+type MoveAction = { within: number } | { to: 'first' | 'last' } | { across: number };
+
+/** Where Alt+arrow sends an item: a step within its list, or into the next or previous list. */
+function moveByKey(key: string, list: HTMLElement): MoveAction | null {
+  const horizontal = axisOf(list) === 'x';
+  const rtl = key === 'ArrowLeft' || key === 'ArrowRight' ? isRtl(list) : false;
+  const step: Record<string, number> = { ArrowUp: -1, ArrowDown: 1, ArrowLeft: rtl ? 1 : -1, ArrowRight: rtl ? -1 : 1 };
+  const value = step[key];
+  if (value === undefined) {
+    return null;
+  }
+  const vertical = key === 'ArrowUp' || key === 'ArrowDown';
+  return vertical !== horizontal ? { within: value } : { across: value };
+}
+
+/** A move with no drag: the same refusal, events, focus and announcements for a key and for a button. */
+function runMove(item: HTMLElement, list: HTMLElement, root: HTMLElement, action: MoveAction, source: SortableSource): void {
+  const scope = getAttr(root, 'data-nowo-ui-sortable') ?? '';
+  const fromIndex = itemsOf(list).indexOf(item);
+  const lastIndex = itemsOf(list).length - 1;
+  let toList: HTMLElement | undefined = list;
+  let index = fromIndex;
+  if ('across' in action) {
+    const lists = queryDocument(LIST).filter((other) => other === list || (scopeOf(other) === scope && !isDisabled(other) && !contains(item, other) && isReachable(other, item)));
+    toList = lists[lists.indexOf(list) + action.across];
+    if (toList) {
+      index = Math.min(fromIndex, itemsOf(toList).length);
+    }
+  } else {
+    index = 'within' in action ? fromIndex + action.within : action.to === 'first' ? 0 : lastIndex;
+    if (index < 0 || index > lastIndex || index === fromIndex) {
+      toList = undefined;
+    }
+  }
+  if (!toList) {
+    say(root, 'edge', item);
+    return;
+  }
+  const destination = toList;
+  const detail: SortableMoveDetail = {
+    scope,
+    id: idOf(item),
+    listId: listIdOf(destination),
+    fromListId: listIdOf(list),
+    index,
+    fromIndex,
+    source,
+    item,
+  };
+  const destinationRoot = rootOf(destination) ?? root;
+  if (!emit(destinationRoot, 'nowo-ui:sortable:move', detail, true)) {
+    say(destinationRoot, 'refused', item);
+    return;
+  }
+  const parent = parentOf(item)!;
+  commit(item, detail, { list, index: fromIndex, parent, next: nextOf(item) }, destination, () => insertAt(destination, item, index));
+}
+
+function onKeydown(event: KeyboardEvent): void {
+  if (!event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.defaultPrevented || drag || pending || !(event.target instanceof Element)) {
+    return;
+  }
+  const target = event.target;
+  const item = itemFrom(target);
+  const list = item ? listOf(item) : null;
+  const root = list ? rootOf(list) : null;
+  const action = list ? moveByKey(event.key, list) : null;
+  if (!item || !list || !root || !action || isDisabled(item) || closest(target, EDITABLE)) {
+    return;
+  }
+  event.preventDefault();
+  runMove(item, list, root, action, 'keyboard');
+}
+
+const BUTTON_ACTIONS: Record<string, MoveAction> = {
+  up: { within: -1 },
+  down: { within: 1 },
+  first: { to: 'first' },
+  last: { to: 'last' },
+  'prev-list': { across: -1 },
+  'next-list': { across: 1 },
+};
+
+/** A host-drawn `data-nowo-ui-sortable-move` button: the route that needs no drag (WCAG 2.5.7). */
+function onMoveButton(event: MouseEvent): void {
+  if (event.defaultPrevented || drag || pending || !(event.target instanceof Element)) {
+    return;
+  }
+  // Only a real button: a planted attribute on a paragraph or a link must not move the item on a click (HH-DL1).
+  const found = closest(event.target, MOVE);
+  const button = found && matches(found, 'button') ? found : null;
+  const item = button ? itemFrom(button) : null;
+  const list = item ? listOf(item) : null;
+  const root = list ? rootOf(list) : null;
+  const name = button ? getAttr(button, 'data-nowo-ui-sortable-move') : null;
+  const action = name !== null && Object.prototype.hasOwnProperty.call(BUTTON_ACTIONS, name) ? BUTTON_ACTIONS[name] : undefined;
+  if (!item || !list || !root || !action || isDisabled(item)) {
+    return;
+  }
+  event.preventDefault();
+  runMove(item, list, root, action, 'button');
+}
+
+function onFocusIn(event: FocusEvent): void {
+  // The region must exist before the first message, or a screen reader may miss it.
+  const item = event.target instanceof Element ? itemFrom(event.target) : null;
+  const root = item ? rootOf(item) : null;
+  if (root) {
+    prepareRegions(getAttr(root, 'data-nowo-ui-sortable'));
+  }
+}
+
+/** Swallows the click a release produces. Enter on a button and a scripted `.click()` have `detail` 0: never theirs. */
+function onClick(event: MouseEvent): void {
+  if (event.detail > 0 && performance.now() < swallowClicksUntil) {
+    swallowClicksUntil = 0;
+    event.preventDefault();
+    event.stopPropagation();
+  }
+}
+
+/** A native drag of a link, an image or a `draggable` item would take the pointer away; selecting text too. */
+function onNativeGesture(event: Event): void {
+  if (pending || drag) {
+    event.preventDefault();
+  }
+}
+
+function onContextMenu(event: Event): void {
+  // Android opens the menu on a long press.
+  if (drag || (pending && pending.pointerType !== 'mouse')) {
+    event.preventDefault();
+  }
+}
+
+function onLeave(): void {
+  clearPending();
+  cancelDrag('lost', true);
+}
+
+function onVisibility(): void {
+  if (documentMember<string>('visibilityState') === 'hidden') {
+    onLeave();
+  }
+}
+
+let bound = false;
+
+/** Binds the delegated listeners once. Content inserted later works without rebinding. */
+export function bindNowoUiSortable(): void {
+  if (bound) {
+    return;
+  }
+  bound = true;
+  // Pressing stays stoppable, so a component can keep a drag from starting. Everything after it is not.
+  listen(documentMember<Window>('defaultView'), 'pointerdown', onAnyPress, true);
+  listen(document, 'pointerdown', onPointerDown);
+  listen(documentMember<Window>('defaultView'), 'pointermove', onPointerMove, true);
+  listen(documentMember<Window>('defaultView'), 'pointerup', onPointerUp, true);
+  listen(documentMember<Window>('defaultView'), 'pointercancel', onPointerCancel, true);
+  listen(document, 'keydown', onEscape, true);
+  listen(document, 'keydown', onKeydown);
+  listen(document, 'focusin', onFocusIn);
+  listen(document, 'click', onClick, true);
+  listen(document, 'click', onMoveButton);
+  listen(document, 'dragstart', onNativeGesture);
+  listen(document, 'selectstart', onNativeGesture);
+  listen(document, 'contextmenu', onContextMenu);
+  listen(document, 'visibilitychange', onVisibility);
+  // A Turbo snapshot must not keep the copy or the placeholder.
+  listen(document, 'turbo:before-cache', onLeave);
+  listen(document, 'turbo:before-render', onLeave);
+  listen(documentMember<Window>('defaultView'), 'pagehide', onLeave);
+  listen(documentMember<Window>('defaultView'), 'blur', onLeave);
+}
+
+declare global {
+  interface Window {
+    nowoUiAnnounceSortable?: typeof announceSortable;
+  }
+}
+
+// A second copy of the script must not bind again. A symbol: an element with some id cannot turn this off (HH-L4).
+const BOUND_KEY = Symbol.for('nowo-ui.sortable.bound');
+if (typeof document !== 'undefined' && !(window as unknown as Record<symbol, unknown>)[BOUND_KEY]) {
+  (window as unknown as Record<symbol, unknown>)[BOUND_KEY] = true;
+  window.nowoUiAnnounceSortable = announceSortable;
+  bindNowoUiSortable();
+}

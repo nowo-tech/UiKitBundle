@@ -36,12 +36,12 @@ final class SmallOptions234Test extends TestCase
         'attributes' => ['dialog_footer' => ['data-host' => '1'], 'progress_meter' => ['data-host' => '1'], 'tree_link' => ['data-host' => '1']],
     ];
 
-    private static function twig(array $templates = [], array $theme = []): Environment
+    private function twig(array $templates = [], array $theme = []): Environment
     {
         return PageContractTwig::create($templates, $theme);
     }
 
-    private static function table(?callable $rowAttributes = null): Table
+    private function table(?callable $rowAttributes = null): Table
     {
         return new Table([new Column('name', 'Name')], ['first' => ['name' => 'One'], 'second' => ['name' => 'Two']], label: 'Rows', rowAttributes: $rowAttributes);
     }
@@ -50,7 +50,7 @@ final class SmallOptions234Test extends TestCase
 
     public function testRowAttributesPerRowWithTheClassAfterTheSlot(): void
     {
-        $html = self::twig()->render(self::PARTIALS.'_table.html.twig', ['table' => self::table(static fn (array $row, string $key): array => [
+        $html = $this->twig()->render(self::PARTIALS.'_table.html.twig', ['table' => $this->table(static fn (array $row, string $key): array => [
             'class' => 'list__row "x',
             'data-key' => $key,
             'data-name' => $row['name'],
@@ -65,7 +65,7 @@ final class SmallOptions234Test extends TestCase
     public function testRowAttributesReachTheListScaffold(): void
     {
         $page = new ListPage(new PageHeader('Rows'), [new Column('name', 'Name')], [['name' => 'One']], rowAttributes: static fn (): array => ['data-testid' => 'row']);
-        $html = self::twig()->render('@NowoUiKit/page/list.html.twig', ['page' => $page]);
+        $html = $this->twig()->render('@NowoUiKit/page/list.html.twig', ['page' => $page]);
         self::assertStringContainsString('<tr class="nowo-ui-table__row" data-testid="row">', $html);
         self::assertStringNotContainsString('<tfoot', $html);
     }
@@ -86,7 +86,7 @@ final class SmallOptions234Test extends TestCase
     public function testRowAttributesAreChecked(array $attributes): void
     {
         $this->expectException(InvalidArgumentException::class);
-        self::table(static fn (): array => $attributes)->rowAttributes(['name' => 'One'], 'first');
+        $this->table(static fn (): array => $attributes)->rowAttributes(['name' => 'One'], 'first');
     }
 
     /**
@@ -108,7 +108,7 @@ final class SmallOptions234Test extends TestCase
     {
         $rows = ['first' => ['name' => 'One', 'link' => '/ok'], 'second' => ['name' => 'Two', 'link' => $stored]];
         $table = new Table([new Column('name', 'Name')], $rows, label: 'Rows', rowAttributes: static fn (array $row): array => ['data-link-url' => $row['link'], 'data-name' => $row['name']]);
-        $html = self::twig()->render(self::PARTIALS.'_table.html.twig', ['table' => $table]);
+        $html = $this->twig()->render(self::PARTIALS.'_table.html.twig', ['table' => $table]);
 
         self::assertStringContainsString('<tr class="nowo-ui-table__row" data-link-url="/ok" data-name="One">', $html);
         self::assertStringContainsString('<tr class="nowo-ui-table__row" data-name="Two">', $html);
@@ -120,7 +120,7 @@ final class SmallOptions234Test extends TestCase
     {
         $rows = [['name' => 'One', 'link' => '/ok'], ['name' => 'Two', 'link' => $stored]];
         $page = new ListPage(new PageHeader('Rows'), [new Column('name', 'Name')], $rows, rowAttributes: static fn (array $row): array => ['data-link-url' => $row['link'], 'data-name' => $row['name']]);
-        $html = self::twig()->render('@NowoUiKit/page/list.html.twig', ['page' => $page]);
+        $html = $this->twig()->render('@NowoUiKit/page/list.html.twig', ['page' => $page]);
 
         self::assertStringContainsString('<tr class="nowo-ui-table__row" data-link-url="/ok" data-name="One">', $html);
         self::assertStringContainsString('<tr class="nowo-ui-table__row" data-name="Two">', $html);
@@ -132,19 +132,19 @@ final class SmallOptions234Test extends TestCase
     public function testAStoredLinkThatRunsNothingIsKept(): void
     {
         $table = new Table([new Column('name', 'Name')], [['name' => 'One']], label: 'Rows', rowAttributes: static fn (): array => ['data-link-url' => 'tel:+34600000000', 'data-location' => 'Madrid: centro']);
-        $html = self::twig()->render(self::PARTIALS.'_table.html.twig', ['table' => $table]);
+        $html = $this->twig()->render(self::PARTIALS.'_table.html.twig', ['table' => $table]);
         self::assertStringContainsString('<tr class="nowo-ui-table__row" data-link-url="tel:+34600000000" data-location="Madrid: centro">', $html);
     }
 
     public function testRowAttributesMustBeAnArray(): void
     {
         $this->expectException(TypeError::class);
-        self::table(static fn (): string => 'class')->rowAttributes(['name' => 'One'], 'first');
+        $this->table(static fn (): string => 'class')->rowAttributes(['name' => 'One'], 'first');
     }
 
     public function testWithoutRowAttributesARowHasNone(): void
     {
-        self::assertSame([], self::table()->rowAttributes(['name' => 'One'], 'first'));
+        self::assertSame([], $this->table()->rowAttributes(['name' => 'One'], 'first'));
     }
 
     public function testFootThroughEmbedWithFootAttr(): void
@@ -154,14 +154,14 @@ final class SmallOptions234Test extends TestCase
     {% block nowo_ui_table_foot %}<tr><th scope="row">Total {{ table.rows|length }}</th></tr>{% endblock %}
 {% endembed %}
 TWIG;
-        $html = self::twig(['page' => $template], self::THEME)->render('page', ['table' => self::table()]);
+        $html = $this->twig(['page' => $template], self::THEME)->render('page', ['table' => $this->table()]);
         self::assertStringContainsString('</tbody><tfoot class="nowo-ui-table__foot app-foot time-col" data-target="totals"><tr><th scope="row">Total 2</th></tr></tfoot>', $html);
     }
 
     public function testAnEmptyFootPrintsNothing(): void
     {
         $template = "{% embed nowo_ui_partial('table') with {table: table} %}{% block nowo_ui_table_foot %}  \n  {% endblock %}{% endembed %}";
-        $html = self::twig(['page' => $template])->render('page', ['table' => self::table()]);
+        $html = $this->twig(['page' => $template])->render('page', ['table' => $this->table()]);
         self::assertStringNotContainsString('<tfoot', $html);
     }
 
@@ -169,7 +169,7 @@ TWIG;
     {
         $template = "{% extends '@NowoUiKit/page/list.html.twig' %}{% block nowo_ui_list_foot %}<tr><th>Sum</th></tr>{% endblock %}";
         $page = new ListPage(new PageHeader('Rows'), [new Column('name', 'Name')], [['name' => 'One']]);
-        $html = self::twig(['page' => $template])->render('page', ['page' => $page]);
+        $html = $this->twig(['page' => $template])->render('page', ['page' => $page]);
         self::assertStringContainsString('<tfoot class="nowo-ui-table__foot"><tr><th>Sum</th></tr></tfoot>', $html);
     }
 
@@ -178,14 +178,14 @@ TWIG;
      */
     public function testFootHtmlEscapesAPlainString(): void
     {
-        $html = self::twig()->render(self::PARTIALS.'_table.html.twig', ['table' => self::table(), 'foot_html' => '<tr onclick="x()"><td>Sum</td></tr>']);
+        $html = $this->twig()->render(self::PARTIALS.'_table.html.twig', ['table' => $this->table(), 'foot_html' => '<tr onclick="x()"><td>Sum</td></tr>']);
         self::assertStringContainsString('&lt;tr onclick=&quot;x()&quot;&gt;', $html);
         self::assertStringNotContainsString('<tr onclick', $html);
     }
 
     public function testFootAttrIsChecked(): void
     {
-        $this->assertTwigRefuses(self::PARTIALS.'_table.html.twig', ['table' => self::table(), 'foot_html' => 'x', 'foot_attr' => ['onclick' => 'x()']]);
+        $this->assertTwigRefuses(self::PARTIALS.'_table.html.twig', ['table' => $this->table(), 'foot_html' => 'x', 'foot_attr' => ['onclick' => 'x()']]);
     }
 
     // K4 — tree
@@ -198,7 +198,7 @@ TWIG;
             'done' => true,
             'children' => [['id' => 'b', 'label' => 'Beta', 'href' => '/b', 'link_attr' => ['data-child' => '1']]],
         ]];
-        $html = self::twig(['check' => '<i class="check">{{ node.done|default(false) ? "done" : "open" }}</i>'], self::THEME)->render(self::PARTIALS.'_tree.html.twig', [
+        $html = $this->twig(['check' => '<i class="check">{{ node.done|default(false) ? "done" : "open" }}</i>'], self::THEME)->render(self::PARTIALS.'_tree.html.twig', [
             'nodes' => $nodes, 'label' => 'Tasks', 'leading_template' => 'check', 'attr' => ['id' => 't'],
         ]);
 
@@ -212,7 +212,7 @@ TWIG;
 
     public function testATreeNodeWithAStoredBadUrlKeepsTheTreeWorking(): void
     {
-        $html = self::twig()->render(self::PARTIALS.'_tree.html.twig', ['label' => 'T', 'attr' => ['id' => 't'], 'nodes' => [[
+        $html = $this->twig()->render(self::PARTIALS.'_tree.html.twig', ['label' => 'T', 'attr' => ['id' => 't'], 'nodes' => [[
             'id' => 'a', 'label' => 'A', 'href' => '/a',
             'link_attr' => ['data-task-panel-url' => 'javascript:x()', 'data-keep' => '1'],
             'item_attr' => ['data-src' => ' JAVASCRIPT:x()', 'data-keep-item' => '1'],
@@ -230,7 +230,7 @@ TWIG;
     public function testTreeHooksCannotBeSetThroughTheOptions(): void
     {
         foreach (['data-nowo-ui-tree-toggle', 'data-nowo-ui-tree-children-url', 'data-nowo-ui-tree-movable', 'DATA-NOWO-UI-TREE-DROP', 'data-nowo-ui-tree'] as $hook) {
-            $html = self::twig()->render(self::PARTIALS.'_tree.html.twig', ['label' => 'T', 'attr' => ['id' => 't'], 'nodes' => [[
+            $html = $this->twig()->render(self::PARTIALS.'_tree.html.twig', ['label' => 'T', 'attr' => ['id' => 't'], 'nodes' => [[
                 'id' => 'a', 'label' => 'A', 'href' => '/a', 'link_attr' => [$hook => '/x'], 'item_attr' => [$hook => '/x'],
             ]]]);
             self::assertStringNotContainsString($hook.'="/x"', $html, $hook);
@@ -270,7 +270,7 @@ TWIG;
     #[DataProvider('scriptHrefs')]
     public function testATreeNodeThatRunsScriptLinksNowhere(string $href): void
     {
-        $html = self::twig()->render(self::PARTIALS.'_tree.html.twig', ['label' => 'T', 'attr' => ['id' => 't'], 'nodes' => [['id' => 'a', 'label' => 'A', 'href' => $href]]]);
+        $html = $this->twig()->render(self::PARTIALS.'_tree.html.twig', ['label' => 'T', 'attr' => ['id' => 't'], 'nodes' => [['id' => 'a', 'label' => 'A', 'href' => $href]]]);
         self::assertStringContainsString('href="#" role="treeitem"', $html);
         self::assertStringNotContainsString('script:', $html);
     }
@@ -278,8 +278,8 @@ TWIG;
     #[DataProvider('scriptHrefs')]
     public function testABackLinkThatRunsScriptPrintsNoLink(string $href): void
     {
-        self::assertStringNotContainsString('<a', self::twig()->render(self::PARTIALS.'_back_link.html.twig', ['href' => $href, 'label' => 'Back']));
-        $html = self::twig()->render(self::PARTIALS.'_page_header.html.twig', ['header' => new PageHeader('Title', back: new BackLink($href, 'Back to list'))]);
+        self::assertStringNotContainsString('<a', $this->twig()->render(self::PARTIALS.'_back_link.html.twig', ['href' => $href, 'label' => 'Back']));
+        $html = $this->twig()->render(self::PARTIALS.'_page_header.html.twig', ['header' => new PageHeader('Title', back: new BackLink($href, 'Back to list'))]);
         self::assertStringNotContainsString('Back to list', $html);
         self::assertStringContainsString('Title', $html);
     }
@@ -308,7 +308,7 @@ TWIG;
 
     public function testDialogHooksMergeOverTheSlots(): void
     {
-        $html = self::twig([], self::THEME)->render(self::PARTIALS.'_dialog.html.twig', [
+        $html = $this->twig([], self::THEME)->render(self::PARTIALS.'_dialog.html.twig', [
             'id' => 'd', 'title' => 'T', 'footer' => 'F',
             'header_attr' => ['class' => 'dh', 'data-a' => '1'],
             'footer_attr' => ['class' => 'task-dialog__actions', 'data-host' => '2'],
@@ -319,15 +319,15 @@ TWIG;
 
     public function testFooterAttrOnTheFooterTargetKeepsItsContract(): void
     {
-        $html = self::twig()->render(self::PARTIALS.'_dialog.html.twig', ['id' => 'd', 'title' => 'T', 'footer_target' => true, 'footer_attr' => ['class' => 'x', 'data-a' => '1', 'hidden' => false, 'data-nowo-ui-dialog-footer' => 'z']]);
+        $html = $this->twig()->render(self::PARTIALS.'_dialog.html.twig', ['id' => 'd', 'title' => 'T', 'footer_target' => true, 'footer_attr' => ['class' => 'x', 'data-a' => '1', 'hidden' => false, 'data-nowo-ui-dialog-footer' => 'z']]);
         self::assertStringContainsString('<footer class="nowo-ui-dialog__footer x" data-nowo-ui-dialog-footer hidden data-a="1"></footer>', $html);
     }
 
     public function testBackArrowBeforeTheTitle(): void
     {
-        $html = self::twig([], self::THEME)->render(self::PARTIALS.'_dialog.html.twig', ['id' => 'd', 'title' => 'Step 2', 'back_href' => '/step-1', 'status' => ['label' => 'Up']]);
+        $html = $this->twig([], self::THEME)->render(self::PARTIALS.'_dialog.html.twig', ['id' => 'd', 'title' => 'Step 2', 'back_href' => '/step-1', 'status' => ['label' => 'Up']]);
         self::assertMatchesRegularExpression('#<a class="nowo-ui-dialog__back app-back" href="/step-1" aria-label="Back" title="Back"><span aria-hidden="true">&larr;</span></a><div class="nowo-ui-dialog__title-row"><h2 #', $html);
-        $html = self::twig()->render(self::PARTIALS.'_dialog.html.twig', ['id' => 'd', 'title' => 'T', 'back_href' => '/x', 'back_label' => 'Back to scope']);
+        $html = $this->twig()->render(self::PARTIALS.'_dialog.html.twig', ['id' => 'd', 'title' => 'T', 'back_href' => '/x', 'back_label' => 'Back to scope']);
         self::assertStringContainsString('href="/x" aria-label="Back to scope" title="Back to scope"><span aria-hidden="true">&larr;</span></a><h2 ', $html);
     }
 
@@ -345,7 +345,7 @@ TWIG;
     #[DataProvider('unsafeBackHrefs')]
     public function testUnsafeBackHrefPrintsNoArrow(string $href): void
     {
-        $html = self::twig()->render(self::PARTIALS.'_dialog.html.twig', ['id' => 'd', 'title' => 'T', 'back_href' => $href]);
+        $html = $this->twig()->render(self::PARTIALS.'_dialog.html.twig', ['id' => 'd', 'title' => 'T', 'back_href' => $href]);
         self::assertStringNotContainsString('nowo-ui-dialog__back', $html);
         self::assertStringNotContainsString('script:', $html);
     }
@@ -371,11 +371,11 @@ TWIG;
 
     public function testRemoteFormDialogForwardsPlacement(): void
     {
-        $html = self::twig()->render(self::PARTIALS.'_remote_form_dialog.html.twig', ['id' => 'r', 'placement' => 'end']);
+        $html = $this->twig()->render(self::PARTIALS.'_remote_form_dialog.html.twig', ['id' => 'r', 'placement' => 'end']);
         self::assertStringContainsString('class="nowo-ui-dialog nowo-ui-dialog--lg nowo-ui-dialog--end nowo-ui-dialog--remote-form"', $html);
-        $html = self::twig()->render(self::PARTIALS.'_remote_form_dialog.html.twig', ['id' => 'r', 'placement' => 'start', 'stimulus' => true, 'size' => 'md']);
+        $html = $this->twig()->render(self::PARTIALS.'_remote_form_dialog.html.twig', ['id' => 'r', 'placement' => 'start', 'stimulus' => true, 'size' => 'md']);
         self::assertStringContainsString('class="nowo-ui-dialog nowo-ui-dialog--start nowo-ui-dialog--remote-form"', $html);
-        $html = self::twig()->render(self::PARTIALS.'_remote_form_dialog.html.twig', ['id' => 'r', 'placement' => 'nonsense']);
+        $html = $this->twig()->render(self::PARTIALS.'_remote_form_dialog.html.twig', ['id' => 'r', 'placement' => 'nonsense']);
         self::assertStringContainsString('class="nowo-ui-dialog nowo-ui-dialog--lg nowo-ui-dialog--remote-form"', $html);
     }
 
@@ -389,7 +389,7 @@ TWIG;
 
     public function testAbsoluteAmount(): void
     {
-        $html = self::twig()->render(self::PARTIALS.'_progress.html.twig', ['value' => 3, 'max' => 5, 'id' => 'p']);
+        $html = $this->twig()->render(self::PARTIALS.'_progress.html.twig', ['value' => 3, 'max' => 5, 'id' => 'p']);
         self::assertStringContainsString('<progress id="p" class="nowo-ui-progress-meter" max="5" value="3">60 %</progress>', $html);
         self::assertStringContainsString('<span class="nowo-ui-progress-field__value" aria-hidden="true">60 %</span>', $html);
         self::assertStringNotContainsString('--indeterminate', $html);
@@ -397,13 +397,13 @@ TWIG;
 
     public function testAmountIsClampedAndPercentWins(): void
     {
-        $html = self::twig()->render(self::PARTIALS.'_progress.html.twig', ['value' => 9, 'max' => 5, 'id' => 'p']);
+        $html = $this->twig()->render(self::PARTIALS.'_progress.html.twig', ['value' => 9, 'max' => 5, 'id' => 'p']);
         self::assertStringContainsString('max="5" value="5">100 %</progress>', $html);
-        $html = self::twig()->render(self::PARTIALS.'_progress.html.twig', ['value' => -1, 'max' => 5, 'id' => 'p']);
+        $html = $this->twig()->render(self::PARTIALS.'_progress.html.twig', ['value' => -1, 'max' => 5, 'id' => 'p']);
         self::assertStringContainsString('max="5" value="0">0 %</progress>', $html);
-        $html = self::twig()->render(self::PARTIALS.'_progress.html.twig', ['value' => 3, 'max' => 5, 'percent' => 10, 'id' => 'p']);
+        $html = $this->twig()->render(self::PARTIALS.'_progress.html.twig', ['value' => 3, 'max' => 5, 'percent' => 10, 'id' => 'p']);
         self::assertStringContainsString('max="100" value="10">10 %</progress>', $html);
-        $html = self::twig()->render(self::PARTIALS.'_progress.html.twig', ['value' => 3, 'max' => 5, 'indeterminate' => true, 'id' => 'p']);
+        $html = $this->twig()->render(self::PARTIALS.'_progress.html.twig', ['value' => 3, 'max' => 5, 'indeterminate' => true, 'id' => 'p']);
         self::assertStringContainsString('nowo-ui-progress-field--indeterminate', $html);
         self::assertStringNotContainsString('value=', $html);
     }
@@ -427,7 +427,7 @@ TWIG;
     #[DataProvider('noAmount')]
     public function testNoAmountStaysIndeterminate(array $context): void
     {
-        $html = self::twig()->render(self::PARTIALS.'_progress.html.twig', ['id' => 'p'] + $context);
+        $html = $this->twig()->render(self::PARTIALS.'_progress.html.twig', ['id' => 'p'] + $context);
         self::assertStringContainsString('<progress id="p" class="nowo-ui-progress-meter" max="100">', $html);
         self::assertNull(ThemeExtension::progressAmount($context['value'] ?? null, $context['max'] ?? null));
     }
@@ -441,13 +441,13 @@ TWIG;
 
     public function testHiddenLabelKeepsTheAccessibleName(): void
     {
-        $html = self::twig()->render(self::PARTIALS.'_progress.html.twig', ['percent' => 40, 'label' => 'Copying', 'label_visible' => false, 'id' => 'p']);
+        $html = $this->twig()->render(self::PARTIALS.'_progress.html.twig', ['percent' => 40, 'label' => 'Copying', 'label_visible' => false, 'id' => 'p']);
         self::assertStringContainsString('<label class="nowo-ui-progress-field__label visually-hidden" for="p">Copying</label>', $html);
     }
 
     public function testMeterAttr(): void
     {
-        $html = self::twig([], self::THEME)->render(self::PARTIALS.'_progress.html.twig', ['value' => 1, 'max' => 2, 'id' => 'p', 'meter_attr' => [
+        $html = $this->twig([], self::THEME)->render(self::PARTIALS.'_progress.html.twig', ['value' => 1, 'max' => 2, 'id' => 'p', 'meter_attr' => [
             'class' => 'task-sync__bar', 'data-sync-target' => 'bar', 'data-host' => '2', 'id' => 'other', 'max' => '9', 'value' => '9',
         ]]);
         self::assertStringContainsString('<progress id="p" class="nowo-ui-progress-meter task-sync__bar" max="2" value="1" data-host="2" data-sync-target="bar">', $html);
@@ -478,7 +478,7 @@ TWIG;
     private function assertTwigRefuses(string $template, array $context): void
     {
         try {
-            $html = self::twig()->render($template, $context);
+            $html = $this->twig()->render($template, $context);
         } catch (Throwable $e) {
             self::assertInstanceOf(InvalidArgumentException::class, $e->getPrevious() ?? $e);
 

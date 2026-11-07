@@ -29,6 +29,7 @@ type Entry =
   | 'error-retry'
   | 'overlay'
   | 'scroll-region'
+  | 'sortable'
   | 'demo-peers';
 
 const entry = process.env.VITE_ENTRY as Entry | undefined;
@@ -373,6 +374,21 @@ const configs: Record<Entry, { build: object }> = {
         output: {
           format: 'iife' as const,
           entryFileNames: 'js/nowo-ui-error-retry.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  sortable: {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-sortable.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-sortable.js',
         },
       },
       minify: true,

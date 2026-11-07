@@ -37,7 +37,23 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
       testMatch: /.*\.spec\.ts/,
-      testIgnore: /screenshots\.spec\.ts/,
+      testIgnore: /screenshots\.spec\.ts|sortable-touch\.spec\.ts/,
+    },
+    // UiKit sortable: the other engines, and touch input in Chromium (make test-e2e-sortable).
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+      testMatch: /sortable\.spec\.ts/,
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+      testMatch: /sortable\.spec\.ts/,
+    },
+    {
+      name: 'chromium-touch',
+      use: { ...devices['Pixel 7'] },
+      testMatch: /sortable-touch\.spec\.ts/,
     },
     {
       name: 'screenshots',

@@ -120,6 +120,13 @@
 
 ## Unreleased
 
+**Template contract:** additive. New opt-in script `js/nowo-ui-sortable.js` and new CSS rules that match only
+`data-nowo-ui-sortable*` attributes and `nowo-ui-sortable*` classes. Pages that do not use them print the same markup,
+and `nowo_ui_script_names()` is unchanged. To use it, see [USAGE](USAGE.md#sortable). A page that uses it must offer a
+way to move that does not need dragging (WCAG 2.5.7), and should be checked on real phones with the checklist there.
+
+**Not run on a real device.** Touch was tested only by emulation in Chromium, and this release is opt-in on that basis. On touch screens, use handles and keep a route that needs no drag until the checklist in USAGE has been run on your devices.
+
 ## To 2.35.0
 
 From **2.34.0**:
