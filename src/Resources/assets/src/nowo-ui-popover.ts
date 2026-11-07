@@ -22,10 +22,9 @@
 export const ROOT = '[data-nowo-ui-popover-menu]';
 export const TRIGGER = '[data-nowo-ui-popover-trigger]';
 export const PANEL = '[data-nowo-ui-popover-panel]';
-/** Gap between the toggle and the panel (px). */
-export const GAP_PX = 4;
-/** Minimum distance between the panel and the viewport edges (px). */
-export const EDGE_PX = 8;
+import { placeBeside } from './nowo-ui-popover-core';
+
+export { EDGE_PX, GAP_PX } from './nowo-ui-popover-core';
 
 /** Root marker of APG menus (2.28). */
 export const MENU_SEMANTICS = '[data-nowo-ui-menu-semantics="menu"]';
@@ -103,16 +102,7 @@ function alignsLeft(trigger: HTMLElement, panel: HTMLElement): boolean {
 /** Below the trigger, end edges aligned (start edges for start-aligned menus); above it when the viewport has no room
  * below; kept inside the viewport. */
 export function placePopover(trigger: HTMLElement, panel: HTMLElement): void {
-  const rect = trigger.getBoundingClientRect();
-  const width = panel.offsetWidth;
-  const height = panel.offsetHeight;
-  const below = rect.bottom + GAP_PX;
-  const above = rect.top - GAP_PX - height;
-  const top = below + height > window.innerHeight - EDGE_PX && above >= EDGE_PX ? above : below;
-  const start = alignsLeft(trigger, panel) ? rect.left : rect.right - width;
-  const left = Math.min(Math.max(EDGE_PX, start), window.innerWidth - EDGE_PX - width);
-  panel.style.top = `${Math.round(top)}px`;
-  panel.style.left = `${Math.round(Math.max(EDGE_PX, left))}px`;
+  placeBeside(trigger, panel, { alignLeft: alignsLeft(trigger, panel) });
 }
 
 /** Hides a panel (no-op when it is not open or the browser lacks the Popover API). */

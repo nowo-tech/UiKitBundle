@@ -122,6 +122,8 @@
 
 ## Unreleased
 
+**Template contract:** additive. New partials `emoji_picker` and `show_more`, ten new slots, new opt-in scripts `js/nowo-ui-emoji-picker.js` and `js/nowo-ui-show-more.js`, new CSS rules that match only the new classes and attributes, and one more form theme in `twig.form_themes`, which defines only `nowo_ui_emoji_picker_*` blocks. Pages that do not use them print the same markup. A fragment's `[data-nowo-ui-dialog-back]` only moves if a fragment has the attribute.
+
 ## To 2.36.1
 
 From **2.36.0**:

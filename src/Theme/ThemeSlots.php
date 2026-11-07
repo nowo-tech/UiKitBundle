@@ -425,6 +425,21 @@ final class ThemeSlots
         // Segmented control (2.4, partial `segmented`): radiogroup root and its option buttons (one checkbox behind)
         'segmented' => ['nowo-ui-segmented', []],
         'segmented_option' => ['nowo-ui-segmented__option', []],
+        // Emoji picker (partial `emoji_picker`, EmojiPickerType): root, toggle, panel, its search box, grid and status.
+        'emoji_picker' => ['nowo-ui-emoji-picker', []],
+        'emoji_picker_toggle' => ['nowo-ui-btn nowo-ui-btn--secondary nowo-ui-emoji-picker__toggle', [
+            'bootstrap' => 'btn btn-outline-secondary',
+            'tailwind' => 'inline-flex items-center gap-1 font-medium px-3 py-1.5 text-sm border',
+            'foundation' => 'button secondary',
+        ]],
+        'emoji_picker_panel' => ['nowo-ui-emoji-picker__panel', []],
+        'emoji_picker_search' => ['nowo-ui-input nowo-ui-emoji-picker__search', ['bootstrap' => 'form-control']],
+        'emoji_picker_grid' => ['nowo-ui-emoji-picker__grid', []],
+        'emoji_picker_status' => ['nowo-ui-emoji-picker__status', []],
+        // Show more (partial `show_more`): root, the folded content, the button.
+        'show_more' => ['nowo-ui-show-more', []],
+        'show_more_content' => ['nowo-ui-show-more__content', []],
+        'show_more_toggle' => ['nowo-ui-btn nowo-ui-btn--link nowo-ui-show-more__toggle', ['bootstrap' => 'btn btn-link']],
         // Tree view (2.24, partial `tree`): role=tree root, each li, the treeitem link and the child groups
         'tree' => ['nowo-ui-tree', []],
         'tree_item' => ['nowo-ui-tree__item', []],
@@ -645,6 +660,7 @@ final class ThemeSlots
         'confirm_dialog' => '@NowoUiKitBundle/partials/_confirm_dialog.html.twig',
         'detail_list' => '@NowoUiKitBundle/page/_detail_list.html.twig',
         'dialog' => '@NowoUiKitBundle/partials/_dialog.html.twig',
+        'emoji_picker' => '@NowoUiKitBundle/partials/_emoji_picker.html.twig',
         'empty' => '@NowoUiKitBundle/partials/_empty.html.twig',
         'filters' => '@NowoUiKitBundle/partials/_filters.html.twig',
         'flashes' => '@NowoUiKitBundle/partials/_flashes.html.twig',
@@ -674,6 +690,7 @@ final class ThemeSlots
         'side_panel' => '@NowoUiKitBundle/partials/_side_panel.html.twig',
         'side_panel_container' => '@NowoUiKitBundle/partials/_side_panel_container.html.twig',
         'side_panel_toggle' => '@NowoUiKitBundle/partials/_side_panel_toggle.html.twig',
+        'show_more' => '@NowoUiKitBundle/partials/_show_more.html.twig',
         'sort_header' => '@NowoUiKitBundle/partials/_sort_header.html.twig',
         'stat_row' => '@NowoUiKitBundle/partials/_stat_row.html.twig',
         'table' => '@NowoUiKitBundle/partials/_table.html.twig',

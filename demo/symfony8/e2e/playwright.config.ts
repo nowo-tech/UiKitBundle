@@ -43,12 +43,12 @@ export default defineConfig({
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
-      testMatch: /sortable\.spec\.ts/,
+      testMatch: /(sortable|emoji-picker|show-more|dialog-back)\.spec\.ts/,
     },
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
-      testMatch: /sortable\.spec\.ts/,
+      testMatch: /(sortable|emoji-picker|show-more|dialog-back)\.spec\.ts/,
     },
     {
       name: 'chromium-touch',

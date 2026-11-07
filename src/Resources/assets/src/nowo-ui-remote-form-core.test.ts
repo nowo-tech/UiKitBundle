@@ -9,7 +9,9 @@ import {
   isFragment,
   headerName,
   isPlainClick,
+  clearBack,
   liftActions,
+  liftBack,
   MAX_STEPS,
   NATIVE_ATTR,
   nestedLayerOwnsEscape,
@@ -349,6 +351,89 @@ describe('remote form helpers', () => {
     expect(nestedLayerOwnsEscape(dialog, document.getElementById('in'))).toBe(true);
     expect(nestedLayerOwnsEscape(dialog, document.getElementById('out'))).toBe(false);
     expect(nestedLayerOwnsEscape(dialog, null)).toBe(false);
+  });
+});
+
+describe('dialog back button', () => {
+  const setup = (body: string, header = ''): { dialog: HTMLDialogElement; body: HTMLElement; header: HTMLElement } => {
+    document.body.innerHTML = `<dialog id="d"><header id="h">${header}<h2 id="t">Title</h2><button id="x" type="button">×</button></header><div id="b">${body}</div></dialog>`;
+    return { dialog: document.getElementById('d') as HTMLDialogElement, body: document.getElementById('b') as HTMLElement, header: document.getElementById('h') as HTMLElement };
+  };
+
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  it('moves the button itself into the header, before the title, and it keeps its listeners', () => {
+    const { dialog, body, header } = setup('<form><button id="back" type="button" data-nowo-ui-dialog-back>Back</button></form>');
+    const back = document.getElementById('back') as HTMLButtonElement;
+    const clicked = vi.fn();
+    back.addEventListener('click', clicked);
+    expect(liftBack(body, dialog)).toBe(true);
+    expect(document.getElementById('back')).toBe(back);
+    expect(header.firstElementChild).toBe(back);
+    expect(body.contains(back)).toBe(false);
+    expect(back.classList.contains('nowo-ui-dialog__back')).toBe(true);
+    back.click();
+    expect(clicked).toHaveBeenCalledTimes(1);
+  });
+
+  it('a new fragment replaces the button, and one without any takes it away', () => {
+    const { dialog, body, header } = setup('<button id="first" type="button" data-nowo-ui-dialog-back>1</button>');
+    liftBack(body, dialog);
+    body.innerHTML = '<button id="second" type="button" data-nowo-ui-dialog-back>2</button>';
+    expect(liftBack(body, dialog)).toBe(true);
+    expect(document.getElementById('first')).toBeNull();
+    expect(header.firstElementChild?.id).toBe('second');
+    body.innerHTML = '<p>no back here</p>';
+    expect(liftBack(body, dialog)).toBe(false);
+    expect(document.getElementById('second')).toBeNull();
+    expect(header.firstElementChild?.id).toBe('t');
+  });
+
+  it.each([
+    ['a submit button', '<button id="n" data-nowo-ui-dialog-back>x</button>'],
+    ['an explicit submit', '<button id="n" type="submit" data-nowo-ui-dialog-back>x</button>'],
+    ['a link', '<a id="n" href="/x" data-nowo-ui-dialog-back>x</a>'],
+  ])('leaves %s where it is', (_name, html) => {
+    const { dialog, body } = setup(html);
+    expect(liftBack(body, dialog)).toBe(false);
+    expect(body.contains(document.getElementById('n'))).toBe(true);
+  });
+
+  it('hides the back_href arrow while a button is there, and shows it again', () => {
+    const { dialog, body } = setup('<button id="back" type="button" data-nowo-ui-dialog-back>B</button>', '<a id="arrow" class="nowo-ui-dialog__back" href="/up">↑</a>');
+    liftBack(body, dialog);
+    expect((document.getElementById('arrow') as HTMLElement).hidden).toBe(true);
+    clearBack(dialog);
+    expect((document.getElementById('arrow') as HTMLElement).hidden).toBe(false);
+    expect(document.getElementById('back')).toBeNull();
+  });
+
+  it('HR-L6: never unhides an arrow the host hid itself', () => {
+    const { dialog, body } = setup('<p>no back</p>', '<a id="host" class="nowo-ui-dialog__back" href="/up" hidden>↑</a>');
+    clearBack(dialog);
+    expect((document.getElementById('host') as HTMLElement).hidden).toBe(true);
+    liftBack(body, dialog);
+    expect((document.getElementById('host') as HTMLElement).hidden).toBe(true);
+    body.innerHTML = '<button type="button" data-nowo-ui-dialog-back>B</button>';
+    liftBack(body, dialog);
+    clearBack(dialog);
+    expect((document.getElementById('host') as HTMLElement).hidden).toBe(true);
+    expect(document.getElementById('host')?.hasAttribute('data-nowo-ui-dialog-back-hid')).toBe(false);
+  });
+
+  it('a form in the fragment with controls named like DOM members hides nothing', () => {
+    const { dialog, body, header } = setup('<form id="f"><input name="querySelector"><input name="closest"><button id="back" type="button" data-nowo-ui-dialog-back>B</button></form>');
+    expect(liftBack(body, dialog)).toBe(true);
+    expect(header.firstElementChild?.id).toBe('back');
+  });
+
+  it('a dialog with no header does nothing', () => {
+    document.body.innerHTML = '<dialog id="d"><div id="b"><button id="back" type="button" data-nowo-ui-dialog-back>B</button></div></dialog>';
+    const dialog = document.getElementById('d') as HTMLDialogElement;
+    clearBack(dialog);
+    expect(liftBack(document.getElementById('b') as HTMLElement, dialog)).toBe(false);
   });
 });
 

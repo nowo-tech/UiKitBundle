@@ -22,6 +22,7 @@ use Nowo\UiKitBundle\Form\AppearanceType;
 use Nowo\UiKitBundle\Form\DateRangeRequestHandler;
 use Nowo\UiKitBundle\Form\DateRangeSubmitExtension;
 use Nowo\UiKitBundle\Form\DateRangeType;
+use Nowo\UiKitBundle\Form\EmojiPickerType;
 use Nowo\UiKitBundle\Form\MultiSelectTypeExtension;
 use Nowo\UiKitBundle\Listing\CookieListingPreferenceStore;
 use Nowo\UiKitBundle\Listing\ListingCustomizerViewBuilder;
@@ -63,6 +64,9 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
 {
     /** Form theme with the date-range field's blocks (2.15), prepended to `twig.form_themes`. */
     public const DATE_RANGE_FORM_THEME = '@NowoUiKit/form/nowo_ui_date_range.html.twig';
+
+    /** Form theme with the emoji picker field's block, prepended to `twig.form_themes`. */
+    public const EMOJI_PICKER_FORM_THEME = '@NowoUiKit/form/nowo_ui_emoji_picker.html.twig';
 
     /** @var Closure(): bool */
     private readonly Closure $httpClientAvailable;
@@ -122,7 +126,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
         ];
         // 2.15: the date-range field's blocks (only `nowo_ui_date_range_*`) in every form, whatever the host theme.
         if (class_exists(AbstractType::class)) {
-            $twig['form_themes'] = [self::DATE_RANGE_FORM_THEME];
+            $twig['form_themes'] = [self::DATE_RANGE_FORM_THEME, self::EMOJI_PICKER_FORM_THEME];
         }
         $container->prependExtensionConfig('twig', $twig);
     }
@@ -391,6 +395,9 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
      */
     private function registerDateRange(ContainerBuilder $container): void
     {
+        $container->register('nowo_ui_kit.form.emoji_picker_type', EmojiPickerType::class)
+            ->setArguments([new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE)])
+            ->addTag('form.type');
         $container->register('nowo_ui_kit.form.date_range_type', DateRangeType::class)
             ->setArguments([new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE)])
             ->addTag('form.type');

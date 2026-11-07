@@ -1,0 +1,28 @@
+{#
+  Show more (theme partial `show_more`): text folded after a number of lines, with a real button. Load
+  js/nowo-ui-show-more.js (opt-in: script_names: nowo_ui_script_names()|merge(['show-more'])). Without it the whole text shows and
+  the button stays hidden. The fold is CSS only (no style attribute); the button appears only when the text overflows.
+  Slots: show_more (root), show_more_content, show_more_toggle.
+
+  Required:
+    - id: id of the content, for the button's aria-controls
+    - content: the text as trusted HTML (escape user text before passing it), or override the block nowo_ui_show_more_content
+  Optional:
+    - lines (int, 1 to 6, default 3): lines shown while folded
+    - labels: {more, less} (View\Label|string; defaults show_more.more / show_more.less)
+    - attr: root attributes (no on*), content_attr, bundle
+#}
+{% set _b = bundle|default(null) %}
+{% set _lines = lines|default(3) %}
+{% set _lines = _lines in [1, 2, 3, 4, 5, 6] ? _lines : 3 %}
+{% set _labels = labels|default({}) %}
+{% set _more = _labels.more is defined ? _labels.more|nowo_ui_trans : 'show_more.more'|trans({}, 'NowoUiKitBundle') %}
+{% set _less = _labels.less is defined ? _labels.less|nowo_ui_trans : 'show_more.less'|trans({}, 'NowoUiKitBundle') %}
+{% set _attr = nowo_ui_safe_attrs(attr|default({})) %}
+{% set _content_attr = nowo_ui_safe_attrs(content_attr|default({})) %}
+<div class="{{ nowo_ui_class('show_more', _b) }} nowo-ui-show-more--lines-{{ _lines }}{{ _attr.class is defined ? ' ' ~ _attr.class }}" data-nowo-ui-show-more{{ nowo_ui_attrs('show_more', _b, _attr|filter((v, k) => k != 'class')) }}>
+    <div id="{{ id }}" class="{{ nowo_ui_class('show_more_content', _b) }}{{ _content_attr.class is defined ? ' ' ~ _content_attr.class }}" data-nowo-ui-show-more-content{{ nowo_ui_attrs('show_more_content', _b, _content_attr|filter((v, k) => k != 'class')) }}>
+        {%- block nowo_ui_show_more_content %}{{ content|default('')|raw }}{% endblock -%}
+    </div>
+    <button type="button" class="{{ nowo_ui_class('show_more_toggle', _b) }}" data-nowo-ui-show-more-toggle data-nowo-ui-show-more-more="{{ _more }}" data-nowo-ui-show-more-less="{{ _less }}" aria-expanded="false" aria-controls="{{ id }}" hidden{{ nowo_ui_attrs('show_more_toggle', _b) }}>{{ _more }}</button>
+</div>

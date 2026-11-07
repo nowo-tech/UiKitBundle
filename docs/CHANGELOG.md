@@ -109,6 +109,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Dialog back button:** a fragment's `[data-nowo-ui-dialog-back]` (a `<button type="button">`) moves into the remote form dialog's header, before the title, and goes when the body is replaced. See [USAGE](USAGE.md#dialog-back-button).
+- **`emoji_picker` (new, opt-in):** `EmojiPickerType` and the partial: a text input with a toggle, a search box and a keyboard-navigable grid. One grapheme, checked on the server, up to 64 bytes by default. Nothing was run on a phone or with a real screen reader. A plain input without JavaScript. `js/nowo-ui-emoji-picker.js`, not in `ThemeSlots::SCRIPTS`. Event `nowo-ui:emoji-picker:pick`. See [USAGE](USAGE.md#emoji-picker).
+- **`show_more` (new, opt-in):** the partial and `js/nowo-ui-show-more.js`: a CSS line-clamp fold with a real button. See [USAGE](USAGE.md#show-more).
+
 ## [2.36.1] - 2026-11-07
 
 ### Security

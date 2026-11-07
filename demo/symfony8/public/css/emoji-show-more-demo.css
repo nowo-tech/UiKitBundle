@@ -1,0 +1,7 @@
+/* UiKit demo: widths for the emoji picker and show more page (no inline styles: the page forbids them). */
+.kit-emoji-demo-form {
+  max-width: 24rem;
+}
+.kit-show-more-demo {
+  max-width: 24rem;
+}

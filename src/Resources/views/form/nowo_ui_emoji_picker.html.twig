@@ -1,0 +1,17 @@
+{#
+  Emoji picker field: the widget of Nowo\UiKitBundle\Form\EmojiPickerType, through the `emoji_picker` partial. Prepended to
+  twig.form_themes by the bundle (and used by form/nowo_ui_layout.html.twig), so form_row() and form_widget() render it in any host
+  theme; it defines only `nowo_ui_emoji_picker_*` blocks. Without JavaScript the field is this plain text input.
+#}
+{%- block nowo_ui_emoji_picker_widget -%}
+    {%- set _b = nowo_ui_emoji_picker.bundle -%}
+    {%- set _invalid = errors is defined and errors|length > 0 -%}
+    {%- set _class = nowo_ui_class('input', _b) ~ (_invalid ? ' ' ~ nowo_ui_class('input_invalid', _b)) ~ (attr.class is defined ? ' ' ~ attr.class) -%}
+    {%- set _input -%}
+        <input type="text" id="{{ id }}" name="{{ full_name }}" class="{{ _class }}" value="{{ value }}" autocomplete="off"
+            {%- if required %} required{% endif %}{% if disabled %} disabled{% endif %}
+            {%- if help is defined and help is not empty %} aria-describedby="{{ id }}_help"{% endif %}{% if _invalid %} aria-invalid="true"{% endif %}
+            {%- for _k, _v in attr|filter((v, k) => k != 'class') %}{% if _v is same as(true) %} {{ _k }}{% elseif _v is not same as(false) and _v is not null %} {{ _k }}="{{ _v }}"{% endif %}{% endfor %}>
+    {%- endset -%}
+    {{- include(nowo_ui_partial('emoji_picker', _b), {id: id ~ '_emoji', input: _input, emojis: nowo_ui_emoji_picker.emojis, labels: nowo_ui_emoji_picker.labels, bundle: _b}, with_context: false) -}}
+{%- endblock nowo_ui_emoji_picker_widget -%}

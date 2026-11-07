@@ -39,6 +39,7 @@ Optional **Stimulus peer** TypeScript sources live under `src/Resources/assets/s
 - [Locale / kebab](#locale--kebab)
 - [Remote form dialog (2.28)](#remote-form-dialog-228)
 - [Scroll regions (2.28)](#scroll-regions-228)
+- [Emoji picker and show more](#emoji-picker-and-show-more)
 - [Sortable](#sortable)
 - [Stimulus peers — import examples](#stimulus-peers--import-examples)
 - [Beacon attribute migration](#beacon-attribute-migration)
@@ -688,6 +689,11 @@ attributes). Contract and server side: [USAGE — Remote form dialog](USAGE.md#r
 IIFE only: `js/nowo-ui-scroll-region.js` (opt-in `script_names` entry `scroll-region`). Markup:
 `[data-nowo-ui-region="table"]` (the `table` partial) or `[data-nowo-ui-scroll-region]`, name from
 `data-nowo-ui-scroll-label`. See [USAGE](USAGE.md#focusable-scroll-regions-228).
+
+## Emoji picker and show more
+
+IIFE only, no peer: `js/nowo-ui-emoji-picker.js` and `js/nowo-ui-show-more.js` (opt-in `script_names` entries `emoji-picker`, `show-more`). Events
+`nowo-ui:emoji-picker:pick` and `nowo-ui:show-more:toggle`. See [USAGE](USAGE.md#emoji-picker) and [USAGE](USAGE.md#show-more).
 
 ## Sortable
 
