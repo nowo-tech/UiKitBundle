@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.36.1](#to-2361)
 - [To 2.36.0](#to-2360)
 - [To 2.35.0](#to-2350)
 - [To 2.34.0](#to-2340)
@@ -120,6 +121,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.36.1
+
+From **2.36.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 **`list-pagination` and `auto-refresh`, and fetched dialogs in Safari:** on a page whose CSP forbids `style` attributes, a `style=` in a fetched row or region is now
 blocked in those browsers too, as it always was in Firefox and for the first page. If such a row looked right only because of this,
