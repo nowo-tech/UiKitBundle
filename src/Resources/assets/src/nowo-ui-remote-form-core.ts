@@ -23,6 +23,7 @@
  * are `textContent`; the server's fragment goes through parseFragment() before insertion.
  */
 
+import { bindMotion, closeDialogWithEffect, finishClosing } from './nowo-ui-motion-core';
 import { importForPage, sanitizeFragment } from './nowo-ui-fragment-filter';
 import { overlayRegistry, type OverlayHandle } from './nowo-ui-overlay';
 
@@ -448,6 +449,7 @@ export class RemoteFormSession {
   ) {}
 
   bind(): void {
+    bindMotion();
     this.dialog.addEventListener('close', this.onClose);
     this.dialog.addEventListener('cancel', this.onCancel);
     this.dialog.addEventListener('click', this.onClick);
@@ -495,6 +497,7 @@ export class RemoteFormSession {
       }
     }
     this.message(body, this.settings().loading);
+    finishClosing(this.dialog);
     if (!this.dialog.open) {
       this.dialog.showModal();
     }
@@ -509,7 +512,7 @@ export class RemoteFormSession {
   close(): void {
     this.controller?.abort();
     if (this.dialog.open) {
-      this.dialog.close();
+      closeDialogWithEffect(this.dialog);
     }
   }
 

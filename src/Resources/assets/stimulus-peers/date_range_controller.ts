@@ -26,6 +26,7 @@
  */
 
 import { Controller } from '@hotwired/stimulus';
+import { closeWithEffect, finishClosing } from '../src/nowo-ui-motion-core';
 
 type Labels = {
   from?: string;
@@ -278,6 +279,7 @@ export default class DateRangeController extends Controller<HTMLElement> {
     if (!panel || this.isOpen()) {
       return;
     }
+    finishClosing(panel);
     if (panel.hasAttribute('popover')) {
       popover(() => panel.showPopover());
     } else {
@@ -316,7 +318,7 @@ export default class DateRangeController extends Controller<HTMLElement> {
       return;
     }
     if (panel.hasAttribute('popover')) {
-      popover(() => panel.hidePopover());
+      closeWithEffect(panel, () => popover(() => panel.hidePopover()));
       // Browsers fire `toggle` asynchronously; finish now so the state is right at once (closed() is idempotent).
     } else {
       panel.hidden = true;

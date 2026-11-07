@@ -110,6 +110,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Motion tokens:** `--nowo-ui-motion-small`, `-small-close`, `-medium`, `-medium-close`, `-ease-out`, `-ease-in`, `-lift`, `-scale`. Dialogs and their backdrop, row detail, menus and popovers, the date range, emoji picker and `multi-select` panels, `collapse-panel` and filters collapse now animate opening and closing through them; tabs and the icon-tab tooltip opening only. `prefers-reduced-motion` and `html[data-motion]` keep a short fade. The kit's own closes wait for the fade, with a timer as a fallback. A closing modal dialog is `inert`, and fades end on `turbo:before-cache`. See [THEMING](THEMING.md#motion).
+
+### Fixed
+
+- **Table cards on a phone:** a card `td` is now `box-sizing: border-box`, so its padding no longer overflows the row, and its `::before` label has `pointer-events: none`, so it no longer catches taps meant for the value.
+- **Emoji picker:** Escape is no longer swallowed by a picker that has left the page (HR-DI1).
+- **Popover menus:** in WebKit, the first Escape in a dialog opened from a menu was taken by the menu, which the browser had already closed.
+
 ## [2.37.0] - 2026-11-07
 
 ### Added

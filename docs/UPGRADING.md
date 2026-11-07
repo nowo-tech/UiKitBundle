@@ -123,6 +123,10 @@
 
 ## Unreleased
 
+**Visible change: opening and closing now animate.** Markup is unchanged. The kit's own closes now wait for the fade: `dialog.open` turns false, focus returns and the `close` event fires up to 150 ms later (80 ms under reduced motion). A test reading those right after a click should wait for them, as Playwright's `expect` does, or set the four duration tokens to `0ms`, which also turns the effect off for users and makes it all happen at once ([THEMING](THEMING.md#motion)). Sizes read during the first 200 ms of opening a dialog include its `0.98` scale.
+
+During a dialog's fade, up to 150 ms, the page is still inert behind it: a click on the page is lost, and a host's `.focus()` right after a kit close is lost too, because focus then returns to the opener. Move focus in a `close` listener instead. The closing modal dialog takes no keys. It is also `inert`, so Enter right after Escape submits nothing. Turbo: fades end on `turbo:before-cache`, so a snapshot holds no half-closed surface.
+
 ## To 2.37.0
 
 From **2.36.1**:

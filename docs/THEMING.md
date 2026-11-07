@@ -24,6 +24,7 @@ two token blocks of `nowo-ui.css`. A host theme is a short `:root` block.
 - [Detail pages (2.21)](#detail-pages-221)
 - [Compact header (2.27)](#compact-header-227)
 - [Full-height sidebar layout (2.32)](#full-height-sidebar-layout-232)
+- [Motion](#motion)
 - [Layers (public API, 2.28)](#layers-public-api-228)
 - [Dialog sizes (2.29)](#dialog-sizes-229)
 - [Remote form dialog (2.28)](#remote-form-dialog-228)
@@ -338,6 +339,39 @@ colour comes from the base tokens (`--nowo-ui-surface`, `--nowo-ui-border`, `--n
 The burger keeps its spot in every mode: centred on the icons-only rail's column (`(--nowo-ui-aside-rail-width -
 2.25rem) / 2` from the aside's start edge), in a row `--nowo-ui-header-height` tall. Phones keep the 2.31 off-canvas
 aside, header burger and header brand.
+
+## Motion
+
+One scale for opening and closing, so that no surface is abrupt or slow. Set the values on `:root`; the kit's own declarations have zero specificity, so yours win.
+
+| Token | Default | Reduced motion | Used for |
+|-------|---------|----------------|----------|
+| `--nowo-ui-motion-small` | `150ms` | `80ms` | Small surfaces opening: menus, popovers, select panels, tooltips, tabs, folds |
+| `--nowo-ui-motion-small-close` | `110ms` | `80ms` | The same closing |
+| `--nowo-ui-motion-medium` | `200ms` | `80ms` | Dialogs and their backdrop, row detail, opening |
+| `--nowo-ui-motion-medium-close` | `150ms` | `80ms` | The same closing |
+| `--nowo-ui-motion-ease-out` | `cubic-bezier(0.2, 0, 0, 1)` | same | Entering |
+| `--nowo-ui-motion-ease-in` | `cubic-bezier(0.4, 0, 1, 1)` | same | Leaving |
+| `--nowo-ui-motion-lift` | `4px` | `0px` | How far a small surface travels |
+| `--nowo-ui-motion-scale` | `0.98` | `1` | The scale a dialog starts from |
+
+**A bundle without the kit's CSS** reads them with its own fallback: `transition: opacity var(--nowo-ui-motion-small, 150ms) var(--nowo-ui-motion-ease-out, ease-out);`.
+
+**Reduced motion:** `prefers-reduced-motion` keeps a short fade and no movement, by changing the tokens. `html[data-motion="reduce"]` does the same, and `html[data-motion="full"]` restores the defaults whatever the system says. Rules use no `!important`, so a host can also set the tokens or write its own rule. If you set a duration on `:root`, it stays in force under reduced motion: set it inside your own `prefers-reduced-motion` block too.
+
+**How a close works.** The kit's own closes (buttons, Escape, a backdrop click, `nowoUiCloseDialog`) set `data-nowo-ui-closing`, which starts the fade, and run the real `close()`, `hidePopover()` or `hidden` when it ends, with a timer in case `transitionend` never fires. So focus returns, the `close` event fires and `dialog.open` turns false up to 150 ms later than before. With the durations at `0ms`, or without the kit's CSS, it all happens at once, in the same task as before. Opening again during a fade ends the fade first. A test should wait for the closed state, or set the durations to `0ms`.
+
+While it fades, a modal dialog is `inert`, so it takes no keys, and `close()` still returns focus. A click on a menu's toggle during its fade opens the menu. Every fade ends on `turbo:before-cache`, so that no snapshot holds one.
+
+**Closes the kit does not run:** a host's own `dialog.close()`, a `popovertarget` button closing its popover and a light dismiss run at once, and only CSS can keep them painted, through `transition-behavior: allow-discrete`. That works in Chromium. WebKit does it for an element that is not in the top layer, and Firefox does not do it at all, so there they close at once. `collapse-panel` and filters collapse use this CSS path too.
+
+**Where it applies:** centred dialogs and their backdrop, row detail, kebab, kit menu and popover, page actions, date range panel, emoji picker panel, `collapse-panel`, filters collapse, and the `multi-select` panel, on the small scale. `nowo-ui-multi-select.css` also works without `nowo-ui.css`, so it carries the same values as fallbacks, and an `80ms` fade under `prefers-reduced-motion`.
+
+**Opening only:**
+- Tabs fade in. The old panel goes at once, as two panels at the same time would stack.
+- The icon-tab tooltip fades in. It is a pseudo-element that does not exist once it goes.
+
+Side panels and the aside have their own tokens and are not part of this scale.
 
 ## Layers (public API, 2.28)
 

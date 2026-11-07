@@ -149,6 +149,8 @@ Unreleased: `list-pagination`, `auto-refresh` and fetched dialogs no longer let 
 
 Unreleased (dialog back button, `emoji_picker`, `show_more`): independent audit Appendix HR (2026-11-07), on `68d5ec8`: **Pass (good)**, no Critical, High, Medium or Low open. Nothing was run on a phone or with a real screen reader. Design points: the back button is taken only from a fragment that already went through the filter, and only as a `<button type="button">`; the picker builds its grid with DOM APIs and `textContent`, and `data-nowo-ui-emoji-picker-table` and `-labels` read only strings; `show_more`'s `content` is trusted HTML, like `content` elsewhere in the kit, so a host must escape user text; `lines` is limited to 1 to 6. No network, no style attribute; attributes and document members go through the prototypes; importing touches no DOM. The server check is one grapheme, not an allowlist: blank-looking and unassigned characters pass, so a host that needs emoji adds a constraint, and sizes its column for the limit.
 
+Unreleased (motion tokens): batch audit Appendix HW (2026-11-07), on `f38b4f4`: Medium. HW-M1 and HW-M2 fixed at `6bc7750`; HW-L7 fixed and HW-L9 documented at `f5bf641`; delta audit: **Pass (good)**. HW-L1 and HW-L2 accepted and documented, HW-L3 fixed for menus. Open: HW-L8 and HW-L9 (Low), and HW-L10 (Low, older).
+
 ## Secrets and cryptography
 
 The bundle does **not** implement cryptography or store API keys. Nothing secret belongs in `config/packages/nowo_ui_kit.yaml` or the Flex recipe.

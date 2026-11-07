@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { closeWithEffect } from './nowo-ui-motion-core';
 import * as mod from './nowo-ui-popover';
 
 function toggle(panel: HTMLElement, newState: 'open' | 'closed'): void {
@@ -175,6 +176,17 @@ describe('nowo-ui-popover', () => {
     expect(mod.isOpen(panel)).toBe(true);
   });
 
+  it('a panel the browser closed without a toggle event does not take the Escape (WebKit, a modal opening from the menu)', () => {
+    panel.showPopover = vi.fn();
+    toggle(panel, 'open');
+    expect(mod.isOpen(panel)).toBe(true);
+    trigger.focus();
+    const event = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+    document.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+    expect(mod.isOpen(panel)).toBe(false);
+  });
+
   it('lets a dialog opened from the menu close first on Escape', () => {
     toggle(panel, 'open');
     const input = document.getElementById('inner-input') as HTMLInputElement;
@@ -290,5 +302,59 @@ describe('nowo-ui-popover APG menu (2.28 menu_semantics: menu)', () => {
     const plain = document.getElementById('plain-t')!;
     plain.focus();
     expect(key(plain, 'ArrowDown').defaultPrevented).toBe(false);
+  });
+});
+
+describe('a toggle clicked during the fade', () => {
+  it('ends the fade first, so that the browser opens the panel', () => {
+    vi.useFakeTimers();
+    document.body.innerHTML = '<div data-nowo-ui-popover-menu><button data-nowo-ui-popover-trigger popovertarget="fade-panel"></button><ul id="fade-panel" data-nowo-ui-popover-panel popover></ul></div>';
+    const panel = document.getElementById('fade-panel')!;
+    const trigger = document.querySelector<HTMLElement>('[popovertarget]')!;
+    const hide = vi.fn();
+    panel.hidePopover = hide;
+    vi.spyOn(window, 'getComputedStyle').mockReturnValue({ transitionDuration: '110ms', transitionDelay: '0s' } as CSSStyleDeclaration);
+    closeWithEffect(panel, hide);
+    expect(panel.hasAttribute('data-nowo-ui-closing')).toBe(true);
+    trigger.click();
+    expect(hide).toHaveBeenCalledOnce();
+    expect(panel.hasAttribute('data-nowo-ui-closing')).toBe(false);
+    vi.restoreAllMocks();
+    vi.useRealTimers();
+    document.body.innerHTML = '';
+  });
+});
+
+describe('choosing an item moves focus to the toggle', () => {
+  const menu = (): { panel: HTMLElement; trigger: HTMLElement; item: HTMLElement; other: HTMLElement } => {
+    document.body.innerHTML = '<div data-nowo-ui-popover-menu><button data-nowo-ui-popover-trigger popovertarget="item-panel"></button><ul id="item-panel" data-nowo-ui-popover-panel popover><li><button data-nowo-ui-menu-button></button></li></ul></div><input id="other">';
+    const panel = document.getElementById('item-panel')!;
+    panel.hidePopover = vi.fn();
+    panel.dispatchEvent(Object.assign(new Event('toggle'), { newState: 'open' }));
+    return {
+      panel,
+      trigger: document.querySelector<HTMLElement>('[popovertarget]')!,
+      item: panel.querySelector<HTMLElement>('button')!,
+      other: document.getElementById('other')!,
+    };
+  };
+
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  it('when focus is on the item', () => {
+    const { trigger, item } = menu();
+    item.focus();
+    item.click();
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  it('but not when a handler already moved it', () => {
+    const { item, other } = menu();
+    item.addEventListener('click', () => other.focus());
+    item.focus();
+    item.click();
+    expect(document.activeElement).toBe(other);
   });
 });

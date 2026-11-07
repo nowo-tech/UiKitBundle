@@ -113,7 +113,9 @@ test.describe('a style attribute in fetched HTML', () => {
     expect(changed).toEqual({ row: true, nav: true, info: true, confirm: true });
     await expectBlocked(page, '[data-imported-nav]');
     await expectBlocked(page, '[data-imported-info]');
-    await expectBlocked(page, '[data-imported-confirm]');
+    // A closed dialog is `position: fixed` of its own, so here only the style counts.
+    await expect(page.locator('[data-imported-confirm]').first()).toBeAttached();
+    expect(await page.locator('[data-imported-confirm]').first().evaluate((el: HTMLElement) => el.style.length)).toBe(0);
     // The peer may still be loading the next page when the test ends.
     await page.unrouteAll({ behavior: 'ignoreErrors' });
   });

@@ -18,6 +18,7 @@
  * coordinates go through the CSSOM. Importing touches no DOM. Members are read through the prototypes (GT-L3, HH-L4).
  */
 import { EMOJI } from './nowo-ui-emoji-table';
+import { closeWithEffect, finishClosing, isClosing } from './nowo-ui-motion-core';
 import { EDGE_PX, placeBeside } from './nowo-ui-popover-core';
 
 export const ROOT = '[data-nowo-ui-emoji-picker]';
@@ -193,17 +194,20 @@ const viewListeners = (add: boolean): void => {
 export function closePicker(root: HTMLElement, refocus: boolean): void {
   const panel = query(root, PANEL);
   const toggle = query(root, TOGGLE);
-  if (!panel || panel.hidden) {
+  if (!panel || panel.hidden || isClosing(panel)) {
     return;
   }
-  if (typeof panel.hidePopover === 'function' && panel.hasAttribute('popover')) {
-    try {
-      panel.hidePopover();
-    } catch {
-      // Already hidden: a morph took it out of the top layer.
+  // State for the user changes now; the DOM's after the fade.
+  closeWithEffect(panel, () => {
+    if (typeof panel.hidePopover === 'function' && panel.hasAttribute('popover')) {
+      try {
+        panel.hidePopover();
+      } catch {
+        // Already hidden: a morph took it out of the top layer.
+      }
     }
-  }
-  panel.hidden = true;
+    panel.hidden = true;
+  });
   if (placed === root) {
     placed = null;
     viewListeners(false);
@@ -216,7 +220,7 @@ export function closePicker(root: HTMLElement, refocus: boolean): void {
 }
 
 function closeAll(except: Element | null): void {
-  (Document.prototype.querySelectorAll.call(document, `${PANEL}:not([hidden])`) as NodeListOf<Element>).forEach((panel) => {
+  (Document.prototype.querySelectorAll.call(document, `${PANEL}:not([hidden], [data-nowo-ui-closing])`) as NodeListOf<Element>).forEach((panel) => {
     const root = closest(panel, ROOT);
     if (root && root !== except) {
       closePicker(root, false);
@@ -231,6 +235,7 @@ export function openPicker(root: HTMLElement): void {
     return;
   }
   closeAll(root);
+  finishClosing(panel);
   setInputValue(search, '');
   panel.hidden = false;
   query(root, TOGGLE)?.setAttribute('aria-expanded', 'true');
@@ -292,10 +297,15 @@ function openRootFor(target: EventTarget | null): HTMLElement | null {
   const inside = target instanceof Element ? closest(target, ROOT) : null;
   if (inside) {
     const panel = query(inside, PANEL);
-    return panel && !panel.hidden ? inside : null;
+    return panel && !panel.hidden && !isClosing(panel) ? inside : null;
   }
   // Focus fell out of the panel, to the page itself: the open picker still owns Escape.
   const onPage = target === document || target === Reflect.get(Document.prototype, 'body', document) || target === Reflect.get(Document.prototype, 'documentElement', document);
+  // A morph or a replaced body may have taken it away: then this Escape belongs to whatever is around it.
+  if (placed && !Reflect.get(Node.prototype, 'isConnected', placed)) {
+    placed = null;
+    viewListeners(false);
+  }
   return onPage ? placed : null;
 }
 
@@ -379,7 +389,7 @@ function onClick(event: MouseEvent): void {
   if (toggle && root) {
     event.preventDefault();
     const panel = query(root, PANEL);
-    if (panel?.hidden) {
+    if (panel?.hidden || (panel && isClosing(panel))) {
       openPicker(root);
     } else {
       closePicker(root, true);

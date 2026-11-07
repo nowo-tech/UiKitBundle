@@ -27,6 +27,7 @@
  * (it closes when its toggle is activated again).
  */
 
+import { bindMotion, closeDialogWithEffect, finishClosing } from './nowo-ui-motion-core';
 import { overlayRegistry, type OverlayHandle } from './nowo-ui-overlay';
 import {
   DEFAULT_SETTINGS,
@@ -75,6 +76,7 @@ export function openDialog(id: string | HTMLDialogElement | null, opener: Elemen
   if (!dialog || typeof dialog.showModal !== 'function') {
     return false;
   }
+  finishClosing(dialog);
   if (!dialog.open) {
     if (opener) {
       openers.set(dialog, opener);
@@ -92,7 +94,7 @@ export function openDialog(id: string | HTMLDialogElement | null, opener: Elemen
 export function closeDialog(id: string | HTMLDialogElement | null): void {
   const dialog = resolveDialog(id);
   if (dialog && dialog.open && typeof dialog.close === 'function') {
-    dialog.close();
+    closeDialogWithEffect(dialog);
   }
 }
 
@@ -322,6 +324,7 @@ export function bindNowoUiDialog(): void {
     return;
   }
   dialogBound = true;
+  bindMotion();
   document.addEventListener('click', onDocumentClick);
   document.addEventListener('keydown', onDocumentKeydown);
   // `close` does not bubble: listen in the capture phase.

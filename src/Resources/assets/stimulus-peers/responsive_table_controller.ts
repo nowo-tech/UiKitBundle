@@ -32,6 +32,7 @@
  *         `detail.previous`, `detail.message` = `messages.saveError` or empty).
  */
 
+import { closeDialogWithEffect, finishClosing } from '../src/nowo-ui-motion-core';
 import { Controller } from '@hotwired/stimulus';
 
 import { syncIconState } from './icon_state';
@@ -98,7 +99,7 @@ export default class ResponsiveTableController extends Controller<HTMLElement> {
   private readonly onDialogClick = (event: MouseEvent): void => {
     // A click on the backdrop (outside the dialog box) closes it.
     if (event.target === this.dialogTarget) {
-      this.dialogTarget.close();
+      closeDialogWithEffect(this.dialogTarget);
     }
   };
 
@@ -165,7 +166,7 @@ export default class ResponsiveTableController extends Controller<HTMLElement> {
   }
 
   close(): void {
-    this.dialogTarget.close();
+    closeDialogWithEffect(this.dialogTarget);
   }
 
   /**
@@ -298,6 +299,7 @@ export default class ResponsiveTableController extends Controller<HTMLElement> {
    * (forms, links and their listeners keep working, ids stay unique) and go back when it closes.
    */
   private showRow(row: HTMLTableRowElement, from: HTMLElement): void {
+    finishClosing(this.dialogTarget);
     if (this.dialogTarget.open) {
       return;
     }
