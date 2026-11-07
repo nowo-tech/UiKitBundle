@@ -118,6 +118,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   changes), `:moved` (with `detail.revert()` for a failed write), `:cancel`, `:reverted`. Tokens
   `--nowo-ui-sortable-drop-bg`, `-drop-line`, `-ghost-shadow`, `-z`. See [USAGE](USAGE.md#sortable), which has the
   accessibility contract and a checklist for real devices: touch was tested only by emulation.
+  **Not run on a real device.** Touch was tested only by emulation in Chromium, and this release is opt-in on that basis. On touch screens, use handles and keep a route that needs no drag until the checklist in USAGE has been run on your devices.
 
 ## [2.35.0] - 2026-11-06
 
