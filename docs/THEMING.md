@@ -870,7 +870,7 @@ Corner, border and footer stay from `defaults`; a brand provider that throws is 
   `nowo_ui_error_brand`, top of `<main>`): `<div class="nowo-ui-brand-region nowo-ui-brand-region--guest|error"
   data-nowo-ui-region="brand">` with the lockup, only when there is one. The error layout reads the appearance through
   `nowo_ui_appearance_or_null()`, which returns null when the provider throws, so an error page with a broken database
-  renders its config chrome (no 500 inside a 500).
+  renders its config chrome (no 500 inside a 500). Since 2.40 the `nowo_ui_appearance*()` functions and `nowo_ui_tokens()` behave the same way: a provider exception is logged and the config `defaults` are used.
 
 Tokens: `--nowo-ui-brand-logo-height` (lockup height in the shell, default `1.75rem`),
 `--nowo-ui-brand-region-logo-height` (guest, error and auth panel, default `2.5rem`). Logos are markup, never a

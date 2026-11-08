@@ -6,6 +6,7 @@ namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 
 use Nowo\Brand\Contract\BrandColors;
 use Nowo\UiKitBundle\Appearance\Appearance;
+use Nowo\UiKitBundle\Appearance\AppearanceCssEmitter;
 use Nowo\UiKitBundle\Appearance\AppearanceLogos;
 use Nowo\UiKitBundle\Appearance\AppearancePalette;
 use Nowo\UiKitBundle\Appearance\AppearancePresetRegistry;
@@ -14,10 +15,13 @@ use Nowo\UiKitBundle\Appearance\AppearanceView;
 use Nowo\UiKitBundle\Appearance\BrandAppearanceProvider;
 use Nowo\UiKitBundle\Appearance\ConfigAppearanceProvider;
 use Nowo\UiKitBundle\Tests\Unit\Appearance\BrandAppearanceTest;
+use Nowo\UiKitBundle\Twig\AppearanceExtension;
 use Nowo\UiKitBundle\View\AuthPage;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\AbstractLogger;
 use RuntimeException;
+use Stringable;
 use Symfony\Component\HttpFoundation\Request;
 use Twig\Environment;
 
@@ -141,6 +145,40 @@ TWIG;
         $html = $this->twig($view)->render('error', ['status_code' => 500]);
         self::assertSame($this->twig(new AppearanceView())->render('error', ['status_code' => 500]), $html, 'no 500 inside a 500: the config chrome');
         self::assertSame($this->twig(new AppearanceView())->render('t', ['opts' => []]), $this->twig($view)->render('t', ['opts' => []]));
+    }
+
+    public function testTokensAndAppearanceFunctionsSurviveAThrowingProvider(): void
+    {
+        $registry = new AppearancePresetRegistry();
+        $config = new ConfigAppearanceProvider($registry, ['brand_name' => 'Config', 'preset' => 'ocean']);
+        $throwing = new class implements AppearanceProviderInterface {
+            public function getAppearance(): Appearance
+            {
+                throw new RuntimeException('SQLSTATE[HY000] [2002] Connection refused');
+            }
+        };
+        $logger = new class extends AbstractLogger {
+            public int $count = 0;
+
+            public function log($level, string|Stringable $message, array $context = []): void
+            {
+                ++$this->count;
+            }
+        };
+        $render = function (AppearanceProviderInterface $provider, string $template, array $vars) use ($registry, $config, $logger): string {
+            $twig = $this->twig(new AppearanceView($provider, false, $logger));
+            $twig->addExtension(new AppearanceExtension($provider, new AppearanceCssEmitter(), $registry, null, $config, $logger));
+
+            return $twig->render($template, $vars);
+        };
+
+        foreach ([['error', ['status_code' => 500]], ['guest', []], ['t', ['opts' => []]]] as [$template, $vars]) {
+            $html = $render($throwing, $template, $vars);
+            self::assertSame($render($config, $template, $vars), $html, $template.': the config chrome');
+        }
+        self::assertStringContainsString('data-nowo-ui-appearance>', $render($throwing, 'error', ['status_code' => 500]));
+        self::assertStringContainsString('--nowo-ui-primary: #0e7490;', $render($throwing, 'guest', []), 'tokens of the configured preset');
+        self::assertGreaterThan(0, $logger->count);
     }
 
     public function testAppearanceHeadIsOptIn(): void

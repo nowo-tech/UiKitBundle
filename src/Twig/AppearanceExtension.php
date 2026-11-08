@@ -9,7 +9,10 @@ use Nowo\UiKitBundle\Appearance\AppearanceCssEmitter;
 use Nowo\UiKitBundle\Appearance\AppearancePreset;
 use Nowo\UiKitBundle\Appearance\AppearancePresetRegistry;
 use Nowo\UiKitBundle\Appearance\AppearanceProviderInterface;
+use Nowo\UiKitBundle\Appearance\ConfigAppearanceProvider;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Throwable;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
@@ -20,6 +23,8 @@ use Twig\TwigFunction;
  * - `nowo_ui_appearance_css()` — the token stylesheet text
  * - `nowo_ui_appearance_style(nonce = null)` — `<style nonce data-nowo-ui-appearance>…</style>`; the nonce
  *   defaults to the request attribute `csp_nonce`
+ *
+ * 2.40: a provider that throws is logged and the config defaults are used (`nowo_ui_tokens()` included), never an error.
  * - `nowo_ui_appearance_presets(mode = null)` — presets for pickers
  */
 final class AppearanceExtension extends AbstractExtension
@@ -29,6 +34,8 @@ final class AppearanceExtension extends AbstractExtension
         private readonly AppearanceCssEmitter $emitter,
         private readonly AppearancePresetRegistry $registry,
         private readonly ?RequestStack $requestStack = null,
+        private readonly ?ConfigAppearanceProvider $fallback = null,
+        private readonly ?LoggerInterface $logger = null,
     ) {
     }
 
@@ -42,14 +49,24 @@ final class AppearanceExtension extends AbstractExtension
         ];
     }
 
+    /**
+     * The provider's appearance; when it throws (2.40), a warning is logged and the config defaults are returned, so a
+     * page (an error page with a broken database above all) never fails because of the appearance.
+     */
     public function appearance(): Appearance
     {
-        return $this->provider->getAppearance();
+        try {
+            return $this->provider->getAppearance();
+        } catch (Throwable $e) {
+            $this->logger?->warning('UiKit appearance: the appearance provider failed, using the appearance defaults.', ['exception' => $e]);
+
+            return ($this->fallback ?? new ConfigAppearanceProvider($this->registry))->getDefaults();
+        }
     }
 
     public function css(): string
     {
-        return $this->emitter->emit($this->provider->getAppearance());
+        return $this->emitter->emit($this->appearance());
     }
 
     public function style(?string $nonce = null): string

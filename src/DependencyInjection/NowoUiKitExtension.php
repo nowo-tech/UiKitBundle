@@ -513,6 +513,8 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
                 new Reference('nowo_ui_kit.appearance.css_emitter'),
                 new Reference('nowo_ui_kit.appearance.preset_registry'),
                 new Reference('request_stack', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                new Reference('nowo_ui_kit.appearance.config_provider'),
+                new Reference('logger', ContainerInterface::NULL_ON_INVALID_REFERENCE),
             ])
             ->addTag('twig.extension');
 

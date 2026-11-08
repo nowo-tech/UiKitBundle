@@ -140,6 +140,7 @@ the 2.39 markup and the container is the 2.39 one.
 - **Favicon and theme-color from the appearance**: replace your `<link rel="icon">` / `meta theme-color` lines with
   `{{ nowo_ui_appearance_head() }}` in your layout, or set `appearance.head_links: true` for the kit layouts (then
   remove your own, or the page has two).
+- A provider that throws no longer fails the page: `nowo_ui_appearance()`, the token style and `nowo_ui_tokens()` log a warning and use `appearance.defaults`. Watch the log if you relied on the exception.
 - A bridge that takes the provider over reads `%nowo_ui_kit.appearance.provider_is_default%` and re-aliases
   `nowo_ui_kit.appearance.provider` only when it is `true`.
 - A host override of `shell/_brand_parts.html.twig`, `page/auth.html.twig`, `layout/guest.html.twig` or
