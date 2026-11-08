@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.39.0](#to-2390)
 - [To 2.38.0](#to-2380)
 - [To 2.37.0](#to-2370)
 - [To 2.36.1](#to-2361)
@@ -123,6 +124,8 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.39.0
 
 Nothing to do: the default presentation (`standard`) and `compact` render the same markup. To drop a host stylesheet
 that hid the intro or the title of UiKit page headers from a preference, set the request attribute
