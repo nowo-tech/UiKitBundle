@@ -46,6 +46,7 @@ Parameters / Twig globals:
 - `row_actions_confirm` → Twig global `nowo_ui_kit_row_actions_confirm` (no container parameter)
 - `%nowo_ui_kit.panel_path_rewrites%` — the validated rewrite map (no Twig global)
 - `%nowo_ui_kit.appearance.enabled%` (no Twig global; use the `nowo_ui_appearance*()` functions)
+- `%nowo_ui_kit.appearance.provider_is_default%` (2.40): `true` when `appearance.provider` is null, so a bridge (InstanceSettings' brand) may take the provider over; a host provider always wins
 - `%nowo_ui_kit.route_links%` (no Twig global; use `nowo_ui_route_link()`)
 - `%nowo_ui_kit.release_check.enabled%`, `%nowo_ui_kit.release_check.github_repo%`, `%nowo_ui_kit.release_check.current_version%` → Twig global `nowo_ui_kit_release_check` (`{enabled, current_version}`)
 - `%nowo_ui_kit.error_pages%` → Twig global `nowo_ui_error_pages` (`{layout_template, theme_storage, theme_toggle, html_attributes, translation_domain, translation_prefix}`) and the functions `nowo_ui_error_page()` / `nowo_ui_error_text()` (2.6)
@@ -260,6 +261,8 @@ nowo_ui_kit:
     appearance:
         enabled: true
         provider: App\Appearance\DbAppearanceProvider   # service implementing AppearanceProviderInterface; null = `defaults`
+        brand: auto                  # 2.40: auto | off — with provider null, a BrandProviderInterface service drives the appearance
+        head_links: false            # 2.40: kit layouts print nowo_ui_appearance_head() (favicon, apple-touch icon, theme-color)
         defaults:                    # used by the config provider (and as your "reset" values)
             brand_name: 'Acme'
             brand_eyebrow: 'Operations'
@@ -287,7 +290,9 @@ nowo_ui_kit:
 | Key | Default | Notes |
 |-----|---------|-------|
 | `enabled` | `false` | Registers the services and Twig functions |
-| `provider` | `null` | Service id; null = `nowo_ui_kit.appearance.config_provider` (the `defaults`) |
+| `provider` | `null` | Service id; null = `nowo_ui_kit.appearance.config_provider` (the `defaults`), or the brand provider below |
+| `brand` | `auto` | 2.40 (spec 220). `auto`: with `provider` null **and** a `Nowo\Brand\Contract\BrandProviderInterface` service (package `nowo-tech/brand-contracts` ^1.0, optional), `BrandAppearanceProvider` serves the brand's name, eyebrow, colours and logos; corner style, border strength and fixed footer stay from `defaults`, and `defaults` is also served when the brand provider throws. No brand service = no change. `off`: always the `defaults` |
+| `head_links` | `false` | 2.40. The kit document and error layouts print `nowo_ui_appearance_head()` after the viewport meta (favicon / apple-touch links of the appearance logos, `meta theme-color` per colour scheme). Off = the 2.39 `<head>` |
 | `defaults.*` | see above | `preset` / `preset_dark` may name a host preset |
 | `presets` | `{}` | Ids: lowercase letters, digits, `-`, `_`; colours validated as CSS colours |
 | `builtin_presets` | all 7 | Subset of `ocean`, `slate`, `sandstone`, `midnight`, `obsidian`, `aurora`, `ember` |
@@ -302,6 +307,13 @@ Services (when enabled): `nowo_ui_kit.appearance.provider` (alias of your provid
 (`AppearanceCssEmitter`), the Twig extension, and — only when `symfony/form` is installed — the form types
 `AppearanceType` / `AppearancePaletteType`. Services implementing `AppearancePresetProviderInterface` are tagged
 `nowo_ui_kit.appearance_preset_provider` automatically and add their presets.
+
+2.40: `nowo_ui_kit.appearance.brand_provider` (`BrandAppearanceProvider`) exists only when `provider` is null, `brand` is
+`auto`, `nowo-tech/brand-contracts` is installed and a `BrandProviderInterface` service or alias is defined; the
+compiler pass `BrandAppearanceProviderPass` then points `nowo_ui_kit.appearance.provider` at it, unless another pass
+(InstanceSettings' bridge) already re-aliased the provider. `nowo_ui_kit.appearance.view` (`AppearanceView`, always
+registered) is what the kit templates read: it never throws. Logos and the brand region: [THEMING.md — Brand and
+logos](THEMING.md#brand-and-logos-240).
 
 ## Route links
 

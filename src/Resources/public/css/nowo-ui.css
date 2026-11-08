@@ -1580,6 +1580,41 @@ a.nowo-ui-pagination__link:hover {
   white-space: nowrap;
 }
 
+/* 2.40 (spec 220 S1): appearance logos. The lockup replaces the name; its <img> pair shows the one of the current
+   [data-theme] (no script; !important so an unlayered host `img { display: … }` cannot show both). */
+.nowo-ui-brand__logo {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: var(--nowo-ui-brand-logo-height, 1.75rem);
+  object-fit: contain;
+}
+
+[data-theme='dark'] [data-nowo-ui-theme-only='light'],
+:root:not([data-theme='dark']) [data-nowo-ui-theme-only='dark'] {
+  display: none !important;
+}
+
+.nowo-ui-aside-brand__logo {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* The mark (or initial) of a logo brand is for the icons-only rail only. */
+.nowo-ui-aside-brand__icon--rail {
+  display: none;
+}
+
+.nowo-ui-brand-region {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 1rem;
+}
+
+.nowo-ui-brand-region .nowo-ui-brand__logo {
+  height: var(--nowo-ui-brand-region-logo-height, 2.5rem);
+}
+
 @media (min-width: 901px) {
   .nowo-ui-shell[data-nowo-ui-sidebar-layout='full-height'] {
     --nowo-ui-shell-inset-start: var(--nowo-ui-aside-width);
@@ -1669,6 +1704,10 @@ a.nowo-ui-pagination__link:hover {
     overflow: hidden;
     clip-path: inset(50%);
     white-space: nowrap;
+  }
+
+  .nowo-ui-shell[data-nowo-ui-sidebar-layout='full-height'].is-aside-rail:not(.is-aside-peek) .nowo-ui-aside-head .nowo-ui-aside-brand__icon--rail {
+    display: inline-flex;
   }
 
   .nowo-ui-shell[data-nowo-ui-sidebar-layout='full-height'].is-aside-rail.is-aside-peek .nowo-ui-aside-head {
@@ -4809,6 +4848,10 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
 .nowo-ui-auth-panel__brand {
   margin: 0 0 0.5rem;
   font-weight: 600;
+}
+
+.nowo-ui-auth-panel__brand--logo .nowo-ui-brand__logo {
+  height: var(--nowo-ui-brand-region-logo-height, 2.5rem);
 }
 
 .nowo-ui-auth-panel__footer {

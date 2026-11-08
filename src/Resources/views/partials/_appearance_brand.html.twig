@@ -1,0 +1,12 @@
+{#-
+  Internal (2.40, spec 220 S1): the brand region of the guest layout and the error layout — the appearance logo lockup
+  (partials/_brand_logos) when the appearance SPI returns logos with one, else nothing at all (the 2.39 markup). Reads
+  nowo_ui_appearance_or_null(), which never throws: a failing provider (a broken database on an error page) prints
+  nothing instead of a second error.
+
+  Options: kind (guest | error: modifier class nowo-ui-brand-region--<kind>).
+-#}
+{%- set _ap = nowo_ui_appearance_or_null() -%}
+{%- if _ap and _ap.logos and _ap.logos.hasLogo() -%}
+<div class="nowo-ui-brand-region nowo-ui-brand-region--{{ kind|default('guest') }}" data-nowo-ui-region="brand">{{ include('@NowoUiKitBundle/partials/_brand_logos.html.twig', {logos: _ap.logos, name: _ap.brandName}, false) }}</div>
+{%- endif -%}

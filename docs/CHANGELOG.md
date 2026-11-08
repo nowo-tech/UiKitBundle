@@ -112,6 +112,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Spec 220 slice S1 (brand configurable per project): logo slots, an optional brand contract consumer and a token lint.
+Audit: batch, re-verification pending.
+
+### Added
+
+- **Appearance logos:** `AppearanceLogos` (`lightSrc`, `darkSrc`, `markSrc`, `faviconSrc`, `appleTouchSrc`, `wordmark`; URLs filtered by `SafeHref::filterImage()`) on `Appearance::$logos` (optional, last constructor argument; `with(['logos' => …])`; not in `toArray()`). With logos and no page `brand_html` / `brand`, the app shell header and the full-height aside print the light / dark `<img class="nowo-ui-brand__logo" data-nowo-ui-theme-only>` pair (alt = the brand name) and the icons-only rail the mark; the auth panel brand, a new guest layout region (block `nowo_ui_guest_brand`) and a new error layout region (block `nowo_ui_error_brand`) print the lockup. Precedence: page options > appearance logos > `shell.brand`. Tokens `--nowo-ui-brand-logo-height`, `--nowo-ui-brand-region-logo-height`. See [THEMING](THEMING.md#brand-and-logos-240).
+- **Brand contract consumer:** with `appearance.provider: null`, `appearance.brand: auto` (new, default) and a `nowo-tech/brand-contracts` ^1.0 `BrandProviderInterface` service, `BrandAppearanceProvider` serves the brand's name, eyebrow (translatable), colours and logos; corner, border and footer stay from `defaults`, which are also served (and a warning logged) when the brand provider throws. The package is `suggest`ed, not required; `conflict` with `<1.0 || >=2.0`. Compiler pass `BrandAppearanceProviderPass` (a provider re-aliased by another pass, such as InstanceSettings' bridge, wins). Parameter `%nowo_ui_kit.appearance.provider_is_default%`.
+- **Appearance head (opt-in):** `nowo_ui_appearance_head()` (favicon / apple-touch links of the logos, `meta theme-color` per colour scheme, escaped); the kit document and error layouts print it with `appearance.head_links: true` (default false).
+- **Never-throwing appearance for templates:** service `nowo_ui_kit.appearance.view` (`AppearanceView`) and Twig `nowo_ui_appearance_or_null()`, `nowo_ui_appearance_head_links()`, registered whether the appearance is on or off; a failing provider gives null (logged), so error pages render their config chrome.
+- **`bin/nowo-ui-token-lint`** (`Lint\TokenLint`): reports colour literals in bundle CSS / SCSS / Twig outside `var()` fallbacks, comments and an allow-list.
+
 ## [2.39.0] - 2026-11-08
 
 Page header presentation variants `inline`, `no_intro`, `no_title` and `no_header` (Beacon UI-6). Audit: Appendix IN, Pass.

@@ -768,7 +768,7 @@ into tokens and prints them:
 ```
 
 Twig functions: `nowo_ui_appearance()` (the `Appearance` value object: `brandName`, `brandEyebrow`, `light` / `dark`
-palettes, `themeId` / `themeIdDark`, `cornerStyle`, `borderStrength`, `footerFixed`), `nowo_ui_appearance_css()`
+palettes, `themeId` / `themeIdDark`, `cornerStyle`, `borderStrength`, `footerFixed`, 2.40 `logos`), `nowo_ui_appearance_css()`
 (stylesheet text), `nowo_ui_appearance_style(nonce = null)` (the nonce defaults to the request attribute
 `csp_nonce`), `nowo_ui_appearance_presets(mode = null)`.
 
@@ -837,6 +837,56 @@ kit stylesheet (or set `selectors` to `html:root` / `html:root[data-theme="dark"
   `symfony/form` installed, `Nowo\UiKitBundle\Form\AppearanceType` (options `with_brand`, `with_colors`,
   `with_footer`) edits that array; colours are validated when `symfony/validator` is installed. The admin
   controller and persistence stay in the host.
+
+### Brand and logos (2.40)
+
+Spec 220 slice S1. `Appearance` has an optional `logos` (`AppearanceLogos`: `lightSrc`, `darkSrc`, `markSrc`,
+`faviconSrc`, `appleTouchSrc`, `wordmark`). They are **URLs**, each passed through `SafeHref::filterImage()` (relative,
+`http`, `https`; anything else is dropped), and the kit prints them only as `<img src>` / `<link href>`: never inlined,
+so an SVG logo cannot run script in the page. They are not in `toArray()`; `fromArray()` keeps the logos of its
+defaults. With `logos` null (the `ConfigAppearanceProvider`, and every host provider until it sets them) every template
+renders the 2.39 markup.
+
+**Who sets them.** A host provider (`new Appearance(…, logos: new AppearanceLogos('/brand/logo.svg', …))`), or the
+brand contract: with `appearance.provider: null`, `appearance.brand: auto` (the default) and a
+`Nowo\Brand\Contract\BrandProviderInterface` service (`composer require nowo-tech/brand-contracts`, a 20-line class
+or InstanceSettings' brand section), `BrandAppearanceProvider` maps the `Brand`: name → `brandName`, eyebrow (a
+translatable one in the current locale) → `brandEyebrow`, `light` / `dark` colours (primary → accent, primaryDeep →
+accent deep, warning → warn, text → ink, the rest by name), and the slots after the contract's fallback chain
+(`logo_light`, `logo_dark` → light, `mark` → `app_icon`, `favicon` → mark → app icon, `app_icon` → apple touch).
+Corner, border and footer stay from `defaults`; a brand provider that throws is logged and `defaults` is served.
+
+**Where they show** (precedence: page options > appearance logos > `shell.brand` config):
+
+- App shell header and the full-height aside: when the page passes neither `brand_html` nor `brand`, the name defaults
+  to the appearance brand name (else `shell.brand.name`), the icon to `markSrc` (else `shell.brand.icon_src`), and
+  without `brand_icon_src` / `brand_icon_html` the lockup replaces the name text:
+  `<img class="nowo-ui-brand__logo" data-nowo-ui-theme-only="light|dark" alt="{name}">` (one `<img>` without a separate
+  dark logo). The kit CSS hides the image of the other `[data-theme]` (no script). In the icons-only rail the mark
+  shows instead (class `nowo-ui-aside-brand__icon--rail`; the name's initial without a mark).
+- Auth scaffold: the panel brand prints the lockup (alt = `page.brand`, else the appearance name); without logos,
+  `page.brand` as text as before.
+- Guest layout (block `nowo_ui_guest_brand`, emptied by the auth scaffold) and error layout (block
+  `nowo_ui_error_brand`, top of `<main>`): `<div class="nowo-ui-brand-region nowo-ui-brand-region--guest|error"
+  data-nowo-ui-region="brand">` with the lockup, only when there is one. The error layout reads the appearance through
+  `nowo_ui_appearance_or_null()`, which returns null when the provider throws, so an error page with a broken database
+  renders its config chrome (no 500 inside a 500).
+
+Tokens: `--nowo-ui-brand-logo-height` (lockup height in the shell, default `1.75rem`),
+`--nowo-ui-brand-region-logo-height` (guest, error and auth panel, default `2.5rem`). Logos are markup, never a
+`url()` in a custom property.
+
+**Head links (opt-in).** `nowo_ui_appearance_head()` returns `<link rel="icon">`, `<link rel="apple-touch-icon">` (when
+the logos have them) and `<meta name="theme-color" content="{paper}" media="(prefers-color-scheme: light|dark)">`,
+escaped, for host layouts. The kit document and error layouts print it after the viewport meta only with
+`appearance.head_links: true` (`nowo_ui_appearance_head_links()`).
+
+**Token lint.** `vendor/bin/nowo-ui-token-lint [--allow=<glob>]... [--no-default-allow] [<path>...]` (default path
+`src/Resources`) reports colour literals (`#rgb`, `#rrggbb`, `#rrggbbaa`, `rgb(`, `rgba(`) in `*.css`, `*.scss` and
+`*.twig` that should read a `--nowo-ui-*` token. Allowed: the fallback of `var(--…, …)`, `rgb(var(--nowo-ui-…) / …)`,
+comments, a line holding `nowo-ui-token-lint-ignore`, and `nowo-ui.css` / `nowo-ui.unlayered.css`. Exit 1 on findings.
+It is a heuristic (an id selector spelling a hex colour is reported too); bundles add it to CI in their next sweep, not
+as a release blocker.
 
 ### Keeping legacy variable names (`token_aliases`)
 

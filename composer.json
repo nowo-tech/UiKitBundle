@@ -48,6 +48,7 @@
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.0",
         "igor-php/igor-php": "^0.9.7 || ^0.10.0",
+        "nowo-tech/brand-contracts": "^1.0",
         "nowo-tech/phpstan-frankenphp": "^1.0",
         "phpstan/extension-installer": "^1.0",
         "phpstan/phpstan": "^2.0",
@@ -63,6 +64,9 @@
         "symfony/yaml": "^7.4 || ^8.0",
         "vincentlanglet/twig-cs-fixer": "^3.0 || ^4.0"
     },
+    "bin": [
+        "bin/nowo-ui-token-lint"
+    ],
     "autoload": {
         "psr-4": {
             "Nowo\\UiKitBundle\\": "src/"
@@ -94,7 +98,11 @@
             "/node_modules"
         ]
     },
+    "conflict": {
+        "nowo-tech/brand-contracts": "<1.0 || >=2.0"
+    },
     "suggest": {
+        "nowo-tech/brand-contracts": "2.40: with a BrandProviderInterface service (^1.0) and appearance.provider null, the brand drives the appearance name, colours and logos (spec 220)",
         "phpunit/phpunit": "UI bundles: require-dev, to run Nowo\\UiKitBundle\\Test\\PageContractTestCase (REQ-UI-003 contract test)",
         "symfony/form": "For the optional AppearanceType / AppearancePaletteType forms (appearance SPI)",
         "symfony/http-client": "For the optional release_check feature (GitHub release-version dialog)",

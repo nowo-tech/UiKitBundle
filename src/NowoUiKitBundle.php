@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle;
 
+use Nowo\UiKitBundle\DependencyInjection\Compiler\BrandAppearanceProviderPass;
 use Nowo\UiKitBundle\DependencyInjection\Compiler\TwigPathsPass;
 use Nowo\UiKitBundle\DependencyInjection\NowoUiKitExtension;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -16,6 +17,7 @@ final class NowoUiKitBundle extends Bundle
     {
         parent::build($container);
         $container->addCompilerPass(new TwigPathsPass());
+        $container->addCompilerPass(new BrandAppearanceProviderPass());
     }
 
     public function getContainerExtension(): ExtensionInterface

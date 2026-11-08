@@ -5,19 +5,31 @@
   through the app_shell_open options or nowo_ui_kit.shell.brand, never by overriding this file.
 
   Options: slot, kit_class, hook (adds data-nowo-ui-aside-brand), name, href (already filtered by nowo_ui_safe_href),
-  icon_html, icon_src, kit, bundle.
+  icon_html, icon_src, logo (2.40: AppearanceLogos with a lockup, or null), kit, bundle.
+  With logo (2.40), the name slot holds the lockup (partials/_brand_logos: light / dark <img>, alt = the name) and the
+  icon (mark, else the initial) gets nowo-ui-aside-brand__icon--rail: the kit CSS shows it only in the icons-only rail.
 #}
 {% set _name = name is null ? '' : name ~ '' %}
 {% set _icon_class = nowo_ui_class('app_aside_brand_icon', bundle) ~ (kit ? ' nowo-ui-aside-brand__icon') %}
+{% set _logo = logo|default(null) %}
 {% set _inner %}
-    {%- if icon_html -%}
+    {%- if _logo -%}
+        {%- if icon_html -%}
+            <span class="{{ _icon_class }}{{ kit ? ' nowo-ui-aside-brand__icon--rail' }}" aria-hidden="true">{{ icon_html|raw }}</span>
+        {%- elseif icon_src -%}
+            <span class="{{ _icon_class }}{{ kit ? ' nowo-ui-aside-brand__icon--rail' }}" aria-hidden="true"><img src="{{ icon_src }}" alt="" width="28" height="28"></span>
+        {%- elseif _name is not same as('') -%}
+            <span class="{{ _icon_class }}{{ kit ? ' nowo-ui-aside-brand__icon--initial nowo-ui-aside-brand__icon--rail' }}" aria-hidden="true">{{ _name|trim|first|upper }}</span>
+        {%- endif -%}
+        <span class="{{ nowo_ui_class('app_aside_brand_name', bundle) }}{{ kit ? ' nowo-ui-aside-brand__name nowo-ui-aside-brand__logo' }}">{{ include('@NowoUiKitBundle/partials/_brand_logos.html.twig', {logos: _logo, name: _name}, false) }}</span>
+    {%- elseif icon_html -%}
         <span class="{{ _icon_class }}" aria-hidden="true">{{ icon_html|raw }}</span>
     {%- elseif icon_src -%}
         <span class="{{ _icon_class }}" aria-hidden="true"><img src="{{ icon_src }}" alt="" width="28" height="28"></span>
     {%- elseif _name is not same as('') -%}
         <span class="{{ _icon_class }}{{ kit ? ' nowo-ui-aside-brand__icon--initial' }}" aria-hidden="true">{{ _name|trim|first|upper }}</span>
     {%- endif -%}
-    {%- if _name is not same as('') -%}
+    {%- if not _logo and _name is not same as('') -%}
         <span class="{{ nowo_ui_class('app_aside_brand_name', bundle) }}{{ kit ? ' nowo-ui-aside-brand__name' }}">{{ _name }}</span>
     {%- endif -%}
 {% endset %}

@@ -46,6 +46,11 @@
       brand_href (relative, http, https or mailto, else no link) (defaults: nowo_ui_kit.shell.brand.icon_src / name /
       href), else brand_html, else brand (its initial as the icon). The parts (slots app_aside_brand_icon / app_aside_brand_name) also fill the
       header brand when neither brand_html nor brand is given
+    - appearance logos (2.40, spec 220 S1): when neither brand_html nor brand is given and the appearance SPI returns
+      logos (AppearanceLogos: a brand provider, or a host provider that sets them), they sit between the options and
+      nowo_ui_kit.shell.brand: the name defaults to the appearance brand name, the icon to the mark, and without
+      brand_icon_src / brand_icon_html the logo lockup (light / dark <img> pair, alt = the name) replaces the name
+      text; the icons-only rail shows the mark (else the initial). No logos = the 2.39 markup byte for byte
     - hover_expand (2.32; default nowo_ui_kit.shell.hover_expand): with kit styles and rail_mode, the icons-only rail
       widens over the page on hover / focus (data-nowo-ui-sidebar-hover-expand; nowo-ui-shell.js sets is-aside-peek)
     - bundle: per-bundle theme exceptions
@@ -104,11 +109,21 @@
     bundle: bundle,
 } %}
 {% set _brand_cfg = _cfg.brand|default({}) %}
+{% set _page_brand = (brand_html is defined and brand_html) or (brand is defined and brand) %}
+{% set _appearance = _page_brand ? null : nowo_ui_appearance_or_null() %}
+{% set _logos = _appearance ? _appearance.logos : null %}
+{% set _brand_logo = null %}
+{% if _logos %}
+{% set _brand_name = brand_name ?? (_appearance.brandName is same as('') ? (_brand_cfg.name ?? null) : _appearance.brandName) %}
+{% set _brand_icon_src = nowo_ui_safe_image_src(brand_icon_src ?? (_logos.markSrc ?? (_brand_cfg.icon_src ?? null))) %}
+{% set _brand_logo = (brand_icon_src ?? null) is null and (brand_icon_html ?? null) is null and _logos.hasLogo() ? _logos : null %}
+{% else %}
 {% set _brand_name = brand_name ?? (_brand_cfg.name ?? null) %}
-{% set _brand_href = nowo_ui_safe_href(brand_href ?? (_brand_cfg.href ?? null)) %}
 {% set _brand_icon_src = nowo_ui_safe_image_src(brand_icon_src ?? (_brand_cfg.icon_src ?? null)) %}
+{% endif %}
+{% set _brand_href = nowo_ui_safe_href(brand_href ?? (_brand_cfg.href ?? null)) %}
 {% set _brand_icon = brand_icon_html ?? null %}
-{% set _has_brand_parts = _brand_icon or _brand_icon_src or (_brand_name is not null and _brand_name is not same as('')) %}
+{% set _has_brand_parts = _brand_logo or _brand_icon or _brand_icon_src or (_brand_name is not null and _brand_name is not same as('')) %}
 {% set aside_label = aside_label|default('nav.aside'|trans({}, 'NowoUiKitBundle')) %}
 {% set _header_context = header_context is defined and header_context ? header_context|trim : '' %}
 <div class="{{ nowo_ui_class('app_shell', bundle) }}{{ _kit ? ' nowo-ui-shell' }} {{ _state }}{{ _header_context is not same as('') ? ' has-header-context' }}" data-nowo-ui-shell{{ nowo_ui_attrs('app_shell', bundle, _root_attr) }}>
@@ -120,7 +135,7 @@
             {% elseif brand is defined and brand %}
                 <strong class="{{ nowo_ui_class('app_brand', bundle) }}{{ _kit ? ' nowo-ui-header__brand' }}"{{ nowo_ui_attrs('app_brand', bundle) }}>{{ brand }}</strong>
             {% elseif _has_brand_parts %}
-                {{ include('@NowoUiKitBundle/shell/_brand_parts.html.twig', {slot: 'app_brand', kit_class: 'nowo-ui-header__brand nowo-ui-aside-brand', name: _brand_name, href: _brand_href, icon_html: _brand_icon, icon_src: _brand_icon_src, kit: _kit, bundle: bundle}, false) }}
+                {{ include('@NowoUiKitBundle/shell/_brand_parts.html.twig', {slot: 'app_brand', kit_class: 'nowo-ui-header__brand nowo-ui-aside-brand', name: _brand_name, href: _brand_href, icon_html: _brand_icon, icon_src: _brand_icon_src, logo: _brand_logo, kit: _kit, bundle: bundle}, false) }}
             {% endif %}
         </div>
 {% if _header_context is not same as('') %}
@@ -155,7 +170,7 @@
             {% if aside_brand_html is defined and aside_brand_html %}
                 <div class="{{ nowo_ui_class('app_aside_brand', bundle) }}{{ _kit ? ' nowo-ui-aside-brand' }}" data-nowo-ui-aside-brand{{ nowo_ui_attrs('app_aside_brand', bundle) }}>{{ aside_brand_html|raw }}</div>
             {% elseif _has_brand_parts %}
-                {{ include('@NowoUiKitBundle/shell/_brand_parts.html.twig', {slot: 'app_aside_brand', kit_class: 'nowo-ui-aside-brand', hook: true, name: _brand_name, href: _brand_href, icon_html: _brand_icon, icon_src: _brand_icon_src, kit: _kit, bundle: bundle}, false) }}
+                {{ include('@NowoUiKitBundle/shell/_brand_parts.html.twig', {slot: 'app_aside_brand', kit_class: 'nowo-ui-aside-brand', hook: true, name: _brand_name, href: _brand_href, icon_html: _brand_icon, icon_src: _brand_icon_src, logo: _brand_logo, kit: _kit, bundle: bundle}, false) }}
             {% elseif brand_html is defined and brand_html %}
                 <div class="{{ nowo_ui_class('app_aside_brand', bundle) }}{{ _kit ? ' nowo-ui-aside-brand' }}" data-nowo-ui-aside-brand{{ nowo_ui_attrs('app_aside_brand', bundle) }}>{{ brand_html|raw }}</div>
             {% elseif brand is defined and brand %}

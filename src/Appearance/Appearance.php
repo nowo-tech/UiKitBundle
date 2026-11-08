@@ -10,6 +10,10 @@ namespace Nowo\UiKitBundle\Appearance;
  *
  * Immutable: `with*()` return a copy. {@see self::toArray()} / {@see self::fromArray()} bridge to
  * forms and storage.
+ *
+ * 2.40 (spec 220 S1): optional {@see AppearanceLogos} (brand image URLs). They are not part of
+ * {@see self::toArray()} (forms and stored rows do not carry them); {@see self::fromArray()} keeps the logos of its
+ * `$defaults`. Null (the default) renders every template as before.
  */
 final readonly class Appearance
 {
@@ -25,6 +29,7 @@ final readonly class Appearance
         public string $cornerStyle = 'soft',
         public string $borderStrength = 'medium',
         public bool $footerFixed = false,
+        public ?AppearanceLogos $logos = null,
     ) {
     }
 
@@ -76,6 +81,7 @@ final readonly class Appearance
             (string) $this->scalar($value('cornerStyle', $this->cornerStyle)),
             (string) $this->scalar($value('borderStrength', $this->borderStrength)),
             (bool) $value('footerFixed', $this->footerFixed),
+            $this->logosOf($value('logos', $this->logos)),
         );
     }
 
@@ -128,7 +134,13 @@ final readonly class Appearance
             $string('corner_style', $defaults->cornerStyle),
             $string('border_strength', $defaults->borderStrength),
             \array_key_exists('footer_fixed', $data) ? (bool) $data['footer_fixed'] : $defaults->footerFixed,
+            $defaults->logos,
         );
+    }
+
+    private function logosOf(mixed $value): ?AppearanceLogos
+    {
+        return $value instanceof AppearanceLogos ? $value : null;
     }
 
     private function scalar(mixed $value): string|int|float|bool|null

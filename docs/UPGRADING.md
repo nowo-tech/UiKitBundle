@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+  - [To 2.40.0 (brand contract, logos)](#to-2400-brand-contract-logos)
 - [To 2.39.0](#to-2390)
 - [To 2.38.0](#to-2380)
 - [To 2.37.0](#to-2370)
@@ -124,6 +125,26 @@
   - [Install](#install)
 
 ## Unreleased
+
+### To 2.40.0 (brand contract, logos)
+
+Nothing to do: without a `BrandProviderInterface` service and without logos in your `Appearance`, every page renders
+the 2.39 markup and the container is the 2.39 one.
+
+- **You have a `nowo-tech/brand-contracts` brand provider** (your own, or InstanceSettings' brand section) and
+  `appearance.enabled: true` with `provider: null`: the brand now drives the appearance name, eyebrow, colours and
+  logos. Set `appearance.brand: off` to keep the `defaults`. A host `appearance.provider` always wins.
+- **To show logos from your own provider** (Beacon B1): pass `logos: new AppearanceLogos(lightSrc, darkSrc, markSrc,
+  faviconSrc, appleTouchSrc, wordmark)` to the `Appearance` you return. Unsafe URLs are dropped. Check host CSS that
+  styles `.nowo-ui-aside-brand__name` or the auth panel brand: they now hold `<img>`s when there is a lockup.
+- **Favicon and theme-color from the appearance**: replace your `<link rel="icon">` / `meta theme-color` lines with
+  `{{ nowo_ui_appearance_head() }}` in your layout, or set `appearance.head_links: true` for the kit layouts (then
+  remove your own, or the page has two).
+- A bridge that takes the provider over reads `%nowo_ui_kit.appearance.provider_is_default%` and re-aliases
+  `nowo_ui_kit.appearance.provider` only when it is `true`.
+- A host override of `shell/_brand_parts.html.twig`, `page/auth.html.twig`, `layout/guest.html.twig` or
+  `error/layout.html.twig` keeps working but does not show logos; new blocks: `nowo_ui_guest_brand`,
+  `nowo_ui_error_brand`.
 
 ## To 2.39.0
 

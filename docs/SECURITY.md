@@ -37,6 +37,7 @@ If you discover a security-related issue, please report it privately (e.g. by em
 | **Plain remote dialog content (2.2)** | `data-nowo-ui-dialog-src` (`Action::$dialogId` + `href`): a same-origin fragment fetched into a `<dialog>` |
 | **Element attribute options (2.34)** | `Table::$rowAttributes`, `node.link_attr`, `node.item_attr`, `footer_attr`, `header_attr`, `foot_attr`, `meter_attr`, `back_href`: host-supplied attribute maps and a link target |
 | **Translations** | Domain `NowoUiKitBundle` strings rendered in Twig |
+| **Appearance logos and brand (2.40)** | `AppearanceLogos` URLs from a host appearance provider or a `nowo-tech/brand-contracts` `BrandProviderInterface` (admin-editable in InstanceSettings' brand section), the brand name / eyebrow (text), the paper colours printed in `meta theme-color` |
 | **Action icons (opt-in)** | `nowo_ui_kit.action_icons` / `action_variants`: host configuration, checked against `[prefix:]name` and `primary\|secondary\|danger` at container build; the names reach a `class` attribute (auto-escaped) or `ux_icon()`. Not request data. |
 
 The bundle does **not** expose CLI commands that mutate production data, file uploads, or cookie writers. The only outbound HTTP integration is the opt-in release check (off by default).
@@ -122,6 +123,17 @@ The bundle does **not** expose CLI commands that mutate production data, file up
   `pagehide`, so an
   error cannot leave the shell locked. The `nowo:overlay-*` events can be dispatched by any same-document script;
   they only hide or show chrome (no data, no permission).
+- Appearance logos and brand (2.40, spec 220 S1): logo sources are URLs only, filtered by `SafeHref::filterImage()`
+  when `AppearanceLogos` is built (relative, `http`, `https`, read the way a browser reads them; `javascript:`,
+  `data:`, `blob:` and every other scheme become null), then printed by Twig with auto-escaping in `src` / `href`. The
+  kit never inlines logo bytes or markup (no `|raw`, no `source()`, no `url()` in a custom property), so an SVG logo,
+  even an uploaded one, is an image and cannot run script; consumers that inline must check
+  `BrandAsset::isInlineSafe()` themselves. Names, eyebrows and alt text are escaped. `nowo_ui_appearance_head()`
+  escapes every attribute and prints `theme-color` only for a value that passes the emitter's colour check. The filter
+  checks the scheme, not the origin: a brand provider may point at another `https` host (an image request that host
+  can log). The brand provider and the appearance provider are wrapped for the templates: an exception is logged and
+  the config chrome renders (error pages with a broken database). `BrandAppearanceProvider` keeps no state between
+  requests.
 - Recipe defaults contain no secrets.
 - **FrankenPHP worker:** runtime PHP services (`ReleaseUpdateChecker`, `ReleaseStatusController`, routing helpers) are `readonly` / stateless — no per-request mutable state; safe with kernel not reset between requests ([FRANKENPHP-WORKER-AUDIT.md](FRANKENPHP-WORKER-AUDIT.md)).
 
@@ -149,6 +161,8 @@ Unreleased: `list-pagination`, `auto-refresh` and fetched dialogs no longer let 
 
 Unreleased (dialog back button, `emoji_picker`, `show_more`): independent audit Appendix HR (2026-11-07), on `68d5ec8`: **Pass (good)**, no Critical, High, Medium or Low open. Nothing was run on a phone or with a real screen reader. Design points: the back button is taken only from a fragment that already went through the filter, and only as a `<button type="button">`; the picker builds its grid with DOM APIs and `textContent`, and `data-nowo-ui-emoji-picker-table` and `-labels` read only strings; `show_more`'s `content` is trusted HTML, like `content` elsewhere in the kit, so a host must escape user text; `lines` is limited to 1 to 6. No network, no style attribute; attributes and document members go through the prototypes; importing touches no DOM. The server check is one grapheme, not an allowlist: blank-looking and unassigned characters pass, so a host that needs emoji adds a constraint, and sizes its column for the limit.
 
+Unreleased (spec 220 S1: appearance logos, brand contract consumer, appearance head, token lint): batch audit, **re-verification pending**. Points for the auditor: the URL filter of `AppearanceLogos` and the escaping of every new attribute; that no new path prints logo bytes or `|raw` markup; the byte-for-byte guarantee without logos (shell, auth, guest, error, document) and with `head_links` off; the alias rule of `BrandAppearanceProviderPass` against a host provider and InstanceSettings' bridge; that `AppearanceView` swallows only for the templates (the `nowo_ui_appearance*()` functions and `nowo_ui_tokens()` still call the provider directly, as in 2.39).
+
 Unreleased (motion tokens): batch audit Appendix HW (2026-11-07), on `f38b4f4`: Medium. HW-M1 and HW-M2 fixed at `6bc7750`; HW-L7 fixed and HW-L9 documented at `f5bf641`; delta audit: **Pass (good)**. HW-L1 and HW-L2 accepted and documented, HW-L3 fixed for menus. Open: HW-L8 and HW-L9 (Low), and HW-L10 (Low, older).
 
 ## Secrets and cryptography
@@ -157,7 +171,7 @@ The bundle does **not** implement cryptography or store API keys. Nothing secret
 
 ## Logging
 
-No request logging or PII collection is performed by this bundle.
+No request logging or PII collection is performed by this bundle. 2.40: when the appearance or brand provider throws, a `warning` is logged through the `logger` service (if any) with the exception; no request data.
 
 ## Dependencies and updates
 

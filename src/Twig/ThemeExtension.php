@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Nowo\UiKitBundle\Twig;
 
 use InvalidArgumentException;
+use Nowo\UiKitBundle\Appearance\Appearance;
+use Nowo\UiKitBundle\Appearance\AppearanceView;
 use Nowo\UiKitBundle\Dialog\RemoteDialog;
 use Nowo\UiKitBundle\Dialog\RemoteDialogHeaders;
 use Nowo\UiKitBundle\Form\ActionCsrfType;
@@ -69,6 +71,10 @@ use Twig\TwigFunction;
  *   `nowo_ui_kit.shell.sidebar_layout`)
  * - `nowo_ui_safe_image_src(src)` (2.32) — the image source when it is relative, http or https ({@see SafeHref::isSafeImage()}),
  *   else null
+ * - `nowo_ui_appearance_or_null()` (2.40) — the appearance SPI's {@see Appearance} (its `logos`
+ *   drive the shell, guest, auth and error brand), or null while the appearance is disabled or its provider throws
+ * - `nowo_ui_appearance_head()` (2.40) — favicon / apple-touch links and `meta theme-color` of the appearance ('' without
+ *   one); `nowo_ui_appearance_head_links()` — whether the kit layouts print it (`appearance.head_links`)
  * - `nowo_ui_safe_href(href)` (2.27) — the href when its scheme is safe ({@see SafeHref}: relative, http, https,
  *   mailto), else null
  * - `nowo_ui_breadcrumb_kit_trail(collection = null, context_key = '')` (2.27) — BreadcrumbKit's `breadcrumb_trail()`
@@ -130,6 +136,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
         array $header = ['presentation' => 'standard', 'compact_actions' => 'page'],
         string $sidebarLayout = 'below-header',
         private readonly ?RemoteDialogHeaders $remoteDialogHeaders = null,
+        private readonly AppearanceView $appearanceView = new AppearanceView(),
     ) {
         $this->uiForms = new UiFormViews($actionForms);
         $this->presentationResolver = new HeaderPresentationResolver($requestStack, $header['presentation'], $header['compact_actions']);
@@ -174,6 +181,10 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             new TwigFunction('nowo_ui_remote_dialog_attrs', fn (): array => ($this->remoteDialogHeaders ?? RemoteDialogHeaders::defaults())->dialogAttributes()),
             new TwigFunction('nowo_ui_remote_form_opener', self::remoteFormOpener(...)),
             new TwigFunction('nowo_ui_dialog_status', PageStatus::fromOption(...)),
+            // 2.40 (spec 220 S1): registered with the appearance on or off; never throw.
+            new TwigFunction('nowo_ui_appearance_or_null', $this->appearanceView->current(...)),
+            new TwigFunction('nowo_ui_appearance_head', $this->appearanceView->head(...), ['is_safe' => ['html']]),
+            new TwigFunction('nowo_ui_appearance_head_links', $this->appearanceView->headLinks(...)),
         ];
     }
 
