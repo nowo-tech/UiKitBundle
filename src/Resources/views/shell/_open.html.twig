@@ -50,7 +50,8 @@
       logos (AppearanceLogos: a brand provider, or a host provider that sets them), they sit between the options and
       nowo_ui_kit.shell.brand: the name defaults to the appearance brand name, the icon to the mark, and without
       brand_icon_src / brand_icon_html the logo lockup (light / dark <img> pair, alt = the name) replaces the name
-      text; the icons-only rail shows the mark (else the initial). No logos = the 2.39 markup byte for byte
+      text; the icons-only rail shows the mark (else the initial). No logos, or logos whose every URL was filtered
+      out, = the 2.39 markup byte for byte (nowo_ui_kit.shell.brand.name still applies)
     - hover_expand (2.32; default nowo_ui_kit.shell.hover_expand): with kit styles and rail_mode, the icons-only rail
       widens over the page on hover / focus (data-nowo-ui-sidebar-hover-expand; nowo-ui-shell.js sets is-aside-peek)
     - bundle: per-bundle theme exceptions
@@ -111,7 +112,7 @@
 {% set _brand_cfg = _cfg.brand|default({}) %}
 {% set _page_brand = (brand_html is defined and brand_html) or (brand is defined and brand) %}
 {% set _appearance = _page_brand ? null : nowo_ui_appearance_or_null() %}
-{% set _logos = _appearance ? _appearance.logos : null %}
+{% set _logos = _appearance and _appearance.logos and not _appearance.logos.isEmpty() ? _appearance.logos : null %}
 {% set _brand_logo = null %}
 {% if _logos %}
 {% set _brand_name = brand_name ?? (_appearance.brandName is same as('') ? (_brand_cfg.name ?? null) : _appearance.brandName) %}

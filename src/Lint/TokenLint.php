@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\UiKitBundle\Lint;
 
 use FilesystemIterator;
+use InvalidArgumentException;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use SplFileInfo;
@@ -71,9 +72,16 @@ final readonly class TokenLint
      * @param list<string> $paths
      *
      * @return array<string, list<array{line: int, match: string}>>
+     *
+     * @throws InvalidArgumentException when a path does not exist (a typo must not pass as "clean", audit IS-I7)
      */
     public function lintPaths(array $paths): array
     {
+        foreach ($paths as $path) {
+            if (!file_exists($path)) {
+                throw new InvalidArgumentException(\sprintf('nowo-ui-token-lint: path "%s" does not exist.', $path));
+            }
+        }
         $results = [];
         foreach ($paths as $path) {
             foreach ($this->files($path) as $file) {
@@ -110,9 +118,6 @@ final readonly class TokenLint
     {
         if (is_file($path)) {
             return $this->linted($path) ? [$path] : [];
-        }
-        if (!is_dir($path)) {
-            return [];
         }
         $files = [];
         $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS));
@@ -162,14 +167,23 @@ final readonly class TokenLint
             }
             $out .= $m[0];
             $i += \strlen($m[0]);
+            $start = $i;
+            $blank = '';
             for ($depth = 1; $i < $length; ++$i) {
                 $char = $contents[$i];
                 $depth += '(' === $char ? 1 : (')' === $char ? -1 : 0);
                 if (0 === $depth) {
                     break;
                 }
-                $out .= "\n" === $char ? "\n" : ' ';
+                $blank .= "\n" === $char ? "\n" : ' ';
             }
+            // An unterminated var( (audit IS-I7) blanks nothing: the rest of the file is still linted.
+            if ($i >= $length) {
+                $i = $start;
+
+                continue;
+            }
+            $out .= $blank;
         }
 
         return $out.substr($contents, $i);

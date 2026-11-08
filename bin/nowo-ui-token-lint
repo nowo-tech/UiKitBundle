@@ -9,7 +9,7 @@ declare(strict_types=1);
  *
  *   vendor/bin/nowo-ui-token-lint [--allow=<glob>]... [--no-default-allow] [<path>...]   (default path: src/Resources)
  *
- * Exit code 0 = clean, 1 = findings (one "<file>:<line>: <literal>" line each), 2 = usage error.
+ * Exit code 0 = clean, 1 = findings (one "<file>:<line>: <literal>" line each), 2 = usage error or a missing path.
  */
 
 use Nowo\UiKitBundle\Lint\TokenLint;
@@ -45,7 +45,12 @@ foreach (array_slice($argv, 1) as $arg) {
     }
 }
 
-$results = (new TokenLint($allow))->lintPaths([] === $paths ? ['src/Resources'] : $paths);
+try {
+    $results = (new TokenLint($allow))->lintPaths([] === $paths ? ['src/Resources'] : $paths);
+} catch (\InvalidArgumentException $e) {
+    fwrite(STDERR, $e->getMessage()."\n");
+    exit(2);
+}
 $count = 0;
 foreach ($results as $file => $findings) {
     foreach ($findings as $finding) {

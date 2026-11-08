@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\Appearance;
 
+use ArrayObject;
 use Nowo\Brand\Contract\Brand;
 use Nowo\Brand\Contract\BrandAsset;
 use Nowo\Brand\Contract\BrandAssetOrigin;
@@ -23,6 +24,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
 use RuntimeException;
 use Stringable;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Translation\Loader\ArrayLoader;
 use Symfony\Component\Translation\TranslatableMessage;
 use Symfony\Component\Translation\Translator;
@@ -221,6 +224,61 @@ final class BrandAppearanceTest extends TestCase
         self::assertSame('', $failing->head());
         self::assertSame(3, $logger->count);
         self::assertNull((new AppearanceView($throwing))->current(), 'no logger');
+    }
+
+    public function testAppearanceViewMemoisesPerMainRequest(): void
+    {
+        $calls = new ArrayObject();
+        $logger = new class extends AbstractLogger {
+            public int $count = 0;
+
+            public function log($level, string|Stringable $message, array $context = []): void
+            {
+                ++$this->count;
+            }
+        };
+        $provider = new class($calls) implements AppearanceProviderInterface {
+            public function __construct(private readonly ArrayObject $calls)
+            {
+            }
+
+            public function getAppearance(): Appearance
+            {
+                $this->calls->append(1);
+
+                throw new RuntimeException('down');
+            }
+        };
+        $stack = new RequestStack();
+        $view = new AppearanceView($provider, true, $logger, $stack);
+
+        self::assertNull($view->current());
+        self::assertNull($view->current(), 'no request: no memo');
+        self::assertCount(2, $calls);
+
+        $stack->push(new Request());
+        self::assertNull($view->current());
+        self::assertSame('', $view->head());
+        self::assertNull($view->logos());
+        self::assertCount(3, $calls, 'one call per main request, also when it fails');
+        self::assertSame(3, $logger->count);
+
+        $stack->push(Request::create('/sub'));
+        self::assertNull($view->current());
+        self::assertCount(3, $calls, 'a sub-request shares the main request memo');
+
+        $stack->pop();
+        $stack->pop();
+        $stack->push(new Request());
+        self::assertNull($view->current());
+        self::assertCount(4, $calls, 'a new main request asks again');
+        $view->reset();
+        self::assertNull($view->current());
+        self::assertCount(5, $calls, 'reset() drops the memo');
+
+        $ok = new AppearanceView(self::fixed($appearance = new Appearance('A', '', BuiltInAppearancePresets::get('slate')->light, BuiltInAppearancePresets::get('midnight')->dark)), false, null, $stack);
+        self::assertSame($appearance, $ok->current());
+        self::assertSame($appearance, $ok->current());
     }
 
     public static function asset(string $slot, string $url, string $type = 'image/png', BrandAssetOrigin $origin = BrandAssetOrigin::Uploaded): BrandAsset

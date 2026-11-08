@@ -9,10 +9,10 @@ use Nowo\UiKitBundle\Appearance\AppearanceCssEmitter;
 use Nowo\UiKitBundle\Appearance\AppearancePreset;
 use Nowo\UiKitBundle\Appearance\AppearancePresetRegistry;
 use Nowo\UiKitBundle\Appearance\AppearanceProviderInterface;
+use Nowo\UiKitBundle\Appearance\AppearanceView;
 use Nowo\UiKitBundle\Appearance\ConfigAppearanceProvider;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Throwable;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
@@ -23,9 +23,12 @@ use Twig\TwigFunction;
  * - `nowo_ui_appearance_css()` — the token stylesheet text
  * - `nowo_ui_appearance_style(nonce = null)` — `<style nonce data-nowo-ui-appearance>…</style>`; the nonce
  *   defaults to the request attribute `csp_nonce`
- *
- * 2.40: a provider that throws is logged and the config defaults are used (`nowo_ui_tokens()` included), never an error.
  * - `nowo_ui_appearance_presets(mode = null)` — presets for pickers
+ *
+ * 2.40: the provider is read through an {@see AppearanceView} (the kit's, so one call per page is shared with the kit
+ * templates): when it throws, a warning is logged once and the `appearance.defaults` are used (`nowo_ui_tokens()`
+ * included), never an error. `$defaults` is the kit's private defaults provider, not the decoratable
+ * `nowo_ui_kit.appearance.config_provider` (audit IS-L1).
  */
 final class AppearanceExtension extends AbstractExtension
 {
@@ -34,8 +37,9 @@ final class AppearanceExtension extends AbstractExtension
         private readonly AppearanceCssEmitter $emitter,
         private readonly AppearancePresetRegistry $registry,
         private readonly ?RequestStack $requestStack = null,
-        private readonly ?ConfigAppearanceProvider $fallback = null,
+        private readonly ?ConfigAppearanceProvider $defaults = null,
         private readonly ?LoggerInterface $logger = null,
+        private readonly ?AppearanceView $view = null,
     ) {
     }
 
@@ -55,13 +59,9 @@ final class AppearanceExtension extends AbstractExtension
      */
     public function appearance(): Appearance
     {
-        try {
-            return $this->provider->getAppearance();
-        } catch (Throwable $e) {
-            $this->logger?->warning('UiKit appearance: the appearance provider failed, using the appearance defaults.', ['exception' => $e]);
+        $view = $this->view ?? new AppearanceView($this->provider, false, $this->logger, $this->requestStack);
 
-            return ($this->fallback ?? new ConfigAppearanceProvider($this->registry))->getDefaults();
-        }
+        return $view->current() ?? ($this->defaults ?? new ConfigAppearanceProvider($this->registry))->getDefaults();
     }
 
     public function css(): string

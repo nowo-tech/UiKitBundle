@@ -845,7 +845,8 @@ Spec 220 slice S1. `Appearance` has an optional `logos` (`AppearanceLogos`: `lig
 `http`, `https`; anything else is dropped), and the kit prints them only as `<img src>` / `<link href>`: never inlined,
 so an SVG logo cannot run script in the page. They are not in `toArray()`; `fromArray()` keeps the logos of its
 defaults. With `logos` null (the `ConfigAppearanceProvider`, and every host provider until it sets them) every template
-renders the 2.39 markup.
+renders the 2.39 markup. An `AppearanceLogos` whose every URL was filtered out counts as none: the shell keeps
+`shell.brand.name` (a brand without images included).
 
 **Who sets them.** A host provider (`new Appearance(…, logos: new AppearanceLogos('/brand/logo.svg', …))`), or the
 brand contract: with `appearance.provider: null`, `appearance.brand: auto` (the default) and a
@@ -885,7 +886,7 @@ escaped, for host layouts. The kit document and error layouts print it after the
 `src/Resources`) reports colour literals (`#rgb`, `#rrggbb`, `#rrggbbaa`, `rgb(`, `rgba(`) in `*.css`, `*.scss` and
 `*.twig` that should read a `--nowo-ui-*` token. Allowed: the fallback of `var(--…, …)`, `rgb(var(--nowo-ui-…) / …)`,
 comments, a line holding `nowo-ui-token-lint-ignore`, and `nowo-ui.css` / `nowo-ui.unlayered.css`. Exit 1 on findings.
-It is a heuristic (an id selector spelling a hex colour is reported too); bundles add it to CI in their next sweep, not
+A missing path exits 2; `make token-lint` runs it on `src/Resources` without the demo views. It is a heuristic (an id selector spelling a hex colour is reported too); bundles add it to CI in their next sweep, not
 as a release blocker.
 
 ### Keeping legacy variable names (`token_aliases`)

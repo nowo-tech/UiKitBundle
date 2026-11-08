@@ -66,6 +66,9 @@ TWIG;
         $config = new ConfigAppearanceProvider(new AppearancePresetRegistry(), ['brand_name' => 'From appearance']);
         self::assertSame($off, $this->twig(new AppearanceView($config))->render($template, $vars));
         self::assertStringNotContainsString('nowo-ui-brand__logo', $off);
+        // IS-I5: logos whose every URL was filtered out count as none (shell.brand.name still applies).
+        $filtered = new AppearanceView(BrandAppearanceTest::fixed($this->appearance('From appearance', new AppearanceLogos('javascript:x', 'data:x', 'vbscript:x', wordmark: 'w'))));
+        self::assertSame($off, $this->twig($filtered)->render($template, $vars));
         self::assertStringNotContainsString('data-nowo-ui-region="brand"', $off);
     }
 

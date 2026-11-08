@@ -310,7 +310,9 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
                 new Reference('nowo_ui_kit.appearance.provider', ContainerInterface::NULL_ON_INVALID_REFERENCE),
                 $appearanceConfig['head_links'],
                 new Reference('logger', ContainerInterface::NULL_ON_INVALID_REFERENCE),
-            ]);
+                new Reference('request_stack', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+            ])
+            ->addTag('kernel.reset', ['method' => 'reset']);
         $container->register('nowo_ui_kit.theme_twig_extension', ThemeExtension::class)
             ->setArguments([
                 new Reference('nowo_ui_kit.theme'),
@@ -481,6 +483,10 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
         $container->register('nowo_ui_kit.appearance.config_provider', ConfigAppearanceProvider::class)
             ->setArguments([new Reference('nowo_ui_kit.appearance.preset_registry'), $appearance['defaults']]);
         $container->setAlias(ConfigAppearanceProvider::class, 'nowo_ui_kit.appearance.config_provider');
+        // 2.40 (audit IS-L1): the kit's own fallback, private and never decorated (hosts may decorate config_provider).
+        $container->register('nowo_ui_kit.appearance.defaults_provider', ConfigAppearanceProvider::class)
+            ->setArguments([new Reference('nowo_ui_kit.appearance.preset_registry'), $appearance['defaults']])
+            ->setPublic(false);
 
         $providerId = $appearance['provider'] ?? 'nowo_ui_kit.appearance.config_provider';
         $container->setAlias('nowo_ui_kit.appearance.provider', $providerId);
@@ -491,7 +497,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
         if (null === $appearance['provider'] && 'auto' === $appearance['brand'] && interface_exists(BrandProviderInterface::class)) {
             $container->register(BrandAppearanceProviderPass::CANDIDATE, BrandAppearanceProvider::class)
                 ->setArguments([
-                    new Reference('nowo_ui_kit.appearance.config_provider'),
+                    new Reference('nowo_ui_kit.appearance.defaults_provider'),
                     new Reference(BrandProviderInterface::class),
                     new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE),
                     new Reference('logger', ContainerInterface::NULL_ON_INVALID_REFERENCE),
@@ -513,8 +519,9 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
                 new Reference('nowo_ui_kit.appearance.css_emitter'),
                 new Reference('nowo_ui_kit.appearance.preset_registry'),
                 new Reference('request_stack', ContainerInterface::NULL_ON_INVALID_REFERENCE),
-                new Reference('nowo_ui_kit.appearance.config_provider'),
+                new Reference('nowo_ui_kit.appearance.defaults_provider'),
                 new Reference('logger', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                new Reference('nowo_ui_kit.appearance.view'),
             ])
             ->addTag('twig.extension');
 

@@ -5,7 +5,11 @@ declare(strict_types=1);
 namespace Nowo\UiKitBundle\Appearance;
 
 use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Contracts\Service\ResetInterface;
 use Throwable;
+use WeakReference;
 
 /**
  * What the kit templates read from the appearance SPI (2.40, spec 220 S1), registered whether the appearance is on or
@@ -17,15 +21,30 @@ use Throwable;
  * - {@see self::head()} — favicon / apple-touch `<link>` tags and `meta theme-color` per colour scheme (escaped)
  * - {@see self::headLinks()} — `nowo_ui_kit.appearance.head_links`: whether the kit layouts print {@see self::head()}
  *
- * Stateless (no memo): every call asks the provider, which memoises per request if it needs to.
+ * Memo (audit IS-I1): with a request stack, the result — or the failure — is kept for the current main request only
+ * (a weak reference to it), so a failing provider is asked and logged once per page, not once per template that reads
+ * it. A new main request, or {@see self::reset()} (`kernel.reset`, long-running workers), drops it. Without a current
+ * request every call asks the provider.
  */
-final readonly class AppearanceView
+final class AppearanceView implements ResetInterface
 {
+    /** @var WeakReference<Request>|null */
+    private ?WeakReference $memoFor = null;
+
+    private ?Appearance $memo = null;
+
     public function __construct(
-        private ?AppearanceProviderInterface $provider = null,
-        private bool $headLinks = false,
-        private ?LoggerInterface $logger = null,
+        private readonly ?AppearanceProviderInterface $provider = null,
+        private readonly bool $headLinks = false,
+        private readonly ?LoggerInterface $logger = null,
+        private readonly ?RequestStack $requestStack = null,
     ) {
+    }
+
+    public function reset(): void
+    {
+        $this->memoFor = null;
+        $this->memo = null;
     }
 
     public function current(): ?Appearance
@@ -33,13 +52,22 @@ final readonly class AppearanceView
         if (!$this->provider instanceof AppearanceProviderInterface) {
             return null;
         }
+        $request = $this->requestStack?->getMainRequest();
+        if ($request instanceof Request && $this->memoFor?->get() === $request) {
+            return $this->memo;
+        }
         try {
-            return $this->provider->getAppearance();
+            $appearance = $this->provider->getAppearance();
         } catch (Throwable $e) {
             $this->logger?->warning('UiKit appearance: the appearance provider failed, the kit chrome uses its config.', ['exception' => $e]);
-
-            return null;
+            $appearance = null;
         }
+        if ($request instanceof Request) {
+            $this->memoFor = WeakReference::create($request); // @igor-ignore — per-main-request memo, weak, dropped on reset()
+            $this->memo = $appearance; // @igor-ignore — same memo
+        }
+
+        return $appearance;
     }
 
     public function logos(): ?AppearanceLogos

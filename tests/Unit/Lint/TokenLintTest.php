@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\Lint;
 
+use InvalidArgumentException;
 use Nowo\UiKitBundle\Lint\TokenLint;
 use PHPUnit\Framework\TestCase;
 
@@ -57,13 +58,14 @@ final class TokenLintTest extends TestCase
             ['line' => 7, 'match' => 'rgb('],
             ['line' => 7, 'match' => 'rgba('],
             ['line' => 9, 'match' => '#4444'],
-        ], $lint->lintContents($css));
+            ['line' => 11, 'match' => '#555'],
+        ], $lint->lintContents($css), 'an unterminated var( hides nothing');
     }
 
     public function testPathsAndAllowList(): void
     {
         $lint = new TokenLint();
-        $results = $lint->lintPaths([$this->dir, $this->dir.'/missing', $this->dir.'/readme.md']);
+        $results = $lint->lintPaths([$this->dir, $this->dir.'/readme.md']);
         self::assertSame([
             $this->dir.'/css/bundle.css' => [['line' => 1, 'match' => '#fff']],
             $this->dir.'/page.html.twig' => [['line' => 2, 'match' => 'rgba(']],
@@ -72,6 +74,12 @@ final class TokenLintTest extends TestCase
         self::assertSame([$this->dir.'/css/bundle.css'], array_keys((new TokenLint(['*.twig']))->lintPaths([$this->dir.'/css/bundle.css', $this->dir.'/page.html.twig'])));
         self::assertArrayHasKey($this->dir.'/css/nowo-ui.css', (new TokenLint([]))->lintPaths([$this->dir]));
         self::assertTrue($lint->isAllowed('nowo-ui.css'));
+        try {
+            $lint->lintPaths([$this->dir, $this->dir.'/missing']);
+            self::fail('a missing path must not pass as clean');
+        } catch (InvalidArgumentException $e) {
+            self::assertStringContainsString('/missing" does not exist', $e->getMessage());
+        }
         self::assertFalse($lint->isAllowed('src/my.css'));
     }
 
@@ -98,5 +106,8 @@ final class TokenLintTest extends TestCase
 
         self::assertSame(0, $run('--help')[0]);
         self::assertSame(2, $run('--nope')[0]);
+        [$code, $out] = $run(escapeshellarg($this->dir.'/typo'));
+        self::assertSame(2, $code);
+        self::assertStringContainsString('does not exist', $out);
     }
 }

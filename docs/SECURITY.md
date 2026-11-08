@@ -40,7 +40,7 @@ If you discover a security-related issue, please report it privately (e.g. by em
 | **Appearance logos and brand (2.40)** | `AppearanceLogos` URLs from a host appearance provider or a `nowo-tech/brand-contracts` `BrandProviderInterface` (admin-editable in InstanceSettings' brand section), the brand name / eyebrow (text), the paper colours printed in `meta theme-color` |
 | **Action icons (opt-in)** | `nowo_ui_kit.action_icons` / `action_variants`: host configuration, checked against `[prefix:]name` and `primary\|secondary\|danger` at container build; the names reach a `class` attribute (auto-escaped) or `ux_icon()`. Not request data. |
 
-The bundle does **not** expose CLI commands that mutate production data, file uploads, or cookie writers. The only outbound HTTP integration is the opt-in release check (off by default).
+The bundle does **not** expose CLI commands that mutate production data, file uploads, or cookie writers. Its only CLI, `bin/nowo-ui-token-lint` (2.40), reads `*.css` / `*.scss` / `*.twig` files and prints findings; it writes nothing and runs no command. The only outbound HTTP integration is the opt-in release check (off by default).
 
 ## Threat model
 
@@ -126,14 +126,14 @@ The bundle does **not** expose CLI commands that mutate production data, file up
 - Appearance logos and brand (2.40, spec 220 S1): logo sources are URLs only, filtered by `SafeHref::filterImage()`
   when `AppearanceLogos` is built (relative, `http`, `https`, read the way a browser reads them; `javascript:`,
   `data:`, `blob:` and every other scheme become null), then printed by Twig with auto-escaping in `src` / `href`. The
-  kit never inlines logo bytes or markup (no `|raw`, no `source()`, no `url()` in a custom property), so an SVG logo,
+  kit never inlines logo bytes or markup (no `|raw` of unescaped data: the head string is escaped in PHP before it is printed; no `source()`, no `url()` in a custom property), so an SVG logo,
   even an uploaded one, is an image and cannot run script; consumers that inline must check
   `BrandAsset::isInlineSafe()` themselves. Names, eyebrows and alt text are escaped. `nowo_ui_appearance_head()`
   escapes every attribute and prints `theme-color` only for a value that passes the emitter's colour check. The filter
   checks the scheme, not the origin: a brand provider may point at another `https` host (an image request that host
   can log). The brand provider and the appearance provider are wrapped for the templates: an exception is logged and
   the config chrome renders (error pages with a broken database). `BrandAppearanceProvider` keeps no state between
-  requests.
+  requests. Audit IS (2026-11-08): the kit's fallback is a private `nowo_ui_kit.appearance.defaults_provider`, so decorating the public `config_provider` cannot break rendering (IS-L1); `AppearanceView` memoises the provider result, or its failure, per main request (`kernel.reset`), so a failing provider is asked and logged once per page (IS-I1).
 - Recipe defaults contain no secrets.
 - **FrankenPHP worker:** runtime PHP services (`ReleaseUpdateChecker`, `ReleaseStatusController`, routing helpers) are `readonly` / stateless — no per-request mutable state; safe with kernel not reset between requests ([FRANKENPHP-WORKER-AUDIT.md](FRANKENPHP-WORKER-AUDIT.md)).
 

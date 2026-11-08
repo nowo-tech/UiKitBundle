@@ -312,7 +312,7 @@ Services (when enabled): `nowo_ui_kit.appearance.provider` (alias of your provid
 `auto`, `nowo-tech/brand-contracts` is installed and a `BrandProviderInterface` service or alias is defined; the
 compiler pass `BrandAppearanceProviderPass` then points `nowo_ui_kit.appearance.provider` at it, unless another pass
 (InstanceSettings' bridge) already re-aliased the provider. `nowo_ui_kit.appearance.view` (`AppearanceView`, always
-registered) is what the kit templates read: it never throws. Logos and the brand region: [THEMING.md — Brand and
+registered) is what the kit templates and the `nowo_ui_appearance*()` functions read: it never throws and memoises per main request. `nowo_ui_kit.appearance.defaults_provider` (private) is the kit's fallback; decorate `config_provider` freely. Logos and the brand region: [THEMING.md — Brand and
 logos](THEMING.md#brand-and-logos-240).
 
 ## Route links

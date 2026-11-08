@@ -23,6 +23,8 @@ use Throwable;
  * provider throws (the error is logged; a page, an error page above all, never fails because of the brand). The
  * preset ids are the configured defaults when the brand colours equal them, else {@see Appearance::CUSTOM}.
  *
+ * `$config` is the kit's private `nowo_ui_kit.appearance.defaults_provider`, never the decoratable `config_provider`.
+ *
  * Stateless: each call asks the brand provider again (providers memoise per request themselves), so a long-running
  * worker keeps nothing between requests.
  */
