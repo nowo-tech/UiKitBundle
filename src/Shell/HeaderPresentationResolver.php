@@ -17,7 +17,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 final readonly class HeaderPresentationResolver
 {
     /**
-     * @param string $presentation   `nowo_ui_kit.header.presentation` (anything but `compact` means `standard`)
+     * @param string $presentation   `nowo_ui_kit.header.presentation` (a {@see HeaderPresentation} value; anything else means `standard`)
      * @param string $compactActions `nowo_ui_kit.header.compact_actions`: `page` | `bar`
      */
     public function __construct(
@@ -28,7 +28,7 @@ final readonly class HeaderPresentationResolver
     }
 
     /**
-     * The explicit option when it is a valid presentation ({@see HeaderPresentation} or `standard` / `compact`; any other
+     * The explicit option when it is a valid presentation ({@see HeaderPresentation} or its string value; any other
      * value, e.g. an unrelated host variable named `presentation`, is ignored), else the request attribute (the
      * current request, then the main request, so a page header rendered in a sub-request follows the page), else the
      * configured default.

@@ -61,7 +61,7 @@ use Twig\TwigFunction;
  *   — the scaffold page header (`page/_page_header.html.twig`: the `page_header` partial with the 2.0 and 1.x inputs)
  *   for unique pages; bundle and page type default to `nowo_ui_bundle` / `nowo_ui_page_type` of the context. 2.27: the
  *   second argument may be an options hash instead (`{bundle, extra_actions, header_actions, presentation}`), and
- *   `presentation` (`standard` | `compact`; anything else is ignored) defaults to {@see self::headerPresentation()}
+ *   `presentation` (a {@see HeaderPresentation} value; anything else is ignored) defaults to {@see self::headerPresentation()}
  * - `nowo_ui_header_presentation(presentation = null)` (2.27) — the resolved page-header presentation of the request
  *   ({@see HeaderPresentation}: a valid option, else the request attribute, else `nowo_ui_kit.header.presentation`)
  * - `nowo_ui_sidebar_layout(layout = null)` (2.32) — the app shell's sidebar layout of the request (`below-header` |

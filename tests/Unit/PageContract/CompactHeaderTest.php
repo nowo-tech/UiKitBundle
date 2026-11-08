@@ -52,7 +52,7 @@ final class CompactHeaderTest extends TestCase
 
     public function testPresentationEnum(): void
     {
-        self::assertSame(['standard', 'compact'], HeaderPresentation::values());
+        self::assertSame(['standard', 'compact', 'inline', 'no_intro', 'no_title', 'no_header'], HeaderPresentation::values());
         self::assertSame('_nowo_ui_header_presentation', HeaderPresentation::ATTRIBUTE);
         self::assertSame(HeaderPresentation::Compact, HeaderPresentation::fromRequestValue(HeaderPresentation::Compact));
         self::assertSame(HeaderPresentation::Compact, HeaderPresentation::fromRequestValue('compact'));
@@ -61,7 +61,7 @@ final class CompactHeaderTest extends TestCase
         self::assertSame(HeaderPresentation::Standard, HeaderPresentation::fromOption(HeaderPresentation::Standard));
         self::assertSame(HeaderPresentation::Compact, HeaderPresentation::fromOption('compact'));
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Invalid header presentation "tiny" (standard|compact).');
+        $this->expectExceptionMessage('Invalid header presentation "tiny" (standard|compact|inline|no_intro|no_title|no_header).');
         HeaderPresentation::fromOption('tiny');
     }
 
