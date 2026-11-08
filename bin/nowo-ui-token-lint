@@ -1,0 +1,62 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/*
+ * nowo-ui-token-lint (UiKit 2.40, spec 220 §2.1): report colour literals in bundle CSS / SCSS / Twig that should read a
+ * --nowo-ui-* token. See Nowo\UiKitBundle\Lint\TokenLint for the rules.
+ *
+ *   vendor/bin/nowo-ui-token-lint [--allow=<glob>]... [--no-default-allow] [<path>...]   (default path: src/Resources)
+ *
+ * Exit code 0 = clean, 1 = findings (one "<file>:<line>: <literal>" line each), 2 = usage error or a missing path.
+ */
+
+use Nowo\UiKitBundle\Lint\TokenLint;
+
+$autoload = null;
+foreach ([$GLOBALS['_composer_autoload_path'] ?? null, __DIR__.'/../vendor/autoload.php', __DIR__.'/../../../autoload.php'] as $candidate) {
+    if (is_string($candidate) && is_file($candidate)) {
+        $autoload = $candidate;
+        break;
+    }
+}
+if (null === $autoload) {
+    fwrite(STDERR, "nowo-ui-token-lint: vendor/autoload.php not found (run composer install).\n");
+    exit(2);
+}
+require $autoload;
+
+$allow = TokenLint::DEFAULT_ALLOW;
+$paths = [];
+foreach (array_slice($argv, 1) as $arg) {
+    if ('--no-default-allow' === $arg) {
+        $allow = array_values(array_diff($allow, TokenLint::DEFAULT_ALLOW));
+    } elseif (str_starts_with($arg, '--allow=')) {
+        $allow[] = substr($arg, 8);
+    } elseif ('--help' === $arg || '-h' === $arg) {
+        fwrite(STDOUT, "Usage: nowo-ui-token-lint [--allow=<glob>]... [--no-default-allow] [<path>...]\n");
+        exit(0);
+    } elseif (str_starts_with($arg, '-')) {
+        fwrite(STDERR, sprintf("nowo-ui-token-lint: unknown option %s\n", $arg));
+        exit(2);
+    } else {
+        $paths[] = $arg;
+    }
+}
+
+try {
+    $results = (new TokenLint($allow))->lintPaths([] === $paths ? ['src/Resources'] : $paths);
+} catch (\InvalidArgumentException $e) {
+    fwrite(STDERR, $e->getMessage()."\n");
+    exit(2);
+}
+$count = 0;
+foreach ($results as $file => $findings) {
+    foreach ($findings as $finding) {
+        fwrite(STDOUT, sprintf("%s:%d: %s\n", $file, $finding['line'], $finding['match']));
+        ++$count;
+    }
+}
+fwrite(STDERR, sprintf("nowo-ui-token-lint: %d finding(s).\n", $count));
+exit($count > 0 ? 1 : 0);

@@ -9,6 +9,9 @@ use Nowo\UiKitBundle\Appearance\AppearanceCssEmitter;
 use Nowo\UiKitBundle\Appearance\AppearancePreset;
 use Nowo\UiKitBundle\Appearance\AppearancePresetRegistry;
 use Nowo\UiKitBundle\Appearance\AppearanceProviderInterface;
+use Nowo\UiKitBundle\Appearance\AppearanceView;
+use Nowo\UiKitBundle\Appearance\ConfigAppearanceProvider;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
@@ -21,6 +24,11 @@ use Twig\TwigFunction;
  * - `nowo_ui_appearance_style(nonce = null)` — `<style nonce data-nowo-ui-appearance>…</style>`; the nonce
  *   defaults to the request attribute `csp_nonce`
  * - `nowo_ui_appearance_presets(mode = null)` — presets for pickers
+ *
+ * 2.40: the provider is read through an {@see AppearanceView} (the kit's, so one call per page is shared with the kit
+ * templates): when it throws, a warning is logged once and the `appearance.defaults` are used (`nowo_ui_tokens()`
+ * included), never an error. `$defaults` is the kit's private defaults provider, not the decoratable
+ * `nowo_ui_kit.appearance.config_provider` (audit IS-L1).
  */
 final class AppearanceExtension extends AbstractExtension
 {
@@ -29,6 +37,9 @@ final class AppearanceExtension extends AbstractExtension
         private readonly AppearanceCssEmitter $emitter,
         private readonly AppearancePresetRegistry $registry,
         private readonly ?RequestStack $requestStack = null,
+        private readonly ?ConfigAppearanceProvider $defaults = null,
+        private readonly ?LoggerInterface $logger = null,
+        private readonly ?AppearanceView $view = null,
     ) {
     }
 
@@ -42,14 +53,20 @@ final class AppearanceExtension extends AbstractExtension
         ];
     }
 
+    /**
+     * The provider's appearance; when it throws (2.40), a warning is logged and the config defaults are returned, so a
+     * page (an error page with a broken database above all) never fails because of the appearance.
+     */
     public function appearance(): Appearance
     {
-        return $this->provider->getAppearance();
+        $view = $this->view ?? new AppearanceView($this->provider, false, $this->logger, $this->requestStack);
+
+        return $view->current() ?? ($this->defaults ?? new ConfigAppearanceProvider($this->registry))->getDefaults();
     }
 
     public function css(): string
     {
-        return $this->emitter->emit($this->provider->getAppearance());
+        return $this->emitter->emit($this->appearance());
     }
 
     public function style(?string $nonce = null): string

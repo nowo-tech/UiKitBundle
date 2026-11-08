@@ -6,12 +6,16 @@ namespace Nowo\UiKitBundle\DependencyInjection;
 
 use Closure;
 use LogicException;
+use Nowo\Brand\Contract\BrandProviderInterface;
 use Nowo\UiKitBundle\Appearance\AppearanceCssEmitter;
 use Nowo\UiKitBundle\Appearance\AppearancePreset;
 use Nowo\UiKitBundle\Appearance\AppearancePresetProviderInterface;
 use Nowo\UiKitBundle\Appearance\AppearancePresetRegistry;
 use Nowo\UiKitBundle\Appearance\AppearanceProviderInterface;
+use Nowo\UiKitBundle\Appearance\AppearanceView;
+use Nowo\UiKitBundle\Appearance\BrandAppearanceProvider;
 use Nowo\UiKitBundle\Appearance\ConfigAppearanceProvider;
+use Nowo\UiKitBundle\DependencyInjection\Compiler\BrandAppearanceProviderPass;
 use Nowo\UiKitBundle\Dialog\RemoteDialogHeaders;
 use Nowo\UiKitBundle\Dialog\RemoteDialogRedirectListener;
 use Nowo\UiKitBundle\Dialog\RemoteDialogResponder;
@@ -206,9 +210,11 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
         $container->setParameter('nowo_ui_kit.release_check.current_version', $releaseCheck['current_version']);
         $this->registerReleaseCheck($container, $releaseCheck);
 
-        /** @var array{enabled: bool, provider: ?string, defaults: array{brand_name: string, brand_eyebrow: string, preset: string, preset_dark: string, corner_style: string, border_strength: string, footer_fixed: bool}, presets: array<string, array<string, mixed>>, builtin_presets: list<string>, kit_tokens: bool, token_aliases: array<string, list<string>>, selectors: array{root: string, light: string, dark: string}, shadow_rgb_fallback: string} $appearance */
+        /** @var array{enabled: bool, provider: ?string, brand: string, head_links: bool, defaults: array{brand_name: string, brand_eyebrow: string, preset: string, preset_dark: string, corner_style: string, border_strength: string, footer_fixed: bool}, presets: array<string, array<string, mixed>>, builtin_presets: list<string>, kit_tokens: bool, token_aliases: array<string, list<string>>, selectors: array{root: string, light: string, dark: string}, shadow_rgb_fallback: string} $appearance */
         $appearance = $config['appearance'];
         $container->setParameter('nowo_ui_kit.appearance.enabled', $appearance['enabled']);
+        // 2.40 (spec 220): lets a bridge (InstanceSettings) take the provider over only when the host set none.
+        $container->setParameter('nowo_ui_kit.appearance.provider_is_default', null === $appearance['provider']);
         $this->registerAppearance($container, $appearance);
         // Form types / extensions below exist only with symfony/form (optional dependency).
         if (class_exists(AbstractType::class)) {
@@ -296,6 +302,17 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
                 ->setFactory([Forms::class, 'createFormFactory']);
             $actionForms = new Reference('nowo_ui_kit.action_form_factory');
         }
+        // 2.40 (spec 220 S1): the appearance as the kit templates read it (never throws; null provider while disabled).
+        /** @var array{head_links: bool} $appearanceConfig */
+        $appearanceConfig = $config['appearance'];
+        $container->register('nowo_ui_kit.appearance.view', AppearanceView::class)
+            ->setArguments([
+                new Reference('nowo_ui_kit.appearance.provider', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                $appearanceConfig['head_links'],
+                new Reference('logger', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                new Reference('request_stack', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+            ])
+            ->addTag('kernel.reset', ['method' => 'reset']);
         $container->register('nowo_ui_kit.theme_twig_extension', ThemeExtension::class)
             ->setArguments([
                 new Reference('nowo_ui_kit.theme'),
@@ -309,6 +326,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
             ->setArgument('$header', $config['header'])
             ->setArgument('$sidebarLayout', $config['shell']['sidebar_layout'])
             ->setArgument('$remoteDialogHeaders', new Reference('nowo_ui_kit.remote_dialog_headers'))
+            ->setArgument('$appearanceView', new Reference('nowo_ui_kit.appearance.view'))
             ->addTag('twig.extension');
 
         $this->registerRemoteDialog($container, $config);
@@ -440,7 +458,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
      * Appearance SPI services (only when enabled): preset registry, config provider, CSS emitter, Twig
      * extension, optional form types (symfony/form).
      *
-     * @param array{enabled: bool, provider: ?string, defaults: array{brand_name: string, brand_eyebrow: string, preset: string, preset_dark: string, corner_style: string, border_strength: string, footer_fixed: bool}, presets: array<string, array<string, mixed>>, builtin_presets: list<string>, kit_tokens: bool, token_aliases: array<string, list<string>>, selectors: array{root: string, light: string, dark: string}, shadow_rgb_fallback: string} $appearance
+     * @param array{enabled: bool, provider: ?string, brand: string, head_links: bool, defaults: array{brand_name: string, brand_eyebrow: string, preset: string, preset_dark: string, corner_style: string, border_strength: string, footer_fixed: bool}, presets: array<string, array<string, mixed>>, builtin_presets: list<string>, kit_tokens: bool, token_aliases: array<string, list<string>>, selectors: array{root: string, light: string, dark: string}, shadow_rgb_fallback: string} $appearance
      */
     private function registerAppearance(ContainerBuilder $container, array $appearance): void
     {
@@ -465,10 +483,26 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
         $container->register('nowo_ui_kit.appearance.config_provider', ConfigAppearanceProvider::class)
             ->setArguments([new Reference('nowo_ui_kit.appearance.preset_registry'), $appearance['defaults']]);
         $container->setAlias(ConfigAppearanceProvider::class, 'nowo_ui_kit.appearance.config_provider');
+        // 2.40 (audit IS-L1): the kit's own fallback, private and never decorated (hosts may decorate config_provider).
+        $container->register('nowo_ui_kit.appearance.defaults_provider', ConfigAppearanceProvider::class)
+            ->setArguments([new Reference('nowo_ui_kit.appearance.preset_registry'), $appearance['defaults']])
+            ->setPublic(false);
 
         $providerId = $appearance['provider'] ?? 'nowo_ui_kit.appearance.config_provider';
         $container->setAlias('nowo_ui_kit.appearance.provider', $providerId);
         $container->setAlias(AppearanceProviderInterface::class, 'nowo_ui_kit.appearance.provider');
+
+        // 2.40 (spec 220 S1): candidate brand-driven default provider; BrandAppearanceProviderPass aliases it when a
+        // BrandProviderInterface service exists, else removes it.
+        if (null === $appearance['provider'] && 'auto' === $appearance['brand'] && interface_exists(BrandProviderInterface::class)) {
+            $container->register(BrandAppearanceProviderPass::CANDIDATE, BrandAppearanceProvider::class)
+                ->setArguments([
+                    new Reference('nowo_ui_kit.appearance.defaults_provider'),
+                    new Reference(BrandProviderInterface::class),
+                    new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                    new Reference('logger', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                ]);
+        }
 
         $container->register('nowo_ui_kit.appearance.css_emitter', AppearanceCssEmitter::class)
             ->setArguments([
@@ -485,6 +519,9 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
                 new Reference('nowo_ui_kit.appearance.css_emitter'),
                 new Reference('nowo_ui_kit.appearance.preset_registry'),
                 new Reference('request_stack', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                new Reference('nowo_ui_kit.appearance.defaults_provider'),
+                new Reference('logger', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                new Reference('nowo_ui_kit.appearance.view'),
             ])
             ->addTag('twig.extension');
 

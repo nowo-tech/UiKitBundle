@@ -1,0 +1,14 @@
+{#
+  Internal (2.40, spec 220 S1): the appearance logo lockup. Two <img> (data-nowo-ui-theme-only="light" / "dark": the kit
+  CSS hides the one that does not match [data-theme], so the theme switch needs no script) or one when the appearance
+  has no separate dark logo. Never inline markup: sources are URLs already filtered by AppearanceLogos (relative,
+  http, https), so an SVG logo stays an image and cannot run script. alt is the brand name (escaped).
+
+  Options: logos (Nowo\UiKitBundle\Appearance\AppearanceLogos with a lockup), name (text).
+#}
+{%- set _alt = name is defined and name is not null ? name ~ '' : '' -%}
+{%- if logos.darkSrc -%}
+<img class="nowo-ui-brand__logo" src="{{ logos.lightSrc }}" alt="{{ _alt }}" data-nowo-ui-theme-only="light" decoding="async"><img class="nowo-ui-brand__logo" src="{{ logos.darkSrc }}" alt="{{ _alt }}" data-nowo-ui-theme-only="dark" decoding="async">
+{%- else -%}
+<img class="nowo-ui-brand__logo" src="{{ logos.lightSrc }}" alt="{{ _alt }}" decoding="async">
+{%- endif -%}

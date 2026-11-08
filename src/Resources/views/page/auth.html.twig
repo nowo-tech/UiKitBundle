@@ -1,7 +1,9 @@
 {#
   REQ-UI-003 auth scaffold (guest layout). Variable: page (View\AuthPage).
 
-  Regions: brand, panel heading + intro, error, form, footer links (slots auth_panel, auth_footer, auth_links).
+  Regions: brand (2.40: the appearance logo lockup when the appearance SPI returns logos with one, alt = page.brand or
+  the appearance brand name; else page.brand as text, as before; the guest layout's nowo_ui_guest_brand is emptied),
+  panel heading + intro, error, form, footer links (slots auth_panel, auth_footer, auth_links).
   Data blocks: nowo_ui_auth_body (2.3: the whole form region — root form errors, fields, actions — e.g. a "check
   your inbox" message instead of a form), nowo_ui_auth_fields (default: REQ-TWIG-003 child loop of page.form),
   nowo_ui_auth_actions (default: submit button), nowo_ui_auth_after_form (2.3: after the form, inside the panel
@@ -20,15 +22,17 @@
 {% set nowo_ui_page_type = 'auth' %}
 {% set nowo_ui_scripts_enabled = page.scripts %}
 
+{% block nowo_ui_guest_brand %}{% endblock %}
+
 {% block nowo_ui_document_title %}{{ (page.documentTitle ?? page.title)|nowo_ui_trans }}{% endblock %}
 
 {% block nowo_ui_content %}
     {% set _b = page.bundle %}
     {% set form = page.form %}
-    {% set _auth_form = '@NowoUiKitBundle/page/_auth_form.html.twig' %}
+    {% set _auth_form = '@NowoUiKitBundle/page/_auth_form.html.twig' %}{% set _ap = nowo_ui_appearance_or_null() %}{% set _ap_logos = _ap and _ap.logos and _ap.logos.hasLogo() ? _ap.logos : null %}
     <section class="{{ nowo_ui_class('auth_panel', _b) }}" data-nowo-ui-page="auth" data-nowo-ui-region="panel"{{ nowo_ui_attrs('auth_panel', _b) }}{{ nowo_ui_html_attrs(page.attributes) }}>
         <div class="{{ nowo_ui_class('card_body', _b) }}">
-            {% if page.brand %}<p class="nowo-ui-auth-panel__brand">{{ page.brand|nowo_ui_trans }}</p>{% endif %}
+            {% if _ap_logos %}<p class="nowo-ui-auth-panel__brand nowo-ui-auth-panel__brand--logo" data-nowo-ui-region="brand">{{ include('@NowoUiKitBundle/partials/_brand_logos.html.twig', {logos: _ap_logos, name: page.brand ? page.brand|nowo_ui_trans : _ap.brandName}, false) }}</p>{% elseif page.brand %}<p class="nowo-ui-auth-panel__brand">{{ page.brand|nowo_ui_trans }}</p>{% endif %}
             <h1 class="{{ nowo_ui_class('page_title', _b) }}">{{ page.title|nowo_ui_trans }}</h1>
             {% if page.intro %}<p class="{{ nowo_ui_class('page_intro', _b) }}">{{ page.intro|nowo_ui_trans }}</p>{% endif %}
             {% if page.error %}<div class="{{ nowo_ui_class('flash_error', _b) }}" role="alert">{{ page.error|nowo_ui_trans }}</div>{% endif %}

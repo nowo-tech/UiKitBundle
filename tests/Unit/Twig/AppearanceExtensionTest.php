@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\Twig;
 
+use Nowo\UiKitBundle\Appearance\Appearance;
 use Nowo\UiKitBundle\Appearance\AppearanceCssEmitter;
 use Nowo\UiKitBundle\Appearance\AppearancePresetRegistry;
+use Nowo\UiKitBundle\Appearance\AppearanceProviderInterface;
 use Nowo\UiKitBundle\Appearance\ConfigAppearanceProvider;
 use Nowo\UiKitBundle\Twig\AppearanceExtension;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Twig\Environment;
@@ -39,6 +42,25 @@ final class AppearanceExtensionTest extends TestCase
 
         self::assertSame('Acme|#0e7490', $twig->render('brand'));
         self::assertSame('7|midnight,obsidian,aurora,ember,', $twig->render('presets'));
+    }
+
+    public function testAThrowingProviderGivesTheDefaults(): void
+    {
+        $registry = new AppearancePresetRegistry();
+        $throwing = new class implements AppearanceProviderInterface {
+            public function getAppearance(): Appearance
+            {
+                throw new RuntimeException('down');
+            }
+        };
+        $config = new ConfigAppearanceProvider($registry, ['brand_name' => 'Acme']);
+        $twig = new Environment(new ArrayLoader(['t' => '{{ nowo_ui_appearance().brandName }}|{{ nowo_ui_appearance_css()|length > 0 ? "css" }}']));
+        $twig->addExtension(new AppearanceExtension($throwing, new AppearanceCssEmitter(), $registry, null, $config));
+        self::assertSame('Acme|css', $twig->render('t'));
+
+        $bare = new Environment(new ArrayLoader(['t' => '[{{ nowo_ui_appearance().brandName }}]{{ nowo_ui_appearance_style() starts with "<style" ? "ok" }}']));
+        $bare->addExtension(new AppearanceExtension($throwing, new AppearanceCssEmitter(), $registry));
+        self::assertSame('[]ok', $bare->render('t'), 'no config provider given: the built-in defaults');
     }
 
     public function testWorksWithoutRequestStack(): void

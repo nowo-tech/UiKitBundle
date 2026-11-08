@@ -13,7 +13,7 @@ export DOCKER_CONFIG := $(BUNDLE_ROOT)/.docker
 	test-coverage-with-db coverage-check cs-check cs-fix rector rector-dry phpstan validate-phpdoc qa release-check \
 	release-check-demos demo-smoke composer-sync clean update validate validate-translations \
 	setup-hooks check-no-cursor-coauthor check-open-prs strip-cursor-coauthor-from-history check-clean-tree \
-	check-no-raw-html-form
+	check-no-raw-html-form token-lint
 
 help:
 	@echo "Ui Kit Bundle - Development Commands"
@@ -113,6 +113,10 @@ check-twig-extra:
 
 # REQ-TWIG-005: no raw <form> / <input> / <textarea> / <select> in bundle views or demo templates (form themes,
 # deprecated *_legacy fallbacks and `twig-005-ignore` controls excepted; see the script header).
+# 2.40 (spec 220): colour literals outside --nowo-ui-* tokens; the demo views are allow-listed. Not a CI gate yet.
+token-lint: ensure-up
+	@$(COMPOSE) exec -T $(SERVICE_PHP) php bin/nowo-ui-token-lint --allow='*/views/demo/*' src/Resources
+
 check-no-raw-html-form:
 	@chmod +x .scripts/check-no-raw-html-form.sh
 	@./.scripts/check-no-raw-html-form.sh
