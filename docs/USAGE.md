@@ -56,6 +56,7 @@
 - [Overlays and the shell (2.28)](#overlays-and-the-shell-228)
 - [Menu semantics (2.28)](#menu-semantics-228)
 - [Compact header (2.27)](#compact-header-227)
+  - [Page header variants (2.39)](#page-header-variants-239)
 - [Overriding templates (REQ-TWIG-001)](#overriding-templates-req-twig-001)
 - [Override vs upgrade](#override-vs-upgrade)
 - [Overridable `<subpath>` values](#overridable-subpath-values)
@@ -2544,7 +2545,7 @@ Behaviour and accessibility:
 
 | Name | Kind | Returns / use |
 | --- | --- | --- |
-| `nowo_ui_header_presentation(presentation = null)` | function | `'standard'` or `'compact'`: a valid option, else the request attribute `_nowo_ui_header_presentation` (the current request, then the main one, so `render(controller())` follows the page), else `nowo_ui_kit.header.presentation`; invalid values are ignored |
+| `nowo_ui_header_presentation(presentation = null)` | function | `'standard'`, `'compact'` or (2.39) `'inline'`, `'no_intro'`, `'no_title'`, `'no_header'`: a valid option, else the request attribute `_nowo_ui_header_presentation` (the current request, then the main one, so `render(controller())` follows the page), else `nowo_ui_kit.header.presentation`; invalid values are ignored |
 | `nowo_ui_header` | global | the `Nowo\UiKitBundle\Shell\HeaderPresentationResolver` behind that function: `nowo_ui_header.resolve(option)`, `nowo_ui_header.isCompact(option)`, `nowo_ui_header.compactActions()` (`'page'` \| `'bar'`). Partials read it with `nowo_ui_header\|default(null)`, so a Twig environment without UiKit's extension still renders them (standard, unless `presentation` / `title_hidden` is passed) |
 | `nowo_ui_breadcrumb_kit_trail(collection = null, context_key = '')` | function | BreadcrumbKit's trail as `list<View\Crumb>` (a level with `linkEnabled: false` has no href); `[]` without BreadcrumbKit; ignores `nowo_ui_kit.breadcrumbs.breadcrumb_kit` |
 | `nowo_ui_safe_href(href)` | function | the href when its scheme is safe (relative, `#…`, `http`, `https`, `mailto`, checked as a browser reads it), else `null` |
@@ -2560,6 +2561,33 @@ cuts it with `text-overflow: ellipsis`), so its accessible name is the full text
 with the full label for pointer users.
 
 Demo: `/demo/compact-header` in `demo/symfony8` (`?presentation=standard`, `?dir=rtl`).
+
+<a id="page-header-variants-239"></a>
+
+### Page header variants (2.39)
+
+Four more presentations for a "page header" preference, through the same option, request attribute and config
+(`HeaderPresentation::Inline`, `NoIntro`, `NoTitle`, `NoHeader`). Unlike `compact`, nothing moves to the top bar:
+breadcrumbs, back link, status badge, toolbar and tabs stay in the page header.
+
+| Presentation | Page header |
+| --- | --- |
+| `inline` | the intro on the title's row, on one baseline; it wraps under the title when the row is short |
+| `no_intro` | no intro |
+| `no_title` | the title stays the page's `h1`, `visually-hidden` (screen readers still get it) |
+| `no_header` | both: no intro, `h1` visually hidden |
+
+```php
+// kernel.request listener: compact wins, else the person's page header preference
+$request->attributes->set(HeaderPresentation::ATTRIBUTE, $compact ? 'compact' : $prefs->pageHeader()); // e.g. 'no_intro'
+```
+
+The root gets `nowo-ui-page-header--<value>` (underscores as hyphens: `--no-intro`) and
+`data-nowo-ui-page-header="<value>"`; `standard` renders the 2.38 markup byte for byte. Host `page_header` overrides
+receive `presentation` and `title_hidden` (`true` for `no_title` / `no_header`; `intro` is already `null` for
+`no_intro` / `no_header`). Hooks for your own headers that should follow the same preference:
+`[data-nowo-ui-page-header='inline']` and friends, or the request attribute itself. Tokens:
+[THEMING](THEMING.md#compact-header-227).
 
 ## Overriding templates (REQ-TWIG-001)
 

@@ -111,6 +111,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Page header variants (UI-6):** `HeaderPresentation` (config `nowo_ui_kit.header.presentation`, request attribute `_nowo_ui_header_presentation`, `presentation` option) gains `inline` (the intro on the title's row, wrapping under it), `no_intro` (no intro), `no_title` (the `h1` stays, visually hidden) and `no_header` (both). Breadcrumbs, back link, status, toolbar and tabs stay; nothing moves to the top bar. The root gets `nowo-ui-page-header--<value>` and `data-nowo-ui-page-header="<value>"`; tokens `--nowo-ui-page-header-inline-gap`, `--nowo-ui-page-header-inline-intro-min`. `standard` (the default) and `compact` render as before. See [USAGE](USAGE.md#page-header-variants-239).
+
 ## [2.38.0] - 2026-11-07
 
 ### Added

@@ -6602,6 +6602,39 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
 }
 
 /*
+ * Page header variants (2.39, UI-6; HeaderPresentation inline | no_intro | no_title | no_header): `inline` lays the
+ * intro on the title's row, on one baseline, and wraps it under the title when the row is short
+ * (--nowo-ui-page-header-inline-gap, --nowo-ui-page-header-inline-intro-min); the hidden-title variants position the
+ * text box, so the visually hidden h1 never widens a scroller. no_intro renders no intro at all.
+ */
+.nowo-ui-page-header--inline .nowo-ui-page-header__text:has(> .nowo-ui-page-header__intro) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--nowo-ui-page-header-inline-gap, 0.75rem);
+}
+
+.nowo-ui-page-header--inline .nowo-ui-page-header__text:has(> .nowo-ui-page-header__intro) > * {
+  flex: 1 1 100%;
+}
+
+.nowo-ui-page-header--inline .nowo-ui-page-header__text > :is(.nowo-ui-page-header__title, .nowo-ui-page-header__title-row) {
+  flex: 0 1 auto;
+  min-width: 0;
+  margin-block-end: 0;
+}
+
+.nowo-ui-page-header--inline .nowo-ui-page-header__text > .nowo-ui-page-header__intro {
+  flex: 1 1 var(--nowo-ui-page-header-inline-intro-min, 16rem);
+  min-width: 0;
+  margin-block-start: 0;
+}
+
+:is(.nowo-ui-page-header--no-title, .nowo-ui-page-header--no-header) :is(.nowo-ui-page-header__text, .nowo-ui-page-header__title-row) {
+  position: relative;
+}
+
+/*
  * Remote form dialog (2.28, partials/_remote_form_dialog.html.twig, nowo-ui-remote-form-core.ts): the body is a flex
  * column that scrolls between the header and the footer (2.29: the fragment's form actions are moved into the dialog
  * footer); the wide size, and on phones the screen width with a 16 px gutter (--nowo-ui-remote-dialog-phone-inset,

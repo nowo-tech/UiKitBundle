@@ -419,13 +419,13 @@ Since **2.27.0**. The page-header presentation of a request and where the page a
 ```yaml
 nowo_ui_kit:
     header:
-        presentation: standard      # standard | compact: default when the request has no _nowo_ui_header_presentation
+        presentation: standard      # standard | compact | inline | no_intro | no_title | no_header (2.39): default when the request has no _nowo_ui_header_presentation
         compact_actions: page       # page | bar: with bar, compact page headers leave header.actions to the top bar
 ```
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `presentation` | `standard` | Used when neither the template option nor the request attribute `_nowo_ui_header_presentation` (`Nowo\UiKitBundle\Shell\HeaderPresentation::ATTRIBUTE`) is set. An invalid value fails the config; an invalid request value is ignored |
+| `presentation` | `standard` | Used when neither the template option nor the request attribute `_nowo_ui_header_presentation` (`Nowo\UiKitBundle\Shell\HeaderPresentation::ATTRIBUTE`) is set. An invalid value fails the config; an invalid request value is ignored. 2.39: `inline`, `no_intro`, `no_title`, `no_header` ([USAGE](USAGE.md#page-header-variants-239)) |
 | `compact_actions` | `page` | `bar`: in the compact presentation `page/_page_header.html.twig` behaves as `header_actions: false` (`extra_actions` stay). The default keeps the actions in the page, so turning compact on without filling the bar never loses them |
 
 ## Remote dialog (2.28)

@@ -81,7 +81,7 @@ nowo_ui_kit:
     collection: null                  # BreadcrumbKit collection (PageHeader::breadcrumbCollection overrides)
     enabled: true                     # 2.3.1: false = no breadcrumb trail in any page header (host layout renders its own)
   header:                             # 2.27 compact header (docs/CONFIGURATION.md#compact-header-227)
-    presentation: standard            # standard | compact (request attribute _nowo_ui_header_presentation overrides)
+    presentation: standard            # standard | compact | inline | no_intro | no_title | no_header (request attribute _nowo_ui_header_presentation overrides)
     compact_actions: page             # page | bar: compact page headers leave header.actions to the top bar
   theme:
     framework_defaults: true                                           # false = no UiKit framework classes on any slot

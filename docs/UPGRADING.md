@@ -124,6 +124,12 @@
 
 ## Unreleased
 
+Nothing to do: the default presentation (`standard`) and `compact` render the same markup. To drop a host stylesheet
+that hid the intro or the title of UiKit page headers from a preference, set the request attribute
+`_nowo_ui_header_presentation` to `inline`, `no_intro`, `no_title` or `no_header` instead (keep `compact` when the
+compact header is on). A host `page_header` override now also receives these values in `presentation`, and
+`title_hidden: true` for `no_title` / `no_header` — check overrides that treat any `title_hidden` as compact.
+
 ## To 2.38.0
 
 From **2.37.0**:

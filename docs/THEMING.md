@@ -317,6 +317,15 @@ The top-bar slot of the shells (`header_context`) and its partials `header_conte
 | `--nowo-ui-header-crumbs-panel-shadow` | `0 8px 24px rgb(15 23 42 / 12%)`; dark `0 8px 24px rgb(0 0 0 / 45%)` |
 | `--nowo-ui-main-padding-top-compact` | `0.75rem` (top padding of `.nowo-ui-main` under a filled bar) |
 
+Page header variants (2.39, [USAGE](USAGE.md#page-header-variants-239)): the root carries
+`nowo-ui-page-header--inline`, `--no-intro`, `--no-title` or `--no-header` and `data-nowo-ui-page-header="<value>"`.
+No colour is involved, so light / dark need nothing.
+
+| Token | Default |
+|-------|---------|
+| `--nowo-ui-page-header-inline-gap` | `0.75rem` (between the title and the intro on one row, `inline`) |
+| `--nowo-ui-page-header-inline-intro-min` | `16rem` (below this width the intro wraps under the title, `inline`) |
+
 <a id="full-height-sidebar-layout-232"></a>
 
 ## Full-height sidebar layout (2.32)

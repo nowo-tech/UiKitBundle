@@ -377,7 +377,7 @@ final class Configuration implements ConfigurationInterface
                         ->enumNode('presentation')
                             ->values(HeaderPresentation::values())
                             ->defaultValue(HeaderPresentation::Standard->value)
-                            ->info('standard (default) | compact: in compact the page header keeps a visually hidden h1 and leaves its intro, breadcrumbs and back link to the top bar (header_context).')
+                            ->info('standard (default) | compact | inline | no_intro | no_title | no_header: in compact the page header keeps a visually hidden h1 and leaves its intro, breadcrumbs and back link to the top bar (header_context); 2.39: inline puts the intro on the title row, no_intro drops the intro, no_title keeps the h1 visually hidden, no_header does both.')
                         ->end()
                         ->enumNode('compact_actions')
                             ->values(['page', 'bar'])
