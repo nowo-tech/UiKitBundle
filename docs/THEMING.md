@@ -889,6 +889,8 @@ comments, a line holding `nowo-ui-token-lint-ignore`, and `nowo-ui.css` / `nowo-
 A missing path exits 2; `make token-lint` runs it on `src/Resources` without the demo views. It is a heuristic (an id selector spelling a hex colour is reported too); bundles add it to CI in their next sweep, not
 as a release blocker.
 
+**Within one request** the appearance is read once per main request (memo, cleared on `kernel.reset`): a controller that saves a new appearance and renders in the same request shows the old values; redirect after saving, or call `AppearanceView::reset()` (audit IS-I9).
+
 ### Keeping legacy variable names (`token_aliases`)
 
 `token_aliases` writes extra custom properties with the **same literal value** as a kit token (never

@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.40.0](#to-2400)
   - [To 2.40.0 (brand contract, logos)](#to-2400-brand-contract-logos)
 - [To 2.39.0](#to-2390)
 - [To 2.38.0](#to-2380)
@@ -125,6 +126,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.40.0
+
+From **2.39.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 ### To 2.40.0 (brand contract, logos)
 
