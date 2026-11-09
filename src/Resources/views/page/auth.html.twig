@@ -30,7 +30,7 @@
     {% set _b = page.bundle %}
     {% set form = page.form %}
     {% set _auth_form = '@NowoUiKitBundle/page/_auth_form.html.twig' %}{% set _ap = nowo_ui_appearance_or_null() %}{% set _ap_logos = _ap and _ap.logos and _ap.logos.hasLogo() ? _ap.logos : null %}
-    <section class="{{ nowo_ui_class('auth_panel', _b) }}" data-nowo-ui-page="auth" data-nowo-ui-region="panel"{{ nowo_ui_attrs('auth_panel', _b) }}{{ nowo_ui_html_attrs(page.attributes) }}>
+    <section class="{{ nowo_ui_class('auth_panel', _b) }}{{ (page.attributes.class ?? false) ? ' ' ~ page.attributes.class }}" data-nowo-ui-page="auth" data-nowo-ui-region="panel"{{ nowo_ui_attrs('auth_panel', _b) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(page.attributes)) }}>
         <div class="{{ nowo_ui_class('card_body', _b) }}">
             {% if _ap_logos %}<p class="nowo-ui-auth-panel__brand nowo-ui-auth-panel__brand--logo" data-nowo-ui-region="brand">{{ include('@NowoUiKitBundle/partials/_brand_logos.html.twig', {logos: _ap_logos, name: page.brand ? page.brand|nowo_ui_trans : _ap.brandName}, false) }}</p>{% elseif page.brand %}<p class="nowo-ui-auth-panel__brand">{{ page.brand|nowo_ui_trans }}</p>{% endif %}
             <h1 class="{{ nowo_ui_class('page_title', _b) }}">{{ page.title|nowo_ui_trans }}</h1>

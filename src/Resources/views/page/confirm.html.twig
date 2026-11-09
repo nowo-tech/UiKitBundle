@@ -23,7 +23,7 @@
     {% set _b = page.bundle %}
     {% set _confirm = page.confirm %}
     {% set _href = page.action.href ?? (page.action.route ? path(page.action.route, page.action.params) : null) %}
-    <section class="{{ nowo_ui_class('confirm_page', _b) }} {{ nowo_ui_class('card', _b) }}" data-nowo-ui-page="confirm" data-nowo-ui-region="confirm" data-nowo-confirm-scope{{ nowo_ui_attrs('confirm_page', _b) }}{{ nowo_ui_html_attrs(page.attributes) }}>
+    <section class="{{ nowo_ui_class('confirm_page', _b) }} {{ nowo_ui_class('card', _b) }}{{ (page.attributes.class ?? false) ? ' ' ~ page.attributes.class }}" data-nowo-ui-page="confirm" data-nowo-ui-region="confirm" data-nowo-confirm-scope{{ nowo_ui_attrs('confirm_page', _b) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(page.attributes)) }}>
         {#- the confirm_* slots add their host classes to the page's own wrappers (the semantic dialog-box classes stay
             on the dialog); title, message and expect label keep their semantic classes -#}
         {% set _extra = {} %}

@@ -29,7 +29,7 @@
 {% set _meter_attr = nowo_ui_safe_attrs(meter_attr|default({}), ['id', 'max', 'value']) %}
 {% set _label = label|default(null) is null ? 'progress.label'|trans({}, 'NowoUiKitBundle') : label|nowo_ui_trans %}
 {% set _id = id|default('nowo-ui-progress') %}
-<div class="{{ nowo_ui_class('progress', bundle) }}{{ _indeterminate ? ' nowo-ui-progress-field--indeterminate' }}"{{ nowo_ui_attrs('progress', bundle, attr|default({})) }}>
+<div class="{{ nowo_ui_class('progress', bundle) }}{{ _indeterminate ? ' nowo-ui-progress-field--indeterminate' }}{{ (attr.class ?? false) ? ' ' ~ attr.class }}"{{ nowo_ui_attrs('progress', bundle, nowo_ui_attrs_without_class(attr|default({}))) }}>
     <label class="nowo-ui-progress-field__label{{ (label_visible ?? true) ? '' : ' visually-hidden' }}" for="{{ _id }}">{{ _label }}</label>
     <progress id="{{ _id }}" class="{{ nowo_ui_class('progress_meter', bundle) }}{{ _meter_attr.class is defined ? ' ' ~ _meter_attr.class }}" max="{{ _amount ? _amount.max : 100 }}"{% if not _indeterminate %} value="{{ _meter_value }}"{% endif %}{{ nowo_ui_attrs('progress_meter', bundle, nowo_ui_attrs_without_class(_meter_attr)) }}>{{ _indeterminate ? _label : _value ~ ' %' }}</progress>
     {% if not _indeterminate and show_value ?? true %}<span class="nowo-ui-progress-field__value" aria-hidden="true">{{ _value }} %</span>{% endif %}

@@ -38,9 +38,9 @@
 {%- set _glyphs = {none: '↕', asc: '↑', desc: '↓'} -%}
 {%- if _href is not null -%}
     {%- set _state = _active ? _direction : 'none' -%}
-    <a class="{{ nowo_ui_class('sort_link', _b) }}{{ _active ? ' nowo-ui-sort--' ~ _direction }}" href="{{ _href }}"{{ nowo_ui_attrs('sort_link', _b) }}{{ nowo_ui_html_attrs(attr|default({})) }}><span class="nowo-ui-sort__label">{{ label }}</span><span class="nowo-ui-sort__icon" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _icons[_state], label: _glyphs[_state]}, false)|trim|raw }}</span><span class="visually-hidden">{{ _labels[_next] }}</span></a>
+    <a class="{{ nowo_ui_class('sort_link', _b) }}{{ _active ? ' nowo-ui-sort--' ~ _direction }}{{ (attr.class ?? false) ? ' ' ~ attr.class }}" href="{{ _href }}"{{ nowo_ui_attrs('sort_link', _b) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(attr|default({}))) }}><span class="nowo-ui-sort__label">{{ label }}</span><span class="nowo-ui-sort__icon" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _icons[_state], label: _glyphs[_state]}, false)|trim|raw }}</span><span class="visually-hidden">{{ _labels[_next] }}</span></a>
 {%- else -%}
-    <button type="button" class="{{ nowo_ui_class('sort_button', _b) }}" data-action="table-sort#sort"{{ nowo_ui_attrs('sort_button', _b) }}{{ nowo_ui_html_attrs(attr|default({})) }}><span class="nowo-ui-sort__label">{{ label }}</span>
+    <button type="button" class="{{ nowo_ui_class('sort_button', _b) }}{{ (attr.class ?? false) ? ' ' ~ attr.class }}" data-action="table-sort#sort"{{ nowo_ui_attrs('sort_button', _b) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(attr|default({}))) }}><span class="nowo-ui-sort__label">{{ label }}</span>
         {%- for _state in ['none', 'asc', 'desc'] -%}
             <span class="nowo-ui-sort__icon nowo-ui-sort__icon--{{ _state }}" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _icons[_state], label: _glyphs[_state]}, false)|trim|raw }}</span>
         {%- endfor -%}

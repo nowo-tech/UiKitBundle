@@ -130,6 +130,23 @@
 
 ## Unreleased
 
+Target 2.42.1. From **2.42.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+Nothing to do when you never pass `class` inside an attribute map; that markup is unchanged.
+
+- **`class` in `attr` (and the other attribute maps) now applies:** a `class` key in a partial's `attr`, `toggle_attr`,
+  `dialog_attr`, `title_attr`, `body_attr`, item / option / panel `attr`, or in the `attributes` of a View model
+  (`Action`, `Stat`, `DetailItem`, `PageStatus`, `Table`, the scaffold pages) used to print a second `class` attribute
+  that browsers ignore; it is now appended to the element's own classes (full list in the CHANGELOG). A host that
+  worked around it — styling another selector (a wrapper, a `data-*` attribute, the slot class), or adding the class
+  through the theme slots instead — now also gets that class on the element: check that its rules do not now apply
+  twice or clash, and drop the workaround if you like. A class that was never meant to apply (dead code in an `attr`
+  hash) now does: remove it.
+
 ## To 2.42.0
 
 From **2.41.1**:

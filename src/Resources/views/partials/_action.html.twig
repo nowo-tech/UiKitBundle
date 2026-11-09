@@ -87,7 +87,7 @@
         {%- endif -%}
     {% endset %}
     {% set _tip = action.title is null ? null : action.title|nowo_ui_trans %}
-    {% set attrs = action.attributes|merge(context == 'row' or display == 'icon' ? {title: label, 'aria-label': label} : {})|merge(_tip is null ? {} : {title: _tip}) %}
+    {% set class = class ~ ((action.attributes.class ?? false) ? ' ' ~ action.attributes.class) %}{% set attrs = nowo_ui_attrs_without_class(action.attributes)|merge(context == 'row' or display == 'icon' ? {title: label, 'aria-label': label} : {})|merge(_tip is null ? {} : {title: _tip}) %}
     {% set _wrap_tip = _tip is not null and action.disabled %}
     {% if _wrap_tip %}<span class="nowo-ui-action__tip" title="{{ _tip }}">{% endif %}
     {% set confirm_id = action.confirmId() %}

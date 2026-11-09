@@ -116,6 +116,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Target 2.42.1. Request from TaskBoard (`manage/gantt.html.twig`, `manage/calendar.html.twig`).
+
+### Fixed
+
+- **`attr.class` no longer prints a second `class` attribute:** a partial that prints its own `class` and then the
+  caller's attribute map printed every key of the map, `class` included, so the element got two `class` attributes
+  and browsers dropped the caller's (e.g. `_tabs` with `attr: {class: 'nowo-task-gantt__scales'}`). The map's `class`
+  is now appended to the element's classes and the rest of the map prints as before, as `_show_more`, `_emoji_picker`
+  and the 2.34 per-element options (`footer_attr`, `link_attr`…) already did. It is HTML-escaped inside the one quoted
+  `class` attribute. Partials and options:
+  - `partials/_tabs.html.twig` `attr` (primary and `level: 'secondary'`, with and without the ThemeExtension) and item
+    `attr`; `_card`, `_burger`, `_shell` `attr` (both branches); `_kebab`, `_aside_nav_items` item `attr`;
+    `_row_actions` hash `attr` on the link / button (the POST form is unchanged: its `class` stays the kit's);
+  - `shell/_burger.html.twig` and `shell/_open.html.twig` (`attr` / `shell_attr`) `attr`;
+  - `attr` of `_side_panel_toggle`, `_side_panel`, `_side_panel_container`, `_header_context`, `_header_actions`,
+    `_header_crumbs`, `_stat_row`, `_segmented`, `_sort_header`, `_locale_tabs`, `_tree`, `_progress`,
+    `_confirm_dialog`, `_listing_customizer`, `_dialog`, `_responsive_table`, `_tour`, `_corner_tab`, `_edge_tab`,
+    `_edge_tabs_launcher`, `_menu` (root and `toggle_attr`); `_dialog` `title_attr` / `body_attr`; `_confirm_dialog`
+    `dialog_attr`; `_segmented` option `attr`; `_locale_tabs` panel `attr`; `_menu` link items' `attr` /
+    `attributes`;
+  - the `attributes` of `View\Action` (`_action`: links, buttons, POST forms, dialog / modal openers; menu items),
+    `Stat` (`attributes` / `valueAttributes`), `DetailItem` (`attributes` / `valueAttributes`), `PageStatus`, `Table`, `ListPage::$filtersSubmit` and the
+    root `attributes` of the list, show, form, settings, dashboard, confirm, wizard and auth scaffolds.
+  Without a `class` key the markup is byte-identical to 2.42.0 (`AttrClassMerge2421Test`, fixtures under
+  `tests/Fixtures/bc-2.42` rendered by the 2.42.0 templates).
+
 ## [2.42.0] - 2026-11-09
 
 Target 2.42.0. Requests from Symfony Beacon (MUX-01 adoption, MUX-20 / MUX-22).

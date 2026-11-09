@@ -24,23 +24,24 @@
 {% set _button = button|default(false) %}
 {% set _pinned = pinned|default(false) ? ' data-nowo-ui-edge-tab-pinned' : '' %}
 {% set _attr %}{% for _name, _value in attr|default({}) %}{% if _value is not same as(false) and _value is not null and not (_name|lower starts with 'on') %} {{ _name|e('html_attr') }}{% if _value is not same as(true) %}="{{ _value }}"{% endif %}{% endif %}{% endfor %}{% endset %}
+{% set _attr_rest %}{% for _name, _value in attr|default({})|filter((v, k) => k != 'class') %}{% if _value is not same as(false) and _value is not null and not (_name|lower starts with 'on') %} {{ _name|e('html_attr') }}{% if _value is not same as(true) %}="{{ _value }}"{% endif %}{% endif %}{% endfor %}{% endset %}
 {% if inline|default(false) %}
     <p class="nowo-ui-edge-link{{ class|default('') ? ' ' ~ class : '' }}"{% if testid|default('') %} data-testid="{{ testid }}"{% endif %}>
         {% if _button -%}
-        <button type="button" class="nowo-ui-edge-link__button"{{ _attr }}>{{ _label }}</button>
+        <button type="button" class="nowo-ui-edge-link__button{{ (attr.class ?? false) ? ' ' ~ attr.class }}"{{ _attr_rest }}>{{ _label }}</button>
         {%- else -%}
         <a href="{{ href }}"{% if _new_tab %} target="_blank" rel="noopener noreferrer"{% endif %}{{ _attr }}>{{ _label }}</a>
         {%- endif %}
     </p>
 {% elseif _button %}
     <div class="nowo-ui-edge-tab{{ class|default('') ? ' ' ~ class : '' }}" data-nowo-ui-edge-tab-slot="{{ slot|default(0) }}"{% if testid|default('') %} data-testid="{{ testid }}"{% endif %}>
-        <button type="button" class="nowo-ui-edge-tab__link" title="{{ _label }}" aria-label="{{ _label }}"{{ _pinned }}{{ _attr }}>
+        <button type="button" class="nowo-ui-edge-tab__link{{ (attr.class ?? false) ? ' ' ~ attr.class }}" title="{{ _label }}" aria-label="{{ _label }}"{{ _pinned }}{{ _attr_rest }}>
             <span class="nowo-ui-edge-tab__icon" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: icon|default('book'), label: _label}, false)|trim|raw }}</span>
         </button>
     </div>
 {% else %}
     <div class="nowo-ui-edge-tab{{ class|default('') ? ' ' ~ class : '' }}" data-nowo-ui-edge-tab-slot="{{ slot|default(0) }}"{% if testid|default('') %} data-testid="{{ testid }}"{% endif %}>
-        <a class="nowo-ui-edge-tab__link" href="{{ href }}"{% if _new_tab %} target="_blank" rel="noopener noreferrer"{% endif %} title="{{ _label }}" aria-label="{{ _label }}"{{ _pinned }}{{ _attr }}>
+        <a class="nowo-ui-edge-tab__link{{ (attr.class ?? false) ? ' ' ~ attr.class }}" href="{{ href }}"{% if _new_tab %} target="_blank" rel="noopener noreferrer"{% endif %} title="{{ _label }}" aria-label="{{ _label }}"{{ _pinned }}{{ _attr_rest }}>
             <span class="nowo-ui-edge-tab__icon" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: icon|default('book'), label: _label}, false)|trim|raw }}</span>
         </a>
     </div>
