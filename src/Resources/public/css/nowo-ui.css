@@ -6892,6 +6892,83 @@ html[data-nowo-ui-sortable-active] * {
   color: color-mix(in srgb, var(--nowo-ui-muted) 85%, var(--nowo-ui-text));
 }
 
+/* Image crop (js/nowo-ui-image-crop.js, inputs with data-nowo-ui-image-crop): the dialog the script builds. The canvas is sized
+   through its attributes; the mask and the frame line are read from these properties, so a theme can set them per mode. */
+.nowo-ui-image-crop {
+  --nowo-ui-image-crop-mask: rgb(15 23 42 / 60%);
+  --nowo-ui-image-crop-frame: rgb(255 255 255 / 95%);
+  width: min(var(--nowo-ui-image-crop-width, 32rem), calc(100vw - 2rem));
+}
+.nowo-ui-image-crop__help {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+  color: var(--nowo-ui-muted);
+}
+.nowo-ui-image-crop__stage {
+  position: relative;
+  box-sizing: border-box;
+  width: min(100%, 60dvh);
+  aspect-ratio: 1;
+  margin-inline: auto;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  background: var(--nowo-ui-surface-muted);
+  border: 1px solid var(--nowo-ui-border);
+  border-radius: var(--nowo-ui-radius);
+}
+.nowo-ui-image-crop__stage:active {
+  cursor: grabbing;
+}
+.nowo-ui-image-crop__stage:focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline-offset: 2px;
+}
+.nowo-ui-image-crop__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.nowo-ui-image-crop__zoom {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+.nowo-ui-image-crop__zoom-label {
+  flex: none;
+  font-size: 0.875rem;
+}
+.nowo-ui-image-crop__range {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 2.75rem;
+  accent-color: var(--nowo-ui-primary);
+}
+.nowo-ui-image-crop__progress {
+  margin: 0.75rem 0 0;
+  font-size: 0.875rem;
+  color: var(--nowo-ui-muted);
+}
+.nowo-ui-image-crop__progress[hidden] {
+  display: none !important;
+}
+.nowo-ui-image-crop__error {
+  margin: 0.75rem 0 0;
+  font-size: 0.875rem;
+  color: var(--nowo-ui-danger-text-strong);
+}
+.nowo-ui-image-crop__error[hidden] {
+  display: none !important;
+}
+@media (forced-colors: active) {
+  .nowo-ui-image-crop__stage {
+    border-color: CanvasText;
+  }
+}
+
 /* Show more (partial `show_more`, js/nowo-ui-show-more.js): the fold exists only once the script runs. */
 [data-nowo-ui-show-more-ready]:not(.is-expanded) > .nowo-ui-show-more__content {
   display: -webkit-box;

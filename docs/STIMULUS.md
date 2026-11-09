@@ -40,6 +40,7 @@ Optional **Stimulus peer** TypeScript sources live under `src/Resources/assets/s
 - [Remote form dialog (2.28)](#remote-form-dialog-228)
 - [Scroll regions (2.28)](#scroll-regions-228)
 - [Emoji picker and show more](#emoji-picker-and-show-more)
+- [Image crop](#image-crop)
 - [Sortable](#sortable)
 - [Stimulus peers — import examples](#stimulus-peers--import-examples)
 - [Beacon attribute migration](#beacon-attribute-migration)
@@ -694,6 +695,11 @@ IIFE only: `js/nowo-ui-scroll-region.js` (opt-in `script_names` entry `scroll-re
 
 IIFE only, no peer: `js/nowo-ui-emoji-picker.js` and `js/nowo-ui-show-more.js` (opt-in `script_names` entries `emoji-picker`, `show-more`). Events
 `nowo-ui:emoji-picker:pick` and `nowo-ui:show-more:toggle`. See [USAGE](USAGE.md#emoji-picker) and [USAGE](USAGE.md#show-more).
+
+## Image crop
+
+IIFE only, no peer: `js/nowo-ui-image-crop.js` (opt-in `script_names` entry `image-crop`), over file inputs with
+`data-nowo-ui-image-crop`. Events `nowo-ui:image-crop:open|cropped|cancel|error` on the input. See [USAGE](USAGE.md#image-crop).
 
 ## Sortable
 

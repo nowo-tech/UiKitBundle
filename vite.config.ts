@@ -33,6 +33,7 @@ type Entry =
   | 'emoji-picker'
   | 'show-more'
   | 'edge-tabs'
+  | 'image-crop'
   | 'demo-peers';
 
 const entry = process.env.VITE_ENTRY as Entry | undefined;
@@ -438,6 +439,22 @@ const configs: Record<Entry, { build: object }> = {
         output: {
           format: 'iife' as const,
           entryFileNames: 'js/nowo-ui-edge-tabs.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  // 2.43: opt-in crop step for image file inputs.
+  'image-crop': {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-image-crop.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-image-crop.js',
         },
       },
       minify: true,

@@ -117,6 +117,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Target 2.43.0. Request from Symfony Beacon (owner decision D-20261109-09, for Beacon 1.143).
+
+### Added
+
+- **Image crop step for file inputs (opt-in):** `js/nowo-ui-image-crop.js` (add `image-crop` to `script_names`). When an
+  image is picked in a file input that carries `data-nowo-ui-image-crop`, a dialog with the kit's dialog anatomy (opened
+  through `js/nowo-ui-dialog.js` when loaded) shows it under a square or round frame. The image moves by drag, one
+  finger or the arrow keys and zooms by the slider, the wheel, a pinch or `+` / `-`; Home resets, Enter applies, Escape
+  cancels. "Apply" draws the crop on a canvas (EXIF orientation applied, `createImageBitmap` with
+  `imageOrientation: 'from-image'`) and puts it in the input in place of the picked file (DataTransfer), so the server
+  receives and validates an ordinary upload. Cancel, the close button and Escape clear the input. Options as
+  attributes: `-shape` (`square` | `circle`), `-aspect` (`1` | `free` | a ratio), `-max` / `-min` (px), `-format`
+  (`auto` default, `png`, `webp`, `jpeg`), `-max-bytes`, `-quality`, `-bake-circle`, `-preview` (an `<img>` id that
+  shows the crop), `-labels` (JSON). Events `nowo-ui:image-crop:open` (cancelable), `:cropped`, `:cancel`, `:error`.
+- **`format: auto` (the default):** WebP when the engine really encodes it (`toBlob` answered `image/webp`), else PNG
+  for a crop with transparent pixels (a baked circle, or any pixel of the output's alpha channel below 255) and JPEG for
+  an opaque one. Name and type follow what was encoded.
+- **`max_bytes` / `data-nowo-ui-image-crop-max-bytes`:** over it, WebP and JPEG are encoded again at lower qualities
+  (0.92 → 0.5), then the output steps down by 0.85× (never below `min`; PNG only steps the size), at most 10 async
+  encodes. If nothing fits, the dialog stays open with a translated message (`image_crop.too_large`) and `:error` fires
+  with `reason: 'size'`.
+- **Audit JL:** Cancel, Escape and close put the input's previous file list back and dispatch `input` / `change` only if
+  it then differs, so `autosubmit` never posts an empty file (JL-L2). A refused or fallen-back crop dispatches the
+  picked file's events again; a newer pick while decoding wins; a crop on screen refuses another (`reason: 'busy'`); a
+  session whose dialog was removed is dropped (JL-L1). The dialog has `data-turbo-temporary`, ids unique per build, and
+  stale copies are removed (JL-L3). Apply keeps the focus while encoding (`aria-disabled`) and after a size error
+  (JL-L4). A polite "Optimizing the image…" line (`image_crop.optimizing`) shows while it encodes again; 0.55 added to
+  the quality steps and the cap raised to 10 encodes. A malformed `max-bytes` attribute is ignored with a console
+  warning; `quality: NAN` is refused in PHP. Browsers without
+  DataTransfer, canvas `toBlob` or `<dialog>`, `multiple` inputs, SVG, non-images and images the browser cannot decode
+  upload as picked, with no error. No dependency (about 15 KB minified), no style attribute, no inline script. See
+  [USAGE](USAGE.md#image-crop).
+- **`ImageCrop::attributes($options, $translator)`** (`Nowo\UiKitBundle\Form\ImageCrop`): the attribute contract as a
+  map, options validated (`InvalidArgumentException`), dialog texts translated from `image_crop.*` (seven locales). Also
+  the **FileType option `nowo_ui_image_crop`** (`ImageCropTypeExtension`: `false` | `true` | options; refused with
+  `multiple`; the field's `attr` wins) and the **Twig function `nowo_ui_image_crop_attrs(options)`**. FormKit's planned
+  `crop: {shape, aspect, max}` maps onto the same options.
+- **Demo** `/kit/image-crop` and its Playwright e2e in Chromium and WebKit, desktop and phone (`make -C demo/symfony8
+  test-e2e-image-crop`), with an EXIF-rotated fixture, a transparent logo, a large photo under `max_bytes` (and an engine
+  without a WebP encoder), an impossible limit, and axe on the open dialog in light and dark mode.
+
 ## [2.42.1] - 2026-11-09
 
 Target 2.42.1. Request from TaskBoard (`manage/gantt.html.twig`, `manage/calendar.html.twig`).

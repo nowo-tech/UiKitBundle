@@ -48,7 +48,7 @@ export default defineConfig({
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
-      testMatch: /(sortable|emoji-picker|show-more|dialog-back|motion|table-cards)\.spec\.ts/,
+      testMatch: /(sortable|emoji-picker|show-more|dialog-back|motion|table-cards|image-crop)\.spec\.ts/,
     },
     {
       name: 'chromium-touch',
@@ -56,15 +56,16 @@ export default defineConfig({
       testMatch: /sortable-touch\.spec\.ts/,
     },
     // 2.41 phone mode (Beacon mobile UX audit): 390 × 844, touch, Chromium and WebKit (make test-e2e-mobile).
+    // 2.43: the image crop's touch tests too (make test-e2e-image-crop).
     {
       name: 'phone-chromium',
       use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } },
-      testMatch: /mobile-mux\.spec\.ts/,
+      testMatch: /(mobile-mux|image-crop)\.spec\.ts/,
     },
     {
       name: 'phone-webkit',
       use: { ...devices['iPhone 14'], viewport: { width: 390, height: 844 } },
-      testMatch: /mobile-mux\.spec\.ts/,
+      testMatch: /(mobile-mux|image-crop)\.spec\.ts/,
     },
     // Fetched HTML under a CSP: WebKit let more through than Chromium, so it runs in both.
     {

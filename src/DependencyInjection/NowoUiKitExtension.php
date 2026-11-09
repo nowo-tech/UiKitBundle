@@ -27,6 +27,7 @@ use Nowo\UiKitBundle\Form\DateRangeRequestHandler;
 use Nowo\UiKitBundle\Form\DateRangeSubmitExtension;
 use Nowo\UiKitBundle\Form\DateRangeType;
 use Nowo\UiKitBundle\Form\EmojiPickerType;
+use Nowo\UiKitBundle\Form\ImageCropTypeExtension;
 use Nowo\UiKitBundle\Form\MultiSelectTypeExtension;
 use Nowo\UiKitBundle\Listing\CookieListingPreferenceStore;
 use Nowo\UiKitBundle\Listing\ListingCustomizerViewBuilder;
@@ -396,12 +397,17 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
     }
 
     /**
-     * ChoiceType option `nowo_ui_multi_select` (2.14, markup of the `multi-select` Stimulus peer); only with
+     * ChoiceType option `nowo_ui_multi_select` (2.14, markup of the `multi-select` Stimulus peer) and FileType option
+     * `nowo_ui_image_crop` (2.43); only with
      * symfony/form (guarded by the caller).
      */
     private function registerMultiSelect(ContainerBuilder $container): void
     {
         $container->register('nowo_ui_kit.form.multi_select_extension', MultiSelectTypeExtension::class)
+            ->setArguments([new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE)])
+            ->addTag('form.type_extension');
+        // 2.43: FileType option `nowo_ui_image_crop` (attributes of js/nowo-ui-image-crop.js).
+        $container->register('nowo_ui_kit.form.image_crop_extension', ImageCropTypeExtension::class)
             ->setArguments([new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE)])
             ->addTag('form.type_extension');
     }
