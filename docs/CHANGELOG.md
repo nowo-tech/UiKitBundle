@@ -135,9 +135,17 @@ Target 2.43.0. Request from Symfony Beacon (owner decision D-20261109-09, for Be
   for a crop with transparent pixels (a baked circle, or any pixel of the output's alpha channel below 255) and JPEG for
   an opaque one. Name and type follow what was encoded.
 - **`max_bytes` / `data-nowo-ui-image-crop-max-bytes`:** over it, WebP and JPEG are encoded again at lower qualities
-  (0.92 → 0.5), then the output steps down by 0.85× (never below `min`; PNG only steps the size), at most 8 async
+  (0.92 → 0.5), then the output steps down by 0.85× (never below `min`; PNG only steps the size), at most 10 async
   encodes. If nothing fits, the dialog stays open with a translated message (`image_crop.too_large`) and `:error` fires
-  with `reason: 'size'`. Browsers without
+  with `reason: 'size'`.
+- **Audit JL:** Cancel, Escape and close put the input's previous file list back and dispatch `input` / `change` only if
+  it then differs, so `autosubmit` never posts an empty file (JL-L2). A refused or fallen-back crop dispatches the
+  picked file's events again; a newer pick while decoding wins; a crop on screen refuses another (`reason: 'busy'`); a
+  session whose dialog was removed is dropped (JL-L1). The dialog has `data-turbo-temporary`, ids unique per build, and
+  stale copies are removed (JL-L3). Apply keeps the focus while encoding (`aria-disabled`) and after a size error
+  (JL-L4). A polite "Optimizing the image…" line (`image_crop.optimizing`) shows while it encodes again; 0.55 added to
+  the quality steps and the cap raised to 10 encodes. A malformed `max-bytes` attribute is ignored with a console
+  warning; `quality: NAN` is refused in PHP. Browsers without
   DataTransfer, canvas `toBlob` or `<dialog>`, `multiple` inputs, SVG, non-images and images the browser cannot decode
   upload as picked, with no error. No dependency (about 15 KB minified), no style attribute, no inline script. See
   [USAGE](USAGE.md#image-crop).

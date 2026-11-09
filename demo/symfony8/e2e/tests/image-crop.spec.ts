@@ -114,8 +114,10 @@ test.describe('image crop, desktop', () => {
     await input(page, 'avatar').setInputFiles(PHOTO);
     await expect(dialog(page)).toBeVisible();
     await expect(stage(page)).toBeFocused();
-    await expect(stage(page)).toHaveAttribute('aria-describedby', 'nowo-ui-image-crop-help');
-    await expect(page.locator('#nowo-ui-image-crop-help')).toContainText('arrow keys');
+    const help = await stage(page).getAttribute('aria-describedby');
+    expect(help).toMatch(/^nowo-ui-image-crop-[a-z0-9]+-help$/);
+    await expect(dialog(page).locator(`[id="${help}"]`)).toContainText('arrow keys');
+    await expect(dialog(page)).toHaveAttribute('data-turbo-temporary', '');
     await expect(stage(page)).toHaveClass(/is-circle/);
     await apply(page);
     await expect(input(page, 'avatar')).toBeFocused();
@@ -302,6 +304,8 @@ test.describe('image crop, desktop', () => {
     const message = dialog(page).getByRole('alert');
     await expect(message).toHaveText('This crop cannot be made smaller than 100 B. Crop a smaller part of the image, or cancel.');
     await expect(dialog(page)).toBeVisible();
+    // JL-L4: focus is not left on <body> after a mouse Apply.
+    await expect(dialog(page).getByRole('button', { name: 'Apply' })).toBeFocused();
     expect(await picked(page, 'tiny')).toMatchObject({ count: 1, name: 'photo.png', width: 640, height: 480 });
     // A new crop hides the message; cancel clears the input.
     await stage(page).focus();
@@ -310,6 +314,53 @@ test.describe('image crop, desktop', () => {
     await dialog(page).getByRole('button', { name: 'Cancel' }).click();
     await expect(dialog(page)).toBeHidden();
     expect(await picked(page, 'tiny')).toEqual({ count: 0 });
+  });
+
+  test('Cancel puts the previous crop back (JL-L2)', async ({ page }) => {
+    await open(page);
+    await input(page, 'logo').setInputFiles(PHOTO);
+    await apply(page);
+    expect(await picked(page, 'logo')).toMatchObject({ name: 'photo.png', width: 640, height: 360 });
+    await input(page, 'logo').setInputFiles(ROTATED);
+    await dialog(page).getByRole('button', { name: 'Cancel' }).click();
+    await expect(dialog(page)).toBeHidden();
+    expect(await picked(page, 'logo')).toMatchObject({ count: 1, name: 'photo.png', width: 640, height: 360 });
+  });
+
+  test('autosubmit: Cancel posts nothing, Apply posts the crop once (JL-L2)', async ({ page }) => {
+    await open(page);
+    const posts: string[] = [];
+    page.on('request', (request) => {
+      if (request.method() === 'POST') {
+        posts.push(request.url());
+      }
+    });
+    const picture = page.locator('input[type="file"][name="quick[picture]"]');
+    await picture.setInputFiles(PHOTO);
+    await dialog(page).getByRole('button', { name: 'Cancel' }).click();
+    await expect(dialog(page)).toBeHidden();
+    await page.waitForTimeout(500);
+    expect(posts).toEqual([]);
+    await picture.setInputFiles(PHOTO);
+    await apply(page);
+    await expect(page.getByTestId('received-quick')).toHaveText('photo.png image/png 128x128');
+    expect(posts).toHaveLength(1);
+  });
+
+  test('a restored snapshot leaves one dialog, with live ids (JL-L3)', async ({ page }) => {
+    await open(page);
+    await input(page, 'logo').setInputFiles(PHOTO);
+    await dialog(page).getByRole('button', { name: 'Cancel' }).click();
+    await expect(dialog(page)).toBeHidden();
+    // As Turbo restores a cached page: the body comes back as new nodes, a copy of the dialog included.
+    await page.evaluate(() => {
+      document.body.innerHTML = document.body.innerHTML;
+    });
+    await input(page, 'logo').setInputFiles(PHOTO);
+    await expect(dialog(page)).toBeVisible();
+    await expect(page.locator('[data-nowo-ui-image-crop-dialog]')).toHaveCount(1);
+    await expect(zoom(page)).toHaveCount(1);
+    await expect(zoom(page)).toHaveValue('100');
   });
 
   test('an input that did not opt in is left alone', async ({ page }) => {
@@ -329,7 +380,7 @@ test.describe('image crop, desktop', () => {
       await input(page, 'avatar').setInputFiles(PHOTO);
       await expect(dialog(page)).toBeVisible();
       await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => undefined))));
-      const axe = await new AxeBuilder({ page }).include('#nowo-ui-image-crop').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+      const axe = await new AxeBuilder({ page }).include('[data-nowo-ui-image-crop-dialog]').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
       expect(axe.violations).toEqual([]);
     });
   }

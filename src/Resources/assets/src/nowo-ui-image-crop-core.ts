@@ -24,6 +24,8 @@ export interface Labels {
   close: string;
   /** The crop cannot be encoded within max-bytes; `%max%` is the limit (e.g. "300 KB"). */
   tooLarge: string;
+  /** Shown (polite) while the crop is encoded again to fit max-bytes. */
+  optimizing: string;
 }
 
 export interface CropOptions {
@@ -80,6 +82,7 @@ export const DEFAULT_LABELS: Labels = {
   cancel: 'Cancel',
   close: 'Close',
   tooLarge: 'This crop cannot be made smaller than %max%. Crop a smaller part of the image, or cancel.',
+  optimizing: 'Optimizing the image…',
 };
 
 export const DEFAULTS = { max: 1024, min: 1, quality: 0.92 } as const;
@@ -141,12 +144,19 @@ export function parseLabels(raw: string | null): Partial<Labels> {
   return labels;
 }
 
-/** The options of an input, read through `get` (an attribute reader); every value has a safe default. */
-export function readOptions(get: (name: string) => string | null): CropOptions {
+/**
+ * The options of an input, read through `get` (an attribute reader); every value has a safe default. A max-bytes that is not a
+ * positive integer (digits only) is ignored, as the PHP helper refuses it, with a message through `warn`.
+ */
+export function readOptions(get: (name: string) => string | null, warn: (message: string) => void = () => undefined): CropOptions {
   const shape: Shape = get(`${ATTR}-shape`) === 'circle' ? 'circle' : 'square';
   const rawFormat = get(`${ATTR}-format`);
   const format: Format = rawFormat === 'png' || rawFormat === 'webp' || rawFormat === 'jpeg' ? rawFormat : 'auto';
   const rawBytes = (get(`${ATTR}-max-bytes`) ?? '').trim();
+  const maxBytes = /^\d+$/.test(rawBytes) && Number(rawBytes) > 0 ? Number(rawBytes) : null;
+  if (maxBytes === null && rawBytes !== '') {
+    warn(`UiKit image crop: ignored an invalid ${ATTR}-max-bytes value "${rawBytes}" (a positive number of bytes, digits only).`);
+  }
   const rawQuality = Number.parseFloat(get(`${ATTR}-quality`) ?? '');
   const bake = get(`${ATTR}-bake-circle`);
   const preview = (get(`${ATTR}-preview`) ?? '').trim();
@@ -157,7 +167,7 @@ export function readOptions(get: (name: string) => string | null): CropOptions {
     max: parseInteger(get(`${ATTR}-max`), DEFAULTS.max, MAX_RANGE[0], MAX_RANGE[1]),
     min: parseInteger(get(`${ATTR}-min`), DEFAULTS.min, 1, MAX_RANGE[1]),
     format,
-    maxBytes: /^\d+$/.test(rawBytes) && Number(rawBytes) > 0 ? Number(rawBytes) : null,
+    maxBytes,
     quality: Number.isFinite(rawQuality) ? clamp(rawQuality, 0, 1) : DEFAULTS.quality,
     // JPEG has no transparency: a baked circle needs PNG or WebP.
     bakeCircle: shape === 'circle' && format !== 'jpeg' && bake !== null && bake !== 'false',
@@ -287,12 +297,12 @@ export function hasTransparency(data: ArrayLike<number>): boolean {
 }
 
 /** Quality steps for a lossy type over max-bytes, and the lowest quality used. */
-export const QUALITY_STEPS = [0.92, 0.85, 0.78, 0.7, 0.6, 0.5] as const;
+export const QUALITY_STEPS = [0.92, 0.85, 0.78, 0.7, 0.6, 0.55, 0.5] as const;
 export const QUALITY_FLOOR = 0.5;
 /** Each size step multiplies the output's edges by this. */
 export const SCALE_STEP = 0.85;
 /** Encodes tried for one crop, at most (each is an async toBlob). */
-export const MAX_ATTEMPTS = 8;
+export const MAX_ATTEMPTS = 10;
 
 export interface Attempt {
   quality: number;

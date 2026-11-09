@@ -42,26 +42,45 @@ final class KitImageCropController extends AbstractController
             ->add('save', SubmitType::class, ['label' => 'Upload'])
             ->getForm();
         $form->handleRequest($request);
+        // Upload on pick: the kit's autosubmit posts this form when the input changes (after Apply; never after Cancel).
+        $quick = $this->container->get('form.factory')->createNamedBuilder('quick')
+            ->add('picture', FileType::class, ['label' => 'Profile picture, sent on pick (autosubmit)', 'required' => false, 'attr' => ['data-nowo-ui-autosubmit' => ''],
+                ImageCropTypeExtension::OPTION => ['shape' => 'circle', 'max' => 128, 'format' => 'png']])
+            ->getForm();
+        $quick->handleRequest($request);
 
         $received = [];
         if ($form->isSubmitted() && $form->isValid()) {
             foreach (['avatar', 'logo', 'photo', 'badge', 'large', 'brand', 'tiny', 'document'] as $name) {
-                $file = $form->get($name)->getData();
-                if ($file instanceof UploadedFile && $file->isValid()) {
-                    $size = @getimagesize($file->getPathname());
-                    $received[$name] = [
-                        'name' => $file->getClientOriginalName(),
-                        'type' => false === $size ? 'not an image' : $size['mime'],
-                        'size' => false === $size ? '' : $size[0].'x'.$size[1],
-                        'bytes' => (int) $file->getSize(),
-                    ];
-                }
+                $this->describe($form->get($name)->getData(), $name, $received);
             }
         }
+        if ($quick->isSubmitted() && $quick->isValid()) {
+            $received['quick'] = ['name' => '(none)', 'type' => '', 'size' => '', 'bytes' => 0];
+            $this->describe($quick->get('picture')->getData(), 'quick', $received);
+        }
 
-        $response = $this->render('kit/image_crop.html.twig', ['form' => $form->createView(), 'received' => $received]);
+        $response = $this->render('kit/image_crop.html.twig', ['form' => $form->createView(), 'quick' => $quick->createView(), 'received' => $received]);
         $response->headers->set('Content-Security-Policy', "script-src 'self'; style-src-attr 'none'; script-src-attr 'none'; img-src 'self' blob:");
 
         return $response;
+    }
+
+    /**
+     * What the server received for one field, read from the bytes.
+     *
+     * @param array<string, array{name: string, type: string, size: string, bytes: int}> $received
+     */
+    private function describe(mixed $file, string $name, array &$received): void
+    {
+        if ($file instanceof UploadedFile && $file->isValid()) {
+            $size = @getimagesize($file->getPathname());
+            $received[$name] = [
+                'name' => $file->getClientOriginalName(),
+                'type' => false === $size ? 'not an image' : $size['mime'],
+                'size' => false === $size ? '' : $size[0].'x'.$size[1],
+                'bytes' => (int) $file->getSize(),
+            ];
+        }
     }
 }

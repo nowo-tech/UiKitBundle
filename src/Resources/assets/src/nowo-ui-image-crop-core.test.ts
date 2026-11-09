@@ -95,7 +95,16 @@ describe('image crop options', () => {
     expect(options.min).toBe(1);
     expect(options.format).toBe('auto');
     expect(options.maxBytes).toBeNull();
-    expect(readOptions(reader({ 'data-nowo-ui-image-crop-max-bytes': '1e6' })).maxBytes).toBeNull();
+    const warnings: string[] = [];
+    for (const bad of ['1e6', '300KB', '-1', '0', '3.5']) {
+      expect(readOptions(reader({ 'data-nowo-ui-image-crop-max-bytes': bad }), (m) => warnings.push(m)).maxBytes).toBeNull();
+    }
+    expect(warnings).toHaveLength(5);
+    expect(warnings[1]).toContain('"300KB"');
+    // Absent or empty: no limit, no warning.
+    readOptions(reader({ 'data-nowo-ui-image-crop-max-bytes': ' ' }), (m) => warnings.push(m));
+    readOptions(reader({}), (m) => warnings.push(m));
+    expect(warnings).toHaveLength(5);
     expect(readOptions(reader({ 'data-nowo-ui-image-crop-format': 'png' })).format).toBe('png');
     expect(options.quality).toBe(1);
     expect(options.preview).toBeNull();
@@ -121,7 +130,7 @@ describe('image crop options', () => {
     expect(parseLabels('not json')).toEqual({});
     expect(parseLabels('["a"]')).toEqual({});
     expect(parseLabels('{"title":"","cancel":"Annuler"}')).toEqual({ cancel: 'Annuler' });
-    expect(Object.keys(DEFAULT_LABELS)).toEqual(['title', 'instructions', 'stage', 'zoom', 'zoomStatus', 'apply', 'cancel', 'close', 'tooLarge']);
+    expect(Object.keys(DEFAULT_LABELS)).toEqual(['title', 'instructions', 'stage', 'zoom', 'zoomStatus', 'apply', 'cancel', 'close', 'tooLarge', 'optimizing']);
   });
 });
 
@@ -302,7 +311,7 @@ describe('image crop encoding', () => {
       attempt = next;
       steps.push([attempt.quality, Number(attempt.scale.toFixed(4))]);
     }
-    expect(steps.slice(0, 6)).toEqual([[0.85, 1], [0.78, 1], [0.7, 1], [0.6, 1], [0.5, 1], [0.5, 0.85]]);
+    expect(steps.slice(0, 7)).toEqual([[0.85, 1], [0.78, 1], [0.7, 1], [0.6, 1], [0.55, 1], [0.5, 1], [0.5, 0.85]]);
     // The size stops at min (100 of the shorter 500 px edge: scale 0.2).
     expect(steps[steps.length - 1][1]).toBe(0.2);
     expect(steps.every(([quality]) => quality >= QUALITY_FLOOR)).toBe(true);

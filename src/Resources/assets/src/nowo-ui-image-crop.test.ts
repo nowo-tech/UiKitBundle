@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { bindNowoUiImageCrop, cropDialog, currentSession, DIALOG_ID, env, replaceFiles, resetForTests, startCrop, supported, wantsCrop, type Decoded, type Session } from './nowo-ui-image-crop';
+import { bindNowoUiImageCrop, cropDialog, currentSession, DIALOG, env, restoreFiles, sameFiles, replaceFiles, resetForTests, startCrop, supported, wantsCrop, type Decoded, type Session } from './nowo-ui-image-crop';
 import { DEFAULT_LABELS, KEY_STEP } from './nowo-ui-image-crop-core';
+import { bindNowoUiAutosubmit } from './nowo-ui-autosubmit';
 
 type Call = { name: string; args: unknown[] };
 
@@ -56,7 +57,9 @@ const session = async (): Promise<Session> => {
   await vi.waitFor(() => expect(currentSession()).not.toBeNull());
   return currentSession() as Session;
 };
-const dialog = (): HTMLDialogElement => el<HTMLDialogElement>(DIALOG_ID);
+const dialog = (): HTMLDialogElement => document.querySelector(DIALOG) as HTMLDialogElement;
+const title = (): HTMLElement => dialog().querySelector('.nowo-ui-dialog__title') as HTMLElement;
+const zoomRange = (): HTMLInputElement => dialog().querySelector('[data-nowo-ui-image-crop-zoom]') as HTMLInputElement;
 const pointer = (type: string, id: number, x: number, y: number, extra: PointerEventInit = {}): PointerEvent =>
   new PointerEvent(type, { pointerId: id, clientX: x, clientY: y, bubbles: true, cancelable: true, pointerType: 'touch', ...extra });
 
@@ -138,7 +141,7 @@ describe('nowo-ui-image-crop', () => {
       globalThis.DataTransfer = saved;
     }
     expect(changes).toEqual(['change:photo.jpg']);
-    expect(document.getElementById(DIALOG_ID)).toBeNull();
+    expect(document.querySelector(DIALOG)).toBeNull();
     expect(env.decode).not.toHaveBeenCalled();
   });
 
@@ -164,16 +167,18 @@ describe('nowo-ui-image-crop', () => {
     const box = dialog();
     expect(box.open).toBe(true);
     expect(box.matches('dialog.nowo-ui-dialog.nowo-ui-image-crop[data-nowo-ui-dialog]')).toBe(true);
-    expect(box.getAttribute('aria-labelledby')).toBe(`${DIALOG_ID}-title`);
-    expect(el(`${DIALOG_ID}-title`).textContent).toBe(DEFAULT_LABELS.title);
+    expect(box.getAttribute('aria-labelledby')).toBe(title().id);
+    expect(box.id).toMatch(/^nowo-ui-image-crop-[a-z0-9]+$/);
+    expect(box.hasAttribute('data-turbo-temporary')).toBe(true);
+    expect(title().textContent).toBe(DEFAULT_LABELS.title);
     expect(box.querySelector('.nowo-ui-dialog__header .nowo-ui-dialog__close')?.getAttribute('aria-label')).toBe(DEFAULT_LABELS.close);
     expect(box.querySelector('.nowo-ui-dialog__footer [data-nowo-ui-image-crop-apply]')?.textContent).toBe(DEFAULT_LABELS.apply);
     const stage = box.querySelector('[data-nowo-ui-image-crop-stage]') as HTMLElement;
     expect(stage.getAttribute('aria-label')).toBe(DEFAULT_LABELS.stage);
     expect(el(stage.getAttribute('aria-describedby') as string).textContent).toBe(DEFAULT_LABELS.instructions);
     expect(document.activeElement).toBe(stage);
-    const range = el<HTMLInputElement>(`${DIALOG_ID}-zoom`);
-    expect(box.querySelector(`label[for="${DIALOG_ID}-zoom"]`)?.textContent).toBe(DEFAULT_LABELS.zoom);
+    const range = zoomRange();
+    expect(box.querySelector(`label[for="${range.id}"]`)?.textContent).toBe(DEFAULT_LABELS.zoom);
     expect(range.value).toBe('100');
     expect(range.max).toBe('800');
     expect(range.getAttribute('aria-valuetext')).toBe('Zoom 100%');
@@ -294,7 +299,7 @@ describe('nowo-ui-image-crop', () => {
     stage.dispatchEvent(new KeyboardEvent('keydown', { key: '+', bubbles: true, cancelable: true }));
     expect(crop.view.scale / crop.bounds.minScale).toBeCloseTo(1.1);
     expect(dialog().querySelector('[data-nowo-ui-image-crop-status]')?.textContent).toBe('Zoom 110%');
-    expect(el<HTMLInputElement>(`${DIALOG_ID}-zoom`).value).toBe('110');
+    expect(zoomRange().value).toBe('110');
 
     stage.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true, cancelable: true }));
     expect(crop.view.scale).toBeCloseTo(crop.bounds.minScale);
@@ -309,7 +314,7 @@ describe('nowo-ui-image-crop', () => {
     stage.dispatchEvent(touch);
     expect(touch.defaultPrevented).toBe(true);
 
-    const range = el<HTMLInputElement>(`${DIALOG_ID}-zoom`);
+    const range = zoomRange();
     range.value = '300';
     range.dispatchEvent(new Event('input', { bubbles: true }));
     expect(crop.view.scale / crop.bounds.minScale).toBeCloseTo(3);
@@ -346,7 +351,8 @@ describe('nowo-ui-image-crop', () => {
     expect(input.files?.length ?? 0).toBe(0);
     expect(input.value).toBe('');
     expect(cancelled).toHaveBeenCalledOnce();
-    expect(changes).toEqual(['input:', 'change:']);
+    // Nothing changed for the page (the input was empty before the pick): no input or change (JL-L2).
+    expect(changes).toEqual([]);
     expect(dialog().open).toBe(false);
     expect(closed).toBe(1);
     expect(document.activeElement).toBe(input);
@@ -388,10 +394,10 @@ describe('nowo-ui-image-crop', () => {
     input.setAttribute('data-nowo-ui-image-crop-labels', JSON.stringify({ title: 'Recortar', apply: 'Aplicar', zoomStatus: 'Zum %percent% %' }));
     pick(input, photo());
     await session();
-    expect(el(`${DIALOG_ID}-title`).textContent).toBe('Recortar');
+    expect(title().textContent).toBe('Recortar');
     expect(dialog().querySelector('[data-nowo-ui-image-crop-apply]')?.textContent).toBe('Aplicar');
     expect(dialog().querySelector('.nowo-ui-dialog__footer [data-nowo-ui-image-crop-cancel]')?.textContent).toBe('Cancel');
-    expect(el(`${DIALOG_ID}-zoom`).getAttribute('aria-valuetext')).toBe('Zum 100 %');
+    expect(zoomRange().getAttribute('aria-valuetext')).toBe('Zum 100 %');
   });
 
   it('shows the crop in the preview image, revoking the previous URL', async () => {
@@ -423,7 +429,7 @@ describe('nowo-ui-image-crop', () => {
     await vi.waitFor(() => expect(failed).toHaveBeenCalled());
     expect((failed.mock.calls[0][0] as CustomEvent).detail.reason).toBe('decode');
     expect(changes).toEqual(['input:a.heic', 'change:a.heic']);
-    expect(document.getElementById(DIALOG_ID)).toBeNull();
+    expect(document.querySelector(DIALOG)).toBeNull();
 
     env.decode = vi.fn(async () => image(0, 0));
     changes.length = 0;
@@ -511,7 +517,7 @@ describe('nowo-ui-image-crop', () => {
     expect(cropDialog()).toBe(first);
     first.dialog.remove();
     expect(cropDialog()).not.toBe(first);
-    expect(document.querySelectorAll(`#${DIALOG_ID}`)).toHaveLength(1);
+    expect(document.querySelectorAll(DIALOG)).toHaveLength(1);
   });
 
   it('the browser seams: an upright bitmap, an <img> fallback, toBlob', async () => {
@@ -629,10 +635,13 @@ describe('nowo-ui-image-crop', () => {
         [0.78, 400],
         [0.7, 400],
         [0.6, 400],
+        [0.55, 400],
         [0.5, 400],
         [0.5, 340],
       ]);
-      expect((cropped.mock.calls[0][0] as CustomEvent).detail).toMatchObject({ width: 340, height: 340, quality: 0.5, attempts: 7 });
+      expect((cropped.mock.calls[0][0] as CustomEvent).detail).toMatchObject({ width: 340, height: 340, quality: 0.5, attempts: 8 });
+      // The polite progress line was shown while it encoded again, and is gone.
+      expect((dialog().querySelector('[data-nowo-ui-image-crop-progress]') as HTMLElement).hidden).toBe(true);
       expect(input.files?.[0]?.size).toBe(400);
     });
 
@@ -655,7 +664,7 @@ describe('nowo-ui-image-crop', () => {
       const failed = vi.fn();
       input.addEventListener('nowo-ui:image-crop:error', failed);
       const { crop } = await run();
-      expect(encoded).toHaveLength(8);
+      expect(encoded).toHaveLength(10);
       expect((failed.mock.calls[0][0] as CustomEvent).detail).toMatchObject({ reason: 'size', bytes: 400000, maxBytes: 307200 });
       expect(dialog().open).toBe(true);
       const message = dialog().querySelector('[data-nowo-ui-image-crop-error]') as HTMLElement;
@@ -678,8 +687,242 @@ describe('nowo-ui-image-crop', () => {
       const failed = vi.fn();
       input.addEventListener('nowo-ui:image-crop:error', failed);
       await run();
-      expect(encoded).toHaveLength(6);
+      expect(encoded).toHaveLength(7);
       expect((failed.mock.calls[0][0] as CustomEvent).detail.reason).toBe('size');
+    });
+  });
+
+  describe('sessions, file lists and focus (audit JL)', () => {
+    /** A decode that resolves when the test says so. */
+    const deferredDecode = (): Array<(value: Decoded) => void> => {
+      const resolvers: Array<(value: Decoded) => void> = [];
+      env.decode = vi.fn(() => new Promise<Decoded>((resolve) => resolvers.push(resolve)));
+      return resolvers;
+    };
+
+    it('JL-L1: a session whose dialog went away (a body swap) is dropped, and the next pick crops', async () => {
+      const first = el<HTMLInputElement>('avatar');
+      pick(first, photo());
+      await session();
+      // The page swaps its body (Turbo, a Live Component): the dialog is gone and no close event fires.
+      document.body.innerHTML = '<form><input id="again" type="file" data-nowo-ui-image-crop></form>';
+      const again = el<HTMLInputElement>('again');
+      pick(again, photo('second.jpg'));
+      await vi.waitFor(() => expect(currentSession()?.input).toBe(again));
+      expect(closed).toBe(1);
+      expect(dialog().open).toBe(true);
+      expect(document.querySelectorAll(DIALOG)).toHaveLength(1);
+    });
+
+    it('JL-L1: a newer pick while an image decodes cancels the older, the latest file wins', async () => {
+      const resolvers = deferredDecode();
+      const a = el<HTMLInputElement>('avatar');
+      const b = el<HTMLInputElement>('auto');
+      const cancelled = vi.fn();
+      a.addEventListener('nowo-ui:image-crop:cancel', cancelled);
+      pick(a, photo('a.jpg'));
+      pick(b, photo('b.jpg'));
+      // A is back to its list before the pick (empty), with no event for the page.
+      expect(a.files?.length ?? 0).toBe(0);
+      expect(cancelled).toHaveBeenCalledOnce();
+      resolvers[0](image(800, 600));
+      resolvers[1](image(800, 600));
+      await vi.waitFor(() => expect(currentSession()?.input).toBe(b));
+      expect(currentSession()?.original.name).toBe('b.jpg');
+      // A's decoded bitmap was closed.
+      expect(closed).toBe(1);
+      expect(changes).toEqual([]);
+    });
+
+    it('JL-L1: the same input picked twice while decoding crops the second file, and Cancel empties it', async () => {
+      const resolvers = deferredDecode();
+      const a = el<HTMLInputElement>('avatar');
+      pick(a, photo('first.jpg'));
+      pick(a, photo('second.jpg'));
+      resolvers[1](image(800, 600));
+      await vi.waitFor(() => expect(currentSession()?.original.name).toBe('second.jpg'));
+      resolvers[0](image(800, 600));
+      await Promise.resolve();
+      expect(currentSession()?.original.name).toBe('second.jpg');
+      currentSession()?.cancel();
+      expect(a.files?.length ?? 0).toBe(0);
+      expect(changes).toEqual([]);
+    });
+
+    it('JL-L1: a pick that cannot start (a crop is on screen, or no file) still reaches the page', async () => {
+      pick(el<HTMLInputElement>('avatar'), photo());
+      await session();
+      const failed = vi.fn();
+      const other = el<HTMLInputElement>('auto');
+      other.addEventListener('nowo-ui:image-crop:error', failed);
+      pick(other, photo('other.jpg'));
+      await vi.waitFor(() => expect(failed).toHaveBeenCalled());
+      expect((failed.mock.calls[0][0] as CustomEvent).detail.reason).toBe('busy');
+      expect(changes).toEqual(['input:other.jpg', 'change:other.jpg']);
+      changes.length = 0;
+      const empty = document.createElement('input');
+      empty.type = 'file';
+      empty.setAttribute('data-nowo-ui-image-crop', '');
+      document.body.append(empty);
+      expect(await startCrop(empty)).toBeNull();
+      expect(changes).toEqual(['input:', 'change:']);
+    });
+
+    it('JL-L1: a decode that fails after a newer pick took over stays silent', async () => {
+      const rejecters: Array<(reason: Error) => void> = [];
+      const resolvers: Array<(value: Decoded) => void> = [];
+      env.decode = vi.fn(() => new Promise<Decoded>((resolve, reject) => {
+        resolvers.push(resolve);
+        rejecters.push(reject);
+      }));
+      const a = el<HTMLInputElement>('avatar');
+      const failed = vi.fn();
+      a.addEventListener('nowo-ui:image-crop:error', failed);
+      pick(a, photo('a.jpg'));
+      pick(el<HTMLInputElement>('auto'), photo('b.jpg'));
+      rejecters[0](new Error('broken'));
+      resolvers[1](image(800, 600));
+      await session();
+      expect(failed).not.toHaveBeenCalled();
+    });
+
+    it('JL-L2: Cancel puts the previous file back and dispatches nothing', async () => {
+      const input = el<HTMLInputElement>('avatar');
+      pick(input, photo('first.jpg'));
+      await (await session()).apply();
+      const crop = input.files?.[0] as File;
+      expect(crop.name).toBe('first.png');
+      changes.length = 0;
+      // The user opens the picker again (the list is taken on click) and picks another photo, then cancels.
+      input.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      pick(input, photo('second.jpg'));
+      const cancelled = vi.fn();
+      input.addEventListener('nowo-ui:image-crop:cancel', cancelled);
+      (await session()).cancel();
+      expect(input.files?.[0]).toBe(crop);
+      expect((cancelled.mock.calls[0][0] as CustomEvent).detail.restored).toBe(true);
+      expect(changes).toEqual([]);
+      // Escape does the same.
+      pick(input, photo('third.jpg'));
+      await session();
+      dialog().close();
+      expect(input.files?.[0]).toBe(crop);
+      expect(changes).toEqual([]);
+    });
+
+    it('JL-L2: a form reset empties what Cancel restores', async () => {
+      const input = el<HTMLInputElement>('avatar');
+      pick(input, photo());
+      await (await session()).apply();
+      el<HTMLFormElement>('form').reset();
+      el<HTMLFormElement>('form').dispatchEvent(new Event('reset', { bubbles: true }));
+      pick(input, photo('next.jpg'));
+      (await session()).cancel();
+      expect(input.files?.length ?? 0).toBe(0);
+    });
+
+    it('JL-L2: with the kit\'s autosubmit, Cancel posts nothing and Apply posts once', async () => {
+      bindNowoUiAutosubmit();
+      const submit = vi.spyOn(HTMLFormElement.prototype, 'requestSubmit').mockImplementation(() => undefined);
+      const input = el<HTMLInputElement>('avatar');
+      input.setAttribute('data-nowo-ui-autosubmit', '');
+      pick(input, photo());
+      expect(submit).not.toHaveBeenCalled();
+      (await session()).cancel();
+      expect(submit).not.toHaveBeenCalled();
+      pick(input, photo());
+      await (await session()).apply();
+      expect(submit).toHaveBeenCalledOnce();
+    });
+
+    it('restoreFiles and sameFiles', () => {
+      const input = el<HTMLInputElement>('plain');
+      const a = photo('a.jpg');
+      const b = photo('b.jpg');
+      expect(restoreFiles(input, [a, b])).toBe(true);
+      expect(input.files?.length).toBe(2);
+      expect(restoreFiles(input, [])).toBe(true);
+      expect(sameFiles([a], [a])).toBe(true);
+      expect(sameFiles([a], [b])).toBe(false);
+      expect(sameFiles([a], [])).toBe(false);
+      const saved = globalThis.DataTransfer;
+      // @ts-expect-error: a browser without DataTransfer
+      globalThis.DataTransfer = undefined;
+      try {
+        expect(restoreFiles(input, [a])).toBe(false);
+      } finally {
+        globalThis.DataTransfer = saved;
+      }
+    });
+
+    it('JL-L3: a copy from a restored snapshot is removed, and ids are new for each build', async () => {
+      pick(el<HTMLInputElement>('avatar'), photo());
+      const crop = await session();
+      const firstId = dialog().id;
+      crop.cancel();
+      // Turbo restores a cached page: the body (with a copy of the dialog) comes back as new nodes.
+      const snapshot = document.body.innerHTML;
+      document.body.innerHTML = snapshot;
+      expect(document.querySelectorAll(DIALOG)).toHaveLength(1);
+      pick(el<HTMLInputElement>('avatar'), photo());
+      await session();
+      expect(document.querySelectorAll(DIALOG)).toHaveLength(1);
+      expect(dialog().id).not.toBe(firstId);
+      expect(document.querySelectorAll(`[id="${dialog().id}-zoom"]`)).toHaveLength(1);
+      // A stray copy next to the live dialog goes too.
+      const stray = dialog().cloneNode(true) as HTMLElement;
+      stray.removeAttribute('open');
+      document.body.append(stray);
+      currentSession()?.cancel();
+      pick(el<HTMLInputElement>('avatar'), photo());
+      await session();
+      expect(document.querySelectorAll(DIALOG)).toHaveLength(1);
+    });
+
+    it('JL-L4: Apply keeps the focus while it encodes, and after a size error', async () => {
+      let finish: (blob: Blob) => void = () => undefined;
+      env.encode = vi.fn(() => new Promise<Blob | null>((resolve) => (finish = resolve)));
+      const input = el<HTMLInputElement>('auto');
+      input.setAttribute('data-nowo-ui-image-crop-max-bytes', '10');
+      input.setAttribute('data-nowo-ui-image-crop-min', '4000');
+      pick(input, photo());
+      await session();
+      const apply = dialog().querySelector('[data-nowo-ui-image-crop-apply]') as HTMLButtonElement;
+      apply.focus();
+      apply.click();
+      expect(apply.disabled).toBe(false);
+      expect(apply.getAttribute('aria-disabled')).toBe('true');
+      // A second click while busy does nothing.
+      apply.click();
+      for (let i = 0; i < 7; i += 1) {
+        await vi.waitFor(() => expect(env.encode).toHaveBeenCalledTimes(i + 1));
+        finish(new Blob([new Uint8Array(100)], { type: 'image/webp' }));
+      }
+      await vi.waitFor(() => expect(apply.hasAttribute('aria-disabled')).toBe(false));
+      expect((dialog().querySelector('[data-nowo-ui-image-crop-error]') as HTMLElement).hidden).toBe(false);
+      expect(document.activeElement).toBe(apply);
+    });
+
+    it('JL-L4: focus lost during the encode comes back to Apply after a size error', async () => {
+      env.encode = vi.fn(async (_canvas: HTMLCanvasElement, type: string) => {
+        (document.activeElement as HTMLElement | null)?.blur();
+        return new Blob([new Uint8Array(100)], { type });
+      });
+      const input = el<HTMLInputElement>('auto');
+      input.setAttribute('data-nowo-ui-image-crop-max-bytes', '10');
+      pick(input, photo());
+      await (await session()).apply();
+      expect(document.activeElement).toBe(dialog().querySelector('[data-nowo-ui-image-crop-apply]'));
+    });
+
+    it('an invalid max-bytes is ignored with a warning', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      const input = el<HTMLInputElement>('auto');
+      input.setAttribute('data-nowo-ui-image-crop-max-bytes', '300KB');
+      pick(input, photo());
+      const crop = await session();
+      expect(crop.options.maxBytes).toBeNull();
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('"300KB"'));
     });
   });
 });

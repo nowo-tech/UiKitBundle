@@ -11,8 +11,12 @@
  * and docs/USAGE.md. Over -max-bytes the quality, then the size, steps down; if nothing fits, `:error` {reason: 'size'} and the
  * dialog stays open with a message.
  *
+ * Cancel, close and Escape put the input's file list from before the pick back, and dispatch `input` / `change` only if it then
+ * differs (it does not: listeners never saw the picked file). A crop that is refused or falls back dispatches the picked file's
+ * `input` and `change` again. The dialog's ids are unique per build and it carries `data-turbo-temporary`.
+ *
  * Events on the input (bubbling): `nowo-ui:image-crop:open` {file} (cancelable: the file then stays as picked), `:cropped` {file,
- * original, width, height, quality, attempts}, `:cancel` {original}, `:error` {reason: decode|encode|replace|size, original} (the
+ * original, width, height, quality, attempts}, `:cancel` {original, restored}, `:error` {reason: decode|encode|replace|size|busy, original} (the
  * file stays as picked). After the crop and after a
  * cancel, native `input` and `change` are dispatched again; the picked file's own `input` and `change` never reach other listeners
  * (stopped in the capture phase on window), so a host listener only ever sees the final file.
@@ -60,7 +64,9 @@ import {
   type View,
 } from './nowo-ui-image-crop-core';
 
-export const DIALOG_ID = 'nowo-ui-image-crop';
+/** The crop dialog (its ids are unique per build: a restored page snapshot cannot duplicate them). */
+export const DIALOG = 'dialog[data-nowo-ui-image-crop-dialog]';
+let builds = 0;
 const INPUT = `input[type="file"][${ATTR}]`;
 /** Stage size used when the stage has no layout (hidden, or a test DOM). */
 const FALLBACK_STAGE: Size = { width: 320, height: 320 };
@@ -151,8 +157,38 @@ export function replaceFiles(input: HTMLInputElement, file: File): boolean {
 
 let replaying = false;
 
+/** The file list each opted-in input held before the current pick: what Cancel restores (JL-L2). */
+const committed = new WeakMap<HTMLInputElement, File[]>();
+const filesOf = (input: HTMLInputElement): File[] => [...(input.files ?? [])];
+const commit = (input: HTMLInputElement): void => {
+  committed.set(input, filesOf(input));
+};
+
+/** Whether two file lists hold the same files, in order. */
+export function sameFiles(a: ArrayLike<File>, b: ArrayLike<File>): boolean {
+  return a.length === b.length && Array.from(a).every((file, index) => file === b[index]);
+}
+
+/** Puts a file list back in the input (empty clears it); false when the browser does not take it. */
+export function restoreFiles(input: HTMLInputElement, files: File[]): boolean {
+  if (files.length === 0) {
+    input.value = '';
+    return (input.files?.length ?? 0) === 0;
+  }
+  try {
+    const transfer = new DataTransfer();
+    files.forEach((file) => transfer.items.add(file));
+    input.files = transfer.files;
+    return sameFiles(filesOf(input), files) || (input.files?.length === files.length && filesOf(input).every((file, index) => file.name === files[index].name && file.size === files[index].size));
+  } catch {
+    input.value = '';
+    return false;
+  }
+}
+
 /** Dispatches `input` and `change` on the input again (the crop step's own, which it lets through). */
 function replay(input: HTMLInputElement): void {
+  commit(input);
   replaying = true;
   try {
     input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -175,6 +211,7 @@ interface Ui {
   range: HTMLInputElement;
   status: HTMLElement;
   error: HTMLElement;
+  progress: HTMLElement;
   apply: HTMLButtonElement;
   cancel: HTMLButtonElement;
   close: HTMLButtonElement;
@@ -193,17 +230,28 @@ function element<K extends keyof HTMLElementTagNameMap>(tag: K, className: strin
 
 let ui: Ui | null = null;
 let current: Session | null = null;
+/** A pick whose image is still decoding; a newer pick cancels it (JL-L1). */
+let pending: { input: HTMLInputElement; previous: File[] } | null = null;
 /** The input focus goes back to when the dialog closes. */
 let returnFocus: HTMLInputElement | null = null;
 
 /** The crop dialog, built once per page with the anatomy of the `dialog` partial (header, body, footer) and the kit's classes. */
 export function cropDialog(): Ui {
+  // Orphans: a copy brought back by a restored snapshot, or a dialog from a swapped body (JL-L3).
+  document.querySelectorAll(DIALOG).forEach((node) => {
+    if (node !== ui?.dialog) {
+      node.remove();
+    }
+  });
   if (ui && ui.dialog.isConnected) {
     return ui;
   }
-  const dialog = element('dialog', 'nowo-ui-dialog nowo-ui-image-crop', { id: DIALOG_ID, 'data-nowo-ui-dialog': '', 'data-nowo-ui-image-crop-dialog': '', 'aria-labelledby': `${DIALOG_ID}-title` });
+  builds += 1;
+  const id = `nowo-ui-image-crop-${builds.toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+  // data-turbo-temporary: Turbo leaves it out of its page snapshots.
+  const dialog = element('dialog', 'nowo-ui-dialog nowo-ui-image-crop', { id, 'data-nowo-ui-dialog': '', 'data-nowo-ui-image-crop-dialog': '', 'data-turbo-temporary': '', 'aria-labelledby': `${id}-title` });
   const header = element('header', 'nowo-ui-dialog__header');
-  const title = element('h2', 'nowo-ui-dialog__title', { id: `${DIALOG_ID}-title` });
+  const title = element('h2', 'nowo-ui-dialog__title', { id: `${id}-title` });
   const close = element('button', 'nowo-ui-dialog__close', { type: 'button', 'data-nowo-ui-image-crop-cancel': '' });
   const cross = element('span', '', { 'aria-hidden': 'true' });
   cross.textContent = '×';
@@ -211,18 +259,20 @@ export function cropDialog(): Ui {
   header.append(title, close);
 
   const body = element('div', 'nowo-ui-dialog__body nowo-ui-image-crop__body');
-  const help = element('p', 'nowo-ui-image-crop__help', { id: `${DIALOG_ID}-help` });
-  const stage = element('div', 'nowo-ui-image-crop__stage', { 'data-nowo-ui-image-crop-stage': '', tabindex: '0', role: 'application', 'aria-describedby': `${DIALOG_ID}-help`, autofocus: '' });
+  const help = element('p', 'nowo-ui-image-crop__help', { id: `${id}-help` });
+  const stage = element('div', 'nowo-ui-image-crop__stage', { 'data-nowo-ui-image-crop-stage': '', tabindex: '0', role: 'application', 'aria-describedby': `${id}-help`, autofocus: '' });
   const canvas = element('canvas', 'nowo-ui-image-crop__canvas', { 'aria-hidden': 'true' });
   stage.append(canvas);
   const zoom = element('div', 'nowo-ui-image-crop__zoom');
-  const zoomLabel = element('label', 'nowo-ui-image-crop__zoom-label', { for: `${DIALOG_ID}-zoom` });
-  const range = element('input', 'nowo-ui-image-crop__range', { id: `${DIALOG_ID}-zoom`, type: 'range', min: '100', max: '800', step: '1', value: '100', 'data-nowo-ui-image-crop-zoom': '' });
+  const zoomLabel = element('label', 'nowo-ui-image-crop__zoom-label', { for: `${id}-zoom` });
+  const range = element('input', 'nowo-ui-image-crop__range', { id: `${id}-zoom`, type: 'range', min: '100', max: '800', step: '1', value: '100', 'data-nowo-ui-image-crop-zoom': '' });
   zoom.append(zoomLabel, range);
   const status = element('p', 'visually-hidden', { role: 'status', 'aria-live': 'polite', 'data-nowo-ui-image-crop-status': '' });
   const error = element('p', 'nowo-ui-image-crop__error', { role: 'alert', 'data-nowo-ui-image-crop-error': '' });
   error.hidden = true;
-  body.append(help, stage, zoom, error, status);
+  const progress = element('p', 'nowo-ui-image-crop__progress', { 'aria-live': 'polite', 'data-nowo-ui-image-crop-progress': '' });
+  progress.hidden = true;
+  body.append(help, stage, zoom, progress, error, status);
 
   const footer = element('footer', 'nowo-ui-dialog__footer');
   const cancel = element('button', 'nowo-ui-btn nowo-ui-btn--secondary', { type: 'button', 'data-nowo-ui-image-crop-cancel': '' });
@@ -231,7 +281,7 @@ export function cropDialog(): Ui {
   dialog.append(header, body, footer);
   document.body.append(dialog);
 
-  ui = { dialog, title, help, stage, canvas, zoomLabel, range, status, error, apply, cancel, close };
+  ui = { dialog, title, help, stage, canvas, zoomLabel, range, status, error, progress, apply, cancel, close };
   bindUi(ui);
   return ui;
 }
@@ -272,6 +322,8 @@ export class Session {
     readonly image: Decoded,
     readonly options: CropOptions,
     readonly ui: Ui,
+    /** The input's file list before this pick: what Cancel puts back. */
+    readonly previous: File[] = [],
   ) {}
 
   get labels(): Labels {
@@ -520,6 +572,8 @@ export class Session {
         return { kind: 'file', file, size: rendered.size, quality: attempt.quality, attempts: tries };
       }
       smallest = Math.min(smallest, blob.size);
+      // Encoding again to fit max-bytes can take a while: say so.
+      this.showProgress(this.labels.optimizing);
       const next = nextAttempt(attempt, type !== 'image/png', scaledSize(outputSize(sourceRect(this.view, this.frame), this.options.max, square), 1, square), this.options.min);
       if (next === null) {
         break;
@@ -536,7 +590,8 @@ export class Session {
     }
     this.busy = true;
     this.showError(null);
-    this.ui.apply.disabled = true;
+    // aria-disabled, not disabled: a focused button that becomes disabled drops the focus to <body> (JL-L4). `busy` guards it.
+    this.ui.apply.setAttribute('aria-disabled', 'true');
     this.ui.apply.setAttribute('aria-busy', 'true');
     let result: EncodeResult;
     try {
@@ -545,15 +600,20 @@ export class Session {
       result = { kind: 'encode' };
     }
     this.busy = false;
-    this.ui.apply.disabled = false;
+    this.ui.apply.removeAttribute('aria-disabled');
     this.ui.apply.removeAttribute('aria-busy');
+    this.showProgress(null);
     if (this.finished) {
       return;
     }
     if (result.kind === 'size') {
-      // Kept open: the user can crop a smaller part, or cancel.
+      // Kept open: the user can crop a smaller part, or cancel. Focus stays in the dialog, on Apply if it was lost.
       const max = this.options.maxBytes ?? 0;
       this.showError(this.labels.tooLarge.replace('%max%', formatBytes(max)));
+      const active = document.activeElement;
+      if (!(active instanceof HTMLElement) || !this.ui.dialog.contains(active)) {
+        this.ui.apply.focus();
+      }
       emit(this.input, 'error', { reason: 'size', original: this.original, bytes: result.bytes, maxBytes: max });
       return;
     }
@@ -564,7 +624,16 @@ export class Session {
     } else {
       emit(this.input, 'error', { reason: result.kind === 'file' ? 'replace' : 'encode', original: this.original });
     }
-    this.end();
+    this.end(true);
+  }
+
+  /** Shows (or with null hides) the polite progress line. */
+  showProgress(message: string | null): void {
+    const { progress } = this.ui;
+    if (progress.textContent !== (message ?? '')) {
+      progress.textContent = message ?? '';
+    }
+    progress.hidden = message === null;
   }
 
   /** Shows (or with null hides) the message under the crop area. */
@@ -574,15 +643,27 @@ export class Session {
     error.hidden = message === null;
   }
 
-  /** Clears the input (the picked file is not uploaded). */
+  /**
+   * Puts the input's file list from before this pick back (empty if it had none): the picked file is not uploaded. `input` and
+   * `change` are dispatched only if the list then differs from that one (JL-L2), so a Cancel on an empty input fires nothing.
+   */
   cancel(): void {
     if (this.finished) {
       return;
     }
     this.finished = true;
-    this.input.value = '';
-    emit(this.input, 'cancel', { original: this.original });
-    this.end();
+    restoreFiles(this.input, this.previous);
+    emit(this.input, 'cancel', { original: this.original, restored: this.previous.length > 0 });
+    this.end(!sameFiles(filesOf(this.input), this.previous));
+  }
+
+  /** Forgets a session whose dialog is gone (a swapped body, a restored snapshot): nothing is dispatched. */
+  drop(): void {
+    this.finished = true;
+    this.image.close();
+    if (current === this) {
+      current = null;
+    }
   }
 
   private showPreview(file: File): void {
@@ -601,13 +682,17 @@ export class Session {
     target.hidden = false;
   }
 
-  private end(): void {
+  private end(dispatch: boolean): void {
     this.image.close();
     if (current === this) {
       current = null;
     }
     returnFocus = this.input;
-    replay(this.input);
+    if (dispatch) {
+      replay(this.input);
+    } else {
+      commit(this.input);
+    }
     closeCropDialog(this.ui.dialog);
   }
 }
@@ -693,13 +778,49 @@ export function wantsCrop(target: EventTarget | null): target is HTMLInputElemen
   return target.files?.length === 1 && file !== undefined && isCroppable(file.type) && supported();
 }
 
-/** Starts the crop of the input's picked file. Resolves with the session, or null when the upload goes on as picked. */
+/** Puts an earlier input's list back when its pick was overtaken by a newer one (Cancel semantics). */
+function cancelPick(input: HTMLInputElement, previous: File[], original: File | undefined): void {
+  restoreFiles(input, previous);
+  emit(input, 'cancel', { original, restored: previous.length > 0 });
+  if (sameFiles(filesOf(input), previous)) {
+    commit(input);
+  } else {
+    replay(input);
+  }
+}
+
+/**
+ * Starts the crop of the input's picked file. Resolves with the session, or null when the upload goes on as picked: then the
+ * picked file's `input` and `change` are dispatched again, so host listeners always run. A session whose dialog is gone is
+ * dropped; a crop on screen refuses another (`error` {reason: 'busy'}); a newer pick while an image decodes cancels the older.
+ */
 export async function startCrop(input: HTMLInputElement): Promise<Session | null> {
   const original = input.files?.[0];
-  if (!original || current) {
+  // Same input picked again while its first pick decodes: "before" is still the list before that first pick.
+  let previous = pending?.input === input ? pending.previous : (committed.get(input) ?? []);
+  if (current && (!current.ui.dialog.isConnected || !current.ui.dialog.open)) {
+    current.drop();
+  }
+  if (!original) {
+    replay(input);
     return null;
   }
+  if (current) {
+    emit(input, 'error', { reason: 'busy', original });
+    replay(input);
+    return null;
+  }
+  if (pending) {
+    const earlier = pending;
+    pending = null;
+    if (earlier.input !== input) {
+      cancelPick(earlier.input, earlier.previous, earlier.input.files?.[0]);
+    }
+  }
+  const mine = { input, previous };
+  pending = mine;
   if (!emit(input, 'open', { file: original }, true)) {
+    pending = null;
     replay(input);
     return null;
   }
@@ -711,17 +832,29 @@ export async function startCrop(input: HTMLInputElement): Promise<Session | null
       throw new Error('empty image');
     }
   } catch {
+    if (pending !== mine) {
+      return null;
+    }
+    pending = null;
     emit(input, 'error', { reason: 'decode', original });
     replay(input);
     return null;
   }
-  const options = readOptions((name) => input.getAttribute(name));
+  if (pending !== mine) {
+    // A newer pick took over while this one decoded.
+    image.close();
+    return null;
+  }
+  pending = null;
+  previous = mine.previous;
+  const options = readOptions((name) => input.getAttribute(name), (message) => console.warn(message));
   const target = cropDialog();
-  const session = new Session(input, original, image, options, target);
+  const session = new Session(input, original, image, options, target, previous);
   current = session;
   setLabels(target, session.labels);
   target.status.textContent = '';
   session.showError(null);
+  session.showProgress(null);
   openCropDialog(target.dialog, input);
   session.layout();
   target.stage.focus();
@@ -757,6 +890,25 @@ export function bindNowoUiImageCrop(): void {
   bound = true;
   window.addEventListener('input', onPick, true);
   window.addEventListener('change', onPick, true);
+  // The list before a pick: taken when the picker opens (a click, also through a label) or a file is dropped on the input.
+  const before = (event: Event): void => {
+    const target = event.target;
+    if (target instanceof HTMLInputElement && target.matches(INPUT) && !pending) {
+      commit(target);
+    }
+  };
+  window.addEventListener('click', before, true);
+  window.addEventListener('drop', before, true);
+  // A form reset empties its inputs.
+  window.addEventListener(
+    'reset',
+    (event) => {
+      if (event.target instanceof HTMLFormElement) {
+        event.target.querySelectorAll<HTMLInputElement>(INPUT).forEach((input) => committed.set(input, []));
+      }
+    },
+    true,
+  );
 }
 
 /** Test helper: forgets the dialog and the session. */
@@ -764,6 +916,7 @@ export function resetForTests(): void {
   ui?.dialog.remove();
   ui = null;
   current = null;
+  pending = null;
   returnFocus = null;
 }
 

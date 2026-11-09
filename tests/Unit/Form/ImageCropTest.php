@@ -35,7 +35,7 @@ final class ImageCropTest extends TestCase
             'data-nowo-ui-image-crop-max' => '1024',
             'data-nowo-ui-image-crop-format' => 'auto',
             'data-nowo-ui-image-crop-quality' => '0.92',
-            'data-nowo-ui-image-crop-labels' => '{"title":"Crop the image","instructions":"Drag the image or use the arrow keys to move it. Zoom with the slider, the mouse wheel, a pinch, or the + and - keys. Enter applies, Escape cancels.","stage":"Image to crop","zoom":"Zoom","zoomStatus":"Zoom %percent%%","apply":"Apply","cancel":"Cancel","close":"Close","tooLarge":"This crop cannot be made smaller than %max%. Crop a smaller part of the image, or cancel."}',
+            'data-nowo-ui-image-crop-labels' => '{"title":"Crop the image","instructions":"Drag the image or use the arrow keys to move it. Zoom with the slider, the mouse wheel, a pinch, or the + and - keys. Enter applies, Escape cancels.","stage":"Image to crop","zoom":"Zoom","zoomStatus":"Zoom %percent%%","apply":"Apply","cancel":"Cancel","close":"Close","tooLarge":"This crop cannot be made smaller than %max%. Crop a smaller part of the image, or cancel.","optimizing":"Optimizing the image…"}',
         ], ImageCrop::attributes());
         $png = ImageCrop::attributes(['format' => 'png']);
         self::assertSame('png', $png['data-nowo-ui-image-crop-format']);
@@ -101,6 +101,7 @@ final class ImageCropTest extends TestCase
         yield 'quality' => [['quality' => 1.5]];
         yield 'quality string' => [['quality' => '0.5']];
         yield 'negative quality' => [['quality' => -0.1]];
+        yield 'NAN quality' => [['quality' => \NAN]];
         yield 'bake not a bool' => [['shape' => 'circle', 'bake_circle' => 'yes']];
         yield 'bake a square' => [['bake_circle' => true]];
         yield 'bake a jpeg' => [['shape' => 'circle', 'format' => 'jpeg', 'bake_circle' => true]];
@@ -133,7 +134,7 @@ final class ImageCropTest extends TestCase
         self::assertSame('Recortar la imagen', $labels['title']);
         self::assertSame('Zoom %percent%%', $labels['zoomStatus']);
         self::assertSame('No', $labels['cancel']);
-        self::assertSame(['title', 'instructions', 'stage', 'zoom', 'zoomStatus', 'apply', 'cancel', 'close', 'tooLarge'], array_keys($labels));
+        self::assertSame(['title', 'instructions', 'stage', 'zoom', 'zoomStatus', 'apply', 'cancel', 'close', 'tooLarge', 'optimizing'], array_keys($labels));
     }
 
     public function testEveryLocaleTranslatesEveryLabel(): void
@@ -141,7 +142,7 @@ final class ImageCropTest extends TestCase
         foreach (glob(\dirname(__DIR__, 3).'/src/Resources/translations/NowoUiKitBundle.*.yaml') ?: [] as $file) {
             $messages = Yaml::parseFile($file);
             self::assertIsArray($messages);
-            foreach (['title', 'instructions', 'stage', 'zoom', 'zoom_status', 'apply', 'cancel', 'close', 'too_large'] as $key) {
+            foreach (['title', 'instructions', 'stage', 'zoom', 'zoom_status', 'apply', 'cancel', 'close', 'too_large', 'optimizing'] as $key) {
                 self::assertIsString($messages['image_crop.'.$key] ?? null, basename($file).' image_crop.'.$key);
             }
             self::assertStringContainsString('%percent%', $messages['image_crop.zoom_status'], basename($file));

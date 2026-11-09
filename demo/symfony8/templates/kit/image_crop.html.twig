@@ -37,6 +37,11 @@
             {{ form_row(form.save) }}
             {{ form_end(form) }}
         </div>
+        <div data-testid="quick-form">
+            {{ form_start(quick) }}
+            {{ form_row(quick.picture) }}
+            {{ form_end(quick) }}
+        </div>
     </main>
 {% endblock %}
 

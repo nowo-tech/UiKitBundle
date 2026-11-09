@@ -2268,7 +2268,7 @@ Focus reaching something clipped, a link in the hidden lines, opens the fold, so
 A crop step for image uploads. When an image is picked in an opted-in file input, a dialog shows it under a square or
 round frame; the user moves and zooms it, and "Apply" puts the crop in the input **in place of the picked file**. The
 form then uploads the crop as an ordinary file, so the server validates it exactly as before (type, size, dimensions).
-"Cancel", the close button and Escape clear the input. Without the script, or in a browser that cannot crop, the input
+"Cancel", the close button and Escape put back what the input held before the pick (nothing, or an earlier crop). Without the script, or in a browser that cannot crop, the input
 uploads the picked file as it is.
 
 ```php
@@ -2277,7 +2277,7 @@ use Nowo\UiKitBundle\Form\ImageCropTypeExtension;
 $builder->add('avatar', FileType::class, [
     'required' => false,
     'attr' => ['accept' => 'image/png,image/jpeg,image/webp'],
-    ImageCropTypeExtension::OPTION => ['shape' => 'circle', 'max' => 512, 'max_bytes' => 204_800, 'preview' => 'avatar-preview'],
+    ImageCropTypeExtension::OPTION => ['shape' => 'circle', 'max' => 512, 'max_bytes' => 190_000, 'preview' => 'avatar-preview'],
 ]);
 ```
 
@@ -2306,14 +2306,14 @@ value throws `InvalidArgumentException`) and prints them all.
 | `data-nowo-ui-image-crop-max` | `max` | longest output edge in px, 16 to 8192 | `1024` |
 | `data-nowo-ui-image-crop-min` | `min` | shortest crop edge in image px: zooming in stops there | `1` |
 | `data-nowo-ui-image-crop-format` | `format` | `auto`, `png`, `webp`, `jpeg` | `auto` |
-| `data-nowo-ui-image-crop-max-bytes` | `max_bytes` | largest output file in bytes (quality, then size, step down to fit) | none |
+| `data-nowo-ui-image-crop-max-bytes` | `max_bytes` | largest output file in bytes, digits only (quality, then size, step down to fit); any other value is ignored, with a console warning | none |
 | `data-nowo-ui-image-crop-quality` | `quality` | 0 to 1, for WebP and JPEG | `0.92` |
 | `data-nowo-ui-image-crop-bake-circle` | `bake_circle` | present and not `false` (circle, PNG or WebP only) | absent |
 | `data-nowo-ui-image-crop-preview` | `preview` | id of an `<img>` that shows the crop once applied | absent |
-| `data-nowo-ui-image-crop-labels` | `labels` | JSON: `title`, `instructions`, `stage`, `zoom`, `zoomStatus` (with `%percent%`), `apply`, `cancel`, `close`, `tooLarge` (with `%max%`) | English |
+| `data-nowo-ui-image-crop-labels` | `labels` | JSON: `title`, `instructions`, `stage`, `zoom`, `zoomStatus` (with `%percent%`), `apply`, `cancel`, `close`, `tooLarge` (with `%max%`), `optimizing` | English |
 
 `ImageCrop::attributes()` fills `-labels` from the translations `image_crop.*` (domain `NowoUiKitBundle`, seven
-locales); `labels` overrides single texts (snake_case keys in PHP: `zoom_status`, `too_large`). A host that prints the attributes
+locales); `labels` overrides single texts (snake_case keys in PHP: `zoom_status`, `too_large`, `optimizing`). A host that prints the attributes
 itself and leaves `-labels` out gets English.
 
 **For FormKit (and any bundle that renders file inputs):** a `crop: {shape, aspect, max, max_bytes}` option maps one
@@ -2332,10 +2332,17 @@ in content inserted later (a remote form dialog, a Turbo frame), since it listen
   or `jpeg` is used alone (an engine without a WebP encoder answers PNG for `webp`). `jpeg` has no transparency: it is
   drawn on white, and `bake_circle` is refused with it.
 - **`max_bytes`.** When the file is larger, a WebP or JPEG is encoded again at lower qualities (0.92, 0.85, 0.78, 0.7,
-  0.6, 0.5; never below 0.5), then, or straight away for PNG, the output's edges step down by 0.85 (never below `min`).
-  At most 8 encodes, each an async `toBlob`, so the page stays responsive. If nothing fits, the dialog stays open with a
-  message (`tooLarge`, an alert) and `nowo-ui:image-crop:error` `{reason: 'size', bytes, maxBytes}` fires: the user crops a
-  smaller part, or cancels; the input keeps the picked file meanwhile. The server's limit still applies.
+  0.6, 0.55, 0.5; never below 0.5), then, or straight away for PNG, the output's edges step down by 0.85 (never below
+  `min`). At most 10 encodes, each an async `toBlob`, so the page stays responsive; while it encodes again a polite
+  "Optimizing the image…" line (`optimizing`) shows, and Apply stays focusable (`aria-disabled`). If nothing fits, the
+  dialog stays open with a message (`tooLarge`, an alert), focus stays in the dialog (on Apply if it had gone), and
+  `nowo-ui:image-crop:error` `{reason: 'size', bytes, maxBytes}` fires: the user crops a smaller part, or cancels; the
+  input keeps the picked file meanwhile. **Set `max_bytes` about 5 % under the server's limit** (the comparison is on
+  the exact bytes, but leave room for a limit counted differently), and keep the server's own limit: the browser step is
+  a convenience, not a control.
+- **The server must cap decoded pixels.** The browser decodes the picked image at full size before cropping, and the
+  script cannot stop a crafted upload (a "pixel bomb") from reaching the server: keep a pixel limit there (Symfony's
+  `Image` constraint `maxPixels` / `maxWidth` / `maxHeight`, or a header check before GD or Imagick), as without the script.
 - **A circle is a mask, the stored image stays square.** Avatars are shown round by CSS (`border-radius`, the `avatar`
   partial), so a square keeps every option open. `bake_circle` (circle, PNG or WebP) makes the pixels outside the circle
   transparent instead, for images shown without CSS (e-mails, exports).
@@ -2344,12 +2351,23 @@ in content inserted later (a remote form dialog, a Turbo frame), since it listen
 - **Orientation.** The image is decoded upright (`createImageBitmap(file, {imageOrientation: 'from-image'})`, else an
   `<img>`, which applies EXIF orientation too); the output has no EXIF (canvas encoders write none), so a rotated phone
   photo arrives with its real width and height.
-- **Events.** The picked file's own `input` and `change` are stopped on `window` in the capture phase, so no listener sees
-  it; after "Apply" or "Cancel" the script dispatches `input` and `change` again, with the final file (or none). On the
-  input, bubbling: `nowo-ui:image-crop:open` `{file}` (cancelable: the file then stays as picked),
+- **Events.** The picked file's own `input` and `change` are stopped on `window` in the capture phase, so no target,
+  bubble or later capture listener sees it. After "Apply" the script dispatches `input` and `change` with the crop. When
+  the crop is refused or falls back (no file, a crop already on screen, `open` cancelled, a decode or encode error), the
+  picked file's `input` and `change` are dispatched again, so host listeners always run.
+- **Cancel (and Escape, and the close button) puts the previous file list back**: what the input held before this pick
+  (taken when the picker opens or a file is dropped on it, else the last crop; empty after a form reset), or nothing. It
+  dispatches `input` and `change` only if the input then differs from that list, which it does not, as no listener saw
+  the picked file: so Cancel on an empty input fires nothing, and `data-nowo-ui-autosubmit` never posts an empty file.
+- **One crop at a time.** A newer pick while an image still decodes cancels the older pick (Cancel semantics on its
+  input) and crops the latest file. A pick while a crop is on screen gets `error` `{reason: 'busy'}` and goes on as
+  picked. A session whose dialog was removed (a swapped body) is dropped. The dialog has `data-turbo-temporary` and ids
+  unique per build, and copies left by a restored page snapshot are removed when a crop starts.
+- **On the input, bubbling:** `nowo-ui:image-crop:open` `{file}` (cancelable: the file then stays as picked),
   `nowo-ui:image-crop:cropped` `{file, original, width, height, quality, attempts}`, `nowo-ui:image-crop:cancel`
-  `{original}`, `nowo-ui:image-crop:error` `{reason: decode|encode|replace|size, original}` (the file stays as picked;
-  with `size` the dialog stays open).
+  `{original, restored}`, `nowo-ui:image-crop:error` `{reason: decode|encode|replace|size|busy, original}` (the file
+  stays as picked; with `size` the dialog stays open). A host that dispatches `change` itself on an input holding a crop
+  crops it again: dispatch your own event instead, or remove the attribute.
 - **Left as picked, no error:** no DataTransfer, canvas `toBlob` or `<dialog>`; a `multiple` or disabled input; a file
   that is not a raster image (SVG, PDF); an image the browser cannot decode (HEIC outside Safari). The server's
   validation decides, as without the script.
@@ -2387,8 +2405,8 @@ final class SettingImageCropExtension extends AbstractTypeExtension
         // SettingField::image('app_icon', …, minWidth: 512, minHeight: 512, square: true)
         'app_icon' => ['aspect' => 1, 'min' => 512, 'max' => 1024],
         // SettingField::image('logo', …, maxWidth: 2400, maxHeight: 800): free proportions; auto keeps transparency
-        // (WebP or PNG), and max_bytes matches the field's maxBytes default (1 MiB)
-        'logo' => ['aspect' => 'free', 'max' => 2400, 'max_bytes' => 1_048_576],
+        // (WebP or PNG); max_bytes 5 % under the field's maxBytes default (1 MiB)
+        'logo' => ['aspect' => 'free', 'max' => 2400, 'max_bytes' => 996_000],
     ];
 
     public function __construct(private readonly TranslatorInterface $translator)
@@ -2414,8 +2432,8 @@ final class SettingImageCropExtension extends AbstractTypeExtension
 Match the field: `max` at most its `maxWidth` / `maxHeight`, `min` at least its `minWidth` / `minHeight` (the image must
 be large enough: the crop is never enlarged), `aspect: 1` for `square: true` (the crop is exactly square), and a
 `format` among its `types` (`auto` gives WebP, PNG or JPEG, which are the three it accepts by default; use `jpeg` for a
-JPEG-only field), and `max_bytes` equal to its `maxBytes` (default 1 MiB), so a crop that would be refused is made
-smaller in the browser first. InstanceSettings still re-encodes and checks everything on the server.
+JPEG-only field), and `max_bytes` about 5 % under its `maxBytes` (default 1 MiB, so 996 000), so a crop that would be
+refused is made smaller in the browser first. InstanceSettings still re-encodes and checks everything on the server.
 
 ### Host recipe: avatars
 
@@ -2423,9 +2441,10 @@ smaller in the browser first. InstanceSettings still re-encodes and checks every
 $builder->add('avatar', FileType::class, [
     'required' => false,
     'attr' => ['accept' => 'image/png,image/jpeg,image/webp'],
-    'constraints' => [new Image(maxWidth: 512, maxHeight: 512, mimeTypes: ['image/png', 'image/webp', 'image/jpeg'])],
-    // format auto (the default): WebP, or JPEG where the engine cannot encode WebP; at most 200 KB
-    ImageCropTypeExtension::OPTION => ['shape' => 'circle', 'max' => 512, 'max_bytes' => 204_800, 'preview' => 'avatar-preview'],
+    // The server's own limits stay: size, pixels and types.
+    'constraints' => [new Image(maxSize: '200k', maxWidth: 512, maxHeight: 512, maxPixels: 262_144, mimeTypes: ['image/png', 'image/webp', 'image/jpeg'])],
+    // format auto (the default): WebP, or JPEG where the engine cannot encode WebP; max_bytes 5 % under the 200 KB limit
+    ImageCropTypeExtension::OPTION => ['shape' => 'circle', 'max' => 512, 'max_bytes' => 190_000, 'preview' => 'avatar-preview'],
 ]);
 ```
 

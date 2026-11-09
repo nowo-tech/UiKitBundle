@@ -26,7 +26,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  *   - `bake_circle`: `true` (circle only, PNG or WebP): the pixels outside the circle become transparent.
  *   - `preview`: id of an `<img>` that shows the crop once applied.
  *   - `labels`: texts of the dialog (`title`, `instructions`, `stage`, `zoom`, `zoom_status` with `%percent%`, `apply`,
- *     `cancel`, `close`, `too_large` with `%max%`), over the translations of `image_crop.*` (domain NowoUiKitBundle).
+ *     `cancel`, `close`, `too_large` with `%max%`, `optimizing`), over the translations of `image_crop.*` (domain NowoUiKitBundle).
  *
  * Use it on a FileType through the option `nowo_ui_image_crop` ({@see ImageCropTypeExtension}), on a hand-written input through
  * the Twig function `nowo_ui_image_crop_attrs()`, or from another bundle (FormKit) with `ImageCrop::attributes($options,
@@ -57,6 +57,7 @@ final class ImageCrop
         'cancel' => 'image_crop.cancel',
         'close' => 'image_crop.close',
         'too_large' => 'image_crop.too_large',
+        'optimizing' => 'image_crop.optimizing',
     ];
 
     /** English wording when no translator is given (the runtime's own defaults). */
@@ -70,6 +71,7 @@ final class ImageCrop
         'cancel' => 'Cancel',
         'close' => 'Close',
         'too_large' => 'This crop cannot be made smaller than %max%. Crop a smaller part of the image, or cancel.',
+        'optimizing' => 'Optimizing the image…',
     ];
 
     /**
@@ -106,7 +108,7 @@ final class ImageCrop
             throw new InvalidArgumentException(\sprintf('The image crop min is an integer from 1 to %d.', self::MAX_RANGE[1]));
         }
         $quality = $options['quality'] ?? 0.92;
-        if ((!\is_int($quality) && !\is_float($quality)) || $quality < 0 || $quality > 1) {
+        if ((!\is_int($quality) && !\is_float($quality)) || !is_finite((float) $quality) || $quality < 0 || $quality > 1) {
             throw new InvalidArgumentException('The image crop quality is a number from 0 to 1.');
         }
         $bake = $options['bake_circle'] ?? false;
