@@ -18,8 +18,8 @@ importers:
         specifier: 0.9.2
         version: 0.9.2
       datatables.net-dt:
-        specifier: 3.1.4
-        version: 3.1.4
+        specifier: 3.1.5
+        version: 3.1.5
       datatables.net-responsive-dt:
         specifier: 4.1.1
         version: 4.1.1
@@ -628,8 +628,8 @@ packages:
   convert-source-map@2.0.0:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
 
-  datatables.net-dt@3.1.4:
-    resolution: {integrity: sha512-HST6HmWEMr6SA6FM2SpYu2ko0In5nHjUb03Ocop2gsHLWoRP18sgVbehxUtRS3QZP4eHfU68ujs/gnzd0U2t9g==}
+  datatables.net-dt@3.1.5:
+    resolution: {integrity: sha512-JXjpuKJmTZhndDCmi9Pz0Zkxd6sodYaMaE9KYc3x0YOGIerbRlnP0s1EJ2MWBtAkmJ0AbZo5hl8GahreMAd4hg==}
 
   datatables.net-responsive-dt@4.1.1:
     resolution: {integrity: sha512-5kdhC+MVp5URZXjH09cucAa/bCOCkWatAzR0Y3r/6DCH8SHbWxzgmhfbCgYlXI//h6IH/YYzy+B2BNdn7/u9PA==}
@@ -637,8 +637,8 @@ packages:
   datatables.net-responsive@4.1.1:
     resolution: {integrity: sha512-FTo6k/Ov9ULpprImyupEB/3qr4W+7Ia14l1+dfk9voG4X0J6YaNrxftvumzZamZYcs9PZKDV1LXpDUBT8jnmYQ==}
 
-  datatables.net@3.1.4:
-    resolution: {integrity: sha512-tnk14y/AOr0Z1d7avIUvCcOGgqZpeo7B6g6RQiycMQckEMq2FaaZTG1Q1xD6Kci5gpAvdjZInDmbscoiVSTyGw==}
+  datatables.net@3.1.5:
+    resolution: {integrity: sha512-phu9fVz1cOhD7kZDO5Ztj15qwghCkmdwX5AezLi+PxfMtnFAq0itpewvXzdwdr6bOwPqO2zuXsXWUU5x3wQptw==}
 
   detect-libc@2.1.2:
     resolution: {integrity: sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==}
@@ -1393,20 +1393,20 @@ snapshots:
 
   convert-source-map@2.0.0: {}
 
-  datatables.net-dt@3.1.4:
+  datatables.net-dt@3.1.5:
     dependencies:
-      datatables.net: 3.1.4
+      datatables.net: 3.1.5
 
   datatables.net-responsive-dt@4.1.1:
     dependencies:
-      datatables.net-dt: 3.1.4
+      datatables.net-dt: 3.1.5
       datatables.net-responsive: 4.1.1
 
   datatables.net-responsive@4.1.1:
     dependencies:
-      datatables.net: 3.1.4
+      datatables.net: 3.1.5
 
-  datatables.net@3.1.4: {}
+  datatables.net@3.1.5: {}
 
   detect-libc@2.1.2: {}
 
