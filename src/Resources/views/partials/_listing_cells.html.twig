@@ -15,18 +15,19 @@
       (partials/_row_detail_cell.html.twig)
     - testids (default false): data-testid `row-detail` on the detail button
     - bundle
-  Slot: table_cell. Cells carry data-column (lead column) and data-priority (host CSS).
+  Slot: table_cell. Cells carry data-column (lead column) and data-priority (host CSS); 2.42: data-nowo-ui-phone when the
+  lead column has a ListingField::$phone (also without JavaScript; the responsive table copies it from the header).
 #}
 {% set _layout = listing_layout is defined ? listing_layout : listing.layout %}
 {% set _bundle = bundle|default(null) %}
 {% for group in _layout.visibleColumnGroups %}
     {% set lead = group|first %}
     {% if group|length == 1 %}
-        <td class="{{ nowo_ui_class('table_cell', _bundle) }}{{ td_class|default('') ? ' ' ~ td_class }}{{ lead.cellClass ? ' ' ~ lead.cellClass }}" data-column="{{ lead.key }}" data-priority="{{ lead.priority }}">
+        <td class="{{ nowo_ui_class('table_cell', _bundle) }}{{ td_class|default('') ? ' ' ~ td_class }}{{ lead.cellClass ? ' ' ~ lead.cellClass }}" data-column="{{ lead.key }}" data-priority="{{ lead.priority }}"{% if lead.phone %} data-nowo-ui-phone="{{ lead.phone }}"{% endif %}>
             {{- block('cell_' ~ lead.key, cells_template) -}}
         </td>
     {% else %}
-        <td class="{{ nowo_ui_class('table_cell', _bundle) }}{{ td_class|default('') ? ' ' ~ td_class }}{{ lead.cellClass ? ' ' ~ lead.cellClass }} nowo-ui-listing-cell--stacked" data-column="{{ lead.key }}" data-priority="{{ lead.priority }}">
+        <td class="{{ nowo_ui_class('table_cell', _bundle) }}{{ td_class|default('') ? ' ' ~ td_class }}{{ lead.cellClass ? ' ' ~ lead.cellClass }} nowo-ui-listing-cell--stacked" data-column="{{ lead.key }}" data-priority="{{ lead.priority }}"{% if lead.phone %} data-nowo-ui-phone="{{ lead.phone }}"{% endif %}>
             {%- for column in group -%}
                 <div class="nowo-ui-listing-cell__part{{ column.cellClass and not loop.first ? ' ' ~ column.cellClass }}" data-cell-part="{{ column.key }}">
                     {{- block('cell_' ~ column.key, cells_template) -}}

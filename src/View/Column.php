@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\UiKitBundle\View;
 
 use InvalidArgumentException;
+use Nowo\UiKitBundle\Listing\ListingField;
 use Nowo\UiKitBundle\Listing\SortRequest;
 
 /**
@@ -49,9 +50,7 @@ final readonly class Column
         public ?string $sortValueKey = null,
         public ?string $phone = null,
     ) {
-        if (null !== $phone && !\in_array($phone, self::PHONE, true)) {
-            throw new InvalidArgumentException(\sprintf('Invalid Column phone "%s" (%s).', $phone, implode('|', self::PHONE)));
-        }
+        self::assertPhone($phone);
         if (null !== $sortKey && '' === trim($sortKey)) {
             throw new InvalidArgumentException(\sprintf('The sortKey of the Column "%s" must be non-empty (null: the column key).', $key));
         }
@@ -69,6 +68,18 @@ final readonly class Column
         }
         if (!\in_array($align, self::ALIGNS, true)) {
             throw new InvalidArgumentException(\sprintf('Invalid Column align "%s" (%s).', $align, implode('|', self::ALIGNS)));
+        }
+    }
+
+    /**
+     * Validates a phone card place ({@see self::PHONE} or null); shared by {@see ListingField::$phone} (2.42).
+     *
+     * @throws InvalidArgumentException when `$phone` is not null and not one of {@see self::PHONE}
+     */
+    public static function assertPhone(?string $phone, string $owner = 'Column'): void
+    {
+        if (null !== $phone && !\in_array($phone, self::PHONE, true)) {
+            throw new InvalidArgumentException(\sprintf('Invalid %s phone "%s" (%s).', $owner, $phone, implode('|', self::PHONE)));
         }
     }
 

@@ -17,7 +17,9 @@
     - detail (default true), detail_label: row detail header cell (partials/_row_detail_head.html.twig)
     - bundle
   Slot: table_head_cell. Cells carry data-column (lead column), data-columns (every key of the group),
-  data-required="1" (required lead column: the responsive table never hides it) and data-priority.
+  data-required="1" (required lead column: the responsive table never hides it) and data-priority; 2.42: with a
+  ListingField::$phone on the lead column, data-nowo-ui-phone (primary | meta | hide: its place in the phone card of a
+  `responsive_table` with `phone_layout: 'cards'`; a stacked column's own phone is not used, its group follows the lead).
 #}
 {% set bundle = bundle|default(null) %}
 {% set _layout = listing_layout is defined ? listing_layout : listing.layout %}
@@ -31,7 +33,7 @@
     {% set _stacked = group|length > 1 %}
     {% set _sorted = _sorting ? group|filter(c => c.sortKey is not null and _sorting.isActive(c.sortKey))|first : null %}
     {% set _client_sortable = _client_sort and not _stacked and lead.sortKey is not null %}
-    <th class="{{ nowo_ui_class('table_head_cell', bundle) }}{{ th_class|default('') ? ' ' ~ th_class }}{{ lead.headClass ? ' ' ~ lead.headClass }}{{ _stacked ? ' nowo-ui-listing-cell--stacked' }}{{ _client_sortable or (_sorting and not _client_sort and _sort_route and group|filter(c => c.sortKey is not null) is not empty) ? ' ' ~ nowo_ui_class('sortable_header', bundle) }}" scope="col" data-column="{{ lead.key }}" data-columns="{{ group|map(c => c.key)|join(' ') }}"{% if lead.required %} data-required="1"{% endif %} data-priority="{{ lead.priority }}"{% if _sorted %} aria-sort="{{ _sorting.direction == 'asc' ? 'ascending' : 'descending' }}"{% endif %}{% if _client_sortable %} data-sortable{% if lead.sortFirst == 'desc' %} data-sort-first="desc"{% endif %}{% endif %}>
+    <th class="{{ nowo_ui_class('table_head_cell', bundle) }}{{ th_class|default('') ? ' ' ~ th_class }}{{ lead.headClass ? ' ' ~ lead.headClass }}{{ _stacked ? ' nowo-ui-listing-cell--stacked' }}{{ _client_sortable or (_sorting and not _client_sort and _sort_route and group|filter(c => c.sortKey is not null) is not empty) ? ' ' ~ nowo_ui_class('sortable_header', bundle) }}" scope="col" data-column="{{ lead.key }}" data-columns="{{ group|map(c => c.key)|join(' ') }}"{% if lead.required %} data-required="1"{% endif %} data-priority="{{ lead.priority }}"{% if lead.phone %} data-nowo-ui-phone="{{ lead.phone }}"{% endif %}{% if _sorted %} aria-sort="{{ _sorting.direction == 'asc' ? 'ascending' : 'descending' }}"{% endif %}{% if _client_sortable %} data-sortable{% if lead.sortFirst == 'desc' %} data-sort-first="desc"{% endif %}{% endif %}>
         {%- for column in group -%}
             {%- set _content -%}
                 {%- if _heads and block('head_' ~ column.key, _heads) is defined -%}

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\UiKitBundle\Listing;
 
 use InvalidArgumentException;
+use Nowo\UiKitBundle\View\Column;
 use Nowo\UiKitBundle\View\Label;
 
 /**
@@ -22,6 +23,11 @@ use Nowo\UiKitBundle\View\Label;
  * - `sortKey` / `sortFirst` (columns only, 2.20): the whitelisted sort key of the column header (null = not sortable)
  *   and the direction of its first click; `partials/_listing_head.html.twig` renders the sort link / button
  *   ({@see SortRequest::fieldsOf()} builds the whitelist)
+ * - `phone` (columns only, 2.42, MUX-20 / MUX-22): place of the column in the phone card of a responsive table with
+ *   `phone_layout: 'cards'` — the same values and validation as {@see Column::$phone} (`primary` | `meta` | `hide`,
+ *   {@see Column::PHONE}); `partials/_listing_head.html.twig` and `_listing_cells.html.twig` print it as
+ *   `data-nowo-ui-phone` on the cells of the group it leads. Null (default) prints nothing (the 2.41 markup). It comes
+ *   from the definition only: a viewer's stored order / visibility never changes it.
  */
 final readonly class ListingField
 {
@@ -37,7 +43,9 @@ final readonly class ListingField
         public array $queryKeys = [],
         public ?string $sortKey = null,
         public string $sortFirst = 'asc',
+        public ?string $phone = null,
     ) {
+        Column::assertPhone($phone, 'ListingField');
         if (null !== $sortKey && '' === trim($sortKey)) {
             throw new InvalidArgumentException(\sprintf('The sortKey of the ListingField "%s" must be non-empty (null: not sortable).', $key));
         }
