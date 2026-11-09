@@ -118,6 +118,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Documentation
+
+- USAGE: new section "Using it from a DDD / hexagonal application" (where the bundle sits in a hexagonal host, the ports, events and DTOs to build an anti-corruption layer on, and the known limitations).
+
 ## [2.43.0] - 2026-11-09
 
 Target 2.43.0. Request from Symfony Beacon (owner decision D-20261109-09, for Beacon 1.143).

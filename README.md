@@ -145,6 +145,7 @@ make -C demo up-symfony8
 - [Installation](docs/INSTALLATION.md)
 - [Configuration](docs/CONFIGURATION.md)
 - [Usage](docs/USAGE.md)
+  - [Using it from a DDD / hexagonal application](docs/USAGE.md#using-it-from-a-ddd--hexagonal-application)
 - [Contributing](docs/CONTRIBUTING.md)
 - [Code of Conduct](CODE_OF_CONDUCT.md)
 - [Changelog](docs/CHANGELOG.md)
