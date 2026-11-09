@@ -993,6 +993,11 @@ Options: `when` (`phone` | `always`; anything else: never), `gutter` (while fold
 `edge_tab.launcher`), `icon` (default `more`), `class`, `testid`, `attr`. Event: `nowo-ui:edge-tabs:toggle`
 (`detail.open`).
 
+2.41.1: the launcher's `aria-controls` lists the tabs (ids are generated where missing); after opening with a pointer,
+Tab follows the document order, so use ArrowUp / ArrowDown to reach the tabs. A dialog opened from a folded tab gives
+the focus back to the launcher when it closes. The fold applies only to a launcher without `hidden`; never hide it with
+CSS where its `when` applies.
+
 ### Thin scrollbars
 
 One thin bar everywhere (6px, rounded thumb from `--nowo-ui-text`, no arrow buttons; light / dark follow the

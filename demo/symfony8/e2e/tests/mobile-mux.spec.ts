@@ -50,6 +50,38 @@ test.describe('phone mode', () => {
     await expect(launcher).toHaveAttribute('aria-expanded', 'false');
   });
 
+  test('JC-L1: closing a dialog opened from a folded tab gives the focus to the launcher', async ({ page }) => {
+    await open(page);
+    const launcher = page.getByTestId('edge-launcher');
+    await launcher.click();
+    await expect(launcher).toHaveAttribute('aria-controls', /\S/);
+    await page.getByTestId('edge-customizer').locator('button').click();
+    await expect(page.getByTestId('customizer-body')).toBeVisible();
+    await expect(launcher).toHaveAttribute('aria-expanded', 'false');
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('customizer-body')).toBeHidden();
+    await expect(launcher).toBeFocused();
+
+    // From the keyboard too: Enter on the launcher, arrows to the tab, Enter, Escape.
+    await launcher.focus();
+    await page.keyboard.press('Enter');
+    const tab = page.getByTestId('edge-customizer').locator('button');
+    for (let i = 0; i < 6 && !(await tab.evaluate((el) => el === document.activeElement)); i += 1) {
+      await page.keyboard.press('ArrowDown');
+    }
+    await expect(tab).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(page.getByTestId('customizer-body')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(launcher).toBeFocused();
+  });
+
+  test('JC-I12: a hidden launcher folds nothing', async ({ page }) => {
+    await open(page);
+    await page.getByTestId('edge-launcher').evaluate((el) => el.setAttribute('hidden', ''));
+    await expect(page.getByTestId('edge-manual').locator('a')).toBeVisible();
+  });
+
   test('MUX-01: desktop keeps the 2.40 tabs', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await open(page);

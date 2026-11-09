@@ -114,6 +114,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Target 2.41.1. Follow-up of audit Appendix JC-D. Audit: re-verification pending.
+
+### Fixed
+
+- **Edge tabs launcher focus return (JC-L1, WCAG 2.4.3):** a dialog opened from a folded edge tab (the listing
+  customizer, a tour) gave the focus back to the tab, which the fold hides, so it fell to `<body>`. When a dialog
+  closes and the focus is lost (on `<body>`, or on that hidden tab), `js/nowo-ui-edge-tabs.js` moves it to the
+  launcher.
+- **Hidden launcher (JC-I12):** the fold applies only while the launcher has no `hidden` attribute, so a hidden launcher
+  no longer leaves the edge tabs unreachable. Hosts must not hide a launcher with CSS where its `when` applies.
+
+### Added
+
+- **`aria-controls` on the launcher (JC-I15):** the runtime lists the ids of the tabs it shows when it opens (a tab
+  without an id gets `nowo-ui-edge-tab-<n>`).
+
 ## [2.41.0] - 2026-11-09
 
 Target 2.41.0. Phone mode from Beacon's mobile UX audit of 2026-11-09 (390 px, iPhone / WebKit). Audit: batch,
