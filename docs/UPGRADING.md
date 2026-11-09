@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.41.1](#to-2411)
 - [To 2.41.0](#to-2410)
 - [To 2.40.0](#to-2400)
   - [To 2.40.0 (brand contract, logos)](#to-2400-brand-contract-logos)
@@ -127,6 +128,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.41.1
+
+From **2.41.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 Target 2.41.1. Nothing to do. With the opt-in edge tabs launcher: focus returns to the launcher after a dialog opened
 from a folded tab closes; the launcher gets `aria-controls` (tabs without an id get `nowo-ui-edge-tab-<n>` when the
