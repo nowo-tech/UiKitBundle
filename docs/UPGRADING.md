@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.42.0](#to-2420)
 - [To 2.41.1](#to-2411)
 - [To 2.41.0](#to-2410)
 - [To 2.40.0](#to-2400)
@@ -128,6 +129,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.42.0
+
+From **2.41.1**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 Target 2.42.0. From **2.41.1**:
 

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.42.0] - 2026-11-09](#2420---2026-11-09)
 - [[2.41.1] - 2026-11-09](#2411---2026-11-09)
 - [[2.41.0] - 2026-11-09](#2410---2026-11-09)
 - [[2.40.0] - 2026-11-08](#2400---2026-11-08)
@@ -114,6 +115,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+## [2.42.0] - 2026-11-09
 
 Target 2.42.0. Requests from Symfony Beacon (MUX-01 adoption, MUX-20 / MUX-22).
 
@@ -2529,7 +2532,7 @@ Supersedes 1.17.3: same runtime code and CSS, release gate hardened so the tagge
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.41.1...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.42.0...HEAD
 [1.10.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.4...v1.10.0
 [1.8.4]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.3...v1.8.4
 [1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0
