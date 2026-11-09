@@ -268,6 +268,13 @@ final class HostChromePartialsTest extends TestCase
             self::assertStringContainsString(\sprintf("[data-nowo-ui-edge-tab-slot='%d'] .nowo-ui-edge-tab__link {\n  --nowo-ui-edge-tab-slot: %d;", $slot, $slot), $css, 'slot '.$slot);
         }
 
+        // 2.42 (MUX-01): `pinned` keeps the tab out of the edge tabs launcher's fold.
+        $pinned = $this->render("{% include '@NowoUiKitBundle/partials/_edge_tab.html.twig' with {href: '/h', new_tab: false, pinned: true, attr: {'aria-expanded': 'true'}} only %}");
+        self::assertStringContainsString('<a class="nowo-ui-edge-tab__link" href="/h" title="edge_tab.manual" aria-label="edge_tab.manual" data-nowo-ui-edge-tab-pinned aria-expanded="true">', $pinned);
+        $pinnedButton = $this->render("{% include '@NowoUiKitBundle/partials/_edge_tab.html.twig' with {button: true, label: 'Close', pinned: true} only %}");
+        self::assertStringContainsString('<button type="button" class="nowo-ui-edge-tab__link" title="Close" aria-label="Close" data-nowo-ui-edge-tab-pinned>', $pinnedButton);
+        self::assertStringNotContainsString('pinned', $this->render("{% include '@NowoUiKitBundle/partials/_edge_tab.html.twig' with {button: true, label: 'Close', pinned: false} only %}"));
+
         $inline = $this->render("{% include '@NowoUiKitBundle/partials/_edge_tab.html.twig' with {href: '/h', inline: true, testid: 't'} only %}");
         self::assertStringContainsString('<p class="nowo-ui-edge-link" data-testid="t">', $inline);
         self::assertStringContainsString('<a href="/h" target="_blank" rel="noopener noreferrer">edge_tab.manual</a>', $inline);

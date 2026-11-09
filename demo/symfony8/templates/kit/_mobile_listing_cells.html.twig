@@ -1,0 +1,6 @@
+{# Cells of the 2.42 listing demo on /kit/mobile (listing_cells, `cell_<key>` blocks rendered with the row context). #}
+{% block cell_name %}{{ row.name }}{% endblock %}
+{% block cell_email %}{{ row.email }}{% endblock %}
+{% block cell_role %}<span class="nowo-ui-badge">{{ row.role }}</span>{% endblock %}
+{% block cell_status %}{{ row.status }}{% endblock %}
+{% block cell_id %}{{ row.id }}{% endblock %}

@@ -150,11 +150,34 @@ final class MobileUxTest extends TestCase
         $css = $this->css('nowo-ui.unlayered.css');
         self::assertMatchesRegularExpression('/\n\.nowo-ui-edge-tabs-launcher \{[^}]*position: fixed;[^}]*display: none;/', $css);
         foreach (['phone', 'always'] as $when) {
-            $ctx = ":root[data-nowo-ui-edge-tabs-ready]:not([data-nowo-ui-edge-tabs-open]):has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='".$when."']:not([hidden])) .nowo-ui-edge-tab__link {";
+            $ctx = ":root[data-nowo-ui-edge-tabs-ready]:not([data-nowo-ui-edge-tabs-open]):has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='".$when."']:not([hidden])) .nowo-ui-edge-tab__link:not([aria-expanded='true'], [data-nowo-ui-edge-tab-pinned]) {";
             self::assertStringContainsString($ctx, $css, $when);
         }
         self::assertMatchesRegularExpression("/@media \\(max-width: 40rem\\), \\(pointer: coarse\\) and \\(max-width: 64rem\\) \\{\\s*:root\\[data-nowo-ui-edge-tabs-ready\\]:has\\(\\.nowo-ui-edge-tabs-launcher\\[data-nowo-ui-edge-tabs-when='phone'\\]:not\\(\\[hidden\\]\\)\\) \\.nowo-ui-edge-tabs-launcher \\{\\s*display: inline-flex;/", $css);
         self::assertStringContainsString("[data-nowo-ui-edge-tabs-when='phone']:not([hidden])[data-nowo-ui-edge-tabs-gutter]) .nowo-ui-main {", $css);
+    }
+
+    /**
+     * 2.42 (MUX-01): a tab whose panel is open (aria-expanded="true") or pinned never folds, and folded it keeps its own
+     * `top` (only the open launcher stacks the tabs under it); no other rule hides an edge tab link.
+     */
+    public function testCssExpandedOrPinnedEdgeTabNeverFolds(): void
+    {
+        $css = $this->css('nowo-ui.unlayered.css');
+        preg_match_all('/^\s*([^{}\n]*\.nowo-ui-edge-tab__link[^{}\n]*) \{([^}]*)\}/m', $css, $rules, \PREG_SET_ORDER);
+        $folding = 0;
+        foreach ($rules as [, $selector, $body]) {
+            if (str_contains($body, 'display: none') && !str_starts_with(trim($selector), '.nowo-ui-edge-tab__link')) {
+                self::assertStringEndsWith(".nowo-ui-edge-tab__link:not([aria-expanded='true'], [data-nowo-ui-edge-tab-pinned])", trim($selector));
+                ++$folding;
+            }
+            if (str_contains($body, 'top:') && str_contains($selector, ':root')) {
+                self::assertStringContainsString('[data-nowo-ui-edge-tabs-open]', $selector, 'only the open launcher moves the tabs');
+            }
+        }
+        self::assertSame(2, $folding, 'phone and always');
+        self::assertStringContainsString("@layer nowo-ui {\n", $this->css('nowo-ui.css'));
+        self::assertStringContainsString(":not([aria-expanded='true'], [data-nowo-ui-edge-tab-pinned]) {\n    display: none !important;", $this->css('nowo-ui.css'));
     }
 
     public function testCssPhoneCards(): void

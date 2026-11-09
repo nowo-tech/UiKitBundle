@@ -129,6 +129,22 @@
 
 ## Unreleased
 
+Target 2.42.0. From **2.41.1**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+Nothing to do; the default markup is unchanged.
+
+- **Edge tabs launcher:** a tab with `aria-expanded="true"` or `data-nowo-ui-edge-tab-pinned` (partial option
+  `pinned: true`) is no longer folded: it stays at its own `top` while the launcher is folded. A host that relied on the
+  fold hiding an expanded tab must set `aria-expanded="false"` on it (or close its panel) first. Drop any host override
+  that forced such a tab visible.
+- **Listings:** `ListingField` takes `phone: 'primary'|'meta'|'hide'` (like `Column`); `listing_head` / `listing_cells`
+  then print `data-nowo-ui-phone`. Host head / cell templates that print their own cells can use `column.phone` /
+  `lead.phone`.
+
 ## To 2.41.1
 
 From **2.41.0**:

@@ -13,12 +13,18 @@
  * listing customizer, a tour) the dialog's focus return to it would land on <body>. After any dialog closes, if the
  * focus is lost (on <body>, or on that tab while it is hidden) it goes to the launcher instead.
  *
+ * Expanded / pinned tabs (2.42, MUX-01): a tab with `aria-expanded="true"` (its drawer or panel is open) or
+ * `data-nowo-ui-edge-tab-pinned` never folds (CSS), so a click outside the launcher folds the others and leaves it
+ * where it is. When such a tab folds while it has the focus (its panel closed: aria-expanded back to false), the focus
+ * goes to the launcher instead of staying on a hidden element.
+ *
  * Delegated listeners on the document; importing touches no DOM. Members are read through the prototypes.
  */
 export const LAUNCHER = '[data-nowo-ui-edge-tabs-launcher]';
 export const TAB = '.nowo-ui-edge-tab__link';
 export const OPEN = 'data-nowo-ui-edge-tabs-open';
 export const READY = 'data-nowo-ui-edge-tabs-ready';
+export const PINNED = 'data-nowo-ui-edge-tab-pinned';
 
 const closest = (el: Element, selector: string): HTMLElement | null => Element.prototype.closest.call(el, selector) as HTMLElement | null;
 const queryAll = (root: ParentNode, selector: string): HTMLElement[] =>
@@ -118,6 +124,33 @@ export function recoverFocus(): void {
   }
 }
 
+/** Whether a tab stays out of the fold (2.42): its panel is open (`aria-expanded="true"`) or it is pinned. */
+export function isPinned(tab: Element): boolean {
+  return 'true' === tab.getAttribute('aria-expanded') || tab.hasAttribute(PINNED);
+}
+
+/**
+ * 2.42: after the state of tabs changed (aria-expanded / pinned), a focused tab that the fold hid now gives the focus to
+ * the launcher (never left on an element that is not rendered).
+ */
+export function onTabsChanged(changed: Element[]): void {
+  const active = document.activeElement;
+  if (isOpen() || !(active instanceof HTMLElement) || !changed.includes(active) || isPinned(active) || isShown(active)) {
+    return;
+  }
+  const button = launcher();
+  if (button && isShown(button)) {
+    button.focus();
+  }
+}
+
+function onMutations(records: MutationRecord[]): void {
+  const changed = records.map((record) => record.target).filter((node): node is Element => node instanceof Element && null !== closest(node, TAB));
+  if (changed.length > 0) {
+    onTabsChanged(changed);
+  }
+}
+
 function onDialogClose(event: Event): void {
   if (usedTab && event.target instanceof HTMLDialogElement) {
     setTimeout(recoverFocus, 0);
@@ -178,6 +211,9 @@ export function bindNowoUiEdgeTabs(): void {
   listen(document, 'focusout', onFocusOut);
   // `close` does not bubble: capture phase.
   EventTarget.prototype.addEventListener.call(document, 'close', onDialogClose as EventListener, true);
+  if (typeof MutationObserver !== 'undefined') {
+    new MutationObserver(onMutations).observe(root(), { subtree: true, attributes: true, attributeFilter: ['aria-expanded', PINNED] });
+  }
   root().setAttribute(READY, '');
 }
 

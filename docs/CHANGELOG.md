@@ -115,6 +115,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Target 2.42.0. Requests from Symfony Beacon (MUX-01 adoption, MUX-20 / MUX-22).
+
+### Added
+
+- **`ListingField::$phone` (MUX-20 / MUX-22):** a listing column's place in the phone card of a `responsive_table` with
+  `phone_layout: 'cards'` — `primary` | `meta` | `hide`, the same values and validation as `View\Column::$phone` (shared
+  `Column::assertPhone()`; an invalid value throws `InvalidArgumentException`). Null (default) changes nothing. The
+  resolved layout carries it (`ListingLayout::visibleColumns()` / `visibleColumnGroups()` are the `ListingField`s), and
+  `partials/_listing_head.html.twig` / `_listing_cells.html.twig` print `data-nowo-ui-phone` on the header and row
+  cells of the group the column leads, only when it is set (default markup byte-identical). It comes from the
+  definition only: a stored customization (order, visibility, stacking) never changes it.
+- **Pinned edge tab (MUX-01):** `partials/_edge_tab.html.twig` option `pinned` prints `data-nowo-ui-edge-tab-pinned` on
+  the tab; the edge tabs launcher never folds it.
+
+### Fixed
+
+- **An expanded edge tab never folds (MUX-01):** with the edge tabs launcher folded, an `.nowo-ui-edge-tab__link` with
+  `aria-expanded="true"` (its drawer or panel open, e.g. a drawer whose edge tab is its only close control) or
+  `data-nowo-ui-edge-tab-pinned` stays visible at its own `top` (the slot formula; only the open launcher stacks the
+  tabs under it). A click outside the launcher folds the others and leaves it in place. When such a tab folds while it
+  has the focus (its panel closed), `js/nowo-ui-edge-tabs.js` moves the focus to the launcher.
+
 ## [2.41.1] - 2026-11-09
 
 Target 2.41.1. Follow-up of audit Appendix JC-D. Audit: re-verification pending.

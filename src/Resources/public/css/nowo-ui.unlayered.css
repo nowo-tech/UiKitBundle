@@ -7008,7 +7008,8 @@ select.nowo-ui-pagination__select {
    for a launcher without `hidden` (2.41.1, JC-I12; host CSS must not hide it where it applies). `when`:
    phone (viewports up to 40rem, touch screens up to 64rem) or always. Open, the tabs stack under the launcher. With
    `gutter`, the folded launcher's width stays free on the right of .nowo-ui-main (and of any host element that reads
-   var(--nowo-ui-edge-tabs-gutter, 0)). */
+   var(--nowo-ui-edge-tabs-gutter, 0)). 2.42 (MUX-01): a tab whose panel is open (`aria-expanded='true'`) or marked
+   `data-nowo-ui-edge-tab-pinned` never folds: folded, it keeps its own `top` (slot formula, not the open stacking). */
 .nowo-ui-edge-tabs-launcher {
   position: fixed;
   top: var(--nowo-ui-edge-tab-top, calc(var(--nowo-ui-header-height, 3.5rem) + 0.75rem));
@@ -7046,7 +7047,7 @@ select.nowo-ui-pagination__select {
   display: inline-flex;
 }
 
-:root[data-nowo-ui-edge-tabs-ready]:not([data-nowo-ui-edge-tabs-open]):has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always']:not([hidden])) .nowo-ui-edge-tab__link {
+:root[data-nowo-ui-edge-tabs-ready]:not([data-nowo-ui-edge-tabs-open]):has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always']:not([hidden])) .nowo-ui-edge-tab__link:not([aria-expanded='true'], [data-nowo-ui-edge-tab-pinned]) {
   display: none !important;
 }
 
@@ -7067,7 +7068,7 @@ select.nowo-ui-pagination__select {
     display: inline-flex;
   }
 
-  :root[data-nowo-ui-edge-tabs-ready]:not([data-nowo-ui-edge-tabs-open]):has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='phone']:not([hidden])) .nowo-ui-edge-tab__link {
+  :root[data-nowo-ui-edge-tabs-ready]:not([data-nowo-ui-edge-tabs-open]):has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='phone']:not([hidden])) .nowo-ui-edge-tab__link:not([aria-expanded='true'], [data-nowo-ui-edge-tab-pinned]) {
     display: none !important;
   }
 

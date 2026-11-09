@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { bindNowoUiEdgeTabs, isOpen, isShown, launcher, linkTabs, OPEN, READY, recoverFocus, setOpen, tabs } from './nowo-ui-edge-tabs';
+import { bindNowoUiEdgeTabs, isOpen, isPinned, isShown, launcher, linkTabs, onTabsChanged, OPEN, PINNED, READY, recoverFocus, setOpen, tabs } from './nowo-ui-edge-tabs';
 
 const MARKUP = `
 <main><p><a id="page-link" href="#p">page</a></p></main>
@@ -217,5 +217,71 @@ describe('nowo-ui-edge-tabs', () => {
     el('launcher').removeAttribute('aria-controls');
     linkTabs(el('launcher'));
     expect(el('launcher').hasAttribute('aria-controls')).toBe(false);
+  });
+
+  /** Mutation observers run in a microtask; a macrotask flushes them. */
+  const flush = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
+
+  it('2.42 (MUX-01): a tab whose panel is open, or a pinned tab, stays out of the fold', () => {
+    expect(isPinned(el('t1'))).toBe(false);
+    el('t1').setAttribute('aria-expanded', 'false');
+    expect(isPinned(el('t1'))).toBe(false);
+    el('t1').setAttribute('aria-expanded', 'true');
+    expect(isPinned(el('t1'))).toBe(true);
+    el('t2').setAttribute(PINNED, '');
+    expect(isPinned(el('t2'))).toBe(true);
+
+    // A click outside the open launcher folds it; the expanded tab is not touched (its state is the host's).
+    setOpen(true);
+    el('page-link').dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
+    expect(isOpen()).toBe(false);
+    expect(el('t1').getAttribute('aria-expanded')).toBe('true');
+  });
+
+  it('2.42 (MUX-01): an expanded tab that folds while focused gives the focus to the launcher', async () => {
+    // Folded: the expanded tab and the launcher are rendered.
+    shown(['launcher', 't1']);
+    el('t1').setAttribute('aria-expanded', 'true');
+    el('t1').focus();
+    await flush();
+    expect(document.activeElement).toBe(el('t1'));
+
+    // Its panel closes: the fold hides it (CSS) and the focus moves to the launcher.
+    shown(['launcher']);
+    el('t1').setAttribute('aria-expanded', 'false');
+    await flush();
+    expect(document.activeElement).toBe(el('launcher'));
+
+    // Not focused, or still shown (no fold on this viewport), or the launcher open: nothing moves.
+    el('page-link').focus();
+    onTabsChanged([el('t1')]);
+    expect(document.activeElement).toBe(el('page-link'));
+    shown(['launcher', 't2']);
+    el('t2').focus();
+    onTabsChanged([el('t2')]);
+    expect(document.activeElement).toBe(el('t2'));
+    shown(['launcher']);
+    el('t2').setAttribute(PINNED, '');
+    onTabsChanged([el('t2')]);
+    expect(document.activeElement).toBe(el('t2'));
+    el('t2').removeAttribute(PINNED);
+    setOpen(true);
+    el('t2').focus();
+    onTabsChanged([el('t2')]);
+    expect(document.activeElement).toBe(el('t2'));
+    setOpen(false);
+
+    // No rendered launcher (folding off): the focus stays.
+    shown([]);
+    el('t2').focus();
+    onTabsChanged([el('t2')]);
+    expect(document.activeElement).toBe(el('t2'));
+
+    // Changes on other elements are ignored.
+    shown(['launcher']);
+    el('t1').focus();
+    el('page-link').setAttribute('aria-expanded', 'false');
+    await flush();
+    expect(document.activeElement).toBe(el('t1'));
   });
 });
