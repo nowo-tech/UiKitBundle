@@ -37,7 +37,7 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
       testMatch: /.*\.spec\.ts/,
-      testIgnore: /screenshots\.spec\.ts|sortable-touch\.spec\.ts/,
+      testIgnore: /screenshots\.spec\.ts|sortable-touch\.spec\.ts|mobile-mux\.spec\.ts/,
     },
     // UiKit sortable: the other engines, and touch input in Chromium (make test-e2e-sortable).
     {
@@ -54,6 +54,17 @@ export default defineConfig({
       name: 'chromium-touch',
       use: { ...devices['Pixel 7'] },
       testMatch: /sortable-touch\.spec\.ts/,
+    },
+    // 2.41 phone mode (Beacon mobile UX audit): 390 × 844, touch, Chromium and WebKit (make test-e2e-mobile).
+    {
+      name: 'phone-chromium',
+      use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } },
+      testMatch: /mobile-mux\.spec\.ts/,
+    },
+    {
+      name: 'phone-webkit',
+      use: { ...devices['iPhone 14'], viewport: { width: 390, height: 844 } },
+      testMatch: /mobile-mux\.spec\.ts/,
     },
     // Fetched HTML under a CSP: WebKit let more through than Chromium, so it runs in both.
     {

@@ -113,6 +113,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Target 2.41.0. Phone mode from Beacon's mobile UX audit of 2026-11-09 (390 px, iPhone / WebKit). Audit: batch,
+re-verification pending.
+
+### Added
+
+- **Page-edge tabs launcher (MUX-01, opt-in):** partial `edge_tabs_launcher` and runtime `js/nowo-ui-edge-tabs.js`
+  (`script_names` entry `edge-tabs`). On phones (viewports up to 40rem, touch screens up to 64rem; `when: always` for
+  every viewport) every `partials/_edge_tab` of the page folds behind one labelled launcher tab at the first slot; a
+  tap shows them under it. Escape, a click elsewhere, using a tab or moving the focus away folds them; a keyboard
+  opening focuses the first tab and ArrowUp / ArrowDown walk the launcher and the tabs; Tab is never captured. Without
+  the runtime the launcher stays hidden and the tabs keep their 2.40 places. Option `gutter`: the folded launcher's
+  width stays free on the right of `.nowo-ui-main` (token `--nowo-ui-edge-tabs-gutter`). Event
+  `nowo-ui:edge-tabs:toggle`. See [USAGE](USAGE.md#page-edge-tabs-on-phones-241).
+- **Phone place of a column (MUX-20 / MUX-22):** `Column::$phone` (`primary` | `meta` | `hide`, default null) prints
+  `data-nowo-ui-phone` on the header and row cells of the list scaffold and the `table` partial. In the ListPage card
+  mode (container under 40rem) `primary` leads the card without a label, `meta` is a small muted line, `hide` stays out.
+- **Phone cards for the `responsive_table` partial (MUX-20, opt-in):** `phone_layout: 'cards'` — in Responsive mode on a
+  phone (`phone_query`) every row is a card of labelled cells instead of a squeezed table; header cells with
+  `data-nowo-ui-phone` place their column (the peer copies it to the row cells). In the column fit, `hide` columns go
+  first and `primary` ones never hide. Peer value `phoneLayout`, root attribute `data-rt-cards`, cell attribute
+  `data-rt-label`.
+- **Select geometry (MUX-40):** class `.nowo-ui-select` for any host `<select>`; kit selects (`select.nowo-ui-input`,
+  the pagination per-page select) and `.nowo-ui-select` drop the native appearance and draw the chevron in
+  `currentColor` (token `--nowo-ui-select-chevron-gutter`), so WebKit no longer cuts their text. On iOS kit fields are
+  at least 16px (no zoom on focus).
+- **Touch targets (MUX-04):** token `--nowo-ui-control-size-touch` (44px under `pointer: coarse`) as the minimum height of
+  icon buttons, tabs, pagination links, sort headers, row detail buttons and the burger (and minimum width of the
+  square ones). Opt out with `--nowo-ui-control-size-touch: 0px`.
+- **Font-size floor (MUX-161):** token `--nowo-ui-font-size-min` (default 0.75rem) for badges and the kit's meta labels
+  on phones and touch screens.
+- **Guest header (MUX-150, opt-in):** partial `guest_header` (brand linked home, sign-in link; unsafe schemes print no
+  link) and block `nowo_ui_guest_header` in the guest layout, printed when the page or host layout sets
+  `nowo_ui_guest_header`.
+
+### Changed
+
+- **Responsive table overflow (MUX-20):** when only required columns are left and they still do not fit, the table
+  now scrolls sideways and words stay whole. The 2.40 last resort (words broken anywhere, letter by letter in narrow
+  columns) is the partial's `overflow: 'break'`.
+- Kit selects look slightly different on desktop too: the chevron is the kit's instead of the browser's.
+
 ## [2.40.0] - 2026-11-08
 
 Spec 220 slice S1 (brand configurable per project): logo slots, an optional brand contract consumer and a token lint.

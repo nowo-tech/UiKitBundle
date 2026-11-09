@@ -29,6 +29,7 @@ two token blocks of `nowo-ui.css`. A host theme is a short `:root` block.
 - [Dialog sizes (2.29)](#dialog-sizes-229)
 - [Remote form dialog (2.28)](#remote-form-dialog-228)
 - [Corner tabs, edge tabs, scrollbars (1.17)](#corner-tabs-edge-tabs-scrollbars-117)
+- [Phone mode (2.41)](#phone-mode-241)
 - [Default-theme polish tokens (2.2)](#default-theme-polish-tokens-22)
 - [Layout and metrics tokens](#layout-and-metrics-tokens)
 - [CSS framework notes](#css-framework-notes)
@@ -495,6 +496,21 @@ Opt-in chrome ([USAGE.md — Host chrome](USAGE.md#host-chrome-117-opt-in)); not
 
 The row detail dialog uses the confirm dialog chrome (`--nowo-ui-modal-radius`, `--nowo-ui-shadow-dialog`,
 `--nowo-ui-overlay`); its detail list labels use `--nowo-ui-muted`.
+
+## Phone mode (2.41)
+
+From Beacon's mobile UX audit (2026-11-09, 390 px, iPhone / WebKit).
+
+| Token | Default | Used by |
+|-------|---------|---------|
+| `--nowo-ui-control-size-touch` | `2.75rem` (44px) under `pointer: coarse`, unset elsewhere | minimum height of icon buttons, tabs, pagination links, sort headers, row detail buttons, the burger (and minimum width of the square ones); `0px` opts out |
+| `--nowo-ui-font-size-min` | `0.75rem` | floor of badges and the kit's meta labels on phones (up to 40rem) and touch screens; other bundles read it for their meta text |
+| `--nowo-ui-select-chevron-gutter` | `2rem` (`1.75rem` on the pagination select) | end padding of `.nowo-ui-select` / kit selects, where the `currentColor` chevron sits |
+| `--nowo-ui-edge-tabs-gutter` | `2.25rem` while the edge tabs are folded with `gutter`, else unset | right padding added to `.nowo-ui-main`; read it with `var(--nowo-ui-edge-tabs-gutter, 0px)` in a host container |
+
+Select geometry: `.nowo-ui-select` (opt-in on any `<select>`), `select.nowo-ui-input` and the pagination select use
+`appearance: none`, line-height 1.25 and the gradient chevron. Use `background-color`, not the `background` shorthand,
+in host CSS for them. On iOS (`@supports (-webkit-touch-callout: none)`) kit fields are at least 1rem.
 
 ## Default-theme polish tokens (2.2)
 

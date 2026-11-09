@@ -1,0 +1,45 @@
+/* UiKit demo (2.41 phone mode). No inline styles: the page forbids them. */
+.kit-mobile-header {
+  position: sticky;
+  top: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 3.5rem;
+  padding: 0 1rem;
+  border-bottom: 1px solid var(--nowo-ui-border);
+  background: var(--nowo-ui-surface);
+}
+
+.kit-mobile-selects {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 28rem;
+}
+
+.kit-mobile-selects label {
+  display: grid;
+  gap: 0.25rem;
+}
+
+/* Like Beacon's `select.input` before 2.41: explicit height, block padding, native appearance (WebKit cut its text). */
+.kit-mobile-legacy {
+  box-sizing: border-box;
+  height: 2.375rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.kit-mobile-host {
+  width: 100%;
+}
+
+.kit-mobile-tiny-badge {
+  --nowo-ui-badge-font-size: 0.625rem;
+}
+
+.kit-mobile-nowrap {
+  white-space: nowrap;
+}

@@ -15,6 +15,11 @@ use Nowo\UiKitBundle\Listing\SortRequest;
  * table container is narrower than 48rem, 3 = hidden below 60rem; `required` columns never hide. In card mode
  * (container below 40rem) every column shows again, labelled with `label`.
  *
+ * Phone layout (2.41, MUX-20 / MUX-22): `phone` places the column in the card a row becomes on a phone (container below
+ * 40rem in `cards` mode, or the `responsive_table` partial with `phone_layout: cards`): `primary` = the card title (no
+ * label, first, full width), `meta` = a small muted line without a label, `hide` = left out of the card. Null (default)
+ * keeps the labelled `label | value` line and prints no attribute (the 2.40 markup).
+ *
  * Sorting (2.20): `sortable` (or a `sortKey`) makes the header a sort control. `sortKey` is the whitelisted key the
  * header sends (default the column `key`; {@see SortRequest::fieldsOf()} builds the
  * whitelist), `sortFirst` the direction of the first click (`desc` for dates and counts). Client-side tables
@@ -26,6 +31,9 @@ final readonly class Column
     public const ALIGNS = ['start', 'center', 'end'];
 
     public const SORT_TYPES = ['number', 'date', 'text'];
+
+    /** Place of the column in a phone card (2.41): {@see Column::$phone}. */
+    public const PHONE = ['primary', 'meta', 'hide'];
 
     public function __construct(
         public string $key,
@@ -39,7 +47,11 @@ final readonly class Column
         public string $sortFirst = 'asc',
         public ?string $sortType = null,
         public ?string $sortValueKey = null,
+        public ?string $phone = null,
     ) {
+        if (null !== $phone && !\in_array($phone, self::PHONE, true)) {
+            throw new InvalidArgumentException(\sprintf('Invalid Column phone "%s" (%s).', $phone, implode('|', self::PHONE)));
+        }
         if (null !== $sortKey && '' === trim($sortKey)) {
             throw new InvalidArgumentException(\sprintf('The sortKey of the Column "%s" must be non-empty (null: the column key).', $key));
         }

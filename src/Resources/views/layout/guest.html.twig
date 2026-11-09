@@ -4,13 +4,16 @@
   2.40 (spec 220 S1): nowo_ui_guest_brand, before the page header — the appearance logo lockup when the appearance SPI
   returns logos with one (partials/_appearance_brand), else empty (the 2.39 markup). The auth scaffold empties it
   and prints the logo in its panel instead.
+  2.41 (MUX-150): nowo_ui_guest_header, before <main> — the `guest_header` partial (brand linked home + sign-in link)
+  when the page or a host layout sets `nowo_ui_guest_header` (hash of the partial's options), else empty (the 2.40
+  markup).
 #}
 {% extends '@NowoUiKitBundle/layout/document.html.twig' %}
 
 {% block nowo_ui_body %}
     {% set _bundle = nowo_ui_bundle|default(null) %}
     <div class="{{ nowo_ui_class('page', _bundle) }} nowo-ui-page--guest"{{ nowo_ui_attrs('page', _bundle) }}>
-        <main class="{{ nowo_ui_class('content', _bundle) }}" id="nowo-ui-content"{% if _bundle %} data-nowo-ui-bundle="{{ _bundle }}"{% endif %}{{ nowo_ui_attrs('content', _bundle) }}>
+        {% block nowo_ui_guest_header %}{% if nowo_ui_guest_header is defined and nowo_ui_guest_header is iterable and nowo_ui_guest_header is not empty %}{{ include('@NowoUiKitBundle/partials/_guest_header.html.twig', nowo_ui_guest_header, false) }}{% endif %}{% endblock %}<main class="{{ nowo_ui_class('content', _bundle) }}" id="nowo-ui-content"{% if _bundle %} data-nowo-ui-bundle="{{ _bundle }}"{% endif %}{{ nowo_ui_attrs('content', _bundle) }}>
             {% block nowo_ui_guest_brand %}{{ include('@NowoUiKitBundle/partials/_appearance_brand.html.twig', {kind: 'guest'}, false) }}{% endblock %}{% block nowo_ui_page_header %}{% endblock %}
             {% block nowo_ui_flashes %}
                 {{ include(nowo_ui_partial('flashes', _bundle), {bundle: _bundle}) }}

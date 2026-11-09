@@ -127,6 +127,44 @@
 
 ## Unreleased
 
+Target 2.41.0 (phone mode, Beacon mobile UX audit 2026-11-09). From **2.40.0**: `composer update nowo-tech/ui-kit-bundle`.
+
+**Markup:** unchanged for pages that use none of the new options. New, opt-in: `data-nowo-ui-phone` on list and
+`table` cells only for a `Column` with `phone`; `data-responsive-table-phone-layout-value` / `data-rt-overflow-mode` on
+the `responsive_table` root only with `phone_layout: 'cards'` / `overflow: 'break'`; the `edge_tabs_launcher` and
+`guest_header` partials only where you include them (the guest layout's new block `nowo_ui_guest_header` is empty
+unless `nowo_ui_guest_header` is set). A host override of `layout/guest.html.twig` keeps working without the block.
+
+**Visual changes without any option (CSS only):**
+
+- **Kit selects** (`select.nowo-ui-input`, the pagination per-page select): `appearance: none`, line-height 1.25,
+  2rem on the end side for a chevron drawn with two gradients in `currentColor`. If your unlayered CSS sets the
+  `background` shorthand on those selects the chevron disappears: use `background-color`. Bootstrap `.form-select`
+  keeps its own chevron. To give your own selects the same geometry (MUX-40, WebKit cut the text of fixed-height
+  selects), add the class `nowo-ui-select` — with FormKit, `field_types.choice.attr.class` — and drop your own
+  `height` / block padding / `appearance` rules for them: unlayered host rules win over the kit's layer.
+- **Responsive table** (`responsive_table`): when the required columns do not fit, the table scrolls sideways instead
+  of breaking words anywhere. Pass `overflow: 'break'` to keep the 2.40 behaviour.
+- **Touch screens** (`pointer: coarse`): icon buttons, tabs, pagination links, sort headers, row detail buttons and
+  the burger are at least 44px tall (`--nowo-ui-control-size-touch`; `0px` opts out). Rows with sort headers are
+  taller there.
+- **Phones and touch screens**: badges and the kit's small meta labels are at least `--nowo-ui-font-size-min` (12px).
+- **iOS**: kit fields (`.nowo-ui-input`, `.nowo-ui-select`, the pagination select) are at least 16px.
+
+**Adopting the phone mode (Beacon):**
+
+1. Edge tabs (MUX-01): add `edge-tabs` to `script_names` and render `{{ include(nowo_ui_partial('edge_tabs_launcher'), {gutter: true}) }}`
+   once in the layout. Your own edge tabs that are not `partials/_edge_tab` need the class `nowo-ui-edge-tab__link`
+   (and `data-nowo-ui-edge-tab-slot` on a `.nowo-ui-edge-tab` wrapper) to fold with them. Beacon can then drop
+   `assets/lib/edge_tabs.ts`, the `edge-tabs-handle` button and its styles.
+2. Listings (MUX-20 / 22): pass `phone_layout: 'cards'` to the `responsive_table` embed (Beacon:
+   `shared/_listing_table.html.twig`) and print `data-nowo-ui-phone` on the header cells of the columns that lead
+   (`primary`), sit under the title (`meta`) or stay out on phones (`hide`).
+3. Selects (MUX-40): see above.
+4. Public pages (MUX-150): set `nowo_ui_guest_header` (e.g. `{home_href: path('app_home'), sign_in_href:
+   path('app_login'), show_sign_in: not app.user}`) in the guest layout bridge, or include the `guest_header` partial
+   in your own public layout.
+
 ## To 2.40.0
 
 From **2.39.0**:
