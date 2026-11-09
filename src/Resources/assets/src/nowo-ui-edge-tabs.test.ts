@@ -1,10 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { bindNowoUiEdgeTabs, isOpen, launcher, OPEN, READY, setOpen, tabs } from './nowo-ui-edge-tabs';
+import { bindNowoUiEdgeTabs, isOpen, isShown, launcher, linkTabs, OPEN, READY, recoverFocus, setOpen, tabs } from './nowo-ui-edge-tabs';
 
 const MARKUP = `
 <main><p><a id="page-link" href="#p">page</a></p></main>
 <div class="nowo-ui-edge-tab" data-nowo-ui-edge-tab-slot="0"><a id="t1" class="nowo-ui-edge-tab__link" href="#manual" aria-label="Manual">m</a></div>
 <div class="nowo-ui-edge-tab" data-nowo-ui-edge-tab-slot="1"><button id="t2" type="button" class="nowo-ui-edge-tab__link" aria-label="Tour">t</button></div>
+<dialog id="dlg"><button id="in-dialog" type="button">ok</button></dialog>
 <button id="launcher" type="button" class="nowo-ui-edge-tabs-launcher" data-nowo-ui-edge-tabs-launcher aria-expanded="false" aria-label="Page tools">+</button>`;
 
 const el = (id: string): HTMLElement => document.getElementById(id) as HTMLElement;
@@ -126,5 +127,95 @@ describe('nowo-ui-edge-tabs', () => {
     expect(document.activeElement).toBe(el('t1'));
     document.body.dispatchEvent(key('Escape'));
     expect(isOpen()).toBe(false);
+  });
+  /** happy-dom has no layout: say which elements are rendered. */
+  function shown(ids: string[]): void {
+    vi.spyOn(Element.prototype, 'getClientRects').mockImplementation(function (this: Element) {
+      return (ids.includes(this.id) ? [{}] : []) as unknown as DOMRectList;
+    });
+  }
+
+  function closeDialog(): void {
+    el('dlg').dispatchEvent(new Event('close'));
+  }
+
+  it('2.41.1 (JC-L1): a dialog opened from a folded tab gives the focus back to the launcher', async () => {
+    vi.useFakeTimers();
+    try {
+      shown(['launcher']);
+      setOpen(true);
+      el('t2').dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
+      expect(isOpen()).toBe(false);
+      // The dialog runtime returns the focus to the (now hidden) tab, or the browser drops it on <body>.
+      el('t2').focus();
+      closeDialog();
+      vi.runAllTimers();
+      expect(document.activeElement).toBe(el('launcher'));
+
+      // The dialog took the focus first (focusout from the tab folds before the click reaches the document).
+      setOpen(true);
+      el('t2').dispatchEvent(new FocusEvent('focusout', { bubbles: true, relatedTarget: el('in-dialog') }));
+      expect(isOpen()).toBe(false);
+      el('t2').dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
+      (document.activeElement as HTMLElement).blur();
+      closeDialog();
+      vi.runAllTimers();
+      expect(document.activeElement).toBe(el('launcher'));
+
+      // Focus already somewhere visible: left alone.
+      setOpen(true);
+      el('t1').dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
+      el('page-link').focus();
+      closeDialog();
+      vi.runAllTimers();
+      expect(document.activeElement).toBe(el('page-link'));
+
+      // A dialog that no fold tab opened: nothing to do.
+      (document.activeElement as HTMLElement).blur();
+      closeDialog();
+      vi.runAllTimers();
+      expect(document.activeElement).toBe(document.body);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('2.41.1: no recovery when the tab is shown or the launcher is not', () => {
+    shown(['launcher', 't2']);
+    setOpen(true);
+    el('t2').dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
+    (document.activeElement as HTMLElement | null)?.blur();
+    recoverFocus();
+    expect(document.activeElement).toBe(document.body);
+
+    shown([]);
+    setOpen(true);
+    el('t2').dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
+    recoverFocus();
+    expect(document.activeElement).toBe(document.body);
+    expect(isShown(el('launcher'))).toBe(false);
+
+    // Nothing used: nothing to do.
+    recoverFocus();
+    expect(document.activeElement).toBe(document.body);
+  });
+
+  it('2.41.1 (JC-I15): the launcher controls the tabs (ids given where missing)', () => {
+    setOpen(true);
+    const controls = el('launcher').getAttribute('aria-controls')?.split(' ') ?? [];
+    expect(controls).toHaveLength(2);
+    expect(controls[0]).toBe('t1');
+    expect(el('t2').id).toBe('t2');
+    el('t2').removeAttribute('id');
+    linkTabs(el('launcher'));
+    const ids = (el('launcher').getAttribute('aria-controls') ?? '').split(' ');
+    expect(ids[1]).toMatch(/^nowo-ui-edge-tab-\d+$/);
+    expect(document.getElementById(ids[1])?.classList.contains('nowo-ui-edge-tab__link')).toBe(true);
+
+    // No tabs: no attribute change.
+    document.querySelectorAll('.nowo-ui-edge-tab').forEach((t) => t.remove());
+    el('launcher').removeAttribute('aria-controls');
+    linkTabs(el('launcher'));
+    expect(el('launcher').hasAttribute('aria-controls')).toBe(false);
   });
 });

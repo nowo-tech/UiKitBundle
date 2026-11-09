@@ -101,7 +101,9 @@
     {{ include('@NowoUiKitBundle/partials/_edge_tab.html.twig', {href: '#notes', label: 'Technical notes', icon: 'view', slot: 1, new_tab: false, testid: 'edge-notes'}, false) }}
     {{ include('@NowoUiKitBundle/partials/_edge_tab.html.twig', {label: 'Tour this page', icon: 'tour', slot: 2, button: true, testid: 'edge-tour'}, false) }}
     {{ include('@NowoUiKitBundle/partials/_edge_tab.html.twig', {href: '#preferences', label: 'Preferences', icon: 'config', slot: 3, new_tab: false, testid: 'edge-prefs'}, false) }}
+    {{ include('@NowoUiKitBundle/partials/_edge_tab.html.twig', {label: 'Customize the listing', icon: 'filter', slot: 4, button: true, testid: 'edge-customizer', attr: {'data-nowo-ui-dialog-open': 'mobile-customizer'}}, false) }}
     {{ include(nowo_ui_partial('edge_tabs_launcher'), {gutter: true, testid: 'edge-launcher'}, false) }}
+    {{ include(nowo_ui_partial('dialog'), {id: 'mobile-customizer', title: 'Customize the listing', body: '<p data-testid="customizer-body">Columns, filters and rows per page.</p>'}, false) }}
 {% endblock %}
 
 {% block nowo_ui_styles %}

@@ -9,6 +9,10 @@
  * Escape (focus back on the launcher), on a click elsewhere, once a tab is used, and when the focus leaves the launcher
  * and the tabs. Tab / Shift+Tab are never captured (no focus trap). Event: bubbling `nowo-ui:edge-tabs:toggle` {open}.
  *
+ * Focus return (2.41.1, JC-L1): a folded tab is `display: none`, so when a tab used from the fold opens a dialog (the
+ * listing customizer, a tour) the dialog's focus return to it would land on <body>. After any dialog closes, if the
+ * focus is lost (on <body>, or on that tab while it is hidden) it goes to the launcher instead.
+ *
  * Delegated listeners on the document; importing touches no DOM. Members are read through the prototypes.
  */
 export const LAUNCHER = '[data-nowo-ui-edge-tabs-launcher]';
@@ -25,6 +29,14 @@ const listen = (target: EventTarget, type: string, handler: (event: never) => vo
 const root = (): HTMLElement => document.documentElement;
 const elementOf = (target: EventTarget | null): Element | null => (target instanceof Element ? target : null);
 
+/** Whether an element takes part in layout (a folded tab or a hidden launcher does not). */
+export function isShown(el: Element): boolean {
+  return el.isConnected && Element.prototype.getClientRects.call(el).length > 0;
+}
+
+/** The tab last used from the open fold (JC-L1): the opener a dialog may give the focus back to. */
+let usedTab: HTMLElement | null = null;
+
 export function isOpen(): boolean {
   return root().hasAttribute(OPEN);
 }
@@ -39,12 +51,34 @@ export function tabs(): HTMLElement[] {
   return queryAll(document, TAB);
 }
 
+let ids = 0;
+
+/** `aria-controls` of the launcher (2.41.1, JC-I15): the ids of the tabs it shows (a tab without one gets one). */
+export function linkTabs(button: HTMLElement): void {
+  const list = tabs().map((tab) => {
+    if ('' === tab.id) {
+      do {
+        ids += 1;
+        tab.id = `nowo-ui-edge-tab-${ids}`;
+      } while (document.querySelectorAll(`#${tab.id}`).length > 1);
+    }
+    return tab.id;
+  });
+  if (list.length > 0) {
+    button.setAttribute('aria-controls', list.join(' '));
+  }
+}
+
 /** Opens or closes the fold; `focusFirst` moves the focus to the first tab (keyboard opening). */
 export function setOpen(open: boolean, focusFirst = false): void {
   const button = launcher();
   const was = isOpen();
   root().toggleAttribute(OPEN, open);
   button?.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (open && button) {
+    usedTab = null;
+    linkTabs(button);
+  }
   if (open && focusFirst) {
     tabs()[0]?.focus();
   }
@@ -64,7 +98,29 @@ function onClick(event: MouseEvent): void {
   }
   if (isOpen()) {
     // A click on a tab reaches the tab first (its own link / button acts), then folds; anywhere else folds too.
+    usedTab = target ? closest(target, TAB) : null;
     setOpen(false);
+  }
+}
+
+/** After the dialog runtimes gave the focus back (same task), move a lost focus to the launcher. */
+export function recoverFocus(): void {
+  const tab = usedTab;
+  usedTab = null;
+  const button = launcher();
+  if (!tab || !button || !isShown(button)) {
+    return;
+  }
+  const active = document.activeElement;
+  const lost = null === active || active === document.body || active === document.documentElement || (active === tab && !isShown(tab));
+  if (lost && !isShown(tab)) {
+    button.focus();
+  }
+}
+
+function onDialogClose(event: Event): void {
+  if (usedTab && event.target instanceof HTMLDialogElement) {
+    setTimeout(recoverFocus, 0);
   }
 }
 
@@ -104,6 +160,8 @@ function onFocusOut(event: FocusEvent): void {
   const to = elementOf(event.relatedTarget);
   // Focus leaving for the page (not another tab, not the launcher) folds; a null relatedTarget (window blur) does not.
   if (to && !closest(to, LAUNCHER) && !closest(to, TAB)) {
+    // A tab that opened a dialog loses the focus to it before its click reaches the document: remember it (JC-L1).
+    usedTab = closest(from, TAB);
     setOpen(false);
   }
 }
@@ -118,6 +176,8 @@ export function bindNowoUiEdgeTabs(): void {
   listen(document, 'click', onClick);
   listen(document, 'keydown', onKeyDown);
   listen(document, 'focusout', onFocusOut);
+  // `close` does not bubble: capture phase.
+  EventTarget.prototype.addEventListener.call(document, 'close', onDialogClose as EventListener, true);
   root().setAttribute(READY, '');
 }
 

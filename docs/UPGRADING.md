@@ -128,6 +128,11 @@
 
 ## Unreleased
 
+Target 2.41.1. Nothing to do. With the opt-in edge tabs launcher: focus returns to the launcher after a dialog opened
+from a folded tab closes; the launcher gets `aria-controls` (tabs without an id get `nowo-ui-edge-tab-<n>` when the
+fold opens); a launcher with the `hidden` attribute no longer folds the tabs. Do not hide the launcher with CSS where
+its `when` applies (the tabs would be folded behind an invisible button).
+
 ## To 2.41.0
 
 From **2.40.0**:
