@@ -6,11 +6,14 @@
  * and the server validates it as any upload. "Cancel", the close button and Escape clear the input.
  *
  * Contract (attributes on the input; `ImageCrop::attributes()`, the FileType option `nowo_ui_image_crop` and the Twig function
- * `nowo_ui_image_crop_attrs()` print them): -shape square|circle, -aspect 1|free|16/9, -max (px), -min (px), -format png|webp|jpeg,
- * -quality, -bake-circle, -preview (id of an <img>), -labels (JSON). See nowo-ui-image-crop-core.ts and docs/USAGE.md.
+ * `nowo_ui_image_crop_attrs()` print them): -shape square|circle, -aspect 1|free|16/9, -max (px), -min (px), -format
+ * auto|png|webp|jpeg, -max-bytes, -quality, -bake-circle, -preview (id of an <img>), -labels (JSON). See nowo-ui-image-crop-core.ts
+ * and docs/USAGE.md. Over -max-bytes the quality, then the size, steps down; if nothing fits, `:error` {reason: 'size'} and the
+ * dialog stays open with a message.
  *
  * Events on the input (bubbling): `nowo-ui:image-crop:open` {file} (cancelable: the file then stays as picked), `:cropped` {file,
- * original, width, height}, `:cancel` {original}, `:error` {reason, original} (the file stays as picked). After the crop and after a
+ * original, width, height, quality, attempts}, `:cancel` {original}, `:error` {reason: decode|encode|replace|size, original} (the
+ * file stays as picked). After the crop and after a
  * cancel, native `input` and `change` are dispatched again; the picked file's own `input` and `change` never reach other listeners
  * (stopped in the capture phase on window), so a host listener only ever sees the final file.
  *
@@ -31,18 +34,24 @@ import {
   initialView,
   isCroppable,
   keyAction,
-  MIME,
+  candidateTypes,
+  formatBytes,
+  hasTransparency,
+  MAX_ATTEMPTS,
+  nextAttempt,
   outputName,
   outputSize,
   panBy,
   readOptions,
   refit,
   scaleBounds,
+  scaledSize,
   sourceRect,
   wheelFactor,
   zoomPercent,
   zoomText,
   zoomTo,
+  type Attempt,
   type Bounds,
   type CropOptions,
   type Labels,
@@ -165,6 +174,7 @@ interface Ui {
   zoomLabel: HTMLElement;
   range: HTMLInputElement;
   status: HTMLElement;
+  error: HTMLElement;
   apply: HTMLButtonElement;
   cancel: HTMLButtonElement;
   close: HTMLButtonElement;
@@ -210,7 +220,9 @@ export function cropDialog(): Ui {
   const range = element('input', 'nowo-ui-image-crop__range', { id: `${DIALOG_ID}-zoom`, type: 'range', min: '100', max: '800', step: '1', value: '100', 'data-nowo-ui-image-crop-zoom': '' });
   zoom.append(zoomLabel, range);
   const status = element('p', 'visually-hidden', { role: 'status', 'aria-live': 'polite', 'data-nowo-ui-image-crop-status': '' });
-  body.append(help, stage, zoom, status);
+  const error = element('p', 'nowo-ui-image-crop__error', { role: 'alert', 'data-nowo-ui-image-crop-error': '' });
+  error.hidden = true;
+  body.append(help, stage, zoom, error, status);
 
   const footer = element('footer', 'nowo-ui-dialog__footer');
   const cancel = element('button', 'nowo-ui-btn nowo-ui-btn--secondary', { type: 'button', 'data-nowo-ui-image-crop-cancel': '' });
@@ -219,7 +231,7 @@ export function cropDialog(): Ui {
   dialog.append(header, body, footer);
   document.body.append(dialog);
 
-  ui = { dialog, title, help, stage, canvas, zoomLabel, range, status, apply, cancel, close };
+  ui = { dialog, title, help, stage, canvas, zoomLabel, range, status, error, apply, cancel, close };
   bindUi(ui);
   return ui;
 }
@@ -322,6 +334,10 @@ export class Session {
   setView(view: View, announce = false): void {
     this.view = clampView(view, this.frame, this.image, this.bounds);
     this.syncRange();
+    if (!this.ui.error.hidden) {
+      // A new crop: the size message no longer applies.
+      this.showError(null);
+    }
     if (announce) {
       this.ui.status.textContent = zoomText(this.labels.zoomStatus, zoomPercent(this.view, this.bounds));
     }
@@ -428,10 +444,11 @@ export class Session {
     this.setView(zoomTo(this.view, (this.bounds.minScale * percent) / 100, frameCentre(this.frame), this.frame, this.image, this.bounds));
   }
 
-  /** The crop as a canvas of its output size (transparent outside the circle when baked, white under a JPEG). */
-  render(): { canvas: HTMLCanvasElement; size: Size } | null {
+  /** The crop as a canvas of its output size times `scale` (transparent outside the circle when baked, white under a JPEG). */
+  render(scale = 1): { canvas: HTMLCanvasElement; size: Size } | null {
     const source = sourceRect(this.view, this.frame);
-    const size = outputSize(source, this.options.max, this.options.aspect === 1);
+    const square = this.options.aspect === 1;
+    const size = scaledSize(outputSize(source, this.options.max, square), scale, square);
     const canvas = document.createElement('canvas');
     canvas.width = size.width;
     canvas.height = size.height;
@@ -453,29 +470,79 @@ export class Session {
     return { canvas, size };
   }
 
-  /** Encodes the crop and puts it in the input; on any failure the picked file stays. */
+  /** Whether the rendered crop has a pixel that is not opaque (a baked circle always has; unreadable pixels count as transparent). */
+  private transparent(canvas: HTMLCanvasElement): boolean {
+    if (this.options.bakeCircle) {
+      return true;
+    }
+    try {
+      const data = env.context(canvas)?.getImageData(0, 0, canvas.width, canvas.height)?.data;
+      return data ? hasTransparency(data) : true;
+    } catch {
+      return true;
+    }
+  }
+
+  /**
+   * Encodes the crop: the format's candidate types in order (an `auto` WebP is kept only if the engine really encoded WebP), then,
+   * over max-bytes, lower qualities and smaller sizes, in at most MAX_ATTEMPTS async encodes.
+   */
+  async encodeCrop(): Promise<EncodeResult> {
+    const base = this.render();
+    if (!base) {
+      return { kind: 'encode' };
+    }
+    const square = this.options.aspect === 1;
+    const types = this.options.format === 'auto' ? candidateTypes('auto', this.transparent(base.canvas)) : candidateTypes(this.options.format, false);
+    let attempt: Attempt = { quality: this.options.quality, scale: 1 };
+    let index = 0;
+    let smallest = Number.POSITIVE_INFINITY;
+    for (let tries = 1; tries <= MAX_ATTEMPTS; tries += 1) {
+      const rendered = attempt.scale === 1 ? base : this.render(attempt.scale);
+      const wanted = types[index];
+      const blob = rendered ? await env.encode(rendered.canvas, wanted, attempt.quality) : null;
+      if (!rendered || !blob || blob.size === 0) {
+        if (index < types.length - 1) {
+          index += 1;
+          continue;
+        }
+        return { kind: 'encode' };
+      }
+      if (this.options.format === 'auto' && blob.type !== wanted && index < types.length - 1) {
+        // No WebP encoder here (the engine answered with PNG): the next candidate.
+        index += 1;
+        continue;
+      }
+      const type = blob.type || wanted;
+      const limit = this.options.maxBytes;
+      if (limit === null || blob.size <= limit) {
+        const file = new File([blob], outputName(this.original.name, type), { type, lastModified: Date.now() });
+        return { kind: 'file', file, size: rendered.size, quality: attempt.quality, attempts: tries };
+      }
+      smallest = Math.min(smallest, blob.size);
+      const next = nextAttempt(attempt, type !== 'image/png', scaledSize(outputSize(sourceRect(this.view, this.frame), this.options.max, square), 1, square), this.options.min);
+      if (next === null) {
+        break;
+      }
+      attempt = next;
+    }
+    return { kind: 'size', bytes: smallest };
+  }
+
+  /** Encodes the crop and puts it in the input; on a failure the picked file stays, and over max-bytes the dialog stays open. */
   async apply(): Promise<void> {
     if (this.finished || this.busy) {
       return;
     }
     this.busy = true;
+    this.showError(null);
     this.ui.apply.disabled = true;
     this.ui.apply.setAttribute('aria-busy', 'true');
-    let file: File | null = null;
-    let size: Size | null = null;
+    let result: EncodeResult;
     try {
-      const rendered = this.render();
-      if (rendered) {
-        size = rendered.size;
-        const blob = await env.encode(rendered.canvas, MIME[this.options.format], this.options.quality);
-        if (blob && blob.size > 0) {
-          // A browser that cannot encode WebP gives PNG: the name and type follow what it really encoded.
-          const type = blob.type || MIME[this.options.format];
-          file = new File([blob], outputName(this.original.name, type), { type, lastModified: Date.now() });
-        }
-      }
+      result = await this.encodeCrop();
     } catch {
-      file = null;
+      result = { kind: 'encode' };
     }
     this.busy = false;
     this.ui.apply.disabled = false;
@@ -483,14 +550,28 @@ export class Session {
     if (this.finished) {
       return;
     }
+    if (result.kind === 'size') {
+      // Kept open: the user can crop a smaller part, or cancel.
+      const max = this.options.maxBytes ?? 0;
+      this.showError(this.labels.tooLarge.replace('%max%', formatBytes(max)));
+      emit(this.input, 'error', { reason: 'size', original: this.original, bytes: result.bytes, maxBytes: max });
+      return;
+    }
     this.finished = true;
-    if (file && size && replaceFiles(this.input, file)) {
-      this.showPreview(file);
-      emit(this.input, 'cropped', { file, original: this.original, width: size.width, height: size.height });
+    if (result.kind === 'file' && replaceFiles(this.input, result.file)) {
+      this.showPreview(result.file);
+      emit(this.input, 'cropped', { file: result.file, original: this.original, width: result.size.width, height: result.size.height, quality: result.quality, attempts: result.attempts });
     } else {
-      emit(this.input, 'error', { reason: file ? 'replace' : 'encode', original: this.original });
+      emit(this.input, 'error', { reason: result.kind === 'file' ? 'replace' : 'encode', original: this.original });
     }
     this.end();
+  }
+
+  /** Shows (or with null hides) the message under the crop area. */
+  showError(message: string | null): void {
+    const { error } = this.ui;
+    error.textContent = message ?? '';
+    error.hidden = message === null;
   }
 
   /** Clears the input (the picked file is not uploaded). */
@@ -530,6 +611,11 @@ export class Session {
     closeCropDialog(this.ui.dialog);
   }
 }
+
+type EncodeResult =
+  | { kind: 'file'; file: File; size: Size; quality: number; attempts: number }
+  | { kind: 'size'; bytes: number }
+  | { kind: 'encode' };
 
 /** Object URLs shown in preview images, revoked when replaced. */
 const previews = new WeakMap<HTMLImageElement, string>();
@@ -635,6 +721,7 @@ export async function startCrop(input: HTMLInputElement): Promise<Session | null
   current = session;
   setLabels(target, session.labels);
   target.status.textContent = '';
+  session.showError(null);
   openCropDialog(target.dialog, input);
   session.layout();
   target.stage.focus();

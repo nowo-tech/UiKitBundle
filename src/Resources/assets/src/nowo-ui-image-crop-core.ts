@@ -11,7 +11,7 @@
  */
 
 export type Shape = 'square' | 'circle';
-export type Format = 'png' | 'webp' | 'jpeg';
+export type Format = 'auto' | 'png' | 'webp' | 'jpeg';
 
 export interface Labels {
   title: string;
@@ -22,6 +22,8 @@ export interface Labels {
   apply: string;
   cancel: string;
   close: string;
+  /** The crop cannot be encoded within max-bytes; `%max%` is the limit (e.g. "300 KB"). */
+  tooLarge: string;
 }
 
 export interface CropOptions {
@@ -32,7 +34,10 @@ export interface CropOptions {
   max: number;
   /** Shortest edge the crop may have, in image pixels: zooming in stops there. */
   min: number;
+  /** `auto`: WebP when the engine encodes it, else PNG with transparency and JPEG without. */
   format: Format;
+  /** Largest output file in bytes (null: no limit); quality, then size, step down to fit. */
+  maxBytes: number | null;
   /** Encoder quality for WebP and JPEG (0 to 1). */
   quality: number;
   /** Circle only: the pixels outside the circle become transparent (PNG or WebP). */
@@ -74,6 +79,7 @@ export const DEFAULT_LABELS: Labels = {
   apply: 'Apply',
   cancel: 'Cancel',
   close: 'Close',
+  tooLarge: 'This crop cannot be made smaller than %max%. Crop a smaller part of the image, or cancel.',
 };
 
 export const DEFAULTS = { max: 1024, min: 1, quality: 0.92 } as const;
@@ -139,7 +145,8 @@ export function parseLabels(raw: string | null): Partial<Labels> {
 export function readOptions(get: (name: string) => string | null): CropOptions {
   const shape: Shape = get(`${ATTR}-shape`) === 'circle' ? 'circle' : 'square';
   const rawFormat = get(`${ATTR}-format`);
-  const format: Format = rawFormat === 'webp' || rawFormat === 'jpeg' ? rawFormat : 'png';
+  const format: Format = rawFormat === 'png' || rawFormat === 'webp' || rawFormat === 'jpeg' ? rawFormat : 'auto';
+  const rawBytes = (get(`${ATTR}-max-bytes`) ?? '').trim();
   const rawQuality = Number.parseFloat(get(`${ATTR}-quality`) ?? '');
   const bake = get(`${ATTR}-bake-circle`);
   const preview = (get(`${ATTR}-preview`) ?? '').trim();
@@ -150,6 +157,7 @@ export function readOptions(get: (name: string) => string | null): CropOptions {
     max: parseInteger(get(`${ATTR}-max`), DEFAULTS.max, MAX_RANGE[0], MAX_RANGE[1]),
     min: parseInteger(get(`${ATTR}-min`), DEFAULTS.min, 1, MAX_RANGE[1]),
     format,
+    maxBytes: /^\d+$/.test(rawBytes) && Number(rawBytes) > 0 ? Number(rawBytes) : null,
     quality: Number.isFinite(rawQuality) ? clamp(rawQuality, 0, 1) : DEFAULTS.quality,
     // JPEG has no transparency: a baked circle needs PNG or WebP.
     bakeCircle: shape === 'circle' && format !== 'jpeg' && bake !== null && bake !== 'false',
@@ -255,7 +263,75 @@ export function outputSize(source: Size, max: number, square: boolean): Size {
   return { width: Math.min(width, max), height: Math.min(height, max) };
 }
 
-export const MIME: Record<Format, string> = { png: 'image/png', webp: 'image/webp', jpeg: 'image/jpeg' };
+export const MIME: Record<Exclude<Format, 'auto'>, string> = { png: 'image/png', webp: 'image/webp', jpeg: 'image/jpeg' };
+
+/**
+ * The types to try, in order. `auto`: WebP first (kept only if the engine really encoded WebP), then PNG for a crop with transparent
+ * pixels or JPEG for an opaque one. An explicit format is tried alone: the engine may still answer with PNG (no WebP encoder).
+ */
+export function candidateTypes(format: Format, transparent: boolean): string[] {
+  if (format === 'auto') {
+    return ['image/webp', transparent ? 'image/png' : 'image/jpeg'];
+  }
+  return [MIME[format]];
+}
+
+/** Whether RGBA pixel data has any pixel that is not fully opaque. */
+export function hasTransparency(data: ArrayLike<number>): boolean {
+  for (let i = 3; i < data.length; i += 4) {
+    if (data[i] < 255) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** Quality steps for a lossy type over max-bytes, and the lowest quality used. */
+export const QUALITY_STEPS = [0.92, 0.85, 0.78, 0.7, 0.6, 0.5] as const;
+export const QUALITY_FLOOR = 0.5;
+/** Each size step multiplies the output's edges by this. */
+export const SCALE_STEP = 0.85;
+/** Encodes tried for one crop, at most (each is an async toBlob). */
+export const MAX_ATTEMPTS = 8;
+
+export interface Attempt {
+  quality: number;
+  scale: number;
+}
+
+/** The output size at a scale: both edges scaled, at least 1 px, a square kept square. */
+export function scaledSize(size: Size, scale: number, square: boolean): Size {
+  const width = Math.max(1, Math.round(size.width * scale));
+  return { width, height: square ? width : Math.max(1, Math.round(size.height * scale)) };
+}
+
+/**
+ * The next encode for a file over max-bytes, null when nothing smaller is left. A lossy type first lowers the quality along
+ * QUALITY_STEPS (never below QUALITY_FLOOR); then, or for PNG, the size steps down by SCALE_STEP, never below `min` on the
+ * shorter edge.
+ */
+export function nextAttempt(previous: Attempt, lossy: boolean, size: Size, min: number): Attempt | null {
+  if (lossy) {
+    const quality = QUALITY_STEPS.find((step) => step < previous.quality - 1e-9);
+    if (quality !== undefined && quality >= QUALITY_FLOOR) {
+      return { quality, scale: previous.scale };
+    }
+  }
+  const shorter = Math.min(size.width, size.height);
+  const scale = Math.max(previous.scale * SCALE_STEP, Math.min(1, min / shorter));
+  if (scale >= previous.scale - 1e-9 || Math.round(shorter * scale) >= Math.round(shorter * previous.scale)) {
+    return null;
+  }
+  return { quality: previous.quality, scale };
+}
+
+/** A byte count for people: "100 B", "300 KB", "1.5 MB" (1024-based). */
+export function formatBytes(bytes: number): string {
+  if (bytes >= 1024 * 1024) {
+    return `${Number((bytes / (1024 * 1024)).toFixed(1))} MB`;
+  }
+  return bytes >= 1024 ? `${Math.round(bytes / 1024)} KB` : `${bytes} B`;
+}
 const EXTENSION: Record<string, string> = { 'image/png': 'png', 'image/webp': 'webp', 'image/jpeg': 'jpg' };
 
 /** The output's file name: the original's base name with the extension of the type the browser really encoded. */

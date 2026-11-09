@@ -12,6 +12,7 @@ test.describe.configure({ timeout: 60_000 });
 const PAGE = '/kit/image-crop';
 const PHOTO = resolve(__dirname, '../fixtures/photo.png'); // 640 × 480: red, green / blue, yellow quadrants
 const ROTATED = resolve(__dirname, '../fixtures/rotated-exif.jpg'); // stored 800 × 600, red left / blue right, EXIF orientation 6
+const LOGO = resolve(__dirname, '../fixtures/logo-alpha.png'); // 400 × 200, transparent with a blue box in the middle
 
 type Violation = { directive: string };
 
@@ -33,7 +34,7 @@ const stage = (page: Page): Locator => page.locator('[data-nowo-ui-image-crop-st
 const zoom = (page: Page): Locator => page.getByRole('slider', { name: 'Zoom' });
 const input = (page: Page, name: string): Locator => page.locator(`input[type="file"][name="form[${name}]"]`);
 
-type Picked = { count: number; name?: string; type?: string; width?: number; height?: number; pixels?: number[][] };
+type Picked = { count: number; name?: string; type?: string; bytes?: number; width?: number; height?: number; pixels?: number[][] };
 
 /** What the input holds now: its file, decoded upright, and the RGBA of some points (fractions of the width and height). */
 async function picked(page: Page, name: string, points: [number, number][] = []): Promise<Picked> {
@@ -50,7 +51,7 @@ async function picked(page: Page, name: string, points: [number, number][] = [])
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
     ctx.drawImage(bitmap, 0, 0);
     const pixels = samples.map(([fx, fy]) => [...ctx.getImageData(Math.min(bitmap.width - 1, Math.floor(fx * bitmap.width)), Math.min(bitmap.height - 1, Math.floor(fy * bitmap.height)), 1, 1).data]);
-    return { count: files.length, name: file.name, type: file.type, width: bitmap.width, height: bitmap.height, pixels };
+    return { count: files.length, name: file.name, type: file.type, bytes: file.size, width: bitmap.width, height: bitmap.height, pixels };
   }, points);
 }
 
@@ -59,6 +60,36 @@ function near(actual: number[] | undefined, expected: [number, number, number], 
   expect(actual).toBeDefined();
   const [r, g, b] = actual as number[];
   expect(Math.abs(r - expected[0]) + Math.abs(g - expected[1]) + Math.abs(b - expected[2]), `${actual} ≈ ${expected}`).toBeLessThan(tolerance * 3);
+}
+
+/** Picks a 2000 × 1500 "photo" drawn in the page into the `large` input: gradients and grain, which compress like a real one. */
+async function pickLargePhoto(page: Page): Promise<void> {
+  await input(page, 'large').evaluate(async (node) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 2000;
+    canvas.height = 1500;
+    const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
+    const image = ctx.createImageData(2000, 1500);
+    let seed = 7;
+    const random = (): number => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+    for (let y = 0; y < 1500; y += 1) {
+      for (let x = 0; x < 2000; x += 1) {
+        const i = (y * 2000 + x) * 4;
+        const grain = (random() - 0.5) * 70;
+        image.data[i] = (x / 2000) * 255 + grain;
+        image.data[i + 1] = (y / 1500) * 255 + grain;
+        image.data[i + 2] = 128 + 100 * Math.sin(x / 40) * Math.cos(y / 55) + grain;
+        image.data[i + 3] = 255;
+      }
+    }
+    ctx.putImageData(image, 0, 0);
+    const blob = await new Promise<Blob>((done) => canvas.toBlob((b) => done(b as Blob), 'image/png'));
+    const transfer = new DataTransfer();
+    transfer.items.add(new File([blob], 'large.png', { type: 'image/png' }));
+    (node as HTMLInputElement).files = transfer.files;
+    node.dispatchEvent(new Event('input', { bubbles: true }));
+    node.dispatchEvent(new Event('change', { bubbles: true }));
+  });
 }
 
 const RED: [number, number, number] = [220, 30, 30];
@@ -78,7 +109,7 @@ async function apply(page: Page, tap = false): Promise<void> {
 test.describe('image crop, desktop', () => {
   test.skip(({ isMobile }) => isMobile, 'desktop input');
 
-  test('the avatar: a circle, 256 px WebP (PNG where the engine cannot encode WebP), the preview and the server', async ({ page, browserName }) => {
+  test('the avatar: a circle, 256 px, format auto (WebP, or JPEG where the engine cannot encode WebP), the preview and the server', async ({ page, browserName }) => {
     const csp = await open(page);
     await input(page, 'avatar').setInputFiles(PHOTO);
     await expect(dialog(page)).toBeVisible();
@@ -90,13 +121,15 @@ test.describe('image crop, desktop', () => {
     await expect(input(page, 'avatar')).toBeFocused();
     const file = await picked(page, 'avatar', [[0.5, 0.5]]);
     expect(file).toMatchObject({ count: 1, width: 256, height: 256 });
+    expect(file.bytes).toBeLessThanOrEqual(200_000);
     const webp = file.type === 'image/webp';
-    expect(webp || (browserName === 'webkit' && file.type === 'image/png')).toBe(true);
-    expect(file.name).toBe(webp ? 'photo.webp' : 'photo.png');
+    // An opaque crop: WebP, else JPEG (never PNG).
+    expect(webp || (browserName === 'webkit' && file.type === 'image/jpeg')).toBe(true);
+    expect(file.name).toBe(webp ? 'photo.webp' : 'photo.jpg');
     await expect(page.getByTestId('avatar-preview')).toBeVisible();
     await expect(page.getByTestId('avatar-preview')).toHaveAttribute('src', /^blob:/);
     await page.getByRole('button', { name: 'Upload' }).click();
-    await expect(page.getByTestId('received-avatar')).toHaveText(webp ? 'photo.webp image/webp 256x256' : 'photo.png image/png 256x256');
+    await expect(page.getByTestId('received-avatar')).toHaveText(webp ? 'photo.webp image/webp 256x256' : 'photo.jpg image/jpeg 256x256');
     expect(await csp()).toEqual([]);
   });
 
@@ -185,14 +218,98 @@ test.describe('image crop, desktop', () => {
     await expect(page.getByTestId('received-photo')).toHaveText('rotated-exif.jpg image/jpeg 600x800');
   });
 
-  test('a baked circle is transparent outside it', async ({ page }) => {
+  test('a baked circle is transparent outside it: WebP, or PNG without a WebP encoder', async ({ page, browserName }) => {
     await open(page);
     await input(page, 'badge').setInputFiles(PHOTO);
     await apply(page);
     const file = await picked(page, 'badge', [[0.01, 0.01], [0.5, 0.5]]);
-    expect(file).toMatchObject({ type: 'image/png', width: 128, height: 128 });
+    expect(file).toMatchObject({ width: 128, height: 128 });
+    expect(browserName === 'chromium' ? ['image/webp'] : ['image/webp', 'image/png']).toContain(file.type);
     expect(file.pixels?.[0]?.[3]).toBe(0);
     expect(file.pixels?.[1]?.[3]).toBe(255);
+  });
+
+  test('max-bytes: a large photo steps down to fit 300 000 bytes, and the server gets it', async ({ page, browserName }) => {
+    await open(page);
+    await page.evaluate(() => {
+      document.addEventListener('nowo-ui:image-crop:cropped', (event) => {
+        (window as unknown as { cropDetail: unknown }).cropDetail = { ...(event as CustomEvent).detail, file: undefined, original: undefined };
+      });
+    });
+    await pickLargePhoto(page);
+    await expect(dialog(page)).toBeVisible();
+    await apply(page);
+    const file = await picked(page, 'large');
+    const detail = await page.evaluate(() => (window as unknown as { cropDetail: { width: number; height: number; quality: number; attempts: number } }).cropDetail);
+    console.log(`[${browserName}] large photo: ${file.type} ${file.width}x${file.height} ${file.bytes} bytes, quality ${detail.quality}, ${detail.attempts} attempt(s)`);
+    expect(file.type).toBe(browserName === 'chromium' ? 'image/webp' : file.type === 'image/webp' ? 'image/webp' : 'image/jpeg');
+    expect(file.bytes).toBeLessThanOrEqual(300_000);
+    expect(detail.attempts).toBeGreaterThan(1);
+    expect([file.width, file.height]).toEqual([detail.width, detail.height]);
+    // Free aspect keeps the photo's 4:3 within 1600 px, made smaller only as far as the size steps went.
+    expect(Math.abs((file.width as number) / (file.height as number) - 4 / 3)).toBeLessThan(0.01);
+    expect(file.width).toBeLessThanOrEqual(1600);
+    await page.getByRole('button', { name: 'Upload' }).click();
+    const ext = file.type === 'image/webp' ? 'webp' : 'jpg';
+    await expect(page.getByTestId('received-large')).toHaveText(`large.${ext} ${file.type} ${file.width}x${file.height}`);
+    expect(Number(await page.getByTestId('received-large').getAttribute('data-bytes'))).toBeLessThanOrEqual(300_000);
+  });
+
+  test('an engine without a WebP encoder (Safari): JPEG for a photo, PNG for a transparent logo', async ({ page }) => {
+    // Canvas toBlob answers PNG for WebP, as an engine with no WebP encoder does.
+    await page.addInitScript(() => {
+      const toBlob = HTMLCanvasElement.prototype.toBlob;
+      HTMLCanvasElement.prototype.toBlob = function (callback: BlobCallback, type?: string, quality?: number): void {
+        toBlob.call(this, callback, type === 'image/webp' ? 'image/png' : type, quality);
+      };
+    });
+    await open(page);
+    await input(page, 'avatar').setInputFiles(PHOTO);
+    await apply(page);
+    expect(await picked(page, 'avatar')).toMatchObject({ name: 'photo.jpg', type: 'image/jpeg', width: 256, height: 256 });
+    await input(page, 'brand').setInputFiles(LOGO);
+    await apply(page);
+    const logo = await picked(page, 'brand', [[0.02, 0.02]]);
+    expect(logo).toMatchObject({ name: 'logo-alpha.png', type: 'image/png', width: 400, height: 200 });
+    expect(logo.pixels?.[0]?.[3]).toBe(0);
+    await pickLargePhoto(page);
+    await apply(page);
+    const large = await picked(page, 'large');
+    expect(large).toMatchObject({ name: 'large.jpg', type: 'image/jpeg' });
+    expect(large.bytes).toBeLessThanOrEqual(300_000);
+    console.log(`large photo without WebP: ${large.type} ${large.width}x${large.height} ${large.bytes} bytes`);
+    await page.getByRole('button', { name: 'Upload' }).click();
+    await expect(page.getByTestId('received-avatar')).toHaveText('photo.jpg image/jpeg 256x256');
+    await expect(page.getByTestId('received-brand')).toHaveText('logo-alpha.png image/png 400x200');
+  });
+
+  test('a logo with transparency keeps it: WebP, or PNG without a WebP encoder', async ({ page, browserName }) => {
+    await open(page);
+    await input(page, 'brand').setInputFiles(LOGO);
+    await apply(page);
+    const file = await picked(page, 'brand', [[0.02, 0.02], [0.5, 0.5]]);
+    expect(file).toMatchObject({ width: 400, height: 200 });
+    expect(browserName === 'chromium' ? ['image/webp'] : ['image/webp', 'image/png']).toContain(file.type);
+    expect(file.name).toBe(file.type === 'image/webp' ? 'logo-alpha.webp' : 'logo-alpha.png');
+    expect(file.pixels?.[0]?.[3]).toBe(0);
+    expect(file.pixels?.[1]?.[3]).toBe(255);
+  });
+
+  test('an impossible limit: the size message, the dialog stays open, the input keeps the picked file', async ({ page }) => {
+    await open(page);
+    await input(page, 'tiny').setInputFiles(PHOTO);
+    await dialog(page).getByRole('button', { name: 'Apply' }).click();
+    const message = dialog(page).getByRole('alert');
+    await expect(message).toHaveText('This crop cannot be made smaller than 100 B. Crop a smaller part of the image, or cancel.');
+    await expect(dialog(page)).toBeVisible();
+    expect(await picked(page, 'tiny')).toMatchObject({ count: 1, name: 'photo.png', width: 640, height: 480 });
+    // A new crop hides the message; cancel clears the input.
+    await stage(page).focus();
+    await page.keyboard.press('+');
+    await expect(message).toBeHidden();
+    await dialog(page).getByRole('button', { name: 'Cancel' }).click();
+    await expect(dialog(page)).toBeHidden();
+    expect(await picked(page, 'tiny')).toEqual({ count: 0 });
   });
 
   test('an input that did not opt in is left alone', async ({ page }) => {

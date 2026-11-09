@@ -6947,6 +6947,14 @@ html[data-nowo-ui-sortable-active] * {
   min-height: 2.75rem;
   accent-color: var(--nowo-ui-primary);
 }
+.nowo-ui-image-crop__error {
+  margin: 0.75rem 0 0;
+  font-size: 0.875rem;
+  color: var(--nowo-ui-danger-text-strong);
+}
+.nowo-ui-image-crop__error[hidden] {
+  display: none !important;
+}
 @media (forced-colors: active) {
   .nowo-ui-image-crop__stage {
     border-color: CanvasText;

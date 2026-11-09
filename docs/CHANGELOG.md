@@ -128,9 +128,16 @@ Target 2.43.0. Request from Symfony Beacon (owner decision D-20261109-09, for Be
   cancels. "Apply" draws the crop on a canvas (EXIF orientation applied, `createImageBitmap` with
   `imageOrientation: 'from-image'`) and puts it in the input in place of the picked file (DataTransfer), so the server
   receives and validates an ordinary upload. Cancel, the close button and Escape clear the input. Options as
-  attributes: `-shape` (`square` | `circle`), `-aspect` (`1` | `free` | a ratio), `-max` / `-min` (px), `-format` (`png`
-  default, `webp`, `jpeg`), `-quality`, `-bake-circle`, `-preview` (an `<img>` id that shows the crop), `-labels`
-  (JSON). Events `nowo-ui:image-crop:open` (cancelable), `:cropped`, `:cancel`, `:error`. Browsers without
+  attributes: `-shape` (`square` | `circle`), `-aspect` (`1` | `free` | a ratio), `-max` / `-min` (px), `-format`
+  (`auto` default, `png`, `webp`, `jpeg`), `-max-bytes`, `-quality`, `-bake-circle`, `-preview` (an `<img>` id that
+  shows the crop), `-labels` (JSON). Events `nowo-ui:image-crop:open` (cancelable), `:cropped`, `:cancel`, `:error`.
+- **`format: auto` (the default):** WebP when the engine really encodes it (`toBlob` answered `image/webp`), else PNG
+  for a crop with transparent pixels (a baked circle, or any pixel of the output's alpha channel below 255) and JPEG for
+  an opaque one. Name and type follow what was encoded.
+- **`max_bytes` / `data-nowo-ui-image-crop-max-bytes`:** over it, WebP and JPEG are encoded again at lower qualities
+  (0.92 → 0.5), then the output steps down by 0.85× (never below `min`; PNG only steps the size), at most 8 async
+  encodes. If nothing fits, the dialog stays open with a translated message (`image_crop.too_large`) and `:error` fires
+  with `reason: 'size'`. Browsers without
   DataTransfer, canvas `toBlob` or `<dialog>`, `multiple` inputs, SVG, non-images and images the browser cannot decode
   upload as picked, with no error. No dependency (about 15 KB minified), no style attribute, no inline script. See
   [USAGE](USAGE.md#image-crop).
@@ -140,7 +147,8 @@ Target 2.43.0. Request from Symfony Beacon (owner decision D-20261109-09, for Be
   `multiple`; the field's `attr` wins) and the **Twig function `nowo_ui_image_crop_attrs(options)`**. FormKit's planned
   `crop: {shape, aspect, max}` maps onto the same options.
 - **Demo** `/kit/image-crop` and its Playwright e2e in Chromium and WebKit, desktop and phone (`make -C demo/symfony8
-  test-e2e-image-crop`), with an EXIF-rotated fixture and axe on the open dialog in light and dark mode.
+  test-e2e-image-crop`), with an EXIF-rotated fixture, a transparent logo, a large photo under `max_bytes` (and an engine
+  without a WebP encoder), an impossible limit, and axe on the open dialog in light and dark mode.
 
 ## [2.42.1] - 2026-11-09
 

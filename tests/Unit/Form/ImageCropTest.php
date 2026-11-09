@@ -33,14 +33,19 @@ final class ImageCropTest extends TestCase
             'data-nowo-ui-image-crop-shape' => 'square',
             'data-nowo-ui-image-crop-aspect' => '1',
             'data-nowo-ui-image-crop-max' => '1024',
-            'data-nowo-ui-image-crop-format' => 'png',
-            'data-nowo-ui-image-crop-labels' => '{"title":"Crop the image","instructions":"Drag the image or use the arrow keys to move it. Zoom with the slider, the mouse wheel, a pinch, or the + and - keys. Enter applies, Escape cancels.","stage":"Image to crop","zoom":"Zoom","zoomStatus":"Zoom %percent%%","apply":"Apply","cancel":"Cancel","close":"Close"}',
+            'data-nowo-ui-image-crop-format' => 'auto',
+            'data-nowo-ui-image-crop-quality' => '0.92',
+            'data-nowo-ui-image-crop-labels' => '{"title":"Crop the image","instructions":"Drag the image or use the arrow keys to move it. Zoom with the slider, the mouse wheel, a pinch, or the + and - keys. Enter applies, Escape cancels.","stage":"Image to crop","zoom":"Zoom","zoomStatus":"Zoom %percent%%","apply":"Apply","cancel":"Cancel","close":"Close","tooLarge":"This crop cannot be made smaller than %max%. Crop a smaller part of the image, or cancel."}',
         ], ImageCrop::attributes());
+        $png = ImageCrop::attributes(['format' => 'png']);
+        self::assertSame('png', $png['data-nowo-ui-image-crop-format']);
+        self::assertArrayNotHasKey('data-nowo-ui-image-crop-quality', $png);
+        self::assertArrayNotHasKey('data-nowo-ui-image-crop-max-bytes', $png);
     }
 
     public function testEveryOption(): void
     {
-        $attributes = ImageCrop::attributes(['shape' => 'circle', 'aspect' => 'free', 'max' => 512, 'min' => 256, 'format' => 'webp', 'quality' => 0.8, 'bake_circle' => true, 'preview' => 'avatar-preview', 'labels' => ['apply' => 'Use']]);
+        $attributes = ImageCrop::attributes(['shape' => 'circle', 'aspect' => 'free', 'max' => 512, 'min' => 256, 'format' => 'webp', 'max_bytes' => 204_800, 'quality' => 0.8, 'bake_circle' => true, 'preview' => 'avatar-preview', 'labels' => ['apply' => 'Use']]);
 
         self::assertSame('circle', $attributes['data-nowo-ui-image-crop-shape']);
         // A circle is always 1:1.
@@ -49,6 +54,8 @@ final class ImageCropTest extends TestCase
         self::assertSame('256', $attributes['data-nowo-ui-image-crop-min']);
         self::assertSame('webp', $attributes['data-nowo-ui-image-crop-format']);
         self::assertSame('0.8', $attributes['data-nowo-ui-image-crop-quality']);
+        self::assertSame('204800', $attributes['data-nowo-ui-image-crop-max-bytes']);
+        self::assertSame('true', ImageCrop::attributes(['shape' => 'circle', 'format' => 'auto', 'bake_circle' => true])['data-nowo-ui-image-crop-bake-circle']);
         self::assertSame('true', $attributes['data-nowo-ui-image-crop-bake-circle']);
         self::assertSame('avatar-preview', $attributes['data-nowo-ui-image-crop-preview']);
         self::assertSame('Use', json_decode($attributes['data-nowo-ui-image-crop-labels'], true, 2, \JSON_THROW_ON_ERROR)['apply']);
@@ -88,6 +95,8 @@ final class ImageCropTest extends TestCase
         yield 'max too large' => [['max' => 9000]];
         yield 'max string' => [['max' => '512']];
         yield 'min zero' => [['min' => 0]];
+        yield 'max_bytes zero' => [['max_bytes' => 0]];
+        yield 'max_bytes string' => [['max_bytes' => '300000']];
         yield 'min string' => [['min' => '1']];
         yield 'quality' => [['quality' => 1.5]];
         yield 'quality string' => [['quality' => '0.5']];
@@ -124,7 +133,7 @@ final class ImageCropTest extends TestCase
         self::assertSame('Recortar la imagen', $labels['title']);
         self::assertSame('Zoom %percent%%', $labels['zoomStatus']);
         self::assertSame('No', $labels['cancel']);
-        self::assertSame(['title', 'instructions', 'stage', 'zoom', 'zoomStatus', 'apply', 'cancel', 'close'], array_keys($labels));
+        self::assertSame(['title', 'instructions', 'stage', 'zoom', 'zoomStatus', 'apply', 'cancel', 'close', 'tooLarge'], array_keys($labels));
     }
 
     public function testEveryLocaleTranslatesEveryLabel(): void
@@ -132,10 +141,11 @@ final class ImageCropTest extends TestCase
         foreach (glob(\dirname(__DIR__, 3).'/src/Resources/translations/NowoUiKitBundle.*.yaml') ?: [] as $file) {
             $messages = Yaml::parseFile($file);
             self::assertIsArray($messages);
-            foreach (['title', 'instructions', 'stage', 'zoom', 'zoom_status', 'apply', 'cancel', 'close'] as $key) {
+            foreach (['title', 'instructions', 'stage', 'zoom', 'zoom_status', 'apply', 'cancel', 'close', 'too_large'] as $key) {
                 self::assertIsString($messages['image_crop.'.$key] ?? null, basename($file).' image_crop.'.$key);
             }
             self::assertStringContainsString('%percent%', $messages['image_crop.zoom_status'], basename($file));
+            self::assertStringContainsString('%max%', $messages['image_crop.too_large'], basename($file));
         }
     }
 
@@ -203,7 +213,7 @@ final class ImageCropTest extends TestCase
         $twig = PageContractTwig::create(['t' => "<input type=\"file\" name=\"logo\"{{ nowo_ui_html_attrs(nowo_ui_image_crop_attrs({shape: 'square', aspect: '16/9', max: 800})) }}>"]);
         $html = $twig->render('t');
 
-        self::assertStringContainsString('data-nowo-ui-image-crop="" data-nowo-ui-image-crop-shape="square" data-nowo-ui-image-crop-aspect="16/9" data-nowo-ui-image-crop-max="800" data-nowo-ui-image-crop-format="png" data-nowo-ui-image-crop-labels="{&quot;title&quot;', $html);
+        self::assertStringContainsString('data-nowo-ui-image-crop="" data-nowo-ui-image-crop-shape="square" data-nowo-ui-image-crop-aspect="16/9" data-nowo-ui-image-crop-max="800" data-nowo-ui-image-crop-format="auto" data-nowo-ui-image-crop-quality="0.92" data-nowo-ui-image-crop-labels="{&quot;title&quot;', $html);
         self::assertStringNotContainsString('style=', $html);
     }
 

@@ -24,14 +24,20 @@ final class KitImageCropController extends AbstractController
     public function index(Request $request): Response
     {
         $form = $this->createFormBuilder()
-            ->add('avatar', FileType::class, ['label' => 'Avatar (circle, 256 px, WebP)', 'required' => false, 'attr' => ['accept' => 'image/png,image/jpeg,image/webp'],
-                ImageCropTypeExtension::OPTION => ['shape' => 'circle', 'max' => 256, 'format' => 'webp', 'preview' => 'avatar-preview']])
+            ->add('avatar', FileType::class, ['label' => 'Avatar (circle, 256 px, auto format, 200 KB)', 'required' => false, 'attr' => ['accept' => 'image/png,image/jpeg,image/webp'],
+                ImageCropTypeExtension::OPTION => ['shape' => 'circle', 'max' => 256, 'max_bytes' => 200_000, 'preview' => 'avatar-preview']])
             ->add('logo', FileType::class, ['label' => 'Logo (16:9, 800 px, PNG)', 'required' => false, 'attr' => ['accept' => 'image/*'],
-                ImageCropTypeExtension::OPTION => ['aspect' => '16/9', 'max' => 800]])
+                ImageCropTypeExtension::OPTION => ['aspect' => '16/9', 'max' => 800, 'format' => 'png']])
             ->add('photo', FileType::class, ['label' => 'Photo (free aspect, JPEG)', 'required' => false,
                 ImageCropTypeExtension::OPTION => ['aspect' => 'free', 'max' => 4096, 'format' => 'jpeg', 'quality' => 0.9]])
             ->add('badge', FileType::class, ['label' => 'Badge (transparent circle, 128 px)', 'required' => false,
                 ImageCropTypeExtension::OPTION => ['shape' => 'circle', 'bake_circle' => true, 'max' => 128]])
+            ->add('large', FileType::class, ['label' => 'Large photo (free aspect, 1600 px, auto format, 300 000 bytes)', 'required' => false,
+                ImageCropTypeExtension::OPTION => ['aspect' => 'free', 'max' => 1600, 'max_bytes' => 300_000]])
+            ->add('brand', FileType::class, ['label' => 'Logo with transparency (free aspect, auto format)', 'required' => false,
+                ImageCropTypeExtension::OPTION => ['aspect' => 'free', 'max' => 800]])
+            ->add('tiny', FileType::class, ['label' => 'Impossible limit (100 bytes)', 'required' => false,
+                ImageCropTypeExtension::OPTION => ['max_bytes' => 100]])
             ->add('document', FileType::class, ['label' => 'Document (no crop)', 'required' => false])
             ->add('save', SubmitType::class, ['label' => 'Upload'])
             ->getForm();
@@ -39,7 +45,7 @@ final class KitImageCropController extends AbstractController
 
         $received = [];
         if ($form->isSubmitted() && $form->isValid()) {
-            foreach (['avatar', 'logo', 'photo', 'badge', 'document'] as $name) {
+            foreach (['avatar', 'logo', 'photo', 'badge', 'large', 'brand', 'tiny', 'document'] as $name) {
                 $file = $form->get($name)->getData();
                 if ($file instanceof UploadedFile && $file->isValid()) {
                     $size = @getimagesize($file->getPathname());
@@ -47,6 +53,7 @@ final class KitImageCropController extends AbstractController
                         'name' => $file->getClientOriginalName(),
                         'type' => false === $size ? 'not an image' : $size['mime'],
                         'size' => false === $size ? '' : $size[0].'x'.$size[1],
+                        'bytes' => (int) $file->getSize(),
                     ];
                 }
             }

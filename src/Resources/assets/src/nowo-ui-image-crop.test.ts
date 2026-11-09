@@ -11,6 +11,9 @@ function fakeContext(calls: Call[]): CanvasRenderingContext2D {
       if (prop in target) {
         return target[prop];
       }
+      if (prop === 'getImageData') {
+        return () => (pixels === 'throw' ? (() => { throw new Error('tainted'); })() : pixels === null ? undefined : { data: pixels });
+      }
       return (...args: unknown[]) => {
         calls.push({ name: String(prop), args });
       };
@@ -25,6 +28,8 @@ function fakeContext(calls: Call[]): CanvasRenderingContext2D {
 
 const original = { ...env };
 let calls: Call[];
+/** What getImageData answers: RGBA data, undefined (null) or a throw. */
+let pixels: Uint8ClampedArray | null | 'throw';
 let closed: number;
 let encoded: { type: string; quality: number; width: number; height: number }[];
 
@@ -64,6 +69,7 @@ describe('nowo-ui-image-crop', () => {
 
   beforeEach(() => {
     calls = [];
+    pixels = new Uint8ClampedArray([1, 2, 3, 255, 4, 5, 6, 255]);
     closed = 0;
     encoded = [];
     changes = [];
@@ -77,7 +83,8 @@ describe('nowo-ui-image-crop', () => {
     env.revokeObjectURL = vi.fn();
     document.body.innerHTML = `
       <form id="form">
-        <input id="avatar" type="file" name="avatar" accept="image/*" data-nowo-ui-image-crop data-nowo-ui-image-crop-max="512">
+        <input id="avatar" type="file" name="avatar" accept="image/*" data-nowo-ui-image-crop data-nowo-ui-image-crop-max="512" data-nowo-ui-image-crop-format="png">
+        <input id="auto" type="file" name="auto" data-nowo-ui-image-crop data-nowo-ui-image-crop-max="400">
         <input id="plain" type="file" name="plain">
         <input id="many" type="file" multiple data-nowo-ui-image-crop>
         <img id="preview" alt="" hidden>
@@ -547,5 +554,132 @@ describe('nowo-ui-image-crop', () => {
     });
     await expect(original.encode(canvas, 'image/webp', 0.5)).resolves.toBe(blob);
     expect(original.context(canvas)).toBeNull();
+  });
+
+  describe('format auto and max-bytes', () => {
+    /** An encoder whose answers are scripted: the type it really encodes and the size, per call. */
+    const scripted = (answer: (type: string, quality: number, width: number) => { type: string; size: number } | null): void => {
+      env.encode = vi.fn(async (canvas: HTMLCanvasElement, type: string, quality: number) => {
+        encoded.push({ type, quality, width: canvas.width, height: canvas.height });
+        const out = answer(type, quality, canvas.width);
+        return out ? new Blob([new Uint8Array(out.size)], { type: out.type }) : null;
+      });
+    };
+    const run = async (): Promise<{ input: HTMLInputElement; crop: Session }> => {
+      const input = el<HTMLInputElement>('auto');
+      pick(input, photo());
+      const crop = await session();
+      await crop.apply();
+      return { input, crop };
+    };
+
+    it('an opaque crop: WebP where the engine encodes it', async () => {
+      scripted((type) => ({ type, size: 100 }));
+      const { input } = await run();
+      expect(encoded.map((e) => e.type)).toEqual(['image/webp']);
+      expect(input.files?.[0]).toMatchObject({ name: 'photo.webp', type: 'image/webp' });
+    });
+
+    it('an opaque crop without a WebP encoder: JPEG', async () => {
+      scripted((type) => ({ type: type === 'image/webp' ? 'image/png' : type, size: 100 }));
+      const { input } = await run();
+      expect(encoded.map((e) => e.type)).toEqual(['image/webp', 'image/jpeg']);
+      expect(input.files?.[0]).toMatchObject({ name: 'photo.jpg', type: 'image/jpeg' });
+    });
+
+    it('a crop with transparency without a WebP encoder: PNG; unreadable pixels count as transparent', async () => {
+      scripted((type) => ({ type: type === 'image/webp' ? 'image/png' : type, size: 100 }));
+      for (const data of [new Uint8ClampedArray([1, 2, 3, 255, 4, 5, 6, 0]), null, 'throw'] as const) {
+        pixels = data;
+        encoded.length = 0;
+        const { input } = await run();
+        expect(encoded.map((e) => e.type)).toEqual(['image/webp', 'image/png']);
+        expect(input.files?.[0]?.type).toBe('image/png');
+      }
+    });
+
+    it('a baked circle is transparent without reading the pixels', async () => {
+      scripted((type) => ({ type, size: 100 }));
+      const input = el<HTMLInputElement>('auto');
+      input.setAttribute('data-nowo-ui-image-crop-shape', 'circle');
+      input.setAttribute('data-nowo-ui-image-crop-bake-circle', '');
+      pixels = 'throw';
+      const { input: same } = await run();
+      expect(same.files?.[0]?.type).toBe('image/webp');
+      expect(input).toBe(same);
+    });
+
+    it('an encoder that gives nothing for WebP falls to the next type', async () => {
+      scripted((type) => (type === 'image/webp' ? null : { type, size: 100 }));
+      const { input } = await run();
+      expect(input.files?.[0]?.type).toBe('image/jpeg');
+    });
+
+    it('over max-bytes: lower qualities first, then smaller sizes, and the event says how', async () => {
+      // 400 px; the encoder gives 1000 bytes at 0.92 and 0.85, 900 at 0.78…, and fits only once the width is 340 (one size step).
+      scripted((type, quality, width) => ({ type, size: width <= 340 ? 400 : quality > 0.8 ? 1000 : 900 }));
+      const input = el<HTMLInputElement>('auto');
+      input.setAttribute('data-nowo-ui-image-crop-max-bytes', '500');
+      const cropped = vi.fn();
+      input.addEventListener('nowo-ui:image-crop:cropped', cropped);
+      await run();
+      expect(encoded.map((e) => [e.quality, e.width])).toEqual([
+        [0.92, 400],
+        [0.85, 400],
+        [0.78, 400],
+        [0.7, 400],
+        [0.6, 400],
+        [0.5, 400],
+        [0.5, 340],
+      ]);
+      expect((cropped.mock.calls[0][0] as CustomEvent).detail).toMatchObject({ width: 340, height: 340, quality: 0.5, attempts: 7 });
+      expect(input.files?.[0]?.size).toBe(400);
+    });
+
+    it('PNG over max-bytes only steps the size down', async () => {
+      scripted((type, _quality, width) => ({ type, size: width * 10 }));
+      const input = el<HTMLInputElement>('avatar');
+      input.setAttribute('data-nowo-ui-image-crop-max-bytes', '4000');
+      pick(input, photo());
+      await (await session()).apply();
+      expect(encoded.map((e) => e.width)).toEqual([512, 435, 370]);
+      expect(input.files?.[0]?.size).toBe(3700);
+    });
+
+    it('nothing fits: the size error, the dialog stays open with a message, the picked file stays; a new crop hides it', async () => {
+      scripted((type) => ({ type, size: 5000 }));
+      const input = el<HTMLInputElement>('auto');
+      input.setAttribute('data-nowo-ui-image-crop-max-bytes', '307200');
+      input.setAttribute('data-nowo-ui-image-crop-labels', JSON.stringify({ tooLarge: 'Too big: %max%' }));
+      scripted((type) => ({ type, size: 400000 }));
+      const failed = vi.fn();
+      input.addEventListener('nowo-ui:image-crop:error', failed);
+      const { crop } = await run();
+      expect(encoded).toHaveLength(8);
+      expect((failed.mock.calls[0][0] as CustomEvent).detail).toMatchObject({ reason: 'size', bytes: 400000, maxBytes: 307200 });
+      expect(dialog().open).toBe(true);
+      const message = dialog().querySelector('[data-nowo-ui-image-crop-error]') as HTMLElement;
+      expect(message.hidden).toBe(false);
+      expect(message.getAttribute('role')).toBe('alert');
+      expect(message.textContent).toBe('Too big: 300 KB');
+      expect(input.files?.[0]?.name).toBe('photo.jpg');
+      expect(changes).toEqual([]);
+      dialog().querySelector('[data-nowo-ui-image-crop-stage]')?.dispatchEvent(new KeyboardEvent('keydown', { key: '+', bubbles: true, cancelable: true }));
+      expect(message.hidden).toBe(true);
+      crop.cancel();
+      expect(input.files?.length ?? 0).toBe(0);
+    });
+
+    it('an image smaller than min cannot step down: the size error after the qualities', async () => {
+      scripted((type) => ({ type, size: 9999 }));
+      const input = el<HTMLInputElement>('auto');
+      input.setAttribute('data-nowo-ui-image-crop-max-bytes', '10');
+      input.setAttribute('data-nowo-ui-image-crop-min', '2000');
+      const failed = vi.fn();
+      input.addEventListener('nowo-ui:image-crop:error', failed);
+      await run();
+      expect(encoded).toHaveLength(6);
+      expect((failed.mock.calls[0][0] as CustomEvent).detail.reason).toBe('size');
+    });
   });
 });

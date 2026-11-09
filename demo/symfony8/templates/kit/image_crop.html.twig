@@ -17,7 +17,7 @@
             <dl role="status" data-testid="received">
                 {% for field, file in received %}
                     <dt>{{ field }}</dt>
-                    <dd data-testid="received-{{ field }}">{{ file.name }} {{ file.type }} {{ file.size }}</dd>
+                    <dd data-testid="received-{{ field }}" data-bytes="{{ file.bytes }}">{{ file.name }} {{ file.type }} {{ file.size }}</dd>
                 {% endfor %}
             </dl>
         {% endif %}
@@ -30,6 +30,9 @@
             {{ form_row(form.logo) }}
             {{ form_row(form.photo) }}
             {{ form_row(form.badge) }}
+            {{ form_row(form.large) }}
+            {{ form_row(form.brand) }}
+            {{ form_row(form.tiny) }}
             {{ form_row(form.document) }}
             {{ form_row(form.save) }}
             {{ form_end(form) }}

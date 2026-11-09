@@ -17,8 +17,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 /**
  * FileType option `nowo_ui_image_crop` (2.43): the file input gets the attributes of the image crop step ({@see ImageCrop}), so a
  * picked image is cropped in the browser (js/nowo-ui-image-crop.js) and the crop is what the form uploads. Values: `false`
- * (default) | `true` (the defaults: a square, 1024 px, PNG) | an array of {@see ImageCrop} options, e.g.
- * `['shape' => 'circle', 'max' => 512, 'format' => 'webp']`. Refused on a `multiple` field. The field's `attr` wins over the
+ * (default) | `true` (the defaults: a square, 1024 px, format auto) | an array of {@see ImageCrop} options, e.g.
+ * `['shape' => 'circle', 'max' => 512, 'max_bytes' => 204_800]`. Refused on a `multiple` field. The field's `attr` wins over the
  * printed attributes, and an `accept` is left as the field sets it. Only registered when symfony/form is installed.
  */
 final class ImageCropTypeExtension extends AbstractTypeExtension

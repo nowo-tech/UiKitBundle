@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
+  candidateTypes,
+  formatBytes,
+  hasTransparency,
+  nextAttempt,
+  QUALITY_FLOOR,
+  scaledSize,
   clampView,
   DEFAULT_LABELS,
   frameAspect,
@@ -36,7 +42,7 @@ const reader =
 describe('image crop options', () => {
   it('has safe defaults', () => {
     const options = readOptions(reader({}));
-    expect(options).toEqual({ shape: 'square', aspect: 1, max: 1024, min: 1, format: 'png', quality: 0.92, bakeCircle: false, preview: null, labels: {} });
+    expect(options).toEqual({ shape: 'square', aspect: 1, max: 1024, min: 1, format: 'auto', maxBytes: null, quality: 0.92, bakeCircle: false, preview: null, labels: {} });
   });
 
   it('reads every attribute', () => {
@@ -47,6 +53,7 @@ describe('image crop options', () => {
         'data-nowo-ui-image-crop-max': '640',
         'data-nowo-ui-image-crop-min': '200',
         'data-nowo-ui-image-crop-format': 'webp',
+        'data-nowo-ui-image-crop-max-bytes': '300000',
         'data-nowo-ui-image-crop-quality': '0.8',
         'data-nowo-ui-image-crop-preview': ' avatar-preview ',
         'data-nowo-ui-image-crop-labels': '{"apply":"Aplicar","zoom":3,"other":"x"}',
@@ -56,6 +63,7 @@ describe('image crop options', () => {
     expect(options.max).toBe(640);
     expect(options.min).toBe(200);
     expect(options.format).toBe('webp');
+    expect(options.maxBytes).toBe(300000);
     expect(options.quality).toBe(0.8);
     expect(options.preview).toBe('avatar-preview');
     expect(options.labels).toEqual({ apply: 'Aplicar' });
@@ -77,6 +85,7 @@ describe('image crop options', () => {
         'data-nowo-ui-image-crop-max': '99999',
         'data-nowo-ui-image-crop-min': '-3',
         'data-nowo-ui-image-crop-format': 'gif',
+        'data-nowo-ui-image-crop-max-bytes': '0',
         'data-nowo-ui-image-crop-quality': '7',
         'data-nowo-ui-image-crop-preview': '   ',
       }),
@@ -84,7 +93,10 @@ describe('image crop options', () => {
     expect(options.shape).toBe('square');
     expect(options.max).toBe(8192);
     expect(options.min).toBe(1);
-    expect(options.format).toBe('png');
+    expect(options.format).toBe('auto');
+    expect(options.maxBytes).toBeNull();
+    expect(readOptions(reader({ 'data-nowo-ui-image-crop-max-bytes': '1e6' })).maxBytes).toBeNull();
+    expect(readOptions(reader({ 'data-nowo-ui-image-crop-format': 'png' })).format).toBe('png');
     expect(options.quality).toBe(1);
     expect(options.preview).toBeNull();
     expect(readOptions(reader({ 'data-nowo-ui-image-crop-max': '2' })).max).toBe(16);
@@ -109,7 +121,7 @@ describe('image crop options', () => {
     expect(parseLabels('not json')).toEqual({});
     expect(parseLabels('["a"]')).toEqual({});
     expect(parseLabels('{"title":"","cancel":"Annuler"}')).toEqual({ cancel: 'Annuler' });
-    expect(Object.keys(DEFAULT_LABELS)).toEqual(['title', 'instructions', 'stage', 'zoom', 'zoomStatus', 'apply', 'cancel', 'close']);
+    expect(Object.keys(DEFAULT_LABELS)).toEqual(['title', 'instructions', 'stage', 'zoom', 'zoomStatus', 'apply', 'cancel', 'close', 'tooLarge']);
   });
 });
 
@@ -264,5 +276,62 @@ describe('image crop input', () => {
 
   it('writes the zoom status', () => {
     expect(zoomText('Zoom %percent%%', 150)).toBe('Zoom 150%');
+  });
+});
+
+describe('image crop encoding', () => {
+  it('chooses the candidate types', () => {
+    expect(candidateTypes('auto', true)).toEqual(['image/webp', 'image/png']);
+    expect(candidateTypes('auto', false)).toEqual(['image/webp', 'image/jpeg']);
+    expect(candidateTypes('png', true)).toEqual(['image/png']);
+    expect(candidateTypes('webp', false)).toEqual(['image/webp']);
+    expect(candidateTypes('jpeg', true)).toEqual(['image/jpeg']);
+  });
+
+  it('finds a pixel that is not opaque', () => {
+    expect(hasTransparency(new Uint8ClampedArray([0, 0, 0, 255, 9, 9, 9, 255]))).toBe(false);
+    expect(hasTransparency(new Uint8ClampedArray([0, 0, 0, 255, 9, 9, 9, 254]))).toBe(true);
+    expect(hasTransparency([])).toBe(false);
+  });
+
+  it('steps the quality down, then the size, and stops', () => {
+    const size = { width: 1000, height: 500 };
+    let attempt = { quality: 0.92, scale: 1 };
+    const steps: [number, number][] = [];
+    for (let next = nextAttempt(attempt, true, size, 100); next; next = nextAttempt(attempt, true, size, 100)) {
+      attempt = next;
+      steps.push([attempt.quality, Number(attempt.scale.toFixed(4))]);
+    }
+    expect(steps.slice(0, 6)).toEqual([[0.85, 1], [0.78, 1], [0.7, 1], [0.6, 1], [0.5, 1], [0.5, 0.85]]);
+    // The size stops at min (100 of the shorter 500 px edge: scale 0.2).
+    expect(steps[steps.length - 1][1]).toBe(0.2);
+    expect(steps.every(([quality]) => quality >= QUALITY_FLOOR)).toBe(true);
+  });
+
+  it('a quality below the steps goes straight to the size; PNG never lowers the quality', () => {
+    expect(nextAttempt({ quality: 0.4, scale: 1 }, true, { width: 100, height: 100 }, 1)).toEqual({ quality: 0.4, scale: 0.85 });
+    expect(nextAttempt({ quality: 0.92, scale: 1 }, false, { width: 100, height: 100 }, 1)).toEqual({ quality: 0.92, scale: 0.85 });
+    expect(nextAttempt({ quality: 0.97, scale: 1 }, true, { width: 100, height: 100 }, 1)).toEqual({ quality: 0.92, scale: 1 });
+  });
+
+  it('no smaller size left: null', () => {
+    expect(nextAttempt({ quality: 0.5, scale: 1 }, true, { width: 300, height: 300 }, 300)).toBeNull();
+    expect(nextAttempt({ quality: 0.5, scale: 1 }, true, { width: 300, height: 300 }, 600)).toBeNull();
+    // One pixel left: rounding gives no smaller image.
+    expect(nextAttempt({ quality: 0.5, scale: 1 }, false, { width: 1, height: 1 }, 1)).toBeNull();
+  });
+
+  it('scales an output, a square stays square', () => {
+    expect(scaledSize({ width: 401, height: 401 }, 0.85, true)).toEqual({ width: 341, height: 341 });
+    expect(scaledSize({ width: 800, height: 450 }, 0.5, false)).toEqual({ width: 400, height: 225 });
+    expect(scaledSize({ width: 1, height: 1 }, 0.1, false)).toEqual({ width: 1, height: 1 });
+  });
+
+  it('writes byte counts', () => {
+    expect(formatBytes(307200)).toBe('300 KB');
+    expect(formatBytes(1048576)).toBe('1 MB');
+    expect(formatBytes(1572864)).toBe('1.5 MB');
+    expect(formatBytes(10)).toBe('10 B');
+    expect(formatBytes(1024)).toBe('1 KB');
   });
 });

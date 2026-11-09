@@ -139,7 +139,8 @@ composer update nowo-tech/ui-kit-bundle
 
 Nothing to do; the default markup is unchanged. New and opt-in: the image crop step for file inputs
 (`js/nowo-ui-image-crop.js`, the FileType option `nowo_ui_image_crop`, the Twig function `nowo_ui_image_crop_attrs()`,
-`ImageCrop::attributes()`), see [USAGE](USAGE.md#image-crop). New CSS rules match only `.nowo-ui-image-crop*`; new
+`ImageCrop::attributes()`; `format: auto` by default, optional `max_bytes`), see [USAGE](USAGE.md#image-crop). Accept
+`image/webp`, `image/png` and `image/jpeg` where a cropped input is validated: `auto` picks among them per engine. New CSS rules match only `.nowo-ui-image-crop*`; new
 translation keys `image_crop.*`. A page that opts in and sends a CSP needs `img-src blob:` for the `preview` image, and
 for the `<img>` fallback of browsers whose `createImageBitmap` does not take the orientation option.
 

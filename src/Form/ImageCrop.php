@@ -18,12 +18,15 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  *     frame takes the image's own proportions). A circle is always 1.
  *   - `max`: longest edge of the output in px, 16 to 8192 (default 1024). The crop is never enlarged.
  *   - `min`: shortest edge the crop may have in image px (default 1): zooming in stops there, so a server minimum is met.
- *   - `format`: `png` (default) | `webp` | `jpeg`. A browser that cannot encode WebP gives PNG.
+ *   - `format`: `auto` (default: WebP where the engine encodes it, else PNG for a crop with transparency and JPEG without) |
+ *     `png` | `webp` | `jpeg`. A browser that cannot encode WebP gives PNG for an explicit `webp`.
+ *   - `max_bytes`: largest output file in bytes (default none). Over it, the quality (WebP, JPEG) and then the size step down;
+ *     when nothing fits, the dialog says so and stays open.
  *   - `quality`: encoder quality for WebP and JPEG, 0 to 1 (default 0.92).
  *   - `bake_circle`: `true` (circle only, PNG or WebP): the pixels outside the circle become transparent.
  *   - `preview`: id of an `<img>` that shows the crop once applied.
  *   - `labels`: texts of the dialog (`title`, `instructions`, `stage`, `zoom`, `zoom_status` with `%percent%`, `apply`,
- *     `cancel`, `close`), over the translations of `image_crop.*` (domain NowoUiKitBundle).
+ *     `cancel`, `close`, `too_large` with `%max%`), over the translations of `image_crop.*` (domain NowoUiKitBundle).
  *
  * Use it on a FileType through the option `nowo_ui_image_crop` ({@see ImageCropTypeExtension}), on a hand-written input through
  * the Twig function `nowo_ui_image_crop_attrs()`, or from another bundle (FormKit) with `ImageCrop::attributes($options,
@@ -35,13 +38,13 @@ final class ImageCrop
 
     public const SHAPES = ['square', 'circle'];
 
-    public const FORMATS = ['png', 'webp', 'jpeg'];
+    public const FORMATS = ['auto', 'png', 'webp', 'jpeg'];
 
     public const MAX_RANGE = [16, 8192];
 
     public const DEFAULT_MAX = 1024;
 
-    private const KEYS = ['shape', 'aspect', 'max', 'min', 'format', 'quality', 'bake_circle', 'preview', 'labels'];
+    private const KEYS = ['shape', 'aspect', 'max', 'min', 'format', 'max_bytes', 'quality', 'bake_circle', 'preview', 'labels'];
 
     /** Label key => translation key. */
     private const LABELS = [
@@ -53,6 +56,7 @@ final class ImageCrop
         'apply' => 'image_crop.apply',
         'cancel' => 'image_crop.cancel',
         'close' => 'image_crop.close',
+        'too_large' => 'image_crop.too_large',
     ];
 
     /** English wording when no translator is given (the runtime's own defaults). */
@@ -65,6 +69,7 @@ final class ImageCrop
         'apply' => 'Apply',
         'cancel' => 'Cancel',
         'close' => 'Close',
+        'too_large' => 'This crop cannot be made smaller than %max%. Crop a smaller part of the image, or cancel.',
     ];
 
     /**
@@ -72,7 +77,7 @@ final class ImageCrop
      *
      * @param array<mixed> $options
      *
-     * @return array{shape: string, aspect: string, max: int, min: int, format: string, quality: float, bake_circle: bool, preview: ?string, labels: array<string, string>}
+     * @return array{shape: string, aspect: string, max: int, min: int, format: string, max_bytes: ?int, quality: float, bake_circle: bool, preview: ?string, labels: array<string, string>}
      */
     public static function normalize(array $options): array
     {
@@ -84,9 +89,13 @@ final class ImageCrop
         if (!\in_array($shape, self::SHAPES, true)) {
             throw new InvalidArgumentException('The image crop shape is "square" or "circle".');
         }
-        $format = $options['format'] ?? 'png';
+        $format = $options['format'] ?? 'auto';
         if (!\in_array($format, self::FORMATS, true)) {
-            throw new InvalidArgumentException('The image crop format is "png", "webp" or "jpeg".');
+            throw new InvalidArgumentException('The image crop format is "auto", "png", "webp" or "jpeg".');
+        }
+        $maxBytes = $options['max_bytes'] ?? null;
+        if (null !== $maxBytes && (!\is_int($maxBytes) || $maxBytes < 1)) {
+            throw new InvalidArgumentException('The image crop max_bytes is a positive integer (bytes) or null.');
         }
         $max = $options['max'] ?? self::DEFAULT_MAX;
         if (!\is_int($max) || $max < self::MAX_RANGE[0] || $max > self::MAX_RANGE[1]) {
@@ -123,6 +132,7 @@ final class ImageCrop
             'max' => $max,
             'min' => $min,
             'format' => $format,
+            'max_bytes' => $maxBytes,
             'quality' => (float) $quality,
             'bake_circle' => $bake,
             'preview' => $preview,
@@ -170,6 +180,9 @@ final class ImageCrop
         ];
         if (1 !== $config['min']) {
             $attributes[self::ATTRIBUTE.'-min'] = (string) $config['min'];
+        }
+        if (null !== $config['max_bytes']) {
+            $attributes[self::ATTRIBUTE.'-max-bytes'] = (string) $config['max_bytes'];
         }
         if ('png' !== $config['format']) {
             $attributes[self::ATTRIBUTE.'-quality'] = rtrim(rtrim(number_format($config['quality'], 3, '.', ''), '0'), '.');
