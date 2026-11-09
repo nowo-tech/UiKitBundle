@@ -1,7 +1,8 @@
 {#
   UiKit demo (2.41 phone mode): the page-edge tabs launcher (partial edge_tabs_launcher + js/nowo-ui-edge-tabs.js), selects
   (kit geometry vs a host select with a fixed height, which WebKit cut before), a responsive table with phone cards and one
-  whose required columns overflow (it scrolls), a `table` with Column::phone, badges and tabs (touch targets). The meta
+  whose required columns overflow (it scrolls), a `table` with Column::phone, badges and tabs (touch targets). 2.42: a
+  listing (listing_head / listing_cells) with ListingField::phone in phone cards, a drawer whose edge tab never folds. The meta
   tag repeats the CSP of the response.
 #}
 {% extends '@NowoUiKit/layout/document.html.twig' %}
@@ -91,6 +92,22 @@
             {% endembed %}
         </div>
 
+        <h2>Users (listing partials, ListingField::phone)</h2>
+        <div class="nowo-ui-card">
+            {% embed '@NowoUiKitBundle/partials/_responsive_table.html.twig' with {phone_layout: 'cards', dialog_id: 'rt-listing', attr: {'data-testid': 'rt-listing'}, users: users, users_listing: users_listing} only %}
+                {% block table %}
+                    <table class="nowo-ui-table" data-responsive-table-target="table">
+                        <thead><tr>{% include nowo_ui_partial('listing_head') with {listing_layout: users_listing} only %}</tr></thead>
+                        <tbody>
+                        {% for row in users %}
+                            <tr>{% include nowo_ui_partial('listing_cells') with {listing_layout: users_listing, cells_template: 'kit/_mobile_listing_cells.html.twig'} %}</tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                {% endblock %}
+            {% endembed %}
+        </div>
+
         <h2>Users (table partial, Column::phone)</h2>
         <div data-testid="column-phone">
             {{ include(nowo_ui_partial('table'), {table: users_table}, false) }}
@@ -102,6 +119,12 @@
     {{ include('@NowoUiKitBundle/partials/_edge_tab.html.twig', {label: 'Tour this page', icon: 'tour', slot: 2, button: true, testid: 'edge-tour'}, false) }}
     {{ include('@NowoUiKitBundle/partials/_edge_tab.html.twig', {href: '#preferences', label: 'Preferences', icon: 'config', slot: 3, new_tab: false, testid: 'edge-prefs'}, false) }}
     {{ include('@NowoUiKitBundle/partials/_edge_tab.html.twig', {label: 'Customize the listing', icon: 'filter', slot: 4, button: true, testid: 'edge-customizer', attr: {'data-nowo-ui-dialog-open': 'mobile-customizer'}}, false) }}
+    {# 2.42 (MUX-01): like Beacon's drawers, the tab rides on the drawer's edge and is its only close control; while the
+       drawer is open it has aria-expanded="true", so the launcher never folds it. #}
+    <aside class="kit-mobile-drawer" id="kit-mobile-drawer" data-testid="drawer" aria-label="Developer notes">
+        {{ include('@NowoUiKitBundle/partials/_edge_tab.html.twig', {label: 'Developer notes', icon: 'view', slot: 5, button: true, testid: 'edge-drawer', attr: {'aria-expanded': 'false', 'aria-controls': 'kit-mobile-drawer'}}, false) }}
+        <div class="kit-mobile-drawer__body" data-testid="drawer-body"><h2>Developer notes</h2><p><a href="#notes-link">A link inside the drawer</a></p></div>
+    </aside>
     {{ include(nowo_ui_partial('edge_tabs_launcher'), {gutter: true, testid: 'edge-launcher'}, false) }}
     {{ include(nowo_ui_partial('dialog'), {id: 'mobile-customizer', title: 'Customize the listing', body: '<p data-testid="customizer-body">Columns, filters and rows per page.</p>'}, false) }}
 {% endblock %}
@@ -115,4 +138,5 @@
     {{ parent() }}
     <script src="{{ asset('js/nowo-ui-edge-tabs.js', 'nowo_ui_kit') }}" defer></script>
     <script src="{{ asset('js/demo-peers.js') }}" defer></script>
+    <script src="{{ asset('js/mobile-drawer-demo.js') }}" defer></script>
 {% endblock %}

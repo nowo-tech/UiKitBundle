@@ -43,3 +43,35 @@
 .kit-mobile-nowrap {
   white-space: nowrap;
 }
+
+/* 2.42 (MUX-01): a Beacon-like drawer — fixed and transformed (the containing block of the tab inside it), its edge tab
+   absolutely positioned on its left edge. The slider starts under the 3.5rem header, so a 0.75rem tab top keeps the
+   kit's slot rhythm (the same places as the viewport tabs). */
+.kit-mobile-drawer {
+  position: fixed;
+  top: 3.5rem;
+  right: 0;
+  bottom: 0;
+  z-index: 75;
+  width: min(20rem, 85vw);
+  box-sizing: border-box;
+  padding: 1rem;
+  border-left: 1px solid var(--nowo-ui-border);
+  background: var(--nowo-ui-surface);
+  transform: translateX(100%);
+}
+
+.kit-mobile-drawer[data-open] {
+  transform: translateX(0);
+}
+
+.kit-mobile-drawer .nowo-ui-edge-tab__link {
+  --nowo-ui-edge-tab-top: 0.75rem;
+
+  position: absolute;
+  right: 100%;
+}
+
+.kit-mobile-drawer:not([data-open]) .kit-mobile-drawer__body {
+  visibility: hidden;
+}

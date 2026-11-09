@@ -819,7 +819,9 @@ Stimulus peer `responsive-table` ([STIMULUS.md](STIMULUS.md#responsive-table-sti
   each row becomes a card of `label | value` lines (labels from the header cells). Mark header cells with
   `data-nowo-ui-phone`: `primary` (the card title: first, bold, no label), `meta` (a small muted line without a
   label), `hide` (left out on phones). In the desktop column fit `hide` columns go first and `primary` ones never
-  hide. Scroll mode stays a plain table.
+  hide. Scroll mode stays a plain table. Listings (2.42): `new ListingField('name', 'User', phone: 'primary')` —
+  `listing_head` / `listing_cells` print the attribute (a stacked group follows its lead column); a host head template
+  prints `{% if column.phone %} data-nowo-ui-phone="{{ column.phone }}"{% endif %}`.
 - Each row ends with an eye button (shown only while a column is hidden, named "Row details: <row title>", row
   title = text of the first two columns). It opens a native `<dialog>` (confirm dialog chrome, centred with `margin: auto` even under Tailwind preflight — 1.17.2) with **every** column
   as label / value pairs; the cell contents are **moved** into the dialog and back on close, so forms, links, ids and
@@ -998,6 +1000,17 @@ Tab follows the document order, so use ArrowUp / ArrowDown to reach the tabs. A 
 the focus back to the launcher when it closes. The fold applies only to a launcher without `hidden`; never hide it with
 CSS where its `when` applies.
 
+2.42: a tab whose panel is open never folds. While the launcher is folded, a `.nowo-ui-edge-tab__link` with
+`aria-expanded="true"` (set it while its drawer / panel is open) or `data-nowo-ui-edge-tab-pinned` (partial option
+`pinned: true`, or the attribute in `attr`) stays visible at its own `top`; the others stay hidden. Open, the launcher
+stacks every tab under it as before. When the tab folds while focused (aria-expanded back to false), the focus goes to
+the launcher. The `top` of a tab is
+`calc(var(--nowo-ui-edge-tab-top, header height + 0.75rem) + var(--nowo-ui-edge-tab-slot, 0) * var(--nowo-ui-edge-tab-step, 3.25rem))`
+(open launcher: `slot + 1`). It resolves against the tab's containing block: the viewport for a plain tab, but a tab
+inside a transformed (or `filter` / `will-change: transform`) ancestor, `position: fixed` or `absolute`, is placed
+from that ancestor's top. For a tab riding on a drawer, set `--nowo-ui-edge-tab-top` on the drawer (e.g. `0px`) and the
+slot per tab.
+
 ### Thin scrollbars
 
 One thin bar everywhere (6px, rounded thumb from `--nowo-ui-text`, no arrow buttons; light / dark follow the
@@ -1055,7 +1068,7 @@ Pieces:
 | Piece | What |
 | --- | --- |
 | `Nowo\UiKitBundle\Listing\ListingDefinitionInterface` | One service per listing: `key()`, `columns()`, `filters()` (lists of `ListingField`). Autoconfigured with the tag `nowo_ui_kit.listing_definition`. |
-| `ListingField` | `key`, `label` (`View\Label` or string), `required` (always shown), `defaultVisible`, `priority` (`data-priority`), `headClass`, `cellClass` (columns). |
+| `ListingField` | `key`, `label` (`View\Label` or string), `required` (always shown), `defaultVisible`, `priority` (`data-priority`), `headClass`, `cellClass` (columns); 2.42: `phone` (`primary` \| `meta` \| `hide`, columns: `data-nowo-ui-phone` on the head and row cells for `phone_layout: 'cards'`). |
 | `ListingCustomizerViewBuilder` | `forRequest(key, Request)` → `['view' => ListingCustomizerView, 'filteredRequest' => Request]`; `build(key, Request)`. |
 | `ListingCustomizerView` | `layout` (`ListingLayout`), `tableMode`, `tableOptions()`, `ignoredFilters`, `cookieName`, `dialogId()`, `clientState()`, `withLayout()`. |
 | `ListingLayout` | `visibleColumnGroups()` (stacked columns share a cell), `visibleColumnKeys()`, `visibleFilterKeys()`, `hiddenFilterKeys()`, `isColumnVisible()`, `filterRequest()`, `ignoredFilters()`, `withoutColumns()`, `stored`. |

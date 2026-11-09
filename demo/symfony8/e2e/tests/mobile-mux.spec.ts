@@ -76,6 +76,94 @@ test.describe('phone mode', () => {
     await expect(launcher).toBeFocused();
   });
 
+  test('2.42 MUX-01: an expanded edge tab never folds and keeps its own top inside a fixed, transformed drawer', async ({ page }, info) => {
+    await open(page);
+    const launcher = page.getByTestId('edge-launcher');
+    const drawer = page.getByTestId('drawer');
+    const tab = page.getByTestId('edge-drawer').locator('button');
+    const others = ['edge-manual', 'edge-notes', 'edge-tour', 'edge-prefs', 'edge-customizer'].map((id) => page.getByTestId(id).locator('a, button'));
+    const rem = await page.evaluate(() => Number.parseFloat(getComputedStyle(document.documentElement).fontSize));
+    // Own top (slot 5, --nowo-ui-edge-tab-top 0.75rem on the drawer), from the drawer's top: its containing block.
+    const ownTop = 0.75 * rem + 5 * 3.25 * rem;
+    const offset = async (): Promise<number> => (await tab.boundingBox())!.y - (await drawer.boundingBox())!.y;
+
+    // Folded and collapsed: hidden like the others.
+    await expect(tab).toBeHidden();
+
+    // Used from the open launcher: the drawer opens, the launcher folds, the tab rides on the drawer's edge.
+    await launcher.click();
+    await tab.click();
+    await expect(drawer).toHaveAttribute('data-open', '');
+    await expect(tab).toHaveAttribute('aria-expanded', 'true');
+    await expect(launcher).toHaveAttribute('aria-expanded', 'false');
+    await expect(tab).toBeVisible();
+    for (const other of others) {
+      await expect(other).toBeHidden();
+    }
+    expect(Math.abs((await offset()) - ownTop)).toBeLessThan(1);
+    expect(await tab.evaluate((el) => getComputedStyle(el).top)).toBe(`${ownTop}px`);
+    const tabBox = (await tab.boundingBox())!;
+    // right: 100% of the drawer's padding box: the tab ends on the drawer's 1px border.
+    expect(Math.abs(tabBox.x + tabBox.width - (await drawer.boundingBox())!.x)).toBeLessThanOrEqual(1.5);
+    // position: fixed resolves against the transformed drawer too: same place.
+    await tab.evaluate((el) => { (el as HTMLElement).style.position = 'fixed'; });
+    expect(Math.abs((await offset()) - ownTop)).toBeLessThan(1);
+    // Without a transform (transform: none) a fixed tab is placed from the viewport; an absolute one still from the drawer.
+    await drawer.evaluate((el) => { (el as HTMLElement).style.transform = 'none'; });
+    expect(Math.abs((await tab.boundingBox())!.y - ownTop)).toBeLessThan(1);
+    await tab.evaluate((el) => { (el as HTMLElement).style.position = ''; });
+    expect(Math.abs((await offset()) - ownTop)).toBeLessThan(1);
+    await drawer.evaluate((el) => { (el as HTMLElement).style.transform = ''; });
+
+    // A click elsewhere leaves it; the open launcher stacks it under itself (slot + 1), folding puts it back.
+    // (the open drawer covers the right of the page: click the start of the lede)
+    const lede = page.getByTestId('lede');
+    await lede.click({ position: { x: 4, y: 4 } });
+    await expect(tab).toBeVisible();
+    await launcher.focus();
+    await page.keyboard.press('Enter');
+    await expect(launcher).toHaveAttribute('aria-expanded', 'true');
+    expect(Math.abs((await offset()) - (ownTop + 3.25 * rem))).toBeLessThan(1);
+    await lede.click({ position: { x: 4, y: 4 } });
+    await expect(launcher).toHaveAttribute('aria-expanded', 'false');
+    await expect(drawer).toHaveAttribute('data-open', '');
+    expect(Math.abs((await offset()) - ownTop)).toBeLessThan(1);
+
+    // Its own click closes the drawer: collapsed, it folds again.
+    await tab.click();
+    await expect(tab).toHaveAttribute('aria-expanded', 'false');
+    await expect(tab).toBeHidden();
+
+    // From the keyboard: the focus never stays on the folded tab.
+    await launcher.focus();
+    await page.keyboard.press('Enter');
+    for (let i = 0; i < 8 && !(await tab.evaluate((el) => el === document.activeElement)); i += 1) {
+      await page.keyboard.press('ArrowDown');
+    }
+    await expect(tab).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(tab).toHaveAttribute('aria-expanded', 'true');
+    await expect(tab).toBeVisible();
+    await expect(tab).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(tab).toBeHidden();
+    await expect(launcher).toBeFocused();
+
+    // Last: a file written under the demo makes its dev hot reload morph the page.
+    await tab.evaluate((el) => (el as HTMLElement).click());
+    await expect(tab).toBeVisible();
+    await page.screenshot({ path: `test-results/mux-edge-pinned-${info.project.name}.png` });
+  });
+
+  test('2.42 MUX-01: data-nowo-ui-edge-tab-pinned keeps a collapsed tab out of the fold', async ({ page }) => {
+    await open(page);
+    const manual = page.getByTestId('edge-manual').locator('a');
+    await expect(manual).toBeHidden();
+    await manual.evaluate((el) => el.setAttribute('data-nowo-ui-edge-tab-pinned', ''));
+    await expect(manual).toBeVisible();
+    await expect(page.getByTestId('edge-notes').locator('a')).toBeHidden();
+  });
+
   test('JC-I12: a hidden launcher folds nothing', async ({ page }) => {
     await open(page);
     await page.getByTestId('edge-launcher').evaluate((el) => el.setAttribute('hidden', ''));
@@ -135,6 +223,28 @@ test.describe('phone mode', () => {
     expect(await scroller.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
     expect(await page.getByTestId('rt-scroll-name').evaluate((el) => getComputedStyle(el).overflowWrap)).not.toBe('anywhere');
     await root.screenshot({ path: `test-results/mux-scroll-${info.project.name}.png` });
+  });
+
+  test('2.42 MUX-20 / MUX-22: ListingField::phone in phone cards, under a stored customization', async ({ page }, info) => {
+    await open(page);
+    const root = page.getByTestId('rt-listing');
+    await expect(root).toHaveAttribute('data-rt-cards', '');
+    await expect(root.locator('thead th[data-column="name"]')).toHaveAttribute('data-nowo-ui-phone', 'primary');
+    await expect(root.locator('thead th[data-column="role"]')).not.toHaveAttribute('data-nowo-ui-phone', /./);
+    const row = root.locator('tbody tr').first();
+    // Stored order puts Role first and hides Status; the primary column is still the card title.
+    await expect(row.locator('td[data-column]').first()).toHaveAttribute('data-column', 'role');
+    await expect(row.locator('td[data-column="status"]')).toHaveCount(0);
+    const name = row.locator('td[data-column="name"]');
+    await expect(name).toHaveAttribute('data-nowo-ui-phone', 'primary');
+    await expect(name).toHaveText('Demo Admin');
+    expect((await name.boundingBox())!.y).toBeLessThan((await row.locator('td[data-column="role"]').boundingBox())!.y);
+    await expect(row.locator('td[data-column="email"]')).toHaveAttribute('data-nowo-ui-phone', 'meta');
+    await expect(row.locator('td[data-column="id"]')).toBeHidden();
+    await expect(row.locator('td[data-column="role"]')).toHaveAttribute('data-rt-label', 'Role');
+    const scroller = root.locator('.nowo-ui-responsive-table__scroller');
+    expect(await scroller.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
+    await root.screenshot({ path: `test-results/mux-listing-cards-${info.project.name}.png` });
   });
 
   test('MUX-22: Column::phone in the table partial card mode', async ({ page }) => {
