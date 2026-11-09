@@ -39,6 +39,14 @@
     - dialog_id: dialog id prefix (default generated)
     - root_class, scroller_class, dialog_class: extra classes (root, scroller, <dialog>)
     - testids (default false): data-testid `responsive-table`, `table-mode-toggle`, `row-detail-dialog`
+    - phone_layout (2.41, MUX-20): '' (default: the column fit below) | 'cards' — in Responsive mode on a phone
+      (`phone_query`), every row becomes a card of labelled cells instead of hiding columns; cells with
+      `data-nowo-ui-phone="primary"` are the card title, `meta` a small muted line, `hide` stay out of the card
+    - overflow (2.41, MUX-20): what Responsive mode does when the required columns still do not fit — '' (default)
+      scrolls the table sideways (words stay whole); 'break' keeps the 2.40 last resort (words break anywhere, no
+      horizontal scroll)
+  Per column (2.41): `data-nowo-ui-phone="primary|meta|hide"` on the header cell and the row cells. In the column fit,
+  `hide` columns go first and `primary` ones never hide (like `data-required`).
 #}
 {% set _mode = table_mode|default('') %}
 {% set _icons = {scroll: 'scroll_horizontal', responsive: 'rows', close: 'close'}|merge(icons|default({})) %}
@@ -64,6 +72,8 @@
     {%- if save_cookie|default('') %} data-responsive-table-cookie-value="{{ save_cookie }}"{% endif %}
     {%- if phone_query|default('') %} data-responsive-table-phone-query-value="{{ phone_query }}"{% endif %}
     {%- if part_selector|default('') %} data-responsive-table-part-selector-value="{{ part_selector }}"{% endif %}
+    {%- if phone_layout|default('') == 'cards' %} data-responsive-table-phone-layout-value="cards"{% endif %}
+    {%- if overflow|default('') == 'break' %} data-rt-overflow-mode="break"{% endif %}
     data-responsive-table-messages-value="{{ {toResponsive: _labels.to_responsive, toScroll: _labels.to_scroll, details: _labels.details, saveError: _labels.save_error}|json_encode }}"
     {%- if _mode %} data-table-mode="{{ _mode }}"{% endif %}
     {%- if _testids %} data-testid="responsive-table"{% endif %}

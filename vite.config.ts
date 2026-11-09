@@ -32,6 +32,7 @@ type Entry =
   | 'sortable'
   | 'emoji-picker'
   | 'show-more'
+  | 'edge-tabs'
   | 'demo-peers';
 
 const entry = process.env.VITE_ENTRY as Entry | undefined;
@@ -421,6 +422,22 @@ const configs: Record<Entry, { build: object }> = {
         output: {
           format: 'iife' as const,
           entryFileNames: 'js/nowo-ui-show-more.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  // 2.41 (MUX-01): opt-in page-edge tabs launcher.
+  'edge-tabs': {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-edge-tabs.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-edge-tabs.js',
         },
       },
       minify: true,

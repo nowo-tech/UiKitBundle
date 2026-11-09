@@ -1,0 +1,128 @@
+/**
+ * Page-edge tabs launcher (`js/nowo-ui-edge-tabs.js`, 2.41, MUX-01; opt-in: add `edge-tabs` to `script_names` and render the
+ * partial `edge_tabs_launcher` once per page). On phones (or always, per the partial's `when`) the CSS folds every
+ * `partials/_edge_tab` of the page behind one launcher tab; this script only opens and closes the fold. Without it the
+ * launcher stays hidden and the tabs keep their 2.40 places (the CSS needs `data-nowo-ui-edge-tabs-ready` on <html>).
+ *
+ * Open: `data-nowo-ui-edge-tabs-open` on <html> + `aria-expanded="true"` on the launcher; the tabs show under it. Opening
+ * from the keyboard moves the focus to the first tab; ArrowDown / ArrowUp walk the launcher and the tabs. It closes on
+ * Escape (focus back on the launcher), on a click elsewhere, once a tab is used, and when the focus leaves the launcher
+ * and the tabs. Tab / Shift+Tab are never captured (no focus trap). Event: bubbling `nowo-ui:edge-tabs:toggle` {open}.
+ *
+ * Delegated listeners on the document; importing touches no DOM. Members are read through the prototypes.
+ */
+export const LAUNCHER = '[data-nowo-ui-edge-tabs-launcher]';
+export const TAB = '.nowo-ui-edge-tab__link';
+export const OPEN = 'data-nowo-ui-edge-tabs-open';
+export const READY = 'data-nowo-ui-edge-tabs-ready';
+
+const closest = (el: Element, selector: string): HTMLElement | null => Element.prototype.closest.call(el, selector) as HTMLElement | null;
+const queryAll = (root: ParentNode, selector: string): HTMLElement[] =>
+  [...(Document.prototype.querySelectorAll.call(root, selector) as NodeListOf<HTMLElement>)];
+const listen = (target: EventTarget, type: string, handler: (event: never) => void): void => {
+  EventTarget.prototype.addEventListener.call(target, type, handler as EventListener);
+};
+const root = (): HTMLElement => document.documentElement;
+const elementOf = (target: EventTarget | null): Element | null => (target instanceof Element ? target : null);
+
+export function isOpen(): boolean {
+  return root().hasAttribute(OPEN);
+}
+
+/** The launcher of the page (the first one; a page renders one). */
+export function launcher(): HTMLElement | null {
+  return queryAll(document, LAUNCHER)[0] ?? null;
+}
+
+/** The tabs the launcher shows: every edge tab link of the page, in document order. */
+export function tabs(): HTMLElement[] {
+  return queryAll(document, TAB);
+}
+
+/** Opens or closes the fold; `focusFirst` moves the focus to the first tab (keyboard opening). */
+export function setOpen(open: boolean, focusFirst = false): void {
+  const button = launcher();
+  const was = isOpen();
+  root().toggleAttribute(OPEN, open);
+  button?.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (open && focusFirst) {
+    tabs()[0]?.focus();
+  }
+  if (was !== open) {
+    (button ?? root()).dispatchEvent(new CustomEvent('nowo-ui:edge-tabs:toggle', { bubbles: true, detail: { open } }));
+  }
+}
+
+function onClick(event: MouseEvent): void {
+  const target = elementOf(event.target);
+  const button = target ? closest(target, LAUNCHER) : null;
+  if (button) {
+    // detail 0: activated from the keyboard (Enter / Space) — the focus goes to the first tab.
+    setOpen(!isOpen(), !isOpen() && 0 === event.detail);
+
+    return;
+  }
+  if (isOpen()) {
+    // A click on a tab reaches the tab first (its own link / button acts), then folds; anywhere else folds too.
+    setOpen(false);
+  }
+}
+
+function onKeyDown(event: KeyboardEvent): void {
+  if (!isOpen()) {
+    return;
+  }
+  const button = launcher();
+  if ('Escape' === event.key) {
+    setOpen(false);
+    button?.focus();
+
+    return;
+  }
+  if ('ArrowDown' !== event.key && 'ArrowUp' !== event.key) {
+    return;
+  }
+  const active = elementOf(document.activeElement);
+  const ring = [...(button ? [button] : []), ...tabs()];
+  const index = active ? ring.indexOf(active as HTMLElement) : -1;
+  if (-1 === index) {
+    return;
+  }
+  event.preventDefault();
+  const next = ring[(index + ('ArrowDown' === event.key ? 1 : ring.length - 1)) % ring.length];
+  next?.focus();
+}
+
+function onFocusOut(event: FocusEvent): void {
+  if (!isOpen()) {
+    return;
+  }
+  const from = elementOf(event.target);
+  if (!from || !(closest(from, LAUNCHER) || closest(from, TAB))) {
+    return;
+  }
+  const to = elementOf(event.relatedTarget);
+  // Focus leaving for the page (not another tab, not the launcher) folds; a null relatedTarget (window blur) does not.
+  if (to && !closest(to, LAUNCHER) && !closest(to, TAB)) {
+    setOpen(false);
+  }
+}
+
+let bound = false;
+
+export function bindNowoUiEdgeTabs(): void {
+  if (bound) {
+    return;
+  }
+  bound = true;
+  listen(document, 'click', onClick);
+  listen(document, 'keydown', onKeyDown);
+  listen(document, 'focusout', onFocusOut);
+  root().setAttribute(READY, '');
+}
+
+const BOUND_KEY = Symbol.for('nowo-ui.edge-tabs.bound');
+if (typeof document !== 'undefined' && !(window as unknown as Record<symbol, unknown>)[BOUND_KEY]) {
+  (window as unknown as Record<symbol, unknown>)[BOUND_KEY] = true;
+  bindNowoUiEdgeTabs();
+}

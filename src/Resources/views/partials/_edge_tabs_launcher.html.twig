@@ -1,0 +1,22 @@
+{#
+  Page-edge tabs launcher (2.41, MUX-01): on phones the page-edge tabs (partials/_edge_tab: manual, notes, tour, listing
+  customizer…) sat over the right edge of the content, one under the other. Render this partial once per page (e.g. in
+  the layout, after the content) and load the opt-in runtime `edge-tabs` (script_names); then, where `when` applies,
+  every edge tab of the page folds behind this one launcher tab at the first slot, and a tap shows them under it.
+  Without the runtime the launcher stays hidden and the tabs keep their places (no-JS fallback). Desktop is unchanged
+  with the default `when`.
+
+  Optional:
+    - when (default `phone`): `phone` = viewports up to 40rem, and touch screens (pointer: coarse) up to 64rem;
+      `always` = every viewport; anything else = never (the launcher is printed but stays hidden)
+    - gutter (default false): while folded, `.nowo-ui-main` (and any element using var(--nowo-ui-edge-tabs-gutter))
+      keeps the launcher's width free on its right, so it covers nothing
+    - label (default `edge_tab.launcher`), icon (default `more`)
+    - class, testid, attr (hash; true = bare attribute, false / null = omitted, on* handlers dropped)
+#}
+{% set _label = label|default('edge_tab.launcher'|trans({}, 'NowoUiKitBundle')) %}
+{% set _when = when|default('phone') in ['phone', 'always'] ? when|default('phone') : 'never' %}
+{% set _attr %}{% for _name, _value in attr|default({}) %}{% if _value is not same as(false) and _value is not null and not (_name|lower starts with 'on') %} {{ _name|e('html_attr') }}{% if _value is not same as(true) %}="{{ _value }}"{% endif %}{% endif %}{% endfor %}{% endset %}
+<button type="button" class="nowo-ui-edge-tabs-launcher{{ class|default('') ? ' ' ~ class : '' }}" data-nowo-ui-edge-tabs-launcher data-nowo-ui-edge-tabs-when="{{ _when }}"{% if gutter|default(false) %} data-nowo-ui-edge-tabs-gutter{% endif %} aria-expanded="false" aria-label="{{ _label }}" title="{{ _label }}"{% if testid|default('') %} data-testid="{{ testid }}"{% endif %}{{ _attr }}>
+    <span class="nowo-ui-edge-tab__icon" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: icon|default('more'), label: _label}, false)|trim|raw }}</span>
+</button>

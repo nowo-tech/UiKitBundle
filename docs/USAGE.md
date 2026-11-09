@@ -27,6 +27,7 @@
   - [Disclosure chevron](#disclosure-chevron)
   - [Back link](#back-link)
   - [Page-edge tab and route links](#page-edge-tab-and-route-links)
+  - [Page-edge tabs on phones (2.41)](#page-edge-tabs-on-phones-241)
   - [Thin scrollbars](#thin-scrollbars)
   - [Morphicons (animated icons)](#morphicons-animated-icons)
 - [Listing customizer](#listing-customizer)
@@ -811,9 +812,14 @@ Stimulus peer `responsive-table` ([STIMULUS.md](STIMULUS.md#responsive-table-sti
   the detail column, then with it — and recomputes on resize. Cell text wraps — including descendants with
   `white-space: nowrap` (Tailwind `.whitespace-nowrap`, Bootstrap `.text-nowrap`; 1.17.2) — at spaces only. The
   fit measures with words unbreakable (`data-rt-measuring`, 1.17.5), so columns hide before any word splits; only
-  when the required columns still overflow (e.g. a long URL at 320px) does the root get `data-rt-overflow` and the
-  visible cells may break words anywhere — the last resort that keeps 320px free of horizontal scroll. Padding
-  tightens under 30rem.
+  when the required columns still overflow (e.g. a long URL at 320px) does the root get `data-rt-overflow`: since
+  2.41 the table then scrolls sideways and words stay whole; with `overflow: 'break'` the visible cells may break
+  words anywhere instead (the 2.40 last resort, no horizontal scroll at 320px). Padding tightens under 30rem.
+- **Phone cards** (2.41, `phone_layout: 'cards'`): in Responsive mode while `phone_query` matches, no column hides —
+  each row becomes a card of `label | value` lines (labels from the header cells). Mark header cells with
+  `data-nowo-ui-phone`: `primary` (the card title: first, bold, no label), `meta` (a small muted line without a
+  label), `hide` (left out on phones). In the desktop column fit `hide` columns go first and `primary` ones never
+  hide. Scroll mode stays a plain table.
 - Each row ends with an eye button (shown only while a column is hidden, named "Row details: <row title>", row
   title = text of the first two columns). It opens a native `<dialog>` (confirm dialog chrome, centred with `margin: auto` even under Tailwind preflight — 1.17.2) with **every** column
   as label / value pairs; the cell contents are **moved** into the dialog and back on close, so forms, links, ids and
@@ -871,8 +877,10 @@ attributes, hash), `dialog_id`,
 
 Root attributes for CSS / tests: `data-table-mode` (`scroll` | `responsive`; rendered server-side when `table_mode`
 is set, so `.nowo-ui-responsive-table:not([data-table-mode])` targets the no-JS state), `data-rt-has-hidden`,
-`data-rt-overflow` (1.17.5), `data-rt-measuring` (only during a fit — host CSS must not break words under it);
-hidden header / cells get `data-rt-hidden`.
+`data-rt-overflow` (1.17.5), `data-rt-measuring` (only during a fit — host CSS must not break words under it),
+`data-rt-cards` (2.41, phone cards), `data-rt-overflow-mode="break"` (2.41, `overflow: 'break'`); hidden header /
+cells get `data-rt-hidden`; in phone cards every row cell gets `data-rt-label`. 2.41 options: `phone_layout`
+(`cards`), `overflow` (`break`).
 
 ### Foldable filter card
 
@@ -961,6 +969,29 @@ any route starting with `<key>_`; the longest key wins.
     {% include '@NowoUiKitBundle/partials/_edge_tab.html.twig' with {href: manual.url, testid: manual.testid} only %}
 {% endif %}
 ```
+
+### Page-edge tabs on phones (2.41)
+
+Up to five page-edge tabs (manual, notes, routes, listing customizer, preferences, tour) cover the right 30 px of the
+content on a 390 px phone. Render the launcher once per page and load its runtime (`script_names:
+nowo_ui_script_names()|merge(['edge-tabs'])`):
+
+```twig
+{{ include(nowo_ui_partial('edge_tabs_launcher'), {gutter: true}) }}
+```
+
+Where `when` applies — `phone` (default: viewports up to 40rem, and touch screens up to 64rem) or `always` — every
+`.nowo-ui-edge-tab__link` of the page folds behind the launcher (a labelled `<button aria-expanded>` at the first
+slot); a tap shows the tabs under it. It folds again on Escape (focus back on the launcher), a click elsewhere, using
+a tab, or the focus leaving the launcher and the tabs. Opened from the keyboard, the focus moves to the first tab and
+ArrowUp / ArrowDown walk the launcher and the tabs; Tab is never captured. The fold has no animation. Without the
+runtime (`data-nowo-ui-edge-tabs-ready` on `<html>`) the launcher stays hidden and the tabs keep their places; desktop
+(fine pointer, wider than 40rem) is unchanged with `when: phone`.
+
+Options: `when` (`phone` | `always`; anything else: never), `gutter` (while folded, `.nowo-ui-main` keeps
+`--nowo-ui-edge-tabs-gutter` = 2.25rem free on its right; host containers can read the same token), `label` (default
+`edge_tab.launcher`), `icon` (default `more`), `class`, `testid`, `attr`. Event: `nowo-ui:edge-tabs:toggle`
+(`detail.open`).
 
 ### Thin scrollbars
 

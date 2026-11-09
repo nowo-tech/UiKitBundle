@@ -1,0 +1,24 @@
+{#
+  Guest header (2.41, MUX-150): a public page (legal notice, privacy, public status, maintenance…) gets a way back — the
+  brand linked to the home page and a sign-in link. The UiKit guest layout prints it in the block
+  `nowo_ui_guest_header` when the page or the host layout sets `nowo_ui_guest_header` (a hash, the options below);
+  without it nothing is printed (the 2.40 markup). Hosts with their own guest layout include the partial themselves.
+
+  Options:
+    - home_href (required for the brand link): relative, http, https or mailto (other schemes print no link)
+    - brand: brand text (default the appearance brand name, else the `home` label)
+    - sign_in_href: the sign-in link (same scheme rule); omitted = no link
+    - show_sign_in (default true): false hides the sign-in link (e.g. `show_sign_in: not app.user`)
+    - labels: {home, sign_in} — override the NowoUiKitBundle translations
+    - class, testid, bundle (slot `btn_secondary` of the sign-in link)
+#}
+{%- set _ap = nowo_ui_appearance_or_null() -%}
+{%- set _labels = {home: 'guest_header.home'|trans({}, 'NowoUiKitBundle'), sign_in: 'guest_header.sign_in'|trans({}, 'NowoUiKitBundle')}|merge(labels|default({})) -%}
+{%- set _home = nowo_ui_safe_href(home_href|default(null)) -%}
+{%- set _sign_in = nowo_ui_safe_href(sign_in_href|default(null)) -%}
+{%- set _brand = brand|default(_ap ? _ap.brandName : '') ?: _labels.home -%}
+{%- set _show_sign_in = show_sign_in ?? true -%}
+<header class="nowo-ui-guest-header{{ class|default('') ? ' ' ~ class : '' }}" data-nowo-ui-region="guest-header"{% if testid|default('') %} data-testid="{{ testid }}"{% endif %}>
+    {% if _home %}<a class="nowo-ui-guest-header__brand" href="{{ _home }}" aria-label="{{ _brand }} — {{ _labels.home }}">{{ _brand }}</a>{% else %}<span class="nowo-ui-guest-header__brand">{{ _brand }}</span>{% endif %}
+    {% if _sign_in and _show_sign_in %}<nav class="nowo-ui-guest-header__nav" aria-label="{{ _brand }}"><a class="{{ nowo_ui_class('btn_secondary', bundle|default(null)) }} nowo-ui-guest-header__sign-in" href="{{ _sign_in }}"{{ nowo_ui_attrs('btn_secondary', bundle|default(null)) }}>{{ _labels.sign_in }}</a></nav>{% endif %}
+</header>

@@ -3924,10 +3924,16 @@ button.nowo-ui-kebab__item.is-current {
   word-break: normal !important;
 }
 
-/* Last resort, AFTER the fit: only the required columns are left and they still overflow (long URLs, ids) — the
-   visible cells may break words anywhere, so no horizontal scroll appears down to 320px. */
-.nowo-ui-responsive-table[data-table-mode='responsive'][data-rt-overflow]:not([data-rt-measuring]) :is(th, td),
-.nowo-ui-responsive-table[data-table-mode='responsive'][data-rt-overflow]:not([data-rt-measuring]) :is(th, td) * {
+/* AFTER the fit, only the required columns are left and they still overflow (long URLs, ids, a wide actions column).
+   2.41 (MUX-20): the scroller scrolls sideways and words stay whole ("USUARI / O" was a word broken letter by letter).
+   The 2.40 last resort — words break anywhere, no horizontal scroll down to 320px — is the partial's `overflow: 'break'`
+   (data-rt-overflow-mode="break" on the root). */
+.nowo-ui-responsive-table[data-table-mode='responsive'][data-rt-overflow]:not([data-rt-overflow-mode='break']) > .nowo-ui-responsive-table__scroller {
+  overflow-x: auto;
+}
+
+.nowo-ui-responsive-table[data-rt-overflow-mode='break'][data-table-mode='responsive'][data-rt-overflow]:not([data-rt-measuring]) :is(th, td),
+.nowo-ui-responsive-table[data-rt-overflow-mode='break'][data-table-mode='responsive'][data-rt-overflow]:not([data-rt-measuring]) :is(th, td) * {
   overflow-wrap: anywhere;
 }
 
@@ -6912,6 +6918,320 @@ html[data-nowo-ui-sortable-active] * {
   .nowo-ui-show-more__toggle {
     display: none !important;
   }
+}
+
+/* =============================================================================================
+ * 2.41 — phone mode (Beacon mobile UX audit 2026-11-09, MUX-01 / 04 / 20 / 22 / 40 / 150 / 161). Everything below
+ * applies on touch screens or narrow viewports, or to new opt-in classes / attributes, except the kit select geometry
+ * (MUX-40), which every engine gets.
+ * ============================================================================================= */
+
+/* MUX-40 — single-line selects. WebKit (Safari, iOS) draws a native `menulist` with its own inner padding inside the
+   box the author sizes: with an explicit height (filter bars, toolbars) and the kit padding the text sat below the box
+   and its top or bottom half was cut. Kit selects drop the native appearance, keep one line box (line-height 1.25)
+   and draw their chevron with two gradients in `currentColor` (light / dark follow the text colour). Hook classes:
+   `.nowo-ui-select` (opt-in, any host select, e.g. through FormKit `field_types.choice.attr.class`), and the selects
+   the kit already paints (`select.nowo-ui-input`, the pagination per-page select). Bootstrap `.form-select` keeps its
+   own chevron. Unlayered host CSS that sets the `background` shorthand on the same select drops the chevron: set
+   `background-color` instead. Token: --nowo-ui-select-chevron-gutter (room for the chevron, default 2rem). */
+.nowo-ui-select {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-height: var(--nowo-ui-control-height, 2.375rem);
+  padding-block: var(--nowo-ui-input-py, 0.35rem);
+  padding-inline-start: var(--nowo-ui-input-px, 0.6rem);
+  border: 1px solid var(--nowo-ui-input-border, var(--nowo-ui-border-strong));
+  border-radius: var(--nowo-ui-input-radius, var(--nowo-ui-radius));
+  background-color: var(--nowo-ui-input-bg, var(--nowo-ui-surface));
+  color: var(--nowo-ui-input-text, var(--nowo-ui-text));
+  font: inherit;
+  font-size: var(--nowo-ui-input-font-size, inherit);
+}
+
+select.nowo-ui-pagination__select {
+  --nowo-ui-select-chevron-gutter: 1.75rem;
+}
+
+:is(.nowo-ui-select, select.nowo-ui-input:not(.form-select), select.nowo-ui-pagination__select):not([multiple], [size]) {
+  -webkit-appearance: none;
+  appearance: none;
+  line-height: 1.25;
+  padding-inline-end: var(--nowo-ui-select-chevron-gutter, 2rem);
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: right calc(var(--nowo-ui-select-chevron-gutter, 2rem) / 2 + 0.05rem) center, right calc(var(--nowo-ui-select-chevron-gutter, 2rem) / 2 - 0.25rem) center;
+  background-size: 0.3rem 0.3rem, 0.3rem 0.3rem;
+  background-repeat: no-repeat;
+  text-overflow: ellipsis;
+}
+
+:is(.nowo-ui-select, select.nowo-ui-input:not(.form-select), select.nowo-ui-pagination__select):not([multiple], [size]):dir(rtl) {
+  background-position: left calc(var(--nowo-ui-select-chevron-gutter, 2rem) / 2 - 0.25rem) center, left calc(var(--nowo-ui-select-chevron-gutter, 2rem) / 2 + 0.05rem) center;
+}
+
+/* iOS zooms the page into any focused field under 16px: kit fields keep at least 1rem there. */
+@supports (-webkit-touch-callout: none) {
+  :is(.nowo-ui-select, .nowo-ui-input, select.nowo-ui-pagination__select) {
+    font-size: max(1rem, var(--nowo-ui-input-font-size, 1rem));
+  }
+}
+
+/* MUX-04 — touch targets. On touch screens the kit's small controls are at least --nowo-ui-control-size-touch tall
+   (default 44px; same glyph size, more box). A host opts out with `--nowo-ui-control-size-touch: 0px`. */
+@media (pointer: coarse) {
+  :root {
+    --nowo-ui-control-size-touch: 2.75rem;
+  }
+
+  :is(.nowo-ui-btn--icon, .nowo-ui-tabs__item, .nowo-ui-pagination__link, .nowo-ui-sort, .nowo-ui-row-detail-btn, .nowo-ui-burger, .nowo-ui-guest-header__sign-in) {
+    min-height: var(--nowo-ui-control-size-touch);
+  }
+
+  :is(.nowo-ui-btn--icon, .nowo-ui-pagination__link, .nowo-ui-row-detail-btn, .nowo-ui-burger) {
+    min-width: var(--nowo-ui-control-size-touch);
+  }
+}
+
+/* MUX-161 — no text under --nowo-ui-font-size-min (default 0.75rem = 12px) on phones and touch screens: badges and
+   the kit's small meta labels. Other bundles read the same token for their meta text. */
+@media (max-width: 40rem), (pointer: coarse) {
+  .nowo-ui-badge {
+    font-size: max(var(--nowo-ui-font-size-min, 0.75rem), var(--nowo-ui-badge-font-size, 0.75rem));
+  }
+
+  :is(.nowo-ui-stat__label, .nowo-ui-detail-list--facts .nowo-ui-detail-list__term, .nowo-ui-avatar--sm) {
+    font-size: max(var(--nowo-ui-font-size-min, 0.75rem), 0.6875rem);
+  }
+}
+
+/* MUX-01 — page-edge tabs launcher (partials/_edge_tabs_launcher + js/nowo-ui-edge-tabs.js). The edge tabs fold behind
+   one launcher at the first slot only once the runtime marked <html> ready (no JavaScript: the 2.40 tabs). `when`:
+   phone (viewports up to 40rem, touch screens up to 64rem) or always. Open, the tabs stack under the launcher. With
+   `gutter`, the folded launcher's width stays free on the right of .nowo-ui-main (and of any host element that reads
+   var(--nowo-ui-edge-tabs-gutter, 0)). */
+.nowo-ui-edge-tabs-launcher {
+  position: fixed;
+  top: var(--nowo-ui-edge-tab-top, calc(var(--nowo-ui-header-height, 3.5rem) + 0.75rem));
+  right: 0;
+  z-index: var(--nowo-ui-edge-tab-z, 74);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 2.25rem;
+  height: 2.75rem;
+  padding: 0;
+  border: var(--nowo-ui-border-width, 1px) solid var(--nowo-ui-border);
+  border-right: 0;
+  border-radius: var(--nowo-ui-radius) 0 0 var(--nowo-ui-radius);
+  background: var(--nowo-ui-surface);
+  color: var(--nowo-ui-text);
+  box-shadow: -2px 2px 8px rgb(var(--nowo-ui-shadow-rgb, 15 23 42) / 10%);
+  font: inherit;
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.nowo-ui-edge-tabs-launcher[aria-expanded='true'] {
+  color: var(--nowo-ui-primary);
+}
+
+.nowo-ui-edge-tabs-launcher:focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline-offset: 2px;
+}
+
+:root[data-nowo-ui-edge-tabs-ready]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always']) .nowo-ui-edge-tabs-launcher {
+  display: inline-flex;
+}
+
+:root[data-nowo-ui-edge-tabs-ready]:not([data-nowo-ui-edge-tabs-open]):has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always']) .nowo-ui-edge-tab__link {
+  display: none;
+}
+
+:root[data-nowo-ui-edge-tabs-ready][data-nowo-ui-edge-tabs-open]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always']) .nowo-ui-edge-tab__link {
+  top: calc(var(--nowo-ui-edge-tab-top, calc(var(--nowo-ui-header-height, 3.5rem) + 0.75rem)) + (var(--nowo-ui-edge-tab-slot, 0) + 1) * var(--nowo-ui-edge-tab-step, 3.25rem));
+}
+
+:root[data-nowo-ui-edge-tabs-ready]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always'][data-nowo-ui-edge-tabs-gutter]) {
+  --nowo-ui-edge-tabs-gutter: 2.25rem;
+}
+
+:root[data-nowo-ui-edge-tabs-ready]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always'][data-nowo-ui-edge-tabs-gutter]) .nowo-ui-main {
+  padding-inline-end: calc(1.25rem + var(--nowo-ui-edge-tabs-gutter));
+}
+
+@media (max-width: 40rem), (pointer: coarse) and (max-width: 64rem) {
+  :root[data-nowo-ui-edge-tabs-ready]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='phone']) .nowo-ui-edge-tabs-launcher {
+    display: inline-flex;
+  }
+
+  :root[data-nowo-ui-edge-tabs-ready]:not([data-nowo-ui-edge-tabs-open]):has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='phone']) .nowo-ui-edge-tab__link {
+    display: none;
+  }
+
+  :root[data-nowo-ui-edge-tabs-ready][data-nowo-ui-edge-tabs-open]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='phone']) .nowo-ui-edge-tab__link {
+    top: calc(var(--nowo-ui-edge-tab-top, calc(var(--nowo-ui-header-height, 3.5rem) + 0.75rem)) + (var(--nowo-ui-edge-tab-slot, 0) + 1) * var(--nowo-ui-edge-tab-step, 3.25rem));
+  }
+
+  :root[data-nowo-ui-edge-tabs-ready]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='phone'][data-nowo-ui-edge-tabs-gutter]) {
+    --nowo-ui-edge-tabs-gutter: 2.25rem;
+  }
+
+  :root[data-nowo-ui-edge-tabs-ready]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='phone'][data-nowo-ui-edge-tabs-gutter]) .nowo-ui-main {
+    padding-inline-end: calc(1.25rem + var(--nowo-ui-edge-tabs-gutter));
+  }
+}
+
+@media print {
+  .nowo-ui-edge-tabs-launcher {
+    display: none !important;
+  }
+}
+
+/* MUX-20 / MUX-22 — phone cards of the `responsive_table` partial (`phone_layout: 'cards'`; the peer sets
+   data-rt-cards in Responsive mode on a phone, and data-rt-label on every row cell). Per column
+   data-nowo-ui-phone: primary = the card title (first, no label), meta = a small muted line without a label,
+   hide = out of the card. */
+.nowo-ui-responsive-table[data-rt-cards] > .nowo-ui-responsive-table__scroller {
+  overflow-x: visible;
+}
+
+.nowo-ui-responsive-table[data-rt-cards] :is(table, tbody, tr, td) {
+  display: block;
+  width: 100%;
+}
+
+.nowo-ui-responsive-table[data-rt-cards] thead {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.nowo-ui-responsive-table[data-rt-cards] tbody > tr {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border: var(--nowo-ui-border-width, 1px) solid var(--nowo-ui-table-border, var(--nowo-ui-border));
+  border-radius: var(--nowo-ui-radius);
+  background: var(--nowo-ui-surface);
+}
+
+/* A labelled cell: the label sits in the first 38% (positioned), the value — several children too (action buttons,
+   badges) — flows in the rest. */
+.nowo-ui-responsive-table[data-rt-cards] tbody > tr > td {
+  position: relative;
+  box-sizing: border-box;
+  min-height: 1.5rem;
+  padding: 0.3rem 0;
+  border: 0;
+  text-align: start;
+  overflow-wrap: break-word;
+}
+
+.nowo-ui-responsive-table[data-rt-cards] tbody > tr > td[data-rt-label] {
+  padding-inline-start: calc(38% + 0.75rem);
+}
+
+.nowo-ui-responsive-table[data-rt-cards] tbody > tr > td[data-rt-label]::before {
+  content: attr(data-rt-label);
+  position: absolute;
+  inset-inline-start: 0;
+  width: 38%;
+  color: var(--nowo-ui-muted);
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.nowo-ui-responsive-table[data-rt-cards] tbody > tr > td[data-nowo-ui-phone='primary'] {
+  order: -1;
+  padding-inline-start: 0;
+  font-weight: 600;
+}
+
+.nowo-ui-responsive-table[data-rt-cards] tbody > tr > td[data-nowo-ui-phone='meta'] {
+  padding-inline-start: 0;
+  padding-block: 0.125rem;
+  color: var(--nowo-ui-muted);
+  font-size: max(var(--nowo-ui-font-size-min, 0.75rem), 0.8125rem);
+}
+
+.nowo-ui-responsive-table[data-rt-cards] tbody > tr > td:is([data-nowo-ui-phone='primary'], [data-nowo-ui-phone='meta'])::before {
+  content: none;
+}
+
+.nowo-ui-responsive-table[data-rt-cards] tbody > tr > :is(td[data-nowo-ui-phone='hide'], [data-responsive-detail]) {
+  display: none;
+}
+
+/* MUX-20 — the same places in the ListPage card mode (container under 40rem; Column::phone). A row with such cells
+   becomes a flex column, so its primary cell can lead. */
+@container nowo-ui-table (max-width: 39.99rem) {
+  .nowo-ui-table--cards > tbody > tr:has(> td[data-nowo-ui-phone]) {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .nowo-ui-table--cards > tbody > tr > td[data-nowo-ui-phone='primary'] {
+    order: -1;
+    font-weight: 600;
+  }
+
+  .nowo-ui-table--cards > tbody > tr > td[data-nowo-ui-phone='meta'] {
+    color: var(--nowo-ui-muted);
+    font-size: max(var(--nowo-ui-font-size-min, 0.75rem), 0.8125rem);
+  }
+
+  .nowo-ui-table--cards > tbody > tr > td[data-label]:is([data-nowo-ui-phone='primary'], [data-nowo-ui-phone='meta']):not(.nowo-ui-table__actions) {
+    padding-inline-start: 0 !important;
+  }
+
+  .nowo-ui-table--cards > tbody > tr > td:is([data-nowo-ui-phone='primary'], [data-nowo-ui-phone='meta'])::before {
+    content: none;
+  }
+
+  .nowo-ui-table--cards > tbody > tr > td[data-nowo-ui-phone='hide'] {
+    display: none !important;
+  }
+}
+
+/* MUX-150 — guest header (partials/_guest_header, block nowo_ui_guest_header of the guest layout): the brand linked
+   home and the sign-in link on public pages. */
+.nowo-ui-guest-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin: 0 auto 1rem;
+  padding: 0.75rem 0;
+}
+
+.nowo-ui-guest-header__brand {
+  color: var(--nowo-ui-text);
+  font-weight: 700;
+  font-size: 1.05rem;
+  text-decoration: none;
+}
+
+a.nowo-ui-guest-header__brand:hover {
+  color: var(--nowo-ui-link, var(--nowo-ui-primary));
+}
+
+a.nowo-ui-guest-header__brand:focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.nowo-ui-guest-header__nav {
+  display: flex;
+  gap: 0.5rem;
 }
 
 /*

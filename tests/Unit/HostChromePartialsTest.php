@@ -315,7 +315,9 @@ final class HostChromePartialsTest extends TestCase
         // otherwise the table always "fits" and no column is hidden.
         self::assertStringContainsString(".nowo-ui-responsive-table[data-table-mode='responsive'] :is(th, td) * {\n  white-space: normal !important;\n  overflow-wrap: break-word;", $css);
         self::assertStringContainsString(".nowo-ui-responsive-table[data-rt-measuring] :is(th, td) * {\n  overflow-wrap: normal !important;\n  word-break: normal !important;", $css);
-        self::assertStringContainsString(".nowo-ui-responsive-table[data-table-mode='responsive'][data-rt-overflow]:not([data-rt-measuring]) :is(th, td) * {\n  overflow-wrap: anywhere;", $css);
+        // 2.41 (MUX-20): that last resort only with `overflow: 'break'`; by default the scroller scrolls sideways instead.
+        self::assertStringContainsString(".nowo-ui-responsive-table[data-rt-overflow-mode='break'][data-table-mode='responsive'][data-rt-overflow]:not([data-rt-measuring]) :is(th, td) * {\n  overflow-wrap: anywhere;", $css);
+        self::assertStringContainsString(".nowo-ui-responsive-table[data-table-mode='responsive'][data-rt-overflow]:not([data-rt-overflow-mode='break']) > .nowo-ui-responsive-table__scroller {\n  overflow-x: auto;", $css);
         $tableRules = (string) preg_replace('/\/\*.*?\*\//s', '', (string) strstr((string) strstr($css, '/* --- Responsive table'), '/* Row detail dialog', true));
         // The row detail column shows (and only shows) when the fit hid a column.
         self::assertStringContainsString(".nowo-ui-row-detail-col,\n.nowo-ui-row-detail-cell {\n  display: none;", $tableRules);

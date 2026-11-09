@@ -1,7 +1,7 @@
 # Makefile for Symfony 8.0 Demo (Ui Kit Bundle)
 # Run from this directory: make up, make install, etc.
 
-.PHONY: help up down build install shell logs test test-coverage cache-clear update-bundle ensure-up restart test-e2e test-e2e-sortable test-e2e-widgets demo-screenshots
+.PHONY: help up down build install shell logs test test-coverage cache-clear update-bundle ensure-up restart test-e2e test-e2e-sortable test-e2e-widgets test-e2e-mobile demo-screenshots
 
 help:
 	@echo "Symfony 8.0 Demo - Ui Kit Bundle"
@@ -18,6 +18,7 @@ help:
 	@echo "  make update-bundle  Update nowo-tech/ui-kit-bundle and clear cache"
 	@echo "  make test-e2e       Playwright e2e of the page contract host-theme demo (REQ-DEMO-013)"
 	@echo "  make test-e2e-sortable  Sortable e2e: Chromium, Firefox, WebKit, and touch input in Chromium"
+	@echo "  make test-e2e-mobile    2.41 phone mode e2e at 390x844 (Chromium, WebKit)"
 	@echo "  make demo-screenshots  Refresh docs/images/demo/page-contract-*.webp via Playwright"
 	@echo ""
 
@@ -104,6 +105,16 @@ test-e2e-widgets: ensure-up
 		-e DEMO_BASE_URL=http://127.0.0.1:$$PORT \
 		$(PLAYWRIGHT_IMAGE) \
 		bash -lc 'npm install --no-fund --no-audit && npx playwright test emoji-picker show-more dialog-back --workers=1 --global-timeout=360000 --project=chromium --project=firefox --project=webkit'
+
+# 2.41 phone mode (Beacon mobile UX audit) at 390 x 844 in Chromium and WebKit, with a deadline.
+test-e2e-mobile: ensure-up
+	@mkdir -p e2e/node_modules
+	@PORT=$$(grep -E '^PORT=' .env 2>/dev/null | cut -d= -f2 | tr -d '\r'); PORT=$${PORT:-8092}; \
+	timeout $${E2E_DEADLINE:-420} docker run --rm --init --network host \
+		-v "$(CURDIR)/e2e:/e2e" -w /e2e \
+		-e DEMO_BASE_URL=http://127.0.0.1:$$PORT \
+		$(PLAYWRIGHT_IMAGE) \
+		bash -lc 'npm install --no-fund --no-audit && npx playwright test mobile-mux --workers=1 --global-timeout=360000 --project=phone-chromium --project=phone-webkit'
 
 demo-screenshots: ensure-up
 	@mkdir -p ../../docs/images/demo e2e/node_modules

@@ -1,0 +1,17 @@
+{#
+  UiKit demo (2.41, MUX-150): a public page on the kit guest layout with the guest header (brand linked home, sign-in).
+#}
+{% extends '@NowoUiKit/layout/guest.html.twig' %}
+{% set nowo_ui_document_title = 'Legal notice · UiKit' %}
+{% set nowo_ui_guest_header = {home_href: path('kit_mobile'), sign_in_href: '#sign-in', brand: 'UiKit demo', testid: 'guest-header'} %}
+
+{% block nowo_ui_head %}
+    <meta http-equiv="Content-Security-Policy" content="style-src-attr 'none'; script-src-attr 'none'">
+{% endblock %}
+
+{% block nowo_ui_content %}
+    <article data-testid="legal">
+        <h1>Legal notice</h1>
+        <p>A public page: before 2.41 the guest layout had no way back but the browser.</p>
+    </article>
+{% endblock %}

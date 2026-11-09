@@ -24,20 +24,21 @@ function setMatchMedia(): void {
   })) as unknown as typeof window.matchMedia;
 }
 
-function mount(mode = '', url = '/prefs/items/mode', messages: Record<string, string> = MESSAGES): HTMLElement {
+function mount(mode = '', url = '/prefs/items/mode', messages: Record<string, string> = MESSAGES, extra = '', phones: Record<string, string> = {}): HTMLElement {
+  const ph = (column: string): string => (phones[column] ? ` data-nowo-ui-phone="${phones[column]}"` : '');
   document.body.innerHTML = `
     <div class="nowo-ui-card">
       <div data-controller="responsive-table" data-responsive-table-mode-value="${mode}" data-responsive-table-url-value="${url}"
            data-responsive-table-token-value="tok" data-responsive-table-token-url-value="/prefs/csrf-token"
-           data-responsive-table-messages-value='${JSON.stringify(messages)}'>
+           data-responsive-table-messages-value='${JSON.stringify(messages)}'${extra}>
         <button type="button" data-responsive-table-target="toggle" data-action="responsive-table#toggle"></button>
         <div data-responsive-table-target="scroller">
           <table data-responsive-table-target="table">
             <thead><tr>
-              <th data-column="when" data-required="1">When</th>
-              <th data-column="action" data-required="1">Action</th>
-              <th data-column="project"><span data-cell-part>Project</span><span data-cell-part>Issue</span></th>
-              <th data-column="detail" data-required="0">Detail</th>
+              <th data-column="when" data-required="1"${ph('when')}>When</th>
+              <th data-column="action" data-required="1"${ph('action')}>Action</th>
+              <th data-column="project"${ph('project')}><span data-cell-part>Project</span><span data-cell-part>Issue</span></th>
+              <th data-column="detail" data-required="0"${ph('detail')}>Detail</th>
               <th class="nowo-ui-row-detail-col" data-responsive-detail></th>
             </tr></thead>
             <tbody>
@@ -522,5 +523,59 @@ describe('responsive-table peer', () => {
     expect(failed).toHaveBeenCalledTimes(1);
     expect(root.dataset.tableMode).toBe('responsive');
     document.cookie = 'nowo_ui_listing_items=; path=/; max-age=0';
+  });
+  it('2.41: renders phone cards instead of hiding columns (phoneLayout cards, responsive mode, phone query)', async () => {
+    phone = true;
+    setMatchMedia();
+    width = 300;
+    const root = mount('', '', MESSAGES, ' data-responsive-table-phone-layout-value="cards"', { project: 'meta', detail: 'hide' });
+    await tick();
+    expect(root.dataset.tableMode).toBe('responsive');
+    expect(root.hasAttribute('data-rt-cards')).toBe(true);
+    expect(root.querySelector('[data-rt-hidden]')).toBeNull();
+    expect(root.hasAttribute('data-rt-has-hidden')).toBe(false);
+    expect(root.querySelectorAll('tbody [data-responsive-detail] button[hidden]')).toHaveLength(2);
+    const cell = root.querySelector<HTMLElement>('tbody td[data-column="project"]') as HTMLElement;
+    expect(cell.getAttribute('data-rt-label')).toBe('Project · Issue');
+    expect(cell.getAttribute('data-nowo-ui-phone')).toBe('meta');
+    expect(root.querySelector('tbody td[data-column="detail"]')?.getAttribute('data-nowo-ui-phone')).toBe('hide');
+    expect(root.querySelector('tbody td[data-column="when"]')?.hasAttribute('data-nowo-ui-phone')).toBe(false);
+
+    // Scroll mode on the same phone: a plain table again.
+    const scroll = mount('scroll', '', MESSAGES, ' data-responsive-table-phone-layout-value="cards"');
+    await tick();
+    expect(scroll.hasAttribute('data-rt-cards')).toBe(false);
+
+    // Desktop: the column fit as before, no cards.
+    phone = false;
+    setMatchMedia();
+    const desktop = mount('responsive', '', MESSAGES, ' data-responsive-table-phone-layout-value="cards"');
+    await tick();
+    expect(desktop.hasAttribute('data-rt-cards')).toBe(false);
+    expect(desktop.querySelectorAll('thead [data-rt-hidden]').length).toBeGreaterThan(0);
+  });
+
+  it('2.41: without phoneLayout a phone keeps the column fit (no cards, the 2.40 behaviour)', async () => {
+    phone = true;
+    setMatchMedia();
+    width = 700;
+    const root = mount();
+    await tick();
+    expect(root.hasAttribute('data-rt-cards')).toBe(false);
+    expect([...root.querySelectorAll('thead [data-rt-hidden]')].map((th) => (th as HTMLElement).dataset.column)).toEqual(['detail']);
+    expect(root.querySelector('[data-rt-label]')).toBeNull();
+  });
+
+  it('2.41: the fit hides `hide` columns first and never hides `primary` ones', async () => {
+    width = 700;
+    const root = mount('responsive', '', MESSAGES, '', { project: 'hide' });
+    await tick();
+    expect([...root.querySelectorAll('thead [data-rt-hidden]')].map((th) => (th as HTMLElement).dataset.column)).toEqual(['project']);
+
+    width = 100;
+    const narrow = mount('responsive', '', MESSAGES, '', { project: 'primary' });
+    await tick();
+    expect([...narrow.querySelectorAll('thead [data-rt-hidden]')].map((th) => (th as HTMLElement).dataset.column)).toEqual(['detail']);
+    expect(narrow.hasAttribute('data-rt-overflow')).toBe(true);
   });
 });

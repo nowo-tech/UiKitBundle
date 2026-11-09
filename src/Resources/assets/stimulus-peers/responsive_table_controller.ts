@@ -12,6 +12,13 @@
  * their final layout). Recomputed on resize.
  * The detail dialog MOVES the row's cell contents (forms, ids and listeners intact) and puts them back on close.
  *
+ * Phone cards (2.41, `phoneLayout` = `cards`): in Responsive mode while `phoneQuery` matches, nothing hides — the root
+ * gets `data-rt-cards` (CSS: each row is a card) and every row cell gets `data-rt-label` (its column label). Per column
+ * `data-nowo-ui-phone` on the header: `primary` (card title; never hidden by the fit, like `data-required`), `meta`
+ * (small muted line), `hide` (out of the card; the first column the fit hides).
+ * Overflow (2.41): when the required columns still do not fit, the scroller scrolls sideways (words stay whole); with
+ * `data-rt-overflow-mode="break"` on the root, the 2.40 last resort (words break anywhere) instead.
+ *
  * Persistence is host-owned: with a `url` the toggle sends `{"mode": "scroll"|"responsive"}` (JSON, `X-CSRF-TOKEN`
  * header, `method` default PUT); a 403 refreshes the token once from `tokenUrl` (`{"token": "…"}`). Without a `url`
  * but with a `cookie` (listing customizer: the listing cookie name) the mode is merged into that cookie (`mode`
@@ -66,6 +73,7 @@ export default class ResponsiveTableController extends Controller<HTMLElement> {
     cookiePath: { type: String, default: '/' },
     phoneQuery: { type: String, default: RESPONSIVE_TABLE_PHONE_QUERY },
     partSelector: { type: String, default: '[data-cell-part]' },
+    phoneLayout: { type: String, default: '' },
     messages: { type: Object, default: {} },
   };
 
@@ -85,6 +93,7 @@ export default class ResponsiveTableController extends Controller<HTMLElement> {
   declare readonly cookiePathValue: string;
   declare readonly phoneQueryValue: string;
   declare readonly partSelectorValue: string;
+  declare readonly phoneLayoutValue: string;
   declare readonly messagesValue: Messages;
 
   private observer: ResizeObserver | null = null;
@@ -141,6 +150,11 @@ export default class ResponsiveTableController extends Controller<HTMLElement> {
     }
 
     return window.matchMedia?.(this.phoneQueryValue).matches ? 'responsive' : 'scroll';
+  }
+
+  /** Whether the rows render as phone cards (2.41): `phoneLayout` cards, Responsive mode and the phone query. */
+  cards(): boolean {
+    return 'cards' === this.phoneLayoutValue && 'responsive' === this.mode() && true === window.matchMedia?.(this.phoneQueryValue).matches;
   }
 
   /** Toggle: switch modes at once, then save; a failed save switches back and reports it. */
@@ -215,16 +229,23 @@ export default class ResponsiveTableController extends Controller<HTMLElement> {
     this.element.setAttribute('data-rt-measuring', '');
     this.element.removeAttribute('data-rt-overflow');
     headers.forEach((header) => this.setHidden(header, false));
+    const cards = this.cards();
+    this.element.toggleAttribute('data-rt-cards', cards);
+    if (cards) {
+      this.labelCells(headers);
+    }
     // Phase 1: without the detail column. Phase 2 (something must go): with it, since it takes room too.
     this.element.removeAttribute('data-rt-has-hidden');
-    if ('responsive' === this.mode() && !this.fits()) {
+    if (!cards && 'responsive' === this.mode() && !this.fits()) {
       this.element.setAttribute('data-rt-has-hidden', '');
       // 2.6: measure the detail column with its final layout — buttons shown (markRows() shows them afterwards; a
       // still-hidden button measured as an empty cell left the table one button wider than its scroller).
       this.detailButtons().forEach((button) => {
         button.hidden = false;
       });
-      const candidates = headers.filter((header) => '1' !== header.dataset.required).reverse();
+      // 2.41: `data-nowo-ui-phone="primary"` columns stay like required ones; `hide` columns go first.
+      const hideable = headers.filter((header) => '1' !== header.dataset.required && 'primary' !== header.dataset.nowoUiPhone).reverse();
+      const candidates = [...hideable.filter((header) => 'hide' === header.dataset.nowoUiPhone), ...hideable.filter((header) => 'hide' !== header.dataset.nowoUiPhone)];
       for (const header of candidates) {
         if (this.fits()) {
           break;
@@ -235,6 +256,21 @@ export default class ResponsiveTableController extends Controller<HTMLElement> {
     }
     this.element.removeAttribute('data-rt-measuring');
     this.markRows();
+  }
+
+  /** Phone cards (2.41): each row cell is labelled with its column (`data-rt-label`, shown by the CSS) and gets the header's `data-nowo-ui-phone`. */
+  private labelCells(headers: HTMLTableCellElement[]): void {
+    for (const header of headers) {
+      const label = this.label(header);
+      const phone = header.dataset.nowoUiPhone;
+      this.tableTarget.querySelectorAll<HTMLElement>(`tbody td[data-column="${CSS.escape(header.dataset.column ?? '')}"]`).forEach((cell) => {
+        cell.setAttribute('data-rt-label', label);
+        // The header's place in the card applies to its cells unless a cell says otherwise.
+        if (undefined !== phone && !cell.hasAttribute('data-nowo-ui-phone')) {
+          cell.setAttribute('data-nowo-ui-phone', phone);
+        }
+      });
+    }
   }
 
   private fits(): boolean {
