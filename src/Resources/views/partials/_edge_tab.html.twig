@@ -16,10 +16,13 @@
       attribute, false / null = omitted, on* handlers dropped), e.g. {'data-nowo-ui-dialog-open': 'help',
       'data-nowo-ui-dialog-src': url} to open the page in a side panel (dialog placement end) while href stays the
       no-JS fallback
+    - pinned (2.42, default false): `data-nowo-ui-edge-tab-pinned` on the tab, so the edge tabs launcher never folds it
+      (e.g. the close tab of an open drawer). A tab with aria-expanded="true" (its panel open) never folds either.
 #}
 {% set _label = label|default('edge_tab.manual'|trans({}, 'NowoUiKitBundle')) %}
 {% set _new_tab = new_tab ?? true %}
 {% set _button = button|default(false) %}
+{% set _pinned = pinned|default(false) ? ' data-nowo-ui-edge-tab-pinned' : '' %}
 {% set _attr %}{% for _name, _value in attr|default({}) %}{% if _value is not same as(false) and _value is not null and not (_name|lower starts with 'on') %} {{ _name|e('html_attr') }}{% if _value is not same as(true) %}="{{ _value }}"{% endif %}{% endif %}{% endfor %}{% endset %}
 {% if inline|default(false) %}
     <p class="nowo-ui-edge-link{{ class|default('') ? ' ' ~ class : '' }}"{% if testid|default('') %} data-testid="{{ testid }}"{% endif %}>
@@ -31,13 +34,13 @@
     </p>
 {% elseif _button %}
     <div class="nowo-ui-edge-tab{{ class|default('') ? ' ' ~ class : '' }}" data-nowo-ui-edge-tab-slot="{{ slot|default(0) }}"{% if testid|default('') %} data-testid="{{ testid }}"{% endif %}>
-        <button type="button" class="nowo-ui-edge-tab__link" title="{{ _label }}" aria-label="{{ _label }}"{{ _attr }}>
+        <button type="button" class="nowo-ui-edge-tab__link" title="{{ _label }}" aria-label="{{ _label }}"{{ _pinned }}{{ _attr }}>
             <span class="nowo-ui-edge-tab__icon" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: icon|default('book'), label: _label}, false)|trim|raw }}</span>
         </button>
     </div>
 {% else %}
     <div class="nowo-ui-edge-tab{{ class|default('') ? ' ' ~ class : '' }}" data-nowo-ui-edge-tab-slot="{{ slot|default(0) }}"{% if testid|default('') %} data-testid="{{ testid }}"{% endif %}>
-        <a class="nowo-ui-edge-tab__link" href="{{ href }}"{% if _new_tab %} target="_blank" rel="noopener noreferrer"{% endif %} title="{{ _label }}" aria-label="{{ _label }}"{{ _attr }}>
+        <a class="nowo-ui-edge-tab__link" href="{{ href }}"{% if _new_tab %} target="_blank" rel="noopener noreferrer"{% endif %} title="{{ _label }}" aria-label="{{ _label }}"{{ _pinned }}{{ _attr }}>
             <span class="nowo-ui-edge-tab__icon" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: icon|default('book'), label: _label}, false)|trim|raw }}</span>
         </a>
     </div>
