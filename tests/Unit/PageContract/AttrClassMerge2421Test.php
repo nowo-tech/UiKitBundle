@@ -153,7 +153,7 @@ final class AttrClassMerge2421Test extends TestCase
             'header_crumbs' => [static fn (array $a): string => $inc('_header_crumbs.html.twig', ['crumbs' => [new Crumb('Home', '/'), new Crumb('Items', '/items'), new Crumb('Edit')], 'attr' => $a]), 1],
             'side_panel_container' => [static fn (array $a): string => $inc('_side_panel_container.html.twig', ['attr' => $a]), 1],
             'side_panel' => [static fn (array $a): string => $inc('_side_panel.html.twig', ['id' => 'sp', 'title' => 'T', 'attr' => $a]), 1],
-            'stat_row' => [static fn (array $a): string => $inc('_stat_row.html.twig', ['items' => [new Stat('Items', '3', attributes: $a), new Stat('Errors', '1')], 'attr' => $a]), 2],
+            'stat_row' => [static fn (array $a): string => $inc('_stat_row.html.twig', ['items' => [new Stat('Items', '3', attributes: $a, valueAttributes: $a), new Stat('Errors', '1')], 'attr' => $a]), 3],
             'segmented' => [static fn (array $a): string => $inc('_segmented.html.twig', ['name' => 'only', 'checked' => true, 'options' => [['label' => 'A', 'checked' => false, 'attr' => $a], ['label' => 'B', 'checked' => true]], 'attr' => $a]), 2],
             'sort_header_link' => [static fn (array $a): string => $inc('_sort_header.html.twig', ['label' => 'Name', 'href' => '/s', 'attr' => $a]), 1],
             'sort_header_button' => [static fn (array $a): string => $inc('_sort_header.html.twig', ['label' => 'Name', 'attr' => $a]), 1],

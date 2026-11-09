@@ -137,7 +137,7 @@ Target 2.42.1. Request from TaskBoard (`manage/gantt.html.twig`, `manage/calenda
     `dialog_attr`; `_segmented` option `attr`; `_locale_tabs` panel `attr`; `_menu` link items' `attr` /
     `attributes`;
   - the `attributes` of `View\Action` (`_action`: links, buttons, POST forms, dialog / modal openers; menu items),
-    `Stat`, `DetailItem` (`attributes` / `valueAttributes`), `PageStatus`, `Table`, `ListPage::$filtersSubmit` and the
+    `Stat` (`attributes` / `valueAttributes`), `DetailItem` (`attributes` / `valueAttributes`), `PageStatus`, `Table`, `ListPage::$filtersSubmit` and the
     root `attributes` of the list, show, form, settings, dashboard, confirm, wizard and auth scaffolds.
   Without a `class` key the markup is byte-identical to 2.42.0 (`AttrClassMerge2421Test`, fixtures under
   `tests/Fixtures/bc-2.42` rendered by the 2.42.0 templates).

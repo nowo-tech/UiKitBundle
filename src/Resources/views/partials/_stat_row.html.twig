@@ -19,7 +19,7 @@
     {% for stat in items %}
         <div class="{{ nowo_ui_class('stat', _b) }} nowo-ui-stat--{{ stat.tone }}{{ (stat.attributes.class ?? false) ? ' ' ~ stat.attributes.class }}"{{ nowo_ui_attrs('stat', _b) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(stat.attributes ?? {})) }}>
             <dt class="{{ nowo_ui_class('stat_label', _b) }}">{{ stat.label|nowo_ui_trans }}</dt>
-            <dd class="{{ nowo_ui_class('stat_value', _b) }}"{{ nowo_ui_html_attrs(stat.valueAttributes ?? {}) }}>{% if stat.href %}<a href="{{ stat.href }}">{{ stat.value|nowo_ui_trans }}</a>{% else %}{{ stat.value|nowo_ui_trans }}{% endif %}</dd>
+            <dd class="{{ nowo_ui_class('stat_value', _b) }}{{ (stat.valueAttributes.class ?? false) ? ' ' ~ stat.valueAttributes.class }}"{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(stat.valueAttributes ?? {})) }}>{% if stat.href %}<a href="{{ stat.href }}">{{ stat.value|nowo_ui_trans }}</a>{% else %}{{ stat.value|nowo_ui_trans }}{% endif %}</dd>
             {% if stat.hint is not null %}
                 <dd class="{{ nowo_ui_class('stat_hint', _b) }}">{{ stat.hint|nowo_ui_trans }}</dd>
             {% endif %}
