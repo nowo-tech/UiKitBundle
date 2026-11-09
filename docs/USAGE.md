@@ -70,6 +70,7 @@
 - [Freeze rule](#freeze-rule)
 - [Procedure](#procedure)
 - [Remap CSS tokens (theming)](#remap-css-tokens)
+- [Using it from a DDD / hexagonal application](#using-it-from-a-ddd--hexagonal-application)
 - [Feature bundles](#feature-bundles)
 - [Kitchen sink](#kitchen-sink)
 - [Related docs](#related-docs)
@@ -2918,6 +2919,65 @@ Component tokens (`--nowo-ui-btn-*`, `--nowo-ui-input-*`, `--nowo-ui-table-*`, `
 `--nowo-ui-pagination-*`, `--nowo-ui-list-*`) are optional and resolved where they are used, so they also
 work on a scope (`.kit-admin`, a portalled dialog). Bootstrap stacks: add `nowo-ui-bs-tokens` to an
 ancestor to paint Bootstrap's own components from the same tokens.
+
+## Using it from a DDD / hexagonal application
+
+UiKit is a **presentation-layer** bundle: Twig templates and macros, CSS/JS assets, optional form types and readonly
+view models (`Nowo\UiKitBundle\View\*`). It has no entities and no persistence, does not depend on Doctrine and needs
+no `resolve_target_entities`.
+
+**Keep the domain free of the kit.** Only your UI layer (controllers, Twig, form classes) imports `Nowo\UiKitBundle\*`.
+Build the view models (`ListPage`, `Table`, `Column`, `Pagination`, `Action`, `ShowPage`…) in controllers or presenters
+from your application's read models or arrays. `Table` rows may be arrays or objects (cells read `row[key]`, else
+`attribute(row, key)`). Pass arrays or DTOs, not entities, so that templates never trigger lazy loading. The kit form
+types (`AppearanceType`, `SearchFilterType`, `DateRangeType`, `HiddenFieldsType`, `ActionCsrfType`) are bound to arrays
+(`data_class: null`). `Pagination::fromTotal()` / `fromArray()` take plain numbers, so your domain needs no paginator
+library.
+
+**Ports you implement (infrastructure adapters):**
+
+| Interface | Wiring |
+|---|---|
+| `Appearance\AppearanceProviderInterface::getAppearance(): Appearance` | `nowo_ui_kit.appearance.provider: <service id>` |
+| `Appearance\AppearancePresetProviderInterface::getPresets()` | autoconfigured (tag `nowo_ui_kit.appearance_preset_provider`) |
+| `Navigation\AreaNavProviderInterface::areaNav(string $area, array $context): ?AreaNav` | autoconfigured (tag `nowo_ui_kit.area_nav_provider`) |
+| `Listing\ListingDefinitionInterface` (`key()`, `columns()`, `filters()`) | autoconfigured (tag `nowo_ui_kit.listing_definition`) |
+| `Listing\ListingPreferenceStoreInterface` (`load()`, `cookieName()`) | alias the interface to your service (default: cookie store) |
+
+Implementations must be stateless between requests (FrankenPHP worker); a provider that caches per request implements
+`ResetInterface`.
+
+Example appearance adapter over your own settings repository:
+
+    final readonly class SettingsAppearanceProvider implements AppearanceProviderInterface
+    {
+        public function __construct(
+            private SiteSettingsRepository $settings,      // your domain port
+            private ConfigAppearanceProvider $defaults,    // the kit's config defaults
+        ) {}
+
+        public function getAppearance(): Appearance
+        {
+            return Appearance::fromArray(
+                $this->settings->appearance(),             // array in the Appearance::toArray() shape
+                $this->defaults->getAppearance(),
+            );
+        }
+    }
+
+To save, map the submitted `AppearanceType` data with `Appearance::fromArray($form->getData(), $current)` and persist
+`toArray()` through your own repository: the kit has no write port.
+
+**Event:** `Dialog\RemoteDialogRedirectEvent` (dispatched for redirects answered to a remote-dialog request) lets an
+HTTP listener change the answer (`redirect` / `step` / null) or the same-origin path. It is a UI event, not a domain
+event.
+
+**Known limitations**
+
+- `ListingPreferenceStoreInterface` is read-only: a server-side store exposes its own `save_url` endpoint and validates
+  the payload with `ListingLayoutMerger::normalizeLayout()`.
+- The listing ports take the HttpFoundation `Request`: a per-user store resolves the viewer inside its adapter.
+- Nothing stops entities from being passed as `Table` rows; keep to arrays or read models by convention.
 
 ## Feature bundles
 
