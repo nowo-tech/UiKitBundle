@@ -1,0 +1,48 @@
+{#
+  UiKit 2.43 demo: the image crop step (FileType option nowo_ui_image_crop, js/nowo-ui-image-crop.js). Pick an image in an opted-in
+  input: a dialog crops it and the input then holds the crop. The meta tag repeats the CSP of the response: the debug toolbar can
+  strip that header in worker mode.
+#}
+{% extends '@NowoUiKit/layout/document.html.twig' %}
+{% set nowo_ui_document_title = 'Image crop · UiKit' %}
+
+{% block nowo_ui_head %}
+    <meta http-equiv="Content-Security-Policy" content="style-src-attr 'none'; script-src-attr 'none'; img-src 'self' blob:">
+{% endblock %}
+
+{% block nowo_ui_body %}
+    <main id="main-content" class="nowo-ui-content kit-crop-demo" data-testid="image-crop-demo">
+        <h1>Image crop</h1>
+        {% if received is not empty %}
+            <dl role="status" data-testid="received">
+                {% for field, file in received %}
+                    <dt>{{ field }}</dt>
+                    <dd data-testid="received-{{ field }}">{{ file.name }} {{ file.type }} {{ file.size }}</dd>
+                {% endfor %}
+            </dl>
+        {% endif %}
+        <div class="kit-crop-demo__preview">
+            <img id="avatar-preview" class="kit-crop-demo__avatar" alt="Avatar preview" data-testid="avatar-preview" hidden>
+        </div>
+        <div data-testid="crop-form">
+            {{ form_start(form) }}
+            {{ form_row(form.avatar) }}
+            {{ form_row(form.logo) }}
+            {{ form_row(form.photo) }}
+            {{ form_row(form.badge) }}
+            {{ form_row(form.document) }}
+            {{ form_row(form.save) }}
+            {{ form_end(form) }}
+        </div>
+    </main>
+{% endblock %}
+
+{% block nowo_ui_styles %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/image-crop-demo.css') }}">
+{% endblock %}
+
+{% block nowo_ui_scripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/nowo-ui-image-crop.js', 'nowo_ui_kit') }}" defer></script>
+{% endblock %}

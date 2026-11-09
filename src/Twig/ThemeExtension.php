@@ -10,6 +10,7 @@ use Nowo\UiKitBundle\Appearance\AppearanceView;
 use Nowo\UiKitBundle\Dialog\RemoteDialog;
 use Nowo\UiKitBundle\Dialog\RemoteDialogHeaders;
 use Nowo\UiKitBundle\Form\ActionCsrfType;
+use Nowo\UiKitBundle\Form\ImageCrop;
 use Nowo\UiKitBundle\Form\UiFormViews;
 use Nowo\UiKitBundle\Form\VisibleWhen;
 use Nowo\UiKitBundle\Shell\HeaderCrumbs;
@@ -95,6 +96,7 @@ use Twig\TwigFunction;
  *   buttons, one primary, the "more" menu) the `header_actions` partial renders
  * - `nowo_ui_visible_when(field, values)` (2.23) — row attributes of the `visible-when` peer
  *   ({@see VisibleWhen::attributes()}; merge into `row_attr`, or print with `nowo_ui_html_attrs`)
+ * - `nowo_ui_image_crop_attrs(options)` (2.43) — attributes of a file input with the image crop step ({@see ImageCrop})
  * - `nowo_ui_font_preload()` (2.21) — `<link rel="preload" as="font" crossorigin>` tags of `nowo_ui_kit.font_preload`
  *   ({@see FontPreload}; '' when not configured), printed by the document and error layouts
  * - `|nowo_ui_trans(params = {})` — translates a {@see Label}; strings pass through (escaped by Twig)
@@ -143,6 +145,18 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
         $this->sidebarLayoutResolver = new SidebarLayoutResolver($requestStack, $sidebarLayout);
     }
 
+    /**
+     * `nowo_ui_image_crop_attrs(options)` (2.43): the attributes of a file input with the image crop step, labels translated.
+     *
+     * @param array<mixed> $options {@see ImageCrop} options
+     *
+     * @return array<string, string>
+     */
+    public function imageCropAttributes(array $options = []): array
+    {
+        return ImageCrop::attributes($options, $this->translator);
+    }
+
     public function getFunctions(): array
     {
         return [
@@ -169,6 +183,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             new TwigFunction('nowo_ui_page_header', $this->pageHeader(...), ['needs_environment' => true, 'needs_context' => true, 'is_safe' => ['html']]),
             new TwigFunction('nowo_ui_header_actions', HeaderActions::split(...)),
             new TwigFunction('nowo_ui_visible_when', VisibleWhen::attributes(...)),
+            new TwigFunction('nowo_ui_image_crop_attrs', $this->imageCropAttributes(...)),
             new TwigFunction('nowo_ui_font_preload', fn (): string => $this->fontPreload?->tags() ?? '', ['is_safe' => ['html']]),
             new TwigFunction('nowo_ui_header_presentation', $this->headerPresentation(...)),
             new TwigFunction('nowo_ui_sidebar_layout', $this->sidebarLayout(...)),

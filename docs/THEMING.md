@@ -283,6 +283,9 @@ minmax(min(100%, var(--nowo-ui-filters-field-min, 12rem)), 1fr)))`.
 | `--nowo-ui-emoji-picker-width` | `20rem` (`emoji_picker` panel; never wider than the screen) |
 | `--nowo-ui-emoji-picker-height` | `14rem` (the grid, which scrolls past it) |
 | `--nowo-ui-emoji-picker-z` | `var(--nowo-ui-z-popover, 1080)` (the panel without the Popover API; with it, the top layer; [Layers](#layers-public-api-228)) |
+| `--nowo-ui-image-crop-mask` | `rgb(15 23 42 / 60%)` (2.43: the dimmed image around the crop frame; read by the script on every draw) |
+| `--nowo-ui-image-crop-frame` | `rgb(255 255 255 / 95%)` (the frame line) |
+| `--nowo-ui-image-crop-width` | `32rem` (the crop dialog; never wider than the screen) |
 | `--nowo-ui-sortable-drop-bg` | `color-mix(in srgb, var(--nowo-ui-primary) 10%, transparent)` (`sortable` placeholder) |
 | `--nowo-ui-sortable-drop-line` | `var(--nowo-ui-primary)` (placeholder border; outline of the list under the pointer) |
 | `--nowo-ui-sortable-ghost-shadow` | `0 0.5rem 1.5rem rgb(0 0 0 / 25%)` (the copy following the pointer) |

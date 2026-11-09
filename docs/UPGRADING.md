@@ -131,6 +131,18 @@
 
 ## Unreleased
 
+Target 2.43.0. From **2.42.1**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+Nothing to do; the default markup is unchanged. New and opt-in: the image crop step for file inputs
+(`js/nowo-ui-image-crop.js`, the FileType option `nowo_ui_image_crop`, the Twig function `nowo_ui_image_crop_attrs()`,
+`ImageCrop::attributes()`), see [USAGE](USAGE.md#image-crop). New CSS rules match only `.nowo-ui-image-crop*`; new
+translation keys `image_crop.*`. A page that opts in and sends a CSP needs `img-src blob:` for the `preview` image, and
+for the `<img>` fallback of browsers whose `createImageBitmap` does not take the orientation option.
+
 ## To 2.42.1
 
 From **2.42.0**:

@@ -117,6 +117,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Target 2.43.0. Request from Symfony Beacon (owner decision D-20261109-09, for Beacon 1.143).
+
+### Added
+
+- **Image crop step for file inputs (opt-in):** `js/nowo-ui-image-crop.js` (add `image-crop` to `script_names`). When an
+  image is picked in a file input that carries `data-nowo-ui-image-crop`, a dialog with the kit's dialog anatomy (opened
+  through `js/nowo-ui-dialog.js` when loaded) shows it under a square or round frame. The image moves by drag, one
+  finger or the arrow keys and zooms by the slider, the wheel, a pinch or `+` / `-`; Home resets, Enter applies, Escape
+  cancels. "Apply" draws the crop on a canvas (EXIF orientation applied, `createImageBitmap` with
+  `imageOrientation: 'from-image'`) and puts it in the input in place of the picked file (DataTransfer), so the server
+  receives and validates an ordinary upload. Cancel, the close button and Escape clear the input. Options as
+  attributes: `-shape` (`square` | `circle`), `-aspect` (`1` | `free` | a ratio), `-max` / `-min` (px), `-format` (`png`
+  default, `webp`, `jpeg`), `-quality`, `-bake-circle`, `-preview` (an `<img>` id that shows the crop), `-labels`
+  (JSON). Events `nowo-ui:image-crop:open` (cancelable), `:cropped`, `:cancel`, `:error`. Browsers without
+  DataTransfer, canvas `toBlob` or `<dialog>`, `multiple` inputs, SVG, non-images and images the browser cannot decode
+  upload as picked, with no error. No dependency (about 15 KB minified), no style attribute, no inline script. See
+  [USAGE](USAGE.md#image-crop).
+- **`ImageCrop::attributes($options, $translator)`** (`Nowo\UiKitBundle\Form\ImageCrop`): the attribute contract as a
+  map, options validated (`InvalidArgumentException`), dialog texts translated from `image_crop.*` (seven locales). Also
+  the **FileType option `nowo_ui_image_crop`** (`ImageCropTypeExtension`: `false` | `true` | options; refused with
+  `multiple`; the field's `attr` wins) and the **Twig function `nowo_ui_image_crop_attrs(options)`**. FormKit's planned
+  `crop: {shape, aspect, max}` maps onto the same options.
+- **Demo** `/kit/image-crop` and its Playwright e2e in Chromium and WebKit, desktop and phone (`make -C demo/symfony8
+  test-e2e-image-crop`), with an EXIF-rotated fixture and axe on the open dialog in light and dark mode.
+
 ## [2.42.1] - 2026-11-09
 
 Target 2.42.1. Request from TaskBoard (`manage/gantt.html.twig`, `manage/calendar.html.twig`).
