@@ -16,7 +16,7 @@
 #}
 {% set _label = label|default('edge_tab.launcher'|trans({}, 'NowoUiKitBundle')) %}
 {% set _when = when|default('phone') in ['phone', 'always'] ? when|default('phone') : 'never' %}
-{% set _attr %}{% for _name, _value in attr|default({}) %}{% if _value is not same as(false) and _value is not null and not (_name|lower starts with 'on') %} {{ _name|e('html_attr') }}{% if _value is not same as(true) %}="{{ _value }}"{% endif %}{% endif %}{% endfor %}{% endset %}
-<button type="button" class="nowo-ui-edge-tabs-launcher{{ class|default('') ? ' ' ~ class : '' }}" data-nowo-ui-edge-tabs-launcher data-nowo-ui-edge-tabs-when="{{ _when }}"{% if gutter|default(false) %} data-nowo-ui-edge-tabs-gutter{% endif %} aria-expanded="false" aria-label="{{ _label }}" title="{{ _label }}"{% if testid|default('') %} data-testid="{{ testid }}"{% endif %}{{ _attr }}>
+{% set _attr %}{% for _name, _value in attr|default({})|filter((v, k) => k != 'class') %}{% if _value is not same as(false) and _value is not null and not (_name|lower starts with 'on') %} {{ _name|e('html_attr') }}{% if _value is not same as(true) %}="{{ _value }}"{% endif %}{% endif %}{% endfor %}{% endset %}
+<button type="button" class="nowo-ui-edge-tabs-launcher{{ class|default('') ? ' ' ~ class : '' }}{{ (attr.class ?? false) ? ' ' ~ attr.class }}" data-nowo-ui-edge-tabs-launcher data-nowo-ui-edge-tabs-when="{{ _when }}"{% if gutter|default(false) %} data-nowo-ui-edge-tabs-gutter{% endif %} aria-expanded="false" aria-label="{{ _label }}" title="{{ _label }}"{% if testid|default('') %} data-testid="{{ testid }}"{% endif %}{{ _attr }}>
     <span class="nowo-ui-edge-tab__icon" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: icon|default('more'), label: _label}, false)|trim|raw }}</span>
 </button>

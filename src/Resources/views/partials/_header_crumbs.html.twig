@@ -26,7 +26,7 @@
 {%- set _id = id|default('nowo-ui-header-crumbs') -%}
 {%- set _collapsible = _model.isCollapsible() -%}
 {%- set _more_label = 'breadcrumbs.more'|trans({}, 'NowoUiKitBundle') -%}
-<nav class="{{ nowo_ui_class('header_crumbs', _b) }}" aria-label="{{ 'breadcrumbs.nav'|trans({}, 'NowoUiKitBundle') }}" data-nowo-ui-header-crumbs{% if _collapsible %} data-collapsible="true"{% endif %}{{ nowo_ui_attrs('header_crumbs', _b) }}{{ nowo_ui_html_attrs(attr|default({})) }}>
+<nav class="{{ nowo_ui_class('header_crumbs', _b) }}{{ (attr.class ?? false) ? ' ' ~ attr.class }}" aria-label="{{ 'breadcrumbs.nav'|trans({}, 'NowoUiKitBundle') }}" data-nowo-ui-header-crumbs{% if _collapsible %} data-collapsible="true"{% endif %}{{ nowo_ui_attrs('header_crumbs', _b) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(attr|default({}))) }}>
     {%- if _model.up %}
     <a class="{{ nowo_ui_class('header_crumbs_up', _b) }}" href="{{ _model.up.href }}" data-nowo-ui-header-crumbs-up{{ nowo_ui_attrs('header_crumbs_up', _b) }}><span class="nowo-ui-header-crumbs__up-glyph" aria-hidden="true">‹</span><span class="visually-hidden">{{ 'breadcrumbs.up'|trans({'%label%': _model.up.label}, 'NowoUiKitBundle') }}</span></a>
     {%- endif %}

@@ -12,9 +12,9 @@
     - attr: extra attributes (hash; e.g. {'data-action': 'drawer#open', 'aria-expanded': 'false'})
 #}
 {% set _tag = href|default('') ? 'a' : 'button' %}
-<{{ _tag }} class="nowo-ui-corner-tab{{ under|default(false) ? ' nowo-ui-corner-tab--under' : '' }}{{ class|default('') ? ' ' ~ class : '' }}"
+<{{ _tag }} class="nowo-ui-corner-tab{{ under|default(false) ? ' nowo-ui-corner-tab--under' : '' }}{{ class|default('') ? ' ' ~ class : '' }}{{ (attr.class ?? false) ? ' ' ~ attr.class }}"
     {%- if _tag == 'a' %} href="{{ href }}"{% else %} type="button"{% endif %} aria-label="{{ label }}" title="{{ label }}"
-    {%- for _name, _value in attr|default({}) %} {{ _name|e('html_attr') }}="{{ _value }}"{% endfor %}>
+    {%- for _name, _value in attr|default({})|filter((v, k) => k != 'class') %} {{ _name|e('html_attr') }}="{{ _value }}"{% endfor %}>
     {%- if icon|default('') -%}
         <span class="nowo-ui-corner-tab__icon" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: icon, label: label}, false)|trim|raw }}</span>
     {%- else -%}

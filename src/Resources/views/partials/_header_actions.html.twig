@@ -21,7 +21,7 @@
 {% set _b = bundle|default(null) %}
 {% set _pt = nowo_ui_page_type|default(null) %}
 {% set _split = split is defined and split ? split : nowo_ui_header_actions(actions|default([])) %}
-<div class="{{ nowo_ui_class('header_actions', _b) }}" data-nowo-ui-header-actions{{ nowo_ui_attrs('header_actions', _b) }}{{ nowo_ui_html_attrs(attr|default({})) }}>
+<div class="{{ nowo_ui_class('header_actions', _b) }}{{ (attr.class ?? false) ? ' ' ~ attr.class }}" data-nowo-ui-header-actions{{ nowo_ui_attrs('header_actions', _b) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(attr|default({}))) }}>
     {% for action in _split.icons %}
         {{ include(nowo_ui_partial('action', _b), {action: action, context: 'toolbar', bundle: _b, nowo_ui_page_type: _pt}, false) }}
     {% endfor %}

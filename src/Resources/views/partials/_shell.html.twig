@@ -42,7 +42,7 @@
 {% endif %}
 
 <div
-    class="{{ ui.shell(framework) }}{{ collapsed ? ' is-aside-collapsed' : '' }}{{ _rail and _mode == 'rail' ? ' is-aside-rail' : '' }}{{ _root_extra ? ' ' ~ _root_extra }}{{ _header_context is not same as('') ? ' has-header-context' }}"
+    class="{{ ui.shell(framework) }}{{ collapsed ? ' is-aside-collapsed' : '' }}{{ _rail and _mode == 'rail' ? ' is-aside-rail' : '' }}{{ _root_extra ? ' ' ~ _root_extra }}{{ _header_context is not same as('') ? ' has-header-context' }}{{ (attr.class ?? false) ? ' ' ~ attr.class }}"
     data-nowo-ui-shell
     {% if _rail %}
         data-nowo-ui-sidebar-rail
@@ -52,8 +52,8 @@
         {% if _rail_opts.default is defined %}data-nowo-ui-sidebar-default="{{ _rail_opts.default }}"{% endif %}
         {% if _mode in ['expanded', 'rail', 'hidden'] %}data-nowo-ui-sidebar-mode="{{ _mode }}"{% endif %}
     {% endif %}
-    {{- _t ? _t.renderAttributes('shell', bundle, attr|default({}), _pt)|raw : '' }}
-    {%- if not _t %}{% for name, value in attr|default({}) %} {{ name }}="{{ value }}"{% endfor %}{% endif %}
+    {{- _t ? _t.renderAttributes('shell', bundle, attr|default({})|filter((v, k) => k != 'class'), _pt)|raw : '' }}
+    {%- if not _t %}{% for name, value in attr|default({})|filter((v, k) => k != 'class') %} {{ name }}="{{ value }}"{% endfor %}{% endif %}
 >
     <header class="{{ ui.header(framework) }}{{ header_class|default('') ? ' ' ~ header_class }}">
         <div class="nowo-ui-header__start">

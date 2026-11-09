@@ -9,7 +9,7 @@
   Slots: side_panel_container, side_panel_main. Optional: attr (root attributes, no on*), bundle.
 #}
 {% set _b = bundle|default(null) %}
-<div class="{{ nowo_ui_class('side_panel_container', _b) }}" data-nowo-ui-side-panel-container{{ nowo_ui_attrs('side_panel_container', _b) }}{{ nowo_ui_html_attrs(attr|default({})) }}>
+<div class="{{ nowo_ui_class('side_panel_container', _b) }}{{ (attr.class ?? false) ? ' ' ~ attr.class }}" data-nowo-ui-side-panel-container{{ nowo_ui_attrs('side_panel_container', _b) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(attr|default({}))) }}>
     <div class="{{ nowo_ui_class('side_panel_main', _b) }}" data-nowo-ui-side-panel-main{{ nowo_ui_attrs('side_panel_main', _b) }}>
         {%- block nowo_ui_side_panel_main -%}{%- endblock -%}
     </div>

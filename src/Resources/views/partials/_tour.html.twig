@@ -56,7 +56,7 @@
 {% set _testids = testids|default(false) %}
 {% if _steps is not empty %}
 <div
-    class="nowo-ui-tour"
+    class="nowo-ui-tour{{ (attr.class ?? false) ? ' ' ~ attr.class }}"
     hidden
     data-controller="product-tour"
     data-action="nowo-ui-tour:start@window->product-tour#start"
@@ -74,7 +74,7 @@
     {%- if popover_class|default('') %} data-product-tour-popover-class-value="{{ popover_class }}"{% endif %}
     data-product-tour-labels-value="{{ {next: _labels.next, previous: _labels.previous, done: _labels.done, close: _labels.close, progress: _labels.progress}|json_encode }}"
     {%- if _testids %} data-testid="tour"{% endif %}
-    {%- for _name, _value in attr|default({}) %} {{ _name|e('html_attr') }}="{{ _value }}"{% endfor %}
+    {%- for _name, _value in attr|default({})|filter((v, k) => k != 'class') %} {{ _name|e('html_attr') }}="{{ _value }}"{% endfor %}
 >
     {%- if show_tab ?? true %}
     {{ include('@NowoUiKitBundle/partials/_edge_tab.html.twig', {
