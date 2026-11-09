@@ -52,7 +52,7 @@ final class ListingPhoneTest extends TestCase
 
     public function testResolvedLayoutCarriesPhoneWhateverTheStoredCustomization(): void
     {
-        $fields = self::definition()->columns();
+        $fields = $this->definition()->columns();
         // Reordered, one hidden, and a forged `phone` in the stored entry: only key / visible / merged are read.
         $stored = [
             ['key' => 'role', 'visible' => true, 'phone' => 'primary'],
@@ -72,7 +72,7 @@ final class ListingPhoneTest extends TestCase
 
     public function testHeadAndCellsPrintThePhoneOnlyWhenSet(): void
     {
-        $layout = new ListingLayout('users', ListingLayoutMerger::merge(self::definition()->columns(), null), []);
+        $layout = new ListingLayout('users', ListingLayoutMerger::merge($this->definition()->columns(), null), []);
         $row = ['name' => 'Ada', 'email' => 'a@x', 'id' => 7, 'role' => 'admin'];
         $head = $this->render("<tr>{% include nowo_ui_partial('listing_head') with {listing_layout: layout, detail: false} only %}</tr>", ['layout' => $layout]);
         self::assertStringContainsString('data-column="name" data-columns="name" data-required="1" data-priority="0" data-nowo-ui-phone="primary">Name</th>', $head);
@@ -87,7 +87,7 @@ final class ListingPhoneTest extends TestCase
         self::assertStringContainsString('<td class="nowo-ui-table__cell" data-column="role" data-priority="0">admin</td>', $cells);
 
         // A stacked group follows its lead column (the stacked column's own phone is not printed).
-        $stacked = new ListingLayout('users', ListingLayoutMerger::merge(self::definition()->columns(), [['key' => 'role', 'visible' => true], ['key' => 'email', 'visible' => true, 'merged' => true]]), []);
+        $stacked = new ListingLayout('users', ListingLayoutMerger::merge($this->definition()->columns(), [['key' => 'role', 'visible' => true], ['key' => 'email', 'visible' => true, 'merged' => true]]), []);
         $html = $this->render("<tr>{% include nowo_ui_partial('listing_cells') with {listing_layout: layout, cells_template: 'cells.html.twig', detail: false} %}</tr>", ['layout' => $stacked, 'row' => $row]);
         self::assertStringContainsString('<td class="nowo-ui-table__cell nowo-ui-listing-cell--stacked" data-column="role" data-priority="0"><div', $html);
     }
@@ -100,7 +100,7 @@ final class ListingPhoneTest extends TestCase
         return PageContractTwig::create(['page.html.twig' => $template, 'cells.html.twig' => self::CELLS])->render('page.html.twig', $context);
     }
 
-    private static function definition(): ListingDefinitionInterface
+    private function definition(): ListingDefinitionInterface
     {
         return new class implements ListingDefinitionInterface {
             public function key(): string
