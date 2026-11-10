@@ -283,10 +283,13 @@ slot (centred, at most `--nowo-ui-auth-panel-width` 28rem, full-width fields), f
 `form_errors` slot (`role="alert"`, only with errors) — a bundle that prints `form_errors(form)` itself drops that call
 or skips the scaffold's: `rootErrors: false`, or `{% set nowo_ui_auth_root_errors = false %}` in its template extending
 `page/auth`. Every form function lives in `page/_auth_form.html.twig`, included only with a form: an
-`AuthPage` without `form` renders without symfony/form.
+`AuthPage` without `form` renders without symfony/form. 2.44: `nowo_ui_kit.auth_panel.brand: none`, or the variable
+`nowo_ui_auth_brand = 'none'` (render variable, template extending `page/auth`, or the guest layout), leaves the panel
+brand region out ([USAGE](USAGE.md#auth-panel-brand-244)).
 
 | Data block | Default | Context |
 | --- | --- | --- |
+| `nowo_ui_auth_brand` *(2.44)* | the panel brand region (appearance lockup, else `page.brand`; nothing with `auth_panel.brand: none` / `nowo_ui_auth_brand = 'none'`) | `page` |
 | `nowo_ui_auth_body` *(2.3)* | the form region: root errors, `nowo_ui_auth_fields`, `nowo_ui_auth_actions` (nothing without `page.form`) | `form`, `page` |
 | `nowo_ui_auth_fields` | child loop of `page.form` | `form`, `page` |
 | `nowo_ui_auth_actions` | submit button (`page.submitLabel`) | `form`, `page` |

@@ -42,6 +42,7 @@
   - [App shell](#app-shell-26)
   - [Full-height sidebar layout (2.32)](#full-height-sidebar-layout-232)
   - [Compact pagination](#compact-pagination-26)
+  - [Auth panel brand (2.44)](#auth-panel-brand-244)
 - [Pre-paint theme boot](#pre-paint-theme-boot)
 - [App chrome](#app-chrome-aside-avatar-user-menu-footer)
   - [Avatars (2.26)](#avatars-226)
@@ -1768,6 +1769,41 @@ does. `per_page_selector: false` hides the select, `id` prefixes its id. Slots `
 ```twig
 {{ include(nowo_ui_partial('pagination_compact'), {pagination: {page: 2, per_page: 25, total: 160, total_pages: 7}, route: 'device_index'}) }}
 ```
+
+
+<a id="auth-panel-brand-244"></a>
+### Auth panel brand (2.44)
+
+The auth scaffold (`@NowoUiKit/page/auth.html.twig`, AuthKit's login, reset password, e-mail link, QR and two-factor
+pages) prints a brand region at the top of its panel: the appearance logo lockup when Settings → Brand has a logo, else
+`AuthPage::brand` as text. A guest layout that prints its own brand above the panel turns it off:
+
+```yaml
+# config/packages/nowo_ui_kit.yaml — every auth page
+nowo_ui_kit:
+    auth_panel:
+        brand: none
+```
+
+Or for one layout, one page or one render (the variable `nowo_ui_auth_brand`, `auto` | `none`, wins over the config):
+
+```twig
+{# templates/layout/guest.html.twig — the host guest layout (nowo_ui_kit.layouts.guest or AuthPage layout) #}
+{% extends '@NowoUiKit/layout/guest.html.twig' %}
+{% set nowo_ui_auth_brand = 'none' %}
+
+{# templates/security/login.html.twig — one page #}
+{% extends '@NowoUiKit/page/auth.html.twig' %}
+{% set nowo_ui_auth_brand = 'none' %}
+```
+
+```php
+return $this->render('@NowoUiKit/page/auth.html.twig', ['page' => $page, 'nowo_ui_auth_brand' => 'none']);
+```
+
+`auto` in the variable brings the region back on a page when the config says `none`. The block `nowo_ui_auth_brand`
+replaces the region with your own markup (`page`, `_ap_logos` in context). `none` keeps the guest layout's
+`nowo_ui_guest_brand` region emptied, as the auth scaffold always does.
 
 ## Pre-paint theme boot
 

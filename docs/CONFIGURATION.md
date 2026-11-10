@@ -11,6 +11,7 @@
 - [Route links](#route-links)
 - [Error pages](#error-pages)
 - [App shell](#app-shell)
+- [Auth panel (2.44)](#auth-panel-244)
 - [Compact header (2.27)](#compact-header-227)
 - [Remote dialog (2.28)](#remote-dialog-228)
 - [Font preload (2.21)](#font-preload-221)
@@ -35,6 +36,7 @@ Alias: **`nowo_ui_kit`**
 | `route_links` | map | `routes: {}` | Route (prefix) → link map for `nowo_ui_route_link()`, e.g. the page-edge manual tab (since 1.17.0). See [Route links](#route-links) |
 | `error_pages` | map | kit layout + texts | Kit HTTP error pages (since 2.6.0). See [Error pages](#error-pages) |
 | `shell` | map | `kit_styles: true`, `sidebar_layout: below-header` | Signed-in app shell templates (since 2.6.0; sidebar layout, brand and hover expand since 2.32.0). See [App shell](#app-shell) |
+| `auth_panel` | map | `brand: auto` | Auth scaffold panel brand region (since 2.44.0): `auto` \| `none`. See [Auth panel](#auth-panel-244) |
 | `header` | map | `presentation: standard`, `compact_actions: page` | Compact header (since 2.27.0): default page-header presentation and where `PageHeader::actions` go in compact. See [Compact header](#compact-header-227) |
 | `font_preload` | map | `fonts: []`, `manifest.path: null` | `<link rel="preload" as="font">` tags in the document / error layouts (since 2.21.0). See [Font preload](#font-preload-221) |
 
@@ -51,6 +53,7 @@ Parameters / Twig globals:
 - `%nowo_ui_kit.release_check.enabled%`, `%nowo_ui_kit.release_check.github_repo%`, `%nowo_ui_kit.release_check.current_version%` → Twig global `nowo_ui_kit_release_check` (`{enabled, current_version}`)
 - `%nowo_ui_kit.error_pages%` → Twig global `nowo_ui_error_pages` (`{layout_template, theme_storage, theme_toggle, html_attributes, translation_domain, translation_prefix}`) and the functions `nowo_ui_error_page()` / `nowo_ui_error_text()` (2.6)
 - `nowo_ui_kit.shell` → Twig global `nowo_ui_kit_shell` (the whole map, 2.6)
+- `%nowo_ui_kit.auth_panel.brand%` → Twig global `nowo_ui_kit_auth_panel` (`{brand}`, 2.44)
 - `nowo_ui_kit.header` → Twig global `nowo_ui_header` (a stateless `HeaderPresentationResolver`) and the function
   `nowo_ui_header_presentation()` (2.27; no container parameter)
 
@@ -422,6 +425,25 @@ nowo_ui_kit:
 | `sidebar_layout` *(2.32)* | `below-header` | `below-header` (the 2.31 markup, byte for byte) or `full-height`: on desktop the aside runs from the top edge with the burger and the brand in its head; the header and the footer start at its right edge. Per request: the `app_shell_open` option `sidebar_layout`, then the request attribute `_nowo_ui_sidebar_layout` (`Nowo\UiKitBundle\Shell\SidebarLayout::ATTRIBUTE`, e.g. set from a user preference in a `kernel.request` listener). See [USAGE](USAGE.md#full-height-sidebar-layout-232) |
 | `brand.name` / `brand.href` / `brand.icon_src` *(2.32)* | `null` | The brand of the full-height aside head, and of the header when a page passes neither `brand_html` nor `brand`. `href` must be relative, http, https or mailto and `icon_src` relative, http or https: anything else (`javascript:`, `data:`…) fails the container compile. Prefer a same-origin or https `icon_src` (it is an `<img>`; allow it in `img-src`). `name` is escaped. The HTML options (`aside_brand_html`, `brand_icon_html`) are trusted HTML printed raw — see [USAGE](USAGE.md#full-height-sidebar-layout-232). The options `aside_brand_html`, `brand_icon_html`, `brand_icon_src`, `brand_name`, `brand_href` win |
 | `hover_expand` *(2.32)* | `false` | `data-nowo-ui-sidebar-hover-expand` on a three-mode kit-styled shell: `nowo-ui-shell.js` widens the icons-only rail over the page on hover / keyboard focus (`is-aside-peek`). The option `hover_expand` wins |
+
+<a id="auth-panel-244"></a>
+## Auth panel (2.44)
+
+Since **2.44.0**. The brand region of the auth scaffold panel (`@NowoUiKit/page/auth.html.twig`); Twig global
+`nowo_ui_kit_auth_panel`.
+
+```yaml
+nowo_ui_kit:
+    auth_panel:
+        brand: auto   # auto (default) | none
+```
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `brand` | `auto` | `auto`: the 2.43 panel, byte for byte (the appearance logo lockup when Settings → Brand has a logo, else `AuthPage::brand` as text, else nothing). `none`: the panel prints no brand region at all (neither the lockup nor the `AuthPage::brand` text), for a host guest layout that already prints its brand above the panel. Any other value fails the container compile |
+
+Per render, the Twig variable `nowo_ui_auth_brand` (`auto` | `none`) wins over the config: see
+[USAGE](USAGE.md#auth-panel-brand-244).
 
 ## Compact header (2.27)
 

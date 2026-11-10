@@ -885,7 +885,8 @@ Corner, border and footer stay from `defaults`; a brand provider that throws is 
   dark logo). The kit CSS hides the image of the other `[data-theme]` (no script). In the icons-only rail the mark
   shows instead (class `nowo-ui-aside-brand__icon--rail`; the name's initial without a mark).
 - Auth scaffold: the panel brand prints the lockup (alt = `page.brand`, else the appearance name); without logos,
-  `page.brand` as text as before.
+  `page.brand` as text as before. 2.44: `nowo_ui_kit.auth_panel.brand: none` (or `nowo_ui_auth_brand = 'none'`) leaves
+  the region out ([CONFIGURATION](CONFIGURATION.md#auth-panel-244)).
 - Guest layout (block `nowo_ui_guest_brand`, emptied by the auth scaffold) and error layout (block
   `nowo_ui_error_brand`, top of `<main>`): `<div class="nowo-ui-brand-region nowo-ui-brand-region--guest|error"
   data-nowo-ui-region="brand">` with the lockup, only when there is one. The error layout reads the appearance through

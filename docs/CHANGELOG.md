@@ -119,6 +119,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Target 2.44.0.
+
+### Added
+
+- **Auth panel brand option:** `nowo_ui_kit.auth_panel.brand: auto | none` (Twig global `nowo_ui_kit_auth_panel`,
+  parameter `%nowo_ui_kit.auth_panel.brand%`). `auto` (default) keeps the 2.43 panel byte for byte: the appearance logo
+  lockup, else `AuthPage::brand` as text. `none` leaves the brand region out of the `page/auth.html.twig` panel, for a
+  host guest layout that prints its own brand (no more double logo on login, reset, e-mail link, QR, two-factor). A
+  per-render variable `nowo_ui_auth_brand` (`auto` | `none`: a `render()` variable, a `{% set %}` in a template
+  extending `page/auth`, or in the guest layout before `nowo_ui_content`) wins over the config, and the new block
+  `nowo_ui_auth_brand` wraps the region. See [CONFIGURATION](CONFIGURATION.md#auth-panel-244) and
+  [USAGE](USAGE.md#auth-panel-brand-244).
+
 ## [2.43.1] - 2026-11-10
 
 Target 2.43.1. Request from Symfony Beacon (spec 222 "provider-dependent fields").

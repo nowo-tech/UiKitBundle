@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+  - [To 2.44.0 (auth panel brand)](#to-2440-auth-panel-brand)
 - [To 2.43.1](#to-2431)
 - [To 2.43.0](#to-2430)
 - [To 2.42.1](#to-2421)
@@ -132,6 +133,30 @@
   - [Install](#install)
 
 ## Unreleased
+
+### To 2.44.0 (auth panel brand)
+
+Target 2.44.0. From **2.43.x**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+Nothing to do: the default `nowo_ui_kit.auth_panel.brand: auto` renders the auth panel as 2.43. A host whose guest
+layout prints its own brand above the panel (a double logo on the AuthKit pages) sets:
+
+```yaml
+# config/packages/nowo_ui_kit.yaml
+nowo_ui_kit:
+    auth_panel:
+        brand: none
+```
+
+or, for one page or one layout only, `{% set nowo_ui_auth_brand = 'none' %}` (in the template extending
+`@NowoUiKit/page/auth.html.twig`, or in the guest layout before `nowo_ui_content`) or `nowo_ui_auth_brand: 'none'` in
+the `render()` variables. Then drop any CSS that hid `.nowo-ui-auth-panel__brand--logo`. `none` also drops the
+`AuthPage::brand` text. A template overriding `page/auth.html.twig` wholesale keeps working; the new block
+`nowo_ui_auth_brand` is the narrower override point.
 
 ## To 2.43.1
 
