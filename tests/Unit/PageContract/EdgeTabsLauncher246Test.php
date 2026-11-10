@@ -94,7 +94,7 @@ final class EdgeTabsLauncher246Test extends TestCase
         $twig->addGlobal('nowo_ui_kit_icon_set', $set);
         // Like symfony/ux-icons with no network: an icon it cannot resolve is an error (TaskBoard 2.0.2 hit a 500).
         $twig->addFunction(new TwigFunction('ux_icon', static function (string $name): string {
-            if (!\in_array($name, ['bi:three-dots-vertical'], true)) {
+            if ('bi:three-dots-vertical' !== $name) {
                 throw new RuntimeException('Icon "'.$name.'" not found.');
             }
 
