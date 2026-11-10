@@ -26,6 +26,10 @@
  * (`prefers-reduced-motion: reduce` or `data-motion="reduce"`, unless `data-motion="full"`), while the launcher is not
  * shown, or when the tabs have no animation.
  *
+ * 2.46: the unfold has its own tokens (--nowo-ui-edge-tabs-motion-*), the `chevron` icon morphs (CSS only), a Turbo
+ * snapshot (`turbo:before-cache`) ends a running fold first (KV-L1), a style read that throws ends the fold at once
+ * (KV-I1), and a focused tab gives the focus to the launcher before it becomes aria-hidden (KV-I2).
+ *
  * Delegated listeners on the document; importing touches no DOM. Members are read through the prototypes.
  */
 export const LAUNCHER = '[data-nowo-ui-edge-tabs-launcher]';
@@ -146,6 +150,11 @@ function startClosing(button: HTMLElement | null): void {
   if (!button || !isShown(button) || reducedMotion() || 0 === list.length) {
     return;
   }
+  // 2.46 (KV-I2): a folding tab never keeps the focus while it becomes aria-hidden: the launcher takes it first.
+  const active = document.activeElement;
+  if (active instanceof HTMLElement && list.includes(active)) {
+    button.focus();
+  }
   root().setAttribute(CLOSING, '');
   list.forEach((tab, index) => {
     tab.setAttribute(FOLDING, '');
@@ -153,7 +162,13 @@ function startClosing(button: HTMLElement | null): void {
     tab.setAttribute('aria-hidden', 'true');
     tab.style.setProperty(ORDER, String(list.length - 1 - index));
   });
-  const time = animationTime(list);
+  // 2.46 (KV-I1): if the styles cannot be read, the fold ends at once (never leaves the tabs inert).
+  let time = 0;
+  try {
+    time = animationTime(list);
+  } catch {
+    time = 0;
+  }
   if (time <= 0) {
     finishClosing();
 
@@ -305,6 +320,8 @@ export function bindNowoUiEdgeTabs(): void {
   listen(document, 'click', onClick);
   listen(document, 'keydown', onKeyDown);
   listen(document, 'focusout', onFocusOut);
+  // 2.46 (KV-L1): a Turbo snapshot never keeps a fold half-way (inert, aria-hidden, folding tabs): end it first.
+  listen(document, 'turbo:before-cache', finishClosing);
   // `close` does not bubble: capture phase.
   EventTarget.prototype.addEventListener.call(document, 'close', onDialogClose as EventListener, true);
   if (typeof MutationObserver !== 'undefined') {

@@ -515,7 +515,14 @@ From Beacon's mobile UX audit (2026-11-09, 390 px, iPhone / WebKit).
 | `--nowo-ui-font-size-min` | `0.75rem` | floor of badges and the kit's meta labels on phones (up to 40rem) and touch screens; other bundles read it for their meta text |
 | `--nowo-ui-select-chevron-gutter` | `2rem` (`1.75rem` on the pagination select) | end padding of `.nowo-ui-select` / kit selects, where the `currentColor` chevron sits |
 | `--nowo-ui-edge-tabs-gutter` | `var(--nowo-ui-edge-tab-width, 2.25rem)` while the edge tabs are folded with `gutter`, else unset | right padding added to `.nowo-ui-main`; read it with `var(--nowo-ui-edge-tabs-gutter, 0px)` in a host container |
-| `--nowo-ui-edge-tabs-stagger` | `30ms` | delay between two tabs while they unfold / fold (2.45) |
+| `--nowo-ui-edge-tabs-stagger` | `30ms` | delay between two tabs while they unfold / fold (2.45); 2.46: default of `--nowo-ui-edge-tabs-motion-stagger` |
+| `--nowo-ui-edge-tabs-motion-stagger` | `var(--nowo-ui-edge-tabs-stagger, 30ms)` | delay per tab of the unfold / fold (2.46) |
+| `--nowo-ui-edge-tabs-motion-duration` | `260ms` | unfold / fold duration per tab (2.46; 2.45: `--nowo-ui-motion-medium`) |
+| `--nowo-ui-edge-tabs-motion-easing` | `cubic-bezier(0.22, 1, 0.36, 1)` | unfold curve (2.46; 2.45: `--nowo-ui-motion-ease-out`) |
+| `--nowo-ui-edge-tabs-motion-close-easing` | `var(--nowo-ui-motion-ease-in, ease-in)` | fold curve (2.46) |
+| `--nowo-ui-edge-tabs-motion-scale` | `0.96` | start scale of an unfolding tab (2.46; `1` = the 2.45 look) |
+| `--nowo-ui-edge-tabs-icon-duration` | `240ms` | `icon: 'chevron'` morph (or turn) duration (2.46) |
+| `--nowo-ui-edge-tabs-icon-easing` | `cubic-bezier(0.34, 1.56, 0.64, 1)` | chevron morph curve, slight overshoot (2.46) |
 | `--nowo-ui-edge-tabs-order` | set by `js/nowo-ui-edge-tabs.js` per tab | position of a tab in the unfold / fold sequence (multiplied by the stagger); not a host token |
 
 Select geometry: `.nowo-ui-select` (opt-in on any `<select>`), `select.nowo-ui-input` and the pagination select use

@@ -15,6 +15,20 @@ async function open(page: Page, path = '/kit/mobile'): Promise<void> {
 /** 2.45: the tabs unfold / fold with an animation; wait for it before measuring. */
 const settled = (l: Locator): Promise<unknown> => l.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
 
+/**
+ * 2.46: the chevron morphs (CSS `d`) where the browser supports it, else it turns (rotate). True once it points down.
+ */
+async function chevronDown(launcher: Locator): Promise<boolean> {
+  await launcher.evaluate((el) => Promise.all([...el.querySelectorAll('*')].flatMap((n) => n.getAnimations()).map((a) => a.finished)));
+  return launcher.evaluate((el) => {
+    if (CSS.supports('d', "path('M0 0')")) {
+      const [upper, lower] = [...el.querySelectorAll('path')].map((p) => getComputedStyle(p).getPropertyValue('d').replace(/\s+/g, ' '));
+      return /M ?6[ ,]9 ?L ?12[ ,]15/.test(upper ?? '') && /M ?12[ ,]15 ?L ?18[ ,]9/.test(lower ?? '');
+    }
+    return Math.abs(new DOMMatrix(getComputedStyle(el.querySelector('.nowo-ui-edge-tab__icon')!).transform).b + 1) < 0.001;
+  });
+}
+
 const visible = (l: Locator): Promise<boolean> => l.evaluate((el) => getComputedStyle(el).display !== 'none');
 
 test.describe('phone mode', () => {
@@ -90,8 +104,7 @@ test.describe('phone mode', () => {
     const iconSize = await launcher.locator('.nowo-ui-edge-tab__icon').evaluate((el) => el.getBoundingClientRect().width);
     expect(iconSize).toBeCloseTo(0.95 * rem, 0);
     // The chevron points down while open.
-    await settled(launcher.locator('.nowo-ui-edge-tab__icon'));
-    expect(await launcher.locator('.nowo-ui-edge-tab__icon').evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).b)).toBeCloseTo(-1, 3);
+    expect(await chevronDown(launcher)).toBe(true);
     await page.screenshot({ path: `test-results/mux-edge-245-open-${info.project.name}.png`, clip: { x: l.x - 120, y: l.y - 20, width: 120 + l.width, height: 260 } });
     // The launcher widens on hover like the tabs.
     await launcher.hover();
@@ -112,6 +125,65 @@ test.describe('phone mode', () => {
     await expect(page.locator('html')).not.toHaveAttribute('data-nowo-ui-edge-tabs-closing', '');
     await expect(notes).toBeHidden();
     await expect(notes).not.toHaveAttribute('inert', '');
+  });
+
+  test('2.46: the chevron morphs into a down chevron and back; Beacon motion tokens drive the unfold', async ({ page }, info) => {
+    await open(page);
+    await page.evaluate(() => {
+      const s = document.documentElement.style;
+      s.setProperty('--nowo-ui-edge-tab-width', '1.85rem');
+      s.setProperty('--nowo-ui-edge-tab-height', '2.3rem');
+      s.setProperty('--nowo-ui-edge-tab-icon', '0.95rem');
+      s.setProperty('--nowo-ui-edge-tab-hover-width', '2.15rem');
+      s.setProperty('--nowo-ui-edge-tab-step', '2.6rem');
+      s.setProperty('--nowo-ui-edge-tabs-motion-duration', '300ms');
+      s.setProperty('--nowo-ui-edge-tabs-motion-stagger', '40ms');
+    });
+    const launcher = page.getByTestId('edge-launcher');
+    const svg = launcher.locator('svg.nowo-ui-edge-tabs-chevron');
+    await expect(svg).toHaveAttribute('aria-hidden', 'true');
+    await expect(launcher).toHaveAccessibleName('Page tools');
+    const morphs = await page.evaluate(() => CSS.supports('d', "path('M0 0')"));
+    await launcher.focus();
+    await page.keyboard.press('Enter');
+    // Frames of the morph: pause the icon transitions and step through them (deterministic screenshots).
+    const box = (await launcher.boundingBox())!;
+    for (const [i, t] of [0, 60, 120, 180, 240].entries()) {
+      await launcher.evaluate((el, at) => {
+        for (const a of [...el.querySelectorAll('*')].flatMap((n) => n.getAnimations())) {
+          a.pause();
+          a.currentTime = at;
+        }
+      }, t);
+      await page.screenshot({ path: `test-results/mux-chevron-morph-${i}-${t}ms-${info.project.name}.png`, clip: { x: box.x - 8, y: box.y - 8, width: box.width + 8, height: box.height + 16 }, scale: 'device' });
+    }
+    await launcher.evaluate((el) => [...el.querySelectorAll('*')].flatMap((n) => n.getAnimations()).forEach((a) => a.finish()));
+    expect(await chevronDown(launcher)).toBe(true);
+    if (morphs) {
+      // A real morph: the arms move, the icon box does not turn.
+      expect(await launcher.locator('.nowo-ui-edge-tab__icon').evaluate((el) => getComputedStyle(el).transform)).toBe('none');
+    }
+    const notes = page.getByTestId('edge-notes').locator('a');
+    const timing = await notes.evaluate((el) => el.getAnimations().map((a) => [(a as CSSAnimation).animationName, Number(a.effect?.getComputedTiming().duration), Number(a.effect?.getComputedTiming().delay)]));
+    expect(timing).toEqual([['nowo-ui-edge-tab-unfold', 300, 40]]);
+    await settled(notes);
+    await page.screenshot({ path: `test-results/mux-edge-246-open-${info.project.name}.png`, clip: { x: box.x - 120, y: box.y - 20, width: 120 + box.width, height: 260 } });
+
+    // The reverse runs on close.
+    await page.keyboard.press('Escape');
+    await expect(launcher).toHaveAttribute('aria-expanded', 'false');
+    await launcher.evaluate((el) => Promise.all([...el.querySelectorAll('*')].flatMap((n) => n.getAnimations()).map((a) => a.finished)));
+    const back = await launcher.evaluate((el) => (CSS.supports('d', "path('M0 0')") ? getComputedStyle(el.querySelector('path')!).getPropertyValue('d') : getComputedStyle(el.querySelector('.nowo-ui-edge-tab__icon')!).transform));
+    expect(back.replace(/\s+/g, ' ')).toMatch(morphs ? /M ?15[ ,]6 ?L ?9[ ,]12/ : /^(none|matrix\(1, 0, 0, 1, 0, 0\))$/);
+  });
+
+  test('2.46: reduced motion — the chevron and the tabs change at once', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await open(page);
+    const launcher = page.getByTestId('edge-launcher');
+    await launcher.click();
+    expect(await launcher.evaluate((el) => [...el.querySelectorAll('*')].flatMap((n) => n.getAnimations()).length)).toBe(0);
+    expect(await chevronDown(launcher)).toBe(true);
   });
 
   test('2.45: reduced motion opens and closes at once', async ({ page }) => {

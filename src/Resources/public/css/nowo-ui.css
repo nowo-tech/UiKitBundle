@@ -7141,13 +7141,54 @@ select.nowo-ui-pagination__select {
   color: var(--nowo-ui-primary);
 }
 
-/* 2.45: `icon: 'chevron'` — a chevron pointing left while folded turns to point down while open. */
-.nowo-ui-edge-tabs-launcher--chevron .nowo-ui-edge-tab__icon {
-  transition: transform var(--nowo-ui-motion-medium, 200ms) var(--nowo-ui-motion-ease-out, ease-out);
+/* 2.45: `icon: 'chevron'` — a chevron pointing left while folded turns to point down while open. 2.46: a morph. The
+   kit's own inline SVG (two stroke arms, .nowo-ui-edge-tabs-chevron) moves each arm's end points from the left
+   chevron to the down chevron with a CSS `d` transition (--nowo-ui-edge-tabs-icon-duration, 240ms, and
+   --nowo-ui-edge-tabs-icon-easing, a slight overshoot); closing runs it back. A browser without the CSS `d` property
+   rotates the icon instead (the 2.45 turn), with the same tokens. Nothing moves under reduced motion. */
+.nowo-ui-edge-tabs-chevron {
+  display: block;
+  overflow: visible;
 }
 
-.nowo-ui-edge-tabs-launcher--chevron[aria-expanded='true'] .nowo-ui-edge-tab__icon {
-  transform: rotate(-90deg);
+.nowo-ui-edge-tabs-chevron__arm {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@supports (d: path('M0 0')) {
+  .nowo-ui-edge-tabs-chevron__arm {
+    transition: d var(--nowo-ui-edge-tabs-icon-duration, 240ms) var(--nowo-ui-edge-tabs-icon-easing, cubic-bezier(0.34, 1.56, 0.64, 1));
+  }
+
+  .nowo-ui-edge-tabs-chevron__arm--upper {
+    d: path('M15 6L9 12');
+  }
+
+  .nowo-ui-edge-tabs-chevron__arm--lower {
+    d: path('M9 12L15 18');
+  }
+
+  .nowo-ui-edge-tabs-launcher[aria-expanded='true'] .nowo-ui-edge-tabs-chevron__arm--upper {
+    d: path('M6 9L12 15');
+  }
+
+  .nowo-ui-edge-tabs-launcher[aria-expanded='true'] .nowo-ui-edge-tabs-chevron__arm--lower {
+    d: path('M12 15L18 9');
+  }
+}
+
+@supports not (d: path('M0 0')) {
+  .nowo-ui-edge-tabs-launcher--chevron .nowo-ui-edge-tab__icon {
+    transition: transform var(--nowo-ui-edge-tabs-icon-duration, 240ms) var(--nowo-ui-edge-tabs-icon-easing, cubic-bezier(0.34, 1.56, 0.64, 1));
+  }
+
+  .nowo-ui-edge-tabs-launcher--chevron[aria-expanded='true'] .nowo-ui-edge-tab__icon {
+    transform: rotate(-90deg);
+  }
 }
 
 .nowo-ui-edge-tabs-launcher:focus-visible {
@@ -7168,11 +7209,13 @@ select.nowo-ui-pagination__select {
 }
 
 :root[data-nowo-ui-edge-tabs-ready][data-nowo-ui-edge-tabs-open]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always']:not([hidden])) .nowo-ui-edge-tab__link:not([aria-expanded='true'], [data-nowo-ui-edge-tab-pinned]) {
-  animation: nowo-ui-edge-tab-unfold var(--nowo-ui-motion-medium, 200ms) var(--nowo-ui-motion-ease-out, ease-out) calc(var(--nowo-ui-edge-tabs-order, 0) * var(--nowo-ui-edge-tabs-stagger, 30ms)) both;
+  animation: nowo-ui-edge-tab-unfold var(--nowo-ui-edge-tabs-motion-duration, 260ms) var(--nowo-ui-edge-tabs-motion-easing, cubic-bezier(0.22, 1, 0.36, 1)) calc(var(--nowo-ui-edge-tabs-order, 0) * var(--nowo-ui-edge-tabs-motion-stagger, var(--nowo-ui-edge-tabs-stagger, 30ms))) both;
+  transform-origin: 100% 50%;
 }
 
 :root[data-nowo-ui-edge-tabs-ready][data-nowo-ui-edge-tabs-closing]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always']:not([hidden])) .nowo-ui-edge-tab__link[data-nowo-ui-edge-tabs-folding] {
-  animation: nowo-ui-edge-tab-fold var(--nowo-ui-motion-medium, 200ms) var(--nowo-ui-motion-ease-in, ease-in) calc(var(--nowo-ui-edge-tabs-order, 0) * var(--nowo-ui-edge-tabs-stagger, 30ms)) both;
+  animation: nowo-ui-edge-tab-fold var(--nowo-ui-edge-tabs-motion-duration, 260ms) var(--nowo-ui-edge-tabs-motion-close-easing, var(--nowo-ui-motion-ease-in, ease-in)) calc(var(--nowo-ui-edge-tabs-order, 0) * var(--nowo-ui-edge-tabs-motion-stagger, var(--nowo-ui-edge-tabs-stagger, 30ms))) both;
+  transform-origin: 100% 50%;
 }
 
 :root[data-nowo-ui-edge-tabs-ready]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always']:not([hidden])[data-nowo-ui-edge-tabs-gutter]) {
@@ -7197,11 +7240,13 @@ select.nowo-ui-pagination__select {
   }
 
   :root[data-nowo-ui-edge-tabs-ready][data-nowo-ui-edge-tabs-open]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='phone']:not([hidden])) .nowo-ui-edge-tab__link:not([aria-expanded='true'], [data-nowo-ui-edge-tab-pinned]) {
-    animation: nowo-ui-edge-tab-unfold var(--nowo-ui-motion-medium, 200ms) var(--nowo-ui-motion-ease-out, ease-out) calc(var(--nowo-ui-edge-tabs-order, 0) * var(--nowo-ui-edge-tabs-stagger, 30ms)) both;
+    animation: nowo-ui-edge-tab-unfold var(--nowo-ui-edge-tabs-motion-duration, 260ms) var(--nowo-ui-edge-tabs-motion-easing, cubic-bezier(0.22, 1, 0.36, 1)) calc(var(--nowo-ui-edge-tabs-order, 0) * var(--nowo-ui-edge-tabs-motion-stagger, var(--nowo-ui-edge-tabs-stagger, 30ms))) both;
+    transform-origin: 100% 50%;
   }
 
   :root[data-nowo-ui-edge-tabs-ready][data-nowo-ui-edge-tabs-closing]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='phone']:not([hidden])) .nowo-ui-edge-tab__link[data-nowo-ui-edge-tabs-folding] {
-    animation: nowo-ui-edge-tab-fold var(--nowo-ui-motion-medium, 200ms) var(--nowo-ui-motion-ease-in, ease-in) calc(var(--nowo-ui-edge-tabs-order, 0) * var(--nowo-ui-edge-tabs-stagger, 30ms)) both;
+    animation: nowo-ui-edge-tab-fold var(--nowo-ui-edge-tabs-motion-duration, 260ms) var(--nowo-ui-edge-tabs-motion-close-easing, var(--nowo-ui-motion-ease-in, ease-in)) calc(var(--nowo-ui-edge-tabs-order, 0) * var(--nowo-ui-edge-tabs-motion-stagger, var(--nowo-ui-edge-tabs-stagger, 30ms))) both;
+    transform-origin: 100% 50%;
   }
 
   :root[data-nowo-ui-edge-tabs-ready]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='phone']:not([hidden])[data-nowo-ui-edge-tabs-gutter]) {
@@ -7220,20 +7265,23 @@ select.nowo-ui-pagination__select {
 }
 
 /* 2.45: unfold / fold. Open, each tab slides down from the launcher (opacity and translateY(-step × (slot + 1)) to
-   none), one --nowo-ui-edge-tabs-stagger (30ms) later per tab (--nowo-ui-edge-tabs-order, set by the runtime). Closing
+   none), one --nowo-ui-edge-tabs-stagger (30ms) later per tab (--nowo-ui-edge-tabs-order, set by the runtime). 2.46:
+   softer by default and tunable on its own: --nowo-ui-edge-tabs-motion-duration (260ms), -motion-easing (decelerate,
+   cubic-bezier(0.22, 1, 0.36, 1)), -motion-close-easing (ease-in), -motion-scale (from 0.96) and -motion-stagger
+   (defaults to --nowo-ui-edge-tabs-stagger, 30ms). Closing
    runs the reverse (the last tab first) while <html> carries data-nowo-ui-edge-tabs-closing, the folding tabs inert
    and aria-hidden; then they are hidden again. No animation under reduced motion. */
 @keyframes nowo-ui-edge-tab-unfold {
   from {
     opacity: 0;
-    transform: translateY(calc(-1 * (var(--nowo-ui-edge-tab-slot, 0) + 1) * var(--nowo-ui-edge-tab-step, calc(var(--nowo-ui-edge-tab-height, 2.75rem) + var(--nowo-ui-edge-tab-gap, 0.5rem)))));
+    transform: translateY(calc(-1 * (var(--nowo-ui-edge-tab-slot, 0) + 1) * var(--nowo-ui-edge-tab-step, calc(var(--nowo-ui-edge-tab-height, 2.75rem) + var(--nowo-ui-edge-tab-gap, 0.5rem))))) scale(var(--nowo-ui-edge-tabs-motion-scale, 0.96));
   }
 }
 
 @keyframes nowo-ui-edge-tab-fold {
   to {
     opacity: 0;
-    transform: translateY(calc(-1 * (var(--nowo-ui-edge-tab-slot, 0) + 1) * var(--nowo-ui-edge-tab-step, calc(var(--nowo-ui-edge-tab-height, 2.75rem) + var(--nowo-ui-edge-tab-gap, 0.5rem)))));
+    transform: translateY(calc(-1 * (var(--nowo-ui-edge-tab-slot, 0) + 1) * var(--nowo-ui-edge-tab-step, calc(var(--nowo-ui-edge-tab-height, 2.75rem) + var(--nowo-ui-edge-tab-gap, 0.5rem))))) scale(var(--nowo-ui-edge-tabs-motion-scale, 0.96));
   }
 }
 
@@ -7242,7 +7290,7 @@ select.nowo-ui-pagination__select {
     animation: none !important;
   }
 
-  :is(.nowo-ui-edge-tabs-launcher, .nowo-ui-edge-tabs-launcher .nowo-ui-edge-tab__icon):not([data-motion='full'] *) {
+  :is(.nowo-ui-edge-tabs-launcher, .nowo-ui-edge-tabs-launcher .nowo-ui-edge-tab__icon, .nowo-ui-edge-tabs-chevron__arm):not([data-motion='full'] *) {
     transition: none;
   }
 }
@@ -7251,7 +7299,7 @@ select.nowo-ui-pagination__select {
   animation: none !important;
 }
 
-:is([data-motion='reduce'] .nowo-ui-edge-tabs-launcher, [data-motion='reduce'] .nowo-ui-edge-tabs-launcher .nowo-ui-edge-tab__icon) {
+:is([data-motion='reduce'] .nowo-ui-edge-tabs-launcher, [data-motion='reduce'] .nowo-ui-edge-tabs-launcher .nowo-ui-edge-tab__icon, [data-motion='reduce'] .nowo-ui-edge-tabs-chevron__arm) {
   transition: none;
 }
 

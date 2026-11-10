@@ -121,6 +121,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Target 2.46.0.
+
+### Added
+
+- **Morphing chevron (`edge_tabs_launcher` `icon: 'chevron'`):** the kit's own inline SVG with two stroke arms that
+  morph from the left chevron to the down chevron (CSS `d` transition on `aria-expanded="true"`, the reverse on close;
+  rotate fallback where CSS `d` is not supported). Tokens `--nowo-ui-edge-tabs-icon-duration` (240ms) and
+  `--nowo-ui-edge-tabs-icon-easing` (`cubic-bezier(0.34, 1.56, 0.64, 1)`). Same markup under every icon set (no
+  `ux_icon()` call); `aria-hidden` SVG, the button keeps its label; nothing moves under reduced motion.
+- **Launcher motion tokens:** `--nowo-ui-edge-tabs-motion-duration`, `-motion-easing`, `-motion-close-easing`,
+  `-motion-scale` and `-motion-stagger` (defaults to `--nowo-ui-edge-tabs-stagger`), so a host tunes the unfold
+  without touching `--nowo-ui-motion-*`.
+
+### Changed
+
+- **Softer default unfold:** opacity + translateY + scale from 0.96, `cubic-bezier(0.22, 1, 0.36, 1)`, 260ms per tab
+  (2.45: 200ms `--nowo-ui-motion-ease-out`, no scale). See UPGRADING to restore the 2.45 timing.
+- `icon: 'chevron'` no longer follows `nowo_ui_kit.action_icons.chevron_left` (the morph needs the kit SVG).
+
+### Fixed
+
+- KV-L1: `turbo:before-cache` ends a running fold, so a Turbo snapshot never restores inert, aria-hidden tabs over
+  the launcher.
+- KV-I1: if reading the computed styles throws while the fold starts, the fold ends at once.
+- KV-I2: a focused tab gives the focus to the launcher before it becomes `aria-hidden` (no Chrome warning).
+
 ## [2.45.0] - 2026-11-10
 
 Page-edge tabs launcher: size tokens (`--nowo-ui-edge-tab-{width,height,hover-width,icon,gap}`), staggered unfold and `icon: 'chevron'` with a morph. See [UPGRADING](https://github.com/nowo-tech/UiKitBundle/blob/v2.45.0/docs/UPGRADING.md#to-2450).

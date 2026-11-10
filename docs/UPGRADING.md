@@ -136,6 +136,35 @@
 
 ## Unreleased
 
+Target 2.46.0. From **2.45.x**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+Visible changes, no code to change:
+
+- The launcher's tabs unfold more softly by default: 260ms, `cubic-bezier(0.22, 1, 0.36, 1)`, and a scale from 0.96.
+  To restore the 2.45 timing exactly:
+
+  ```css
+  :root {
+    --nowo-ui-edge-tabs-motion-duration: var(--nowo-ui-motion-medium, 200ms);
+    --nowo-ui-edge-tabs-motion-easing: var(--nowo-ui-motion-ease-out, ease-out);
+    --nowo-ui-edge-tabs-motion-scale: 1;
+  }
+  ```
+
+  e2e tests that waited a fixed time for the fold should allow about 260ms + 30ms per tab (or wait for
+  `toBeHidden()` / `el.getAnimations()`).
+- `icon: 'chevron'` prints a kit inline SVG (`svg.nowo-ui-edge-tabs-chevron`) that morphs instead of the icon set's
+  `chevron_left` glyph that turned. A host that mapped `nowo_ui_kit.action_icons.chevron_left` for the launcher, or
+  styled `.nowo-ui-edge-tabs-launcher--chevron .bi-chevron-left` / `i` / `svg[data-icon]`, should style
+  `.nowo-ui-edge-tabs-chevron` instead (stroke `currentColor`, width 2). Tune the morph with
+  `--nowo-ui-edge-tabs-icon-duration` / `--nowo-ui-edge-tabs-icon-easing`; `--nowo-ui-edge-tabs-icon-duration: 0s`
+  turns it off.
+- Turbo hosts: nothing to do; the fold now ends on `turbo:before-cache`.
+
 ## To 2.45.0
 
 From **2.44.x**:
