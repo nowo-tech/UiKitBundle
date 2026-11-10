@@ -412,7 +412,8 @@ through the fragment filter (audit GT-I6), nested `<template>` content included,
 Identifier `visible-when` (`visible_when_controller.ts`) on the form. Rows: `data-nowo-ui-visible-when-field` (name or
 id of the controlling input) and `data-nowo-ui-visible-when-in` (JSON list or comma list). Non-matching rows get
 `hidden` + `inert` + `aria-hidden="true"`; inputs are never disabled or cleared. Re-syncs on connect, `change` and
-`input`; event `visible-when:synced` (detail `{hidden}`). PHP `Form\VisibleWhen`, Twig `nowo_ui_visible_when()`. See
+`input`; event `visible-when:synced` (detail `{hidden}`). Rules chain (2.43.1): a row whose controlling input is inside
+a hidden row is hidden too. PHP `Form\VisibleWhen`, Twig `nowo_ui_visible_when()`. See
 [USAGE](USAGE.md#provider-dependent-fields-223).
 
 ## Listing customizer (Stimulus peer only)

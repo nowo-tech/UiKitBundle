@@ -118,6 +118,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Target 2.43.1. Request from Symfony Beacon (spec 222 "provider-dependent fields").
+
+### Fixed
+
+- **`visible-when` rules chain:** a row whose controlling field sits inside a hidden row is now hidden too, whatever
+  that field's value. Before, a dependent kept the visibility of its own rule only: with storage region "Other" and
+  provider R2, the custom region row stayed visible although the region row was hidden. The peer re-applies until no
+  more rows hide, so the order of the rows in the DOM does not matter (a cycle keeps what its own values say). Hidden
+  inputs are still never disabled or cleared; markup, attributes, `data-testid`s and the `visible-when:synced` event
+  are unchanged (its `hidden` list now includes the chained rows). New export `fieldElements()`. Demo peers bundle
+  rebuilt.
+
 ### Documentation
 
 - USAGE: new section "Using it from a DDD / hexagonal application" (where the bundle sits in a hexagonal host, the ports, events and DTOs to build an anti-corruption layer on, and the known limitations).

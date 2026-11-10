@@ -132,6 +132,17 @@
 
 ## Unreleased
 
+Target 2.43.1. From **2.43.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+Nothing to do. The `visible-when` peer now chains rules: a row whose controlling field is inside a hidden row is hidden
+too. A form that relied on such a row staying visible (a dependent of a hidden provider row) should give the row its
+own rule or move the controlling field out of the dependent row. The server side (InstanceSettings / FormKit) decides
+what is saved; hidden inputs are still submitted.
+
 ## To 2.43.0
 
 From **2.42.1**:

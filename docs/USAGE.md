@@ -787,6 +787,10 @@ $builder = $factory->createNamedBuilder('settings', FormType::class, $data, ['at
   written rows.
 - The peer sets `hidden`, `inert` and `aria-hidden="true"` on non-matching rows, re-syncs on connect and on every
   `change` / `input`, and dispatches `visible-when:synced` (detail `{hidden}`).
+- Rules chain (2.43.1): a row whose controlling input sits inside a hidden row is hidden too, whatever that input's
+  value (provider R2 hides the region row, so the "custom region" row that depends on region "Other" hides with it).
+  The order of the rows does not matter; a controlling field with inputs both inside and outside hidden rows still
+  counts as visible.
 - `VisibleWhen::fromOption(['field' => …, 'in' => […]])` maps a bundle's `visible_when` option (InstanceSettings).
 
 ## Host chrome (1.17, opt-in)
