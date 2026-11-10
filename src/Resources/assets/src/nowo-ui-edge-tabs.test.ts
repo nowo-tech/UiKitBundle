@@ -478,11 +478,110 @@ describe('nowo-ui-edge-tabs unfold / fold (2.45)', () => {
     expect(get('u1').hasAttribute(FOLDING)).toBe(false);
   });
 
+  it('2.46 (KV-L1): turbo:before-cache ends a running fold, so the snapshot keeps no inert / aria-hidden tab', () => {
+    rendered();
+    animated();
+    setOpen(true);
+    setOpen(false);
+    expect(isClosing()).toBe(true);
+    document.dispatchEvent(new Event('turbo:before-cache'));
+    expect(isClosing()).toBe(false);
+    expect(document.querySelectorAll(`[${FOLDING}], [inert], [aria-hidden]`).length).toBe(0);
+    // Idle: nothing to do.
+    document.dispatchEvent(new Event('turbo:before-cache'));
+    expect(isClosing()).toBe(false);
+  });
+
+  it('2.46 (KV-I1): a style read that throws ends the fold at once', () => {
+    rendered();
+    setOpen(true);
+    vi.spyOn(window, 'getComputedStyle').mockImplementation(() => {
+      throw new Error('boom');
+    });
+    setOpen(false);
+    expect(isOpen()).toBe(false);
+    expect(isClosing()).toBe(false);
+    expect(get('u1').hasAttribute('inert')).toBe(false);
+    expect(get('u1').hasAttribute('aria-hidden')).toBe(false);
+  });
+
+  it('2.46 (KV-I2): a focused tab gives the focus to the launcher before it becomes aria-hidden', () => {
+    rendered();
+    animated();
+    setOpen(true);
+    get('u2').focus();
+    const focusWhenHidden: (Element | null)[] = [];
+    const real = Element.prototype.setAttribute;
+    vi.spyOn(Element.prototype, 'setAttribute').mockImplementation(function (this: Element, name: string, value: string) {
+      if ('aria-hidden' === name && this.id === 'u2') {
+        focusWhenHidden.push(document.activeElement);
+      }
+      real.call(this, name, value);
+    });
+    setOpen(false);
+    expect(focusWhenHidden).toEqual([get('go')]);
+    expect(document.activeElement).toBe(get('go'));
+    expect(get('u2').getAttribute('aria-hidden')).toBe('true');
+  });
+
   it('reads delays and durations in s and ms, the first of a list', () => {
     const tab = get('u1');
     vi.spyOn(window, 'getComputedStyle').mockReturnValue({ animationName: 'x', animationDuration: '180ms, 1s', animationDelay: '0.03s' } as unknown as CSSStyleDeclaration);
     expect(animationTime([tab])).toBe(210);
     vi.spyOn(window, 'getComputedStyle').mockReturnValue({ animationName: 'x', animationDuration: 'auto', animationDelay: '' } as unknown as CSSStyleDeclaration);
     expect(animationTime([tab])).toBe(0);
+  });
+});
+
+describe('nowo-ui-edge-tabs chevron morph (2.46)', () => {
+  // The markup of partials/_edge_tabs_launcher with icon: 'chevron' (tests/Unit/PageContract/EdgeTabsLauncher246Test.php).
+  const CHEVRON = `
+<div class="nowo-ui-edge-tab" data-nowo-ui-edge-tab-slot="0"><a id="m1" class="nowo-ui-edge-tab__link" href="#a">a</a></div>
+<button id="chev" type="button" class="nowo-ui-edge-tabs-launcher nowo-ui-edge-tabs-launcher--chevron" data-nowo-ui-edge-tabs-launcher aria-expanded="false" aria-label="Page tools" title="Page tools">
+    <span class="nowo-ui-edge-tab__icon" aria-hidden="true"><svg class="nowo-ui-edge-tabs-chevron" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path class="nowo-ui-edge-tabs-chevron__arm nowo-ui-edge-tabs-chevron__arm--upper" d="M15 6L9 12"/><path class="nowo-ui-edge-tabs-chevron__arm nowo-ui-edge-tabs-chevron__arm--lower" d="M9 12L15 18"/></svg></span>
+</button>`;
+  const get = (id: string): HTMLElement => document.getElementById(id) as HTMLElement;
+  const arms = (): string[] => [...get('chev').querySelectorAll('path')].map((p) => `${p.getAttribute('class')}|${p.getAttribute('d')}`);
+
+  beforeEach(() => {
+    document.body.innerHTML = CHEVRON;
+    bindNowoUiEdgeTabs();
+  });
+
+  afterEach(() => {
+    setOpen(false);
+    finishClosing();
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+    document.body.innerHTML = '';
+  });
+
+  it('the morph state is the launcher aria-expanded; the SVG stays aria-hidden and its arms untouched (CSS morphs them)', () => {
+    const before = arms();
+    expect(before).toEqual([
+      'nowo-ui-edge-tabs-chevron__arm nowo-ui-edge-tabs-chevron__arm--upper|M15 6L9 12',
+      'nowo-ui-edge-tabs-chevron__arm nowo-ui-edge-tabs-chevron__arm--lower|M9 12L15 18',
+    ]);
+    get('chev').dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
+    expect(get('chev').getAttribute('aria-expanded')).toBe('true');
+    expect(get('chev').classList.contains('nowo-ui-edge-tabs-launcher--chevron')).toBe(true);
+    expect(get('chev').querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
+    expect(get('chev').querySelector('svg')?.getAttribute('focusable')).toBe('false');
+    expect(get('chev').getAttribute('aria-label')).toBe('Page tools');
+    expect(arms()).toEqual(before);
+    get('chev').dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
+    expect(get('chev').getAttribute('aria-expanded')).toBe('false');
+    expect(arms()).toEqual(before);
+  });
+
+  it('under reduced motion the state flips at once, with no fold phase', () => {
+    vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches: true }));
+    vi.spyOn(Element.prototype, 'getClientRects').mockImplementation(() => [{}] as unknown as DOMRectList);
+    setOpen(true);
+    expect(get('chev').getAttribute('aria-expanded')).toBe('true');
+    setOpen(false);
+    expect(get('chev').getAttribute('aria-expanded')).toBe('false');
+    expect(isClosing()).toBe(false);
+    expect(get('m1').hasAttribute('inert')).toBe(false);
   });
 });

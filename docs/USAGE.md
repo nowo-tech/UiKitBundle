@@ -1042,6 +1042,32 @@ Options: `when` (`phone` | `always`; anything else: never), `gutter` (while fold
   {{ include(nowo_ui_partial('edge_tabs_launcher'), {gutter: true, icon: 'chevron'}) }}
   ```
 
+2.46: the chevron morphs and the unfold is softer, with launcher-only tokens.
+
+- **Morphing chevron.** `icon: 'chevron'` now prints the kit's own inline SVG (`svg.nowo-ui-edge-tabs-chevron`,
+  `aria-hidden`, `focusable="false"`; the button keeps its `aria-label`) under every icon set, `ux_icon` included (no
+  `ux_icon()` call, so nothing to resolve; `nowo_ui_kit.action_icons.chevron_left` no longer applies to the launcher).
+  Its two stroke arms move their end points from the left chevron (`M15 6L9 12`, `M9 12L15 18`) to the down chevron
+  (`M6 9L12 15`, `M12 15L18 9`) through a CSS `d` transition on `aria-expanded="true"`, and back on close. A browser
+  without the CSS `d` property (WebKit today) turns the icon −90° instead. Tokens: `--nowo-ui-edge-tabs-icon-duration`
+  (240ms) and `--nowo-ui-edge-tabs-icon-easing` (`cubic-bezier(0.34, 1.56, 0.64, 1)`, a slight overshoot). Nothing
+  moves under reduced motion. CSS only: no extra JavaScript, no `morphicons` / `lucide` dependency.
+- **Softer unfold, launcher tokens.** The tabs now fade, slide and scale up from 0.96, decelerating, in 260ms. Tune the
+  launcher alone (other kit animations keep `--nowo-ui-motion-*`):
+
+  | Token | Default | |
+  |-------|---------|-|
+  | `--nowo-ui-edge-tabs-motion-duration` | `260ms` | unfold and fold, per tab |
+  | `--nowo-ui-edge-tabs-motion-easing` | `cubic-bezier(0.22, 1, 0.36, 1)` | unfold |
+  | `--nowo-ui-edge-tabs-motion-close-easing` | `var(--nowo-ui-motion-ease-in)` | fold |
+  | `--nowo-ui-edge-tabs-motion-scale` | `0.96` | start scale of a tab (1 = no scale) |
+  | `--nowo-ui-edge-tabs-motion-stagger` | `var(--nowo-ui-edge-tabs-stagger, 30ms)` | delay per tab |
+  | `--nowo-ui-edge-tabs-icon-duration` | `240ms` | chevron morph |
+  | `--nowo-ui-edge-tabs-icon-easing` | `cubic-bezier(0.34, 1.56, 0.64, 1)` | chevron morph |
+
+- Turbo: `turbo:before-cache` ends a running fold, so a cached page never keeps half-folded (inert) tabs. A tab that
+  has the focus when the fold closes gives it to the launcher first.
+
 2.41.1: the launcher's `aria-controls` lists the tabs (ids are generated where missing); after opening with a pointer,
 Tab follows the document order, so use ArrowUp / ArrowDown to reach the tabs. A dialog opened from a folded tab gives
 the focus back to the launcher when it closes. The fold applies only to a launcher without `hidden`; never hide it with

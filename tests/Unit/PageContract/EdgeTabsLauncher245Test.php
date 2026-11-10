@@ -17,37 +17,17 @@ final class EdgeTabsLauncher245Test extends TestCase
 {
     private const STEP = 'var(--nowo-ui-edge-tab-step, calc(var(--nowo-ui-edge-tab-height, 2.75rem) + var(--nowo-ui-edge-tab-gap, 0.5rem)))';
 
-    public function testChevronIconRendersInEveryIconSet(): void
+    public function testDefaultIconAndOtherKitIcons(): void
     {
-        $expected = [
-            'bootstrap-icons' => '<i class="bi bi-chevron-left" aria-hidden="true"></i>',
-            'tabler-icons' => 'ti ti-chevron-left',
-            'svg_inline' => 'M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z',
-            'ux_icon' => '<svg data-icon="bi:chevron-left"></svg>',
-        ];
-        foreach ($expected as $set => $icon) {
-            $html = $this->launcher($set, ['icon' => 'chevron']);
-            self::assertStringContainsString('<button type="button" class="nowo-ui-edge-tabs-launcher nowo-ui-edge-tabs-launcher--chevron" data-nowo-ui-edge-tabs-launcher', $html, $set);
-            self::assertStringContainsString($icon, $html, $set);
-            self::assertStringNotContainsString('three-dots', $html, $set);
-        }
-
-        // The default stays `more` (BC) and prints no modifier.
+        // The default stays `more` (BC) and prints no modifier. `chevron`: EdgeTabsLauncher246Test (morph SVG).
         $html = $this->launcher('ux_icon', []);
         self::assertStringContainsString('<svg data-icon="bi:three-dots-vertical"></svg>', $html);
         self::assertStringNotContainsString('--chevron', $html);
 
-        // Any other kit icon name still works; with a class the modifier comes first.
+        // Any other kit icon name still works; with a class the chevron modifier comes first.
         $html = $this->launcher('bootstrap-icons', ['icon' => 'chevron', 'class' => 'mine']);
         self::assertStringContainsString('class="nowo-ui-edge-tabs-launcher nowo-ui-edge-tabs-launcher--chevron mine"', $html);
         self::assertStringContainsString('bi bi-grid', $this->launcher('bootstrap-icons', ['icon' => 'grid']));
-    }
-
-    public function testChevronFollowsTheHostActionIconMapOnUxIconHosts(): void
-    {
-        $twig = $this->twig('ux_icon');
-        $twig->addGlobal('nowo_ui_kit_action_icons', ['chevron_left' => 'tabler:chevron-left']);
-        self::assertStringContainsString('<svg data-icon="tabler:chevron-left"></svg>', $twig->render('t', ['opts' => ['icon' => 'chevron']]));
     }
 
     public function testSizeTokensDefaultToTodaysValues(): void
@@ -99,9 +79,10 @@ final class EdgeTabsLauncher245Test extends TestCase
     {
         foreach (['nowo-ui.unlayered.css', 'nowo-ui.css'] as $file) {
             $css = $this->css($file);
-            self::assertSame(2, substr_count($css, 'animation: nowo-ui-edge-tab-unfold var(--nowo-ui-motion-medium, 200ms) var(--nowo-ui-motion-ease-out, ease-out) calc(var(--nowo-ui-edge-tabs-order, 0) * var(--nowo-ui-edge-tabs-stagger, 30ms)) both;'), $file);
-            self::assertSame(2, substr_count($css, 'animation: nowo-ui-edge-tab-fold var(--nowo-ui-motion-medium, 200ms) var(--nowo-ui-motion-ease-in, ease-in) calc(var(--nowo-ui-edge-tabs-order, 0) * var(--nowo-ui-edge-tabs-stagger, 30ms)) both;'), $file);
-            $from = 'opacity: 0;\s*transform: translateY\(calc\(-1 \* \(var\(--nowo-ui-edge-tab-slot, 0\) \+ 1\) \* '.preg_quote(self::STEP, '/').'\)\);';
+            // 2.46 timing: EdgeTabsLauncher246Test.
+            self::assertSame(2, substr_count($css, 'animation: nowo-ui-edge-tab-unfold '), $file);
+            self::assertSame(2, substr_count($css, 'animation: nowo-ui-edge-tab-fold '), $file);
+            $from = 'opacity: 0;\s*transform: translateY\(calc\(-1 \* \(var\(--nowo-ui-edge-tab-slot, 0\) \+ 1\) \* '.preg_quote(self::STEP, '/').'\)\) scale\(var\(--nowo-ui-edge-tabs-motion-scale, 0\.96\)\);';
             self::assertMatchesRegularExpression('/@keyframes nowo-ui-edge-tab-unfold \{\s*from \{\s*'.$from.'\s*\}\s*\}/', $css, $file);
             self::assertMatchesRegularExpression('/@keyframes nowo-ui-edge-tab-fold \{\s*to \{\s*'.$from.'\s*\}\s*\}/', $css, $file);
 
@@ -110,13 +91,11 @@ final class EdgeTabsLauncher245Test extends TestCase
             self::assertSame(2, preg_match_all('/:root\[data-nowo-ui-edge-tabs-ready\]\[data-nowo-ui-edge-tabs-open\]:has\([^)]*\)\) \.nowo-ui-edge-tab__link, :root\[data-nowo-ui-edge-tabs-ready\]\[data-nowo-ui-edge-tabs-closing\]:has\([^)]*\)\) \.nowo-ui-edge-tab__link\[data-nowo-ui-edge-tabs-folding\] \{/', $css));
 
             // Reduced motion: no unfold, no chevron turn.
-            self::assertMatchesRegularExpression("/@media \\(prefers-reduced-motion: reduce\\) \\{\\s*\\.nowo-ui-edge-tab__link:not\\(\\[data-motion='full'\\] \\*\\) \\{\\s*animation: none !important;\\s*\\}\\s*:is\\(\\.nowo-ui-edge-tabs-launcher, \\.nowo-ui-edge-tabs-launcher \\.nowo-ui-edge-tab__icon\\):not\\(\\[data-motion='full'\\] \\*\\) \\{\\s*transition: none;\\s*\\}\\s*\\}/", $css, $file);
+            self::assertMatchesRegularExpression("/@media \\(prefers-reduced-motion: reduce\\) \\{\\s*\\.nowo-ui-edge-tab__link:not\\(\\[data-motion='full'\\] \\*\\) \\{\\s*animation: none !important;\\s*\\}\\s*:is\\(\\.nowo-ui-edge-tabs-launcher, \\.nowo-ui-edge-tabs-launcher \\.nowo-ui-edge-tab__icon, \\.nowo-ui-edge-tabs-chevron__arm\\):not\\(\\[data-motion='full'\\] \\*\\) \\{\\s*transition: none;\\s*\\}\\s*\\}/", $css, $file);
             self::assertMatchesRegularExpression("/\\[data-motion='reduce'\\] \\.nowo-ui-edge-tab__link \\{\\s*animation: none !important;\\s*\\}/", $css, $file);
-            self::assertMatchesRegularExpression("/:is\\(\\[data-motion='reduce'\\] \\.nowo-ui-edge-tabs-launcher, \\[data-motion='reduce'\\] \\.nowo-ui-edge-tabs-launcher \\.nowo-ui-edge-tab__icon\\) \\{\\s*transition: none;\\s*\\}/", $css, $file);
+            self::assertMatchesRegularExpression("/:is\\(\\[data-motion='reduce'\\] \\.nowo-ui-edge-tabs-launcher, \\[data-motion='reduce'\\] \\.nowo-ui-edge-tabs-launcher \\.nowo-ui-edge-tab__icon, \\[data-motion='reduce'\\] \\.nowo-ui-edge-tabs-chevron__arm\\) \\{\\s*transition: none;\\s*\\}/", $css, $file);
 
-            // The chevron points down while open, in about 200 ms.
-            self::assertStringContainsString('transition: transform var(--nowo-ui-motion-medium, 200ms) var(--nowo-ui-motion-ease-out, ease-out);', $this->rule($css, '.nowo-ui-edge-tabs-launcher--chevron .nowo-ui-edge-tab__icon'));
-            self::assertStringContainsString('transform: rotate(-90deg);', $this->rule($css, ".nowo-ui-edge-tabs-launcher--chevron[aria-expanded='true'] .nowo-ui-edge-tab__icon"));
+            // The chevron (2.46 morph, rotate fallback): EdgeTabsLauncher246Test.
         }
     }
 
