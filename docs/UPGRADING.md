@@ -139,13 +139,7 @@
 
 ## To 2.46.0
 
-From **2.45.0**:
-
-```bash
-composer update nowo-tech/ui-kit-bundle
-```
-
-Target 2.46.0. From **2.45.x**:
+From **2.45.x**:
 
 ```bash
 composer update nowo-tech/ui-kit-bundle
