@@ -18,6 +18,14 @@
  * where it is. When such a tab folds while it has the focus (its panel closed: aria-expanded back to false), the focus
  * goes to the launcher instead of staying on a hidden element.
  *
+ * Unfold / fold (2.45): opening sets `--nowo-ui-edge-tabs-order` (0, 1, 2…) on each tab that folds, which the CSS
+ * staggers. Closing keeps the tabs painted while they fold back into the launcher, the last one first: <html> carries
+ * `data-nowo-ui-edge-tabs-closing` and each folding tab `data-nowo-ui-edge-tabs-folding`, `inert` and
+ * `aria-hidden="true"` (no focus, no accessibility tree, no pointer), until the animations end; then the CSS hides them.
+ * The state (`isOpen()`, `aria-expanded`, the event) changes at once. No closing phase under reduced motion
+ * (`prefers-reduced-motion: reduce` or `data-motion="reduce"`, unless `data-motion="full"`), while the launcher is not
+ * shown, or when the tabs have no animation.
+ *
  * Delegated listeners on the document; importing touches no DOM. Members are read through the prototypes.
  */
 export const LAUNCHER = '[data-nowo-ui-edge-tabs-launcher]';
@@ -25,6 +33,9 @@ export const TAB = '.nowo-ui-edge-tab__link';
 export const OPEN = 'data-nowo-ui-edge-tabs-open';
 export const READY = 'data-nowo-ui-edge-tabs-ready';
 export const PINNED = 'data-nowo-ui-edge-tab-pinned';
+export const CLOSING = 'data-nowo-ui-edge-tabs-closing';
+export const FOLDING = 'data-nowo-ui-edge-tabs-folding';
+export const ORDER = '--nowo-ui-edge-tabs-order';
 
 const closest = (el: Element, selector: string): HTMLElement | null => Element.prototype.closest.call(el, selector) as HTMLElement | null;
 const queryAll = (root: ParentNode, selector: string): HTMLElement[] =>
@@ -35,9 +46,9 @@ const listen = (target: EventTarget, type: string, handler: (event: never) => vo
 const root = (): HTMLElement => document.documentElement;
 const elementOf = (target: EventTarget | null): Element | null => (target instanceof Element ? target : null);
 
-/** Whether an element takes part in layout (a folded tab or a hidden launcher does not). */
+/** Whether an element takes part in layout (a folded tab, a tab folding back (2.45) or a hidden launcher does not). */
 export function isShown(el: Element): boolean {
-  return el.isConnected && Element.prototype.getClientRects.call(el).length > 0;
+  return el.isConnected && !el.hasAttribute('data-nowo-ui-edge-tabs-folding') && Element.prototype.getClientRects.call(el).length > 0;
 }
 
 /** The tab last used from the open fold (JC-L1): the opener a dialog may give the focus back to. */
@@ -75,15 +86,100 @@ export function linkTabs(button: HTMLElement): void {
   }
 }
 
+/** Whether motion is reduced: `data-motion` on <html> or <body> first, then `prefers-reduced-motion`. */
+export function reducedMotion(): boolean {
+  const marked = [root(), document.body].map((el) => el?.getAttribute('data-motion')).find((v) => 'reduce' === v || 'full' === v);
+  if (marked) {
+    return 'reduce' === marked;
+  }
+  return typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+/** The tabs that fold behind the launcher (not expanded, not pinned), in document order. */
+export function foldingTabs(): HTMLElement[] {
+  return tabs().filter((tab) => !isPinned(tab));
+}
+
+const seconds = (value: string): number => {
+  const first = (value.split(',')[0] ?? '').trim();
+  const n = Number.parseFloat(first);
+  if (!Number.isFinite(n)) {
+    return 0;
+  }
+  return first.endsWith('ms') ? n : n * 1000;
+};
+
+/** The longest animation (delay + duration, ms) among the tabs, as the CSS resolves it; 0 = none. */
+export function animationTime(list: HTMLElement[]): number {
+  return list.reduce((max, tab) => {
+    const style = window.getComputedStyle(tab);
+    if ('none' === style.animationName) {
+      return max;
+    }
+    return Math.max(max, seconds(style.animationDelay) + seconds(style.animationDuration));
+  }, 0);
+}
+
+let closingTimer: ReturnType<typeof setTimeout> | null = null;
+
+/** Ends the closing phase now: the CSS hides the folded tabs again. */
+export function finishClosing(): void {
+  if (null !== closingTimer) {
+    clearTimeout(closingTimer);
+    closingTimer = null;
+  }
+  root().removeAttribute(CLOSING);
+  queryAll(document, `[${FOLDING}]`).forEach((tab) => {
+    tab.removeAttribute(FOLDING);
+    tab.removeAttribute('inert');
+    tab.removeAttribute('aria-hidden');
+    tab.style.removeProperty(ORDER);
+  });
+}
+
+export function isClosing(): boolean {
+  return root().hasAttribute(CLOSING);
+}
+
+function startClosing(button: HTMLElement | null): void {
+  const list = foldingTabs();
+  if (!button || !isShown(button) || reducedMotion() || 0 === list.length) {
+    return;
+  }
+  root().setAttribute(CLOSING, '');
+  list.forEach((tab, index) => {
+    tab.setAttribute(FOLDING, '');
+    tab.setAttribute('inert', '');
+    tab.setAttribute('aria-hidden', 'true');
+    tab.style.setProperty(ORDER, String(list.length - 1 - index));
+  });
+  const time = animationTime(list);
+  if (time <= 0) {
+    finishClosing();
+
+    return;
+  }
+  closingTimer = setTimeout(finishClosing, Math.ceil(time) + 20);
+}
+
 /** Opens or closes the fold; `focusFirst` moves the focus to the first tab (keyboard opening). */
 export function setOpen(open: boolean, focusFirst = false): void {
   const button = launcher();
   const was = isOpen();
+  if (open || was) {
+    finishClosing();
+  }
+  if (open) {
+    foldingTabs().forEach((tab, index) => tab.style.setProperty(ORDER, String(index)));
+  }
   root().toggleAttribute(OPEN, open);
   button?.setAttribute('aria-expanded', open ? 'true' : 'false');
   if (open && button) {
     usedTab = null;
     linkTabs(button);
+  }
+  if (!open && was) {
+    startClosing(button);
   }
   if (open && focusFirst) {
     tabs()[0]?.focus();

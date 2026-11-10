@@ -998,14 +998,49 @@ Where `when` applies — `phone` (default: viewports up to 40rem, and touch scre
 `.nowo-ui-edge-tab__link` of the page folds behind the launcher (a labelled `<button aria-expanded>` at the first
 slot); a tap shows the tabs under it. It folds again on Escape (focus back on the launcher), a click elsewhere, using
 a tab, or the focus leaving the launcher and the tabs. Opened from the keyboard, the focus moves to the first tab and
-ArrowUp / ArrowDown walk the launcher and the tabs; Tab is never captured. The fold has no animation. Without the
+ArrowUp / ArrowDown walk the launcher and the tabs; Tab is never captured. The fold is animated since 2.45 (below). Without the
 runtime (`data-nowo-ui-edge-tabs-ready` on `<html>`) the launcher stays hidden and the tabs keep their places; desktop
 (fine pointer, wider than 40rem) is unchanged with `when: phone`.
 
 Options: `when` (`phone` | `always`; anything else: never), `gutter` (while folded, `.nowo-ui-main` keeps
 `--nowo-ui-edge-tabs-gutter` = 2.25rem free on its right; host containers can read the same token), `label` (default
-`edge_tab.launcher`), `icon` (default `more`), `class`, `testid`, `attr`. Event: `nowo-ui:edge-tabs:toggle`
-(`detail.open`).
+`edge_tab.launcher`), `icon` (default `more`; `chevron` since 2.45, below; or any kit icon name), `class`, `testid`,
+`attr`. Event: `nowo-ui:edge-tabs:toggle` (`detail.open`).
+
+2.45: one size for every right-edge tab, a smoother unfold and a chevron.
+
+- **Size tokens.** The tabs and the launcher read `--nowo-ui-edge-tab-width` (2.25rem), `--nowo-ui-edge-tab-height`
+  (2.75rem), `--nowo-ui-edge-tab-hover-width` (2.6rem; the launcher now widens on hover like the tabs) and
+  `--nowo-ui-edge-tab-icon` (1.15rem). `--nowo-ui-edge-tab-step` defaults to height + `--nowo-ui-edge-tab-gap`
+  (0.5rem), i.e. 3.25rem as before. Open, tab `slot` sits at top + (slot + 1) × step under a launcher of the same
+  height, so the first tab keeps the same gap (step − height) as the others. To match another edge control (e.g.
+  ChatKit's chat tab), set the tokens instead of overriding the classes:
+
+  ```css
+  :root {
+    --nowo-ui-edge-tab-width: 1.85rem;
+    --nowo-ui-edge-tab-height: 2.3rem;
+    --nowo-ui-edge-tab-hover-width: 2.15rem;
+    --nowo-ui-edge-tab-icon: 0.95rem;
+    --nowo-ui-edge-tab-step: 2.6rem; /* or --nowo-ui-edge-tab-gap: 0.3rem */
+  }
+  ```
+
+- **Unfold / fold.** Opening, the tabs slide down from the launcher (opacity and `translateY(-step × (slot + 1))` to
+  their place, `--nowo-ui-motion-medium` 200ms, ease-out), each one `--nowo-ui-edge-tabs-stagger` (30ms) after the
+  previous. Closing runs the reverse, the last tab first: the state changes at once (`aria-expanded="false"`, the
+  event), `<html>` carries `data-nowo-ui-edge-tabs-closing` while the tabs fold, and each folding tab is `inert` and
+  `aria-hidden="true"` (no focus, no pointer, out of the accessibility tree) until it is hidden again. Pinned or
+  expanded tabs do not move. No animation under `prefers-reduced-motion: reduce` or `data-motion="reduce"` (unless
+  `data-motion="full"`). The no-JS fallback is unchanged.
+- **Chevron.** `icon: 'chevron'` draws the kit's `chevron_left` icon (so `nowo_ui_kit.action_icons.chevron_left` and
+  every icon set, `ux_icon` included as `bi:chevron-left`, apply) and adds `nowo-ui-edge-tabs-launcher--chevron`: it
+  points left while folded and turns −90° (pointing down) on `aria-expanded="true"` in 200ms; no turn animation under
+  reduced motion.
+
+  ```twig
+  {{ include(nowo_ui_partial('edge_tabs_launcher'), {gutter: true, icon: 'chevron'}) }}
+  ```
 
 2.41.1: the launcher's `aria-controls` lists the tabs (ids are generated where missing); after opening with a pointer,
 Tab follows the document order, so use ArrowUp / ArrowDown to reach the tabs. A dialog opened from a folded tab gives
@@ -1017,7 +1052,7 @@ CSS where its `when` applies.
 `pinned: true`, or the attribute in `attr`) stays visible at its own `top`; the others stay hidden. Open, the launcher
 stacks every tab under it as before. When the tab folds while focused (aria-expanded back to false), the focus goes to
 the launcher. The `top` of a tab is
-`calc(var(--nowo-ui-edge-tab-top, header height + 0.75rem) + var(--nowo-ui-edge-tab-slot, 0) * var(--nowo-ui-edge-tab-step, 3.25rem))`
+`calc(var(--nowo-ui-edge-tab-top, header height + 0.75rem) + var(--nowo-ui-edge-tab-slot, 0) * var(--nowo-ui-edge-tab-step, height + gap = 3.25rem))`
 (open launcher: `slot + 1`). It resolves against the tab's containing block: the viewport for a plain tab, but a tab
 inside a transformed (or `filter` / `will-change: transform`) ancestor, `position: fixed` or `absolute`, is placed
 from that ancestor's top. For a tab riding on a drawer, set `--nowo-ui-edge-tab-top` on the drawer (e.g. `0px`) and the
