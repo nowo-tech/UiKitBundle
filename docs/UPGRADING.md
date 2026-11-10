@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.45.0](#to-2450)
 - [To 2.44.0](#to-2440)
   - [To 2.44.0 (auth panel brand)](#to-2440-auth-panel-brand)
 - [To 2.43.1](#to-2431)
@@ -135,7 +136,9 @@
 
 ## Unreleased
 
-Target 2.45.0. From **2.44.x**:
+## To 2.45.0
+
+From **2.44.x**:
 
 ```bash
 composer update nowo-tech/ui-kit-bundle
