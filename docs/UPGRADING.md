@@ -135,6 +135,28 @@
 
 ## Unreleased
 
+Target 2.45.0. From **2.44.x**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+Nothing to do for the defaults: every new edge tab token defaults to the 2.44 value (2.25rem × 2.75rem, hover 2.6rem,
+icon 1.15rem, step 3.25rem = height 2.75rem + gap 0.5rem). Visible changes: the launcher's tabs now unfold / fold with
+a short animation (none under reduced motion), and the launcher widens on hover like the tabs.
+
+- A host that resized the edge tabs or the launcher with CSS overrides on `.nowo-ui-edge-tab__link` /
+  `.nowo-ui-edge-tabs-launcher` should set `--nowo-ui-edge-tab-width`, `--nowo-ui-edge-tab-height`,
+  `--nowo-ui-edge-tab-hover-width` and `--nowo-ui-edge-tab-icon` instead and drop the overrides; with a custom height,
+  set the height (and `--nowo-ui-edge-tab-gap`, or the step) so the first tab keeps the gap under the launcher.
+- Host CSS or tests that expected the tabs to hide the moment the launcher closes: they stay painted, `inert` and
+  `aria-hidden`, for about 200ms + 30ms per tab while `<html>` has `data-nowo-ui-edge-tabs-closing`; e2e tests should
+  wait for the tab to be hidden (Playwright's `toBeHidden()` does) or for `el.getAnimations()` to finish before
+  measuring positions.
+- Hosts without a global `box-sizing: border-box` reset: link edge tabs (`<a>`) lose the extra 1px width / 2px height
+  they had over button tabs and the launcher (`.nowo-ui-edge-tab__link` is now border-box).
+- Optional: `icon: 'chevron'` on the `edge_tabs_launcher` partial for the chevron that turns down while open.
+
 ## To 2.44.0
 
 From **2.43.1**:

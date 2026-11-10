@@ -12,6 +12,9 @@ async function open(page: Page, path = '/kit/mobile'): Promise<void> {
   await expect(page.locator('html')).toHaveAttribute('data-nowo-ui-edge-tabs-ready', '');
 }
 
+/** 2.45: the tabs unfold / fold with an animation; wait for it before measuring. */
+const settled = (l: Locator): Promise<unknown> => l.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
+
 const visible = (l: Locator): Promise<boolean> => l.evaluate((el) => getComputedStyle(el).display !== 'none');
 
 test.describe('phone mode', () => {
@@ -35,6 +38,7 @@ test.describe('phone mode', () => {
     await expect(launcher).toHaveAttribute('aria-expanded', 'true');
     const manual = page.getByTestId('edge-manual').locator('a');
     await expect(manual).toBeVisible();
+    await settled(manual);
     expect((await manual.boundingBox())!.y).toBeGreaterThan(launcherBox.y + launcherBox.height - 1);
     await page.screenshot({ path: `test-results/mux-edge-open-${info.project.name}.png` });
 
@@ -48,6 +52,78 @@ test.describe('phone mode', () => {
     await page.getByTestId('edge-notes').locator('a').click();
     await expect(page).toHaveURL(/#notes$/);
     await expect(launcher).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  test('2.45: with the size tokens, the launcher and the tabs share one size, and the first tab keeps the gap', async ({ page }, info) => {
+    await open(page);
+    // Beacon's values (ChatKit's .nowo-chat-edge): 1.85rem × 2.3rem, icon 0.95rem, hover 2.15rem, step 2.6rem.
+    await page.evaluate(() => {
+      const s = document.documentElement.style;
+      s.setProperty('--nowo-ui-edge-tab-width', '1.85rem');
+      s.setProperty('--nowo-ui-edge-tab-height', '2.3rem');
+      s.setProperty('--nowo-ui-edge-tab-icon', '0.95rem');
+      s.setProperty('--nowo-ui-edge-tab-hover-width', '2.15rem');
+      s.setProperty('--nowo-ui-edge-tab-step', '2.6rem');
+    });
+    const rem = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize));
+    const launcher = page.getByTestId('edge-launcher');
+    await expect(launcher).toHaveClass(/nowo-ui-edge-tabs-launcher--chevron/);
+    // Open from the keyboard: no pointer over the launcher (it widens on hover).
+    await launcher.focus();
+    await page.keyboard.press('Enter');
+    await expect(launcher).toHaveAttribute('aria-expanded', 'true');
+    const tabs = ['edge-manual', 'edge-notes', 'edge-tour'].map((id) => page.getByTestId(id).locator('.nowo-ui-edge-tab__link'));
+    for (const tab of tabs) {
+      await settled(tab);
+    }
+    const l = (await launcher.boundingBox())!;
+    const boxes = await Promise.all(tabs.map(async (t) => (await t.boundingBox())!));
+    expect(l.width).toBeCloseTo(1.85 * rem, 0);
+    expect(l.height).toBeCloseTo(2.3 * rem, 0);
+    for (const b of boxes) {
+      expect(b.width).toBeCloseTo(l.width, 0);
+      expect(b.height).toBeCloseTo(l.height, 0);
+    }
+    // Same 0.3rem gap from the launcher to the first tab as between the tabs.
+    expect(boxes[0]!.y - (l.y + l.height)).toBeCloseTo(0.3 * rem, 0);
+    expect(boxes[1]!.y - (boxes[0]!.y + boxes[0]!.height)).toBeCloseTo(0.3 * rem, 0);
+    const iconSize = await launcher.locator('.nowo-ui-edge-tab__icon').evaluate((el) => el.getBoundingClientRect().width);
+    expect(iconSize).toBeCloseTo(0.95 * rem, 0);
+    // The chevron points down while open.
+    await settled(launcher.locator('.nowo-ui-edge-tab__icon'));
+    expect(await launcher.locator('.nowo-ui-edge-tab__icon').evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).b)).toBeCloseTo(-1, 3);
+    await page.screenshot({ path: `test-results/mux-edge-245-open-${info.project.name}.png`, clip: { x: l.x - 120, y: l.y - 20, width: 120 + l.width, height: 260 } });
+    // The launcher widens on hover like the tabs.
+    await launcher.hover();
+    await expect.poll(async () => (await launcher.boundingBox())!.width).toBeCloseTo(2.15 * rem, 0);
+  });
+
+  test('2.45: the tabs unfold from the launcher and fold back, inert while folding', async ({ page }) => {
+    await open(page);
+    const launcher = page.getByTestId('edge-launcher');
+    await launcher.click();
+    const notes = page.getByTestId('edge-notes').locator('a');
+    expect(await notes.evaluate((el) => el.getAnimations().map((a) => (a as CSSAnimation).animationName))).toEqual(['nowo-ui-edge-tab-unfold']);
+    await settled(notes);
+    await launcher.click();
+    await expect(page.locator('html')).toHaveAttribute('data-nowo-ui-edge-tabs-closing', '');
+    await expect(notes).toHaveAttribute('inert', '');
+    await expect(notes).toHaveAttribute('aria-hidden', 'true');
+    await expect(page.locator('html')).not.toHaveAttribute('data-nowo-ui-edge-tabs-closing', '');
+    await expect(notes).toBeHidden();
+    await expect(notes).not.toHaveAttribute('inert', '');
+  });
+
+  test('2.45: reduced motion opens and closes at once', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await open(page);
+    const launcher = page.getByTestId('edge-launcher');
+    await launcher.click();
+    const notes = page.getByTestId('edge-notes').locator('a');
+    expect(await notes.evaluate((el) => el.getAnimations().length)).toBe(0);
+    await launcher.click();
+    expect(await page.locator('html').getAttribute('data-nowo-ui-edge-tabs-closing')).toBeNull();
+    expect(await visible(notes)).toBe(false);
   });
 
   test('JC-L1: closing a dialog opened from a folded tab gives the focus to the launcher', async ({ page }) => {

@@ -4187,28 +4187,33 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
   display: inline-flex !important;
 }
 
-/* --- Page-edge tab (partials/_edge_tab.html.twig) --- */
+/* --- Page-edge tab (partials/_edge_tab.html.twig) ---
+   Size tokens (2.45): --nowo-ui-edge-tab-width (2.25rem), --nowo-ui-edge-tab-height (2.75rem),
+   --nowo-ui-edge-tab-hover-width (2.6rem), --nowo-ui-edge-tab-icon (1.15rem, the icon size) and --nowo-ui-edge-tab-gap
+   (0.5rem); --nowo-ui-edge-tab-step defaults to height + gap (3.25rem). The launcher (partials/_edge_tabs_launcher)
+   reads the same tokens, so every right-edge tab has one size. */
 .nowo-ui-edge-tab {
   display: contents;
 }
 
 .nowo-ui-edge-tab__link {
   position: fixed;
-  top: calc(var(--nowo-ui-edge-tab-top, calc(var(--nowo-ui-header-height, 3.5rem) + 0.75rem)) + var(--nowo-ui-edge-tab-slot, 0) * var(--nowo-ui-edge-tab-step, 3.25rem));
+  top: calc(var(--nowo-ui-edge-tab-top, calc(var(--nowo-ui-header-height, 3.5rem) + 0.75rem)) + var(--nowo-ui-edge-tab-slot, 0) * var(--nowo-ui-edge-tab-step, calc(var(--nowo-ui-edge-tab-height, 2.75rem) + var(--nowo-ui-edge-tab-gap, 0.5rem))));
   right: 0;
   z-index: var(--nowo-ui-edge-tab-z, 74);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.25rem;
-  height: 2.75rem;
+  box-sizing: border-box;
+  width: var(--nowo-ui-edge-tab-width, 2.25rem);
+  height: var(--nowo-ui-edge-tab-height, 2.75rem);
   border: var(--nowo-ui-border-width, 1px) solid var(--nowo-ui-border);
   border-right: 0;
   border-radius: var(--nowo-ui-radius) 0 0 var(--nowo-ui-radius);
   background: var(--nowo-ui-surface);
   color: var(--nowo-ui-text);
   box-shadow: -2px 2px 8px rgb(var(--nowo-ui-shadow-rgb, 15 23 42) / 10%);
-  font-size: 1.15rem;
+  font-size: var(--nowo-ui-edge-tab-icon, 1.15rem);
   line-height: 1;
   text-decoration: none;
   transition: width 0.15s ease, color 0.15s ease;
@@ -4243,7 +4248,7 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
 }
 
 .nowo-ui-edge-tab__link:hover {
-  width: 2.6rem;
+  width: var(--nowo-ui-edge-tab-hover-width, 2.6rem);
   color: var(--nowo-ui-primary);
 }
 
@@ -4254,8 +4259,8 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
 
 .nowo-ui-edge-tab__icon {
   display: inline-flex;
-  width: 1.15rem;
-  height: 1.15rem;
+  width: var(--nowo-ui-edge-tab-icon, 1.15rem);
+  height: var(--nowo-ui-edge-tab-icon, 1.15rem);
   align-items: center;
   justify-content: center;
 }
@@ -7111,8 +7116,8 @@ select.nowo-ui-pagination__select {
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  width: 2.25rem;
-  height: 2.75rem;
+  width: var(--nowo-ui-edge-tab-width, 2.25rem);
+  height: var(--nowo-ui-edge-tab-height, 2.75rem);
   padding: 0;
   border: var(--nowo-ui-border-width, 1px) solid var(--nowo-ui-border);
   border-right: 0;
@@ -7121,13 +7126,28 @@ select.nowo-ui-pagination__select {
   color: var(--nowo-ui-text);
   box-shadow: -2px 2px 8px rgb(var(--nowo-ui-shadow-rgb, 15 23 42) / 10%);
   font: inherit;
-  font-size: 1.15rem;
+  font-size: var(--nowo-ui-edge-tab-icon, 1.15rem);
   line-height: 1;
   cursor: pointer;
+  transition: width 0.15s ease, color 0.15s ease;
+}
+
+.nowo-ui-edge-tabs-launcher:hover {
+  width: var(--nowo-ui-edge-tab-hover-width, 2.6rem);
+  color: var(--nowo-ui-primary);
 }
 
 .nowo-ui-edge-tabs-launcher[aria-expanded='true'] {
   color: var(--nowo-ui-primary);
+}
+
+/* 2.45: `icon: 'chevron'` — a chevron pointing left while folded turns to point down while open. */
+.nowo-ui-edge-tabs-launcher--chevron .nowo-ui-edge-tab__icon {
+  transition: transform var(--nowo-ui-motion-medium, 200ms) var(--nowo-ui-motion-ease-out, ease-out);
+}
+
+.nowo-ui-edge-tabs-launcher--chevron[aria-expanded='true'] .nowo-ui-edge-tab__icon {
+  transform: rotate(-90deg);
 }
 
 .nowo-ui-edge-tabs-launcher:focus-visible {
@@ -7139,16 +7159,24 @@ select.nowo-ui-pagination__select {
   display: inline-flex;
 }
 
-:root[data-nowo-ui-edge-tabs-ready]:not([data-nowo-ui-edge-tabs-open]):has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always']:not([hidden])) .nowo-ui-edge-tab__link:not([aria-expanded='true'], [data-nowo-ui-edge-tab-pinned]) {
+:root[data-nowo-ui-edge-tabs-ready]:not([data-nowo-ui-edge-tabs-open]):has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always']:not([hidden])) .nowo-ui-edge-tab__link:not([aria-expanded='true'], [data-nowo-ui-edge-tab-pinned], [data-nowo-ui-edge-tabs-folding]) {
   display: none !important;
 }
 
-:root[data-nowo-ui-edge-tabs-ready][data-nowo-ui-edge-tabs-open]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always']:not([hidden])) .nowo-ui-edge-tab__link {
-  top: calc(var(--nowo-ui-edge-tab-top, calc(var(--nowo-ui-header-height, 3.5rem) + 0.75rem)) + (var(--nowo-ui-edge-tab-slot, 0) + 1) * var(--nowo-ui-edge-tab-step, 3.25rem));
+:root[data-nowo-ui-edge-tabs-ready][data-nowo-ui-edge-tabs-open]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always']:not([hidden])) .nowo-ui-edge-tab__link, :root[data-nowo-ui-edge-tabs-ready][data-nowo-ui-edge-tabs-closing]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always']:not([hidden])) .nowo-ui-edge-tab__link[data-nowo-ui-edge-tabs-folding] {
+  top: calc(var(--nowo-ui-edge-tab-top, calc(var(--nowo-ui-header-height, 3.5rem) + 0.75rem)) + (var(--nowo-ui-edge-tab-slot, 0) + 1) * var(--nowo-ui-edge-tab-step, calc(var(--nowo-ui-edge-tab-height, 2.75rem) + var(--nowo-ui-edge-tab-gap, 0.5rem))));
+}
+
+:root[data-nowo-ui-edge-tabs-ready][data-nowo-ui-edge-tabs-open]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always']:not([hidden])) .nowo-ui-edge-tab__link:not([aria-expanded='true'], [data-nowo-ui-edge-tab-pinned]) {
+  animation: nowo-ui-edge-tab-unfold var(--nowo-ui-motion-medium, 200ms) var(--nowo-ui-motion-ease-out, ease-out) calc(var(--nowo-ui-edge-tabs-order, 0) * var(--nowo-ui-edge-tabs-stagger, 30ms)) both;
+}
+
+:root[data-nowo-ui-edge-tabs-ready][data-nowo-ui-edge-tabs-closing]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always']:not([hidden])) .nowo-ui-edge-tab__link[data-nowo-ui-edge-tabs-folding] {
+  animation: nowo-ui-edge-tab-fold var(--nowo-ui-motion-medium, 200ms) var(--nowo-ui-motion-ease-in, ease-in) calc(var(--nowo-ui-edge-tabs-order, 0) * var(--nowo-ui-edge-tabs-stagger, 30ms)) both;
 }
 
 :root[data-nowo-ui-edge-tabs-ready]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always']:not([hidden])[data-nowo-ui-edge-tabs-gutter]) {
-  --nowo-ui-edge-tabs-gutter: 2.25rem;
+  --nowo-ui-edge-tabs-gutter: var(--nowo-ui-edge-tab-width, 2.25rem);
 }
 
 :root[data-nowo-ui-edge-tabs-ready]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always']:not([hidden])[data-nowo-ui-edge-tabs-gutter]) .nowo-ui-main {
@@ -7160,16 +7188,24 @@ select.nowo-ui-pagination__select {
     display: inline-flex;
   }
 
-  :root[data-nowo-ui-edge-tabs-ready]:not([data-nowo-ui-edge-tabs-open]):has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='phone']:not([hidden])) .nowo-ui-edge-tab__link:not([aria-expanded='true'], [data-nowo-ui-edge-tab-pinned]) {
+  :root[data-nowo-ui-edge-tabs-ready]:not([data-nowo-ui-edge-tabs-open]):has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='phone']:not([hidden])) .nowo-ui-edge-tab__link:not([aria-expanded='true'], [data-nowo-ui-edge-tab-pinned], [data-nowo-ui-edge-tabs-folding]) {
     display: none !important;
   }
 
-  :root[data-nowo-ui-edge-tabs-ready][data-nowo-ui-edge-tabs-open]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='phone']:not([hidden])) .nowo-ui-edge-tab__link {
-    top: calc(var(--nowo-ui-edge-tab-top, calc(var(--nowo-ui-header-height, 3.5rem) + 0.75rem)) + (var(--nowo-ui-edge-tab-slot, 0) + 1) * var(--nowo-ui-edge-tab-step, 3.25rem));
+  :root[data-nowo-ui-edge-tabs-ready][data-nowo-ui-edge-tabs-open]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='phone']:not([hidden])) .nowo-ui-edge-tab__link, :root[data-nowo-ui-edge-tabs-ready][data-nowo-ui-edge-tabs-closing]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='phone']:not([hidden])) .nowo-ui-edge-tab__link[data-nowo-ui-edge-tabs-folding] {
+    top: calc(var(--nowo-ui-edge-tab-top, calc(var(--nowo-ui-header-height, 3.5rem) + 0.75rem)) + (var(--nowo-ui-edge-tab-slot, 0) + 1) * var(--nowo-ui-edge-tab-step, calc(var(--nowo-ui-edge-tab-height, 2.75rem) + var(--nowo-ui-edge-tab-gap, 0.5rem))));
+  }
+
+  :root[data-nowo-ui-edge-tabs-ready][data-nowo-ui-edge-tabs-open]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='phone']:not([hidden])) .nowo-ui-edge-tab__link:not([aria-expanded='true'], [data-nowo-ui-edge-tab-pinned]) {
+    animation: nowo-ui-edge-tab-unfold var(--nowo-ui-motion-medium, 200ms) var(--nowo-ui-motion-ease-out, ease-out) calc(var(--nowo-ui-edge-tabs-order, 0) * var(--nowo-ui-edge-tabs-stagger, 30ms)) both;
+  }
+
+  :root[data-nowo-ui-edge-tabs-ready][data-nowo-ui-edge-tabs-closing]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='phone']:not([hidden])) .nowo-ui-edge-tab__link[data-nowo-ui-edge-tabs-folding] {
+    animation: nowo-ui-edge-tab-fold var(--nowo-ui-motion-medium, 200ms) var(--nowo-ui-motion-ease-in, ease-in) calc(var(--nowo-ui-edge-tabs-order, 0) * var(--nowo-ui-edge-tabs-stagger, 30ms)) both;
   }
 
   :root[data-nowo-ui-edge-tabs-ready]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='phone']:not([hidden])[data-nowo-ui-edge-tabs-gutter]) {
-    --nowo-ui-edge-tabs-gutter: 2.25rem;
+    --nowo-ui-edge-tabs-gutter: var(--nowo-ui-edge-tab-width, 2.25rem);
   }
 
   :root[data-nowo-ui-edge-tabs-ready]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='phone']:not([hidden])[data-nowo-ui-edge-tabs-gutter]) .nowo-ui-main {
@@ -7181,6 +7217,42 @@ select.nowo-ui-pagination__select {
   .nowo-ui-edge-tabs-launcher {
     display: none !important;
   }
+}
+
+/* 2.45: unfold / fold. Open, each tab slides down from the launcher (opacity and translateY(-step × (slot + 1)) to
+   none), one --nowo-ui-edge-tabs-stagger (30ms) later per tab (--nowo-ui-edge-tabs-order, set by the runtime). Closing
+   runs the reverse (the last tab first) while <html> carries data-nowo-ui-edge-tabs-closing, the folding tabs inert
+   and aria-hidden; then they are hidden again. No animation under reduced motion. */
+@keyframes nowo-ui-edge-tab-unfold {
+  from {
+    opacity: 0;
+    transform: translateY(calc(-1 * (var(--nowo-ui-edge-tab-slot, 0) + 1) * var(--nowo-ui-edge-tab-step, calc(var(--nowo-ui-edge-tab-height, 2.75rem) + var(--nowo-ui-edge-tab-gap, 0.5rem)))));
+  }
+}
+
+@keyframes nowo-ui-edge-tab-fold {
+  to {
+    opacity: 0;
+    transform: translateY(calc(-1 * (var(--nowo-ui-edge-tab-slot, 0) + 1) * var(--nowo-ui-edge-tab-step, calc(var(--nowo-ui-edge-tab-height, 2.75rem) + var(--nowo-ui-edge-tab-gap, 0.5rem)))));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nowo-ui-edge-tab__link:not([data-motion='full'] *) {
+    animation: none !important;
+  }
+
+  :is(.nowo-ui-edge-tabs-launcher, .nowo-ui-edge-tabs-launcher .nowo-ui-edge-tab__icon):not([data-motion='full'] *) {
+    transition: none;
+  }
+}
+
+[data-motion='reduce'] .nowo-ui-edge-tab__link {
+  animation: none !important;
+}
+
+:is([data-motion='reduce'] .nowo-ui-edge-tabs-launcher, [data-motion='reduce'] .nowo-ui-edge-tabs-launcher .nowo-ui-edge-tab__icon) {
+  transition: none;
 }
 
 /* MUX-20 / MUX-22 — phone cards of the `responsive_table` partial (`phone_layout: 'cards'`; the peer sets

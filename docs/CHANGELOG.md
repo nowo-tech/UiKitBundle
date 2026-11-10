@@ -120,6 +120,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Target 2.45.0.
+
+### Added
+
+- **Edge tab size tokens (MUX-01, Beacon):** `--nowo-ui-edge-tab-width` (2.25rem), `--nowo-ui-edge-tab-height`
+  (2.75rem), `--nowo-ui-edge-tab-hover-width` (2.6rem), `--nowo-ui-edge-tab-icon` (1.15rem) and
+  `--nowo-ui-edge-tab-gap` (0.5rem), read by every `.nowo-ui-edge-tab__link` and by the edge tabs launcher, which had
+  a hard-coded size. `--nowo-ui-edge-tab-step` now defaults to height + gap (still 3.25rem). With a custom height the
+  first unfolded tab keeps the same gap under the launcher as the others (it overlapped the 2.75rem launcher before).
+- **Edge tabs unfold / fold animation:** the tabs slide down from the launcher (opacity + translateY, 200ms
+  ease-out, 30ms stagger per tab, `--nowo-ui-edge-tabs-stagger`) and fold back the same way, the last one first.
+  While they fold `<html>` carries `data-nowo-ui-edge-tabs-closing` and each folding tab is `inert` and
+  `aria-hidden="true"`. Off under reduced motion; the no-JS fallback is unchanged.
+- **`edge_tabs_launcher` `icon: 'chevron'`:** a chevron pointing left while folded, turned −90° (pointing down) while
+  open, in 200ms (`nowo-ui-edge-tabs-launcher--chevron`). It is the kit's `chevron_left` icon in every icon set
+  (`bi:chevron-left` under `ux_icon`). `more` stays the default.
+
+### Changed
+
+- The edge tabs launcher widens on hover (`--nowo-ui-edge-tab-hover-width`) and turns to the primary colour, like the
+  tabs. The `gutter` width follows `--nowo-ui-edge-tab-width`.
+- `.nowo-ui-edge-tab__link` is `box-sizing: border-box`, like the launcher and the `<button>` tabs. No change on hosts
+  with a global box-sizing reset (Bootstrap, Tailwind); on hosts without one, link tabs (`<a>`) were 1px wider and 2px
+  taller than button tabs and the launcher, and now share their size.
+
 ## [2.44.0] - 2026-11-10
 
 Target 2.44.0.

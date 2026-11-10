@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { bindNowoUiEdgeTabs, isOpen, isPinned, isShown, launcher, linkTabs, onTabsChanged, OPEN, PINNED, READY, recoverFocus, setOpen, tabs } from './nowo-ui-edge-tabs';
+import { animationTime, bindNowoUiEdgeTabs, CLOSING, finishClosing, FOLDING, foldingTabs, isClosing, isOpen, isPinned, isShown, launcher, linkTabs, onTabsChanged, OPEN, PINNED, ORDER, READY, recoverFocus, reducedMotion, setOpen, tabs } from './nowo-ui-edge-tabs';
 
 const MARKUP = `
 <main><p><a id="page-link" href="#p">page</a></p></main>
@@ -283,5 +283,206 @@ describe('nowo-ui-edge-tabs', () => {
     el('page-link').setAttribute('aria-expanded', 'false');
     await flush();
     expect(document.activeElement).toBe(el('t1'));
+  });
+});
+
+describe('nowo-ui-edge-tabs unfold / fold (2.45)', () => {
+  const MORE = `
+<div class="nowo-ui-edge-tab" data-nowo-ui-edge-tab-slot="0"><a id="u1" class="nowo-ui-edge-tab__link" href="#a">a</a></div>
+<div class="nowo-ui-edge-tab" data-nowo-ui-edge-tab-slot="1"><a id="u2" class="nowo-ui-edge-tab__link" href="#b">b</a></div>
+<div class="nowo-ui-edge-tab" data-nowo-ui-edge-tab-slot="2"><button id="u3" type="button" class="nowo-ui-edge-tab__link" data-nowo-ui-edge-tab-pinned>c</button></div>
+<div class="nowo-ui-edge-tab" data-nowo-ui-edge-tab-slot="3"><a id="u4" class="nowo-ui-edge-tab__link" href="#d">d</a></div>
+<button id="go" type="button" class="nowo-ui-edge-tabs-launcher" data-nowo-ui-edge-tabs-launcher aria-expanded="false" aria-label="Page tools">+</button>`;
+  const get = (id: string): HTMLElement => document.getElementById(id) as HTMLElement;
+  const order = (id: string): string => get(id).style.getPropertyValue(ORDER);
+
+  /** The CSS of the kit as a browser resolves it: 200 ms per tab, 30 ms more per --nowo-ui-edge-tabs-order. */
+  function animated(): void {
+    const real = window.getComputedStyle.bind(window);
+    vi.spyOn(window, 'getComputedStyle').mockImplementation((elt: Element) => {
+      const style = real(elt);
+      const tab = elt as HTMLElement;
+      const isTab = tab.matches('.nowo-ui-edge-tab__link');
+      const n = Number(tab.style?.getPropertyValue(ORDER) || '0');
+      return new Proxy(style, {
+        get(target, prop) {
+          if ('animationName' === prop) {
+            return isTab ? 'nowo-ui-edge-tab-fold' : 'none';
+          }
+          if ('animationDuration' === prop) {
+            return isTab ? '0.2s' : '0s';
+          }
+          if ('animationDelay' === prop) {
+            return isTab ? `${n * 30}ms` : '0s';
+          }
+          const value = Reflect.get(target, prop);
+          return typeof value === 'function' ? value.bind(target) : value;
+        },
+      });
+    });
+  }
+
+  function rendered(): void {
+    vi.spyOn(Element.prototype, 'getClientRects').mockImplementation(function (this: Element) {
+      return [{}] as unknown as DOMRectList;
+    });
+  }
+
+  beforeEach(() => {
+    document.body.innerHTML = MORE;
+    bindNowoUiEdgeTabs();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    setOpen(false);
+    finishClosing();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+    document.documentElement.removeAttribute('data-motion');
+    document.body.innerHTML = '';
+  });
+
+  it('staggers the opening: every folding tab gets its order, pinned tabs none', () => {
+    rendered();
+    animated();
+    setOpen(true);
+    expect(foldingTabs().map((t) => t.id)).toEqual(['u1', 'u2', 'u4']);
+    expect(['u1', 'u2', 'u4'].map(order)).toEqual(['0', '1', '2']);
+    expect(order('u3')).toBe('');
+    expect(isClosing()).toBe(false);
+  });
+
+  it('closing runs the reverse: state at once, tabs painted, inert and aria-hidden until the animations end', () => {
+    rendered();
+    animated();
+    const events: boolean[] = [];
+    document.addEventListener('nowo-ui:edge-tabs:toggle', (e) => events.push((e as CustomEvent<{ open: boolean }>).detail.open));
+    setOpen(true);
+    setOpen(false);
+
+    // The state changed at once.
+    expect(isOpen()).toBe(false);
+    expect(get('go').getAttribute('aria-expanded')).toBe('false');
+    expect(events).toEqual([true, false]);
+
+    // The tabs fold back, the last one first; they take no focus and leave the accessibility tree.
+    expect(document.documentElement.hasAttribute(CLOSING)).toBe(true);
+    expect(['u1', 'u2', 'u4'].map(order)).toEqual(['2', '1', '0']);
+    for (const id of ['u1', 'u2', 'u4']) {
+      expect(get(id).hasAttribute(FOLDING)).toBe(true);
+      expect(get(id).hasAttribute('inert')).toBe(true);
+      expect(get(id).getAttribute('aria-hidden')).toBe('true');
+    }
+    // A pinned tab never folds.
+    expect(get('u3').hasAttribute(FOLDING)).toBe(false);
+    expect(get('u3').hasAttribute('inert')).toBe(false);
+
+    // 200 ms + 2 × 30 ms stagger.
+    expect(animationTime(foldingTabs())).toBe(260);
+    vi.advanceTimersByTime(250);
+    expect(isClosing()).toBe(true);
+    vi.advanceTimersByTime(40);
+    expect(isClosing()).toBe(false);
+    for (const id of ['u1', 'u2', 'u4']) {
+      expect(get(id).hasAttribute(FOLDING)).toBe(false);
+      expect(get(id).hasAttribute('inert')).toBe(false);
+      expect(get(id).hasAttribute('aria-hidden')).toBe(false);
+      expect(order(id)).toBe('');
+    }
+  });
+
+  it('opening again while closing cancels the closing phase and restarts the unfold', () => {
+    rendered();
+    animated();
+    setOpen(true);
+    setOpen(false);
+    expect(isClosing()).toBe(true);
+    setOpen(true);
+    expect(isClosing()).toBe(false);
+    expect(isOpen()).toBe(true);
+    expect(get('u1').hasAttribute('inert')).toBe(false);
+    expect(['u1', 'u2', 'u4'].map(order)).toEqual(['0', '1', '2']);
+    vi.advanceTimersByTime(1000);
+    expect(isOpen()).toBe(true);
+  });
+
+  it('Escape closes, the focus goes to the launcher, never to a folding tab', () => {
+    rendered();
+    animated();
+    get('go').focus();
+    get('go').dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 0 }));
+    expect(document.activeElement).toBe(get('u1'));
+    get('u1').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(isOpen()).toBe(false);
+    expect(document.activeElement).toBe(get('go'));
+    expect(get('u1').hasAttribute('inert')).toBe(true);
+  });
+
+  it('a dialog closed while its tab still folds gives the focus to the launcher (JC-L1)', () => {
+    rendered();
+    animated();
+    document.body.insertAdjacentHTML('beforeend', '<dialog id="d2"><button id="in-d2" type="button">ok</button></dialog>');
+    setOpen(true);
+    get('u2').dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }));
+    expect(isClosing()).toBe(true);
+    // A folding tab counts as hidden: it is inert and about to be display: none.
+    expect(isShown(get('u2'))).toBe(false);
+    expect(isShown(get('u3'))).toBe(true);
+    get('d2').dispatchEvent(new Event('close'));
+    vi.advanceTimersByTime(1);
+    expect(document.activeElement).toBe(get('go'));
+  });
+
+  it('no closing phase under reduced motion (media query or data-motion), unless data-motion="full"', () => {
+    rendered();
+    animated();
+    const media = vi.fn().mockReturnValue({ matches: true });
+    vi.stubGlobal('matchMedia', media);
+    try {
+      expect(reducedMotion()).toBe(true);
+      setOpen(true);
+      setOpen(false);
+      expect(isClosing()).toBe(false);
+      expect(get('u1').hasAttribute('inert')).toBe(false);
+
+      document.documentElement.setAttribute('data-motion', 'full');
+      expect(reducedMotion()).toBe(false);
+      setOpen(true);
+      setOpen(false);
+      expect(isClosing()).toBe(true);
+      finishClosing();
+
+      media.mockReturnValue({ matches: false });
+      document.documentElement.setAttribute('data-motion', 'reduce');
+      expect(reducedMotion()).toBe(true);
+      setOpen(true);
+      setOpen(false);
+      expect(isClosing()).toBe(false);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('no closing phase when the launcher is not shown or the tabs have no animation', () => {
+    // Launcher not rendered (desktop with `when: phone`).
+    setOpen(true);
+    setOpen(false);
+    expect(isClosing()).toBe(false);
+
+    // Rendered, but no animation resolves (host CSS turned it off): the fold ends at once.
+    rendered();
+    setOpen(true);
+    setOpen(false);
+    expect(isClosing()).toBe(false);
+    expect(get('u1').hasAttribute(FOLDING)).toBe(false);
+  });
+
+  it('reads delays and durations in s and ms, the first of a list', () => {
+    const tab = get('u1');
+    vi.spyOn(window, 'getComputedStyle').mockReturnValue({ animationName: 'x', animationDuration: '180ms, 1s', animationDelay: '0.03s' } as unknown as CSSStyleDeclaration);
+    expect(animationTime([tab])).toBe(210);
+    vi.spyOn(window, 'getComputedStyle').mockReturnValue({ animationName: 'x', animationDuration: 'auto', animationDelay: '' } as unknown as CSSStyleDeclaration);
+    expect(animationTime([tab])).toBe(0);
   });
 });
