@@ -127,6 +127,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
                 'nowo_ui_kit_row_actions_confirm' => $config['row_actions_confirm'],
                 'nowo_ui_kit_release_check' => $releaseCheck,
                 'nowo_ui_kit_shell' => $config['shell'],
+                'nowo_ui_kit_auth_panel' => $config['auth_panel'],
             ],
         ];
         // 2.15: the date-range field's blocks (only `nowo_ui_date_range_*`) in every form, whatever the host theme.
@@ -198,6 +199,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
         $container->setParameter('nowo_ui_kit.css_framework', $fw);
         $container->setParameter('nowo_ui_kit.icon_set', $config['icon_set']);
         $container->setParameter('nowo_ui_kit.row_actions_display', $config['row_actions_display']);
+        $container->setParameter('nowo_ui_kit.auth_panel.brand', $config['auth_panel']['brand']);
 
         /** @var array<string, string> $rewrites */
         $rewrites = $config['panel_path_rewrites'];

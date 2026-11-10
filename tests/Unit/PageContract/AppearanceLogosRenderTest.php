@@ -136,6 +136,67 @@ TWIG;
         self::assertMatchesRegularExpression('#<main id="main-content" tabindex="-1" class="nowo-ui-error-page__main">\s*<div class="nowo-ui-brand-region nowo-ui-brand-region--error" data-nowo-ui-region="brand"><img#', $error);
     }
 
+    /**
+     * 2.44: nowo_ui_kit.auth_panel.brand (Twig global nowo_ui_kit_auth_panel) auto | none, and the per-render
+     * nowo_ui_auth_brand variable (render(), extending template, guest layout) that wins over it.
+     */
+    public function testAuthPanelBrandConfigAndPerRenderOverride(): void
+    {
+        $view = $this->view($this->appearance('Acme', new AppearanceLogos('/l.png', '/d.png')));
+        $auth = '@NowoUiKit/page/auth.html.twig';
+        $page = new AuthPage('Sign in', brand: 'Acme Login');
+        $templates = [
+            'auth/none.html.twig' => "{% extends '@NowoUiKit/page/auth.html.twig' %}{% set nowo_ui_auth_brand = 'none' %}",
+            'auth/block.html.twig' => "{% extends '@NowoUiKit/page/auth.html.twig' %}{% block nowo_ui_auth_brand %}<p data-own-brand>Own</p>{% endblock %}",
+            'layout/no_brand.html.twig' => "{% extends '@NowoUiKit/layout/guest.html.twig' %}{% set nowo_ui_auth_brand = 'none' %}",
+        ];
+        $render = static function (?array $authPanel, string $template, array $vars) use ($view, $templates): string {
+            $twig = PageContractTwig::create(
+                $templates + ['t' => self::HALVES, 'guest' => self::GUEST, 'error' => self::ERROR],
+                request: Request::create('https://app.example/x'),
+                shell: self::SHELL,
+                appearanceView: $view,
+            );
+            if (null !== $authPanel) {
+                $twig->addGlobal('nowo_ui_kit_auth_panel', $authPanel);
+            }
+
+            return $twig->render($template, $vars);
+        };
+
+        // auto (the default) = the bytes without the global (2.43).
+        $before = $render(null, $auth, ['page' => $page]);
+        self::assertSame($before, $render(['brand' => 'auto'], $auth, ['page' => $page]));
+        self::assertStringContainsString('nowo-ui-auth-panel__brand--logo', $before);
+
+        // none: no brand region at all (neither the lockup nor the page.brand text); the rest of the panel unchanged.
+        $none = $render(['brand' => 'none'], $auth, ['page' => $page]);
+        self::assertStringNotContainsString('nowo-ui-auth-panel__brand', $none);
+        self::assertStringNotContainsString('nowo-ui-brand__logo', $none);
+        self::assertStringNotContainsString('nowo-ui-brand-region', $none, 'the guest brand region stays emptied');
+        self::assertStringContainsString('Sign in</h1>', $none);
+        self::assertSame($none, $render(['brand' => 'auto'], $auth, ['page' => $page, 'nowo_ui_auth_brand' => 'none']), 'render() variable wins over auto');
+
+        // Per-render override: auto wins over the none config; extending template and guest layout flags.
+        self::assertSame($before, $render(['brand' => 'none'], $auth, ['page' => $page, 'nowo_ui_auth_brand' => 'auto']));
+        self::assertSame($none, $render(['brand' => 'auto'], 'auth/none.html.twig', ['page' => $page]));
+        self::assertSame($none, $render(null, 'auth/none.html.twig', ['page' => $page]));
+        $layout = $render(['brand' => 'auto'], $auth, ['page' => new AuthPage('Sign in', brand: 'Acme Login', layout: 'layout/no_brand.html.twig')]);
+        self::assertStringNotContainsString('nowo-ui-auth-panel__brand', $layout);
+        self::assertStringContainsString('Sign in</h1>', $layout);
+
+        // Block nowo_ui_auth_brand replaces the region.
+        $block = $render(['brand' => 'auto'], 'auth/block.html.twig', ['page' => $page]);
+        self::assertStringContainsString('<p data-own-brand>Own</p>', $block);
+        self::assertStringNotContainsString('nowo-ui-auth-panel__brand', $block);
+
+        // Without logos, none also drops the page.brand text.
+        $plain = PageContractTwig::create();
+        $plain->addGlobal('nowo_ui_kit_auth_panel', ['brand' => 'none']);
+        self::assertStringNotContainsString('Acme Login', $plain->render($auth, ['page' => $page]));
+        self::assertStringContainsString('<p class="nowo-ui-auth-panel__brand">Acme Login</p>', PageContractTwig::create()->render($auth, ['page' => $page]));
+    }
+
     public function testErrorPageRendersWithAThrowingProvider(): void
     {
         $throwing = new class implements AppearanceProviderInterface {
