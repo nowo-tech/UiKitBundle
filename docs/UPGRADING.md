@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.49.0](#to-2490)
 - [To 2.48.1](#to-2481)
 - [To 2.48.0](#to-2480)
 - [To 2.48.0](#to-2480-1)
@@ -140,6 +141,69 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.49.0
+
+From **2.48.1**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+Target **2.49.0** (minor, REQ-ARCH-001 rule 3). **Nothing to change**: no markup, CSS, JS or template variable changes,
+and every existing port keeps working. Two framework-typed signatures are deprecated and removed in **3.0**:
+
+| Deprecated (2.49) | Replacement | Removed |
+|---|---|---|
+| `Listing\ListingPreferenceStoreInterface::load(string $listingKey, Request $request)` | `Listing\ListingPreferenceReaderInterface::load(string $listingKey, ListingContext $context)` | 3.0 |
+| `Dialog\RemoteDialogRedirectEvent::getRequest()` | `getRequestPath()`, `getRequestRoute()`, `getRouteParameters()` | 3.0 |
+| `Dialog\RemoteDialogRedirectEvent::getResponse()` | `getRedirectTargetUrl()`, `getRedirectStatusCode()` | 3.0 |
+
+**Host listing store (only if you aliased `ListingPreferenceStoreInterface`).** It still works: the builder passes it
+the request as before and triggers one `E_USER_DEPRECATED` notice when the builder is built. To migrate, implement the
+new port and alias it instead (it wins over the legacy alias):
+
+```php
+use Nowo\UiKitBundle\Listing\ListingContext;
+use Nowo\UiKitBundle\Listing\ListingPreferenceReaderInterface;
+
+final readonly class DoctrineListingPreferenceStore implements ListingPreferenceReaderInterface
+{
+    public function load(string $listingKey, ListingContext $context): ?array
+    {
+        // was: $request->cookies / the token / $request->attributes->get('project')
+        // now: $context->cookie($name), $context->viewerId, $context->routeParameters['project'] ?? null
+    }
+
+    public function cookieName(string $listingKey): ?string
+    {
+        return null;
+    }
+}
+```
+
+```yaml
+# config/services.yaml
+Nowo\UiKitBundle\Listing\ListingPreferenceReaderInterface: '@App\Listing\DoctrineListingPreferenceStore'
+# optional: fills ListingContext::$viewerId (the kit ships no implementation)
+Nowo\UiKitBundle\Listing\ListingViewerResolverInterface: '@App\Listing\CurrentUserViewer'
+```
+
+A store that resolved the user from the security token inside `load()` can keep doing so through its own injected
+service; `viewerId` is a convenience. **Fail closed:** a per-viewer reader returns null when it has no viewer (null
+`viewerId` and no identity of its own), never a shared row. In debug, the builder logs a warning when a server-side
+reader runs without a viewer resolver. `$context->cookies` holds only the `nowo_ui_listing_*` cookies; a store that
+needs another cookie reads it through its own request-aware service. Without a request (a presenter, a console preview) call
+`ListingCustomizerViewBuilder::buildForContext($key, $context)`.
+
+**`RemoteDialogRedirectEvent` listeners.** Replace `$event->getRequest()->attributes->get('_route')` with
+`$event->getRequestRoute()`, `->get('_route_params')[…]` / route attributes with `$event->getRouteParameters()[…]`, and
+`$event->getResponse()->getTargetUrl()` with `$event->getRedirectTargetUrl()`. `getPath()`, `setPath()`,
+`getAnswer()` and `setAnswer()` are unchanged. The two deprecated getters trigger an `E_USER_DEPRECATED` notice on
+each call (visible in the profiler / deprecation log, never an exception).
+
+**Named arguments.** `CookieListingPreferenceStore::load()`'s second parameter is now `$context`
+(`ListingContext|Request`); positional calls are unchanged.
 
 ## To 2.48.1
 

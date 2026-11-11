@@ -16,6 +16,7 @@
 - [Findings](#findings)
   - [Info](#info)
 - [Usage recommendations in worker mode](#usage-recommendations-in-worker-mode)
+- [2.49 addendum: listing ports (REQ-ARCH-001)](#249-addendum-listing-ports-req-arch-001)
 - [Re-audit triggers](#re-audit-triggers)
 
 ## Execution model assumed
@@ -67,6 +68,16 @@ No findings. **No code changes required** for worker / `reset_kernel=false` comp
 
 - No special configuration or reset hook is needed for this bundle under `reset_kernel=false`.
 - When overriding the bundle templates or adding Twig globals next to the `nowo_ui_kit_*` ones, do not put per-user or per-request values (current user, locale, permissions) in `twig.globals` or in a `GlobalsInterface` extension as scalars; Twig caches globals, and under scenario B they would leak between users. Read them through `app.*` or a Twig function instead.
+
+## 2.49 addendum: listing ports (REQ-ARCH-001)
+
+- `CookieListingPreferenceStore` and `ListingCustomizerViewBuilder` stay `final readonly`; the builder picks its store
+  once at construction (from the container wiring, not from a request) and builds a new `ListingContext` per call.
+  `ListingContext` is an immutable per-call VO, never kept in a service. `ListingViewerResolverInterface` adapters must
+  resolve per call (documented on the interface).
+- Worker test: `tests/Integration/DddHostListingKernelTest.php` — one kernel, 400 requests through `http_kernel` (no
+  services resetter), two viewers (`alice` / `bob`) and two projects in alternation; each response holds only that
+  viewer's layout, and memory grows less than 2 MiB after a 50-request warm-up. Igor: 136 service files OK, 0 KO.
 
 ## Re-audit triggers
 

@@ -125,6 +125,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Target **2.49.0** (minor; REQ-ARCH-001 rule 3, B2). No markup, CSS, JS or template change; no BC break.
+
+### Added
+
+- **`Listing\ListingPreferenceReaderInterface`**: framework-free listing preference port,
+  `load(string $listingKey, ListingContext $context)` + `cookieName()`. The default `CookieListingPreferenceStore`
+  implements it (same cookie, same parsing rules: tested equivalent for every cookie fixture). A host reader alias wins
+  over the default store.
+- **`Listing\ListingContext`** VO (`cookies`, `viewerId`, `route`, `routeParameters`, `locale`; strings / scalars only)
+  and the optional **`Listing\ListingViewerResolverInterface`** SPI that fills `viewerId` (no default implementation).
+- **`ListingCustomizerViewBuilder::buildForContext()`**: builds a listing view without an HttpFoundation request.
+- **`RemoteDialogRedirectEvent`** request-free accessors: `getRequestPath()`, `getRequestRoute()`,
+  `getRouteParameters()`, `getRedirectTargetUrl()`, `getRedirectStatusCode()`.
+- DDD-host kernel test (`tests/Integration/DddHostListingKernelTest.php`): host reader, viewer resolver and a
+  scalar-only redirect listener, 400 requests through `http_kernel` without the services resetter, two viewers in
+  alternation, flat memory.
+- `docs/USAGE.md`: "Standard host" and "DDD host" sections.
+
+- Reader contract (audit MR-U-L2): a per-viewer `ListingPreferenceReaderInterface` returns null for a null `viewerId`
+  (fail closed). With `kernel.debug` on, the builder logs a warning (`logger` service) when a server-side reader
+  (`cookieName()` null) runs without a `ListingViewerResolverInterface`.
+
+### Security
+
+- `ListingContext::$cookies`, built from the request, holds only the `nowo_ui_listing_*` cookies (audit MR-U-L1):
+  session, remember-me and other host cookies are never handed to a reader.
+
+### Deprecated
+
+- `Listing\ListingPreferenceStoreInterface` (`load(string, Request)`): implement `ListingPreferenceReaderInterface`.
+  A legacy-only host store still works and triggers one `E_USER_DEPRECATED` notice when the builder is built. Removed
+  in 3.0.
+- `RemoteDialogRedirectEvent::getRequest()` / `getResponse()`: use the scalar accessors. Each call triggers an
+  `E_USER_DEPRECATED` notice (audit MR-U-I1). Removed in 3.0.
+
 ## [2.48.1] - 2026-11-11
 
 Target **2.48.1** (patch; Beacon report 2026-11-11 after adopting 2.48.0).

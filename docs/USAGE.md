@@ -78,6 +78,8 @@
 - [Procedure](#procedure)
 - [Remap CSS tokens (theming)](#remap-css-tokens)
 - [Using it from a DDD / hexagonal application](#using-it-from-a-ddd--hexagonal-application)
+  - [Standard host](#standard-host)
+  - [DDD host](#ddd-host)
 - [Feature bundles](#feature-bundles)
 - [Kitchen sink](#kitchen-sink)
 - [Related docs](#related-docs)
@@ -1152,11 +1154,14 @@ Pieces:
 | --- | --- |
 | `Nowo\UiKitBundle\Listing\ListingDefinitionInterface` | One service per listing: `key()`, `columns()`, `filters()` (lists of `ListingField`). Autoconfigured with the tag `nowo_ui_kit.listing_definition`. |
 | `ListingField` | `key`, `label` (`View\Label` or string), `required` (always shown), `defaultVisible`, `priority` (`data-priority`), `headClass`, `cellClass` (columns); 2.42: `phone` (`primary` \| `meta` \| `hide`, columns: `data-nowo-ui-phone` on the head and row cells for `phone_layout: 'cards'`). |
-| `ListingCustomizerViewBuilder` | `forRequest(key, Request)` → `['view' => ListingCustomizerView, 'filteredRequest' => Request]`; `build(key, Request)`. |
+| `ListingCustomizerViewBuilder` | `forRequest(key, Request)` → `['view' => ListingCustomizerView, 'filteredRequest' => Request]`; `build(key, Request)`; 2.49: `buildForContext(key, ListingContext)` (no `Request`). |
 | `ListingCustomizerView` | `layout` (`ListingLayout`), `tableMode`, `tableOptions()`, `ignoredFilters`, `cookieName`, `dialogId()`, `clientState()`, `withLayout()`. |
 | `ListingLayout` | `visibleColumnGroups()` (stacked columns share a cell), `visibleColumnKeys()`, `visibleFilterKeys()`, `hiddenFilterKeys()`, `isColumnVisible()`, `filterRequest()`, `ignoredFilters()`, `withoutColumns()`, `stored`. |
 | `ListingLayoutMerger` | `merge()` (lenient: stored layouts survive added / removed fields), `normalize()` / `normalizeLayout()` (strict, for a host save endpoint). |
-| `ListingPreferenceStoreInterface` | Port: `load(key, Request)`, `cookieName(key)`. Default `CookieListingPreferenceStore`. |
+| `ListingPreferenceReaderInterface` | 2.49 port: `load(key, ListingContext)`, `cookieName(key)`. Default `CookieListingPreferenceStore`. |
+| `ListingContext` | 2.49 framework-free VO: `cookies` (only `nowo_ui_listing_*`), `viewerId`, `route`, `routeParameters`, `locale`. |
+| `ListingViewerResolverInterface` | 2.49 optional SPI: `viewerId(): ?string`, copied into the context (no default). |
+| `ListingPreferenceStoreInterface` | Deprecated port (2.49, removed in 3.0): `load(key, Request)`, `cookieName(key)`. Still honoured. |
 | `ListingRegistry`, `ListingTableMode` | Definitions by key; `scroll` / `responsive`. |
 | Partials | `listing_customizer`, `listing_head`, `listing_cells`, `listing_filter_fields` ([THEME_SLOTS](THEME_SLOTS.md#partials)). |
 | Stimulus peer | `listing-customizer` (`stimulus-peers/listing_customizer_controller.ts`), with `responsive-table` for the table mode. |
@@ -1312,11 +1317,25 @@ implement the port and alias it:
 
 ```yaml
 # config/services.yaml
-Nowo\UiKitBundle\Listing\ListingPreferenceStoreInterface: '@App\Listing\DoctrineListingPreferenceStore'
+Nowo\UiKitBundle\Listing\ListingPreferenceReaderInterface: '@App\Listing\DoctrineListingPreferenceStore'
+# optional: the viewer id copied into ListingContext::$viewerId
+Nowo\UiKitBundle\Listing\ListingViewerResolverInterface: '@App\Listing\CurrentUserViewer'
 ```
 
-`load(string $listingKey, Request $request): ?array` returns `{columns, filters, mode}` (raw lists, merged leniently)
-for whatever scope the request implies (the current user, the project in the route…); `cookieName()` returns null.
+`load(string $listingKey, ListingContext $context): ?array` returns `{columns, filters, mode}` (raw lists, merged
+leniently) for whatever scope the context implies (`$context->viewerId`, the project in `$context->routeParameters`…);
+`cookieName()` returns null. A host reader wins over the default cookie store.
+
+**Fail closed.** A per-viewer reader returns null when `$context->viewerId` is null (the definition defaults apply);
+it never serves a shared or "anonymous" row. Only scopes that do not depend on the viewer (a project default keyed by
+`routeParameters`) may answer without one. With `kernel.debug` on, the builder logs a warning when a server-side reader
+runs without a `ListingViewerResolverInterface`. `$context->cookies` holds only the `nowo_ui_listing_*` cookies: the
+kit never passes session or remember-me cookies to a reader.
+
+Before 2.49 the port was `ListingPreferenceStoreInterface::load(string $listingKey, Request $request)`. A host store
+that still implements (and aliases) only that interface keeps working unchanged: the builder passes it the request and
+triggers a deprecation notice. It is removed in 3.0 ([UPGRADING](UPGRADING.md#to-2490)).
+
 Then pass the save endpoint to the partials:
 
 ```twig
@@ -2414,12 +2433,17 @@ nowo_ui_kit:
 public function __invoke(RemoteDialogRedirectEvent $event): void
 {
     // The link step closes the dialog on the board instead of loading the next step.
-    if (str_ends_with((string) $event->getRequest()->attributes->get('_route'), '_board_connection_link')) {
+    if (str_ends_with((string) $event->getRequestRoute(), '_board_connection_link')) {
         $event->setAnswer(RemoteDialogRedirectEvent::ANSWER_REDIRECT);
-        $event->setPath($this->urls->generate('board_show', ['id' => $event->getRequest()->attributes->get('boardId')]));
+        $event->setPath($this->urls->generate('board_show', ['id' => $event->getRouteParameters()['boardId'] ?? null]));
     }
 }
 ```
+
+The event exposes the request and the redirect as scalars (2.49): `getRequestPath()`, `getRequestRoute()`,
+`getRouteParameters()`, `getRedirectTargetUrl()`, `getRedirectStatusCode()`, plus `getPath()` / `getAnswer()`.
+`getRequest()` and `getResponse()` still work but are deprecated: each call triggers an `E_USER_DEPRECATED` notice
+(removed in 3.0).
 
 ### Header names (2.33)
 
@@ -3332,6 +3356,27 @@ ancestor to paint Bootstrap's own components from the same tokens.
 
 ## Using it from a DDD / hexagonal application
 
+### Standard host
+
+Zero configuration: install the bundle, include the partials and macros, and build view models in controllers. The
+listing customizer reads its cookie from the request (`ListingCustomizerViewBuilder::forRequest()`), the redirect
+listener converts remote-dialog redirects, and every port has a default (cookie store, config appearance provider).
+Nothing below is needed.
+
+### DDD host
+
+Opt-in. No public port, event accessor or VO of the kit needs a Symfony component type (REQ-ARCH-001 rule 3, 2.49):
+
+- listings: implement `ListingPreferenceReaderInterface` (takes a `ListingContext` VO, not a `Request`) and, without
+  an HTTP request (a presenter, a console preview), call `ListingCustomizerViewBuilder::buildForContext($key, new
+  ListingContext(cookies: …, viewerId: …))`; a per-viewer reader returns null for a null `viewerId` (fail closed);
+- remote-dialog redirects: read `RemoteDialogRedirectEvent::getRequestPath()`, `getRequestRoute()`,
+  `getRouteParameters()`, `getRedirectTargetUrl()`, `getRedirectStatusCode()` (scalars) instead of the deprecated
+  `getRequest()` / `getResponse()`.
+
+The kernel test `tests/Integration/DddHostListingKernelTest.php` boots the bundle with a host reader, a viewer
+resolver and a scalar-only redirect listener.
+
 UiKit is a **presentation-layer** bundle: Twig templates and macros, CSS/JS assets, optional form types and readonly
 view models (`Nowo\UiKitBundle\View\*`). It has no entities and no persistence, does not depend on Doctrine and needs
 no `resolve_target_entities`.
@@ -3352,7 +3397,8 @@ library.
 | `Appearance\AppearancePresetProviderInterface::getPresets()` | autoconfigured (tag `nowo_ui_kit.appearance_preset_provider`) |
 | `Navigation\AreaNavProviderInterface::areaNav(string $area, array $context): ?AreaNav` | autoconfigured (tag `nowo_ui_kit.area_nav_provider`) |
 | `Listing\ListingDefinitionInterface` (`key()`, `columns()`, `filters()`) | autoconfigured (tag `nowo_ui_kit.listing_definition`) |
-| `Listing\ListingPreferenceStoreInterface` (`load()`, `cookieName()`) | alias the interface to your service (default: cookie store) |
+| `Listing\ListingPreferenceReaderInterface` (`load(key, ListingContext)`, `cookieName()`) | alias the interface to your service (default: cookie store) |
+| `Listing\ListingViewerResolverInterface::viewerId(): ?string` (optional) | alias the interface to your service |
 
 Implementations must be stateless between requests (FrankenPHP worker); a provider that caches per request implements
 `ResetInterface`.
@@ -3380,13 +3426,14 @@ To save, map the submitted `AppearanceType` data with `Appearance::fromArray($fo
 
 **Event:** `Dialog\RemoteDialogRedirectEvent` (dispatched for redirects answered to a remote-dialog request) lets an
 HTTP listener change the answer (`redirect` / `step` / null) or the same-origin path. It is a UI event, not a domain
-event.
+event. Read it through the scalar accessors (2.49); `getRequest()` / `getResponse()` are deprecated.
 
 **Known limitations**
 
 - `ListingPreferenceStoreInterface` is read-only: a server-side store exposes its own `save_url` endpoint and validates
   the payload with `ListingLayoutMerger::normalizeLayout()`.
-- The listing ports take the HttpFoundation `Request`: a per-user store resolves the viewer inside its adapter.
+- `ListingCustomizerViewBuilder::forRequest()` / `build()` and `ListingLayout::filterRequest()` still take a `Request`:
+  they are controller helpers (UI layer), not ports. `buildForContext()` is the request-free entry point.
 - Nothing stops entities from being passed as `Table` rows; keep to arrays or read models by convention.
 
 ## Feature bundles
