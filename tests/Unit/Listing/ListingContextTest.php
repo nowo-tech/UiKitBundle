@@ -80,4 +80,24 @@ final class ListingContextTest extends TestCase
         self::assertNull($context->viewerId);
         self::assertSame('en', $context->locale);
     }
+
+    /**
+     * Audit MR-U-L1: session, remember-me and other host cookies never reach a reader.
+     */
+    public function testFactoryCopiesOnlyListingCookies(): void
+    {
+        $request = new Request([], [], [], [
+            'PHPSESSID' => 'session-value',
+            'REMEMBERME' => 'remember-value',
+            'app_theme' => 'dark',
+            'nowo_ui_listing_invoices_index' => '{"mode":"scroll"}',
+            'nowo_ui_listing_other' => '{"mode":"responsive"}',
+            'xnowo_ui_listing_y' => 'not a prefix match',
+        ]);
+
+        self::assertSame(
+            ['nowo_ui_listing_invoices_index' => '{"mode":"scroll"}', 'nowo_ui_listing_other' => '{"mode":"responsive"}'],
+            ListingContextFactory::fromRequest($request)->cookies,
+        );
+    }
 }

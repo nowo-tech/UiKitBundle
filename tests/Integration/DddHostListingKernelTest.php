@@ -97,6 +97,9 @@ final class DddHostListingKernelTest extends TestCase
             self::assertInstanceOf(ListingCustomizerViewBuilder::class, $builder);
             $view = $builder->buildForContext(InvoiceListing::KEY, new ListingContext([], 'alice', null, ['project' => 'p1']));
             self::assertSame(['number', 'total'], $view->layout->visibleColumnKeys());
+            $anonymous = $builder->buildForContext(InvoiceListing::KEY, new ListingContext([], null, null, ['project' => 'p1']));
+            self::assertFalse($anonymous->layout->stored, 'unknown viewer: the definition defaults');
+            self::assertSame(['number', 'customer', 'total'], $anonymous->layout->visibleColumnKeys());
         } finally {
             $kernel->shutdown();
         }
@@ -117,6 +120,9 @@ final readonly class HostListingReader implements ListingPreferenceReaderInterfa
 
     public function load(string $listingKey, ListingContext $context): ?array
     {
+        if (null === $context->viewerId) {
+            return null; // fail closed: never a shared row for an unknown viewer (audit MR-U-L2)
+        }
         $project = $context->routeParameters['project'] ?? null;
         $columns = self::LAYOUTS[$context->viewerId.'|'.(\is_string($project) ? $project : '')] ?? null;
 

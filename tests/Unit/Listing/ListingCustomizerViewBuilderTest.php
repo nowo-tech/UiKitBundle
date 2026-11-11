@@ -15,7 +15,10 @@ use Nowo\UiKitBundle\Listing\ListingPreferenceStoreInterface;
 use Nowo\UiKitBundle\Listing\ListingRegistry;
 use Nowo\UiKitBundle\Listing\ListingTableMode;
 use Nowo\UiKitBundle\Listing\ListingViewerResolverInterface;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\AbstractLogger;
+use Stringable;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Translation\Loader\ArrayLoader;
 use Symfony\Component\Translation\Translator;
@@ -253,5 +256,54 @@ final class ListingCustomizerViewBuilderTest extends TestCase
         self::assertFalse($view->hasFilters());
         self::assertSame('nowo-ui-listing-audit-log', $view->dialogId());
         self::assertSame('nowo_ui_listing_audit_log', $view->cookieName);
+    }
+
+    /**
+     * @return iterable<string, array{bool, bool, bool, int}>
+     */
+    public static function viewerWarningCases(): iterable
+    {
+        // [debug, server-side reader, viewer resolver, expected warnings]
+        yield 'debug, server-side, no resolver' => [true, true, false, 1];
+        yield 'debug, server-side, resolver' => [true, true, true, 0];
+        yield 'no debug' => [false, true, false, 0];
+        yield 'cookie store' => [true, false, false, 0];
+    }
+
+    /**
+     * Audit MR-U-L2: in debug, a server-side reader without a viewer resolver is reported.
+     */
+    #[DataProvider('viewerWarningCases')]
+    public function testWarnsAboutAServerSideReaderWithoutViewer(bool $debug, bool $serverSide, bool $resolver, int $expected): void
+    {
+        $logger = new class extends AbstractLogger {
+            /** @var list<string> */
+            public array $warnings = [];
+
+            /**
+             * @param array<mixed> $context
+             */
+            public function log($level, string|Stringable $message, array $context = []): void
+            {
+                if ('warning' === $level) {
+                    $this->warnings[] = (string) $message;
+                }
+            }
+        };
+        $viewer = $resolver ? new class implements ListingViewerResolverInterface {
+            public function viewerId(): string
+            {
+                return 'u1';
+            }
+        } : null;
+        $reader = $serverSide ? new ServerListingReader() : null;
+        $builder = new ListingCustomizerViewBuilder(new ListingRegistry([new InvoiceListing()]), new CookieListingPreferenceStore(), null, $reader, $viewer, $logger, $debug);
+
+        $builder->build(InvoiceListing::KEY, $this->request());
+
+        self::assertCount($expected, $logger->warnings);
+        if (1 === $expected) {
+            self::assertStringContainsString('fail closed', $logger->warnings[0]);
+        }
     }
 }

@@ -190,13 +190,17 @@ Nowo\UiKitBundle\Listing\ListingViewerResolverInterface: '@App\Listing\CurrentUs
 ```
 
 A store that resolved the user from the security token inside `load()` can keep doing so through its own injected
-service; `viewerId` is a convenience. Without a request (a presenter, a console preview) call
+service; `viewerId` is a convenience. **Fail closed:** a per-viewer reader returns null when it has no viewer (null
+`viewerId` and no identity of its own), never a shared row. In debug, the builder logs a warning when a server-side
+reader runs without a viewer resolver. `$context->cookies` holds only the `nowo_ui_listing_*` cookies; a store that
+needs another cookie reads it through its own request-aware service. Without a request (a presenter, a console preview) call
 `ListingCustomizerViewBuilder::buildForContext($key, $context)`.
 
 **`RemoteDialogRedirectEvent` listeners.** Replace `$event->getRequest()->attributes->get('_route')` with
 `$event->getRequestRoute()`, `->get('_route_params')[…]` / route attributes with `$event->getRouteParameters()[…]`, and
 `$event->getResponse()->getTargetUrl()` with `$event->getRedirectTargetUrl()`. `getPath()`, `setPath()`,
-`getAnswer()` and `setAnswer()` are unchanged.
+`getAnswer()` and `setAnswer()` are unchanged. The two deprecated getters trigger an `E_USER_DEPRECATED` notice on
+each call (visible in the profiler / deprecation log, never an exception).
 
 **Named arguments.** `CookieListingPreferenceStore::load()`'s second parameter is now `$context`
 (`ListingContext|Request`); positional calls are unchanged.

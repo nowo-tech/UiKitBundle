@@ -482,6 +482,8 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
                 new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE),
                 new Reference(ListingPreferenceReaderInterface::class),
                 new Reference(ListingViewerResolverInterface::class, ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                new Reference('logger', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                $container->hasParameter('kernel.debug') ? '%kernel.debug%' : false,
             ]);
         $container->setAlias(ListingCustomizerViewBuilder::class, 'nowo_ui_kit.listing.view_builder');
     }

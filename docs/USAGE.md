@@ -1159,7 +1159,7 @@ Pieces:
 | `ListingLayout` | `visibleColumnGroups()` (stacked columns share a cell), `visibleColumnKeys()`, `visibleFilterKeys()`, `hiddenFilterKeys()`, `isColumnVisible()`, `filterRequest()`, `ignoredFilters()`, `withoutColumns()`, `stored`. |
 | `ListingLayoutMerger` | `merge()` (lenient: stored layouts survive added / removed fields), `normalize()` / `normalizeLayout()` (strict, for a host save endpoint). |
 | `ListingPreferenceReaderInterface` | 2.49 port: `load(key, ListingContext)`, `cookieName(key)`. Default `CookieListingPreferenceStore`. |
-| `ListingContext` | 2.49 framework-free VO: `cookies`, `viewerId`, `route`, `routeParameters`, `locale`. |
+| `ListingContext` | 2.49 framework-free VO: `cookies` (only `nowo_ui_listing_*`), `viewerId`, `route`, `routeParameters`, `locale`. |
 | `ListingViewerResolverInterface` | 2.49 optional SPI: `viewerId(): ?string`, copied into the context (no default). |
 | `ListingPreferenceStoreInterface` | Deprecated port (2.49, removed in 3.0): `load(key, Request)`, `cookieName(key)`. Still honoured. |
 | `ListingRegistry`, `ListingTableMode` | Definitions by key; `scroll` / `responsive`. |
@@ -1325,6 +1325,12 @@ Nowo\UiKitBundle\Listing\ListingViewerResolverInterface: '@App\Listing\CurrentUs
 `load(string $listingKey, ListingContext $context): ?array` returns `{columns, filters, mode}` (raw lists, merged
 leniently) for whatever scope the context implies (`$context->viewerId`, the project in `$context->routeParameters`…);
 `cookieName()` returns null. A host reader wins over the default cookie store.
+
+**Fail closed.** A per-viewer reader returns null when `$context->viewerId` is null (the definition defaults apply);
+it never serves a shared or "anonymous" row. Only scopes that do not depend on the viewer (a project default keyed by
+`routeParameters`) may answer without one. With `kernel.debug` on, the builder logs a warning when a server-side reader
+runs without a `ListingViewerResolverInterface`. `$context->cookies` holds only the `nowo_ui_listing_*` cookies: the
+kit never passes session or remember-me cookies to a reader.
 
 Before 2.49 the port was `ListingPreferenceStoreInterface::load(string $listingKey, Request $request)`. A host store
 that still implements (and aliases) only that interface keeps working unchanged: the builder passes it the request and
@@ -2436,7 +2442,8 @@ public function __invoke(RemoteDialogRedirectEvent $event): void
 
 The event exposes the request and the redirect as scalars (2.49): `getRequestPath()`, `getRequestRoute()`,
 `getRouteParameters()`, `getRedirectTargetUrl()`, `getRedirectStatusCode()`, plus `getPath()` / `getAnswer()`.
-`getRequest()` and `getResponse()` still work but are deprecated (removed in 3.0).
+`getRequest()` and `getResponse()` still work but are deprecated: each call triggers an `E_USER_DEPRECATED` notice
+(removed in 3.0).
 
 ### Header names (2.33)
 
@@ -3362,7 +3369,7 @@ Opt-in. No public port, event accessor or VO of the kit needs a Symfony componen
 
 - listings: implement `ListingPreferenceReaderInterface` (takes a `ListingContext` VO, not a `Request`) and, without
   an HTTP request (a presenter, a console preview), call `ListingCustomizerViewBuilder::buildForContext($key, new
-  ListingContext(cookies: …, viewerId: …))`;
+  ListingContext(cookies: …, viewerId: …))`; a per-viewer reader returns null for a null `viewerId` (fail closed);
 - remote-dialog redirects: read `RemoteDialogRedirectEvent::getRequestPath()`, `getRequestRoute()`,
   `getRouteParameters()`, `getRedirectTargetUrl()`, `getRedirectStatusCode()` (scalars) instead of the deprecated
   `getRequest()` / `getResponse()`.

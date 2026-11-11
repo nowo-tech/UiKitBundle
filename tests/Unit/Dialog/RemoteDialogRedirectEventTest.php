@@ -45,4 +45,31 @@ final class RemoteDialogRedirectEventTest extends TestCase
         self::assertSame('/x', $event->getRequestPath());
         self::assertSame(302, $event->getRedirectStatusCode());
     }
+
+    /**
+     * Audit MR-U-I1: the HTTP getters still work and trigger a runtime deprecation.
+     */
+    public function testHttpGettersTriggerADeprecation(): void
+    {
+        $request = Request::create('/x');
+        $response = new RedirectResponse('/y');
+        $event = new RemoteDialogRedirectEvent($request, $response, '/y', null);
+        $deprecations = [];
+        set_error_handler(static function (int $type, string $message) use (&$deprecations): bool {
+            $deprecations[] = $message;
+
+            return true;
+        }, \E_USER_DEPRECATED);
+        try {
+            self::assertSame($request, $event->getRequest());
+            self::assertSame($response, $event->getResponse());
+        } finally {
+            restore_error_handler();
+        }
+
+        self::assertCount(2, $deprecations);
+        self::assertStringContainsString('Since nowo-tech/ui-kit-bundle 2.49', $deprecations[0]);
+        self::assertStringContainsString('getRequest()', $deprecations[0]);
+        self::assertStringContainsString('getResponse()', $deprecations[1]);
+    }
 }

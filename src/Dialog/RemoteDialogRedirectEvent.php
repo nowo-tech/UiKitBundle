@@ -48,6 +48,8 @@ final class RemoteDialogRedirectEvent extends Event
      */
     public function getRequest(): Request
     {
+        @trigger_error(\sprintf('Since nowo-tech/ui-kit-bundle 2.49: %s() is deprecated, use getRequestPath(), getRequestRoute() or getRouteParameters() (removed in 3.0).', __METHOD__), \E_USER_DEPRECATED);
+
         return $this->request;
     }
 
@@ -56,6 +58,8 @@ final class RemoteDialogRedirectEvent extends Event
      */
     public function getResponse(): RedirectResponse
     {
+        @trigger_error(\sprintf('Since nowo-tech/ui-kit-bundle 2.49: %s() is deprecated, use getRedirectTargetUrl() or getRedirectStatusCode() (removed in 3.0).', __METHOD__), \E_USER_DEPRECATED);
+
         return $this->response;
     }
 

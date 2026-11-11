@@ -143,11 +143,22 @@ Target **2.49.0** (minor; REQ-ARCH-001 rule 3, B2). No markup, CSS, JS or templa
   alternation, flat memory.
 - `docs/USAGE.md`: "Standard host" and "DDD host" sections.
 
+- Reader contract (audit MR-U-L2): a per-viewer `ListingPreferenceReaderInterface` returns null for a null `viewerId`
+  (fail closed). With `kernel.debug` on, the builder logs a warning (`logger` service) when a server-side reader
+  (`cookieName()` null) runs without a `ListingViewerResolverInterface`.
+
+### Security
+
+- `ListingContext::$cookies`, built from the request, holds only the `nowo_ui_listing_*` cookies (audit MR-U-L1):
+  session, remember-me and other host cookies are never handed to a reader.
+
 ### Deprecated
 
 - `Listing\ListingPreferenceStoreInterface` (`load(string, Request)`): implement `ListingPreferenceReaderInterface`.
-  A legacy-only host store still works and triggers one `E_USER_DEPRECATED` notice. Removed in 3.0.
-- `RemoteDialogRedirectEvent::getRequest()` / `getResponse()`: use the scalar accessors. Removed in 3.0.
+  A legacy-only host store still works and triggers one `E_USER_DEPRECATED` notice when the builder is built. Removed
+  in 3.0.
+- `RemoteDialogRedirectEvent::getRequest()` / `getResponse()`: use the scalar accessors. Each call triggers an
+  `E_USER_DEPRECATED` notice (audit MR-U-I1). Removed in 3.0.
 
 ## [2.48.1] - 2026-11-11
 

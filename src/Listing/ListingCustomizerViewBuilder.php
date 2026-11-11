@@ -7,6 +7,7 @@ namespace Nowo\UiKitBundle\Listing;
 use LogicException;
 use Nowo\UiKitBundle\Listing\Http\ListingContextFactory;
 use Nowo\UiKitBundle\View\Label;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\Translation\TranslatorInterface;
 
@@ -32,6 +33,7 @@ final readonly class ListingCustomizerViewBuilder
      * @param ListingPreferenceReaderInterface|ListingPreferenceStoreInterface $store  a legacy-only store is deprecated since 2.49
      * @param ListingPreferenceReaderInterface|null                            $reader the host reader port (2.49)
      * @param ListingViewerResolverInterface|null                              $viewer fills {@see ListingContext::$viewerId} (2.49)
+     * @param bool                                                             $debug  `kernel.debug`: warn about a server-side reader without a viewer resolver (2.49)
      */
     public function __construct(
         private ListingRegistry $registry,
@@ -39,6 +41,8 @@ final readonly class ListingCustomizerViewBuilder
         private ?TranslatorInterface $translator = null,
         ?ListingPreferenceReaderInterface $reader = null,
         private ?ListingViewerResolverInterface $viewer = null,
+        private ?LoggerInterface $logger = null,
+        private bool $debug = false,
     ) {
         if ($reader instanceof ListingPreferenceReaderInterface && !$reader instanceof CookieListingPreferenceStore) {
             $this->effectiveReader = $reader;
@@ -69,7 +73,16 @@ final readonly class ListingCustomizerViewBuilder
     public function build(string $listingKey, Request $request): ListingCustomizerView
     {
         if ($this->effectiveReader instanceof ListingPreferenceReaderInterface) {
-            return $this->buildFromStored($listingKey, $this->effectiveReader->load($listingKey, ListingContextFactory::fromRequest($request, $this->viewer?->viewerId())), $this->effectiveReader->cookieName($listingKey));
+            $cookieName = $this->effectiveReader->cookieName($listingKey);
+            if (null === $cookieName && !$this->viewer instanceof ListingViewerResolverInterface && $this->debug) {
+                $this->logger?->warning('nowo_ui_kit listing "{listing}": the server-side preference reader {reader} runs without a {resolver}, so ListingContext::$viewerId is null; a per-viewer reader must return null then (fail closed).', [
+                    'listing' => $listingKey,
+                    'reader' => $this->effectiveReader::class,
+                    'resolver' => ListingViewerResolverInterface::class,
+                ]);
+            }
+
+            return $this->buildFromStored($listingKey, $this->effectiveReader->load($listingKey, ListingContextFactory::fromRequest($request, $this->viewer?->viewerId())), $cookieName);
         }
         $store = $this->store;
         \assert($store instanceof ListingPreferenceStoreInterface);

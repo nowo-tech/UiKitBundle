@@ -38,6 +38,13 @@ final class ListingDependencyInjectionTest extends TestCase
         self::assertSame(ListingPreferenceStoreInterface::class, (string) $arguments[1]);
         self::assertSame(ListingPreferenceReaderInterface::class, (string) $arguments[3]);
         self::assertSame(ListingViewerResolverInterface::class, (string) $arguments[4]);
+        self::assertSame('logger', (string) $arguments[5]);
+        self::assertFalse($arguments[6], 'no kernel.debug parameter: no warning');
+
+        $debugContainer = new ContainerBuilder();
+        $debugContainer->setParameter('kernel.debug', true);
+        (new NowoUiKitExtension())->load([[]], $debugContainer);
+        self::assertSame('%kernel.debug%', $debugContainer->getDefinition('nowo_ui_kit.listing.view_builder')->getArgument(6));
         self::assertSame('nowo_ui_kit.listing.view_builder', (string) $container->getAlias(ListingCustomizerViewBuilder::class));
         self::assertArrayHasKey(ListingDefinitionInterface::class, $container->getAutoconfiguredInstanceof());
         self::assertTrue($container->getAutoconfiguredInstanceof()[ListingDefinitionInterface::class]->hasTag(ListingDefinitionInterface::TAG));

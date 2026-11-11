@@ -8,7 +8,8 @@ namespace Nowo\UiKitBundle\Listing;
  * 2.49 (REQ-ARCH-001 rule 3): framework-free context of one listing page view, the input of
  * {@see ListingPreferenceReaderInterface::load()}.
  *
- *  - `cookies`: the request cookies (name => value, strings only), so a browser-side store such as the default
+ *  - `cookies`: the listing cookies of the request (name => value, strings only; the kit copies only
+ *    `nowo_ui_listing_*` names, never session or remember-me cookies), so a browser-side store such as the default
  *    {@see CookieListingPreferenceStore} needs no HttpFoundation `Request`;
  *  - `viewerId`: an opaque id of the viewer (user identifier, user id…) for per-user stores, null when unknown;
  *    filled from {@see ListingViewerResolverInterface} when the host provides one, or by a DDD host that builds the

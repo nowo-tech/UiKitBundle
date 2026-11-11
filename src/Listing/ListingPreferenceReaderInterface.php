@@ -14,14 +14,21 @@ namespace Nowo\UiKitBundle\Listing;
  * {@see ListingCustomizerViewBuilder} then uses it (it wins over a re-aliased legacy store). The viewer is
  * {@see ListingContext::$viewerId} (from {@see ListingViewerResolverInterface}) or the store's own identity port.
  *
+ * **Fail closed on an unknown viewer (audit MR-U-L2).** A reader that stores layouts per viewer (`cookieName()` null)
+ * returns null when {@see ListingContext::$viewerId} is null, so the definition defaults apply; it never falls back to a
+ * shared or "anonymous" row. Only scopes that do not depend on the viewer (a project default keyed by
+ * `routeParameters`) may be served without one. With `kernel.debug` on, the builder logs a warning when a server-side
+ * reader runs without a {@see ListingViewerResolverInterface}.
+ *
  * Implementations must be stateless between requests (FrankenPHP worker, kernel reset false): read from `$context`
  * only.
  */
 interface ListingPreferenceReaderInterface
 {
     /**
-     * Stored preferences of a listing for the viewer of `$context`, null when there are none. Values are raw: the
-     * builder merges them leniently with the definition ({@see ListingLayoutMerger::merge()}).
+     * Stored preferences of a listing for the viewer of `$context`, null when there are none, and null for a per-viewer
+     * store when `$context->viewerId` is null. Values are raw: the builder merges them leniently with the definition
+     * ({@see ListingLayoutMerger::merge()}).
      *
      * @return array{columns: array<mixed>|null, filters: array<mixed>|null, mode: string|null}|null
      */
