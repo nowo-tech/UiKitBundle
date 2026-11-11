@@ -124,6 +124,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Error illustration provider** (`nowo_ui_kit.error_pages.illustration_provider`): an optional host service
+  implementing `View\ErrorIllustrationProviderInterface` returns the illustration of each status code
+  (`ErrorIllustration::fromUrl(src, width, height, webpSrcset, srcset, sizes)`) or null for the configured
+  `illustrations` map. A null answer, any `Throwable` or an invalid illustration falls back to the map (code, then
+  `default`), logging one warning per failed or slow call. The provider is injected lazily (a service closure resolved
+  inside the guard), so a provider whose constructor or dependency throws (database down) never breaks Twig or the
+  error page. Optional guard `error_pages.illustration_provider_budget_ms`: a call over
+  budget makes the rest of the same request skip the provider (flag on the Request, nothing kept across requests;
+  FrankenPHP worker safe, N-request `http_kernel` test without the resetter). Provided illustrations render
+  `<picture>` with an optional WebP `<source srcset sizes>` and `<img src srcset sizes>`; URLs are validated
+  (http(s), protocol-relative or path; no other scheme) and escaped, never passed through `asset()`. Without a
+  provider the page is byte-identical to 2.46.0. A missing provider service or one that does not implement the
+  interface fails the container build (`ErrorIllustrationProviderPass`).
+- `View\ErrorIllustration` gains optional `src`, `srcset`, `sizes`, `webpSrcset` (URL mode), `fromUrl()` and
+  `isUrl()`; the asset path mode is unchanged.
 - **Image input** (FileType option `nowo_ui_image_input`, `Form\ImageInputTypeExtension`, form theme
   `form/nowo_ui_image_input.html.twig`, partial `image_input`, `js/nowo-ui-image-input.js` opt-in `image-input`): the
   field's own box shows the stored image (`current_url`, a URL or a closure on the field) or the default (`default_url`,
@@ -134,6 +149,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `alt` from the field label, checkerboard / light / dark backdrop. No-JS: the plain file input, the current image and the
   remove checkbox. CSP-safe (needs `img-src blob:`, as the crop step). 9 theme slots, 4 tokens, 11 labels in 7 locales.
   Opt-in: a FileType without the option renders exactly as before. Worker safe (nothing kept between requests).
+
+### Documentation
+
+- [ROADMAP.md](ROADMAP.md): new section "Ideas from an admin-template review (2026-11)" with prioritised gaps (RTL readiness, a top navigation layout, alert and tooltip partials, statistic cards with trends, bulk selection, an activity timeline, avatar groups and table extras), and ideas routed to other bundles.
 
 ## [2.46.0] - 2026-11-10
 

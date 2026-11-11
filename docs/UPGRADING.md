@@ -146,7 +146,24 @@ From **2.46.x**:
 composer update nowo-tech/ui-kit-bundle
 ```
 
-Nothing to change: a FileType renders exactly as before unless it sets the new option `nowo_ui_image_input`.
+Nothing to change: without `error_pages.illustration_provider` the error pages are byte-identical, and a FileType
+renders exactly as before unless it sets the new option `nowo_ui_image_input`.
+
+Optional — per-brand error illustrations: implement `Nowo\UiKitBundle\View\ErrorIllustrationProviderInterface`
+(return `ErrorIllustration::fromUrl(...)` or null) and set
+
+```yaml
+nowo_ui_kit:
+    error_pages:
+        illustration_provider: App\Ui\BrandErrorIllustrations
+        illustration_provider_budget_ms: 20   # optional: a slower call skips the provider for the rest of the request
+```
+
+The provider must be fast and must not need the database (error pages render while it is down); any exception falls
+back to `error_pages.illustrations`. Allow the image host in your CSP `img-src` when it is not `'self'`. A host that
+overrides the `error_illustration` block keeps its markup; read `error.illustration.isUrl()` / `.src` / `.srcset` /
+`.sizes` / `.webpSrcset` to support provided illustrations. See
+[USAGE.md](USAGE.md#error-illustration-provider-247).
 
 Optional — image input box (stored image or default, instant local preview, Replace / Remove / Undo):
 

@@ -13,7 +13,8 @@
 
   Blocks (per-code templates error404.html.twig… may extend this one and override them):
     - title: <title> ("404 — Page not found")
-    - error_illustration: the <picture> (WebP <source> + PNG <img>, width / height) of error_pages.illustrations
+    - error_illustration: the <picture> (WebP <source> + PNG <img>, width / height) of error_pages.illustrations, or
+      (2.47) of error_pages.illustration_provider (ready URLs, optional srcset / sizes / WebP srcset)
     - error_title / error_lead / error_hint: the texts (an empty hint renders no paragraph)
     - error_actions: the action row content (home, retry, back, then error_extra_actions); {{ parent() }} keeps them
     - error_extra_actions: more buttons at the end of the row ("Report this problem"…) — empty
@@ -31,13 +32,23 @@
 {% block nowo_ui_error_content %}
     <div class="{{ nowo_ui_class('error_card') }}"{{ nowo_ui_attrs('error_card') }} data-nowo-ui-region="error">
         {% block error_illustration %}
-            {% if error.illustration %}
+            {% if error.illustration and not error.illustration.isUrl() %}
                 <figure class="{{ nowo_ui_class('error_figure') }}"{{ nowo_ui_attrs('error_figure') }}>
                     <picture>
                         {% if error.illustration.webp %}
                             <source type="image/webp" srcset="{{ asset(error.illustration.webpSrc()) }}">
                         {% endif %}
                         <img class="{{ nowo_ui_class('error_image') }}"{{ nowo_ui_attrs('error_image') }} src="{{ asset(error.illustration.fallbackSrc()) }}" width="{{ error.illustration.width }}" height="{{ error.illustration.height }}" alt="{{ nowo_ui_error_text('image_alt', error_code) }}" decoding="async" fetchpriority="high">
+                    </picture>
+                </figure>
+            {% elseif error.illustration %}
+                {# 2.47: provider illustration — ready URLs (validated by ErrorIllustration, escaped here), never asset() #}
+                <figure class="{{ nowo_ui_class('error_figure') }}"{{ nowo_ui_attrs('error_figure') }}>
+                    <picture>
+                        {% if error.illustration.webpSrcset %}
+                            <source type="image/webp" srcset="{{ error.illustration.webpSrcset }}"{% if error.illustration.sizes %} sizes="{{ error.illustration.sizes }}"{% endif %}>
+                        {% endif %}
+                        <img class="{{ nowo_ui_class('error_image') }}"{{ nowo_ui_attrs('error_image') }} src="{{ error.illustration.src }}"{% if error.illustration.srcset %} srcset="{{ error.illustration.srcset }}"{% endif %}{% if error.illustration.sizes %} sizes="{{ error.illustration.sizes }}"{% endif %} width="{{ error.illustration.width }}" height="{{ error.illustration.height }}" alt="{{ nowo_ui_error_text('image_alt', error_code) }}" decoding="async" fetchpriority="high">
                     </picture>
                 </figure>
             {% endif %}

@@ -366,6 +366,8 @@ nowo_ui_kit:
             503: { path: illustrations/error-503, width: 1536, height: 1024, webp: false, extension: png }
         illustration_width: 1024
         illustration_height: 683
+        illustration_provider: null                            # 2.47: service id (ErrorIllustrationProviderInterface)
+        illustration_provider_budget_ms: 0                     # 2.47: > 0 = skip a slow provider for the rest of the request
         webp: true
         retry_statuses: [408]                                  # + every 5xx: "Try again" on GET
         back_link_statuses: [404]                              # "Go back" for a same-site referer
@@ -383,6 +385,8 @@ nowo_ui_kit:
 | `home_path` | `/` | Href of "Back to home" |
 | `illustrations` | `{}` | Code (400–599) or `default` → path string or `{path, width, height, webp, extension}` |
 | `illustration_width` / `illustration_height` | `1024` / `683` | Default intrinsic size of the `<img>` |
+| `illustration_provider` | `null` | 2.47: service id implementing `Nowo\UiKitBundle\View\ErrorIllustrationProviderInterface`, asked first per code. Null answer, any exception or an invalid `ErrorIllustration` → the `illustrations` map (code, then `default`), then none. The container build fails when the service is missing or does not implement the interface. See [USAGE.md](USAGE.md#error-illustration-provider-247) |
+| `illustration_provider_budget_ms` | `0` | 2.47: when > 0, one provider call slower than this makes the rest of the **same request** skip the provider (one warning logged; the slow answer is still used). Never carried to the next request. 0 = no budget |
 | `webp` | `true` | Print the `<source type="image/webp">` (`<path>.webp`) |
 | `retry_statuses` | `[408]` | Statuses besides 5xx with "Try again" (GET only) |
 | `back_link_statuses` | `[404]` | Statuses with "Go back" (same-site referer only) |
