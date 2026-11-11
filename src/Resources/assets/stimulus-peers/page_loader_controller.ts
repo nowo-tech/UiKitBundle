@@ -6,6 +6,10 @@
  *
  * Identifier: `page-loader`
  * Overlay: target `overlay` or `[data-nowo-ui-page-loader]`
+ *
+ * Link interception listens in the capture phase but decides only after the click has been dispatched to every
+ * handler (in the `linkDelay` timeout): a click a later handler cancels (`preventDefault()`, e.g. a toggle on an
+ * `<a>`) never shows the overlay. Opt a link out with `data-no-page-loader` (or `data-no-page-loader="true"`).
  */
 
 import { Controller } from '@hotwired/stimulus';
@@ -81,6 +85,7 @@ export default class extends Controller {
       return;
     }
     if (
+      anchor.dataset.noPageLoader === '' ||
       anchor.dataset.noPageLoader === 'true' ||
       anchor.target === '_blank' ||
       anchor.hasAttribute('download')
@@ -107,12 +112,16 @@ export default class extends Controller {
       return;
     }
 
-    this.navigating = true;
+    // Capture phase: the target's own handlers (and the document's bubble handlers) have not run yet. A timeout
+    // always fires after the whole dispatch, so `defaultPrevented` is final there (a microtask is not: for a real
+    // click it runs between listeners).
     window.setTimeout(() => {
-      if (this.navigating) {
-        this.show();
-        this.armSafetyHide();
+      if (event.defaultPrevented) {
+        return;
       }
+      this.navigating = true;
+      this.show();
+      this.armSafetyHide();
     }, Math.max(0, this.linkDelayValue));
   };
 

@@ -221,7 +221,7 @@ timing that matches the visual (`min_visible_ms` / `leave_ms` to override).
 
 Script: `js/nowo-ui-page-loader.js` → `nowoUiShowPageLoader` / `nowoUiHidePageLoader`. With `visual: orb`, also load `js/nowo-ui-orb.js`.
 
-Stimulus peer: identifier `page-loader` (`page_loader_controller.ts`) — min-visible timing, same-origin link interception, leave animation. Resolves `[data-nowo-ui-page-loader]` when no `overlay` target. The leave (`.is-leaving`) ends on the overlay's own `opacity` `transitionend` (children may use transitions freely) or after `leave-ms` + 80 ms.
+Stimulus peer: identifier `page-loader` (`page_loader_controller.ts`) — min-visible timing, same-origin link interception, leave animation. Link clicks are decided after dispatch (in the `link-delay` timeout): a click any handler cancels with `preventDefault()` never shows the overlay (since 2.48.1); opt a link out with `data-no-page-loader` (bare or `="true"`). Resolves `[data-nowo-ui-page-loader]` when no `overlay` target. The leave (`.is-leaving`) ends on the overlay's own `opacity` `transitionend` (children may use transitions freely) or after `leave-ms` + 80 ms.
 
 ## Release status
 

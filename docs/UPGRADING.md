@@ -140,6 +140,11 @@
 
 ## Unreleased
 
+Target **2.48.1** (patch). Nothing to change. If you worked around the `page-loader` peer showing its overlay on
+cancelled link clicks (e.g. by adding `data-no-page-loader` to toggle links), you can drop the workaround: a click
+any handler cancels with `preventDefault()` no longer shows the overlay. `data-no-page-loader` now also works as a bare
+attribute.
+
 ## To 2.48.0
 
 From **2.47.0**:

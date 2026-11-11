@@ -124,6 +124,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Target **2.48.1** (patch; Beacon report 2026-11-11 after adopting 2.48.0).
+
+### Fixed
+
+- **`page-loader` peer: a cancelled link click no longer shows the overlay.** The peer intercepts link clicks in the
+  capture phase, before the link's own handlers run, so it showed the "Loading…" overlay even when a toggle handler on
+  the `<a>` then called `preventDefault()` (the page never navigated and the overlay stayed until the 8 s safety hide).
+  The decision now happens in the `link-delay` timeout, after the click has reached every handler: when
+  `event.defaultPrevented` is set by then, nothing is shown. Uncancelled same-origin links behave as before.
+- `data-no-page-loader` also opts a link out when written as a bare attribute (`<a data-no-page-loader>`); the
+  `data-no-page-loader="true"` form keeps working.
+
+### Tests
+
+- `page_loader_controller.test.ts`: link interception — a click cancelled by the link's own handler or by a later
+  document handler shows nothing, an uncancelled same-origin click shows the overlay, and both `data-no-page-loader`
+  forms opt out.
+
 ## [2.48.0] - 2026-11-11
 
 Wiki page view layout (Beacon 1.149): side panel drawer breakpoint and remembered state, a collapsible column rail,
