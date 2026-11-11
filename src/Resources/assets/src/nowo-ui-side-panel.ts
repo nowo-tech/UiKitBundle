@@ -25,6 +25,10 @@
  * - `window.NowoUiSidePanel`: open / close / toggle / isOpen / setCount (badge; never announced; 0 hides the badge
  *   and its suffix, so the toggle's name is just its label).
  * - Delegated listeners, no inline handlers or style attributes (strict CSP).
+ * - 2.48: `data-drawer-below="md|lg|xl"` moves the drawer breakpoint (767 / 1199 / 1439 px; the mode follows the media
+ *   queries). `data-nowo-ui-side-panel-persist="<key>"` (only when the host has no store of its own) remembers the
+ *   inline open / closed state in localStorage and applies it on start (before the first paint with
+ *   js/nowo-ui-layout-state.js in <head>); see nowo-ui-layout-state-core.ts.
  */
 
 export const PANEL = '[data-nowo-ui-side-panel]';
@@ -34,14 +38,17 @@ export const BACKDROP = '[data-nowo-ui-side-panel-backdrop]';
 export const STATUS = '[data-nowo-ui-side-panel-status]';
 export const CONTAINER = '[data-nowo-ui-side-panel-container]';
 export const MAIN = '[data-nowo-ui-side-panel-main]';
-/** Viewports where an inline panel becomes an overlay drawer. */
+/** Viewports where an inline panel becomes an overlay drawer (the default `md`; 2.48: per panel, `data-drawer-below`). */
 export const DRAWER_QUERY = '(max-width: 767px)';
 
 export type SidePanelSource = 'toggle' | 'close' | 'escape' | 'backdrop' | 'shortcut' | 'api';
 export type OpenOptions = { focus?: HTMLElement | string | false; source?: SidePanelSource; opener?: HTMLElement | null };
-export type Shortcut = { ctrl: boolean; alt: boolean; shift: boolean; meta: boolean; key: string };
 
 import { overlayRegistry, type OverlayHandle } from './nowo-ui-overlay';
+import { applyStoredPanel, DRAWER_QUERIES, panelIsDrawer, PANEL_PERSIST_ATTR, rememberPanel } from './nowo-ui-layout-state-core';
+import { matchesShortcut, parseShortcut } from './nowo-ui-shortcut-core';
+
+export { matchesShortcut, parseShortcut, type Shortcut } from './nowo-ui-shortcut-core';
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
@@ -94,9 +101,17 @@ export function isOpen(panel: HTMLElement): boolean {
   return !panel.hidden;
 }
 
-/** Whether the panel shows as an overlay drawer now (layout overlay, or a phone-sized viewport). */
+/**
+ * Whether the panel shows as an overlay drawer now: layout overlay, or a viewport at or under its breakpoint
+ * (`data-drawer-below` md = 767 px, the default; 2.48: lg = 1199 px, xl = 1439 px).
+ */
 export function isDrawer(panel: HTMLElement): boolean {
-  return panel.dataset.layout === 'overlay' || (typeof window.matchMedia === 'function' && window.matchMedia(DRAWER_QUERY).matches);
+  return panelIsDrawer(panel);
+}
+
+/** 2.48: remembers the state (persist key only) while the panel is an inline column; a drawer state is never kept. */
+function remember(panel: HTMLElement, open: boolean): void {
+  if (panel.hasAttribute(PANEL_PERSIST_ATTR) && !isDrawer(panel)) rememberPanel(panel, open);
 }
 
 /** Says `text` in the panel's polite status region (a repeated text is changed so it is announced again). */
@@ -186,6 +201,7 @@ export function openPanel(panel: HTMLElement, options: OpenOptions = {}): boolea
   if (options.opener) openers.set(panel, options.opener);
   else openers.delete(panel);
   applyMode(panel);
+  remember(panel, true);
   target?.focus();
   announce(panel, panel.getAttribute('data-nowo-ui-side-panel-opened') ?? '');
   emit(panel, 'nowo-ui:side-panel:open', options.source ?? 'api');
@@ -200,6 +216,7 @@ export function closePanel(panel: HTMLElement, source: SidePanelSource = 'api'):
   panel.hidden = true;
   setExpanded(panel, false);
   applyMode(panel);
+  remember(panel, false);
   if (hadFocus) (openers.get(panel) ?? togglesOf(panel)[0])?.focus();
   announce(panel, panel.getAttribute('data-nowo-ui-side-panel-closed') ?? '');
   emit(panel, 'nowo-ui:side-panel:close', source);
@@ -230,23 +247,6 @@ export function setCount(panel: HTMLElement, count: number, suffix?: string): vo
       tail.hidden = !has;
     }
   });
-}
-
-/** Parses `Alt+Shift+C` (modifiers Control / Ctrl, Alt, Shift, Meta; the last part is the key). */
-export function parseShortcut(value: string | null | undefined): Shortcut | null {
-  const parts = (value ?? '').split('+').map((part) => part.trim()).filter((part) => part !== '');
-  const key = parts.pop();
-  if (!key) return null;
-  const mods = parts.map((part) => part.toLowerCase());
-  return { ctrl: mods.includes('control') || mods.includes('ctrl'), alt: mods.includes('alt'), shift: mods.includes('shift'), meta: mods.includes('meta'), key: key.toLowerCase() };
-}
-
-/** Whether a key event is the shortcut (letters and digits by physical key, so Alt / Option layouts still match). */
-export function matchesShortcut(event: KeyboardEvent, shortcut: Shortcut): boolean {
-  if (event.ctrlKey !== shortcut.ctrl || event.altKey !== shortcut.alt || event.shiftKey !== shortcut.shift || event.metaKey !== shortcut.meta) return false;
-  if (/^[a-z]$/.test(shortcut.key)) return event.code === `Key${shortcut.key.toUpperCase()}` || event.key.toLowerCase() === shortcut.key;
-  if (/^[0-9]$/.test(shortcut.key)) return event.code === `Digit${shortcut.key}` || event.key === shortcut.key;
-  return event.key.toLowerCase() === shortcut.key;
 }
 
 const isTyping = (el: Element | null): boolean =>
@@ -360,11 +360,28 @@ export const api = {
 
 let bound = false;
 
-/** Marks the panels driven by this script and applies the drawer mode to those rendered open. */
+/**
+ * Marks the panels driven by this script and applies the drawer mode to those rendered open. 2.48: a panel with a
+ * persist key first takes its remembered state (when js/nowo-ui-layout-state.js did not already apply it before the
+ * first paint), and its toggles follow.
+ */
 export function markSidePanelsReady(root: ParentNode = document): void {
   root.querySelectorAll<HTMLElement>(PANEL).forEach((panel) => {
     panel.setAttribute('data-nowo-ui-side-panel-ready', '');
+    if (panel.hasAttribute(PANEL_PERSIST_ATTR)) {
+      applyStoredPanel(panel);
+      setExpanded(panel, isOpen(panel));
+    }
     applyMode(panel);
+  });
+}
+
+/** 2.48: the drawer mode also follows each breakpoint's media query (not only `resize`). */
+function watchBreakpoints(): void {
+  if (typeof window.matchMedia !== 'function') return;
+  Object.values(DRAWER_QUERIES).forEach((query) => {
+    const list = window.matchMedia(query);
+    if (list && typeof list.addEventListener === 'function') list.addEventListener('change', onResize);
   });
 }
 
@@ -377,6 +394,7 @@ export function bindNowoUiSidePanel(): void {
   document.addEventListener('click', onClick);
   document.addEventListener('keydown', onKeydown);
   window.addEventListener('resize', onResize);
+  watchBreakpoints();
   document.addEventListener('nowo:overlay-close', onOverlayClose);
 }
 

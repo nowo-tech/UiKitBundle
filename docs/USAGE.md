@@ -49,6 +49,9 @@
   - [Avatars (2.26)](#avatars-226)
 - [Sidebar rail (opt-in)](#sidebar-rail-opt-in)
 - [Side panel and drawer (2.25)](#side-panel-and-drawer-225)
+  - [Drawer breakpoint and remembered state (2.48)](#drawer-breakpoint-and-remembered-state-248)
+- [Collapsible column rail (2.48)](#collapsible-column-rail-248)
+- [Reading column and wide content (2.48)](#reading-column-and-wide-content-248)
 - [Remote form dialog (2.28)](#remote-form-dialog-228)
 - [Small element options (2.34)](#small-element-options-234)
 - [Focusable scroll regions (2.28)](#focusable-scroll-regions-228)
@@ -67,6 +70,7 @@
 - [Menu semantics (2.28)](#menu-semantics-228)
 - [Compact header (2.27)](#compact-header-227)
   - [Page header variants (2.39)](#page-header-variants-239)
+  - [Tabs and actions on one row (2.48)](#tabs-and-actions-on-one-row-248)
 - [Overriding templates (REQ-TWIG-001)](#overriding-templates-req-twig-001)
 - [Override vs upgrade](#override-vs-upgrade)
 - [Overridable `<subpath>` values](#overridable-subpath-values)
@@ -2155,6 +2159,122 @@ page (it is not in the default `scripts` list).
 
 Demo: `/kit/side-panel` in `demo/symfony8`.
 
+<a id="drawer-breakpoint-and-remembered-state-248"></a>
+
+### Drawer breakpoint and remembered state (2.48)
+
+**Breakpoint.** A page with another column (a tree, a filter column) squeezes the content long before 767 px.
+`drawer_below: 'lg'` docks the panel only from 1200 px (a drawer at ≤ 1199 px), `'xl'` from 1440 px (≤ 1439 px); `md`
+(the default) and any other value keep the 2.25 markup. Pass the same value to the container so the columns stack at
+the same width (browsers with `:has()` follow the panel without it). The script reads the panel's
+`data-drawer-below` and switches between column and drawer when that media query changes (inert, backdrop, overlay
+registration and the Tab cycle follow).
+
+```twig
+{% embed '@NowoUiKitBundle/partials/_side_panel_container.html.twig' with {drawer_below: 'lg'} %}
+    {% block nowo_ui_side_panel_main %}…{% endblock %}
+    {% block nowo_ui_side_panel_panel %}
+        {{ include('@NowoUiKitBundle/partials/_side_panel.html.twig', {id: 'comments', title: 'Comments', open: open, drawer_below: 'lg',
+            persist: has_store ? null : 'wiki-comments'}) }}
+    {% endblock %}
+{% endembed %}
+```
+
+**Remembered state.** The host store stays primary: keep the open state per user on the server (from the
+`nowo-ui:side-panel:open` / `close` events) and render `open` from it — no JavaScript, no flash. Only when there is no
+store (no session, a stateless firewall) pass `persist: '<key>'` (1–64 of `A-Z a-z 0-9 _ . : -`): the script then keeps
+the state in `localStorage` (`nowo-ui-panel:<key>` = `open` | `closed`) and applies it on start. Rules:
+
+- Only the inline (column) state is written; opening or closing the drawer on a phone never changes it, and a stored
+  `open` never opens a drawer on load.
+- Storage errors (private mode, blocked site data, quota) are ignored: the server state stays.
+- `<html data-nowo-ui-panel-<key>="open|closed">` mirrors the applied state for host CSS (key lower-cased, other
+  characters as `-`).
+
+**No flash before the first paint (CSP-safe, no inline script).** The deferred `nowo-ui-side-panel.js` applies the
+remembered state when it starts, which can show the server state for one frame. To avoid it, load the small
+`js/nowo-ui-layout-state.js` (~2 KB) as a blocking external script in `<head>`:
+
+```twig
+<script src="{{ asset('js/nowo-ui-layout-state.js', 'nowo_ui_kit') }}"></script>  {# add your nonce when script-src uses nonces #}
+```
+
+It watches the parser (one `MutationObserver`, disconnected at `DOMContentLoaded`) and sets each persisted panel's
+`hidden` (and each persisted rail's state) as soon as the element is parsed: a mutation callback runs at the end of the
+parser task, before the browser can paint it. Trade-offs:
+
+| Strategy | Flash | Cost |
+| --- | --- | --- |
+| Host store, server-rendered `open` (recommended) | none | a request to save the state |
+| `persist` + `nowo-ui-layout-state.js` blocking in `<head>` | none | one small blocking request (cacheable), a parser observer until `DOMContentLoaded` |
+| `persist` + only the deferred scripts (or the layout-state script with `defer`) | possible, one frame | none |
+
+The script holds no state beyond the page (worker-safe on the server side: nothing is stored per request). It is not in
+the `scripts` list because that list is printed `defer`.
+
+## Collapsible column rail (2.48)
+
+Collapse an in-page column — a page tree, a filter column — to a thin rail with an expand button. The column is the
+host element (your markup); the `rail_toggle` partial is its button; what disappears carries `data-nowo-ui-rail-body`.
+
+```twig
+<aside id="tree" data-nowo-ui-rail-host data-nowo-ui-rail="{{ collapsed ? 'collapsed' : 'expanded' }}">
+    <div class="tree-header">
+        <h2 data-nowo-ui-rail-body>Pages</h2>
+        {{ include(nowo_ui_partial('rail_toggle'), {
+            target: 'tree-body', title: 'Pages', collapsed: collapsed,
+            href: path('page', {tree: collapsed ? 'full' : 'rail'}),    {# no-JavaScript path #}
+            state_url: path('panel_state'), state_token: csrf_token('panel'), state_panel: 'tree_rail',  {# host store #}
+        }) }}
+    </div>
+    <nav id="tree-body" data-nowo-ui-rail-body>…</nav>
+</aside>
+```
+
+and `script_names: nowo_ui_script_names()|merge(['rail'])`.
+
+- **Markup:** a `<button aria-controls aria-expanded>` (a `role="button"` link with `href`), its name "Collapse Pages" /
+  "Expand Pages" (`rail.collapse` / `rail.expand`, 7 locales; `labels: {collapse, expand}` to override) in a visually
+  hidden span, a chevron icon, and in the rail the title written vertically (`aria-hidden`; `show_title: false` hides
+  it). `side: 'end'` for a column at the end (the chevron points the other way; RTL is handled).
+- **Collapsed:** `[data-nowo-ui-rail-host][data-nowo-ui-rail="collapsed"]` is `--nowo-ui-rail-width` wide (2.75rem) and
+  its `[data-nowo-ui-rail-body]` parts are `display: none` — out of the tab order and the accessibility tree, not just
+  clipped. Set the column's grid track yourself when the host is a grid item (e.g.
+  `.layout:has([data-nowo-ui-rail='collapsed']) { grid-template-columns: var(--nowo-ui-rail-width, 2.75rem) minmax(0, 1fr) }`).
+- **Keyboard:** Enter / Space (also on the link form); focus inside the hidden part moves to the toggle when the column
+  collapses. Optional `shortcut: 'Alt+Shift+P'` (`aria-keyshortcuts`; ignored while typing unless it has Ctrl, Alt or
+  Meta).
+- **Persistence:** with `state_url` the script POSTs `{"panel": state_panel ?? persist ?? host id, "open": collapsed}`
+  as JSON with `X-CSRF-Token: state_token` (same origin; failures are ignored) and the server renders `collapsed` from
+  the same store — the host store is primary and localStorage is then never used. Without a store, `persist: '<key>'`
+  keeps the state in `localStorage` (`nowo-ui-rail:<key>` = `collapsed` | `expanded`), applied on start (before the first
+  paint with `js/nowo-ui-layout-state.js`, see [above](#drawer-breakpoint-and-remembered-state-248)).
+- **Events / API:** `nowo-ui:rail:change` (bubbling, on the host) `{ id, collapsed, source }`;
+  `window.NowoUiRail.collapse(id)` / `expand` / `toggle` / `isCollapsed` (by host id).
+- **Motion:** the width changes with a short transition, none under `prefers-reduced-motion: reduce` or
+  `<html data-motion="reduce">`.
+- **CSP:** delegated listeners, no inline handlers or styles; `attr` refuses `on*`.
+
+## Reading column and wide content (2.48)
+
+- **Reading width:** `.nowo-ui-readable` centres a column at most `--nowo-ui-reading-width` wide (default `75ch`), full
+  width below it. Set the token on `:root` or on a scope to change the measure.
+- **Wide code and tables:** mark rendered content (Markdown / HTML bodies) with `class="nowo-ui-rendered-content"` or
+  `data-nowo-ui-rendered-content`: its `pre` scroll sideways and its `table` become a horizontally scrolling block
+  (`display: block; inline-size: max-content; max-inline-size: 100%`), so they never widen the page. Any element with
+  `data-nowo-ui-scroll-region` gets `max-inline-size: 100%; overflow-x: auto` from CSS too. With
+  `js/nowo-ui-scroll-region.js` (opt-in `scroll-region`) they also become keyboard reachable while they overflow
+  ([Focusable scroll regions](#focusable-scroll-regions-228)); a `table` gets only `tabindex="0"` and keeps its table
+  role. `data-nowo-ui-scroll-role="group"` makes the script set `role="group"` instead of `region`.
+- **Editors:** nothing inside an editable area (`[contenteditable]` other than `"false"`) gets these rules or the
+  script's attributes (attributes set before the area became editable are removed): the editor owns its layout.
+- **Cards that widen:** a grid item keeps `min-width: auto`, so one long line sizes its track to the content.
+  `.nowo-ui-grid-fit` is a one-column grid (`minmax(0, 1fr)`) whose children have `min-inline-size: 0`; set your own
+  `grid-template-columns` on it for more columns.
+
+All of these are zero-specificity (`:where`) rules: host CSS wins whatever the order. See
+[THEMING](THEMING.md#reading-column-rail-and-wide-content-248).
+
 ## Remote form dialog (2.28)
 
 A form page opened in a native `<dialog>` and posted back with `fetch`: the opener is a plain link to the full page
@@ -3093,6 +3213,25 @@ receive `presentation` and `title_hidden` (`true` for `no_title` / `no_header`; 
 `no_intro` / `no_header`). Hooks for your own headers that should follow the same preference:
 `[data-nowo-ui-page-header='inline']` and friends, or the request attribute itself. Tokens:
 [THEMING](THEMING.md#compact-header-227).
+
+<a id="tabs-and-actions-on-one-row-248"></a>
+
+### Tabs and actions on one row (2.48)
+
+A show page with tabs prints the title, then the toolbar, then the tabs on their own row. `tabs_inline: true` puts the
+tabs (at the start) and the toolbar (at the end) on **one** row under the title; on a narrow screen the toolbar wraps
+under the tabs.
+
+```twig
+{{ nowo_ui_page_header(header, {tabs_inline: true}) }}
+{# or: include('@NowoUiKit/page/_page_header.html.twig', {header: header, tabs_inline: true}) / the page_header partial #}
+```
+
+It applies only when the header has tabs (`PageHeader::withTabs()`) and the value is exactly `true`; otherwise the
+output is the 2.47 one byte for byte. The tabs keep the `tabs` partial (region `area-nav`, `aria-current` on the active
+tab), `actionsLayout: split` keeps its icon buttons and "more" menu, and the root gets
+`nowo-ui-page-header--tabs-inline`; the row is `.nowo-ui-page-header__bar`. Host `page_header` overrides receive
+`tabs_inline`.
 
 ## Overriding templates (REQ-TWIG-001)
 

@@ -709,6 +709,10 @@ IIFE only, no peer: `js/nowo-ui-image-input.js` (2.47, opt-in `script_names` ent
 `image_input` (FileType option `nowo_ui_image_input`). Event `nowo-ui:image-input:change` on the root. See
 [USAGE](USAGE.md#image-input-247).
 
+IIFE only, no peer (2.48): `js/nowo-ui-rail.js` (opt-in `script_names` entry `rail`, partial `rail_toggle`; event
+`nowo-ui:rail:change` on the host) and `js/nowo-ui-layout-state.js` (a blocking `<head>` script, not in `script_names`).
+See [USAGE](USAGE.md#collapsible-column-rail-248).
+
 ## Sortable
 
 IIFE only, no peer: `js/nowo-ui-sortable.js` (opt-in `script_names` entry `sortable`). Markup:

@@ -64,7 +64,8 @@ use Twig\TwigFunction;
  *   — the scaffold page header (`page/_page_header.html.twig`: the `page_header` partial with the 2.0 and 1.x inputs)
  *   for unique pages; bundle and page type default to `nowo_ui_bundle` / `nowo_ui_page_type` of the context. 2.27: the
  *   second argument may be an options hash instead (`{bundle, extra_actions, header_actions, presentation}`), and
- *   `presentation` (a {@see HeaderPresentation} value; anything else is ignored) defaults to {@see self::headerPresentation()}
+ *   `presentation` (a {@see HeaderPresentation} value; anything else is ignored) defaults to {@see self::headerPresentation()};
+ *   2.48: `tabs_inline: true` in the options hash puts the tabs and the actions on one row
  * - `nowo_ui_header_presentation(presentation = null)` (2.27) — the resolved page-header presentation of the request
  *   ({@see HeaderPresentation}: a valid option, else the request attribute, else `nowo_ui_kit.header.presentation`)
  * - `nowo_ui_sidebar_layout(layout = null)` (2.32) — the app shell's sidebar layout of the request (`below-header` |
@@ -395,7 +396,8 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
     /**
      * `nowo_ui_page_header()`: renders `page/_page_header.html.twig` (the scaffolds' page header) for a unique page.
      * 2.27: `$bundle` may be an options hash (`bundle`, `extra_actions`, `header_actions`, `presentation`) instead of
-     * the positional arguments; `presentation` null resolves through {@see self::headerPresentation()}.
+     * the positional arguments; `presentation` null resolves through {@see self::headerPresentation()}. 2.48: the
+     * options hash also takes `tabs_inline` (only `true`: tabs and actions on one row).
      *
      * @param array<string, mixed>             $context
      * @param string|array<string, mixed>|null $bundle       bundle name, or the options hash (2.27)
@@ -403,12 +405,14 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
      */
     public function pageHeader(Environment $env, array $context, PageHeader $header, string|array|null $bundle = null, iterable $extraActions = [], bool $headerActions = true, mixed $presentation = null): string
     {
+        $tabsInline = false;
         if (\is_array($bundle)) {
             $options = $bundle;
             $bundle = \is_string($options['bundle'] ?? null) ? $options['bundle'] : null;
             $extraActions = is_iterable($options['extra_actions'] ?? null) ? $options['extra_actions'] : $extraActions;
             $headerActions = \is_bool($options['header_actions'] ?? null) ? $options['header_actions'] : $headerActions;
             $presentation = $options['presentation'] ?? $presentation;
+            $tabsInline = true === ($options['tabs_inline'] ?? null);
         }
         $contextBundle = $context['nowo_ui_bundle'] ?? null;
 
@@ -419,6 +423,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             'extra_actions' => ViewList::of($extraActions, Action::class, 'nowo_ui_page_header() extra actions'),
             'header_actions' => $headerActions,
             'presentation' => $this->headerPresentation($presentation),
+            'tabs_inline' => $tabsInline,
         ]);
     }
 

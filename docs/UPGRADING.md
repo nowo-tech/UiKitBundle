@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.48.0](#to-2480)
 - [To 2.47.0](#to-2470)
 - [To 2.46.0](#to-2460)
 - [To 2.45.0](#to-2450)
@@ -137,6 +138,39 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.48.0
+
+From **2.47.x**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+php bin/console assets:install   # new js/nowo-ui-rail.js and js/nowo-ui-layout-state.js; rebuilt side-panel / scroll-region
+```
+
+Nothing to change: every 2.48 option is opt-in, and without them the side panel, its container and the page header
+render byte-identical to 2.47.0 (`tests/Fixtures/bc-2.47`). Two CSS additions apply to markup that already uses the
+attributes, at zero specificity (host rules win):
+
+- `[data-nowo-ui-scroll-region]` now gets `max-inline-size: 100%; overflow-x: auto` from the kit CSS (it was a
+  JavaScript-only hook). A host that styled these regions itself keeps its rules.
+- `js/nowo-ui-scroll-region.js` no longer makes regions inside a `contenteditable` area focusable (and removes the
+  attributes it set there). Editors that relied on it should mark their own scroll containers.
+
+Optional — what to adopt:
+
+- A three-column page (tree + content + panel): `drawer_below: 'lg'` on `side_panel` and `side_panel_container`.
+- No per-user store for the panel: `persist: '<key>'`, and `js/nowo-ui-layout-state.js` blocking in `<head>` to avoid
+  a flash. Keep the server-rendered `open` when you have a store.
+- A collapsible column: the `rail_toggle` partial, `data-nowo-ui-rail-host` / `data-nowo-ui-rail-body` on your markup,
+  `script_names: nowo_ui_script_names()|merge(['rail'])`.
+- Show pages with tabs: `nowo_ui_page_header(header, {tabs_inline: true})`.
+- Reading pages: `.nowo-ui-readable`, `class="nowo-ui-rendered-content"` on rendered bodies, `.nowo-ui-grid-fit` on a
+  grid whose items widen it.
+
+Host `page_header` overrides receive `tabs_inline`; host `side_panel` overrides receive `drawer_below` and `persist`.
+Hosts with a custom `scripts` list: no change (the new scripts are opt-in). See
+[USAGE.md](USAGE.md#drawer-breakpoint-and-remembered-state-248).
 
 ## To 2.47.0
 
