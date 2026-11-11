@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.48.1](#to-2481)
 - [To 2.48.0](#to-2480)
 - [To 2.48.0](#to-2480-1)
 - [To 2.47.0](#to-2470)
@@ -139,6 +140,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.48.1
+
+From **2.48.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 Target **2.48.1** (patch). Nothing to change. If you worked around the `page-loader` peer showing its overlay on
 cancelled link clicks (e.g. by adding `data-no-page-loader` to toggle links), you can drop the workaround: a click
