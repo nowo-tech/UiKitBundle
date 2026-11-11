@@ -38,6 +38,7 @@
 - [Guided tour](#guided-tour)
 - [Kit templates (2.6)](#kit-templates-26)
   - [Error pages](#error-pages-26)
+    - [Error illustration provider (2.47)](#error-illustration-provider-247)
   - [Confirm dialog](#confirm-dialog-26)
   - [App shell](#app-shell-26)
   - [Full-height sidebar layout (2.32)](#full-height-sidebar-layout-232)
@@ -1629,6 +1630,68 @@ lead for 400, 401, 403, 404, 405, 408, 410, 413, 422, 429, 500, 502, 503, 504). 
 
 Preview a code in development without throwing: render `@NowoUiKit/error/status.html.twig` with `status_code` (and
 `exception: {'Retry-After': '30'}` for 429), as the demo's `/kit/errors/{code}` does.
+
+<a id="error-illustration-provider-247"></a>
+#### Error illustration provider (2.47)
+
+Optional. When the art depends on the brand or the tenant (a CDN URL, settings already in memory), implement
+`Nowo\UiKitBundle\View\ErrorIllustrationProviderInterface` and point `error_pages.illustration_provider` at the
+service:
+
+```php
+use Nowo\UiKitBundle\View\ErrorIllustration;
+use Nowo\UiKitBundle\View\ErrorIllustrationProviderInterface;
+
+final class BrandErrorIllustrations implements ErrorIllustrationProviderInterface
+{
+    public function __construct(private readonly string $cdn) {} // config only: no repository, no HTTP client
+
+    public function getIllustration(int $statusCode): ?ErrorIllustration
+    {
+        if (!\in_array($statusCode, [403, 404, 500, 503], true)) {
+            return null; // the error_pages.illustrations map (code, then default), then none
+        }
+
+        return ErrorIllustration::fromUrl(
+            $this->cdn.'/errors/'.$statusCode.'.png',
+            1024,
+            683,
+            webpSrcset: $this->cdn.'/errors/'.$statusCode.'.webp 1x, '.$this->cdn.'/errors/'.$statusCode.'@2x.webp 2x',
+            srcset: $this->cdn.'/errors/'.$statusCode.'.png 1x, '.$this->cdn.'/errors/'.$statusCode.'@2x.png 2x',
+        );
+    }
+}
+```
+
+```yaml
+nowo_ui_kit:
+    error_pages:
+        illustration_provider: App\Ui\BrandErrorIllustrations
+        illustration_provider_budget_ms: 20   # optional guard, see below
+```
+
+- **It never breaks the page.** A null answer, any `Throwable` (an exception, a `TypeError`, an invalid
+  `ErrorIllustration`) falls back to `error_pages.illustrations` (code, then `default`), then to no illustration. The
+  provider reaches UiKit as a service closure that is resolved inside that guard, only when an error page asks for an
+  illustration: a provider whose constructor or dependency throws (settings read from a database that is down) falls
+  back the same way and never breaks Twig or any other page. Each failed or slow call logs one warning when a `logger`
+  service exists (so one per error page during an outage), nothing more; the context carries the exception.
+- **Fast, and no database.** An error page often renders *because* the database, the cache or the network is down.
+  Read config, a precomputed map or values already in memory; never run a query or an HTTP call. UiKit itself has no
+  database dependency here.
+- **Budget guard.** With `illustration_provider_budget_ms` > 0, UiKit measures each call; one call over budget logs a
+  warning and the rest of the **same request** skips the provider (a flag on the current `Request`'s attributes, never
+  on a service). The slow answer is still used (PHP cannot interrupt the call), and the next request asks again. Symfony
+  renders an error page in its own sub-request and asks for the illustration once per page, so in the standard flow the
+  budget acts as a "slow provider" warning; the skip matters for templates that render several illustrations.
+- **Worker mode** (FrankenPHP, kernel kept alive, no reset): keep no request, user or tenant data in properties or
+  statics; resolve per call.
+- **Markup.** Without a provider, or when it falls back, the page is byte-identical to 2.46. A provided illustration
+  renders `<picture>`, an optional `<source type="image/webp" srcset sizes>` and `<img src srcset sizes width height>`
+  with the same classes, slots, `alt` and `decoding` / `fetchpriority` as the map. URLs are used as given (no
+  `asset()`), HTML-escaped, and validated by `ErrorIllustration::fromUrl()`: `http(s)://`, `//host/…`, `/path` or a
+  relative path; no other scheme (`javascript:`, `data:`), no whitespace or control characters; `srcset`
+  descriptors are `640w` / `2x`. CSP: no inline style or handler; allow the image host in `img-src`.
 
 <a id="confirm-dialog-26"></a>
 ### Confirm dialog

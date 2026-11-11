@@ -51,6 +51,7 @@ use Nowo\UiKitBundle\Twig\RouteLinkExtension;
 use Nowo\UiKitBundle\Twig\ThemeExtension;
 use Symfony\Component\Asset\Package;
 use Symfony\Component\Config\FileLocator;
+use Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument;
 use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -295,6 +296,12 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
                 $errorPages,
                 new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE),
                 new Reference('request_stack', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                // 2.47: optional host provider, as a service closure resolved inside the extension's guard (a provider whose
+                // constructor throws never breaks Twig; audit LK-L1). ErrorIllustrationProviderPass checks its class.
+                \is_string($errorPages['illustration_provider'] ?? null) && '' !== $errorPages['illustration_provider']
+                    ? new ServiceClosureArgument(new Reference($errorPages['illustration_provider']))
+                    : null,
+                new Reference('logger', ContainerInterface::NULL_ON_INVALID_REFERENCE),
             ])
             ->addTag('twig.extension');
 
