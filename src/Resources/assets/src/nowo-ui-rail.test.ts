@@ -84,7 +84,7 @@ describe('nowo-ui-rail (2.48)', () => {
     vi.stubGlobal('fetch', fetchMock);
     click(el('s'));
     expect(el('srv').getAttribute('data-nowo-ui-rail')).toBe('expanded');
-    expect(fetchMock).toHaveBeenCalledWith('/state', expect.objectContaining({ method: 'POST', credentials: 'same-origin', body: JSON.stringify({ panel: 'srv-key', open: false }) }));
+    expect(fetchMock).toHaveBeenCalledWith(new URL('/state', window.location.href).href, expect.objectContaining({ method: 'POST', mode: 'same-origin', credentials: 'same-origin', body: JSON.stringify({ panel: 'srv-key', open: false }) }));
     const init = fetchMock.mock.calls[0][1] as RequestInit;
     expect((init.headers as Record<string, string>)['X-CSRF-Token']).toBe('tok');
     expect(localStorage.getItem('nowo-ui-rail:srv-key')).toBeNull();
@@ -105,6 +105,37 @@ describe('nowo-ui-rail (2.48)', () => {
     vi.stubGlobal('fetch', undefined);
     expect(mod.sendToHostStore(el('s'), el('srv'), true)).toBe(true);
     vi.unstubAllGlobals();
+  });
+
+  it('never sends the state (or the CSRF header) to another origin (audit LV-I3)', () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    vi.stubGlobal('fetch', fetchMock);
+    for (const url of ['https://evil.example/state', '//evil.example/state', 'http://[bad']) {
+      el('s').setAttribute('data-nowo-ui-rail-state-url', url);
+      expect(mod.sendToHostStore(el('s'), el('srv'), true)).toBe(true);
+    }
+    click(el('s'));
+    expect(el('srv').getAttribute('data-nowo-ui-rail')).toBe('expanded');
+    expect(fetchMock).not.toHaveBeenCalled();
+    // A store URL is configured: the localStorage fallback is not used either.
+    expect(localStorage.getItem('nowo-ui-rail:srv-key')).toBeNull();
+    expect(mod.sameOriginUrl('/state?x=1')).toBe(new URL('/state?x=1', window.location.href).href);
+    expect(mod.sameOriginUrl(`${window.location.origin}/s`)).toBe(`${window.location.origin}/s`);
+    vi.unstubAllGlobals();
+  });
+
+  it('lets modified and non-primary clicks on the link form through (audit LV-I6)', () => {
+    for (const init of [{ ctrlKey: true }, { metaKey: true }, { shiftKey: true }, { altKey: true }, { button: 1 }]) {
+      const event = new MouseEvent('click', { bubbles: true, cancelable: true, ...init });
+      el('t').dispatchEvent(event);
+      expect(event.defaultPrevented).toBe(false);
+    }
+    expect(el('tree').getAttribute('data-nowo-ui-rail')).toBe('expanded');
+    // The button form has no other behaviour to keep: a Ctrl-click still toggles it.
+    const event = new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true });
+    el('p').dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+    expect(el('plain').getAttribute('data-nowo-ui-rail')).toBe('collapsed');
   });
 
   it('works for a toggle outside its host and without any persistence', () => {

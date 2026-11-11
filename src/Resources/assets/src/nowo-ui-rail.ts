@@ -42,10 +42,28 @@ export function syncToggle(toggle: HTMLElement, collapsed: boolean): void {
   if (label !== null && text) text.textContent = label;
 }
 
-/** Sends the state to the host store; true when a store URL is configured (localStorage is then not used). */
+/**
+ * The store URL resolved against the page when it is on the page's own origin (audit LV-I3), else null: the CSRF
+ * header is never sent to another origin.
+ */
+export function sameOriginUrl(url: string): string | null {
+  try {
+    const resolved = new URL(url, window.location.href);
+    return resolved.origin === window.location.origin ? resolved.href : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Sends the state to the host store; true when a store URL is configured (localStorage is then not used). A URL on
+ * another origin (or an invalid one) is configured but never fetched: the state is then not saved.
+ */
 export function sendToHostStore(toggle: HTMLElement, host: HTMLElement, collapsed: boolean): boolean {
-  const url = toggle.getAttribute('data-nowo-ui-rail-state-url');
-  if (!url) return false;
+  const configured = toggle.getAttribute('data-nowo-ui-rail-state-url');
+  if (!configured) return false;
+  const url = sameOriginUrl(configured);
+  if (!url) return true;
   const panel = toggle.getAttribute('data-nowo-ui-rail-state-panel') || persistKey(toggle.getAttribute(RAIL_PERSIST_ATTR)) || host.id;
   const headers: Record<string, string> = { 'Content-Type': 'application/json', Accept: 'application/json' };
   const token = toggle.getAttribute('data-nowo-ui-rail-state-token');
@@ -53,9 +71,9 @@ export function sendToHostStore(toggle: HTMLElement, host: HTMLElement, collapse
   if (typeof fetch === 'function') {
     try {
       // A failed save only loses the remembered state; the page keeps working.
-      fetch(url, { method: 'POST', credentials: 'same-origin', headers, body: JSON.stringify({ panel, open: collapsed }) }).catch(() => undefined);
+      fetch(url, { method: 'POST', mode: 'same-origin', credentials: 'same-origin', headers, body: JSON.stringify({ panel, open: collapsed }) }).catch(() => undefined);
     } catch {
-      // fetch threw synchronously (invalid URL): same as a failed save.
+      // fetch threw synchronously: same as a failed save.
     }
   }
   return true;
@@ -88,6 +106,8 @@ function onClick(event: MouseEvent): void {
   const toggle = target.closest<HTMLElement>(RAIL_TOGGLE);
   const host = toggle ? railHostOf(toggle) : null;
   if (!toggle || !host) return;
+  // Audit LV-I6: a modified or non-primary click on the link form keeps the browser's behaviour (new tab / window).
+  if (toggle instanceof HTMLAnchorElement && (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0)) return;
   event.preventDefault();
   setCollapsed(host, !railIsCollapsed(host), 'toggle', toggle);
 }

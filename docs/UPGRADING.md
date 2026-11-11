@@ -159,7 +159,9 @@ attributes, at zero specificity (host rules win):
 
 Optional — what to adopt:
 
-- A three-column page (tree + content + panel): `drawer_below: 'lg'` on `side_panel` and `side_panel_container`.
+- A three-column page (tree + content + panel): `drawer_below: 'lg'` on `side_panel` and `side_panel_container`. A
+  panel the server renders `open` starts closed at or under that breakpoint (never a modal drawer on load); the host
+  store keeps `open` for wide screens.
 - No per-user store for the panel: `persist: '<key>'`, and `js/nowo-ui-layout-state.js` blocking in `<head>` to avoid
   a flash. Keep the server-rendered `open` when you have a store.
 - A collapsible column: the `rail_toggle` partial, `data-nowo-ui-rail-host` / `data-nowo-ui-rail-body` on your markup,
@@ -169,6 +171,7 @@ Optional — what to adopt:
   grid whose items widen it.
 
 Host `page_header` overrides receive `tabs_inline`; host `side_panel` overrides receive `drawer_below` and `persist`.
+The `rail_toggle` `attr` option is checked by `nowo_ui_safe_attrs()`: a `style` key throws (as `on*` does).
 Hosts with a custom `scripts` list: no change (the new scripts are opt-in). See
 [USAGE.md](USAGE.md#drawer-breakpoint-and-remembered-state-248).
 

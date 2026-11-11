@@ -12,7 +12,8 @@
     - title (View\Label|string): the column's name ("Pages"); part of the labels and shown vertically in the rail
   Optional:
     - collapsed (bool, default false): rendered collapsed (aria-expanded="false")
-    - href: URL of the other state (no-JavaScript path); without it a button (JavaScript only)
+    - href: URL of the other state (no-JavaScript path); without it a button (JavaScript only). Checked by
+      nowo_ui_safe_href() (relative, http, https, mailto): any other scheme (javascript:, data:…) renders the button
     - side: start (default; the column is at the start) | end: the chevron's direction
     - labels: {collapse, expand} (View\Label|string; defaults "Collapse %title%" / "Expand %title%")
     - show_title (bool, default true): the vertical title in the rail (aria-hidden: the label names the control)
@@ -20,9 +21,14 @@
       (before the first paint with js/nowo-ui-layout-state.js in <head>). Only when the host has no store.
     - state_url / state_token / state_panel: the host store (primary): js/nowo-ui-rail.js POSTs
       `{panel: state_panel ?? persist ?? host id, open: <collapsed>}` as JSON with `X-CSRF-Token: state_token`; the
-      server renders `collapsed` from the same store. With state_url, localStorage is never used.
+      server renders `collapsed` from the same store. With state_url, localStorage is never used. state_url is checked
+      by nowo_ui_safe_href() (a refused value renders no store attributes); js/nowo-ui-rail.js only POSTs to a URL of
+      the page's own origin.
     - shortcut: keyboard shortcut (e.g. `Alt+Shift+P`; none by default), exposed as aria-keyshortcuts
-    - attr: root attributes (no on*), bundle
+    - attr: root attributes, `class` added to the slot classes; checked by nowo_ui_safe_attrs() (no on*, style,
+      srcdoc or script-running URLs). The attributes the partial owns (href, role, type, aria-controls, aria-expanded,
+      aria-keyshortcuts, data-nowo-ui-rail-*) are dropped from it, so they are neither printed twice nor changed.
+    - bundle
 #}
 {% set _b = bundle|default(null) %}
 {% set _collapsed = (collapsed ?? false) is same as(true) %}
@@ -31,12 +37,13 @@
 {% set _labels = labels|default({}) %}
 {% set _collapse = _labels.collapse is defined ? _labels.collapse|nowo_ui_trans : 'rail.collapse'|trans({'%title%': _title}, 'NowoUiKitBundle') %}
 {% set _expand = _labels.expand is defined ? _labels.expand|nowo_ui_trans : 'rail.expand'|trans({'%title%': _title}, 'NowoUiKitBundle') %}
-{% set _href = href|default(null) %}
-{% set _key_ok = (persist ?? null) is not null and persist is not iterable and (persist ~ '') matches '/^[A-Za-z0-9_.:-]{1,64}$/' %}
+{% set _href = nowo_ui_safe_href(href|default(null)) %}
+{% set _attr = nowo_ui_safe_attrs(attr|default({}), ['href', 'role', 'type', 'aria-controls', 'aria-expanded', 'aria-keyshortcuts', 'data-nowo-ui-rail-toggle', 'data-nowo-ui-rail-label-collapse', 'data-nowo-ui-rail-label-expand', 'data-nowo-ui-rail-persist', 'data-nowo-ui-rail-state-url', 'data-nowo-ui-rail-state-token', 'data-nowo-ui-rail-state-panel', 'data-nowo-ui-rail-shortcut']) %}
+{% set _key_ok = (persist ?? null) is not null and persist is not iterable and (persist ~ '') matches '/^[A-Za-z0-9_.:-]{1,64}$/D' %}
 {% set _persist = _key_ok ? persist : null %}
-{% set _state_url = state_url|default(null) %}
+{% set _state_url = nowo_ui_safe_href(state_url|default(null)) %}
 {% set _shortcut = shortcut|default(null) %}
-{% if _href %}<a href="{{ _href }}" role="button"{% else %}<button type="button"{% endif %} class="{{ nowo_ui_class('rail_toggle', _b) }} nowo-ui-rail-toggle--{{ _side }}{{ (attr.class ?? false) ? ' ' ~ attr.class }}" aria-controls="{{ target }}" aria-expanded="{{ _collapsed ? 'false' : 'true' }}" data-nowo-ui-rail-toggle data-nowo-ui-rail-label-collapse="{{ _collapse }}" data-nowo-ui-rail-label-expand="{{ _expand }}"{% if _persist %} data-nowo-ui-rail-persist="{{ _persist }}"{% endif %}{% if _state_url %} data-nowo-ui-rail-state-url="{{ _state_url }}"{% if state_token|default(null) %} data-nowo-ui-rail-state-token="{{ state_token }}"{% endif %}{% if state_panel|default(null) %} data-nowo-ui-rail-state-panel="{{ state_panel }}"{% endif %}{% endif %}{% if _shortcut %} aria-keyshortcuts="{{ _shortcut }}" data-nowo-ui-rail-shortcut="{{ _shortcut }}"{% endif %}{{ nowo_ui_attrs('rail_toggle', _b) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(attr|default({}))) }}>
+{% if _href %}<a href="{{ _href }}" role="button"{% else %}<button type="button"{% endif %} class="{{ nowo_ui_class('rail_toggle', _b) }} nowo-ui-rail-toggle--{{ _side }}{{ (_attr.class ?? false) ? ' ' ~ _attr.class }}" aria-controls="{{ target }}" aria-expanded="{{ _collapsed ? 'false' : 'true' }}" data-nowo-ui-rail-toggle data-nowo-ui-rail-label-collapse="{{ _collapse }}" data-nowo-ui-rail-label-expand="{{ _expand }}"{% if _persist %} data-nowo-ui-rail-persist="{{ _persist }}"{% endif %}{% if _state_url %} data-nowo-ui-rail-state-url="{{ _state_url }}"{% if state_token|default(null) %} data-nowo-ui-rail-state-token="{{ state_token }}"{% endif %}{% if state_panel|default(null) %} data-nowo-ui-rail-state-panel="{{ state_panel }}"{% endif %}{% endif %}{% if _shortcut %} aria-keyshortcuts="{{ _shortcut }}" data-nowo-ui-rail-shortcut="{{ _shortcut }}"{% endif %}{{ nowo_ui_attrs('rail_toggle', _b) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(_attr)) }}>
     <span class="nowo-ui-rail-toggle__icon" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: 'chevron_left', label: _collapsed ? _expand : _collapse}, false)|trim|raw }}</span>
     <span class="visually-hidden" data-nowo-ui-rail-toggle-label>{{ _collapsed ? _expand : _collapse }}</span>
     {% if show_title ?? true %}<span class="nowo-ui-rail-toggle__title" aria-hidden="true">{{ _title }}</span>{% endif %}

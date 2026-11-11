@@ -15,7 +15,11 @@
  *
  * A stored `open` never opens a panel that would show as a drawer (overlay layout, or a viewport under its
  * `data-drawer-below` breakpoint): a drawer covering the page on load is worse than a closed panel. For the same reason
- * the side panel only writes the state while it is an inline column.
+ * the side panel only writes the state while it is an inline column. The same rule covers the server state (audit
+ * LV-L2): a panel with `data-drawer-below="lg|xl"` that the server rendered open (a host store remembers the inline
+ * column) starts closed when the page loads at or under its breakpoint, where it would be a modal drawer; nothing is
+ * stored or dispatched, so the host store keeps `open` for wider screens. The 2.25 default (`md`) and overlay panels
+ * keep their server state.
  */
 
 export const PANEL_PERSIST_ATTR = 'data-nowo-ui-side-panel-persist';
@@ -127,6 +131,22 @@ export function applyStoredPanel(panel: HTMLElement): boolean {
   return true;
 }
 
+/** Marker the side-panel script sets on every panel it has started (the start rules below run once per panel). */
+export const PANEL_READY_ATTR = 'data-nowo-ui-side-panel-ready';
+
+/**
+ * Start rule for a server-open panel (2.48, audit LV-L2): a panel with `data-drawer-below="lg|xl"` (not the overlay
+ * layout) that is open while the viewport is at or under its breakpoint starts closed (only `hidden`; the side-panel
+ * script syncs the toggles). Returns whether it closed the panel.
+ */
+export function closeStartingDrawer(panel: HTMLElement): boolean {
+  const below = panel.getAttribute('data-drawer-below');
+  if (below !== 'lg' && below !== 'xl') return false;
+  if (panel.hidden || panel.getAttribute('data-layout') === 'overlay' || !panelIsDrawer(panel)) return false;
+  panel.hidden = true;
+  return true;
+}
+
 /** The rail host a toggle drives: its closest host, else the host around (or at) the element it controls. */
 export function railHostOf(toggle: Element): HTMLElement | null {
   const own = toggle.closest<HTMLElement>(RAIL_HOST);
@@ -163,12 +183,18 @@ export function applyStoredRail(toggle: HTMLElement): boolean | null {
 
 const seen = new WeakSet<Element>();
 
-/** Applies the stored states to every persisted panel and rail toggle of `root` not handled yet. */
+/**
+ * Applies the stored states to every persisted panel and rail toggle of `root` not handled yet, and the start rule of
+ * {@link closeStartingDrawer} to every `lg` / `xl` panel.
+ */
 export function applyStoredStates(root: ParentNode = document): void {
-  root.querySelectorAll<HTMLElement>(`[data-nowo-ui-side-panel][${PANEL_PERSIST_ATTR}]`).forEach((panel) => {
+  root.querySelectorAll<HTMLElement>(`[data-nowo-ui-side-panel][${PANEL_PERSIST_ATTR}], [data-nowo-ui-side-panel][data-drawer-below]`).forEach((panel) => {
     if (seen.has(panel)) return;
     seen.add(panel);
+    // Already started by the side-panel script: its state is the user's now.
+    if (panel.hasAttribute(PANEL_READY_ATTR)) return;
     applyStoredPanel(panel);
+    closeStartingDrawer(panel);
   });
   root.querySelectorAll<HTMLElement>(`${RAIL_TOGGLE}[${RAIL_PERSIST_ATTR}]`).forEach((toggle) => {
     if (seen.has(toggle)) return;

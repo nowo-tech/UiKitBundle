@@ -12,7 +12,7 @@
   nothing). Browsers with :has() also follow a panel's modifier without it.
 #}
 {% set _b = bundle|default(null) %}
-{% set _drawer_below = (drawer_below ?? null) in ['lg', 'xl'] ? drawer_below : null %}
+{% set _drawer_below = (drawer_below ?? null) is same as('lg') or (drawer_below ?? null) is same as('xl') ? drawer_below : null %}
 <div class="{{ nowo_ui_class('side_panel_container', _b) }}{{ _drawer_below ? ' nowo-ui-side-panel-container--drawer-' ~ _drawer_below }}{{ (attr.class ?? false) ? ' ' ~ attr.class }}" data-nowo-ui-side-panel-container{% if _drawer_below %} data-drawer-below="{{ _drawer_below }}"{% endif %}{{ nowo_ui_attrs('side_panel_container', _b) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(attr|default({}))) }}>
     <div class="{{ nowo_ui_class('side_panel_main', _b) }}" data-nowo-ui-side-panel-main{{ nowo_ui_attrs('side_panel_main', _b) }}>
         {%- block nowo_ui_side_panel_main -%}{%- endblock -%}

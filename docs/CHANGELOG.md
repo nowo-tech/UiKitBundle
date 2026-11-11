@@ -158,6 +158,24 @@ the markup is byte-identical to 2.47.0. See [UPGRADING](UPGRADING.md#to-2480).
 
 - The keyboard shortcut helpers of the side panel moved to `nowo-ui-shortcut-core.ts` (re-exported; no behaviour change).
 
+### Security
+
+Fixes from the independent audit Appendix LV (2026-11-11, **Pass-Low** on `ed5365c`), before the tag:
+
+- **LV-L1:** `rail_toggle` `attr` goes through `nowo_ui_safe_attrs()` (no `on*`, `style`, `srcdoc` or script-running
+  URLs) with the attributes the partial owns reserved (`href`, `role`, `type`, `aria-controls`, `aria-expanded`,
+  `aria-keyshortcuts`, `data-nowo-ui-rail-*`); `href` and `state_url` go through `nowo_ui_safe_href()` (a refused `href`
+  renders the button, a refused `state_url` no store attributes).
+- **LV-L2:** a side panel with `drawer_below: 'lg' | 'xl'` that the server renders `open` starts closed when the page
+  loads at or under its breakpoint, like a remembered `open`, instead of a modal drawer that made the content and the
+  shell inert on every load at laptop / tablet widths. No event, nothing stored; `md` and `overlay` panels keep the
+  server state. Applied before the first paint by `js/nowo-ui-layout-state.js`, else by `nowo-ui-side-panel.js`.
+- **LV-I1 / LV-I2:** `drawer_below` compares strictly (`true` no longer renders `--drawer-1`); the persist-key pattern
+  has the `D` modifier (no trailing newline).
+- **LV-I3:** `js/nowo-ui-rail.js` posts the state (and the CSRF header) only to a store URL on the page's own origin
+  (`mode: 'same-origin'`); another origin is never fetched.
+- **LV-I6:** modified (Ctrl / Cmd / Shift / Alt) and non-primary clicks on the rail link keep the browser's behaviour.
+
 ## [2.47.0] - 2026-11-11
 
 Optional error-illustration provider with a safe fallback, and an opt-in image input with instant preview. See [UPGRADING](https://github.com/nowo-tech/UiKitBundle/blob/v2.47.0/docs/UPGRADING.md#to-2470).

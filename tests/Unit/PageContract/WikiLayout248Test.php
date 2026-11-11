@@ -118,8 +118,68 @@ final class WikiLayout248Test extends TestCase
 
     public function testRailToggleRefusesInlineHandlers(): void
     {
-        $this->expectExceptionMessage('inline event handler attribute "onclick" is not allowed');
+        $this->expectExceptionMessage('Invalid or unsafe attribute "onclick" (no on* handlers: CSP).');
         $this->render(self::RAIL, ['target' => 't', 'title' => 'P', 'attr' => ['onclick' => 'x()']]);
+    }
+
+    /**
+     * Audit LV-L1: `href` and `state_url` go through SafeHref; `attr` through nowo_ui_safe_attrs() with the attributes
+     * the partial owns reserved.
+     */
+    public function testRailToggleRefusesScriptUrlsAndOwnedAttributes(): void
+    {
+        $plain = $this->render(self::RAIL, ['target' => 't', 'title' => 'P']);
+        foreach (['javascript:alert(1)', ' JaVaScRiPt:alert(1)', "java\tscript:alert(1)", 'data:text/html,x', 'vbscript:x'] as $href) {
+            self::assertSame($plain, $this->render(self::RAIL, ['target' => 't', 'title' => 'P', 'href' => $href, 'state_url' => $href]), $href);
+        }
+        $link = $this->render(self::RAIL, ['target' => 't', 'title' => 'P', 'href' => '/spaces/a?tree=rail', 'state_url' => 'https://app.example/state']);
+        self::assertStringStartsWith('<a href="/spaces/a?tree=rail" role="button"', $link);
+        self::assertStringContainsString(' data-nowo-ui-rail-state-url="https://app.example/state">', $link);
+
+        $html = $this->render(self::RAIL, ['target' => 't', 'title' => 'P', 'collapsed' => true, 'attr' => [
+            'aria-expanded' => 'true',
+            'ARIA-CONTROLS' => 'other',
+            'role' => 'link',
+            'type' => 'submit',
+            'href' => '/elsewhere',
+            'aria-keyshortcuts' => 'X',
+            'data-nowo-ui-rail-state-url' => '/steal',
+            'data-nowo-ui-rail-persist' => 'other',
+            'data-nowo-ui-rail-toggle' => 'x',
+            'data-nowo-ui-rail-label-expand' => 'Other',
+            'data-href' => 'javascript:alert(1)',
+            'data-testid' => 'rail',
+            'class' => 'extra',
+        ]]);
+        self::assertStringStartsWith('<button type="button" class="nowo-ui-btn nowo-ui-btn--icon nowo-ui-rail-toggle btn btn-sm btn-outline-secondary nowo-ui-rail-toggle--start extra" aria-controls="t" aria-expanded="false" data-nowo-ui-rail-toggle data-nowo-ui-rail-label-collapse="Collapse P" data-nowo-ui-rail-label-expand="Expand P" data-testid="rail">', $html);
+        $tag = strtolower((string) strstr($html, '>', true));
+        foreach (['aria-expanded' => 1, 'aria-controls' => 1, 'type' => 1, 'data-nowo-ui-rail-label-expand' => 1, 'role' => 0, 'href' => 0, 'aria-keyshortcuts' => 0, 'data-nowo-ui-rail-state-url' => 0, 'data-nowo-ui-rail-persist' => 0, 'data-href' => 0] as $name => $count) {
+            self::assertSame($count, substr_count($tag, ' '.$name.'='), $name);
+        }
+        self::assertStringNotContainsString('javascript', $html);
+        self::assertStringNotContainsString('/steal', $html);
+    }
+
+    public function testRailToggleRefusesAStyleAttribute(): void
+    {
+        $this->expectExceptionMessage('Unsafe attribute "style"');
+        $this->render(self::RAIL, ['target' => 't', 'title' => 'P', 'attr' => ['style' => 'position:fixed']]);
+    }
+
+    /**
+     * Audit LV-I1 / LV-I2: `drawer_below` compares strictly; the persist keys have no trailing-newline loophole.
+     */
+    public function testDrawerBelowIsStrictAndPersistKeysRefuseATrailingNewline(): void
+    {
+        $plain = $this->render(self::PANEL, ['id' => 'c', 'title' => 'Comments']);
+        foreach ([true, 1, 'LG'] as $value) {
+            self::assertSame($plain, $this->render(self::PANEL, ['id' => 'c', 'title' => 'Comments', 'drawer_below' => $value]), var_export($value, true));
+        }
+        $twig = PageContractTwig::create(['c' => "{% embed '".self::CONTAINER."' with {drawer_below: bp} only %}{% block nowo_ui_side_panel_main %}M{% endblock %}{% endembed %}"]);
+        self::assertStringNotContainsString('drawer', $twig->render('c', ['bp' => true]));
+
+        self::assertSame($plain, $this->render(self::PANEL, ['id' => 'c', 'title' => 'Comments', 'persist' => "abc\n"]));
+        self::assertStringNotContainsString('data-nowo-ui-rail-persist', $this->render(self::RAIL, ['target' => 't', 'title' => 'P', 'persist' => "abc\n"]));
     }
 
     public function testRailToggleIsAThemeSlotAndItsLabelsExistInEveryLocale(): void

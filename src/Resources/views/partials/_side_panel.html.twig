@@ -48,8 +48,8 @@
 {% set _hl = heading_level|default(2) %}
 {% set _level = [2, 3, 4, 5, 6]|filter(n => n is same as(_hl))|first|default(2) %}
 {% set _close_href = close_href|default(null) %}
-{% set _drawer_below = (drawer_below ?? null) in ['lg', 'xl'] ? drawer_below : null %}
-{% set _persist = (persist ?? null) is not null and persist is not iterable and (persist ~ '') matches '/^[A-Za-z0-9_.:-]{1,64}$/' ? persist : null %}
+{% set _drawer_below = (drawer_below ?? null) is same as('lg') or (drawer_below ?? null) is same as('xl') ? drawer_below : null %}
+{% set _persist = (persist ?? null) is not null and persist is not iterable and (persist ~ '') matches '/^[A-Za-z0-9_.:-]{1,64}$/D' ? persist : null %}
 <aside id="{{ id }}" class="{{ nowo_ui_class('side_panel', _b) }} nowo-ui-side-panel--{{ _side }} nowo-ui-side-panel--{{ _layout }}{{ _drawer_below ? ' nowo-ui-side-panel--drawer-' ~ _drawer_below }}{{ (attr.class ?? false) ? ' ' ~ attr.class }}" data-nowo-ui-side-panel data-side="{{ _side }}" data-layout="{{ _layout }}" aria-labelledby="{{ id }}-title" data-nowo-ui-side-panel-opened="{{ _opened }}" data-nowo-ui-side-panel-closed="{{ _closed }}"{% if not _open %} hidden{% endif %}{% if not (backdrop_close ?? true) %} data-nowo-ui-side-panel-backdrop-close="false"{% endif %}{% if _drawer_below %} data-drawer-below="{{ _drawer_below }}"{% endif %}{% if _persist %} data-nowo-ui-side-panel-persist="{{ _persist }}"{% endif %}{{ nowo_ui_attrs('side_panel', _b) }}{{ nowo_ui_html_attrs((attr|default({}))|filter((v, k) => k not in ['id', 'class'])) }}>
     <div class="{{ nowo_ui_class('side_panel_header', _b) }}"{{ nowo_ui_attrs('side_panel_header', _b) }}>
         <h{{ _level }} id="{{ id }}-title" class="{{ nowo_ui_class('side_panel_title', _b) }}" tabindex="-1"{{ nowo_ui_attrs('side_panel_title', _b) }}>{{ _title }}</h{{ _level }}>

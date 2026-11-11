@@ -2170,6 +2170,16 @@ the same width (browsers with `:has()` follow the panel without it). The script 
 `data-drawer-below` and switches between column and drawer when that media query changes (inert, backdrop, overlay
 registration and the Tab cycle follow).
 
+**A server-open `lg` / `xl` panel starts closed under its breakpoint.** The host store remembers the inline column, so
+it renders `open` on every page; at 768–1199 px (`lg`) or 768–1439 px (`xl`), ordinary laptops and tablets, that panel
+would otherwise start as a modal drawer (backdrop, inert content and shell) on every load. Like a remembered `open`
+from `persist` (below), it starts closed instead: on the panel's first start, `nowo-ui-side-panel.js` (or
+`js/nowo-ui-layout-state.js` in `<head>`, before the first paint) sets `hidden` and the toggles' `aria-expanded`; no
+`open` / `close` event is dispatched and nothing is stored, so the host store keeps `open` for wider screens. The toggle
+opens it as a drawer as before. `md` (the 2.25 default) and `layout: 'overlay'` keep the server state, so a no-JavaScript
+"open" link still opens the drawer on a phone. A host that must open the panel as a drawer on load at those widths
+calls `window.NowoUiSidePanel.open(id)` after the script starts.
+
 ```twig
 {% embed '@NowoUiKitBundle/partials/_side_panel_container.html.twig' with {drawer_below: 'lg'} %}
     {% block nowo_ui_side_panel_main %}…{% endblock %}
@@ -2245,7 +2255,8 @@ and `script_names: nowo_ui_script_names()|merge(['rail'])`.
   collapses. Optional `shortcut: 'Alt+Shift+P'` (`aria-keyshortcuts`; ignored while typing unless it has Ctrl, Alt or
   Meta).
 - **Persistence:** with `state_url` the script POSTs `{"panel": state_panel ?? persist ?? host id, "open": collapsed}`
-  as JSON with `X-CSRF-Token: state_token` (same origin; failures are ignored) and the server renders `collapsed` from
+  as JSON with `X-CSRF-Token: state_token` (only to a URL on the page's own origin: another origin, or an invalid URL,
+  is never fetched, so the token never leaves the site; failures are ignored) and the server renders `collapsed` from
   the same store — the host store is primary and localStorage is then never used. Without a store, `persist: '<key>'`
   keeps the state in `localStorage` (`nowo-ui-rail:<key>` = `collapsed` | `expanded`), applied on start (before the first
   paint with `js/nowo-ui-layout-state.js`, see [above](#drawer-breakpoint-and-remembered-state-248)).
@@ -2253,7 +2264,14 @@ and `script_names: nowo_ui_script_names()|merge(['rail'])`.
   `window.NowoUiRail.collapse(id)` / `expand` / `toggle` / `isCollapsed` (by host id).
 - **Motion:** the width changes with a short transition, none under `prefers-reduced-motion: reduce` or
   `<html data-motion="reduce">`.
-- **CSP:** delegated listeners, no inline handlers or styles; `attr` refuses `on*`.
+- **Link form:** Ctrl / Cmd / Shift / Alt-clicks and middle clicks on the `href` toggle keep the browser's behaviour
+  (open the other state in a new tab or window); a plain click toggles in place.
+- **Checked input:** `href` and `state_url` go through `nowo_ui_safe_href()` (relative, `http`, `https`, `mailto`): a
+  `javascript:` or `data:` `href` renders the button, a refused `state_url` renders no store attributes. `attr` goes
+  through `nowo_ui_safe_attrs()`: `on*`, `style` and `srcdoc` throw, script-running URLs in URL attributes are dropped,
+  and the attributes the partial owns (`href`, `role`, `type`, `aria-controls`, `aria-expanded`, `aria-keyshortcuts`,
+  `data-nowo-ui-rail-*`) are dropped from it, so they are never printed twice or changed.
+- **CSP:** delegated listeners, no inline handlers or styles.
 
 ## Reading column and wide content (2.48)
 

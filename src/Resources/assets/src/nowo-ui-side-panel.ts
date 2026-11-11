@@ -28,7 +28,9 @@
  * - 2.48: `data-drawer-below="md|lg|xl"` moves the drawer breakpoint (767 / 1199 / 1439 px; the mode follows the media
  *   queries). `data-nowo-ui-side-panel-persist="<key>"` (only when the host has no store of its own) remembers the
  *   inline open / closed state in localStorage and applies it on start (before the first paint with
- *   js/nowo-ui-layout-state.js in <head>); see nowo-ui-layout-state-core.ts.
+ *   js/nowo-ui-layout-state.js in <head>); see nowo-ui-layout-state-core.ts. A `lg` / `xl` panel the server rendered
+ *   open starts closed when the page loads at or under its breakpoint (audit LV-L2: never a modal drawer on load; no
+ *   event, nothing stored); opening it from a toggle then shows the drawer as before.
  */
 
 export const PANEL = '[data-nowo-ui-side-panel]';
@@ -45,7 +47,7 @@ export type SidePanelSource = 'toggle' | 'close' | 'escape' | 'backdrop' | 'shor
 export type OpenOptions = { focus?: HTMLElement | string | false; source?: SidePanelSource; opener?: HTMLElement | null };
 
 import { overlayRegistry, type OverlayHandle } from './nowo-ui-overlay';
-import { applyStoredPanel, DRAWER_QUERIES, panelIsDrawer, PANEL_PERSIST_ATTR, rememberPanel } from './nowo-ui-layout-state-core';
+import { applyStoredPanel, closeStartingDrawer, DRAWER_QUERIES, panelIsDrawer, PANEL_PERSIST_ATTR, PANEL_READY_ATTR, rememberPanel } from './nowo-ui-layout-state-core';
 import { matchesShortcut, parseShortcut } from './nowo-ui-shortcut-core';
 
 export { matchesShortcut, parseShortcut, type Shortcut } from './nowo-ui-shortcut-core';
@@ -363,15 +365,18 @@ let bound = false;
 /**
  * Marks the panels driven by this script and applies the drawer mode to those rendered open. 2.48: a panel with a
  * persist key first takes its remembered state (when js/nowo-ui-layout-state.js did not already apply it before the
- * first paint), and its toggles follow.
+ * first paint), and its toggles follow. On a panel's first start, a `lg` / `xl` panel rendered open under its
+ * breakpoint starts closed ({@link closeStartingDrawer}, audit LV-L2), like a remembered `open` would.
  */
 export function markSidePanelsReady(root: ParentNode = document): void {
   root.querySelectorAll<HTMLElement>(PANEL).forEach((panel) => {
-    panel.setAttribute('data-nowo-ui-side-panel-ready', '');
-    if (panel.hasAttribute(PANEL_PERSIST_ATTR)) {
-      applyStoredPanel(panel);
-      setExpanded(panel, isOpen(panel));
-    }
+    const starting = !panel.hasAttribute(PANEL_READY_ATTR);
+    panel.setAttribute(PANEL_READY_ATTR, '');
+    const persisted = panel.hasAttribute(PANEL_PERSIST_ATTR);
+    if (persisted) applyStoredPanel(panel);
+    if (starting) closeStartingDrawer(panel);
+    // The toggles follow a state changed before this script ran too (js/nowo-ui-layout-state.js in <head>).
+    if (persisted || (starting && panel.hasAttribute('data-drawer-below'))) setExpanded(panel, isOpen(panel));
     applyMode(panel);
   });
 }

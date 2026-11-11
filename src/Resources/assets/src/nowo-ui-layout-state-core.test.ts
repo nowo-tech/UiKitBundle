@@ -4,6 +4,7 @@ import {
   applyStoredRail,
   applyStoredStates,
   attributeSuffix,
+  closeStartingDrawer,
   DRAWER_QUERIES,
   drawerQueryOf,
   mediaMatches,
@@ -189,6 +190,33 @@ describe('nowo-ui-layout-state-core (2.48)', () => {
     document.body.appendChild(host);
     applyStoredStates();
     expect(host.getAttribute('data-nowo-ui-rail')).toBe('collapsed');
+  });
+
+  it('pre-paint: a server-open lg / xl panel starts closed under its breakpoint, before paint (audit LV-L2)', () => {
+    setMedia([DRAWER_QUERIES.lg, DRAWER_QUERIES.xl]);
+    document.body.innerHTML = `<aside id="lg" data-nowo-ui-side-panel data-layout="inline" data-drawer-below="lg"></aside>
+      <aside id="xl" data-nowo-ui-side-panel data-layout="inline" data-drawer-below="xl"></aside>
+      <aside id="md" data-nowo-ui-side-panel data-layout="inline" data-drawer-below="md"></aside>
+      <aside id="ov" data-nowo-ui-side-panel data-layout="overlay" data-drawer-below="lg"></aside>
+      <aside id="ready" data-nowo-ui-side-panel data-layout="inline" data-drawer-below="lg" data-nowo-ui-side-panel-ready></aside>
+      <aside id="shut" data-nowo-ui-side-panel data-layout="inline" data-drawer-below="lg" hidden></aside>`;
+    applyStoredStates();
+    expect(el('lg').hidden).toBe(true);
+    expect(el('xl').hidden).toBe(true);
+    expect(el('md').hidden).toBe(false);
+    expect(el('ov').hidden).toBe(false);
+    expect(el('ready').hidden).toBe(false);
+    expect(el('shut').hidden).toBe(true);
+    expect(closeStartingDrawer(el('shut'))).toBe(false);
+    expect(localStorage.length).toBe(0);
+
+    // 1300 px: an xl panel is still a drawer, an lg one is an inline column.
+    setMedia([DRAWER_QUERIES.xl]);
+    document.body.innerHTML = `<aside id="lg" data-nowo-ui-side-panel data-layout="inline" data-drawer-below="lg"></aside>
+      <aside id="xl" data-nowo-ui-side-panel data-layout="inline" data-drawer-below="xl"></aside>`;
+    expect(closeStartingDrawer(el('lg'))).toBe(false);
+    expect(closeStartingDrawer(el('xl'))).toBe(true);
+    expect(el('lg').hidden).toBe(false);
   });
 
   it('pre-paint: applies now, after every parser chunk while loading, and stops at DOMContentLoaded', async () => {
