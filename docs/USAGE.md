@@ -1671,14 +1671,19 @@ nowo_ui_kit:
 ```
 
 - **It never breaks the page.** A null answer, any `Throwable` (an exception, a `TypeError`, an invalid
-  `ErrorIllustration`) falls back to `error_pages.illustrations` (code, then `default`), then to no illustration. A
-  failure logs one warning when a `logger` service exists, nothing more.
+  `ErrorIllustration`) falls back to `error_pages.illustrations` (code, then `default`), then to no illustration. The
+  provider reaches UiKit as a service closure that is resolved inside that guard, only when an error page asks for an
+  illustration: a provider whose constructor or dependency throws (settings read from a database that is down) falls
+  back the same way and never breaks Twig or any other page. Each failed or slow call logs one warning when a `logger`
+  service exists (so one per error page during an outage), nothing more; the context carries the exception.
 - **Fast, and no database.** An error page often renders *because* the database, the cache or the network is down.
   Read config, a precomputed map or values already in memory; never run a query or an HTTP call. UiKit itself has no
   database dependency here.
 - **Budget guard.** With `illustration_provider_budget_ms` > 0, UiKit measures each call; one call over budget logs a
   warning and the rest of the **same request** skips the provider (a flag on the current `Request`'s attributes, never
-  on a service). The slow answer is still used (PHP cannot interrupt the call), and the next request asks again.
+  on a service). The slow answer is still used (PHP cannot interrupt the call), and the next request asks again. Symfony
+  renders an error page in its own sub-request and asks for the illustration once per page, so in the standard flow the
+  budget acts as a "slow provider" warning; the skip matters for templates that render several illustrations.
 - **Worker mode** (FrankenPHP, kernel kept alive, no reset): keep no request, user or tenant data in properties or
   statics; resolve per call.
 - **Markup.** Without a provider, or when it falls back, the page is byte-identical to 2.46. A provided illustration

@@ -16,8 +16,9 @@ namespace Nowo\UiKitBundle\View;
  * - never keep request / user / tenant data in properties or statics across requests (FrankenPHP worker mode with the
  *   kernel kept alive); resolve per call.
  *
- * UiKit guards every call: any `Throwable` (including a TypeError or an invalid {@see ErrorIllustration}) falls back to
- * the configured map and logs one warning when a logger is available; `error_pages.illustration_provider_budget_ms`
+ * UiKit guards every call: any `Throwable` (including a TypeError, an invalid {@see ErrorIllustration}, or this
+ * service's own constructor or dependencies failing: it is built lazily, inside the guard, only when an error page asks)
+ * falls back to the configured map and logs one warning per failed or slow call when a logger is available; `error_pages.illustration_provider_budget_ms`
  * skips the provider for the rest of the same request once one call ran over budget.
  */
 interface ErrorIllustrationProviderInterface

@@ -11,6 +11,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Definition\Processor;
+use Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 
@@ -104,7 +105,9 @@ final class KitTemplatesConfigurationTest extends TestCase
         $withProvider = new ContainerBuilder();
         (new NowoUiKitExtension())->load([['error_pages' => ['illustration_provider' => 'app.error_illustrations', 'illustration_provider_budget_ms' => 25]]], $withProvider);
         $definition = $withProvider->getDefinition('nowo_ui_kit.error_page_twig_extension');
-        self::assertSame('app.error_illustrations', (string) $definition->getArgument(3));
+        $provider = $definition->getArgument(3);
+        self::assertInstanceOf(ServiceClosureArgument::class, $provider, 'LK-L1: lazy, resolved inside the guard');
+        self::assertSame('app.error_illustrations', (string) $provider->getValues()[0]);
         self::assertSame(25, $definition->getArgument(0)['illustration_provider_budget_ms']);
 
         $prepend = new ContainerBuilder();

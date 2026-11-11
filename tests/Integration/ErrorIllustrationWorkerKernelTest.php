@@ -20,11 +20,13 @@ use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\HttpKernel\TerminableInterface;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
+use Twig\Environment;
 
 /**
  * 2.47, FrankenPHP worker mode with the kernel kept alive and NOT reset: N error pages through `http_kernel` (no
@@ -95,6 +97,54 @@ final class ErrorIllustrationWorkerKernelTest extends TestCase
             $kernel->shutdown();
         }
     }
+
+    public function testAProviderWhoseConstructorThrowsBreaksNeitherTwigNorTheErrorPage(): void
+    {
+        $this->dir = sys_get_temp_dir().'/nowo-ui-kit-error-illus-'.bin2hex(random_bytes(4));
+        $fs = new Filesystem();
+        $fs->dumpFile($this->dir.'/templates/bundles/TwigBundle/Exception/error.html.twig', "{% extends '@NowoUiKit/error/status.html.twig' %}");
+        $fs->dumpFile($this->dir.'/templates/ok.html.twig', 'ok {{ 20 + 22 }}');
+        $kernel = new ErrorIllustrationTestKernel($this->dir, ThrowingConstructorIllustrationProvider::class);
+        $kernel->boot();
+
+        try {
+            $httpKernel = $kernel->getContainer()->get('http_kernel');
+            self::assertInstanceOf(HttpKernelInterface::class, $httpKernel);
+            $logger = $kernel->getContainer()->get('logger');
+            self::assertInstanceOf(CountingLogger::class, $logger);
+
+            $ok = $httpKernel->handle(Request::create('https://app.example/ok'));
+            self::assertSame(200, $ok->getStatusCode());
+            self::assertSame('ok 42', $ok->getContent(), 'a plain Twig page never builds the provider');
+
+            foreach ([404, 500] as $code) {
+                $page = $httpKernel->handle(Request::create('https://app.example/fail/'.$code));
+                self::assertSame($code, $page->getStatusCode());
+                self::assertStringContainsString(500 === $code ? 'src="/bundles/nowouikit/illustrations/error-500.png"' : 'src="/bundles/nowouikit/illustrations/error.png"', (string) $page->getContent(), 'the static map');
+            }
+            self::assertSame(2, $logger->illustrationWarnings['exceptions']);
+        } finally {
+            $kernel->shutdown();
+        }
+    }
+}
+
+/**
+ * Audit LK-L1: settings read from the database in the constructor, while the database is down.
+ *
+ * @internal
+ */
+final class ThrowingConstructorIllustrationProvider implements ErrorIllustrationProviderInterface
+{
+    public function __construct()
+    {
+        throw new RuntimeException('SQLSTATE[HY000] [2002] Connection refused');
+    }
+
+    public function getIllustration(int $statusCode): ?ErrorIllustration
+    {
+        return null;
+    }
 }
 
 /**
@@ -155,9 +205,17 @@ final class ErrorIllustrationTestKernel extends Kernel implements CompilerPassIn
 {
     use MicroKernelTrait;
 
-    public function __construct(private readonly string $dir)
+    public function __construct(private readonly string $dir, private readonly string $providerClass = WorkerIllustrationProvider::class)
     {
         parent::__construct('test', false);
+    }
+
+    public function ok(): Response
+    {
+        $twig = $this->getContainer()->get('test.service_container')->get('twig');
+        \assert($twig instanceof Environment);
+
+        return new Response($twig->render('ok.html.twig'));
     }
 
     public function registerBundles(): iterable
@@ -202,7 +260,7 @@ final class ErrorIllustrationTestKernel extends Kernel implements CompilerPassIn
             'illustrations' => [500 => 'illustrations/error-500', 'default' => 'illustrations/error'],
             'webp' => false,
         ]]);
-        $container->register('test.error_illustration_provider', WorkerIllustrationProvider::class)->setPublic(true);
+        $container->register('test.error_illustration_provider', $this->providerClass)->setPublic(true);
         $container->register('logger', CountingLogger::class)->setPublic(true);
     }
 
@@ -216,6 +274,7 @@ final class ErrorIllustrationTestKernel extends Kernel implements CompilerPassIn
 
     protected function configureRoutes(RoutingConfigurator $routes): void
     {
+        $routes->add('ok', '/ok')->controller('kernel::ok');
         $routes->add('fail', '/fail/{code}')->controller('kernel::fail')->requirements(['code' => '\d+']);
     }
 }

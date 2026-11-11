@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Twig;
 
+use Closure;
 use Nowo\UiKitBundle\View\ErrorIllustration;
 use Nowo\UiKitBundle\View\ErrorIllustrationProviderInterface;
 use Nowo\UiKitBundle\View\ErrorPage;
@@ -15,6 +16,7 @@ use Throwable;
 use Twig\Extension\AbstractExtension;
 use Twig\Extension\GlobalsInterface;
 use Twig\TwigFunction;
+use UnexpectedValueException;
 
 /**
  * Kit error pages (2.6, `nowo_ui_kit.error_pages`, templates `@NowoUiKit/error/{layout,status}.html.twig`):
@@ -28,8 +30,9 @@ use Twig\TwigFunction;
  *   translation_prefix}`
  *
  * Illustrations (2.47): an optional {@see ErrorIllustrationProviderInterface} is asked first; null, any `Throwable` or
- * an invalid {@see ErrorIllustration} falls back to `error_pages.illustrations` (code, then `default`), logging at most
- * one warning. With `illustration_provider_budget_ms` > 0, a call over budget makes the rest of the same request skip
+ * an invalid {@see ErrorIllustration} falls back to `error_pages.illustrations` (code, then `default`), logging one
+ * warning per failed or slow call. The container passes the provider as a service closure, resolved inside the guard, so
+ * a provider whose constructor throws (database down) never breaks Twig. With `illustration_provider_budget_ms` > 0, a call over budget makes the rest of the same request skip
  * the provider (flag on the current Request's attributes, never on this service).
  *
  * Stateless: the request is read from the request stack on each call (FrankenPHP worker safe).
@@ -50,13 +53,14 @@ final class ErrorPageExtension extends AbstractExtension implements GlobalsInter
     private readonly array $config;
 
     /**
-     * @param array<string, mixed> $config processed `nowo_ui_kit.error_pages` (missing keys take the defaults)
+     * @param array<string, mixed>                                       $config               processed `nowo_ui_kit.error_pages` (missing keys take the defaults)
+     * @param ErrorIllustrationProviderInterface|(Closure(): mixed)|null $illustrationProvider 2.47: the provider, or a service closure resolved inside the guard (a constructor that throws never breaks Twig)
      */
     public function __construct(
         array $config = [],
         private readonly ?TranslatorInterface $translator = null,
         private readonly ?RequestStack $requestStack = null,
-        private readonly ?ErrorIllustrationProviderInterface $illustrationProvider = null,
+        private readonly ErrorIllustrationProviderInterface|Closure|null $illustrationProvider = null,
         private readonly ?LoggerInterface $logger = null,
     ) {
         $this->config = $config + self::defaults();
@@ -231,7 +235,7 @@ final class ErrorPageExtension extends AbstractExtension implements GlobalsInter
      */
     private function providedIllustration(int $code): ?ErrorIllustration
     {
-        if (!$this->illustrationProvider instanceof ErrorIllustrationProviderInterface) {
+        if (null === $this->illustrationProvider) {
             return null;
         }
         $request = $this->requestStack?->getCurrentRequest();
@@ -240,18 +244,28 @@ final class ErrorPageExtension extends AbstractExtension implements GlobalsInter
         }
         $budget = max(0, (int) $this->config['illustration_provider_budget_ms']);
         $start = hrtime(true);
+        $failed = false;
         try {
-            $illustration = $this->illustrationProvider->getIllustration($code);
+            // Resolved here, inside the guard: a provider whose constructor or dependency throws falls back too.
+            $provider = $this->illustrationProvider instanceof Closure ? ($this->illustrationProvider)() : $this->illustrationProvider;
+            if (!$provider instanceof ErrorIllustrationProviderInterface) {
+                throw new UnexpectedValueException(\sprintf('The error page illustration provider must implement %s.', ErrorIllustrationProviderInterface::class));
+            }
+            $illustration = $provider->getIllustration($code);
         } catch (Throwable $e) {
             $this->logger?->warning('Error page illustration provider failed; using the configured illustration.', [
                 'status_code' => $code,
                 'exception' => $e,
             ]);
             $illustration = null;
+            $failed = true;
         }
         $elapsed = (hrtime(true) - $start) / 1e6;
         if ($budget > 0 && $elapsed > $budget) {
             $request?->attributes->set(self::PROVIDER_SKIP_ATTRIBUTE, true); // @igor-ignore — flag on the current Request object (dies with it), never on this service
+        }
+        // One warning per call: a failure already logged one.
+        if (!$failed && $budget > 0 && $elapsed > $budget) {
             $this->logger?->warning('Error page illustration provider exceeded its budget; skipped for the rest of this request.', [
                 'status_code' => $code,
                 'elapsed_ms' => round($elapsed, 2),

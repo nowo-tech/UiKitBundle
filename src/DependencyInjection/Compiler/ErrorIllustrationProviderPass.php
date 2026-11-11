@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Nowo\UiKitBundle\DependencyInjection\Compiler;
 
 use Nowo\UiKitBundle\View\ErrorIllustrationProviderInterface;
+use Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
@@ -12,7 +13,8 @@ use Symfony\Component\DependencyInjection\Reference;
 
 /**
  * 2.47: fails the container build (never an error page at runtime) when `nowo_ui_kit.error_pages.illustration_provider`
- * names a service that does not exist or whose class does not implement {@see ErrorIllustrationProviderInterface}.
+ * names a service that does not exist or whose class does not implement {@see ErrorIllustrationProviderInterface}. The
+ * argument is a service closure (audit LK-L1) or, from a host that registered the extension itself, a plain reference.
  */
 final class ErrorIllustrationProviderPass implements CompilerPassInterface
 {
@@ -28,6 +30,9 @@ final class ErrorIllustrationProviderPass implements CompilerPassInterface
         }
         $arguments = $container->getDefinition(self::EXTENSION)->getArguments();
         $reference = $arguments[self::ARGUMENT] ?? null;
+        if ($reference instanceof ServiceClosureArgument) {
+            $reference = $reference->getValues()[0] ?? null;
+        }
         if (!$reference instanceof Reference) {
             return;
         }

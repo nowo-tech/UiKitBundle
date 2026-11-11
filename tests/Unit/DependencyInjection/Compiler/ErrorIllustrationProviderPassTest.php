@@ -10,6 +10,7 @@ use Nowo\UiKitBundle\View\ErrorIllustration;
 use Nowo\UiKitBundle\View\ErrorIllustrationProviderInterface;
 use PHPUnit\Framework\TestCase;
 use stdClass;
+use Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
 use Symfony\Component\DependencyInjection\Reference;
@@ -55,6 +56,18 @@ final class ErrorIllustrationProviderPassTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('service "app.missing" does not exist');
         (new ErrorIllustrationProviderPass())->process($this->container('app.missing'));
+    }
+
+    public function testServiceClosureArgumentIsUnwrapped(): void
+    {
+        $container = new ContainerBuilder();
+        $container->register('app.wrong', stdClass::class);
+        $container->register(ErrorIllustrationProviderPass::EXTENSION, ErrorPageExtension::class)
+            ->setArguments([[], null, null, new ServiceClosureArgument(new Reference('app.wrong')), null]);
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('service "app.wrong"');
+        (new ErrorIllustrationProviderPass())->process($container);
     }
 
     public function testWrongClassFails(): void

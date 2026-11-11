@@ -152,6 +152,22 @@ final class ErrorIllustrationProviderTest extends TestCase
         self::assertCount(2, $provider->calls);
     }
 
+    public function testAFailingSlowCallLogsOneWarning(): void
+    {
+        $provider = new CallbackIllustrationProvider(static function (int $code): ErrorIllustration {
+            usleep(10_000);
+
+            throw new RuntimeException('down');
+        });
+        $logger = new RecordingLogger();
+        $request = Request::create('https://app.example/x', 'GET');
+        $html = PageContractTwig::create(['e' => self::HOST], request: $request, errorPages: self::MAP + ['illustration_provider_budget_ms' => 1], illustrationProvider: $provider, logger: $logger)->render('e', ['status_code' => 404]);
+
+        self::assertStringContainsString('src="/bundles/nowouikit/illustrations/error-404.png"', $html);
+        self::assertSame(['warning'], array_column($logger->records, 0), 'one warning per call');
+        self::assertTrue($request->attributes->get(ErrorPageExtension::PROVIDER_SKIP_ATTRIBUTE));
+    }
+
     public function testNoBudgetNeverSkips(): void
     {
         $provider = new CallbackIllustrationProvider(static function (int $code): ErrorIllustration {
