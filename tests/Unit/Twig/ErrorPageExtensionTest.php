@@ -7,6 +7,7 @@ namespace Nowo\UiKitBundle\Tests\Unit\Twig;
 use InvalidArgumentException;
 use Nowo\UiKitBundle\Twig\ErrorPageExtension;
 use Nowo\UiKitBundle\View\ErrorIllustration;
+use Nowo\UiKitBundle\View\ErrorIllustrationProviderInterface;
 use Nowo\UiKitBundle\View\ErrorPage;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -187,6 +188,27 @@ final class ErrorPageExtensionTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('width and height must be positive');
         new ErrorIllustration('a', 0, 10);
+    }
+
+    public function testProviderWithoutRequestStackOrLogger(): void
+    {
+        $provider = new class implements ErrorIllustrationProviderInterface {
+            public int $calls = 0;
+
+            public function getIllustration(int $statusCode): ?ErrorIllustration
+            {
+                ++$this->calls;
+                usleep(3_000);
+
+                return 0 === $statusCode ? null : ErrorIllustration::fromUrl('/e/'.$statusCode.'.png', 4, 3);
+            }
+        };
+        $ext = new ErrorPageExtension(['illustration_provider_budget_ms' => 1, 'illustrations' => ['default' => ['path' => 'illustrations/error']]], null, null, $provider);
+
+        self::assertSame('/e/404.png', $ext->page(404)->illustration?->src, 'over budget, no request: the answer is used');
+        self::assertSame('/e/500.png', $ext->page('500')->illustration?->src, 'no request to flag: asked again');
+        self::assertSame('illustrations/error', $ext->page(null)->illustration?->path, 'null → map default');
+        self::assertSame(3, $provider->calls);
     }
 
     private function stack(Request $request): RequestStack

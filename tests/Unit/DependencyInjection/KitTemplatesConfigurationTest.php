@@ -75,6 +75,7 @@ final class KitTemplatesConfigurationTest extends TestCase
         yield 'array html attribute value' => [['error_pages' => ['html_attributes' => ['data-x' => ['a']]]], 'values are strings'];
         yield 'negative auto retry' => [['error_pages' => ['auto_retry_seconds' => -1]], 'auto_retry_seconds'];
         yield 'empty layout' => [['error_pages' => ['layout_template' => '']], 'layout_template'];
+        yield 'negative provider budget' => [['error_pages' => ['illustration_provider_budget_ms' => -1]], 'illustration_provider_budget_ms'];
     }
 
     /**
@@ -97,6 +98,14 @@ final class KitTemplatesConfigurationTest extends TestCase
         self::assertTrue($definition->hasTag('twig.extension'));
         self::assertSame('messages', $definition->getArgument(0)['translation_domain']);
         self::assertSame('messages', $container->getParameter('nowo_ui_kit.error_pages')['translation_domain']);
+        self::assertNull($definition->getArgument(3), '2.47: no provider by default');
+        self::assertSame('logger', (string) $definition->getArgument(4));
+
+        $withProvider = new ContainerBuilder();
+        (new NowoUiKitExtension())->load([['error_pages' => ['illustration_provider' => 'app.error_illustrations', 'illustration_provider_budget_ms' => 25]]], $withProvider);
+        $definition = $withProvider->getDefinition('nowo_ui_kit.error_page_twig_extension');
+        self::assertSame('app.error_illustrations', (string) $definition->getArgument(3));
+        self::assertSame(25, $definition->getArgument(0)['illustration_provider_budget_ms']);
 
         $prepend = new ContainerBuilder();
         $prepend->registerExtension(new class extends Extension {

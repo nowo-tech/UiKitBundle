@@ -295,6 +295,11 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
                 $errorPages,
                 new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE),
                 new Reference('request_stack', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                // 2.47: optional host provider; ErrorIllustrationProviderPass checks that it implements the interface.
+                \is_string($errorPages['illustration_provider'] ?? null) && '' !== $errorPages['illustration_provider']
+                    ? new Reference($errorPages['illustration_provider'])
+                    : null,
+                new Reference('logger', ContainerInterface::NULL_ON_INVALID_REFERENCE),
             ])
             ->addTag('twig.extension');
 

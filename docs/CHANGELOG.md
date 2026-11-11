@@ -122,6 +122,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Error illustration provider** (`nowo_ui_kit.error_pages.illustration_provider`): an optional host service
+  implementing `View\ErrorIllustrationProviderInterface` returns the illustration of each status code
+  (`ErrorIllustration::fromUrl(src, width, height, webpSrcset, srcset, sizes)`) or null for the configured
+  `illustrations` map. A null answer, any `Throwable` or an invalid illustration falls back to the map (code, then
+  `default`), logging at most one warning. Optional guard `error_pages.illustration_provider_budget_ms`: a call over
+  budget makes the rest of the same request skip the provider (flag on the Request, nothing kept across requests;
+  FrankenPHP worker safe, N-request `http_kernel` test without the resetter). Provided illustrations render
+  `<picture>` with an optional WebP `<source srcset sizes>` and `<img src srcset sizes>`; URLs are validated
+  (http(s), protocol-relative or path; no other scheme) and escaped, never passed through `asset()`. Without a
+  provider the page is byte-identical to 2.46.0. A missing provider service or one that does not implement the
+  interface fails the container build (`ErrorIllustrationProviderPass`).
+- `View\ErrorIllustration` gains optional `src`, `srcset`, `sizes`, `webpSrcset` (URL mode), `fromUrl()` and
+  `isUrl()`; the asset path mode is unchanged.
+
 ## [2.46.0] - 2026-11-10
 
 Edge-tabs launcher: morphing chevron SVG (CSS d transition, rotate fallback), softer default unfold and launcher-only motion tokens. See [UPGRADING](https://github.com/nowo-tech/UiKitBundle/blob/v2.46.0/docs/UPGRADING.md#to-2460).

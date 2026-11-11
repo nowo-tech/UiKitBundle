@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace Nowo\UiKitBundle\Twig;
 
 use Nowo\UiKitBundle\View\ErrorIllustration;
+use Nowo\UiKitBundle\View\ErrorIllustrationProviderInterface;
 use Nowo\UiKitBundle\View\ErrorPage;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use Throwable;
 use Twig\Extension\AbstractExtension;
 use Twig\Extension\GlobalsInterface;
 use Twig\TwigFunction;
@@ -24,6 +27,11 @@ use Twig\TwigFunction;
  * - global `nowo_ui_error_pages` — `{layout_template, theme_storage, theme_toggle, html_attributes, translation_domain,
  *   translation_prefix}`
  *
+ * Illustrations (2.47): an optional {@see ErrorIllustrationProviderInterface} is asked first; null, any `Throwable` or
+ * an invalid {@see ErrorIllustration} falls back to `error_pages.illustrations` (code, then `default`), logging at most
+ * one warning. With `illustration_provider_budget_ms` > 0, a call over budget makes the rest of the same request skip
+ * the provider (flag on the current Request's attributes, never on this service).
+ *
  * Stateless: the request is read from the request stack on each call (FrankenPHP worker safe).
  */
 final class ErrorPageExtension extends AbstractExtension implements GlobalsInterface
@@ -31,6 +39,9 @@ final class ErrorPageExtension extends AbstractExtension implements GlobalsInter
     public const KIT_DOMAIN = 'NowoUiKitBundle';
 
     public const KIT_PREFIX = 'error';
+
+    /** Request attribute set once a provider call ran over budget: the rest of that request skips the provider. */
+    public const PROVIDER_SKIP_ATTRIBUTE = '_nowo_ui_error_illustration_provider_skip';
 
     /** Per-code fields; the generic texts stand in for `title` / `lead` of a known code missing them. */
     private const CODE_FIELDS = ['title', 'lead', 'hint', 'image_alt'];
@@ -45,6 +56,8 @@ final class ErrorPageExtension extends AbstractExtension implements GlobalsInter
         array $config = [],
         private readonly ?TranslatorInterface $translator = null,
         private readonly ?RequestStack $requestStack = null,
+        private readonly ?ErrorIllustrationProviderInterface $illustrationProvider = null,
+        private readonly ?LoggerInterface $logger = null,
     ) {
         $this->config = $config + self::defaults();
     }
@@ -64,6 +77,8 @@ final class ErrorPageExtension extends AbstractExtension implements GlobalsInter
             'illustrations' => [],
             'illustration_width' => 1024,
             'illustration_height' => 683,
+            'illustration_provider' => null,
+            'illustration_provider_budget_ms' => 0,
             'webp' => true,
             'retry_statuses' => [408],
             'back_link_statuses' => [404],
@@ -207,6 +222,47 @@ final class ErrorPageExtension extends AbstractExtension implements GlobalsInter
     }
 
     private function illustration(int $code): ?ErrorIllustration
+    {
+        return $this->providedIllustration($code) ?? $this->configuredIllustration($code);
+    }
+
+    /**
+     * The provider's illustration, or null (no provider, skipped in this request, null answer, any Throwable).
+     */
+    private function providedIllustration(int $code): ?ErrorIllustration
+    {
+        if (!$this->illustrationProvider instanceof ErrorIllustrationProviderInterface) {
+            return null;
+        }
+        $request = $this->requestStack?->getCurrentRequest();
+        if ($request instanceof Request && true === $request->attributes->get(self::PROVIDER_SKIP_ATTRIBUTE)) {
+            return null;
+        }
+        $budget = max(0, (int) $this->config['illustration_provider_budget_ms']);
+        $start = hrtime(true);
+        try {
+            $illustration = $this->illustrationProvider->getIllustration($code);
+        } catch (Throwable $e) {
+            $this->logger?->warning('Error page illustration provider failed; using the configured illustration.', [
+                'status_code' => $code,
+                'exception' => $e,
+            ]);
+            $illustration = null;
+        }
+        $elapsed = (hrtime(true) - $start) / 1e6;
+        if ($budget > 0 && $elapsed > $budget) {
+            $request?->attributes->set(self::PROVIDER_SKIP_ATTRIBUTE, true); // @igor-ignore — flag on the current Request object (dies with it), never on this service
+            $this->logger?->warning('Error page illustration provider exceeded its budget; skipped for the rest of this request.', [
+                'status_code' => $code,
+                'elapsed_ms' => round($elapsed, 2),
+                'budget_ms' => $budget,
+            ]);
+        }
+
+        return $illustration;
+    }
+
+    private function configuredIllustration(int $code): ?ErrorIllustration
     {
         /** @var array<int|string, array{path: string, width?: int|null, height?: int|null, webp?: bool|null, extension?: string|null}> $map */
         $map = $this->config['illustrations'];
