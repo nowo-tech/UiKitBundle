@@ -146,7 +146,8 @@ From **2.46.x**:
 composer update nowo-tech/ui-kit-bundle
 ```
 
-Nothing to change: without `error_pages.illustration_provider` the error pages are byte-identical.
+Nothing to change: without `error_pages.illustration_provider` the error pages are byte-identical, and a FileType
+renders exactly as before unless it sets the new option `nowo_ui_image_input`.
 
 Optional — per-brand error illustrations: implement `Nowo\UiKitBundle\View\ErrorIllustrationProviderInterface`
 (return `ErrorIllustration::fromUrl(...)` or null) and set
@@ -163,6 +164,23 @@ back to `error_pages.illustrations`. Allow the image host in your CSP `img-src` 
 overrides the `error_illustration` block keeps its markup; read `error.illustration.isUrl()` / `.src` / `.srcset` /
 `.sizes` / `.webpSrcset` to support provided illustrations. See
 [USAGE.md](USAGE.md#error-illustration-provider-247).
+
+Optional — image input box (stored image or default, instant local preview, Replace / Remove / Undo):
+
+```php
+$builder
+    ->add('logo', FileType::class, [
+        'required' => false,
+        ImageInputTypeExtension::OPTION => ['current_url' => $logoUrl, 'default_url' => $defaultUrl, 'remove_field' => 'removeLogo'],
+    ])
+    ->add('removeLogo', CheckboxType::class, ['required' => false, 'mapped' => false]);
+```
+
+and add `image-input` to the scripts: `script_names: nowo_ui_script_names()|merge(['image-input'])`. Hosts with their own
+remove checkbox markup: pass its field name as `remove_field` (it is then rendered inside the box, only when an image is
+stored). CSP: `img-src` needs `blob:` (already required by `image-crop`). A host form theme that is not the kit's must keep
+UiKit's prepended `form_themes` (default) or `{% use '@NowoUiKit/form/nowo_ui_image_input.html.twig' %}`. See
+[USAGE.md](USAGE.md#image-input-247).
 
 ## To 2.46.0
 

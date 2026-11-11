@@ -6974,6 +6974,126 @@ html[data-nowo-ui-sortable-active] * {
   }
 }
 
+/* Image input (2.47, partial `image_input`, FileType option nowo_ui_image_input, js/nowo-ui-image-input.js): one box with the
+   stored image, the default (badge) or the local preview. Without the script the file input stays visible; with it
+   (`.is-enhanced`) the input is visually hidden and the Replace button opens it. The backdrop shows through transparent art. */
+.nowo-ui-image-input {
+  --nowo-ui-image-input-size: 12rem;
+  --nowo-ui-image-input-backdrop-light: rgb(255 255 255);
+  --nowo-ui-image-input-backdrop-dark: rgb(17 24 39);
+  --nowo-ui-image-input-checker: color-mix(in srgb, var(--nowo-ui-text) 10%, var(--nowo-ui-surface));
+  display: grid;
+  gap: 0.5rem;
+  justify-items: start;
+}
+.nowo-ui-image-input__frame {
+  position: relative;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  width: min(100%, var(--nowo-ui-image-input-size));
+  min-height: calc(var(--nowo-ui-image-input-size) * 0.5);
+  max-height: var(--nowo-ui-image-input-size);
+  overflow: hidden;
+  border: 1px solid var(--nowo-ui-border);
+  border-radius: var(--nowo-ui-radius);
+  background-color: var(--nowo-ui-surface);
+}
+.nowo-ui-image-input--checkerboard .nowo-ui-image-input__frame {
+  background-image: conic-gradient(var(--nowo-ui-image-input-checker) 25%, transparent 0 50%, var(--nowo-ui-image-input-checker) 0 75%, transparent 0);
+  background-size: 1rem 1rem;
+}
+.nowo-ui-image-input--light .nowo-ui-image-input__frame {
+  background-color: var(--nowo-ui-image-input-backdrop-light);
+}
+.nowo-ui-image-input--dark .nowo-ui-image-input__frame {
+  background-color: var(--nowo-ui-image-input-backdrop-dark);
+}
+.nowo-ui-image-input__frame.is-dragover {
+  border-style: dashed;
+  border-color: var(--nowo-ui-primary);
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline-offset: 2px;
+}
+.nowo-ui-image-input__preview {
+  display: block;
+  max-width: 100%;
+  max-height: var(--nowo-ui-image-input-size);
+  object-fit: contain;
+}
+.nowo-ui-image-input__empty {
+  padding: 1rem;
+  font-size: 0.875rem;
+  color: var(--nowo-ui-muted);
+  text-align: center;
+}
+.nowo-ui-image-input__badge {
+  position: absolute;
+  inset-block-start: 0.375rem;
+  inset-inline-start: 0.375rem;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--nowo-ui-text);
+  background: var(--nowo-ui-surface);
+  border: 1px solid var(--nowo-ui-border);
+  border-radius: 999px;
+}
+.nowo-ui-image-input__drop {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--nowo-ui-text);
+  text-align: center;
+  background: color-mix(in srgb, var(--nowo-ui-surface) 85%, transparent);
+}
+.nowo-ui-image-input__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.nowo-ui-image-input__preview[hidden],
+.nowo-ui-image-input__empty[hidden],
+.nowo-ui-image-input__badge[hidden],
+.nowo-ui-image-input__drop[hidden],
+.nowo-ui-image-input__button[hidden],
+.nowo-ui-image-input__remove-field[hidden] {
+  display: none !important;
+}
+.nowo-ui-image-input.is-enhanced .nowo-ui-image-input__file {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+.nowo-ui-image-input__status {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+@media (forced-colors: active) {
+  .nowo-ui-image-input__frame,
+  .nowo-ui-image-input__badge {
+    border-color: CanvasText;
+  }
+}
+
 /* Show more (partial `show_more`, js/nowo-ui-show-more.js): the fold exists only once the script runs. */
 [data-nowo-ui-show-more-ready]:not(.is-expanded) > .nowo-ui-show-more__content {
   display: -webkit-box;

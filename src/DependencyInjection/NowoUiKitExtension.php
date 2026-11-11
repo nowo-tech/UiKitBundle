@@ -28,6 +28,7 @@ use Nowo\UiKitBundle\Form\DateRangeSubmitExtension;
 use Nowo\UiKitBundle\Form\DateRangeType;
 use Nowo\UiKitBundle\Form\EmojiPickerType;
 use Nowo\UiKitBundle\Form\ImageCropTypeExtension;
+use Nowo\UiKitBundle\Form\ImageInputTypeExtension;
 use Nowo\UiKitBundle\Form\MultiSelectTypeExtension;
 use Nowo\UiKitBundle\Listing\CookieListingPreferenceStore;
 use Nowo\UiKitBundle\Listing\ListingCustomizerViewBuilder;
@@ -73,6 +74,9 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
 
     /** Form theme with the emoji picker field's block, prepended to `twig.form_themes`. */
     public const EMOJI_PICKER_FORM_THEME = '@NowoUiKit/form/nowo_ui_emoji_picker.html.twig';
+
+    /** Form theme with the image input's block (2.47, FileType option `nowo_ui_image_input`), prepended to `twig.form_themes`. */
+    public const IMAGE_INPUT_FORM_THEME = '@NowoUiKit/form/nowo_ui_image_input.html.twig';
 
     /** @var Closure(): bool */
     private readonly Closure $httpClientAvailable;
@@ -133,7 +137,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
         ];
         // 2.15: the date-range field's blocks (only `nowo_ui_date_range_*`) in every form, whatever the host theme.
         if (class_exists(AbstractType::class)) {
-            $twig['form_themes'] = [self::DATE_RANGE_FORM_THEME, self::EMOJI_PICKER_FORM_THEME];
+            $twig['form_themes'] = [self::DATE_RANGE_FORM_THEME, self::EMOJI_PICKER_FORM_THEME, self::IMAGE_INPUT_FORM_THEME];
         }
         $container->prependExtensionConfig('twig', $twig);
     }
@@ -407,7 +411,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
 
     /**
      * ChoiceType option `nowo_ui_multi_select` (2.14, markup of the `multi-select` Stimulus peer) and FileType option
-     * `nowo_ui_image_crop` (2.43); only with
+     * `nowo_ui_image_crop` (2.43) and `nowo_ui_image_input` (2.47); only with
      * symfony/form (guarded by the caller).
      */
     private function registerMultiSelect(ContainerBuilder $container): void
@@ -418,6 +422,13 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
         // 2.43: FileType option `nowo_ui_image_crop` (attributes of js/nowo-ui-image-crop.js).
         $container->register('nowo_ui_kit.form.image_crop_extension', ImageCropTypeExtension::class)
             ->setArguments([new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE)])
+            ->addTag('form.type_extension');
+        // 2.47: FileType option `nowo_ui_image_input` (the image input box, js/nowo-ui-image-input.js).
+        $container->register('nowo_ui_kit.form.image_input_extension', ImageInputTypeExtension::class)
+            ->setArguments([
+                new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                new Reference('logger', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+            ])
             ->addTag('form.type_extension');
     }
 

@@ -61,6 +61,7 @@
   - [Image crop accessibility contract](#image-crop-accessibility-contract)
   - [Host recipe: InstanceSettings image fields](#host-recipe-instancesettings-image-fields)
   - [Host recipe: avatars](#host-recipe-avatars)
+- [Image input (2.47)](#image-input-247)
 - [Sortable](#sortable)
 - [Overlays and the shell (2.28)](#overlays-and-the-shell-228)
 - [Menu semantics (2.28)](#menu-semantics-228)
@@ -2619,6 +2620,94 @@ $builder->add('avatar', FileType::class, [
 
 The stored image is square (store it as before); show it through the `avatar` partial, which makes it round. The
 preview `<img>` shows the crop as soon as it is applied (a `blob:` URL), before anything is saved.
+
+<a id="image-input-247"></a>
+## Image input (2.47)
+
+An image field that shows the image in its own box: the **stored** image when editing (or the effective **default**, with a
+"Default" badge), and, as soon as a file is picked or dropped, a **local preview** of it (an object URL; nothing is uploaded
+until the form is submitted). Replace, Remove and Undo sit in the same box. Opt in per FileType; without the option a
+FileType renders exactly as before.
+
+```php
+use Nowo\UiKitBundle\Form\ImageCropTypeExtension;
+use Nowo\UiKitBundle\Form\ImageInputTypeExtension;
+
+$builder
+    ->add('logo', FileType::class, [
+        'required' => false,
+        'mapped' => false,
+        'label' => 'brand.logo',
+        'attr' => ['accept' => 'image/png,image/webp'],
+        ImageInputTypeExtension::OPTION => [
+            'current_url' => $settings->logoUrl(),          // null / '' = nothing stored
+            'default_url' => '/img/brand/default-logo.svg', // optional
+            'remove_field' => 'removeLogo',                 // a sibling field of the same form
+            'backdrop' => 'checkerboard',                   // checkerboard (default) | light | dark
+        ],
+        // optional: crop before upload; the crop's preview then targets the box
+        ImageCropTypeExtension::OPTION => ['aspect' => 'free', 'max' => 1600],
+    ])
+    ->add('removeLogo', CheckboxType::class, ['required' => false, 'mapped' => false, 'label' => 'brand.remove_logo']);
+```
+
+```twig
+{{ form_row(form.logo) }} {# renders the box, and the removeLogo row inside it #}
+{{ include(nowo_ui_partial('scripts'), {script_names: nowo_ui_script_names()|merge(['image-input', 'image-crop'])}) }}
+```
+
+**API for hosts** (InstanceSettings `SettingImageType`, Beacon's profile picture and organization logo): the option takes
+three values, everything else is optional.
+
+| Option key | Value | Notes |
+|------------|-------|-------|
+| `current_url` | URL of the stored image, or `Closure(FormInterface $field): ?string` | The closure runs when the view is built (e.g. `fn ($f) => $f->getParent()?->getData()?->avatarUrl()`). |
+| `default_url` | URL of the image used when nothing is stored | Shown with the "Default" badge, and again after Remove. Null = an empty box ("No image"). |
+| `remove_field` | Name of a sibling field (CheckboxType) of the same parent form | Rendered inside the box only when something is stored; otherwise marked rendered and never printed. A name that is not a sibling throws a `LogicException` when the view is built. |
+| `backdrop` | `checkerboard` \| `light` \| `dark` | What shows through transparent art. |
+| `labels` | `replace`, `choose`, `remove`, `undo`, `default`, `empty`, `selected` (`%name%`), `removed`, `restored`, `drop`, `not_image` | Already translated; defaults from `image_input.*` (7 locales). |
+
+`true` is the same as `[]`. URLs: http(s), protocol-relative, root-relative or relative, or `data:image/…;base64,`; any
+other scheme, whitespace or a control character is refused; the template escapes them. A static `current_url` /
+`default_url` that breaks these rules throws an `InvalidOptionsException` when the field is built (a programming error).
+A `current_url` **closure** reads stored data, so its bad result (a legacy `javascript:` value, an unencoded
+`/uploads/my photo.png`) never fails the form: the field renders without a stored image and one warning is logged
+(percent-encode stored paths to keep them). URLs only ever reach `<img src>` and a data attribute fed back into it. The
+option is refused with `multiple`. The input gets `accept="image/*"` unless the field sets one, and loses `required` while an
+image is stored (keeping it must not need a new upload). The preview's `alt` is the field label (translated); `label: false`
+gives `alt=""`.
+
+**Behaviour** (`js/nowo-ui-image-input.js`, opt-in `script_names` entry `image-input`):
+
+- Pick or drop a file → the box shows it at once; the status (a polite live region) says "Selected: <name>"; Undo appears.
+  With the crop step, the box shows the cropped result after Apply (the crop's `-preview` targets the box; its object URL
+  is adopted, not duplicated); Cancel leaves the box as it was.
+- Remove (only when something is stored) → ticks the remove checkbox; the box shows the default (badge) or "No image";
+  Undo appears. Picking a file after Remove unticks it.
+- Undo → no picked file, checkbox unticked, the box as the page rendered it; focus goes back to Replace.
+- Keyboard: the file input leaves the tab order (it stays visible to assistive technology, with its label, help and
+  errors); Replace (a real `<button>`) opens the picker; Remove and Undo are buttons too. Every button is described by
+  the field name, its help and its errors (`aria-describedby`), so two image fields on a page are told apart and
+  validation errors are announced. Drag and drop on the box (highlighted, with the "Drop an image here" hint, while a
+  file is dragged over it).
+- The input carries one `aria-describedby` (help, then errors), whether the field is rendered by `form_row()` or
+  `form_widget()`; `attr.title` / `attr.placeholder` are translated as in Symfony's themes.
+- A box removed from the page (Turbo swap, dialog close) gives its preview's object URL back.
+- A form `reset` paints the rendered state again; a box inserted later (dialog, Turbo frame) is enhanced too.
+- Event: `nowo-ui:image-input:change` {state: `stored|default|empty|picked|removed`, file} on the root (bubbling).
+
+**Without JavaScript**: the current image above the plain file input and the remove checkbox; the buttons stay hidden and
+the form submits as any upload (the host reads the file and the checkbox as before).
+
+**CSP**: no inline script or style. The local preview is a `blob:` URL: add `blob:` to `img-src` (the image crop step needs
+it already), plus the host of `current_url` / `default_url` when it is not `'self'` (and `data:` if you pass data URIs).
+
+**Theming**: slots `image_input`, `image_input_frame`, `image_input_preview`, `image_input_empty`, `image_input_badge`,
+`image_input_controls`, `image_input_button`, `image_input_remove_field`, `image_input_status` ([THEME_SLOTS.md](THEME_SLOTS.md));
+tokens `--nowo-ui-image-input-size`, `-backdrop-light`, `-backdrop-dark`, `-checker` ([THEMING.md](THEMING.md)). The partial
+`image_input` can wrap a hand-written file input (it needs `data-nowo-ui-image-input-file`).
+
+**Worker mode**: the type extension keeps nothing between requests; every value lives in the form view.
 
 ## Sortable
 

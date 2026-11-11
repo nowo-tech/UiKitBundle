@@ -230,6 +230,15 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `emoji_picker_search` | `nowo-ui-input nowo-ui-emoji-picker__search` | `form-control` | `form-control` | — | — |
 | `emoji_picker_grid` | `nowo-ui-emoji-picker__grid` | — | — | — | — |
 | `emoji_picker_status` | `nowo-ui-emoji-picker__status` | — | — | — | — |
+| `image_input` | `nowo-ui-image-input` | — | — | — | — |
+| `image_input_frame` | `nowo-ui-image-input__frame` | — | — | — | — |
+| `image_input_preview` | `nowo-ui-image-input__preview` | — | — | — | — |
+| `image_input_empty` | `nowo-ui-image-input__empty` | — | — | — | — |
+| `image_input_badge` | `nowo-ui-image-input__badge` | — | — | — | — |
+| `image_input_controls` | `nowo-ui-image-input__controls` | — | — | — | — |
+| `image_input_button` | `nowo-ui-btn nowo-ui-btn--secondary nowo-ui-btn--sm nowo-ui-image-input__button` | `btn btn-outline-secondary btn-sm` | `btn btn-outline-secondary btn-sm` | `inline-flex items-center gap-1 font-medium px-2 py-1 text-sm border` | `button secondary small` |
+| `image_input_remove_field` | `nowo-ui-image-input__remove-field` | — | — | — | — |
+| `image_input_status` | `nowo-ui-image-input__status` | — | — | — | — |
 | `show_more` | `nowo-ui-show-more` | — | — | — | — |
 | `show_more_content` | `nowo-ui-show-more__content` | — | — | — | — |
 | `show_more_toggle` | `nowo-ui-btn nowo-ui-btn--link nowo-ui-show-more__toggle` | `btn btn-link` | `btn btn-link` | — | — |
@@ -502,6 +511,7 @@ as the UiKit partial (documented in the header comment of each template) and sho
 | `confirm_dialog` *(2.6)* | `partials/_confirm_dialog.html.twig` | `only_dialog`, `wrapper`, `trigger_label` / `trigger_class` / `trigger_title` / `trigger_aria_label` / `trigger_testid` / `trigger_disabled`, `expected_value`, `open_on_connect`, `dialog_id`, `dialog_testid`, `aria_labelledby`, `dialog_modifier`, `attr`, `dialog_attr`, `bundle`; 2.29: `anatomy: true` with `title` / `title_html`, `status`, `size`, `close_label`, `dismissible`, `title_id`; blocks `trigger`, `form` (`{% embed %}`), 2.29 `body` / `footer` (anatomy); slots `confirm_dialog_root`, `confirm_dialog`, `confirm_dialog_trigger` | Stimulus `confirm-dialog` wrapper around a form dialog |
 | `detail_list` | `page/_detail_list.html.twig` | `items` (list of `View\DetailItem`), `modifier` (`meta`, `stacked`, 2.21 `facts`: compact grid, slot `detail_list_facts`), `bundle` | show scaffold (sections, meta) |
 | `emoji_picker` | `partials/_emoji_picker.html.twig` | `id`, `input` (trusted HTML), `emojis`, `labels`, `attr`, `bundle`. Rendered by `EmojiPickerType` |
+| `image_input` | `partials/_image_input.html.twig` | `id`, `input` (trusted HTML, carries `data-nowo-ui-image-input-file`), `labels`, `current_url`, `default_url`, `remove` (trusted HTML), `alt`, `backdrop`, `disabled`, `attr`, `bundle`. Rendered by the FileType option `nowo_ui_image_input` (2.47) |
 | `show_more` | `partials/_show_more.html.twig` | `id`, `content` (trusted HTML) or block `nowo_ui_show_more_content`, `lines` (1 to 6), `labels`, `attr`, `content_attr`, `bundle` |
 | `dialog` *(2.1)* | `partials/_dialog.html.twig` | `id`, `title` (string or `Label`), `body` / `footer` (HTML), `size` (`sm` \| `md` \| `lg` \| `xl`), `body_muted`, `dismissible`, `backdrop_close`, `close_label`, `attr`, `bundle`, 2.2: `title_html` (rich title, raw), `title_attr` / `body_attr` (attributes of the title / body), 2.28: `root_class` (extra classes), 2.34: `footer_attr` / `header_attr` (safe attributes, `class` merged), `back_href` / `back_label` (back arrow before the title); block `nowo_ui_dialog_body`; slots `dialog`, `dialog_header`, `dialog_title`, `dialog_back`, `dialog_body`, `dialog_footer` | framework-free native `<dialog>` (opener `data-nowo-ui-dialog-open="<id>"`, `js/nowo-ui-dialog.js`) — preferred over `modal_shell` in page-contract bundles |
 | `edge_tabs_launcher` *(2.41)* | `partials/_edge_tabs_launcher.html.twig` | `when` (`phone` \| `always`), `gutter`, `label`, `icon`, `class`, `testid`, `attr`; runtime `edge-tabs` | host layout, once per page |

@@ -41,6 +41,7 @@ Optional **Stimulus peer** TypeScript sources live under `src/Resources/assets/s
 - [Scroll regions (2.28)](#scroll-regions-228)
 - [Emoji picker and show more](#emoji-picker-and-show-more)
 - [Image crop](#image-crop)
+- [Image input](#image-input)
 - [Sortable](#sortable)
 - [Stimulus peers — import examples](#stimulus-peers--import-examples)
 - [Beacon attribute migration](#beacon-attribute-migration)
@@ -701,6 +702,12 @@ IIFE only, no peer: `js/nowo-ui-emoji-picker.js` and `js/nowo-ui-show-more.js` (
 
 IIFE only, no peer: `js/nowo-ui-image-crop.js` (opt-in `script_names` entry `image-crop`), over file inputs with
 `data-nowo-ui-image-crop`. Events `nowo-ui:image-crop:open|cropped|cancel|error` on the input. See [USAGE](USAGE.md#image-crop).
+
+## Image input
+
+IIFE only, no peer: `js/nowo-ui-image-input.js` (2.47, opt-in `script_names` entry `image-input`), over the partial
+`image_input` (FileType option `nowo_ui_image_input`). Event `nowo-ui:image-input:change` on the root. See
+[USAGE](USAGE.md#image-input-247).
 
 ## Sortable
 
