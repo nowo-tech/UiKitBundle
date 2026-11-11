@@ -4,6 +4,7 @@
 
 - [Unreleased](#unreleased)
 - [To 2.48.0](#to-2480)
+- [To 2.48.0](#to-2480-1)
 - [To 2.47.0](#to-2470)
 - [To 2.46.0](#to-2460)
 - [To 2.45.0](#to-2450)
@@ -138,6 +139,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.48.0
+
+From **2.47.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 ## To 2.48.0
 
