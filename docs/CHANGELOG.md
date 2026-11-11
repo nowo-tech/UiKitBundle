@@ -122,6 +122,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Documentation
+
+- [ROADMAP.md](ROADMAP.md): new section "Ideas from an admin-template review (2026-11)" with prioritised gaps (RTL readiness, a top navigation layout, alert and tooltip partials, statistic cards with trends, bulk selection, an activity timeline, avatar groups and table extras), and ideas routed to other bundles.
+
 ## [2.46.0] - 2026-11-10
 
 Edge-tabs launcher: morphing chevron SVG (CSS d transition, rotate fallback), softer default unfold and launcher-only motion tokens. See [UPGRADING](https://github.com/nowo-tech/UiKitBundle/blob/v2.46.0/docs/UPGRADING.md#to-2460).
