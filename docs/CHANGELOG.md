@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.47.0] - 2026-11-11](#2470---2026-11-11)
 - [[2.46.0] - 2026-11-10](#2460---2026-11-10)
 - [[2.45.0] - 2026-11-10](#2450---2026-11-10)
 - [[2.44.0] - 2026-11-10](#2440---2026-11-10)
@@ -122,6 +123,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [2.47.0] - 2026-11-11
+
+Optional error-illustration provider with a safe fallback, and an opt-in image input with instant preview. See [UPGRADING](https://github.com/nowo-tech/UiKitBundle/blob/v2.47.0/docs/UPGRADING.md#to-2470).
+
 ### Added
 
 - **Error illustration provider** (`nowo_ui_kit.error_pages.illustration_provider`): an optional host service
@@ -160,7 +165,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [2.46.0] - 2026-11-10
 
 Edge-tabs launcher: morphing chevron SVG (CSS d transition, rotate fallback), softer default unfold and launcher-only motion tokens. See [UPGRADING](https://github.com/nowo-tech/UiKitBundle/blob/v2.46.0/docs/UPGRADING.md#to-2460).
-
 
 ### Added
 
@@ -2733,7 +2737,7 @@ Supersedes 1.17.3: same runtime code and CSS, release gate hardened so the tagge
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.46.0...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.47.0...HEAD
 [1.10.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.4...v1.10.0
 [1.8.4]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.3...v1.8.4
 [1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0
