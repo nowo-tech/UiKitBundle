@@ -6,10 +6,13 @@ namespace Nowo\UiKitBundle\Tests\Unit\Listing;
 
 use Nowo\UiKitBundle\DependencyInjection\NowoUiKitExtension;
 use Nowo\UiKitBundle\Listing\CookieListingPreferenceStore;
+use Nowo\UiKitBundle\Listing\ListingContext;
 use Nowo\UiKitBundle\Listing\ListingCustomizerViewBuilder;
 use Nowo\UiKitBundle\Listing\ListingDefinitionInterface;
+use Nowo\UiKitBundle\Listing\ListingPreferenceReaderInterface;
 use Nowo\UiKitBundle\Listing\ListingPreferenceStoreInterface;
 use Nowo\UiKitBundle\Listing\ListingRegistry;
+use Nowo\UiKitBundle\Listing\ListingViewerResolverInterface;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -30,6 +33,11 @@ final class ListingDependencyInjectionTest extends TestCase
         self::assertSame('nowo_ui_kit.listing.registry', (string) $container->getAlias(ListingRegistry::class));
         self::assertSame('nowo_ui_kit.listing.cookie_store', (string) $container->getAlias(ListingPreferenceStoreInterface::class));
         self::assertSame('nowo_ui_kit.listing.cookie_store', (string) $container->getAlias(CookieListingPreferenceStore::class));
+        self::assertSame('nowo_ui_kit.listing.cookie_store', (string) $container->getAlias(ListingPreferenceReaderInterface::class));
+        $arguments = $container->getDefinition('nowo_ui_kit.listing.view_builder')->getArguments();
+        self::assertSame(ListingPreferenceStoreInterface::class, (string) $arguments[1]);
+        self::assertSame(ListingPreferenceReaderInterface::class, (string) $arguments[3]);
+        self::assertSame(ListingViewerResolverInterface::class, (string) $arguments[4]);
         self::assertSame('nowo_ui_kit.listing.view_builder', (string) $container->getAlias(ListingCustomizerViewBuilder::class));
         self::assertArrayHasKey(ListingDefinitionInterface::class, $container->getAutoconfiguredInstanceof());
         self::assertTrue($container->getAutoconfiguredInstanceof()[ListingDefinitionInterface::class]->hasTag(ListingDefinitionInterface::TAG));
@@ -66,5 +74,21 @@ final class ListingDependencyInjectionTest extends TestCase
         $builder = $container->get(ListingCustomizerViewBuilder::class);
         self::assertInstanceOf(ListingCustomizerViewBuilder::class, $builder);
         self::assertNull($builder->build(InvoiceListing::KEY, new Request())->cookieName);
+    }
+
+    public function testHostReaderReplacesTheDefault(): void
+    {
+        $container = new ContainerBuilder();
+        (new NowoUiKitExtension())->load([[]], $container);
+        $container->register('app.listing_reader', ServerListingReader::class);
+        $container->setAlias(ListingPreferenceReaderInterface::class, 'app.listing_reader');
+        $container->register(InvoiceListing::class, InvoiceListing::class)->setAutoconfigured(true);
+        $container->getAlias(ListingCustomizerViewBuilder::class)->setPublic(true);
+        $container->compile();
+
+        $builder = $container->get(ListingCustomizerViewBuilder::class);
+        self::assertInstanceOf(ListingCustomizerViewBuilder::class, $builder);
+        self::assertNull($builder->build(InvoiceListing::KEY, new Request())->cookieName);
+        self::assertNull($builder->buildForContext(InvoiceListing::KEY, new ListingContext())->cookieName);
     }
 }
