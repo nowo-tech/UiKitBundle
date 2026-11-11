@@ -123,6 +123,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Wiki page view layout (Beacon 1.149): side panel drawer breakpoint and remembered state, a collapsible column rail,
+tabs and actions on one header row, a reading-width token and overflow helpers. Every option is opt-in; without them
+the markup is byte-identical to 2.47.0. See [UPGRADING](UPGRADING.md#to-2480).
+
+### Added
+
+- **Side panel `drawer_below`** (`md` default | `lg` | `xl`, also on `side_panel_container`): the panel docks as a
+  column only from 768 / 1200 / 1440 px and is the overlay drawer below (modifier `nowo-ui-side-panel--drawer-<bp>`,
+  `data-drawer-below`). `js/nowo-ui-side-panel.js` reads the panel's breakpoint and follows each media query change
+  (inert, backdrop, overlay registration, focus trap).
+- **Side panel `persist`** (`data-nowo-ui-side-panel-persist`): a localStorage fallback for hosts without a store of
+  their own (`nowo-ui-panel:<key>`), written only in the inline state and never opening a drawer on load; storage errors
+  are ignored. The host store (server-rendered `open`) stays primary.
+- **`js/nowo-ui-layout-state.js`**: optional blocking `<head>` script (external, no inline code) that applies remembered
+  panel and rail states while the document is parsed, before the first paint; `<html data-nowo-ui-panel-<key>>` /
+  `data-nowo-ui-rail-<key>` mirror them for host CSS.
+- **Rail toggle** (partial and slot `rail_toggle`, `js/nowo-ui-rail.js`, opt-in `script_names` entry `rail`): collapses
+  an in-page column (`[data-nowo-ui-rail-host]`) to a `--nowo-ui-rail-width` rail; `[data-nowo-ui-rail-body]` parts are
+  `display: none`. Button or no-JS link with `aria-controls` / `aria-expanded`, "Collapse / Expand %title%" labels
+  (`rail.collapse`, `rail.expand`, 7 locales), vertical title in the rail, focus kept on the toggle, optional shortcut,
+  `nowo-ui:rail:change` event, `window.NowoUiRail`, host store (`state_url` POST with CSRF header) or localStorage
+  fallback (`persist`), no width transition under reduced motion.
+- **Page header `tabs_inline`** (`true` only; partial, `page/_page_header.html.twig`, `nowo_ui_page_header()` options):
+  with `header.tabs`, the tabs and the toolbar share one row (`nowo-ui-page-header__bar`) that wraps on narrow widths.
+- **Reading width:** token `--nowo-ui-reading-width: 75ch` and the utility `.nowo-ui-readable`.
+- **Overflow helpers:** CSS for `[data-nowo-ui-scroll-region]` (`max-inline-size: 100%; overflow-x: auto`), `pre` and
+  `table` inside `.nowo-ui-rendered-content` / `[data-nowo-ui-rendered-content]` scroll sideways, `.nowo-ui-grid-fit`
+  (one `minmax(0, 1fr)` column, children `min-inline-size: 0`); nothing inside a `contenteditable` area is touched.
+- **`js/nowo-ui-scroll-region.js`:** also handles `pre` / `table` in rendered content (a table gets only the tab stop),
+  skips regions inside `contenteditable` areas (removing attributes it set before), and `data-nowo-ui-scroll-role="group"`.
+
+### Changed
+
+- The keyboard shortcut helpers of the side panel moved to `nowo-ui-shortcut-core.ts` (re-exported; no behaviour change).
+
+### Security
+
+Fixes from the independent audit Appendix LV (2026-11-11, **Pass-Low** on `ed5365c`), before the tag:
+
+- **LV-L1:** `rail_toggle` `attr` goes through `nowo_ui_safe_attrs()` (no `on*`, `style`, `srcdoc` or script-running
+  URLs) with the attributes the partial owns reserved (`href`, `role`, `type`, `aria-controls`, `aria-expanded`,
+  `aria-keyshortcuts`, `data-nowo-ui-rail-*`); `href` and `state_url` go through `nowo_ui_safe_href()` (a refused `href`
+  renders the button, a refused `state_url` no store attributes).
+- **LV-L2:** a side panel with `drawer_below: 'lg' | 'xl'` that the server renders `open` starts closed when the page
+  loads at or under its breakpoint, like a remembered `open`, instead of a modal drawer that made the content and the
+  shell inert on every load at laptop / tablet widths. No event, nothing stored; `md` and `overlay` panels keep the
+  server state. Applied before the first paint by `js/nowo-ui-layout-state.js`, else by `nowo-ui-side-panel.js`.
+- **LV-I1 / LV-I2:** `drawer_below` compares strictly (`true` no longer renders `--drawer-1`); the persist-key pattern
+  has the `D` modifier (no trailing newline).
+- **LV-I3:** `js/nowo-ui-rail.js` posts the state (and the CSRF header) only to a store URL on the page's own origin
+  (`mode: 'same-origin'`); another origin is never fetched.
+- **LV-I6:** modified (Ctrl / Cmd / Shift / Alt) and non-primary clicks on the rail link keep the browser's behaviour.
+
 ## [2.47.0] - 2026-11-11
 
 Optional error-illustration provider with a safe fallback, and an opt-in image input with instant preview. See [UPGRADING](https://github.com/nowo-tech/UiKitBundle/blob/v2.47.0/docs/UPGRADING.md#to-2470).

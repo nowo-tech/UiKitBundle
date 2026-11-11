@@ -35,6 +35,8 @@ type Entry =
   | 'edge-tabs'
   | 'image-crop'
   | 'image-input'
+  | 'rail'
+  | 'layout-state'
   | 'demo-peers';
 
 const entry = process.env.VITE_ENTRY as Entry | undefined;
@@ -472,6 +474,38 @@ const configs: Record<Entry, { build: object }> = {
         output: {
           format: 'iife' as const,
           entryFileNames: 'js/nowo-ui-image-input.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  // 2.48: opt-in collapsible column rail (partial rail_toggle).
+  'rail': {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-rail.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-rail.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  // 2.48: opt-in pre-paint script for remembered side panel / rail states (blocking, in <head>).
+  'layout-state': {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-layout-state.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-layout-state.js',
         },
       },
       minify: true,

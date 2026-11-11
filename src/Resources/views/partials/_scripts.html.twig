@@ -8,7 +8,7 @@
   partials on it (stateless: no per-request registry).
 
   Optional:
-    - script_names: list of runtime names (default nowo_ui_script_names(): modal, confirm, dialog, toast, tabs, theme, popover, segmented; 2.6: autosubmit; 2.26: avatar). Opt-in runtimes are merged by the host: emoji-picker, show-more, tree (2.24), side-panel (2.25), header-crumbs (2.27, the compact breadcrumb collapse), sortable, image-crop (2.43), image-input (2.47) : script_names: nowo_ui_script_names()|merge(['header-crumbs'])
+    - script_names: list of runtime names (default nowo_ui_script_names(): modal, confirm, dialog, toast, tabs, theme, popover, segmented; 2.6: autosubmit; 2.26: avatar). Opt-in runtimes are merged by the host: emoji-picker, show-more, tree (2.24), side-panel (2.25), header-crumbs (2.27, the compact breadcrumb collapse), sortable, image-crop (2.43), image-input (2.47), rail (2.48, the rail_toggle partial) : script_names: nowo_ui_script_names()|merge(['header-crumbs'])
     - nonce: CSP nonce (default the request attribute csp_nonce)
 #}
 {% set _request = app is defined and app ? app.request : null %}

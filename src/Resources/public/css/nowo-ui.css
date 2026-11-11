@@ -949,6 +949,8 @@ a.nowo-ui-pagination__link:hover {
   --nowo-ui-aside-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --nowo-ui-header-height: 3.25rem;
   --nowo-ui-content-max-width: 72rem;
+  /* 2.48: comfortable line length of reading content (.nowo-ui-readable) */
+  --nowo-ui-reading-width: 75ch;
 }
 
 .nowo-ui-shell {
@@ -6407,6 +6409,227 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
     transform: translateX(-1.5rem);
     opacity: 0;
   }
+}
+
+/*
+ * Side panel drawer breakpoint (2.48, option drawer_below on side_panel / side_panel_container): `lg` docks the panel
+ * only from 1200 px, `xl` from 1440 px; below, the same overlay drawer as under 768 px. Without the option nothing
+ * changes (md). The container follows its own modifier, or (where :has() is known) its panel's.
+ */
+@media (max-width: 1199px) {
+  .nowo-ui-side-panel-container:is(.nowo-ui-side-panel-container--drawer-lg, .nowo-ui-side-panel-container--drawer-xl, :has(> .nowo-ui-side-panel--drawer-lg, > .nowo-ui-side-panel--drawer-xl)) {
+    display: block;
+  }
+
+  .nowo-ui-side-panel:is(.nowo-ui-side-panel--drawer-lg, .nowo-ui-side-panel--drawer-xl) {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-end: 0;
+    width: min(100%, var(--nowo-ui-side-panel-width, 22rem));
+    inset-block-end: auto;
+    height: 100vh;
+    height: 100dvh;
+    max-height: none;
+    border-radius: 0;
+    border-block: 0;
+    border-inline-end: 0;
+    z-index: calc(var(--nowo-ui-side-panel-z, var(--nowo-ui-z-overlay, 1040)) + 1);
+    box-shadow: var(--nowo-ui-side-panel-shadow, 0 0 1.5rem rgb(0 0 0 / 25%));
+  }
+
+  .nowo-ui-side-panel--start:is(.nowo-ui-side-panel--drawer-lg, .nowo-ui-side-panel--drawer-xl) {
+    inset-inline-end: auto;
+    inset-inline-start: 0;
+    border-inline-start: 0;
+    border-inline-end: 1px solid var(--nowo-ui-side-panel-border, var(--nowo-ui-border));
+  }
+}
+
+@media (max-width: 1439px) {
+  .nowo-ui-side-panel-container:is(.nowo-ui-side-panel-container--drawer-xl, :has(> .nowo-ui-side-panel--drawer-xl)) {
+    display: block;
+  }
+
+  .nowo-ui-side-panel.nowo-ui-side-panel--drawer-xl {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-end: 0;
+    width: min(100%, var(--nowo-ui-side-panel-width, 22rem));
+    inset-block-end: auto;
+    height: 100vh;
+    height: 100dvh;
+    max-height: none;
+    border-radius: 0;
+    border-block: 0;
+    border-inline-end: 0;
+    z-index: calc(var(--nowo-ui-side-panel-z, var(--nowo-ui-z-overlay, 1040)) + 1);
+    box-shadow: var(--nowo-ui-side-panel-shadow, 0 0 1.5rem rgb(0 0 0 / 25%));
+  }
+
+  .nowo-ui-side-panel--start.nowo-ui-side-panel--drawer-xl {
+    inset-inline-end: auto;
+    inset-inline-start: 0;
+    border-inline-start: 0;
+    border-inline-end: 1px solid var(--nowo-ui-side-panel-border, var(--nowo-ui-border));
+  }
+}
+
+/* Phones keep the full-width drawer of 2.25 whatever the breakpoint. */
+@media (max-width: 767px) {
+  .nowo-ui-side-panel:is(.nowo-ui-side-panel--drawer-lg, .nowo-ui-side-panel--drawer-xl) {
+    width: 100%;
+    border: 0;
+  }
+}
+
+/*
+ * Collapsible column rail (2.48, partial rail_toggle, js/nowo-ui-rail.js): the host column
+ * ([data-nowo-ui-rail-host]) shrinks to --nowo-ui-rail-width while data-nowo-ui-rail="collapsed"; its
+ * [data-nowo-ui-rail-body] parts are display: none (out of the tab order and the accessibility tree), the toggle stays
+ * and shows the column's title vertically. The width change is animated only without reduced motion.
+ */
+[data-nowo-ui-rail-host] {
+  min-inline-size: 0;
+}
+
+[data-nowo-ui-rail-host][data-nowo-ui-rail='collapsed'] {
+  inline-size: var(--nowo-ui-rail-width, 2.75rem);
+  max-inline-size: var(--nowo-ui-rail-width, 2.75rem);
+  overflow: hidden;
+}
+
+[data-nowo-ui-rail-host][data-nowo-ui-rail='collapsed'] [data-nowo-ui-rail-body] {
+  display: none !important;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-nowo-ui-rail-host]:not([data-motion='reduce'] *) {
+    transition: inline-size var(--nowo-ui-motion-medium, 200ms) ease, max-inline-size var(--nowo-ui-motion-medium, 200ms) ease;
+  }
+}
+
+.nowo-ui-rail-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  min-width: 2rem;
+  min-height: 2rem;
+  text-decoration: none;
+  /* chevron direction: start column, LTR, expanded = pointing to the start (collapse) */
+  --nowo-ui-rail-toggle-flip: 1;
+}
+
+.nowo-ui-rail-toggle:focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, var(--nowo-ui-primary));
+  outline-offset: 2px;
+}
+
+.nowo-ui-rail-toggle__icon {
+  display: inline-flex;
+  line-height: 1;
+  transform: scaleX(var(--nowo-ui-rail-toggle-flip));
+}
+
+.nowo-ui-rail-toggle--end,
+.nowo-ui-rail-toggle--start:dir(rtl),
+[data-nowo-ui-rail='collapsed'] .nowo-ui-rail-toggle--start:dir(ltr) {
+  --nowo-ui-rail-toggle-flip: -1;
+}
+
+.nowo-ui-rail-toggle--end:dir(rtl),
+[data-nowo-ui-rail='collapsed'] .nowo-ui-rail-toggle--start:dir(rtl),
+[data-nowo-ui-rail='collapsed'] .nowo-ui-rail-toggle--end:dir(ltr) {
+  --nowo-ui-rail-toggle-flip: 1;
+}
+
+[data-nowo-ui-rail='collapsed'] .nowo-ui-rail-toggle--end:dir(rtl) {
+  --nowo-ui-rail-toggle-flip: -1;
+}
+
+.nowo-ui-rail-toggle__title {
+  display: none;
+}
+
+[data-nowo-ui-rail-host][data-nowo-ui-rail='collapsed'] .nowo-ui-rail-toggle {
+  flex-direction: column;
+  padding-block: 0.5rem;
+}
+
+[data-nowo-ui-rail-host][data-nowo-ui-rail='collapsed'] .nowo-ui-rail-toggle__title {
+  display: inline-block;
+  writing-mode: vertical-rl;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/*
+ * Page header tabs_inline (2.48): the tabs and the toolbar on one row under the title; the toolbar goes to the end and
+ * wraps under the tabs when the row is short.
+ */
+.nowo-ui-page-header__bar {
+  flex: 1 0 100%;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem 0.75rem;
+}
+
+.nowo-ui-page-header__bar > .nowo-ui-page-header__nav {
+  flex: 1 1 16rem;
+}
+
+.nowo-ui-page-header__bar > :not(.nowo-ui-page-header__nav) {
+  flex: 0 0 auto;
+  margin-inline-start: auto;
+  margin-bottom: 0;
+}
+
+/*
+ * Reading column and overflow helpers (2.48). `.nowo-ui-readable`: centred, at most --nowo-ui-reading-width (75ch).
+ * `[data-nowo-ui-scroll-region]`, and `pre` / `table` inside rendered content (`.nowo-ui-rendered-content` or
+ * `[data-nowo-ui-rendered-content]`), scroll sideways instead of widening the page; nothing inside an editable area
+ * (`contenteditable` other than "false") is touched. `.nowo-ui-grid-fit`: a one-column grid whose children may shrink
+ * below their content (min-width: 0), the fix for a wide code line or table widening a card; set your own
+ * grid-template-columns on it for more columns. All at zero specificity: host rules win.
+ */
+:where(.nowo-ui-readable) {
+  box-sizing: border-box;
+  inline-size: 100%;
+  max-inline-size: var(--nowo-ui-reading-width, 75ch);
+  min-inline-size: 0;
+  margin-inline: auto;
+}
+
+:where([data-nowo-ui-scroll-region]):not(:where([contenteditable]:not([contenteditable='false'])), :where([contenteditable]:not([contenteditable='false'])) *) {
+  max-inline-size: 100%;
+  overflow-x: auto;
+}
+
+:where(.nowo-ui-rendered-content, [data-nowo-ui-rendered-content]) :where(pre):not(:where([contenteditable]:not([contenteditable='false'])), :where([contenteditable]:not([contenteditable='false'])) *) {
+  max-inline-size: 100%;
+  overflow-x: auto;
+}
+
+:where(.nowo-ui-rendered-content, [data-nowo-ui-rendered-content]) :where(table):not(:where([contenteditable]:not([contenteditable='false'])), :where([contenteditable]:not([contenteditable='false'])) *) {
+  display: block;
+  inline-size: max-content;
+  max-inline-size: 100%;
+  overflow-x: auto;
+}
+
+:where(.nowo-ui-grid-fit) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-inline-size: 0;
+}
+
+:where(.nowo-ui-grid-fit) > * {
+  min-inline-size: 0;
 }
 
 /*

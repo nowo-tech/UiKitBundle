@@ -32,6 +32,7 @@ two token blocks of `nowo-ui.css`. A host theme is a short `:root` block.
 - [Phone mode (2.41)](#phone-mode-241)
 - [Default-theme polish tokens (2.2)](#default-theme-polish-tokens-22)
 - [Layout and metrics tokens](#layout-and-metrics-tokens)
+- [Reading column, rail and wide content (2.48)](#reading-column-rail-and-wide-content-248)
 - [CSS framework notes](#css-framework-notes)
 - [Example: generic brand](#example-generic-brand)
 - [Example: Symfony Beacon (moss / sand)](#example-symfony-beacon-moss--sand)
@@ -609,6 +610,32 @@ App shell tokens added in 2.32: `--nowo-ui-aside-peek-width`, `--nowo-ui-aside-b
 
 Since 2.11 `--nowo-ui-control-height` also sets the minimum height of `.nowo-ui-btn` and `.nowo-ui-input` (it used
 to feed the filter rows only). See [Density tokens](#density-tokens-211) for the per-component metrics.
+
+<a id="reading-column-rail-and-wide-content-248"></a>
+
+## Reading column, rail and wide content (2.48)
+
+| Token | Default |
+|-------|---------|
+| `--nowo-ui-reading-width` | `75ch` (declared on `:root`; the maximum width of `.nowo-ui-readable`, a centred reading column) |
+| `--nowo-ui-rail-width` | `2.75rem` (not declared: the width of a column collapsed by the `rail_toggle` partial, `[data-nowo-ui-rail-host][data-nowo-ui-rail="collapsed"]`) |
+| `--nowo-ui-rail-toggle-flip` | `1` / `-1` (internal: the chevron direction of the rail toggle, from its side, the state and the text direction; do not set it) |
+
+Helpers, all at zero specificity (`:where`), so host rules win:
+
+- `.nowo-ui-readable`: `max-inline-size: var(--nowo-ui-reading-width, 75ch)`, centred, full width below it.
+- `[data-nowo-ui-scroll-region]`: `max-inline-size: 100%; overflow-x: auto` (CSS for the attribute that
+  `js/nowo-ui-scroll-region.js` makes focusable while it overflows).
+- Rendered content (`.nowo-ui-rendered-content` or `[data-nowo-ui-rendered-content]`): its `pre` scroll sideways, and
+  its `table` become `display: block; inline-size: max-content; max-inline-size: 100%; overflow-x: auto` (a table
+  narrower than the column keeps its content width).
+- Nothing inside an editable area (`[contenteditable]` other than `"false"`) gets these rules: the editor owns its
+  layout.
+- `.nowo-ui-grid-fit`: a one-column grid (`minmax(0, 1fr)`) whose children have `min-inline-size: 0`, so a long code
+  line or a wide table cannot widen the card or the page; set `grid-template-columns` yourself for more columns.
+
+The side panel's drawer breakpoint (`drawer_below: lg | xl`) has no token: it is a media query (1199 / 1439 px), the
+same list `js/nowo-ui-side-panel.js` uses.
 
 <a id="density-tokens-211"></a>
 

@@ -484,6 +484,11 @@ final class ThemeSlots
         ]],
         'side_panel_container' => ['nowo-ui-side-panel-container', []],
         'side_panel_main' => ['nowo-ui-side-panel-container__main', []],
+        // Rail toggle (2.48, partial `rail_toggle`): collapses an in-page column to a thin rail and expands it again
+        'rail_toggle' => ['nowo-ui-btn nowo-ui-btn--icon nowo-ui-rail-toggle', [
+            'bootstrap' => 'btn btn-sm btn-outline-secondary',
+            'foundation' => 'button clear tiny',
+        ]],
         // Compact header (2.27, partials `header_context`, `header_crumbs`, `page_actions`): the filling of the top bar's
         // `app_header_context` slot — page-actions trigger, home link (added to btn_secondary + btn_icon) and the
         // one-line breadcrumb with its "…" disclosure, panel and phone "‹" up link
@@ -699,6 +704,7 @@ final class ThemeSlots
         'pagination' => '@NowoUiKitBundle/partials/_pagination.html.twig',
         'pagination_compact' => '@NowoUiKitBundle/partials/_pagination_compact.html.twig',
         'progress' => '@NowoUiKitBundle/partials/_progress.html.twig',
+        'rail_toggle' => '@NowoUiKitBundle/partials/_rail_toggle.html.twig',
         'remote_form_dialog' => '@NowoUiKitBundle/partials/_remote_form_dialog.html.twig',
         'row_actions' => '@NowoUiKitBundle/partials/_row_actions.html.twig',
         'scripts' => '@NowoUiKitBundle/partials/_scripts.html.twig',
