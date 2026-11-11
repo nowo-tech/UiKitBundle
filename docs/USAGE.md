@@ -2668,7 +2668,11 @@ three values, everything else is optional.
 | `labels` | `replace`, `choose`, `remove`, `undo`, `default`, `empty`, `selected` (`%name%`), `removed`, `restored`, `drop`, `not_image` | Already translated; defaults from `image_input.*` (7 locales). |
 
 `true` is the same as `[]`. URLs: http(s), protocol-relative, root-relative or relative, or `data:image/…;base64,`; any
-other scheme, whitespace or a control character is refused (`InvalidOptionsException`); the template escapes them. The
+other scheme, whitespace or a control character is refused; the template escapes them. A static `current_url` /
+`default_url` that breaks these rules throws an `InvalidOptionsException` when the field is built (a programming error).
+A `current_url` **closure** reads stored data, so its bad result (a legacy `javascript:` value, an unencoded
+`/uploads/my photo.png`) never fails the form: the field renders without a stored image and one warning is logged
+(percent-encode stored paths to keep them). URLs only ever reach `<img src>` and a data attribute fed back into it. The
 option is refused with `multiple`. The input gets `accept="image/*"` unless the field sets one, and loses `required` while an
 image is stored (keeping it must not need a new upload). The preview's `alt` is the field label (translated); `label: false`
 gives `alt=""`.
@@ -2681,8 +2685,14 @@ gives `alt=""`.
 - Remove (only when something is stored) → ticks the remove checkbox; the box shows the default (badge) or "No image";
   Undo appears. Picking a file after Remove unticks it.
 - Undo → no picked file, checkbox unticked, the box as the page rendered it; focus goes back to Replace.
-- Keyboard: the file input leaves the tab order; Replace (a real `<button>`) opens the picker; Remove and Undo are buttons
-  too. Drag and drop on the box (highlighted while a file is dragged over it).
+- Keyboard: the file input leaves the tab order (it stays visible to assistive technology, with its label, help and
+  errors); Replace (a real `<button>`) opens the picker; Remove and Undo are buttons too. Every button is described by
+  the field name, its help and its errors (`aria-describedby`), so two image fields on a page are told apart and
+  validation errors are announced. Drag and drop on the box (highlighted, with the "Drop an image here" hint, while a
+  file is dragged over it).
+- The input carries one `aria-describedby` (help, then errors), whether the field is rendered by `form_row()` or
+  `form_widget()`; `attr.title` / `attr.placeholder` are translated as in Symfony's themes.
+- A box removed from the page (Turbo swap, dialog close) gives its preview's object URL back.
 - A form `reset` paints the rendered state again; a box inserted later (dialog, Turbo frame) is enhanced too.
 - Event: `nowo-ui:image-input:change` {state: `stored|default|empty|picked|removed`, file} on the root (bubbling).
 

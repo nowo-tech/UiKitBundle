@@ -22,6 +22,7 @@ const FRAME = '[data-nowo-ui-image-input-frame]';
 const PREVIEW = '[data-nowo-ui-image-input-preview]';
 const EMPTY = '[data-nowo-ui-image-input-empty]';
 const BADGE = '[data-nowo-ui-image-input-badge]';
+const DROP = '[data-nowo-ui-image-input-drop]';
 const REPLACE = '[data-nowo-ui-image-input-replace]';
 const REMOVE = '[data-nowo-ui-image-input-remove]';
 const UNDO = '[data-nowo-ui-image-input-undo]';
@@ -294,8 +295,9 @@ export function enhance(root: HTMLElement): void {
     return;
   }
   root.classList.add('is-enhanced');
+  // Out of the tab order (Replace is the keyboard path) but not hidden from assistive technology: its label, help and
+  // errors stay reachable in browse mode (audit LK-L4).
   box.input.tabIndex = -1;
-  box.input.setAttribute('aria-hidden', 'true');
   if (box.replace) {
     box.replace.hidden = false;
     box.replace.setAttribute('aria-controls', box.input.id);
@@ -376,14 +378,21 @@ function onDrag(event: Event): void {
     return;
   }
   drag.preventDefault();
+  const hint = frame.querySelector<HTMLElement>(DROP);
   if (drag.type === 'dragenter' || drag.type === 'dragover') {
     frame.classList.add('is-dragover');
+    if (hint) {
+      hint.hidden = false;
+    }
     if (drag.dataTransfer) {
       drag.dataTransfer.dropEffect = 'copy';
     }
     return;
   }
   frame.classList.remove('is-dragover');
+  if (hint) {
+    hint.hidden = true;
+  }
   const file = drag.type === 'drop' ? drag.dataTransfer?.files?.[0] : undefined;
   if (file) {
     dropFile(box, file);
@@ -407,6 +416,16 @@ function onReset(event: Event): void {
   }, 0);
 }
 
+/** Revokes the object URLs of the previews in a removed subtree that is no longer in the document. */
+export function releaseRemoved(node: Element): void {
+  const previews = node.matches(PREVIEW) ? [node] : [...node.querySelectorAll(PREVIEW)];
+  previews.forEach((preview) => {
+    if (preview instanceof HTMLImageElement && !preview.isConnected) {
+      forgetOwnUrl(preview);
+    }
+  });
+}
+
 let bound = false;
 
 export function bindNowoUiImageInput(): void {
@@ -425,12 +444,18 @@ export function bindNowoUiImageInput(): void {
   } else {
     enhanceAll();
   }
-  // Boxes that arrive later (a remote form dialog, a Turbo frame or a morph).
+  // Boxes that arrive later (a remote form dialog, a Turbo frame or a morph) are enhanced; a box that left the page
+  // (and was not put back in the same batch, as a move does) gives its preview's object URL back.
   new MutationObserver((records) => {
     for (const record of records) {
       record.addedNodes.forEach((node) => {
         if (node instanceof Element) {
           enhanceAll(node);
+        }
+      });
+      record.removedNodes.forEach((node) => {
+        if (node instanceof Element) {
+          releaseRemoved(node);
         }
       });
     }

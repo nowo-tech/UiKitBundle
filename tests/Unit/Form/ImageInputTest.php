@@ -14,6 +14,8 @@ use Nowo\UiKitBundle\Form\ImageInputTypeExtension;
 use Nowo\UiKitBundle\Tests\Unit\PageContract\PageContractTwig;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\AbstractLogger;
+use Stringable;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
@@ -103,9 +105,9 @@ final class ImageInputTest extends TestCase
         self::assertStringContainsString('<img id="form_logo_preview" class="nowo-ui-image-input__preview" data-nowo-ui-image-input-preview src="https://cdn.example/logo.png?v=2&amp;t=1" alt="Company logo" decoding="async">', $html);
         self::assertMatchesRegularExpression('#<span class="nowo-ui-image-input__badge" data-nowo-ui-image-input-badge hidden>Default</span>#', $html);
         self::assertMatchesRegularExpression('#<input type="file" id="form_logo" name="form\[logo\]" class="nowo-ui-input nowo-ui-image-input__file" data-nowo-ui-image-input-file accept="image/\*">#', $html, 'no required while an image is stored');
-        self::assertMatchesRegularExpression('#<button type="button" class="nowo-ui-btn nowo-ui-btn--secondary nowo-ui-btn--sm nowo-ui-image-input__button" data-nowo-ui-image-input-replace hidden>Replace image</button>#', $html);
-        self::assertStringContainsString('data-nowo-ui-image-input-remove hidden>Remove image</button>', $html);
-        self::assertStringContainsString('data-nowo-ui-image-input-undo hidden>Undo</button>', $html);
+        self::assertMatchesRegularExpression('#<button type="button" class="nowo-ui-btn nowo-ui-btn--secondary nowo-ui-btn--sm nowo-ui-image-input__button" data-nowo-ui-image-input-replace aria-describedby="form_logo_name" hidden>Replace image</button>#', $html);
+        self::assertStringContainsString('data-nowo-ui-image-input-remove aria-describedby="form_logo_name" hidden>Remove image</button>', $html);
+        self::assertStringContainsString('data-nowo-ui-image-input-undo aria-describedby="form_logo_name" hidden>Undo</button>', $html);
         self::assertMatchesRegularExpression('#<div class="nowo-ui-image-input__remove-field" data-nowo-ui-image-input-remove-field>.*<input type="checkbox" id="form_removeLogo" name="form\[removeLogo\]"#s', $html);
         self::assertSame(1, substr_count($html, 'name="form[removeLogo]"'), 'the remove row is printed once, inside the box');
         self::assertStringContainsString('<p class="nowo-ui-image-input__status" data-nowo-ui-image-input-status role="status" aria-live="polite"></p>', $html);
@@ -121,7 +123,7 @@ final class ImageInputTest extends TestCase
         self::assertStringContainsString('src="/img/default.svg" alt="Logo"', $html, 'alt from the humanized name');
         self::assertMatchesRegularExpression('#data-nowo-ui-image-input-badge>Default</span>#', $html);
         self::assertStringContainsString('data-nowo-ui-image-input-file required accept="image/*"', $html);
-        self::assertStringContainsString('data-nowo-ui-image-input-replace hidden>Choose image</button>', $html);
+        self::assertStringContainsString('data-nowo-ui-image-input-replace aria-describedby="form_logo_name" hidden>Choose image</button>', $html);
         self::assertStringNotContainsString('data-nowo-ui-image-input-remove', $html);
         self::assertStringNotContainsString('removeLogo', $html, 'nothing stored: the remove field is marked rendered, never printed');
     }
@@ -146,7 +148,7 @@ final class ImageInputTest extends TestCase
         self::assertStringContainsString('data-nowo-ui-image-input-current="/u/7.webp"', $picture);
         self::assertStringContainsString('alt="Foto de perfil"', $picture);
         self::assertStringContainsString('&quot;replace&quot;:&quot;Cambiar imagen&quot;', $picture);
-        self::assertStringContainsString('data-nowo-ui-image-input-replace hidden>Cambiar imagen</button>', $picture);
+        self::assertStringContainsString('data-nowo-ui-image-input-replace aria-describedby="profile_picture_name" hidden>Cambiar imagen</button>', $picture);
 
         self::assertStringContainsString('data-nowo-ui-image-input-state="empty"', $empty);
         self::assertStringContainsString('data-nowo-ui-image-input-preview hidden alt=""', $empty);
@@ -177,6 +179,62 @@ final class ImageInputTest extends TestCase
         self::assertStringContainsString('data-nowo-ui-image-crop-preview="mine"', $html, 'a preview the field set wins');
         self::assertStringContainsString('class="nowo-ui-input nowo-ui-image-input__file nowo-ui-input--invalid', $html);
         self::assertStringContainsString('aria-invalid="true"', $html);
+    }
+
+    public function testOneDescribedByWithHelpAndErrorsAndDescribedButtons(): void
+    {
+        $form = $this->factory()->createNamedBuilder('form')
+            ->add('logo', FileType::class, ['help' => 'PNG, at most 1 MB', 'label' => 'Brand logo', 'attr' => ['title' => 'logo.title', 'placeholder' => 'logo.placeholder'], ImageInputTypeExtension::OPTION => ['current_url' => '/l.png', 'remove_field' => 'removeLogo']])
+            ->add('removeLogo', CheckboxType::class, ['required' => false, 'mapped' => false])
+            ->getForm();
+        $form->submit([]);
+        $form->get('logo')->addError(new FormError('Too big'));
+        $form->get('logo')->addError(new FormError('Wrong type'));
+
+        foreach (['{{ form_row(form.logo) }}', '{{ form_widget(form.logo) }}'] as $body) {
+            $twig = PageContractTwig::create(['t' => self::THEME.$body], [], 'none', messages: ['messages' => ['logo.title' => 'Logo title', 'logo.placeholder' => 'Logo hint']]);
+            $html = $twig->render('t', ['form' => $form->createView()]);
+            preg_match('#<input type="file"[^>]*>#', $html, $input);
+            self::assertSame(1, substr_count($input[0], 'aria-describedby='), $body.' LK-L2: one attribute');
+            self::assertStringContainsString('aria-describedby="form_logo_help form_logo_error1 form_logo_error2"', $input[0], $body);
+            self::assertSame(1, substr_count($input[0], 'aria-invalid='), $body);
+            self::assertStringNotContainsString('aria-hidden', $input[0]);
+            self::assertStringContainsString('title="Logo title" placeholder="Logo hint"', $input[0], $body.' LK-I8');
+            self::assertStringContainsString('<span id="form_logo_name" hidden>Brand logo</span>', $html);
+            self::assertSame(3, substr_count($html, ' aria-describedby="form_logo_name form_logo_help form_logo_error1 form_logo_error2" hidden'), $body.' LK-L4: Replace, Remove, Undo');
+            self::assertStringContainsString('data-nowo-ui-image-input-drop hidden>Drop an image here</span>', $html);
+        }
+
+        $plain = $this->render($this->form($this->factory(), true, ['label' => false])->createView(), '{{ form_widget(form.logo) }}');
+        self::assertStringNotContainsString('aria-describedby', $plain, 'no label, help or errors: nothing to reference');
+        self::assertStringNotContainsString('_name"', $plain);
+    }
+
+    public function testAnUnusableStoredUrlFromAClosureRendersWithoutIt(): void
+    {
+        $logger = new class extends AbstractLogger {
+            /** @var list<array{0: mixed, 1: string, 2: array<mixed>}> */
+            public array $records = [];
+
+            public function log($level, string|Stringable $message, array $context = []): void
+            {
+                $this->records[] = [$level, (string) $message, $context];
+            }
+        };
+        $factory = Forms::createFormFactoryBuilder()->addTypeExtension(new ImageInputTypeExtension(null, $logger))->getFormFactory();
+        foreach (['/uploads/my photo.png', 'javascript:alert(1)', 42] as $stored) {
+            $form = $this->form($factory, ['current_url' => static fn (): mixed => $stored, 'default_url' => '/d.png', 'remove_field' => 'removeLogo']);
+            $html = $this->render($form->createView(), '{{ form_row(form.logo) }}{{ form_rest(form) }}');
+            self::assertStringContainsString('data-nowo-ui-image-input-state="default"', $html, (string) $stored);
+            self::assertStringNotContainsString('removeLogo', $html);
+        }
+        self::assertCount(3, $logger->records);
+        self::assertSame('warning', $logger->records[0][0]);
+        self::assertSame('logo', $logger->records[0][2]['field']);
+
+        $silent = Forms::createFormFactoryBuilder()->addTypeExtension(new ImageInputTypeExtension())->getFormFactory();
+        $html = $this->render($this->form($silent, ['current_url' => static fn (): string => 'vbscript:x'])->createView(), '{{ form_row(form.logo) }}');
+        self::assertStringContainsString('data-nowo-ui-image-input-state="empty"', $html);
     }
 
     public function testFieldOptionErrors(): void
@@ -239,6 +297,7 @@ final class ImageInputTest extends TestCase
         $definition = $container->getDefinition('nowo_ui_kit.form.image_input_extension');
         self::assertSame(ImageInputTypeExtension::class, $definition->getClass());
         self::assertTrue($definition->hasTag('form.type_extension'));
+        self::assertSame('logger', (string) $definition->getArgument(1));
 
         $prepend = new ContainerBuilder();
         $prepend->registerExtension(new class extends Extension {

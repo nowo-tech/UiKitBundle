@@ -425,7 +425,10 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
             ->addTag('form.type_extension');
         // 2.47: FileType option `nowo_ui_image_input` (the image input box, js/nowo-ui-image-input.js).
         $container->register('nowo_ui_kit.form.image_input_extension', ImageInputTypeExtension::class)
-            ->setArguments([new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE)])
+            ->setArguments([
+                new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                new Reference('logger', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+            ])
             ->addTag('form.type_extension');
     }
 

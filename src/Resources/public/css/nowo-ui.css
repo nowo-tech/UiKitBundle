@@ -7039,6 +7039,18 @@ html[data-nowo-ui-sortable-active] * {
   border: 1px solid var(--nowo-ui-border);
   border-radius: 999px;
 }
+.nowo-ui-image-input__drop {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--nowo-ui-text);
+  text-align: center;
+  background: color-mix(in srgb, var(--nowo-ui-surface) 85%, transparent);
+}
 .nowo-ui-image-input__controls {
   display: flex;
   flex-wrap: wrap;
@@ -7048,6 +7060,7 @@ html[data-nowo-ui-sortable-active] * {
 .nowo-ui-image-input__preview[hidden],
 .nowo-ui-image-input__empty[hidden],
 .nowo-ui-image-input__badge[hidden],
+.nowo-ui-image-input__drop[hidden],
 .nowo-ui-image-input__button[hidden],
 .nowo-ui-image-input__remove-field[hidden] {
   display: none !important;

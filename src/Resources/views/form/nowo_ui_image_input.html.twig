@@ -6,6 +6,8 @@
   - The input loses `required` while an image is stored (keeping it needs no new upload).
   - With `nowo_ui_image_crop` on the same field, the crop's preview targets the box (`data-nowo-ui-image-crop-preview`).
   - `remove_field`: the sibling field is rendered inside the box when an image is stored; otherwise it is marked rendered, unprinted.
+  - One aria-describedby on the input (help, then errors; from form_row() or form_widget()); the buttons reference the field
+    name, its help and its errors too. `title` / `placeholder` in `attr` are translated as in Symfony's widget_attributes.
 #}
 {%- block nowo_ui_image_input_widget -%}
     {%- set _cfg = nowo_ui_image_input -%}
@@ -16,11 +18,26 @@
         {%- set _attr = _attr|merge({'data-nowo-ui-image-crop-preview': id ~ '_preview'}) -%}
     {%- endif -%}
     {%- set _class = nowo_ui_class('input', _b) ~ ' nowo-ui-image-input__file' ~ (_invalid ? ' ' ~ nowo_ui_class('input_invalid', _b)) ~ (_attr.class is defined ? ' ' ~ _attr.class) -%}
+    {#- one aria-describedby (audit LK-L2): the row's ids (help, errors) plus help and errors when rendered by form_widget() -#}
+    {%- set _describedby = (_attr['aria-describedby'] is defined and _attr['aria-describedby'] is not empty ? _attr['aria-describedby']|split(' ') : [])|filter(v => v != '') -%}
+    {%- if help is defined and help is not empty and (id ~ '_help') not in _describedby -%}
+        {%- set _describedby = _describedby|merge([id ~ '_help']) -%}
+    {%- endif -%}
+    {%- if _invalid -%}
+        {%- for _i in 1..errors|length -%}
+            {%- if (id ~ '_error' ~ _i) not in _describedby -%}{%- set _describedby = _describedby|merge([id ~ '_error' ~ _i]) -%}{%- endif -%}
+        {%- endfor -%}
+    {%- endif -%}
     {%- set _input -%}
         <input type="file" id="{{ id }}" name="{{ full_name }}" class="{{ _class }}" data-nowo-ui-image-input-file
             {%- if required and not _cfg.current_url %} required{% endif %}{% if disabled %} disabled{% endif %}
-            {%- if help is defined and help is not empty %} aria-describedby="{{ id }}_help"{% endif %}{% if _invalid %} aria-invalid="true"{% endif %}
-            {%- for _k, _v in _attr|filter((v, k) => k != 'class') %}{% if _v is same as(true) %} {{ _k }}{% elseif _v is not same as(false) and _v is not null %} {{ _k }}="{{ _v }}"{% endif %}{% endfor %}>
+            {%- if _describedby is not empty %} aria-describedby="{{ _describedby|join(' ') }}"{% endif %}{% if _invalid %} aria-invalid="true"{% endif %}
+            {%- for _k, _v in _attr|filter((v, k) => k not in ['class', 'aria-describedby', 'aria-invalid']) -%}
+                {%- if _k in ['title', 'placeholder'] and _v is not same as(false) and _v is not null and translation_domain is not same as(false) -%}
+                    {%- set _v = _v|trans(attr_translation_parameters|default({}), translation_domain) -%}
+                {%- endif -%}
+                {%- if _v is same as(true) %} {{ _k }}{% elseif _v is not same as(false) and _v is not null %} {{ _k }}="{{ _v }}"{% endif -%}
+            {%- endfor -%}>
     {%- endset -%}
     {%- set _remove = null -%}
     {%- if _cfg.remove_field and form.parent and form.parent.children[_cfg.remove_field] is defined -%}
@@ -49,6 +66,7 @@
         alt: _alt,
         labels: _cfg.labels,
         backdrop: _cfg.backdrop,
+        describedby: _describedby,
         disabled: disabled,
         bundle: _b,
     }, with_context: false) -}}

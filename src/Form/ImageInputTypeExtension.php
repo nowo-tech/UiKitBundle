@@ -7,6 +7,7 @@ namespace Nowo\UiKitBundle\Form;
 use Closure;
 use InvalidArgumentException;
 use LogicException;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Form\AbstractTypeExtension;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\FormInterface;
@@ -21,7 +22,8 @@ use Symfony\Contracts\Translation\TranslatorInterface;
  * `nowo_ui_image_input_widget` of `form/nowo_ui_image_input.html.twig`, partial `image_input`, js/nowo-ui-image-input.js). Values:
  * `false` (default: the FileType renders exactly as before) | `true` | an array of {@see ImageInput} options, e.g.
  * `['current_url' => $user->avatarUrl(), 'default_url' => '/img/avatar.svg', 'remove_field' => 'removeAvatar']`. Refused on a
- * `multiple` field. Combine with `nowo_ui_image_crop`: the crop's preview then targets the box. Stateless (worker safe): every
+ * `multiple` field. A `current_url` closure whose result is not a usable URL renders the field without a stored image
+ * (one warning logged). Combine with `nowo_ui_image_crop`: the crop's preview then targets the box. Stateless (worker safe): every
  * value lives in the form view. Only registered when symfony/form is installed.
  */
 final class ImageInputTypeExtension extends AbstractTypeExtension
@@ -45,8 +47,10 @@ final class ImageInputTypeExtension extends AbstractTypeExtension
         'not_image' => 'This file is not an image.',
     ];
 
-    public function __construct(private readonly ?TranslatorInterface $translator = null)
-    {
+    public function __construct(
+        private readonly ?TranslatorInterface $translator = null,
+        private readonly ?LoggerInterface $logger = null,
+    ) {
     }
 
     public static function getExtendedTypes(): iterable
@@ -85,7 +89,7 @@ final class ImageInputTypeExtension extends AbstractTypeExtension
         }
         $current = $config['current_url'];
         if ($current instanceof Closure) {
-            $current = ImageInput::url($current($form), 'current_url');
+            $current = $this->storedUrl($current($form), $form);
         }
         $remove = $config['remove_field'];
         if (null !== $remove && !($form->getParent()?->has($remove) ?? false)) {
@@ -107,6 +111,27 @@ final class ImageInputTypeExtension extends AbstractTypeExtension
             'backdrop' => $config['backdrop'],
             'labels' => $this->labels($config['labels']),
         ];
+    }
+
+    /**
+     * A closure's `current_url` comes from stored data (audit LK-L3): an unsafe or malformed value (a space, a legacy
+     * `javascript:` URL) renders the form without a stored image and logs a warning, instead of failing the whole form.
+     * A static `current_url` / `default_url` is still refused with an InvalidOptionsException when the field is built.
+     *
+     * @param FormInterface<mixed> $form
+     */
+    private function storedUrl(mixed $url, FormInterface $form): ?string
+    {
+        try {
+            return ImageInput::url($url, 'current_url');
+        } catch (InvalidArgumentException $exception) {
+            $this->logger?->warning('Image input: the stored image URL is not usable; the field renders without it.', [
+                'field' => $form->getName(),
+                'reason' => $exception->getMessage(),
+            ]);
+
+            return null;
+        }
     }
 
     /**

@@ -10,6 +10,7 @@ const box = (id: string, { current = '/media/logo.png', fallback = '/img/default
       <img id="${id}-preview" data-nowo-ui-image-input-preview${current || fallback ? ` src="${current || fallback}"` : ' hidden'} alt="Logo">
       <span id="${id}-empty" data-nowo-ui-image-input-empty${current || fallback ? ' hidden' : ''}>No image</span>
       <span id="${id}-badge" data-nowo-ui-image-input-badge${current || !fallback ? ' hidden' : ''}>Default</span>
+      <span id="${id}-drop" data-nowo-ui-image-input-drop hidden>Drop</span>
     </div>
     <div>
       <input id="${id}-file" type="file" name="logo" data-nowo-ui-image-input-file${disabled ? ' disabled' : ''}>
@@ -61,6 +62,7 @@ describe('nowo-ui-image-input', () => {
     expect(el('a-undo').hidden).toBe(true);
     expect(el('a-remove-field').hidden).toBe(true);
     expect(el<HTMLInputElement>('a-file').tabIndex).toBe(-1);
+    expect(el('a-file').hasAttribute('aria-hidden')).toBe(false);
     expect(el('a').getAttribute('data-nowo-ui-image-input-state')).toBe('stored');
     expect(el('b').getAttribute('data-nowo-ui-image-input-state')).toBe('default');
     expect(el('b-replace').textContent).toBe('Choose image');
@@ -188,9 +190,11 @@ describe('nowo-ui-image-input', () => {
     };
     expect(drag('dragenter').defaultPrevented).toBe(true);
     expect(frame.classList.contains('is-dragover')).toBe(true);
+    expect(el('a-drop').hidden).toBe(false);
     expect(drag('dragover').defaultPrevented).toBe(true);
     drag('dragleave');
     expect(frame.classList.contains('is-dragover')).toBe(false);
+    expect(el('a-drop').hidden).toBe(true);
     expect(drag('dragover', [], ['text/plain']).defaultPrevented).toBe(false);
 
     const drops: string[] = [];
@@ -262,6 +266,23 @@ describe('nowo-ui-image-input', () => {
     el('other').dispatchEvent(new Event('change', { bubbles: true }));
     el('loose').dispatchEvent(new Event('change', { bubbles: true }));
     document.dispatchEvent(new Event('change'));
+  });
+
+  it('a box that leaves the page gives its object URL back; a moved box keeps it', async () => {
+    pick(el<HTMLInputElement>('a-file'), photo());
+    pick(el<HTMLInputElement>('b-file'), photo());
+    const moved = el('b-form');
+    document.body.append(moved);
+    el('a-form').remove();
+    await vi.waitFor(() => expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:local/1'));
+    expect(URL.revokeObjectURL).not.toHaveBeenCalledWith('blob:local/2');
+    expect(img('b').getAttribute('src')).toBe('blob:local/2');
+    const loose = document.createElement('img');
+    loose.setAttribute('data-nowo-ui-image-input-preview', '');
+    document.body.append(loose);
+    loose.remove();
+    document.body.append(document.createElement('span'));
+    document.body.lastElementChild?.remove();
   });
 
   it('readLabels, initialState and isImage', () => {
