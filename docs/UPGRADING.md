@@ -145,6 +145,15 @@ cancelled link clicks (e.g. by adding `data-no-page-loader` to toggle links), yo
 any handler cancels with `preventDefault()` no longer shows the overlay. `data-no-page-loader` now also works as a bare
 attribute.
 
+**Turbo Drive hosts (visible change):** Turbo cancels the link clicks it handles, so the peer no longer shows the
+overlay on Turbo visits. Turbo's progress bar already covers them. To keep the kit overlay there, load the kit IIFE
+`nowo-ui-page-loader.js` (it defines the helpers) and add:
+
+```js
+document.addEventListener('turbo:visit', () => window.nowoUiShowPageLoader?.());
+document.addEventListener('turbo:load', () => window.nowoUiHidePageLoader?.());
+```
+
 ## To 2.48.0
 
 From **2.47.0**:

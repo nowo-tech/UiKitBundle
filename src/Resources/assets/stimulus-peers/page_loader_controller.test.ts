@@ -26,9 +26,13 @@ beforeEach(() => {
   app.register('page-loader', PageLoaderController);
 });
 
-afterEach(() => {
-  app.stop();
+afterEach(async () => {
+  // Remove the markup first so Stimulus disconnects the controllers (`app.stop()` alone does not): a controller left
+  // connected keeps its document click listener and would show the next test's overlay.
   document.body.innerHTML = '';
+  await vi.advanceTimersByTimeAsync(0);
+  app.stop();
+  document.documentElement.classList.remove('is-page-loading');
   vi.useRealTimers();
 });
 
@@ -126,6 +130,21 @@ describe('page-loader peer', () => {
 
       expect(overlay.hidden).toBe(false);
       expect(document.documentElement.classList.contains('is-page-loading')).toBe(true);
+    });
+
+    it('does not show the overlay after a disconnect within the link delay', async () => {
+      const overlay = await mountWithLinks();
+      overlay.setAttribute('data-page-loader-link-delay-value', '90');
+      await vi.advanceTimersByTimeAsync(0);
+      click('next');
+      // Detach the controller before the link-delay timeout fires; the overlay itself stays in the page.
+      overlay.removeAttribute('data-controller');
+      await vi.advanceTimersByTimeAsync(0);
+      // Past the link delay: a stale timeout would show the overlay here (and only the 8 s safety hide would end it).
+      await vi.advanceTimersByTimeAsync(200);
+
+      expect(overlay.hidden).toBe(true);
+      expect(document.documentElement.classList.contains('is-page-loading')).toBe(false);
     });
 
     it('keeps data-no-page-loader opting a link out', async () => {
