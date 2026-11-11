@@ -124,6 +124,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Target **2.48.1** (patch; Beacon report 2026-11-11 after adopting 2.48.0).
+
+### Fixed
+
+- **`page-loader` peer: a cancelled link click no longer shows the overlay.** The peer intercepts link clicks in the
+  capture phase, before the link's own handlers run, so it showed the "Loading…" overlay even when a toggle handler on
+  the `<a>` then called `preventDefault()` (the page never navigated and the overlay stayed until the 8 s safety hide).
+  The decision now happens in the `link-delay` timeout, after the click has reached every handler: when
+  `event.defaultPrevented` is set by then, nothing is shown. Uncancelled same-origin links behave as before.
+- **Visible change with Turbo Drive (audit ME-U-L1):** Turbo Drive cancels the link clicks it handles, so the peer no
+  longer shows the overlay on Turbo visits (there is no full page unload). For a loader on Turbo visits, use Turbo's own
+  progress bar, or call `window.nowoUiShowPageLoader()` on `turbo:visit` and `window.nowoUiHidePageLoader()` on
+  `turbo:load` (see UPGRADING).
+- `page-loader` peer: the `link-delay` timeout is cleared on `disconnect()`, so a controller removed within the delay no
+  longer shows the overlay and arms an 8 s safety hide afterwards (audit ME-U-I1, already present before 2.48.1).
+- `data-no-page-loader` also opts a link out when written as a bare attribute (`<a data-no-page-loader>`); the
+  `data-no-page-loader="true"` form keeps working.
+
+### Tests
+
+- `page_loader_controller.test.ts`: link interception — a click cancelled by the link's own handler or by a later
+  document handler shows nothing, an uncancelled same-origin click shows the overlay, both `data-no-page-loader`
+  forms opt out, and a disconnect within the link delay shows nothing. The test teardown now removes the markup before
+  `app.stop()`, so each test's controllers are disconnected (they used to keep their document listeners).
+
 ## [2.48.0] - 2026-11-11
 
 Wiki page view layout (Beacon 1.149): side panel drawer breakpoint and remembered state, a collapsible column rail,
