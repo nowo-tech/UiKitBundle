@@ -34,6 +34,7 @@ type Entry =
   | 'show-more'
   | 'edge-tabs'
   | 'image-crop'
+  | 'image-input'
   | 'demo-peers';
 
 const entry = process.env.VITE_ENTRY as Entry | undefined;
@@ -455,6 +456,22 @@ const configs: Record<Entry, { build: object }> = {
         output: {
           format: 'iife' as const,
           entryFileNames: 'js/nowo-ui-image-crop.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  // 2.47: opt-in image input box (FileType option nowo_ui_image_input).
+  'image-input': {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-image-input.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-image-input.js',
         },
       },
       minify: true,

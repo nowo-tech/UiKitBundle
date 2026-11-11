@@ -1,0 +1,47 @@
+{#
+  Image input (2.47, theme partial `image_input`): one box that shows the stored image (or the default, with a "Default" badge),
+  swaps to a local preview as soon as a file is picked, and holds Replace / Remove / Undo. Load js/nowo-ui-image-input.js (opt-in:
+  script_names: nowo_ui_script_names()|merge(['image-input'])); without it the box shows the current image above the plain file input
+  and the remove checkbox, and the buttons stay hidden. The FileType option `nowo_ui_image_input` renders this for you; use it directly
+  around any file input of yours (the input needs data-nowo-ui-image-input-file).
+  CSP: no style attribute, no inline script; the local preview is a blob: URL (img-src blob:, as the image crop step needs).
+  Slots: image_input (root), image_input_frame, image_input_preview, image_input_empty, image_input_badge, image_input_controls,
+  image_input_button, image_input_remove_field, image_input_status.
+
+  Required:
+    - id: base of the ids (the preview is `<id>_preview`)
+    - input: the file input as trusted HTML
+    - labels: {replace, choose, remove, undo, default, empty, selected, removed, restored, drop, not_image}
+  Optional:
+    - current_url: stored image URL; default_url: image used when nothing is stored
+    - remove: the remove checkbox row as trusted HTML (only when something is stored)
+    - alt: alternative text of the preview (the field label); backdrop: checkerboard (default) | light | dark
+    - disabled, attr: root attributes (no on*), bundle
+#}
+{% set _b = bundle|default(null) %}
+{% set _current = current_url|default(null) %}
+{% set _default = default_url|default(null) %}
+{% set _shown = _current ?: _default %}
+{% set _state = _current ? 'stored' : (_default ? 'default' : 'empty') %}
+{% set _backdrop = backdrop|default('checkerboard') in ['checkerboard', 'light', 'dark'] ? backdrop|default('checkerboard') : 'checkerboard' %}
+{% set _attr = nowo_ui_safe_attrs(attr|default({})) %}
+<div class="{{ nowo_ui_class('image_input', _b) }} nowo-ui-image-input--{{ _backdrop }}{{ _attr.class is defined ? ' ' ~ _attr.class }}" data-nowo-ui-image-input data-nowo-ui-image-input-state="{{ _state }}" data-nowo-ui-image-input-labels="{{ labels|json_encode }}"
+    {%- if _current %} data-nowo-ui-image-input-current="{{ _current }}"{% endif %}{% if _default %} data-nowo-ui-image-input-default="{{ _default }}"{% endif %}{% if disabled|default(false) %} data-nowo-ui-image-input-disabled{% endif %}{{ nowo_ui_attrs('image_input', _b, _attr|filter((v, k) => k != 'class')) }}>
+    <div class="{{ nowo_ui_class('image_input_frame', _b) }}" data-nowo-ui-image-input-frame{{ nowo_ui_attrs('image_input_frame', _b) }}>
+        <img id="{{ id }}_preview" class="{{ nowo_ui_class('image_input_preview', _b) }}" data-nowo-ui-image-input-preview{% if _shown %} src="{{ _shown }}"{% else %} hidden{% endif %} alt="{{ alt|default('') }}" decoding="async"{{ nowo_ui_attrs('image_input_preview', _b) }}>
+        <span class="{{ nowo_ui_class('image_input_empty', _b) }}" data-nowo-ui-image-input-empty{% if _shown %} hidden{% endif %}{{ nowo_ui_attrs('image_input_empty', _b) }}>{{ labels.empty }}</span>
+        <span class="{{ nowo_ui_class('image_input_badge', _b) }}" data-nowo-ui-image-input-badge{% if _state != 'default' %} hidden{% endif %}{{ nowo_ui_attrs('image_input_badge', _b) }}>{{ labels.default }}</span>
+    </div>
+    <div class="{{ nowo_ui_class('image_input_controls', _b) }}"{{ nowo_ui_attrs('image_input_controls', _b) }}>
+        {{- input|raw -}}
+        <button type="button" class="{{ nowo_ui_class('image_input_button', _b) }}" data-nowo-ui-image-input-replace hidden{{ nowo_ui_attrs('image_input_button', _b) }}>{{ _shown and _current ? labels.replace : labels.choose }}</button>
+        {%- if remove|default(null) %}
+            <button type="button" class="{{ nowo_ui_class('image_input_button', _b) }}" data-nowo-ui-image-input-remove hidden{{ nowo_ui_attrs('image_input_button', _b) }}>{{ labels.remove }}</button>
+        {%- endif %}
+        <button type="button" class="{{ nowo_ui_class('image_input_button', _b) }}" data-nowo-ui-image-input-undo hidden{{ nowo_ui_attrs('image_input_button', _b) }}>{{ labels.undo }}</button>
+    </div>
+    {%- if remove|default(null) %}
+        <div class="{{ nowo_ui_class('image_input_remove_field', _b) }}" data-nowo-ui-image-input-remove-field{{ nowo_ui_attrs('image_input_remove_field', _b) }}>{{ remove|raw }}</div>
+    {%- endif %}
+    <p class="{{ nowo_ui_class('image_input_status', _b) }}" data-nowo-ui-image-input-status role="status" aria-live="polite"{{ nowo_ui_attrs('image_input_status', _b) }}></p>
+</div>

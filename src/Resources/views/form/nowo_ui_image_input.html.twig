@@ -1,0 +1,55 @@
+{#
+  Image input (2.47): the widget of a FileType with the option `nowo_ui_image_input` (Form\ImageInputTypeExtension), through the
+  `image_input` partial. Prepended to twig.form_themes by the bundle (and used by form/nowo_ui_layout.html.twig), so form_row() and
+  form_widget() render it in any host theme; it defines only the `nowo_ui_image_input_widget` block, and a FileType without the option
+  renders exactly as before. Without JavaScript: the plain file input, the current image and the host's remove checkbox.
+  - The input loses `required` while an image is stored (keeping it needs no new upload).
+  - With `nowo_ui_image_crop` on the same field, the crop's preview targets the box (`data-nowo-ui-image-crop-preview`).
+  - `remove_field`: the sibling field is rendered inside the box when an image is stored; otherwise it is marked rendered, unprinted.
+#}
+{%- block nowo_ui_image_input_widget -%}
+    {%- set _cfg = nowo_ui_image_input -%}
+    {%- set _b = _cfg.bundle|default(null) -%}
+    {%- set _invalid = errors is defined and errors|length > 0 -%}
+    {%- set _attr = attr -%}
+    {%- if _attr['data-nowo-ui-image-crop'] is defined and _attr['data-nowo-ui-image-crop-preview'] is not defined -%}
+        {%- set _attr = _attr|merge({'data-nowo-ui-image-crop-preview': id ~ '_preview'}) -%}
+    {%- endif -%}
+    {%- set _class = nowo_ui_class('input', _b) ~ ' nowo-ui-image-input__file' ~ (_invalid ? ' ' ~ nowo_ui_class('input_invalid', _b)) ~ (_attr.class is defined ? ' ' ~ _attr.class) -%}
+    {%- set _input -%}
+        <input type="file" id="{{ id }}" name="{{ full_name }}" class="{{ _class }}" data-nowo-ui-image-input-file
+            {%- if required and not _cfg.current_url %} required{% endif %}{% if disabled %} disabled{% endif %}
+            {%- if help is defined and help is not empty %} aria-describedby="{{ id }}_help"{% endif %}{% if _invalid %} aria-invalid="true"{% endif %}
+            {%- for _k, _v in _attr|filter((v, k) => k != 'class') %}{% if _v is same as(true) %} {{ _k }}{% elseif _v is not same as(false) and _v is not null %} {{ _k }}="{{ _v }}"{% endif %}{% endfor %}>
+    {%- endset -%}
+    {%- set _remove = null -%}
+    {%- if _cfg.remove_field and form.parent and form.parent.children[_cfg.remove_field] is defined -%}
+        {%- set _remove_view = form.parent.children[_cfg.remove_field] -%}
+        {%- if _cfg.current_url and not _remove_view.rendered -%}
+            {%- set _remove = form_row(_remove_view) -%}
+        {%- else -%}
+            {%- do _remove_view.setRendered() -%}
+        {%- endif -%}
+    {%- endif -%}
+    {%- if label is same as(false) -%}
+        {%- set _alt = '' -%}
+    {%- elseif label is empty -%}
+        {%- set _alt = name|humanize -%}
+    {%- elseif translation_domain is same as(false) -%}
+        {%- set _alt = label -%}
+    {%- else -%}
+        {%- set _alt = label|trans(label_translation_parameters|default({}), translation_domain) -%}
+    {%- endif -%}
+    {{- include(nowo_ui_partial('image_input', _b), {
+        id: id,
+        input: _input,
+        current_url: _cfg.current_url,
+        default_url: _cfg.default_url,
+        remove: _remove,
+        alt: _alt,
+        labels: _cfg.labels,
+        backdrop: _cfg.backdrop,
+        disabled: disabled,
+        bundle: _b,
+    }, with_context: false) -}}
+{%- endblock nowo_ui_image_input_widget -%}

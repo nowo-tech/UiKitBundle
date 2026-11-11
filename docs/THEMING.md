@@ -286,6 +286,10 @@ minmax(min(100%, var(--nowo-ui-filters-field-min, 12rem)), 1fr)))`.
 | `--nowo-ui-image-crop-mask` | `rgb(15 23 42 / 60%)` (2.43: the dimmed image around the crop frame; read by the script on every draw) |
 | `--nowo-ui-image-crop-frame` | `rgb(255 255 255 / 95%)` (the frame line) |
 | `--nowo-ui-image-crop-width` | `32rem` (the crop dialog; never wider than the screen) |
+| `--nowo-ui-image-input-size` | `12rem` (2.47: the image input box — widest edge of the preview; the box is never wider than its column) |
+| `--nowo-ui-image-input-backdrop-light` | `rgb(255 255 255)` (behind transparent art with `backdrop: light`) |
+| `--nowo-ui-image-input-backdrop-dark` | `rgb(17 24 39)` (behind transparent art with `backdrop: dark`) |
+| `--nowo-ui-image-input-checker` | `color-mix(in srgb, var(--nowo-ui-text) 10%, var(--nowo-ui-surface))` (the dark squares of `backdrop: checkerboard`, light and dark mode) |
 | `--nowo-ui-sortable-drop-bg` | `color-mix(in srgb, var(--nowo-ui-primary) 10%, transparent)` (`sortable` placeholder) |
 | `--nowo-ui-sortable-drop-line` | `var(--nowo-ui-primary)` (placeholder border; outline of the list under the pointer) |
 | `--nowo-ui-sortable-ghost-shadow` | `0 0.5rem 1.5rem rgb(0 0 0 / 25%)` (the copy following the pointer) |

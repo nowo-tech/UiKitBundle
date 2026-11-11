@@ -122,6 +122,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Image input** (FileType option `nowo_ui_image_input`, `Form\ImageInputTypeExtension`, form theme
+  `form/nowo_ui_image_input.html.twig`, partial `image_input`, `js/nowo-ui-image-input.js` opt-in `image-input`): the
+  field's own box shows the stored image (`current_url`, a URL or a closure on the field) or the default (`default_url`,
+  "Default" badge), swaps to a local preview (object URL) on pick or drop, and holds Replace / Remove / Undo. Remove only
+  when something is stored: it drives the host's sibling checkbox (`remove_field`), rendered inside the box. With
+  `nowo_ui_image_crop` the crop's preview targets the box and the cropped result shows after Apply. Keyboard reachable
+  (Replace is a button; the input leaves the tab order), drag and drop, polite live region with the chosen file name,
+  `alt` from the field label, checkerboard / light / dark backdrop. No-JS: the plain file input, the current image and the
+  remove checkbox. CSP-safe (needs `img-src blob:`, as the crop step). 9 theme slots, 4 tokens, 11 labels in 7 locales.
+  Opt-in: a FileType without the option renders exactly as before. Worker safe (nothing kept between requests).
+
 ## [2.46.0] - 2026-11-10
 
 Edge-tabs launcher: morphing chevron SVG (CSS d transition, rotate fallback), softer default unfold and launcher-only motion tokens. See [UPGRADING](https://github.com/nowo-tech/UiKitBundle/blob/v2.46.0/docs/UPGRADING.md#to-2460).

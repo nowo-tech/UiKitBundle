@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.47.0](#to-2470)
 - [To 2.46.0](#to-2460)
 - [To 2.45.0](#to-2450)
 - [To 2.44.0](#to-2440)
@@ -136,6 +137,33 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.47.0
+
+From **2.46.x**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+Nothing to change: a FileType renders exactly as before unless it sets the new option `nowo_ui_image_input`.
+
+Optional — image input box (stored image or default, instant local preview, Replace / Remove / Undo):
+
+```php
+$builder
+    ->add('logo', FileType::class, [
+        'required' => false,
+        ImageInputTypeExtension::OPTION => ['current_url' => $logoUrl, 'default_url' => $defaultUrl, 'remove_field' => 'removeLogo'],
+    ])
+    ->add('removeLogo', CheckboxType::class, ['required' => false, 'mapped' => false]);
+```
+
+and add `image-input` to the scripts: `script_names: nowo_ui_script_names()|merge(['image-input'])`. Hosts with their own
+remove checkbox markup: pass its field name as `remove_field` (it is then rendered inside the box, only when an image is
+stored). CSP: `img-src` needs `blob:` (already required by `image-crop`). A host form theme that is not the kit's must keep
+UiKit's prepended `form_themes` (default) or `{% use '@NowoUiKit/form/nowo_ui_image_input.html.twig' %}`. See
+[USAGE.md](USAGE.md#image-input-247).
 
 ## To 2.46.0
 

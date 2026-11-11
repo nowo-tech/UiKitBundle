@@ -436,6 +436,21 @@ final class ThemeSlots
         'emoji_picker_search' => ['nowo-ui-input nowo-ui-emoji-picker__search', ['bootstrap' => 'form-control']],
         'emoji_picker_grid' => ['nowo-ui-emoji-picker__grid', []],
         'emoji_picker_status' => ['nowo-ui-emoji-picker__status', []],
+        // Image input (2.47, partial `image_input`, FileType option nowo_ui_image_input): root, the image box, its preview, the
+        // empty text and the "Default" badge, the controls row, its buttons, the remove checkbox row and the live status.
+        'image_input' => ['nowo-ui-image-input', []],
+        'image_input_frame' => ['nowo-ui-image-input__frame', []],
+        'image_input_preview' => ['nowo-ui-image-input__preview', []],
+        'image_input_empty' => ['nowo-ui-image-input__empty', []],
+        'image_input_badge' => ['nowo-ui-image-input__badge', []],
+        'image_input_controls' => ['nowo-ui-image-input__controls', []],
+        'image_input_button' => ['nowo-ui-btn nowo-ui-btn--secondary nowo-ui-btn--sm nowo-ui-image-input__button', [
+            'bootstrap' => 'btn btn-outline-secondary btn-sm',
+            'tailwind' => 'inline-flex items-center gap-1 font-medium px-2 py-1 text-sm border',
+            'foundation' => 'button secondary small',
+        ]],
+        'image_input_remove_field' => ['nowo-ui-image-input__remove-field', []],
+        'image_input_status' => ['nowo-ui-image-input__status', []],
         // Show more (partial `show_more`): root, the folded content, the button.
         'show_more' => ['nowo-ui-show-more', []],
         'show_more_content' => ['nowo-ui-show-more__content', []],
@@ -661,6 +676,7 @@ final class ThemeSlots
         'detail_list' => '@NowoUiKitBundle/page/_detail_list.html.twig',
         'dialog' => '@NowoUiKitBundle/partials/_dialog.html.twig',
         'emoji_picker' => '@NowoUiKitBundle/partials/_emoji_picker.html.twig',
+        'image_input' => '@NowoUiKitBundle/partials/_image_input.html.twig',
         'edge_tabs_launcher' => '@NowoUiKitBundle/partials/_edge_tabs_launcher.html.twig',
         'empty' => '@NowoUiKitBundle/partials/_empty.html.twig',
         'filters' => '@NowoUiKitBundle/partials/_filters.html.twig',
