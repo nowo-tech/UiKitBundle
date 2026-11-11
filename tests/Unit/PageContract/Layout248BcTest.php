@@ -46,7 +46,7 @@ final class Layout248BcTest extends TestCase
         self::assertFileExists($file);
         $expected = (string) file_get_contents($file);
         self::assertSame($expected, $html, $name.' must render exactly as UiKit 2.47.0 printed it');
-        foreach (self::offValues()[$name] ?? [] as $label => $extra) {
+        foreach ($this->offValues()[$name] ?? [] as $label => $extra) {
             self::assertSame($expected, self::renders()[$name]($extra), $name.' ('.$label.') must render exactly as UiKit 2.47.0 printed it');
         }
     }
@@ -56,7 +56,7 @@ final class Layout248BcTest extends TestCase
      *
      * @return array<string, array<string, array<string, mixed>>>
      */
-    private static function offValues(): array
+    private function offValues(): array
     {
         $panel = ['drawer md' => ['drawer_below' => 'md'], 'drawer invalid' => ['drawer_below' => 'huge'], 'persist null' => ['persist' => null], 'persist invalid' => ['persist' => 'a b']];
         $header = ['tabs_inline false' => ['tabs_inline' => false], 'tabs_inline string' => ['tabs_inline' => 'true']];

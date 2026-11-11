@@ -140,7 +140,7 @@ final class WikiLayout248Test extends TestCase
 
     public function testTabsInlinePutsTabsAndActionsOnOneRow(): void
     {
-        $header = self::header();
+        $header = $this->header();
         $html = $this->render(self::HEADER, ['header' => $header, 'tabs_inline' => true]);
 
         self::assertStringContainsString(' nowo-ui-page-header--tabs-inline"', $html);
@@ -167,11 +167,11 @@ final class WikiLayout248Test extends TestCase
 
     public function testTabsInlineNeedsTabsAndTrue(): void
     {
-        $noTabs = self::header()->withTabs(null);
+        $noTabs = $this->header()->withTabs(null);
         self::assertSame($this->render(self::HEADER, ['header' => $noTabs]), $this->render(self::HEADER, ['header' => $noTabs, 'tabs_inline' => true]));
-        self::assertSame($this->render(self::HEADER, ['header' => self::header()]), $this->render(self::HEADER, ['header' => self::header(), 'tabs_inline' => 'yes']));
+        self::assertSame($this->render(self::HEADER, ['header' => $this->header()]), $this->render(self::HEADER, ['header' => $this->header(), 'tabs_inline' => 'yes']));
         $fn = PageContractTwig::create(['f' => '{{ nowo_ui_page_header(header, {tabs_inline: 1}) }}', 'g' => '{{ nowo_ui_page_header(header) }}']);
-        self::assertSame($fn->render('g', ['header' => self::header()]), $fn->render('f', ['header' => self::header()]));
+        self::assertSame($fn->render('g', ['header' => $this->header()]), $fn->render('f', ['header' => $this->header()]));
     }
 
     public function testCssRules(): void
@@ -194,7 +194,7 @@ final class WikiLayout248Test extends TestCase
         self::assertStringContainsString(".nowo-ui-page-header__bar {\n  flex: 1 0 100%;", $css);
     }
 
-    private static function header(): PageHeader
+    private function header(): PageHeader
     {
         return new PageHeader(
             'Getting started',
