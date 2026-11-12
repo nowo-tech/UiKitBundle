@@ -7206,8 +7206,10 @@ html[data-nowo-ui-sortable-active] * {
   --nowo-ui-image-input-backdrop-dark: rgb(17 24 39);
   --nowo-ui-image-input-checker: color-mix(in srgb, var(--nowo-ui-text) 10%, var(--nowo-ui-surface));
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.5rem;
   justify-items: start;
+  max-width: 100%;
 }
 .nowo-ui-image-input__frame {
   position: relative;
@@ -7279,6 +7281,13 @@ html[data-nowo-ui-sortable-active] * {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
+  min-width: 0;
+  max-width: 100%;
+}
+.nowo-ui-image-input__controls > * {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 .nowo-ui-image-input__preview[hidden],
 .nowo-ui-image-input__empty[hidden],
