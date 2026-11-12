@@ -3,8 +3,8 @@
 | Field | Value |
 |-------|-------|
 | Package | `nowo-tech/ui-kit-bundle` (`symfony-bundle`) |
-| Audited revision | `a9dee3a` (post-`v1.8.3`) |
-| Audit date | 2026-09-25 |
+| Audited revision | `v2.49.0` + 2.49.1 worker test (first audit `a9dee3a`, post-`v1.8.3`) |
+| Audit date | 2026-11-12 (first audit 2026-09-25) |
 | Method | Manual review of every PHP file under `src/` (bundle class, DI extension, configuration, compiler pass, enums), `Resources/config/services.yaml`, Twig templates for request/user data, plus PHPStan `ruleset-classic` + `ruleset-worker` |
 | **Verdict** | ✅ **100% compatible** — safe in FrankenPHP worker mode with **kernel not reset** between requests (scenario B below) |
 
@@ -17,6 +17,7 @@
   - [Info](#info)
 - [Usage recommendations in worker mode](#usage-recommendations-in-worker-mode)
 - [2.49 addendum: listing ports (REQ-ARCH-001)](#249-addendum-listing-ports-req-arch-001)
+- [2.49.1: kept-alive kernel tests (REQ-RUNTIME-002)](#2491-kept-alive-kernel-tests-req-runtime-002)
 - [Re-audit triggers](#re-audit-triggers)
 
 ## Execution model assumed
@@ -32,9 +33,9 @@ A bundle that is safe under **B** is safe under **A** and under classic mode / P
 
 | Area | Status | Notes |
 |------|--------|-------|
-| Mutable state in shared services | ✅ N/A | The bundle registers no runtime services (`services.yaml` only sets `_defaults`) |
+| Mutable state in shared services | ✅ | Since 2.x the extension registers runtime services (Twig extensions, theme, listing, appearance, remote dialog, release checker); all are `readonly` or hold boot-time config, except `AppearanceView` (per-main-request memo, see 2.49.1 section) |
 | Static properties / `static` locals | ✅ | None; enums only have pure static `values()` helpers |
-| `ResetInterface` / `kernel.reset` coverage | ✅ N/A | Nothing to reset |
+| `ResetInterface` / `kernel.reset` coverage | ✅ | `AppearanceView::reset()`; the worker path never relies on it (the memo is keyed by a weak reference to the main request) |
 | Request / user / locale captured in services | ✅ | No services; templates read `app.request` / `app.flashes` at render time |
 | Superglobals, `$_ENV`, `putenv`, `ini_set`, `setlocale`, timezone | ✅ | None used |
 | Doctrine / EntityManager | ✅ N/A | No persistence |
@@ -78,6 +79,27 @@ No findings. **No code changes required** for worker / `reset_kernel=false` comp
 - Worker test: `tests/Integration/DddHostListingKernelTest.php` — one kernel, 400 requests through `http_kernel` (no
   services resetter), two viewers (`alice` / `bob`) and two projects in alternation; each response holds only that
   viewer's layout, and memory grows less than 2 MiB after a 50-request warm-up. Igor: 136 service files OK, 0 KO.
+
+## 2.49.1: kept-alive kernel tests (REQ-RUNTIME-002)
+
+Services with state that a request could see (every other runtime service is `readonly` or holds boot-time config only):
+
+| Service | State | Boundary | Scenario B |
+|---------|-------|----------|------------|
+| `nowo_ui_kit.appearance.view` (`AppearanceView`) | provider result (or failure) for the current main request | keyed by a `WeakReference` to the main request: a new main request asks again; outside a request (console, Messenger) there is no memo; `reset()` also drops it | ✅ |
+| `nowo_ui_kit.listing.view_builder` / `cookie_store` | none (`readonly`) | a new `ListingContext` per call | ✅ |
+| `nowo_ui_kit.error_page_twig_extension` | none; the provider skip flag is a sub-request attribute | per request | ✅ |
+| `nowo_ui_kit.release_update_checker` | PSR-6 cache (same answer for every user) | TTL | ✅ |
+
+Kept-alive kernel tests (one kernel, requests through `http_kernel`, services resetter never called):
+
+| Test | N | Users / tenants | Memory margin |
+|------|---|-----------------|---------------|
+| `tests/Integration/Worker/WorkerKeptAliveKernelTest` | 1,000 | `alice` (brand `acme`) / `bob` (brand `globex`) alternating; host appearance provider fails on 20 requests; cookie listing layouts per user; plus 20 reads outside a request | < 2 MiB after 50 warm-up requests |
+| `tests/Integration/DddHostListingKernelTest` | 400 | two viewers, two projects (framework-free listing ports) | < 2 MiB after 50 |
+| `tests/Integration/ErrorIllustrationWorkerKernelTest` | 400 | error pages, provider answers / null / throws / over budget | < 2 MiB after 50 |
+
+Igor (`composer igor`, 2026-11-12): 136 files OK, 0 KO, 0 WARN. PHPStan worker ruleset clean.
 
 ## Re-audit triggers
 

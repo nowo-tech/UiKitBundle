@@ -126,6 +126,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+Target **2.49.1** (patch; REQ-RUNTIME-002, batch C9). Tests and docs only: no PHP, markup, CSS, JS or template change.
+
+### Added
+
+- `tests/Integration/Worker/WorkerKeptAliveKernelTest`: one kernel kept alive with no services resetter (FrankenPHP
+  worker, `reset_kernel: false`), 1,000 main requests through `http_kernel`, two users of two brands in alternation.
+  Checks that the appearance provider is asked once per request (the `AppearanceView` main-request memo never crosses
+  requests), that brand name, logos and `<head>` links never leak to the other brand, that a provider failure on one
+  request falls back for that request only, that the cookie listing store gives each user only their own layout, and
+  that memory grows less than 2 MiB after a 50-request warm-up. A second test reads the view outside any request
+  (console / Messenger) right after each request: the last request's memo is never reused.
+
+### Changed
+
+- `docs/FRANKENPHP-WORKER-AUDIT.md` refreshed for 2.49.1: services table (appearance view, listing builder, error
+  illustration provider budget), the three kept-alive kernel tests with N, users and memory margin, Igor result.
+
 ## [2.49.0] - 2026-11-11
 
 Target **2.49.0** (minor; REQ-ARCH-001 rule 3, B2). No markup, CSS, JS or template change; no BC break.
