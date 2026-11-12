@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+  - [To 2.49.1](#to-2491)
 - [To 2.49.0](#to-2490)
 - [To 2.49.0](#to-2490-1)
 - [To 2.48.1](#to-2481)
@@ -142,6 +143,11 @@
   - [Install](#install)
 
 ## Unreleased
+
+### To 2.49.1
+
+From **2.49.0**: `composer update nowo-tech/ui-kit-bundle`. Tests and docs only (REQ-RUNTIME-002 worker test with two
+users and brands); no configuration, template or API change.
 
 ## To 2.49.0
 
