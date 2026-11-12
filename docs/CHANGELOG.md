@@ -126,7 +126,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Target **2.49.1** (patch; REQ-RUNTIME-002, batch C9). Tests and docs only: no PHP, markup, CSS, JS or template change.
+Target **2.49.1** (patch; REQ-RUNTIME-002, batch C9). Tests and docs only, plus one CSS fix (image input phone overflow): no PHP, markup, JS or template change.
+
+### Fixed
+
+- Image input no longer overflows its card on narrow screens (`.nowo-ui-image-input` is one `minmax(0, 1fr)` column;
+  the controls shrink and long file names wrap).
 
 ### Added
 
