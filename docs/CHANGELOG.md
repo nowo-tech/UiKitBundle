@@ -127,6 +127,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Token `--nowo-ui-edge-tabs-launcher-gap` (default `0`, no visual change): an extra gap between the launcher and the first unfolded edge tab, so a host no longer needs its own `top` values.
+
+### Fixed
+
+- Edge-tabs chevron rotates again on browsers without CSS `d` (Safari/iOS): a test now guards the `@supports not (d: path(...))` fallback (transition, `rotate(-90deg)`, reduced-motion override) in both compiled stylesheets.
+
 ## [2.49.1] - 2026-11-13
 
 Target **2.49.1** (patch; REQ-RUNTIME-002, batch C9). Tests and docs only, plus one CSS fix (image input phone overflow): no PHP, markup, JS or template change.

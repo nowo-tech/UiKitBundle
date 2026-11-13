@@ -7542,7 +7542,7 @@ select.nowo-ui-pagination__select {
 }
 
 :root[data-nowo-ui-edge-tabs-ready][data-nowo-ui-edge-tabs-open]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always']:not([hidden])) .nowo-ui-edge-tab__link, :root[data-nowo-ui-edge-tabs-ready][data-nowo-ui-edge-tabs-closing]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always']:not([hidden])) .nowo-ui-edge-tab__link[data-nowo-ui-edge-tabs-folding] {
-  top: calc(var(--nowo-ui-edge-tab-top, calc(var(--nowo-ui-header-height, 3.5rem) + 0.75rem)) + (var(--nowo-ui-edge-tab-slot, 0) + 1) * var(--nowo-ui-edge-tab-step, calc(var(--nowo-ui-edge-tab-height, 2.75rem) + var(--nowo-ui-edge-tab-gap, 0.5rem))));
+  top: calc(var(--nowo-ui-edge-tab-top, calc(var(--nowo-ui-header-height, 3.5rem) + 0.75rem)) + (var(--nowo-ui-edge-tab-slot, 0) + 1) * var(--nowo-ui-edge-tab-step, calc(var(--nowo-ui-edge-tab-height, 2.75rem) + var(--nowo-ui-edge-tab-gap, 0.5rem)))) + var(--nowo-ui-edge-tabs-launcher-gap, 0px));
 }
 
 :root[data-nowo-ui-edge-tabs-ready][data-nowo-ui-edge-tabs-open]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always']:not([hidden])) .nowo-ui-edge-tab__link:not([aria-expanded='true'], [data-nowo-ui-edge-tab-pinned]) {
@@ -7573,7 +7573,7 @@ select.nowo-ui-pagination__select {
   }
 
   :root[data-nowo-ui-edge-tabs-ready][data-nowo-ui-edge-tabs-open]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='phone']:not([hidden])) .nowo-ui-edge-tab__link, :root[data-nowo-ui-edge-tabs-ready][data-nowo-ui-edge-tabs-closing]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='phone']:not([hidden])) .nowo-ui-edge-tab__link[data-nowo-ui-edge-tabs-folding] {
-    top: calc(var(--nowo-ui-edge-tab-top, calc(var(--nowo-ui-header-height, 3.5rem) + 0.75rem)) + (var(--nowo-ui-edge-tab-slot, 0) + 1) * var(--nowo-ui-edge-tab-step, calc(var(--nowo-ui-edge-tab-height, 2.75rem) + var(--nowo-ui-edge-tab-gap, 0.5rem))));
+    top: calc(var(--nowo-ui-edge-tab-top, calc(var(--nowo-ui-header-height, 3.5rem) + 0.75rem)) + (var(--nowo-ui-edge-tab-slot, 0) + 1) * var(--nowo-ui-edge-tab-step, calc(var(--nowo-ui-edge-tab-height, 2.75rem) + var(--nowo-ui-edge-tab-gap, 0.5rem)))) + var(--nowo-ui-edge-tabs-launcher-gap, 0px));
   }
 
   :root[data-nowo-ui-edge-tabs-ready][data-nowo-ui-edge-tabs-open]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='phone']:not([hidden])) .nowo-ui-edge-tab__link:not([aria-expanded='true'], [data-nowo-ui-edge-tab-pinned]) {

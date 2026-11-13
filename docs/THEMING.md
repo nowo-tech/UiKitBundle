@@ -528,6 +528,7 @@ From Beacon's mobile UX audit (2026-11-09, 390 px, iPhone / WebKit).
 | `--nowo-ui-edge-tabs-motion-scale` | `0.96` | start scale of an unfolding tab (2.46; `1` = the 2.45 look) |
 | `--nowo-ui-edge-tabs-icon-duration` | `240ms` | `icon: 'chevron'` morph (or turn) duration (2.46) |
 | `--nowo-ui-edge-tabs-icon-easing` | `cubic-bezier(0.34, 1.56, 0.64, 1)` | chevron morph curve, slight overshoot (2.46) |
+| `--nowo-ui-edge-tabs-launcher-gap` | `0` | extra gap between the launcher and the first unfolded tab (added to every unfolded tab's `top`; e.g. `0.5rem`); nothing changes at the default |
 | `--nowo-ui-edge-tabs-order` | set by `js/nowo-ui-edge-tabs.js` per tab | position of a tab in the unfold / fold sequence (multiplied by the stagger); not a host token |
 
 Select geometry: `.nowo-ui-select` (opt-in on any `<select>`), `select.nowo-ui-input` and the pagination select use
