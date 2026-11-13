@@ -135,6 +135,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Edge-tabs chevron rotates again on browsers without CSS `d` (Safari/iOS): a test now guards the `@supports not (d: path(...))` fallback (transition, `rotate(-90deg)`, reduced-motion override) in both compiled stylesheets.
 
+### Documentation
+
+- `docs/SECURITY.md`: record the 2.48.0, 2.48.1 and 2.49.0 AI security audits (Appendices LV, ME, MR) with dates and grade (REQ-SEC-004).
+
 ## [2.49.1] - 2026-11-13
 
 Target **2.49.1** (patch; REQ-RUNTIME-002, batch C9). Tests and docs only, plus one CSS fix (image input phone overflow): no PHP, markup, JS or template change.
