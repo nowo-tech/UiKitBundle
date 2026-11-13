@@ -129,6 +129,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- CI, `make coverage-check` and `composer coverage-check`: the PHP line-coverage gate is now **100%** (was 99%). The suite is already at 100%; the gate only stops a regression from merging.
+
 ## [2.51.0] - 2026-11-13
 
 ### Added

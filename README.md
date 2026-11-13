@@ -193,7 +193,7 @@ and Stimulus peers run with Vitest (happy-dom). Figures below are the CI `Code C
 
 | Suite | Coverage |
 |-------|----------|
-| PHP (PHPUnit) | 100% lines (3253/3253; CI fails under 99%) |
+| PHP (PHPUnit) | 100% lines (3253/3253; CI fails under 100%) |
 | TypeScript (Vitest) | 100% lines (2810/2810), 95.76% branches (gated set, see [COVERAGE.md](docs/COVERAGE.md); thresholds 90% lines / 85% branches) |
 | Python | N/A |
 
