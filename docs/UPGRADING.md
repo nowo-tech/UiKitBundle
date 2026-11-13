@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.51.0](#to-2510)
   - [UiKit's default theme is available, and off (`base_stylesheet`)](#uikits-default-theme-is-available-and-off-base_stylesheet)
   - [`.nowo-ui-header` navigation](#nowo-ui-header-navigation)
 - [To 2.50.0](#to-2500)
@@ -147,6 +148,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.51.0
+
+From **2.50.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 **Nothing to do.** Both changes below are additive; a host that upgrades and changes no configuration renders
 byte-identical HTML and keeps the same CSS.
