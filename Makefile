@@ -74,11 +74,11 @@ test-with-db: test
 test-coverage: ensure-up
 	@$(COMPOSE) exec -T $(SERVICE_PHP) composer test-coverage
 	@./.scripts/php-coverage-percent.sh coverage-output.txt
-	@./.scripts/coverage-fail-under.sh coverage-output.txt 99
+	@./.scripts/coverage-fail-under.sh coverage-output.txt 100
 
 coverage-check: ensure-up
 	@$(COMPOSE) exec -T $(SERVICE_PHP) sh -lc 'composer test-coverage'
-	@./.scripts/coverage-fail-under.sh coverage-output.txt 99
+	@./.scripts/coverage-fail-under.sh coverage-output.txt 100
 
 test-coverage-with-db: test-coverage
 

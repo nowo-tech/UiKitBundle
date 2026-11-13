@@ -242,7 +242,7 @@ jobs:
           composer test-coverage | tee coverage-output.txt
           chmod +x .scripts/php-coverage-percent.sh .scripts/coverage-fail-under.sh
           ./.scripts/php-coverage-percent.sh coverage-output.txt
-          ./.scripts/coverage-fail-under.sh coverage-output.txt 99
+          ./.scripts/coverage-fail-under.sh coverage-output.txt 100
 
       - name: Validate coverage file
         run: |

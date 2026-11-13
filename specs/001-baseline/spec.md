@@ -416,7 +416,7 @@ fonts painted above the fold.
 
 - **SC-001**: Every production file under `src/` (excluding the 42 co-located `*.test.ts`) appears exactly once in [`code-inventory.md`](code-inventory.md) with semantic requirement IDs: **306/306 mapped** (101 PHP, 60 TS, 112 Twig, 9 YAML, 4 CSS, 1 SCSS, 18 built JS, 1 Markdown), audited 2026-11-01 on 2.21.0.
 - **SC-002**: Every FR id used in the inventory is defined in this spec (domain-grouped list above).
-- **SC-003**: PHPUnit + Vitest + `coverage-check` (≥99% PHP lines) pass in CI; `make release-check` includes `check-no-raw-html-form`.
+- **SC-003**: PHPUnit + Vitest + `coverage-check` (100% PHP lines) pass in CI; `make release-check` includes `check-no-raw-html-form`.
 - **SC-004**: FrankenPHP demos boot on ports 8092 / 8093 with HTTP 200; the order page passes the Playwright e2e with axe.
 - **SC-005**: Kitchen sink demonstrates feedback surfaces, shell width toggle, Thinking Orbs states, tables (server and client sort) and forms.
 - **SC-006**: FrankenPHP worker audit documents **100%** compatibility with kernel not reset (`FR-FRANKENPHP-001`).
