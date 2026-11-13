@@ -3,6 +3,8 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+  - [UiKit's default theme is available, and off (`base_stylesheet`)](#uikits-default-theme-is-available-and-off-base_stylesheet)
+  - [`.nowo-ui-header` navigation](#nowo-ui-header-navigation)
 - [To 2.50.0](#to-2500)
 - [To 2.49.1](#to-2491)
   - [To 2.49.1](#to-2491-1)
@@ -145,6 +147,42 @@
   - [Install](#install)
 
 ## Unreleased
+
+**Nothing to do.** Both changes below are additive; a host that upgrades and changes no configuration renders
+byte-identical HTML and keeps the same CSS.
+
+### UiKit's default theme is available, and off (`base_stylesheet`)
+
+`nowo-ui.css` paints UiKit's components but not the document around them — no body font, no page gutter, no
+masthead height. Hosts with a CSS framework (Bootstrap in the `base` layer, Tailwind) or their own theme file get
+those from there and need nothing. Hosts with **neither** (`css_framework: custom` / `none` and no stylesheet of
+their own) were falling back to the browser defaults: a serif body font, edge-to-edge content and a one-line
+masthead. If that is you:
+
+```yaml
+nowo_ui_kit:
+    base_stylesheet: true
+```
+
+`@NowoUiKit/layout/document.html.twig` and the error layout then link `css/nowo-ui-base.css` before `nowo-ui.css`
+(run `assets:install` after upgrading, as for any new shipped asset). Its rules live in
+`@layer theme.nowo-ui-base`, a nested sub-layer of the first layer of UiKit's order, so a framework in `base`, the
+kit, host utilities and all unlayered host CSS still beat it — it cannot override a theme you already have.
+Details: [THEMING.md — The default theme](THEMING.md#the-default-theme-251).
+
+A host layout that overrides `nowo_ui_styles` without `{{ parent() }}` links the stylesheets itself; add
+`css/nowo-ui-base.css` before `css/nowo-ui.css` there if you want it.
+
+### `.nowo-ui-header` navigation
+
+A `<nav>` placed directly inside a masthead `.nowo-ui-header` (the page contract's `nowo_ui_navigation` region)
+now renders as a wrapping flex row with a gap, and the `[aria-current]` item in the active colour and weight;
+`.nowo-ui-header__nav` is the explicit class for it. Before, such links ran together with no spacing. If your own
+CSS already lays that `<nav>` out, it keeps winning (your rules are unlayered or in a higher layer).
+
+`.nowo-ui-header` also sets `padding-block: 0; padding-inline: var(--nowo-ui-header-padding-inline, 1rem)` instead
+of the `padding: 0 1rem` shorthand. Same rendering; the token is what lets a theme line the masthead up with the
+page gutter from a lower cascade layer.
 
 ## To 2.50.0
 

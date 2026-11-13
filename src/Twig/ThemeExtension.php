@@ -100,6 +100,8 @@ use Twig\TwigFunction;
  * - `nowo_ui_image_crop_attrs(options)` (2.43) — attributes of a file input with the image crop step ({@see ImageCrop})
  * - `nowo_ui_font_preload()` (2.21) — `<link rel="preload" as="font" crossorigin>` tags of `nowo_ui_kit.font_preload`
  *   ({@see FontPreload}; '' when not configured), printed by the document and error layouts
+ * - `nowo_ui_base_stylesheet()` (2.51) — whether `nowo_ui_kit.base_stylesheet` is on, i.e. whether the document and
+ *   error layouts link `css/nowo-ui-base.css` (the opt-in default theme) before `nowo-ui.css`
  * - `|nowo_ui_trans(params = {})` — translates a {@see Label}; strings pass through (escaped by Twig)
  * - `|nowo_ui_translatable(params = {})` (2.3) — a {@see TranslatableText} for values a form theme translates again
  *   (`attr.placeholder`, choice `placeholder`): a Label is translated exactly once, a string printed as given
@@ -121,11 +123,12 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
 
     /**
      * @param array{admin: string, guest: string}                                  $layouts
-     * @param array{breadcrumb_kit: bool, collection: string|null, enabled?: bool} $breadcrumbs   `enabled` (2.3.1, default true): false = no breadcrumb trail in page headers
-     * @param FormFactoryInterface|null                                            $actionForms   standalone factory of the CSRF-only action forms (2.18; core types only, so no host type extension changes them); null = a new one per call
-     * @param FontPreload|null                                                     $fontPreload   font preload tags (2.21, `nowo_ui_kit.font_preload`); null = none
-     * @param array{presentation: string, compact_actions: string}                 $header        2.27 `nowo_ui_kit.header`: default presentation, where `header.actions` go in compact (`page` | `bar`)
-     * @param string                                                               $sidebarLayout 2.32 `nowo_ui_kit.shell.sidebar_layout`: `below-header` | `full-height`
+     * @param array{breadcrumb_kit: bool, collection: string|null, enabled?: bool} $breadcrumbs    `enabled` (2.3.1, default true): false = no breadcrumb trail in page headers
+     * @param FormFactoryInterface|null                                            $actionForms    standalone factory of the CSRF-only action forms (2.18; core types only, so no host type extension changes them); null = a new one per call
+     * @param FontPreload|null                                                     $fontPreload    font preload tags (2.21, `nowo_ui_kit.font_preload`); null = none
+     * @param array{presentation: string, compact_actions: string}                 $header         2.27 `nowo_ui_kit.header`: default presentation, where `header.actions` go in compact (`page` | `bar`)
+     * @param string                                                               $sidebarLayout  2.32 `nowo_ui_kit.shell.sidebar_layout`: `below-header` | `full-height`
+     * @param bool                                                                 $baseStylesheet 2.51 `nowo_ui_kit.base_stylesheet`: the document layouts link css/nowo-ui-base.css (the opt-in default theme) before nowo-ui.css
      */
     public function __construct(
         private readonly Theme $theme,
@@ -140,6 +143,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
         string $sidebarLayout = 'below-header',
         private readonly ?RemoteDialogHeaders $remoteDialogHeaders = null,
         private readonly AppearanceView $appearanceView = new AppearanceView(),
+        private readonly bool $baseStylesheet = false,
     ) {
         $this->uiForms = new UiFormViews($actionForms);
         $this->presentationResolver = new HeaderPresentationResolver($requestStack, $header['presentation'], $header['compact_actions']);
@@ -186,6 +190,8 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             new TwigFunction('nowo_ui_visible_when', VisibleWhen::attributes(...)),
             new TwigFunction('nowo_ui_image_crop_attrs', $this->imageCropAttributes(...)),
             new TwigFunction('nowo_ui_font_preload', fn (): string => $this->fontPreload?->tags() ?? '', ['is_safe' => ['html']]),
+            // 2.51: true when nowo_ui_kit.base_stylesheet is on — the layouts link css/nowo-ui-base.css first.
+            new TwigFunction('nowo_ui_base_stylesheet', fn (): bool => $this->baseStylesheet),
             new TwigFunction('nowo_ui_header_presentation', $this->headerPresentation(...)),
             new TwigFunction('nowo_ui_sidebar_layout', $this->sidebarLayout(...)),
             new TwigFunction('nowo_ui_breadcrumb_kit_trail', $this->breadcrumbKitTrail(...), ['needs_environment' => true]),

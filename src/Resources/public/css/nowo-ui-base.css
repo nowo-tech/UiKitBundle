@@ -1,0 +1,155 @@
+/*
+ * nowo-ui-base.css — UiKit's opt-in default theme (2.51).
+ *
+ * `nowo-ui.css` paints UiKit's own components (tables, buttons, cards, the shell…) but never the document around
+ * them: it sets no body font, no page gutter and no masthead height. A host that adopts the UiKit layouts and
+ * brings a CSS framework (Bootstrap, Tailwind) or its own theme file gets those from there. A host that brings
+ * NEITHER — the `css_framework: custom` / `none` case, and every REQ-DEMO-014 demo — fell back to the browser
+ * defaults: a serif body font, content flush against the window edges and a masthead one line tall.
+ *
+ * This stylesheet is that missing document base. Enable it with:
+ *
+ *     nowo_ui_kit:
+ *         base_stylesheet: true
+ *
+ * and `@NowoUiKit/layout/document.html.twig` (so the admin / guest / error layouts) links it before `nowo-ui.css`.
+ * It is OFF by default: switching it on for every existing host would be a visual change they did not ask for.
+ *
+ * Cascade — why this cannot fight a host theme: every rule lives in `@layer theme.nowo-ui-base`, a NESTED sub-layer
+ * of the first layer of UiKit's canonical order, so it sits BELOW `base`, `nowo-ui`, `components` and `utilities`,
+ * and below any rule the host puts in `theme` itself (rules written directly in a layer come after its sub-layers).
+ * A framework in the `base` layer (Bootstrap from a CDN, Tailwind's preflight), UiKit's own `nowo-ui` layer, host
+ * utilities in theme slots and ALL unlayered host CSS therefore beat it, whatever their specificity or load order.
+ * It only paints what nothing else paints.
+ *
+ * It must be a SUB-LAYER, not a new top-level one: the layer order is fixed by the first stylesheet that names the
+ * layers, and a later statement can only APPEND names it does not already know — at the end, i.e. on top of
+ * everything. A `nowo-ui-base` top-level layer would therefore outrank the host's framework on exactly the hosts
+ * that declare the order themselves. Nesting inside `theme` needs no new name, so there is nothing to append.
+ *
+ * Hosts that link `nowo-ui.unlayered.css` (their framework is unlayered, so it must lose to the kit) do not need
+ * this file at all: they already have a framework.
+ *
+ * Theming: everything it paints reads a documented `--nowo-ui-*` token, so `theme.tokens`, the appearance SPI and
+ * the dark defaults of `nowo-ui.css` all follow without a single override here.
+ *
+ * Hand-maintained (no `nowo-ui.unlayered.css` twin): `pnpm run build:css` does not touch it.
+ */
+@layer theme, base, nowo-ui, components, utilities;
+
+@layer theme.nowo-ui-base {
+
+/* --- Document --- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--nowo-ui-font-family, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif);
+  font-size: var(--nowo-ui-font-size, 1rem);
+  line-height: var(--nowo-ui-line-height, 1.5);
+  color: var(--nowo-ui-text);
+  background: var(--nowo-ui-surface-muted);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* --- Typography --- */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0 0 0.5rem;
+  font-family: var(--nowo-ui-font-display, inherit);
+  font-weight: var(--nowo-ui-heading-weight, 600);
+  line-height: 1.25;
+  color: var(--nowo-ui-text);
+}
+
+h1 { font-size: 1.5rem; }
+h2 { font-size: 1.25rem; }
+h3 { font-size: 1.125rem; }
+h4,
+h5,
+h6 { font-size: 1rem; }
+
+p,
+dl,
+figure,
+blockquote,
+pre {
+  margin: 0 0 1rem;
+}
+
+ul,
+ol {
+  margin: 0 0 1rem;
+  padding-inline-start: 1.5rem;
+}
+
+small {
+  font-size: 0.875em;
+}
+
+a {
+  color: var(--nowo-ui-link, var(--nowo-ui-primary));
+}
+
+hr {
+  margin: 1rem 0;
+  border: 0;
+  border-top: 1px solid var(--nowo-ui-border);
+}
+
+/* Form controls inherit the body face instead of the browser's own (Times in several engines). */
+button,
+input,
+select,
+textarea,
+optgroup {
+  font: inherit;
+  color: inherit;
+}
+
+/* Deliberately no `img { max-width: 100% }`: unlike the rules above, it would resize host content the kit knows
+   nothing about, and the geometry change can move things a page depends on. A host that wants fluid media says so
+   itself — that is a layout choice, not part of a document base. */
+
+/* --- Page gutters ---
+ * The kit shell gives `.nowo-ui-main` its padding and max width; the plain page contract (`.nowo-ui-page` +
+ * `.nowo-ui-content`, what `layout/admin.html.twig` and `layout/guest.html.twig` render) has none, so the content
+ * runs edge to edge. `--nowo-ui-content-max-width` is the token the shell already uses for its content width.
+ * The guest page centres a narrow card itself (`.nowo-ui-page--guest`), so it is left alone.
+ */
+.nowo-ui-page:not(.nowo-ui-page--guest) > .nowo-ui-content {
+  max-width: var(--nowo-ui-content-max-width, 72rem);
+  margin-inline: auto;
+  padding-inline: var(--nowo-ui-page-gutter, 1.25rem);
+}
+
+/* --- Masthead ---
+ * `.nowo-ui-header` is painted by `nowo-ui.css` for the kit shell, where the grid row gives it its height and the
+ * aside its horizontal offset. Used on its own as a masthead (the page contract's `nowo_ui_navigation` region) it
+ * collapses to the height of its text and starts at the window edge. Give it the shell's header height and line
+ * its contents up with the content gutter above.
+ */
+.nowo-ui-page > .nowo-ui-header {
+  min-height: var(--nowo-ui-header-height, 3.25rem);
+  --nowo-ui-header-padding-inline: max(
+    var(--nowo-ui-page-gutter, 1.25rem),
+    calc((100% - var(--nowo-ui-content-max-width, 72rem)) / 2 + var(--nowo-ui-page-gutter, 1.25rem))
+  );
+}
+
+}

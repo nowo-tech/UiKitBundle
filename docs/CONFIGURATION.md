@@ -25,6 +25,7 @@ Alias: **`nowo_ui_kit`**
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `css_framework` | enum | `bootstrap5` | `bootstrap` (alias of `bootstrap5`), `bootstrap4`, `bootstrap5`, `tabler`, `tailwind`, `foundation`, `custom`, `none` |
+| `base_stylesheet` | bool | `false` | **2.51**: link UiKit's opt-in default theme (`css/nowo-ui-base.css`) before `nowo-ui.css` in the document / error layouts — body font stack, page gutters and masthead height for a host with no CSS framework and no theme file. Its cascade layer sits below `base`, so a framework, host utilities and unlayered host CSS still win. See [THEMING.md](THEMING.md#the-default-theme-251) |
 | `icon_set` | enum | `bootstrap-icons` | `bootstrap-icons`, `tabler-icons`, `ux_icon`, `svg_inline`, `none` — how glyphs are drawn |
 | `row_actions_display` | enum | `icon` | Table/list row actions: `icon` (glyph + visually hidden label), `text` (visible label only), `icon_text` (glyph + visible label) |
 | `row_actions_confirm` | enum | `inline` | How `confirm_message` of 1.x `_row_actions` POST hashes asks (since 2.22.0): `inline` (`onsubmit="return confirm(…)"`, unchanged markup), `native` / `dialog` (no inline handler: the `confirm-submit` Stimulus peer asks with `window.confirm()` / the kit `<dialog>`). See [ROW_ACTIONS.md](ROW_ACTIONS.md#confirm-contract-for-post-hashes-222) |
@@ -579,6 +580,9 @@ nowo_ui_kit:
 
 ```yaml
 nowo_ui_kit:
+    # With no framework and no theme file of your own, turn on the default theme (2.51) or the document keeps the
+    # browser defaults (serif body font, no page gutter, a one-line masthead). See THEMING.md#the-default-theme-251.
+    base_stylesheet: true
     css_framework: custom
     icon_set: ux_icon
     row_actions_display: icon_text
