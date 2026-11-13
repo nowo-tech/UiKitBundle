@@ -785,6 +785,15 @@ overrides the theme tokens**: both blocks use the same selectors' specificity (`
 
 ### Cascade layers
 
+> **Hosts with no framework at all.** `nowo-ui.css` paints the kit's components, never the document around them: no
+> body font, no page gutter, no masthead height. With `css_framework: custom` / `none` and no host stylesheet those
+> come from nowhere and the page falls back to the browser defaults (a serif body font, edge-to-edge content).
+> Turn on UiKit's opt-in default theme — `nowo_ui_kit.base_stylesheet: true`, which links `nowo-ui-base.css` in
+> `@layer theme.nowo-ui-base`, a nested sub-layer of the first layer above, so it cannot fight a framework or a
+> host theme. (A new top-level layer would be appended at the **end** of an order a host has already fixed, i.e. on
+> top of everything — which is exactly why it nests.)
+> See [THEMING.md — The default theme](THEMING.md#the-default-theme-251).
+
 `nowo-ui.css` ships inside the cascade layer **`nowo-ui`** and starts with the order statement
 `@layer theme, base, nowo-ui, components, utilities;` (Tailwind v4 layer names). Consequences:
 

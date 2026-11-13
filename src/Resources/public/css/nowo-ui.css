@@ -980,12 +980,30 @@ a.nowo-ui-pagination__link:hover {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  padding: 0 1rem;
+  /* 2.51: the inline padding reads a token so a theme (nowo-ui-base.css, a host) can line the masthead up with the
+     page gutter — a `padding` shorthand here would beat a `padding-inline` from any lower cascade layer. */
+  padding-block: 0;
+  padding-inline: var(--nowo-ui-header-padding-inline, 1rem);
   border-bottom: 1px solid var(--nowo-ui-border);
   background: var(--nowo-ui-surface);
   position: sticky;
   top: 0;
   z-index: 40;
+}
+
+/* 2.51: main navigation of a masthead `.nowo-ui-header` (the page contract's `nowo_ui_navigation` region, outside
+   the kit shell) — a flex row of links. The bare `> nav` keeps the row readable on hosts that carry no class. */
+.nowo-ui-header__nav,
+.nowo-ui-header > nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.9rem;
+}
+
+:is(.nowo-ui-header__nav, .nowo-ui-header > nav) > [aria-current] {
+  font-weight: 600;
+  color: var(--nowo-ui-nav-active-text, var(--nowo-ui-text));
 }
 
 .nowo-ui-header__start,

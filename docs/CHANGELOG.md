@@ -128,6 +128,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **UiKit's default theme: `nowo-ui-base.css` (opt-in).** `nowo-ui.css` paints UiKit's components but never the
+  document around them — it sets no body font, no page gutter and no masthead height. A host that adopts the UiKit
+  layouts with a CSS framework (Bootstrap in the `base` layer, Tailwind) or its own theme file got those from there;
+  a host with **neither** (`css_framework: custom` / `none`, and every REQ-DEMO-014 demo) fell back to the browser
+  defaults: a **serif** body font, content flush against the window edges and a masthead one line tall. The new
+  `src/Resources/public/css/nowo-ui-base.css` is that missing document base — sans-serif font stack, heading and
+  prose rhythm, `box-sizing`, page gutters on `.nowo-ui-content` (`--nowo-ui-content-max-width`) and the shell's
+  header height + gutter alignment for a masthead `.nowo-ui-header`. Everything it paints reads a `--nowo-ui-*`
+  token, so host tokens, the appearance SPI and dark mode follow with no override.
+
+  Turn it on with `nowo_ui_kit.base_stylesheet: true`; `layout/document.html.twig` and `error/layout.html.twig`
+  then link it **before** `nowo-ui.css`. **Off by default** — switching it on for every host would be a visual
+  change they did not ask for. Its rules live in `@layer theme.nowo-ui-base`, a **nested sub-layer** of the first
+  layer of UiKit's canonical order, so they sit below `base`, `nowo-ui`, `components`, `utilities` and anything the
+  host writes in `theme` itself: a framework in the `base` layer, the kit's own `nowo-ui` layer, host utilities in
+  theme slots and all unlayered host CSS beat it whatever their specificity or load order. (A new *top-level* layer
+  would not do: the order is fixed by the first stylesheet that names the layers, and a later statement can only
+  append unknown names — at the end, on top of everything.) It only paints what nothing else paints, and it never
+  uses `!important`.
+  New Twig function `nowo_ui_base_stylesheet()`. Docs: `docs/THEMING.md#default-theme`.
+- **`.nowo-ui-header__nav`** — the main navigation of a masthead `.nowo-ui-header` (the page contract's
+  `nowo_ui_navigation` region, outside the kit shell): a wrapping flex row of links with the `[aria-current]` item
+  in the active colour and weight. A bare `<nav>` directly inside `.nowo-ui-header` gets the same row, so mastheads
+  written before this stop running their links together.
+
+### Changed
+
+- `.nowo-ui-header` sets `padding-block: 0; padding-inline: var(--nowo-ui-header-padding-inline, 1rem)` instead of
+  the `padding: 0 1rem` shorthand (same rendering). A shorthand in the `nowo-ui` layer would beat a `padding-inline`
+  from any lower layer, so the token is how a theme — `nowo-ui-base.css`, or a host — lines the masthead up with the
+  page gutter.
+
+### Fixed
+
+- Demo: the `/page-contract/default/…` pages, which exist to show **UiKit's default theme**, were only presentable
+  because the demo layout loaded Bootstrap from a CDN and hand-wrote the content gutters. They now load UiKit's two
+  stylesheets and nothing else (REQ-DEMO-014), and their masthead uses `.nowo-ui-header` / `.nowo-ui-brand` /
+  `.nowo-ui-header__nav` instead of Bootstrap navbar markup.
+
 ## [2.50.0] - 2026-11-13
 
 ### Added

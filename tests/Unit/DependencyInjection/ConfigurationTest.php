@@ -78,6 +78,13 @@ final class ConfigurationTest extends TestCase
         (new Processor())->processConfiguration(new Configuration(), [['row_actions_confirm' => 'popup']]);
     }
 
+    /** 2.51: UiKit's opt-in default theme (css/nowo-ui-base.css) is off unless the host turns it on. */
+    public function testBaseStylesheetDefaultsToOff(): void
+    {
+        self::assertFalse((new Processor())->processConfiguration(new Configuration(), [[]])['base_stylesheet']);
+        self::assertTrue((new Processor())->processConfiguration(new Configuration(), [['base_stylesheet' => true]])['base_stylesheet']);
+    }
+
     public function testPanelPathRewritesMap(): void
     {
         $config = (new Processor())->processConfiguration(new Configuration(), [[

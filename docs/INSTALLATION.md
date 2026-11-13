@@ -62,6 +62,10 @@ nowo_ui_kit:
     css_framework: bootstrap5
     icon_set: bootstrap-icons
     row_actions_display: icon
+    # base_stylesheet: true     # 2.51: UiKit's default theme. Turn it on when the app has NO CSS framework and no
+                                # theme stylesheet of its own, or the document keeps the browser defaults (serif
+                                # body font, edge-to-edge content, a one-line masthead). It cannot override a
+                                # framework or a host theme. See THEMING.md#the-default-theme-251.
 ```
 
 See [Configuration](CONFIGURATION.md) for all enum values.
@@ -72,7 +76,7 @@ See [Configuration](CONFIGURATION.md) for all enum values.
 php bin/console assets:install
 ```
 
-This publishes `src/Resources/public` to `public/bundles/nowouikit/` (`css/nowo-ui.css`, `js/nowo-ui-modal.js`, `js/nowo-ui-shell.js`). Templates load them via the `nowo_ui_kit` asset package:
+This publishes `src/Resources/public` to `public/bundles/nowouikit/` (`css/nowo-ui.css`, `css/nowo-ui-base.css`, `js/nowo-ui-modal.js`, `js/nowo-ui-shell.js`). Templates load them via the `nowo_ui_kit` asset package:
 
 ```twig
 <link rel="stylesheet" href="{{ asset('css/nowo-ui.css', 'nowo_ui_kit') }}">
