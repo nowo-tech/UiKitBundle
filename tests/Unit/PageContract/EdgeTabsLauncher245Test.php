@@ -62,7 +62,7 @@ final class EdgeTabsLauncher245Test extends TestCase
     public function testSpacingFormulaWithCustomHeightAndStep(): void
     {
         $css = $this->css('nowo-ui.unlayered.css');
-        self::assertSame(2, substr_count($css, '+ (var(--nowo-ui-edge-tab-slot, 0) + 1) * '.self::STEP.');'), 'open stacking, both `when`');
+        self::assertSame(2, substr_count($css, '+ (var(--nowo-ui-edge-tab-slot, 0) + 1) * '.self::STEP.' + var(--nowo-ui-edge-tabs-launcher-gap, 0px));'), 'open stacking, both `when`');
 
         foreach ([[2.75, null, 0.5, 0.5], [2.3, 2.6, null, 0.3], [2.3, null, 0.3, 0.3], [2.0, 2.4, 0.1, 0.4]] as [$height, $step, $gap, $expectedGap]) {
             $resolvedStep = $step ?? ($height + ($gap ?? 0.5));

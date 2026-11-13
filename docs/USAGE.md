@@ -1072,6 +1072,7 @@ Options: `when` (`phone` | `always`; anything else: never), `gutter` (while fold
   | `--nowo-ui-edge-tabs-motion-stagger` | `var(--nowo-ui-edge-tabs-stagger, 30ms)` | delay per tab |
   | `--nowo-ui-edge-tabs-icon-duration` | `240ms` | chevron morph |
   | `--nowo-ui-edge-tabs-icon-easing` | `cubic-bezier(0.34, 1.56, 0.64, 1)` | chevron morph |
+  | `--nowo-ui-edge-tabs-launcher-gap` | `0` | extra gap between the launcher and the first unfolded tab, e.g. `:root { --nowo-ui-edge-tabs-launcher-gap: 0.5rem; }` |
 
 - Turbo: `turbo:before-cache` ends a running fold, so a cached page never keeps half-folded (inert) tabs. A tab that
   has the focus when the fold closes gives it to the launcher first.
