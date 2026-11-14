@@ -21,10 +21,10 @@
 {% set _field = field ?? null %}
 {% set _checked = _field is not null ? _field.vars.checked|default(false) : checked|default(false) %}
 {% set _input_attr = {'data-nowo-ui-segmented-input': true, tabindex: '-1'}|merge(input_attr|default({})) %}
-<div class="{{ nowo_ui_class('segmented', _b) }}" role="radiogroup" data-nowo-ui-segmented{% if labelled_by|default(null) %} aria-labelledby="{{ labelled_by }}"{% elseif label|default(null) is not null %} aria-label="{{ label|nowo_ui_trans }}"{% endif %}{{ nowo_ui_attrs('segmented', _b) }}{{ nowo_ui_html_attrs(attr|default({})) }}>
+<div class="{{ nowo_ui_class('segmented', _b) }}{{ (attr.class ?? false) ? ' ' ~ attr.class }}" role="radiogroup" data-nowo-ui-segmented{% if labelled_by|default(null) %} aria-labelledby="{{ labelled_by }}"{% elseif label|default(null) is not null %} aria-label="{{ label|nowo_ui_trans }}"{% endif %}{{ nowo_ui_attrs('segmented', _b) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(attr|default({}))) }}>
     {% for _option in options %}
         {% set _selected = (_option.checked|default(false) ? true : false) == (_checked ? true : false) %}
-        <button type="button" role="radio" class="{{ nowo_ui_class('segmented_option', _b) }}{{ _selected ? ' is-active' }}" aria-checked="{{ _selected ? 'true' : 'false' }}" tabindex="{{ _selected ? '0' : '-1' }}"{% if _option.title|default(null) is not null %} title="{{ _option.title|nowo_ui_trans }}"{% endif %} data-nowo-ui-segmented-option data-nowo-ui-segmented-checked="{{ _option.checked|default(false) ? 'true' : 'false' }}"{{ nowo_ui_attrs('segmented_option', _b) }}{{ nowo_ui_html_attrs(_option.attr|default({})) }}>{{ _option.label|nowo_ui_trans }}</button>
+        <button type="button" role="radio" class="{{ nowo_ui_class('segmented_option', _b) }}{{ _selected ? ' is-active' }}{{ (_option.attr.class ?? false) ? ' ' ~ _option.attr.class }}" aria-checked="{{ _selected ? 'true' : 'false' }}" tabindex="{{ _selected ? '0' : '-1' }}"{% if _option.title|default(null) is not null %} title="{{ _option.title|nowo_ui_trans }}"{% endif %} data-nowo-ui-segmented-option data-nowo-ui-segmented-checked="{{ _option.checked|default(false) ? 'true' : 'false' }}"{{ nowo_ui_attrs('segmented_option', _b) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(_option.attr|default({}))) }}>{{ _option.label|nowo_ui_trans }}</button>
     {% endfor %}
     <span class="nowo-ui-segmented__field">
         {%- if _field is not null -%}

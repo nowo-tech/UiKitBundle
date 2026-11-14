@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.51.0] - 2026-11-13](#2510---2026-11-13)
+- [[2.50.0] - 2026-11-13](#2500---2026-11-13)
+- [[2.49.1] - 2026-11-13](#2491---2026-11-13)
+- [[2.49.0] - 2026-11-11](#2490---2026-11-11)
+- [[2.48.1] - 2026-11-11](#2481---2026-11-11)
+- [[2.48.0] - 2026-11-11](#2480---2026-11-11)
+- [[2.47.0] - 2026-11-11](#2470---2026-11-11)
+- [[2.46.0] - 2026-11-10](#2460---2026-11-10)
+- [[2.45.0] - 2026-11-10](#2450---2026-11-10)
+- [[2.44.0] - 2026-11-10](#2440---2026-11-10)
+- [[2.43.1] - 2026-11-10](#2431---2026-11-10)
+- [[2.43.0] - 2026-11-09](#2430---2026-11-09)
+- [[2.42.1] - 2026-11-09](#2421---2026-11-09)
 - [[2.42.0] - 2026-11-09](#2420---2026-11-09)
 - [[2.41.1] - 2026-11-09](#2411---2026-11-09)
 - [[2.41.0] - 2026-11-09](#2410---2026-11-09)
@@ -115,6 +128,408 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+### Changed
+
+- CI, `make coverage-check` and `composer coverage-check`: the PHP line-coverage gate is now **100%** (was 99%). The suite is already at 100%; the gate only stops a regression from merging.
+
+## [2.51.0] - 2026-11-13
+
+### Added
+
+- **UiKit's default theme: `nowo-ui-base.css` (opt-in).** `nowo-ui.css` paints UiKit's components but never the
+  document around them — it sets no body font, no page gutter and no masthead height. A host that adopts the UiKit
+  layouts with a CSS framework (Bootstrap in the `base` layer, Tailwind) or its own theme file got those from there;
+  a host with **neither** (`css_framework: custom` / `none`, and every REQ-DEMO-014 demo) fell back to the browser
+  defaults: a **serif** body font, content flush against the window edges and a masthead one line tall. The new
+  `src/Resources/public/css/nowo-ui-base.css` is that missing document base — sans-serif font stack, heading and
+  prose rhythm, `box-sizing`, page gutters on `.nowo-ui-content` (`--nowo-ui-content-max-width`) and the shell's
+  header height + gutter alignment for a masthead `.nowo-ui-header`. Everything it paints reads a `--nowo-ui-*`
+  token, so host tokens, the appearance SPI and dark mode follow with no override.
+
+  Turn it on with `nowo_ui_kit.base_stylesheet: true`; `layout/document.html.twig` and `error/layout.html.twig`
+  then link it **before** `nowo-ui.css`. **Off by default** — switching it on for every host would be a visual
+  change they did not ask for. Its rules live in `@layer theme.nowo-ui-base`, a **nested sub-layer** of the first
+  layer of UiKit's canonical order, so they sit below `base`, `nowo-ui`, `components`, `utilities` and anything the
+  host writes in `theme` itself: a framework in the `base` layer, the kit's own `nowo-ui` layer, host utilities in
+  theme slots and all unlayered host CSS beat it whatever their specificity or load order. (A new *top-level* layer
+  would not do: the order is fixed by the first stylesheet that names the layers, and a later statement can only
+  append unknown names — at the end, on top of everything.) It only paints what nothing else paints, and it never
+  uses `!important`.
+  New Twig function `nowo_ui_base_stylesheet()`. Docs: `docs/THEMING.md#default-theme`.
+- **`.nowo-ui-header__nav`** — the main navigation of a masthead `.nowo-ui-header` (the page contract's
+  `nowo_ui_navigation` region, outside the kit shell): a wrapping flex row of links with the `[aria-current]` item
+  in the active colour and weight. A bare `<nav>` directly inside `.nowo-ui-header` gets the same row, so mastheads
+  written before this stop running their links together.
+
+### Changed
+
+- `.nowo-ui-header` sets `padding-block: 0; padding-inline: var(--nowo-ui-header-padding-inline, 1rem)` instead of
+  the `padding: 0 1rem` shorthand (same rendering). A shorthand in the `nowo-ui` layer would beat a `padding-inline`
+  from any lower layer, so the token is how a theme — `nowo-ui-base.css`, or a host — lines the masthead up with the
+  page gutter.
+
+### Fixed
+
+- Demo: the `/page-contract/default/…` pages, which exist to show **UiKit's default theme**, were only presentable
+  because the demo layout loaded Bootstrap from a CDN and hand-wrote the content gutters. They now load UiKit's two
+  stylesheets and nothing else (REQ-DEMO-014), and their masthead uses `.nowo-ui-header` / `.nowo-ui-brand` /
+  `.nowo-ui-header__nav` instead of Bootstrap navbar markup.
+
+## [2.50.0] - 2026-11-13
+
+### Added
+
+- Token `--nowo-ui-edge-tabs-launcher-gap` (default `0`, no visual change): an extra gap between the launcher and the first unfolded edge tab, so a host no longer needs its own `top` values.
+
+### Fixed
+
+- Edge-tabs chevron rotates again on browsers without CSS `d` (Safari/iOS): a test now guards the `@supports not (d: path(...))` fallback (transition, `rotate(-90deg)`, reduced-motion override) in both compiled stylesheets.
+
+### Documentation
+
+- `docs/SECURITY.md`: record the 2.48.0, 2.48.1 and 2.49.0 AI security audits (Appendices LV, ME, MR) with dates and grade (REQ-SEC-004).
+
+## [2.49.1] - 2026-11-13
+
+Target **2.49.1** (patch; REQ-RUNTIME-002, batch C9). Tests and docs only, plus one CSS fix (image input phone overflow): no PHP, markup, JS or template change.
+
+### Fixed
+
+- Image input no longer overflows its card on narrow screens (`.nowo-ui-image-input` is one `minmax(0, 1fr)` column;
+  the controls shrink and long file names wrap).
+
+### Added
+
+- `tests/Integration/Worker/WorkerKeptAliveKernelTest`: one kernel kept alive with no services resetter (FrankenPHP
+  worker, `reset_kernel: false`), 1,000 main requests through `http_kernel`, two users of two brands in alternation.
+  Checks that the appearance provider is asked once per request (the `AppearanceView` main-request memo never crosses
+  requests), that brand name, logos and `<head>` links never leak to the other brand, that a provider failure on one
+  request falls back for that request only, that the cookie listing store gives each user only their own layout, and
+  that memory grows less than 2 MiB after a 50-request warm-up. A second test reads the view outside any request
+  (console / Messenger) right after each request: the last request's memo is never reused.
+
+### Changed
+
+- `docs/FRANKENPHP-WORKER-AUDIT.md` refreshed for 2.49.1: services table (appearance view, listing builder, error
+  illustration provider budget), the three kept-alive kernel tests with N, users and memory margin, Igor result.
+
+## [2.49.0] - 2026-11-11
+
+Target **2.49.0** (minor; REQ-ARCH-001 rule 3, B2). No markup, CSS, JS or template change; no BC break.
+
+### Added
+
+- **`Listing\ListingPreferenceReaderInterface`**: framework-free listing preference port,
+  `load(string $listingKey, ListingContext $context)` + `cookieName()`. The default `CookieListingPreferenceStore`
+  implements it (same cookie, same parsing rules: tested equivalent for every cookie fixture). A host reader alias wins
+  over the default store.
+- **`Listing\ListingContext`** VO (`cookies`, `viewerId`, `route`, `routeParameters`, `locale`; strings / scalars only)
+  and the optional **`Listing\ListingViewerResolverInterface`** SPI that fills `viewerId` (no default implementation).
+- **`ListingCustomizerViewBuilder::buildForContext()`**: builds a listing view without an HttpFoundation request.
+- **`RemoteDialogRedirectEvent`** request-free accessors: `getRequestPath()`, `getRequestRoute()`,
+  `getRouteParameters()`, `getRedirectTargetUrl()`, `getRedirectStatusCode()`.
+- DDD-host kernel test (`tests/Integration/DddHostListingKernelTest.php`): host reader, viewer resolver and a
+  scalar-only redirect listener, 400 requests through `http_kernel` without the services resetter, two viewers in
+  alternation, flat memory.
+- `docs/USAGE.md`: "Standard host" and "DDD host" sections.
+
+- Reader contract (audit MR-U-L2): a per-viewer `ListingPreferenceReaderInterface` returns null for a null `viewerId`
+  (fail closed). With `kernel.debug` on, the builder logs a warning (`logger` service) when a server-side reader
+  (`cookieName()` null) runs without a `ListingViewerResolverInterface`.
+
+### Security
+
+- `ListingContext::$cookies`, built from the request, holds only the `nowo_ui_listing_*` cookies (audit MR-U-L1):
+  session, remember-me and other host cookies are never handed to a reader.
+
+### Deprecated
+
+- `Listing\ListingPreferenceStoreInterface` (`load(string, Request)`): implement `ListingPreferenceReaderInterface`.
+  A legacy-only host store still works and triggers one `E_USER_DEPRECATED` notice when the builder is built. Removed
+  in 3.0.
+- `RemoteDialogRedirectEvent::getRequest()` / `getResponse()`: use the scalar accessors. Each call triggers an
+  `E_USER_DEPRECATED` notice (audit MR-U-I1). Removed in 3.0.
+
+## [2.48.1] - 2026-11-11
+
+Target **2.48.1** (patch; Beacon report 2026-11-11 after adopting 2.48.0).
+
+### Fixed
+
+- **`page-loader` peer: a cancelled link click no longer shows the overlay.** The peer intercepts link clicks in the
+  capture phase, before the link's own handlers run, so it showed the "Loading…" overlay even when a toggle handler on
+  the `<a>` then called `preventDefault()` (the page never navigated and the overlay stayed until the 8 s safety hide).
+  The decision now happens in the `link-delay` timeout, after the click has reached every handler: when
+  `event.defaultPrevented` is set by then, nothing is shown. Uncancelled same-origin links behave as before.
+- **Visible change with Turbo Drive (audit ME-U-L1):** Turbo Drive cancels the link clicks it handles, so the peer no
+  longer shows the overlay on Turbo visits (there is no full page unload). For a loader on Turbo visits, use Turbo's own
+  progress bar, or call `window.nowoUiShowPageLoader()` on `turbo:visit` and `window.nowoUiHidePageLoader()` on
+  `turbo:load` (see UPGRADING).
+- `page-loader` peer: the `link-delay` timeout is cleared on `disconnect()`, so a controller removed within the delay no
+  longer shows the overlay and arms an 8 s safety hide afterwards (audit ME-U-I1, already present before 2.48.1).
+- `data-no-page-loader` also opts a link out when written as a bare attribute (`<a data-no-page-loader>`); the
+  `data-no-page-loader="true"` form keeps working.
+
+### Tests
+
+- `page_loader_controller.test.ts`: link interception — a click cancelled by the link's own handler or by a later
+  document handler shows nothing, an uncancelled same-origin click shows the overlay, both `data-no-page-loader`
+  forms opt out, and a disconnect within the link delay shows nothing. The test teardown now removes the markup before
+  `app.stop()`, so each test's controllers are disconnected (they used to keep their document listeners).
+
+## [2.48.0] - 2026-11-11
+
+Wiki page view layout (Beacon 1.149): side panel drawer breakpoint and remembered state, a collapsible column rail,
+tabs and actions on one header row, a reading-width token and overflow helpers. Every option is opt-in; without them
+the markup is byte-identical to 2.47.0. See [UPGRADING](UPGRADING.md#to-2480).
+
+### Added
+
+- **Side panel `drawer_below`** (`md` default | `lg` | `xl`, also on `side_panel_container`): the panel docks as a
+  column only from 768 / 1200 / 1440 px and is the overlay drawer below (modifier `nowo-ui-side-panel--drawer-<bp>`,
+  `data-drawer-below`). `js/nowo-ui-side-panel.js` reads the panel's breakpoint and follows each media query change
+  (inert, backdrop, overlay registration, focus trap).
+- **Side panel `persist`** (`data-nowo-ui-side-panel-persist`): a localStorage fallback for hosts without a store of
+  their own (`nowo-ui-panel:<key>`), written only in the inline state and never opening a drawer on load; storage errors
+  are ignored. The host store (server-rendered `open`) stays primary.
+- **`js/nowo-ui-layout-state.js`**: optional blocking `<head>` script (external, no inline code) that applies remembered
+  panel and rail states while the document is parsed, before the first paint; `<html data-nowo-ui-panel-<key>>` /
+  `data-nowo-ui-rail-<key>` mirror them for host CSS.
+- **Rail toggle** (partial and slot `rail_toggle`, `js/nowo-ui-rail.js`, opt-in `script_names` entry `rail`): collapses
+  an in-page column (`[data-nowo-ui-rail-host]`) to a `--nowo-ui-rail-width` rail; `[data-nowo-ui-rail-body]` parts are
+  `display: none`. Button or no-JS link with `aria-controls` / `aria-expanded`, "Collapse / Expand %title%" labels
+  (`rail.collapse`, `rail.expand`, 7 locales), vertical title in the rail, focus kept on the toggle, optional shortcut,
+  `nowo-ui:rail:change` event, `window.NowoUiRail`, host store (`state_url` POST with CSRF header) or localStorage
+  fallback (`persist`), no width transition under reduced motion.
+- **Page header `tabs_inline`** (`true` only; partial, `page/_page_header.html.twig`, `nowo_ui_page_header()` options):
+  with `header.tabs`, the tabs and the toolbar share one row (`nowo-ui-page-header__bar`) that wraps on narrow widths.
+- **Reading width:** token `--nowo-ui-reading-width: 75ch` and the utility `.nowo-ui-readable`.
+- **Overflow helpers:** CSS for `[data-nowo-ui-scroll-region]` (`max-inline-size: 100%; overflow-x: auto`), `pre` and
+  `table` inside `.nowo-ui-rendered-content` / `[data-nowo-ui-rendered-content]` scroll sideways, `.nowo-ui-grid-fit`
+  (one `minmax(0, 1fr)` column, children `min-inline-size: 0`); nothing inside a `contenteditable` area is touched.
+- **`js/nowo-ui-scroll-region.js`:** also handles `pre` / `table` in rendered content (a table gets only the tab stop),
+  skips regions inside `contenteditable` areas (removing attributes it set before), and `data-nowo-ui-scroll-role="group"`.
+
+### Changed
+
+- The keyboard shortcut helpers of the side panel moved to `nowo-ui-shortcut-core.ts` (re-exported; no behaviour change).
+
+### Security
+
+Fixes from the independent audit Appendix LV (2026-11-11, **Pass-Low** on `ed5365c`), before the tag:
+
+- **LV-L1:** `rail_toggle` `attr` goes through `nowo_ui_safe_attrs()` (no `on*`, `style`, `srcdoc` or script-running
+  URLs) with the attributes the partial owns reserved (`href`, `role`, `type`, `aria-controls`, `aria-expanded`,
+  `aria-keyshortcuts`, `data-nowo-ui-rail-*`); `href` and `state_url` go through `nowo_ui_safe_href()` (a refused `href`
+  renders the button, a refused `state_url` no store attributes).
+- **LV-L2:** a side panel with `drawer_below: 'lg' | 'xl'` that the server renders `open` starts closed when the page
+  loads at or under its breakpoint, like a remembered `open`, instead of a modal drawer that made the content and the
+  shell inert on every load at laptop / tablet widths. No event, nothing stored; `md` and `overlay` panels keep the
+  server state. Applied before the first paint by `js/nowo-ui-layout-state.js`, else by `nowo-ui-side-panel.js`.
+- **LV-I1 / LV-I2:** `drawer_below` compares strictly (`true` no longer renders `--drawer-1`); the persist-key pattern
+  has the `D` modifier (no trailing newline).
+- **LV-I3:** `js/nowo-ui-rail.js` posts the state (and the CSRF header) only to a store URL on the page's own origin
+  (`mode: 'same-origin'`); another origin is never fetched.
+- **LV-I6:** modified (Ctrl / Cmd / Shift / Alt) and non-primary clicks on the rail link keep the browser's behaviour.
+
+## [2.47.0] - 2026-11-11
+
+Optional error-illustration provider with a safe fallback, and an opt-in image input with instant preview. See [UPGRADING](https://github.com/nowo-tech/UiKitBundle/blob/v2.47.0/docs/UPGRADING.md#to-2470).
+
+### Added
+
+- **Error illustration provider** (`nowo_ui_kit.error_pages.illustration_provider`): an optional host service
+  implementing `View\ErrorIllustrationProviderInterface` returns the illustration of each status code
+  (`ErrorIllustration::fromUrl(src, width, height, webpSrcset, srcset, sizes)`) or null for the configured
+  `illustrations` map. A null answer, any `Throwable` or an invalid illustration falls back to the map (code, then
+  `default`), logging one warning per failed or slow call. The provider is injected lazily (a service closure resolved
+  inside the guard), so a provider whose constructor or dependency throws (database down) never breaks Twig or the
+  error page. Optional guard `error_pages.illustration_provider_budget_ms`: a call over
+  budget makes the rest of the same request skip the provider (flag on the Request, nothing kept across requests;
+  FrankenPHP worker safe, N-request `http_kernel` test without the resetter). Provided illustrations render
+  `<picture>` with an optional WebP `<source srcset sizes>` and `<img src srcset sizes>`; URLs are validated
+  (http(s), protocol-relative or path; no other scheme) and escaped, never passed through `asset()`. Without a
+  provider the page is byte-identical to 2.46.0. A missing provider service or one that does not implement the
+  interface fails the container build (`ErrorIllustrationProviderPass`).
+- `View\ErrorIllustration` gains optional `src`, `srcset`, `sizes`, `webpSrcset` (URL mode), `fromUrl()` and
+  `isUrl()`; the asset path mode is unchanged.
+- **Image input** (FileType option `nowo_ui_image_input`, `Form\ImageInputTypeExtension`, form theme
+  `form/nowo_ui_image_input.html.twig`, partial `image_input`, `js/nowo-ui-image-input.js` opt-in `image-input`): the
+  field's own box shows the stored image (`current_url`, a URL or a closure on the field) or the default (`default_url`,
+  "Default" badge), swaps to a local preview (object URL) on pick or drop, and holds Replace / Remove / Undo. Remove only
+  when something is stored: it drives the host's sibling checkbox (`remove_field`), rendered inside the box. With
+  `nowo_ui_image_crop` the crop's preview targets the box and the cropped result shows after Apply. Keyboard reachable
+  (Replace is a button; the input leaves the tab order but stays visible to assistive technology), buttons described by
+  the field name, help and errors, one `aria-describedby` on the input, drag and drop with a hint, object URLs revoked
+  when a box leaves the page, a `current_url` closure whose stored value is unusable renders without it (one warning
+  instead of a failing form), polite live region with the chosen file name,
+  `alt` from the field label, checkerboard / light / dark backdrop. No-JS: the plain file input, the current image and the
+  remove checkbox. CSP-safe (needs `img-src blob:`, as the crop step). 9 theme slots, 4 tokens, 11 labels in 7 locales.
+  Opt-in: a FileType without the option renders exactly as before. Worker safe (nothing kept between requests).
+
+### Documentation
+
+- [ROADMAP.md](ROADMAP.md): new section "Ideas from an admin-template review (2026-11)" with prioritised gaps (RTL readiness, a top navigation layout, alert and tooltip partials, statistic cards with trends, bulk selection, an activity timeline, avatar groups and table extras), and ideas routed to other bundles.
+
+## [2.46.0] - 2026-11-10
+
+Edge-tabs launcher: morphing chevron SVG (CSS d transition, rotate fallback), softer default unfold and launcher-only motion tokens. See [UPGRADING](https://github.com/nowo-tech/UiKitBundle/blob/v2.46.0/docs/UPGRADING.md#to-2460).
+
+### Added
+
+- **Morphing chevron (`edge_tabs_launcher` `icon: 'chevron'`):** the kit's own inline SVG with two stroke arms that
+  morph from the left chevron to the down chevron (CSS `d` transition on `aria-expanded="true"`, the reverse on close;
+  rotate fallback where CSS `d` is not supported). Tokens `--nowo-ui-edge-tabs-icon-duration` (240ms) and
+  `--nowo-ui-edge-tabs-icon-easing` (`cubic-bezier(0.34, 1.56, 0.64, 1)`). Same markup under every icon set (no
+  `ux_icon()` call); `aria-hidden` SVG, the button keeps its label; nothing moves under reduced motion.
+- **Launcher motion tokens:** `--nowo-ui-edge-tabs-motion-duration`, `-motion-easing`, `-motion-close-easing`,
+  `-motion-scale` and `-motion-stagger` (defaults to `--nowo-ui-edge-tabs-stagger`), so a host tunes the unfold
+  without touching `--nowo-ui-motion-*`.
+
+### Changed
+
+- **Softer default unfold:** opacity + translateY + scale from 0.96, `cubic-bezier(0.22, 1, 0.36, 1)`, 260ms per tab
+  (2.45: 200ms `--nowo-ui-motion-ease-out`, no scale). See UPGRADING to restore the 2.45 timing.
+- `icon: 'chevron'` no longer follows `nowo_ui_kit.action_icons.chevron_left` (the morph needs the kit SVG).
+
+### Fixed
+
+- KV-L1: `turbo:before-cache` ends a running fold, so a Turbo snapshot never restores inert, aria-hidden tabs over
+  the launcher.
+- KV-I1: if reading the computed styles throws while the fold starts, the fold ends at once.
+- KV-I2: a focused tab gives the focus to the launcher before it becomes `aria-hidden` (no Chrome warning).
+
+## [2.45.0] - 2026-11-10
+
+Page-edge tabs launcher: size tokens (`--nowo-ui-edge-tab-{width,height,hover-width,icon,gap}`), staggered unfold and `icon: 'chevron'` with a morph. See [UPGRADING](https://github.com/nowo-tech/UiKitBundle/blob/v2.45.0/docs/UPGRADING.md#to-2450).
+
+### Added
+
+- **Edge tab size tokens (MUX-01, Beacon):** `--nowo-ui-edge-tab-width` (2.25rem), `--nowo-ui-edge-tab-height`
+  (2.75rem), `--nowo-ui-edge-tab-hover-width` (2.6rem), `--nowo-ui-edge-tab-icon` (1.15rem) and
+  `--nowo-ui-edge-tab-gap` (0.5rem), read by every `.nowo-ui-edge-tab__link` and by the edge tabs launcher, which had
+  a hard-coded size. `--nowo-ui-edge-tab-step` now defaults to height + gap (still 3.25rem). With a custom height the
+  first unfolded tab keeps the same gap under the launcher as the others (it overlapped the 2.75rem launcher before).
+- **Edge tabs unfold / fold animation:** the tabs slide down from the launcher (opacity + translateY, 200ms
+  ease-out, 30ms stagger per tab, `--nowo-ui-edge-tabs-stagger`) and fold back the same way, the last one first.
+  While they fold `<html>` carries `data-nowo-ui-edge-tabs-closing` and each folding tab is `inert` and
+  `aria-hidden="true"`. Off under reduced motion; the no-JS fallback is unchanged.
+- **`edge_tabs_launcher` `icon: 'chevron'`:** a chevron pointing left while folded, turned −90° (pointing down) while
+  open, in 200ms (`nowo-ui-edge-tabs-launcher--chevron`). It is the kit's `chevron_left` icon in every icon set
+  (`bi:chevron-left` under `ux_icon`). `more` stays the default.
+
+### Changed
+
+- The edge tabs launcher widens on hover (`--nowo-ui-edge-tab-hover-width`) and turns to the primary colour, like the
+  tabs. The `gutter` width follows `--nowo-ui-edge-tab-width`.
+- `.nowo-ui-edge-tab__link` is `box-sizing: border-box`, like the launcher and the `<button>` tabs. No change on hosts
+  with a global box-sizing reset (Bootstrap, Tailwind); on hosts without one, link tabs (`<a>`) were 1px wider and 2px
+  taller than button tabs and the launcher, and now share their size.
+
+## [2.44.0] - 2026-11-10
+
+Target 2.44.0.
+
+### Added
+
+- **Auth panel brand option:** `nowo_ui_kit.auth_panel.brand: auto | none` (Twig global `nowo_ui_kit_auth_panel`,
+  parameter `%nowo_ui_kit.auth_panel.brand%`). `auto` (default) keeps the 2.43 panel byte for byte: the appearance logo
+  lockup, else `AuthPage::brand` as text. `none` leaves the brand region out of the `page/auth.html.twig` panel, for a
+  host guest layout that prints its own brand (no more double logo on login, reset, e-mail link, QR, two-factor). A
+  per-render variable `nowo_ui_auth_brand` (`auto` | `none`: a `render()` variable, a `{% set %}` in a template
+  extending `page/auth`, or in the guest layout before `nowo_ui_content`) wins over the config, and the new block
+  `nowo_ui_auth_brand` wraps the region. See [CONFIGURATION](CONFIGURATION.md#auth-panel-244) and
+  [USAGE](USAGE.md#auth-panel-brand-244).
+
+## [2.43.1] - 2026-11-10
+
+Target 2.43.1. Request from Symfony Beacon (spec 222 "provider-dependent fields").
+
+### Fixed
+
+- **`visible-when` rules chain:** a row whose controlling field sits inside a hidden row is now hidden too, whatever
+  that field's value. Before, a dependent kept the visibility of its own rule only: with storage region "Other" and
+  provider R2, the custom region row stayed visible although the region row was hidden. The peer re-applies until no
+  more rows hide, so the order of the rows in the DOM does not matter (a cycle keeps what its own values say). Hidden
+  inputs are still never disabled or cleared; markup, attributes, `data-testid`s and the `visible-when:synced` event
+  are unchanged (its `hidden` list now includes the chained rows). New export `fieldElements()`. Demo peers bundle
+  rebuilt.
+
+### Documentation
+
+- USAGE: new section "Using it from a DDD / hexagonal application" (where the bundle sits in a hexagonal host, the ports, events and DTOs to build an anti-corruption layer on, and the known limitations).
+
+## [2.43.0] - 2026-11-09
+
+Target 2.43.0. Request from Symfony Beacon (owner decision D-20261109-09, for Beacon 1.143).
+
+### Added
+
+- **Image crop step for file inputs (opt-in):** `js/nowo-ui-image-crop.js` (add `image-crop` to `script_names`). When an
+  image is picked in a file input that carries `data-nowo-ui-image-crop`, a dialog with the kit's dialog anatomy (opened
+  through `js/nowo-ui-dialog.js` when loaded) shows it under a square or round frame. The image moves by drag, one
+  finger or the arrow keys and zooms by the slider, the wheel, a pinch or `+` / `-`; Home resets, Enter applies, Escape
+  cancels. "Apply" draws the crop on a canvas (EXIF orientation applied, `createImageBitmap` with
+  `imageOrientation: 'from-image'`) and puts it in the input in place of the picked file (DataTransfer), so the server
+  receives and validates an ordinary upload. Cancel, the close button and Escape clear the input. Options as
+  attributes: `-shape` (`square` | `circle`), `-aspect` (`1` | `free` | a ratio), `-max` / `-min` (px), `-format`
+  (`auto` default, `png`, `webp`, `jpeg`), `-max-bytes`, `-quality`, `-bake-circle`, `-preview` (an `<img>` id that
+  shows the crop), `-labels` (JSON). Events `nowo-ui:image-crop:open` (cancelable), `:cropped`, `:cancel`, `:error`.
+- **`format: auto` (the default):** WebP when the engine really encodes it (`toBlob` answered `image/webp`), else PNG
+  for a crop with transparent pixels (a baked circle, or any pixel of the output's alpha channel below 255) and JPEG for
+  an opaque one. Name and type follow what was encoded.
+- **`max_bytes` / `data-nowo-ui-image-crop-max-bytes`:** over it, WebP and JPEG are encoded again at lower qualities
+  (0.92 → 0.5), then the output steps down by 0.85× (never below `min`; PNG only steps the size), at most 10 async
+  encodes. If nothing fits, the dialog stays open with a translated message (`image_crop.too_large`) and `:error` fires
+  with `reason: 'size'`.
+- **Audit JL:** Cancel, Escape and close put the input's previous file list back and dispatch `input` / `change` only if
+  it then differs, so `autosubmit` never posts an empty file (JL-L2). A refused or fallen-back crop dispatches the
+  picked file's events again; a newer pick while decoding wins; a crop on screen refuses another (`reason: 'busy'`); a
+  session whose dialog was removed is dropped (JL-L1). The dialog has `data-turbo-temporary`, ids unique per build, and
+  stale copies are removed (JL-L3). Apply keeps the focus while encoding (`aria-disabled`) and after a size error
+  (JL-L4). A polite "Optimizing the image…" line (`image_crop.optimizing`) shows while it encodes again; 0.55 added to
+  the quality steps and the cap raised to 10 encodes. A malformed `max-bytes` attribute is ignored with a console
+  warning; `quality: NAN` is refused in PHP. Browsers without
+  DataTransfer, canvas `toBlob` or `<dialog>`, `multiple` inputs, SVG, non-images and images the browser cannot decode
+  upload as picked, with no error. No dependency (about 15 KB minified), no style attribute, no inline script. See
+  [USAGE](USAGE.md#image-crop).
+- **`ImageCrop::attributes($options, $translator)`** (`Nowo\UiKitBundle\Form\ImageCrop`): the attribute contract as a
+  map, options validated (`InvalidArgumentException`), dialog texts translated from `image_crop.*` (seven locales). Also
+  the **FileType option `nowo_ui_image_crop`** (`ImageCropTypeExtension`: `false` | `true` | options; refused with
+  `multiple`; the field's `attr` wins) and the **Twig function `nowo_ui_image_crop_attrs(options)`**. FormKit's planned
+  `crop: {shape, aspect, max}` maps onto the same options.
+- **Demo** `/kit/image-crop` and its Playwright e2e in Chromium and WebKit, desktop and phone (`make -C demo/symfony8
+  test-e2e-image-crop`), with an EXIF-rotated fixture, a transparent logo, a large photo under `max_bytes` (and an engine
+  without a WebP encoder), an impossible limit, and axe on the open dialog in light and dark mode.
+
+## [2.42.1] - 2026-11-09
+
+Target 2.42.1. Request from TaskBoard (`manage/gantt.html.twig`, `manage/calendar.html.twig`).
+
+### Fixed
+
+- **`attr.class` no longer prints a second `class` attribute:** a partial that prints its own `class` and then the
+  caller's attribute map printed every key of the map, `class` included, so the element got two `class` attributes
+  and browsers dropped the caller's (e.g. `_tabs` with `attr: {class: 'nowo-task-gantt__scales'}`). The map's `class`
+  is now appended to the element's classes and the rest of the map prints as before, as `_show_more`, `_emoji_picker`
+  and the 2.34 per-element options (`footer_attr`, `link_attr`…) already did. It is HTML-escaped inside the one quoted
+  `class` attribute. Partials and options:
+  - `partials/_tabs.html.twig` `attr` (primary and `level: 'secondary'`, with and without the ThemeExtension) and item
+    `attr`; `_card`, `_burger`, `_shell` `attr` (both branches); `_kebab`, `_aside_nav_items` item `attr`;
+    `_row_actions` hash `attr` on the link / button (the POST form is unchanged: its `class` stays the kit's);
+  - `shell/_burger.html.twig` and `shell/_open.html.twig` (`attr` / `shell_attr`) `attr`;
+  - `attr` of `_side_panel_toggle`, `_side_panel`, `_side_panel_container`, `_header_context`, `_header_actions`,
+    `_header_crumbs`, `_stat_row`, `_segmented`, `_sort_header`, `_locale_tabs`, `_tree`, `_progress`,
+    `_confirm_dialog`, `_listing_customizer`, `_dialog`, `_responsive_table`, `_tour`, `_corner_tab`, `_edge_tab`,
+    `_edge_tabs_launcher`, `_menu` (root and `toggle_attr`); `_dialog` `title_attr` / `body_attr`; `_confirm_dialog`
+    `dialog_attr`; `_segmented` option `attr`; `_locale_tabs` panel `attr`; `_menu` link items' `attr` /
+    `attributes`;
+  - the `attributes` of `View\Action` (`_action`: links, buttons, POST forms, dialog / modal openers; menu items),
+    `Stat` (`attributes` / `valueAttributes`), `DetailItem` (`attributes` / `valueAttributes`), `PageStatus`, `Table`, `ListPage::$filtersSubmit` and the
+    root `attributes` of the list, show, form, settings, dashboard, confirm, wizard and auth scaffolds.
+  Without a `class` key the markup is byte-identical to 2.42.0 (`AttrClassMerge2421Test`, fixtures under
+  `tests/Fixtures/bc-2.42` rendered by the 2.42.0 templates).
 
 ## [2.42.0] - 2026-11-09
 
@@ -2532,7 +2947,7 @@ Supersedes 1.17.3: same runtime code and CSS, release gate hardened so the tagge
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.42.0...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.51.0...HEAD
 [1.10.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.4...v1.10.0
 [1.8.4]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.3...v1.8.4
 [1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0

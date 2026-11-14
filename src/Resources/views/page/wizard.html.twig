@@ -20,7 +20,7 @@
 {% block nowo_ui_content %}
     {% set _b = page.bundle %}
     {% set step = page.steps[page.currentIndex()] %}
-    <div class="nowo-ui-wizard-page" data-nowo-ui-page="wizard"{{ nowo_ui_html_attrs(page.attributes) }}>
+    <div class="nowo-ui-wizard-page{{ (page.attributes.class ?? false) ? ' ' ~ page.attributes.class }}" data-nowo-ui-page="wizard"{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(page.attributes)) }}>
         <ol class="{{ nowo_ui_class('wizard_steps', _b) }}" aria-label="{{ 'wizard.steps'|trans({}, 'NowoUiKitBundle') }}" data-nowo-ui-region="steps"{{ nowo_ui_attrs('wizard_steps', _b) }}>
             {% for s in page.steps %}
                 {% set _status = page.status(s) %}

@@ -16,6 +16,10 @@
   `{% set nowo_ui_auth_root_errors = false %}` in a template extending this one (a bundle that prints
   form_errors(form) itself). Every form function lives in page/_auth_form.html.twig, included
   only with a form: without page.form the scaffold renders without symfony/form.
+  2.44: nowo_ui_kit.auth_panel.brand (Twig global nowo_ui_kit_auth_panel; auto = the region above, none = no brand
+  region in the panel, e.g. a host guest layout that prints its own brand); a variable nowo_ui_auth_brand (auto | none:
+  a render() variable, or `{% set nowo_ui_auth_brand = 'none' %}` in a template extending this one or in the guest
+  layout before nowo_ui_content) wins over the config. Block nowo_ui_auth_brand wraps the region.
 #}
 {% extends page.layout ?? nowo_ui_layout.guest %}
 {% set nowo_ui_bundle = page.bundle %}
@@ -30,9 +34,9 @@
     {% set _b = page.bundle %}
     {% set form = page.form %}
     {% set _auth_form = '@NowoUiKitBundle/page/_auth_form.html.twig' %}{% set _ap = nowo_ui_appearance_or_null() %}{% set _ap_logos = _ap and _ap.logos and _ap.logos.hasLogo() ? _ap.logos : null %}
-    <section class="{{ nowo_ui_class('auth_panel', _b) }}" data-nowo-ui-page="auth" data-nowo-ui-region="panel"{{ nowo_ui_attrs('auth_panel', _b) }}{{ nowo_ui_html_attrs(page.attributes) }}>
+    <section class="{{ nowo_ui_class('auth_panel', _b) }}{{ (page.attributes.class ?? false) ? ' ' ~ page.attributes.class }}" data-nowo-ui-page="auth" data-nowo-ui-region="panel"{{ nowo_ui_attrs('auth_panel', _b) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(page.attributes)) }}>
         <div class="{{ nowo_ui_class('card_body', _b) }}">
-            {% if _ap_logos %}<p class="nowo-ui-auth-panel__brand nowo-ui-auth-panel__brand--logo" data-nowo-ui-region="brand">{{ include('@NowoUiKitBundle/partials/_brand_logos.html.twig', {logos: _ap_logos, name: page.brand ? page.brand|nowo_ui_trans : _ap.brandName}, false) }}</p>{% elseif page.brand %}<p class="nowo-ui-auth-panel__brand">{{ page.brand|nowo_ui_trans }}</p>{% endif %}
+            {% block nowo_ui_auth_brand %}{% if (nowo_ui_auth_brand ?? nowo_ui_kit_auth_panel.brand ?? 'auto') != 'none' %}{% if _ap_logos %}<p class="nowo-ui-auth-panel__brand nowo-ui-auth-panel__brand--logo" data-nowo-ui-region="brand">{{ include('@NowoUiKitBundle/partials/_brand_logos.html.twig', {logos: _ap_logos, name: page.brand ? page.brand|nowo_ui_trans : _ap.brandName}, false) }}</p>{% elseif page.brand %}<p class="nowo-ui-auth-panel__brand">{{ page.brand|nowo_ui_trans }}</p>{% endif %}{% endif %}{% endblock %}
             <h1 class="{{ nowo_ui_class('page_title', _b) }}">{{ page.title|nowo_ui_trans }}</h1>
             {% if page.intro %}<p class="{{ nowo_ui_class('page_intro', _b) }}">{{ page.intro|nowo_ui_trans }}</p>{% endif %}
             {% if page.error %}<div class="{{ nowo_ui_class('flash_error', _b) }}" role="alert">{{ page.error|nowo_ui_trans }}</div>{% endif %}

@@ -27,6 +27,6 @@
 {% set _b = bundle|default(null) %}
 {# 2.24: every group id is prefixed with the tree id (attr.id, or a generated one) — unique across trees on a page #}
 {% set _tree_id = (attr|default({})).id ?? ('nowo-ui-tree-' ~ random(100000000, 999999999)) %}
-<ul class="{{ nowo_ui_class('tree', _b) }}" id="{{ _tree_id }}" role="tree" aria-label="{{ label|nowo_ui_trans }}" data-nowo-ui-tree{% if movable|default(false) %} data-nowo-ui-tree-movable{% endif %}{{ nowo_ui_attrs('tree', _b) }}{{ nowo_ui_html_attrs((attr|default({}))|filter((v, k) => k != 'id')) }}>
+<ul class="{{ nowo_ui_class('tree', _b) }}{{ (attr.class ?? false) ? ' ' ~ attr.class }}" id="{{ _tree_id }}" role="tree" aria-label="{{ label|nowo_ui_trans }}" data-nowo-ui-tree{% if movable|default(false) %} data-nowo-ui-tree-movable{% endif %}{{ nowo_ui_attrs('tree', _b) }}{{ nowo_ui_html_attrs((attr|default({}))|filter((v, k) => k not in ['id', 'class'])) }}>
     {{ include('@NowoUiKitBundle/partials/_tree_items.html.twig', {tree_id: _tree_id, nodes: nodes, level: 1, tab_first: not nowo_ui_tree_has_current(nodes), actions_template: actions_template|default(null), leading_template: leading_template|default(null), movable: movable|default(false), bundle: _b}, false) }}
 </ul>

@@ -69,8 +69,8 @@
     {%- if is_invalid %}<span class="nowo-ui-locale-tabs__marker nowo-ui-locale-tabs__marker--invalid" aria-hidden="true">{{ m.invalid }}</span>{% endif -%}
 {%- endmacro -%}
 {%- set _m = {default: default_marker ?? '★', required: required_marker ?? '*', invalid: error_marker ?? '!'} -%}
-<div id="{{ _id }}" class="nowo-ui-locale-tabs" data-nowo-ui-locale-tabs data-nowo-ui-tabs{% if _progressive %} data-nowo-ui-tabs-upgrade{% endif %} data-nowo-ui-tabs-active="{{ _id ~ '-' ~ _active }}" data-nowo-ui-tabs-tab-class="{{ _tab_class }}" data-nowo-ui-tabs-tab-active-class="{{ _tab_active_class }}"
-    {%- if _s %} data-controller="{{ _s }}" data-{{ _s }}-active-tab-value="{{ _id ~ '-' ~ _active }}"{% endif %}{{ nowo_ui_html_attrs(attr|default({})) }}>
+<div id="{{ _id }}" class="nowo-ui-locale-tabs{{ (attr.class ?? false) ? ' ' ~ attr.class }}" data-nowo-ui-locale-tabs data-nowo-ui-tabs{% if _progressive %} data-nowo-ui-tabs-upgrade{% endif %} data-nowo-ui-tabs-active="{{ _id ~ '-' ~ _active }}" data-nowo-ui-tabs-tab-class="{{ _tab_class }}" data-nowo-ui-tabs-tab-active-class="{{ _tab_active_class }}"
+    {%- if _s %} data-controller="{{ _s }}" data-{{ _s }}-active-tab-value="{{ _id ~ '-' ~ _active }}"{% endif %}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(attr|default({}))) }}>
     <div role="tablist" aria-label="{{ label is defined and label is not null ? label|nowo_ui_trans : 'locale_tabs.label'|trans({}, 'NowoUiKitBundle') }}" class="{{ nowo_ui_class('locale_tabs_nav', _b) }}" data-nowo-ui-tabs-list{% if _s %} data-{{ _s }}-target="list"{% endif %}{% if _progressive %} hidden{% endif %}{{ nowo_ui_attrs('locale_tabs_nav', _b) }}>
         {%- for _p in _panels %}
             {%- set _tab_id = _id ~ '-' ~ _p.locale %}
@@ -97,10 +97,10 @@
         {%- set _is_required = _p.required ?? (_p.locale in _required) %}
         {%- set _is_invalid = _p.invalid ?? false %}
         {%- set _name = _p.name is defined and _p.name is not null ? _p.name|nowo_ui_trans : nowo_ui_locale_name(_p.locale) %}
-    <div id="tab-{{ _tab_id }}-panel" class="{{ nowo_ui_class('tab_panel', _b) }} nowo-ui-locale-tabs__panel" lang="{{ _p.locale|replace({_: '-'}) }}" dir="{{ _p.dir ?? nowo_ui_locale_dir(_p.locale) }}" data-locale="{{ _p.locale }}" data-state="{{ _open or _progressive ? 'active' : 'inactive' }}" data-nowo-ui-tabs-panel data-nowo-ui-tab-id="{{ _tab_id }}"
+    <div id="tab-{{ _tab_id }}-panel" class="{{ nowo_ui_class('tab_panel', _b) }} nowo-ui-locale-tabs__panel{{ (_p.attr.class ?? false) ? ' ' ~ _p.attr.class }}" lang="{{ _p.locale|replace({_: '-'}) }}" dir="{{ _p.dir ?? nowo_ui_locale_dir(_p.locale) }}" data-locale="{{ _p.locale }}" data-state="{{ _open or _progressive ? 'active' : 'inactive' }}" data-nowo-ui-tabs-panel data-nowo-ui-tab-id="{{ _tab_id }}"
         {%- if not _progressive %} role="tabpanel" aria-labelledby="tab-{{ _tab_id }}"{% if not _open %} hidden{% endif %}{% endif %}
         {%- if _open %} data-active{% endif %}{% if _is_invalid %} data-invalid{% endif %}
-        {%- if _s %} data-{{ _s }}-target="tab" data-tab-id="{{ _tab_id }}"{% endif %}{{ nowo_ui_attrs('tab_panel', _b) }}{{ nowo_ui_html_attrs(_p.attr|default({})) }}>
+        {%- if _s %} data-{{ _s }}-target="tab" data-tab-id="{{ _tab_id }}"{% endif %}{{ nowo_ui_attrs('tab_panel', _b) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(_p.attr|default({}))) }}>
         <fieldset class="nowo-ui-locale-tabs__fieldset">
             {%- if _legend %}
             <legend class="nowo-ui-locale-tabs__legend{% if not _progressive %} visually-hidden{% endif %}" data-nowo-ui-tabs-legend>{{ _name }}{% if _name != _p.locale|upper %} <span class="nowo-ui-locale-tabs__code">{{ _p.locale|upper }}</span>{% endif %}

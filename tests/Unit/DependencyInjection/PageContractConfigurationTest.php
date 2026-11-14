@@ -26,6 +26,7 @@ final class PageContractConfigurationTest extends TestCase
 
         self::assertSame(['admin' => '@NowoUiKit/layout/admin.html.twig', 'guest' => '@NowoUiKit/layout/guest.html.twig'], $config['layouts']);
         self::assertSame(['breadcrumb_kit' => true, 'collection' => null, 'enabled' => true], $config['breadcrumbs']);
+        self::assertSame(['brand' => 'auto'], $config['auth_panel'], '2.44: auth_panel.brand defaults to auto (the 2.43 panel)');
         self::assertSame(['framework_defaults' => true, 'classes' => [], 'attributes' => [], 'partials' => [], 'tokens' => [], 'tokens_dark' => [], 'confirm_message_in_header' => false, 'popover_menus' => false, 'form_errors_after_widget' => false, 'menu_semantics' => null, 'dialog' => ['height' => 'content'], 'bundles' => [], 'pages' => []], $config['theme']);
     }
 
@@ -226,6 +227,7 @@ final class PageContractConfigurationTest extends TestCase
         yield 'unknown bundle partial' => [['theme' => ['bundles' => ['NowoXBundle' => ['partials' => ['nope' => 'x']]]]], 'Unknown nowo_ui_kit.theme.bundles.<bundle>.partials key "nope"'];
         yield 'unknown bundle key' => [['theme' => ['bundles' => ['NowoXBundle' => ['colors' => []]]]], 'Unrecognized option "colors"'];
         yield 'empty layout' => [['layouts' => ['admin' => '']], 'cannot contain an empty value'];
+        yield 'unknown auth_panel brand' => [['auth_panel' => ['brand' => 'hidden']], 'The value "hidden" is not allowed for path "nowo_ui_kit.auth_panel.brand"'];
     }
 
     /**
@@ -237,6 +239,18 @@ final class PageContractConfigurationTest extends TestCase
         $this->expectException(InvalidConfigurationException::class);
         $this->expectExceptionMessage($message);
         $this->process($input);
+    }
+
+    public function testAuthPanelBrandNone(): void
+    {
+        self::assertSame(['brand' => 'none'], $this->process(['auth_panel' => ['brand' => 'none']])['auth_panel']);
+
+        $container = new ContainerBuilder();
+        (new NowoUiKitExtension())->load([['auth_panel' => ['brand' => 'none']]], $container);
+        self::assertSame('none', $container->getParameter('nowo_ui_kit.auth_panel.brand'));
+        $container = new ContainerBuilder();
+        (new NowoUiKitExtension())->load([[]], $container);
+        self::assertSame('auto', $container->getParameter('nowo_ui_kit.auth_panel.brand'));
     }
 
     public function testExtensionRegistersThemeAndTwigExtension(): void

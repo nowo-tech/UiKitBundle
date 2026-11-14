@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Settings</title>
+            <script src="/bundles/nowouikit/js/nowo-ui-theme-boot.js" data-nowo-ui-theme-boot></script>
+
+                    <link rel="stylesheet" href="/bundles/nowouikit/css/nowo-ui.css">
+    </head>
+<body class="nowo-ui-body">
+            <div class="nowo-ui-page nowo-ui-page--admin">
+                <main class="nowo-ui-content" id="nowo-ui-content">
+                            <div class="nowo-ui-page-header d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3" data-nowo-ui-region="header">
+    <div class="nowo-ui-page-header__text">                <nav class="nowo-ui-breadcrumbs" aria-label="Breadcrumb">
+        <ol class="nowo-ui-breadcrumbs__list">
+                            <li class="nowo-ui-breadcrumbs__item">                                            <a class="nowo-ui-breadcrumbs__link" href="/">Home</a>
+                                    </li>
+                            <li class="nowo-ui-breadcrumbs__item"><span class="nowo-ui-breadcrumbs__separator" aria-hidden="true">/</span>                                            <span class="nowo-ui-breadcrumbs__current" aria-current="page">Settings</span>
+                                    </li>
+                    </ol>
+    </nav>
+
+                                <h1 class="nowo-ui-page-header__title h3 mb-1">Settings</h1>
+                                <p class="nowo-ui-page-header__intro">Every item of the catalogue</p>
+            </div>
+        </div>
+
+
+                                                                                <div class="nowo-ui-flash nowo-ui-flash--success alert alert-success" role="alert">Saved.</div>
+    
+                                <div class="nowo-ui-settings-page" data-nowo-ui-page="settings" data-probe="p">
+                                                                                                    <nav class="nowo-ui-tabs nav nav-tabs mb-3" aria-label="Sections" data-nowo-ui-region="tabs">
+                                                                    <a
+            class="nowo-ui-tabs__item nav-link"
+            href="/settings/general"
+                                            >General</a>
+                                                                    <a
+            class="nowo-ui-tabs__item nowo-ui-tabs__item--active nav-link active"
+            href="/settings/mail"
+            aria-current="page"                                >Mail</a>
+    </nav>
+
+                            <section class="nowo-ui-section mb-4 nowo-ui-card card" id="nowo-ui-settings-mail" data-nowo-ui-region="section">
+                <header class="nowo-ui-card__header card-header d-flex flex-wrap align-items-start justify-content-between gap-2">
+                    <div class="nowo-ui-card__heading">
+                        <h2 class="nowo-ui-card__title">Mail</h2>
+                        <p class="nowo-ui-card__intro">Outgoing mail</p>                    </div>
+                </header>
+                <div class="nowo-ui-card__body card-body">
+                                                                                            <form name="mail" method="post" class="nowo-ui-form" data-nowo-ui-region="form">
+                        <div><label for="mail_sender">Sender</label><input type="text" id="mail_sender" name="mail[sender]" /></div>
+                    <div class="nowo-ui-form__actions d-flex flex-wrap gap-2">
+        <button type="submit" class="nowo-ui-btn nowo-ui-btn--primary btn btn-primary">Save</button>
+                
+    </div>
+</form>
+
+                                                            </div>
+            </section>
+            </div>
+        </main>
+            </div>
+                            <script src="/bundles/nowouikit/js/nowo-ui-modal.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-confirm.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-dialog.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-toast.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-tabs.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-theme.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-popover.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-segmented.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-autosubmit.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-avatar.js" defer></script>
+
+            </body>
+</html>

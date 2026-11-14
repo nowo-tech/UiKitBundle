@@ -19,7 +19,7 @@
 
 {% block nowo_ui_content %}
     {% set _b = page.bundle %}
-    <div class="nowo-ui-settings-page" data-nowo-ui-page="settings"{{ nowo_ui_html_attrs(page.attributes) }}>
+    <div class="nowo-ui-settings-page{{ (page.attributes.class ?? false) ? ' ' ~ page.attributes.class }}" data-nowo-ui-page="settings"{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(page.attributes)) }}>
         {% if page.hasTabs() %}
             {% set _tabs = [] %}
             {% for section in page.sections %}

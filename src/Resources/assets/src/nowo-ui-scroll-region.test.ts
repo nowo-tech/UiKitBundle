@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { MARK, overflows, regionName, regionsOfMutations, schedule, syncRegion, syncRegions } from './nowo-ui-scroll-region';
+import { isEditable, MARK, overflows, regionName, regionRole, regionsOfMutations, schedule, syncRegion, syncRegions } from './nowo-ui-scroll-region';
 
 const size = (el: HTMLElement, scroll: number, client: number): void => {
   Object.defineProperty(el, 'scrollWidth', { configurable: true, get: () => scroll });
@@ -177,5 +177,71 @@ describe('nowo-ui-scroll-region (2.28, KIT-71)', () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+});
+
+describe('nowo-ui-scroll-region 2.48: rendered content, editable areas, role', () => {
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  it('treats pre and table inside rendered content as regions; a table keeps its own semantics', () => {
+    document.body.innerHTML = `<div class="nowo-ui-rendered-content"><pre id="pre" data-nowo-ui-scroll-label="Code">x</pre><table id="tbl" aria-label="Wide"><tr><td>x</td></tr></table></div>
+      <div data-nowo-ui-rendered-content><pre id="pre2">y</pre></div><pre id="outside">z</pre>`;
+    const pre = document.getElementById('pre') as HTMLElement;
+    const table = document.getElementById('tbl') as HTMLElement;
+    const pre2 = document.getElementById('pre2') as HTMLElement;
+    const outside = document.getElementById('outside') as HTMLElement;
+    [pre, table, pre2, outside].forEach((node) => size(node, 900, 100));
+    syncRegions();
+    expect(pre.getAttribute('role')).toBe('region');
+    expect(pre.getAttribute('aria-label')).toBe('Code');
+    expect(table.getAttribute('tabindex')).toBe('0');
+    expect(table.hasAttribute('role')).toBe(false);
+    expect(table.getAttribute(MARK)).toBe('tabindex');
+    expect(pre2.getAttribute('tabindex')).toBe('0');
+    expect(outside.hasAttribute('tabindex')).toBe(false);
+  });
+
+  it('skips anything inside an editable area and removes what it set before the area became editable', () => {
+    document.body.innerHTML = `<div id="ed" contenteditable="true"><div id="in" data-nowo-ui-scroll-region data-nowo-ui-scroll-label="X"></div></div>
+      <div contenteditable="false"><div id="ro" data-nowo-ui-scroll-region></div></div>
+      <div id="later"><div id="was" data-nowo-ui-scroll-region data-nowo-ui-scroll-label="W"></div></div>`;
+    const inside = document.getElementById('in') as HTMLElement;
+    const ro = document.getElementById('ro') as HTMLElement;
+    const was = document.getElementById('was') as HTMLElement;
+    [inside, ro, was].forEach((node) => size(node, 900, 100));
+    expect(isEditable(inside)).toBe(true);
+    expect(isEditable(ro)).toBe(false);
+    syncRegions();
+    expect(inside.hasAttribute('tabindex')).toBe(false);
+    expect(ro.getAttribute('tabindex')).toBe('0');
+    syncRegion(was);
+    expect(was.getAttribute('role')).toBe('region');
+    (document.getElementById('later') as HTMLElement).setAttribute('contenteditable', '');
+    syncRegion(was);
+    expect(was.hasAttribute('tabindex')).toBe(false);
+    expect(was.hasAttribute('role')).toBe(false);
+    expect(was.hasAttribute(MARK)).toBe(false);
+    syncRegion(was);
+  });
+
+  it('uses role=group when asked, else region', () => {
+    document.body.innerHTML = '<div id="g" data-nowo-ui-scroll-region data-nowo-ui-scroll-role="group" data-nowo-ui-scroll-label="Code"></div><div id="r" data-nowo-ui-scroll-region data-nowo-ui-scroll-role="banner"></div>';
+    const group = document.getElementById('g') as HTMLElement;
+    expect(regionRole(group)).toBe('group');
+    expect(regionRole(document.getElementById('r') as HTMLElement)).toBe('region');
+    size(group, 900, 100);
+    syncRegion(group);
+    expect(group.getAttribute('role')).toBe('group');
+  });
+
+  it('a contenteditable mutation names the regions inside the element (and the element itself)', () => {
+    document.body.innerHTML = '<div id="host" data-nowo-ui-scroll-region><div id="child" data-nowo-ui-scroll-region></div></div>';
+    const host = document.getElementById('host') as HTMLElement;
+    const record = { type: 'attributes', target: host, addedNodes: [] as unknown as NodeList, removedNodes: [] as unknown as NodeList } as unknown as MutationRecord;
+    const { regions } = regionsOfMutations([record]);
+    expect(regions).toContain(host);
+    expect(regions).toContain(document.getElementById('child'));
   });
 });

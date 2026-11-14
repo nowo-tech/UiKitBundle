@@ -20,7 +20,7 @@
 
 {% block nowo_ui_content %}
     {% set _b = page.bundle %}
-    <div class="nowo-ui-show-page" data-nowo-ui-page="show"{{ nowo_ui_html_attrs(page.attributes) }}>
+    <div class="nowo-ui-show-page{{ (page.attributes.class ?? false) ? ' ' ~ page.attributes.class }}" data-nowo-ui-page="show"{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(page.attributes)) }}>
         {% block nowo_ui_show_stats %}{% if page.stats is not empty %}{{ include(nowo_ui_partial('stat_row', _b), {items: page.stats, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}{% endif %}{% endblock %}{% block nowo_ui_show_sections %}
             {% for section in page.sections %}
                 <section class="{{ nowo_ui_class('section', _b) }} {{ nowo_ui_class('card', _b) }}"{% if section.id %} id="{{ section.id }}"{% endif %} data-nowo-ui-region="section"{{ nowo_ui_attrs('section', _b) }}>

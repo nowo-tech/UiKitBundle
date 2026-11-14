@@ -12,6 +12,9 @@
   Runtime scripts print through the `scripts` theme partial (2.2, partials/_scripts.html.twig): host layouts with
   their own script list include that partial instead of copying the list.
     - nowo_ui_bundle: bundle name for per-bundle theme exceptions (also set by the scaffolds from page.bundle)
+  Default theme (2.51): with nowo_ui_kit.base_stylesheet, css/nowo-ui-base.css is linked BEFORE nowo-ui.css — the
+  document base (body font, page gutters, masthead height) for hosts with no CSS framework and no theme file. Its
+  cascade layer sits below every other one, so it can never fight a framework or a host theme (THEMING.md).
   Font preload (2.21): nowo_ui_kit.font_preload prints <link rel="preload" as="font" crossorigin> tags after the
   viewport meta (nowo_ui_font_preload(); nothing when not configured).
   Appearance head (2.40, spec 220 S1): with nowo_ui_kit.appearance.head_links, nowo_ui_appearance_head() after them
@@ -33,7 +36,8 @@
     {% endif %}
     {% block nowo_ui_head %}{% endblock %}
     {% block nowo_ui_styles %}
-        <link rel="stylesheet" href="{{ asset('css/nowo-ui.css', 'nowo_ui_kit') }}">
+        {% if nowo_ui_base_stylesheet() %}<link rel="stylesheet" href="{{ asset('css/nowo-ui-base.css', 'nowo_ui_kit') }}">
+        {% endif %}<link rel="stylesheet" href="{{ asset('css/nowo-ui.css', 'nowo_ui_kit') }}">
         {#- theme tokens (host defaults), then the appearance SPI (user choice) when enabled: the later wins -#}
         {{ nowo_ui_tokens(_nonce) }}
     {% endblock %}

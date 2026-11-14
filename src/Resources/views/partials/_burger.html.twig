@@ -27,7 +27,7 @@
 {% set _extra = root_class|default('')|trim %}
 <button
     type="button"
-    class="{{ _t ? _t.macroClasses('burger', ui.burger(framework), bundle, _pt) : ui.burger(framework) }}{{ _extra ? ' ' ~ _extra }}"
+    class="{{ _t ? _t.macroClasses('burger', ui.burger(framework), bundle, _pt) : ui.burger(framework) }}{{ _extra ? ' ' ~ _extra }}{{ (attr.class ?? false) ? ' ' ~ attr.class }}"
     data-nowo-ui-burger
     aria-controls="{{ controls }}"
     aria-expanded="{{ expanded ? 'true' : 'false' }}"
@@ -37,8 +37,8 @@
         {{ _names.rail }}="{{ label_rail|default('nav.sidebar_rail'|trans({}, 'NowoUiKitBundle')) }}"
         {{ _names.hide }}="{{ label_hide|default('nav.sidebar_hide'|trans({}, 'NowoUiKitBundle')) }}"
     {% endif %}
-    {{- _t ? _t.renderAttributes('burger', bundle, attr|default({}), _pt)|raw : '' }}
-    {%- if not _t %}{% for name, value in attr|default({}) %} {{ name }}="{{ value }}"{% endfor %}{% endif %}
+    {{- _t ? _t.renderAttributes('burger', bundle, attr|default({})|filter((v, k) => k != 'class'), _pt)|raw : '' }}
+    {%- if not _t %}{% for name, value in attr|default({})|filter((v, k) => k != 'class') %} {{ name }}="{{ value }}"{% endfor %}{% endif %}
 >
     <svg class="nowo-ui-burger__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
         <path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>

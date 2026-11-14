@@ -58,7 +58,7 @@ install: ensure-up
 assets: ensure-up
 	@$(COMPOSE) exec -T -e CI=true $(SERVICE_PHP) pnpm install
 	@$(COMPOSE) exec -T $(SERVICE_PHP) pnpm run build
-	@echo "Assets: src/Resources/public/js/nowo-ui-{modal,shell,toast,confirm,page-loader,theme,theme-boot,orb,clipboard,tabs,release,open-modal,dialog,popover,segmented,tree,side-panel,avatar,header-crumbs,autosubmit,error-retry,sortable,emoji-picker,show-more,edge-tabs}.js"
+	@echo "Assets: src/Resources/public/js/nowo-ui-{modal,shell,toast,confirm,page-loader,theme,theme-boot,orb,clipboard,tabs,release,open-modal,dialog,popover,segmented,tree,side-panel,avatar,header-crumbs,autosubmit,error-retry,sortable,emoji-picker,show-more,edge-tabs,image-crop,image-input,rail,layout-state}.js"
 
 test-ts: ensure-up
 	@$(COMPOSE) exec -T $(SERVICE_PHP) pnpm run test:coverage | tee coverage-ts.txt
@@ -74,11 +74,11 @@ test-with-db: test
 test-coverage: ensure-up
 	@$(COMPOSE) exec -T $(SERVICE_PHP) composer test-coverage
 	@./.scripts/php-coverage-percent.sh coverage-output.txt
-	@./.scripts/coverage-fail-under.sh coverage-output.txt 99
+	@./.scripts/coverage-fail-under.sh coverage-output.txt 100
 
 coverage-check: ensure-up
 	@$(COMPOSE) exec -T $(SERVICE_PHP) sh -lc 'composer test-coverage'
-	@./.scripts/coverage-fail-under.sh coverage-output.txt 99
+	@./.scripts/coverage-fail-under.sh coverage-output.txt 100
 
 test-coverage-with-db: test-coverage
 

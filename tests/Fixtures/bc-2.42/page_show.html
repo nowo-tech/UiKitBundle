@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Item Alpha</title>
+            <script src="/bundles/nowouikit/js/nowo-ui-theme-boot.js" data-nowo-ui-theme-boot></script>
+
+                    <link rel="stylesheet" href="/bundles/nowouikit/css/nowo-ui.css">
+    </head>
+<body class="nowo-ui-body">
+            <div class="nowo-ui-page nowo-ui-page--admin">
+                <main class="nowo-ui-content" id="nowo-ui-content">
+                            <div class="nowo-ui-page-header d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3" data-nowo-ui-region="header">
+    <div class="nowo-ui-page-header__text">                <nav class="nowo-ui-breadcrumbs" aria-label="Breadcrumb">
+        <ol class="nowo-ui-breadcrumbs__list">
+                            <li class="nowo-ui-breadcrumbs__item">                                            <a class="nowo-ui-breadcrumbs__link" href="/">Home</a>
+                                    </li>
+                            <li class="nowo-ui-breadcrumbs__item"><span class="nowo-ui-breadcrumbs__separator" aria-hidden="true">/</span>                                            <span class="nowo-ui-breadcrumbs__current" aria-current="page">Item Alpha</span>
+                                    </li>
+                    </ol>
+    </nav>
+
+                                <h1 class="nowo-ui-page-header__title h3 mb-1">Item Alpha</h1>
+                                <p class="nowo-ui-page-header__intro">Every item of the catalogue</p>
+            </div>
+            <div class="nowo-ui-toolbar d-flex flex-wrap align-items-center gap-1 mb-2"><a class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary nowo-ui-action--edit" href="/items/1/edit"><span class="nowo-ui-action__label">Edit</span></a>
+                                                                                <form name="restore_item" method="post" action="/items/1/restore" class="nowo-ui-action__form">
+    <button type="submit" class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary nowo-ui-action--restore"><span class="nowo-ui-action__label">Restore</span></button><input type="hidden" name="restore_item[_token]" value="tok-restore_item"></form>
+
+
+                                                                            <button type="button" class="nowo-ui-btn nowo-ui-btn--danger btn btn-outline-danger nowo-ui-action--delete" data-nowo-confirm-open data-nowo-confirm-target="nowo-ui-confirm-1803903e6714"><span class="nowo-ui-action__label">Delete</span></button>
+                                                            <dialog
+    id="nowo-ui-confirm-1803903e6714"
+    class="nowo-ui-confirm"
+    data-nowo-ui-confirm
+    aria-labelledby="nowo-ui-confirm-1803903e6714-title"
+>
+    <div class="nowo-ui-confirm__panel">
+        <header class="nowo-ui-confirm__header">
+            <h2 class="nowo-ui-confirm__title" id="nowo-ui-confirm-1803903e6714-title">Delete this item?</h2>
+                                                        <button type="button" class="nowo-ui-confirm__close" data-nowo-confirm-close aria-label="Close" title="Close"><span aria-hidden="true">&times;</span></button>
+                    </header>
+                    <div class="nowo-ui-confirm__body"><p class="nowo-ui-confirm__message">This action cannot be undone.</p></div>
+                                <div class="nowo-ui-confirm__footer">
+                            <button type="button" class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary" data-nowo-confirm-close>
+                    Cancel
+                </button>
+                                        <form name="delete_item" method="post" action="/items/1" class="nowo-ui-action__form">
+    <button type="submit" class="nowo-ui-btn nowo-ui-btn--danger nowo-ui-btn--solid btn btn-danger nowo-ui-confirm__submit">Delete</button><input type="hidden" name="delete_item[_token]" value="tok-delete_item"></form>
+
+
+                                    </div>
+    </div>
+</dialog></div>
+        </div>
+
+
+                                                                                <div class="nowo-ui-flash nowo-ui-flash--success alert alert-success" role="alert">Saved.</div>
+    
+                                <div class="nowo-ui-show-page" data-nowo-ui-page="show" data-probe="p">
+                                    <section class="nowo-ui-section mb-4 nowo-ui-card card" id="general" data-nowo-ui-region="section">
+                                            <header class="nowo-ui-card__header card-header d-flex flex-wrap align-items-start justify-content-between gap-2"><h2 class="nowo-ui-card__title">General</h2></header>
+                                        <div class="nowo-ui-card__body card-body">
+                        <dl class="nowo-ui-detail-list">
+            <div class="nowo-ui-detail-list__item">
+            <dt class="nowo-ui-detail-list__term">Name</dt>
+            <dd class="nowo-ui-detail-list__value">Alpha</dd>
+        </div>
+            <div class="nowo-ui-detail-list__item">
+            <dt class="nowo-ui-detail-list__term">Quantity</dt>
+            <dd class="nowo-ui-detail-list__value">3</dd>
+        </div>
+            <div class="nowo-ui-detail-list__item">
+            <dt class="nowo-ui-detail-list__term">Active</dt>
+            <dd class="nowo-ui-detail-list__value">✓</dd>
+        </div>
+    </dl>
+
+                    </div>
+                </section>
+                                        <aside class="nowo-ui-show-page__meta" data-nowo-ui-region="meta">
+                <dl class="nowo-ui-detail-list nowo-ui-detail-list--meta">
+            <div class="nowo-ui-detail-list__item">
+            <dt class="nowo-ui-detail-list__term">Created</dt>
+            <dd class="nowo-ui-detail-list__value">2026-10-16</dd>
+        </div>
+    </dl>
+
+            </aside>
+                    </div>
+        </main>
+            </div>
+                            <script src="/bundles/nowouikit/js/nowo-ui-modal.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-confirm.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-dialog.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-toast.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-tabs.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-theme.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-popover.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-segmented.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-autosubmit.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-avatar.js" defer></script>
+
+            </body>
+</html>

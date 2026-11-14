@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Delete item</title>
+            <script src="/bundles/nowouikit/js/nowo-ui-theme-boot.js" data-nowo-ui-theme-boot></script>
+
+                    <link rel="stylesheet" href="/bundles/nowouikit/css/nowo-ui.css">
+    </head>
+<body class="nowo-ui-body">
+            <div class="nowo-ui-page nowo-ui-page--admin">
+                <main class="nowo-ui-content" id="nowo-ui-content">
+                            <div class="nowo-ui-page-header d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3" data-nowo-ui-region="header">
+    <div class="nowo-ui-page-header__text">                <nav class="nowo-ui-breadcrumbs" aria-label="Breadcrumb">
+        <ol class="nowo-ui-breadcrumbs__list">
+                            <li class="nowo-ui-breadcrumbs__item">                                            <a class="nowo-ui-breadcrumbs__link" href="/">Home</a>
+                                    </li>
+                            <li class="nowo-ui-breadcrumbs__item"><span class="nowo-ui-breadcrumbs__separator" aria-hidden="true">/</span>                                            <span class="nowo-ui-breadcrumbs__current" aria-current="page">Delete item</span>
+                                    </li>
+                    </ol>
+    </nav>
+
+                                <h1 class="nowo-ui-page-header__title h3 mb-1">Delete item</h1>
+                                <p class="nowo-ui-page-header__intro">Every item of the catalogue</p>
+            </div>
+        </div>
+
+
+                                                                                <div class="nowo-ui-flash nowo-ui-flash--success alert alert-success" role="alert">Saved.</div>
+    
+                                        <section class="nowo-ui-confirm-page nowo-ui-card card" data-nowo-ui-page="confirm" data-nowo-ui-region="confirm" data-nowo-confirm-scope data-probe="p">                                                                                                                                                        <div class="nowo-ui-card__body card-body nowo-ui-confirm-page__panel">
+            <header class="nowo-ui-confirm-page__header">
+                <h2 class="nowo-ui-confirm__title">Delete this item?</h2>
+                            </header>
+                            <div class="nowo-ui-confirm-page__body"><p class="nowo-ui-confirm__message">Alpha will be removed.</p></div>
+                                    <div class="nowo-ui-form__actions d-flex flex-wrap gap-2">
+                                    <a class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary" href="/items">Cancel</a>
+                                    <form method="post" action="/items/1" class="nowo-ui-action__form">
+    <button type="submit" class="nowo-ui-btn nowo-ui-btn--danger nowo-ui-btn--solid btn btn-danger nowo-ui-confirm__submit">Delete</button><input type="hidden" name="_token" value="tok"></form>
+
+
+            </div>
+        </div>
+    </section>
+        </main>
+            </div>
+                            <script src="/bundles/nowouikit/js/nowo-ui-modal.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-confirm.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-dialog.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-toast.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-tabs.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-theme.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-popover.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-segmented.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-autosubmit.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-avatar.js" defer></script>
+
+            </body>
+</html>

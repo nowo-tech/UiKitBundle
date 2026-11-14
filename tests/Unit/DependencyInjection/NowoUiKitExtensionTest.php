@@ -176,6 +176,7 @@ final class NowoUiKitExtensionTest extends TestCase
         self::assertSame('svg_inline', $globals['nowo_ui_kit_icon_set']);
         self::assertSame('text', $globals['nowo_ui_kit_row_actions_display']);
         self::assertSame('dialog', $globals['nowo_ui_kit_row_actions_confirm']);
+        self::assertSame(['brand' => 'auto'], $globals['nowo_ui_kit_auth_panel'], '2.44: auth_panel.brand defaults to auto');
     }
 
     public function testReleaseCheckDisabledRegistersControllerOnly(): void

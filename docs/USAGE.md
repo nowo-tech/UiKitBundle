@@ -38,32 +38,48 @@
 - [Guided tour](#guided-tour)
 - [Kit templates (2.6)](#kit-templates-26)
   - [Error pages](#error-pages-26)
+    - [Error illustration provider (2.47)](#error-illustration-provider-247)
   - [Confirm dialog](#confirm-dialog-26)
   - [App shell](#app-shell-26)
   - [Full-height sidebar layout (2.32)](#full-height-sidebar-layout-232)
   - [Compact pagination](#compact-pagination-26)
+  - [Auth panel brand (2.44)](#auth-panel-brand-244)
 - [Pre-paint theme boot](#pre-paint-theme-boot)
 - [App chrome](#app-chrome-aside-avatar-user-menu-footer)
   - [Avatars (2.26)](#avatars-226)
 - [Sidebar rail (opt-in)](#sidebar-rail-opt-in)
 - [Side panel and drawer (2.25)](#side-panel-and-drawer-225)
+  - [Drawer breakpoint and remembered state (2.48)](#drawer-breakpoint-and-remembered-state-248)
+- [Collapsible column rail (2.48)](#collapsible-column-rail-248)
+- [Reading column and wide content (2.48)](#reading-column-and-wide-content-248)
 - [Remote form dialog (2.28)](#remote-form-dialog-228)
 - [Small element options (2.34)](#small-element-options-234)
 - [Focusable scroll regions (2.28)](#focusable-scroll-regions-228)
 - [Dialog back button](#dialog-back-button)
 - [Emoji picker](#emoji-picker)
 - [Show more](#show-more)
+- [Image crop](#image-crop)
+  - [Image crop attribute contract](#image-crop-attribute-contract)
+  - [How the crop is made (decisions)](#how-the-crop-is-made-decisions)
+  - [Image crop accessibility contract](#image-crop-accessibility-contract)
+  - [Host recipe: InstanceSettings image fields](#host-recipe-instancesettings-image-fields)
+  - [Host recipe: avatars](#host-recipe-avatars)
+- [Image input (2.47)](#image-input-247)
 - [Sortable](#sortable)
 - [Overlays and the shell (2.28)](#overlays-and-the-shell-228)
 - [Menu semantics (2.28)](#menu-semantics-228)
 - [Compact header (2.27)](#compact-header-227)
   - [Page header variants (2.39)](#page-header-variants-239)
+  - [Tabs and actions on one row (2.48)](#tabs-and-actions-on-one-row-248)
 - [Overriding templates (REQ-TWIG-001)](#overriding-templates-req-twig-001)
 - [Override vs upgrade](#override-vs-upgrade)
 - [Overridable `<subpath>` values](#overridable-subpath-values)
 - [Freeze rule](#freeze-rule)
 - [Procedure](#procedure)
 - [Remap CSS tokens (theming)](#remap-css-tokens)
+- [Using it from a DDD / hexagonal application](#using-it-from-a-ddd--hexagonal-application)
+  - [Standard host](#standard-host)
+  - [DDD host](#ddd-host)
 - [Feature bundles](#feature-bundles)
 - [Kitchen sink](#kitchen-sink)
 - [Related docs](#related-docs)
@@ -780,6 +796,10 @@ $builder = $factory->createNamedBuilder('settings', FormType::class, $data, ['at
   written rows.
 - The peer sets `hidden`, `inert` and `aria-hidden="true"` on non-matching rows, re-syncs on connect and on every
   `change` / `input`, and dispatches `visible-when:synced` (detail `{hidden}`).
+- Rules chain (2.43.1): a row whose controlling input sits inside a hidden row is hidden too, whatever that input's
+  value (provider R2 hides the region row, so the "custom region" row that depends on region "Other" hides with it).
+  The order of the rows does not matter; a controlling field with inputs both inside and outside hidden rows still
+  counts as visible.
 - `VisibleWhen::fromOption(['field' => …, 'in' => […]])` maps a bundle's `visible_when` option (InstanceSettings).
 
 ## Host chrome (1.17, opt-in)
@@ -986,14 +1006,76 @@ Where `when` applies — `phone` (default: viewports up to 40rem, and touch scre
 `.nowo-ui-edge-tab__link` of the page folds behind the launcher (a labelled `<button aria-expanded>` at the first
 slot); a tap shows the tabs under it. It folds again on Escape (focus back on the launcher), a click elsewhere, using
 a tab, or the focus leaving the launcher and the tabs. Opened from the keyboard, the focus moves to the first tab and
-ArrowUp / ArrowDown walk the launcher and the tabs; Tab is never captured. The fold has no animation. Without the
+ArrowUp / ArrowDown walk the launcher and the tabs; Tab is never captured. The fold is animated since 2.45 (below). Without the
 runtime (`data-nowo-ui-edge-tabs-ready` on `<html>`) the launcher stays hidden and the tabs keep their places; desktop
 (fine pointer, wider than 40rem) is unchanged with `when: phone`.
 
 Options: `when` (`phone` | `always`; anything else: never), `gutter` (while folded, `.nowo-ui-main` keeps
 `--nowo-ui-edge-tabs-gutter` = 2.25rem free on its right; host containers can read the same token), `label` (default
-`edge_tab.launcher`), `icon` (default `more`), `class`, `testid`, `attr`. Event: `nowo-ui:edge-tabs:toggle`
-(`detail.open`).
+`edge_tab.launcher`), `icon` (default `more`; `chevron` since 2.45, below; or any kit icon name), `class`, `testid`,
+`attr`. Event: `nowo-ui:edge-tabs:toggle` (`detail.open`).
+
+2.45: one size for every right-edge tab, a smoother unfold and a chevron.
+
+- **Size tokens.** The tabs and the launcher read `--nowo-ui-edge-tab-width` (2.25rem), `--nowo-ui-edge-tab-height`
+  (2.75rem), `--nowo-ui-edge-tab-hover-width` (2.6rem; the launcher now widens on hover like the tabs) and
+  `--nowo-ui-edge-tab-icon` (1.15rem). `--nowo-ui-edge-tab-step` defaults to height + `--nowo-ui-edge-tab-gap`
+  (0.5rem), i.e. 3.25rem as before. Open, tab `slot` sits at top + (slot + 1) × step under a launcher of the same
+  height, so the first tab keeps the same gap (step − height) as the others. To match another edge control (e.g.
+  ChatKit's chat tab), set the tokens instead of overriding the classes:
+
+  ```css
+  :root {
+    --nowo-ui-edge-tab-width: 1.85rem;
+    --nowo-ui-edge-tab-height: 2.3rem;
+    --nowo-ui-edge-tab-hover-width: 2.15rem;
+    --nowo-ui-edge-tab-icon: 0.95rem;
+    --nowo-ui-edge-tab-step: 2.6rem; /* or --nowo-ui-edge-tab-gap: 0.3rem */
+  }
+  ```
+
+- **Unfold / fold.** Opening, the tabs slide down from the launcher (opacity and `translateY(-step × (slot + 1))` to
+  their place, `--nowo-ui-motion-medium` 200ms, ease-out), each one `--nowo-ui-edge-tabs-stagger` (30ms) after the
+  previous. Closing runs the reverse, the last tab first: the state changes at once (`aria-expanded="false"`, the
+  event), `<html>` carries `data-nowo-ui-edge-tabs-closing` while the tabs fold, and each folding tab is `inert` and
+  `aria-hidden="true"` (no focus, no pointer, out of the accessibility tree) until it is hidden again. Pinned or
+  expanded tabs do not move. No animation under `prefers-reduced-motion: reduce` or `data-motion="reduce"` (unless
+  `data-motion="full"`). The no-JS fallback is unchanged.
+- **Chevron.** `icon: 'chevron'` draws the kit's `chevron_left` icon (so `nowo_ui_kit.action_icons.chevron_left` and
+  every icon set, `ux_icon` included as `bi:chevron-left`, apply) and adds `nowo-ui-edge-tabs-launcher--chevron`: it
+  points left while folded and turns −90° (pointing down) on `aria-expanded="true"` in 200ms; no turn animation under
+  reduced motion.
+
+  ```twig
+  {{ include(nowo_ui_partial('edge_tabs_launcher'), {gutter: true, icon: 'chevron'}) }}
+  ```
+
+2.46: the chevron morphs and the unfold is softer, with launcher-only tokens.
+
+- **Morphing chevron.** `icon: 'chevron'` now prints the kit's own inline SVG (`svg.nowo-ui-edge-tabs-chevron`,
+  `aria-hidden`, `focusable="false"`; the button keeps its `aria-label`) under every icon set, `ux_icon` included (no
+  `ux_icon()` call, so nothing to resolve; `nowo_ui_kit.action_icons.chevron_left` no longer applies to the launcher).
+  Its two stroke arms move their end points from the left chevron (`M15 6L9 12`, `M9 12L15 18`) to the down chevron
+  (`M6 9L12 15`, `M12 15L18 9`) through a CSS `d` transition on `aria-expanded="true"`, and back on close. A browser
+  without the CSS `d` property (WebKit today) turns the icon −90° instead. Tokens: `--nowo-ui-edge-tabs-icon-duration`
+  (240ms) and `--nowo-ui-edge-tabs-icon-easing` (`cubic-bezier(0.34, 1.56, 0.64, 1)`, a slight overshoot). Nothing
+  moves under reduced motion. CSS only: no extra JavaScript, no `morphicons` / `lucide` dependency.
+- **Softer unfold, launcher tokens.** The tabs now fade, slide and scale up from 0.96, decelerating, in 260ms. Tune the
+  launcher alone (other kit animations keep `--nowo-ui-motion-*`):
+
+  | Token | Default | |
+  |-------|---------|-|
+  | `--nowo-ui-edge-tabs-motion-duration` | `260ms` | unfold and fold, per tab |
+  | `--nowo-ui-edge-tabs-motion-easing` | `cubic-bezier(0.22, 1, 0.36, 1)` | unfold |
+  | `--nowo-ui-edge-tabs-motion-close-easing` | `var(--nowo-ui-motion-ease-in)` | fold |
+  | `--nowo-ui-edge-tabs-motion-scale` | `0.96` | start scale of a tab (1 = no scale) |
+  | `--nowo-ui-edge-tabs-motion-stagger` | `var(--nowo-ui-edge-tabs-stagger, 30ms)` | delay per tab |
+  | `--nowo-ui-edge-tabs-icon-duration` | `240ms` | chevron morph |
+  | `--nowo-ui-edge-tabs-icon-easing` | `cubic-bezier(0.34, 1.56, 0.64, 1)` | chevron morph |
+  | `--nowo-ui-edge-tabs-launcher-gap` | `0` | extra gap between the launcher and the first unfolded tab, e.g. `:root { --nowo-ui-edge-tabs-launcher-gap: 0.5rem; }` |
+
+- Turbo: `turbo:before-cache` ends a running fold, so a cached page never keeps half-folded (inert) tabs. A tab that
+  has the focus when the fold closes gives it to the launcher first.
 
 2.41.1: the launcher's `aria-controls` lists the tabs (ids are generated where missing); after opening with a pointer,
 Tab follows the document order, so use ArrowUp / ArrowDown to reach the tabs. A dialog opened from a folded tab gives
@@ -1005,7 +1087,7 @@ CSS where its `when` applies.
 `pinned: true`, or the attribute in `attr`) stays visible at its own `top`; the others stay hidden. Open, the launcher
 stacks every tab under it as before. When the tab folds while focused (aria-expanded back to false), the focus goes to
 the launcher. The `top` of a tab is
-`calc(var(--nowo-ui-edge-tab-top, header height + 0.75rem) + var(--nowo-ui-edge-tab-slot, 0) * var(--nowo-ui-edge-tab-step, 3.25rem))`
+`calc(var(--nowo-ui-edge-tab-top, header height + 0.75rem) + var(--nowo-ui-edge-tab-slot, 0) * var(--nowo-ui-edge-tab-step, height + gap = 3.25rem))`
 (open launcher: `slot + 1`). It resolves against the tab's containing block: the viewport for a plain tab, but a tab
 inside a transformed (or `filter` / `will-change: transform`) ancestor, `position: fixed` or `absolute`, is placed
 from that ancestor's top. For a tab riding on a drawer, set `--nowo-ui-edge-tab-top` on the drawer (e.g. `0px`) and the
@@ -1073,11 +1155,14 @@ Pieces:
 | --- | --- |
 | `Nowo\UiKitBundle\Listing\ListingDefinitionInterface` | One service per listing: `key()`, `columns()`, `filters()` (lists of `ListingField`). Autoconfigured with the tag `nowo_ui_kit.listing_definition`. |
 | `ListingField` | `key`, `label` (`View\Label` or string), `required` (always shown), `defaultVisible`, `priority` (`data-priority`), `headClass`, `cellClass` (columns); 2.42: `phone` (`primary` \| `meta` \| `hide`, columns: `data-nowo-ui-phone` on the head and row cells for `phone_layout: 'cards'`). |
-| `ListingCustomizerViewBuilder` | `forRequest(key, Request)` → `['view' => ListingCustomizerView, 'filteredRequest' => Request]`; `build(key, Request)`. |
+| `ListingCustomizerViewBuilder` | `forRequest(key, Request)` → `['view' => ListingCustomizerView, 'filteredRequest' => Request]`; `build(key, Request)`; 2.49: `buildForContext(key, ListingContext)` (no `Request`). |
 | `ListingCustomizerView` | `layout` (`ListingLayout`), `tableMode`, `tableOptions()`, `ignoredFilters`, `cookieName`, `dialogId()`, `clientState()`, `withLayout()`. |
 | `ListingLayout` | `visibleColumnGroups()` (stacked columns share a cell), `visibleColumnKeys()`, `visibleFilterKeys()`, `hiddenFilterKeys()`, `isColumnVisible()`, `filterRequest()`, `ignoredFilters()`, `withoutColumns()`, `stored`. |
 | `ListingLayoutMerger` | `merge()` (lenient: stored layouts survive added / removed fields), `normalize()` / `normalizeLayout()` (strict, for a host save endpoint). |
-| `ListingPreferenceStoreInterface` | Port: `load(key, Request)`, `cookieName(key)`. Default `CookieListingPreferenceStore`. |
+| `ListingPreferenceReaderInterface` | 2.49 port: `load(key, ListingContext)`, `cookieName(key)`. Default `CookieListingPreferenceStore`. |
+| `ListingContext` | 2.49 framework-free VO: `cookies` (only `nowo_ui_listing_*`), `viewerId`, `route`, `routeParameters`, `locale`. |
+| `ListingViewerResolverInterface` | 2.49 optional SPI: `viewerId(): ?string`, copied into the context (no default). |
+| `ListingPreferenceStoreInterface` | Deprecated port (2.49, removed in 3.0): `load(key, Request)`, `cookieName(key)`. Still honoured. |
 | `ListingRegistry`, `ListingTableMode` | Definitions by key; `scroll` / `responsive`. |
 | Partials | `listing_customizer`, `listing_head`, `listing_cells`, `listing_filter_fields` ([THEME_SLOTS](THEME_SLOTS.md#partials)). |
 | Stimulus peer | `listing-customizer` (`stimulus-peers/listing_customizer_controller.ts`), with `responsive-table` for the table mode. |
@@ -1233,11 +1318,25 @@ implement the port and alias it:
 
 ```yaml
 # config/services.yaml
-Nowo\UiKitBundle\Listing\ListingPreferenceStoreInterface: '@App\Listing\DoctrineListingPreferenceStore'
+Nowo\UiKitBundle\Listing\ListingPreferenceReaderInterface: '@App\Listing\DoctrineListingPreferenceStore'
+# optional: the viewer id copied into ListingContext::$viewerId
+Nowo\UiKitBundle\Listing\ListingViewerResolverInterface: '@App\Listing\CurrentUserViewer'
 ```
 
-`load(string $listingKey, Request $request): ?array` returns `{columns, filters, mode}` (raw lists, merged leniently)
-for whatever scope the request implies (the current user, the project in the route…); `cookieName()` returns null.
+`load(string $listingKey, ListingContext $context): ?array` returns `{columns, filters, mode}` (raw lists, merged
+leniently) for whatever scope the context implies (`$context->viewerId`, the project in `$context->routeParameters`…);
+`cookieName()` returns null. A host reader wins over the default cookie store.
+
+**Fail closed.** A per-viewer reader returns null when `$context->viewerId` is null (the definition defaults apply);
+it never serves a shared or "anonymous" row. Only scopes that do not depend on the viewer (a project default keyed by
+`routeParameters`) may answer without one. With `kernel.debug` on, the builder logs a warning when a server-side reader
+runs without a `ListingViewerResolverInterface`. `$context->cookies` holds only the `nowo_ui_listing_*` cookies: the
+kit never passes session or remember-me cookies to a reader.
+
+Before 2.49 the port was `ListingPreferenceStoreInterface::load(string $listingKey, Request $request)`. A host store
+that still implements (and aliases) only that interface keeps working unchanged: the builder passes it the request and
+triggers a deprecation notice. It is removed in 3.0 ([UPGRADING](UPGRADING.md#to-2490)).
+
 Then pass the save endpoint to the partials:
 
 ```twig
@@ -1557,6 +1656,68 @@ lead for 400, 401, 403, 404, 405, 408, 410, 413, 422, 429, 500, 502, 503, 504). 
 Preview a code in development without throwing: render `@NowoUiKit/error/status.html.twig` with `status_code` (and
 `exception: {'Retry-After': '30'}` for 429), as the demo's `/kit/errors/{code}` does.
 
+<a id="error-illustration-provider-247"></a>
+#### Error illustration provider (2.47)
+
+Optional. When the art depends on the brand or the tenant (a CDN URL, settings already in memory), implement
+`Nowo\UiKitBundle\View\ErrorIllustrationProviderInterface` and point `error_pages.illustration_provider` at the
+service:
+
+```php
+use Nowo\UiKitBundle\View\ErrorIllustration;
+use Nowo\UiKitBundle\View\ErrorIllustrationProviderInterface;
+
+final class BrandErrorIllustrations implements ErrorIllustrationProviderInterface
+{
+    public function __construct(private readonly string $cdn) {} // config only: no repository, no HTTP client
+
+    public function getIllustration(int $statusCode): ?ErrorIllustration
+    {
+        if (!\in_array($statusCode, [403, 404, 500, 503], true)) {
+            return null; // the error_pages.illustrations map (code, then default), then none
+        }
+
+        return ErrorIllustration::fromUrl(
+            $this->cdn.'/errors/'.$statusCode.'.png',
+            1024,
+            683,
+            webpSrcset: $this->cdn.'/errors/'.$statusCode.'.webp 1x, '.$this->cdn.'/errors/'.$statusCode.'@2x.webp 2x',
+            srcset: $this->cdn.'/errors/'.$statusCode.'.png 1x, '.$this->cdn.'/errors/'.$statusCode.'@2x.png 2x',
+        );
+    }
+}
+```
+
+```yaml
+nowo_ui_kit:
+    error_pages:
+        illustration_provider: App\Ui\BrandErrorIllustrations
+        illustration_provider_budget_ms: 20   # optional guard, see below
+```
+
+- **It never breaks the page.** A null answer, any `Throwable` (an exception, a `TypeError`, an invalid
+  `ErrorIllustration`) falls back to `error_pages.illustrations` (code, then `default`), then to no illustration. The
+  provider reaches UiKit as a service closure that is resolved inside that guard, only when an error page asks for an
+  illustration: a provider whose constructor or dependency throws (settings read from a database that is down) falls
+  back the same way and never breaks Twig or any other page. Each failed or slow call logs one warning when a `logger`
+  service exists (so one per error page during an outage), nothing more; the context carries the exception.
+- **Fast, and no database.** An error page often renders *because* the database, the cache or the network is down.
+  Read config, a precomputed map or values already in memory; never run a query or an HTTP call. UiKit itself has no
+  database dependency here.
+- **Budget guard.** With `illustration_provider_budget_ms` > 0, UiKit measures each call; one call over budget logs a
+  warning and the rest of the **same request** skips the provider (a flag on the current `Request`'s attributes, never
+  on a service). The slow answer is still used (PHP cannot interrupt the call), and the next request asks again. Symfony
+  renders an error page in its own sub-request and asks for the illustration once per page, so in the standard flow the
+  budget acts as a "slow provider" warning; the skip matters for templates that render several illustrations.
+- **Worker mode** (FrankenPHP, kernel kept alive, no reset): keep no request, user or tenant data in properties or
+  statics; resolve per call.
+- **Markup.** Without a provider, or when it falls back, the page is byte-identical to 2.46. A provided illustration
+  renders `<picture>`, an optional `<source type="image/webp" srcset sizes>` and `<img src srcset sizes width height>`
+  with the same classes, slots, `alt` and `decoding` / `fetchpriority` as the map. URLs are used as given (no
+  `asset()`), HTML-escaped, and validated by `ErrorIllustration::fromUrl()`: `http(s)://`, `//host/…`, `/path` or a
+  relative path; no other scheme (`javascript:`, `data:`), no whitespace or control characters; `srcset`
+  descriptors are `640w` / `2x`. CSP: no inline style or handler; allow the image host in `img-src`.
+
 <a id="confirm-dialog-26"></a>
 ### Confirm dialog
 
@@ -1757,6 +1918,41 @@ does. `per_page_selector: false` hides the select, `id` prefixes its id. Slots `
 ```twig
 {{ include(nowo_ui_partial('pagination_compact'), {pagination: {page: 2, per_page: 25, total: 160, total_pages: 7}, route: 'device_index'}) }}
 ```
+
+
+<a id="auth-panel-brand-244"></a>
+### Auth panel brand (2.44)
+
+The auth scaffold (`@NowoUiKit/page/auth.html.twig`, AuthKit's login, reset password, e-mail link, QR and two-factor
+pages) prints a brand region at the top of its panel: the appearance logo lockup when Settings → Brand has a logo, else
+`AuthPage::brand` as text. A guest layout that prints its own brand above the panel turns it off:
+
+```yaml
+# config/packages/nowo_ui_kit.yaml — every auth page
+nowo_ui_kit:
+    auth_panel:
+        brand: none
+```
+
+Or for one layout, one page or one render (the variable `nowo_ui_auth_brand`, `auto` | `none`, wins over the config):
+
+```twig
+{# templates/layout/guest.html.twig — the host guest layout (nowo_ui_kit.layouts.guest or AuthPage layout) #}
+{% extends '@NowoUiKit/layout/guest.html.twig' %}
+{% set nowo_ui_auth_brand = 'none' %}
+
+{# templates/security/login.html.twig — one page #}
+{% extends '@NowoUiKit/page/auth.html.twig' %}
+{% set nowo_ui_auth_brand = 'none' %}
+```
+
+```php
+return $this->render('@NowoUiKit/page/auth.html.twig', ['page' => $page, 'nowo_ui_auth_brand' => 'none']);
+```
+
+`auto` in the variable brings the region back on a page when the config says `none`. The block `nowo_ui_auth_brand`
+replaces the region with your own markup (`page`, `_ap_logos` in context). `none` keeps the guest layout's
+`nowo_ui_guest_brand` region emptied, as the auth scaffold always does.
 
 ## Pre-paint theme boot
 
@@ -1983,6 +2179,140 @@ page (it is not in the default `scripts` list).
 
 Demo: `/kit/side-panel` in `demo/symfony8`.
 
+<a id="drawer-breakpoint-and-remembered-state-248"></a>
+
+### Drawer breakpoint and remembered state (2.48)
+
+**Breakpoint.** A page with another column (a tree, a filter column) squeezes the content long before 767 px.
+`drawer_below: 'lg'` docks the panel only from 1200 px (a drawer at ≤ 1199 px), `'xl'` from 1440 px (≤ 1439 px); `md`
+(the default) and any other value keep the 2.25 markup. Pass the same value to the container so the columns stack at
+the same width (browsers with `:has()` follow the panel without it). The script reads the panel's
+`data-drawer-below` and switches between column and drawer when that media query changes (inert, backdrop, overlay
+registration and the Tab cycle follow).
+
+**A server-open `lg` / `xl` panel starts closed under its breakpoint.** The host store remembers the inline column, so
+it renders `open` on every page; at 768–1199 px (`lg`) or 768–1439 px (`xl`), ordinary laptops and tablets, that panel
+would otherwise start as a modal drawer (backdrop, inert content and shell) on every load. Like a remembered `open`
+from `persist` (below), it starts closed instead: on the panel's first start, `nowo-ui-side-panel.js` (or
+`js/nowo-ui-layout-state.js` in `<head>`, before the first paint) sets `hidden` and the toggles' `aria-expanded`; no
+`open` / `close` event is dispatched and nothing is stored, so the host store keeps `open` for wider screens. The toggle
+opens it as a drawer as before. `md` (the 2.25 default) and `layout: 'overlay'` keep the server state, so a no-JavaScript
+"open" link still opens the drawer on a phone. A host that must open the panel as a drawer on load at those widths
+calls `window.NowoUiSidePanel.open(id)` after the script starts.
+
+```twig
+{% embed '@NowoUiKitBundle/partials/_side_panel_container.html.twig' with {drawer_below: 'lg'} %}
+    {% block nowo_ui_side_panel_main %}…{% endblock %}
+    {% block nowo_ui_side_panel_panel %}
+        {{ include('@NowoUiKitBundle/partials/_side_panel.html.twig', {id: 'comments', title: 'Comments', open: open, drawer_below: 'lg',
+            persist: has_store ? null : 'wiki-comments'}) }}
+    {% endblock %}
+{% endembed %}
+```
+
+**Remembered state.** The host store stays primary: keep the open state per user on the server (from the
+`nowo-ui:side-panel:open` / `close` events) and render `open` from it — no JavaScript, no flash. Only when there is no
+store (no session, a stateless firewall) pass `persist: '<key>'` (1–64 of `A-Z a-z 0-9 _ . : -`): the script then keeps
+the state in `localStorage` (`nowo-ui-panel:<key>` = `open` | `closed`) and applies it on start. Rules:
+
+- Only the inline (column) state is written; opening or closing the drawer on a phone never changes it, and a stored
+  `open` never opens a drawer on load.
+- Storage errors (private mode, blocked site data, quota) are ignored: the server state stays.
+- `<html data-nowo-ui-panel-<key>="open|closed">` mirrors the applied state for host CSS (key lower-cased, other
+  characters as `-`).
+
+**No flash before the first paint (CSP-safe, no inline script).** The deferred `nowo-ui-side-panel.js` applies the
+remembered state when it starts, which can show the server state for one frame. To avoid it, load the small
+`js/nowo-ui-layout-state.js` (~2 KB) as a blocking external script in `<head>`:
+
+```twig
+<script src="{{ asset('js/nowo-ui-layout-state.js', 'nowo_ui_kit') }}"></script>  {# add your nonce when script-src uses nonces #}
+```
+
+It watches the parser (one `MutationObserver`, disconnected at `DOMContentLoaded`) and sets each persisted panel's
+`hidden` (and each persisted rail's state) as soon as the element is parsed: a mutation callback runs at the end of the
+parser task, before the browser can paint it. Trade-offs:
+
+| Strategy | Flash | Cost |
+| --- | --- | --- |
+| Host store, server-rendered `open` (recommended) | none | a request to save the state |
+| `persist` + `nowo-ui-layout-state.js` blocking in `<head>` | none | one small blocking request (cacheable), a parser observer until `DOMContentLoaded` |
+| `persist` + only the deferred scripts (or the layout-state script with `defer`) | possible, one frame | none |
+
+The script holds no state beyond the page (worker-safe on the server side: nothing is stored per request). It is not in
+the `scripts` list because that list is printed `defer`.
+
+## Collapsible column rail (2.48)
+
+Collapse an in-page column — a page tree, a filter column — to a thin rail with an expand button. The column is the
+host element (your markup); the `rail_toggle` partial is its button; what disappears carries `data-nowo-ui-rail-body`.
+
+```twig
+<aside id="tree" data-nowo-ui-rail-host data-nowo-ui-rail="{{ collapsed ? 'collapsed' : 'expanded' }}">
+    <div class="tree-header">
+        <h2 data-nowo-ui-rail-body>Pages</h2>
+        {{ include(nowo_ui_partial('rail_toggle'), {
+            target: 'tree-body', title: 'Pages', collapsed: collapsed,
+            href: path('page', {tree: collapsed ? 'full' : 'rail'}),    {# no-JavaScript path #}
+            state_url: path('panel_state'), state_token: csrf_token('panel'), state_panel: 'tree_rail',  {# host store #}
+        }) }}
+    </div>
+    <nav id="tree-body" data-nowo-ui-rail-body>…</nav>
+</aside>
+```
+
+and `script_names: nowo_ui_script_names()|merge(['rail'])`.
+
+- **Markup:** a `<button aria-controls aria-expanded>` (a `role="button"` link with `href`), its name "Collapse Pages" /
+  "Expand Pages" (`rail.collapse` / `rail.expand`, 7 locales; `labels: {collapse, expand}` to override) in a visually
+  hidden span, a chevron icon, and in the rail the title written vertically (`aria-hidden`; `show_title: false` hides
+  it). `side: 'end'` for a column at the end (the chevron points the other way; RTL is handled).
+- **Collapsed:** `[data-nowo-ui-rail-host][data-nowo-ui-rail="collapsed"]` is `--nowo-ui-rail-width` wide (2.75rem) and
+  its `[data-nowo-ui-rail-body]` parts are `display: none` — out of the tab order and the accessibility tree, not just
+  clipped. Set the column's grid track yourself when the host is a grid item (e.g.
+  `.layout:has([data-nowo-ui-rail='collapsed']) { grid-template-columns: var(--nowo-ui-rail-width, 2.75rem) minmax(0, 1fr) }`).
+- **Keyboard:** Enter / Space (also on the link form); focus inside the hidden part moves to the toggle when the column
+  collapses. Optional `shortcut: 'Alt+Shift+P'` (`aria-keyshortcuts`; ignored while typing unless it has Ctrl, Alt or
+  Meta).
+- **Persistence:** with `state_url` the script POSTs `{"panel": state_panel ?? persist ?? host id, "open": collapsed}`
+  as JSON with `X-CSRF-Token: state_token` (only to a URL on the page's own origin: another origin, or an invalid URL,
+  is never fetched, so the token never leaves the site; failures are ignored) and the server renders `collapsed` from
+  the same store — the host store is primary and localStorage is then never used. Without a store, `persist: '<key>'`
+  keeps the state in `localStorage` (`nowo-ui-rail:<key>` = `collapsed` | `expanded`), applied on start (before the first
+  paint with `js/nowo-ui-layout-state.js`, see [above](#drawer-breakpoint-and-remembered-state-248)).
+- **Events / API:** `nowo-ui:rail:change` (bubbling, on the host) `{ id, collapsed, source }`;
+  `window.NowoUiRail.collapse(id)` / `expand` / `toggle` / `isCollapsed` (by host id).
+- **Motion:** the width changes with a short transition, none under `prefers-reduced-motion: reduce` or
+  `<html data-motion="reduce">`.
+- **Link form:** Ctrl / Cmd / Shift / Alt-clicks and middle clicks on the `href` toggle keep the browser's behaviour
+  (open the other state in a new tab or window); a plain click toggles in place.
+- **Checked input:** `href` and `state_url` go through `nowo_ui_safe_href()` (relative, `http`, `https`, `mailto`): a
+  `javascript:` or `data:` `href` renders the button, a refused `state_url` renders no store attributes. `attr` goes
+  through `nowo_ui_safe_attrs()`: `on*`, `style` and `srcdoc` throw, script-running URLs in URL attributes are dropped,
+  and the attributes the partial owns (`href`, `role`, `type`, `aria-controls`, `aria-expanded`, `aria-keyshortcuts`,
+  `data-nowo-ui-rail-*`) are dropped from it, so they are never printed twice or changed.
+- **CSP:** delegated listeners, no inline handlers or styles.
+
+## Reading column and wide content (2.48)
+
+- **Reading width:** `.nowo-ui-readable` centres a column at most `--nowo-ui-reading-width` wide (default `75ch`), full
+  width below it. Set the token on `:root` or on a scope to change the measure.
+- **Wide code and tables:** mark rendered content (Markdown / HTML bodies) with `class="nowo-ui-rendered-content"` or
+  `data-nowo-ui-rendered-content`: its `pre` scroll sideways and its `table` become a horizontally scrolling block
+  (`display: block; inline-size: max-content; max-inline-size: 100%`), so they never widen the page. Any element with
+  `data-nowo-ui-scroll-region` gets `max-inline-size: 100%; overflow-x: auto` from CSS too. With
+  `js/nowo-ui-scroll-region.js` (opt-in `scroll-region`) they also become keyboard reachable while they overflow
+  ([Focusable scroll regions](#focusable-scroll-regions-228)); a `table` gets only `tabindex="0"` and keeps its table
+  role. `data-nowo-ui-scroll-role="group"` makes the script set `role="group"` instead of `region`.
+- **Editors:** nothing inside an editable area (`[contenteditable]` other than `"false"`) gets these rules or the
+  script's attributes (attributes set before the area became editable are removed): the editor owns its layout.
+- **Cards that widen:** a grid item keeps `min-width: auto`, so one long line sizes its track to the content.
+  `.nowo-ui-grid-fit` is a one-column grid (`minmax(0, 1fr)`) whose children have `min-inline-size: 0`; set your own
+  `grid-template-columns` on it for more columns.
+
+All of these are zero-specificity (`:where`) rules: host CSS wins whatever the order. See
+[THEMING](THEMING.md#reading-column-rail-and-wide-content-248).
+
 ## Remote form dialog (2.28)
 
 A form page opened in a native `<dialog>` and posted back with `fetch`: the opener is a plain link to the full page
@@ -2104,12 +2434,17 @@ nowo_ui_kit:
 public function __invoke(RemoteDialogRedirectEvent $event): void
 {
     // The link step closes the dialog on the board instead of loading the next step.
-    if (str_ends_with((string) $event->getRequest()->attributes->get('_route'), '_board_connection_link')) {
+    if (str_ends_with((string) $event->getRequestRoute(), '_board_connection_link')) {
         $event->setAnswer(RemoteDialogRedirectEvent::ANSWER_REDIRECT);
-        $event->setPath($this->urls->generate('board_show', ['id' => $event->getRequest()->attributes->get('boardId')]));
+        $event->setPath($this->urls->generate('board_show', ['id' => $event->getRouteParameters()['boardId'] ?? null]));
     }
 }
 ```
+
+The event exposes the request and the redirect as scalars (2.49): `getRequestPath()`, `getRequestRoute()`,
+`getRouteParameters()`, `getRedirectTargetUrl()`, `getRedirectStatusCode()`, plus `getPath()` / `getAnswer()`.
+`getRequest()` and `getResponse()` still work but are deprecated: each call triggers an `E_USER_DEPRECATED` notice
+(removed in 3.0).
 
 ### Header names (2.33)
 
@@ -2256,6 +2591,286 @@ before you pass it**, as above.
 
 The fold is CSS only (`line-clamp`), so there is no style attribute. The button appears only when the text overflows, and follows a change of width. It has `aria-expanded` and `aria-controls`, and keeps focus when it opens and folds.
 Focus reaching something clipped, a link in the hidden lines, opens the fold, so nothing focusable is out of sight. Focus on a link that already shows leaves it folded, so a click on it does not shift the layout. In print the whole text shows. Event: bubbling `nowo-ui:show-more:toggle` `{expanded}`. Slots `show_more*`.
+
+## Image crop
+
+A crop step for image uploads. When an image is picked in an opted-in file input, a dialog shows it under a square or
+round frame; the user moves and zooms it, and "Apply" puts the crop in the input **in place of the picked file**. The
+form then uploads the crop as an ordinary file, so the server validates it exactly as before (type, size, dimensions).
+"Cancel", the close button and Escape put back what the input held before the pick (nothing, or an earlier crop). Without the script, or in a browser that cannot crop, the input
+uploads the picked file as it is.
+
+```php
+use Nowo\UiKitBundle\Form\ImageCropTypeExtension;
+
+$builder->add('avatar', FileType::class, [
+    'required' => false,
+    'attr' => ['accept' => 'image/png,image/jpeg,image/webp'],
+    ImageCropTypeExtension::OPTION => ['shape' => 'circle', 'max' => 512, 'max_bytes' => 190_000, 'preview' => 'avatar-preview'],
+]);
+```
+
+```twig
+{# a hand-written input: the same attributes #}
+{{ form_widget(form.logo, {attr: nowo_ui_image_crop_attrs({aspect: '16/9', max: 1600})}) }}
+
+{{ include(nowo_ui_partial('scripts'), {script_names: nowo_ui_script_names()|merge(['image-crop'])}) }}
+```
+
+`nowo_ui_image_crop: true` gives the defaults (a square, at most 1024 px, format `auto`, no byte limit). The FileType option is refused with
+`multiple`; the field's own `attr` wins over the printed attributes, and `accept` stays as you set it. Demo:
+`/kit/image-crop`.
+
+### Image crop attribute contract
+
+On an `<input type="file">`. Only `data-nowo-ui-image-crop` is required; every other attribute has a default, and a value
+the runtime does not understand falls back to it. `ImageCrop::attributes()` validates the options (an unknown key or a bad
+value throws `InvalidArgumentException`) and prints them all.
+
+| Attribute | Option | Values | Default |
+| --- | --- | --- | --- |
+| `data-nowo-ui-image-crop` | — | present (any value) | — |
+| `data-nowo-ui-image-crop-shape` | `shape` | `square`, `circle` | `square` |
+| `data-nowo-ui-image-crop-aspect` | `aspect` | `1`, a number (`1.5`), a ratio (`16/9`, `16:9`), `free` | `1` (a circle is always 1) |
+| `data-nowo-ui-image-crop-max` | `max` | longest output edge in px, 16 to 8192 | `1024` |
+| `data-nowo-ui-image-crop-min` | `min` | shortest crop edge in image px: zooming in stops there | `1` |
+| `data-nowo-ui-image-crop-format` | `format` | `auto`, `png`, `webp`, `jpeg` | `auto` |
+| `data-nowo-ui-image-crop-max-bytes` | `max_bytes` | largest output file in bytes, digits only (quality, then size, step down to fit); any other value is ignored, with a console warning | none |
+| `data-nowo-ui-image-crop-quality` | `quality` | 0 to 1, for WebP and JPEG | `0.92` |
+| `data-nowo-ui-image-crop-bake-circle` | `bake_circle` | present and not `false` (circle, PNG or WebP only) | absent |
+| `data-nowo-ui-image-crop-preview` | `preview` | id of an `<img>` that shows the crop once applied | absent |
+| `data-nowo-ui-image-crop-labels` | `labels` | JSON: `title`, `instructions`, `stage`, `zoom`, `zoomStatus` (with `%percent%`), `apply`, `cancel`, `close`, `tooLarge` (with `%max%`), `optimizing` | English |
+
+`ImageCrop::attributes()` fills `-labels` from the translations `image_crop.*` (domain `NowoUiKitBundle`, seven
+locales); `labels` overrides single texts (snake_case keys in PHP: `zoom_status`, `too_large`, `optimizing`). A host that prints the attributes
+itself and leaves `-labels` out gets English.
+
+**For FormKit (and any bundle that renders file inputs):** a `crop: {shape, aspect, max, max_bytes}` option maps one
+to one onto these options (`max_bytes` → `data-nowo-ui-image-crop-max-bytes`). With UiKit installed, merge `ImageCrop::attributes($crop, $translator)` into the file input's `attr`;
+without it, print the attributes of the table yourself. That is all: the script finds the input by the attribute, also
+in content inserted later (a remote form dialog, a Turbo frame), since it listens on `window`.
+
+### How the crop is made (decisions)
+
+- **The output is never enlarged.** It is the crop's own size, made smaller so its longest edge is at most `max`. A
+  small image gives a small file: pair the server's minimum with `min` (the zoom stops before the crop gets smaller).
+- **`format: auto` by default.** The script looks at the crop's alpha channel (a baked circle always has transparency;
+  otherwise every pixel of the output canvas, at most `max` × `max`, is read once). With transparency: WebP if the engine
+  really encodes WebP (`toBlob` answered `image/webp`), else PNG. Without: WebP, else JPEG. The file name and type follow
+  what was really encoded, so accept `image/webp`, `image/png` and `image/jpeg` on the server. An explicit `png`, `webp`
+  or `jpeg` is used alone (an engine without a WebP encoder answers PNG for `webp`). `jpeg` has no transparency: it is
+  drawn on white, and `bake_circle` is refused with it.
+- **`max_bytes`.** When the file is larger, a WebP or JPEG is encoded again at lower qualities (0.92, 0.85, 0.78, 0.7,
+  0.6, 0.55, 0.5; never below 0.5), then, or straight away for PNG, the output's edges step down by 0.85 (never below
+  `min`). At most 10 encodes, each an async `toBlob`, so the page stays responsive; while it encodes again a polite
+  "Optimizing the image…" line (`optimizing`) shows, and Apply stays focusable (`aria-disabled`). If nothing fits, the
+  dialog stays open with a message (`tooLarge`, an alert), focus stays in the dialog (on Apply if it had gone), and
+  `nowo-ui:image-crop:error` `{reason: 'size', bytes, maxBytes}` fires: the user crops a smaller part, or cancels; the
+  input keeps the picked file meanwhile. **Set `max_bytes` about 5 % under the server's limit** (the comparison is on
+  the exact bytes, but leave room for a limit counted differently), and keep the server's own limit: the browser step is
+  a convenience, not a control.
+- **The server must cap decoded pixels.** The browser decodes the picked image at full size before cropping, and the
+  script cannot stop a crafted upload (a "pixel bomb") from reaching the server: keep a pixel limit there (Symfony's
+  `Image` constraint `maxPixels` / `maxWidth` / `maxHeight`, or a header check before GD or Imagick), as without the script.
+- **A circle is a mask, the stored image stays square.** Avatars are shown round by CSS (`border-radius`, the `avatar`
+  partial), so a square keeps every option open. `bake_circle` (circle, PNG or WebP) makes the pixels outside the circle
+  transparent instead, for images shown without CSS (e-mails, exports).
+- **`aspect: free`** gives the frame the image's own proportions (within 1:3 and 3:1); the user zooms and moves inside
+  it. There are no handles to resize the frame.
+- **Orientation.** The image is decoded upright (`createImageBitmap(file, {imageOrientation: 'from-image'})`, else an
+  `<img>`, which applies EXIF orientation too); the output has no EXIF (canvas encoders write none), so a rotated phone
+  photo arrives with its real width and height.
+- **Events.** The picked file's own `input` and `change` are stopped on `window` in the capture phase, so no target,
+  bubble or later capture listener sees it. After "Apply" the script dispatches `input` and `change` with the crop. When
+  the crop is refused or falls back (no file, a crop already on screen, `open` cancelled, a decode or encode error), the
+  picked file's `input` and `change` are dispatched again, so host listeners always run.
+- **Cancel (and Escape, and the close button) puts the previous file list back**: what the input held before this pick
+  (taken when the picker opens or a file is dropped on it, else the last crop; empty after a form reset), or nothing. It
+  dispatches `input` and `change` only if the input then differs from that list, which it does not, as no listener saw
+  the picked file: so Cancel on an empty input fires nothing, and `data-nowo-ui-autosubmit` never posts an empty file.
+- **One crop at a time.** A newer pick while an image still decodes cancels the older pick (Cancel semantics on its
+  input) and crops the latest file. A pick while a crop is on screen gets `error` `{reason: 'busy'}` and goes on as
+  picked. A session whose dialog was removed (a swapped body) is dropped. The dialog has `data-turbo-temporary` and ids
+  unique per build, and copies left by a restored page snapshot are removed when a crop starts.
+- **On the input, bubbling:** `nowo-ui:image-crop:open` `{file}` (cancelable: the file then stays as picked),
+  `nowo-ui:image-crop:cropped` `{file, original, width, height, quality, attempts}`, `nowo-ui:image-crop:cancel`
+  `{original, restored}`, `nowo-ui:image-crop:error` `{reason: decode|encode|replace|size|busy, original}` (the file
+  stays as picked; with `size` the dialog stays open). A host that dispatches `change` itself on an input holding a crop
+  crops it again: dispatch your own event instead, or remove the attribute.
+- **Left as picked, no error:** no DataTransfer, canvas `toBlob` or `<dialog>`; a `multiple` or disabled input; a file
+  that is not a raster image (SVG, PDF); an image the browser cannot decode (HEIC outside Safari). The server's
+  validation decides, as without the script.
+
+### Image crop accessibility contract
+
+The kit does: the dialog's anatomy and labelling (`aria-labelledby` on the title), focus on the crop area when it opens
+and back on the input when it closes, the instructions as the crop area's description (`aria-describedby`, read when
+it takes focus), a labelled zoom slider (`input type="range"`, with `aria-valuetext` "Zoom 150%"), a polite status for
+zoom changes from the keyboard, labelled buttons, Escape to cancel. Keys on the crop area: arrows move the image (with
+Shift, further), `+` / `-` and Page Up / Page Down zoom, Home resets, Enter applies. Touch: one finger moves, two pinch
+(the crop area has `touch-action: none`). axe (WCAG 2.1 AA) passes on the open dialog in light and dark mode. You do: a
+label on the file input, and the translated texts (the PHP helpers do that). Tested by emulation (Chromium and WebKit,
+desktop and phone); not on a real phone or with a real screen reader.
+
+**CSP:** no style attribute and no inline script; the canvas is sized through its attributes. The `preview` image and the
+`<img>` decoding fallback use `blob:` URLs: add `img-src blob:` where you use them. Tokens:
+`--nowo-ui-image-crop-mask` (the dimmed area), `--nowo-ui-image-crop-frame` (the frame line),
+`--nowo-ui-image-crop-width` (the dialog, default 32rem). The dialog is built by the script with the kit's classes
+(`nowo-ui-dialog*`, `nowo-ui-btn*`), so `css_framework` slot classes do not apply to it.
+
+### Host recipe: InstanceSettings image fields
+
+InstanceSettingsBundle's `SettingImageType` builds the file input itself (child `file`); a host type extension adds the
+crop per field, from the field's limits:
+
+```php
+use Nowo\InstanceSettingsBundle\Form\SettingImageType;
+use Nowo\UiKitBundle\Form\ImageCrop;
+
+final class SettingImageCropExtension extends AbstractTypeExtension
+{
+    /** Crop per image field (its name in the section form). */
+    private const CROPS = [
+        // SettingField::image('app_icon', …, minWidth: 512, minHeight: 512, square: true)
+        'app_icon' => ['aspect' => 1, 'min' => 512, 'max' => 1024],
+        // SettingField::image('logo', …, maxWidth: 2400, maxHeight: 800): free proportions; auto keeps transparency
+        // (WebP or PNG); max_bytes 5 % under the field's maxBytes default (1 MiB)
+        'logo' => ['aspect' => 'free', 'max' => 2400, 'max_bytes' => 996_000],
+    ];
+
+    public function __construct(private readonly TranslatorInterface $translator)
+    {
+    }
+
+    public static function getExtendedTypes(): iterable
+    {
+        return [SettingImageType::class];
+    }
+
+    public function finishView(FormView $view, FormInterface $form, array $options): void
+    {
+        $crop = self::CROPS[$form->getName()] ?? null;
+        if (null !== $crop && isset($view->children[SettingImageType::FILE])) {
+            $file = $view->children[SettingImageType::FILE];
+            $file->vars['attr'] += ImageCrop::attributes($crop, $this->translator);
+        }
+    }
+}
+```
+
+Match the field: `max` at most its `maxWidth` / `maxHeight`, `min` at least its `minWidth` / `minHeight` (the image must
+be large enough: the crop is never enlarged), `aspect: 1` for `square: true` (the crop is exactly square), and a
+`format` among its `types` (`auto` gives WebP, PNG or JPEG, which are the three it accepts by default; use `jpeg` for a
+JPEG-only field), and `max_bytes` about 5 % under its `maxBytes` (default 1 MiB, so 996 000), so a crop that would be
+refused is made smaller in the browser first. InstanceSettings still re-encodes and checks everything on the server.
+
+### Host recipe: avatars
+
+```php
+$builder->add('avatar', FileType::class, [
+    'required' => false,
+    'attr' => ['accept' => 'image/png,image/jpeg,image/webp'],
+    // The server's own limits stay: size, pixels and types.
+    'constraints' => [new Image(maxSize: '200k', maxWidth: 512, maxHeight: 512, maxPixels: 262_144, mimeTypes: ['image/png', 'image/webp', 'image/jpeg'])],
+    // format auto (the default): WebP, or JPEG where the engine cannot encode WebP; max_bytes 5 % under the 200 KB limit
+    ImageCropTypeExtension::OPTION => ['shape' => 'circle', 'max' => 512, 'max_bytes' => 190_000, 'preview' => 'avatar-preview'],
+]);
+```
+
+```twig
+<img id="avatar-preview" class="my-avatar-preview" alt="{{ 'profile.avatar_preview'|trans }}" hidden>
+```
+
+The stored image is square (store it as before); show it through the `avatar` partial, which makes it round. The
+preview `<img>` shows the crop as soon as it is applied (a `blob:` URL), before anything is saved.
+
+<a id="image-input-247"></a>
+## Image input (2.47)
+
+An image field that shows the image in its own box: the **stored** image when editing (or the effective **default**, with a
+"Default" badge), and, as soon as a file is picked or dropped, a **local preview** of it (an object URL; nothing is uploaded
+until the form is submitted). Replace, Remove and Undo sit in the same box. Opt in per FileType; without the option a
+FileType renders exactly as before.
+
+```php
+use Nowo\UiKitBundle\Form\ImageCropTypeExtension;
+use Nowo\UiKitBundle\Form\ImageInputTypeExtension;
+
+$builder
+    ->add('logo', FileType::class, [
+        'required' => false,
+        'mapped' => false,
+        'label' => 'brand.logo',
+        'attr' => ['accept' => 'image/png,image/webp'],
+        ImageInputTypeExtension::OPTION => [
+            'current_url' => $settings->logoUrl(),          // null / '' = nothing stored
+            'default_url' => '/img/brand/default-logo.svg', // optional
+            'remove_field' => 'removeLogo',                 // a sibling field of the same form
+            'backdrop' => 'checkerboard',                   // checkerboard (default) | light | dark
+        ],
+        // optional: crop before upload; the crop's preview then targets the box
+        ImageCropTypeExtension::OPTION => ['aspect' => 'free', 'max' => 1600],
+    ])
+    ->add('removeLogo', CheckboxType::class, ['required' => false, 'mapped' => false, 'label' => 'brand.remove_logo']);
+```
+
+```twig
+{{ form_row(form.logo) }} {# renders the box, and the removeLogo row inside it #}
+{{ include(nowo_ui_partial('scripts'), {script_names: nowo_ui_script_names()|merge(['image-input', 'image-crop'])}) }}
+```
+
+**API for hosts** (InstanceSettings `SettingImageType`, Beacon's profile picture and organization logo): the option takes
+three values, everything else is optional.
+
+| Option key | Value | Notes |
+|------------|-------|-------|
+| `current_url` | URL of the stored image, or `Closure(FormInterface $field): ?string` | The closure runs when the view is built (e.g. `fn ($f) => $f->getParent()?->getData()?->avatarUrl()`). |
+| `default_url` | URL of the image used when nothing is stored | Shown with the "Default" badge, and again after Remove. Null = an empty box ("No image"). |
+| `remove_field` | Name of a sibling field (CheckboxType) of the same parent form | Rendered inside the box only when something is stored; otherwise marked rendered and never printed. A name that is not a sibling throws a `LogicException` when the view is built. |
+| `backdrop` | `checkerboard` \| `light` \| `dark` | What shows through transparent art. |
+| `labels` | `replace`, `choose`, `remove`, `undo`, `default`, `empty`, `selected` (`%name%`), `removed`, `restored`, `drop`, `not_image` | Already translated; defaults from `image_input.*` (7 locales). |
+
+`true` is the same as `[]`. URLs: http(s), protocol-relative, root-relative or relative, or `data:image/…;base64,`; any
+other scheme, whitespace or a control character is refused; the template escapes them. A static `current_url` /
+`default_url` that breaks these rules throws an `InvalidOptionsException` when the field is built (a programming error).
+A `current_url` **closure** reads stored data, so its bad result (a legacy `javascript:` value, an unencoded
+`/uploads/my photo.png`) never fails the form: the field renders without a stored image and one warning is logged
+(percent-encode stored paths to keep them). URLs only ever reach `<img src>` and a data attribute fed back into it. The
+option is refused with `multiple`. The input gets `accept="image/*"` unless the field sets one, and loses `required` while an
+image is stored (keeping it must not need a new upload). The preview's `alt` is the field label (translated); `label: false`
+gives `alt=""`.
+
+**Behaviour** (`js/nowo-ui-image-input.js`, opt-in `script_names` entry `image-input`):
+
+- Pick or drop a file → the box shows it at once; the status (a polite live region) says "Selected: <name>"; Undo appears.
+  With the crop step, the box shows the cropped result after Apply (the crop's `-preview` targets the box; its object URL
+  is adopted, not duplicated); Cancel leaves the box as it was.
+- Remove (only when something is stored) → ticks the remove checkbox; the box shows the default (badge) or "No image";
+  Undo appears. Picking a file after Remove unticks it.
+- Undo → no picked file, checkbox unticked, the box as the page rendered it; focus goes back to Replace.
+- Keyboard: the file input leaves the tab order (it stays visible to assistive technology, with its label, help and
+  errors); Replace (a real `<button>`) opens the picker; Remove and Undo are buttons too. Every button is described by
+  the field name, its help and its errors (`aria-describedby`), so two image fields on a page are told apart and
+  validation errors are announced. Drag and drop on the box (highlighted, with the "Drop an image here" hint, while a
+  file is dragged over it).
+- The input carries one `aria-describedby` (help, then errors), whether the field is rendered by `form_row()` or
+  `form_widget()`; `attr.title` / `attr.placeholder` are translated as in Symfony's themes.
+- A box removed from the page (Turbo swap, dialog close) gives its preview's object URL back.
+- A form `reset` paints the rendered state again; a box inserted later (dialog, Turbo frame) is enhanced too.
+- Event: `nowo-ui:image-input:change` {state: `stored|default|empty|picked|removed`, file} on the root (bubbling).
+
+**Without JavaScript**: the current image above the plain file input and the remove checkbox; the buttons stay hidden and
+the form submits as any upload (the host reads the file and the checkbox as before).
+
+**CSP**: no inline script or style. The local preview is a `blob:` URL: add `blob:` to `img-src` (the image crop step needs
+it already), plus the host of `current_url` / `default_url` when it is not `'self'` (and `data:` if you pass data URIs).
+
+**Theming**: slots `image_input`, `image_input_frame`, `image_input_preview`, `image_input_empty`, `image_input_badge`,
+`image_input_controls`, `image_input_button`, `image_input_remove_field`, `image_input_status` ([THEME_SLOTS.md](THEME_SLOTS.md));
+tokens `--nowo-ui-image-input-size`, `-backdrop-light`, `-backdrop-dark`, `-checker` ([THEMING.md](THEMING.md)). The partial
+`image_input` can wrap a hand-written file input (it needs `data-nowo-ui-image-input-file`).
+
+**Worker mode**: the type extension keeps nothing between requests; every value lives in the form view.
 
 ## Sortable
 
@@ -2642,6 +3257,25 @@ receive `presentation` and `title_hidden` (`true` for `no_title` / `no_header`; 
 `[data-nowo-ui-page-header='inline']` and friends, or the request attribute itself. Tokens:
 [THEMING](THEMING.md#compact-header-227).
 
+<a id="tabs-and-actions-on-one-row-248"></a>
+
+### Tabs and actions on one row (2.48)
+
+A show page with tabs prints the title, then the toolbar, then the tabs on their own row. `tabs_inline: true` puts the
+tabs (at the start) and the toolbar (at the end) on **one** row under the title; on a narrow screen the toolbar wraps
+under the tabs.
+
+```twig
+{{ nowo_ui_page_header(header, {tabs_inline: true}) }}
+{# or: include('@NowoUiKit/page/_page_header.html.twig', {header: header, tabs_inline: true}) / the page_header partial #}
+```
+
+It applies only when the header has tabs (`PageHeader::withTabs()`) and the value is exactly `true`; otherwise the
+output is the 2.47 one byte for byte. The tabs keep the `tabs` partial (region `area-nav`, `aria-current` on the active
+tab), `actionsLayout: split` keeps its icon buttons and "more" menu, and the root gets
+`nowo-ui-page-header--tabs-inline`; the row is `.nowo-ui-page-header__bar`. Host `page_header` overrides receive
+`tabs_inline`.
+
 ## Overriding templates (REQ-TWIG-001)
 
 Place a file at:
@@ -2720,6 +3354,88 @@ Component tokens (`--nowo-ui-btn-*`, `--nowo-ui-input-*`, `--nowo-ui-table-*`, `
 `--nowo-ui-pagination-*`, `--nowo-ui-list-*`) are optional and resolved where they are used, so they also
 work on a scope (`.kit-admin`, a portalled dialog). Bootstrap stacks: add `nowo-ui-bs-tokens` to an
 ancestor to paint Bootstrap's own components from the same tokens.
+
+## Using it from a DDD / hexagonal application
+
+### Standard host
+
+Zero configuration: install the bundle, include the partials and macros, and build view models in controllers. The
+listing customizer reads its cookie from the request (`ListingCustomizerViewBuilder::forRequest()`), the redirect
+listener converts remote-dialog redirects, and every port has a default (cookie store, config appearance provider).
+Nothing below is needed.
+
+### DDD host
+
+Opt-in. No public port, event accessor or VO of the kit needs a Symfony component type (REQ-ARCH-001 rule 3, 2.49):
+
+- listings: implement `ListingPreferenceReaderInterface` (takes a `ListingContext` VO, not a `Request`) and, without
+  an HTTP request (a presenter, a console preview), call `ListingCustomizerViewBuilder::buildForContext($key, new
+  ListingContext(cookies: …, viewerId: …))`; a per-viewer reader returns null for a null `viewerId` (fail closed);
+- remote-dialog redirects: read `RemoteDialogRedirectEvent::getRequestPath()`, `getRequestRoute()`,
+  `getRouteParameters()`, `getRedirectTargetUrl()`, `getRedirectStatusCode()` (scalars) instead of the deprecated
+  `getRequest()` / `getResponse()`.
+
+The kernel test `tests/Integration/DddHostListingKernelTest.php` boots the bundle with a host reader, a viewer
+resolver and a scalar-only redirect listener.
+
+UiKit is a **presentation-layer** bundle: Twig templates and macros, CSS/JS assets, optional form types and readonly
+view models (`Nowo\UiKitBundle\View\*`). It has no entities and no persistence, does not depend on Doctrine and needs
+no `resolve_target_entities`.
+
+**Keep the domain free of the kit.** Only your UI layer (controllers, Twig, form classes) imports `Nowo\UiKitBundle\*`.
+Build the view models (`ListPage`, `Table`, `Column`, `Pagination`, `Action`, `ShowPage`…) in controllers or presenters
+from your application's read models or arrays. `Table` rows may be arrays or objects (cells read `row[key]`, else
+`attribute(row, key)`). Pass arrays or DTOs, not entities, so that templates never trigger lazy loading. The kit form
+types (`AppearanceType`, `SearchFilterType`, `DateRangeType`, `HiddenFieldsType`, `ActionCsrfType`) are bound to arrays
+(`data_class: null`). `Pagination::fromTotal()` / `fromArray()` take plain numbers, so your domain needs no paginator
+library.
+
+**Ports you implement (infrastructure adapters):**
+
+| Interface | Wiring |
+|---|---|
+| `Appearance\AppearanceProviderInterface::getAppearance(): Appearance` | `nowo_ui_kit.appearance.provider: <service id>` |
+| `Appearance\AppearancePresetProviderInterface::getPresets()` | autoconfigured (tag `nowo_ui_kit.appearance_preset_provider`) |
+| `Navigation\AreaNavProviderInterface::areaNav(string $area, array $context): ?AreaNav` | autoconfigured (tag `nowo_ui_kit.area_nav_provider`) |
+| `Listing\ListingDefinitionInterface` (`key()`, `columns()`, `filters()`) | autoconfigured (tag `nowo_ui_kit.listing_definition`) |
+| `Listing\ListingPreferenceReaderInterface` (`load(key, ListingContext)`, `cookieName()`) | alias the interface to your service (default: cookie store) |
+| `Listing\ListingViewerResolverInterface::viewerId(): ?string` (optional) | alias the interface to your service |
+
+Implementations must be stateless between requests (FrankenPHP worker); a provider that caches per request implements
+`ResetInterface`.
+
+Example appearance adapter over your own settings repository:
+
+    final readonly class SettingsAppearanceProvider implements AppearanceProviderInterface
+    {
+        public function __construct(
+            private SiteSettingsRepository $settings,      // your domain port
+            private ConfigAppearanceProvider $defaults,    // the kit's config defaults
+        ) {}
+
+        public function getAppearance(): Appearance
+        {
+            return Appearance::fromArray(
+                $this->settings->appearance(),             // array in the Appearance::toArray() shape
+                $this->defaults->getAppearance(),
+            );
+        }
+    }
+
+To save, map the submitted `AppearanceType` data with `Appearance::fromArray($form->getData(), $current)` and persist
+`toArray()` through your own repository: the kit has no write port.
+
+**Event:** `Dialog\RemoteDialogRedirectEvent` (dispatched for redirects answered to a remote-dialog request) lets an
+HTTP listener change the answer (`redirect` / `step` / null) or the same-origin path. It is a UI event, not a domain
+event. Read it through the scalar accessors (2.49); `getRequest()` / `getResponse()` are deprecated.
+
+**Known limitations**
+
+- `ListingPreferenceStoreInterface` is read-only: a server-side store exposes its own `save_url` endpoint and validates
+  the payload with `ListingLayoutMerger::normalizeLayout()`.
+- `ListingCustomizerViewBuilder::forRequest()` / `build()` and `ListingLayout::filterRequest()` still take a `Request`:
+  they are controller helpers (UI layer), not ports. `buildForContext()` is the request-free entry point.
+- Nothing stops entities from being passed as `Table` rows; keep to arrays or read models by convention.
 
 ## Feature bundles
 

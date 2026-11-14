@@ -21,6 +21,10 @@ use Symfony\Contracts\EventDispatcher\Event;
  * The proposed answer is `step` for a route matching `remote_dialog.step_routes`, else `redirect` with
  * `convert_redirects: true`, else null. {@see setPath()} retargets the answer; the path is validated again (same-origin
  * only), so a listener cannot open a redirect to another origin.
+ *
+ * 2.49 (REQ-ARCH-001 rule 3): the request-free accessors {@see getRequestPath()}, {@see getRequestRoute()}, {@see getRouteParameters()},
+ * {@see getRedirectTargetUrl()} and {@see getRedirectStatusCode()} give a listener what it needs as scalars;
+ * {@see getRequest()} / {@see getResponse()} are deprecated (removed in 3.0).
  */
 final class RemoteDialogRedirectEvent extends Event
 {
@@ -28,6 +32,9 @@ final class RemoteDialogRedirectEvent extends Event
 
     public const ANSWER_STEP = 'step';
 
+    /**
+     * @internal built by the kit's redirect listener; listeners only read and change it
+     */
     public function __construct(
         private readonly Request $request,
         private readonly RedirectResponse $response,
@@ -36,14 +43,68 @@ final class RemoteDialogRedirectEvent extends Event
     ) {
     }
 
+    /**
+     * @deprecated since 2.49, use {@see getRequestPath()} / {@see getRequestRoute()} / {@see getRouteParameters()}; removed in 3.0
+     */
     public function getRequest(): Request
     {
+        @trigger_error(\sprintf('Since nowo-tech/ui-kit-bundle 2.49: %s() is deprecated, use getRequestPath(), getRequestRoute() or getRouteParameters() (removed in 3.0).', __METHOD__), \E_USER_DEPRECATED);
+
         return $this->request;
     }
 
+    /**
+     * @deprecated since 2.49, use {@see getRedirectTargetUrl()} / {@see getRedirectStatusCode()}; removed in 3.0
+     */
     public function getResponse(): RedirectResponse
     {
+        @trigger_error(\sprintf('Since nowo-tech/ui-kit-bundle 2.49: %s() is deprecated, use getRedirectTargetUrl() or getRedirectStatusCode() (removed in 3.0).', __METHOD__), \E_USER_DEPRECATED);
+
         return $this->response;
+    }
+
+    /** 2.49: path of the dialog request (`Request::getPathInfo()`, no query string), e.g. `/orders/7/edit`. */
+    public function getRequestPath(): string
+    {
+        return $this->request->getPathInfo();
+    }
+
+    /** 2.49: route name of the dialog request (`_route` attribute), null when unrouted. */
+    public function getRequestRoute(): ?string
+    {
+        $route = $this->request->attributes->get('_route');
+
+        return \is_string($route) ? $route : null;
+    }
+
+    /**
+     * 2.49: route parameters of the dialog request (`_route_params`), scalar values only (others are dropped).
+     *
+     * @return array<string, bool|float|int|string|null>
+     */
+    public function getRouteParameters(): array
+    {
+        $params = $this->request->attributes->get('_route_params');
+        $scalars = [];
+        foreach (\is_array($params) ? $params : [] as $name => $value) {
+            if (\is_string($name) && (null === $value || \is_scalar($value))) {
+                $scalars[$name] = $value;
+            }
+        }
+
+        return $scalars;
+    }
+
+    /** 2.49: the redirect's original target URL as the controller set it (before same-origin reduction). */
+    public function getRedirectTargetUrl(): string
+    {
+        return $this->response->getTargetUrl();
+    }
+
+    /** 2.49: the redirect's status code (301, 302, 303, 307 or 308). */
+    public function getRedirectStatusCode(): int
+    {
+        return $this->response->getStatusCode();
     }
 
     /** The validated same-origin path of the answer (path, query and fragment). */

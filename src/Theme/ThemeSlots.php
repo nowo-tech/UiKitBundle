@@ -436,6 +436,21 @@ final class ThemeSlots
         'emoji_picker_search' => ['nowo-ui-input nowo-ui-emoji-picker__search', ['bootstrap' => 'form-control']],
         'emoji_picker_grid' => ['nowo-ui-emoji-picker__grid', []],
         'emoji_picker_status' => ['nowo-ui-emoji-picker__status', []],
+        // Image input (2.47, partial `image_input`, FileType option nowo_ui_image_input): root, the image box, its preview, the
+        // empty text and the "Default" badge, the controls row, its buttons, the remove checkbox row and the live status.
+        'image_input' => ['nowo-ui-image-input', []],
+        'image_input_frame' => ['nowo-ui-image-input__frame', []],
+        'image_input_preview' => ['nowo-ui-image-input__preview', []],
+        'image_input_empty' => ['nowo-ui-image-input__empty', []],
+        'image_input_badge' => ['nowo-ui-image-input__badge', []],
+        'image_input_controls' => ['nowo-ui-image-input__controls', []],
+        'image_input_button' => ['nowo-ui-btn nowo-ui-btn--secondary nowo-ui-btn--sm nowo-ui-image-input__button', [
+            'bootstrap' => 'btn btn-outline-secondary btn-sm',
+            'tailwind' => 'inline-flex items-center gap-1 font-medium px-2 py-1 text-sm border',
+            'foundation' => 'button secondary small',
+        ]],
+        'image_input_remove_field' => ['nowo-ui-image-input__remove-field', []],
+        'image_input_status' => ['nowo-ui-image-input__status', []],
         // Show more (partial `show_more`): root, the folded content, the button.
         'show_more' => ['nowo-ui-show-more', []],
         'show_more_content' => ['nowo-ui-show-more__content', []],
@@ -469,6 +484,11 @@ final class ThemeSlots
         ]],
         'side_panel_container' => ['nowo-ui-side-panel-container', []],
         'side_panel_main' => ['nowo-ui-side-panel-container__main', []],
+        // Rail toggle (2.48, partial `rail_toggle`): collapses an in-page column to a thin rail and expands it again
+        'rail_toggle' => ['nowo-ui-btn nowo-ui-btn--icon nowo-ui-rail-toggle', [
+            'bootstrap' => 'btn btn-sm btn-outline-secondary',
+            'foundation' => 'button clear tiny',
+        ]],
         // Compact header (2.27, partials `header_context`, `header_crumbs`, `page_actions`): the filling of the top bar's
         // `app_header_context` slot — page-actions trigger, home link (added to btn_secondary + btn_icon) and the
         // one-line breadcrumb with its "…" disclosure, panel and phone "‹" up link
@@ -661,6 +681,7 @@ final class ThemeSlots
         'detail_list' => '@NowoUiKitBundle/page/_detail_list.html.twig',
         'dialog' => '@NowoUiKitBundle/partials/_dialog.html.twig',
         'emoji_picker' => '@NowoUiKitBundle/partials/_emoji_picker.html.twig',
+        'image_input' => '@NowoUiKitBundle/partials/_image_input.html.twig',
         'edge_tabs_launcher' => '@NowoUiKitBundle/partials/_edge_tabs_launcher.html.twig',
         'empty' => '@NowoUiKitBundle/partials/_empty.html.twig',
         'filters' => '@NowoUiKitBundle/partials/_filters.html.twig',
@@ -683,6 +704,7 @@ final class ThemeSlots
         'pagination' => '@NowoUiKitBundle/partials/_pagination.html.twig',
         'pagination_compact' => '@NowoUiKitBundle/partials/_pagination_compact.html.twig',
         'progress' => '@NowoUiKitBundle/partials/_progress.html.twig',
+        'rail_toggle' => '@NowoUiKitBundle/partials/_rail_toggle.html.twig',
         'remote_form_dialog' => '@NowoUiKitBundle/partials/_remote_form_dialog.html.twig',
         'row_actions' => '@NowoUiKitBundle/partials/_row_actions.html.twig',
         'scripts' => '@NowoUiKitBundle/partials/_scripts.html.twig',
