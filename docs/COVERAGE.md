@@ -9,7 +9,7 @@
 
 ## PHP line coverage gate
 
-`make coverage-check` / `composer coverage-check` enforce **≥ 99%** line coverage on the PHPUnit includable `src/` set (`REQ-TEST-003` / `REQ-TEST-006`).
+`make coverage-check` / `composer coverage-check` enforce **100%** line coverage on the PHPUnit includable `src/` set (`REQ-TEST-003` / `REQ-TEST-006`).
 
 Latest run (2026-11-01, 2.21.x + `chore/req-100`): **100%** PHP lines (3253/3253, 1109 tests, `tests/Unit` + `tests/Integration`).
 
@@ -25,7 +25,7 @@ Outside the gate: the vendored orb engine (`src/orb/`, see below) and the peers 
 
 ## Justified exclusions
 
-No `<source><exclude>` entries in `phpunit.xml.dist` at this time — target aggregate line coverage is **≥99%** (prefer **100%**) on PHPUnit-includable `src/`.
+No `<source><exclude>` entries in `phpunit.xml.dist` at this time — target aggregate line coverage is **100%** on PHPUnit-includable `src/`.
 
 **TypeScript:** `src/Resources/assets/src/orb/` (Thinking Orbs canvas engine + mount helpers, MIT — see [THIRD_PARTY.md](THIRD_PARTY.md)) is outside the Vitest coverage gate. Smoke coverage remains via `nowo-ui-orb.test.ts` / `nowo-ui-orb.ts`.
 

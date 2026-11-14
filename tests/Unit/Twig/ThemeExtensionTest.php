@@ -30,7 +30,7 @@ final class ThemeExtensionTest extends TestCase
         $extension = new ThemeExtension($theme, ['admin' => 'layouts/admin.html.twig', 'guest' => 'layouts/guest.html.twig']);
 
         $names = array_map(static fn (TwigFunction $f): string => $f->getName(), $extension->getFunctions());
-        self::assertSame(['nowo_ui_class', 'nowo_ui_attrs', 'nowo_ui_html_attrs', 'nowo_ui_safe_attrs', 'nowo_ui_attrs_without_class', 'nowo_ui_partial', 'nowo_ui_script_names', 'nowo_ui_progress_amount', 'nowo_ui_tree_has_current', 'nowo_ui_tree_group_id', 'nowo_ui_theme_tokens', 'nowo_ui_theme_css', 'nowo_ui_tokens', 'nowo_ui_breadcrumb_kit', 'nowo_ui_breadcrumb_kit_available', 'nowo_ui_locale_name', 'nowo_ui_locale_dir', 'nowo_ui_action_form', 'nowo_ui_form', 'nowo_ui_form_hidden', 'nowo_ui_page_header', 'nowo_ui_header_actions', 'nowo_ui_visible_when', 'nowo_ui_font_preload', 'nowo_ui_header_presentation', 'nowo_ui_sidebar_layout', 'nowo_ui_breadcrumb_kit_trail', 'nowo_ui_header_crumbs', 'nowo_ui_safe_href', 'nowo_ui_safe_image_src', 'nowo_ui_dialog_request', 'nowo_ui_remote_dialog_attrs', 'nowo_ui_remote_form_opener', 'nowo_ui_dialog_status', 'nowo_ui_appearance_or_null', 'nowo_ui_appearance_head', 'nowo_ui_appearance_head_links'], $names);
+        self::assertSame(['nowo_ui_class', 'nowo_ui_attrs', 'nowo_ui_html_attrs', 'nowo_ui_safe_attrs', 'nowo_ui_attrs_without_class', 'nowo_ui_partial', 'nowo_ui_script_names', 'nowo_ui_progress_amount', 'nowo_ui_tree_has_current', 'nowo_ui_tree_group_id', 'nowo_ui_theme_tokens', 'nowo_ui_theme_css', 'nowo_ui_tokens', 'nowo_ui_breadcrumb_kit', 'nowo_ui_breadcrumb_kit_available', 'nowo_ui_locale_name', 'nowo_ui_locale_dir', 'nowo_ui_action_form', 'nowo_ui_form', 'nowo_ui_form_hidden', 'nowo_ui_page_header', 'nowo_ui_header_actions', 'nowo_ui_visible_when', 'nowo_ui_image_crop_attrs', 'nowo_ui_font_preload', 'nowo_ui_base_stylesheet', 'nowo_ui_header_presentation', 'nowo_ui_sidebar_layout', 'nowo_ui_breadcrumb_kit_trail', 'nowo_ui_header_crumbs', 'nowo_ui_safe_href', 'nowo_ui_safe_image_src', 'nowo_ui_dialog_request', 'nowo_ui_remote_dialog_attrs', 'nowo_ui_remote_form_opener', 'nowo_ui_dialog_status', 'nowo_ui_appearance_or_null', 'nowo_ui_appearance_head', 'nowo_ui_appearance_head_links'], $names);
         self::assertSame('nowo_ui_trans', $extension->getFilters()[0]->getName());
         self::assertSame(['admin' => 'layouts/admin.html.twig', 'guest' => 'layouts/guest.html.twig'], $extension->getGlobals()['nowo_ui_layout']);
         self::assertSame($theme, $extension->getGlobals()['nowo_ui_theme']);
@@ -38,6 +38,16 @@ final class ThemeExtensionTest extends TestCase
 
         $html = $this->twig($extension, "<a class=\"{{ nowo_ui_class('btn_primary') }}\"{{ nowo_ui_attrs('toasts', null, {'data-x': '\"'}) }}>{{ nowo_ui_partial('pagination') }}|{{ nowo_ui_layout.admin }}</a>")->render('t');
         self::assertSame('<a class="nowo-ui-btn nowo-ui-btn--primary btn btn-primary btn-moss" data-controller="toast-stack" data-x="&quot;">kit/_p.html.twig|layouts/admin.html.twig</a>', $html);
+    }
+
+    /** 2.51: nowo_ui_base_stylesheet() mirrors nowo_ui_kit.base_stylesheet — off unless the host asks for it. */
+    public function testBaseStylesheetFlagIsOffByDefaultAndFollowsTheConstructor(): void
+    {
+        $off = new ThemeExtension(new Theme('custom'));
+        self::assertSame('no', $this->twig($off, '{{ nowo_ui_base_stylesheet() ? \'yes\' : \'no\' }}')->render('t'));
+
+        $on = new ThemeExtension(new Theme('custom'), baseStylesheet: true);
+        self::assertSame('yes', $this->twig($on, '{{ nowo_ui_base_stylesheet() ? \'yes\' : \'no\' }}')->render('t'));
     }
 
     public function testPageTypeFromContextAndPlainAttributeMaps(): void

@@ -27,12 +27,16 @@ use Nowo\UiKitBundle\Form\DateRangeRequestHandler;
 use Nowo\UiKitBundle\Form\DateRangeSubmitExtension;
 use Nowo\UiKitBundle\Form\DateRangeType;
 use Nowo\UiKitBundle\Form\EmojiPickerType;
+use Nowo\UiKitBundle\Form\ImageCropTypeExtension;
+use Nowo\UiKitBundle\Form\ImageInputTypeExtension;
 use Nowo\UiKitBundle\Form\MultiSelectTypeExtension;
 use Nowo\UiKitBundle\Listing\CookieListingPreferenceStore;
 use Nowo\UiKitBundle\Listing\ListingCustomizerViewBuilder;
 use Nowo\UiKitBundle\Listing\ListingDefinitionInterface;
+use Nowo\UiKitBundle\Listing\ListingPreferenceReaderInterface;
 use Nowo\UiKitBundle\Listing\ListingPreferenceStoreInterface;
 use Nowo\UiKitBundle\Listing\ListingRegistry;
+use Nowo\UiKitBundle\Listing\ListingViewerResolverInterface;
 use Nowo\UiKitBundle\Navigation\AreaNavProviderInterface;
 use Nowo\UiKitBundle\Navigation\AreaNavRegistry;
 use Nowo\UiKitBundle\Release\ReleaseStatusController;
@@ -50,6 +54,7 @@ use Nowo\UiKitBundle\Twig\RouteLinkExtension;
 use Nowo\UiKitBundle\Twig\ThemeExtension;
 use Symfony\Component\Asset\Package;
 use Symfony\Component\Config\FileLocator;
+use Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument;
 use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -71,6 +76,9 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
 
     /** Form theme with the emoji picker field's block, prepended to `twig.form_themes`. */
     public const EMOJI_PICKER_FORM_THEME = '@NowoUiKit/form/nowo_ui_emoji_picker.html.twig';
+
+    /** Form theme with the image input's block (2.47, FileType option `nowo_ui_image_input`), prepended to `twig.form_themes`. */
+    public const IMAGE_INPUT_FORM_THEME = '@NowoUiKit/form/nowo_ui_image_input.html.twig';
 
     /** @var Closure(): bool */
     private readonly Closure $httpClientAvailable;
@@ -126,11 +134,12 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
                 'nowo_ui_kit_row_actions_confirm' => $config['row_actions_confirm'],
                 'nowo_ui_kit_release_check' => $releaseCheck,
                 'nowo_ui_kit_shell' => $config['shell'],
+                'nowo_ui_kit_auth_panel' => $config['auth_panel'],
             ],
         ];
         // 2.15: the date-range field's blocks (only `nowo_ui_date_range_*`) in every form, whatever the host theme.
         if (class_exists(AbstractType::class)) {
-            $twig['form_themes'] = [self::DATE_RANGE_FORM_THEME, self::EMOJI_PICKER_FORM_THEME];
+            $twig['form_themes'] = [self::DATE_RANGE_FORM_THEME, self::EMOJI_PICKER_FORM_THEME, self::IMAGE_INPUT_FORM_THEME];
         }
         $container->prependExtensionConfig('twig', $twig);
     }
@@ -197,6 +206,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
         $container->setParameter('nowo_ui_kit.css_framework', $fw);
         $container->setParameter('nowo_ui_kit.icon_set', $config['icon_set']);
         $container->setParameter('nowo_ui_kit.row_actions_display', $config['row_actions_display']);
+        $container->setParameter('nowo_ui_kit.auth_panel.brand', $config['auth_panel']['brand']);
 
         /** @var array<string, string> $rewrites */
         $rewrites = $config['panel_path_rewrites'];
@@ -292,6 +302,12 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
                 $errorPages,
                 new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE),
                 new Reference('request_stack', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                // 2.47: optional host provider, as a service closure resolved inside the extension's guard (a provider whose
+                // constructor throws never breaks Twig; audit LK-L1). ErrorIllustrationProviderPass checks its class.
+                \is_string($errorPages['illustration_provider'] ?? null) && '' !== $errorPages['illustration_provider']
+                    ? new ServiceClosureArgument(new Reference($errorPages['illustration_provider']))
+                    : null,
+                new Reference('logger', ContainerInterface::NULL_ON_INVALID_REFERENCE),
             ])
             ->addTag('twig.extension');
 
@@ -327,6 +343,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
             ->setArgument('$sidebarLayout', $config['shell']['sidebar_layout'])
             ->setArgument('$remoteDialogHeaders', new Reference('nowo_ui_kit.remote_dialog_headers'))
             ->setArgument('$appearanceView', new Reference('nowo_ui_kit.appearance.view'))
+            ->setArgument('$baseStylesheet', $config['base_stylesheet'])
             ->addTag('twig.extension');
 
         $this->registerRemoteDialog($container, $config);
@@ -396,13 +413,25 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
     }
 
     /**
-     * ChoiceType option `nowo_ui_multi_select` (2.14, markup of the `multi-select` Stimulus peer); only with
+     * ChoiceType option `nowo_ui_multi_select` (2.14, markup of the `multi-select` Stimulus peer) and FileType option
+     * `nowo_ui_image_crop` (2.43) and `nowo_ui_image_input` (2.47); only with
      * symfony/form (guarded by the caller).
      */
     private function registerMultiSelect(ContainerBuilder $container): void
     {
         $container->register('nowo_ui_kit.form.multi_select_extension', MultiSelectTypeExtension::class)
             ->setArguments([new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE)])
+            ->addTag('form.type_extension');
+        // 2.43: FileType option `nowo_ui_image_crop` (attributes of js/nowo-ui-image-crop.js).
+        $container->register('nowo_ui_kit.form.image_crop_extension', ImageCropTypeExtension::class)
+            ->setArguments([new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE)])
+            ->addTag('form.type_extension');
+        // 2.47: FileType option `nowo_ui_image_input` (the image input box, js/nowo-ui-image-input.js).
+        $container->register('nowo_ui_kit.form.image_input_extension', ImageInputTypeExtension::class)
+            ->setArguments([
+                new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                new Reference('logger', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+            ])
             ->addTag('form.type_extension');
     }
 
@@ -430,8 +459,9 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
 
     /**
      * Listing customizer: autoconfigured definitions (tag `nowo_ui_kit.listing_definition`), their registry, the
-     * default cookie preference store behind the {@see ListingPreferenceStoreInterface} port (a host re-aliases the
-     * interface to its own store) and the view builder.
+     * default cookie preference store behind the {@see ListingPreferenceReaderInterface} port (2.49) and the deprecated
+     * {@see ListingPreferenceStoreInterface} (a host re-aliases either interface to its own store; the reader wins) and
+     * the view builder (optional {@see ListingViewerResolverInterface}).
      */
     private function registerListingCustomizer(ContainerBuilder $container): void
     {
@@ -444,12 +474,17 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
         $container->register('nowo_ui_kit.listing.cookie_store', CookieListingPreferenceStore::class);
         $container->setAlias(CookieListingPreferenceStore::class, 'nowo_ui_kit.listing.cookie_store');
         $container->setAlias(ListingPreferenceStoreInterface::class, 'nowo_ui_kit.listing.cookie_store');
+        $container->setAlias(ListingPreferenceReaderInterface::class, 'nowo_ui_kit.listing.cookie_store');
 
         $container->register('nowo_ui_kit.listing.view_builder', ListingCustomizerViewBuilder::class)
             ->setArguments([
                 new Reference('nowo_ui_kit.listing.registry'),
                 new Reference(ListingPreferenceStoreInterface::class),
                 new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                new Reference(ListingPreferenceReaderInterface::class),
+                new Reference(ListingViewerResolverInterface::class, ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                new Reference('logger', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                $container->hasParameter('kernel.debug') ? '%kernel.debug%' : false,
             ]);
         $container->setAlias(ListingCustomizerViewBuilder::class, 'nowo_ui_kit.listing.view_builder');
     }

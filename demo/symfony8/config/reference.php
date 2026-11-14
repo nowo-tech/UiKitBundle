@@ -807,6 +807,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *             testid?: scalar|Param|null, // Default: null
  *         }>,
  *     },
+ *     base_stylesheet?: bool|Param, // 2.51: link UiKit's opt-in default theme (css/nowo-ui-base.css) before nowo-ui.css in the document / error layouts: body font stack, page gutters and masthead height for hosts that bring no CSS framework and no theme stylesheet. Its rules nest in `@layer theme.nowo-ui-base`, below `base`, so a framework, host utilities and unlayered host CSS still win. Leave it false when the host already has a framework or a theme file. // Default: false
  *     font_preload?: array{ // 2.21: <link rel="preload" as="font" crossorigin> tags printed in the <head> of the document and error layouts (Twig nowo_ui_font_preload()) for the fonts painted above the fold. Empty = no tags.
  *         fonts?: list<scalar|Param|null>,
  *         manifest?: array{ // Hashed builds: pick the fonts from a Vite manifest (.vite/manifest.json). A missing manifest (dev server) prints nothing.
@@ -818,7 +819,9 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     },
  *     appearance?: array{ // Optional site appearance SPI (presets, --nowo-ui-* token emitter, Twig functions). Off by default.
  *         enabled?: bool|Param, // Default: false
- *         provider?: scalar|Param|null, // Service id implementing AppearanceProviderInterface (host storage). Null = the config defaults below. // Default: null
+ *         provider?: scalar|Param|null, // Service id implementing AppearanceProviderInterface (host storage). Null = the config defaults below (or, 2.40, the brand provider: see brand). // Default: null
+ *         brand?: "auto"|"off"|Param, // 2.40 (spec 220): auto = with provider null and a nowo-tech/brand-contracts BrandProviderInterface service, the brand drives the name, eyebrow, colours and logos (corner, border and footer stay from defaults). off = always the defaults. No brand service = no change. // Default: "auto"
+ *         head_links?: bool|Param, // 2.40: the kit layouts (document, error) print nowo_ui_appearance_head() in <head>: favicon / apple-touch links of the appearance logos and meta theme-color (paper colour per colour scheme). Off = the 2.39 <head>. // Default: false
  *         defaults?: array{
  *             brand_name?: scalar|Param|null, // Default: ""
  *             brand_eyebrow?: scalar|Param|null, // Default: ""
@@ -869,8 +872,11 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         enabled?: bool|Param, // 2.3.1: false drops the breadcrumb trail (BreadcrumbKit and PageHeader::breadcrumbs) from every page header, e.g. when the host layout renders its own. // Default: true
  *     },
  *     header?: array{ // 2.27 compact header: the default page-header presentation (a request attribute _nowo_ui_header_presentation overrides it per request) and where PageHeader::actions go in the compact presentation.
- *         presentation?: "standard"|"compact"|Param, // standard (default) | compact: in compact the page header keeps a visually hidden h1 and leaves its intro, breadcrumbs and back link to the top bar (header_context). // Default: "standard"
+ *         presentation?: "standard"|"compact"|"inline"|"no_intro"|"no_title"|"no_header"|Param, // standard (default) | compact | inline | no_intro | no_title | no_header: in compact the page header keeps a visually hidden h1 and leaves its intro, breadcrumbs and back link to the top bar (header_context); 2.39: inline puts the intro on the title row, no_intro drops the intro, no_title keeps the h1 visually hidden, no_header does both. // Default: "standard"
  *         compact_actions?: "page"|"bar"|Param, // page (default): header.actions stay in the page header; bar: in the compact presentation the page header leaves them out (the host shows them in the top bar through the page_actions partial). extra_actions always stay. // Default: "page"
+ *     },
+ *     auth_panel?: array{ // 2.44: the auth scaffold (page/auth.html.twig) panel (Twig global nowo_ui_kit_auth_panel).
+ *         brand?: "auto"|"none"|Param, // auto (default, the 2.43 markup): the panel brand region prints the appearance logo lockup, else AuthPage::brand as text; none: the panel prints no brand region (a host guest layout that prints its own brand). A render variable nowo_ui_auth_brand (auto | none) wins over it. // Default: "auto"
  *     },
  *     remote_dialog?: array{ // 2.28 remote form dialog (X-Nowo-Dialog requests).
  *         convert_redirects?: bool|Param, // Turn a RedirectResponse answered to a dialog request (X-Nowo-Dialog: 1, main request) into 204 + X-Nowo-Redirect when its Location is a same-origin path, so redirectToRoute() controllers work in the dialog without code changes. // Default: false
@@ -946,6 +952,8 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         }>,
  *         illustration_width?: int|Param, // Default intrinsic width of the illustrations. // Default: 1024
  *         illustration_height?: int|Param, // Default intrinsic height of the illustrations. // Default: 683
+ *         illustration_provider?: scalar|Param|null, // 2.47: service id implementing Nowo\UiKitBundle\View\ErrorIllustrationProviderInterface, asked first per status code (null answer, any exception or an invalid illustration → the illustrations map). Must be fast and must not need the database. Null = the map only. // Default: null
+ *         illustration_provider_budget_ms?: int|Param, // 2.47: when > 0, a provider call slower than this many milliseconds makes the rest of the same request skip the provider (logged once). 0 = no budget. // Default: 0
  *         webp?: bool|Param, // Illustrations ship a .webp next to the fallback image (<source type="image/webp">). // Default: true
  *         retry_statuses?: list<int|Param>,
  *         back_link_statuses?: list<int|Param>,

@@ -1,0 +1,72 @@
+{#
+  UiKit 2.48 demo: the Wiki page layout (Beacon 1.149). A page tree that collapses to a rail (partial rail_toggle,
+  js/nowo-ui-rail.js) and a comments side panel with drawer_below 'lg' (a column from 1200 px, a drawer below). The
+  panel is rendered open, as a host store that remembers the inline column would; js/nowo-ui-layout-state.js in <head>
+  closes it before the first paint under 1200 px (audit LV-L2), so the page never loads behind a modal drawer.
+#}
+{% extends '@NowoUiKit/layout/document.html.twig' %}
+{% set nowo_ui_document_title = 'Wiki layout · UiKit 2.48' %}
+
+{% block nowo_ui_head %}
+    <script src="{{ asset('js/nowo-ui-layout-state.js', 'nowo_ui_kit') }}"></script>
+{% endblock %}
+
+{% block nowo_ui_body %}
+    <main id="main-content" class="nowo-ui-content" data-testid="wiki-layout-demo">
+        <div class="kit-wiki-layout">
+            <aside id="wiki-tree" class="kit-wiki-tree" data-nowo-ui-rail-host data-nowo-ui-rail="{{ tree_collapsed ? 'collapsed' : 'expanded' }}" data-testid="tree">
+                {{ include(nowo_ui_partial('rail_toggle'), {
+                    target: 'wiki-tree-body',
+                    title: 'Pages',
+                    collapsed: tree_collapsed,
+                    href: path('kit_wiki_layout', {tree: tree_collapsed ? 'full' : 'rail'}),
+                    attr: {'data-testid': 'rail-toggle'},
+                }, false) }}
+                <nav id="wiki-tree-body" data-nowo-ui-rail-body aria-label="Pages">
+                    <ul><li><a href="#main-content">Getting started</a></li><li><a href="#main-content">Release notes</a></li></ul>
+                </nav>
+            </aside>
+            <div class="kit-wiki-page">
+                <div class="kit-side-panel-bar">
+                    <h1>Release notes 2.48</h1>
+                    {{ include('@NowoUiKitBundle/partials/_side_panel_toggle.html.twig', {
+                        target: 'wiki-comments',
+                        label: 'Comments',
+                        open: open,
+                        href: path('kit_wiki_layout', {panel: open ? 0 : 1}),
+                        attr: {'data-testid': 'comments-toggle'},
+                    }, false) }}
+                </div>
+                {% embed '@NowoUiKitBundle/partials/_side_panel_container.html.twig' with {open: open, drawer_below: 'lg'} %}
+                    {% block nowo_ui_side_panel_main %}
+                        <article class="nowo-ui-readable" data-testid="wiki-content">
+                            <p>The comments panel docks as a column from 1200 px and is a drawer below. A host store renders
+                                it open; under 1200 px it starts closed so the page stays usable.</p>
+                            <button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-testid="content-button">A button in the content</button>
+                        </article>
+                    {% endblock %}
+                    {% block nowo_ui_side_panel_panel %}
+                        {% embed '@NowoUiKitBundle/partials/_side_panel.html.twig' with {
+                            id: 'wiki-comments',
+                            title: 'Comments',
+                            open: open,
+                            drawer_below: 'lg',
+                            close_href: path('kit_wiki_layout', {panel: 0}),
+                            attr: {'data-testid': 'comments-panel'},
+                        } only %}
+                            {% block nowo_ui_side_panel_body %}
+                                <button type="button" class="{{ nowo_ui_class('btn_primary') }}" data-testid="reply">Reply</button>
+                            {% endblock %}
+                        {% endembed %}
+                    {% endblock %}
+                {% endembed %}
+            </div>
+        </div>
+    </main>
+{% endblock %}
+
+{% block nowo_ui_scripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/nowo-ui-side-panel.js', 'nowo_ui_kit') }}" defer></script>
+    <script src="{{ asset('js/nowo-ui-rail.js', 'nowo_ui_kit') }}" defer></script>
+{% endblock %}

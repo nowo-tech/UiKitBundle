@@ -64,17 +64,17 @@
 {% set _footer_attr = nowo_ui_safe_attrs(footer_attr|default({}), footer_target|default(false) ? ['data-nowo-ui-dialog-footer', 'hidden'] : []) %}
 {% set _back_href = nowo_ui_safe_href(back_href|default(null)) %}
 {% set _back_label = back_label|default(null) is null ? 'action.back'|trans({}, 'NowoUiKitBundle') : back_label|nowo_ui_trans %}
-<dialog id="{{ id }}" class="{{ nowo_ui_class('dialog', bundle) }}{{ _size in ['sm', 'lg', 'xl', 'wide'] ? ' nowo-ui-dialog--' ~ _size }}{{ _placement in ['end', 'start'] ? ' nowo-ui-dialog--' ~ _placement }}{{ root_class|default('') ? ' ' ~ root_class }}" data-nowo-ui-dialog aria-labelledby="{{ id }}-title"
+<dialog id="{{ id }}" class="{{ nowo_ui_class('dialog', bundle) }}{{ _size in ['sm', 'lg', 'xl', 'wide'] ? ' nowo-ui-dialog--' ~ _size }}{{ _placement in ['end', 'start'] ? ' nowo-ui-dialog--' ~ _placement }}{{ root_class|default('') ? ' ' ~ root_class }}{{ (attr.class ?? false) ? ' ' ~ attr.class }}" data-nowo-ui-dialog aria-labelledby="{{ id }}-title"
     {{- (backdrop_close ?? true) ? ' data-nowo-ui-dialog-backdrop-close' }}
-    {{- nowo_ui_theme.renderAttributes('dialog', bundle, attr|default({}), _pt)|raw }}>
+    {{- nowo_ui_theme.renderAttributes('dialog', bundle, nowo_ui_attrs_without_class(attr|default({})), _pt)|raw }}>
     <header class="{{ nowo_ui_class('dialog_header', bundle) }}{{ _header_attr.class is defined ? ' ' ~ _header_attr.class }}"{{ nowo_ui_attrs('dialog_header', bundle, nowo_ui_attrs_without_class(_header_attr)) }}>
-        {% if _back_href %}<a class="{{ nowo_ui_class('dialog_back', bundle) }}" href="{{ _back_href }}" aria-label="{{ _back_label }}" title="{{ _back_label }}"{{ nowo_ui_attrs('dialog_back', bundle) }}><span aria-hidden="true">&larr;</span></a>{% endif %}{% if _status %}<div class="nowo-ui-dialog__title-row">{% endif %}<h2 class="{{ nowo_ui_class('dialog_title', bundle) }}" id="{{ id }}-title"{{ nowo_ui_attrs('dialog_title', bundle, title_attr|default({})) }}>{% if title_html|default(null) %}{{ title_html|raw }}{% else %}{{ _title }}{% endif %}</h2>{% if _status %}{{ include(nowo_ui_partial('page_status', bundle), {status: _status, bundle: bundle}, false)|trim|raw }}</div>{% endif %}
+        {% if _back_href %}<a class="{{ nowo_ui_class('dialog_back', bundle) }}" href="{{ _back_href }}" aria-label="{{ _back_label }}" title="{{ _back_label }}"{{ nowo_ui_attrs('dialog_back', bundle) }}><span aria-hidden="true">&larr;</span></a>{% endif %}{% if _status %}<div class="nowo-ui-dialog__title-row">{% endif %}<h2 class="{{ nowo_ui_class('dialog_title', bundle) }}{{ (title_attr.class ?? false) ? ' ' ~ title_attr.class }}" id="{{ id }}-title"{{ nowo_ui_attrs('dialog_title', bundle, nowo_ui_attrs_without_class(title_attr|default({}))) }}>{% if title_html|default(null) %}{{ title_html|raw }}{% else %}{{ _title }}{% endif %}</h2>{% if _status %}{{ include(nowo_ui_partial('page_status', bundle), {status: _status, bundle: bundle}, false)|trim|raw }}</div>{% endif %}
 
         {% if dismissible ?? true %}
             <button type="button" class="nowo-ui-dialog__close" data-nowo-ui-dialog-close aria-label="{{ _close_label }}" title="{{ _close_label }}"><span aria-hidden="true">&times;</span></button>
         {% endif %}
     </header>
-    <div class="{{ nowo_ui_class('dialog_body', bundle) }}{{ body_muted|default(false) ? ' ' ~ nowo_ui_class('dialog_body_muted', bundle) }}"{{ nowo_ui_attrs('dialog_body', bundle, body_attr|default({})) }}>
+    <div class="{{ nowo_ui_class('dialog_body', bundle) }}{{ body_muted|default(false) ? ' ' ~ nowo_ui_class('dialog_body_muted', bundle) }}{{ (body_attr.class ?? false) ? ' ' ~ body_attr.class }}"{{ nowo_ui_attrs('dialog_body', bundle, nowo_ui_attrs_without_class(body_attr|default({}))) }}>
         {%- block nowo_ui_dialog_body %}{{ body|default('')|raw }}{% endblock -%}
     </div>
     {% if footer|default(null) %}

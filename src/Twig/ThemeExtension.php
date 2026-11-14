@@ -10,6 +10,7 @@ use Nowo\UiKitBundle\Appearance\AppearanceView;
 use Nowo\UiKitBundle\Dialog\RemoteDialog;
 use Nowo\UiKitBundle\Dialog\RemoteDialogHeaders;
 use Nowo\UiKitBundle\Form\ActionCsrfType;
+use Nowo\UiKitBundle\Form\ImageCrop;
 use Nowo\UiKitBundle\Form\UiFormViews;
 use Nowo\UiKitBundle\Form\VisibleWhen;
 use Nowo\UiKitBundle\Shell\HeaderCrumbs;
@@ -63,7 +64,8 @@ use Twig\TwigFunction;
  *   — the scaffold page header (`page/_page_header.html.twig`: the `page_header` partial with the 2.0 and 1.x inputs)
  *   for unique pages; bundle and page type default to `nowo_ui_bundle` / `nowo_ui_page_type` of the context. 2.27: the
  *   second argument may be an options hash instead (`{bundle, extra_actions, header_actions, presentation}`), and
- *   `presentation` (a {@see HeaderPresentation} value; anything else is ignored) defaults to {@see self::headerPresentation()}
+ *   `presentation` (a {@see HeaderPresentation} value; anything else is ignored) defaults to {@see self::headerPresentation()};
+ *   2.48: `tabs_inline: true` in the options hash puts the tabs and the actions on one row
  * - `nowo_ui_header_presentation(presentation = null)` (2.27) — the resolved page-header presentation of the request
  *   ({@see HeaderPresentation}: a valid option, else the request attribute, else `nowo_ui_kit.header.presentation`)
  * - `nowo_ui_sidebar_layout(layout = null)` (2.32) — the app shell's sidebar layout of the request (`below-header` |
@@ -95,8 +97,11 @@ use Twig\TwigFunction;
  *   buttons, one primary, the "more" menu) the `header_actions` partial renders
  * - `nowo_ui_visible_when(field, values)` (2.23) — row attributes of the `visible-when` peer
  *   ({@see VisibleWhen::attributes()}; merge into `row_attr`, or print with `nowo_ui_html_attrs`)
+ * - `nowo_ui_image_crop_attrs(options)` (2.43) — attributes of a file input with the image crop step ({@see ImageCrop})
  * - `nowo_ui_font_preload()` (2.21) — `<link rel="preload" as="font" crossorigin>` tags of `nowo_ui_kit.font_preload`
  *   ({@see FontPreload}; '' when not configured), printed by the document and error layouts
+ * - `nowo_ui_base_stylesheet()` (2.51) — whether `nowo_ui_kit.base_stylesheet` is on, i.e. whether the document and
+ *   error layouts link `css/nowo-ui-base.css` (the opt-in default theme) before `nowo-ui.css`
  * - `|nowo_ui_trans(params = {})` — translates a {@see Label}; strings pass through (escaped by Twig)
  * - `|nowo_ui_translatable(params = {})` (2.3) — a {@see TranslatableText} for values a form theme translates again
  *   (`attr.placeholder`, choice `placeholder`): a Label is translated exactly once, a string printed as given
@@ -118,11 +123,12 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
 
     /**
      * @param array{admin: string, guest: string}                                  $layouts
-     * @param array{breadcrumb_kit: bool, collection: string|null, enabled?: bool} $breadcrumbs   `enabled` (2.3.1, default true): false = no breadcrumb trail in page headers
-     * @param FormFactoryInterface|null                                            $actionForms   standalone factory of the CSRF-only action forms (2.18; core types only, so no host type extension changes them); null = a new one per call
-     * @param FontPreload|null                                                     $fontPreload   font preload tags (2.21, `nowo_ui_kit.font_preload`); null = none
-     * @param array{presentation: string, compact_actions: string}                 $header        2.27 `nowo_ui_kit.header`: default presentation, where `header.actions` go in compact (`page` | `bar`)
-     * @param string                                                               $sidebarLayout 2.32 `nowo_ui_kit.shell.sidebar_layout`: `below-header` | `full-height`
+     * @param array{breadcrumb_kit: bool, collection: string|null, enabled?: bool} $breadcrumbs    `enabled` (2.3.1, default true): false = no breadcrumb trail in page headers
+     * @param FormFactoryInterface|null                                            $actionForms    standalone factory of the CSRF-only action forms (2.18; core types only, so no host type extension changes them); null = a new one per call
+     * @param FontPreload|null                                                     $fontPreload    font preload tags (2.21, `nowo_ui_kit.font_preload`); null = none
+     * @param array{presentation: string, compact_actions: string}                 $header         2.27 `nowo_ui_kit.header`: default presentation, where `header.actions` go in compact (`page` | `bar`)
+     * @param string                                                               $sidebarLayout  2.32 `nowo_ui_kit.shell.sidebar_layout`: `below-header` | `full-height`
+     * @param bool                                                                 $baseStylesheet 2.51 `nowo_ui_kit.base_stylesheet`: the document layouts link css/nowo-ui-base.css (the opt-in default theme) before nowo-ui.css
      */
     public function __construct(
         private readonly Theme $theme,
@@ -137,10 +143,23 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
         string $sidebarLayout = 'below-header',
         private readonly ?RemoteDialogHeaders $remoteDialogHeaders = null,
         private readonly AppearanceView $appearanceView = new AppearanceView(),
+        private readonly bool $baseStylesheet = false,
     ) {
         $this->uiForms = new UiFormViews($actionForms);
         $this->presentationResolver = new HeaderPresentationResolver($requestStack, $header['presentation'], $header['compact_actions']);
         $this->sidebarLayoutResolver = new SidebarLayoutResolver($requestStack, $sidebarLayout);
+    }
+
+    /**
+     * `nowo_ui_image_crop_attrs(options)` (2.43): the attributes of a file input with the image crop step, labels translated.
+     *
+     * @param array<mixed> $options {@see ImageCrop} options
+     *
+     * @return array<string, string>
+     */
+    public function imageCropAttributes(array $options = []): array
+    {
+        return ImageCrop::attributes($options, $this->translator);
     }
 
     public function getFunctions(): array
@@ -169,7 +188,10 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             new TwigFunction('nowo_ui_page_header', $this->pageHeader(...), ['needs_environment' => true, 'needs_context' => true, 'is_safe' => ['html']]),
             new TwigFunction('nowo_ui_header_actions', HeaderActions::split(...)),
             new TwigFunction('nowo_ui_visible_when', VisibleWhen::attributes(...)),
+            new TwigFunction('nowo_ui_image_crop_attrs', $this->imageCropAttributes(...)),
             new TwigFunction('nowo_ui_font_preload', fn (): string => $this->fontPreload?->tags() ?? '', ['is_safe' => ['html']]),
+            // 2.51: true when nowo_ui_kit.base_stylesheet is on — the layouts link css/nowo-ui-base.css first.
+            new TwigFunction('nowo_ui_base_stylesheet', fn (): bool => $this->baseStylesheet),
             new TwigFunction('nowo_ui_header_presentation', $this->headerPresentation(...)),
             new TwigFunction('nowo_ui_sidebar_layout', $this->sidebarLayout(...)),
             new TwigFunction('nowo_ui_breadcrumb_kit_trail', $this->breadcrumbKitTrail(...), ['needs_environment' => true]),
@@ -380,7 +402,8 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
     /**
      * `nowo_ui_page_header()`: renders `page/_page_header.html.twig` (the scaffolds' page header) for a unique page.
      * 2.27: `$bundle` may be an options hash (`bundle`, `extra_actions`, `header_actions`, `presentation`) instead of
-     * the positional arguments; `presentation` null resolves through {@see self::headerPresentation()}.
+     * the positional arguments; `presentation` null resolves through {@see self::headerPresentation()}. 2.48: the
+     * options hash also takes `tabs_inline` (only `true`: tabs and actions on one row).
      *
      * @param array<string, mixed>             $context
      * @param string|array<string, mixed>|null $bundle       bundle name, or the options hash (2.27)
@@ -388,12 +411,14 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
      */
     public function pageHeader(Environment $env, array $context, PageHeader $header, string|array|null $bundle = null, iterable $extraActions = [], bool $headerActions = true, mixed $presentation = null): string
     {
+        $tabsInline = false;
         if (\is_array($bundle)) {
             $options = $bundle;
             $bundle = \is_string($options['bundle'] ?? null) ? $options['bundle'] : null;
             $extraActions = is_iterable($options['extra_actions'] ?? null) ? $options['extra_actions'] : $extraActions;
             $headerActions = \is_bool($options['header_actions'] ?? null) ? $options['header_actions'] : $headerActions;
             $presentation = $options['presentation'] ?? $presentation;
+            $tabsInline = true === ($options['tabs_inline'] ?? null);
         }
         $contextBundle = $context['nowo_ui_bundle'] ?? null;
 
@@ -404,6 +429,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             'extra_actions' => ViewList::of($extraActions, Action::class, 'nowo_ui_page_header() extra actions'),
             'header_actions' => $headerActions,
             'presentation' => $this->headerPresentation($presentation),
+            'tabs_inline' => $tabsInline,
         ]);
     }
 

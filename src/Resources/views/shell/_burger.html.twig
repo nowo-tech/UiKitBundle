@@ -30,7 +30,7 @@
 {% set _labels = {(_names.expand): _label_expand}|merge(_rail_mode ? {(_names.rail): _label_rail} : {})|merge({(_names.hide): _label_hide}) %}
 {% set _icon = icon|default('svg') %}
 {% set _icon_class = nowo_ui_class('app_burger_icon', bundle) %}
-<button type="button" class="{{ nowo_ui_class('app_burger', bundle) }}{{ _kit ? ' nowo-ui-burger nowo-ui-btn nowo-ui-btn--secondary nowo-ui-btn--sm' }}" data-nowo-ui-burger aria-controls="{{ controls }}" aria-expanded="{{ _expanded ? 'true' : 'false' }}" data-nowo-ui-burger-glyph="{{ _expanded and not _rail ? 'close' : 'open' }}" aria-label="{{ _label }}" title="{{ _label }}"{{ nowo_ui_html_attrs(_labels) }}{{ nowo_ui_attrs('app_burger', bundle, attr|default({})) }}>
+<button type="button" class="{{ nowo_ui_class('app_burger', bundle) }}{{ _kit ? ' nowo-ui-burger nowo-ui-btn nowo-ui-btn--secondary nowo-ui-btn--sm' }}{{ (attr.class ?? false) ? ' ' ~ attr.class }}" data-nowo-ui-burger aria-controls="{{ controls }}" aria-expanded="{{ _expanded ? 'true' : 'false' }}" data-nowo-ui-burger-glyph="{{ _expanded and not _rail ? 'close' : 'open' }}" aria-label="{{ _label }}" title="{{ _label }}"{{ nowo_ui_html_attrs(_labels) }}{{ nowo_ui_attrs('app_burger', bundle, nowo_ui_attrs_without_class(attr|default({}))) }}>
     {% if _icon == 'morph' %}
         {% if 'open' in static_icons|default(['open', 'close']) %}
             <svg class="{{ _icon_class }} nowo-ui-burger__icon--open" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>

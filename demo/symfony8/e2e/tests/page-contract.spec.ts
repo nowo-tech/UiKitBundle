@@ -283,7 +283,7 @@ test.describe('page contract — validation round 3 (REQ-UI-003)', () => {
 
   test('UiKit 2.2 default theme: masthead, confirm close button, solid delete, aligned headers', async ({ page }) => {
     await page.goto('/page-contract/default/orders');
-    await expect(page.locator('.demo-masthead a[aria-current="page"]')).toHaveText('Orders');
+    await expect(page.locator('[data-testid="demo-masthead"] a[aria-current="page"]')).toHaveText('Orders');
     const total = page.locator('thead th', { hasText: 'Total' });
     expect(await total.evaluate((el) => getComputedStyle(el).textAlign)).toBe('end');
     await expect(page.locator('thead th.nowo-ui-table__actions')).toHaveText('Actions');

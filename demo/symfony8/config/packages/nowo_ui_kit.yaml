@@ -3,6 +3,11 @@ nowo_ui_kit:
     icon_set: bootstrap-icons
     row_actions_display: icon
 
+    # 2.51 note: `base_stylesheet: true` would link UiKit's default theme (css/nowo-ui-base.css) on EVERY page of
+    # this app. This demo leaves it off, because its pages already get their document base from Bootstrap (in the
+    # `base` cascade layer) and from the host theme. Only the /page-contract/default/… pages — UiKit's default
+    # theme, no framework, no host stylesheet — need it, and their layouts link it themselves.
+
     # REQ-UI-003 host-theme demo (/page-contract): the host layouts (bridges into base.html.twig)…
     layouts:
         admin: 'page_contract/layouts/admin.html.twig'

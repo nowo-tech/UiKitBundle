@@ -69,14 +69,14 @@
 {% set _labelledby = (aria_labelledby is defined and aria_labelledby) ? aria_labelledby : _title_id %}
 
 {% if not _only_dialog %}
-<div class="{{ nowo_ui_class('confirm_dialog_root', bundle) }}" data-controller="confirm-dialog"{% if _expected is not null %} data-confirm-dialog-expected-value="{{ _expected }}"{% endif %}{% if _open_on_connect %} data-confirm-dialog-open-on-connect-value="true"{% endif %}{{ nowo_ui_attrs('confirm_dialog_root', bundle, attr|default({})) }}>
+<div class="{{ nowo_ui_class('confirm_dialog_root', bundle) }}{{ (attr.class ?? false) ? ' ' ~ attr.class }}" data-controller="confirm-dialog"{% if _expected is not null %} data-confirm-dialog-expected-value="{{ _expected }}"{% endif %}{% if _open_on_connect %} data-confirm-dialog-open-on-connect-value="true"{% endif %}{{ nowo_ui_attrs('confirm_dialog_root', bundle, nowo_ui_attrs_without_class(attr|default({}))) }}>
     {% block trigger %}
         {% if trigger_label is defined %}
             <button type="button" class="{{ trigger_class|default(nowo_ui_class('confirm_dialog_trigger', bundle)) }}" data-action="confirm-dialog#open"{% if _dialog_id %} data-nowo-confirm-open data-nowo-confirm-target="{{ _dialog_id }}" aria-haspopup="dialog" aria-controls="{{ _dialog_id }}"{% endif %}{% if trigger_title is defined %} title="{{ trigger_title }}"{% endif %}{% if trigger_aria_label is defined %} aria-label="{{ trigger_aria_label }}"{% endif %}{% if trigger_testid is defined %} data-testid="{{ trigger_testid }}"{% endif %}{% if trigger_disabled|default(false) %} disabled{% endif %}{{ nowo_ui_attrs('confirm_dialog_trigger', bundle) }}>{{ trigger_label }}</button>
         {% endif %}
     {% endblock %}
 {% endif %}
-<dialog class="{{ _dialog_class }}" data-confirm-dialog-target="dialog"{% if _dialog_id %} id="{{ _dialog_id }}" data-nowo-ui-confirm{% endif %}{% if dialog_testid|default(null) %} data-testid="{{ dialog_testid }}"{% endif %}{% if _labelledby %} aria-labelledby="{{ _labelledby }}"{% endif %}{{ nowo_ui_attrs('confirm_dialog', bundle, dialog_attr|default({})) }}>
+<dialog class="{{ _dialog_class }}{{ (dialog_attr.class ?? false) ? ' ' ~ dialog_attr.class }}" data-confirm-dialog-target="dialog"{% if _dialog_id %} id="{{ _dialog_id }}" data-nowo-ui-confirm{% endif %}{% if dialog_testid|default(null) %} data-testid="{{ dialog_testid }}"{% endif %}{% if _labelledby %} aria-labelledby="{{ _labelledby }}"{% endif %}{{ nowo_ui_attrs('confirm_dialog', bundle, nowo_ui_attrs_without_class(dialog_attr|default({}))) }}>
 {% if _anatomy %}
     {% set _status = nowo_ui_dialog_status(status ?? null) %}
     {% set _close_label = close_label|default('action.close'|trans({}, 'NowoUiKitBundle')) %}

@@ -33,6 +33,10 @@ type Entry =
   | 'emoji-picker'
   | 'show-more'
   | 'edge-tabs'
+  | 'image-crop'
+  | 'image-input'
+  | 'rail'
+  | 'layout-state'
   | 'demo-peers';
 
 const entry = process.env.VITE_ENTRY as Entry | undefined;
@@ -438,6 +442,70 @@ const configs: Record<Entry, { build: object }> = {
         output: {
           format: 'iife' as const,
           entryFileNames: 'js/nowo-ui-edge-tabs.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  // 2.43: opt-in crop step for image file inputs.
+  'image-crop': {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-image-crop.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-image-crop.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  // 2.47: opt-in image input box (FileType option nowo_ui_image_input).
+  'image-input': {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-image-input.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-image-input.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  // 2.48: opt-in collapsible column rail (partial rail_toggle).
+  'rail': {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-rail.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-rail.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  // 2.48: opt-in pre-paint script for remembered side panel / rail states (blocking, in <head>).
+  'layout-state': {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-layout-state.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-layout-state.js',
         },
       },
       minify: true,

@@ -7,9 +7,13 @@
     {% endembed %}
   The main column carries data-nowo-ui-side-panel-main: the script makes it inert while a drawer is open.
   Slots: side_panel_container, side_panel_main. Optional: attr (root attributes, no on*), bundle.
+  2.48: drawer_below (md default | lg | xl): the same breakpoint as the panel's, so the columns stack where the panel
+  becomes a drawer (modifier nowo-ui-side-panel-container--drawer-<bp> + data-drawer-below; md and other values render
+  nothing). Browsers with :has() also follow a panel's modifier without it.
 #}
 {% set _b = bundle|default(null) %}
-<div class="{{ nowo_ui_class('side_panel_container', _b) }}" data-nowo-ui-side-panel-container{{ nowo_ui_attrs('side_panel_container', _b) }}{{ nowo_ui_html_attrs(attr|default({})) }}>
+{% set _drawer_below = (drawer_below ?? null) is same as('lg') or (drawer_below ?? null) is same as('xl') ? drawer_below : null %}
+<div class="{{ nowo_ui_class('side_panel_container', _b) }}{{ _drawer_below ? ' nowo-ui-side-panel-container--drawer-' ~ _drawer_below }}{{ (attr.class ?? false) ? ' ' ~ attr.class }}" data-nowo-ui-side-panel-container{% if _drawer_below %} data-drawer-below="{{ _drawer_below }}"{% endif %}{{ nowo_ui_attrs('side_panel_container', _b) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(attr|default({}))) }}>
     <div class="{{ nowo_ui_class('side_panel_main', _b) }}" data-nowo-ui-side-panel-main{{ nowo_ui_attrs('side_panel_main', _b) }}>
         {%- block nowo_ui_side_panel_main -%}{%- endblock -%}
     </div>

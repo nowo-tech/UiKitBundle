@@ -13,4 +13,4 @@
 #}
 {% set _b = bundle|default(null) %}
 {% set _title = status.title is null ? null : status.title|nowo_ui_trans %}
-<span class="{{ nowo_ui_class('page_status', _b) }} {{ nowo_ui_class('badge_' ~ status.tone, _b) }}" data-nowo-ui-page-status="{{ status.tone }}"{% if _title %} title="{{ _title }}"{% endif %}{{ nowo_ui_attrs('page_status', _b) }}{{ nowo_ui_attrs('badge_' ~ status.tone, _b) }}{{ nowo_ui_html_attrs(status.attributes ?? {}) }}>{{ status.label|nowo_ui_trans }}</span>
+<span class="{{ nowo_ui_class('page_status', _b) }} {{ nowo_ui_class('badge_' ~ status.tone, _b) }}{{ (status.attributes.class ?? false) ? ' ' ~ status.attributes.class }}" data-nowo-ui-page-status="{{ status.tone }}"{% if _title %} title="{{ _title }}"{% endif %}{{ nowo_ui_attrs('page_status', _b) }}{{ nowo_ui_attrs('badge_' ~ status.tone, _b) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(status.attributes ?? {})) }}>{{ status.label|nowo_ui_trans }}</span>

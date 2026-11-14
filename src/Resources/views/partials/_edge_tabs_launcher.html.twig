@@ -11,12 +11,16 @@
       `always` = every viewport; anything else = never (the launcher is printed but stays hidden)
     - gutter (default false): while folded, `.nowo-ui-main` (and any element using var(--nowo-ui-edge-tabs-gutter))
       keeps the launcher's width free on its right, so it covers nothing
-    - label (default `edge_tab.launcher`), icon (default `more`)
+    - label (default `edge_tab.launcher`), icon (default `more`: vertical dots; `chevron` (2.45): a chevron pointing
+      left while folded and down while open — 2.46: the kit's own inline SVG whose two arms morph between the two
+      (CSS only, the same markup under every icon set, ux_icon included); any other kit icon name: that icon)
     - class, testid, attr (hash; true = bare attribute, false / null = omitted, on* handlers dropped)
 #}
 {% set _label = label|default('edge_tab.launcher'|trans({}, 'NowoUiKitBundle')) %}
+{% set _icon = icon|default('more') %}
+{% set _chevron = _icon == 'chevron' %}
 {% set _when = when|default('phone') in ['phone', 'always'] ? when|default('phone') : 'never' %}
-{% set _attr %}{% for _name, _value in attr|default({}) %}{% if _value is not same as(false) and _value is not null and not (_name|lower starts with 'on') %} {{ _name|e('html_attr') }}{% if _value is not same as(true) %}="{{ _value }}"{% endif %}{% endif %}{% endfor %}{% endset %}
-<button type="button" class="nowo-ui-edge-tabs-launcher{{ class|default('') ? ' ' ~ class : '' }}" data-nowo-ui-edge-tabs-launcher data-nowo-ui-edge-tabs-when="{{ _when }}"{% if gutter|default(false) %} data-nowo-ui-edge-tabs-gutter{% endif %} aria-expanded="false" aria-label="{{ _label }}" title="{{ _label }}"{% if testid|default('') %} data-testid="{{ testid }}"{% endif %}{{ _attr }}>
-    <span class="nowo-ui-edge-tab__icon" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: icon|default('more'), label: _label}, false)|trim|raw }}</span>
+{% set _attr %}{% for _name, _value in attr|default({})|filter((v, k) => k != 'class') %}{% if _value is not same as(false) and _value is not null and not (_name|lower starts with 'on') %} {{ _name|e('html_attr') }}{% if _value is not same as(true) %}="{{ _value }}"{% endif %}{% endif %}{% endfor %}{% endset %}
+<button type="button" class="nowo-ui-edge-tabs-launcher{{ _chevron ? ' nowo-ui-edge-tabs-launcher--chevron' }}{{ class|default('') ? ' ' ~ class : '' }}{{ (attr.class ?? false) ? ' ' ~ attr.class }}" data-nowo-ui-edge-tabs-launcher data-nowo-ui-edge-tabs-when="{{ _when }}"{% if gutter|default(false) %} data-nowo-ui-edge-tabs-gutter{% endif %} aria-expanded="false" aria-label="{{ _label }}" title="{{ _label }}"{% if testid|default('') %} data-testid="{{ testid }}"{% endif %}{{ _attr }}>
+    <span class="nowo-ui-edge-tab__icon" aria-hidden="true">{% if _chevron %}<svg class="nowo-ui-edge-tabs-chevron" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path class="nowo-ui-edge-tabs-chevron__arm nowo-ui-edge-tabs-chevron__arm--upper" d="M15 6L9 12"/><path class="nowo-ui-edge-tabs-chevron__arm nowo-ui-edge-tabs-chevron__arm--lower" d="M9 12L15 18"/></svg>{% else %}{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _icon, label: _label}, false)|trim|raw }}{% endif %}</span>
 </button>

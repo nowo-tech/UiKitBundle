@@ -81,5 +81,5 @@ Bootstrap.
 
 ## Success criteria
 
-- `ThemingTokensTest` + `UiMacrosTwigTest` green; PHP coverage gate (≥ 99 %) and Vitest gates unchanged.
+- `ThemingTokensTest` + `UiMacrosTwigTest` green; PHP coverage gate (100 %) and Vitest gates unchanged.
 - Beacon can replace its `.kit-admin` colour remaps and Tailwind-utility neutralisers with one `html:root` block.
