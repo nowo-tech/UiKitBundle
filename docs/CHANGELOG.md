@@ -132,6 +132,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 
 - CI, `make coverage-check` and `composer coverage-check`: the PHP line-coverage gate is now **100%** (was 99%). The suite is already at 100%; the gate only stops a regression from merging.
+- CI: the Dependabot asset-rebuild workflow also runs `build:demo-peers`, so an npm bump no longer leaves `demo/symfony8/public/js/demo-peers.js` out of sync (the "built assets are committed" check failed on the vite bump).
 
 ## [2.51.0] - 2026-11-13
 
