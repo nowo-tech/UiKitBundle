@@ -283,10 +283,13 @@ slot (centred, at most `--nowo-ui-auth-panel-width` 28rem, full-width fields), f
 `form_errors` slot (`role="alert"`, only with errors) — a bundle that prints `form_errors(form)` itself drops that call
 or skips the scaffold's: `rootErrors: false`, or `{% set nowo_ui_auth_root_errors = false %}` in its template extending
 `page/auth`. Every form function lives in `page/_auth_form.html.twig`, included only with a form: an
-`AuthPage` without `form` renders without symfony/form.
+`AuthPage` without `form` renders without symfony/form. 2.44: `nowo_ui_kit.auth_panel.brand: none`, or the variable
+`nowo_ui_auth_brand = 'none'` (render variable, template extending `page/auth`, or the guest layout), leaves the panel
+brand region out ([USAGE](USAGE.md#auth-panel-brand-244)).
 
 | Data block | Default | Context |
 | --- | --- | --- |
+| `nowo_ui_auth_brand` *(2.44)* | the panel brand region (appearance lockup, else `page.brand`; nothing with `auth_panel.brand: none` / `nowo_ui_auth_brand = 'none'`) | `page` |
 | `nowo_ui_auth_body` *(2.3)* | the form region: root errors, `nowo_ui_auth_fields`, `nowo_ui_auth_actions` (nothing without `page.form`) | `form`, `page` |
 | `nowo_ui_auth_fields` | child loop of `page.form` | `form`, `page` |
 | `nowo_ui_auth_actions` | submit button (`page.submitLabel`) | `form`, `page` |
@@ -781,6 +784,15 @@ overrides the theme tokens**: both blocks use the same selectors' specificity (`
 `nowo-ui.css`; a host layout calls `{{ nowo_ui_tokens() }}` there too (instead of the two functions).
 
 ### Cascade layers
+
+> **Hosts with no framework at all.** `nowo-ui.css` paints the kit's components, never the document around them: no
+> body font, no page gutter, no masthead height. With `css_framework: custom` / `none` and no host stylesheet those
+> come from nowhere and the page falls back to the browser defaults (a serif body font, edge-to-edge content).
+> Turn on UiKit's opt-in default theme — `nowo_ui_kit.base_stylesheet: true`, which links `nowo-ui-base.css` in
+> `@layer theme.nowo-ui-base`, a nested sub-layer of the first layer above, so it cannot fight a framework or a
+> host theme. (A new top-level layer would be appended at the **end** of an order a host has already fixed, i.e. on
+> top of everything — which is exactly why it nests.)
+> See [THEMING.md — The default theme](THEMING.md#the-default-theme-251).
 
 `nowo-ui.css` ships inside the cascade layer **`nowo-ui`** and starts with the order statement
 `@layer theme, base, nowo-ui, components, utilities;` (Tailwind v4 layer names). Consequences:

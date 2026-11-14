@@ -10,6 +10,8 @@ use Nowo\UiKitBundle\Theme\FontPreload;
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Twig\ErrorPageExtension;
 use Nowo\UiKitBundle\Twig\ThemeExtension;
+use Nowo\UiKitBundle\View\ErrorIllustrationProviderInterface;
+use Psr\Log\LoggerInterface;
 use ReflectionClass;
 use Symfony\Bridge\Twig\Extension\FormExtension;
 use Symfony\Bridge\Twig\Extension\TranslationExtension;
@@ -42,16 +44,18 @@ final class PageContractTwig
     }
 
     /**
-     * @param array<string, string>                                     $templates      extra in-memory templates
-     * @param array<string, mixed>                                      $theme          processed nowo_ui_kit.theme config
+     * @param array<string, string>                                     $templates            extra in-memory templates
+     * @param array<string, mixed>                                      $theme                processed nowo_ui_kit.theme config
      * @param array{admin?: string, guest?: string}                     $layouts
-     * @param array<string, mixed>                                      $errorPages     processed nowo_ui_kit.error_pages (2.6)
-     * @param array<string, array<string, string>>                      $messages       extra catalogues: domain => [id => text] (locale $locale)
-     * @param array<string, mixed>|null                                 $shell          nowo_ui_kit_shell global (2.6; null = not defined)
-     * @param FontPreload|null                                          $fontPreload    font preload tags (2.21)
-     * @param array{presentation: string, compact_actions: string}|null $header         nowo_ui_kit.header (2.27; null = defaults)
-     * @param string                                                    $sidebarLayout  nowo_ui_kit.shell.sidebar_layout (2.32)
-     * @param AppearanceView|null                                       $appearanceView appearance seen by the kit templates (2.40; null = none)
+     * @param array<string, mixed>                                      $errorPages           processed nowo_ui_kit.error_pages (2.6)
+     * @param array<string, array<string, string>>                      $messages             extra catalogues: domain => [id => text] (locale $locale)
+     * @param array<string, mixed>|null                                 $shell                nowo_ui_kit_shell global (2.6; null = not defined)
+     * @param FontPreload|null                                          $fontPreload          font preload tags (2.21)
+     * @param array{presentation: string, compact_actions: string}|null $header               nowo_ui_kit.header (2.27; null = defaults)
+     * @param string                                                    $sidebarLayout        nowo_ui_kit.shell.sidebar_layout (2.32)
+     * @param AppearanceView|null                                       $appearanceView       appearance seen by the kit templates (2.40; null = none)
+     * @param ErrorIllustrationProviderInterface|null                   $illustrationProvider error page illustration provider (2.47)
+     * @param LoggerInterface|null                                      $logger               logger of the error page extension (2.47)
      */
     public static function create(
         array $templates = [],
@@ -70,6 +74,8 @@ final class PageContractTwig
         string $sidebarLayout = 'below-header',
         ?RemoteDialogHeaders $remoteDialogHeaders = null,
         ?AppearanceView $appearanceView = null,
+        ?ErrorIllustrationProviderInterface $illustrationProvider = null,
+        ?LoggerInterface $logger = null,
     ): Environment {
         $views = self::root().'/src/Resources/views';
         $fs = new FilesystemLoader();
@@ -111,7 +117,7 @@ final class PageContractTwig
             remoteDialogHeaders: $remoteDialogHeaders,
             appearanceView: $appearanceView ?? new AppearanceView(),
         ));
-        $twig->addExtension(new ErrorPageExtension($errorPages, $translator, $requestStack));
+        $twig->addExtension(new ErrorPageExtension($errorPages, $translator, $requestStack, $illustrationProvider, $logger));
         if (null !== $shell) {
             $twig->addGlobal('nowo_ui_kit_shell', $shell);
         }

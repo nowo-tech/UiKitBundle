@@ -55,6 +55,8 @@ Beacon-style design system:
 nowo_ui_kit:
     css_framework: custom
     icon_set: ux_icon
+    # With no framework AND no design-system stylesheet of your own, add `base_stylesheet: true` so the document
+    # itself (body font, page gutters, masthead height) is painted: THEMING.md#the-default-theme-251.
 ```
 
 ## Override vs tokens

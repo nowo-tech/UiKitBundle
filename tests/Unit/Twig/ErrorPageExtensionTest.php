@@ -7,9 +7,12 @@ namespace Nowo\UiKitBundle\Tests\Unit\Twig;
 use InvalidArgumentException;
 use Nowo\UiKitBundle\Twig\ErrorPageExtension;
 use Nowo\UiKitBundle\View\ErrorIllustration;
+use Nowo\UiKitBundle\View\ErrorIllustrationProviderInterface;
 use Nowo\UiKitBundle\View\ErrorPage;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
+use stdClass;
 use Symfony\Component\ErrorHandler\Exception\FlattenException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -187,6 +190,52 @@ final class ErrorPageExtensionTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('width and height must be positive');
         new ErrorIllustration('a', 0, 10);
+    }
+
+    public function testProviderWithoutRequestStackOrLogger(): void
+    {
+        $provider = new class implements ErrorIllustrationProviderInterface {
+            public int $calls = 0;
+
+            public function getIllustration(int $statusCode): ?ErrorIllustration
+            {
+                ++$this->calls;
+                usleep(3_000);
+
+                return 0 === $statusCode ? null : ErrorIllustration::fromUrl('/e/'.$statusCode.'.png', 4, 3);
+            }
+        };
+        $ext = new ErrorPageExtension(['illustration_provider_budget_ms' => 1, 'illustrations' => ['default' => ['path' => 'illustrations/error']]], null, null, $provider);
+
+        self::assertSame('/e/404.png', $ext->page(404)->illustration?->src, 'over budget, no request: the answer is used');
+        self::assertSame('/e/500.png', $ext->page('500')->illustration?->src, 'no request to flag: asked again');
+        self::assertSame('illustrations/error', $ext->page(null)->illustration?->path, 'null → map default');
+        self::assertSame(3, $provider->calls);
+    }
+
+    public function testLazyProviderIsResolvedInsideTheGuard(): void
+    {
+        $map = ['illustrations' => ['default' => ['path' => 'illustrations/error']]];
+        $builds = 0;
+        $throwing = new ErrorPageExtension($map, null, null, static function () use (&$builds): ErrorIllustrationProviderInterface {
+            ++$builds;
+
+            throw new RuntimeException('SQLSTATE[HY000] [2002] Connection refused');
+        });
+        self::assertSame(0, $builds, 'nothing is built with the extension (LK-L1)');
+        self::assertSame('illustrations/error', $throwing->page(404)->illustration?->path);
+        self::assertSame(1, $builds);
+
+        $notAProvider = new ErrorPageExtension($map, null, null, static fn (): stdClass => new stdClass());
+        self::assertSame('illustrations/error', $notAProvider->page(500)->illustration?->path);
+
+        $lazy = new ErrorPageExtension($map, null, null, static fn (): ErrorIllustrationProviderInterface => new class implements ErrorIllustrationProviderInterface {
+            public function getIllustration(int $statusCode): ErrorIllustration
+            {
+                return ErrorIllustration::fromUrl('/lazy.png', 2, 2);
+            }
+        });
+        self::assertSame('/lazy.png', $lazy->page(404)->illustration?->src);
     }
 
     private function stack(Request $request): RequestStack

@@ -9,6 +9,7 @@ two token blocks of `nowo-ui.css`. A host theme is a short `:root` block.
 ## Table of contents
 
 - [How it works](#how-it-works)
+- [The default theme (2.51)](#the-default-theme-251)
 - [Writing a host theme](#writing-a-host-theme)
 - [Base tokens](#base-tokens)
 - [Typography, focus, links](#typography-focus-links)
@@ -32,6 +33,7 @@ two token blocks of `nowo-ui.css`. A host theme is a short `:root` block.
 - [Phone mode (2.41)](#phone-mode-241)
 - [Default-theme polish tokens (2.2)](#default-theme-polish-tokens-22)
 - [Layout and metrics tokens](#layout-and-metrics-tokens)
+- [Reading column, rail and wide content (2.48)](#reading-column-rail-and-wide-content-248)
 - [CSS framework notes](#css-framework-notes)
 - [Example: generic brand](#example-generic-brand)
 - [Example: Symfony Beacon (moss / sand)](#example-symfony-beacon-moss--sand)
@@ -53,6 +55,67 @@ two token blocks of `nowo-ui.css`. A host theme is a short `:root` block.
     where they are used, so a scoped `--nowo-ui-primary` also recolours hover states, focus rings, etc.;
   - dark mode keeps working: the fallbacks follow the dark base tokens.
 - The *Default* column below is that fallback chain.
+
+## The default theme (2.51)
+
+`nowo-ui.css` paints UiKit's **components** — tables, buttons, cards, flashes, the shell — but nothing about the
+**document** they sit in. It sets no `font-family` on `<body>`, no page gutter and no height for a masthead
+`.nowo-ui-header` used outside the kit shell. That is deliberate for a host that brings a CSS framework (Bootstrap
+in the `base` layer, Tailwind's preflight) or its own theme file: those already paint the document, and the kit
+must not fight them.
+
+A host that brings **neither** — `css_framework: custom` or `none` with no stylesheet of its own — got the browser
+defaults instead: a **serif** body font, content flush against the window edges, and a masthead one line tall.
+
+`nowo-ui-base.css` is that missing document base. Turn it on:
+
+```yaml
+nowo_ui_kit:
+    base_stylesheet: true
+```
+
+`@NowoUiKit/layout/document.html.twig` (so the admin, guest and error layouts) then links it **before**
+`nowo-ui.css`. It gives you:
+
+- a system sans-serif stack on `<body>` (`--nowo-ui-font-family`), inherited by form controls;
+- `box-sizing: border-box`, heading sizes / weights (`--nowo-ui-heading-weight`), prose and list margins, link colour;
+- page gutters on the content region: `max-width: var(--nowo-ui-content-max-width, 72rem)`, centred, with
+  `var(--nowo-ui-page-gutter, 1.25rem)` of inline padding (the guest page keeps its own narrow card layout);
+- the shell's header height on a masthead `.nowo-ui-header`, with its contents lined up with the page gutter
+  through `--nowo-ui-header-padding-inline`.
+
+Everything it paints reads a `--nowo-ui-*` token, so `theme.tokens`, the appearance SPI and the dark defaults all
+follow without an override here.
+
+**It is off by default**, because turning it on for every existing host would be a visual change they did not ask
+for. Turn it on when UiKit's layouts are your whole front end; leave it off when a framework or your own theme file
+already paints the document.
+
+### Why it cannot fight your theme
+
+Every rule lives in a **nested sub-layer** of the first layer of UiKit's canonical order:
+
+```css
+@layer theme, base, nowo-ui, components, utilities;   /* the same statement nowo-ui.css makes */
+
+@layer theme.nowo-ui-base { /* … */ }
+```
+
+so it sits below `base`, `nowo-ui`, `components` and `utilities`, and below anything the host writes in `theme`
+itself (rules written directly in a layer come after that layer's sub-layers). A framework in the `base` layer,
+UiKit's own `nowo-ui` layer, host utilities placed in theme slots and **all unlayered host CSS** beat it, whatever
+their specificity or load order (see [PAGE_CONTRACT.md#cascade-layers](PAGE_CONTRACT.md#cascade-layers)). It never
+uses `!important`. In practice it only paints what nothing else paints, which is why it is safe to leave on even
+next to a framework.
+
+It has to be a sub-layer rather than a new top-level one. The layer order is fixed by the **first** stylesheet that
+names the layers, and a later statement can only **append** names that order does not contain — at the end, i.e. on
+top of everything. A top-level `nowo-ui-base` layer would therefore outrank the framework on exactly the hosts that
+declare the order themselves (a Bootstrap CDN host, a Tailwind v4 host). Nesting inside `theme` introduces no new
+name, so there is nothing to append and nothing to get wrong.
+
+Hosts that link `nowo-ui.unlayered.css` (their framework is unlayered, so the kit must beat it) do not need this
+file: they already have a framework. There is no unlayered twin.
 
 ## Writing a host theme
 
@@ -108,9 +171,13 @@ Declared in `nowo-ui.css` (light on `:root`, dark on `[data-theme="dark"]`).
 
 | Token | Default | Used by |
 |-------|---------|---------|
-| `--nowo-ui-font-family` | `inherit` | `.nowo-ui-shell` |
+| `--nowo-ui-font-family` | `inherit` | `.nowo-ui-shell`; `<body>` with the default theme (`nowo-ui-base.css`), where the fallback is a system sans-serif stack |
 | `--nowo-ui-font-display` | `inherit` | page header title, card title, modal / confirm title, brand text |
-| `--nowo-ui-heading-weight` | `700` | page header title |
+| `--nowo-ui-heading-weight` | `700` | page header title (`600` for `h1`–`h6` with the default theme) |
+| `--nowo-ui-header-padding-inline` *(2.51)* | `1rem` | `.nowo-ui-header` inline padding; the default theme sets it so a masthead lines up with the page gutter |
+| `--nowo-ui-page-gutter` *(2.51)* | `1.25rem` | page gutter of `.nowo-ui-content` and the masthead, with the default theme |
+| `--nowo-ui-font-size` *(2.51)* | `1rem` | `<body>` with the default theme |
+| `--nowo-ui-line-height` *(2.51)* | `1.5` | `<body>` with the default theme |
 | `--nowo-ui-focus-ring-color` | `color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent)` | `:focus-visible` outline on buttons, links, tabs, pagination, toggles, menus, checkboxes |
 | `--nowo-ui-focus-ring` | `0 0 0 0.2rem var(--nowo-ui-focus-ring-color)` | `box-shadow` of focused inputs (and Bootstrap controls with the bridge) |
 | `--nowo-ui-link` | `var(--nowo-ui-primary)` | `.nowo-ui-link`, `.nowo-ui-btn--link` |
@@ -283,6 +350,13 @@ minmax(min(100%, var(--nowo-ui-filters-field-min, 12rem)), 1fr)))`.
 | `--nowo-ui-emoji-picker-width` | `20rem` (`emoji_picker` panel; never wider than the screen) |
 | `--nowo-ui-emoji-picker-height` | `14rem` (the grid, which scrolls past it) |
 | `--nowo-ui-emoji-picker-z` | `var(--nowo-ui-z-popover, 1080)` (the panel without the Popover API; with it, the top layer; [Layers](#layers-public-api-228)) |
+| `--nowo-ui-image-crop-mask` | `rgb(15 23 42 / 60%)` (2.43: the dimmed image around the crop frame; read by the script on every draw) |
+| `--nowo-ui-image-crop-frame` | `rgb(255 255 255 / 95%)` (the frame line) |
+| `--nowo-ui-image-crop-width` | `32rem` (the crop dialog; never wider than the screen) |
+| `--nowo-ui-image-input-size` | `12rem` (2.47: the image input box — widest edge of the preview; the box is never wider than its column) |
+| `--nowo-ui-image-input-backdrop-light` | `rgb(255 255 255)` (behind transparent art with `backdrop: light`) |
+| `--nowo-ui-image-input-backdrop-dark` | `rgb(17 24 39)` (behind transparent art with `backdrop: dark`) |
+| `--nowo-ui-image-input-checker` | `color-mix(in srgb, var(--nowo-ui-text) 10%, var(--nowo-ui-surface))` (the dark squares of `backdrop: checkerboard`, light and dark mode) |
 | `--nowo-ui-sortable-drop-bg` | `color-mix(in srgb, var(--nowo-ui-primary) 10%, transparent)` (`sortable` placeholder) |
 | `--nowo-ui-sortable-drop-line` | `var(--nowo-ui-primary)` (placeholder border; outline of the list under the pointer) |
 | `--nowo-ui-sortable-ghost-shadow` | `0 0.5rem 1.5rem rgb(0 0 0 / 25%)` (the copy following the pointer) |
@@ -487,7 +561,12 @@ Opt-in chrome ([USAGE.md — Host chrome](USAGE.md#host-chrome-117-opt-in)); not
 | `--nowo-ui-corner-tab-accent` | `var(--nowo-ui-primary)` | corner tab text; border 35 % / background 10 % (hover 18 %) of it mixed with `--nowo-ui-border` / `--nowo-ui-surface` |
 | `--nowo-ui-border-width` | `1px` | corner and edge tab borders (also emitted by the appearance SPI) |
 | `--nowo-ui-edge-tab-top` | `calc(var(--nowo-ui-header-height, 3.5rem) + 0.75rem)` | `.nowo-ui-edge-tab__link` top of slot 0 |
-| `--nowo-ui-edge-tab-step` | `3.25rem` | offset per `slot` |
+| `--nowo-ui-edge-tab-width` | `2.25rem` | width of every edge tab and of the edge tabs launcher (2.45) |
+| `--nowo-ui-edge-tab-height` | `2.75rem` | height of every edge tab and of the launcher (2.45) |
+| `--nowo-ui-edge-tab-hover-width` | `2.6rem` | width on hover, tabs and launcher (2.45; the launcher widens like the tabs since 2.45) |
+| `--nowo-ui-edge-tab-icon` | `1.15rem` | icon size (font-size and icon box) of the tabs and the launcher (2.45) |
+| `--nowo-ui-edge-tab-gap` | `0.5rem` | space between stacked tabs, and between the open launcher and its first tab (2.45) |
+| `--nowo-ui-edge-tab-step` | `calc(var(--nowo-ui-edge-tab-height) + var(--nowo-ui-edge-tab-gap))` = `3.25rem` | offset per `slot`; set the height (and the gap) rather than the step so the launcher keeps the same gap |
 | `--nowo-ui-edge-tab-slot` | `0` | set by `data-nowo-ui-edge-tab-slot` (1–3); a number, multiplied by the step |
 | `--nowo-ui-edge-tab-z` | `74` | edge tab z-index ([Layers](#layers-public-api-228), public API since 2.28) |
 | `--nowo-ui-scrollbar-size` | `6px` | thin scrollbars (`.nowo-ui-thin-scroll`, `html[data-nowo-ui-thin-scrollbars]`) |
@@ -506,7 +585,17 @@ From Beacon's mobile UX audit (2026-11-09, 390 px, iPhone / WebKit).
 | `--nowo-ui-control-size-touch` | `2.75rem` (44px) under `pointer: coarse`, unset elsewhere | minimum height of icon buttons, tabs, pagination links, sort headers, row detail buttons, the burger (and minimum width of the square ones); `0px` opts out |
 | `--nowo-ui-font-size-min` | `0.75rem` | floor of badges and the kit's meta labels on phones (up to 40rem) and touch screens; other bundles read it for their meta text |
 | `--nowo-ui-select-chevron-gutter` | `2rem` (`1.75rem` on the pagination select) | end padding of `.nowo-ui-select` / kit selects, where the `currentColor` chevron sits |
-| `--nowo-ui-edge-tabs-gutter` | `2.25rem` while the edge tabs are folded with `gutter`, else unset | right padding added to `.nowo-ui-main`; read it with `var(--nowo-ui-edge-tabs-gutter, 0px)` in a host container |
+| `--nowo-ui-edge-tabs-gutter` | `var(--nowo-ui-edge-tab-width, 2.25rem)` while the edge tabs are folded with `gutter`, else unset | right padding added to `.nowo-ui-main`; read it with `var(--nowo-ui-edge-tabs-gutter, 0px)` in a host container |
+| `--nowo-ui-edge-tabs-stagger` | `30ms` | delay between two tabs while they unfold / fold (2.45); 2.46: default of `--nowo-ui-edge-tabs-motion-stagger` |
+| `--nowo-ui-edge-tabs-motion-stagger` | `var(--nowo-ui-edge-tabs-stagger, 30ms)` | delay per tab of the unfold / fold (2.46) |
+| `--nowo-ui-edge-tabs-motion-duration` | `260ms` | unfold / fold duration per tab (2.46; 2.45: `--nowo-ui-motion-medium`) |
+| `--nowo-ui-edge-tabs-motion-easing` | `cubic-bezier(0.22, 1, 0.36, 1)` | unfold curve (2.46; 2.45: `--nowo-ui-motion-ease-out`) |
+| `--nowo-ui-edge-tabs-motion-close-easing` | `var(--nowo-ui-motion-ease-in, ease-in)` | fold curve (2.46) |
+| `--nowo-ui-edge-tabs-motion-scale` | `0.96` | start scale of an unfolding tab (2.46; `1` = the 2.45 look) |
+| `--nowo-ui-edge-tabs-icon-duration` | `240ms` | `icon: 'chevron'` morph (or turn) duration (2.46) |
+| `--nowo-ui-edge-tabs-icon-easing` | `cubic-bezier(0.34, 1.56, 0.64, 1)` | chevron morph curve, slight overshoot (2.46) |
+| `--nowo-ui-edge-tabs-launcher-gap` | `0` | extra gap between the launcher and the first unfolded tab (added to every unfolded tab's `top`; e.g. `0.5rem`); nothing changes at the default |
+| `--nowo-ui-edge-tabs-order` | set by `js/nowo-ui-edge-tabs.js` per tab | position of a tab in the unfold / fold sequence (multiplied by the stagger); not a host token |
 
 Select geometry: `.nowo-ui-select` (opt-in on any `<select>`), `select.nowo-ui-input` and the pagination select use
 `appearance: none`, line-height 1.25 and the gradient chevron. Use `background-color`, not the `background` shorthand,
@@ -588,6 +677,32 @@ App shell tokens added in 2.32: `--nowo-ui-aside-peek-width`, `--nowo-ui-aside-b
 
 Since 2.11 `--nowo-ui-control-height` also sets the minimum height of `.nowo-ui-btn` and `.nowo-ui-input` (it used
 to feed the filter rows only). See [Density tokens](#density-tokens-211) for the per-component metrics.
+
+<a id="reading-column-rail-and-wide-content-248"></a>
+
+## Reading column, rail and wide content (2.48)
+
+| Token | Default |
+|-------|---------|
+| `--nowo-ui-reading-width` | `75ch` (declared on `:root`; the maximum width of `.nowo-ui-readable`, a centred reading column) |
+| `--nowo-ui-rail-width` | `2.75rem` (not declared: the width of a column collapsed by the `rail_toggle` partial, `[data-nowo-ui-rail-host][data-nowo-ui-rail="collapsed"]`) |
+| `--nowo-ui-rail-toggle-flip` | `1` / `-1` (internal: the chevron direction of the rail toggle, from its side, the state and the text direction; do not set it) |
+
+Helpers, all at zero specificity (`:where`), so host rules win:
+
+- `.nowo-ui-readable`: `max-inline-size: var(--nowo-ui-reading-width, 75ch)`, centred, full width below it.
+- `[data-nowo-ui-scroll-region]`: `max-inline-size: 100%; overflow-x: auto` (CSS for the attribute that
+  `js/nowo-ui-scroll-region.js` makes focusable while it overflows).
+- Rendered content (`.nowo-ui-rendered-content` or `[data-nowo-ui-rendered-content]`): its `pre` scroll sideways, and
+  its `table` become `display: block; inline-size: max-content; max-inline-size: 100%; overflow-x: auto` (a table
+  narrower than the column keeps its content width).
+- Nothing inside an editable area (`[contenteditable]` other than `"false"`) gets these rules: the editor owns its
+  layout.
+- `.nowo-ui-grid-fit`: a one-column grid (`minmax(0, 1fr)`) whose children have `min-inline-size: 0`, so a long code
+  line or a wide table cannot widen the card or the page; set `grid-template-columns` yourself for more columns.
+
+The side panel's drawer breakpoint (`drawer_below: lg | xl`) has no token: it is a media query (1199 / 1439 px), the
+same list `js/nowo-ui-side-panel.js` uses.
 
 <a id="density-tokens-211"></a>
 
@@ -882,7 +997,8 @@ Corner, border and footer stay from `defaults`; a brand provider that throws is 
   dark logo). The kit CSS hides the image of the other `[data-theme]` (no script). In the icons-only rail the mark
   shows instead (class `nowo-ui-aside-brand__icon--rail`; the name's initial without a mark).
 - Auth scaffold: the panel brand prints the lockup (alt = `page.brand`, else the appearance name); without logos,
-  `page.brand` as text as before.
+  `page.brand` as text as before. 2.44: `nowo_ui_kit.auth_panel.brand: none` (or `nowo_ui_auth_brand = 'none'`) leaves
+  the region out ([CONFIGURATION](CONFIGURATION.md#auth-panel-244)).
 - Guest layout (block `nowo_ui_guest_brand`, emptied by the auth scaffold) and error layout (block
   `nowo_ui_error_brand`, top of `<main>`): `<div class="nowo-ui-brand-region nowo-ui-brand-region--guest|error"
   data-nowo-ui-region="brand">` with the lockup, only when there is one. The error layout reads the appearance through

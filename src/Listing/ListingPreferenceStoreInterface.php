@@ -17,6 +17,11 @@ use Symfony\Component\HttpFoundation\Request;
  * table: the peers then send the layout there (validate it with {@see ListingLayoutMerger::normalizeLayout()}).
  *
  * Implementations must be stateless between requests (FrankenPHP worker): read from `$request` only.
+ *
+ * @deprecated since 2.49, implement {@see ListingPreferenceReaderInterface} (takes a framework-free
+ *             {@see ListingContext}, REQ-ARCH-001 rule 3) and alias that interface instead; removed in 3.0. A store
+ *             that implements only this interface still works (the builder passes the request) and triggers a
+ *             deprecation notice.
  */
 interface ListingPreferenceStoreInterface
 {

@@ -24,6 +24,7 @@
   2.39 (UI-6), presentation `inline` | `no_intro` | `no_title` | `no_header`: passed on as `presentation`; `no_intro` and
   `no_header` pass `intro: null`, `no_title` and `no_header` pass `title_hidden: true` (breadcrumbs, back link, actions
   and tabs stay; nothing moves to the top bar).
+  2.48, tabs_inline (only `true`): passed on to the partial; with header.tabs, the tabs and the actions share one row.
 #}
 {% set _b = bundle|default(nowo_ui_bundle|default(null)) %}
 {% set _pt = nowo_ui_page_type|default(null) %}
@@ -57,4 +58,5 @@
     nowo_ui_page_type: _pt,
     presentation: _presentation,
     title_hidden: _hide_title,
+    tabs_inline: (tabs_inline ?? false) is same as(true),
 }, false) }}

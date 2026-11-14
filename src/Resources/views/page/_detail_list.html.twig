@@ -18,9 +18,9 @@
 {% set _modifier = modifier|default(null) %}
 <dl class="{{ nowo_ui_class('detail_list', bundle) }}{{ _modifier in ['meta', 'facts'] ? ' ' ~ nowo_ui_class('detail_list_' ~ _modifier, bundle) : (_modifier ? ' nowo-ui-detail-list--' ~ _modifier) }}"{{ nowo_ui_attrs('detail_list', bundle) }}{{ _modifier in ['meta', 'facts'] ? nowo_ui_attrs('detail_list_' ~ _modifier, bundle) }}>
     {% for item in items %}
-        <div class="{{ nowo_ui_class('detail_item', bundle) }}"{{ nowo_ui_html_attrs(item.attributes ?? {}) }}>
+        <div class="{{ nowo_ui_class('detail_item', bundle) }}{{ (item.attributes.class ?? false) ? ' ' ~ item.attributes.class }}"{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(item.attributes ?? {})) }}>
             <dt class="{{ nowo_ui_class('detail_term', bundle) }}">{{ item.label|nowo_ui_trans }}</dt>
-            <dd class="{{ nowo_ui_class('detail_value', bundle) }}"{{ nowo_ui_html_attrs(item.valueAttributes ?? {}) }}>
+            <dd class="{{ nowo_ui_class('detail_value', bundle) }}{{ (item.valueAttributes.class ?? false) ? ' ' ~ item.valueAttributes.class }}"{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(item.valueAttributes ?? {})) }}>
                 {%- set _blank = item.value is same as(false) or item.value is null or item.value is same as('') -%}
                 {%- set _value = item.value is same as(true) ? '✓' : (_blank ? '—' : item.value|nowo_ui_trans) -%}
                 {%- if _blank %}{% set _value %}<span class="{{ nowo_ui_class('muted', bundle) }}">—</span>{% endset %}{% elseif item.badge ?? null %}{% set _value %}<span class="{{ nowo_ui_class('badge_' ~ item.badge, bundle) }}"{{ nowo_ui_attrs('badge_' ~ item.badge, bundle) }}>{{ _value }}</span>{% endset %}{% endif -%}

@@ -115,7 +115,7 @@
             {% elseif tag == 'button' %}
                 <button
                     type="button"
-                    class="{{ class }}"
+                    class="{{ class }}{{ (action.attr.class ?? false) ? ' ' ~ action.attr.class }}"
                     title="{{ label }}"
                     aria-label="{{ label }}"
                     {% if disabled %}disabled{% endif %}
@@ -128,7 +128,7 @@
                         {{ ui.modal_target_attr(action.modal_id, framework) }}
                     {% endif %}
                     {% if action.attr is defined %}
-                        {% for name, value in action.attr %}{{ name }}="{{ value }}" {% endfor %}
+                        {% for name, value in action.attr|filter((v, k) => k != 'class') %}{{ name }}="{{ value }}" {% endfor %}
                     {% endif %}
                 >
                     {{ include('@NowoUiKitBundle/partials/_action_inner.html.twig', {
@@ -139,7 +139,7 @@
                 </button>
             {% else %}
                 <a
-                    class="{{ class }}{% if disabled %} is-disabled{% endif %}"
+                    class="{{ class }}{% if disabled %} is-disabled{% endif %}{{ (action.attr.class ?? false) ? ' ' ~ action.attr.class }}"
                     href="{{ action.href|default('#') }}"
                     title="{{ label }}"
                     aria-label="{{ label }}"
@@ -153,7 +153,7 @@
                         {{ ui.modal_target_attr(action.modal_id, framework) }}
                     {% endif %}
                     {% if action.attr is defined %}
-                        {% for name, value in action.attr %}{{ name }}="{{ value }}" {% endfor %}
+                        {% for name, value in action.attr|filter((v, k) => k != 'class') %}{{ name }}="{{ value }}" {% endfor %}
                     {% endif %}
                 >
                     {{ include('@NowoUiKitBundle/partials/_action_inner.html.twig', {

@@ -31,7 +31,7 @@ If you discover a security-related issue, please report it privately (e.g. by em
 | **Twig macros / partials** | Labels, hrefs, and optional HTML fragments passed by the host app |
 | **Configuration** | `nowo_ui_kit.css_framework` / `icon_set` / `row_actions_display` (compile-time enums); optional `release_check` (repo + version strings) |
 | **Release check (opt-in)** | Public `GET /_nowo-ui/release/status` (only when the host imports the route; 404 while disabled) + outbound `GET https://api.github.com/repos/{owner}/{name}/releases[/latest]` (fixed host, `owner/name` regex, 5–8 s timeout, no redirects, cached) |
-| **Frontend JS** | IIFEs: `nowo-ui-modal.js`, `nowo-ui-shell.js`, `nowo-ui-toast.js`, `nowo-ui-confirm.js`, `nowo-ui-page-loader.js`, `nowo-ui-theme.js`, `nowo-ui-orb.js`, `nowo-ui-clipboard.js`, `nowo-ui-tabs.js`, `nowo-ui-release.js`, `nowo-ui-dialog.js`, `nowo-ui-overlay.js`, `nowo-ui-side-panel.js`, `nowo-ui-sortable.js`, `nowo-ui-emoji-picker.js`, `nowo-ui-show-more.js` (DOM / canvas; clipboard, release and the dialog may `fetch` same-origin URLs; 2.28: the remote form dialog posts host forms back with `fetch`) |
+| **Frontend JS** | IIFEs: `nowo-ui-modal.js`, `nowo-ui-shell.js`, `nowo-ui-toast.js`, `nowo-ui-confirm.js`, `nowo-ui-page-loader.js`, `nowo-ui-theme.js`, `nowo-ui-orb.js`, `nowo-ui-clipboard.js`, `nowo-ui-tabs.js`, `nowo-ui-release.js`, `nowo-ui-dialog.js`, `nowo-ui-overlay.js`, `nowo-ui-side-panel.js`, `nowo-ui-sortable.js`, `nowo-ui-emoji-picker.js`, `nowo-ui-show-more.js`, `nowo-ui-image-crop.js`, `nowo-ui-image-input.js`, `nowo-ui-rail.js`, `nowo-ui-layout-state.js` (DOM / canvas; 2.43: the image crop reads the picked file locally, sends nothing and only replaces the input's file; 2.47: the image input previews the picked or dropped file through an object URL, sends nothing and revokes its URLs; 2.48: the rail may POST its collapsed state to a host-given URL with the host's CSRF header, only when that URL is on the page's own origin (checked before `fetch`, `mode: 'same-origin'`; audit LV-I3), and the rail / side panel / layout-state scripts read and write only their own `nowo-ui-panel:*` / `nowo-ui-rail:*` localStorage keys; clipboard, release and the dialog may `fetch` same-origin URLs; 2.28: the remote form dialog posts host forms back with `fetch`) |
 | **Remote form dialog (2.28)** | Request header `X-Nowo-Dialog`, response header `X-Nowo-Redirect`, `RemoteDialogResponder`, opt-in `RemoteDialogRedirectListener` |
 | **Remote dialog steps (2.33)** | Response header `X-Nowo-Dialog-Location`, opt-in `remote_dialog.step_routes`, `RemoteDialogRedirectEvent`, configurable names `remote_dialog.{request,redirect,location}_header`; each step load is one more fragment insertion |
 | **Plain remote dialog content (2.2)** | `data-nowo-ui-dialog-src` (`Action::$dialogId` + `href`): a same-origin fragment fetched into a `<dialog>` |
@@ -143,8 +143,8 @@ The bundle does **not** expose CLI commands that mutate production data, file up
 
 | Field | Value |
 | ----- | ----- |
-| **Date** | 2026-11-06 |
-| **Method** | Independent audit Appendix GT: code read and browser PoC in three engines, re-verified 2026-11-06, 2.33.1 fixes included; Appendix HG for 2.34.0 |
+| **Date** | 2026-11-06 (2.33 to 2.36); later releases below, latest 2026-11-11 |
+| **Method** | Independent audit Appendix GT: code read and browser PoC in three engines, re-verified 2026-11-06, 2.33.1 fixes included; Appendix HG for 2.34.0; Appendices LV, ME and MR for 2.48.0, 2.48.1 and 2.49.0 |
 | **Overall risk** | **Low** |
 | **Grade** | **Pass (good)** |
 | **Open residuals** | Host must not feed UGC into `|raw` slots; embedders must apply their own `access_control` around admin chrome; other-origin frames, forms and subresources are left to the host's CSP |
@@ -168,6 +168,10 @@ Unreleased (dialog back button, `emoji_picker`, `show_more`): independent audit 
 Unreleased (2.41.1, edge tabs launcher JC-L1 / JC-I12 / JC-I15): **audited (batch Appendix JD, Pass)**. The runtime adds one capture `close` listener on the document; after a dialog closes it only moves the focus to the launcher when the focus is lost and the last tab used from the fold is not rendered. It sets `id` (generated, only on tabs without one) and `aria-controls` on the launcher; no data read, no HTML parsed, Tab still never captured. The fold CSS now also requires a launcher without `hidden`.
 
 Unreleased (motion tokens): batch audit Appendix HW (2026-11-07), on `f38b4f4`: Medium. HW-M1 and HW-M2 fixed at `6bc7750`; HW-L7 fixed and HW-L9 documented at `f5bf641`; delta audit: **Pass (good)**. HW-L1 and HW-L2 accepted and documented, HW-L3 fixed for menus. Open: HW-L8 and HW-L9 (Low), and HW-L10 (Low, older).
+
+Unreleased (2.48.0, Wiki page layout: side panel `drawer_below` / `persist`, `rail_toggle`, layout-state script): independent audit Appendix LV (2026-11-11), on `ed5365c`: **Pass-Low**. Fixed before the tag: LV-L1 (`rail_toggle` `attr` through `nowo_ui_safe_attrs()` with its own attributes reserved; `href` and `state_url` through `nowo_ui_safe_href()`), LV-L2 (a server-open `lg` / `xl` panel starts closed under its breakpoint instead of a modal drawer on load), LV-I1, LV-I2, LV-I3 (the rail store POST and its CSRF header go only to the page's own origin) and LV-I6. Open (Info, documented): LV-I4 (localStorage layout keys are per browser, not per user; UI state only), LV-I5 (put the rail toggle first in its host), LV-I7 (`display: block` tables in rendered content; prefer a scroll-region wrapper).
+
+Since 2.48.0 (monorepo `BUNDLES_SECURITY_ANALYSIS.md`): 2.48.0 independent audit Appendix LV (2026-11-11), **Pass-Low** on `ed5365c`, delta on `2f676f4` **Pass**; LV-L1 and LV-L2 fixed. 2.48.1 (page loader ignores a cancelled link click) Appendix ME (2026-11-11), **Pass / Low**, ME-U-L1 documented. 2.49.0 (framework-free listing and redirect-event ports) Appendix MR (2026-11-11): MR-U-L1 (only `nowo_ui_listing_*` cookies are copied) and MR-U-L2 (a null `viewerId` fails closed) fixed, no markup change, no open redirect. 2.49.1 changes CSS and tests only.
 
 ## Secrets and cryptography
 

@@ -1,42 +1,42 @@
 {#
-  Default-theme view of the page contract demo: UiKit's own admin layout with Bootstrap and nowo-ui.css only — no
-  host tokens, no host stylesheet. Used as the per-page layout override (ListPage(layout: …)) together with the
-  DemoDefaultTheme per-bundle exception that resets the host class map and partial.
+  Default-theme view of the page contract demo (REQ-DEMO-014): UiKit's own admin layout with UiKit's assets only —
+  no CSS framework, no host tokens, no host stylesheet, nothing hand-written here. Used as the per-page layout
+  override (ListPage(layout: …)) together with the DemoDefaultTheme per-bundle exception that resets the host class
+  map and partial.
+
+  Everything the document needs around the components — body font stack, page gutters, masthead height — comes from
+  nowo-ui-base.css, UiKit's opt-in default theme, linked below. (A real host turns it on once with
+  `nowo_ui_kit.base_stylesheet: true` and the UiKit layouts link it; this layout links it by hand because the rest
+  of this demo app deliberately keeps Bootstrap.) This page is the proof that a host with no theme of its own is
+  presentable out of the box.
 #}
 {% extends '@NowoUiKit/layout/admin.html.twig' %}
 
 {% block nowo_ui_styles %}
-    {#- UiKit 2.0 ships nowo-ui.css in @layer nowo-ui: a CDN framework goes into the base layer (below the kit, as the
-        1.x load order did) and the layer order is declared first (PAGE_CONTRACT.md#cascade-layers). -#}
-    <style>@layer theme, base, nowo-ui, components, utilities; @import url("https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css") layer(base);</style>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    {#- UiKit's own two stylesheets and nothing else: the opt-in default theme (nowo_ui_kit.base_stylesheet) under
+        the components. nowo_ui_tokens() is deliberately NOT called — these pages show UiKit's own palette, not the
+        demo host's tokens. -#}
+    <link rel="stylesheet" href="{{ asset('css/nowo-ui-base.css', 'nowo_ui_kit') }}">
     <link rel="stylesheet" href="{{ asset('css/nowo-ui.css', 'nowo_ui_kit') }}">
-    <style>
-        .nowo-ui-page--admin > .nowo-ui-content { max-width: 72rem; margin: 0 auto; padding: 1.5rem; }
-        .demo-masthead { border-bottom: 1px solid var(--bs-border-color); background: var(--bs-body-bg); }
-        .demo-masthead .container-xl { max-width: 72rem; }
-    </style>
+    {#- Icons only: UiKit ships no icon font, and this demo runs with icon_set: bootstrap-icons. -#}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 {% endblock %}
 
-{#- Masthead (demo host chrome, not UiKit markup): brand + main navigation with the active item, like a real host
-    header. The page content below is UiKit's default theme. -#}
+{#- Masthead: UiKit's own header / brand / nav classes, no framework markup (REQ-DEMO-014 rule 2). -#}
 {% block nowo_ui_navigation %}
     {% set _route = app.request.attributes.get('_route') %}
-    <header class="demo-masthead">
-        <nav class="navbar navbar-expand container-xl px-4" aria-label="Main">
-            <a class="navbar-brand fw-semibold" href="{{ path('page_contract_default_index', {theme: 'default'}) }}">Acme Admin</a>
-            <ul class="navbar-nav me-auto">
-                {% for item in [
-                    {route: 'page_contract_default_dashboard', label: 'Dashboard'},
-                    {route: 'page_contract_default_orders', label: 'Orders'},
-                    {route: 'page_contract_default_wizard', label: 'Onboarding'},
-                    {route: 'page_contract_default_settings', label: 'Settings'},
-                ] %}
-                    {% set _active = _route starts with item.route or (item.route == 'page_contract_default_orders' and _route starts with 'page_contract_default_order') %}
-                    <li class="nav-item"><a class="nav-link{{ _active ? ' active fw-semibold' }}" href="{{ path(item.route, {theme: 'default'}) }}"{% if _active %} aria-current="page"{% endif %}>{{ item.label }}</a></li>
-                {% endfor %}
-            </ul>
-            <a class="small" href="{{ path('page_contract_index') }}">Host theme →</a>
+    <header class="nowo-ui-header" data-testid="demo-masthead">
+        <a class="nowo-ui-brand" href="{{ path('page_contract_default_index', {theme: 'default'}) }}">Acme Admin</a>
+        <nav class="nowo-ui-header__nav" aria-label="Main">
+            {% for item in [
+                {route: 'page_contract_default_dashboard', label: 'Dashboard'},
+                {route: 'page_contract_default_orders', label: 'Orders'},
+                {route: 'page_contract_default_wizard', label: 'Onboarding'},
+                {route: 'page_contract_default_settings', label: 'Settings'},
+            ] %}
+                {% set _active = _route starts with item.route or (item.route == 'page_contract_default_orders' and _route starts with 'page_contract_default_order') %}
+                <a class="nowo-ui-link" href="{{ path(item.route, {theme: 'default'}) }}"{% if _active %} aria-current="page"{% endif %}>{{ item.label }}</a>
+            {% endfor %}
         </nav>
     </header>
 {% endblock %}

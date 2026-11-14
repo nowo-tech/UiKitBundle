@@ -14,6 +14,7 @@
     - region: data-nowo-ui-region on the <nav> (scaffolds pass `tabs`)
     - attr (2.1): root attributes of the <nav> (e.g. {'data-turbo': 'false'} kept from a bundle's 1.x markup), merged
       over the `tabs` slot attributes; true = bare attribute, false / null = omitted, no on* handlers
+      (2.42.1: `class` is appended to the <nav> classes, not printed as a second class attribute; same for item `attr`)
     - level (2.2): primary (default; slot `tabs`) | secondary (slot `tabs_secondary`: pills / sub-nav for section tabs
       under an area nav — the settings scaffold passes it when PageHeader::tabs is set)
     - icon (2.16): per item, a canonical icon kind or an icon name (`tabler:bug`, see components/_icon). The item then
@@ -30,9 +31,9 @@
 {% set aria_label = aria_label|default('tabs.nav'|trans({}, 'NowoUiKitBundle')) %}
 {% set _attr = attr|default({}) %}
 {% set _secondary = level|default('primary') == 'secondary' %}
-<nav class="{{ _secondary ? (_t ? _t.classFor('tabs_secondary', bundle, framework, _pt) : 'nowo-ui-tabs nowo-ui-tabs--secondary') : (_t ? _t.macroClasses('tabs', ui.tab_list(framework), bundle, _pt) : ui.tab_list(framework)) }}" aria-label="{{ aria_label }}"
-    {{- _t ? _t.renderAttributes(_secondary ? 'tabs_secondary' : 'tabs', bundle, _attr, _pt)|raw -}}
-    {%- if not _t %}{% for name, value in _attr %}{% if value is same as(true) %} {{ name }}{% elseif value is not null and value is not same as(false) %} {{ name }}="{{ value }}"{% endif %}{% endfor %}{% endif %}
+<nav class="{{ _secondary ? (_t ? _t.classFor('tabs_secondary', bundle, framework, _pt) : 'nowo-ui-tabs nowo-ui-tabs--secondary') : (_t ? _t.macroClasses('tabs', ui.tab_list(framework), bundle, _pt) : ui.tab_list(framework)) }}{{ (_attr.class ?? false) ? ' ' ~ _attr.class }}" aria-label="{{ aria_label }}"
+    {{- _t ? _t.renderAttributes(_secondary ? 'tabs_secondary' : 'tabs', bundle, _attr|filter((v, k) => k != 'class'), _pt)|raw -}}
+    {%- if not _t %}{% for name, value in _attr|filter((v, k) => k != 'class') %}{% if value is same as(true) %} {{ name }}{% elseif value is not null and value is not same as(false) %} {{ name }}="{{ value }}"{% endif %}{% endfor %}{% endif %}
     {%- if region|default(null) %} data-nowo-ui-region="{{ region }}"{% endif %}>
     {% for item in items %}
         {% set is_current = item.current|default(false) %}
@@ -47,12 +48,12 @@
         {% endif %}
         {% set _icon = _icon and _set != 'none' ? _icon : null %}
         <a
-            class="{{ _t ? _t.macroClasses(is_current ? 'tab_active' : 'tab', ui.tab_item(is_current, framework), bundle, _pt) : ui.tab_item(is_current, framework) }}"
+            class="{{ _t ? _t.macroClasses(is_current ? 'tab_active' : 'tab', ui.tab_item(is_current, framework), bundle, _pt) : ui.tab_item(is_current, framework) }}{{ (item.attr.class ?? false) ? ' ' ~ item.attr.class }}"
             href="{{ item.href }}"
             {% if is_current %}aria-current="page"{% endif %}
             {% if _icon %}data-rail-label="{{ _label }}"{% endif %}
             {% if item.attr is defined %}
-                {% for name, value in item.attr %}{{ name }}="{{ value }}" {% endfor %}
+                {% for name, value in item.attr|filter((v, k) => k != 'class') %}{{ name }}="{{ value }}" {% endfor %}
             {% endif %}
         >{% if _icon %}<span class="nowo-ui-tabs__icon" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _icon, label: _label}, false)|trim|raw }}</span><span class="nowo-ui-tabs__label">{{ _label }}</span>{% else %}{{ _label }}{% endif %}</a>
     {% endfor %}

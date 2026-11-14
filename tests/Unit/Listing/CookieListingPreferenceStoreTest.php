@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Nowo\UiKitBundle\Tests\Unit\Listing;
 
 use Nowo\UiKitBundle\Listing\CookieListingPreferenceStore;
+use Nowo\UiKitBundle\Listing\Http\ListingContextFactory;
+use Nowo\UiKitBundle\Listing\ListingContext;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
@@ -66,5 +68,32 @@ final class CookieListingPreferenceStoreTest extends TestCase
     public function testOtherListingCookieIsIgnored(): void
     {
         self::assertNull((new CookieListingPreferenceStore())->load('invoices.index', $this->request('{"mode":"scroll"}', 'nowo_ui_listing_other')));
+    }
+
+    /**
+     * @return iterable<string, array{mixed}>
+     */
+    public static function everyCookie(): iterable
+    {
+        yield 'valid' => ['{"v":1,"columns":[{"key":"total","visible":true}],"filters":[],"mode":"responsive"}'];
+        yield 'partial' => ['{"mode":"scroll","columns":{"a":1},"filters":"x"}'];
+        yield 'bad mode' => ['{"columns":[1],"mode":"cards"}'];
+        foreach (self::unusable() as $name => $case) {
+            yield $name => $case;
+        }
+    }
+
+    /**
+     * 2.49: the framework-free port reads the same cookie with the same rules as the deprecated Request signature.
+     */
+    #[DataProvider('everyCookie')]
+    public function testContextAndRequestReadTheSame(mixed $value): void
+    {
+        $store = new CookieListingPreferenceStore();
+        $request = $this->request($value);
+        $legacy = $store->load('invoices.index', $request);
+
+        self::assertSame($legacy, $store->load('invoices.index', ListingContextFactory::fromRequest($request)));
+        self::assertSame($legacy, $store->load('invoices.index', new ListingContext(null === $value ? [] : ['nowo_ui_listing_invoices_index' => $value])));
     }
 }

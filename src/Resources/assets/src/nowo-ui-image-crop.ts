@@ -1,0 +1,928 @@
+/**
+ * Image crop (`js/nowo-ui-image-crop.js`, opt-in: add `image-crop` to `script_names`): a crop step for the file inputs that carry
+ * `data-nowo-ui-image-crop`. When an image is picked, a dialog (the kit's dialog anatomy, opened through js/nowo-ui-dialog.js when it
+ * is loaded) shows it under a square or round frame. The image moves (drag, arrow keys) and zooms (slider, wheel, pinch, + and -).
+ * "Apply" draws the crop on a canvas and puts it in the input in place of the picked file (DataTransfer), so the form uploads the crop
+ * and the server validates it as any upload. "Cancel", the close button and Escape clear the input.
+ *
+ * Contract (attributes on the input; `ImageCrop::attributes()`, the FileType option `nowo_ui_image_crop` and the Twig function
+ * `nowo_ui_image_crop_attrs()` print them): -shape square|circle, -aspect 1|free|16/9, -max (px), -min (px), -format
+ * auto|png|webp|jpeg, -max-bytes, -quality, -bake-circle, -preview (id of an <img>), -labels (JSON). See nowo-ui-image-crop-core.ts
+ * and docs/USAGE.md. Over -max-bytes the quality, then the size, steps down; if nothing fits, `:error` {reason: 'size'} and the
+ * dialog stays open with a message.
+ *
+ * Cancel, close and Escape put the input's file list from before the pick back, and dispatch `input` / `change` only if it then
+ * differs (it does not: listeners never saw the picked file). A crop that is refused or falls back dispatches the picked file's
+ * `input` and `change` again. The dialog's ids are unique per build and it carries `data-turbo-temporary`.
+ *
+ * Events on the input (bubbling): `nowo-ui:image-crop:open` {file} (cancelable: the file then stays as picked), `:cropped` {file,
+ * original, width, height, quality, attempts}, `:cancel` {original, restored}, `:error` {reason: decode|encode|replace|size|busy, original} (the
+ * file stays as picked). After the crop and after a
+ * cancel, native `input` and `change` are dispatched again; the picked file's own `input` and `change` never reach other listeners
+ * (stopped in the capture phase on window), so a host listener only ever sees the final file.
+ *
+ * Fallback: without DataTransfer, canvas toBlob or <dialog>, a `multiple` input, a file that is not a raster image (SVG included) or an
+ * image the browser cannot decode, the upload goes on as picked: no crop, no error shown.
+ *
+ * CSP: no style attribute and no inline script. The canvas is sized through its width and height attributes, colours come from CSS
+ * custom properties (`--nowo-ui-image-crop-mask`, `--nowo-ui-image-crop-frame`). The preview needs `img-src blob:`.
+ * Importing touches no DOM.
+ */
+import {
+  ATTR,
+  clampView,
+  DEFAULT_LABELS,
+  frameAspect,
+  frameCentre,
+  frameRect,
+  initialView,
+  isCroppable,
+  keyAction,
+  candidateTypes,
+  formatBytes,
+  hasTransparency,
+  MAX_ATTEMPTS,
+  nextAttempt,
+  outputName,
+  outputSize,
+  panBy,
+  readOptions,
+  refit,
+  scaleBounds,
+  scaledSize,
+  sourceRect,
+  wheelFactor,
+  zoomPercent,
+  zoomText,
+  zoomTo,
+  type Attempt,
+  type Bounds,
+  type CropOptions,
+  type Labels,
+  type Rect,
+  type Size,
+  type View,
+} from './nowo-ui-image-crop-core';
+
+/** The crop dialog (its ids are unique per build: a restored page snapshot cannot duplicate them). */
+export const DIALOG = 'dialog[data-nowo-ui-image-crop-dialog]';
+let builds = 0;
+const INPUT = `input[type="file"][${ATTR}]`;
+/** Stage size used when the stage has no layout (hidden, or a test DOM). */
+const FALLBACK_STAGE: Size = { width: 320, height: 320 };
+
+export interface Decoded {
+  source: CanvasImageSource;
+  width: number;
+  height: number;
+  close(): void;
+}
+
+type DialogWindow = Window & {
+  nowoUiOpenDialog?: (id: string | HTMLDialogElement | null, opener?: Element | null) => void;
+  nowoUiCloseDialog?: (id: string | HTMLDialogElement | null) => void;
+};
+
+/** Browser seams (decode, encode, 2D context), replaced by the tests. */
+export const env = {
+  /** Decodes a file upright (EXIF orientation applied): createImageBitmap, else an <img> on an object URL. */
+  async decode(file: File): Promise<Decoded> {
+    if (typeof createImageBitmap === 'function') {
+      try {
+        const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+        return { source: bitmap, width: bitmap.width, height: bitmap.height, close: () => bitmap.close() };
+      } catch {
+        // Older engines refuse the option or the type: the <img> below (which applies EXIF orientation by default).
+      }
+    }
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+    image.src = url;
+    try {
+      await image.decode();
+    } catch (error) {
+      URL.revokeObjectURL(url);
+      throw error;
+    }
+    return { source: image, width: image.naturalWidth, height: image.naturalHeight, close: () => URL.revokeObjectURL(url) };
+  },
+  encode(canvas: HTMLCanvasElement, type: string, quality: number): Promise<Blob | null> {
+    return new Promise((resolve) => {
+      canvas.toBlob(resolve, type, quality);
+    });
+  },
+  context(canvas: HTMLCanvasElement): CanvasRenderingContext2D | null {
+    return canvas.getContext('2d');
+  },
+  createObjectURL(blob: Blob): string {
+    return URL.createObjectURL(blob);
+  },
+  revokeObjectURL(url: string): void {
+    URL.revokeObjectURL(url);
+  },
+};
+
+/** Whether this browser can crop: DataTransfer that builds a file list, canvas toBlob and a modal <dialog>. */
+export function supported(): boolean {
+  try {
+    if (
+      typeof DataTransfer !== 'function' ||
+      typeof HTMLCanvasElement === 'undefined' ||
+      typeof HTMLCanvasElement.prototype.toBlob !== 'function' ||
+      typeof HTMLDialogElement === 'undefined' ||
+      typeof HTMLDialogElement.prototype.showModal !== 'function'
+    ) {
+      return false;
+    }
+    const transfer = new DataTransfer();
+    transfer.items.add(new File([''], 'probe.png', { type: 'image/png' }));
+    return transfer.files.length === 1;
+  } catch {
+    return false;
+  }
+}
+
+/** Puts `file` in the input in place of its files; false when the browser does not take a DataTransfer's list. */
+export function replaceFiles(input: HTMLInputElement, file: File): boolean {
+  try {
+    const transfer = new DataTransfer();
+    transfer.items.add(file);
+    input.files = transfer.files;
+    const now = input.files?.[0];
+    return input.files?.length === 1 && now !== undefined && now.name === file.name && now.size === file.size;
+  } catch {
+    return false;
+  }
+}
+
+let replaying = false;
+
+/** The file list each opted-in input held before the current pick: what Cancel restores (JL-L2). */
+const committed = new WeakMap<HTMLInputElement, File[]>();
+const filesOf = (input: HTMLInputElement): File[] => [...(input.files ?? [])];
+const commit = (input: HTMLInputElement): void => {
+  committed.set(input, filesOf(input));
+};
+
+/** Whether two file lists hold the same files, in order. */
+export function sameFiles(a: ArrayLike<File>, b: ArrayLike<File>): boolean {
+  return a.length === b.length && Array.from(a).every((file, index) => file === b[index]);
+}
+
+/** Puts a file list back in the input (empty clears it); false when the browser does not take it. */
+export function restoreFiles(input: HTMLInputElement, files: File[]): boolean {
+  if (files.length === 0) {
+    input.value = '';
+    return (input.files?.length ?? 0) === 0;
+  }
+  try {
+    const transfer = new DataTransfer();
+    files.forEach((file) => transfer.items.add(file));
+    input.files = transfer.files;
+    return sameFiles(filesOf(input), files) || (input.files?.length === files.length && filesOf(input).every((file, index) => file.name === files[index].name && file.size === files[index].size));
+  } catch {
+    input.value = '';
+    return false;
+  }
+}
+
+/** Dispatches `input` and `change` on the input again (the crop step's own, which it lets through). */
+function replay(input: HTMLInputElement): void {
+  commit(input);
+  replaying = true;
+  try {
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  } finally {
+    replaying = false;
+  }
+}
+
+const emit = (input: HTMLInputElement, name: string, detail: Record<string, unknown>, cancelable = false): boolean =>
+  input.dispatchEvent(new CustomEvent(`nowo-ui:image-crop:${name}`, { bubbles: true, cancelable, detail }));
+
+interface Ui {
+  dialog: HTMLDialogElement;
+  title: HTMLElement;
+  help: HTMLElement;
+  stage: HTMLElement;
+  canvas: HTMLCanvasElement;
+  zoomLabel: HTMLElement;
+  range: HTMLInputElement;
+  status: HTMLElement;
+  error: HTMLElement;
+  progress: HTMLElement;
+  apply: HTMLButtonElement;
+  cancel: HTMLButtonElement;
+  close: HTMLButtonElement;
+}
+
+function element<K extends keyof HTMLElementTagNameMap>(tag: K, className: string, attributes: Record<string, string> = {}): HTMLElementTagNameMap[K] {
+  const node = document.createElement(tag);
+  if (className !== '') {
+    node.className = className;
+  }
+  for (const [name, value] of Object.entries(attributes)) {
+    node.setAttribute(name, value);
+  }
+  return node;
+}
+
+let ui: Ui | null = null;
+let current: Session | null = null;
+/** A pick whose image is still decoding; a newer pick cancels it (JL-L1). */
+let pending: { input: HTMLInputElement; previous: File[] } | null = null;
+/** The input focus goes back to when the dialog closes. */
+let returnFocus: HTMLInputElement | null = null;
+
+/** The crop dialog, built once per page with the anatomy of the `dialog` partial (header, body, footer) and the kit's classes. */
+export function cropDialog(): Ui {
+  // Orphans: a copy brought back by a restored snapshot, or a dialog from a swapped body (JL-L3).
+  document.querySelectorAll(DIALOG).forEach((node) => {
+    if (node !== ui?.dialog) {
+      node.remove();
+    }
+  });
+  if (ui && ui.dialog.isConnected) {
+    return ui;
+  }
+  builds += 1;
+  const id = `nowo-ui-image-crop-${builds.toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+  // data-turbo-temporary: Turbo leaves it out of its page snapshots.
+  const dialog = element('dialog', 'nowo-ui-dialog nowo-ui-image-crop', { id, 'data-nowo-ui-dialog': '', 'data-nowo-ui-image-crop-dialog': '', 'data-turbo-temporary': '', 'aria-labelledby': `${id}-title` });
+  const header = element('header', 'nowo-ui-dialog__header');
+  const title = element('h2', 'nowo-ui-dialog__title', { id: `${id}-title` });
+  const close = element('button', 'nowo-ui-dialog__close', { type: 'button', 'data-nowo-ui-image-crop-cancel': '' });
+  const cross = element('span', '', { 'aria-hidden': 'true' });
+  cross.textContent = '×';
+  close.append(cross);
+  header.append(title, close);
+
+  const body = element('div', 'nowo-ui-dialog__body nowo-ui-image-crop__body');
+  const help = element('p', 'nowo-ui-image-crop__help', { id: `${id}-help` });
+  const stage = element('div', 'nowo-ui-image-crop__stage', { 'data-nowo-ui-image-crop-stage': '', tabindex: '0', role: 'application', 'aria-describedby': `${id}-help`, autofocus: '' });
+  const canvas = element('canvas', 'nowo-ui-image-crop__canvas', { 'aria-hidden': 'true' });
+  stage.append(canvas);
+  const zoom = element('div', 'nowo-ui-image-crop__zoom');
+  const zoomLabel = element('label', 'nowo-ui-image-crop__zoom-label', { for: `${id}-zoom` });
+  const range = element('input', 'nowo-ui-image-crop__range', { id: `${id}-zoom`, type: 'range', min: '100', max: '800', step: '1', value: '100', 'data-nowo-ui-image-crop-zoom': '' });
+  zoom.append(zoomLabel, range);
+  const status = element('p', 'visually-hidden', { role: 'status', 'aria-live': 'polite', 'data-nowo-ui-image-crop-status': '' });
+  const error = element('p', 'nowo-ui-image-crop__error', { role: 'alert', 'data-nowo-ui-image-crop-error': '' });
+  error.hidden = true;
+  const progress = element('p', 'nowo-ui-image-crop__progress', { 'aria-live': 'polite', 'data-nowo-ui-image-crop-progress': '' });
+  progress.hidden = true;
+  body.append(help, stage, zoom, progress, error, status);
+
+  const footer = element('footer', 'nowo-ui-dialog__footer');
+  const cancel = element('button', 'nowo-ui-btn nowo-ui-btn--secondary', { type: 'button', 'data-nowo-ui-image-crop-cancel': '' });
+  const apply = element('button', 'nowo-ui-btn nowo-ui-btn--primary', { type: 'button', 'data-nowo-ui-image-crop-apply': '' });
+  footer.append(cancel, apply);
+  dialog.append(header, body, footer);
+  document.body.append(dialog);
+
+  ui = { dialog, title, help, stage, canvas, zoomLabel, range, status, error, progress, apply, cancel, close };
+  bindUi(ui);
+  return ui;
+}
+
+function setLabels(target: Ui, labels: Labels): void {
+  target.title.textContent = labels.title;
+  target.help.textContent = labels.instructions;
+  target.stage.setAttribute('aria-label', labels.stage);
+  target.zoomLabel.textContent = labels.zoom;
+  target.apply.textContent = labels.apply;
+  target.cancel.textContent = labels.cancel;
+  target.close.setAttribute('aria-label', labels.close);
+  target.close.setAttribute('title', labels.close);
+}
+
+const ratio = (): number => Math.min(3, Math.max(1, window.devicePixelRatio || 1));
+
+function cssValue(node: Element, name: string, fallback: string): string {
+  const value = window.getComputedStyle(node).getPropertyValue(name).trim();
+  return value === '' ? fallback : value;
+}
+
+/** One crop: the picked file, its decoded image and the view the user moves. */
+export class Session {
+  stage: Size = FALLBACK_STAGE;
+  frame: Rect = { x: 0, y: 0, ...FALLBACK_STAGE };
+  bounds: Bounds = { minScale: 1, maxScale: 1 };
+  view: View = { scale: 1, x: 0, y: 0 };
+  private readonly pointers = new Map<number, { x: number; y: number }>();
+  private pinch: { distance: number; scale: number } | null = null;
+  private laidOut = false;
+  finished = false;
+  busy = false;
+
+  constructor(
+    readonly input: HTMLInputElement,
+    readonly original: File,
+    readonly image: Decoded,
+    readonly options: CropOptions,
+    readonly ui: Ui,
+    /** The input's file list before this pick: what Cancel puts back. */
+    readonly previous: File[] = [],
+  ) {}
+
+  get labels(): Labels {
+    return { ...DEFAULT_LABELS, ...this.options.labels };
+  }
+
+  /** Measures the stage and fits the frame and the view to it (keeping the zoom and the centre after the first time). */
+  layout(): void {
+    const measured = { width: this.ui.stage.clientWidth, height: this.ui.stage.clientHeight };
+    const stage = measured.width > 0 && measured.height > 0 ? measured : FALLBACK_STAGE;
+    const frame = frameRect(stage, frameAspect(this.options.aspect, this.image));
+    const bounds = scaleBounds(frame, this.image, this.options.min);
+    this.view = this.laidOut ? refit(this.view, this.frame, this.bounds, frame, this.image, bounds) : initialView(frame, this.image, bounds);
+    this.stage = stage;
+    this.frame = frame;
+    this.bounds = bounds;
+    this.laidOut = true;
+    const dpr = ratio();
+    this.ui.canvas.width = Math.round(stage.width * dpr);
+    this.ui.canvas.height = Math.round(stage.height * dpr);
+    this.ui.stage.classList.toggle('is-circle', this.options.shape === 'circle');
+    this.syncRange();
+    this.draw();
+  }
+
+  /** The image under a dimmed mask with the frame cut out (a circle or a rectangle) and outlined. */
+  draw(): void {
+    const ctx = env.context(this.ui.canvas);
+    if (!ctx) {
+      return;
+    }
+    const dpr = ratio();
+    const { frame, view, stage } = this;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, stage.width, stage.height);
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(this.image.source, frame.x + view.x, frame.y + view.y, this.image.width * view.scale, this.image.height * view.scale);
+    ctx.beginPath();
+    ctx.rect(0, 0, stage.width, stage.height);
+    this.framePath(ctx);
+    ctx.fillStyle = cssValue(this.ui.stage, '--nowo-ui-image-crop-mask', 'rgb(0 0 0 / 55%)');
+    ctx.fill('evenodd');
+    ctx.beginPath();
+    this.framePath(ctx);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = cssValue(this.ui.stage, '--nowo-ui-image-crop-frame', 'rgb(255 255 255)');
+    ctx.stroke();
+  }
+
+  private framePath(ctx: CanvasRenderingContext2D): void {
+    const { frame } = this;
+    if (this.options.shape === 'circle') {
+      ctx.moveTo(frame.x + frame.width, frame.y + frame.height / 2);
+      ctx.arc(frame.x + frame.width / 2, frame.y + frame.height / 2, frame.width / 2, 0, Math.PI * 2);
+    } else {
+      ctx.rect(frame.x, frame.y, frame.width, frame.height);
+    }
+  }
+
+  setView(view: View, announce = false): void {
+    this.view = clampView(view, this.frame, this.image, this.bounds);
+    this.syncRange();
+    if (!this.ui.error.hidden) {
+      // A new crop: the size message no longer applies.
+      this.showError(null);
+    }
+    if (announce) {
+      this.ui.status.textContent = zoomText(this.labels.zoomStatus, zoomPercent(this.view, this.bounds));
+    }
+    this.draw();
+  }
+
+  syncRange(): void {
+    const { range } = this.ui;
+    const max = Math.max(100, Math.floor((this.bounds.maxScale / this.bounds.minScale) * 100));
+    const percent = zoomPercent(this.view, this.bounds);
+    range.max = String(max);
+    range.value = String(Math.min(max, percent));
+    range.disabled = max <= 100;
+    range.setAttribute('aria-valuetext', zoomText(this.labels.zoomStatus, percent));
+  }
+
+  /** Stage coordinates of a pointer event. */
+  private point(event: { clientX: number; clientY: number }): { x: number; y: number } {
+    const rect = this.ui.stage.getBoundingClientRect();
+    return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+  }
+
+  /** Frame coordinates of a stage point. */
+  private toFrame(point: { x: number; y: number }): { x: number; y: number } {
+    return { x: point.x - this.frame.x, y: point.y - this.frame.y };
+  }
+
+  private pinchState(): { distance: number; mid: { x: number; y: number } } {
+    const [a, b] = [...this.pointers.values()];
+    return { distance: Math.max(1, Math.hypot(b.x - a.x, b.y - a.y)), mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 } };
+  }
+
+  pointerDown(event: PointerEvent): void {
+    if (event.pointerType === 'mouse' && event.button !== 0) {
+      return;
+    }
+    event.preventDefault();
+    try {
+      this.ui.stage.setPointerCapture(event.pointerId);
+    } catch {
+      // A synthetic pointer has nothing to capture.
+    }
+    this.pointers.set(event.pointerId, this.point(event));
+    if (this.pointers.size === 2) {
+      this.pinch = { distance: this.pinchState().distance, scale: this.view.scale };
+    }
+  }
+
+  pointerMove(event: PointerEvent): void {
+    const previous = this.pointers.get(event.pointerId);
+    if (!previous) {
+      return;
+    }
+    event.preventDefault();
+    if (this.pointers.size === 1) {
+      const next = this.point(event);
+      this.pointers.set(event.pointerId, next);
+      this.setView(panBy(this.view, next.x - previous.x, next.y - previous.y, this.frame, this.image, this.bounds));
+      return;
+    }
+    const before = this.pinchState();
+    this.pointers.set(event.pointerId, this.point(event));
+    const after = this.pinchState();
+    const pinch = this.pinch ?? { distance: before.distance, scale: this.view.scale };
+    const zoomed = zoomTo(this.view, pinch.scale * (after.distance / pinch.distance), this.toFrame(after.mid), this.frame, this.image, this.bounds);
+    this.setView(panBy(zoomed, after.mid.x - before.mid.x, after.mid.y - before.mid.y, this.frame, this.image, this.bounds));
+  }
+
+  pointerUp(event: PointerEvent): void {
+    this.pointers.delete(event.pointerId);
+    if (this.pointers.size < 2) {
+      this.pinch = null;
+    }
+  }
+
+  wheel(event: WheelEvent): void {
+    event.preventDefault();
+    const focal = this.toFrame(this.point(event));
+    this.setView(zoomTo(this.view, this.view.scale * wheelFactor(event.deltaY, event.deltaMode), focal, this.frame, this.image, this.bounds));
+  }
+
+  key(event: KeyboardEvent): void {
+    if (event.altKey || event.ctrlKey || event.metaKey) {
+      return;
+    }
+    const action = keyAction(event.key, event.shiftKey);
+    if (action === null) {
+      return;
+    }
+    event.preventDefault();
+    if ('pan' in action) {
+      this.setView(panBy(this.view, action.pan[0], action.pan[1], this.frame, this.image, this.bounds));
+    } else if ('zoom' in action) {
+      this.setView(zoomTo(this.view, this.view.scale * action.zoom, frameCentre(this.frame), this.frame, this.image, this.bounds), true);
+    } else if ('reset' in action) {
+      this.setView(initialView(this.frame, this.image, this.bounds), true);
+    } else {
+      void this.apply();
+    }
+  }
+
+  rangeInput(): void {
+    const percent = Number(this.ui.range.value);
+    this.setView(zoomTo(this.view, (this.bounds.minScale * percent) / 100, frameCentre(this.frame), this.frame, this.image, this.bounds));
+  }
+
+  /** The crop as a canvas of its output size times `scale` (transparent outside the circle when baked, white under a JPEG). */
+  render(scale = 1): { canvas: HTMLCanvasElement; size: Size } | null {
+    const source = sourceRect(this.view, this.frame);
+    const square = this.options.aspect === 1;
+    const size = scaledSize(outputSize(source, this.options.max, square), scale, square);
+    const canvas = document.createElement('canvas');
+    canvas.width = size.width;
+    canvas.height = size.height;
+    const ctx = env.context(canvas);
+    if (!ctx) {
+      return null;
+    }
+    ctx.imageSmoothingQuality = 'high';
+    if (this.options.format === 'jpeg') {
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, size.width, size.height);
+    }
+    if (this.options.bakeCircle) {
+      ctx.beginPath();
+      ctx.arc(size.width / 2, size.height / 2, Math.min(size.width, size.height) / 2, 0, Math.PI * 2);
+      ctx.clip();
+    }
+    ctx.drawImage(this.image.source, source.x, source.y, source.width, source.height, 0, 0, size.width, size.height);
+    return { canvas, size };
+  }
+
+  /** Whether the rendered crop has a pixel that is not opaque (a baked circle always has; unreadable pixels count as transparent). */
+  private transparent(canvas: HTMLCanvasElement): boolean {
+    if (this.options.bakeCircle) {
+      return true;
+    }
+    try {
+      const data = env.context(canvas)?.getImageData(0, 0, canvas.width, canvas.height)?.data;
+      return data ? hasTransparency(data) : true;
+    } catch {
+      return true;
+    }
+  }
+
+  /**
+   * Encodes the crop: the format's candidate types in order (an `auto` WebP is kept only if the engine really encoded WebP), then,
+   * over max-bytes, lower qualities and smaller sizes, in at most MAX_ATTEMPTS async encodes.
+   */
+  async encodeCrop(): Promise<EncodeResult> {
+    const base = this.render();
+    if (!base) {
+      return { kind: 'encode' };
+    }
+    const square = this.options.aspect === 1;
+    const types = this.options.format === 'auto' ? candidateTypes('auto', this.transparent(base.canvas)) : candidateTypes(this.options.format, false);
+    let attempt: Attempt = { quality: this.options.quality, scale: 1 };
+    let index = 0;
+    let smallest = Number.POSITIVE_INFINITY;
+    for (let tries = 1; tries <= MAX_ATTEMPTS; tries += 1) {
+      const rendered = attempt.scale === 1 ? base : this.render(attempt.scale);
+      const wanted = types[index];
+      const blob = rendered ? await env.encode(rendered.canvas, wanted, attempt.quality) : null;
+      if (!rendered || !blob || blob.size === 0) {
+        if (index < types.length - 1) {
+          index += 1;
+          continue;
+        }
+        return { kind: 'encode' };
+      }
+      if (this.options.format === 'auto' && blob.type !== wanted && index < types.length - 1) {
+        // No WebP encoder here (the engine answered with PNG): the next candidate.
+        index += 1;
+        continue;
+      }
+      const type = blob.type || wanted;
+      const limit = this.options.maxBytes;
+      if (limit === null || blob.size <= limit) {
+        const file = new File([blob], outputName(this.original.name, type), { type, lastModified: Date.now() });
+        return { kind: 'file', file, size: rendered.size, quality: attempt.quality, attempts: tries };
+      }
+      smallest = Math.min(smallest, blob.size);
+      // Encoding again to fit max-bytes can take a while: say so.
+      this.showProgress(this.labels.optimizing);
+      const next = nextAttempt(attempt, type !== 'image/png', scaledSize(outputSize(sourceRect(this.view, this.frame), this.options.max, square), 1, square), this.options.min);
+      if (next === null) {
+        break;
+      }
+      attempt = next;
+    }
+    return { kind: 'size', bytes: smallest };
+  }
+
+  /** Encodes the crop and puts it in the input; on a failure the picked file stays, and over max-bytes the dialog stays open. */
+  async apply(): Promise<void> {
+    if (this.finished || this.busy) {
+      return;
+    }
+    this.busy = true;
+    this.showError(null);
+    // aria-disabled, not disabled: a focused button that becomes disabled drops the focus to <body> (JL-L4). `busy` guards it.
+    this.ui.apply.setAttribute('aria-disabled', 'true');
+    this.ui.apply.setAttribute('aria-busy', 'true');
+    let result: EncodeResult;
+    try {
+      result = await this.encodeCrop();
+    } catch {
+      result = { kind: 'encode' };
+    }
+    this.busy = false;
+    this.ui.apply.removeAttribute('aria-disabled');
+    this.ui.apply.removeAttribute('aria-busy');
+    this.showProgress(null);
+    if (this.finished) {
+      return;
+    }
+    if (result.kind === 'size') {
+      // Kept open: the user can crop a smaller part, or cancel. Focus stays in the dialog, on Apply if it was lost.
+      const max = this.options.maxBytes ?? 0;
+      this.showError(this.labels.tooLarge.replace('%max%', formatBytes(max)));
+      const active = document.activeElement;
+      if (!(active instanceof HTMLElement) || !this.ui.dialog.contains(active)) {
+        this.ui.apply.focus();
+      }
+      emit(this.input, 'error', { reason: 'size', original: this.original, bytes: result.bytes, maxBytes: max });
+      return;
+    }
+    this.finished = true;
+    if (result.kind === 'file' && replaceFiles(this.input, result.file)) {
+      this.showPreview(result.file);
+      emit(this.input, 'cropped', { file: result.file, original: this.original, width: result.size.width, height: result.size.height, quality: result.quality, attempts: result.attempts });
+    } else {
+      emit(this.input, 'error', { reason: result.kind === 'file' ? 'replace' : 'encode', original: this.original });
+    }
+    this.end(true);
+  }
+
+  /** Shows (or with null hides) the polite progress line. */
+  showProgress(message: string | null): void {
+    const { progress } = this.ui;
+    if (progress.textContent !== (message ?? '')) {
+      progress.textContent = message ?? '';
+    }
+    progress.hidden = message === null;
+  }
+
+  /** Shows (or with null hides) the message under the crop area. */
+  showError(message: string | null): void {
+    const { error } = this.ui;
+    error.textContent = message ?? '';
+    error.hidden = message === null;
+  }
+
+  /**
+   * Puts the input's file list from before this pick back (empty if it had none): the picked file is not uploaded. `input` and
+   * `change` are dispatched only if the list then differs from that one (JL-L2), so a Cancel on an empty input fires nothing.
+   */
+  cancel(): void {
+    if (this.finished) {
+      return;
+    }
+    this.finished = true;
+    restoreFiles(this.input, this.previous);
+    emit(this.input, 'cancel', { original: this.original, restored: this.previous.length > 0 });
+    this.end(!sameFiles(filesOf(this.input), this.previous));
+  }
+
+  /** Forgets a session whose dialog is gone (a swapped body, a restored snapshot): nothing is dispatched. */
+  drop(): void {
+    this.finished = true;
+    this.image.close();
+    if (current === this) {
+      current = null;
+    }
+  }
+
+  private showPreview(file: File): void {
+    const id = this.options.preview;
+    const target = id === null ? null : document.getElementById(id);
+    if (!(target instanceof HTMLImageElement)) {
+      return;
+    }
+    const previous = previews.get(target);
+    if (previous) {
+      env.revokeObjectURL(previous);
+    }
+    const url = env.createObjectURL(file);
+    previews.set(target, url);
+    target.src = url;
+    target.hidden = false;
+  }
+
+  private end(dispatch: boolean): void {
+    this.image.close();
+    if (current === this) {
+      current = null;
+    }
+    returnFocus = this.input;
+    if (dispatch) {
+      replay(this.input);
+    } else {
+      commit(this.input);
+    }
+    closeCropDialog(this.ui.dialog);
+  }
+}
+
+type EncodeResult =
+  | { kind: 'file'; file: File; size: Size; quality: number; attempts: number }
+  | { kind: 'size'; bytes: number }
+  | { kind: 'encode' };
+
+/** Object URLs shown in preview images, revoked when replaced. */
+const previews = new WeakMap<HTMLImageElement, string>();
+
+function openCropDialog(dialog: HTMLDialogElement, opener: HTMLElement): void {
+  const page = window as DialogWindow;
+  if (typeof page.nowoUiOpenDialog === 'function') {
+    page.nowoUiOpenDialog(dialog, opener);
+  }
+  if (!dialog.open) {
+    dialog.showModal();
+  }
+}
+
+function closeCropDialog(dialog: HTMLDialogElement): void {
+  const page = window as DialogWindow;
+  if (!dialog.open) {
+    return;
+  }
+  if (typeof page.nowoUiCloseDialog === 'function') {
+    page.nowoUiCloseDialog(dialog);
+  } else {
+    dialog.close();
+  }
+}
+
+function bindUi(target: Ui): void {
+  const { dialog, stage, range } = target;
+  dialog.addEventListener('click', (event) => {
+    const node = event.target instanceof Element ? event.target : null;
+    if (!current || !node) {
+      return;
+    }
+    if (node.closest('[data-nowo-ui-image-crop-apply]')) {
+      event.preventDefault();
+      void current.apply();
+    } else if (node.closest('[data-nowo-ui-image-crop-cancel]')) {
+      event.preventDefault();
+      current.cancel();
+    }
+  });
+  // Escape (the native `cancel`), the dialog runtime's backdrop or any other close: a session still open is cancelled.
+  dialog.addEventListener('close', () => {
+    const session = current;
+    if (session && !session.finished) {
+      session.cancel();
+    }
+    const input = returnFocus;
+    returnFocus = null;
+    if (input && input.isConnected) {
+      input.focus();
+    }
+  });
+  stage.addEventListener('pointerdown', (event) => current?.pointerDown(event));
+  stage.addEventListener('pointermove', (event) => current?.pointerMove(event));
+  stage.addEventListener('pointerup', (event) => current?.pointerUp(event));
+  stage.addEventListener('pointercancel', (event) => current?.pointerUp(event));
+  stage.addEventListener('lostpointercapture', (event) => current?.pointerUp(event));
+  stage.addEventListener('wheel', (event) => current?.wheel(event), { passive: false });
+  // touch-action: none stops scrolling; a cancelled touchmove also stops the fling that would swallow the next tap (Chromium).
+  stage.addEventListener('touchmove', (event) => event.preventDefault(), { passive: false });
+  stage.addEventListener('keydown', (event) => current?.key(event));
+  range.addEventListener('input', () => current?.rangeInput());
+  if (typeof ResizeObserver === 'function') {
+    new ResizeObserver(() => current?.layout()).observe(stage);
+  }
+}
+
+/** Whether a change on this input starts a crop: an opted-in single file input holding one raster image, in a browser that can. */
+export function wantsCrop(target: EventTarget | null): target is HTMLInputElement {
+  if (!(target instanceof HTMLInputElement) || !target.matches(INPUT) || target.multiple || target.disabled) {
+    return false;
+  }
+  const file = target.files?.[0];
+  return target.files?.length === 1 && file !== undefined && isCroppable(file.type) && supported();
+}
+
+/** Puts an earlier input's list back when its pick was overtaken by a newer one (Cancel semantics). */
+function cancelPick(input: HTMLInputElement, previous: File[], original: File | undefined): void {
+  restoreFiles(input, previous);
+  emit(input, 'cancel', { original, restored: previous.length > 0 });
+  if (sameFiles(filesOf(input), previous)) {
+    commit(input);
+  } else {
+    replay(input);
+  }
+}
+
+/**
+ * Starts the crop of the input's picked file. Resolves with the session, or null when the upload goes on as picked: then the
+ * picked file's `input` and `change` are dispatched again, so host listeners always run. A session whose dialog is gone is
+ * dropped; a crop on screen refuses another (`error` {reason: 'busy'}); a newer pick while an image decodes cancels the older.
+ */
+export async function startCrop(input: HTMLInputElement): Promise<Session | null> {
+  const original = input.files?.[0];
+  // Same input picked again while its first pick decodes: "before" is still the list before that first pick.
+  let previous = pending?.input === input ? pending.previous : (committed.get(input) ?? []);
+  if (current && (!current.ui.dialog.isConnected || !current.ui.dialog.open)) {
+    current.drop();
+  }
+  if (!original) {
+    replay(input);
+    return null;
+  }
+  if (current) {
+    emit(input, 'error', { reason: 'busy', original });
+    replay(input);
+    return null;
+  }
+  if (pending) {
+    const earlier = pending;
+    pending = null;
+    if (earlier.input !== input) {
+      cancelPick(earlier.input, earlier.previous, earlier.input.files?.[0]);
+    }
+  }
+  const mine = { input, previous };
+  pending = mine;
+  if (!emit(input, 'open', { file: original }, true)) {
+    pending = null;
+    replay(input);
+    return null;
+  }
+  let image: Decoded;
+  try {
+    image = await env.decode(original);
+    if (!(image.width > 0 && image.height > 0)) {
+      image.close();
+      throw new Error('empty image');
+    }
+  } catch {
+    if (pending !== mine) {
+      return null;
+    }
+    pending = null;
+    emit(input, 'error', { reason: 'decode', original });
+    replay(input);
+    return null;
+  }
+  if (pending !== mine) {
+    // A newer pick took over while this one decoded.
+    image.close();
+    return null;
+  }
+  pending = null;
+  previous = mine.previous;
+  const options = readOptions((name) => input.getAttribute(name), (message) => console.warn(message));
+  const target = cropDialog();
+  const session = new Session(input, original, image, options, target, previous);
+  current = session;
+  setLabels(target, session.labels);
+  target.status.textContent = '';
+  session.showError(null);
+  session.showProgress(null);
+  openCropDialog(target.dialog, input);
+  session.layout();
+  target.stage.focus();
+  // The dialog's box exists only once it is shown: measure again on the next frame.
+  window.requestAnimationFrame(() => {
+    if (current === session) {
+      session.layout();
+    }
+  });
+  return session;
+}
+
+/** The session on screen (tests and hosts that drive the dialog). */
+export const currentSession = (): Session | null => current;
+
+function onPick(event: Event): void {
+  if (replaying || !wantsCrop(event.target)) {
+    return;
+  }
+  // The picked file's own events stop here: listeners get the final file through replay().
+  event.stopImmediatePropagation();
+  if (event.type === 'change') {
+    void startCrop(event.target);
+  }
+}
+
+let bound = false;
+
+export function bindNowoUiImageCrop(): void {
+  if (bound) {
+    return;
+  }
+  bound = true;
+  window.addEventListener('input', onPick, true);
+  window.addEventListener('change', onPick, true);
+  // The list before a pick: taken when the picker opens (a click, also through a label) or a file is dropped on the input.
+  const before = (event: Event): void => {
+    const target = event.target;
+    if (target instanceof HTMLInputElement && target.matches(INPUT) && !pending) {
+      commit(target);
+    }
+  };
+  window.addEventListener('click', before, true);
+  window.addEventListener('drop', before, true);
+  // A form reset empties its inputs.
+  window.addEventListener(
+    'reset',
+    (event) => {
+      if (event.target instanceof HTMLFormElement) {
+        event.target.querySelectorAll<HTMLInputElement>(INPUT).forEach((input) => committed.set(input, []));
+      }
+    },
+    true,
+  );
+}
+
+/** Test helper: forgets the dialog and the session. */
+export function resetForTests(): void {
+  ui?.dialog.remove();
+  ui = null;
+  current = null;
+  pending = null;
+  returnFocus = null;
+}
+
+// A second copy of the script must not bind again. A symbol: an element with some id cannot turn this off.
+const BOUND_KEY = Symbol.for('nowo-ui.image-crop.bound');
+if (typeof window !== 'undefined' && typeof document !== 'undefined' && !(window as unknown as Record<symbol, unknown>)[BOUND_KEY]) {
+  (window as unknown as Record<symbol, unknown>)[BOUND_KEY] = true;
+  bindNowoUiImageCrop();
+}

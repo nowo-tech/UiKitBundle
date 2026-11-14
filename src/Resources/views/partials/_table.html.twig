@@ -38,7 +38,7 @@
 {% set _foot %}{% block nowo_ui_table_foot %}{{ foot_html|default('') }}{% endblock %}{% endset %}
 {% set _tfoot %}{% if _foot|trim is not empty %}{% set _foot_attr = nowo_ui_safe_attrs(foot_attr|default({})) %}<tfoot class="{{ nowo_ui_class('table_foot', _b) }}{{ _foot_attr.class is defined ? ' ' ~ _foot_attr.class }}"{{ nowo_ui_attrs('table_foot', _b, nowo_ui_attrs_without_class(_foot_attr)) }}>{{ _foot }}</tfoot>{% endif %}{% endset %}
 <div class="{{ nowo_ui_class('table_wrap', _b) }}" data-nowo-ui-region="table"{% if _cards %} data-nowo-ui-responsive="cards"{% endif %}{% if scroll_label|default(null) %} data-nowo-ui-scroll-label="{{ scroll_label|nowo_ui_trans }}"{% endif %}{{ nowo_ui_attrs('table_wrap', _b) }}>
-    <table class="{{ nowo_ui_class('table', _b) }}{{ _cards ? ' nowo-ui-table--cards' }}"{{ nowo_ui_attrs('table', _b) }}{{ nowo_ui_html_attrs(_table_attrs) }}
+    <table class="{{ nowo_ui_class('table', _b) }}{{ _cards ? ' nowo-ui-table--cards' }}{{ (_table_attrs.class ?? false) ? ' ' ~ _table_attrs.class }}"{{ nowo_ui_attrs('table', _b) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(_table_attrs)) }}
         {%- set _label = table.label ?? label|default(null) %}{% if not table.caption and _label %} aria-label="{{ _label|nowo_ui_trans }}"{% endif %}>
         {% if table.caption %}<caption class="{{ nowo_ui_class('table_caption', _b) }}{{ table.captionVisible ? '' : ' visually-hidden' }}"{{ nowo_ui_attrs('table_caption', _b) }}>{{ table.caption|nowo_ui_trans }}</caption>{% endif %}
         <thead class="{{ nowo_ui_class('table_head', _b) }}"{{ nowo_ui_attrs('table_head', _b) }}>

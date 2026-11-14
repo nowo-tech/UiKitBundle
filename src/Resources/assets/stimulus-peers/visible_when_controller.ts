@@ -12,7 +12,8 @@
  * form, else by id; its value is that of the select / text input, the checked radio, a checked checkbox's value ('' when
  * unchecked), or any selected option of a multiple select.
  *
- * A non-matching row gets `hidden`, `inert` and `aria-hidden="true"`; a matching row loses them. The rows re-sync on
+ * A non-matching row gets `hidden`, `inert` and `aria-hidden="true"`; a matching row loses them. Rules chain (2.43.1):
+ * a row whose controlling field is inside a hidden row is hidden too. The rows re-sync on
  * connect and on every `change` / `input` inside the container. Without JavaScript every row stays visible.
  *
  * Identifier: `visible-when`. Event: `visible-when:synced` on the container (detail `{hidden}`: rows hidden now).
@@ -39,8 +40,8 @@ export function parseValues(raw: string | null): string[] {
   return text === '' ? [] : text.split(',').map((value) => value.trim());
 }
 
-/** Current values of the controlling field (several for a multiple select / checkboxes of the same name). */
-export function fieldValues(scope: Element, name: string): string[] | null {
+/** Inputs of the controlling field (by `name` in the container's form, else in the container, else by id); null when none. */
+export function fieldElements(scope: Element, name: string): Element[] | null {
   const form = scope instanceof HTMLFormElement ? scope : scope.querySelector('form') ?? scope.closest('form');
   const named = form ? Array.from(form.elements).filter((el) => (el as HTMLInputElement).name === name) : [];
   const fields = named.length > 0 ? named : Array.from(scope.querySelectorAll(`[name="${CSS.escape(name)}"]`));
@@ -51,7 +52,14 @@ export function fieldValues(scope: Element, name: string): string[] | null {
       fields.push(byId);
     }
   }
-  if (fields.length === 0) {
+
+  return fields.length === 0 ? null : fields;
+}
+
+/** Current values of the controlling field (several for a multiple select / checkboxes of the same name). */
+export function fieldValues(scope: Element, name: string): string[] | null {
+  const fields = fieldElements(scope, name);
+  if (fields === null) {
     return null;
   }
   const values: string[] = [];
@@ -121,18 +129,56 @@ export class VisibleWhenController extends Controller {
     this.element.removeEventListener('input', this.onChange);
   }
 
-  /** Re-applies every row of the container; returns the rows hidden now. */
+  /**
+   * Re-applies every row of the container; returns the rows hidden now.
+   *
+   * Rules chain (2.43.1): a row whose controlling field sits inside a hidden row is hidden too, whatever that field's
+   * value (region "Other" → custom region row, hidden as soon as the region row itself is hidden by the provider).
+   * The pass repeats until no more rows hide, so the order of the rows in the DOM does not matter; it only ever hides
+   * more rows, so it ends (a cycle of rows controlling each other stays as their own values say).
+   */
   sync(): HTMLElement[] {
-    const hidden: HTMLElement[] = [];
-    this.element.querySelectorAll<HTMLElement>(ROW_SELECTOR).forEach((row) => {
-      const values = fieldValues(this.element, row.getAttribute('data-nowo-ui-visible-when-field') ?? '');
-      if (values === null) {
-        // unknown controlling field: leave the row as rendered (visible)
-        setRowVisible(row, true);
-        return;
+    const rows = Array.from(this.element.querySelectorAll<HTMLElement>(ROW_SELECTOR));
+    const controls = new Map<HTMLElement, Element[] | null>();
+    const hiddenRows = new Set<HTMLElement>();
+    rows.forEach((row) => {
+      const name = row.getAttribute('data-nowo-ui-visible-when-field') ?? '';
+      const values = fieldValues(this.element, name);
+      controls.set(row, fieldElements(this.element, name));
+      // unknown controlling field: leave the row as rendered (visible)
+      if (values !== null) {
+        const allowed = parseValues(row.getAttribute('data-nowo-ui-visible-when-in'));
+        if (!values.some((value) => allowed.includes(value))) {
+          hiddenRows.add(row);
+        }
       }
-      const allowed = parseValues(row.getAttribute('data-nowo-ui-visible-when-in'));
-      const visible = values.some((value) => allowed.includes(value));
+    });
+    const insideHidden = (field: Element): boolean => {
+      for (const hiddenRow of hiddenRows) {
+        if (hiddenRow !== field && hiddenRow.contains(field)) {
+          return true;
+        }
+      }
+
+      return false;
+    };
+    let changed = hiddenRows.size > 0;
+    while (changed) {
+      changed = false;
+      rows.forEach((row) => {
+        const fields = controls.get(row);
+        if (hiddenRows.has(row) || !fields) {
+          return;
+        }
+        if (fields.every((field) => insideHidden(field))) {
+          hiddenRows.add(row);
+          changed = true;
+        }
+      });
+    }
+    const hidden: HTMLElement[] = [];
+    rows.forEach((row) => {
+      const visible = !hiddenRows.has(row);
       setRowVisible(row, visible);
       if (!visible) {
         hidden.push(row);

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Edit item</title>
+            <script src="/bundles/nowouikit/js/nowo-ui-theme-boot.js" data-nowo-ui-theme-boot></script>
+
+                    <link rel="stylesheet" href="/bundles/nowouikit/css/nowo-ui.css">
+    </head>
+<body class="nowo-ui-body">
+            <div class="nowo-ui-page nowo-ui-page--admin">
+                <main class="nowo-ui-content" id="nowo-ui-content">
+                            <div class="nowo-ui-page-header d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3" data-nowo-ui-region="header">
+    <div class="nowo-ui-page-header__text">                <nav class="nowo-ui-breadcrumbs" aria-label="Breadcrumb">
+        <ol class="nowo-ui-breadcrumbs__list">
+                            <li class="nowo-ui-breadcrumbs__item">                                            <a class="nowo-ui-breadcrumbs__link" href="/">Home</a>
+                                    </li>
+                            <li class="nowo-ui-breadcrumbs__item"><span class="nowo-ui-breadcrumbs__separator" aria-hidden="true">/</span>                                            <span class="nowo-ui-breadcrumbs__current" aria-current="page">Edit item</span>
+                                    </li>
+                    </ol>
+    </nav>
+
+                                <h1 class="nowo-ui-page-header__title h3 mb-1">Edit item</h1>
+                                <p class="nowo-ui-page-header__intro">Every item of the catalogue</p>
+            </div>
+            <div class="nowo-ui-toolbar d-flex flex-wrap align-items-center gap-1 mb-2"><a class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary nowo-ui-action--view" href="/items/1"><span class="nowo-ui-action__label">View</span></a>
+                                                                            <a class="nowo-ui-btn nowo-ui-btn--outline btn btn-outline-primary nowo-ui-action--export" href="/items/1/export">            <i class="bi bi-download" aria-hidden="true"></i>
+<span class="nowo-ui-action__label">Export</span></a>
+                                                                            <a class="nowo-ui-btn nowo-ui-btn--link btn btn-link nowo-ui-action--copy" href="/items/1/copy"><span class="nowo-ui-action__label">Duplicate</span></a>
+                                                                            <button type="button" class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary nowo-ui-action--import" data-bs-toggle="modal" data-bs-target="#import-modal"><span class="nowo-ui-action__label">Import</span></button></div>
+        </div>
+
+
+                                                                                <div class="nowo-ui-flash nowo-ui-flash--success alert alert-success" role="alert">Saved.</div>
+    
+                                            <div class="nowo-ui-form-page" data-nowo-ui-page="form" data-probe="p">
+        <div class="nowo-ui-form-page__main">
+            <div class="nowo-ui-form-panel">
+                                                <form name="item" method="post" class="nowo-ui-form" data-nowo-ui-region="form">
+                                                                                                                                                <div><label for="item_name">Name</label><input type="text" id="item_name" name="item[name]" /></div>
+                                                                                                                <div><label for="item_active">Active</label><input type="checkbox" id="item_active" name="item[active]" value="1" /></div>
+                                                                                                                                    <div class="nowo-ui-form__actions d-flex flex-wrap gap-2">
+                        <button type="submit" class="nowo-ui-btn nowo-ui-btn--primary btn btn-primary">Save</button>
+                                                    <a class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary" href="/items">Cancel</a>
+                                            </div>
+                </form>
+                            </div>
+                                        <section class="nowo-ui-danger-zone mt-4" data-nowo-ui-region="danger-zone">
+                    <h2 class="nowo-ui-danger-zone__title">Danger zone</h2>
+                                                                                                                <button type="button" class="nowo-ui-btn nowo-ui-btn--danger btn btn-outline-danger nowo-ui-action--delete" data-nowo-confirm-open data-nowo-confirm-target="nowo-ui-confirm-ae3be7f268fb"><span class="nowo-ui-action__label">Delete</span></button>
+                                                            <dialog
+    id="nowo-ui-confirm-ae3be7f268fb"
+    class="nowo-ui-confirm"
+    data-nowo-ui-confirm
+    aria-labelledby="nowo-ui-confirm-ae3be7f268fb-title"
+>
+    <div class="nowo-ui-confirm__panel">
+        <header class="nowo-ui-confirm__header">
+            <h2 class="nowo-ui-confirm__title" id="nowo-ui-confirm-ae3be7f268fb-title">Delete this item?</h2>
+                                                        <button type="button" class="nowo-ui-confirm__close" data-nowo-confirm-close aria-label="Close" title="Close"><span aria-hidden="true">&times;</span></button>
+                    </header>
+                    <div class="nowo-ui-confirm__body"><p class="nowo-ui-confirm__message">This action cannot be undone.</p></div>
+                                <div class="nowo-ui-confirm__footer">
+                            <button type="button" class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary" data-nowo-confirm-close>
+                    Cancel
+                </button>
+                                        <form method="post" action="/items/1" class="nowo-ui-action__form">
+    <button type="submit" class="nowo-ui-btn nowo-ui-btn--danger nowo-ui-btn--solid btn btn-danger nowo-ui-confirm__submit">Delete</button><input type="hidden" name="_token" value="tok"></form>
+
+
+                                    </div>
+    </div>
+</dialog>
+
+            
+                </section>
+                    </div>
+            </div>
+        </main>
+            </div>
+                            <script src="/bundles/nowouikit/js/nowo-ui-modal.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-confirm.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-dialog.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-toast.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-tabs.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-theme.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-popover.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-segmented.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-autosubmit.js" defer></script>
+    <script src="/bundles/nowouikit/js/nowo-ui-avatar.js" defer></script>
+
+            </body>
+</html>

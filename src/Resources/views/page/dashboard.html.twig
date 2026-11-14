@@ -19,7 +19,7 @@
 
 {% block nowo_ui_content %}
     {% set _b = page.bundle %}
-    <div class="nowo-ui-dashboard-page" data-nowo-ui-page="dashboard"{{ nowo_ui_html_attrs(page.attributes) }}>
+    <div class="nowo-ui-dashboard-page{{ (page.attributes.class ?? false) ? ' ' ~ page.attributes.class }}" data-nowo-ui-page="dashboard"{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(page.attributes)) }}>
         {% if page.kpis is not empty %}
             <div class="{{ nowo_ui_class('kpis', _b) }}" data-nowo-ui-region="kpis"{{ nowo_ui_attrs('kpis', _b) }}>
                 {% for kpi in page.kpis %}

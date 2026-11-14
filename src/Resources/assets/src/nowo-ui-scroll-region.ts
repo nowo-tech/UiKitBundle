@@ -12,10 +12,29 @@
  * throttled to one animation frame. Since 2.29.1 a pass after a mutation or a resize syncs only the regions concerned
  * (the whole document is scanned once, at start-up), regions that left the document are unobserved, and a label the
  * script set follows the caption. No `resize` listener. No inline styles or handlers (CSP).
+ *
+ * 2.48: `pre` and `table` elements inside rendered content (`.nowo-ui-rendered-content` or
+ * `[data-nowo-ui-rendered-content]`) are regions too (the kit CSS makes them scroll sideways); a `table` gets only the
+ * tab stop (its own table semantics stay). Anything inside an editable area (`[contenteditable]` other than "false")
+ * is skipped, and attributes set before it became editable are removed. `data-nowo-ui-scroll-role="group"` uses
+ * `role="group"` instead of `region` (any other value: `region`).
  */
 
-export const REGION = '[data-nowo-ui-region="table"], [data-nowo-ui-scroll-region]';
+export const REGION =
+  '[data-nowo-ui-region="table"], [data-nowo-ui-scroll-region], :is(.nowo-ui-rendered-content, [data-nowo-ui-rendered-content]) :is(pre, table)';
 export const MARK = 'data-nowo-ui-scroll-focusable';
+/** Editable areas: their content is the editor's, never a scroll region of this script. */
+export const EDITABLE = '[contenteditable]:not([contenteditable="false"])';
+
+/** Whether an element is (inside) an editable area. */
+export function isEditable(element: Element): boolean {
+  return element.closest(EDITABLE) !== null;
+}
+
+/** The landmark role the script sets: `group` when asked (`data-nowo-ui-scroll-role`), else `region`. */
+export function regionRole(element: HTMLElement): string {
+  return element.getAttribute('data-nowo-ui-scroll-role') === 'group' ? 'group' : 'region';
+}
 
 /** Whether an element's content is wider than its box. */
 export function overflows(element: HTMLElement): boolean {
@@ -36,9 +55,21 @@ export function regionName(element: HTMLElement): string {
   return table?.querySelector('caption')?.textContent?.trim() ?? '';
 }
 
+/** Removes the attributes this script set on a region (only those). */
+function unmark(element: HTMLElement): void {
+  (element.getAttribute(MARK) ?? '').split(' ').forEach((name) => {
+    if (name !== '') element.removeAttribute(name);
+  });
+  element.removeAttribute(MARK);
+}
+
 /** Makes one region focusable while it overflows, and undoes only what this script set when it does not. */
 export function syncRegion(element: HTMLElement): void {
   const marked = element.hasAttribute(MARK);
+  if (isEditable(element)) {
+    if (marked) unmark(element);
+    return;
+  }
   if (overflows(element)) {
     if (marked) {
       // A label this script set follows the caption / label when it changes (2.29.1).
@@ -52,10 +83,10 @@ export function syncRegion(element: HTMLElement): void {
       return;
     }
     element.setAttribute('tabindex', '0');
-    const name = regionName(element);
+    const name = element.tagName === 'TABLE' ? '' : regionName(element);
     const roles: string[] = [];
     if (name !== '' && !element.hasAttribute('role')) {
-      element.setAttribute('role', 'region');
+      element.setAttribute('role', regionRole(element));
       roles.push('role');
       if (!element.hasAttribute('aria-label') && !element.hasAttribute('aria-labelledby')) {
         element.setAttribute('aria-label', name);
@@ -64,10 +95,7 @@ export function syncRegion(element: HTMLElement): void {
     }
     element.setAttribute(MARK, ['tabindex', ...roles].join(' '));
   } else if (marked) {
-    (element.getAttribute(MARK) ?? '').split(' ').forEach((name) => {
-      if (name !== '') element.removeAttribute(name);
-    });
-    element.removeAttribute(MARK);
+    unmark(element);
   }
 }
 
@@ -173,6 +201,11 @@ export function regionsOfMutations(records: MutationRecord[]): { regions: HTMLEl
       node.querySelectorAll<HTMLElement>(REGION).forEach((region) => regions.push(region));
     });
     if (record.removedNodes.length > 0) removed = true;
+    // 2.48: an area that became (or stopped being) editable: the regions inside it follow.
+    if (record.type === 'attributes' && record.target instanceof HTMLElement) {
+      if (record.target.matches(REGION)) regions.push(record.target);
+      record.target.querySelectorAll<HTMLElement>(REGION).forEach((region) => regions.push(region));
+    }
     const owner = regionOf(record.target);
     if (owner) regions.push(owner);
   });
@@ -199,7 +232,7 @@ export function bindNowoUiScrollRegion(): void {
     new MutationObserver((records) => {
       const { regions, removed } = regionsOfMutations(records);
       if (regions.length > 0 || removed) schedule(regions);
-    }).observe(document.documentElement, { childList: true, subtree: true });
+    }).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['contenteditable'] });
   }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => schedule(), { once: true });
