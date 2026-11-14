@@ -40,6 +40,8 @@ Optional **Stimulus peer** TypeScript sources live under `src/Resources/assets/s
 - [Remote form dialog (2.28)](#remote-form-dialog-228)
 - [Scroll regions (2.28)](#scroll-regions-228)
 - [Emoji picker and show more](#emoji-picker-and-show-more)
+- [Image crop](#image-crop)
+- [Image input](#image-input)
 - [Sortable](#sortable)
 - [Stimulus peers — import examples](#stimulus-peers--import-examples)
 - [Beacon attribute migration](#beacon-attribute-migration)
@@ -219,7 +221,7 @@ timing that matches the visual (`min_visible_ms` / `leave_ms` to override).
 
 Script: `js/nowo-ui-page-loader.js` → `nowoUiShowPageLoader` / `nowoUiHidePageLoader`. With `visual: orb`, also load `js/nowo-ui-orb.js`.
 
-Stimulus peer: identifier `page-loader` (`page_loader_controller.ts`) — min-visible timing, same-origin link interception, leave animation. Resolves `[data-nowo-ui-page-loader]` when no `overlay` target. The leave (`.is-leaving`) ends on the overlay's own `opacity` `transitionend` (children may use transitions freely) or after `leave-ms` + 80 ms.
+Stimulus peer: identifier `page-loader` (`page_loader_controller.ts`) — min-visible timing, same-origin link interception, leave animation. Link clicks are decided after dispatch (in the `link-delay` timeout): a click any handler cancels with `preventDefault()` never shows the overlay (since 2.48.1); opt a link out with `data-no-page-loader` (bare or `="true"`). Resolves `[data-nowo-ui-page-loader]` when no `overlay` target. The leave (`.is-leaving`) ends on the overlay's own `opacity` `transitionend` (children may use transitions freely) or after `leave-ms` + 80 ms.
 
 ## Release status
 
@@ -411,7 +413,8 @@ through the fragment filter (audit GT-I6), nested `<template>` content included,
 Identifier `visible-when` (`visible_when_controller.ts`) on the form. Rows: `data-nowo-ui-visible-when-field` (name or
 id of the controlling input) and `data-nowo-ui-visible-when-in` (JSON list or comma list). Non-matching rows get
 `hidden` + `inert` + `aria-hidden="true"`; inputs are never disabled or cleared. Re-syncs on connect, `change` and
-`input`; event `visible-when:synced` (detail `{hidden}`). PHP `Form\VisibleWhen`, Twig `nowo_ui_visible_when()`. See
+`input`; event `visible-when:synced` (detail `{hidden}`). Rules chain (2.43.1): a row whose controlling input is inside
+a hidden row is hidden too. PHP `Form\VisibleWhen`, Twig `nowo_ui_visible_when()`. See
 [USAGE](USAGE.md#provider-dependent-fields-223).
 
 ## Listing customizer (Stimulus peer only)
@@ -694,6 +697,21 @@ IIFE only: `js/nowo-ui-scroll-region.js` (opt-in `script_names` entry `scroll-re
 
 IIFE only, no peer: `js/nowo-ui-emoji-picker.js` and `js/nowo-ui-show-more.js` (opt-in `script_names` entries `emoji-picker`, `show-more`). Events
 `nowo-ui:emoji-picker:pick` and `nowo-ui:show-more:toggle`. See [USAGE](USAGE.md#emoji-picker) and [USAGE](USAGE.md#show-more).
+
+## Image crop
+
+IIFE only, no peer: `js/nowo-ui-image-crop.js` (opt-in `script_names` entry `image-crop`), over file inputs with
+`data-nowo-ui-image-crop`. Events `nowo-ui:image-crop:open|cropped|cancel|error` on the input. See [USAGE](USAGE.md#image-crop).
+
+## Image input
+
+IIFE only, no peer: `js/nowo-ui-image-input.js` (2.47, opt-in `script_names` entry `image-input`), over the partial
+`image_input` (FileType option `nowo_ui_image_input`). Event `nowo-ui:image-input:change` on the root. See
+[USAGE](USAGE.md#image-input-247).
+
+IIFE only, no peer (2.48): `js/nowo-ui-rail.js` (opt-in `script_names` entry `rail`, partial `rail_toggle`; event
+`nowo-ui:rail:change` on the host) and `js/nowo-ui-layout-state.js` (a blocking `<head>` script, not in `script_names`).
+See [USAGE](USAGE.md#collapsible-column-rail-248).
 
 ## Sortable
 

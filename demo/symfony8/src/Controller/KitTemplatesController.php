@@ -71,6 +71,23 @@ final class KitTemplatesController extends AbstractController
     }
 
     /**
+     * UiKit 2.48 (Beacon Wiki 1.149 page view): a page tree with a collapsible rail and a comments panel with
+     * `drawer_below: 'lg'`. The comments panel is rendered open unless `?panel=0`, as a host store that remembers the
+     * inline column would (audit LV-L2: under 1200 px it must start closed, not as a modal drawer). Same CSP as above.
+     */
+    #[Route('/wiki-layout', name: 'kit_wiki_layout')]
+    public function wikiLayout(Request $request): Response
+    {
+        $response = $this->render('kit/wiki_layout.html.twig', [
+            'open' => '0' !== $request->query->get('panel'),
+            'tree_collapsed' => 'rail' === $request->query->get('tree'),
+        ]);
+        $response->headers->set('Content-Security-Policy', "script-src 'self'; style-src-attr 'none'; script-src-attr 'none'");
+
+        return $response;
+    }
+
+    /**
      * UiKit 2.34: the small options — table row attributes and foot, tree hooks, dialog hooks and back arrow, the remote
      * form dialog as a side panel, progress with an absolute amount. The response forbids inline style attributes and
      * handlers (CSP); window.nowoUiAskConfirm is exercised by e2e/tests/small-options.spec.ts on this page.

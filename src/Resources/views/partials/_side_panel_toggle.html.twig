@@ -34,7 +34,7 @@
 {% set _has = _count is not null and _count > 0 %}
 {% set _href = href|default(null) %}
 {% set _shortcut = shortcut|default(null) %}
-{% if _href %}<a href="{{ _href }}" role="button"{% else %}<button type="button"{% endif %} class="{{ nowo_ui_class('side_panel_toggle', _b) }}{% if _icon %} nowo-ui-side-panel-toggle--icon{% endif %}" aria-controls="{{ target }}" aria-expanded="{{ _open ? 'true' : 'false' }}" data-nowo-ui-side-panel-toggle{% if _shortcut %} aria-keyshortcuts="{{ _shortcut }}" data-nowo-ui-side-panel-shortcut="{{ _shortcut }}"{% endif %}{{ nowo_ui_attrs('side_panel_toggle', _b) }}{{ nowo_ui_html_attrs(attr|default({})) }}>
+{% if _href %}<a href="{{ _href }}" role="button"{% else %}<button type="button"{% endif %} class="{{ nowo_ui_class('side_panel_toggle', _b) }}{% if _icon %} nowo-ui-side-panel-toggle--icon{% endif %}{{ (attr.class ?? false) ? ' ' ~ attr.class }}" aria-controls="{{ target }}" aria-expanded="{{ _open ? 'true' : 'false' }}" data-nowo-ui-side-panel-toggle{% if _shortcut %} aria-keyshortcuts="{{ _shortcut }}" data-nowo-ui-side-panel-shortcut="{{ _shortcut }}"{% endif %}{{ nowo_ui_attrs('side_panel_toggle', _b) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(attr|default({}))) }}>
     {% if _icon %}<span class="nowo-ui-side-panel-toggle__icon" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _icon, label: _label}, false)|trim|raw }}</span>
     <span class="visually-hidden">{{ _label }}</span>{% else %}<span class="nowo-ui-side-panel-toggle__label">{{ _label }}</span>{% endif %}
     <span class="{{ nowo_ui_class('side_panel_badge', _b) }}" data-nowo-ui-side-panel-badge{% if not _has %} hidden{% endif %}{{ nowo_ui_attrs('side_panel_badge', _b) }}>{{ _has ? _count : '' }}</span>

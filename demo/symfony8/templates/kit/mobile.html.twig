@@ -125,7 +125,7 @@
         {{ include('@NowoUiKitBundle/partials/_edge_tab.html.twig', {label: 'Developer notes', icon: 'view', slot: 5, button: true, testid: 'edge-drawer', attr: {'aria-expanded': 'false', 'aria-controls': 'kit-mobile-drawer'}}, false) }}
         <div class="kit-mobile-drawer__body" data-testid="drawer-body"><h2>Developer notes</h2><p><a href="#notes-link">A link inside the drawer</a></p></div>
     </aside>
-    {{ include(nowo_ui_partial('edge_tabs_launcher'), {gutter: true, testid: 'edge-launcher'}, false) }}
+    {{ include(nowo_ui_partial('edge_tabs_launcher'), {gutter: true, icon: 'chevron', testid: 'edge-launcher'}, false) }}
     {{ include(nowo_ui_partial('dialog'), {id: 'mobile-customizer', title: 'Customize the listing', body: '<p data-testid="customizer-body">Columns, filters and rows per page.</p>'}, false) }}
 {% endblock %}
 

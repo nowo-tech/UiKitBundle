@@ -1,0 +1,37 @@
+<div class="nowo-ui-listing-customizer" data-controller="listing-customizer" data-listing-customizer-state-value="{&quot;listingKey&quot;:&quot;invoices.index&quot;,&quot;stored&quot;:false,&quot;mode&quot;:null,&quot;columns&quot;:[{&quot;key&quot;:&quot;number&quot;,&quot;label&quot;:&quot;invoice.number&quot;,&quot;required&quot;:true,&quot;visible&quot;:true,&quot;merged&quot;:false},{&quot;key&quot;:&quot;customer&quot;,&quot;label&quot;:&quot;Customer&quot;,&quot;required&quot;:false,&quot;visible&quot;:true,&quot;merged&quot;:false},{&quot;key&quot;:&quot;total&quot;,&quot;label&quot;:&quot;Total&quot;,&quot;required&quot;:false,&quot;visible&quot;:true,&quot;merged&quot;:false},{&quot;key&quot;:&quot;notes&quot;,&quot;label&quot;:&quot;Notes&quot;,&quot;required&quot;:false,&quot;visible&quot;:false,&quot;merged&quot;:false}],&quot;filters&quot;:[{&quot;key&quot;:&quot;q&quot;,&quot;label&quot;:&quot;filter.q&quot;,&quot;required&quot;:false,&quot;visible&quot;:true},{&quot;key&quot;:&quot;status&quot;,&quot;label&quot;:&quot;Status&quot;,&quot;required&quot;:false,&quot;visible&quot;:true},{&quot;key&quot;:&quot;tag&quot;,&quot;label&quot;:&quot;Tag&quot;,&quot;required&quot;:false,&quot;visible&quot;:false}]}" data-listing-customizer-cookie-value="nowo_ui_listing_invoices_index" data-listing-customizer-messages-value="{&quot;required&quot;:&quot;Always shown&quot;,&quot;moveUp&quot;:&quot;Move up&quot;,&quot;moveDown&quot;:&quot;Move down&quot;,&quot;stack&quot;:&quot;Stack under the previous column&quot;,&quot;dragHandle&quot;:&quot;Drag to reorder&quot;,&quot;moved&quot;:&quot;%label% moved to position %position% of %count%.&quot;,&quot;unsaved&quot;:&quot;Unsaved changes.&quot;,&quot;saving&quot;:&quot;Saving\u2026&quot;,&quot;saveError&quot;:&quot;Could not save the listing layout.&quot;,&quot;tooLarge&quot;:&quot;This layout is too large to keep in the browser.&quot;,&quot;sessionExpired&quot;:&quot;Your session has expired. Reload the page and try again.&quot;,&quot;resetConfirm&quot;:&quot;Restore the default columns and filters of this listing?&quot;,&quot;confirmOk&quot;:&quot;Reset to default&quot;,&quot;cancel&quot;:&quot;Cancel&quot;}" data-probe="p">
+                <div class="nowo-ui-edge-tab" data-nowo-ui-edge-tab-slot="0">
+            <button type="button" class="nowo-ui-edge-tab__link nowo-ui-listing-customizer__toggle" data-nowo-ui-dialog-open="nowo-ui-listing-invoices-index" data-listing-customizer-target="toggle" data-action="listing-customizer#open" aria-haspopup="dialog" aria-controls="nowo-ui-listing-invoices-index" title="Customize listing" aria-label="Customize listing">
+                <span class="nowo-ui-edge-tab__icon" aria-hidden="true"><i class="bi bi-sliders" aria-hidden="true"></i></span>
+            </button>
+        </div>
+            <dialog id="nowo-ui-listing-invoices-index" class="nowo-ui-dialog nowo-ui-dialog--sm nowo-ui-dialog--end" data-nowo-ui-dialog aria-labelledby="nowo-ui-listing-invoices-index-title" data-nowo-ui-dialog-backdrop-close data-listing-customizer-target="dialog">
+    <header class="nowo-ui-dialog__header">
+        <h2 class="nowo-ui-dialog__title" id="nowo-ui-listing-invoices-index-title">Customize listing</h2>
+                    <button type="button" class="nowo-ui-dialog__close" data-nowo-ui-dialog-close aria-label="Close" title="Close"><span aria-hidden="true">&times;</span></button>
+            </header>
+    <div class="nowo-ui-dialog__body">                                        <div class="nowo-ui-listing-customizer__tabs" role="tablist" aria-label="Customize listing">
+                                            <button type="button" role="tab" id="nowo-ui-listing-invoices-index-tab-columns" class="nowo-ui-listing-customizer__tab" aria-selected="true" aria-controls="nowo-ui-listing-invoices-index-panel-columns" data-panel="columns" data-listing-customizer-target="tabButton" data-action="listing-customizer#selectTab keydown->listing-customizer#tabKeydown">Columns</button>
+                                            <button type="button" role="tab" id="nowo-ui-listing-invoices-index-tab-filters" class="nowo-ui-listing-customizer__tab" aria-selected="false" tabindex="-1" aria-controls="nowo-ui-listing-invoices-index-panel-filters" data-panel="filters" data-listing-customizer-target="tabButton" data-action="listing-customizer#selectTab keydown->listing-customizer#tabKeydown">Filters</button>
+                                    </div>
+                                                            <section id="nowo-ui-listing-invoices-index-panel-columns" class="nowo-ui-listing-customizer__panel" role="tabpanel" aria-labelledby="nowo-ui-listing-invoices-index-tab-columns" data-panel="columns" data-listing-customizer-target="panel">
+                        <p class="nowo-ui-muted text-muted">Show, hide and reorder the columns: drag a row or use its arrow buttons.</p>
+                                                    <p class="nowo-ui-muted text-muted">Stack a column under the previous one to show both in one cell.</p>
+                                                <ul class="nowo-ui-listing-customizer__list" data-kind="columns" data-listing-customizer-target="list" aria-label="Columns"></ul>
+                    </section>
+                                                                <section id="nowo-ui-listing-invoices-index-panel-filters" class="nowo-ui-listing-customizer__panel" role="tabpanel" aria-labelledby="nowo-ui-listing-invoices-index-tab-filters" hidden data-panel="filters" data-listing-customizer-target="panel">
+                        <p class="nowo-ui-muted text-muted">Show, hide and reorder the filters. Hidden filters are not applied.</p>
+                                                <ul class="nowo-ui-listing-customizer__list" data-kind="filters" data-listing-customizer-target="list" aria-label="Filters"></ul>
+                    </section>
+                                            <template data-listing-customizer-icon="grip"><i class="bi bi-grip-vertical" aria-hidden="true"></i></template>
+                            <template data-listing-customizer-icon="up"><i class="bi bi-chevron-up" aria-hidden="true"></i></template>
+                            <template data-listing-customizer-icon="down"><i class="bi bi-chevron-down" aria-hidden="true"></i></template>
+                            <template data-listing-customizer-icon="stack"><i class="bi bi-arrow-90deg-up" aria-hidden="true"></i></template>
+                    </div>
+            <footer class="nowo-ui-dialog__footer">        <p class="nowo-ui-listing-customizer__status" role="status" aria-live="polite" data-listing-customizer-target="status"></p>
+        <div class="nowo-ui-listing-customizer__actions">
+            <button type="button" class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary" data-listing-customizer-target="resetButton" data-action="listing-customizer#reset" disabled>Reset to default</button>
+            <button type="button" class="nowo-ui-btn nowo-ui-btn--primary btn btn-primary" data-listing-customizer-target="applyButton" data-action="listing-customizer#apply" disabled>Apply</button>
+        </div>
+    </footer>
+    </dialog>
+</div>

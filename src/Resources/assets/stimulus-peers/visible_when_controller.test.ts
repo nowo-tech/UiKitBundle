@@ -1,7 +1,7 @@
 import { Application } from '@hotwired/stimulus';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import VisibleWhenController, { fieldValues, parseValues, setRowVisible } from './visible_when_controller';
+import VisibleWhenController, { fieldElements, fieldValues, parseValues, setRowVisible } from './visible_when_controller';
 
 const flush = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -65,6 +65,70 @@ describe('visible-when peer', () => {
     expect(host.value).toBe('mail.example.com');
     // hidden fields are still submitted
     expect(new FormData(form as HTMLFormElement).get('settings[smtp_host]')).toBe('mail.example.com');
+  });
+
+  // 2.43.1: rules chain — a row controlled by a field inside a hidden row is hidden too (spec 222: region "Other")
+  const CHAIN = `
+    <form data-controller="visible-when">
+      <div id="custom-row" data-nowo-ui-visible-when-field="s[region]" data-nowo-ui-visible-when-in='["other"]'>
+        <input name="s[custom_region]" value="eu-x-1">
+      </div>
+      <div id="region-row" data-nowo-ui-visible-when-field="s[provider]" data-nowo-ui-visible-when-in='["s3"]'>
+        <select name="s[region]"><option value="eu-west-1">eu</option><option value="other" selected>Other</option></select>
+      </div>
+      <div id="deep-row" data-nowo-ui-visible-when-field="s[custom_region]" data-nowo-ui-visible-when-in='["eu-x-1"]'></div>
+      <div id="provider-row"><select name="s[provider]"><option value="s3" selected>S3</option><option value="r2">R2</option></select></div>
+      <div id="a-row" data-nowo-ui-visible-when-field="s[b]" data-nowo-ui-visible-when-in='["1"]'><input name="s[a]" value="1"></div>
+      <div id="b-row" data-nowo-ui-visible-when-field="s[a]" data-nowo-ui-visible-when-in='["1"]'><input name="s[b]" value="1"></div>
+    </form>`;
+
+  it('hides the dependents of a hidden controlling row, whatever the row order', async () => {
+    const form = await mount(CHAIN);
+    const synced = vi.fn();
+    form.addEventListener('visible-when:synced', synced);
+    expect(row('region-row').hidden).toBe(false);
+    expect(row('custom-row').hidden).toBe(false);
+    expect(row('deep-row').hidden).toBe(false);
+
+    const provider = form.querySelector<HTMLSelectElement>('[name="s[provider]"]')!;
+    provider.value = 'r2';
+    provider.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(row('region-row').hidden).toBe(true);
+    expect(row('custom-row').hidden).toBe(true);
+    expect(row('custom-row').getAttribute('aria-hidden')).toBe('true');
+    expect(row('deep-row').hidden).toBe(true);
+    expect(synced.mock.calls[0][0].detail.hidden.map((el: HTMLElement) => el.id)).toEqual(['custom-row', 'region-row', 'deep-row']);
+    // values untouched, still submitted
+    expect(new FormData(form as HTMLFormElement).get('s[custom_region]')).toBe('eu-x-1');
+    // a cycle of rows controlling each other keeps what their own values say
+    expect(row('a-row').hidden).toBe(false);
+    expect(row('b-row').hidden).toBe(false);
+
+    provider.value = 's3';
+    provider.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(row('region-row').hidden).toBe(false);
+    expect(row('custom-row').hidden).toBe(false);
+    expect(row('deep-row').hidden).toBe(false);
+
+    const region = form.querySelector<HTMLSelectElement>('[name="s[region]"]')!;
+    region.value = 'eu-west-1';
+    region.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(row('custom-row').hidden).toBe(true);
+    expect(row('deep-row').hidden).toBe(true);
+    expect(row('region-row').hidden).toBe(false);
+  });
+
+  it('keeps a dependent visible while one of its controlling inputs is outside hidden rows', async () => {
+    await mount(`
+      <form data-controller="visible-when">
+        <select name="p"><option value="x" selected>x</option><option value="y">y</option></select>
+        <div id="r1" data-nowo-ui-visible-when-field="p" data-nowo-ui-visible-when-in='["y"]'><input type="radio" name="m" value="a"></div>
+        <input type="radio" name="m" value="a" checked>
+        <div id="dep" data-nowo-ui-visible-when-field="m" data-nowo-ui-visible-when-in='["a"]'></div>
+      </form>`);
+    expect(row('r1').hidden).toBe(true);
+    expect(row('dep').hidden).toBe(false);
+    expect(fieldElements(document.body, 'nope')).toBeNull();
   });
 
   it('reads radios, checkboxes, multiple selects and ids', async () => {

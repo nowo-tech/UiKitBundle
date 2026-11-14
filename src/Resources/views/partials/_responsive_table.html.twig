@@ -62,7 +62,7 @@
 {% set _testids = testids|default(false) %}
 {% set _toggle_label = _mode == 'responsive' ? _labels.to_scroll : _labels.to_responsive %}
 <div
-    class="nowo-ui-responsive-table{{ _corner ? ' nowo-ui-responsive-table--corner' : '' }}{{ root_class|default('') ? ' ' ~ root_class : '' }}"
+    class="nowo-ui-responsive-table{{ _corner ? ' nowo-ui-responsive-table--corner' : '' }}{{ root_class|default('') ? ' ' ~ root_class : '' }}{{ (attr.class ?? false) ? ' ' ~ attr.class }}"
     data-controller="responsive-table"
     data-responsive-table-mode-value="{{ _mode }}"
     {%- if save_url|default('') %} data-responsive-table-url-value="{{ save_url }}"{% endif %}
@@ -77,7 +77,7 @@
     data-responsive-table-messages-value="{{ {toResponsive: _labels.to_responsive, toScroll: _labels.to_scroll, details: _labels.details, saveError: _labels.save_error}|json_encode }}"
     {%- if _mode %} data-table-mode="{{ _mode }}"{% endif %}
     {%- if _testids %} data-testid="responsive-table"{% endif %}
-    {%- for _name, _value in attr|default({}) %} {{ _name|e('html_attr') }}="{{ _value }}"{% endfor %}
+    {%- for _name, _value in attr|default({})|filter((v, k) => k != 'class') %} {{ _name|e('html_attr') }}="{{ _value }}"{% endfor %}
 >
     {% if mode_toggle ?? true %}
         <div class="nowo-ui-responsive-table__bar">

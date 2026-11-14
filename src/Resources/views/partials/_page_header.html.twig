@@ -32,6 +32,10 @@
   inline lays the intro on the title's row (wrapping under it when the row is short); no_intro renders no intro;
   no_title keeps the title as the page's h1 with `visually-hidden`; no_header does both. With one of these
   presentations, `title_hidden: true` hides the title only (it means compact for `standard` / no presentation, as in 2.27).
+  2.48, tabs_inline (only `true`; opt-in): with header.tabs, the tabs and the toolbar share one row under the title
+  (nowo-ui-page-header__bar: the tabs at the start, the toolbar at the end; the toolbar wraps under the tabs when the
+  row is short) and the root gets nowo-ui-page-header--tabs-inline. Without tabs, or with any other value, the output
+  is the 2.47 one. The tabs keep the `tabs` partial (region area-nav, aria-current); split actions work the same.
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 {% set framework = framework|default(null) %}
@@ -52,6 +56,7 @@
 {% set _header = header is defined and header ? header : null %}
 {% set _status = _header and _header.status is defined ? _header.status : null %}
 {% set _split = _header and _header.actionsLayout is defined and _header.actionsLayout == 'split' and not header_actions_rendered|default(false) %}
+{% set _tabs_inline = (tabs_inline ?? false) is same as(true) and header is defined and header and header.tabs is defined and header.tabs and not header.tabs.isEmpty() %}
 {% set _title_row_open = '' %}
 {% set _title_row_close = '' %}
 {% set _split_html = '' %}
@@ -69,7 +74,7 @@
 {% set _has_toolbar = (header is defined and header and header.actions is not empty and not header_actions_rendered|default(false)) or (toolbar is defined and toolbar) %}
 {% set _has_tabs = header is defined and header and header.tabs is defined and header.tabs and not header.tabs.isEmpty() %}
 {% endif %}
-<div class="{{ _t ? _t.macroClasses('page_header', ui.page_header(framework), bundle, _pt) : ui.page_header(framework) }}{{ _compact ? ' nowo-ui-page-header--compact' }}{{ _variant ? ' nowo-ui-page-header--' ~ _variant|replace({'_': '-'}) }}"{{ _t ? _t.renderAttributes('page_header', bundle, {}, _pt)|raw }}{% if _compact %} data-nowo-ui-page-header="compact"{% if not (_has_toolbar or _has_tabs or _status) %} data-nowo-ui-page-header-empty{% endif %}{% endif %}{% if _variant %} data-nowo-ui-page-header="{{ _variant }}"{% endif %}{% if region|default(null) %} data-nowo-ui-region="{{ region }}"{% endif %}>
+<div class="{{ _t ? _t.macroClasses('page_header', ui.page_header(framework), bundle, _pt) : ui.page_header(framework) }}{{ _compact ? ' nowo-ui-page-header--compact' }}{{ _variant ? ' nowo-ui-page-header--' ~ _variant|replace({'_': '-'}) }}{{ _tabs_inline ? ' nowo-ui-page-header--tabs-inline' }}"{{ _t ? _t.renderAttributes('page_header', bundle, {}, _pt)|raw }}{% if _compact %} data-nowo-ui-page-header="compact"{% if not (_has_toolbar or _has_tabs or _status) %} data-nowo-ui-page-header-empty{% endif %}{% endif %}{% if _variant %} data-nowo-ui-page-header="{{ _variant }}"{% endif %}{% if region|default(null) %} data-nowo-ui-region="{{ region }}"{% endif %}>
     <div class="nowo-ui-page-header__text">
         {#- nowo_ui_kit.breadcrumbs.enabled (2.3.1): false drops the trail from every page header. 2.27: compact has none. -#}
         {% if header is defined and header and ((nowo_ui_breadcrumbs ?? {}).enabled ?? true) and not _compact %}
@@ -86,6 +91,7 @@
             <p class="nowo-ui-page-header__intro{{ _intro_extra ? ' ' ~ _intro_extra }}">{{ intro }}</p>
         {% endif %}
     </div>
+{% if not _tabs_inline %}
     {% if header is defined and header and header.actions is not empty and not header_actions_rendered|default(false) %}
         <div class="{{ _toolbar_class }}">
             {% for action in (_split ? [] : header.actions) %}
@@ -114,4 +120,34 @@
             }, false) }}
         </div>
     {% endif %}
+{% else %}
+    <div class="nowo-ui-page-header__bar">
+        {% set _nav = header.tabs %}
+        {% set _items = [] %}
+        {% for item in _nav.items %}
+            {% set _items = _items|merge([{label: item.label, href: item.href, current: item.active, attr: item.attributes, icon: item.icon}]) %}
+        {% endfor %}
+        <div class="nowo-ui-page-header__nav">
+            {{ include(_t ? _t.partial('tabs', bundle) : '@NowoUiKitBundle/partials/_tabs.html.twig', {
+                items: _items,
+                aria_label: _nav.label is null ? null : (_nav.label.key is defined ? _nav.label.key|trans(_nav.label.params, _nav.label.domain) : _nav.label),
+                attr: _nav.attributes,
+                region: 'area-nav',
+                framework: framework,
+                bundle: bundle,
+                nowo_ui_page_type: _pt,
+            }, false) }}
+        </div>
+        {% if header.actions is not empty and not header_actions_rendered|default(false) %}
+            <div class="{{ _toolbar_class }}">
+                {% for action in (_split ? [] : header.actions) %}
+                    {{ include(_t ? _t.partial('action', bundle) : '@NowoUiKitBundle/partials/_action.html.twig', {action: action, context: 'toolbar', framework: framework, bundle: bundle, nowo_ui_page_type: _pt}, false) }}
+                {% endfor %}
+                {{ _split_html }}{% if toolbar is defined and toolbar %}{{ toolbar|raw }}{% endif %}
+            </div>
+        {% elseif toolbar is defined and toolbar %}
+            <div class="{{ _toolbar_class }}">{{ toolbar|raw }}</div>
+        {% endif %}
+    </div>
+{% endif %}
 </div>

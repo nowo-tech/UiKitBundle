@@ -35,7 +35,7 @@
 {% set _title = title is defined and title ? (title.key is defined ? title.key|trans(title.params|default({}), title.domain|default('messages')) : title) : null %}
 {% set _intro = intro is defined and intro ? (intro.key is defined ? intro.key|trans(intro.params|default({}), intro.domain|default('messages')) : intro) : null %}
 {% set _actions = actions is defined and actions is iterable ? actions : [] %}
-<section class="{{ _t ? _t.macroClasses('card', ui.card(framework), bundle, _pt) : ui.card(framework) }}"{% if id is defined and id %} id="{{ id }}"{% endif %} data-nowo-ui-card{{ _t ? _t.renderAttributes('card', bundle, attr|default({}), _pt)|raw }}{% if not _t %}{% for name, value in attr|default({}) %} {{ name }}="{{ value }}"{% endfor %}{% endif %}>
+<section class="{{ _t ? _t.macroClasses('card', ui.card(framework), bundle, _pt) : ui.card(framework) }}{{ (attr.class ?? false) ? ' ' ~ attr.class }}"{% if id is defined and id %} id="{{ id }}"{% endif %} data-nowo-ui-card{{ _t ? _t.renderAttributes('card', bundle, attr|default({})|filter((v, k) => k != 'class'), _pt)|raw }}{% if not _t %}{% for name, value in attr|default({})|filter((v, k) => k != 'class') %} {{ name }}="{{ value }}"{% endfor %}{% endif %}>
     {% if _title %}
         <header class="{{ _t ? _t.macroClasses('card_header', ui.card_header(framework), bundle, _pt) : ui.card_header(framework) }}">
             <div class="nowo-ui-card__heading">

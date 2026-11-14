@@ -34,11 +34,11 @@
     {% else %}
         {% set is_current = item.current|default(false) %}
         <a
-            class="nowo-ui-aside__link{{ is_current ? ' is-current' : '' }}"
+            class="nowo-ui-aside__link{{ is_current ? ' is-current' : '' }}{{ (item.attr.class ?? false) ? ' ' ~ item.attr.class }}"
             href="{{ item.href|default('#') }}"
             {% if is_current %}aria-current="page"{% endif %}
             {% if item.attr is defined %}
-                {% for name, value in item.attr %}{{ name }}="{{ value }}" {% endfor %}
+                {% for name, value in item.attr|filter((v, k) => k != 'class') %}{{ name }}="{{ value }}" {% endfor %}
             {% endif %}
         >{{ item.label }}</a>
     {% endif %}

@@ -93,7 +93,7 @@
     {% set _scope_key = scope|default(_scopes|first.key) %}
 {% endif %}
 {% set _both = listing.hasColumns and listing.hasFilters %}
-<div class="{{ nowo_ui_class('listing_customizer', bundle) }}" data-controller="listing-customizer"
+<div class="{{ nowo_ui_class('listing_customizer', bundle) }}{{ (attr.class ?? false) ? ' ' ~ attr.class }}" data-controller="listing-customizer"
     {{- ' ' }}data-listing-customizer-state-value="{{ listing.clientState|json_encode }}"
     {%- if save_url|default('') %} data-listing-customizer-url-value="{{ save_url }}"{% elseif listing.cookieName %} data-listing-customizer-cookie-value="{{ listing.cookieName }}"{% endif %}
     {%- if save_token|default('') %} data-listing-customizer-token-value="{{ save_token }}"{% endif %}
@@ -103,7 +103,7 @@
     {{- ' ' }}data-listing-customizer-messages-value="{{ _messages|json_encode }}"
     {%- if _scopes is not empty %} data-listing-customizer-scopes-value="{{ _scope_values|json_encode }}" data-listing-customizer-scope-value="{{ _scope_key }}"{% endif %}
     {%- if _testids %} data-testid="listing-customizer"{% endif %}
-    {{- nowo_ui_attrs('listing_customizer', bundle, attr|default({})) }}>
+    {{- nowo_ui_attrs('listing_customizer', bundle, nowo_ui_attrs_without_class(attr|default({}))) }}>
     {% if listing.ignoredFilters is not empty %}
         <div class="{{ nowo_ui_class('listing_notice', bundle) }}" role="status"{% if _testids %} data-testid="listing-ignored-filters"{% endif %}{{ nowo_ui_attrs('listing_notice', bundle) }}>
             <span>{{ 'listing.ignored_filters'|trans({'%filters%': listing.ignoredFilters|map(f => f.label|nowo_ui_trans)|join(', ')}, 'NowoUiKitBundle') }}</span>

@@ -150,7 +150,7 @@ final class MobileUxTest extends TestCase
         $css = $this->css('nowo-ui.unlayered.css');
         self::assertMatchesRegularExpression('/\n\.nowo-ui-edge-tabs-launcher \{[^}]*position: fixed;[^}]*display: none;/', $css);
         foreach (['phone', 'always'] as $when) {
-            $ctx = ":root[data-nowo-ui-edge-tabs-ready]:not([data-nowo-ui-edge-tabs-open]):has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='".$when."']:not([hidden])) .nowo-ui-edge-tab__link:not([aria-expanded='true'], [data-nowo-ui-edge-tab-pinned]) {";
+            $ctx = ":root[data-nowo-ui-edge-tabs-ready]:not([data-nowo-ui-edge-tabs-open]):has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='".$when."']:not([hidden])) .nowo-ui-edge-tab__link:not([aria-expanded='true'], [data-nowo-ui-edge-tab-pinned], [data-nowo-ui-edge-tabs-folding]) {";
             self::assertStringContainsString($ctx, $css, $when);
         }
         self::assertMatchesRegularExpression("/@media \\(max-width: 40rem\\), \\(pointer: coarse\\) and \\(max-width: 64rem\\) \\{\\s*:root\\[data-nowo-ui-edge-tabs-ready\\]:has\\(\\.nowo-ui-edge-tabs-launcher\\[data-nowo-ui-edge-tabs-when='phone'\\]:not\\(\\[hidden\\]\\)\\) \\.nowo-ui-edge-tabs-launcher \\{\\s*display: inline-flex;/", $css);
@@ -168,7 +168,7 @@ final class MobileUxTest extends TestCase
         $folding = 0;
         foreach ($rules as [, $selector, $body]) {
             if (str_contains($body, 'display: none') && !str_starts_with(trim($selector), '.nowo-ui-edge-tab__link')) {
-                self::assertStringEndsWith(".nowo-ui-edge-tab__link:not([aria-expanded='true'], [data-nowo-ui-edge-tab-pinned])", trim($selector));
+                self::assertStringEndsWith(".nowo-ui-edge-tab__link:not([aria-expanded='true'], [data-nowo-ui-edge-tab-pinned], [data-nowo-ui-edge-tabs-folding])", trim($selector));
                 ++$folding;
             }
             if (str_contains($body, 'top:') && str_contains($selector, ':root')) {
@@ -177,7 +177,7 @@ final class MobileUxTest extends TestCase
         }
         self::assertSame(2, $folding, 'phone and always');
         self::assertStringContainsString("@layer nowo-ui {\n", $this->css('nowo-ui.css'));
-        self::assertStringContainsString(":not([aria-expanded='true'], [data-nowo-ui-edge-tab-pinned]) {\n    display: none !important;", $this->css('nowo-ui.css'));
+        self::assertStringContainsString(":not([aria-expanded='true'], [data-nowo-ui-edge-tab-pinned], [data-nowo-ui-edge-tabs-folding]) {\n    display: none !important;", $this->css('nowo-ui.css'));
     }
 
     public function testCssPhoneCards(): void

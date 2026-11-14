@@ -1,0 +1,27 @@
+<div
+    class="nowo-ui-responsive-table nowo-ui-responsive-table--corner"
+    data-controller="responsive-table"
+    data-responsive-table-mode-value=""    data-responsive-table-messages-value="{&quot;toResponsive&quot;:&quot;Switch to responsive table&quot;,&quot;toScroll&quot;:&quot;Switch to horizontal scroll&quot;,&quot;details&quot;:&quot;Row details&quot;,&quot;saveError&quot;:&quot;Could not save the table mode.&quot;}" data-probe="p">
+            <div class="nowo-ui-responsive-table__bar">
+            <button
+                type="button"
+                class="nowo-ui-responsive-table__toggle nowo-ui-corner-tab"
+                data-responsive-table-target="toggle"
+                data-action="responsive-table#toggle"
+                aria-pressed="false"
+                aria-label="Switch to responsive table"
+                title="Switch to responsive table"            ><span class="nowo-ui-responsive-table__icon nowo-ui-responsive-table__icon--scroll" aria-hidden="true"><i class="bi bi-arrows" aria-hidden="true"></i></span>
+                <span class="nowo-ui-responsive-table__icon nowo-ui-responsive-table__icon--responsive" aria-hidden="true"><i class="bi bi-view-stacked" aria-hidden="true"></i></span>            </button>
+        </div>
+        <div class="nowo-ui-table-wrap nowo-ui-responsive-table__scroller" data-responsive-table-target="scroller">
+        <table></table>    </div>
+    <dialog class="nowo-ui-confirm nowo-ui-row-detail" data-responsive-table-target="dialog" aria-labelledby="rt-title">
+        <div class="nowo-ui-confirm__panel nowo-ui-row-detail__panel">
+            <div class="nowo-ui-confirm__header nowo-ui-row-detail__header">
+                <h2 class="nowo-ui-confirm__title nowo-ui-row-detail__title" id="rt-title" data-responsive-table-target="dialogTitle"></h2>
+                <button type="button" class="nowo-ui-row-detail__close" data-action="responsive-table#close" aria-label="Close" title="Close"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+            </div>
+            <div class="nowo-ui-row-detail__content" data-responsive-table-target="dialogBody"></div>
+        </div>
+    </dialog>
+</div>

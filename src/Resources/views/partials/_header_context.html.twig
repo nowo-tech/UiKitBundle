@@ -44,7 +44,7 @@
 }|merge(crumbs_options|default({})), false)|trim -%}
 {%- if _actions_html is not same as('') or _home or _crumbs_html is not same as('') -%}
 {%- set _home_label = home_label|default(null) is null ? 'nav.home'|trans({}, 'NowoUiKitBundle') : home_label|nowo_ui_trans -%}
-<div class="{{ nowo_ui_class('header_context', _b) }}" data-nowo-ui-header-context-inner{{ nowo_ui_attrs('header_context', _b) }}{{ nowo_ui_html_attrs(attr|default({})) }}>
+<div class="{{ nowo_ui_class('header_context', _b) }}{{ (attr.class ?? false) ? ' ' ~ attr.class }}" data-nowo-ui-header-context-inner{{ nowo_ui_attrs('header_context', _b) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(attr|default({}))) }}>
     {%- if _actions_html is not same as('') %}
     {{ _actions_html|raw }}
     {%- endif -%}

@@ -127,7 +127,7 @@
 {% set _has_brand_parts = _brand_logo or _brand_icon or _brand_icon_src or (_brand_name is not null and _brand_name is not same as('')) %}
 {% set aside_label = aside_label|default('nav.aside'|trans({}, 'NowoUiKitBundle')) %}
 {% set _header_context = header_context is defined and header_context ? header_context|trim : '' %}
-<div class="{{ nowo_ui_class('app_shell', bundle) }}{{ _kit ? ' nowo-ui-shell' }} {{ _state }}{{ _header_context is not same as('') ? ' has-header-context' }}" data-nowo-ui-shell{{ nowo_ui_attrs('app_shell', bundle, _root_attr) }}>
+<div class="{{ nowo_ui_class('app_shell', bundle) }}{{ _kit ? ' nowo-ui-shell' }} {{ _state }}{{ _header_context is not same as('') ? ' has-header-context' }}{{ (_root_attr.class ?? false) ? ' ' ~ _root_attr.class }}" data-nowo-ui-shell{{ nowo_ui_attrs('app_shell', bundle, nowo_ui_attrs_without_class(_root_attr)) }}>
     <header class="{{ nowo_ui_class('app_header', bundle) }}{{ _kit ? ' nowo-ui-header' }}"{{ nowo_ui_attrs('app_header', bundle) }}>
         <div class="{{ nowo_ui_class('app_header_start', bundle) }}{{ _kit ? ' nowo-ui-header__start' }}"{{ nowo_ui_attrs('app_header_start', bundle) }}>
             {{ include(nowo_ui_partial('app_shell_burger', bundle), _burger, false) }}

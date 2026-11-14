@@ -3,6 +3,25 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.51.0](#to-2510)
+  - [UiKit's default theme is available, and off (`base_stylesheet`)](#uikits-default-theme-is-available-and-off-base_stylesheet)
+  - [`.nowo-ui-header` navigation](#nowo-ui-header-navigation)
+- [To 2.50.0](#to-2500)
+- [To 2.49.1](#to-2491)
+  - [To 2.49.1](#to-2491-1)
+- [To 2.49.0](#to-2490)
+- [To 2.49.0](#to-2490-1)
+- [To 2.48.1](#to-2481)
+- [To 2.48.0](#to-2480)
+- [To 2.48.0](#to-2480-1)
+- [To 2.47.0](#to-2470)
+- [To 2.46.0](#to-2460)
+- [To 2.45.0](#to-2450)
+- [To 2.44.0](#to-2440)
+  - [To 2.44.0 (auth panel brand)](#to-2440-auth-panel-brand)
+- [To 2.43.1](#to-2431)
+- [To 2.43.0](#to-2430)
+- [To 2.42.1](#to-2421)
 - [To 2.42.0](#to-2420)
 - [To 2.41.1](#to-2411)
 - [To 2.41.0](#to-2410)
@@ -129,6 +148,407 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.51.0
+
+From **2.50.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+**Nothing to do.** Both changes below are additive; a host that upgrades and changes no configuration renders
+byte-identical HTML and keeps the same CSS.
+
+### UiKit's default theme is available, and off (`base_stylesheet`)
+
+`nowo-ui.css` paints UiKit's components but not the document around them — no body font, no page gutter, no
+masthead height. Hosts with a CSS framework (Bootstrap in the `base` layer, Tailwind) or their own theme file get
+those from there and need nothing. Hosts with **neither** (`css_framework: custom` / `none` and no stylesheet of
+their own) were falling back to the browser defaults: a serif body font, edge-to-edge content and a one-line
+masthead. If that is you:
+
+```yaml
+nowo_ui_kit:
+    base_stylesheet: true
+```
+
+`@NowoUiKit/layout/document.html.twig` and the error layout then link `css/nowo-ui-base.css` before `nowo-ui.css`
+(run `assets:install` after upgrading, as for any new shipped asset). Its rules live in
+`@layer theme.nowo-ui-base`, a nested sub-layer of the first layer of UiKit's order, so a framework in `base`, the
+kit, host utilities and all unlayered host CSS still beat it — it cannot override a theme you already have.
+Details: [THEMING.md — The default theme](THEMING.md#the-default-theme-251).
+
+A host layout that overrides `nowo_ui_styles` without `{{ parent() }}` links the stylesheets itself; add
+`css/nowo-ui-base.css` before `css/nowo-ui.css` there if you want it.
+
+### `.nowo-ui-header` navigation
+
+A `<nav>` placed directly inside a masthead `.nowo-ui-header` (the page contract's `nowo_ui_navigation` region)
+now renders as a wrapping flex row with a gap, and the `[aria-current]` item in the active colour and weight;
+`.nowo-ui-header__nav` is the explicit class for it. Before, such links ran together with no spacing. If your own
+CSS already lays that `<nav>` out, it keeps winning (your rules are unlayered or in a higher layer).
+
+`.nowo-ui-header` also sets `padding-block: 0; padding-inline: var(--nowo-ui-header-padding-inline, 1rem)` instead
+of the `padding: 0 1rem` shorthand. Same rendering; the token is what lets a theme line the masthead up with the
+page gutter from a lower cascade layer.
+
+## To 2.50.0
+
+From **2.49.1**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+## To 2.49.1
+
+From **2.49.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+### To 2.49.1
+
+From **2.49.0**: `composer update nowo-tech/ui-kit-bundle`. Tests and docs only (REQ-RUNTIME-002 worker test with two
+users and brands); no configuration, template or API change.
+
+## To 2.49.0
+
+From **2.48.1**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+## To 2.49.0
+
+From **2.48.1**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+Target **2.49.0** (minor, REQ-ARCH-001 rule 3). **Nothing to change**: no markup, CSS, JS or template variable changes,
+and every existing port keeps working. Two framework-typed signatures are deprecated and removed in **3.0**:
+
+| Deprecated (2.49) | Replacement | Removed |
+|---|---|---|
+| `Listing\ListingPreferenceStoreInterface::load(string $listingKey, Request $request)` | `Listing\ListingPreferenceReaderInterface::load(string $listingKey, ListingContext $context)` | 3.0 |
+| `Dialog\RemoteDialogRedirectEvent::getRequest()` | `getRequestPath()`, `getRequestRoute()`, `getRouteParameters()` | 3.0 |
+| `Dialog\RemoteDialogRedirectEvent::getResponse()` | `getRedirectTargetUrl()`, `getRedirectStatusCode()` | 3.0 |
+
+**Host listing store (only if you aliased `ListingPreferenceStoreInterface`).** It still works: the builder passes it
+the request as before and triggers one `E_USER_DEPRECATED` notice when the builder is built. To migrate, implement the
+new port and alias it instead (it wins over the legacy alias):
+
+```php
+use Nowo\UiKitBundle\Listing\ListingContext;
+use Nowo\UiKitBundle\Listing\ListingPreferenceReaderInterface;
+
+final readonly class DoctrineListingPreferenceStore implements ListingPreferenceReaderInterface
+{
+    public function load(string $listingKey, ListingContext $context): ?array
+    {
+        // was: $request->cookies / the token / $request->attributes->get('project')
+        // now: $context->cookie($name), $context->viewerId, $context->routeParameters['project'] ?? null
+    }
+
+    public function cookieName(string $listingKey): ?string
+    {
+        return null;
+    }
+}
+```
+
+```yaml
+# config/services.yaml
+Nowo\UiKitBundle\Listing\ListingPreferenceReaderInterface: '@App\Listing\DoctrineListingPreferenceStore'
+# optional: fills ListingContext::$viewerId (the kit ships no implementation)
+Nowo\UiKitBundle\Listing\ListingViewerResolverInterface: '@App\Listing\CurrentUserViewer'
+```
+
+A store that resolved the user from the security token inside `load()` can keep doing so through its own injected
+service; `viewerId` is a convenience. **Fail closed:** a per-viewer reader returns null when it has no viewer (null
+`viewerId` and no identity of its own), never a shared row. In debug, the builder logs a warning when a server-side
+reader runs without a viewer resolver. `$context->cookies` holds only the `nowo_ui_listing_*` cookies; a store that
+needs another cookie reads it through its own request-aware service. Without a request (a presenter, a console preview) call
+`ListingCustomizerViewBuilder::buildForContext($key, $context)`.
+
+**`RemoteDialogRedirectEvent` listeners.** Replace `$event->getRequest()->attributes->get('_route')` with
+`$event->getRequestRoute()`, `->get('_route_params')[…]` / route attributes with `$event->getRouteParameters()[…]`, and
+`$event->getResponse()->getTargetUrl()` with `$event->getRedirectTargetUrl()`. `getPath()`, `setPath()`,
+`getAnswer()` and `setAnswer()` are unchanged. The two deprecated getters trigger an `E_USER_DEPRECATED` notice on
+each call (visible in the profiler / deprecation log, never an exception).
+
+**Named arguments.** `CookieListingPreferenceStore::load()`'s second parameter is now `$context`
+(`ListingContext|Request`); positional calls are unchanged.
+
+## To 2.48.1
+
+From **2.48.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+Target **2.48.1** (patch). Nothing to change. If you worked around the `page-loader` peer showing its overlay on
+cancelled link clicks (e.g. by adding `data-no-page-loader` to toggle links), you can drop the workaround: a click
+any handler cancels with `preventDefault()` no longer shows the overlay. `data-no-page-loader` now also works as a bare
+attribute.
+
+**Turbo Drive hosts (visible change):** Turbo cancels the link clicks it handles, so the peer no longer shows the
+overlay on Turbo visits. Turbo's progress bar already covers them. To keep the kit overlay there, load the kit IIFE
+`nowo-ui-page-loader.js` (it defines the helpers) and add:
+
+```js
+document.addEventListener('turbo:visit', () => window.nowoUiShowPageLoader?.());
+document.addEventListener('turbo:load', () => window.nowoUiHidePageLoader?.());
+```
+
+## To 2.48.0
+
+From **2.47.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+## To 2.48.0
+
+From **2.47.x**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+php bin/console assets:install   # new js/nowo-ui-rail.js and js/nowo-ui-layout-state.js; rebuilt side-panel / scroll-region
+```
+
+Nothing to change: every 2.48 option is opt-in, and without them the side panel, its container and the page header
+render byte-identical to 2.47.0 (`tests/Fixtures/bc-2.47`). Two CSS additions apply to markup that already uses the
+attributes, at zero specificity (host rules win):
+
+- `[data-nowo-ui-scroll-region]` now gets `max-inline-size: 100%; overflow-x: auto` from the kit CSS (it was a
+  JavaScript-only hook). A host that styled these regions itself keeps its rules.
+- `js/nowo-ui-scroll-region.js` no longer makes regions inside a `contenteditable` area focusable (and removes the
+  attributes it set there). Editors that relied on it should mark their own scroll containers.
+
+Optional — what to adopt:
+
+- A three-column page (tree + content + panel): `drawer_below: 'lg'` on `side_panel` and `side_panel_container`. A
+  panel the server renders `open` starts closed at or under that breakpoint (never a modal drawer on load); the host
+  store keeps `open` for wide screens.
+- No per-user store for the panel: `persist: '<key>'`, and `js/nowo-ui-layout-state.js` blocking in `<head>` to avoid
+  a flash. Keep the server-rendered `open` when you have a store.
+- A collapsible column: the `rail_toggle` partial, `data-nowo-ui-rail-host` / `data-nowo-ui-rail-body` on your markup,
+  `script_names: nowo_ui_script_names()|merge(['rail'])`.
+- Show pages with tabs: `nowo_ui_page_header(header, {tabs_inline: true})`.
+- Reading pages: `.nowo-ui-readable`, `class="nowo-ui-rendered-content"` on rendered bodies, `.nowo-ui-grid-fit` on a
+  grid whose items widen it.
+
+Host `page_header` overrides receive `tabs_inline`; host `side_panel` overrides receive `drawer_below` and `persist`.
+The `rail_toggle` `attr` option is checked by `nowo_ui_safe_attrs()`: a `style` key throws (as `on*` does).
+Hosts with a custom `scripts` list: no change (the new scripts are opt-in). See
+[USAGE.md](USAGE.md#drawer-breakpoint-and-remembered-state-248).
+
+## To 2.47.0
+
+From **2.46.x**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+Nothing to change: without `error_pages.illustration_provider` the error pages are byte-identical, and a FileType
+renders exactly as before unless it sets the new option `nowo_ui_image_input`.
+
+Optional — per-brand error illustrations: implement `Nowo\UiKitBundle\View\ErrorIllustrationProviderInterface`
+(return `ErrorIllustration::fromUrl(...)` or null) and set
+
+```yaml
+nowo_ui_kit:
+    error_pages:
+        illustration_provider: App\Ui\BrandErrorIllustrations
+        illustration_provider_budget_ms: 20   # optional: a slower call skips the provider for the rest of the request
+```
+
+The provider must be fast and must not need the database (error pages render while it is down); any exception falls
+back to `error_pages.illustrations`. Allow the image host in your CSP `img-src` when it is not `'self'`. A host that
+overrides the `error_illustration` block keeps its markup; read `error.illustration.isUrl()` / `.src` / `.srcset` /
+`.sizes` / `.webpSrcset` to support provided illustrations. See
+[USAGE.md](USAGE.md#error-illustration-provider-247).
+
+Optional — image input box (stored image or default, instant local preview, Replace / Remove / Undo):
+
+```php
+$builder
+    ->add('logo', FileType::class, [
+        'required' => false,
+        ImageInputTypeExtension::OPTION => ['current_url' => $logoUrl, 'default_url' => $defaultUrl, 'remove_field' => 'removeLogo'],
+    ])
+    ->add('removeLogo', CheckboxType::class, ['required' => false, 'mapped' => false]);
+```
+
+and add `image-input` to the scripts: `script_names: nowo_ui_script_names()|merge(['image-input'])`. Hosts with their own
+remove checkbox markup: pass its field name as `remove_field` (it is then rendered inside the box, only when an image is
+stored). CSP: `img-src` needs `blob:` (already required by `image-crop`). A host form theme that is not the kit's must keep
+UiKit's prepended `form_themes` (default) or `{% use '@NowoUiKit/form/nowo_ui_image_input.html.twig' %}`. See
+[USAGE.md](USAGE.md#image-input-247).
+
+## To 2.46.0
+
+From **2.45.x**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+Visible changes, no code to change:
+
+- The launcher's tabs unfold more softly by default: 260ms, `cubic-bezier(0.22, 1, 0.36, 1)`, and a scale from 0.96.
+  To restore the 2.45 timing exactly:
+
+  ```css
+  :root {
+    --nowo-ui-edge-tabs-motion-duration: var(--nowo-ui-motion-medium, 200ms);
+    --nowo-ui-edge-tabs-motion-easing: var(--nowo-ui-motion-ease-out, ease-out);
+    --nowo-ui-edge-tabs-motion-scale: 1;
+  }
+  ```
+
+  e2e tests that waited a fixed time for the fold should allow about 260ms + 30ms per tab (or wait for
+  `toBeHidden()` / `el.getAnimations()`).
+- `icon: 'chevron'` prints a kit inline SVG (`svg.nowo-ui-edge-tabs-chevron`) that morphs instead of the icon set's
+  `chevron_left` glyph that turned. A host that mapped `nowo_ui_kit.action_icons.chevron_left` for the launcher, or
+  styled `.nowo-ui-edge-tabs-launcher--chevron .bi-chevron-left` / `i` / `svg[data-icon]`, should style
+  `.nowo-ui-edge-tabs-chevron` instead (stroke `currentColor`, width 2). Tune the morph with
+  `--nowo-ui-edge-tabs-icon-duration` / `--nowo-ui-edge-tabs-icon-easing`; `--nowo-ui-edge-tabs-icon-duration: 0s`
+  turns it off.
+- Turbo hosts: nothing to do; the fold now ends on `turbo:before-cache`.
+
+## To 2.45.0
+
+From **2.44.x**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+Nothing to do for the defaults: every new edge tab token defaults to the 2.44 value (2.25rem × 2.75rem, hover 2.6rem,
+icon 1.15rem, step 3.25rem = height 2.75rem + gap 0.5rem). Visible changes: the launcher's tabs now unfold / fold with
+a short animation (none under reduced motion), and the launcher widens on hover like the tabs.
+
+- A host that resized the edge tabs or the launcher with CSS overrides on `.nowo-ui-edge-tab__link` /
+  `.nowo-ui-edge-tabs-launcher` should set `--nowo-ui-edge-tab-width`, `--nowo-ui-edge-tab-height`,
+  `--nowo-ui-edge-tab-hover-width` and `--nowo-ui-edge-tab-icon` instead and drop the overrides; with a custom height,
+  set the height (and `--nowo-ui-edge-tab-gap`, or the step) so the first tab keeps the gap under the launcher.
+- Host CSS or tests that expected the tabs to hide the moment the launcher closes: they stay painted, `inert` and
+  `aria-hidden`, for about 200ms + 30ms per tab while `<html>` has `data-nowo-ui-edge-tabs-closing`; e2e tests should
+  wait for the tab to be hidden (Playwright's `toBeHidden()` does) or for `el.getAnimations()` to finish before
+  measuring positions.
+- Hosts without a global `box-sizing: border-box` reset: link edge tabs (`<a>`) lose the extra 1px width / 2px height
+  they had over button tabs and the launcher (`.nowo-ui-edge-tab__link` is now border-box).
+- Optional: `icon: 'chevron'` on the `edge_tabs_launcher` partial for the chevron that turns down while open.
+
+## To 2.44.0
+
+From **2.43.1**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+### To 2.44.0 (auth panel brand)
+
+Target 2.44.0. From **2.43.x**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+Nothing to do: the default `nowo_ui_kit.auth_panel.brand: auto` renders the auth panel as 2.43. A host whose guest
+layout prints its own brand above the panel (a double logo on the AuthKit pages) sets:
+
+```yaml
+# config/packages/nowo_ui_kit.yaml
+nowo_ui_kit:
+    auth_panel:
+        brand: none
+```
+
+or, for one page or one layout only, `{% set nowo_ui_auth_brand = 'none' %}` (in the template extending
+`@NowoUiKit/page/auth.html.twig`, or in the guest layout before `nowo_ui_content`) or `nowo_ui_auth_brand: 'none'` in
+the `render()` variables. Then drop any CSS that hid `.nowo-ui-auth-panel__brand--logo`. `none` also drops the
+`AuthPage::brand` text. A template overriding `page/auth.html.twig` wholesale keeps working; the new block
+`nowo_ui_auth_brand` is the narrower override point.
+
+## To 2.43.1
+
+From **2.43.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+Target 2.43.1. From **2.43.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+Nothing to do. The `visible-when` peer now chains rules: a row whose controlling field is inside a hidden row is hidden
+too. A form that relied on such a row staying visible (a dependent of a hidden provider row) should give the row its
+own rule or move the controlling field out of the dependent row. The server side (InstanceSettings / FormKit) decides
+what is saved; hidden inputs are still submitted.
+
+## To 2.43.0
+
+From **2.42.1**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+Target 2.43.0. From **2.42.1**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+Nothing to do; the default markup is unchanged. New and opt-in: the image crop step for file inputs
+(`js/nowo-ui-image-crop.js`, the FileType option `nowo_ui_image_crop`, the Twig function `nowo_ui_image_crop_attrs()`,
+`ImageCrop::attributes()`; `format: auto` by default, optional `max_bytes`), see [USAGE](USAGE.md#image-crop). Accept
+`image/webp`, `image/png` and `image/jpeg` where a cropped input is validated: `auto` picks among them per engine.
+Cancel (Escape, close) puts back the input's previous file list and dispatches `input` / `change` only if it then
+differs, so it fires nothing on an empty input. Set `max_bytes` about 5 % under the server limit, and keep the server's
+size and pixel limits. New CSS rules match only `.nowo-ui-image-crop*`; new
+translation keys `image_crop.*`. A page that opts in and sends a CSP needs `img-src blob:` for the `preview` image, and
+for the `<img>` fallback of browsers whose `createImageBitmap` does not take the orientation option.
+
+## To 2.42.1
+
+From **2.42.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+Target 2.42.1. From **2.42.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+Nothing to do when you never pass `class` inside an attribute map; that markup is unchanged.
+
+- **`class` in `attr` (and the other attribute maps) now applies:** a `class` key in a partial's `attr`, `toggle_attr`,
+  `dialog_attr`, `title_attr`, `body_attr`, item / option / panel `attr`, or in the `attributes` of a View model
+  (`Action`, `Stat`, `DetailItem`, `PageStatus`, `Table`, the scaffold pages) used to print a second `class` attribute
+  that browsers ignore; it is now appended to the element's own classes (full list in the CHANGELOG). A host that
+  worked around it — styling another selector (a wrapper, a `data-*` attribute, the slot class), or adding the class
+  through the theme slots instead — now also gets that class on the element: check that its rules do not now apply
+  twice or clash, and drop the workaround if you like. A class that was never meant to apply (dead code in an `attr`
+  hash) now does: remove it.
 
 ## To 2.42.0
 

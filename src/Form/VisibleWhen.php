@@ -10,7 +10,8 @@ use InvalidArgumentException;
  * Contract of the `visible-when` Stimulus peer (2.23): a form row shown only while another field (the "provider")
  * holds one of some values. The peer hides non-matching rows (`hidden`, `inert`, `aria-hidden`) and never disables
  * or clears an input, so hidden fields are still submitted and stored values survive; without JavaScript every row is
- * visible. Use the attributes as a row's `row_attr` (the UiKit form theme and Symfony's form_div_layout render it) and
+ * visible; rules chain (2.43.1): a row whose controlling field sits inside a hidden row is hidden too. Use the
+ * attributes as a row's `row_attr` (the UiKit form theme and Symfony's form_div_layout render it) and
  * put `data-controller="visible-when"` ({@see self::containerAttributes()}) on the form:
  *
  *     $builder->add('smtp_host', TextType::class, [

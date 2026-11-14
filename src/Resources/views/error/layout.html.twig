@@ -45,7 +45,8 @@
     <title>{% block title %}{% block nowo_ui_document_title %}{{ nowo_ui_document_title|default(_error_status ?: '') }}{% endblock %}{% endblock %}</title>
     {% block nowo_ui_error_head %}{% endblock %}
     {% block nowo_ui_error_styles %}
-        <link rel="stylesheet" href="{{ asset('css/nowo-ui.css', 'nowo_ui_kit') }}">
+        {% if nowo_ui_base_stylesheet() %}<link rel="stylesheet" href="{{ asset('css/nowo-ui-base.css', 'nowo_ui_kit') }}">
+        {% endif %}<link rel="stylesheet" href="{{ asset('css/nowo-ui.css', 'nowo_ui_kit') }}">
         {{ nowo_ui_tokens(_nonce) }}
     {% endblock %}
 </head>

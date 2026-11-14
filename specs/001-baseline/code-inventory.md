@@ -80,6 +80,8 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | `Form/DateRangeType.php` | 2.15: date-range filter field (two native dates, host-chosen `from_name` / `to_name`) | FR-DATERANGE-001 |
 | `Form/DateRangeRequestHandler.php` | 2.15.1: request handler decorator — a URL carrying only a range submits the nameless filter form | FR-DATERANGE-001 |
 | `Form/DateRangeSubmitExtension.php` | 2.15: moves the flat sibling from / to parameters onto the date-range child before submit | FR-DATERANGE-001 |
+| `Form/ImageCrop.php` | 2.43: attribute contract of the image crop step (`ImageCrop::attributes()`, Twig `nowo_ui_image_crop_attrs()`) | FR-FORM-001 |
+| `Form/ImageCropTypeExtension.php` | 2.43: FileType option `nowo_ui_image_crop` | FR-FORM-001 |
 | `Form/MultiSelectTypeExtension.php` | 2.14: ChoiceType option `nowo_ui_multi_select` adds the `multi-select` peer markup | FR-MULTISELECT-001 |
 | `Form/VisibleWhen.php` | 2.23: `visible-when` peer contract — row attributes (`data-nowo-ui-visible-when-field` / `-in`), `fromOption()` for a `visible_when` option, container attributes | FR-VISIBLEWHEN-001 |
 
@@ -393,6 +395,7 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | `Resources/assets/src/nowo-ui-shell.ts` | Shell: burger, aside, backdrop, width toggle, opt-in rail | FR-JS-001, FR-SIDEBAR-001 |
 | `Resources/assets/src/nowo-ui-sidebar-core.ts` | 1.15: side-effect-free three-mode sidebar helpers | FR-SIDEBAR-001 |
 | `Resources/assets/src/nowo-ui-toast.ts` | Toast dismiss + auto-hide | FR-JS-001 |
+| `Resources/assets/src/nowo-ui-image-crop.ts` | Opt-in crop step for image file inputs (`nowo-ui-image-crop-core.ts`: options, geometry, output) | FR-JS-001 |
 | `Resources/assets/src/nowo-ui-emoji-picker.ts` | Opt-in emoji picker over a text input (`nowo-ui-emoji-table.ts`: its table) | FR-JS-001 |
 | `Resources/assets/src/nowo-ui-show-more.ts` | Opt-in line-clamp fold with a real button | FR-JS-001 |
 | `Resources/assets/src/nowo-ui-motion-core.ts` | Closing with an effect: fade, then the real close, with a fallback timer | FR-JS-001 |
