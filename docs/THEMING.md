@@ -9,6 +9,7 @@ two token blocks of `nowo-ui.css`. A host theme is a short `:root` block.
 ## Table of contents
 
 - [How it works](#how-it-works)
+- [The default theme (2.51)](#the-default-theme-251)
 - [Writing a host theme](#writing-a-host-theme)
 - [Base tokens](#base-tokens)
 - [Typography, focus, links](#typography-focus-links)
@@ -54,6 +55,67 @@ two token blocks of `nowo-ui.css`. A host theme is a short `:root` block.
     where they are used, so a scoped `--nowo-ui-primary` also recolours hover states, focus rings, etc.;
   - dark mode keeps working: the fallbacks follow the dark base tokens.
 - The *Default* column below is that fallback chain.
+
+## The default theme (2.51)
+
+`nowo-ui.css` paints UiKit's **components** — tables, buttons, cards, flashes, the shell — but nothing about the
+**document** they sit in. It sets no `font-family` on `<body>`, no page gutter and no height for a masthead
+`.nowo-ui-header` used outside the kit shell. That is deliberate for a host that brings a CSS framework (Bootstrap
+in the `base` layer, Tailwind's preflight) or its own theme file: those already paint the document, and the kit
+must not fight them.
+
+A host that brings **neither** — `css_framework: custom` or `none` with no stylesheet of its own — got the browser
+defaults instead: a **serif** body font, content flush against the window edges, and a masthead one line tall.
+
+`nowo-ui-base.css` is that missing document base. Turn it on:
+
+```yaml
+nowo_ui_kit:
+    base_stylesheet: true
+```
+
+`@NowoUiKit/layout/document.html.twig` (so the admin, guest and error layouts) then links it **before**
+`nowo-ui.css`. It gives you:
+
+- a system sans-serif stack on `<body>` (`--nowo-ui-font-family`), inherited by form controls;
+- `box-sizing: border-box`, heading sizes / weights (`--nowo-ui-heading-weight`), prose and list margins, link colour;
+- page gutters on the content region: `max-width: var(--nowo-ui-content-max-width, 72rem)`, centred, with
+  `var(--nowo-ui-page-gutter, 1.25rem)` of inline padding (the guest page keeps its own narrow card layout);
+- the shell's header height on a masthead `.nowo-ui-header`, with its contents lined up with the page gutter
+  through `--nowo-ui-header-padding-inline`.
+
+Everything it paints reads a `--nowo-ui-*` token, so `theme.tokens`, the appearance SPI and the dark defaults all
+follow without an override here.
+
+**It is off by default**, because turning it on for every existing host would be a visual change they did not ask
+for. Turn it on when UiKit's layouts are your whole front end; leave it off when a framework or your own theme file
+already paints the document.
+
+### Why it cannot fight your theme
+
+Every rule lives in a **nested sub-layer** of the first layer of UiKit's canonical order:
+
+```css
+@layer theme, base, nowo-ui, components, utilities;   /* the same statement nowo-ui.css makes */
+
+@layer theme.nowo-ui-base { /* … */ }
+```
+
+so it sits below `base`, `nowo-ui`, `components` and `utilities`, and below anything the host writes in `theme`
+itself (rules written directly in a layer come after that layer's sub-layers). A framework in the `base` layer,
+UiKit's own `nowo-ui` layer, host utilities placed in theme slots and **all unlayered host CSS** beat it, whatever
+their specificity or load order (see [PAGE_CONTRACT.md#cascade-layers](PAGE_CONTRACT.md#cascade-layers)). It never
+uses `!important`. In practice it only paints what nothing else paints, which is why it is safe to leave on even
+next to a framework.
+
+It has to be a sub-layer rather than a new top-level one. The layer order is fixed by the **first** stylesheet that
+names the layers, and a later statement can only **append** names that order does not contain — at the end, i.e. on
+top of everything. A top-level `nowo-ui-base` layer would therefore outrank the framework on exactly the hosts that
+declare the order themselves (a Bootstrap CDN host, a Tailwind v4 host). Nesting inside `theme` introduces no new
+name, so there is nothing to append and nothing to get wrong.
+
+Hosts that link `nowo-ui.unlayered.css` (their framework is unlayered, so the kit must beat it) do not need this
+file: they already have a framework. There is no unlayered twin.
 
 ## Writing a host theme
 
@@ -109,9 +171,13 @@ Declared in `nowo-ui.css` (light on `:root`, dark on `[data-theme="dark"]`).
 
 | Token | Default | Used by |
 |-------|---------|---------|
-| `--nowo-ui-font-family` | `inherit` | `.nowo-ui-shell` |
+| `--nowo-ui-font-family` | `inherit` | `.nowo-ui-shell`; `<body>` with the default theme (`nowo-ui-base.css`), where the fallback is a system sans-serif stack |
 | `--nowo-ui-font-display` | `inherit` | page header title, card title, modal / confirm title, brand text |
-| `--nowo-ui-heading-weight` | `700` | page header title |
+| `--nowo-ui-heading-weight` | `700` | page header title (`600` for `h1`–`h6` with the default theme) |
+| `--nowo-ui-header-padding-inline` *(2.51)* | `1rem` | `.nowo-ui-header` inline padding; the default theme sets it so a masthead lines up with the page gutter |
+| `--nowo-ui-page-gutter` *(2.51)* | `1.25rem` | page gutter of `.nowo-ui-content` and the masthead, with the default theme |
+| `--nowo-ui-font-size` *(2.51)* | `1rem` | `<body>` with the default theme |
+| `--nowo-ui-line-height` *(2.51)* | `1.5` | `<body>` with the default theme |
 | `--nowo-ui-focus-ring-color` | `color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent)` | `:focus-visible` outline on buttons, links, tabs, pagination, toggles, menus, checkboxes |
 | `--nowo-ui-focus-ring` | `0 0 0 0.2rem var(--nowo-ui-focus-ring-color)` | `box-shadow` of focused inputs (and Bootstrap controls with the bridge) |
 | `--nowo-ui-link` | `var(--nowo-ui-primary)` | `.nowo-ui-link`, `.nowo-ui-btn--link` |
@@ -528,6 +594,7 @@ From Beacon's mobile UX audit (2026-11-09, 390 px, iPhone / WebKit).
 | `--nowo-ui-edge-tabs-motion-scale` | `0.96` | start scale of an unfolding tab (2.46; `1` = the 2.45 look) |
 | `--nowo-ui-edge-tabs-icon-duration` | `240ms` | `icon: 'chevron'` morph (or turn) duration (2.46) |
 | `--nowo-ui-edge-tabs-icon-easing` | `cubic-bezier(0.34, 1.56, 0.64, 1)` | chevron morph curve, slight overshoot (2.46) |
+| `--nowo-ui-edge-tabs-launcher-gap` | `0` | extra gap between the launcher and the first unfolded tab (added to every unfolded tab's `top`; e.g. `0.5rem`); nothing changes at the default |
 | `--nowo-ui-edge-tabs-order` | set by `js/nowo-ui-edge-tabs.js` per tab | position of a tab in the unfold / fold sequence (multiplied by the stagger); not a host token |
 
 Select geometry: `.nowo-ui-select` (opt-in on any `<select>`), `select.nowo-ui-input` and the pagination select use

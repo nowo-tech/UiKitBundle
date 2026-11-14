@@ -143,8 +143,8 @@ The bundle does **not** expose CLI commands that mutate production data, file up
 
 | Field | Value |
 | ----- | ----- |
-| **Date** | 2026-11-06 |
-| **Method** | Independent audit Appendix GT: code read and browser PoC in three engines, re-verified 2026-11-06, 2.33.1 fixes included; Appendix HG for 2.34.0 |
+| **Date** | 2026-11-06 (2.33 to 2.36); later releases below, latest 2026-11-11 |
+| **Method** | Independent audit Appendix GT: code read and browser PoC in three engines, re-verified 2026-11-06, 2.33.1 fixes included; Appendix HG for 2.34.0; Appendices LV, ME and MR for 2.48.0, 2.48.1 and 2.49.0 |
 | **Overall risk** | **Low** |
 | **Grade** | **Pass (good)** |
 | **Open residuals** | Host must not feed UGC into `|raw` slots; embedders must apply their own `access_control` around admin chrome; other-origin frames, forms and subresources are left to the host's CSP |
@@ -170,6 +170,8 @@ Unreleased (2.41.1, edge tabs launcher JC-L1 / JC-I12 / JC-I15): **audited (batc
 Unreleased (motion tokens): batch audit Appendix HW (2026-11-07), on `f38b4f4`: Medium. HW-M1 and HW-M2 fixed at `6bc7750`; HW-L7 fixed and HW-L9 documented at `f5bf641`; delta audit: **Pass (good)**. HW-L1 and HW-L2 accepted and documented, HW-L3 fixed for menus. Open: HW-L8 and HW-L9 (Low), and HW-L10 (Low, older).
 
 Unreleased (2.48.0, Wiki page layout: side panel `drawer_below` / `persist`, `rail_toggle`, layout-state script): independent audit Appendix LV (2026-11-11), on `ed5365c`: **Pass-Low**. Fixed before the tag: LV-L1 (`rail_toggle` `attr` through `nowo_ui_safe_attrs()` with its own attributes reserved; `href` and `state_url` through `nowo_ui_safe_href()`), LV-L2 (a server-open `lg` / `xl` panel starts closed under its breakpoint instead of a modal drawer on load), LV-I1, LV-I2, LV-I3 (the rail store POST and its CSRF header go only to the page's own origin) and LV-I6. Open (Info, documented): LV-I4 (localStorage layout keys are per browser, not per user; UI state only), LV-I5 (put the rail toggle first in its host), LV-I7 (`display: block` tables in rendered content; prefer a scroll-region wrapper).
+
+Since 2.48.0 (monorepo `BUNDLES_SECURITY_ANALYSIS.md`): 2.48.0 independent audit Appendix LV (2026-11-11), **Pass-Low** on `ed5365c`, delta on `2f676f4` **Pass**; LV-L1 and LV-L2 fixed. 2.48.1 (page loader ignores a cancelled link click) Appendix ME (2026-11-11), **Pass / Low**, ME-U-L1 documented. 2.49.0 (framework-free listing and redirect-event ports) Appendix MR (2026-11-11): MR-U-L1 (only `nowo_ui_listing_*` cookies are copied) and MR-U-L2 (a null `viewerId` fails closed) fixed, no markup change, no open redirect. 2.49.1 changes CSS and tests only.
 
 ## Secrets and cryptography
 

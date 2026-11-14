@@ -32,7 +32,7 @@ Expected steps:
 - Composer validation and lock sync
 - Code style checks
 - Static analysis (Rector dry run + PHPStan)
-- PHP and TypeScript test suites with coverage (≥99% PHP lines)
+- PHP and TypeScript test suites with coverage (100% PHP lines)
 - Demo verification (`demo/Makefile` `release-check`)
 - Git hygiene: no Cursor co-author trailers (**REQ-GIT-001**) via `make check-no-cursor-coauthor`
 
@@ -80,7 +80,7 @@ composer require nowo-tech/ui-kit-bundle
 
 ## Coverage goals
 
-- **PHP**: **≥99%** line coverage (prefer **100%**; `make test-coverage` / `make coverage-check`)
+- **PHP**: **100%** line coverage (`make test-coverage` / `make coverage-check`)
 - **TypeScript**: enforce via `make test-ts` (Vitest + `.scripts/ts-coverage-percent.sh`)
 
 Update README **Tests and coverage** percentages after each release when coverage changes materially.

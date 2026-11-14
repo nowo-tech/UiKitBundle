@@ -26,9 +26,13 @@ beforeEach(() => {
   app.register('page-loader', PageLoaderController);
 });
 
-afterEach(() => {
-  app.stop();
+afterEach(async () => {
+  // Remove the markup first so Stimulus disconnects the controllers (`app.stop()` alone does not): a controller left
+  // connected keeps its document click listener and would show the next test's overlay.
   document.body.innerHTML = '';
+  await vi.advanceTimersByTimeAsync(0);
+  app.stop();
+  document.documentElement.classList.remove('is-page-loading');
   vi.useRealTimers();
 });
 
@@ -66,5 +70,90 @@ describe('page-loader peer', () => {
     transitionEnd(overlay, 'opacity');
     expect(overlay.hidden).toBe(false);
     expect(overlay.classList.contains('is-leaving')).toBe(false);
+  });
+
+  describe('link interception', () => {
+    const mountWithLinks = async (): Promise<HTMLElement> => {
+      document.body.innerHTML = `
+        <div data-controller="page-loader" data-nowo-ui-page-loader hidden
+             data-page-loader-min-visible-value="0" data-page-loader-leave-ms-value="0"
+             data-page-loader-link-delay-value="0"></div>
+        <a id="toggle" href="/menu">Menu</a>
+        <a id="next" href="/next">Next</a>
+        <a id="opt-out" href="/next" data-no-page-loader>Opt out</a>
+        <a id="opt-out-true" href="/next" data-no-page-loader="true">Opt out</a>`;
+      await vi.advanceTimersByTimeAsync(0);
+      const overlay = document.querySelector('[data-controller="page-loader"]') as HTMLElement;
+      // Let the initial show / leave finish so the overlay starts hidden.
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(overlay.hidden).toBe(true);
+      return overlay;
+    };
+
+    const click = (id: string): MouseEvent => {
+      const event = new MouseEvent('click', { bubbles: true, cancelable: true, button: 0 });
+      document.getElementById(id)!.dispatchEvent(event);
+      return event;
+    };
+
+    it('does not show the overlay when a later handler cancels the click', async () => {
+      const overlay = await mountWithLinks();
+      // A toggle handler on the link itself, after the capture-phase listener (the Beacon report).
+      document.getElementById('toggle')!.addEventListener('click', (event) => event.preventDefault());
+
+      const event = click('toggle');
+      expect(event.defaultPrevented).toBe(true);
+      await vi.advanceTimersByTimeAsync(100);
+
+      expect(overlay.hidden).toBe(true);
+      expect(document.documentElement.classList.contains('is-page-loading')).toBe(false);
+    });
+
+    it('does not show the overlay when a document bubble handler cancels the click', async () => {
+      const overlay = await mountWithLinks();
+      const cancel = (event: Event): void => event.preventDefault();
+      document.addEventListener('click', cancel);
+      try {
+        click('next');
+        await vi.advanceTimersByTimeAsync(100);
+        expect(overlay.hidden).toBe(true);
+      } finally {
+        document.removeEventListener('click', cancel);
+      }
+    });
+
+    it('shows the overlay for a same-origin link click that is not cancelled', async () => {
+      const overlay = await mountWithLinks();
+      const event = click('next');
+      expect(event.defaultPrevented).toBe(false);
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(overlay.hidden).toBe(false);
+      expect(document.documentElement.classList.contains('is-page-loading')).toBe(true);
+    });
+
+    it('does not show the overlay after a disconnect within the link delay', async () => {
+      const overlay = await mountWithLinks();
+      overlay.setAttribute('data-page-loader-link-delay-value', '90');
+      await vi.advanceTimersByTimeAsync(0);
+      click('next');
+      // Detach the controller before the link-delay timeout fires; the overlay itself stays in the page.
+      overlay.removeAttribute('data-controller');
+      await vi.advanceTimersByTimeAsync(0);
+      // Past the link delay: a stale timeout would show the overlay here (and only the 8 s safety hide would end it).
+      await vi.advanceTimersByTimeAsync(200);
+
+      expect(overlay.hidden).toBe(true);
+      expect(document.documentElement.classList.contains('is-page-loading')).toBe(false);
+    });
+
+    it('keeps data-no-page-loader opting a link out', async () => {
+      const overlay = await mountWithLinks();
+      click('opt-out');
+      click('opt-out-true');
+      await vi.advanceTimersByTimeAsync(100);
+
+      expect(overlay.hidden).toBe(true);
+    });
   });
 });

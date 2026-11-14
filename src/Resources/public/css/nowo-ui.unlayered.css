@@ -965,12 +965,30 @@ a.nowo-ui-pagination__link:hover {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  padding: 0 1rem;
+  /* 2.51: the inline padding reads a token so a theme (nowo-ui-base.css, a host) can line the masthead up with the
+     page gutter — a `padding` shorthand here would beat a `padding-inline` from any lower cascade layer. */
+  padding-block: 0;
+  padding-inline: var(--nowo-ui-header-padding-inline, 1rem);
   border-bottom: 1px solid var(--nowo-ui-border);
   background: var(--nowo-ui-surface);
   position: sticky;
   top: 0;
   z-index: 40;
+}
+
+/* 2.51: main navigation of a masthead `.nowo-ui-header` (the page contract's `nowo_ui_navigation` region, outside
+   the kit shell) — a flex row of links. The bare `> nav` keeps the row readable on hosts that carry no class. */
+.nowo-ui-header__nav,
+.nowo-ui-header > nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.9rem;
+}
+
+:is(.nowo-ui-header__nav, .nowo-ui-header > nav) > [aria-current] {
+  font-weight: 600;
+  color: var(--nowo-ui-nav-active-text, var(--nowo-ui-text));
 }
 
 .nowo-ui-header__start,
@@ -7191,8 +7209,10 @@ html[data-nowo-ui-sortable-active] * {
   --nowo-ui-image-input-backdrop-dark: rgb(17 24 39);
   --nowo-ui-image-input-checker: color-mix(in srgb, var(--nowo-ui-text) 10%, var(--nowo-ui-surface));
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.5rem;
   justify-items: start;
+  max-width: 100%;
 }
 .nowo-ui-image-input__frame {
   position: relative;
@@ -7264,6 +7284,13 @@ html[data-nowo-ui-sortable-active] * {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
+  min-width: 0;
+  max-width: 100%;
+}
+.nowo-ui-image-input__controls > * {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 .nowo-ui-image-input__preview[hidden],
 .nowo-ui-image-input__empty[hidden],
@@ -7533,7 +7560,7 @@ select.nowo-ui-pagination__select {
 }
 
 :root[data-nowo-ui-edge-tabs-ready][data-nowo-ui-edge-tabs-open]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always']:not([hidden])) .nowo-ui-edge-tab__link, :root[data-nowo-ui-edge-tabs-ready][data-nowo-ui-edge-tabs-closing]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always']:not([hidden])) .nowo-ui-edge-tab__link[data-nowo-ui-edge-tabs-folding] {
-  top: calc(var(--nowo-ui-edge-tab-top, calc(var(--nowo-ui-header-height, 3.5rem) + 0.75rem)) + (var(--nowo-ui-edge-tab-slot, 0) + 1) * var(--nowo-ui-edge-tab-step, calc(var(--nowo-ui-edge-tab-height, 2.75rem) + var(--nowo-ui-edge-tab-gap, 0.5rem))));
+  top: calc(var(--nowo-ui-edge-tab-top, calc(var(--nowo-ui-header-height, 3.5rem) + 0.75rem)) + (var(--nowo-ui-edge-tab-slot, 0) + 1) * var(--nowo-ui-edge-tab-step, calc(var(--nowo-ui-edge-tab-height, 2.75rem) + var(--nowo-ui-edge-tab-gap, 0.5rem))) + var(--nowo-ui-edge-tabs-launcher-gap, 0px));
 }
 
 :root[data-nowo-ui-edge-tabs-ready][data-nowo-ui-edge-tabs-open]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always']:not([hidden])) .nowo-ui-edge-tab__link:not([aria-expanded='true'], [data-nowo-ui-edge-tab-pinned]) {
@@ -7564,7 +7591,7 @@ select.nowo-ui-pagination__select {
   }
 
   :root[data-nowo-ui-edge-tabs-ready][data-nowo-ui-edge-tabs-open]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='phone']:not([hidden])) .nowo-ui-edge-tab__link, :root[data-nowo-ui-edge-tabs-ready][data-nowo-ui-edge-tabs-closing]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='phone']:not([hidden])) .nowo-ui-edge-tab__link[data-nowo-ui-edge-tabs-folding] {
-    top: calc(var(--nowo-ui-edge-tab-top, calc(var(--nowo-ui-header-height, 3.5rem) + 0.75rem)) + (var(--nowo-ui-edge-tab-slot, 0) + 1) * var(--nowo-ui-edge-tab-step, calc(var(--nowo-ui-edge-tab-height, 2.75rem) + var(--nowo-ui-edge-tab-gap, 0.5rem))));
+    top: calc(var(--nowo-ui-edge-tab-top, calc(var(--nowo-ui-header-height, 3.5rem) + 0.75rem)) + (var(--nowo-ui-edge-tab-slot, 0) + 1) * var(--nowo-ui-edge-tab-step, calc(var(--nowo-ui-edge-tab-height, 2.75rem) + var(--nowo-ui-edge-tab-gap, 0.5rem))) + var(--nowo-ui-edge-tabs-launcher-gap, 0px));
   }
 
   :root[data-nowo-ui-edge-tabs-ready][data-nowo-ui-edge-tabs-open]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='phone']:not([hidden])) .nowo-ui-edge-tab__link:not([aria-expanded='true'], [data-nowo-ui-edge-tab-pinned]) {

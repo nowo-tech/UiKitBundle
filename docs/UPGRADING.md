@@ -3,6 +3,15 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.51.0](#to-2510)
+  - [UiKit's default theme is available, and off (`base_stylesheet`)](#uikits-default-theme-is-available-and-off-base_stylesheet)
+  - [`.nowo-ui-header` navigation](#nowo-ui-header-navigation)
+- [To 2.50.0](#to-2500)
+- [To 2.49.1](#to-2491)
+  - [To 2.49.1](#to-2491-1)
+- [To 2.49.0](#to-2490)
+- [To 2.49.0](#to-2490-1)
+- [To 2.48.1](#to-2481)
 - [To 2.48.0](#to-2480)
 - [To 2.48.0](#to-2480-1)
 - [To 2.47.0](#to-2470)
@@ -139,6 +148,164 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.51.0
+
+From **2.50.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+**Nothing to do.** Both changes below are additive; a host that upgrades and changes no configuration renders
+byte-identical HTML and keeps the same CSS.
+
+### UiKit's default theme is available, and off (`base_stylesheet`)
+
+`nowo-ui.css` paints UiKit's components but not the document around them — no body font, no page gutter, no
+masthead height. Hosts with a CSS framework (Bootstrap in the `base` layer, Tailwind) or their own theme file get
+those from there and need nothing. Hosts with **neither** (`css_framework: custom` / `none` and no stylesheet of
+their own) were falling back to the browser defaults: a serif body font, edge-to-edge content and a one-line
+masthead. If that is you:
+
+```yaml
+nowo_ui_kit:
+    base_stylesheet: true
+```
+
+`@NowoUiKit/layout/document.html.twig` and the error layout then link `css/nowo-ui-base.css` before `nowo-ui.css`
+(run `assets:install` after upgrading, as for any new shipped asset). Its rules live in
+`@layer theme.nowo-ui-base`, a nested sub-layer of the first layer of UiKit's order, so a framework in `base`, the
+kit, host utilities and all unlayered host CSS still beat it — it cannot override a theme you already have.
+Details: [THEMING.md — The default theme](THEMING.md#the-default-theme-251).
+
+A host layout that overrides `nowo_ui_styles` without `{{ parent() }}` links the stylesheets itself; add
+`css/nowo-ui-base.css` before `css/nowo-ui.css` there if you want it.
+
+### `.nowo-ui-header` navigation
+
+A `<nav>` placed directly inside a masthead `.nowo-ui-header` (the page contract's `nowo_ui_navigation` region)
+now renders as a wrapping flex row with a gap, and the `[aria-current]` item in the active colour and weight;
+`.nowo-ui-header__nav` is the explicit class for it. Before, such links ran together with no spacing. If your own
+CSS already lays that `<nav>` out, it keeps winning (your rules are unlayered or in a higher layer).
+
+`.nowo-ui-header` also sets `padding-block: 0; padding-inline: var(--nowo-ui-header-padding-inline, 1rem)` instead
+of the `padding: 0 1rem` shorthand. Same rendering; the token is what lets a theme line the masthead up with the
+page gutter from a lower cascade layer.
+
+## To 2.50.0
+
+From **2.49.1**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+## To 2.49.1
+
+From **2.49.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+### To 2.49.1
+
+From **2.49.0**: `composer update nowo-tech/ui-kit-bundle`. Tests and docs only (REQ-RUNTIME-002 worker test with two
+users and brands); no configuration, template or API change.
+
+## To 2.49.0
+
+From **2.48.1**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+## To 2.49.0
+
+From **2.48.1**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+Target **2.49.0** (minor, REQ-ARCH-001 rule 3). **Nothing to change**: no markup, CSS, JS or template variable changes,
+and every existing port keeps working. Two framework-typed signatures are deprecated and removed in **3.0**:
+
+| Deprecated (2.49) | Replacement | Removed |
+|---|---|---|
+| `Listing\ListingPreferenceStoreInterface::load(string $listingKey, Request $request)` | `Listing\ListingPreferenceReaderInterface::load(string $listingKey, ListingContext $context)` | 3.0 |
+| `Dialog\RemoteDialogRedirectEvent::getRequest()` | `getRequestPath()`, `getRequestRoute()`, `getRouteParameters()` | 3.0 |
+| `Dialog\RemoteDialogRedirectEvent::getResponse()` | `getRedirectTargetUrl()`, `getRedirectStatusCode()` | 3.0 |
+
+**Host listing store (only if you aliased `ListingPreferenceStoreInterface`).** It still works: the builder passes it
+the request as before and triggers one `E_USER_DEPRECATED` notice when the builder is built. To migrate, implement the
+new port and alias it instead (it wins over the legacy alias):
+
+```php
+use Nowo\UiKitBundle\Listing\ListingContext;
+use Nowo\UiKitBundle\Listing\ListingPreferenceReaderInterface;
+
+final readonly class DoctrineListingPreferenceStore implements ListingPreferenceReaderInterface
+{
+    public function load(string $listingKey, ListingContext $context): ?array
+    {
+        // was: $request->cookies / the token / $request->attributes->get('project')
+        // now: $context->cookie($name), $context->viewerId, $context->routeParameters['project'] ?? null
+    }
+
+    public function cookieName(string $listingKey): ?string
+    {
+        return null;
+    }
+}
+```
+
+```yaml
+# config/services.yaml
+Nowo\UiKitBundle\Listing\ListingPreferenceReaderInterface: '@App\Listing\DoctrineListingPreferenceStore'
+# optional: fills ListingContext::$viewerId (the kit ships no implementation)
+Nowo\UiKitBundle\Listing\ListingViewerResolverInterface: '@App\Listing\CurrentUserViewer'
+```
+
+A store that resolved the user from the security token inside `load()` can keep doing so through its own injected
+service; `viewerId` is a convenience. **Fail closed:** a per-viewer reader returns null when it has no viewer (null
+`viewerId` and no identity of its own), never a shared row. In debug, the builder logs a warning when a server-side
+reader runs without a viewer resolver. `$context->cookies` holds only the `nowo_ui_listing_*` cookies; a store that
+needs another cookie reads it through its own request-aware service. Without a request (a presenter, a console preview) call
+`ListingCustomizerViewBuilder::buildForContext($key, $context)`.
+
+**`RemoteDialogRedirectEvent` listeners.** Replace `$event->getRequest()->attributes->get('_route')` with
+`$event->getRequestRoute()`, `->get('_route_params')[…]` / route attributes with `$event->getRouteParameters()[…]`, and
+`$event->getResponse()->getTargetUrl()` with `$event->getRedirectTargetUrl()`. `getPath()`, `setPath()`,
+`getAnswer()` and `setAnswer()` are unchanged. The two deprecated getters trigger an `E_USER_DEPRECATED` notice on
+each call (visible in the profiler / deprecation log, never an exception).
+
+**Named arguments.** `CookieListingPreferenceStore::load()`'s second parameter is now `$context`
+(`ListingContext|Request`); positional calls are unchanged.
+
+## To 2.48.1
+
+From **2.48.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+Target **2.48.1** (patch). Nothing to change. If you worked around the `page-loader` peer showing its overlay on
+cancelled link clicks (e.g. by adding `data-no-page-loader` to toggle links), you can drop the workaround: a click
+any handler cancels with `preventDefault()` no longer shows the overlay. `data-no-page-loader` now also works as a bare
+attribute.
+
+**Turbo Drive hosts (visible change):** Turbo cancels the link clicks it handles, so the peer no longer shows the
+overlay on Turbo visits. Turbo's progress bar already covers them. To keep the kit overlay there, load the kit IIFE
+`nowo-ui-page-loader.js` (it defines the helpers) and add:
+
+```js
+document.addEventListener('turbo:visit', () => window.nowoUiShowPageLoader?.());
+document.addEventListener('turbo:load', () => window.nowoUiHidePageLoader?.());
+```
 
 ## To 2.48.0
 

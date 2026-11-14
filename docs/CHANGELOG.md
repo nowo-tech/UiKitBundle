@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.51.0] - 2026-11-13](#2510---2026-11-13)
+- [[2.50.0] - 2026-11-13](#2500---2026-11-13)
+- [[2.49.1] - 2026-11-13](#2491---2026-11-13)
+- [[2.49.0] - 2026-11-11](#2490---2026-11-11)
+- [[2.48.1] - 2026-11-11](#2481---2026-11-11)
 - [[2.48.0] - 2026-11-11](#2480---2026-11-11)
 - [[2.47.0] - 2026-11-11](#2470---2026-11-11)
 - [[2.46.0] - 2026-11-10](#2460---2026-11-10)
@@ -123,6 +128,155 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+### Changed
+
+- CI, `make coverage-check` and `composer coverage-check`: the PHP line-coverage gate is now **100%** (was 99%). The suite is already at 100%; the gate only stops a regression from merging.
+
+## [2.51.0] - 2026-11-13
+
+### Added
+
+- **UiKit's default theme: `nowo-ui-base.css` (opt-in).** `nowo-ui.css` paints UiKit's components but never the
+  document around them — it sets no body font, no page gutter and no masthead height. A host that adopts the UiKit
+  layouts with a CSS framework (Bootstrap in the `base` layer, Tailwind) or its own theme file got those from there;
+  a host with **neither** (`css_framework: custom` / `none`, and every REQ-DEMO-014 demo) fell back to the browser
+  defaults: a **serif** body font, content flush against the window edges and a masthead one line tall. The new
+  `src/Resources/public/css/nowo-ui-base.css` is that missing document base — sans-serif font stack, heading and
+  prose rhythm, `box-sizing`, page gutters on `.nowo-ui-content` (`--nowo-ui-content-max-width`) and the shell's
+  header height + gutter alignment for a masthead `.nowo-ui-header`. Everything it paints reads a `--nowo-ui-*`
+  token, so host tokens, the appearance SPI and dark mode follow with no override.
+
+  Turn it on with `nowo_ui_kit.base_stylesheet: true`; `layout/document.html.twig` and `error/layout.html.twig`
+  then link it **before** `nowo-ui.css`. **Off by default** — switching it on for every host would be a visual
+  change they did not ask for. Its rules live in `@layer theme.nowo-ui-base`, a **nested sub-layer** of the first
+  layer of UiKit's canonical order, so they sit below `base`, `nowo-ui`, `components`, `utilities` and anything the
+  host writes in `theme` itself: a framework in the `base` layer, the kit's own `nowo-ui` layer, host utilities in
+  theme slots and all unlayered host CSS beat it whatever their specificity or load order. (A new *top-level* layer
+  would not do: the order is fixed by the first stylesheet that names the layers, and a later statement can only
+  append unknown names — at the end, on top of everything.) It only paints what nothing else paints, and it never
+  uses `!important`.
+  New Twig function `nowo_ui_base_stylesheet()`. Docs: `docs/THEMING.md#default-theme`.
+- **`.nowo-ui-header__nav`** — the main navigation of a masthead `.nowo-ui-header` (the page contract's
+  `nowo_ui_navigation` region, outside the kit shell): a wrapping flex row of links with the `[aria-current]` item
+  in the active colour and weight. A bare `<nav>` directly inside `.nowo-ui-header` gets the same row, so mastheads
+  written before this stop running their links together.
+
+### Changed
+
+- `.nowo-ui-header` sets `padding-block: 0; padding-inline: var(--nowo-ui-header-padding-inline, 1rem)` instead of
+  the `padding: 0 1rem` shorthand (same rendering). A shorthand in the `nowo-ui` layer would beat a `padding-inline`
+  from any lower layer, so the token is how a theme — `nowo-ui-base.css`, or a host — lines the masthead up with the
+  page gutter.
+
+### Fixed
+
+- Demo: the `/page-contract/default/…` pages, which exist to show **UiKit's default theme**, were only presentable
+  because the demo layout loaded Bootstrap from a CDN and hand-wrote the content gutters. They now load UiKit's two
+  stylesheets and nothing else (REQ-DEMO-014), and their masthead uses `.nowo-ui-header` / `.nowo-ui-brand` /
+  `.nowo-ui-header__nav` instead of Bootstrap navbar markup.
+
+## [2.50.0] - 2026-11-13
+
+### Added
+
+- Token `--nowo-ui-edge-tabs-launcher-gap` (default `0`, no visual change): an extra gap between the launcher and the first unfolded edge tab, so a host no longer needs its own `top` values.
+
+### Fixed
+
+- Edge-tabs chevron rotates again on browsers without CSS `d` (Safari/iOS): a test now guards the `@supports not (d: path(...))` fallback (transition, `rotate(-90deg)`, reduced-motion override) in both compiled stylesheets.
+
+### Documentation
+
+- `docs/SECURITY.md`: record the 2.48.0, 2.48.1 and 2.49.0 AI security audits (Appendices LV, ME, MR) with dates and grade (REQ-SEC-004).
+
+## [2.49.1] - 2026-11-13
+
+Target **2.49.1** (patch; REQ-RUNTIME-002, batch C9). Tests and docs only, plus one CSS fix (image input phone overflow): no PHP, markup, JS or template change.
+
+### Fixed
+
+- Image input no longer overflows its card on narrow screens (`.nowo-ui-image-input` is one `minmax(0, 1fr)` column;
+  the controls shrink and long file names wrap).
+
+### Added
+
+- `tests/Integration/Worker/WorkerKeptAliveKernelTest`: one kernel kept alive with no services resetter (FrankenPHP
+  worker, `reset_kernel: false`), 1,000 main requests through `http_kernel`, two users of two brands in alternation.
+  Checks that the appearance provider is asked once per request (the `AppearanceView` main-request memo never crosses
+  requests), that brand name, logos and `<head>` links never leak to the other brand, that a provider failure on one
+  request falls back for that request only, that the cookie listing store gives each user only their own layout, and
+  that memory grows less than 2 MiB after a 50-request warm-up. A second test reads the view outside any request
+  (console / Messenger) right after each request: the last request's memo is never reused.
+
+### Changed
+
+- `docs/FRANKENPHP-WORKER-AUDIT.md` refreshed for 2.49.1: services table (appearance view, listing builder, error
+  illustration provider budget), the three kept-alive kernel tests with N, users and memory margin, Igor result.
+
+## [2.49.0] - 2026-11-11
+
+Target **2.49.0** (minor; REQ-ARCH-001 rule 3, B2). No markup, CSS, JS or template change; no BC break.
+
+### Added
+
+- **`Listing\ListingPreferenceReaderInterface`**: framework-free listing preference port,
+  `load(string $listingKey, ListingContext $context)` + `cookieName()`. The default `CookieListingPreferenceStore`
+  implements it (same cookie, same parsing rules: tested equivalent for every cookie fixture). A host reader alias wins
+  over the default store.
+- **`Listing\ListingContext`** VO (`cookies`, `viewerId`, `route`, `routeParameters`, `locale`; strings / scalars only)
+  and the optional **`Listing\ListingViewerResolverInterface`** SPI that fills `viewerId` (no default implementation).
+- **`ListingCustomizerViewBuilder::buildForContext()`**: builds a listing view without an HttpFoundation request.
+- **`RemoteDialogRedirectEvent`** request-free accessors: `getRequestPath()`, `getRequestRoute()`,
+  `getRouteParameters()`, `getRedirectTargetUrl()`, `getRedirectStatusCode()`.
+- DDD-host kernel test (`tests/Integration/DddHostListingKernelTest.php`): host reader, viewer resolver and a
+  scalar-only redirect listener, 400 requests through `http_kernel` without the services resetter, two viewers in
+  alternation, flat memory.
+- `docs/USAGE.md`: "Standard host" and "DDD host" sections.
+
+- Reader contract (audit MR-U-L2): a per-viewer `ListingPreferenceReaderInterface` returns null for a null `viewerId`
+  (fail closed). With `kernel.debug` on, the builder logs a warning (`logger` service) when a server-side reader
+  (`cookieName()` null) runs without a `ListingViewerResolverInterface`.
+
+### Security
+
+- `ListingContext::$cookies`, built from the request, holds only the `nowo_ui_listing_*` cookies (audit MR-U-L1):
+  session, remember-me and other host cookies are never handed to a reader.
+
+### Deprecated
+
+- `Listing\ListingPreferenceStoreInterface` (`load(string, Request)`): implement `ListingPreferenceReaderInterface`.
+  A legacy-only host store still works and triggers one `E_USER_DEPRECATED` notice when the builder is built. Removed
+  in 3.0.
+- `RemoteDialogRedirectEvent::getRequest()` / `getResponse()`: use the scalar accessors. Each call triggers an
+  `E_USER_DEPRECATED` notice (audit MR-U-I1). Removed in 3.0.
+
+## [2.48.1] - 2026-11-11
+
+Target **2.48.1** (patch; Beacon report 2026-11-11 after adopting 2.48.0).
+
+### Fixed
+
+- **`page-loader` peer: a cancelled link click no longer shows the overlay.** The peer intercepts link clicks in the
+  capture phase, before the link's own handlers run, so it showed the "Loading…" overlay even when a toggle handler on
+  the `<a>` then called `preventDefault()` (the page never navigated and the overlay stayed until the 8 s safety hide).
+  The decision now happens in the `link-delay` timeout, after the click has reached every handler: when
+  `event.defaultPrevented` is set by then, nothing is shown. Uncancelled same-origin links behave as before.
+- **Visible change with Turbo Drive (audit ME-U-L1):** Turbo Drive cancels the link clicks it handles, so the peer no
+  longer shows the overlay on Turbo visits (there is no full page unload). For a loader on Turbo visits, use Turbo's own
+  progress bar, or call `window.nowoUiShowPageLoader()` on `turbo:visit` and `window.nowoUiHidePageLoader()` on
+  `turbo:load` (see UPGRADING).
+- `page-loader` peer: the `link-delay` timeout is cleared on `disconnect()`, so a controller removed within the delay no
+  longer shows the overlay and arms an 8 s safety hide afterwards (audit ME-U-I1, already present before 2.48.1).
+- `data-no-page-loader` also opts a link out when written as a bare attribute (`<a data-no-page-loader>`); the
+  `data-no-page-loader="true"` form keeps working.
+
+### Tests
+
+- `page_loader_controller.test.ts`: link interception — a click cancelled by the link's own handler or by a later
+  document handler shows nothing, an uncancelled same-origin click shows the overlay, both `data-no-page-loader`
+  forms opt out, and a disconnect within the link delay shows nothing. The test teardown now removes the markup before
+  `app.stop()`, so each test's controllers are disconnected (they used to keep their document listeners).
 
 ## [2.48.0] - 2026-11-11
 
@@ -2793,7 +2947,7 @@ Supersedes 1.17.3: same runtime code and CSS, release gate hardened so the tagge
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.48.0...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.51.0...HEAD
 [1.10.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.4...v1.10.0
 [1.8.4]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.3...v1.8.4
 [1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0

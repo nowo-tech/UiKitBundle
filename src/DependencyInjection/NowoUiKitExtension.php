@@ -33,8 +33,10 @@ use Nowo\UiKitBundle\Form\MultiSelectTypeExtension;
 use Nowo\UiKitBundle\Listing\CookieListingPreferenceStore;
 use Nowo\UiKitBundle\Listing\ListingCustomizerViewBuilder;
 use Nowo\UiKitBundle\Listing\ListingDefinitionInterface;
+use Nowo\UiKitBundle\Listing\ListingPreferenceReaderInterface;
 use Nowo\UiKitBundle\Listing\ListingPreferenceStoreInterface;
 use Nowo\UiKitBundle\Listing\ListingRegistry;
+use Nowo\UiKitBundle\Listing\ListingViewerResolverInterface;
 use Nowo\UiKitBundle\Navigation\AreaNavProviderInterface;
 use Nowo\UiKitBundle\Navigation\AreaNavRegistry;
 use Nowo\UiKitBundle\Release\ReleaseStatusController;
@@ -341,6 +343,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
             ->setArgument('$sidebarLayout', $config['shell']['sidebar_layout'])
             ->setArgument('$remoteDialogHeaders', new Reference('nowo_ui_kit.remote_dialog_headers'))
             ->setArgument('$appearanceView', new Reference('nowo_ui_kit.appearance.view'))
+            ->setArgument('$baseStylesheet', $config['base_stylesheet'])
             ->addTag('twig.extension');
 
         $this->registerRemoteDialog($container, $config);
@@ -456,8 +459,9 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
 
     /**
      * Listing customizer: autoconfigured definitions (tag `nowo_ui_kit.listing_definition`), their registry, the
-     * default cookie preference store behind the {@see ListingPreferenceStoreInterface} port (a host re-aliases the
-     * interface to its own store) and the view builder.
+     * default cookie preference store behind the {@see ListingPreferenceReaderInterface} port (2.49) and the deprecated
+     * {@see ListingPreferenceStoreInterface} (a host re-aliases either interface to its own store; the reader wins) and
+     * the view builder (optional {@see ListingViewerResolverInterface}).
      */
     private function registerListingCustomizer(ContainerBuilder $container): void
     {
@@ -470,12 +474,17 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
         $container->register('nowo_ui_kit.listing.cookie_store', CookieListingPreferenceStore::class);
         $container->setAlias(CookieListingPreferenceStore::class, 'nowo_ui_kit.listing.cookie_store');
         $container->setAlias(ListingPreferenceStoreInterface::class, 'nowo_ui_kit.listing.cookie_store');
+        $container->setAlias(ListingPreferenceReaderInterface::class, 'nowo_ui_kit.listing.cookie_store');
 
         $container->register('nowo_ui_kit.listing.view_builder', ListingCustomizerViewBuilder::class)
             ->setArguments([
                 new Reference('nowo_ui_kit.listing.registry'),
                 new Reference(ListingPreferenceStoreInterface::class),
                 new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                new Reference(ListingPreferenceReaderInterface::class),
+                new Reference(ListingViewerResolverInterface::class, ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                new Reference('logger', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                $container->hasParameter('kernel.debug') ? '%kernel.debug%' : false,
             ]);
         $container->setAlias(ListingCustomizerViewBuilder::class, 'nowo_ui_kit.listing.view_builder');
     }

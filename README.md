@@ -73,7 +73,7 @@ This bundle is **FrankenPHP worker mode friendly** (including when the kernel is
 - Optional Stimulus peers under `src/Resources/assets/stimulus-peers/` (see [docs/STIMULUS.md](docs/STIMULUS.md)) — `confirm-submit` (form submit or single button click, `blocked` value), `confirm-dialog`, `tabs`, `toast-stack`, `clipboard-copy`, `page-loader`, `release-status`, `auto-refresh`, `temporary-reveal`, `collapse-panel`, `datatable` (optional DataTables dependency), `responsive-table`, `filters-collapse`, `disclosure-icon` (1.17), `listing-customizer`, `product-tour` (2.13, optional driver.js), `multi-select` (2.14: Tom Select chips for `ChoiceType` `multiple` filters via the `nowo_ui_multi_select` option, optional `tom-select`, skin `css/nowo-ui-multi-select.css`), `date-range` (2.15: one labelled from / to filter field `DateRangeType` with a range calendar, optional `cally`; two native date inputs without JavaScript), `table-sort` (2.20: client-side sortable headers of `View\Table` / `ListPage` `clientSort`; server-side ones use `Listing\SortRequest`)
 - Optional **release check** (off by default): installed-version button + lazy GitHub “newer release?” dialog (`release_check` config, `_release_version.html.twig`, `nowo-ui-release.js`) — see [docs/CONFIGURATION.md](docs/CONFIGURATION.md#release-check)
 - Thinking Orbs: `_thinking_orb` + `nowo-ui-orb.js`; page loader `visual: orb|spinner` ([THIRD_PARTY.md](docs/THIRD_PARTY.md))
-- Config: `css_framework`, `icon_set`, `row_actions_display`, `appearance`, `route_links`, `font_preload`; i18n domain `NowoUiKitBundle` (`en`, `es`, `it`, `fr`, `pt`, `de`, `nl`)
+- Config: `css_framework`, `icon_set`, `row_actions_display`, `base_stylesheet`, `appearance`, `route_links`, `font_preload`; i18n domain `NowoUiKitBundle` (`en`, `es`, `it`, `fr`, `pt`, `de`, `nl`)
 - Twig namespace overrides under `templates/bundles/NowoUiKitBundle/`
 - Adoption + Stimulus contracts: [docs/ADOPTION.md](docs/ADOPTION.md), [docs/STIMULUS.md](docs/STIMULUS.md)
 
@@ -94,6 +94,8 @@ nowo_ui_kit:
     css_framework: bootstrap5   # or: tailwind | foundation | custom
     icon_set: bootstrap-icons
     row_actions_display: icon   # or: text | icon_text
+    # base_stylesheet: true     # 2.51: UiKit's default theme (body font, page gutters, masthead) for apps with no
+    #                           # CSS framework and no theme file — docs/THEMING.md#the-default-theme-251
     # panel_path_rewrites:      # optional (1.9.0+): rewrite kit routes + 301 legacy URLs
     #     '/admin/blog': '/panel/blog'
     # release_check:            # optional (1.10.0+): footer version + GitHub release dialog
@@ -191,7 +193,7 @@ and Stimulus peers run with Vitest (happy-dom). Figures below are the CI `Code C
 
 | Suite | Coverage |
 |-------|----------|
-| PHP (PHPUnit) | 100% lines (3253/3253; CI fails under 99%) |
+| PHP (PHPUnit) | 100% lines (3253/3253; CI fails under 100%) |
 | TypeScript (Vitest) | 100% lines (2810/2810), 95.76% branches (gated set, see [COVERAGE.md](docs/COVERAGE.md); thresholds 90% lines / 85% branches) |
 | Python | N/A |
 
