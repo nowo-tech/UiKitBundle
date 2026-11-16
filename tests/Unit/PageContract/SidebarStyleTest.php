@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 
+use Nowo\UiKitBundle\Shell\SidebarStyle;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
@@ -143,6 +144,34 @@ final class SidebarStyleTest extends TestCase
     }
 
     /**
+     * Worker mode at the Twig level (2.52.1, audit RK-L2): one Environment (compiled templates, extensions, the resolver)
+     * renders the shell for alternating requests; a request without a preference right after an inset one prints the
+     * 2.51 classic markup byte for byte, and the inset render differs from it by the two root hooks only.
+     */
+    public function testOneEnvironmentRendersEachRequestsOwnStyle(): void
+    {
+        $request = Request::create('https://app.example/orders/7', 'GET');
+        $request->attributes->set('_route', 'orders_show');
+        $request->attributes->set('_route_params', []);
+        $twig = $this->twig(null, 'classic', request: $request);
+        $opts = ['opts' => self::shellOptions()['plain']];
+        $classic = (string) file_get_contents(\dirname(__DIR__, 2).'/Fixtures/bc-2.26/app_shell_open_plain.html');
+
+        for ($i = 0; $i < 50; ++$i) {
+            $request->attributes->set(SidebarStyle::ATTRIBUTE, 'inset');
+            $inset = $twig->render('halves', $opts);
+            self::assertStringContainsString(' data-nowo-ui-sidebar-style="inset"', $inset, 'render '.$i.': inset');
+            self::assertSame($classic, str_replace([' is-sidebar-inset', ' data-nowo-ui-sidebar-style="inset"'], '', $inset));
+
+            $request->attributes->remove(SidebarStyle::ATTRIBUTE);
+            self::assertSame($classic, $twig->render('halves', $opts), 'render '.$i.': no preference after an inset request');
+
+            $request->attributes->set(SidebarStyle::ATTRIBUTE, 'classic');
+            self::assertSame($classic, $twig->render('halves', $opts), 'render '.$i.': classic preference');
+        }
+    }
+
+    /**
      * Variant => [extra options, request attribute value (null = none), nowo_ui_kit.shell.sidebar_style].
      *
      * @return array<string, array{0: array<string, mixed>, 1: mixed, 2: string}>
@@ -185,11 +214,13 @@ final class SidebarStyleTest extends TestCase
         ];
     }
 
-    private function twig(mixed $styleAttribute, string $sidebarStyle, string $sidebarLayout = 'below-header'): Environment
+    private function twig(mixed $styleAttribute, string $sidebarStyle, string $sidebarLayout = 'below-header', ?Request $request = null): Environment
     {
-        $request = Request::create('https://app.example/orders/7', 'GET');
-        $request->attributes->set('_route', 'orders_show');
-        $request->attributes->set('_route_params', []);
+        if (null === $request) {
+            $request = Request::create('https://app.example/orders/7', 'GET');
+            $request->attributes->set('_route', 'orders_show');
+            $request->attributes->set('_route_params', []);
+        }
         if (null !== $styleAttribute) {
             $request->attributes->set('_nowo_ui_sidebar_style', $styleAttribute);
         }

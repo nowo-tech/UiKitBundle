@@ -179,7 +179,7 @@ Declared in `nowo-ui.css` (light on `:root`, dark on `[data-theme="dark"]`).
 | `--nowo-ui-page-gutter` *(2.51)* | `1.25rem` | page gutter of `.nowo-ui-content` and the masthead, with the default theme |
 | `--nowo-ui-font-size` *(2.51)* | `1rem` | `<body>` with the default theme |
 | `--nowo-ui-line-height` *(2.51)* | `1.5` | `<body>` with the default theme |
-| `--nowo-ui-focus-ring-color` | `color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent)` | `:focus-visible` outline on buttons, links, tabs, pagination, toggles, menus, checkboxes |
+| `--nowo-ui-focus-ring-color` | *(optional)* outlines fall back to `color-mix(in srgb, var(--nowo-ui-primary) 80%, transparent)` (2.52.1; 35 % before), the box-shadow halos to the 35 % mix | `:focus-visible` outline on buttons, links, tabs, pagination, toggles, menus, checkboxes. The 80 % outline is 3.51:1 or more on the default surfaces (light `#ffffff` / `#f8fafc`, dark `#0f172a` / `#1e293b`; WCAG 1.4.11 asks 3:1); the 35 % halo of focused inputs sits next to their primary border, which carries the contrast |
 | `--nowo-ui-focus-ring` | `0 0 0 0.2rem var(--nowo-ui-focus-ring-color)` | `box-shadow` of focused inputs (and Bootstrap controls with the bridge) |
 | `--nowo-ui-link` | `var(--nowo-ui-primary)` | `.nowo-ui-link`, `.nowo-ui-btn--link` |
 | `--nowo-ui-link-hover` | `var(--nowo-ui-link)` | link hover |
@@ -364,7 +364,7 @@ minmax(min(100%, var(--nowo-ui-filters-field-min, 12rem)), 1fr)))`.
 | `--nowo-ui-sortable-z` | `var(--nowo-ui-z-popover, 1080)` (the copy; [Layers](#layers-public-api-228)) |
 | `--nowo-ui-tree-badge-text` | `color-mix(in srgb, var(--nowo-ui-muted) 85%, var(--nowo-ui-text))` (2.24: `tree` badges; keeps 4.5:1 on the tinted current row) |
 | `--nowo-ui-nav-active-bg` | `color-mix(in srgb, var(--nowo-ui-primary) 12%, transparent)` (current aside link) |
-| `--nowo-ui-nav-active-text` | `var(--nowo-ui-primary)` |
+| `--nowo-ui-nav-active-text` | `color-mix(in srgb, var(--nowo-ui-primary) 85%, var(--nowo-ui-text))` (2.52.1; `var(--nowo-ui-primary)` before: 4.37:1 on its tint in the light defaults, now 5.28:1) |
 | `--nowo-ui-progress-track` | `var(--nowo-ui-surface-muted)` |
 | `--nowo-ui-progress-bar` | `var(--nowo-ui-primary)` |
 | `--nowo-ui-page-loader-color` | `var(--nowo-ui-primary)` (minimal page loaders) |
@@ -459,9 +459,21 @@ other palette tokens. Gap and radius apply in both modes.
 | dark | shell `#0f172a` | 14.48:1 | 6.96:1 | 7.02:1 |
 | dark | panel `#1e293b` | 11.87:1 | 5.71:1 | 5.75:1 |
 
-The current aside item keeps its primary tint; on the shell surface its text is `--nowo-ui-nav-active-text` when set,
-else the primary mixed 85 % with the text colour (5.08:1 light, more in dark), because the plain primary on that tint
-would be 4.20:1. A host palette that changes these tokens checks its own pairs (the demo's axe run covers the defaults).
+The current aside item keeps its primary tint; its text is `--nowo-ui-nav-active-text` when set, else the primary mixed
+85 % with the text colour in both styles since 2.52.1 (measured on the inset shell surface: 5.06:1 light, 6.45:1 dark; classic 5.28:1 light), because
+the plain primary on that tint would be 4.19:1. Muted text on the light shell surface is 4.55:1: it passes AA with
+little margin, so a host that darkens `--nowo-ui-surface-muted` or lightens `--nowo-ui-muted` checks that pair first.
+A host palette that changes these tokens checks its own pairs. The demo's axe and contrast run
+(`demo/symfony8/e2e/tests/sidebar-contrast.spec.ts`) covers the UiKit defaults in light and dark (it drops the demo's
+host `tokens`, which apply in light mode only) and the demo's host palette in light; `sidebar-inset.spec.ts` covers the
+host palette in light and the kit defaults in dark.
+
+**Scope of the surfaces.** The light and dark defaults of `--nowo-ui-shell-inset-surface` and
+`--nowo-ui-shell-inset-panel-surface` are declared on `:root` (and on `[data-theme="dark"]`) as
+`var(--nowo-ui-surface-muted)` / `var(--nowo-ui-surface)`, so they resolve there: a palette override scoped to the
+shell (`.nowo-ui-shell { --nowo-ui-surface: … }`) does not reach them. Set the two inset tokens on the same element
+(`.nowo-ui-shell { --nowo-ui-shell-inset-surface: …; --nowo-ui-shell-inset-panel-surface: … }`), or override the base
+palette on `:root` / through `tokens`.
 
 ## Motion
 

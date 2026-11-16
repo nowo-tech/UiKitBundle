@@ -1969,9 +1969,58 @@ in both themes: [THEMING](THEMING.md#inset-sidebar-style-252).
 
 Demo: `/demo/sidebar-layout?style=inset` (with `?layout=`, `?mode=`, `?width=content`, `?panel=column|drawer`).
 
-| Below header, expanded | Full height, icons-only rail | Phone (no inset) |
-|---|---|---|
-| ![Inset style, below-header layout, expanded](images/demo/kit-sidebar-inset-below-header-expanded-light.webp) | ![Inset style, full-height layout, icons-only rail (dark)](images/demo/kit-sidebar-inset-full-height-rail-dark.webp) | ![Inset style on a phone: the classic phone shell](images/demo/kit-sidebar-inset-phone-light.webp) |
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="images/demo/kit-sidebar-inset-below-header-expanded-light.webp" alt="Inset sidebar style, below-header layout, aside expanded, light mode: one surface for the header, aside and footer, content in a rounded inset panel" />
+      <br /><sub>Below-header layout, aside expanded (light)</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="images/demo/kit-sidebar-inset-below-header-expanded-dark.webp" alt="Inset sidebar style, below-header layout, aside expanded, dark mode: one surface for the header, aside and footer, content in a rounded inset panel" />
+      <br /><sub>Below-header layout, aside expanded (dark)</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="images/demo/kit-sidebar-inset-below-header-rail-light.webp" alt="Inset sidebar style, below-header layout, icons-only rail, light mode: one surface for the header, aside and footer, content in a rounded inset panel" />
+      <br /><sub>Below-header layout, icons-only rail (light)</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="images/demo/kit-sidebar-inset-below-header-rail-dark.webp" alt="Inset sidebar style, below-header layout, icons-only rail, dark mode: one surface for the header, aside and footer, content in a rounded inset panel" />
+      <br /><sub>Below-header layout, icons-only rail (dark)</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="images/demo/kit-sidebar-inset-full-height-expanded-light.webp" alt="Inset sidebar style, full-height layout, aside expanded, light mode: one surface for the header, aside and footer, content in a rounded inset panel" />
+      <br /><sub>Full-height layout, aside expanded (light)</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="images/demo/kit-sidebar-inset-full-height-expanded-dark.webp" alt="Inset sidebar style, full-height layout, aside expanded, dark mode: one surface for the header, aside and footer, content in a rounded inset panel" />
+      <br /><sub>Full-height layout, aside expanded (dark)</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="images/demo/kit-sidebar-inset-full-height-rail-light.webp" alt="Inset sidebar style, full-height layout, icons-only rail, light mode: one surface for the header, aside and footer, content in a rounded inset panel" />
+      <br /><sub>Full-height layout, icons-only rail (light)</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="images/demo/kit-sidebar-inset-full-height-rail-dark.webp" alt="Inset sidebar style, full-height layout, icons-only rail, dark mode: one surface for the header, aside and footer, content in a rounded inset panel" />
+      <br /><sub>Full-height layout, icons-only rail (dark)</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="images/demo/kit-sidebar-inset-phone-light.webp" alt="Inset sidebar style on a phone, light mode: the classic phone shell with no inset panel" />
+      <br /><sub>Phone: the classic phone shell, no inset (light)</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="images/demo/kit-sidebar-inset-phone-dark.webp" alt="Inset sidebar style on a phone, dark mode: the classic phone shell with no inset panel" />
+      <br /><sub>Phone: the classic phone shell, no inset (dark)</sub>
+    </td>
+  </tr>
+</table>
 
 <a id="compact-pagination-26"></a>
 ### Compact pagination

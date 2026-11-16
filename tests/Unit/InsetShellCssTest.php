@@ -55,6 +55,33 @@ final class InsetShellCssTest extends TestCase
         }
     }
 
+    /**
+     * 2.52.1 (audit RK-L1): with inset, content width and an edge-tabs gutter, the end padding is the centring padding
+     * plus the gutter, in a rule that outranks the edge-tabs gutter rule (0,7,0).
+     */
+    public function testEdgeTabsGutterAddsToTheCentringPadding(): void
+    {
+        $css = $this->css();
+        $rule = ":root[data-nowo-ui-edge-tabs-ready]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-gutter]:not([hidden])) .nowo-ui-shell[data-nowo-ui-sidebar-style='inset'].is-main-content > .nowo-ui-main {\n    padding-inline-end: calc(max(1.25rem, calc((100% - 2 * var(--nowo-ui-shell-inset-gap) - var(--nowo-ui-content-max-width)) / 2 + 1.25rem)) + var(--nowo-ui-edge-tabs-gutter, 0px));";
+        self::assertSame(1, substr_count($css, $rule));
+        self::assertStringContainsString(":root[data-nowo-ui-edge-tabs-ready]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always']:not([hidden])[data-nowo-ui-edge-tabs-gutter]) .nowo-ui-main {\n  padding-inline-end: calc(1.25rem + var(--nowo-ui-edge-tabs-gutter));", $css, 'the classic gutter rule is unchanged');
+    }
+
+    /**
+     * 2.52.1 (audit RK-M1 / RK-I5, WCAG AA): the classic current aside item mixes the primary 85 % with the text colour
+     * (as the inset style did), and every :focus-visible outline falls back to an 80 % primary (3:1 or more on the
+     * default surfaces); the input / Bootstrap-bridge box-shadow halos keep the 35 % mix next to their own indicator.
+     */
+    public function testContrastFallbacks(): void
+    {
+        $css = $this->css();
+        self::assertStringContainsString(".nowo-ui-aside__link.is-current,\n.nowo-ui-aside__link--active {\n  background: var(--nowo-ui-nav-active-bg, color-mix(in srgb, var(--nowo-ui-primary) 12%, transparent));\n  color: var(--nowo-ui-nav-active-text, color-mix(in srgb, var(--nowo-ui-primary) 85%, var(--nowo-ui-text)));", $css);
+        self::assertStringNotContainsString('color: var(--nowo-ui-nav-active-text, var(--nowo-ui-primary));', $css);
+        self::assertSame(0, substr_count($css, 'outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));'));
+        self::assertGreaterThanOrEqual(24, substr_count($css, 'outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 80%, transparent));'));
+        self::assertSame(0, preg_match('/outline:[^;]*35%, transparent/', $css), 'no outline keeps the 35 % ring');
+    }
+
     public function testLayeredStylesheetCarriesTheSameRules(): void
     {
         $layered = (string) file_get_contents(self::DIR.'/nowo-ui.css');
