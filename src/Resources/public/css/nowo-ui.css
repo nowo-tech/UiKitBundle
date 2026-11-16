@@ -131,7 +131,7 @@
 }
 
 .nowo-ui-btn:focus-visible {
-  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 80%, transparent));
   outline-offset: 2px;
 }
 
@@ -220,7 +220,7 @@
 }
 
 .nowo-ui-link:focus-visible {
-  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 80%, transparent));
   outline-offset: 2px;
   border-radius: 2px;
 }
@@ -284,7 +284,7 @@
 }
 
 .nowo-ui-check > input:is([type='checkbox'], [type='radio']):focus-visible {
-  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 80%, transparent));
   outline-offset: 2px;
 }
 
@@ -586,7 +586,7 @@
 
 .nowo-ui-modal.nowo-ui-modal-open .btn-close:focus-visible {
   opacity: 1;
-  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 80%, transparent));
   outline-offset: 2px;
 }
 
@@ -732,7 +732,7 @@ a.nowo-ui-pagination__link:hover {
 }
 
 .nowo-ui-pagination__link:focus-visible {
-  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 80%, transparent));
   outline-offset: 2px;
 }
 
@@ -797,7 +797,7 @@ a.nowo-ui-pagination__link:hover {
 }
 
 .nowo-ui-tabs__item:focus-visible {
-  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 80%, transparent));
   outline-offset: 2px;
 }
 
@@ -1101,16 +1101,19 @@ a.nowo-ui-pagination__link:hover {
   background: var(--nowo-ui-surface-muted);
 }
 
+/* 2.52.1 (WCAG AA): the current item's text is the primary mixed 85 % with the text colour, as the inset style did in
+   2.52.0 — the plain primary on its 12 % tint was 4.37:1 in the light defaults (5.28:1 now). --nowo-ui-nav-active-text
+   still wins. */
 .nowo-ui-aside__link.is-current,
 .nowo-ui-aside__link--active {
   background: var(--nowo-ui-nav-active-bg, color-mix(in srgb, var(--nowo-ui-primary) 12%, transparent));
-  color: var(--nowo-ui-nav-active-text, var(--nowo-ui-primary));
+  color: var(--nowo-ui-nav-active-text, color-mix(in srgb, var(--nowo-ui-primary) 85%, var(--nowo-ui-text)));
   font-weight: 600;
 }
 
 .nowo-ui-aside__link:focus-visible,
 .nowo-ui-aside__group-toggle:focus-visible {
-  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 80%, transparent));
   outline-offset: 1px;
 }
 
@@ -1238,7 +1241,7 @@ a.nowo-ui-pagination__link:hover {
 
 .nowo-ui-user-menu__summary:hover,
 .nowo-ui-user-menu__summary:focus-visible {
-  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 80%, transparent));
   outline-offset: 2px;
 }
 
@@ -1769,11 +1772,8 @@ a.nowo-ui-pagination__link:hover {
     background: var(--nowo-ui-shell-inset-hover-bg, color-mix(in srgb, var(--nowo-ui-text) 7%, transparent));
   }
 
-  /* The current item's text on the primary tint of the shell surface: a step towards the text colour keeps it at 4.5:1
-     or more (the classic primary on that tint is 4.2:1 in the light defaults). --nowo-ui-nav-active-text still wins. */
-  .nowo-ui-shell[data-nowo-ui-sidebar-style='inset'] > .nowo-ui-aside :is(.nowo-ui-aside__link.is-current, .nowo-ui-aside__link--active) {
-    color: var(--nowo-ui-nav-active-text, color-mix(in srgb, var(--nowo-ui-primary) 85%, var(--nowo-ui-text)));
-  }
+  /* The current item's text: since 2.52.1 the classic rule already mixes the primary 85 % with the text colour (5.06:1
+     on the light shell surface), so this style adds nothing for it. */
 
   .nowo-ui-shell[data-nowo-ui-sidebar-style='inset'] > .nowo-ui-main {
     width: auto;
@@ -1788,6 +1788,13 @@ a.nowo-ui-pagination__link:hover {
     max-width: none;
     margin-inline: var(--nowo-ui-shell-inset-gap);
     padding-inline: max(1.25rem, calc((100% - 2 * var(--nowo-ui-shell-inset-gap) - var(--nowo-ui-content-max-width)) / 2 + 1.25rem));
+  }
+
+  /* 2.52.1: with an edge-tabs gutter (always, or phone on a coarse-pointer tablet) the gutter rule's end padding
+     (specificity 0,7,0) used to replace the centring padding above (0,4,0): the content grew by about 56 px and moved
+     off-centre. The gutter now adds to the centring padding, as it narrows the classic content-width box. */
+  :root[data-nowo-ui-edge-tabs-ready]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-gutter]:not([hidden])) .nowo-ui-shell[data-nowo-ui-sidebar-style='inset'].is-main-content > .nowo-ui-main {
+    padding-inline-end: calc(max(1.25rem, calc((100% - 2 * var(--nowo-ui-shell-inset-gap) - var(--nowo-ui-content-max-width)) / 2 + 1.25rem)) + var(--nowo-ui-edge-tabs-gutter, 0px));
   }
 }
 
@@ -2172,7 +2179,7 @@ a.nowo-ui-pagination__link:hover {
 }
 
 .nowo-ui-dialog__back:focus-visible {
-  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 80%, transparent));
   outline-offset: 2px;
 }
 
@@ -2211,7 +2218,7 @@ a.nowo-ui-pagination__link:hover {
 
 .nowo-ui-dialog__close:focus-visible,
 .nowo-ui-confirm__close:focus-visible {
-  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 80%, transparent));
   outline-offset: 2px;
 }
 
@@ -2990,7 +2997,7 @@ form.nowo-ui-filters select[multiple]:not(.ts-hidden-accessible) {
 }
 
 .nowo-ui-date-range__clear:focus-visible {
-  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 80%, transparent));
   outline-offset: 1px;
 }
 
@@ -3307,7 +3314,7 @@ table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr:hover > td {
 .nowo-ui-kebab__summary:focus-visible,
 .nowo-ui-toast__dismiss:focus-visible,
 .nowo-ui-release__trigger:focus-visible {
-  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 80%, transparent));
   outline-offset: 2px;
 }
 
@@ -3896,7 +3903,7 @@ button.nowo-ui-kebab__item.is-current {
 }
 
 .nowo-ui-corner-tab:focus-visible {
-  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 80%, transparent));
   outline-offset: 2px;
 }
 
@@ -3967,7 +3974,7 @@ button.nowo-ui-kebab__item.is-current {
 }
 
 .nowo-ui-responsive-table__toggle:not(.nowo-ui-corner-tab):focus-visible {
-  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 80%, transparent));
   outline-offset: 2px;
 }
 
@@ -4085,7 +4092,7 @@ button.nowo-ui-kebab__item.is-current {
 
 .nowo-ui-row-detail-btn:focus-visible,
 .nowo-ui-row-detail__close:focus-visible {
-  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 80%, transparent));
   outline-offset: 2px;
 }
 
@@ -4332,7 +4339,7 @@ details:not([open]) > summary:not(.is-morph-ready) > .nowo-ui-disclosure-icon .n
 }
 
 .nowo-ui-edge-tab__link:focus-visible {
-  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 80%, transparent));
   outline-offset: 2px;
 }
 
@@ -4408,7 +4415,7 @@ button.nowo-ui-edge-tab__link {
 
 .nowo-ui-listing-customizer__tab:focus-visible,
 .nowo-ui-listing-customizer__move:focus-visible {
-  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 80%, transparent));
   outline-offset: 1px;
 }
 
@@ -4733,7 +4740,7 @@ button.nowo-ui-edge-tab__link {
 }
 
 .nowo-ui-sort:focus-visible {
-  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 80%, transparent));
   outline-offset: 1px;
 }
 
@@ -4998,7 +5005,7 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
 }
 
 .nowo-ui-menu__toggle:focus-visible {
-  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 80%, transparent));
   outline-offset: 2px;
 }
 
@@ -5228,7 +5235,7 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
 }
 
 .nowo-ui-segmented__option:focus-visible {
-  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 80%, transparent));
   outline-offset: 1px;
 }
 
@@ -7228,7 +7235,7 @@ html[data-nowo-ui-sortable-active] * {
   cursor: grabbing;
 }
 .nowo-ui-image-crop__stage:focus-visible {
-  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 80%, transparent));
   outline-offset: 2px;
 }
 .nowo-ui-image-crop__canvas {
@@ -7314,7 +7321,7 @@ html[data-nowo-ui-sortable-active] * {
 .nowo-ui-image-input__frame.is-dragover {
   border-style: dashed;
   border-color: var(--nowo-ui-primary);
-  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 80%, transparent));
   outline-offset: 2px;
 }
 .nowo-ui-image-input__preview {
@@ -7621,7 +7628,7 @@ select.nowo-ui-pagination__select {
 }
 
 .nowo-ui-edge-tabs-launcher:focus-visible {
-  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 80%, transparent));
   outline-offset: 2px;
 }
 
@@ -7867,7 +7874,7 @@ a.nowo-ui-guest-header__brand:hover {
 }
 
 a.nowo-ui-guest-header__brand:focus-visible {
-  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent));
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 80%, transparent));
   outline-offset: 2px;
   border-radius: 2px;
 }

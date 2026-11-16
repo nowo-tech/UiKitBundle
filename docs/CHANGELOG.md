@@ -130,6 +130,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Current aside item contrast (WCAG 1.4.3, visible change).** The classic `.nowo-ui-aside__link.is-current` /
+  `--active` text now falls back to `color-mix(in srgb, var(--nowo-ui-primary) 85%, var(--nowo-ui-text))`, as the inset
+  style already did, instead of the plain primary: 4.37:1 → 5.28:1 on its tint with the light defaults (dark 6.45:1).
+  The item is a shade darker in light mode; `--nowo-ui-nav-active-text` still wins. The inset rule for the same colour
+  is gone (the classic rule now gives it).
+- **Focus outline contrast (WCAG 1.4.11, visible change).** Every `:focus-visible` outline (buttons, links, tabs,
+  pagination, toggles, menus, checkboxes, aside links…: 24 rules) falls back to an 80 % primary instead of 35 %:
+  about 1.65:1 → 3.51:1 or more on the default light surfaces, 4.23:1 or more in dark. The outline is a stronger blue;
+  a host that sets `--nowo-ui-focus-ring-color` keeps its own colour. The 0.2rem box-shadow halos (focused kit inputs,
+  the opt-in Bootstrap bridge) keep the 35 % mix.
+- **Inset style, content width and an edge-tabs gutter.** The edge-tabs gutter rule replaced the inset centring padding
+  (the content grew by about 56 px and sat off-centre); the gutter now adds to the centring padding.
+
+### Changed
+
+- Tests: the 1000-request worker test of `SidebarStyleResolver` now sends a request without a preference right after an
+  inset one (it could not see an inset leak before), for an inset config too; a Twig-level test renders the shell for
+  alternating requests with one Environment. New e2e `sidebar-contrast.spec.ts` (classic / inset, light / dark, UiKit
+  defaults and the demo host palette: current item ≥ 4.5:1, focus outline ≥ 3:1, axe) and an edge-tabs gutter check.
+- Docs: THEMING states which palette each axe run covers, the 4.55:1 muted-on-shell margin, and that the inset surface
+  defaults resolve on `:root` (a palette override scoped to `.nowo-ui-shell` does not reach them); USAGE shows every
+  inset screenshot in an HTML table; UPGRADING (2.52.0) notes that template-file overrides of the shell stay classic.
+  The classic sidebar, app shell and confirm dialog screenshots are refreshed.
+
 ## [2.52.0] - 2026-11-16
 
 ### Added

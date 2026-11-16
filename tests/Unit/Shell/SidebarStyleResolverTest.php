@@ -81,25 +81,32 @@ final class SidebarStyleResolverTest extends TestCase
 
     /**
      * Worker mode: the same resolver instance serves alternating users; each request sees only its own preference and a
-     * request without one falls back to the config, never to the previous user's value.
+     * request without one falls back to the config, never to the previous user's value. 2.52.1 (audit RK-L2): the order
+     * is classic → inset → none, so a request without a preference always follows an inset one and an inset leak would
+     * show; the inset-config resolver runs the mirror order (inset config, a classic user, then none).
      */
     public function testOneInstanceAcrossManyRequestsKeepsNoState(): void
     {
-        $stack = new RequestStack();
-        $resolver = new SidebarStyleResolver($stack);
-        for ($i = 0; $i < 1000; ++$i) {
-            $request = new Request();
-            if (0 === $i % 3) {
-                $request->attributes->set(SidebarStyle::ATTRIBUTE, 'inset');
-            } elseif (1 === $i % 3) {
-                $request->attributes->set(SidebarStyle::ATTRIBUTE, 'classic');
+        foreach (['classic' => ['classic', 'inset'], 'inset' => ['inset', 'classic']] as $config => [$first, $preference]) {
+            $stack = new RequestStack();
+            $resolver = new SidebarStyleResolver($stack, $config);
+            for ($i = 0; $i < 1000; ++$i) {
+                $request = new Request();
+                $expected = $config;
+                if (0 === $i % 3) {
+                    $request->attributes->set(SidebarStyle::ATTRIBUTE, $first);
+                    $expected = $first;
+                } elseif (1 === $i % 3) {
+                    $request->attributes->set(SidebarStyle::ATTRIBUTE, $preference);
+                    $expected = $preference;
+                }
+                $stack->push($request);
+                self::assertSame($expected, $resolver->resolve(), 'request '.$i.' (config '.$config.')');
+                $stack->pop();
             }
-            $stack->push($request);
-            self::assertSame(1 === $i % 3 || 2 === $i % 3 ? 'classic' : 'inset', $resolver->resolve());
-            $stack->pop();
+            self::assertNull($stack->getCurrentRequest());
+            self::assertSame($config, $resolver->resolve(), 'no request: the config default');
         }
-        self::assertNull($stack->getCurrentRequest());
-        self::assertSame('classic', $resolver->resolve(), 'no request: the config default');
     }
 
     public function testConfiguration(): void

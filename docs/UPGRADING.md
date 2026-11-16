@@ -151,6 +151,22 @@
 
 ## Unreleased
 
+From **2.52.0** (patch 2.52.1):
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+**Nothing to do; two visible changes, both for WCAG AA contrast.** No token, class, option or template changes.
+
+- The current aside item's text is a shade darker in light mode (the primary mixed 85 % with the text colour, 5.28:1
+  instead of 4.37:1). To keep the old colour, set `--nowo-ui-nav-active-text: var(--nowo-ui-primary)` (it fails AA
+  with the default palette).
+- Focus outlines are stronger: an 80 % primary instead of 35 % (3:1 or more). To keep the old ring, set
+  `--nowo-ui-focus-ring-color: color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent)` (about 1.65:1). Hosts that
+  already set `--nowo-ui-focus-ring-color` see no change; check that their colour reaches 3:1 on their surfaces.
+- Visual regression baselines of host apps that show a current aside item or a focused control need refreshing.
+
 ## To 2.52.0
 
 From **2.51.0**:
@@ -175,6 +191,12 @@ byte-identical HTML (`nowo_ui_kit.shell.sidebar_style` defaults to `classic`). T
 - Host `tokens` for `shell-inset-surface` / `shell-inset-panel-surface` apply in light mode only (they have dark
   defaults); use `tokens_dark` for dark mode. Check the contrast of your own palette on both surfaces
   ([THEMING](THEMING.md#inset-sidebar-style-252)).
+- Host template-file overrides of the shell (`templates/bundles/NowoUiKitBundle/shell/_open.html.twig` and the like)
+  stay classic: the inset hooks (`is-sidebar-inset` and `data-nowo-ui-sidebar-style="inset"` on the shell root, from
+  `nowo_ui_sidebar_style()`) are printed by the kit's `shell/_open.html.twig`, so an override copied from 2.51 or earlier
+  never gets them. Copy those lines into the override to adopt the style.
+- A palette override scoped to the shell (`.nowo-ui-shell { --nowo-ui-surface: … }`) does not reach the inset surfaces,
+  which resolve on `:root`; set `--nowo-ui-shell-inset-surface` / `--nowo-ui-shell-inset-panel-surface` there too.
 
 ## To 2.51.0
 
