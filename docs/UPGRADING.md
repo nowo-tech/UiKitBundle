@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.52.0](#to-2520)
   - [Adopting the inset sidebar style](#adopting-the-inset-sidebar-style)
 - [To 2.51.0](#to-2510)
   - [UiKit's default theme is available, and off (`base_stylesheet`)](#uikits-default-theme-is-available-and-off-base_stylesheet)
@@ -149,6 +150,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.52.0
+
+From **2.51.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 **Nothing to do.** The inset sidebar style is opt-in: a host that upgrades and changes no configuration renders
 byte-identical HTML (`nowo_ui_kit.shell.sidebar_style` defaults to `classic`). The stylesheet gains the four
