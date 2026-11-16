@@ -18,6 +18,8 @@ use Nowo\UiKitBundle\Shell\HeaderPresentation;
 use Nowo\UiKitBundle\Shell\HeaderPresentationResolver;
 use Nowo\UiKitBundle\Shell\SafeHref;
 use Nowo\UiKitBundle\Shell\SidebarLayoutResolver;
+use Nowo\UiKitBundle\Shell\SidebarStyle;
+use Nowo\UiKitBundle\Shell\SidebarStyleResolver;
 use Nowo\UiKitBundle\Theme\FontPreload;
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Theme\ThemeSlots;
@@ -71,6 +73,8 @@ use Twig\TwigFunction;
  * - `nowo_ui_sidebar_layout(layout = null)` (2.32) — the app shell's sidebar layout of the request (`below-header` |
  *   `full-height`: a valid option, else the request attribute `_nowo_ui_sidebar_layout`, else
  *   `nowo_ui_kit.shell.sidebar_layout`)
+ * - `nowo_ui_sidebar_style(style = null)` (2.52) — the app shell's sidebar style of the request (`classic` | `inset`: a
+ *   valid option, else the request attribute `_nowo_ui_sidebar_style`, else `nowo_ui_kit.shell.sidebar_style`)
  * - `nowo_ui_safe_image_src(src)` (2.32) — the image source when it is relative, http or https ({@see SafeHref::isSafeImage()}),
  *   else null
  * - `nowo_ui_appearance_or_null()` (2.40) — the appearance SPI's {@see Appearance} (its `logos`
@@ -118,6 +122,8 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
 
     private readonly SidebarLayoutResolver $sidebarLayoutResolver;
 
+    private readonly SidebarStyleResolver $sidebarStyleResolver;
+
     /** Public page-header contract (2.3): what the scaffolds render in `nowo_ui_page_header`. */
     public const PAGE_HEADER_TEMPLATE = '@NowoUiKitBundle/page/_page_header.html.twig';
 
@@ -128,6 +134,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
      * @param FontPreload|null                                                     $fontPreload    font preload tags (2.21, `nowo_ui_kit.font_preload`); null = none
      * @param array{presentation: string, compact_actions: string}                 $header         2.27 `nowo_ui_kit.header`: default presentation, where `header.actions` go in compact (`page` | `bar`)
      * @param string                                                               $sidebarLayout  2.32 `nowo_ui_kit.shell.sidebar_layout`: `below-header` | `full-height`
+     * @param string                                                               $sidebarStyle   2.52 `nowo_ui_kit.shell.sidebar_style`: `classic` | `inset`
      * @param bool                                                                 $baseStylesheet 2.51 `nowo_ui_kit.base_stylesheet`: the document layouts link css/nowo-ui-base.css (the opt-in default theme) before nowo-ui.css
      */
     public function __construct(
@@ -144,10 +151,12 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
         private readonly ?RemoteDialogHeaders $remoteDialogHeaders = null,
         private readonly AppearanceView $appearanceView = new AppearanceView(),
         private readonly bool $baseStylesheet = false,
+        string $sidebarStyle = 'classic',
     ) {
         $this->uiForms = new UiFormViews($actionForms);
         $this->presentationResolver = new HeaderPresentationResolver($requestStack, $header['presentation'], $header['compact_actions']);
         $this->sidebarLayoutResolver = new SidebarLayoutResolver($requestStack, $sidebarLayout);
+        $this->sidebarStyleResolver = new SidebarStyleResolver($requestStack, $sidebarStyle);
     }
 
     /**
@@ -194,6 +203,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             new TwigFunction('nowo_ui_base_stylesheet', fn (): bool => $this->baseStylesheet),
             new TwigFunction('nowo_ui_header_presentation', $this->headerPresentation(...)),
             new TwigFunction('nowo_ui_sidebar_layout', $this->sidebarLayout(...)),
+            new TwigFunction('nowo_ui_sidebar_style', $this->sidebarStyle(...)),
             new TwigFunction('nowo_ui_breadcrumb_kit_trail', $this->breadcrumbKitTrail(...), ['needs_environment' => true]),
             new TwigFunction('nowo_ui_header_crumbs', $this->headerCrumbs(...), ['needs_environment' => true]),
             new TwigFunction('nowo_ui_safe_href', static fn (mixed $href): ?string => \is_string($href) ? SafeHref::filter($href) : null),
@@ -451,6 +461,16 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
     public function sidebarLayout(mixed $layout = null): string
     {
         return $this->sidebarLayoutResolver->resolve($layout);
+    }
+
+    /**
+     * `nowo_ui_sidebar_style(style = null)` (2.52): the app shell's sidebar style of the request
+     * ({@see SidebarStyle}: a valid `style`, else the request attribute
+     * `_nowo_ui_sidebar_style`, else `nowo_ui_kit.shell.sidebar_style`): `classic` | `inset`.
+     */
+    public function sidebarStyle(mixed $style = null): string
+    {
+        return $this->sidebarStyleResolver->resolve($style);
     }
 
     /**

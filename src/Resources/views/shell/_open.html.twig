@@ -54,6 +54,11 @@
       out, = the 2.39 markup byte for byte (nowo_ui_kit.shell.brand.name still applies)
     - hover_expand (2.32; default nowo_ui_kit.shell.hover_expand): with kit styles and rail_mode, the icons-only rail
       widens over the page on hover / focus (data-nowo-ui-sidebar-hover-expand; nowo-ui-shell.js sets is-aside-peek)
+    - sidebar_style (2.52): classic (default: nowo_ui_kit.shell.sidebar_style, overridden per request by the request
+      attribute _nowo_ui_sidebar_style; classic = the 2.51 markup, byte for byte) | inset: the root gets
+      is-sidebar-inset + data-nowo-ui-sidebar-style="inset"; on desktop the kit CSS paints the header, the aside and the
+      footer on one shell surface without borders and the main region as an inset rounded panel (phones unchanged).
+      Works with both sidebar layouts, every aside mode and both content widths
     - bundle: per-bundle theme exceptions
   Root state classes: is-sidebar-collapsed, is-sidebar-rail, is-full-width / is-content-width (+ is-aside-collapsed /
   is-aside-rail with kit styles, the classes nowo-ui-shell.js toggles). Hooks: data-nowo-ui-shell, data-nowo-ui-aside,
@@ -79,6 +84,8 @@
 {% if _full_height %}
     {% set _state = _state ~ ' is-sidebar-full-height' %}
 {% endif %}
+{% set _inset = nowo_ui_sidebar_style(sidebar_style ?? null) == 'inset' %}
+{% set _state = _state ~ (_inset ? ' is-sidebar-inset') %}
 {% set _root_attr = {}|merge(attr|default({}))|merge(shell_attr|default({})) %}
 {% if _kit and _rail_mode %}
     {% set _root_attr = {
@@ -93,6 +100,7 @@
 {% if _full_height %}
     {% set _root_attr = {'data-nowo-ui-sidebar-layout': 'full-height'}|merge(_root_attr) %}
 {% endif %}
+{% set _root_attr = _inset ? {'data-nowo-ui-sidebar-style': 'inset'}|merge(_root_attr) : _root_attr %}
 {% set _burger = {
     controls: aside_id,
     expanded: not _collapsed,

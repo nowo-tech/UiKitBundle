@@ -76,6 +76,7 @@ final class PageContractTwig
         ?AppearanceView $appearanceView = null,
         ?ErrorIllustrationProviderInterface $illustrationProvider = null,
         ?LoggerInterface $logger = null,
+        string $sidebarStyle = 'classic',
     ): Environment {
         $views = self::root().'/src/Resources/views';
         $fs = new FilesystemLoader();
@@ -116,6 +117,7 @@ final class PageContractTwig
             sidebarLayout: $sidebarLayout,
             remoteDialogHeaders: $remoteDialogHeaders,
             appearanceView: $appearanceView ?? new AppearanceView(),
+            sidebarStyle: $sidebarStyle,
         ));
         $twig->addExtension(new ErrorPageExtension($errorPages, $translator, $requestStack, $illustrationProvider, $logger));
         if (null !== $shell) {

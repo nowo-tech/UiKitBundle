@@ -341,6 +341,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
             ->setArgument('$fontPreload', $this->registerFontPreload($container, $config))
             ->setArgument('$header', $config['header'])
             ->setArgument('$sidebarLayout', $config['shell']['sidebar_layout'])
+            ->setArgument('$sidebarStyle', $config['shell']['sidebar_style'])
             ->setArgument('$remoteDialogHeaders', new Reference('nowo_ui_kit.remote_dialog_headers'))
             ->setArgument('$appearanceView', new Reference('nowo_ui_kit.appearance.view'))
             ->setArgument('$baseStylesheet', $config['base_stylesheet'])
