@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.52.1](#to-2521)
 - [To 2.52.0](#to-2520)
   - [Adopting the inset sidebar style](#adopting-the-inset-sidebar-style)
 - [To 2.51.0](#to-2510)
@@ -150,6 +151,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.52.1
+
+From **2.52.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 From **2.52.0** (patch 2.52.1):
 
