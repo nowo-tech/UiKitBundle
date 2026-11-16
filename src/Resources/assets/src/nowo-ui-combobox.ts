@@ -186,14 +186,15 @@ export function fieldOf(root: Element): HTMLInputElement | null {
   return (queryAll(root, 'input').find((input) => getAttr(input, 'type') !== 'hidden') as HTMLInputElement | undefined) ?? null;
 }
 
-/** The hidden input that takes the picked value: named by id, `type="hidden"`, and in the field's form (or in no form, as the field). */
+/** The hidden input that takes the picked value: named by id, `type="hidden"`, and in the same form as the field (audit RU-I1: both in a form). */
 function valueInputOf(root: Element, field: HTMLInputElement): HTMLInputElement | null {
   const id = getAttr(root, 'data-nowo-ui-combobox-value-input');
   const input = id ? Document.prototype.getElementById.call(document, id) : null;
   if (!(input instanceof HTMLInputElement) || getAttr(input, 'type') !== 'hidden') {
     return null;
   }
-  return Reflect.get(HTMLInputElement.prototype, 'form', input) === Reflect.get(HTMLInputElement.prototype, 'form', field) ? input : null;
+  const form = Reflect.get(HTMLInputElement.prototype, 'form', field) as HTMLFormElement | null;
+  return form !== null && Reflect.get(HTMLInputElement.prototype, 'form', input) === form ? input : null;
 }
 
 const isUsable = (input: HTMLInputElement | null): input is HTMLInputElement =>
@@ -478,6 +479,17 @@ export async function search(root: HTMLElement, term: string): Promise<void> {
   }
 }
 
+/** Drops the planned search and the request in flight: neither may open the list later (audit RU-L1). */
+export function cancel(root: HTMLElement): void {
+  const state = stateOf(root);
+  clearTimeout(state.timer);
+  state.timer = undefined;
+  state.controller?.abort();
+  state.controller = null;
+  state.seq++;
+  removeAttr(root, 'aria-busy');
+}
+
 /** Plans a search for the field's current text: after the debounce, or none below the minimum length. */
 export function schedule(root: HTMLElement, delay = debounceOf(root)): void {
   const field = fieldOf(root);
@@ -490,11 +502,8 @@ export function schedule(root: HTMLElement, delay = debounceOf(root)): void {
   const term = inputValue(field).trim();
   const min = minLengthOf(root);
   if (length(term) < min) {
-    state.controller?.abort();
-    state.controller = null;
-    state.seq++;
+    cancel(root);
     state.options = [];
-    removeAttr(root, 'aria-busy');
     closeList(root);
     setStatus(root, term === '' ? '' : labelsOf(root).min_length.replace('%count%', String(min)));
     return;
@@ -655,6 +664,8 @@ function onFocusOut(event: FocusEvent): void {
   const root = rootOfField(event.target);
   const next = event.relatedTarget;
   if (root && !(next instanceof Node && Node.prototype.contains.call(root, next))) {
+    // Leaving the field: a search still planned or in flight must not reopen the list behind the user (audit RU-L1).
+    cancel(root);
     closeList(root);
   }
 }

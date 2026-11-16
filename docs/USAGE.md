@@ -2711,7 +2711,7 @@ your server must accept free text (or resolve it) whatever the script does.
 ```php
 $builder->add('page', ComboboxType::class, [
     'label' => 'Wiki page',
-    'url' => $this->urlGenerator->generate('app_page_search'), // same origin
+    'url' => $this->urlGenerator->generate('app_page_search'), // a path, or an absolute URL of this request's origin
     'min_length' => 2,   // default 2 (1 to 50)
     'debounce' => 250,   // ms, default 250 (0 to 2000)
     'param' => 'q',      // default q
@@ -2723,7 +2723,8 @@ $builder->add('page', ComboboxType::class, [
 ```
 
 For a field of yours, wrap it: `{{ include(nowo_ui_partial('combobox'), {id: 'page_picker', input: form_widget(form.page), url:
-path('app_page_search')}) }}`; `input` is trusted HTML. With `value_input: form.page_id.vars.id` (a hidden input of the same form), the
+path('app_page_search')}) }}`; `input` is trusted HTML. With `value_input: form.page_id.vars.id` (a hidden input of the same form: both inside one `<form>`;
+without a shared form no hidden input is written and the field takes the value), the
 field shows the picked label and the hidden input takes its value; typing again empties the hidden input, so a stale id is never
 submitted. `labels` overrides `list` (the listbox's name), `results` and `min_length` (with `%count%`), `none`, `error`.
 
@@ -2742,8 +2743,13 @@ without a label is dropped; a number becomes a string; anything else is ignored.
 characters per text are shown: limit and order on the server. The endpoint is yours, so it checks access, limits the term's length and
 rate, and returns only what this user may see. Make it stateless (no per-user data in services) for FrankenPHP worker mode.
 
+**`url`.** `ComboboxType` accepts a path starting with one `/` (not `//` or `/\`), or an absolute http(s) URL whose scheme, host and
+port are the current request's; anything else (another host, no current request for an absolute URL) is refused when the options
+are resolved, by the same rules the script applies before it sends anything.
+
 **Requests.** The first one starts `debounce` ms after the last keystroke, once the trimmed term has `min_length` characters; below that
-the list closes and the status says how many characters are needed. A newer term aborts the request in flight (`AbortController`), and
+the list closes and the status says how many characters are needed. Leaving the field drops a planned search and aborts the one in
+flight, so the list never reopens behind the user. A newer term aborts the request in flight (`AbortController`), and
 an answer for an older term is dropped. A URL on another origin, or not http(s), sends nothing and shows the error status; `mode:
 'same-origin'` also makes a redirect to another origin fail. A non-2xx answer, another content type or broken JSON shows the error.
 

@@ -8,6 +8,7 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
@@ -18,7 +19,9 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  * endpoint and its answer shape: docs/USAGE.md "Combobox". Stateless: nothing is kept between requests (FrankenPHP worker mode).
  *
  * Options:
- *   - `url` (required): the search URL, on the page's origin (a path, or an absolute http(s) URL of the same origin)
+ *   - `url` (required): the search URL on the page's origin: a path starting with one `/` (not `//` or `/\`), or an absolute http(s)
+ *     URL whose scheme, host and port are the current request's. Anything else, an absolute URL without a current request included,
+ *     is refused at option resolution, as the script would refuse it (audit RU-I2)
  *   - `min_length`: characters before the first request (default 2, 1 to 50)
  *   - `debounce`: milliseconds after the last keystroke (default 250, 0 to 2000)
  *   - `param`: query parameter of the term (default `q`; letters, digits, `_`, `.` and `-`, at most 64)
@@ -33,6 +36,37 @@ final class ComboboxType extends AbstractType
 
     /** Label keys a host may override. */
     public const LABELS = ['list', 'results', 'none', 'min_length', 'error'];
+
+    /** The request stack is read per call (FrankenPHP worker mode): nothing about a request is kept. */
+    public function __construct(private readonly ?RequestStack $requestStack = null)
+    {
+    }
+
+    /**
+     * Whether the script would send a request to this URL from a page of `$origin` (`scheme://host[:port]`, null when unknown): a
+     * single-slash path, or an http(s) URL of exactly that origin. The same rules as `searchUrl()` in `nowo-ui-combobox.ts`.
+     */
+    public static function isSameOriginUrl(string $url, ?string $origin): bool
+    {
+        if (1 === preg_match('#[\s\x00-\x1F\x7F]#', $url) || '' === $url) {
+            return false;
+        }
+        if (1 === preg_match('#\A/(?![/\\\\])#', $url)) {
+            return true;
+        }
+        if (null === $origin || 1 !== preg_match('#\Ahttps?://#i', $url)) {
+            return false;
+        }
+        $parts = parse_url($url);
+        if (!\is_array($parts) || !isset($parts['scheme'], $parts['host']) || isset($parts['user']) || isset($parts['pass'])) {
+            return false;
+        }
+        $scheme = strtolower($parts['scheme']);
+        $port = $parts['port'] ?? ('https' === $scheme ? 443 : 80);
+        $default = ('https' === $scheme && 443 === $port) || ('http' === $scheme && 80 === $port);
+
+        return strtolower($scheme.'://'.$parts['host'].($default ? '' : ':'.$port)) === strtolower($origin);
+    }
 
     public function buildView(FormView $view, FormInterface $form, array $options): void
     {
@@ -57,7 +91,8 @@ final class ComboboxType extends AbstractType
             'bundle' => null,
         ]);
         $resolver->setAllowedTypes('url', 'string');
-        $resolver->setAllowedValues('url', static fn (string $url): bool => 1 === preg_match('#\A(/(?![/\\\\])|https?://)[^\s]*\z#i', $url));
+        $requestStack = $this->requestStack;
+        $resolver->setAllowedValues('url', static fn (string $url): bool => self::isSameOriginUrl($url, $requestStack?->getMainRequest()?->getSchemeAndHttpHost()));
         $resolver->setAllowedTypes('min_length', 'int');
         $resolver->setAllowedValues('min_length', static fn (int $value): bool => $value >= 1 && $value <= 50);
         $resolver->setAllowedTypes('debounce', 'int');

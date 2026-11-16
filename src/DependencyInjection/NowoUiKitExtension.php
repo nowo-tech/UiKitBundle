@@ -451,6 +451,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
             ->setArguments([new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE)])
             ->addTag('form.type');
         $container->register('nowo_ui_kit.form.combobox_type', ComboboxType::class)
+            ->setArguments([new Reference('request_stack', ContainerInterface::NULL_ON_INVALID_REFERENCE)])
             ->addTag('form.type');
         $container->register('nowo_ui_kit.form.date_range_type', DateRangeType::class)
             ->setArguments([new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE)])

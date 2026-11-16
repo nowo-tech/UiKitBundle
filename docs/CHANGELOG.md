@@ -158,6 +158,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
     Chromium, Firefox and WebKit (`make -C demo/symfony8 test-e2e-combobox`).
   - Opt-in: nothing changes for a page that does not use the partial, the form type or the runtime; existing markup is unchanged.
     FormKit can map its fields to `ComboboxType` in a follow-up of its own (`FormTypeMap`, as for `emoji_picker`).
+  - Audit RU (2026-11-16): RELEASE OK, no High or Medium. Fixed before the tag: RU-L1 (leaving the field now drops the planned
+    search and aborts the request in flight; before, the list could reopen after Tab with `aria-expanded="true"` and Escape could
+    not close it), RU-I1 (`value_input` is written only when the field and the hidden input share a real form), RU-I2
+    (`ComboboxType` refuses an absolute `url` on another origin, or any absolute `url` without a current request, by the script's
+    rules; it takes the `request_stack` service).
 
 ## [2.52.2] - 2026-11-16
 

@@ -425,6 +425,18 @@ describe('nowo-ui-combobox', () => {
       expect(el<HTMLInputElement>('page-id').value).toBe('');
     });
 
+    it('RU-I1: is ignored when neither input is in a form', async () => {
+      document.body.innerHTML = MARKUP.replace('<form id="form">', '<div id="form">').replace('</form>', '</div>');
+      enhanceAll();
+      root().setAttribute('data-nowo-ui-combobox-value-input', 'page-id');
+      expect(field().form).toBeNull();
+      field().value = 'ab';
+      await search(root(), 'ab');
+      expect(pick(root(), 0)).toBe(true);
+      expect(field().value).toBe('1');
+      expect(el<HTMLInputElement>('page-id').value).toBe('');
+    });
+
     it('is ignored when it is not a hidden input of the same form', () => {
       el('page-id').setAttribute('type', 'text');
       pick(root(), 0);
@@ -497,6 +509,33 @@ describe('nowo-ui-combobox', () => {
       field().disabled = true;
       expect(pick(root(), 0)).toBe(false);
     });
+  });
+
+  it('RU-L1: leaving the field drops the planned search and the request in flight', async () => {
+    vi.useFakeTimers();
+    field().focus();
+    type('ab');
+    field().dispatchEvent(new FocusEvent('focusout', { bubbles: true, relatedTarget: el('outside') }));
+    vi.advanceTimersByTime(1000);
+    expect(fetchMock).not.toHaveBeenCalled();
+    vi.useRealTimers();
+    let release: (r: Response) => void = () => undefined;
+    let signal: AbortSignal | undefined;
+    fetchMock.mockImplementationOnce((_url: string, init: RequestInit) => {
+      signal = init.signal!;
+      return new Promise<Response>((resolve) => {
+        release = resolve;
+      });
+    });
+    const pending = search(root(), 'ab');
+    expect(root().getAttribute('aria-busy')).toBe('true');
+    field().dispatchEvent(new FocusEvent('focusout', { bubbles: true, relatedTarget: el('outside') }));
+    expect(signal!.aborted).toBe(true);
+    expect(root().hasAttribute('aria-busy')).toBe(false);
+    release(json(ANSWER));
+    await pending;
+    expect(field().getAttribute('aria-expanded')).toBe('false');
+    expect(el('list').hidden).toBe(true);
   });
 
   it('nextIndex wraps and handles an empty list', () => {

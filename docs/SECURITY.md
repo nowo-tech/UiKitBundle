@@ -173,14 +173,18 @@ Unreleased (2.48.0, Wiki page layout: side panel `drawer_below` / `persist`, `ra
 
 Since 2.48.0 (monorepo `BUNDLES_SECURITY_ANALYSIS.md`): 2.48.0 independent audit Appendix LV (2026-11-11), **Pass-Low** on `ed5365c`, delta on `2f676f4` **Pass**; LV-L1 and LV-L2 fixed. 2.48.1 (page loader ignores a cancelled link click) Appendix ME (2026-11-11), **Pass / Low**, ME-U-L1 documented. 2.49.0 (framework-free listing and redirect-event ports) Appendix MR (2026-11-11): MR-U-L1 (only `nowo_ui_listing_*` cookies are copied) and MR-U-L2 (a null `viewerId` fails closed) fixed, no markup change, no open redirect. 2.49.1 changes CSS and tests only.
 
-Unreleased (2.53, `combobox`: partial, `ComboboxType`, `js/nowo-ui-combobox.js`): **re-verification pending** (no independent audit
-yet). Design points for the audit: the runtime sends a `GET` only to an http(s) URL on the page's origin (`new URL()` against the base
+Unreleased (2.53, `combobox`: partial, `ComboboxType`, `js/nowo-ui-combobox.js`): Audit RU (2026-11-16): **RELEASE OK**, on `33466ec`;
+no High or Medium. Fixed before the tag: RU-L1 (Low: leaving the field cancels the planned search and aborts the request in flight,
+so the list cannot reopen after focus left), RU-I1 (Info: the hidden `value_input` must share a real form with the field), RU-I2
+(Info: `ComboboxType` refuses an absolute `url` of another origin at option resolution, by the script's rules). The fixes are
+**re-verification pending**. Design points: the runtime sends a `GET` only to an http(s) URL on the page's origin (`new URL()` against the base
 URI, origin compared before `fetch`, `mode: 'same-origin'`, credentials same-origin), so a host-given or tampered `data-nowo-ui-combobox-url`
 cannot reach another origin or leak the term there; a redirect to another origin fails. The answer must be `application/json` or
 `+json`, is read through own properties only, strings (or finite numbers) only, at most 20 groups, 100 options and 300 characters per
 text, and every text goes through `textContent`; no `innerHTML`, no HTML parsing, no URL from the answer is followed. The picked value
-goes only into the field and an optional hidden input that must be `type="hidden"` and in the field's form. `ComboboxType` refuses a
-`url` that is not a single-`/` path or an http(s) URL (no `//host`, `/\host`, `javascript:`), bounds `min_length`, `debounce`, `param`
+goes only into the field and an optional hidden input that must be `type="hidden"` and in the same, real form as the field.
+`ComboboxType` refuses a `url` that is not a single-`/` path or an http(s) URL of the current request's origin (no `//host`,
+`/\host`, `javascript:`, other host, scheme or port), bounds `min_length`, `debounce`, `param`
 and the label keys. The endpoint is the host's: it checks access, limits the term and the rate, and returns only what the user may
 see. Server side nothing is kept between requests (FrankenPHP worker mode, kernel reset off; igor clean). No style attribute, no inline
 script; attributes and document members are read through the prototypes; importing touches no DOM.

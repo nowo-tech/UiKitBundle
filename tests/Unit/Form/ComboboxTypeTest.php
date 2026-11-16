@@ -17,6 +17,8 @@ use Symfony\Component\DependencyInjection\Extension\Extension;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\Forms;
 use Symfony\Component\Form\FormView;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\OptionsResolver\Exception\InvalidOptionsException;
 use Symfony\Component\OptionsResolver\Exception\MissingOptionsException;
 
@@ -81,6 +83,7 @@ final class ComboboxTypeTest extends TestCase
     public static function badOptions(): iterable
     {
         yield 'another scheme' => [['url' => 'javascript:alert(1)']];
+        yield 'another host, no request' => [['url' => 'https://other.host/s']];
         yield 'protocol-relative' => [['url' => '//evil.example/s']];
         yield 'backslash' => [['url' => '/\\evil.example/s']];
         yield 'relative without slash' => [['url' => 'search']];
@@ -104,11 +107,48 @@ final class ComboboxTypeTest extends TestCase
         $this->factory()->create(ComboboxType::class, null, $options);
     }
 
-    public function testTheUrlIsRequiredAndAbsoluteHttpIsAccepted(): void
+    public function testTheUrlIsRequired(): void
     {
-        self::assertSame('https://example.test/s', $this->view(['url' => 'https://example.test/s'])->vars[ComboboxType::BLOCK_PREFIX]['url']);
         $this->expectException(MissingOptionsException::class);
         $this->factory()->create(ComboboxType::class);
+    }
+
+    /**
+     * @return iterable<string, array{string, string|null, bool}>
+     */
+    public static function origins(): iterable
+    {
+        yield 'path' => ['/s?q=1', null, true];
+        yield 'same origin' => ['https://example.test/s', 'https://example.test', true];
+        yield 'same origin, explicit default port' => ['https://example.test:443/s', 'https://example.test', true];
+        yield 'same origin, other port' => ['http://localhost:8092/s', 'http://localhost:8092', true];
+        yield 'host case' => ['HTTPS://Example.TEST/s', 'https://example.test', true];
+        yield 'another host' => ['https://other.host/s', 'https://example.test', false];
+        yield 'another scheme' => ['http://example.test/s', 'https://example.test', false];
+        yield 'another port' => ['https://example.test:8443/s', 'https://example.test', false];
+        yield 'a look-alike host' => ['https://example.test.evil/s', 'https://example.test', false];
+        yield 'credentials' => ['https://u@example.test/s', 'https://example.test', false];
+        yield 'absolute without a request' => ['https://example.test/s', null, false];
+        yield 'protocol-relative' => ['//example.test/s', 'https://example.test', false];
+        yield 'backslash' => ['/\\example.test/s', 'https://example.test', false];
+        yield 'empty' => ['', 'https://example.test', false];
+    }
+
+    #[DataProvider('origins')]
+    public function testRuI2OnlyTheScriptsOwnOriginIsAccepted(string $url, ?string $origin, bool $ok): void
+    {
+        self::assertSame($ok, ComboboxType::isSameOriginUrl($url, $origin));
+    }
+
+    public function testRuI2TheOptionFollowsTheCurrentRequest(): void
+    {
+        $stack = new RequestStack();
+        $stack->push(Request::create('https://example.test/page'));
+        $type = new ComboboxType($stack);
+
+        self::assertSame('https://example.test/s', $this->view(['url' => 'https://example.test/s'], $type)->vars[ComboboxType::BLOCK_PREFIX]['url']);
+        $this->expectException(InvalidOptionsException::class);
+        $this->view(['url' => 'https://other.host/s'], $type);
     }
 
     public function testItIsOptInAndRegistered(): void
