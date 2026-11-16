@@ -24,8 +24,8 @@ importers:
         specifier: 4.1.1
         version: 4.1.1
       driver.js:
-        specifier: 1.10.2
-        version: 1.10.2
+        specifier: 1.12.1
+        version: 1.12.1
       happy-dom:
         specifier: ^21.0.4
         version: 21.0.4
@@ -668,8 +668,8 @@ packages:
     resolution: {integrity: sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==}
     engines: {node: '>=8'}
 
-  driver.js@1.10.2:
-    resolution: {integrity: sha512-L/EMTriJPAmg+5kIFmrjzt3TI+1NblhHOV/UZkfpgU/uxhSflGheynMBxk5oImDSy6seAEkIl6MzNOc0zdoKtg==}
+  driver.js@1.12.1:
+    resolution: {integrity: sha512-upBRqQW+bz+yfH7ee1gjWBaq0ue7i2343f2U3WzIUc3bhs5hwb2jz86cuB8gArRh3nfNp77CLNgkUtArTYTKFA==}
 
   entities@7.0.1:
     resolution: {integrity: sha512-TWrgLOFUQTH994YUyl1yT4uyavY5nNB5muff+RtWaqNVCAK408b5ZnnbNAUEWLTCpum9w6arT70i1XdQ4UeOPA==}
@@ -1472,7 +1472,7 @@ snapshots:
 
   detect-libc@2.1.2: {}
 
-  driver.js@1.10.2: {}
+  driver.js@1.12.1: {}
 
   entities@7.0.1: {}
 
