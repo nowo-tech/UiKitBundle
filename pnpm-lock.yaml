@@ -36,8 +36,8 @@ importers:
         specifier: 2.0.2
         version: 2.0.2
       sass:
-        specifier: 1.107.1
-        version: 1.107.1
+        specifier: 1.108.2
+        version: 1.108.2
       tom-select:
         specifier: 2.6.2
         version: 2.6.2
@@ -46,10 +46,10 @@ importers:
         version: 7.0.2
       vite:
         specifier: ^8.3.6
-        version: 8.3.6(@types/node@26.6.5)(esbuild@0.28.2)(sass@1.107.1)
+        version: 8.3.6(@types/node@26.6.5)(esbuild@0.28.2)(sass@1.108.2)
       vitest:
         specifier: ^4.1.12
-        version: 4.1.12(@types/node@26.6.5)(@vitest/coverage-v8@4.1.12)(happy-dom@21.0.4)(vite@8.3.6(@types/node@26.6.5)(esbuild@0.28.2)(sass@1.107.1))
+        version: 4.1.12(@types/node@26.6.5)(@vitest/coverage-v8@4.1.12)(happy-dom@21.0.4)(vite@8.3.6(@types/node@26.6.5)(esbuild@0.28.2)(sass@1.108.2))
 
 packages:
 
@@ -715,8 +715,8 @@ packages:
   html-escaper@2.0.2:
     resolution: {integrity: sha512-H2iMtd0I4Mt5eYiapRdIDjp+XzelXQ0tFE4JS7YFwFevXXMmOp9myNrUvCg0D6ws8iqkRPBfKHgbwig1SmlLfg==}
 
-  immutable@5.1.9:
-    resolution: {integrity: sha512-m8nVez3rwrgmWxtLMt1ZYXB2Lv7OKYn/disyxAlSDYAlKSlFoPPfIAmAM/M5xqL4m4C/wAPw7S2/CNaUii1Hxg==}
+  immutable@5.2.1:
+    resolution: {integrity: sha512-CgXNM1BhKqpMjFHTyqQSk09OWqzHNJ/U4BdeBgXoBdR2DdgBdOSv131cO1/YMgzopqnka3B/i949UaMLEKUxOA==}
 
   is-extglob@2.1.1:
     resolution: {integrity: sha512-SbKbANkN603Vi4jEZv49LeVJMn4yGwsbzZworEoyEiutsN3nJYdbO36zfhGJ6QEDpOZIFkDtnq5JRxmvl3jsoQ==}
@@ -879,8 +879,8 @@ packages:
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
 
-  sass@1.107.1:
-    resolution: {integrity: sha512-aJ1/LvxOOb04YhmiBjzZn3jVwdHKol+OVhoMV6fFl02fF9T3i+5Mg9l/CnzqtM+NX5Jn5o3lAbs/ZJivTCLHfQ==}
+  sass@1.108.2:
+    resolution: {integrity: sha512-kugK8djotnG9HQRPTOf36asKYlxg8rWWsNLYHOgWDIVOiZQqlRfKBgF4XXM6kfw146kIDMvm57B4GIkvDSyTzA==}
     engines: {node: '>=20.19.0'}
     hasBin: true
 
@@ -1386,7 +1386,7 @@ snapshots:
       obug: 2.2.1
       std-env: 4.3.0
       tinyrainbow: 3.2.0
-      vitest: 4.1.12(@types/node@26.6.5)(@vitest/coverage-v8@4.1.12)(happy-dom@21.0.4)(vite@8.3.6(@types/node@26.6.5)(esbuild@0.28.2)(sass@1.107.1))
+      vitest: 4.1.12(@types/node@26.6.5)(@vitest/coverage-v8@4.1.12)(happy-dom@21.0.4)(vite@8.3.6(@types/node@26.6.5)(esbuild@0.28.2)(sass@1.108.2))
 
   '@vitest/expect@4.1.12':
     dependencies:
@@ -1397,13 +1397,13 @@ snapshots:
       chai: 6.3.0
       tinyrainbow: 3.2.0
 
-  '@vitest/mocker@4.1.12(vite@8.3.6(@types/node@26.6.5)(esbuild@0.28.2)(sass@1.107.1))':
+  '@vitest/mocker@4.1.12(vite@8.3.6(@types/node@26.6.5)(esbuild@0.28.2)(sass@1.108.2))':
     dependencies:
       '@vitest/spy': 4.1.12
       estree-walker: 3.0.3
       magic-string: 0.30.21
     optionalDependencies:
-      vite: 8.3.6(@types/node@26.6.5)(esbuild@0.28.2)(sass@1.107.1)
+      vite: 8.3.6(@types/node@26.6.5)(esbuild@0.28.2)(sass@1.108.2)
 
   '@vitest/pretty-format@4.1.12':
     dependencies:
@@ -1538,7 +1538,7 @@ snapshots:
 
   html-escaper@2.0.2: {}
 
-  immutable@5.1.9: {}
+  immutable@5.2.1: {}
 
   is-extglob@2.1.1:
     optional: true
@@ -1673,10 +1673,10 @@ snapshots:
       '@rolldown/binding-win32-arm64-msvc': 1.2.19
       '@rolldown/binding-win32-x64-msvc': 1.2.19
 
-  sass@1.107.1:
+  sass@1.108.2:
     dependencies:
       chokidar: 5.0.0
-      immutable: 5.1.9
+      immutable: 5.2.1
       source-map-js: 1.2.2
     optionalDependencies:
       '@parcel/watcher': 2.6.0
@@ -1739,7 +1739,7 @@ snapshots:
 
   undici-types@8.9.0: {}
 
-  vite@8.3.6(@types/node@26.6.5)(esbuild@0.28.2)(sass@1.107.1):
+  vite@8.3.6(@types/node@26.6.5)(esbuild@0.28.2)(sass@1.108.2):
     dependencies:
       lightningcss: 1.33.0
       picomatch: 4.0.7
@@ -1750,12 +1750,12 @@ snapshots:
       '@types/node': 26.6.5
       esbuild: 0.28.2
       fsevents: 2.3.3
-      sass: 1.107.1
+      sass: 1.108.2
 
-  vitest@4.1.12(@types/node@26.6.5)(@vitest/coverage-v8@4.1.12)(happy-dom@21.0.4)(vite@8.3.6(@types/node@26.6.5)(esbuild@0.28.2)(sass@1.107.1)):
+  vitest@4.1.12(@types/node@26.6.5)(@vitest/coverage-v8@4.1.12)(happy-dom@21.0.4)(vite@8.3.6(@types/node@26.6.5)(esbuild@0.28.2)(sass@1.108.2)):
     dependencies:
       '@vitest/expect': 4.1.12
-      '@vitest/mocker': 4.1.12(vite@8.3.6(@types/node@26.6.5)(esbuild@0.28.2)(sass@1.107.1))
+      '@vitest/mocker': 4.1.12(vite@8.3.6(@types/node@26.6.5)(esbuild@0.28.2)(sass@1.108.2))
       '@vitest/pretty-format': 4.1.12
       '@vitest/runner': 4.1.12
       '@vitest/snapshot': 4.1.12
@@ -1772,7 +1772,7 @@ snapshots:
       tinyexec: 1.3.1
       tinyglobby: 0.2.17
       tinyrainbow: 3.2.0
-      vite: 8.3.6(@types/node@26.6.5)(esbuild@0.28.2)(sass@1.107.1)
+      vite: 8.3.6(@types/node@26.6.5)(esbuild@0.28.2)(sass@1.108.2)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 26.6.5
