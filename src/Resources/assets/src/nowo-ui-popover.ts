@@ -15,6 +15,9 @@
  * get `role="none"` / `role="menuitem"` (Action entries rendered by the `action` partial too), opening focuses the
  * first item (the last when opened with ArrowUp from the toggle), ArrowDown / ArrowUp / Home / End move a roving
  * focus, Tab closes the menu.
+ * 2.52.2 (WCAG 2.4.3): a click on a menu item is recorded (capture phase, before a host handler forwards it to a
+ * hidden dialog trigger) as the invoker of the dialog it opens, so closing that dialog focuses the item, else this
+ * menu's toggle (nowo-ui-focus-return.ts).
  * Markup: `[data-nowo-ui-popover-menu]` root, `[data-nowo-ui-popover-trigger]` toggle, `[data-nowo-ui-popover-panel]`
  * panel. Ported from the symfony-beacon `popover_menu` Stimulus controller. No inline handlers (CSP).
  */
@@ -22,6 +25,7 @@
 export const ROOT = '[data-nowo-ui-popover-menu]';
 export const TRIGGER = '[data-nowo-ui-popover-trigger]';
 export const PANEL = '[data-nowo-ui-popover-panel]';
+import { bindFocusReturn } from './nowo-ui-focus-return';
 import { closeWithEffect, finishClosing, isClosing } from './nowo-ui-motion-core';
 import { placeBeside } from './nowo-ui-popover-core';
 
@@ -279,6 +283,7 @@ export function bindNowoUiPopover(): void {
     return;
   }
   bound = true;
+  bindFocusReturn();
   // `toggle` does not bubble: listen in the capture phase. Escape in the capture phase too, so the menu closes
   // before a surrounding dialog handles the key.
   document.addEventListener('toggle', onToggle, true);

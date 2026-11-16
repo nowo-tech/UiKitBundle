@@ -3321,6 +3321,14 @@ Behaviour and accessibility:
   are `<button type="button">`s that keep only their `data-*` / `aria-*` attributes (Stimulus actions; `on*` is refused,
   `style`, `type`, `formaction`… are dropped).
   The bar aligns the menu `start`, so the panel opens towards the content.
+  2.52.2 (WCAG 2.4.3): an item that forwards its click to a dialog trigger the page keeps `hidden` (symfony-beacon's
+  `opens:` items) gets the focus back when that dialog closes — any kit dialog: confirm (`nowo-ui-confirm.js`, the
+  `confirm-dialog` peer), remote form (both drivers), `dialog`. The kit records the clicked menu item (capture phase);
+  on close focus goes to the first of: the opener, the item, the toggles of the menus around it (innermost first) that
+  is connected and focusable — never a hidden element. The item is in the closed menu by then, so in practice the
+  page-actions toggle. A host script that opens a dialog some other way can name the invoker first:
+  `window.nowoUiRecordOpener(item, fallback?)` (used by the next dialog that opens within one second). Visible
+  triggers keep getting the focus back as before.
 - **Page header in compact:** one `h1`, `visually-hidden`; no intro, breadcrumbs or back link; status badge, toolbar
   and tabs stay. `data-nowo-ui-page-header-empty` marks a header with nothing visible left; utilities on the
   `page_header` slot (`mb-6`) beat the kit's reset, so add `[data-nowo-ui-page-header-empty] { margin-block-end: 0; }`.

@@ -7,9 +7,14 @@
  *
  * Identifier: `confirm-dialog`
  * Close attrs (either): data-nowo-confirm-close | data-confirm-dialog-close
+ *
+ * Focus return (2.52.2, WCAG 2.4.3): on close (Escape, Cancel, Confirm, ×, backdrop) focus goes back to the trigger
+ * that opened the dialog; a hidden trigger (a page-actions menu item forwarded its click to it) hands it to that menu
+ * item, else to the menu's toggle (src/nowo-ui-focus-return.ts).
  */
 
 import { Controller } from '@hotwired/stimulus';
+import { bindFocusReturn, rememberOpener, returnFocus } from '../src/nowo-ui-focus-return';
 import { closeDialogWithEffect, finishClosing } from '../src/nowo-ui-motion-core';
 
 export default class extends Controller {
@@ -39,8 +44,14 @@ export default class extends Controller {
   private portaled = false;
   private readonly onDialogClick = (event: MouseEvent): void => this.handleDialogClick(event);
   private readonly onConfirmInput = (): void => this.syncSubmit();
+  private readonly onDialogClose = (event: Event): void => {
+    if (event.target instanceof HTMLDialogElement) {
+      returnFocus(event.target);
+    }
+  };
 
   override connect(): void {
+    bindFocusReturn();
     this.cacheElements();
     if (this.openOnConnectValue) {
       this.open();
@@ -73,6 +84,12 @@ export default class extends Controller {
     }
 
     this.portalDialog(dialog);
+    // Remembered now, in the click's task: the dialog opens two frames later, after a menu that forwarded the click
+    // closed. nowoUiOpenConfirm() below, called without an opener, keeps this list.
+    const opener = event?.currentTarget instanceof HTMLElement ? event.currentTarget : null;
+    if (!dialog.open) {
+      rememberOpener(dialog, opener);
+    }
 
     if (this.confirmInputEl) {
       this.confirmInputEl.value = '';
@@ -178,6 +195,8 @@ export default class extends Controller {
     }
     dialog.removeEventListener('click', this.onDialogClick);
     dialog.addEventListener('click', this.onDialogClick);
+    dialog.removeEventListener('close', this.onDialogClose);
+    dialog.addEventListener('close', this.onDialogClose);
     if (this.confirmInputEl) {
       this.confirmInputEl.removeEventListener('input', this.onConfirmInput);
       this.confirmInputEl.addEventListener('input', this.onConfirmInput);
@@ -186,6 +205,7 @@ export default class extends Controller {
 
   private teardownPortaledListeners(): void {
     this.dialogEl?.removeEventListener('click', this.onDialogClick);
+    this.dialogEl?.removeEventListener('close', this.onDialogClose);
     this.confirmInputEl?.removeEventListener('input', this.onConfirmInput);
   }
 
@@ -211,7 +231,7 @@ export default class extends Controller {
 
 declare global {
   interface Window {
-    nowoUiOpenConfirm?: (id: string | HTMLDialogElement | null) => void;
+    nowoUiOpenConfirm?: (id: string | HTMLDialogElement | null, opener?: Element | null) => void;
     nowoUiCloseConfirm?: (el: HTMLDialogElement | null) => void;
   }
 }

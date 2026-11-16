@@ -20,14 +20,19 @@
  * Runtime question (2.34): `window.nowoUiAskConfirm(message, { danger, title, confirm, cancel, closeLabel, … })` is
  * `askConfirm()` of `stimulus-peers/ask_confirm.ts` for code without the peers: a `Promise<boolean>`, a kit `<dialog>`
  * built when asked, for actions whose target is only known at runtime.
+ *
+ * Focus return (2.52.2, WCAG 2.4.3): closing a confirm dialog (Escape, Cancel, Confirm, ×, backdrop) focuses the
+ * element that opened it; when that opener cannot take focus (a hidden trigger a page-actions menu item forwarded its
+ * click to), the menu item, else the menu's toggle — never a hidden element (nowo-ui-focus-return.ts).
  */
 
+import { bindFocusReturn, rememberOpener, returnFocus } from './nowo-ui-focus-return';
 import { bindMotion, closeDialogWithEffect, finishClosing } from './nowo-ui-motion-core';
 import { askConfirm, type ConfirmOptions } from '../stimulus-peers/ask_confirm';
 
 declare global {
   interface Window {
-    nowoUiOpenConfirm?: (id: string | HTMLDialogElement | null) => void;
+    nowoUiOpenConfirm?: (id: string | HTMLDialogElement | null, opener?: Element | null) => void;
     nowoUiCloseConfirm?: (el: HTMLDialogElement | null) => void;
     nowoUiAskConfirm?: (message: string, options?: ConfirmOptions) => Promise<boolean>;
   }
@@ -74,13 +79,15 @@ export function resetExpected(scope: ParentNode): HTMLInputElement | null {
   return first;
 }
 
-export function openConfirm(id: string | HTMLDialogElement | null): void {
+/** Opens a confirm dialog; `opener` (2.52.2) is where focus returns on close (see the module comment). */
+export function openConfirm(id: string | HTMLDialogElement | null, opener: Element | null = null): void {
   const dialog = resolveDialog(id);
   if (!dialog || typeof dialog.showModal !== 'function') {
     return;
   }
   finishClosing(dialog);
   if (!dialog.open) {
+    rememberOpener(dialog, opener);
     const input = resetExpected(dialog);
     dialog.showModal();
     input?.focus();
@@ -107,7 +114,7 @@ function onDocumentClick(event: MouseEvent): void {
     const targetId = openBtn.getAttribute('data-nowo-confirm-target');
     if (targetId) {
       event.preventDefault();
-      openConfirm(targetId);
+      openConfirm(targetId, openBtn);
     }
     return;
   }
@@ -129,6 +136,14 @@ export function syncAllExpected(root: ParentNode): void {
       syncExpected(input);
     }
   });
+}
+
+/** A dialog closed (native `close`, captured): focus back to its opener or the nearest visible fallback. */
+function onDialogClose(event: Event): void {
+  const target = event.target;
+  if (target instanceof HTMLDialogElement) {
+    returnFocus(target);
+  }
 }
 
 function onDocumentInput(event: Event): void {
@@ -187,6 +202,9 @@ export function bindNowoUiConfirm(): void {
   }
   confirmBound = true;
   bindMotion();
+  bindFocusReturn();
+  // `close` does not bubble: listen in the capture phase. Only dialogs with a remembered opener are touched.
+  document.addEventListener('close', onDialogClose, true);
   document.addEventListener('click', onDocumentClick);
   document.addEventListener('input', onDocumentInput);
   document.addEventListener('submit', warnMissingConfirmPeer, true);

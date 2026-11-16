@@ -3,7 +3,8 @@
  * Open: [data-nowo-ui-dialog-open="<id>"] (any element; links keep their href as a no-JS fallback).
  * Close: [data-nowo-ui-dialog-close] inside the dialog (or [data-nowo-ui-dialog-close="<id>"] anywhere), Escape
  * (native), a <form method="dialog">, or a click on the backdrop when the dialog has data-nowo-ui-dialog-backdrop-close.
- * Focus returns to the opener on close. No inline handlers (CSP).
+ * Focus returns to the opener on close; 2.52.2: when the opener cannot take it (a hidden trigger a page-actions menu item
+ * forwarded its click to), to that menu item, else the menu's toggle (nowo-ui-focus-return.ts). No inline handlers (CSP).
  * Replace (2.2): an opener with [data-nowo-ui-dialog-replace] inside an open dialog closes that dialog first and
  * hands its focus-return target over to the new one (focus goes back to whatever opened the first dialog).
  * Remote content (2.2): an opener with [data-nowo-ui-dialog-src="<url>"] fetches that URL (http(s) on this origin,
@@ -27,6 +28,7 @@
  * (it closes when its toggle is activated again).
  */
 
+import { bindFocusReturn, handOverOpener, isFocusable, rememberOpener, returnFocus } from './nowo-ui-focus-return';
 import { bindMotion, closeDialogWithEffect, finishClosing } from './nowo-ui-motion-core';
 import { overlayRegistry, type OverlayHandle } from './nowo-ui-overlay';
 import {
@@ -81,6 +83,7 @@ export function openDialog(id: string | HTMLDialogElement | null, opener: Elemen
     if (opener) {
       openers.set(dialog, opener);
     }
+    rememberOpener(dialog, opener);
     dialog.showModal();
     trackOverlay(dialog);
     const autofocus = dialog.querySelector('[autofocus]');
@@ -110,6 +113,7 @@ export function replaceDialog(id: string | HTMLDialogElement | null, opener: Ele
   }
   const handover = openers.get(current) ?? null;
   openers.delete(current);
+  handOverOpener(current, next);
   closeDialog(current);
   return openDialog(next, handover);
 }
@@ -220,11 +224,17 @@ export async function loadDialogContent(dialog: HTMLDialogElement, src: string, 
   }
 }
 
-/** Returns focus to the element that opened the dialog (native `close` event). */
+/**
+ * Returns focus to the element that opened the dialog (native `close` event): the opener, else (2.52.2) the menu item
+ * that invoked it or that menu's toggle — never a hidden element.
+ */
 export function restoreFocus(dialog: HTMLDialogElement): void {
   const opener = openers.get(dialog);
   openers.delete(dialog);
-  if (opener instanceof HTMLElement && opener.isConnected) {
+  if (returnFocus(dialog)) {
+    return;
+  }
+  if (isFocusable(opener)) {
     opener.focus();
   }
 }
@@ -325,6 +335,7 @@ export function bindNowoUiDialog(): void {
   }
   dialogBound = true;
   bindMotion();
+  bindFocusReturn();
   document.addEventListener('click', onDocumentClick);
   document.addEventListener('keydown', onDocumentKeydown);
   // `close` does not bubble: listen in the capture phase.

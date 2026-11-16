@@ -1,0 +1,56 @@
+{#
+  UiKit 2.52.2 demo (WCAG 2.4.3): dialogs opened from the page-actions menu. Each menu item forwards its click to a
+  dialog trigger the page keeps `hidden` (symfony-beacon's `opens:` page actions, public/js/demo-page-actions.js):
+  a confirm dialog (confirm-dialog peer), a remote form dialog (remote-form-dialog peer) and a kit dialog
+  (js/nowo-ui-dialog.js). Closing any of them returns focus to the menu item, else the page-actions toggle — never to
+  the hidden trigger. The visible triggers show the normal case: focus back on the trigger.
+  The response forbids inline scripts, style attributes and handlers (CSP).
+#}
+{% extends '@NowoUiKit/layout/document.html.twig' %}
+{% set nowo_ui_document_title = 'Page actions dialogs · UiKit 2.52.2' %}
+
+{% block nowo_ui_body %}
+    <main id="main-content" class="nowo-ui-content" data-testid="page-actions-dialogs" data-controller="demo-stay" data-action="remote-form-dialog:saved->demo-stay#saved">
+        <div class="kit-page-actions-demo__bar">
+            <h1>Monitor "API health"</h1>
+            {{ include(nowo_ui_partial('page_actions'), {
+                label: 'Page actions',
+                id: 'demo-page-actions',
+                attr: {'data-controller': 'page-actions', 'data-testid': 'page-actions'},
+                items: [
+                    {label: 'Archive monitor', attr: {'data-testid': 'pa-archive', 'data-action': 'page-actions#open', 'data-page-actions-opens-param': '#pa-archive-trigger'}},
+                    {label: 'New destination', attr: {'data-testid': 'pa-destination', 'data-action': 'page-actions#open', 'data-page-actions-opens-param': '#pa-destination-trigger'}},
+                    {label: 'Invoices', attr: {'data-testid': 'pa-invoices', 'data-action': 'page-actions#open', 'data-page-actions-opens-param': '#pa-invoices-trigger'}},
+                ],
+            }) }}
+        </div>
+        <p role="status" data-demo-stay-target="status" data-testid="status"></p>
+
+        <div class="{{ nowo_ui_class('form_actions') }}">
+            {% embed nowo_ui_partial('confirm_dialog') with {anatomy: true, title: 'Archive this monitor?', dialog_id: 'pa-archive-dialog', dialog_testid: 'pa-archive-dialog'} %}
+                {% block trigger %}
+                    <button type="button" id="pa-archive-trigger" hidden data-action="confirm-dialog#open" data-nowo-confirm-open data-nowo-confirm-target="pa-archive-dialog" aria-haspopup="dialog">Archive monitor</button>
+                    <button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-action="confirm-dialog#open" data-nowo-confirm-open data-nowo-confirm-target="pa-archive-dialog" aria-haspopup="dialog" data-testid="archive-visible">Archive (visible trigger)</button>
+                {% endblock %}
+                {% block body %}<p>It stops checking and leaves the dashboard. You can restore it later.</p>{% endblock %}
+                {% block footer %}
+                    <button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-confirm-dialog-close data-nowo-confirm-close data-testid="pa-archive-cancel">Cancel</button>
+                    <button type="button" class="{{ nowo_ui_class('btn_primary') }}" data-confirm-dialog-close data-nowo-confirm-close data-testid="pa-archive-confirm">Archive</button>
+                {% endblock %}
+            {% endembed %}
+
+            <span data-controller="remote-form-dialog" class="kit-page-actions-demo__remote">
+                {% set _new = path('kit_remote_form_new') %}
+                <a href="{{ _new }}" id="pa-destination-trigger" hidden data-action="remote-form-dialog#open" data-remote-form-dialog-title="New destination">New destination</a>
+                <a href="{{ _new }}" class="{{ nowo_ui_class('btn_secondary') }}" data-action="remote-form-dialog#open" data-remote-form-dialog-title="New destination" data-testid="destination-visible">New destination (visible trigger)</a>
+                {{ include(nowo_ui_partial('remote_form_dialog'), {id: 'pa-destination-dialog', stimulus: true, attr: {'data-testid': 'pa-destination-dialog'}}) }}
+            </span>
+
+            <button type="button" id="pa-invoices-trigger" hidden data-nowo-ui-dialog-open="pa-invoices-dialog">Invoices</button>
+        </div>
+    </main>
+    {% set _invoices_footer %}<button type="button" class="{{ nowo_ui_class('btn_primary') }}" data-nowo-ui-dialog-close data-testid="pa-invoices-close">Close</button>{% endset %}
+    {{ include(nowo_ui_partial('dialog'), {id: 'pa-invoices-dialog', title: 'Invoices', body: '<p>No open invoices.</p>', footer: _invoices_footer, backdrop_close: true, attr: {'data-testid': 'pa-invoices-dialog'}}) }}
+{% endblock %}
+
+{% block nowo_ui_scripts %}{{ parent() }}<script src="{{ asset('js/demo-page-actions.js') }}" defer></script>{% endblock %}
