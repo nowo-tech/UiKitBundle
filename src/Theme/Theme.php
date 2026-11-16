@@ -56,6 +56,8 @@ final readonly class Theme
         'surface', 'surface-muted', 'border', 'border-strong', 'text', 'muted', 'link',
         // 2.27: the compact breadcrumb's "…" panel shadow (the only component token with a dark default)
         'header-crumbs-panel-shadow',
+        // 2.52: the inset sidebar style's shell and panel surfaces
+        'shell-inset-surface', 'shell-inset-panel-surface',
     ];
 
     /**

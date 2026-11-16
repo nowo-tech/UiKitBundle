@@ -60,6 +60,9 @@
   --nowo-ui-radius: 0.375rem;
   /* 2.3: defined (follows the primary on the same element), so host / bundle CSS can read var(--nowo-ui-link) */
   --nowo-ui-link: var(--nowo-ui-primary);
+  /* 2.52: inset sidebar style — the shell surface (header, aside, footer) and the content panel */
+  --nowo-ui-shell-inset-surface: var(--nowo-ui-surface-muted);
+  --nowo-ui-shell-inset-panel-surface: var(--nowo-ui-surface);
 }
 
 .nowo-ui-page-header,
@@ -949,6 +952,9 @@ a.nowo-ui-pagination__link:hover {
   --nowo-ui-aside-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --nowo-ui-header-height: 3.25rem;
   --nowo-ui-content-max-width: 72rem;
+  /* 2.52: inset sidebar style — gap of the content panel from the aside, the header and the viewport edges; its radius */
+  --nowo-ui-shell-inset-gap: 0.5rem;
+  --nowo-ui-shell-inset-radius: 0.75rem;
   /* 2.48: comfortable line length of reading content (.nowo-ui-readable) */
   --nowo-ui-reading-width: 75ch;
 }
@@ -1732,6 +1738,56 @@ a.nowo-ui-pagination__link:hover {
 
   .nowo-ui-shell[data-nowo-ui-sidebar-layout='full-height'].is-aside-rail.is-aside-peek .nowo-ui-aside-head {
     width: var(--nowo-ui-aside-peek-width, 15.5rem);
+  }
+}
+
+/* --- Inset sidebar style (2.52, opt-in) ---
+ * `nowo_ui_kit.shell.sidebar_style: inset` (or the `sidebar_style` option / the `_nowo_ui_sidebar_style` request
+ * attribute): `data-nowo-ui-sidebar-style="inset"` on the shell. Desktop only (901px and up), with either sidebar
+ * layout and every aside mode (expanded, icons-only rail, hover-expanded rail, hidden): the header, the aside (and its
+ * head) and the footer share one surface (--nowo-ui-shell-inset-surface) with no visible border between them — the
+ * borders turn transparent, so every box keeps the classic geometry — and `.nowo-ui-main` becomes an inset panel
+ * (--nowo-ui-shell-inset-panel-surface, radius --nowo-ui-shell-inset-radius) with a --nowo-ui-shell-inset-gap margin
+ * from the aside, the header, the viewport edge and the footer. The panel never clips (no overflow), so sticky content
+ * and fixed drawers behave as in the classic style; the aside still slides through the shell grid, the panel's margins
+ * never change, so toggling the aside moves nothing but the panel's start edge. Content width: the panel keeps the full
+ * width and its padding centres the content at --nowo-ui-content-max-width. Phones keep the classic shell.
+ */
+@media (min-width: 901px) {
+  .nowo-ui-shell[data-nowo-ui-sidebar-style='inset'] {
+    background: var(--nowo-ui-shell-inset-surface);
+  }
+
+  .nowo-ui-shell[data-nowo-ui-sidebar-style='inset'] > :is(.nowo-ui-header, .nowo-ui-aside, .nowo-ui-footer),
+  .nowo-ui-shell[data-nowo-ui-sidebar-style='inset'] > .nowo-ui-aside > .nowo-ui-aside-head {
+    border-color: transparent;
+    background: var(--nowo-ui-shell-inset-surface);
+  }
+
+  /* The classic hover is the muted surface, which is this style's shell surface in light mode. */
+  .nowo-ui-shell[data-nowo-ui-sidebar-style='inset'] > .nowo-ui-aside :is(.nowo-ui-aside__link:not(.is-current, .nowo-ui-aside__link--active), .nowo-ui-aside__group-toggle):hover {
+    background: var(--nowo-ui-shell-inset-hover-bg, color-mix(in srgb, var(--nowo-ui-text) 7%, transparent));
+  }
+
+  /* The current item's text on the primary tint of the shell surface: a step towards the text colour keeps it at 4.5:1
+     or more (the classic primary on that tint is 4.2:1 in the light defaults). --nowo-ui-nav-active-text still wins. */
+  .nowo-ui-shell[data-nowo-ui-sidebar-style='inset'] > .nowo-ui-aside :is(.nowo-ui-aside__link.is-current, .nowo-ui-aside__link--active) {
+    color: var(--nowo-ui-nav-active-text, color-mix(in srgb, var(--nowo-ui-primary) 85%, var(--nowo-ui-text)));
+  }
+
+  .nowo-ui-shell[data-nowo-ui-sidebar-style='inset'] > .nowo-ui-main {
+    width: auto;
+    max-width: none;
+    margin: var(--nowo-ui-shell-inset-gap);
+    border-radius: var(--nowo-ui-shell-inset-radius);
+    background: var(--nowo-ui-shell-inset-panel-surface);
+    box-shadow: 0 0 0 1px var(--nowo-ui-shell-inset-panel-border, var(--nowo-ui-border));
+  }
+
+  .nowo-ui-shell[data-nowo-ui-sidebar-style='inset'].is-main-content > .nowo-ui-main {
+    max-width: none;
+    margin-inline: var(--nowo-ui-shell-inset-gap);
+    padding-inline: max(1.25rem, calc((100% - 2 * var(--nowo-ui-shell-inset-gap) - var(--nowo-ui-content-max-width)) / 2 + 1.25rem));
   }
 }
 
@@ -3791,6 +3847,9 @@ button.nowo-ui-kebab__item.is-current {
   --nowo-ui-link: var(--nowo-ui-primary);
   /* 2.27: the only component token with its own dark default (Theme::LIGHT_ONLY_TOKENS) */
   --nowo-ui-header-crumbs-panel-shadow: 0 8px 24px rgb(0 0 0 / 45%);
+  /* 2.52: inset sidebar style — dark chrome, the content panel one step lighter */
+  --nowo-ui-shell-inset-surface: var(--nowo-ui-surface);
+  --nowo-ui-shell-inset-panel-surface: var(--nowo-ui-surface-muted);
 }
 
 

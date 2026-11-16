@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use Nowo\UiKitBundle\Shell\HeaderPresentation;
 use Nowo\UiKitBundle\Shell\SidebarLayout;
+use Nowo\UiKitBundle\Shell\SidebarStyle;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
@@ -18,6 +19,9 @@ use Symfony\Component\Routing\Attribute\Route;
  * request attribute `_nowo_ui_sidebar_layout`, as a host listener would from the user's preference; `?mode=expanded|
  * rail|hidden` is the server-rendered aside mode; `?hover=1` turns on the hover-expanded rail; `?footer=fixed` pins the
  * footer (it follows the aside through --nowo-ui-shell-inset-start); `?header=compact` fills the compact header slot.
+ * 2.52: `?style=classic|inset` (default classic) sets the request attribute `_nowo_ui_sidebar_style`, as a host listener
+ * would from the user's preference (Beacon: Account → Interface); `?width=content` constrains the content width
+ * (is-main-content); `?panel=column|drawer` adds a kit side panel (a sticky column, or an open overlay drawer).
  * The profiler toolbar is off for this page, so the e2e geometry and axe checks only see the shell.
  */
 final class KitSidebarLayoutController extends AbstractController
@@ -37,6 +41,9 @@ final class KitSidebarLayoutController extends AbstractController
         $layout = SidebarLayout::fromValue($request->query->get('layout')) ?? SidebarLayout::FullHeight;
         $mode = \in_array($request->query->get('mode'), ['rail', 'hidden'], true) ? (string) $request->query->get('mode') : 'expanded';
         $compact = 'compact' === $request->query->get('header');
+        $style = SidebarStyle::fromValue($request->query->get('style')) ?? SidebarStyle::Classic;
+        $panel = \in_array($request->query->get('panel'), ['column', 'drawer'], true) ? (string) $request->query->get('panel') : null;
+        $request->attributes->set(SidebarStyle::ATTRIBUTE, $style->value);
         $request->attributes->set(SidebarLayout::ATTRIBUTE, $layout->value);
         $request->attributes->set(HeaderPresentation::ATTRIBUTE, $compact ? HeaderPresentation::Compact->value : HeaderPresentation::Standard->value);
         $query = array_filter([
@@ -45,6 +52,9 @@ final class KitSidebarLayoutController extends AbstractController
             'hover' => $request->query->getBoolean('hover') ? '1' : null,
             'footer' => 'fixed' === $request->query->get('footer') ? 'fixed' : null,
             'header' => $compact ? 'compact' : null,
+            'style' => SidebarStyle::Inset === $style ? $style->value : null,
+            'width' => 'content' === $request->query->get('width') ? 'content' : null,
+            'panel' => $panel,
         ]);
 
         return $this->render('kit/sidebar_layout.html.twig', [
@@ -53,6 +63,8 @@ final class KitSidebarLayoutController extends AbstractController
             'hover' => isset($query['hover']),
             'footer_fixed' => isset($query['footer']),
             'compact' => $compact,
+            'content_width' => isset($query['width']),
+            'panel' => $panel,
             'rows' => self::ROWS,
         ]);
     }

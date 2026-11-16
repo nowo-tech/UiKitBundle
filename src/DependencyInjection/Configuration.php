@@ -17,6 +17,7 @@ use Nowo\UiKitBundle\Enum\RowActionsDisplay;
 use Nowo\UiKitBundle\Shell\HeaderPresentation;
 use Nowo\UiKitBundle\Shell\SafeHref;
 use Nowo\UiKitBundle\Shell\SidebarLayout;
+use Nowo\UiKitBundle\Shell\SidebarStyle;
 use Nowo\UiKitBundle\Theme\ListFiltersOptions;
 use Nowo\UiKitBundle\Theme\Theme;
 use Nowo\UiKitBundle\Theme\ThemeSlots;
@@ -596,6 +597,11 @@ final class Configuration implements ConfigurationInterface
                     ->values(SidebarLayout::values())
                     ->defaultValue(SidebarLayout::BelowHeader->value)
                     ->info('2.32: below-header (default, the 2.31 markup byte for byte) | full-height: on desktop the aside runs from the top edge with the burger and the brand in its head (aside_brand_html / brand_icon_html + brand_name / brand_html), the header and the footer start at its right edge. The app_shell_open option sidebar_layout, then the request attribute _nowo_ui_sidebar_layout, win over it.')
+                ->end()
+                ->enumNode('sidebar_style')
+                    ->values(SidebarStyle::values())
+                    ->defaultValue(SidebarStyle::Classic->value)
+                    ->info('2.52: classic (default, the 2.51 markup byte for byte) | inset: on desktop the header, the aside and the footer share one shell surface with no border between them, and the content is an inset panel with rounded corners (tokens --nowo-ui-shell-inset-gap / -radius / -surface / -panel-surface). Phones are unchanged. The app_shell_open option sidebar_style, then the request attribute _nowo_ui_sidebar_style, win over it.')
                 ->end()
                 ->arrayNode('brand')
                     ->info('2.32: the shell brand from config (no template override): the aside head of the full-height layout, and the header brand when a page passes neither brand_html nor brand. The app_shell_open options brand_name / brand_href / brand_icon_src / brand_icon_html / aside_brand_html win.')

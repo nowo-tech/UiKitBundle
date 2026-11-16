@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+  - [Adopting the inset sidebar style](#adopting-the-inset-sidebar-style)
 - [To 2.51.0](#to-2510)
   - [UiKit's default theme is available, and off (`base_stylesheet`)](#uikits-default-theme-is-available-and-off-base_stylesheet)
   - [`.nowo-ui-header` navigation](#nowo-ui-header-navigation)
@@ -148,6 +149,23 @@
   - [Install](#install)
 
 ## Unreleased
+
+**Nothing to do.** The inset sidebar style is opt-in: a host that upgrades and changes no configuration renders
+byte-identical HTML (`nowo_ui_kit.shell.sidebar_style` defaults to `classic`). The stylesheet gains the four
+`--nowo-ui-shell-inset-*` tokens and rules keyed on `[data-nowo-ui-sidebar-style='inset']` only.
+
+### Adopting the inset sidebar style
+
+- For everyone: `nowo_ui_kit.shell.sidebar_style: inset`.
+- Per user (e.g. an Account → Interface choice next to the sidebar layout): store `classic` | `inset` and set the
+  request attribute `_nowo_ui_sidebar_style` (`Nowo\UiKitBundle\Shell\SidebarStyle::ATTRIBUTE`) from a
+  `kernel.request` listener, exactly like `_nowo_ui_sidebar_layout` — see
+  [USAGE](USAGE.md#inset-sidebar-style-252). Do not keep the value in a service (FrankenPHP worker, kernel reset false).
+- Host CSS that paints the shell itself: the panel is `.nowo-ui-main`; check host rules on `.nowo-ui-main` margin,
+  width, background or radius, and on header / aside / footer borders, under `[data-nowo-ui-sidebar-style='inset']`.
+- Host `tokens` for `shell-inset-surface` / `shell-inset-panel-surface` apply in light mode only (they have dark
+  defaults); use `tokens_dark` for dark mode. Check the contrast of your own palette on both surfaces
+  ([THEMING](THEMING.md#inset-sidebar-style-252)).
 
 ## To 2.51.0
 
