@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.53.0](#to-2530)
 - [To 2.52.2](#to-2522)
 - [To 2.52.1](#to-2521)
 - [To 2.52.0](#to-2520)
@@ -152,6 +153,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.53.0
+
+From **2.52.2**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 Nothing to change. The new combobox (`ComboboxType`, partial `combobox`, runtime `combobox`) is opt-in: see
 [USAGE.md "Combobox"](USAGE.md#combobox). A host with its own `combobox` partial override, block `nowo_ui_combobox_widget`, or
