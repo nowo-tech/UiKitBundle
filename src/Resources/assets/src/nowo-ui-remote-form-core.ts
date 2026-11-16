@@ -10,7 +10,8 @@
  *   and go there (reload without a valid target); `422` / 200 HTML → re-render and focus the first invalid control;
  *   errors → keep the typed form with a `role="alert"` line;
  * - close: abort the request, empty the body (Stimulus controllers of the fragment disconnect), release the overlay,
- *   return focus to the opener.
+ *   return focus to the opener (2.52.2: else to the page-actions menu item that invoked it, else its toggle — never a
+ *   hidden trigger; nowo-ui-focus-return.ts).
  * - step (2.33): a 2xx answer with a valid `X-Nowo-Dialog-Location` (name configurable) keeps the dialog open and
  *   loads that same-origin path into it (cancelable `step` event first), as `open` does: the next step of a
  *   multi-step flow. It wins over `X-Nowo-Redirect`; an invalid value is ignored (warned) and the answer is handled
@@ -23,6 +24,7 @@
  * are `textContent`; the server's fragment goes through parseFragment() before insertion.
  */
 
+import { bindFocusReturn, isFocusable, rememberOpener, returnFocus } from './nowo-ui-focus-return';
 import { bindMotion, closeDialogWithEffect, finishClosing } from './nowo-ui-motion-core';
 import { importForPage, sanitizeFragment } from './nowo-ui-fragment-filter';
 import { overlayRegistry, type OverlayHandle } from './nowo-ui-overlay';
@@ -450,6 +452,7 @@ export class RemoteFormSession {
 
   bind(): void {
     bindMotion();
+    bindFocusReturn();
     this.dialog.addEventListener('close', this.onClose);
     this.dialog.addEventListener('cancel', this.onCancel);
     this.dialog.addEventListener('click', this.onClick);
@@ -499,6 +502,7 @@ export class RemoteFormSession {
     this.message(body, this.settings().loading);
     finishClosing(this.dialog);
     if (!this.dialog.open) {
+      rememberOpener(this.dialog, opener);
       this.dialog.showModal();
     }
     if (!this.overlay) {
@@ -765,7 +769,7 @@ export class RemoteFormSession {
     const opener = this.opener;
     this.opener = null;
     this.url = null;
-    if (opener?.isConnected) {
+    if (!returnFocus(this.dialog) && isFocusable(opener)) {
       opener.focus();
     }
     this.overlay?.release();

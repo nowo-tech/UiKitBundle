@@ -35,7 +35,7 @@
     "build:image-input": "VITE_ENTRY=image-input vite build",
     "build:rail": "VITE_ENTRY=rail vite build",
     "build:layout-state": "VITE_ENTRY=layout-state vite build",
-    "build:demo-peers": "VITE_ENTRY=demo-peers vite build",
+    "build:demo-peers": "VITE_ENTRY=demo-peers vite build && VITE_ENTRY=demo-page-actions vite build",
     "watch": "VITE_ENTRY=modal vite build --watch",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.strict-host.json",
     "test": "vitest run",

@@ -131,6 +131,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Focus return from dialogs opened through the page-actions menu (WCAG 2.4.3, Beacon request).** A confirm dialog
+  (`nowo-ui-confirm.js` or the `confirm-dialog` peer), a remote form dialog (IIFE driver or `remote-form-dialog`
+  peer) or a kit `dialog` whose trigger is `hidden` and is opened by a page-actions menu item (symfony-beacon's
+  `opens:` items forward the click to it) left focus on the body when it closed: the browser's own restoration and
+  the kit's `opener.focus()` both target an element that cannot take focus (the hidden trigger, or the item in the
+  closed menu). The kit now records the clicked menu item (`js/nowo-ui-popover.js` and the dialog runtimes, capture
+  phase) and, on close — Escape, Cancel, Confirm, ×, backdrop, a saved or closed remote form — focuses the first of
+  the opener, that item, then the toggles of the menus around it (nested menus innermost first) that is connected
+  and focusable; never a hidden element. Visible triggers keep getting the focus back as before; focus held by
+  another open modal (a replacing or nested dialog) is left alone. New module `src/nowo-ui-focus-return.ts` (state
+  shared by the IIFEs and the peers through `Symbol.for('nowo-ui.focus-return')`); hosts may call
+  `window.nowoUiRecordOpener(item, fallback?)` before forwarding a click some other way. No markup, option or PHP
+  change; CSP-safe. Rebuilt `js/nowo-ui-confirm.js`, `js/nowo-ui-dialog.js`, `js/nowo-ui-popover.js`.
+
+### Changed
+
+- Demo: `/kit/page-actions-dialogs` (confirm, remote form and kit dialogs opened from the page-actions menu through
+  hidden triggers, with a copy of Beacon's `page-actions` controller in `public/js/demo-page-actions.js`, built by
+  `pnpm run build:demo-peers`) and its Playwright spec `page-actions-focus` (Chromium, Firefox, WebKit; phone width;
+  axe). Vitest: `nowo-ui-focus-return.test.ts`.
+
 ## [2.52.1] - 2026-11-16
 
 ### Fixed

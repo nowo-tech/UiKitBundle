@@ -195,6 +195,20 @@ final class KitTemplatesController extends AbstractController
     }
 
     /**
+     * UiKit 2.52.2 (WCAG 2.4.3): a confirm dialog, a remote form dialog and a kit dialog opened from the page-actions
+     * menu through hidden triggers (symfony-beacon's `opens:` items); closing one returns focus to the menu item, else
+     * the page-actions toggle. The response forbids inline scripts, style attributes and handlers (CSP).
+     */
+    #[Route('/page-actions-dialogs', name: 'kit_page_actions_dialogs')]
+    public function pageActionsDialogs(): Response
+    {
+        $response = $this->render('kit/page_actions_dialogs.html.twig');
+        $response->headers->set('Content-Security-Policy', "script-src 'self'; style-src-attr 'none'; script-src-attr 'none'");
+
+        return $response;
+    }
+
+    /**
      * UiKit 2.29: the two dialog sizes and the dialog anatomy — a medium form, a wide table, a plain yes / no
      * confirmation (natural height) and a long form whose submit sits in the footer (`form="…"`), outside the scrolling
      * body.

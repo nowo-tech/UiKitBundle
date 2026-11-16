@@ -37,7 +37,8 @@ type Entry =
   | 'image-input'
   | 'rail'
   | 'layout-state'
-  | 'demo-peers';
+  | 'demo-peers'
+  | 'demo-page-actions';
 
 const entry = process.env.VITE_ENTRY as Entry | undefined;
 
@@ -522,6 +523,22 @@ const configs: Record<Entry, { build: object }> = {
         output: {
           format: 'iife' as const,
           entryFileNames: 'js/demo-peers.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  // Demo only (UiKit 2.52.2): /kit/page-actions-dialogs — the confirm / remote form peers and a Beacon-like page-actions controller.
+  'demo-page-actions': {
+    build: {
+      outDir: 'demo/symfony8/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'demo/symfony8/assets/demo-page-actions.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/demo-page-actions.js',
         },
       },
       minify: true,
