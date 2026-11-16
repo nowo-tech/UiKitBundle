@@ -1,0 +1,33 @@
+{#
+  Combobox (2.53, theme partial `combobox`): a text input that searches a URL of the host as the user types and lists the answers in a
+  grouped listbox. Load js/nowo-ui-combobox.js (opt-in: script_names: nowo_ui_script_names()|merge(['combobox'])). Without it the
+  field is a plain text input that submits what was typed, and the listbox stays hidden. ComboboxType renders this for you; use it
+  directly around any text input of yours. The script adds the combobox roles to the input, so the server markup has none.
+  Slots: combobox (root), combobox_listbox, combobox_status. The answer's shape and the keys: docs/USAGE.md "Combobox".
+
+  Required:
+    - id: base of the listbox's id
+    - input: the text input as trusted HTML (form_widget(form.page))
+    - url: the search URL, on this origin (path('app_page_search')); the term is added as `param`
+  Optional:
+    - min_length: characters before the first request (default 2, 1 to 50)
+    - debounce: milliseconds after the last keystroke (default 250, 0 to 2000)
+    - param: query parameter of the term (default q; letters, digits, `_`, `.` and `-`)
+    - value_input: id of a hidden input of the same form that takes the picked option's value (the field then shows its label)
+    - labels: {list, results, none, min_length, error} (View\Label|string; defaults combobox.*; `results` and `min_length` have %count%)
+    - attr: root attributes (no on*), bundle
+#}
+{% set _b = bundle|default(null) %}
+{% set _labels = labels|default({}) %}
+{% set _text = {} %}
+{% for _name in ['list', 'results', 'none', 'min_length', 'error'] %}
+    {% set _text = _text|merge({(_name): _labels[_name] is defined ? _labels[_name]|nowo_ui_trans : ('combobox.' ~ _name)|trans({}, 'NowoUiKitBundle')}) %}
+{% endfor %}
+{% set _attr = nowo_ui_safe_attrs(attr|default({})) %}
+<div class="{{ nowo_ui_class('combobox', _b) }}{{ _attr.class is defined ? ' ' ~ _attr.class }}" data-nowo-ui-combobox data-nowo-ui-combobox-url="{{ url }}" data-nowo-ui-combobox-min-length="{{ min_length|default(2) }}" data-nowo-ui-combobox-debounce="{{ debounce|default(250) }}"
+    {%- if param|default(null) %} data-nowo-ui-combobox-param="{{ param }}"{% endif %}
+    {%- if value_input|default(null) %} data-nowo-ui-combobox-value-input="{{ value_input }}"{% endif %} data-nowo-ui-combobox-labels="{{ {results: _text.results, none: _text.none, min_length: _text.min_length, error: _text.error}|json_encode }}"{{ nowo_ui_attrs('combobox', _b, _attr|filter((v, k) => k != 'class')) }}>
+    {{- input|raw -}}
+    <div id="{{ id }}-listbox" class="{{ nowo_ui_class('combobox_listbox', _b) }}" data-nowo-ui-combobox-listbox role="listbox" aria-label="{{ _text.list }}" popover="manual" hidden{{ nowo_ui_attrs('combobox_listbox', _b) }}></div>
+    <p class="{{ nowo_ui_class('combobox_status', _b) }}" data-nowo-ui-combobox-status role="status"{{ nowo_ui_attrs('combobox_status', _b) }}></p>
+</div>

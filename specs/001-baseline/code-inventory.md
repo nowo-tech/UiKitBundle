@@ -77,6 +77,7 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | `Form/AppearanceType.php` | Optional appearance admin form (`with_brand` / `with_colors` / `with_footer`) | FR-APPEARANCE-006 |
 | `Form/AppearancePaletteType.php` | The seven colours of one mode as a sub-form | FR-APPEARANCE-006 |
 | `Form/EmojiPickerType.php` | Emoji picker field: text input, one grapheme checked on the server | FR-FORM-001 |
+| `Form/ComboboxType.php` | 2.53 async grouped combobox field: text input, search URL and bounds checked | FR-FORM-001 |
 | `Form/DateRangeType.php` | 2.15: date-range filter field (two native dates, host-chosen `from_name` / `to_name`) | FR-DATERANGE-001 |
 | `Form/DateRangeRequestHandler.php` | 2.15.1: request handler decorator — a URL carrying only a range submits the nameless filter form | FR-DATERANGE-001 |
 | `Form/DateRangeSubmitExtension.php` | 2.15: moves the flat sibling from / to parameters onto the date-range child before submit | FR-DATERANGE-001 |
@@ -291,8 +292,10 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | `Resources/views/partials/_confirm.html.twig` | Accessible confirm `<dialog>` | FR-CONFIRM-001, FR-PARTIAL-001 |
 | `Resources/views/partials/_confirm_dialog.html.twig` | 2.6: Stimulus `confirm-dialog` wrapper | FR-CONFIRM-001 |
 | `Resources/views/partials/_emoji_picker.html.twig` | Emoji picker wrapper around a text input | FR-PARTIAL-001 |
+| `Resources/views/partials/_combobox.html.twig` | 2.53 combobox wrapper around a text input (listbox, status) | FR-PARTIAL-001 |
 | `Resources/views/partials/_show_more.html.twig` | Show more fold | FR-PARTIAL-001 |
 | `Resources/views/form/nowo_ui_emoji_picker.html.twig` | Emoji picker field's form block | FR-FORM-001 |
+| `Resources/views/form/nowo_ui_combobox.html.twig` | Combobox field's form block | FR-FORM-001 |
 | `Resources/views/partials/_dialog.html.twig` | 2.1: generic native dialog (2.12 side-panel placement) | FR-DIALOG-001 |
 | `Resources/views/partials/_modal_shell.html.twig` | Generic modal shell (Bootstrap-JS compatible) | FR-PARTIAL-001, FR-JS-001 |
 | `Resources/views/partials/_open_modal_on_load.html.twig` | Open-modal-on-load JSON island | FR-OPENMODAL-001 |
@@ -397,6 +400,7 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | `Resources/assets/src/nowo-ui-toast.ts` | Toast dismiss + auto-hide | FR-JS-001 |
 | `Resources/assets/src/nowo-ui-image-crop.ts` | Opt-in crop step for image file inputs (`nowo-ui-image-crop-core.ts`: options, geometry, output) | FR-JS-001 |
 | `Resources/assets/src/nowo-ui-emoji-picker.ts` | Opt-in emoji picker over a text input (`nowo-ui-emoji-table.ts`: its table) | FR-JS-001 |
+| `Resources/assets/src/nowo-ui-combobox.ts` | Opt-in async grouped combobox over a text input (same-origin search, text-only listbox) | FR-JS-001 |
 | `Resources/assets/src/nowo-ui-show-more.ts` | Opt-in line-clamp fold with a real button | FR-JS-001 |
 | `Resources/assets/src/nowo-ui-motion-core.ts` | Closing with an effect: fade, then the real close, with a fallback timer | FR-JS-001 |
 | `Resources/assets/src/nowo-ui-sortable.ts` | Opt-in reorder by pointer, touch and keyboard over host markup | FR-JS-001 |
@@ -622,6 +626,7 @@ Produced by `pnpm run build` (`vite.config.ts`, one `VITE_ENTRY` per IIFE; `buil
 | `Resources/assets/src/nowo-ui-popover-core.ts` | Popover geometry constants and helpers (gap, viewport margin) | FR-MENU-001 |
 | `Resources/assets/src/nowo-ui-emoji-table.ts` | Small offline emoji table bundled only into the emoji picker | FR-JS-001 |
 | `Resources/public/js/nowo-ui-emoji-picker.js` | Build output of `nowo-ui-emoji-picker.ts` | FR-BUILD-001, FR-JS-001 |
+| `Resources/public/js/nowo-ui-combobox.js` | Build output of `nowo-ui-combobox.ts` | FR-BUILD-001, FR-JS-001 |
 | `Resources/public/js/nowo-ui-show-more.js` | Build output of `nowo-ui-show-more.ts` | FR-BUILD-001, FR-JS-001 |
 | `Resources/public/js/nowo-ui-sortable.js` | Build output of `nowo-ui-sortable.ts` | FR-BUILD-001, FR-JS-001 |
 

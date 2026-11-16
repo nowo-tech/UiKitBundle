@@ -31,6 +31,7 @@ type Entry =
   | 'scroll-region'
   | 'sortable'
   | 'emoji-picker'
+  | 'combobox'
   | 'show-more'
   | 'edge-tabs'
   | 'image-crop'
@@ -397,6 +398,21 @@ const configs: Record<Entry, { build: object }> = {
         output: {
           format: 'iife' as const,
           entryFileNames: 'js/nowo-ui-sortable.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  combobox: {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-combobox.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-combobox.js',
         },
       },
       minify: true,

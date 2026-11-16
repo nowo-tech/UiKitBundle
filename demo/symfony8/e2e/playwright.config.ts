@@ -39,16 +39,16 @@ export default defineConfig({
       testMatch: /.*\.spec\.ts/,
       testIgnore: /screenshots\.spec\.ts|sortable-touch\.spec\.ts|mobile-mux\.spec\.ts/,
     },
-    // UiKit sortable: the other engines, and touch input in Chromium (make test-e2e-sortable).
+    // UiKit sortable: the other engines, and touch input in Chromium (make test-e2e-sortable). 2.53: combobox (make test-e2e-combobox).
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
-      testMatch: /(sortable|emoji-picker|show-more|dialog-back|motion|table-cards|page-actions-focus)\.spec\.ts/,
+      testMatch: /(sortable|emoji-picker|combobox|show-more|dialog-back|motion|table-cards|page-actions-focus)\.spec\.ts/,
     },
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
-      testMatch: /(sortable|emoji-picker|show-more|dialog-back|motion|table-cards|image-crop|page-actions-focus)\.spec\.ts/,
+      testMatch: /(sortable|emoji-picker|combobox|show-more|dialog-back|motion|table-cards|image-crop|page-actions-focus)\.spec\.ts/,
     },
     {
       name: 'chromium-touch',
