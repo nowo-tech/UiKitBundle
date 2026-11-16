@@ -42,6 +42,7 @@
   - [Confirm dialog](#confirm-dialog-26)
   - [App shell](#app-shell-26)
   - [Full-height sidebar layout (2.32)](#full-height-sidebar-layout-232)
+  - [Inset sidebar style (2.52)](#inset-sidebar-style-252)
   - [Compact pagination](#compact-pagination-26)
   - [Auth panel brand (2.44)](#auth-panel-brand-244)
 - [Pre-paint theme boot](#pre-paint-theme-boot)
@@ -1897,6 +1898,80 @@ Demo: `/demo/sidebar-layout` (`?layout=`, `?mode=expanded|rail|hidden`, `?hover=
 geometry is the host's CSS (the kit CSS keys on the kit classes). Map `app_aside_head`, `app_aside_brand`,
 `app_aside_brand_icon` / `app_aside_brand_name` like the other `app_*` slots and key the layout on
 `[data-nowo-ui-sidebar-layout='full-height']` (or `.is-sidebar-full-height`) instead of a host attribute.
+
+<a id="inset-sidebar-style-252"></a>
+### Inset sidebar style (2.52)
+
+The app shell has two desktop styles: `classic` (default: the header, the aside and the footer on the surface with
+borders between them, the content on the muted surface — the 2.51 markup, byte for byte) and `inset`, modelled on
+GitLab: the header, the aside and the footer share one shell surface with no border or separator between them, and the
+content area is an inset panel with rounded corners (`0.75rem`), its own surface and a small gap (`0.5rem`) from the
+aside, the header, the viewport edges and the footer. Below 901 px both styles are the same phone shell, with no inset.
+The style is independent of the [sidebar layout](#full-height-sidebar-layout-232): both layouts, every aside mode
+(expanded, icons-only rail, hover-expanded rail, hidden) and both content widths work.
+
+Pick it, first match wins: the `sidebar_style` option of `app_shell_open` / `app_shell`, the request attribute
+`_nowo_ui_sidebar_style` (`SidebarStyle::ATTRIBUTE`), then `nowo_ui_kit.shell.sidebar_style`. **A per-user preference**
+follows the same pattern as the sidebar layout: store the value (`classic` | `inset`) with the user's interface
+settings and set the attribute from a `kernel.request` listener — request scope, so one FrankenPHP worker serves users
+with different preferences (kernel reset false) and nothing is kept in a service. Set it from a listener, not as a
+route placeholder or default (the router would let the URL choose the style):
+
+```php
+use Nowo\UiKitBundle\Shell\SidebarLayout;
+use Nowo\UiKitBundle\Shell\SidebarStyle;
+use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
+
+#[AsEventListener(priority: 0)]
+final class ShellPreferenceListener
+{
+    public function __construct(private readonly Security $security) {}
+
+    public function __invoke(RequestEvent $event): void
+    {
+        $user = $event->isMainRequest() ? $this->security->getUser() : null;
+        if (!$user instanceof AppUser) {
+            return; // the config default applies
+        }
+        $request = $event->getRequest();
+        $request->attributes->set(SidebarLayout::ATTRIBUTE, $user->getSidebarLayout()); // existing option
+        $request->attributes->set(SidebarStyle::ATTRIBUTE, $user->getSidebarStyle());   // 'classic' | 'inset'
+    }
+}
+```
+
+An invalid or missing value falls back to the next source, so a stale stored value never breaks a page.
+`SidebarStyle::values()` lists the valid values for the preference form (a `ChoiceType` / FormKit choice).
+`nowo_ui_sidebar_style(style = null)` returns the resolved style (e.g. to mark the preference as selected).
+
+**Markup.** Only the shell root changes: it gets `is-sidebar-inset` and `data-nowo-ui-sidebar-style="inset"`. The
+landmarks (`header`, `aside` with its label, the main region, `footer role="contentinfo"`), their order and so the focus
+order are the same as in the classic style; there is no inline style or script (the CSP stays the same) and the kit CSS
+never hides or shows anything for this style, so no visibility depends on a stylesheet override.
+
+**What the kit CSS does** (desktop, `kit_styles: true`): the shell root, header, aside (and the full-height aside head)
+and footer take `--nowo-ui-shell-inset-surface`; their borders turn transparent, so every box keeps the classic
+geometry; `.nowo-ui-main` (the panel) takes `--nowo-ui-shell-inset-panel-surface`, `--nowo-ui-shell-inset-radius`, a 1 px
+ring and a `--nowo-ui-shell-inset-gap` margin. Tokens and their light / dark defaults, and the contrast of both surfaces
+in both themes: [THEMING](THEMING.md#inset-sidebar-style-252).
+
+- **No layout shift.** The panel's margins never change: showing, railing or hiding the aside slides the panel's start
+  edge with the aside (the same grid transition as the classic style); its top, its end edge and the header stay put.
+- **Content width.** With `is-main-content` the panel keeps the full width and its padding centres the content at
+  `--nowo-ui-content-max-width` (same content width as the classic style); `is-full-width` fills the panel.
+- **Sticky content and drawers.** The panel never clips (`overflow` stays visible) and the page still scrolls the
+  document, so `position: sticky` content (side panel columns, table headers, toolbars) sticks as before, and fixed
+  side panels, drawers and docks (a chat dock, a wiki side panel, `side_panel` with `layout: 'overlay'`) cover the
+  viewport above the panel. A host's fixed footer keeps following the aside through `--nowo-ui-shell-inset-start`.
+- **Host shells (`kit_styles: false`)** get the root hooks and paint the style themselves.
+
+Demo: `/demo/sidebar-layout?style=inset` (with `?layout=`, `?mode=`, `?width=content`, `?panel=column|drawer`).
+
+| Below header, expanded | Full height, icons-only rail | Phone (no inset) |
+|---|---|---|
+| ![Inset style, below-header layout, expanded](images/demo/kit-sidebar-inset-below-header-expanded-light.webp) | ![Inset style, full-height layout, icons-only rail (dark)](images/demo/kit-sidebar-inset-full-height-rail-dark.webp) | ![Inset style on a phone: the classic phone shell](images/demo/kit-sidebar-inset-phone-light.webp) |
 
 <a id="compact-pagination-26"></a>
 ### Compact pagination

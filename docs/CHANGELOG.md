@@ -129,6 +129,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Inset sidebar style for the app shell (opt-in, 2.52).** `nowo_ui_kit.shell.sidebar_style: classic | inset`
+  (default `classic`, the 2.51 markup byte for byte). `inset`, modelled on GitLab: on desktop (901 px and up) the
+  header, the aside and the footer share one shell surface with no border or separator between them, and the content
+  is an inset panel with rounded corners, its own surface and a small gap from the aside, the header and the viewport
+  edges. Works with both sidebar layouts (`below-header`, `full-height`), every aside mode (expanded, icons-only rail,
+  hover-expanded rail, hidden), both content widths, sticky content and fixed side panels / drawers; phones are
+  unchanged (no inset); toggling the aside moves only the panel's start edge. Per request / per user: the
+  `app_shell_open` option `sidebar_style`, then the request attribute `_nowo_ui_sidebar_style`
+  (`Nowo\UiKitBundle\Shell\SidebarStyle::ATTRIBUTE`, set from a `kernel.request` listener — the same pattern as
+  `sidebar_layout`), then the config. New: `SidebarStyle` enum, `SidebarStyleResolver` (reads the request on every
+  call, keeps nothing: FrankenPHP worker safe), Twig function `nowo_ui_sidebar_style()`, root hooks
+  `is-sidebar-inset` / `data-nowo-ui-sidebar-style="inset"`. Tokens with light and dark defaults:
+  `--nowo-ui-shell-inset-gap` (`0.5rem`), `--nowo-ui-shell-inset-radius` (`0.75rem`), `--nowo-ui-shell-inset-surface`
+  (light `--nowo-ui-surface-muted`, dark `--nowo-ui-surface`), `--nowo-ui-shell-inset-panel-surface` (light
+  `--nowo-ui-surface`, dark `--nowo-ui-surface-muted`); optional `--nowo-ui-shell-inset-panel-border` and
+  `--nowo-ui-shell-inset-hover-bg`. The two surfaces join `Theme::LIGHT_ONLY_TOKENS`. Contrast of both surfaces in both
+  themes is documented in THEMING; the current aside item's text is mixed towards the text colour on the shell surface
+  so it stays at 4.5:1 or more. Demo: `/demo/sidebar-layout?style=inset` (`?width=content`, `?panel=column|drawer`),
+  Playwright e2e (geometry, no layout shift, content width, sticky side panel, drawer, phone, focus order, axe in
+  light and dark) and WebP screenshots. Requested by Symfony Beacon (Account → Interface, Beacon 1.160).
+
 ### Changed
 
 - CI, `make coverage-check` and `composer coverage-check`: the PHP line-coverage gate is now **100%** (was 99%). The suite is already at 100%; the gate only stops a regression from merging.

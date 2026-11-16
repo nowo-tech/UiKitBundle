@@ -25,6 +25,7 @@ two token blocks of `nowo-ui.css`. A host theme is a short `:root` block.
 - [Detail pages (2.21)](#detail-pages-221)
 - [Compact header (2.27)](#compact-header-227)
 - [Full-height sidebar layout (2.32)](#full-height-sidebar-layout-232)
+- [Inset sidebar style (2.52)](#inset-sidebar-style-252)
 - [Motion](#motion)
 - [Layers (public API, 2.28)](#layers-public-api-228)
 - [Dialog sizes (2.29)](#dialog-sizes-229)
@@ -424,6 +425,44 @@ The burger keeps its spot in every mode: centred on the icons-only rail's column
 2.25rem) / 2` from the aside's start edge), in a row `--nowo-ui-header-height` tall. Phones keep the 2.31 off-canvas
 aside, header burger and header brand.
 
+<a id="inset-sidebar-style-252"></a>
+
+## Inset sidebar style (2.52)
+
+`nowo_ui_kit.shell.sidebar_style: inset` (or the `sidebar_style` option / the `_nowo_ui_sidebar_style` request
+attribute; [USAGE](USAGE.md#inset-sidebar-style-252)) paints the app shell the way GitLab does on desktop (901 px and
+up): the header, the aside (with its head in the full-height layout) and the footer share one shell surface with no
+border or separator between them, and the content area is an inset panel with rounded corners and its own surface, a
+small gap away from the aside, the header and the viewport edges. Both sidebar layouts and every aside mode (expanded,
+icons-only rail, hover-expanded rail, hidden) work; phones keep the classic shell with no inset. Hooks:
+`[data-nowo-ui-sidebar-style='inset']` / `.is-sidebar-inset` on the shell; the panel is `.nowo-ui-main`.
+
+| Token | Light default | Dark default | Used by |
+|-------|---------------|--------------|---------|
+| `--nowo-ui-shell-inset-surface` | `var(--nowo-ui-surface-muted)` | `var(--nowo-ui-surface)` | shell surface: the shell root, header, aside, aside head and footer |
+| `--nowo-ui-shell-inset-panel-surface` | `var(--nowo-ui-surface)` | `var(--nowo-ui-surface-muted)` | the content panel (`.nowo-ui-main`) |
+| `--nowo-ui-shell-inset-gap` | `0.5rem` | same | the panel's margin from the aside, the header, the viewport edge and the footer |
+| `--nowo-ui-shell-inset-radius` | `0.75rem` | same | the panel's corner radius |
+| `--nowo-ui-shell-inset-panel-border` | *(optional; falls back to `--nowo-ui-border`)* | | the panel's 1 px edge (a `box-shadow` ring, so it takes no space; `transparent` removes it) |
+| `--nowo-ui-shell-inset-hover-bg` | *(optional; falls back to `color-mix(in srgb, var(--nowo-ui-text) 7%, transparent)`)* | | aside link / group hover (the classic hover is the muted surface, which is this style's shell surface) |
+
+The two surfaces have dark defaults, so they are light-only `tokens` (set `tokens_dark` for dark mode), like the
+other palette tokens. Gap and radius apply in both modes.
+
+**Contrast** (WCAG 2.1, the UiKit default palette; text = `--nowo-ui-text`, muted = `--nowo-ui-muted`, link / primary =
+`--nowo-ui-primary`):
+
+| Theme | Surface | Text | Muted | Primary |
+|-------|---------|------|-------|---------|
+| light | shell `#f8fafc` | 17.06:1 | 4.55:1 | 4.94:1 |
+| light | panel `#ffffff` | 17.85:1 | 4.76:1 | 5.17:1 |
+| dark | shell `#0f172a` | 14.48:1 | 6.96:1 | 7.02:1 |
+| dark | panel `#1e293b` | 11.87:1 | 5.71:1 | 5.75:1 |
+
+The current aside item keeps its primary tint; on the shell surface its text is `--nowo-ui-nav-active-text` when set,
+else the primary mixed 85 % with the text colour (5.08:1 light, more in dark), because the plain primary on that tint
+would be 4.20:1. A host palette that changes these tokens checks its own pairs (the demo's axe run covers the defaults).
+
 ## Motion
 
 One scale for opening and closing, so that no surface is abrupt or slow. Set the values on `:root`; the kit's own declarations have zero specificity, so yours win.
@@ -674,6 +713,9 @@ rail width, default `3.75rem`)*, `--nowo-ui-aside-duration`,
 
 App shell tokens added in 2.32: `--nowo-ui-aside-peek-width`, `--nowo-ui-aside-brand-icon-size`,
 `--nowo-ui-shell-inset-start` (see [Full-height sidebar layout](#full-height-sidebar-layout-232)).
+App shell tokens added in 2.52: `--nowo-ui-shell-inset-gap`, `--nowo-ui-shell-inset-radius`,
+`--nowo-ui-shell-inset-surface`, `--nowo-ui-shell-inset-panel-surface` (see
+[Inset sidebar style](#inset-sidebar-style-252)).
 
 Since 2.11 `--nowo-ui-control-height` also sets the minimum height of `.nowo-ui-btn` and `.nowo-ui-input` (it used
 to feed the filter rows only). See [Density tokens](#density-tokens-211) for the per-component metrics.

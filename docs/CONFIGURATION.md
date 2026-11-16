@@ -36,7 +36,7 @@ Alias: **`nowo_ui_kit`**
 | `appearance` | map | `enabled: false` | Optional site appearance SPI: presets, `--nowo-ui-*` token emitter, Twig functions, optional form (since 1.16.0). See [Appearance](#appearance) |
 | `route_links` | map | `routes: {}` | Route (prefix) → link map for `nowo_ui_route_link()`, e.g. the page-edge manual tab (since 1.17.0). See [Route links](#route-links) |
 | `error_pages` | map | kit layout + texts | Kit HTTP error pages (since 2.6.0). See [Error pages](#error-pages) |
-| `shell` | map | `kit_styles: true`, `sidebar_layout: below-header` | Signed-in app shell templates (since 2.6.0; sidebar layout, brand and hover expand since 2.32.0). See [App shell](#app-shell) |
+| `shell` | map | `kit_styles: true`, `sidebar_layout: below-header`, `sidebar_style: classic` | Signed-in app shell templates (since 2.6.0; sidebar layout, brand and hover expand since 2.32.0; sidebar style since 2.52.0). See [App shell](#app-shell) |
 | `auth_panel` | map | `brand: auto` | Auth scaffold panel brand region (since 2.44.0): `auto` \| `none`. See [Auth panel](#auth-panel-244) |
 | `header` | map | `presentation: standard`, `compact_actions: page` | Compact header (since 2.27.0): default page-header presentation and where `PageHeader::actions` go in compact. See [Compact header](#compact-header-227) |
 | `font_preload` | map | `fonts: []`, `manifest.path: null` | `<link rel="preload" as="font">` tags in the document / error layouts (since 2.21.0). See [Font preload](#font-preload-221) |
@@ -414,6 +414,7 @@ nowo_ui_kit:
         sidebar_rail_value: rail
         sidebar_storage: null        # localStorage key for nowo-ui-shell.js (kit_styles + rail_mode)
         sidebar_layout: below-header # 2.32: below-header | full-height (per request: _nowo_ui_sidebar_layout)
+        sidebar_style: classic       # 2.52: classic | inset (per request: _nowo_ui_sidebar_style)
         brand:                       # 2.32: the shell brand without a template override
             name: null               # e.g. Acme Billing
             href: null               # e.g. /
@@ -428,6 +429,7 @@ nowo_ui_kit:
 | `sidebar_hidden_value` / `sidebar_rail_value` | `collapsed` / `rail` | Cookie values of the hidden aside and the icons-only rail |
 | `sidebar_storage` | `null` | `data-nowo-ui-sidebar-storage` of a three-mode (`rail_mode`) kit-styled shell |
 | `sidebar_layout` *(2.32)* | `below-header` | `below-header` (the 2.31 markup, byte for byte) or `full-height`: on desktop the aside runs from the top edge with the burger and the brand in its head; the header and the footer start at its right edge. Per request: the `app_shell_open` option `sidebar_layout`, then the request attribute `_nowo_ui_sidebar_layout` (`Nowo\UiKitBundle\Shell\SidebarLayout::ATTRIBUTE`, e.g. set from a user preference in a `kernel.request` listener). See [USAGE](USAGE.md#full-height-sidebar-layout-232) |
+| `sidebar_style` *(2.52)* | `classic` | `classic` (the 2.51 markup, byte for byte) or `inset`: on desktop (901 px and up) the header, the aside and the footer share one shell surface with no border or separator between them, and the content is an inset panel with rounded corners, its own surface and a small gap from the aside, the header and the viewport edges (tokens `--nowo-ui-shell-inset-gap`, `--nowo-ui-shell-inset-radius`, `--nowo-ui-shell-inset-surface`, `--nowo-ui-shell-inset-panel-surface`). Phones are unchanged. Works with both `sidebar_layout` values, every aside mode and both content widths. Per request (a per-user preference): the `app_shell_open` option `sidebar_style`, then the request attribute `_nowo_ui_sidebar_style` (`Nowo\UiKitBundle\Shell\SidebarStyle::ATTRIBUTE`, values `classic` / `inset`, set from a `kernel.request` listener). See [USAGE](USAGE.md#inset-sidebar-style-252) |
 | `brand.name` / `brand.href` / `brand.icon_src` *(2.32)* | `null` | The brand of the full-height aside head, and of the header when a page passes neither `brand_html` nor `brand`. `href` must be relative, http, https or mailto and `icon_src` relative, http or https: anything else (`javascript:`, `data:`…) fails the container compile. Prefer a same-origin or https `icon_src` (it is an `<img>`; allow it in `img-src`). `name` is escaped. The HTML options (`aside_brand_html`, `brand_icon_html`) are trusted HTML printed raw — see [USAGE](USAGE.md#full-height-sidebar-layout-232). The options `aside_brand_html`, `brand_icon_html`, `brand_icon_src`, `brand_name`, `brand_href` win |
 | `hover_expand` *(2.32)* | `false` | `data-nowo-ui-sidebar-hover-expand` on a three-mode kit-styled shell: `nowo-ui-shell.js` widens the icons-only rail over the page on hover / keyboard focus (`is-aside-peek`). The option `hover_expand` wins |
 
