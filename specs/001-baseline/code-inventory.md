@@ -1,6 +1,6 @@
 # Code inventory — 100% traceability
 
-**Last audited**: 2026-11-01 (2.21.0)  
+**Last audited**: 2026-11-16 (2.51.0 line: brand appearance, remote dialog, listing ports, side panel, rail, tree, image input, base stylesheet)  
 **Baseline spec**: [`spec.md`](spec.md)  
 **Package**: `nowo-tech/ui-kit-bundle`
 
@@ -10,7 +10,7 @@ one row per file. Paths are relative to `src/`. Requirement IDs are defined in [
 
 **Scope**: every file tracked by Git under `src/` (`git ls-files src`), i.e. PHP, TypeScript, Twig, YAML, CSS, SCSS,
 the built JavaScript and the Stimulus peers README. **Excluded**: the co-located Vitest files `*.test.ts` under
-`Resources/assets/` (42 files — test artifacts covered by FR-TEST-001, not shipped runtime units; same rule as
+`Resources/assets/` (78 files at this audit — test artifacts covered by FR-TEST-001, not shipped runtime units; same rule as
 TwigInspectorBundle). `tests/`, `demo/` apps and caches are outside `src/` and out of scope. Built files that live
 under `src/` (the Vite IIFEs, the layered stylesheet and the inline theme-boot copy) are committed (Packagist installs
 no Node toolchain); they are listed in their own table as **outputs** of named sources (`FR-BUILD-*`) and are never
@@ -503,42 +503,190 @@ Produced by `pnpm run build` (`vite.config.ts`, one `VITE_ENTRY` per IIFE; `buil
 | `Resources/views/inline/nowo-ui-theme-boot.js` | Copy of `public/js/nowo-ui-theme-boot.js` (`build:theme-boot`), printed inline by `_theme_boot` | FR-BUILD-003, FR-THEMEBOOT-001 |
 | `Resources/public/css/nowo-ui.css` | `public/css/nowo-ui.unlayered.css` wrapped in `@layer nowo-ui` (`build:css`) | FR-BUILD-002, FR-CSS-002 |
 
+## Brand appearance (spec 220)
+
+| Source file | Spec section | Requirement IDs |
+| --- | --- | --- |
+| `Appearance/AppearanceLogos.php` | Brand images of an appearance: URLs only, filtered by `SafeHref::filterImage()`, never markup or bytes | FR-BRAND-001 |
+| `Appearance/AppearanceView.php` | What the templates read from the appearance SPI; `current()` never throws so error pages render with a broken provider | FR-BRAND-001 |
+| `Appearance/BrandAppearanceProvider.php` | Default provider built from a `nowo-tech/brand-contracts` `BrandProviderInterface` service | FR-BRAND-002 |
+| `DependencyInjection/Compiler/BrandAppearanceProviderPass.php` | Points `appearance.provider` at the brand provider when every condition holds, else removes the candidate | FR-BRAND-002 |
+| `Resources/views/partials/_appearance_brand.html.twig` | Brand region of the guest and error layouts: logo lockup or nothing | FR-BRAND-001 |
+| `Resources/views/partials/_brand_logos.html.twig` | Logo lockup: light and dark `<img>` switched by CSS, never inline markup | FR-BRAND-001 |
+
+## Avatar URL policy
+
+| Source file | Spec section | Requirement IDs |
+| --- | --- | --- |
+| `Avatar/AvatarUrlPolicy.php` | The only picture URLs the `_avatar` partial puts in `<img src>` (2.26) | FR-AVATAR-001 |
+| `Twig/AvatarExtension.php` | `nowo_ui_avatar_url` filter applying the policy | FR-AVATAR-001 |
+| `Resources/assets/src/nowo-ui-avatar.ts` | Picture fallback over the initials; opt-in `data-nowo-avatar-image` for other bundles | FR-AVATAR-001 |
+| `Resources/public/js/nowo-ui-avatar.js` | Build output of `nowo-ui-avatar.ts` | FR-BUILD-001, FR-AVATAR-001 |
+
+## Error illustration SPI
+
+| Source file | Spec section | Requirement IDs |
+| --- | --- | --- |
+| `View/ErrorIllustrationProviderInterface.php` | Optional host SPI: illustration per status code | FR-ERROR-003 |
+| `DependencyInjection/Compiler/ErrorIllustrationProviderPass.php` | Fails the container build when the configured provider service is missing or of the wrong type | FR-ERROR-003 |
+
+## Remote form dialog (2.28 / 2.33)
+
+| Source file | Spec section | Requirement IDs |
+| --- | --- | --- |
+| `Dialog/RemoteDialog.php` | Dialog request detection and `Vary` for the request header | FR-REMOTEDIALOG-001 |
+| `Dialog/RemoteDialogHeaders.php` | The three header names (request, redirect, step) and their validation | FR-REMOTEDIALOG-001 |
+| `Dialog/RemoteDialogTarget.php` | Redirect target rule: path-absolute without unsafe segments, or same-origin absolute URL reduced to a path | FR-REMOTEDIALOG-001 |
+| `Dialog/RemoteDialogResponder.php` | Server side: success and step answers, template choice for page versus fragment | FR-REMOTEDIALOG-002 |
+| `Dialog/RemoteDialogRedirectListener.php` | Opt-in `convert_redirects`: a same-origin redirect becomes `204` + `X-Nowo-Redirect` | FR-REMOTEDIALOG-003 |
+| `Dialog/RemoteDialogRedirectEvent.php` | Hook to change the proposed answer before the conversion | FR-REMOTEDIALOG-003 |
+| `Resources/assets/src/nowo-ui-remote-form-core.ts` | Client core: loads a form page into a native `<dialog>` and posts it with `fetch` | FR-REMOTEDIALOG-004 |
+| `Resources/assets/stimulus-peers/remote_form_dialog_controller.ts` | Optional Stimulus peer driving the same contract | FR-REMOTEDIALOG-004, FR-PEER-001 |
+| `Resources/views/partials/_remote_form_dialog.html.twig` | The `dialog` partial prepared for a remote form (Stimulus or IIFE driver) | FR-REMOTEDIALOG-004 |
+| `Resources/views/layout/fragment.html.twig` | Dialog fragment layout printing only the `body` block | FR-REMOTEDIALOG-004 |
+
+## Image input
+
+| Source file | Spec section | Requirement IDs |
+| --- | --- | --- |
+| `Form/ImageInput.php` | Options of the image input box (stored or default image, preview, Replace / Remove / Undo) | FR-IMAGEINPUT-001 |
+| `Form/ImageInputTypeExtension.php` | FileType option `nowo_ui_image_input`; `false` keeps the FileType unchanged | FR-IMAGEINPUT-001 |
+| `Resources/views/form/nowo_ui_image_input.html.twig` | Form theme block `nowo_ui_image_input_widget` | FR-IMAGEINPUT-001 |
+| `Resources/views/partials/_image_input.html.twig` | Theme partial `image_input`; works without JavaScript | FR-IMAGEINPUT-001 |
+| `Resources/assets/src/nowo-ui-image-input.ts` | Opt-in runtime of the box | FR-IMAGEINPUT-001 |
+| `Resources/assets/src/nowo-ui-image-crop-core.ts` | Crop core without a DOM: options, geometry, output size and type | FR-JS-001 |
+| `Resources/public/js/nowo-ui-image-input.js` | Build output of `nowo-ui-image-input.ts` | FR-BUILD-001, FR-IMAGEINPUT-001 |
+| `Resources/public/js/nowo-ui-image-crop.js` | Build output of `nowo-ui-image-crop.ts` | FR-BUILD-001, FR-JS-001 |
+
+## Listing ports (framework-free, 2.49)
+
+| Source file | Spec section | Requirement IDs |
+| --- | --- | --- |
+| `Listing/ListingContext.php` | Framework-free context of one listing page view (listing cookies, route, scalar parameters, locale, viewer id) | FR-LISTING-005 |
+| `Listing/ListingPreferenceReaderInterface.php` | Port reading the preferences of one viewer from a `ListingContext` | FR-LISTING-005 |
+| `Listing/ListingViewerResolverInterface.php` | Optional SPI giving the opaque viewer id | FR-LISTING-005 |
+| `Listing/Http/ListingContextFactory.php` | HTTP adapter: copies only listing cookies, route, scalar parameters and locale | FR-LISTING-005 |
+| `Theme/ListFiltersOptions.php` | Host options of the list scaffold filters (`theme.pages.list.filters`) | FR-LISTING-006 |
+
+## Compact header, breadcrumbs, page actions and sidebar layout
+
+| Source file | Spec section | Requirement IDs |
+| --- | --- | --- |
+| `Shell/HeaderCrumbs.php` | Compact breadcrumb of the top bar from translated levels | FR-HEADER-001 |
+| `Shell/HeaderPresentation.php` | Header presentation enum (standard, compact, inline, no intro, no title, no header) | FR-HEADER-002 |
+| `Shell/HeaderPresentationResolver.php` | Resolves explicit option, request attribute or configured default | FR-HEADER-002 |
+| `Shell/SafeHref.php` | Scheme guard for host-supplied hrefs and image sources | FR-HEADER-003 |
+| `Shell/SidebarLayout.php` | Sidebar layout enum: `below-header` or `full-height` | FR-SIDEBARLAYOUT-001 |
+| `Shell/SidebarLayoutResolver.php` | Resolves the sidebar layout of the current request | FR-SIDEBARLAYOUT-001 |
+| `Resources/views/shell/_brand_parts.html.twig` | Brand made of icon and name for the full-height aside head | FR-SIDEBARLAYOUT-001 |
+| `Resources/views/partials/_header_crumbs.html.twig` | Compact breadcrumb partial, truncated levels, current page last | FR-HEADER-001 |
+| `Resources/views/partials/_header_context.html.twig` | Compact header filling: page actions trigger and crumbs | FR-HEADER-002 |
+| `Resources/views/partials/_page_actions.html.twig` | Page-actions trigger (square popover menu) and its confirm dialogs | FR-HEADERACTIONS-001 |
+| `Resources/views/partials/_guest_header.html.twig` | Guest header: brand linked home and a sign-in link | FR-GUESTHEADER-001 |
+| `Resources/assets/src/nowo-ui-header-crumbs.ts` | Opt-in collapse of the crumb trail | FR-HEADER-001 |
+| `Resources/public/js/nowo-ui-header-crumbs.js` | Build output of `nowo-ui-header-crumbs.ts` | FR-BUILD-001, FR-HEADER-001 |
+
+## Side panel, rail, tree, edge tabs and layout state
+
+| Source file | Spec section | Requirement IDs |
+| --- | --- | --- |
+| `Resources/views/partials/_side_panel.html.twig` | Complementary panel: inline column or overlay drawer, open state rendered by the server | FR-SIDEPANEL-001 |
+| `Resources/views/partials/_side_panel_container.html.twig` | Page content and a side panel as two columns | FR-SIDEPANEL-001 |
+| `Resources/views/partials/_side_panel_toggle.html.twig` | Toggle with `aria-controls` / `aria-expanded`, optional count and no-JS link | FR-SIDEPANEL-001 |
+| `Resources/assets/src/nowo-ui-side-panel.ts` | Opt-in runtime of the panel | FR-SIDEPANEL-001 |
+| `Resources/assets/src/nowo-ui-shortcut-core.ts` | Side-effect-free keyboard shortcut helpers shared by side panel and rail | FR-SIDEPANEL-001, FR-RAIL-001 |
+| `Resources/public/js/nowo-ui-side-panel.js` | Build output of `nowo-ui-side-panel.ts` | FR-BUILD-001, FR-SIDEPANEL-001 |
+| `Resources/views/partials/_rail_toggle.html.twig` | Collapses an in-page column to a thin rail | FR-RAIL-001 |
+| `Resources/assets/src/nowo-ui-rail.ts` | Opt-in runtime of the rail toggle | FR-RAIL-001 |
+| `Resources/public/js/nowo-ui-rail.js` | Build output of `nowo-ui-rail.ts` | FR-BUILD-001, FR-RAIL-001 |
+| `Resources/assets/src/nowo-ui-layout-state-core.ts` | Remembered layout state helpers (localStorage, no host store) | FR-LAYOUTSTATE-001 |
+| `Resources/assets/src/nowo-ui-layout-state.ts` | Optional pre-paint script applying remembered panel and rail state | FR-LAYOUTSTATE-001 |
+| `Resources/public/js/nowo-ui-layout-state.js` | Build output of `nowo-ui-layout-state.ts` | FR-BUILD-001, FR-LAYOUTSTATE-001 |
+| `Resources/views/partials/_tree.html.twig` | Navigation tree following the WAI-ARIA treeview pattern; plain links without JavaScript | FR-TREE-001 |
+| `Resources/views/partials/_tree_items.html.twig` | One recursive level of the tree | FR-TREE-001 |
+| `Resources/assets/src/nowo-ui-tree.ts` | Opt-in keyboard and disclosure runtime of the tree | FR-TREE-001 |
+| `Resources/public/js/nowo-ui-tree.js` | Build output of `nowo-ui-tree.ts` | FR-BUILD-001, FR-TREE-001 |
+| `Resources/views/partials/_edge_tabs_launcher.html.twig` | One launcher tab that folds the page-edge tabs on phones | FR-EDGETAB-002 |
+| `Resources/assets/src/nowo-ui-edge-tabs.ts` | Opt-in script that opens and closes the fold | FR-EDGETAB-002 |
+| `Resources/public/js/nowo-ui-edge-tabs.js` | Build output of `nowo-ui-edge-tabs.ts` | FR-BUILD-001, FR-EDGETAB-002 |
+
+## Overlay registry, scroll regions and small helpers
+
+| Source file | Spec section | Requirement IDs |
+| --- | --- | --- |
+| `Resources/assets/src/nowo-ui-overlay.ts` | One owner of "a modal overlay is open" for UiKit, host scripts and other bundles | FR-OVERLAY-001 |
+| `Resources/public/js/nowo-ui-overlay.js` | Build output of `nowo-ui-overlay.ts` | FR-BUILD-001, FR-OVERLAY-001 |
+| `Resources/assets/src/nowo-ui-scroll-region.ts` | Opt-in focusable scroll regions (table wraps and marked elements) | FR-SCROLLREGION-001 |
+| `Resources/public/js/nowo-ui-scroll-region.js` | Build output of `nowo-ui-scroll-region.ts` | FR-BUILD-001, FR-SCROLLREGION-001 |
+| `Resources/assets/src/nowo-ui-button-label.ts` | Changes a button's label without touching its icon | FR-JS-001 |
+| `Resources/assets/src/nowo-ui-popover-core.ts` | Popover geometry constants and helpers (gap, viewport margin) | FR-MENU-001 |
+| `Resources/assets/src/nowo-ui-emoji-table.ts` | Small offline emoji table bundled only into the emoji picker | FR-JS-001 |
+| `Resources/public/js/nowo-ui-emoji-picker.js` | Build output of `nowo-ui-emoji-picker.ts` | FR-BUILD-001, FR-JS-001 |
+| `Resources/public/js/nowo-ui-show-more.js` | Build output of `nowo-ui-show-more.ts` | FR-BUILD-001, FR-JS-001 |
+| `Resources/public/js/nowo-ui-sortable.js` | Build output of `nowo-ui-sortable.ts` | FR-BUILD-001, FR-JS-001 |
+
+## Default theme stylesheet and token lint
+
+| Source file | Spec section | Requirement IDs |
+| --- | --- | --- |
+| `Resources/public/css/nowo-ui-base.css` | Opt-in default theme (2.51) | FR-BASESTYLE-001 |
+| `Lint/TokenLint.php` | Colour-literal lint of bundle CSS, SCSS and Twig (`bin/nowo-ui-token-lint`) | FR-LINT-001 |
+
 ## Coverage summary
 
-| Category | Files | Mapped |
-| --- | ---: | ---: |
-| PHP — bundle / DI / enums / routing / release | 13 | 13 |
-| PHP — appearance SPI | 11 | 11 |
-| PHP — forms | 11 | 11 |
-| PHP — listing | 12 | 12 |
-| PHP — navigation / theme / tour / Twig | 15 | 15 |
-| PHP — view models | 33 | 33 |
-| PHP — test kit | 6 | 6 |
-| **PHP subtotal** | **101** | **101** |
-| TS — kit IIFE sources | 22 | 22 |
-| TS — Thinking Orbs | 14 | 14 |
-| TS — morphicons | 1 | 1 |
-| TS — Stimulus peers | 23 | 23 |
-| **TS subtotal (excl. `*.test.ts`)** | **60** | **60** |
-| **PHP + TS production units** | **161** | **161** |
-| Twig views | 112 | 112 |
-| YAML (config 2 + translations 7) | 9 | 9 |
-| CSS (authored 3 + generated 1) | 4 | 4 |
-| SCSS | 1 | 1 |
-| JS build outputs (17 IIFEs + 1 inline copy) | 18 | 18 |
-| Markdown (Stimulus peers README) | 1 | 1 |
-| **Total production sources under `src/` (excl. `*.test.ts`)** | **306** | **306** |
-| Excluded: co-located Vitest `*.test.ts` | 42 | — |
+| Category | Mapped |
+| --- | ---: |
+| Bundle and dependency injection | 4 |
+| Configuration enums | 3 |
+| Routing and legacy panel paths | 3 |
+| Release check (optional) | 3 |
+| Appearance SPI (opt-in) | 11 |
+| Forms | 15 |
+| Listing (customizer, preferences, sorting) | 12 |
+| Navigation | 2 |
+| Theme | 3 |
+| Product tour | 3 |
+| Twig extensions and helpers | 8 |
+| View models (`View/`) | 34 |
+| Test kit for UI bundles (`Test/`) | 6 |
+| Symfony config (`Resources/config/`) | 2 |
+| Translations (`Resources/translations/`) | 7 |
+| Twig views — layouts (`Resources/views/layout/`) | 5 |
+| Twig views — page scaffolds (`Resources/views/page/`) | 15 |
+| Twig views — app shell (`Resources/views/shell/`) | 4 |
+| Twig views — error pages (`Resources/views/error/`) | 2 |
+| Twig views — form themes (`Resources/views/form/`) | 3 |
+| Twig views — macros and components (`Resources/views/{macros,components}/`) | 3 |
+| Twig views — kitchen sink demo (`Resources/views/demo/`) | 4 |
+| Twig views — partials: actions, confirm, dialogs, menus (`Resources/views/partials/`) | 16 |
+| Twig views — partials: page header, key figures and navigation | 11 |
+| Twig views — partials: shell chrome and feedback | 27 |
+| Twig views — partials: filters, tables, pagination, segmented | 26 |
+| Stylesheets (authored) | 4 |
+| TypeScript — kit IIFE sources (`Resources/assets/src/`) | 27 |
+| TypeScript — Thinking Orbs (vendored MIT, `Resources/assets/src/orb/`) | 14 |
+| TypeScript — morphicons (optional, `Resources/assets/morphicons/`) | 1 |
+| Stimulus peers (`Resources/assets/stimulus-peers/`) | 27 |
+| Build outputs (generated, committed, never hand-edited) | 19 |
+| Brand appearance (spec 220) | 6 |
+| Avatar URL policy | 4 |
+| Error illustration SPI | 2 |
+| Remote form dialog (2.28 / 2.33) | 10 |
+| Image input | 8 |
+| Listing ports (framework-free, 2.49) | 5 |
+| Compact header, breadcrumbs, page actions and sidebar layout | 13 |
+| Side panel, rail, tree, edge tabs and layout state | 19 |
+| Overlay registry, scroll regions and small helpers | 10 |
+| Default theme stylesheet and token lint | 2 |
+| **Total** | **403** |
 
-Of the 306 rows, 19 are build outputs (18 JS + the layered `nowo-ui.css`) documented as products of named sources; the
-other 287 are authored units.
+Excluded: co-located Vitest `*.test.ts` (78 files at this audit).
 
-Audit (2026-11-01, 2.21.0):
+Audit (2026-11-16):
 
 ```bash
-git ls-files src | grep -v '\.test\.ts$' | wc -l                      # 306
-git ls-files src | grep -v '\.test\.ts$' | grep -c '\.php$'           # 101
-git ls-files src | grep -v '\.test\.ts$' | grep -c '\.ts$'            # 60
-git ls-files src | grep -c '\.test\.ts$'                              # 42 (excluded)
-comm -3 <(git ls-files src | sort) <(find src -type f | sort)         # empty: no untracked file
+git ls-files src | grep -v '\.test\.ts$' | wc -l                      # 403
+git ls-files src | grep -v '\.test\.ts$' | grep -c '\.php$'           # 135
+git ls-files src | grep -v '\.test\.ts$' | grep -c '\.ts$'            # 86
+git ls-files src | grep -c '\.test\.ts$'                              # 78 (excluded)
 ```

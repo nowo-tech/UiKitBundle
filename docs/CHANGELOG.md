@@ -131,6 +131,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- docs: Spec Kit baseline refreshed (REQ-SPECKIT-001 / REQ-SPECKIT-003 sweep 2026-11-16): `specs/001-baseline/code-inventory.md` maps all 403 production units under `src/` (79 added: brand appearance, remote form dialog, image input, listing ports, compact header, side panel, rail, tree, layout state, base stylesheet) and `spec.md` gains the matching `FR-*` group; no code change
 - CI, `make coverage-check` and `composer coverage-check`: the PHP line-coverage gate is now **100%** (was 99%). The suite is already at 100%; the gate only stops a regression from merging.
 - CI: the Dependabot asset-rebuild workflow also runs `build:demo-peers`, so an npm bump no longer leaves `demo/symfony8/public/js/demo-peers.js` out of sync (the "built assets are committed" check failed on the vite bump).
 

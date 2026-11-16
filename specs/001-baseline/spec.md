@@ -2,7 +2,7 @@
 
 **Feature Branch**: `001-baseline`  
 **Created**: 2026-08-03  
-**Updated**: 2026-11-01 (2.21.0 — inventory re-audited, 306/306 production files; 2.x surfaces added: page contract,
+**Updated**: 2026-11-16 (inventory re-audited, 403/403 production files; 2.24–2.51 surfaces added: brand appearance, remote form dialog, image input, listing ports, compact header, side panel, rail, tree, layout state, base stylesheet; 2.x surfaces added: page contract,
 appearance, listing customizer, tour, error pages, Form Types, sortable headers, detail page patterns, font preload)  
 **Status**: Active  
 **Input**: Backfill GitHub Spec Kit baseline documenting 100% of production code in `src/`.
@@ -379,6 +379,35 @@ fonts painted above the fold.
 - **FR-FRANKENPHP-001**: Bundle PHP is safe under FrankenPHP worker with kernel not reset between requests (readonly / stateless services, no per-request mutable state); documented in `docs/FRANKENPHP-WORKER-AUDIT.md`.
 - **FR-FRANKENPHP-002**: PHPStan includes `phpstan-frankenphp` classic + worker rulesets.
 
+### Surfaces added after the 2.21 baseline (2.24–2.51)
+
+- **FR-BRAND-001**: `AppearanceLogos` keeps brand images as URLs only (every source goes through `SafeHref::filterImage()`: relative, `http` or `https`; anything else becomes null) and the kit prints them only as `<img src>` / `<link href>`; `AppearanceView::current()` never throws, so the shell, guest and auth pages and the error layout fall back to their configuration when the provider fails; `_appearance_brand` and `_brand_logos` print the logo lockup (light and dark images switched by CSS, one image without a dark logo) or nothing.
+- **FR-BRAND-002**: With a `nowo-tech/brand-contracts` `BrandProviderInterface` service and `appearance.provider: null`, `BrandAppearanceProvider` builds the appearance from the brand (name, eyebrow in the current locale, palettes); `BrandAppearanceProviderPass` wires it only when every condition holds and removes the candidate service otherwise.
+- **FR-AVATAR-001**: `AvatarUrlPolicy` (2.26) accepts only picture URLs the `_avatar` partial may put in `<img src>`; the `nowo_ui_avatar_url` Twig filter exposes it (result still escaped); `nowo-ui-avatar.ts` shows the picture over the initials and removes it when it fails, also for `<img data-nowo-avatar-image>` of bundles that cannot require UiKit.
+- **FR-ERROR-003**: `ErrorIllustrationProviderInterface` (2.47) gives an illustration per status code; `ErrorIllustrationProviderPass` fails the container build, never an error page at runtime, when `error_pages.illustration_provider` names a missing service or one of the wrong type.
+- **FR-REMOTEDIALOG-001**: The remote form dialog contract (2.28, 2.33): `RemoteDialogHeaders` holds the three header names (`X-Nowo-Dialog` request, `X-Nowo-Redirect` with `204`, `X-Nowo-Dialog-Location` step), `RemoteDialog` detects a dialog request and adds `Vary`, `RemoteDialogTarget` accepts only a path-absolute URL without `//`, backslash, control characters or `.` / `..` segments (also `%2e`) of at most 2048 characters, or a same-origin absolute URL reduced to its path.
+- **FR-REMOTEDIALOG-002**: `RemoteDialogResponder` answers a dialog request with the success redirect or the next step and chooses the template (page or fragment) for a URL that serves both.
+- **FR-REMOTEDIALOG-003**: With `remote_dialog.convert_redirects: true`, `RemoteDialogRedirectListener` turns a `RedirectResponse` to a same-origin path answered to a main dialog request into `204` + `X-Nowo-Redirect`; `RemoteDialogRedirectEvent` lets a listener change the proposed answer.
+- **FR-REMOTEDIALOG-004**: Client side: `nowo-ui-remote-form-core.ts` loads a form page into a native `<dialog>` and posts it with `fetch` (IIFE mode of `nowo-ui-dialog.js` and the `remote-form-dialog` Stimulus peer), the `remote_form_dialog` partial prepares the dialog and `layout/fragment.html.twig` prints only the `body` block of the answer.
+- **FR-IMAGEINPUT-001**: FileType option `nowo_ui_image_input` (2.47; `false` leaves the type unchanged) renders one box with the stored or default image, a local preview, Replace / Remove / Undo (`ImageInput`, `ImageInputTypeExtension`, form theme block, `image_input` partial, opt-in `nowo-ui-image-input.js`); without JavaScript it is the plain file input.
+- **FR-LISTING-005**: Framework-free listing ports (2.49, REQ-ARCH-001 rule 3): `ListingPreferenceReaderInterface::load()` takes a `ListingContext`; `ListingContextFactory` copies only the listing cookies, the route name, scalar route parameters and the locale from the request; `ListingViewerResolverInterface` is an optional SPI giving the opaque viewer id (the kit ships none).
+- **FR-LISTING-006**: `ListFiltersOptions` carries the host options of the list scaffold filters (`theme.pages.list.filters`: display, grid columns and classes, fold) with validation errors; the defaults print the 2.29 markup.
+- **FR-HEADER-001**: `HeaderCrumbs` builds the compact breadcrumb of the top bar (last level is the current page, never a link; optionally drops the home crumb; collapsible), rendered by `header_crumbs` and collapsed by the opt-in `nowo-ui-header-crumbs.js`.
+- **FR-HEADER-002**: `HeaderPresentation` (standard, compact, inline, no intro, no title, no header) is resolved by `HeaderPresentationResolver` from an explicit option, the request attribute, then the configured default (invalid values ignored); `header_context` fills the compact header.
+- **FR-HEADER-003**: `SafeHref` keeps only relative URLs and the schemes `http`, `https` and `mailto` for host-supplied hrefs (crumbs, home link, page actions) and filters image sources.
+- **FR-HEADERACTIONS-001**: The `page_actions` partial is the square popover menu of the split page header with the confirm dialogs of its POST and confirm actions placed outside the popover panel.
+- **FR-GUESTHEADER-001**: The `guest_header` partial gives a public page a brand linked to the home page and a sign-in link, printed by the guest layout when the page sets `nowo_ui_guest_header`.
+- **FR-SIDEBARLAYOUT-001**: `SidebarLayout` (`below-header`, `full-height`) is resolved per request by `SidebarLayoutResolver` (Twig `nowo_ui_sidebar_layout()`); `shell/_brand_parts` draws the brand of the full-height aside head from icon and name.
+- **FR-SIDEPANEL-001**: `side_panel`, `side_panel_container` and `side_panel_toggle` render a complementary panel (inline column or overlay drawer at 767 px or less) whose open state the server renders, so it works without JavaScript; `nowo-ui-side-panel.js` toggles it with shortcuts from `nowo-ui-shortcut-core.ts`.
+- **FR-RAIL-001**: The `rail_toggle` partial collapses an in-page column to a thin rail (`data-nowo-ui-rail-host`), driven by the opt-in `nowo-ui-rail.js`.
+- **FR-LAYOUTSTATE-001**: Open and collapsed state of side panels and rails is remembered in localStorage without a host store (`nowo-ui-layout-state-core.ts`) and applied before first paint by the optional `nowo-ui-layout-state.js`.
+- **FR-TREE-001**: The `tree` partial renders a navigation tree following the WAI-ARIA treeview pattern (plain links without JavaScript); `nowo-ui-tree.js` adds keyboard and disclosure behaviour.
+- **FR-EDGETAB-002**: The `edge_tabs_launcher` partial and the opt-in `nowo-ui-edge-tabs.js` fold the page-edge tabs behind one launcher tab on phones; the script only opens and closes the fold.
+- **FR-OVERLAY-001**: `nowo-ui-overlay.js` is the single owner of "a modal overlay is open" for UiKit, host scripts and other bundles (also bundled into the dialog and side-panel scripts).
+- **FR-SCROLLREGION-001**: The opt-in `nowo-ui-scroll-region.js` makes table wraps and marked elements focusable scroll regions.
+- **FR-BASESTYLE-001**: `css/nowo-ui-base.css` is UiKit's opt-in default theme (2.51), on the `--nowo-ui-*` tokens.
+- **FR-LINT-001**: `TokenLint` (`bin/nowo-ui-token-lint`) reports colour literals (`#rgb`, `#rrggbb`, `#rrggbbaa`, `rgb(`, `rgba(`) in bundle CSS, SCSS and Twig, since bundle UIs read colours only through `--nowo-ui-*` tokens.
+
 ### Release check (optional)
 
 - **FR-RELEASE-001**: Optional `release_check` (off by default): `ReleaseUpdateChecker` compares `current_version` (clean semver) with GitHub `releases/latest` of `github_repo` (`owner/name` only), counts newer non-prerelease releases, caches per repo+version (`cache_ttl`, `cache.app`), soft-fails to `skipped`/`error`; registered only when enabled (requires `symfony/http-client`).
@@ -414,7 +443,7 @@ fonts painted above the fold.
 
 ## Success criteria
 
-- **SC-001**: Every production file under `src/` (excluding the 42 co-located `*.test.ts`) appears exactly once in [`code-inventory.md`](code-inventory.md) with semantic requirement IDs: **306/306 mapped** (101 PHP, 60 TS, 112 Twig, 9 YAML, 4 CSS, 1 SCSS, 18 built JS, 1 Markdown), audited 2026-11-01 on 2.21.0.
+- **SC-001**: Every production file under `src/` (excluding the 78 co-located `*.test.ts`) appears exactly once in [`code-inventory.md`](code-inventory.md) with semantic requirement IDs: **403/403 mapped** (135 PHP, 86 TS, the rest Twig, YAML, CSS, SCSS, built JS and Markdown), audited 2026-11-16.
 - **SC-002**: Every FR id used in the inventory is defined in this spec (domain-grouped list above).
 - **SC-003**: PHPUnit + Vitest + `coverage-check` (100% PHP lines) pass in CI; `make release-check` includes `check-no-raw-html-form`.
 - **SC-004**: FrankenPHP demos boot on ports 8092 / 8093 with HTTP 200; the order page passes the Playwright e2e with axe.
@@ -445,5 +474,5 @@ make test-ts         # Vitest
 make phpstan
 make check-no-raw-html-form
 make release-check   # full gate (clean tree, CS, Rector, PHPStan, coverage, Vitest, demos)
-git ls-files src | grep -v '\.test\.ts$' | wc -l   # 306 = inventory total
+git ls-files src | grep -v '\.test\.ts$' | wc -l   # 403 = inventory total
 ```

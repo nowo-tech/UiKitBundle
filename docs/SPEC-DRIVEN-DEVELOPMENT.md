@@ -2,7 +2,7 @@
 
 In this repository, **spec-driven development** has three layers that stay in sync:
 
-1. **GitHub Spec Kit baseline** — [`specs/001-baseline/`](../specs/001-baseline/) ([`spec.md`](../specs/001-baseline/spec.md), [`code-inventory.md`](../specs/001-baseline/code-inventory.md)), initialized with [GitHub Spec Kit](https://github.com/github/spec-kit) (`.specify/`, **Cursor Agent** skills in `.cursor/skills/speckit-*`). The inventory maps **100%** of production code in `src/` (**306/306** files, last audited 2026-11-01 on 2.21.0); feature specs `specs/002-…` to `specs/009-…` cover the 1.13–2.21 increments. **How to install, initialize, and use Spec Kit:** [`SPEC-KIT.md`](SPEC-KIT.md).
+1. **GitHub Spec Kit baseline** — [`specs/001-baseline/`](../specs/001-baseline/) ([`spec.md`](../specs/001-baseline/spec.md), [`code-inventory.md`](../specs/001-baseline/code-inventory.md)), initialized with [GitHub Spec Kit](https://github.com/github/spec-kit) (`.specify/`, **Cursor Agent** skills in `.cursor/skills/speckit-*`). The inventory maps **100%** of production code in `src/` (**403/403** files, last audited 2026-11-16); feature specs `specs/002-…` to `specs/009-…` cover the 1.13–2.21 increments. **How to install, initialize, and use Spec Kit:** [`SPEC-KIT.md`](SPEC-KIT.md).
 2. **Product behavior** — what **UiKitBundle** guarantees to applications that integrate it (see [`USAGE.md`](USAGE.md), [`CONFIGURATION.md`](CONFIGURATION.md), [`INSTALLATION.md`](INSTALLATION.md)). **PHPUnit** and **PHPStan** (and **Vitest**) enforce contracts in CI where applicable.
 3. **Traceability anchors** — stable **`REQ-*`** identifiers in Makefiles and demos (when present) so changes to scripts, ports, and demo workflows stay discoverable from issues and PRs.
 
@@ -105,7 +105,7 @@ See [`ENGRAM.md`](ENGRAM.md) for memory / checklist pointers used across Nowo bu
 
 - Constitution: `.specify/memory/constitution.md`
 - Skills: `.cursor/skills/speckit-*`
-- Baseline: [`specs/001-baseline/spec.md`](../specs/001-baseline/spec.md) and [`code-inventory.md`](../specs/001-baseline/code-inventory.md) — **306/306** production files under `src/` mapped (`*.test.ts` excluded), last audited 2026-11-01 (2.21.0)
+- Baseline: [`specs/001-baseline/spec.md`](../specs/001-baseline/spec.md) and [`code-inventory.md`](../specs/001-baseline/code-inventory.md) — **403/403** production files under `src/` mapped (`*.test.ts` excluded), last audited 2026-11-16
 - Feature specs: [`002-theming-tokens`](../specs/002-theming-tokens/spec.md) (1.13), [`003-host-chrome-extractions`](../specs/003-host-chrome-extractions/spec.md) (1.15), [`004-appearance-spi`](../specs/004-appearance-spi/spec.md) (1.16), [`005-host-chrome-tables-filters`](../specs/005-host-chrome-tables-filters/spec.md) (1.17), [`006-action-csrf-forms`](../specs/006-action-csrf-forms/spec.md) (2.18), [`007-form-types-everywhere`](../specs/007-form-types-everywhere/spec.md) (2.19), [`008-sortable-columns`](../specs/008-sortable-columns/spec.md) (2.20), [`009-detail-page-patterns`](../specs/009-detail-page-patterns/spec.md) (2.21)
 - Details: [`SPEC-KIT.md`](SPEC-KIT.md)
 
