@@ -40,6 +40,7 @@ Optional **Stimulus peer** TypeScript sources live under `src/Resources/assets/s
 - [Remote form dialog (2.28)](#remote-form-dialog-228)
 - [Scroll regions (2.28)](#scroll-regions-228)
 - [Emoji picker and show more](#emoji-picker-and-show-more)
+- [Combobox](#combobox)
 - [Image crop](#image-crop)
 - [Image input](#image-input)
 - [Sortable](#sortable)
@@ -697,6 +698,11 @@ IIFE only: `js/nowo-ui-scroll-region.js` (opt-in `script_names` entry `scroll-re
 
 IIFE only, no peer: `js/nowo-ui-emoji-picker.js` and `js/nowo-ui-show-more.js` (opt-in `script_names` entries `emoji-picker`, `show-more`). Events
 `nowo-ui:emoji-picker:pick` and `nowo-ui:show-more:toggle`. See [USAGE](USAGE.md#emoji-picker) and [USAGE](USAGE.md#show-more).
+
+## Combobox
+
+IIFE only, no peer (2.53): `js/nowo-ui-combobox.js` (opt-in `script_names` entry `combobox`). Events `nowo-ui:combobox:pick`,
+`nowo-ui:combobox:results` and `nowo-ui:combobox:error`. See [USAGE](USAGE.md#combobox).
 
 ## Image crop
 

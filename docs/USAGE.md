@@ -58,6 +58,7 @@
 - [Focusable scroll regions (2.28)](#focusable-scroll-regions-228)
 - [Dialog back button](#dialog-back-button)
 - [Emoji picker](#emoji-picker)
+- [Combobox](#combobox)
 - [Show more](#show-more)
 - [Image crop](#image-crop)
   - [Image crop attribute contract](#image-crop-attribute-contract)
@@ -2700,6 +2701,83 @@ Focus returns to the toggle in both cases. `aria-selected` marks the field's cur
 **Limits:** no recently used list, no categories, no skin tone choice. Nothing was run on a phone or with a real screen reader.
 
 Tokens: `--nowo-ui-emoji-picker-width`, `--nowo-ui-emoji-picker-height`, `--nowo-ui-emoji-picker-z`. Slots `emoji_picker*`. Demo: `/kit/emoji-show-more`.
+
+## Combobox
+
+*(2.53)* A text input that searches a URL of yours as the user types and lists the answers in a grouped listbox, for example a page
+picker with "This wiki" first and "Other wikis" after it. Without JavaScript it is a plain text input that submits what was typed, so
+your server must accept free text (or resolve it) whatever the script does.
+
+```php
+$builder->add('page', ComboboxType::class, [
+    'label' => 'Wiki page',
+    'url' => $this->urlGenerator->generate('app_page_search'), // a path, or an absolute URL of this request's origin
+    'min_length' => 2,   // default 2 (1 to 50)
+    'debounce' => 250,   // ms, default 250 (0 to 2000)
+    'param' => 'q',      // default q
+]);
+```
+
+```twig
+{{ include(nowo_ui_partial('scripts'), {script_names: nowo_ui_script_names()|merge(['combobox'])}) }}
+```
+
+For a field of yours, wrap it: `{{ include(nowo_ui_partial('combobox'), {id: 'page_picker', input: form_widget(form.page), url:
+path('app_page_search')}) }}`; `input` is trusted HTML. With `value_input: form.page_id.vars.id` (a hidden input of the same form: both inside one `<form>`;
+without a shared form no hidden input is written and the field takes the value), the
+field shows the picked label and the hidden input takes its value; typing again empties the hidden input, so a stale id is never
+submitted. `labels` overrides `list` (the listbox's name), `results` and `min_length` (with `%count%`), `none`, `error`.
+
+**Your endpoint.** `GET <url>?q=<term>` on the page's origin, with the session cookie, `Accept: application/json` and
+`X-Requested-With: XMLHttpRequest`. Answer `application/json` (or any `+json` type):
+
+```json
+{"groups": [
+  {"label": "This wiki", "options": [{"value": "42", "label": "Getting started", "description": "/handbook/getting-started"}]},
+  {"label": "Other wikis", "options": [{"value": "77", "label": "Start here", "description": "Ops · /start-here"}]}
+]}
+```
+
+`{"options": [...]}` or a bare list is one group without a heading. `value` defaults to `label`; `description` is optional; an option
+without a label is dropped; a number becomes a string; anything else is ignored. At most 20 groups, 100 options in all and 300
+characters per text are shown: limit and order on the server. The endpoint is yours, so it checks access, limits the term's length and
+rate, and returns only what this user may see. Make it stateless (no per-user data in services) for FrankenPHP worker mode.
+
+**`url`.** `ComboboxType` accepts a path starting with one `/` (not `//` or `/\`), or an absolute http(s) URL whose scheme, host and
+port are the current request's; anything else (another host, no current request for an absolute URL) is refused when the options
+are resolved, by the same rules the script applies before it sends anything.
+
+**Requests.** The first one starts `debounce` ms after the last keystroke, once the trimmed term has `min_length` characters; below that
+the list closes and the status says how many characters are needed. Leaving the field drops a planned search and aborts the one in
+flight, so the list never reopens behind the user. A newer term aborts the request in flight (`AbortController`), and
+an answer for an older term is dropped. A URL on another origin, or not http(s), sends nothing and shows the error status; `mode:
+'same-origin'` also makes a redirect to another origin fail. A non-2xx answer, another content type or broken JSON shows the error.
+
+**Events** on the root, bubbling: `nowo-ui:combobox:pick` `{value, label, description, group}` (cancelable, before anything changes),
+then native `input` and `change` on the field (and on the value input); `nowo-ui:combobox:results` `{term, count}`;
+`nowo-ui:combobox:error` `{term}`.
+
+**Accessibility contract.** The kit does: the WAI-ARIA 1.2 combobox pattern with list autocomplete and no automatic selection. The
+script adds `role="combobox"`, `aria-autocomplete="list"`, `aria-expanded` and `aria-controls` to the field (the server markup has none,
+so the no-JS field is a plain text box); focus stays in the field and `aria-activedescendant` names the active option, which has
+`aria-selected="true"`. Groups are `role="group"` named by their heading. Down and Up move through all the options and wrap; with the
+list closed they open it again (or search at once when the text changed). Alt+Down opens without moving, Alt+Up closes. Enter picks
+the active option and never submits the form; with no active option Enter submits as usual. Escape closes the list, not a dialog around
+it. Tab closes it and moves on. Left, Right, Home and End move the caret and leave the list. A polite status gives the number of
+results, "no results", the minimum length or the failure. You do: give the field a label, and pass translated `labels` when the
+kit's do not fit.
+
+**Text only.** Labels, descriptions and headings are written with `textContent`; markup in an answer shows as text and is never parsed.
+The settings and labels on the root are read as strings only.
+
+**Position:** the listbox is a `[popover]` in the top layer, at least as wide as the field, below it or above it when there is no room
+below, aligned with the field's start edge (the right one in right-to-left text) and kept inside the viewport; it is placed through the
+CSSOM, so a CSP without `style-src-attr` holds. Without the Popover API it is `position: fixed` under `--nowo-ui-combobox-z`.
+
+**Limits:** no free-text "create" option, no multiple selection, no caching of answers. Nothing was run with a real screen reader.
+
+Tokens: `--nowo-ui-combobox-width`, `--nowo-ui-combobox-height`, `--nowo-ui-combobox-z`. Slots `combobox*`. Demo: `/kit/combobox`.
+FormKit: `ComboboxType` is the integration point; mapping FormKit fields to it is a later FormKit change.
 
 ## Show more
 

@@ -153,6 +153,10 @@
 
 ## Unreleased
 
+Nothing to change. The new combobox (`ComboboxType`, partial `combobox`, runtime `combobox`) is opt-in: see
+[USAGE.md "Combobox"](USAGE.md#combobox). A host with its own `combobox` partial override, block `nowo_ui_combobox_widget`, or
+translation keys `combobox.*` in the `NowoUiKitBundle` domain should check that they do not clash.
+
 ## To 2.52.2
 
 From **2.52.1**:

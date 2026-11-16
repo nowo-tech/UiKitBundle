@@ -7189,6 +7189,93 @@ html[data-nowo-ui-sortable-active] * {
   color: color-mix(in srgb, var(--nowo-ui-muted) 85%, var(--nowo-ui-text));
 }
 
+/* Combobox (2.53, partial `combobox`, js/nowo-ui-combobox.js): without the script, only the input shows. The listbox is a
+   [popover] placed by the script through the CSSOM (no style attribute); its options are text only. */
+.nowo-ui-combobox {
+  position: relative;
+  min-width: 0;
+}
+.nowo-ui-combobox > input {
+  width: 100%;
+}
+.nowo-ui-combobox__listbox[hidden] {
+  display: none !important;
+}
+.nowo-ui-combobox__listbox {
+  position: fixed;
+  inset: auto;
+  z-index: var(--nowo-ui-combobox-z, var(--nowo-ui-z-popover, 1080));
+  box-sizing: border-box;
+  width: max-content;
+  max-width: min(var(--nowo-ui-combobox-width, 32rem), calc(100vw - 1rem));
+  max-height: min(var(--nowo-ui-combobox-height, 18rem), calc(100vh - 1rem));
+  padding: 0.25rem;
+  margin: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--nowo-ui-surface);
+  color: var(--nowo-ui-text);
+  border: 1px solid var(--nowo-ui-border);
+  border-radius: var(--nowo-ui-radius);
+  box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 25%);
+}
+.nowo-ui-combobox__group + .nowo-ui-combobox__group,
+.nowo-ui-combobox__option + .nowo-ui-combobox__group {
+  margin-top: 0.25rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid var(--nowo-ui-border);
+}
+.nowo-ui-combobox__group-label {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--nowo-ui-muted) 85%, var(--nowo-ui-text));
+}
+.nowo-ui-combobox__option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-height: 2.25rem;
+  justify-content: center;
+  padding: 0.375rem 0.5rem;
+  cursor: pointer;
+  border-radius: var(--nowo-ui-radius);
+  overflow-wrap: anywhere;
+}
+.nowo-ui-combobox__option:hover {
+  background: color-mix(in srgb, var(--nowo-ui-primary) 10%, transparent);
+}
+.nowo-ui-combobox__option.is-active {
+  background: color-mix(in srgb, var(--nowo-ui-primary) 15%, transparent);
+  outline: 2px solid var(--nowo-ui-primary);
+  outline-offset: -2px;
+}
+@media (forced-colors: active) {
+  .nowo-ui-combobox__option.is-active {
+    outline-color: Highlight;
+  }
+}
+.nowo-ui-combobox__option-description {
+  font-size: 0.8125rem;
+  color: color-mix(in srgb, var(--nowo-ui-muted) 85%, var(--nowo-ui-text));
+}
+/* The status sits on the host's page, not on a kit surface: it keeps the host's text colour. */
+.nowo-ui-combobox__status {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+  color: inherit;
+}
+.nowo-ui-combobox__status:empty {
+  display: none;
+}
+@media (pointer: coarse) {
+  .nowo-ui-combobox__option {
+    min-height: 2.75rem;
+  }
+}
+
 /* Image crop (js/nowo-ui-image-crop.js, inputs with data-nowo-ui-image-crop): the dialog the script builds. The canvas is sized
    through its attributes; the mask and the frame line are read from these properties, so a theme can set them per mode. */
 .nowo-ui-image-crop {
@@ -8005,12 +8092,12 @@ a.nowo-ui-guest-header__brand:focus-visible {
 
 @supports selector(:popover-open) {
   :is(.nowo-ui-menu__panel, .nowo-ui-popover, .nowo-ui-kebab__menu)[popover]:not(:popover-open),
-  :is(.nowo-ui-date-range__panel, .nowo-ui-emoji-picker__panel)[popover]:not(:popover-open) {
+  :is(.nowo-ui-date-range__panel, .nowo-ui-emoji-picker__panel, .nowo-ui-combobox__listbox)[popover]:not(:popover-open) {
     opacity: 0;
     transform: translateY(var(--nowo-ui-motion-lift));
   }
 
-  :is(.nowo-ui-menu__panel, .nowo-ui-popover, .nowo-ui-kebab__menu, .nowo-ui-date-range__panel, .nowo-ui-emoji-picker__panel)[popover]:popover-open {
+  :is(.nowo-ui-menu__panel, .nowo-ui-popover, .nowo-ui-kebab__menu, .nowo-ui-date-range__panel, .nowo-ui-emoji-picker__panel, .nowo-ui-combobox__listbox)[popover]:popover-open {
     opacity: 1;
     transform: none;
     transition-duration: var(--nowo-ui-motion-small);
@@ -8018,7 +8105,7 @@ a.nowo-ui-guest-header__brand:focus-visible {
   }
 
   @starting-style {
-    :is(.nowo-ui-menu__panel, .nowo-ui-popover, .nowo-ui-kebab__menu, .nowo-ui-date-range__panel, .nowo-ui-emoji-picker__panel)[popover]:popover-open {
+    :is(.nowo-ui-menu__panel, .nowo-ui-popover, .nowo-ui-kebab__menu, .nowo-ui-date-range__panel, .nowo-ui-emoji-picker__panel, .nowo-ui-combobox__listbox)[popover]:popover-open {
       opacity: 0;
       transform: translateY(var(--nowo-ui-motion-lift));
     }
@@ -8026,7 +8113,7 @@ a.nowo-ui-guest-header__brand:focus-visible {
 }
 
 /* The kit's own closes of these panels: after the rules above, which they must beat. */
-:is(.nowo-ui-menu__panel, .nowo-ui-popover, .nowo-ui-kebab__menu, .nowo-ui-date-range__panel, .nowo-ui-emoji-picker__panel)[data-nowo-ui-closing][data-nowo-ui-closing] {
+:is(.nowo-ui-menu__panel, .nowo-ui-popover, .nowo-ui-kebab__menu, .nowo-ui-date-range__panel, .nowo-ui-emoji-picker__panel, .nowo-ui-combobox__listbox)[data-nowo-ui-closing][data-nowo-ui-closing] {
   opacity: 0;
   transform: translateY(var(--nowo-ui-motion-lift));
   pointer-events: none;
@@ -8035,7 +8122,7 @@ a.nowo-ui-guest-header__brand:focus-visible {
 }
 
 /* The same panels where there is no Popover API: `hidden` decides. */
-:is(.nowo-ui-date-range__panel, .nowo-ui-emoji-picker__panel)[hidden] {
+:is(.nowo-ui-date-range__panel, .nowo-ui-emoji-picker__panel, .nowo-ui-combobox__listbox)[hidden] {
   opacity: 0;
 }
 

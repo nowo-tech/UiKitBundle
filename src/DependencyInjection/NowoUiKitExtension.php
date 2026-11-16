@@ -23,6 +23,7 @@ use Nowo\UiKitBundle\Enum\CssFramework;
 use Nowo\UiKitBundle\EventSubscriber\LegacyPanelPathRedirectSubscriber;
 use Nowo\UiKitBundle\Form\AppearancePaletteType;
 use Nowo\UiKitBundle\Form\AppearanceType;
+use Nowo\UiKitBundle\Form\ComboboxType;
 use Nowo\UiKitBundle\Form\DateRangeRequestHandler;
 use Nowo\UiKitBundle\Form\DateRangeSubmitExtension;
 use Nowo\UiKitBundle\Form\DateRangeType;
@@ -76,6 +77,9 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
 
     /** Form theme with the emoji picker field's block, prepended to `twig.form_themes`. */
     public const EMOJI_PICKER_FORM_THEME = '@NowoUiKit/form/nowo_ui_emoji_picker.html.twig';
+
+    /** Form theme with the combobox field's block (2.53), prepended to `twig.form_themes`. */
+    public const COMBOBOX_FORM_THEME = '@NowoUiKit/form/nowo_ui_combobox.html.twig';
 
     /** Form theme with the image input's block (2.47, FileType option `nowo_ui_image_input`), prepended to `twig.form_themes`. */
     public const IMAGE_INPUT_FORM_THEME = '@NowoUiKit/form/nowo_ui_image_input.html.twig';
@@ -139,7 +143,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
         ];
         // 2.15: the date-range field's blocks (only `nowo_ui_date_range_*`) in every form, whatever the host theme.
         if (class_exists(AbstractType::class)) {
-            $twig['form_themes'] = [self::DATE_RANGE_FORM_THEME, self::EMOJI_PICKER_FORM_THEME, self::IMAGE_INPUT_FORM_THEME];
+            $twig['form_themes'] = [self::DATE_RANGE_FORM_THEME, self::EMOJI_PICKER_FORM_THEME, self::COMBOBOX_FORM_THEME, self::IMAGE_INPUT_FORM_THEME];
         }
         $container->prependExtensionConfig('twig', $twig);
     }
@@ -445,6 +449,9 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
     {
         $container->register('nowo_ui_kit.form.emoji_picker_type', EmojiPickerType::class)
             ->setArguments([new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE)])
+            ->addTag('form.type');
+        $container->register('nowo_ui_kit.form.combobox_type', ComboboxType::class)
+            ->setArguments([new Reference('request_stack', ContainerInterface::NULL_ON_INVALID_REFERENCE)])
             ->addTag('form.type');
         $container->register('nowo_ui_kit.form.date_range_type', DateRangeType::class)
             ->setArguments([new Reference('translator', ContainerInterface::NULL_ON_INVALID_REFERENCE)])

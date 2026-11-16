@@ -132,6 +132,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Async grouped combobox (`nowo-ui-combobox`, opt-in).** A text input that searches a URL of the host as the user types and lists the
+  answers in a grouped listbox ("This wiki" / "Other wikis"), approved on 2026-11-16 to reduce host overrides. New partial `combobox`,
+  form type `Nowo\UiKitBundle\Form\ComboboxType` (block `nowo_ui_combobox_widget`, prepended to `twig.form_themes` and used by
+  `form/nowo_ui_layout.html.twig`), runtime `js/nowo-ui-combobox.js` (add `combobox` to `script_names`), slots `combobox`,
+  `combobox_listbox`, `combobox_status`, tokens `--nowo-ui-combobox-width` / `-height` / `-z`, and `combobox.*` translations
+  (en, es, de, fr, it, nl, pt).
+  - Request: `GET <url>?q=<term>` (`param` configurable) on the page's origin only, `mode: 'same-origin'`, after `debounce` ms
+    (default 250) once the trimmed term has `min_length` characters (default 2); a newer term aborts the request in flight and an older
+    answer is dropped.
+  - Answer: `{"groups": [{"label": "…", "options": [{"value": "…", "label": "…", "description": "…"}]}]}` (or `{"options": […]}` / a
+    bare list), `application/json` or `+json`; strings only, at most 20 groups, 100 options and 300 characters per text, inserted with
+    `textContent` only.
+  - WAI-ARIA 1.2 combobox with a grouped listbox: `role="combobox"`, `aria-expanded`, `aria-controls` and `aria-activedescendant` on
+    the field (added by the script), Down / Up / Alt+Down / Alt+Up / Enter / Escape / Tab, a polite status with the result count, no
+    results, the minimum length or the failure. Escape closes the list, not a dialog around it; Enter on an option never submits.
+  - Events `nowo-ui:combobox:pick` (cancelable) `{value, label, description, group}`, `nowo-ui:combobox:results` `{term, count}`,
+    `nowo-ui:combobox:error` `{term}`. Partial option `value_input`: a hidden input of the same form takes the picked value while the
+    field shows its label; typing again empties it.
+  - Without JavaScript the field is a plain text input that submits what was typed. No inline script or style (CSSOM placement), top
+    layer `[popover]`, light and dark, LTR and RTL, phone width. Stateless on the server (FrankenPHP worker mode, kernel reset off).
+  - Demo `/kit/combobox` (with its fixture endpoint `/kit/combobox/search`), Vitest, and the Playwright spec `combobox.spec.ts` in
+    Chromium, Firefox and WebKit (`make -C demo/symfony8 test-e2e-combobox`).
+  - Opt-in: nothing changes for a page that does not use the partial, the form type or the runtime; existing markup is unchanged.
+    FormKit can map its fields to `ComboboxType` in a follow-up of its own (`FormTypeMap`, as for `emoji_picker`).
+  - Audit RU (2026-11-16): RELEASE OK, no High or Medium. Fixed before the tag: RU-L1 (leaving the field now drops the planned
+    search and aborts the request in flight; before, the list could reopen after Tab with `aria-expanded="true"` and Escape could
+    not close it), RU-I1 (`value_input` is written only when the field and the hidden input share a real form), RU-I2
+    (`ComboboxType` refuses an absolute `url` on another origin, or any absolute `url` without a current request, by the script's
+    rules; it takes the `request_stack` service).
+
 ## [2.52.2] - 2026-11-16
 
 ### Fixed

@@ -436,6 +436,10 @@ final class ThemeSlots
         'emoji_picker_search' => ['nowo-ui-input nowo-ui-emoji-picker__search', ['bootstrap' => 'form-control']],
         'emoji_picker_grid' => ['nowo-ui-emoji-picker__grid', []],
         'emoji_picker_status' => ['nowo-ui-emoji-picker__status', []],
+        // Combobox (2.53, partial `combobox`, ComboboxType): root, the listbox of the answers and the live status.
+        'combobox' => ['nowo-ui-combobox', []],
+        'combobox_listbox' => ['nowo-ui-combobox__listbox', []],
+        'combobox_status' => ['nowo-ui-combobox__status', []],
         // Image input (2.47, partial `image_input`, FileType option nowo_ui_image_input): root, the image box, its preview, the
         // empty text and the "Default" badge, the controls row, its buttons, the remove checkbox row and the live status.
         'image_input' => ['nowo-ui-image-input', []],
@@ -681,6 +685,7 @@ final class ThemeSlots
         'detail_list' => '@NowoUiKitBundle/page/_detail_list.html.twig',
         'dialog' => '@NowoUiKitBundle/partials/_dialog.html.twig',
         'emoji_picker' => '@NowoUiKitBundle/partials/_emoji_picker.html.twig',
+        'combobox' => '@NowoUiKitBundle/partials/_combobox.html.twig',
         'image_input' => '@NowoUiKitBundle/partials/_image_input.html.twig',
         'edge_tabs_launcher' => '@NowoUiKitBundle/partials/_edge_tabs_launcher.html.twig',
         'empty' => '@NowoUiKitBundle/partials/_empty.html.twig',

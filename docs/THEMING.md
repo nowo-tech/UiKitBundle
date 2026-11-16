@@ -351,6 +351,9 @@ minmax(min(100%, var(--nowo-ui-filters-field-min, 12rem)), 1fr)))`.
 | `--nowo-ui-emoji-picker-width` | `20rem` (`emoji_picker` panel; never wider than the screen) |
 | `--nowo-ui-emoji-picker-height` | `14rem` (the grid, which scrolls past it) |
 | `--nowo-ui-emoji-picker-z` | `var(--nowo-ui-z-popover, 1080)` (the panel without the Popover API; with it, the top layer; [Layers](#layers-public-api-228)) |
+| `--nowo-ui-combobox-width` | `32rem` (2.53: the widest the `combobox` listbox gets; it is at least as wide as the field, never wider than the screen) |
+| `--nowo-ui-combobox-height` | `18rem` (the listbox, which scrolls past it; never taller than the viewport) |
+| `--nowo-ui-combobox-z` | `var(--nowo-ui-z-popover, 1080)` (the listbox without the Popover API; with it, the top layer; [Layers](#layers-public-api-228)) |
 | `--nowo-ui-image-crop-mask` | `rgb(15 23 42 / 60%)` (2.43: the dimmed image around the crop frame; read by the script on every draw) |
 | `--nowo-ui-image-crop-frame` | `rgb(255 255 255 / 95%)` (the frame line) |
 | `--nowo-ui-image-crop-width` | `32rem` (the crop dialog; never wider than the screen) |
@@ -528,6 +531,7 @@ value is declared, so the cascade is unchanged; a host maps its own scale once (
 | Modal (non-top-layer) | `--nowo-ui-z-modal` (`--nowo-ui-menu-z-index` wins for menus) | `1050` | legacy Bootstrap `modal_shell`, `menu` popover fallback |
 | Popovers over modals | `--nowo-ui-z-popover` (`--nowo-ui-date-range-z`, `--nowo-ui-multi-select-z` win) | `1080` | calendar, multi-select panel (inline fallbacks) |
 | Emoji picker panel | `--nowo-ui-emoji-picker-z` (`--nowo-ui-z-popover` below it) | `1080` | the open panel without the Popover API; with it, the top layer |
+| Combobox listbox *(2.53)* | `--nowo-ui-combobox-z` (`--nowo-ui-z-popover` below it) | `1080` | the open listbox without the Popover API; with it, the top layer |
 | Sortable copy | `--nowo-ui-sortable-z` (`--nowo-ui-z-popover` below it) | `1080` | the dragged copy; inside a modal `<dialog>` it stays in the top layer with its parent |
 | Toasts | `--nowo-ui-z-toast` | `1100` | `.nowo-ui-toast-stack` |
 | Page loader | `--nowo-ui-z-loader` | `1200` | `.nowo-ui-page-loader` |
