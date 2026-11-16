@@ -216,7 +216,7 @@ final class SidebarStyleTest extends TestCase
 
     private function twig(mixed $styleAttribute, string $sidebarStyle, string $sidebarLayout = 'below-header', ?Request $request = null): Environment
     {
-        if (null === $request) {
+        if (!$request instanceof Request) {
             $request = Request::create('https://app.example/orders/7', 'GET');
             $request->attributes->set('_route', 'orders_show');
             $request->attributes->set('_route_params', []);
