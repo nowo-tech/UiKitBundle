@@ -1,0 +1,82 @@
+{#
+  UiKit 2.55 demo: the shell focus mode (KitFocusModeController). config/packages/nowo_ui_kit.yaml enables
+  theme.focus_mode with keep [breadcrumb_min, search, timer_chip]; app_shell_open then prints the shell attributes and
+  the focus bar (with the one-line breadcrumb from focus_crumbs), and the scripts partial loads js/nowo-ui-focus-mode.js.
+  The page toolbar holds what WikiBundle / TaskBoard add: the `focus_mode_toggle` partial (area wiki) and a fullscreen
+  toggle. In focus mode the aside, the header (but its kept search field and timer chip), the side panel, the footer
+  and the messages dock (data-nowo-ui-focus-region="dock") leave; F toggles, Escape leaves, Ctrl+K still focuses the
+  search field (js/focus-mode-demo.js, a host script).
+#}
+{% extends '@NowoUiKit/layout/document.html.twig' %}
+{% set nowo_ui_document_title = 'Focus mode · UiKit 2.55' %}
+
+{% block nowo_ui_styles %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/focus-mode-demo.css') }}">
+{% endblock %}
+
+{% block nowo_ui_body %}
+    <a class="{{ nowo_ui_class('skip_link') }}" href="#main-content">Skip to main content</a>
+    {% set header_end %}
+        {# twig-005-ignore: host search box, never submitted #}
+        <input type="search" id="kit-focus-search" class="form-control form-control-sm kit-focus-search" placeholder="Search (Ctrl+K)" aria-label="Search" aria-keyshortcuts="Control+K" data-nowo-ui-focus-keep="search" data-testid="search">
+        <span class="kit-focus-chip" data-nowo-ui-focus-keep="timer_chip" data-testid="timer-chip" title="Tracked today">01:25</span>
+        <a class="{{ nowo_ui_class('btn_secondary') }}" href="{{ path('nowo_ui_kit_kitchen_sink') }}" data-testid="header-link">Kitchen sink</a>
+        {{ include('@NowoUiKitBundle/partials/_theme_toggle.html.twig', {compact: true}) }}
+    {% endset %}
+    {% set crumbs = [{label: 'Wiki', href: path('kit_focus_mode')}, {label: 'Engineering', href: path('kit_focus_mode')}, {label: 'Runbooks', href: path('kit_focus_mode')}, {label: 'Deploying the API'}] %}
+    {{ include(nowo_ui_partial('app_shell_open'), {
+        brand: 'Acme Wiki',
+        header_end: header_end,
+        aside_label: 'Wiki',
+        aside_items: [
+            {label: 'Engineering', href: path('kit_focus_mode'), current: true},
+            {label: 'Product', href: path('kit_focus_mode')},
+            {label: 'People', href: path('kit_focus_mode')},
+        ],
+        name: 'Ada Lovelace',
+        initials: 'AL',
+        focus_crumbs: crumbs,
+        shell_attr: {'data-testid': 'shell'},
+    }) }}
+        <main id="main-content" tabindex="-1" class="nowo-ui-content" data-testid="focus-main" data-nowo-ui-focus-area="wiki">
+            {% embed '@NowoUiKitBundle/partials/_side_panel_container.html.twig' with {open: true} %}
+                {% block nowo_ui_side_panel_main %}
+                    <article class="{{ nowo_ui_class('card') }}" data-testid="article">
+                        <div class="{{ nowo_ui_class('card_header') }} kit-focus-toolbar">
+                            <h1 class="{{ nowo_ui_class('card_title') }}">Deploying the API</h1>
+                            <div class="kit-focus-toolbar__actions">
+                                {{ include(nowo_ui_partial('focus_mode_toggle'), {area: 'wiki', show_label: true, attr: {'data-testid': 'focus-toggle'}}) }}
+                                {{ include(nowo_ui_partial('focus_mode_toggle'), {area: 'wiki', level: 'fullscreen', attr: {'data-testid': 'fullscreen-toggle'}}) }}
+                                <button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-nowo-ui-dialog-open="kit-focus-dialog" data-testid="open-dialog">Page info</button>
+                            </div>
+                        </div>
+                        <div class="{{ nowo_ui_class('card_body') }}">
+                            <p>Focus mode hides the shell around the page: the navigation, the top bar (but the search field and the
+                                timer chip, which this host keeps), the comments panel, the footer and the messages dock.
+                                Press <kbd>F</kbd> to toggle it, <kbd>Esc</kbd> to leave it.</p>
+                            <label for="kit-focus-editor">Notes</label>
+                            {# twig-005-ignore: demo editor, never submitted #}
+                            <textarea id="kit-focus-editor" class="form-control" rows="4" data-testid="editor">Typing F here never toggles focus mode.</textarea>
+                            {% for i in 1..6 %}<p>Step {{ i }}: run the migration, then roll the workers one by one and watch the error rate.</p>{% endfor %}
+                        </div>
+                    </article>
+                {% endblock %}
+                {% block nowo_ui_side_panel_panel %}
+                    {% embed '@NowoUiKitBundle/partials/_side_panel.html.twig' with {id: 'kit-focus-comments', title: 'Comments', open: true, attr: {'data-testid': 'comments'}} only %}
+                        {% block nowo_ui_side_panel_body %}<p>Two open threads.</p>{% endblock %}
+                    {% endembed %}
+                {% endblock %}
+            {% endembed %}
+        </main>
+    {{ include(nowo_ui_partial('app_shell_close'), {footer_copyright: '© Acme', footer_links: [{label: 'Privacy', href: path('kit_focus_mode')}]}) }}
+    <div class="kit-focus-dock" data-nowo-ui-focus-region="dock" data-testid="dock" role="complementary" aria-label="Messages">Messages (2)</div>
+    {{ include(nowo_ui_partial('dialog'), {id: 'kit-focus-dialog', title: 'Page info', body: '<p>Escape closes this dialog first; focus mode stays on.</p>'}) }}
+{% endblock %}
+
+{% block nowo_ui_scripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/nowo-ui-shell.js', 'nowo_ui_kit') }}" defer></script>
+    <script src="{{ asset('js/nowo-ui-side-panel.js', 'nowo_ui_kit') }}" defer></script>
+    <script src="{{ asset('js/focus-mode-demo.js') }}" defer></script>
+{% endblock %}

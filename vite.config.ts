@@ -39,6 +39,7 @@ type Entry =
   | 'rail'
   | 'layout-state'
   | 'context-menu'
+  | 'focus-mode'
   | 'demo-peers'
   | 'demo-page-actions';
 
@@ -540,6 +541,22 @@ const configs: Record<Entry, { build: object }> = {
         output: {
           format: 'iife' as const,
           entryFileNames: 'js/nowo-ui-context-menu.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  // 2.55: shell focus mode (theme.focus_mode; added to the scripts partial when enabled).
+  'focus-mode': {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-focus-mode.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-focus-mode.js',
         },
       },
       minify: true,

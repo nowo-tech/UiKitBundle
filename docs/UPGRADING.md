@@ -155,6 +155,32 @@
 
 ## Unreleased
 
+Nothing to change: the shell focus mode is off by default (`nowo_ui_kit.theme.focus_mode.enabled: false`), and while it
+is off the shell, the `scripts` partial and the new `focus_mode_toggle` / `focus_mode_bar` partials render the 2.54
+markup. To adopt it ([USAGE "Shell focus mode"](USAGE.md#shell-focus-mode-255)):
+
+1. Enable it in the host config, with the regions your shell has and what to keep:
+
+   ```yaml
+   nowo_ui_kit:
+       theme:
+           focus_mode:
+               enabled: true
+               keep: [breadcrumb_min, search, timer_chip]
+   ```
+
+2. Mark host parts: `data-nowo-ui-focus-region="dock"` on a messages dock or chat launcher (also outside the shell),
+   `data-nowo-ui-focus-keep="search"` on the global search field (so Ctrl+K still finds it), `data-nowo-ui-focus-keep="timer_chip"`
+   on a timer chip. Pass `focus_crumbs` (or `focus_header`) to `app_shell_open` for the one-line breadcrumb.
+3. A host with its own `scripts` list loads `focus-mode` automatically once enabled; a host shell of its own (not
+   `app_shell_open`) prints the root attributes and includes the `focus_mode_bar` partial itself (USAGE).
+4. Bundles add `{{ include(nowo_ui_partial('focus_mode_toggle'), {area: 'wiki'}) }}` to their toolbar; nothing shows
+   until the host enables focus mode.
+
+Check for clashes: a host `focus_mode_toggle` / `focus_mode_bar` partial override, translation keys `focus_mode.*` in the
+`NowoUiKitBundle` domain, a `theme.focus_mode` key in a custom config loader, or host CSS / JS using `data-focus-mode` on
+the shell root or the `F` key on the same pages.
+
 ## To 2.54.0
 
 From **2.53.0**:

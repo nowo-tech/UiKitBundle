@@ -52,6 +52,7 @@
 - [Side panel and drawer (2.25)](#side-panel-and-drawer-225)
   - [Drawer breakpoint and remembered state (2.48)](#drawer-breakpoint-and-remembered-state-248)
 - [Collapsible column rail (2.48)](#collapsible-column-rail-248)
+- [Shell focus mode (2.55)](#shell-focus-mode-255)
 - [Reading column and wide content (2.48)](#reading-column-and-wide-content-248)
 - [Remote form dialog (2.28)](#remote-form-dialog-228)
 - [Small element options (2.34)](#small-element-options-234)
@@ -2418,6 +2419,133 @@ and `script_names: nowo_ui_script_names()|merge(['rail'])`.
   and the attributes the partial owns (`href`, `role`, `type`, `aria-controls`, `aria-expanded`, `aria-keyshortcuts`,
   `data-nowo-ui-rail-*`) are dropped from it, so they are never printed twice or changed.
 - **CSP:** delegated listeners, no inline handlers or styles.
+
+## Shell focus mode (2.55)
+
+A focus mode for the kit shell: the page's work area goes full width and the chrome around it leaves. Two levels:
+
+1. **Focus mode** — the shell root gets `data-focus-mode="on"`; the configured regions (sidebar, top bar, footer, side
+   panels, edge tabs, a messages dock…) are hidden and a small focus bar with an "Exit focus" button shows.
+2. **Fullscreen** (optional) — from inside focus mode, the browser's real fullscreen (Fullscreen API) on the shell:
+   `data-focus-mode="fullscreen"`.
+
+Turn it on once in the config ([CONFIGURATION](CONFIGURATION.md#shell-focus-mode-255)):
+
+```yaml
+nowo_ui_kit:
+    theme:
+        focus_mode:
+            enabled: true
+            keep: [breadcrumb_min, search, timer_chip]
+```
+
+With the kit shell (`app_shell_open` / `app_shell`) that is all the host does: the shell root gets the attributes, its
+main region starts with the focus bar, and the `scripts` partial loads `js/nowo-ui-focus-mode.js`. Pages without a toggle
+are unchanged (the bar is hidden, `F` does nothing there).
+
+### How a bundle adds its toggle
+
+WikiBundle, TaskBoard or any page puts the `focus_mode_toggle` partial in its own toolbar, unconditionally: it renders
+nothing while the host has not enabled focus mode.
+
+```twig
+{{ include(nowo_ui_partial('focus_mode_toggle'), {area: 'wiki'}) }}
+{# optional: straight to fullscreen #}
+{{ include(nowo_ui_partial('focus_mode_toggle'), {area: 'wiki', level: 'fullscreen'}) }}
+```
+
+Options: `area` (the key the state is remembered under), `level` (`toggle` | `fullscreen`), `label` (`Label` or string;
+default "Focus mode" / "Full screen", `focus_mode.*` keys in 7 locales), `show_label` (show the name next to the icon),
+`attr` (checked by `nowo_ui_safe_attrs()`; the attributes the partial owns are dropped), `bundle`. The button is a toggle
+button (`aria-pressed`), with `aria-keyshortcuts` and a title naming the shortcut. Any element works as a toggle too:
+
+| Attribute | Effect |
+| --- | --- |
+| `data-nowo-ui-focus-mode` (or `="toggle"`) | Level 1 on / off; `aria-pressed` follows |
+| `data-nowo-ui-focus-mode="fullscreen"` | Fullscreen (entering level 1 first) / back to level 1; hidden where the browser or the config has no fullscreen |
+| `data-nowo-ui-focus-mode="exit"` | Leaves focus mode (and fullscreen) — the focus bar's button |
+| `data-nowo-ui-focus-area="<key>"` | On the toggle, an ancestor or anywhere on the page: the state is remembered per area (`wiki`, `tasks`) |
+| `data-nowo-ui-focus-region="<name>"` | Host element hidden with the region `<name>` (e.g. `dock` on a messages dock, even outside the shell) |
+| `data-nowo-ui-focus-keep="<name>"` | Host element kept visible inside a hidden region when `<name>` is in `keep` (e.g. `search`) |
+
+### Regions and the keep list
+
+| Region | Hidden elements |
+| --- | --- |
+| `sidebar` | The aside (`[data-nowo-ui-aside]`) and its phone backdrop; the aside column collapses |
+| `header` | The shell's top bar (its `<header>`), except kept elements |
+| `footer` | The shell's `<footer>` |
+| `side_panels` | Side panels (2.25), their toggles and backdrops |
+| `edge_tabs` | The page-edge tabs launcher (2.41) |
+| `dock` | Only marked elements (`data-nowo-ui-focus-region="dock"`): a messages dock, a chat launcher |
+
+Every region, built-in or not, also takes the elements marked `data-nowo-ui-focus-region="<name>"`. Hidden elements get
+`data-nowo-ui-focus-hidden` and `inert` (the kit CSS adds `display: none`), so they leave the tab order and the
+accessibility tree; an element that was already `inert` stays inert after focus mode. A region that holds a kept element is
+hidden branch by branch around it: with `keep: [search]` the top bar shrinks to the search field. `breadcrumb_min` is
+built in: the focus bar shows a one-line breadcrumb (the `header_crumbs` partial) with the exit button at its end;
+`app_shell_open` takes its source in `focus_crumbs` (crumbs), `focus_header` (a `PageHeader`) or `focus_home_href`, else
+BreadcrumbKit's trail.
+
+`app_shell_open` options: `focus_mode: false` leaves a page out, `focus_area` prints the area on the shell root,
+`focus_crumbs` / `focus_header` / `focus_home_href` feed the bar's breadcrumb. A host shell of its own prints the root
+attributes itself (`data-nowo-ui-shell data-nowo-ui-focus-regions="sidebar header footer" data-nowo-ui-focus-keep-list="search"
+data-nowo-ui-focus-shortcut="F"`; `data-nowo-ui-focus-fullscreen="false"` without level 2) and includes the
+`focus_mode_bar` partial inside the shell, outside the hidden regions.
+
+### Keyboard
+
+- **`F`** (config `shortcut`; `null` disables it) toggles level 1 on pages with a toggle, never while an input,
+  textarea, select or contenteditable is focused, while a link, button or other interactive control (`summary`, tabs,
+  checkboxes, menu items, options…) has the focus, with a modifier pressed, on key repeat, or while a dialog, menu,
+  listbox, popover or open popup owns the keys. A shortcut with Ctrl / Alt / Meta (`Alt+Shift+F`) also works while typing.
+- **WCAG 2.1.4 (Character Key Shortcuts):** `F` is a single-character shortcut, the default the owner asked for. It only
+  fires where it cannot be typed by mistake (see above), but WCAG asks that users can turn such a shortcut off or remap
+  it: a host whose users need that sets `shortcut: 'Alt+Shift+F'` (a modifier) or `shortcut: null`, or exposes the
+  choice in its user settings and passes it per page through `data-nowo-ui-focus-shortcut` on the shell root.
+- **`Escape`** leaves fullscreen first, then focus mode — only when nothing else handles it: an open dialog, menu,
+  popover, combobox list or phone drawer keeps its Escape, an event already handled (`defaultPrevented`) is ignored, and
+  a focused text field (input, textarea, contenteditable editor) keeps its Escape (clearing a search, leaving an editor's
+  mode): move the focus out of it, or use the exit button. In fullscreen the browser usually takes Escape itself; the
+  state follows it back to level 1.
+- **Ctrl+K** (and every Ctrl / Cmd combination) is never handled: keep the global search with `keep: [search]` and mark it
+  `data-nowo-ui-focus-keep="search"`, so a host shortcut that focuses it still finds it (an inert field cannot be focused).
+
+### Memory, fullscreen, accessibility
+
+- **Per area:** `localStorage` `nowo-ui-focus:<area>` = `on` while focus mode is on, removed when it is left; restored on
+  load and after `turbo:load` (level 1: browsers only allow fullscreen from a user gesture). Every access is in try /
+  catch: without storage (private mode, blocked site data) it still works, nothing is remembered. Without an area nothing
+  is remembered either. A host that stores the state per user can render `data-focus-mode="on"` on the shell root; the
+  script then hides the regions when it starts.
+- **Fullscreen:** `requestFullscreen` on the shell root after feature detection (`document.fullscreenEnabled`). Unsupported,
+  refused or throwing: level 1 stays, without an error, and the live region says so. Leaving fullscreen through the
+  browser (Escape, F11, the API) goes back to level 1. Only the shell and the top layer (native dialogs, popovers) are
+  visible in fullscreen: toasts or a dock outside the shell are not.
+- **Focus:** stays where it was; when focus mode hides the focused element (the toggle in the top bar), the exit button
+  gets it, and leaving from the focus bar returns it to the toggle that entered.
+- **Announcements:** each change is read from a polite live region (`[data-nowo-ui-focus-status]`, printed by the focus
+  bar with the translated `focus_mode.announce_*` texts; created by the script when a host shell has none).
+- **Host `inert`:** focus mode removes on exit only the `inert` it added. An element that was inert before stays inert;
+  `inert` the host writes on a hidden element during focus mode (a modal library making the page inert) becomes the
+  host's and stays after exit; `inert` the host removes from a hidden element stays until exit (the element is hidden),
+  then is gone.
+- **Loaded twice:** a second copy of the script (a Turbo body script, two bundles printing it) only assigns the API;
+  the listeners and the state belong to the first copy (`Symbol.for('nowo-ui.focus-mode.bound')` on `window`, which
+  re-applies the state on `turbo:load`), the `inert` watcher is one per page, and a click another handler already took
+  (`defaultPrevented`) toggles nothing.
+- **Motion / CSP:** no animation of its own; delegated listeners, no inline handlers, styles or scripts; kit tokens only.
+
+### Events and API
+
+- `nowo-ui:focus-mode:change` (bubbling, on the shell) `{ level: 'off' | 'on' | 'fullscreen', previous, area, source }`,
+  `source` = `toggle` | `shortcut` | `escape` | `fullscreenchange` | `restore` | `api`.
+- `window.NowoUiFocusMode.enter()` / `exit()` / `toggle()` / `fullscreen()` / `level()`.
+- State hooks for CSS: `[data-focus-mode]` on the shell root (`on` | `fullscreen`), mirrored as
+  `<html data-nowo-ui-focus-state="on|fullscreen">` for host parts outside the shell.
+
+Slots: `focus_mode_toggle`, `focus_bar`, `focus_bar_exit`, `focus_bar_fullscreen`. Demo: `/kit/focus-mode` in
+`demo/symfony8`.
 
 ## Reading column and wide content (2.48)
 

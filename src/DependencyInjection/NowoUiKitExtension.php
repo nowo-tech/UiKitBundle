@@ -139,6 +139,8 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
                 'nowo_ui_kit_release_check' => $releaseCheck,
                 'nowo_ui_kit_shell' => $config['shell'],
                 'nowo_ui_kit_auth_panel' => $config['auth_panel'],
+                // 2.55: shell focus mode (theme.focus_mode): the shell attributes, the focus bar and the toggle partial.
+                'nowo_ui_kit_focus_mode' => $config['theme']['focus_mode'],
             ],
         ];
         // 2.15: the date-range field's blocks (only `nowo_ui_date_range_*`) in every form, whatever the host theme.

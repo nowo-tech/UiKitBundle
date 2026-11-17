@@ -1,0 +1,38 @@
+/* UiKit 2.55 demo (/kit/focus-mode): the host parts of the page — a timer chip, a messages dock — with kit tokens. */
+.kit-focus-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border: 1px solid var(--nowo-ui-border);
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.kit-focus-search {
+  max-width: 14rem;
+}
+
+.kit-focus-dock {
+  position: fixed;
+  inset-block-end: 1rem;
+  inset-inline-end: 1rem;
+  z-index: 35;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--nowo-ui-border);
+  border-radius: var(--nowo-ui-radius);
+  background: var(--nowo-ui-surface);
+}
+
+.kit-focus-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.kit-focus-toolbar__actions {
+  display: flex;
+  gap: 0.375rem;
+}
