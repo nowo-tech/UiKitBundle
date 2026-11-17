@@ -1,0 +1,41 @@
+/* UiKit demo: layout of the context menu page (no inline styles: the page forbids them). */
+.kit-ctx-demo {
+  max-width: 56rem;
+}
+
+.kit-ctx-demo tr[tabindex]:focus-visible,
+.kit-ctx-card:focus-visible {
+  outline: 2px solid var(--nowo-ui-primary);
+  outline-offset: -2px;
+}
+
+.kit-ctx-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-block: 1rem;
+}
+
+.kit-ctx-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  min-width: 16rem;
+  padding: 1rem;
+  border: 1px solid var(--nowo-ui-border);
+  border-radius: var(--nowo-ui-radius);
+  background: var(--nowo-ui-surface);
+}
+
+/* The host's own nested list (submenu) inside its <details> kebab: indented under its label. */
+.kit-ctx-sub {
+  margin: 0;
+  padding-inline-start: 1rem;
+  list-style: none;
+}
+
+/* Room below the cards, so that a swipe on a row can scroll the page (touch e2e). */
+.kit-ctx-spacer {
+  min-height: 120vh;
+}

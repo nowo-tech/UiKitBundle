@@ -37,23 +37,29 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
       testMatch: /.*\.spec\.ts/,
-      testIgnore: /screenshots\.spec\.ts|sortable-touch\.spec\.ts|mobile-mux\.spec\.ts/,
+      testIgnore: /screenshots\.spec\.ts|sortable-touch\.spec\.ts|mobile-mux\.spec\.ts|context-menu-touch\.spec\.ts/,
     },
     // UiKit sortable: the other engines, and touch input in Chromium (make test-e2e-sortable). 2.53: combobox (make test-e2e-combobox).
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
-      testMatch: /(sortable|emoji-picker|combobox|show-more|dialog-back|motion|table-cards|page-actions-focus)\.spec\.ts/,
+      testMatch: /(sortable|emoji-picker|combobox|show-more|dialog-back|motion|table-cards|page-actions-focus|context-menu)\.spec\.ts/,
     },
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
-      testMatch: /(sortable|emoji-picker|combobox|show-more|dialog-back|motion|table-cards|image-crop|page-actions-focus)\.spec\.ts/,
+      testMatch: /(sortable|emoji-picker|combobox|show-more|dialog-back|motion|table-cards|image-crop|page-actions-focus|context-menu)\.spec\.ts/,
     },
     {
       name: 'chromium-touch',
       use: { ...devices['Pixel 7'] },
       testMatch: /sortable-touch\.spec\.ts/,
+    },
+    // 2.54 context menus: long press with touch input in Chromium (pointer: coarse; make test-e2e-context-menu).
+    {
+      name: 'context-menu-touch',
+      use: { ...devices['Pixel 7'] },
+      testMatch: /context-menu-touch\.spec\.ts/,
     },
     // 2.41 phone mode (Beacon mobile UX audit): 390 × 844, touch, Chromium and WebKit (make test-e2e-mobile).
     // 2.43: the image crop's touch tests too (make test-e2e-image-crop).
