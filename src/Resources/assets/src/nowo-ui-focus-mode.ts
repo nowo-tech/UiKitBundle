@@ -1,5 +1,5 @@
 /**
- * Shell focus mode (2.54, `js/nowo-ui-focus-mode.js`; the `scripts` partial adds it when
+ * Shell focus mode (2.55, `js/nowo-ui-focus-mode.js`; the `scripts` partial adds it when
  * `nowo_ui_kit.theme.focus_mode.enabled` is true). Two levels on the `[data-nowo-ui-shell]` root:
  *   1. `data-focus-mode="on"`: the configured shell regions (sidebar, header, footer, side panels, edge tabs, a host's
  *      dock…) get `inert` + `data-nowo-ui-focus-hidden` (display: none in the kit CSS), the work area goes full width
@@ -12,9 +12,11 @@
  *     hidden where the browser or the config has no fullscreen)
  *   `[data-nowo-ui-focus-mode="exit"]`: leaves focus mode (and fullscreen)
  * Keyboard: the shell shortcut (`F` by default; none with `data-nowo-ui-focus-shortcut="none"`) toggles level 1 when the
- * page has a toggle, nothing typed is focused, no modifier is pressed and no dialog / menu is open. Escape leaves
- * fullscreen first, then focus mode, only when nothing else owns it (see overlayOwnsKeys). Ctrl / Cmd combinations
- * (Ctrl+K search…) are never touched.
+ * page has a toggle, neither a text field nor a link / button / other control is focused, no modifier is pressed and no
+ * dialog / menu is open. Escape leaves fullscreen first, then focus mode, only when nothing else owns it (see
+ * overlayOwnsKeys) and no text field is focused. Ctrl / Cmd combinations (Ctrl+K search…) are never touched.
+ * A second copy of this script only re-applies the state and the API (window flag Symbol.for('nowo-ui.focus-mode.bound')).
+ * Hidden elements: `inert` written by the host during focus mode is the host's (kept on exit).
  * Memory: per area (`data-nowo-ui-focus-area` on the toggle, an ancestor, or anywhere on the page) in localStorage
  * `nowo-ui-focus:<area>` = `on`, restored on load (level 1: browsers only allow fullscreen from a user gesture). Every
  * storage access is in try / catch: without storage nothing is remembered.
@@ -35,6 +37,7 @@ import {
   HTML_STATE_ATTR,
   hideRegions,
   isEnabled,
+  isInteractive,
   isTyping,
   levelOf,
   MESSAGES,
@@ -244,7 +247,8 @@ function onClick(event: MouseEvent): void {
   const target = event.target;
   if (!(target instanceof Element)) return;
   const toggle = target.closest<HTMLElement>(TOGGLE);
-  if (!toggle) return;
+  // Handled already (another copy of this script, a host handler): never toggle twice (audit SK-M2).
+  if (!toggle || event.defaultPrevented) return;
   const shell = shellFor(toggle);
   if (!shell) return;
   // A modified or non-primary click on a link keeps the browser's behaviour (new tab / window).
@@ -283,7 +287,8 @@ function onKeydown(event: KeyboardEvent): void {
   const level = levelOf(shell);
 
   if (event.key === 'Escape' || event.key === 'Esc') {
-    if (level === 'off' || event.ctrlKey || event.altKey || event.metaKey || event.shiftKey || overlayOwnsKeys(event.target)) return;
+    // A text field keeps its Escape (clearing a search, leaving an editor's mode; audit SK-L3).
+    if (level === 'off' || event.ctrlKey || event.altKey || event.metaKey || event.shiftKey || isTyping(event.target) || isTyping(document.activeElement) || overlayOwnsKeys(event.target)) return;
     event.preventDefault();
     if (level === 'fullscreen' || document.fullscreenElement === shell) {
       leaveFullscreen(shell);
@@ -296,7 +301,9 @@ function onKeydown(event: KeyboardEvent): void {
   const shortcut = parseShortcut(shortcutOf(shell));
   if (!shortcut || event.repeat || !matchesShortcut(event, shortcut) || !pageHasToggle()) return;
   const plain = !shortcut.ctrl && !shortcut.alt && !shortcut.meta;
-  if ((plain && (isTyping(event.target) || isTyping(document.activeElement))) || overlayOwnsKeys(event.target)) return;
+  // A single-character shortcut (WCAG 2.1.4) never fires while typing or while a link, button or other control has the
+  // focus: there the key belongs to the control (audit I6).
+  if ((plain && (isTyping(event.target) || isTyping(document.activeElement) || isInteractive(event.target) || isInteractive(document.activeElement))) || overlayOwnsKeys(event.target)) return;
   event.preventDefault();
   if (level === 'off') {
     enter(shell, 'shortcut', firstToggle());
@@ -310,8 +317,12 @@ function onKeydown(event: KeyboardEvent): void {
  * gets its regions hidden; otherwise a remembered area restores level 1 quietly (no announcement, no focus move).
  */
 export function start(): void {
-  document.querySelectorAll<HTMLElement>(SHELL).forEach((shell) => {
-    if (!isEnabled(shell)) return;
+  const shells = [...document.querySelectorAll<HTMLElement>(SHELL)].filter((shell) => isEnabled(shell));
+  // A page without a focus-mode shell (a Turbo visit away from one) keeps no stale state (audit I7).
+  if (shells.length === 0) document.documentElement.removeAttribute(HTML_STATE_ATTR);
+  shells.forEach((shell) => {
+    // The live region exists before the first change, so the first message is read (audit I8).
+    statusRegion(shell);
     const level = levelOf(shell);
     if (level !== 'off') {
       if (level === 'fullscreen' && document.fullscreenElement !== shell) shell.setAttribute(STATE_ATTR, 'on');
@@ -356,13 +367,15 @@ export const api = {
   },
 };
 
-let bound = false;
+/** Set on window by the first copy of this script: a second copy (a Turbo body script, two bundles) binds nothing. */
+export const BOUND = Symbol.for('nowo-ui.focus-mode.bound');
 
 export function bindNowoUiFocusMode(): void {
-  (window as unknown as { NowoUiFocusMode: typeof api }).NowoUiFocusMode = api;
+  const host = window as unknown as { NowoUiFocusMode: typeof api; [BOUND]?: true };
+  host.NowoUiFocusMode = api;
   start();
-  if (bound) return;
-  bound = true;
+  if (host[BOUND]) return;
+  host[BOUND] = true;
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
   document.addEventListener('click', onClick);
   document.addEventListener('keydown', onKeydown);

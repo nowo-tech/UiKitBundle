@@ -54,7 +54,7 @@ function fullscreen(enabled: boolean, request?: (this: HTMLElement) => Promise<v
   return { exit, setElement: (value) => (current = value) };
 }
 
-describe('nowo-ui-focus-mode (2.54)', () => {
+describe('nowo-ui-focus-mode (2.55)', () => {
   let events: Detail[];
   const listener = (e: Event): void => {
     events.push((e as CustomEvent<Detail>).detail);
@@ -148,7 +148,8 @@ describe('nowo-ui-focus-mode (2.54)', () => {
     pressF();
     expect(mod.api.level()).toBe('off');
 
-    for (const id of ['editor', 'ce', 'sel', 'search']) {
+    // Text fields and (I6, WCAG 2.1.4) links, buttons and other controls keep the plain key.
+    for (const id of ['editor', 'ce', 'sel', 'search', 'toggle', 'link-toggle', 'nav']) {
       el(id).focus();
       expect(pressF(el(id)).defaultPrevented, id).toBe(false);
     }
@@ -225,11 +226,18 @@ describe('nowo-ui-focus-mode (2.54)', () => {
     el('main').removeEventListener('keydown', stop);
     expect(mod.api.level()).toBe('on');
 
-    // From a text field (the wiki editor) Escape leaves focus mode and the caret stays.
-    el('editor').focus();
-    expect(key(el('editor'), 'Escape').defaultPrevented).toBe(true);
+    // A text field keeps its Escape (SK-L3): the editor, the kept search field.
+    for (const id of ['editor', 'search', 'ce']) {
+      el(id).focus();
+      expect(key(el(id), 'Escape').defaultPrevented, id).toBe(false);
+    }
+    expect(mod.api.level()).toBe('on');
+
+    // From a button (or nothing focused) Escape leaves focus mode and the focus stays.
+    el('toggle').focus();
+    expect(key(el('toggle'), 'Escape').defaultPrevented).toBe(true);
     expect(mod.api.level()).toBe('off');
-    expect(document.activeElement).toBe(el('editor'));
+    expect(document.activeElement).toBe(el('toggle'));
     expect(events[events.length - 1]?.source).toBe('escape');
   });
 
@@ -413,7 +421,7 @@ describe('nowo-ui-focus-mode (2.54)', () => {
   });
 });
 
-describe('nowo-ui-focus-mode-core (2.54)', () => {
+describe('nowo-ui-focus-mode-core (2.55)', () => {
   afterEach(() => {
     document.body.innerHTML = '';
   });
@@ -466,5 +474,69 @@ describe('nowo-ui-focus-mode-core (2.54)', () => {
     expect(el('wrap').hasAttribute('data-nowo-ui-focus-partial')).toBe(false);
     expect(core.regionElements(el('shell'), 'nothing')).toEqual([]);
     expect(core.regionElements(el('shell'), 'constructor')).toEqual([]);
+  });
+});
+
+describe('nowo-ui-focus-mode audit SK fixes', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    document.body.innerHTML = MARKUP;
+    fullscreen(false);
+    mod.bindNowoUiFocusMode();
+  });
+
+  afterEach(() => {
+    if (document.getElementById('shell')) mod.exit(el('shell'));
+    document.body.innerHTML = '';
+    vi.restoreAllMocks();
+  });
+
+  it('SK-M2: a second copy of the script binds nothing more, and the toggle still enters once', async () => {
+    vi.resetModules();
+    const second = await import('./nowo-ui-focus-mode');
+    expect(second).not.toBe(mod);
+    expect((window as unknown as Record<symbol, unknown>)[Symbol.for('nowo-ui.focus-mode.bound')]).toBe(true);
+    expect((window as unknown as { NowoUiFocusMode: unknown }).NowoUiFocusMode).toBe(second.api);
+
+    click(el('toggle'));
+    expect(mod.api.level()).toBe('on');
+    click(el('toggle'));
+    expect(mod.api.level()).toBe('off');
+
+    // A click another handler already took (defaultPrevented) toggles nothing.
+    const stop = (e: Event): void => e.preventDefault();
+    el('area').addEventListener('click', stop);
+    click(el('toggle'));
+    el('area').removeEventListener('click', stop);
+    expect(mod.api.level()).toBe('off');
+  });
+
+  it('SK-L4: inert written by the host during focus mode is the host\'s after exit', async () => {
+    mod.api.enter();
+    el('aside').setAttribute('inert', ''); // a modal library making the page inert
+    el('ftr').removeAttribute('inert'); // the host wants the footer usable afterwards
+    await Promise.resolve();
+    expect(el('aside').getAttribute('data-nowo-ui-focus-hidden')).toBe('');
+    expect(el('ftr').hasAttribute('inert')).toBe(true);
+
+    el('dock').setAttribute('inert', ''); // still pending when focus mode ends
+    mod.api.exit();
+    expect(el('aside').hasAttribute('inert')).toBe(true);
+    expect(el('dock').hasAttribute('inert')).toBe(true);
+    expect(el('ftr').hasAttribute('inert')).toBe(false);
+    expect(el('nav').closest('[inert]')).toBe(el('aside'));
+  });
+
+  it('I7 / I8: no stale <html> state without a focus-mode shell; the live region exists before the first change', () => {
+    el('status').remove();
+    mod.start();
+    const region = el('shell').querySelector('[data-nowo-ui-focus-status]');
+    expect(region?.textContent).toBe('');
+
+    mod.api.enter();
+    expect(document.documentElement.getAttribute('data-nowo-ui-focus-state')).toBe('on');
+    document.body.innerHTML = '<main>another page</main>';
+    document.dispatchEvent(new Event('turbo:load'));
+    expect(document.documentElement.hasAttribute('data-nowo-ui-focus-state')).toBe(false);
   });
 });

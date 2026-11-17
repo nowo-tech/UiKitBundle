@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 /**
- * UiKit 2.54 shell focus mode on /kit/focus-mode (theme.focus_mode enabled with keep [breadcrumb_min, search,
+ * UiKit 2.55 shell focus mode on /kit/focus-mode (theme.focus_mode enabled with keep [breadcrumb_min, search,
  * timer_chip]): the page toggle and the focus bar, hidden regions (inert, out of the tab order) and kept ones, the
  * full-width work area, F / Escape / Ctrl+K, dialogs keeping Escape, the per-area memory (also without storage),
  * fullscreen and its browser-side exit, the live region, axe, and no CSP violation (the page forbids inline style
@@ -18,7 +18,7 @@ async function watchCsp(page: Page): Promise<string[]> {
 
 const state = (page: Page): Promise<string | null> => page.getByTestId('shell').getAttribute('data-focus-mode');
 
-test.describe('shell focus mode (2.54)', () => {
+test.describe('shell focus mode (2.55)', () => {
   test.use({ reducedMotion: 'reduce' });
 
   test.beforeEach(async ({ page }) => {
@@ -96,9 +96,19 @@ test.describe('shell focus mode (2.54)', () => {
 
     await page.keyboard.press('Control+k');
     await expect(page.getByTestId('search')).toBeFocused();
+    // The search field keeps its Escape (the browser clears it); focus mode stays.
+    await page.keyboard.type('deploy');
+    await page.keyboard.press('Escape');
+    expect(await state(page)).toBe('on');
+    // Out of the field, Escape leaves focus mode.
+    await page.getByTestId('article').click({ position: { x: 5, y: 60 } });
     await page.keyboard.press('Escape');
     expect(await state(page)).toBeNull();
-    await expect(page.getByTestId('search')).toBeFocused();
+
+    // F on a focused link or button belongs to the control (WCAG 2.1.4).
+    await page.getByTestId('header-link').focus();
+    await page.keyboard.press('f');
+    expect(await state(page)).toBeNull();
   });
 
   test('remembered per area across reloads, and fine without storage', async ({ page, context }) => {

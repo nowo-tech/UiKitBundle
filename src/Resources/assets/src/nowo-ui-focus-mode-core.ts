@@ -1,5 +1,5 @@
 /**
- * Shell focus mode (2.54): side-effect-free helpers of `nowo-ui-focus-mode.ts` — the configured lists on the shell root,
+ * Shell focus mode (2.55): side-effect-free helpers of `nowo-ui-focus-mode.ts` — the configured lists on the shell root,
  * the shell regions a list names, hiding and restoring them (with the `keep` list), the per-area memory and the
  * keyboard rules. No listener is bound here, so tests and other entries can import it freely.
  *
@@ -113,6 +113,35 @@ function hideBranches(region: Element, kept: Element[]): void {
   }
 }
 
+/**
+ * Who owns `inert` while an element is hidden (audit SK-L4). `data-nowo-ui-focus-hidden="inert"` = focus mode added it
+ * and removes it on exit; `""` = it belongs to the page. A host that writes `inert` on a hidden element during focus mode
+ * (a modal library making the page inert) takes it over: it stays after exit. A host that removes it gets that on exit,
+ * while the element stays inert as long as it is hidden. Only `inert` writes made after hiding are watched.
+ */
+let inertWatcher: MutationObserver | null = null;
+
+function onInertRecords(records: MutationRecord[]): void {
+  for (const record of records) {
+    const el = record.target;
+    if (!(el instanceof Element) || !el.hasAttribute(HIDDEN_ATTR)) continue;
+    if (el.hasAttribute('inert')) {
+      el.setAttribute(HIDDEN_ATTR, '');
+    } else {
+      // Removed by the host: keep the hidden element inert until exit, which then removes it (the host's wish).
+      el.setAttribute(HIDDEN_ATTR, 'inert');
+      el.setAttribute('inert', '');
+      inertWatcher?.takeRecords();
+    }
+  }
+}
+
+function watchInert(): void {
+  if (typeof MutationObserver !== 'function') return;
+  inertWatcher ??= new MutationObserver(onInertRecords);
+  document.querySelectorAll(`[${HIDDEN_ATTR}]`).forEach((el) => inertWatcher?.observe(el, { attributes: true, attributeFilter: ['inert'] }));
+}
+
 /** Hides the shell's regions; returns the hidden elements (whole regions and branches). */
 export function hideRegions(shell: HTMLElement): Element[] {
   const kept = keptElements(shell);
@@ -127,12 +156,19 @@ export function hideRegions(shell: HTMLElement): Element[] {
       }
     }
   }
+  // Our own writes above happened before observing, so they never reach the watcher.
+  if (inertWatcher) onInertRecords(inertWatcher.takeRecords());
+  watchInert();
 
   return [...document.querySelectorAll(`[${HIDDEN_ATTR}]`)];
 }
 
-/** Shows again everything focus mode hid (only the `inert` it added itself is removed). */
+/** Shows again everything focus mode hid (only the `inert` it still owns is removed). */
 export function restoreRegions(): void {
+  if (inertWatcher) {
+    onInertRecords(inertWatcher.takeRecords());
+    inertWatcher.disconnect();
+  }
   document.querySelectorAll(`[${HIDDEN_ATTR}]`).forEach((el) => {
     if (el.getAttribute(HIDDEN_ATTR) === 'inert') el.removeAttribute('inert');
     el.removeAttribute(HIDDEN_ATTR);
@@ -182,6 +218,13 @@ export function isTyping(el: EventTarget | null): boolean {
   if (el instanceof HTMLElement && el.isContentEditable) return true;
 
   return el.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"])') !== null;
+}
+
+const INTERACTIVE = 'a[href], button, summary, [role="button"], [role="link"], [role="tab"], [role="checkbox"], [role="radio"], [role="switch"], [role="menuitem"], [role="option"], [role="slider"], [role="treeitem"]';
+
+/** Whether the element is (inside) a link, button or other interactive control: a plain-key shortcut leaves it alone. */
+export function isInteractive(el: EventTarget | null): boolean {
+  return el instanceof Element && el.closest(INTERACTIVE) !== null;
 }
 
 const OVERLAY = 'dialog[open], [role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"], [aria-modal="true"], [popover], details[open]:is([data-nowo-ui-menu], .nowo-ui-kebab__details, .nowo-ui-user-menu__details)';
