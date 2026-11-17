@@ -133,6 +133,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed (demo)
+
+- Demo no longer loads Bootstrap, Bootstrap Icons or Tailwind from a CDN (REQ-DEMO-014 / UI-003; the whole demo is the host-theme exemption). Bootstrap 5.3.3 and Bootstrap Icons 1.11.3 are vendored in `demo/symfony8/public/third-party/`; the Tailwind demo serves a prebuilt `public/css/tailwind.css` (Tailwind CLI 3.4.17 pinned in its `package.json`, `make build-css`) instead of the Play CDN runtime JIT. Rendered pages are pixel-identical to the CDN version (35 pages, light and dark); demo screenshots refreshed. No change to `src/`.
+
 ### Documentation
 
 - Spec Kit baseline: `code-inventory.md` maps `Shell/SidebarStyle*.php` and `nowo-ui-focus-return.ts` (406 units, 2.53.0 line); `spec.md` gains FR-SIDEBARSTYLE-001 and FR-DIALOG-002 (REQ-SPECKIT-003).

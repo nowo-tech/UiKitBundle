@@ -10,7 +10,8 @@ import AxeBuilder from '@axe-core/playwright';
  */
 
 const SETTINGS = '/page-contract/default/settings/notifications';
-const BOOTSTRAP_CSS = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css';
+/** Bootstrap 5.3.3, vendored under public/third-party/ (no CDN). */
+const BOOTSTRAP_CSS = '/third-party/bootstrap/css/bootstrap.min.css';
 
 /** Dark sets data-theme and data-bs-theme together, like the UiKit theme boot / toggle (unless data-nowo-ui-bs-theme="off"). */
 type Mode = 'light' | 'dark';
@@ -60,7 +61,7 @@ const ratiosOf = (page: Page, selector: string): Promise<number[]> =>
 const open = async (page: Page, unlayeredBootstrap: boolean, mode: Mode): Promise<void> => {
   await page.goto(SETTINGS);
   if (unlayeredBootstrap) {
-    await page.addStyleTag({ url: BOOTSTRAP_CSS });
+    await page.addStyleTag({ url: new URL(BOOTSTRAP_CSS, page.url()).href });
   }
   await page.evaluate((m) => {
     document.documentElement.setAttribute('data-theme', m);

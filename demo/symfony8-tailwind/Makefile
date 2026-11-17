@@ -1,7 +1,7 @@
 # Makefile for Symfony 8.0 Demo (Ui Kit Bundle (Tailwind))
 # Run from this directory: make up, make install, etc.
 
-.PHONY: help up down build install shell logs test test-coverage cache-clear update-bundle ensure-up restart
+.PHONY: help up down build install shell logs test test-coverage cache-clear update-bundle ensure-up restart build-css
 
 help:
 	@echo "Symfony 8.0 Demo - Ui Kit Bundle (Tailwind)"
@@ -15,10 +15,11 @@ help:
 	@echo "  make test           Run tests"
 	@echo "  make test-coverage  Run tests with coverage"
 	@echo "  make cache-clear    Clear Symfony cache"
+	@echo "  make build-css      Rebuild public/css/tailwind.css (Tailwind 3.4 CLI, node container)"
 	@echo "  make update-bundle  Update nowo-tech/ui-kit-bundle and clear cache"
 	@echo ""
 
-up:
+up: public/css/tailwind.css
 	@if [ ! -f .env ]; then cp .env.example .env 2>/dev/null || true; fi
 	@$(call run-compose,up -d)
 	@echo "Waiting for container to be ready..."
@@ -68,6 +69,16 @@ update-bundle: ensure-up
 	@$(call run-compose,exec php php bin/console cache:clear --env=dev --no-warmup) || true
 	@echo "Bundle updated. Reload the page in the browser."
 
+
+# The demo serves a prebuilt stylesheet (no Play CDN runtime JIT): Tailwind CLI pinned in package.json, run in a throwaway node container.
+NODE_IMAGE ?= node:22-alpine
+build-css:
+	docker run --rm --user $$(id -u):$$(id -g) -e HOME=/tmp -v "$(CURDIR)/../..:/repo" -w /repo/demo/symfony8-tailwind $(NODE_IMAGE) \
+		sh -c 'npm install --no-fund --no-audit --no-package-lock --no-save >/dev/null && npx --no-install tailwindcss -c tailwind.config.js -i assets/tailwind.css -o public/css/tailwind.css --minify'
+	@echo "public/css/tailwind.css rebuilt (commit it)."
+
+public/css/tailwind.css:
+	@$(MAKE) build-css
 
 # REQ-MAKE-008: update-deps (REQ-MAKE-008)
 # Prefer Compose V2 plugin (GitHub Actions / modern Docker Desktop); fall back to docker-compose V1 (REQ-MAKE-010).

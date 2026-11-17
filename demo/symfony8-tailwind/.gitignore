@@ -27,3 +27,4 @@
 *.tgz
 *.rar
 *.7z
+/node_modules/

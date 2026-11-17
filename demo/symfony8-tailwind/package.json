@@ -1,0 +1,11 @@
+{
+  "name": "ui-kit-demo-symfony8-tailwind",
+  "private": true,
+  "description": "Builds the Tailwind stylesheet of the UiKit Tailwind demo (replaces the Play CDN runtime JIT).",
+  "scripts": {
+    "build:css": "tailwindcss -c tailwind.config.js -i assets/tailwind.css -o public/css/tailwind.css --minify"
+  },
+  "devDependencies": {
+    "tailwindcss": "3.4.17"
+  }
+}
