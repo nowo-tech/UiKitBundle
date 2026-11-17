@@ -23,7 +23,11 @@
             <tbody>
                 <tr tabindex="0" data-testid="row-1042">
                     <td>Invoice #1042 <a href="{{ path('kit_context_menu', {picked: 'link-1042'}) }}" data-testid="row-link">details</a></td>
-                    <td><label class="visually-hidden" for="note-1042">Note</label><input id="note-1042" type="text" value="Paid" data-testid="row-input"></td>
+                    <td>
+                        <label class="visually-hidden" for="note-1042">Note</label>
+                        {# twig-005-ignore: a nameless field outside any form, never submitted: it shows that a field keeps the browser's menu #}
+                        <input id="note-1042" type="text" value="Paid" data-testid="row-input">
+                    </td>
                     <td>
                         {{ include('@NowoUiKitBundle/partials/_kebab.html.twig', {id: 'kebab-1042', popover: true, context_menu: true, items: [
                             {label: 'Edit', href: path('kit_context_menu', {picked: 'edit-1042'})},
