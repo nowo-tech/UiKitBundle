@@ -8,6 +8,7 @@
 - [Display modes](#display-modes)
 - [Partial API](#partial-api)
 - [Confirm and POST](#confirm-and-post)
+- [Context menu (2.54)](#context-menu-254)
 - [Do / don't](#do--dont)
 - [Migration](#migration)
 
@@ -208,6 +209,13 @@ Feature `web_ui.row_actions_display` **MAY** mirror the kit key and pass `displa
 | `visible` / `disabled` | Optional gates |
 
 Macro `ui.action(kind, framework, variant=null)` only emits **classes**; prefer the partial for full controls.
+
+## Context menu (2.54)
+
+`context_menu: true` (default `theme.context_menus`) marks the row-actions root, in menu and button-cluster mode, so a
+right-click, the ContextMenu key, Shift+F10 or a long press on the table row around it opens the same actions as a context menu
+(runtime `context-menu`). The items forward their click to these actions: POST forms, confirm dialogs and modals work unchanged,
+and nothing the row actions do not show can appear. See [USAGE.md "Context menus"](USAGE.md#context-menus).
 
 ## Confirm and POST
 

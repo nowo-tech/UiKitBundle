@@ -10,10 +10,14 @@
     - popover (2.4, bool; default theme.popover_menus, false): <button popovertarget> + a native [popover] menu in the
       browser top layer (never clipped by table scrollers); nowo-ui-popover.js places it under the button. id: the
       menu id (default random).
+    - context_menu (2.54, bool; default theme.context_menus, false): the root carries data-nowo-ui-context-menu-source,
+      so a right-click, the ContextMenu key, Shift+F10 or a long press on the table row / ARIA row / UiKit card /
+      [data-nowo-ui-context-menu-scope] around the kebab opens the same items there (opt-in runtime `context-menu`).
 #}
 {% set label = label|default('action.more'|trans({}, 'NowoUiKitBundle')) %}
 {% set _t = nowo_ui_theme|default(null) %}
 {% set _popover = popover ?? (_t ? _t.popoverMenus() : false) %}
+{% set _ctx = context_menu ?? (_t and _t.contextMenus is defined ? _t.contextMenus() : false) %}
 {% set _items %}
             {% for item in items|default([]) %}
                 {% set is_current = item.current|default(false) %}
@@ -30,7 +34,7 @@
 {% endset %}
 {% if _popover %}
 {% set _menu_id = id|default(null) ?: 'nowo-ui-kebab-' ~ random() %}
-<div class="nowo-ui-kebab" data-nowo-ui-kebab data-nowo-ui-popover-menu>
+<div class="nowo-ui-kebab" data-nowo-ui-kebab data-nowo-ui-popover-menu{% if _ctx %} data-nowo-ui-context-menu-source data-nowo-ui-context-menu-label="{{ 'context_menu.label'|trans({}, 'NowoUiKitBundle') }}"{% endif %}>
     <button type="button" class="nowo-ui-kebab__summary" popovertarget="{{ _menu_id }}" aria-haspopup="menu" aria-expanded="false" aria-label="{{ label }}" data-nowo-ui-popover-trigger>
         <span class="nowo-ui-kebab__dots" aria-hidden="true">⋮</span>
     </button>
@@ -39,7 +43,7 @@
     </div>
 </div>
 {% else %}
-<div class="nowo-ui-kebab" data-nowo-ui-kebab>
+<div class="nowo-ui-kebab" data-nowo-ui-kebab{% if _ctx %} data-nowo-ui-context-menu-source data-nowo-ui-context-menu-label="{{ 'context_menu.label'|trans({}, 'NowoUiKitBundle') }}"{% endif %}>
     <details class="nowo-ui-kebab__details">
         <summary class="nowo-ui-kebab__summary" aria-label="{{ label }}">
             <span class="nowo-ui-kebab__dots" aria-hidden="true">⋮</span>

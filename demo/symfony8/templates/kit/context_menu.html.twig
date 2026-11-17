@@ -1,0 +1,110 @@
+{#
+  UiKit demo (2.54): context menus. Every row and card below already has a kebab or row actions; a right-click, the ContextMenu
+  key, Shift+F10 or a long press (touch) on it opens the SAME items at the pointer. Opt-in per element: `context_menu: true` on
+  the kit partials (theme.context_menus does it for every kebab), or data-nowo-ui-context-menu on a host element. The runtime is
+  opt-in too: js/nowo-ui-context-menu.js. Links, the text field and selected text keep the browser's menu, as does Shift / Ctrl.
+#}
+{% extends '@NowoUiKit/layout/document.html.twig' %}
+{% set nowo_ui_document_title = 'Context menus · UiKit' %}
+
+{% block nowo_ui_head %}
+    <meta http-equiv="Content-Security-Policy" content="style-src-attr 'none'; script-src-attr 'none'">
+{% endblock %}
+
+{% block nowo_ui_body %}
+    <main id="main-content" class="nowo-ui-content kit-ctx-demo" data-testid="context-menu-demo">
+        <h1>Context menus</h1>
+        <p>Right-click a row or a card, press the ContextMenu key or Shift+F10 on a focused row, or long-press it on a touch screen.</p>
+        {% if picked %}<p role="status" data-testid="picked">Picked: {{ picked }}</p>{% endif %}
+        {% if submitted %}<p role="status" data-testid="submitted">Submitted.</p>{% endif %}
+
+        <table class="table" data-testid="invoices">
+            <thead><tr><th>Invoice</th><th>Note</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
+            <tbody>
+                <tr tabindex="0" data-testid="row-1042">
+                    <td>Invoice #1042 <a href="{{ path('kit_context_menu', {picked: 'link-1042'}) }}" data-testid="row-link">details</a></td>
+                    <td>
+                        <label class="visually-hidden" for="note-1042">Note</label>
+                        {# twig-005-ignore: a nameless field outside any form, never submitted: it shows that a field keeps the browser's menu #}
+                        <input id="note-1042" type="text" value="Paid" data-testid="row-input">
+                    </td>
+                    <td>
+                        {{ include('@NowoUiKitBundle/partials/_kebab.html.twig', {id: 'kebab-1042', popover: true, context_menu: true, items: [
+                            {label: 'Edit', href: path('kit_context_menu', {picked: 'edit-1042'})},
+                            {label: 'Duplicate', href: path('kit_context_menu', {picked: 'duplicate-1042'})},
+                            {label: 'Download PDF', href: path('kit_context_menu', {picked: 'download-1042'})},
+                            {label: 'Delete', href: path('kit_context_menu', {picked: 'delete-1042'}), danger: true},
+                        ]}, with_context: false) }}
+                    </td>
+                </tr>
+                <tr tabindex="0" data-testid="row-1041">
+                    <td>Invoice #1041</td>
+                    <td>Disclosure kebab (no popover)</td>
+                    <td>
+                        {{ include('@NowoUiKitBundle/partials/_kebab.html.twig', {popover: false, context_menu: true, items: [
+                            {label: 'Edit', href: path('kit_context_menu', {picked: 'edit-1041'})},
+                            {label: 'Delete', href: path('kit_context_menu', {picked: 'delete-1041'}), danger: true},
+                        ]}, with_context: false) }}
+                    </td>
+                </tr>
+                <tr tabindex="0" data-testid="row-1040">
+                    <td>Invoice #1040</td>
+                    <td>Row actions (buttons, one POST)</td>
+                    <td>
+                        {{ include(nowo_ui_partial('row_actions'), {context_menu: true, display: 'icon', actions: [
+                            {kind: 'view', label: 'View', href: path('kit_context_menu', {picked: 'view-1040'})},
+                            {kind: 'copy', label: 'Copy', href: path('kit_context_menu'), method: 'POST'},
+                        ]}, with_context: false) }}
+                    </td>
+                </tr>
+                <tr data-testid="row-plain">
+                    <td>Invoice #1039</td>
+                    <td>No kebab: the browser's menu</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="kit-ctx-cards">
+            <section class="nowo-ui-card kit-ctx-card" data-nowo-ui-card tabindex="0" data-testid="card-project">
+                <h2 class="h6">Project Apollo</h2>
+                {{ include(nowo_ui_partial('menu'), {popover: true, context_menu: true, label: 'Project actions', icon: 'config', display: 'icon', items: [
+                    {label: 'Rename', href: path('kit_context_menu', {picked: 'rename-project'})},
+                    {label: 'Share', href: path('kit_context_menu', {picked: 'share-project'})},
+                ]}, with_context: false) }}
+            </section>
+
+            {#- A host element linked to its own kebab by id; the kebab has a submenu (a nested list). -#}
+            <article class="kit-ctx-card" tabindex="0" data-nowo-ui-context-menu="board-card-menu" data-testid="card-board">
+                <h2 class="h6">Board card: write the docs</h2>
+                <details class="nowo-ui-menu nowo-ui-menu--end" data-nowo-ui-menu id="board-card-menu">
+                    <summary class="nowo-ui-menu__toggle" aria-label="Card actions">⋮</summary>
+                    <ul class="nowo-ui-menu__panel">
+                        <li><a class="nowo-ui-menu__item" href="{{ path('kit_context_menu', {picked: 'open-card'}) }}">Open</a></li>
+                        <li>
+                            <span class="nowo-ui-menu__item">Move to</span>
+                            <ul class="kit-ctx-sub">
+                                <li><a class="nowo-ui-menu__item" href="{{ path('kit_context_menu', {picked: 'move-todo'}) }}">To do</a></li>
+                                <li><a class="nowo-ui-menu__item" href="{{ path('kit_context_menu', {picked: 'move-doing'}) }}">Doing</a></li>
+                                <li><a class="nowo-ui-menu__item" href="{{ path('kit_context_menu', {picked: 'move-done'}) }}">Done</a></li>
+                            </ul>
+                        </li>
+                        <li role="separator"></li>
+                        <li><a class="nowo-ui-menu__item nowo-ui-menu__item--danger" href="{{ path('kit_context_menu', {picked: 'archive-card'}) }}">Archive</a></li>
+                    </ul>
+                </details>
+            </article>
+        </div>
+        <p class="kit-ctx-spacer" data-testid="spacer">Room to scroll: a swipe that starts on a row still scrolls the page.</p>
+    </main>
+{% endblock %}
+
+{% block nowo_ui_styles %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/context-menu-demo.css') }}">
+{% endblock %}
+
+{% block nowo_ui_scripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/nowo-ui-context-menu.js', 'nowo_ui_kit') }}" defer></script>
+{% endblock %}

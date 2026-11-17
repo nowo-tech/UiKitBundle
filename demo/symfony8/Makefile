@@ -1,7 +1,7 @@
 # Makefile for Symfony 8.0 Demo (Ui Kit Bundle)
 # Run from this directory: make up, make install, etc.
 
-.PHONY: help up down build install shell logs test test-coverage cache-clear update-bundle ensure-up restart test-e2e test-e2e-sortable test-e2e-widgets test-e2e-mobile test-e2e-image-crop test-e2e-combobox demo-screenshots
+.PHONY: help up down build install shell logs test test-coverage cache-clear update-bundle ensure-up restart test-e2e test-e2e-sortable test-e2e-widgets test-e2e-mobile test-e2e-image-crop test-e2e-combobox test-e2e-context-menu demo-screenshots
 
 help:
 	@echo "Symfony 8.0 Demo - Ui Kit Bundle"
@@ -21,6 +21,7 @@ help:
 	@echo "  make test-e2e-mobile    2.41 phone mode e2e at 390x844 (Chromium, WebKit)"
 	@echo "  make test-e2e-image-crop  2.43 image crop e2e: desktop and phone, Chromium and WebKit"
 	@echo "  make test-e2e-combobox    2.53 combobox e2e: Chromium, Firefox, WebKit"
+	@echo "  make test-e2e-context-menu  2.54 context menu e2e: Chromium, Firefox, WebKit, touch in Chromium"
 	@echo "  make demo-screenshots  Refresh docs/images/demo/page-contract-*.webp via Playwright"
 	@echo ""
 
@@ -137,6 +138,16 @@ test-e2e-combobox: ensure-up
 		-e DEMO_BASE_URL=http://127.0.0.1:$$PORT \
 		$(PLAYWRIGHT_IMAGE) \
 		bash -lc 'npm install --no-fund --no-audit && npx playwright test combobox --workers=1 --global-timeout=360000 --project=chromium --project=firefox --project=webkit'
+
+# 2.54 context menus: Chromium, Firefox, WebKit, and a long press with touch input in Chromium, with a deadline.
+test-e2e-context-menu: ensure-up
+	@mkdir -p e2e/node_modules
+	@PORT=$$(grep -E '^PORT=' .env 2>/dev/null | cut -d= -f2 | tr -d '\r'); PORT=$${PORT:-8092}; \
+	timeout $${E2E_DEADLINE:-420} docker run --rm --init --network host \
+		-v "$(CURDIR)/e2e:/e2e" -w /e2e \
+		-e DEMO_BASE_URL=http://127.0.0.1:$$PORT \
+		$(PLAYWRIGHT_IMAGE) \
+		bash -lc 'npm install --no-fund --no-audit && npx playwright test context-menu --workers=2 --global-timeout=360000 --project=chromium --project=firefox --project=webkit --project=context-menu-touch'
 
 demo-screenshots: ensure-up
 	@mkdir -p ../../docs/images/demo e2e/node_modules

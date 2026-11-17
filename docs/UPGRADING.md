@@ -154,6 +154,25 @@
 
 ## Unreleased
 
+Nothing to change. Context menus are opt-in and off by default: without `theme.context_menus`, the `context_menu` partial option
+or a `data-nowo-ui-context-menu` attribute, the markup of the `kebab`, `row_actions`, `menu` and `scripts` partials is unchanged and
+no runtime is loaded. To adopt them, see [USAGE.md "Context menus"](USAGE.md#context-menus):
+
+1. Load the runtime: `script_names: nowo_ui_script_names()|merge(['context-menu'])`, or set `theme.context_menus: true` (the
+   `scripts` partial then adds it).
+2. Opt in: `theme.context_menus: true` for every kebab / row-action menu, or `context_menu: true` on one partial, or
+   `data-nowo-ui-context-menu` on your own row / card (and `data-nowo-ui-context-menu-scope` on a host element that is not a
+   `tr`, `[role="row"]` or UiKit card). Make the row / card focusable for the keyboard.
+3. A host that overrides the `kebab`, `row_actions` or `menu` partial keeps its markup: print
+   `data-nowo-ui-context-menu-source` on the root yourself, or put `data-nowo-ui-context-menu` on the row.
+4. A host that already handles `contextmenu` on rows keeps it: the runtime listens on `document` (bubble phase) and leaves a
+   right-click whose `contextmenu` event your handler already prevented, provided your handler runs before it (a listener on
+   the element or an ancestor, or on `document` added before the runtime loaded; not a `window` listener, nor a `document`
+   listener added later); or cancel `nowo-ui:context-menu:open`, or use `data-nowo-ui-context-menu="off"`.
+5. Bundles that render user HTML through a sanitizer keeping `data-*` must strip `data-nowo-ui-context-menu*` from it.
+
+A host translation key `context_menu.label` in the `NowoUiKitBundle` domain overrides the menu's name ("Actions").
+
 ## To 2.53.0
 
 From **2.52.2**:
