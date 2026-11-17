@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.54.0] - 2026-11-17](#2540---2026-11-17)
 - [[2.53.0] - 2026-11-16](#2530---2026-11-16)
 - [[2.52.2] - 2026-11-16](#2522---2026-11-16)
 - [[2.52.1] - 2026-11-16](#2521---2026-11-16)
@@ -155,6 +156,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Demo: `/kit/focus-mode` (wiki-like page with the toggles, a kept search field and timer chip, a messages dock) and the
   Playwright spec `focus-mode.spec.ts`; the demo config enables focus mode.
 
+### Documentation
+
+- Spec Kit: feature spec `014-shell-focus-mode`; `code-inventory.md` maps the six focus mode files; `spec.md` gains FR-FOCUSMODE-001..004.
+
+## [2.54.0] - 2026-11-17
+
+### Added
+
+- **Context menus** (Beacon request, owner-approved): a right-click, the ContextMenu key, Shift+F10 or a long press (~500 ms,
+  touch / pen) on a row or card opens the **same items** as the kebab / row-action menu it already renders, at the pointer
+  (keyboard: under the focused element). The items are proxies that forward the click to the kebab item, so links, POST forms,
+  confirm and remote dialogs and Stimulus actions behave as from the kebab; no new item, no new authorization surface. Opt-in:
+  runtime `context-menu` (`js/nowo-ui-context-menu.js`, not in `nowo_ui_script_names()`); `theme.context_menus: true` marks every
+  `kebab` / `row_actions` partial and appends the runtime in the `scripts` partial; partial option `context_menu` (`kebab`,
+  `row_actions`, `menu`); host attribute `data-nowo-ui-context-menu` (empty, a kebab id, or `off`), scope attribute
+  `data-nowo-ui-context-menu-scope` (besides `tr`, `[role="row"]`, `[data-nowo-ui-card]`). WAI-ARIA menu: arrows, Home / End,
+  typeahead, Enter / Space, Escape returns focus, Right / Left submenus (nested menus / nested lists of the kebab), Tab closes.
+  The browser's menu stays with selected text, on fields, contenteditable and links, and with Shift or Ctrl held. One menu at a
+  time; closes on an outside click, scroll, resize, window blur, Turbo cache and another kit popover opening. Top-layer
+  `popover="manual"` panel (fixed-position fallback), placed through the CSSOM: strict-CSP safe. Events
+  `nowo-ui:context-menu:open` (cancelable) / `nowo-ui:context-menu:close`. New translation key `context_menu.label` (7 locales).
+  Hidden, inert, aria-hidden, unrendered and disabled kebab entries are never run; a second copy of the script binds nothing.
+  Sanitizers of user HTML must strip `data-nowo-ui-context-menu*` (docs/SECURITY.md).
+  Demo `/kit/context-menu`; e2e in Chromium, Firefox, WebKit and touch emulation. See [USAGE.md](USAGE.md#context-menus).
+
 ### Changed (demo)
 
 - Demo no longer loads Bootstrap, Bootstrap Icons or Tailwind from a CDN (REQ-DEMO-014 / UI-003; the whole demo is the host-theme exemption). Bootstrap 5.3.3 and Bootstrap Icons 1.11.3 are vendored in `demo/symfony8/public/third-party/`; the Tailwind demo serves a prebuilt `public/css/tailwind.css` (Tailwind CLI 3.4.17 pinned in its `package.json`, `make build-css`) instead of the Play CDN runtime JIT. Rendered pages are pixel-identical to the CDN version (35 pages, light and dark); demo screenshots refreshed. No change to `src/`.
@@ -162,7 +188,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Documentation
 
 - Spec Kit baseline: `code-inventory.md` maps `Shell/SidebarStyle*.php` and `nowo-ui-focus-return.ts` (406 units, 2.53.0 line); `spec.md` gains FR-SIDEBARSTYLE-001 and FR-DIALOG-002 (REQ-SPECKIT-003).
-- Spec Kit: feature spec `014-shell-focus-mode`; `code-inventory.md` maps the six focus mode files (417 units); `spec.md` gains FR-FOCUSMODE-001..004.
+- Spec Kit: feature spec `specs/013-context-menus/spec.md`; `code-inventory.md` maps `nowo-ui-context-menu.ts` and its build output.
 
 ## [2.53.0] - 2026-11-16
 
@@ -3096,7 +3122,7 @@ Supersedes 1.17.3: same runtime code and CSS, release gate hardened so the tagge
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.53.0...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.54.0...HEAD
 [1.10.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.4...v1.10.0
 [1.8.4]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.3...v1.8.4
 [1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0

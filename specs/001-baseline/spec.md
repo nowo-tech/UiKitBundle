@@ -412,6 +412,7 @@ fonts painted above the fold.
 - **FR-OVERLAY-001**: `nowo-ui-overlay.js` is the single owner of "a modal overlay is open" for UiKit, host scripts and other bundles (also bundled into the dialog and side-panel scripts).
 - **FR-SCROLLREGION-001**: The opt-in `nowo-ui-scroll-region.js` makes table wraps and marked elements focusable scroll regions.
 - **FR-BASESTYLE-001**: `css/nowo-ui-base.css` is UiKit's opt-in default theme (2.51), on the `--nowo-ui-*` tokens.
+- **FR-CTXMENU-001** (2.54): Opt-in context menus (`nowo-ui-context-menu.js`, `theme.context_menus`, partial option `context_menu`, attribute `data-nowo-ui-context-menu`): a right-click, the ContextMenu key, Shift+F10 or a long press on a row or card opens proxies of the items of its kebab / row-action menu; detailed in [`specs/013-context-menus/spec.md`](../013-context-menus/spec.md).
 - **FR-LINT-001**: `TokenLint` (`bin/nowo-ui-token-lint`) reports colour literals (`#rgb`, `#rrggbb`, `#rrggbbaa`, `rgb(`, `rgba(`) in bundle CSS, SCSS and Twig, since bundle UIs read colours only through `--nowo-ui-*` tokens.
 
 ### Release check (optional)
@@ -449,7 +450,7 @@ fonts painted above the fold.
 
 ## Success criteria
 
-- **SC-001**: Every production file under `src/` (excluding the 81 co-located `*.test.ts`) appears exactly once in [`code-inventory.md`](code-inventory.md) with semantic requirement IDs: **417/417 mapped** (139 PHP, 90 TS, the rest Twig, YAML, CSS, SCSS, built JS and Markdown), audited 2026-11-17.
+- **SC-001**: Every production file under `src/` (excluding the 82 co-located `*.test.ts`) appears exactly once in [`code-inventory.md`](code-inventory.md) with semantic requirement IDs: **419/419 mapped** (139 PHP, 91 TS, the rest Twig, YAML, CSS, SCSS, built JS and Markdown), audited 2026-11-17.
 - **SC-002**: Every FR id used in the inventory is defined in this spec (domain-grouped list above).
 - **SC-003**: PHPUnit + Vitest + `coverage-check` (100% PHP lines) pass in CI; `make release-check` includes `check-no-raw-html-form`.
 - **SC-004**: FrankenPHP demos boot on ports 8092 / 8093 with HTTP 200; the order page passes the Playwright e2e with axe.

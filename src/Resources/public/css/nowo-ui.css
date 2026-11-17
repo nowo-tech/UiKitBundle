@@ -5109,6 +5109,85 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
   margin: 0;
 }
 
+/* Context menus (2.54, opt-in runtime `context-menu`): the items of a row's / card's kebab at the pointer. The panel
+   reuses the menu panel and item rules above; nowo-ui-context-menu.js places it (CSSOM) in the top layer, or as a
+   fixed panel where the browser has no Popover API. */
+.nowo-ui-menu__panel.nowo-ui-context-menu {
+  position: fixed;
+  inset: auto;
+  top: 0;
+  left: 0;
+  margin: 0 !important;
+  overflow: visible;
+}
+
+.nowo-ui-context-menu--fallback {
+  z-index: var(--nowo-ui-menu-z-index, var(--nowo-ui-z-modal, 1050));
+}
+
+.nowo-ui-context-menu[hidden] {
+  display: none !important;
+}
+
+.nowo-ui-context-menu__item {
+  cursor: pointer;
+}
+
+.nowo-ui-context-menu__item:focus {
+  outline: none;
+  background: var(--nowo-ui-surface-muted);
+}
+
+.nowo-ui-context-menu__item:focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 80%, transparent));
+  outline-offset: -2px;
+}
+
+.nowo-ui-context-menu__item[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.nowo-ui-context-menu__label {
+  flex: 1 1 auto;
+}
+
+.nowo-ui-context-menu__item--submenu::after {
+  content: '';
+  flex: 0 0 auto;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-block-start: 1.5px solid currentColor;
+  border-inline-end: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  opacity: 0.7;
+}
+
+[dir='rtl'] .nowo-ui-context-menu__item--submenu::after {
+  transform: rotate(-135deg);
+}
+
+.nowo-ui-context-menu__separator {
+  height: 0;
+  margin: 0.25rem 0;
+  border-block-start: var(--nowo-ui-border-width, 1px) solid var(--nowo-ui-border);
+}
+
+/* Fingers: taller items; no iOS link callout over a row whose long press opens the menu (links keep theirs). */
+@media (pointer: coarse) {
+  .nowo-ui-context-menu__item {
+    min-height: 2.75rem;
+  }
+
+  :is([data-nowo-ui-context-menu]:not([data-nowo-ui-context-menu='off']), [data-nowo-ui-context-menu-open]) {
+    -webkit-touch-callout: none;
+  }
+
+  :is([data-nowo-ui-context-menu], [data-nowo-ui-context-menu-open]) a[href] {
+    -webkit-touch-callout: default;
+  }
+}
+
 /* Tree view (2.24, partial `tree`): APG navigation treeview; nested groups indent, toggles are decorative */
 .nowo-ui-tree,
 .nowo-ui-tree__group {

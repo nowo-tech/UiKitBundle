@@ -206,8 +206,8 @@ git ls-files src | grep -v '\.test\.ts$' | wc -l
 
 The **Total production sources** row in `code-inventory.md` must match this count.
 
-In **UiKitBundle**, the baseline inventory covers **417/417** files (139 PHP, 90 TypeScript, the rest Twig, YAML, CSS, SCSS,
-built JS and Markdown; the 81 co-located `*.test.ts` files are excluded), last audited **2026-11-17** — see [`specs/001-baseline/code-inventory.md`](../specs/001-baseline/code-inventory.md). The committed Vite
+In **UiKitBundle**, the baseline inventory covers **419/419** files (139 PHP, 91 TypeScript, the rest Twig, YAML, CSS, SCSS,
+built JS and Markdown; the 82 co-located `*.test.ts` files are excluded), last audited **2026-11-17** — see [`specs/001-baseline/code-inventory.md`](../specs/001-baseline/code-inventory.md). The committed Vite
 IIFEs (`Resources/public/js/*.js`), the inline theme-boot copy and the layered `nowo-ui.css` are listed as build
 outputs of named sources (`FR-BUILD-*`).
 
