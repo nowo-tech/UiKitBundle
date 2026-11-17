@@ -6635,6 +6635,111 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
 }
 
 /*
+ * Shell focus mode (2.54, nowo_ui_kit.theme.focus_mode, js/nowo-ui-focus-mode.js). The script marks every hidden region
+ * (or, around a kept element, every branch without one) with data-nowo-ui-focus-hidden + inert; here they leave the
+ * layout. The shell root carries data-focus-mode="on" | "fullscreen": the aside column and the fixed header row
+ * collapse, the main region goes full width and the focus bar (exit / fullscreen buttons, optional one-line
+ * breadcrumb) shows. Kit tokens only; no motion of its own (reduced motion needs nothing more).
+ */
+[data-nowo-ui-focus-hidden] {
+  display: none !important;
+}
+
+.nowo-ui-shell[data-focus-mode] {
+  grid-template-rows: auto 1fr auto;
+}
+
+.nowo-ui-shell[data-focus-mode][data-nowo-ui-focus-regions~='sidebar'] {
+  --nowo-ui-aside-width: 0px;
+  --nowo-ui-shell-inset-start: 0px;
+}
+
+.nowo-ui-shell[data-focus-mode] .nowo-ui-main {
+  max-width: none;
+}
+
+.nowo-ui-shell:fullscreen {
+  overflow: auto;
+  min-height: 100vh;
+}
+
+.nowo-ui-focus-bar {
+  display: none;
+}
+
+[data-focus-mode] .nowo-ui-focus-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  position: fixed;
+  inset-block-start: 0.75rem;
+  inset-inline-end: 0.75rem;
+  z-index: 45;
+}
+
+[data-focus-mode] .nowo-ui-focus-bar--crumbs {
+  justify-content: space-between;
+  position: sticky;
+  inset-block-start: 0;
+  inset-inline-end: auto;
+  margin-block-end: 0.75rem;
+  padding-block: 0.375rem;
+  background: var(--nowo-ui-surface-muted);
+  border-bottom: 1px solid var(--nowo-ui-border);
+}
+
+.nowo-ui-focus-bar__crumbs {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.nowo-ui-focus-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex: 0 0 auto;
+}
+
+.nowo-ui-focus-bar__exit,
+.nowo-ui-focus-bar__fullscreen,
+.nowo-ui-focus-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  min-width: 2rem;
+  min-height: 2rem;
+}
+
+[data-focus-mode] .nowo-ui-focus-bar:not(.nowo-ui-focus-bar--crumbs) :is(.nowo-ui-focus-bar__exit, .nowo-ui-focus-bar__fullscreen) {
+  background: var(--nowo-ui-surface);
+  box-shadow: var(--nowo-ui-shadow-popover, 0 10px 28px rgba(15, 23, 42, 0.12));
+}
+
+:is(.nowo-ui-focus-bar__exit, .nowo-ui-focus-bar__fullscreen, .nowo-ui-focus-mode-toggle):focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, var(--nowo-ui-primary));
+  outline-offset: 2px;
+}
+
+.nowo-ui-focus-bar__fullscreen[aria-pressed='true'],
+.nowo-ui-focus-mode-toggle[aria-pressed='true'] {
+  color: var(--nowo-ui-primary);
+}
+
+/* Phones: the exit button keeps its icon and its name for screen readers, the visible text goes. */
+@media (max-width: 30rem) {
+  .nowo-ui-focus-bar__exit-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/*
  * Page header tabs_inline (2.48): the tabs and the toolbar on one row under the title; the toolbar goes to the end and
  * wraps under the tabs when the row is short.
  */

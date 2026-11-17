@@ -1,0 +1,35 @@
+{#
+  Focus mode toggle (2.54, theme partial `focus_mode_toggle`): the button a page (WikiBundle, TaskBoard…) puts in its
+  own toolbar to enter or leave the shell focus mode. Renders nothing unless `nowo_ui_kit.theme.focus_mode.enabled`
+  (and for `level: 'fullscreen'`, unless `focus_mode.fullscreen`), so a bundle includes it unconditionally:
+
+      {{ include(nowo_ui_partial('focus_mode_toggle'), {area: 'wiki'}) }}
+
+  js/nowo-ui-focus-mode.js (loaded by the `scripts` partial when focus mode is enabled) handles the click, the
+  shortcut, Escape, the remembered state and aria-pressed. A toggle button (aria-pressed), so its name stays the same.
+  Slots: focus_mode_toggle.
+
+  Optional:
+    - area: key the state is remembered under (`nowo-ui-focus:<area>` in localStorage; 1-64 of A-Z a-z 0-9 _ . : -,
+      anything else is dropped); also printed as data-nowo-ui-focus-area for the shortcut and the restore on load
+    - level: toggle (default; level 1) | fullscreen (level 2 straight away: focus mode plus the browser fullscreen)
+    - label (View\Label|string): the accessible name (default "Focus mode" / "Full screen")
+    - show_label (bool, default false): show the name next to the icon (else visually hidden)
+    - attr: root attributes, `class` added to the slot classes; checked by nowo_ui_safe_attrs() (no on*, style,
+      srcdoc or script-running URLs). The attributes the partial owns (type, aria-pressed, aria-keyshortcuts,
+      data-nowo-ui-focus-mode, data-nowo-ui-focus-area) are dropped from it.
+    - bundle
+#}
+{% set _cfg = nowo_ui_kit_focus_mode|default({}) %}
+{% set _fullscreen = (level ?? 'toggle') == 'fullscreen' %}
+{% if (_cfg.enabled ?? false) is same as(true) and (not _fullscreen or (_cfg.fullscreen ?? true)) %}
+{% set _b = bundle|default(null) %}
+{% set _area = (area ?? null) is not null and area is not iterable and (area ~ '') matches '/^[A-Za-z0-9_.:-]{1,64}$/D' ? area : null %}
+{% set _label = label is defined and label is not null ? label|nowo_ui_trans : (_fullscreen ? 'focus_mode.fullscreen' : 'focus_mode.toggle')|trans({}, 'NowoUiKitBundle') %}
+{% set _shortcut = _fullscreen ? null : (_cfg.shortcut ?? null) %}
+{% set _attr = nowo_ui_safe_attrs(attr|default({}), ['type', 'aria-pressed', 'aria-keyshortcuts', 'data-nowo-ui-focus-mode', 'data-nowo-ui-focus-area']) %}
+<button type="button" class="{{ nowo_ui_class('focus_mode_toggle', _b) }}{{ (_attr.class ?? false) ? ' ' ~ _attr.class }}" data-nowo-ui-focus-mode{% if _fullscreen %}="fullscreen"{% endif %} aria-pressed="false"{% if _area %} data-nowo-ui-focus-area="{{ _area }}"{% endif %}{% if _shortcut %} aria-keyshortcuts="{{ _shortcut }}" title="{{ 'focus_mode.shortcut_hint'|trans({'%key%': _shortcut}, 'NowoUiKitBundle') }}"{% endif %}{{ nowo_ui_attrs('focus_mode_toggle', _b) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(_attr)) }}>
+    <span class="nowo-ui-focus-mode-toggle__icon" aria-hidden="true">{% if _fullscreen %}<svg class="nowo-ui-icon" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>{% else %}<svg class="nowo-ui-icon" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg>{% endif %}</span>
+    <span class="{{ show_label|default(false) ? 'nowo-ui-focus-mode-toggle__label' : 'visually-hidden' }}">{{ _label }}</span>
+</button>
+{% endif %}

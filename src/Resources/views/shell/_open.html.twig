@@ -59,6 +59,11 @@
       is-sidebar-inset + data-nowo-ui-sidebar-style="inset"; on desktop the kit CSS paints the header, the aside and the
       footer on one shell surface without borders and the main region as an inset rounded panel (phones unchanged).
       Works with both sidebar layouts, every aside mode and both content widths
+    - focus_mode (2.54; default true): false leaves this page out of the shell focus mode of
+      nowo_ui_kit.theme.focus_mode (enabled: the root gets data-nowo-ui-focus-regions / -keep-list / -shortcut /
+      -fullscreen for js/nowo-ui-focus-mode.js, and the main region starts with the `focus_mode_bar` partial)
+    - focus_area (2.54): area key printed on the root (data-nowo-ui-focus-area; the state is remembered per area)
+    - focus_crumbs / focus_header / focus_home_href (2.54): the breadcrumb of the focus bar (keep breadcrumb_min)
     - bundle: per-bundle theme exceptions
   Root state classes: is-sidebar-collapsed, is-sidebar-rail, is-full-width / is-content-width (+ is-aside-collapsed /
   is-aside-rail with kit styles, the classes nowo-ui-shell.js toggles). Hooks: data-nowo-ui-shell, data-nowo-ui-aside,
@@ -101,6 +106,18 @@
     {% set _root_attr = {'data-nowo-ui-sidebar-layout': 'full-height'}|merge(_root_attr) %}
 {% endif %}
 {% set _root_attr = _inset ? {'data-nowo-ui-sidebar-style': 'inset'}|merge(_root_attr) : _root_attr %}
+{% set _focus = nowo_ui_kit_focus_mode|default({}) %}
+{% set _focus_on = (_focus.enabled ?? false) is same as(true) and (focus_mode ?? true) is not same as(false) %}
+{% if _focus_on %}
+    {% set _focus_area = (focus_area ?? null) is not null and focus_area is not iterable and (focus_area ~ '') matches '/^[A-Za-z0-9_.:-]{1,64}$/D' ? focus_area : null %}
+    {% set _root_attr = {
+        'data-nowo-ui-focus-regions': (_focus.regions ?? [])|join(' '),
+        'data-nowo-ui-focus-keep-list': (_focus.keep ?? []) is empty ? null : _focus.keep|join(' '),
+        'data-nowo-ui-focus-shortcut': _focus.shortcut ?? 'none',
+        'data-nowo-ui-focus-fullscreen': (_focus.fullscreen ?? true) ? null : 'false',
+        'data-nowo-ui-focus-area': _focus_area,
+    }|merge(_root_attr) %}
+{% endif %}
 {% set _burger = {
     controls: aside_id,
     expanded: not _collapsed,
@@ -202,3 +219,4 @@
     </aside>
 
     <div class="{{ nowo_ui_class('app_main', bundle) }}{{ _kit ? ' nowo-ui-main' }}"{{ nowo_ui_attrs('app_main', bundle) }}>
+{% if _focus_on %}{{ include(nowo_ui_partial('focus_mode_bar', bundle), {crumbs: focus_crumbs ?? null, header: focus_header ?? null, home_href: focus_home_href|default(null), bundle: bundle}, false) }}{% endif %}

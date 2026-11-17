@@ -493,6 +493,21 @@ final class ThemeSlots
             'bootstrap' => 'btn btn-sm btn-outline-secondary',
             'foundation' => 'button clear tiny',
         ]],
+        // Shell focus mode (2.54, partials `focus_mode_toggle`, `focus_mode_bar`): the page's toggle, the focus bar shown
+        // in focus mode (one-line breadcrumb with `keep: [breadcrumb_min]`), its exit and fullscreen buttons
+        'focus_mode_toggle' => ['nowo-ui-btn nowo-ui-btn--icon nowo-ui-focus-mode-toggle', [
+            'bootstrap' => 'btn btn-sm btn-outline-secondary',
+            'foundation' => 'button clear tiny',
+        ]],
+        'focus_bar' => ['nowo-ui-focus-bar', []],
+        'focus_bar_exit' => ['nowo-ui-btn nowo-ui-focus-bar__exit', [
+            'bootstrap' => 'btn btn-sm btn-outline-secondary',
+            'foundation' => 'button clear tiny',
+        ]],
+        'focus_bar_fullscreen' => ['nowo-ui-btn nowo-ui-btn--icon nowo-ui-focus-bar__fullscreen', [
+            'bootstrap' => 'btn btn-sm btn-outline-secondary',
+            'foundation' => 'button clear tiny',
+        ]],
         // Compact header (2.27, partials `header_context`, `header_crumbs`, `page_actions`): the filling of the top bar's
         // `app_header_context` slot — page-actions trigger, home link (added to btn_secondary + btn_icon) and the
         // one-line breadcrumb with its "…" disclosure, panel and phone "‹" up link
@@ -690,6 +705,8 @@ final class ThemeSlots
         'edge_tabs_launcher' => '@NowoUiKitBundle/partials/_edge_tabs_launcher.html.twig',
         'empty' => '@NowoUiKitBundle/partials/_empty.html.twig',
         'filters' => '@NowoUiKitBundle/partials/_filters.html.twig',
+        'focus_mode_bar' => '@NowoUiKitBundle/partials/_focus_mode_bar.html.twig',
+        'focus_mode_toggle' => '@NowoUiKitBundle/partials/_focus_mode_toggle.html.twig',
         'flashes' => '@NowoUiKitBundle/partials/_flashes.html.twig',
         'guest_header' => '@NowoUiKitBundle/partials/_guest_header.html.twig',
         'header_actions' => '@NowoUiKitBundle/partials/_header_actions.html.twig',

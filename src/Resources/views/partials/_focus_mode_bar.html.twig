@@ -1,0 +1,39 @@
+{#
+  Focus bar (2.54, theme partial `focus_mode_bar`): what stays on screen in shell focus mode — a small floating "exit
+  focus" button (always visible in focus mode, top end corner), the fullscreen button (level 2; hidden by the script
+  where the browser has no fullscreen) and, with `nowo_ui_kit.theme.focus_mode.keep` containing `breadcrumb_min`, a
+  one-line breadcrumb (the `header_crumbs` partial) with the buttons at its end. The kit CSS shows it only while the
+  shell root has `data-focus-mode`; it is inside the shell, so it also shows in fullscreen. A polite live region
+  (`data-nowo-ui-focus-status`, with the translated `data-nowo-ui-focus-msg-*` texts) follows the bar: it is never
+  hidden, so js/nowo-ui-focus-mode.js can announce every change.
+
+  `app_shell_open` prints it at the start of the main region when focus mode is enabled (options focus_crumbs /
+  focus_header / focus_home_href forward the breadcrumb); a host shell of its own includes it inside its shell root,
+  outside the regions focus mode hides. Renders nothing unless focus mode is enabled.
+  Slots: focus_bar, focus_bar_exit, focus_bar_fullscreen.
+
+  Optional:
+    - crumbs / header / home_href: the breadcrumb source, as for `header_crumbs` (crumbs list, a View\PageHeader, else
+      BreadcrumbKit's default trail); only with keep `breadcrumb_min`. No levels: the bar keeps its buttons only
+    - fullscreen (bool): show the fullscreen button (default nowo_ui_kit.theme.focus_mode.fullscreen)
+    - bundle
+#}
+{% set _cfg = nowo_ui_kit_focus_mode|default({}) %}
+{% if (_cfg.enabled ?? false) is same as(true) %}
+{% set _b = bundle|default(null) %}
+{% set _crumbs = 'breadcrumb_min' in (_cfg.keep ?? []) %}
+{% set _fullscreen = (fullscreen ?? (_cfg.fullscreen ?? true)) is same as(true) %}
+{% set _exit = 'focus_mode.exit_label'|trans({}, 'NowoUiKitBundle') %}
+<div class="{{ nowo_ui_class('focus_bar', _b) }}{{ _crumbs ? ' nowo-ui-focus-bar--crumbs' }}" data-nowo-ui-focus-bar{{ nowo_ui_attrs('focus_bar', _b) }}>
+{% if _crumbs %}
+    <div class="nowo-ui-focus-bar__crumbs">{{ include(nowo_ui_partial('header_crumbs', _b), {crumbs: crumbs ?? null, header: header ?? null, home_href: home_href|default(null), id: 'nowo-ui-focus-crumbs', bundle: _b}, false) }}</div>
+{% endif %}
+    <div class="nowo-ui-focus-bar__actions">
+{% if _fullscreen %}
+        <button type="button" class="{{ nowo_ui_class('focus_bar_fullscreen', _b) }}" data-nowo-ui-focus-mode="fullscreen" aria-pressed="false" title="{{ 'focus_mode.fullscreen'|trans({}, 'NowoUiKitBundle') }}"{{ nowo_ui_attrs('focus_bar_fullscreen', _b) }}><span aria-hidden="true"><svg class="nowo-ui-icon" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></span><span class="visually-hidden">{{ 'focus_mode.fullscreen'|trans({}, 'NowoUiKitBundle') }}</span></button>
+{% endif %}
+        <button type="button" class="{{ nowo_ui_class('focus_bar_exit', _b) }}" data-nowo-ui-focus-mode="exit" title="{{ _exit }}" aria-keyshortcuts="Escape"{{ nowo_ui_attrs('focus_bar_exit', _b) }}><span aria-hidden="true"><svg class="nowo-ui-icon" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5"/></svg></span><span class="nowo-ui-focus-bar__exit-label">{{ 'focus_mode.exit'|trans({}, 'NowoUiKitBundle') }}</span></button>
+    </div>
+</div>
+<p class="visually-hidden" role="status" aria-live="polite" data-nowo-ui-focus-status data-nowo-ui-focus-msg-on="{{ 'focus_mode.announce_on'|trans({}, 'NowoUiKitBundle') }}" data-nowo-ui-focus-msg-off="{{ 'focus_mode.announce_off'|trans({}, 'NowoUiKitBundle') }}" data-nowo-ui-focus-msg-fullscreen="{{ 'focus_mode.announce_fullscreen'|trans({}, 'NowoUiKitBundle') }}" data-nowo-ui-focus-msg-fullscreen-off="{{ 'focus_mode.announce_fullscreen_off'|trans({}, 'NowoUiKitBundle') }}" data-nowo-ui-focus-msg-fullscreen-unavailable="{{ 'focus_mode.announce_fullscreen_unavailable'|trans({}, 'NowoUiKitBundle') }}"></p>
+{% endif %}
