@@ -59,6 +59,7 @@
 - [Dialog back button](#dialog-back-button)
 - [Emoji picker](#emoji-picker)
 - [Combobox](#combobox)
+- [Context menus](#context-menus)
 - [Show more](#show-more)
 - [Image crop](#image-crop)
   - [Image crop attribute contract](#image-crop-attribute-contract)
@@ -2778,6 +2779,133 @@ CSSOM, so a CSP without `style-src-attr` holds. Without the Popover API it is `p
 
 Tokens: `--nowo-ui-combobox-width`, `--nowo-ui-combobox-height`, `--nowo-ui-combobox-z`. Slots `combobox*`. Demo: `/kit/combobox`.
 FormKit: `ComboboxType` is the integration point; mapping FormKit fields to it is a later FormKit change.
+
+## Context menus
+
+*(2.54)* A right-click on a row or a card, the ContextMenu key or Shift+F10 on a focused one, or a long press on a touch screen
+opens **the same items** as the kebab / row-action menu that row or card already renders, at the pointer. The context menu is a
+proxy: each of its items forwards a click to the kebab item it mirrors, so links, POST forms, confirm dialogs, remote dialogs and
+your Stimulus actions behave exactly as from the kebab. It never adds an item and adds no authorization surface: what the
+kebab shows (already filtered by your voters) is all it can show. Off by default.
+
+### Opt in
+
+Load the runtime (opt-in, not in `nowo_ui_script_names()`):
+
+```twig
+{{ include(nowo_ui_partial('scripts'), {script_names: nowo_ui_script_names()|merge(['context-menu'])}) }}
+```
+
+Then pick one of:
+
+- **Every kebab** — `theme.context_menus: true`. The `kebab` and `row_actions` partials then mark their root, and the `scripts`
+  partial appends the `context-menu` runtime by itself.
+
+  ```yaml
+  nowo_ui_kit:
+      theme:
+          context_menus: true
+  ```
+
+- **One partial** — the `context_menu` option (it wins over the theme flag; `false` opts one out):
+
+  ```twig
+  {{ include(nowo_ui_partial('row_actions'), {actions: actions, menu: true, context_menu: true}) }}
+  {{ include('@NowoUiKitBundle/partials/_kebab.html.twig', {items: items, context_menu: true}) }}
+  {{ include(nowo_ui_partial('menu'), {items: items, popover: true, context_menu: true}) }} {# the menu partial: option only #}
+  ```
+
+  A marked menu belongs to the nearest **scope** around it: a table row (`tr`), an ARIA row (`[role="row"]`), a UiKit card
+  (`[data-nowo-ui-card]`, the `card` partial) or any element you mark `data-nowo-ui-context-menu-scope` (a board card, a list
+  item). A menu with no scope around it gets no context menu.
+
+- **Your own element** — `data-nowo-ui-context-menu` on the row / card:
+
+  ```html
+  <article class="board-card" tabindex="0" data-nowo-ui-context-menu="card-42-menu">…<details data-nowo-ui-menu id="card-42-menu">…</details></article>
+  <li data-nowo-ui-context-menu>…{{ include(nowo_ui_partial('menu'), {items: items}) }}</li>
+  ```
+
+  An empty value takes the first kebab / menu / row actions inside the element; a value is the id of one (or of its panel; `#`
+  optional). `data-nowo-ui-context-menu="off"` keeps the browser's menu on an element (and its content) under the theme flag.
+
+Give the row or card `tabindex="0"` (or let your existing focus handling reach it) so the keyboard can open its menu; focus goes
+back to it when the menu closes.
+
+### Attribute and event contract
+
+| Name | Where | Meaning |
+|------|-------|---------|
+| `data-nowo-ui-context-menu` | row / card (yours) | Explicit host: empty = first kebab inside, an id = that kebab, `off` = opt out |
+| `data-nowo-ui-context-menu-source` | kebab / menu / row-actions root (the partials) | This menu is the context menu of its scope |
+| `data-nowo-ui-context-menu-scope` | any element (yours) | Scope for a marked menu inside it, besides `tr`, `[role="row"]`, `[data-nowo-ui-card]` |
+| `data-nowo-ui-context-menu-label` | host or source | Name of the menu (`aria-label`); the partials print `context_menu.label` ("Actions", 7 locales) |
+| `data-nowo-ui-context-menu-open` | host (the runtime) | Present while its context menu is open (style the row) |
+| `nowo-ui:context-menu:open` | host, bubbles, cancelable | `detail: {source, trigger}`, trigger `pointer` \| `keyboard` \| `touch`; `preventDefault()` keeps the browser's menu |
+| `nowo-ui:context-menu:close` | host, bubbles | `detail: {source}` |
+
+The panel is `<ul class="nowo-ui-menu__panel nowo-ui-context-menu" role="menu">` with `<button role="menuitem"
+class="nowo-ui-menu__item nowo-ui-context-menu__item">` items (danger items keep `nowo-ui-menu__item--danger`, disabled items
+`aria-disabled="true"`), so it takes your menu theme. Submenus add `nowo-ui-context-menu--sub`.
+
+### What the context menu mirrors
+
+Links, buttons and submit buttons of the kebab's panel (a row-actions cluster: its buttons), in order, with their visible text or
+`aria-label`, their icon, their danger look and their disabled state; `<hr>` / `role="separator"` entries; never the toggle, nor
+anything inside a `<dialog>` (confirm dialogs stay where they are and open from the forwarded click). A nested menu inside the panel
+(`details[data-nowo-ui-menu]`, a popover menu, or an `li` holding a nested `ul`) becomes a submenu named by its toggle / first child.
+Hidden (`[hidden]`) entries are skipped. A kebab with no item gets no context menu (the browser's menu shows).
+
+### When the browser's menu stays
+
+- text is selected (copy must keep working);
+- the target is an `input`, `textarea`, `select`, a `contenteditable` element or a link (`a[href]`): open in a new tab, copy link;
+- **Shift** or **Ctrl** is held during the right-click (documented escape hatch; on macOS a Ctrl+click is the system's own
+  right-click, so it shows the browser's menu: use a two-finger click there);
+- the row has no kebab, or `data-nowo-ui-context-menu="off"`, or a listener cancelled `nowo-ui:context-menu:open`, or your own
+  `contextmenu` handler already called `preventDefault()` (the runtime listens on `document`).
+
+### Keyboard, pointer and touch (WAI-ARIA menu)
+
+| Key | Action |
+|-----|--------|
+| ContextMenu, Shift+F10 | Open on the focused row / card, under it |
+| Down / Up | Next / previous item (wraps) |
+| Home / End | First / last item |
+| A letter | Typeahead: the next item starting with it (type a word quickly to match more letters) |
+| Enter, Space | Run the item (open a submenu) |
+| Right / Left | Open / close a submenu (mirrored in RTL) |
+| Escape | Close a submenu, else the menu; focus returns to the row / card (else its kebab toggle) |
+| Tab | Close; focus returns to the row / card |
+
+Only one context menu is open at a time; opening one also closes an open kebab popover or `<details>` menu, and another kit
+popover opening closes it. It closes on an outside click, a scroll of the page or of a scroller around the row, a resize and the
+window losing focus, and before Turbo caches the page. Rows added later (Turbo frames, live lists) work: everything is delegated.
+
+**Long press** (touch or pen, `pointer: coarse`): about 500 ms without moving more than 10 px opens the menu at the finger; moving,
+lifting the finger or scrolling first cancels it, and the click that ends the press is swallowed (the row is not followed). The
+listeners are passive: a swipe that starts on a row still scrolls. On fingers the items are at least 44 px tall. Android's own
+long-press `contextmenu` opens the same menu once. Check iOS Safari on a real device (its text-selection timing is not emulated).
+
+### Placement, CSP and theming
+
+A `popover="manual"` panel in the browser top layer (never clipped by a table scroller or a card; inside an open modal `<dialog>`
+when the row is in one), or a `position: fixed` panel where there is no Popover API. It opens at the pointer, flipped left / up
+without room and kept inside the viewport; from the keyboard, under the focused element (above it without room). Coordinates are
+set through the CSSOM like the kit's popover menus: no `style` attribute in markup, no inline script or handler, no `eval`, so a
+strict CSP (`script-src 'self'; style-src-attr 'none'; script-src-attr 'none'`) holds; the demo page runs under exactly that.
+Colours, radius, border and shadow come from the menu panel rules and the `--nowo-ui-*` tokens (light and dark).
+
+### For bundles (TaskBoard, ChatKit, Wiki…)
+
+Render your row / card actions with the kit's `kebab`, `row_actions` or `menu` partial as today and pass `context_menu: true`
+(or leave it to the host's theme flag). Give a host element that is not a `tr`, `[role="row"]` or UiKit card the
+`data-nowo-ui-context-menu-scope` attribute (or put `data-nowo-ui-context-menu` on it yourself), and make it focusable. Do not
+build a second item list: whatever is in the kebab is the context menu. Hosts load the runtime (or set the theme flag). Server side
+nothing changes: stateless markup, safe in FrankenPHP worker mode.
+
+Demo: `/kit/context-menu` (`demo/symfony8`), e2e `context-menu.spec.ts` (Chromium, Firefox, WebKit) and
+`context-menu-touch.spec.ts` (touch emulation), `make test-e2e-context-menu`.
 
 ## Show more
 

@@ -1,6 +1,6 @@
 # Code inventory — 100% traceability
 
-**Last audited**: 2026-11-17 (2.53.0 line: inset sidebar style, dialog focus return, async combobox; 2.51.0 line: brand appearance, remote dialog, listing ports, side panel, rail, tree, image input, base stylesheet)  
+**Last audited**: 2026-11-17 (Unreleased: context menus; 2.53.0 line: inset sidebar style, dialog focus return, async combobox; 2.51.0 line: brand appearance, remote dialog, listing ports, side panel, rail, tree, image input, base stylesheet)  
 **Baseline spec**: [`spec.md`](spec.md)  
 **Package**: `nowo-tech/ui-kit-bundle`
 
@@ -10,7 +10,7 @@ one row per file. Paths are relative to `src/`. Requirement IDs are defined in [
 
 **Scope**: every file tracked by Git under `src/` (`git ls-files src`), i.e. PHP, TypeScript, Twig, YAML, CSS, SCSS,
 the built JavaScript and the Stimulus peers README. **Excluded**: the co-located Vitest files `*.test.ts` under
-`Resources/assets/` (80 files at this audit — test artifacts covered by FR-TEST-001, not shipped runtime units; same rule as
+`Resources/assets/` (81 files at this audit — test artifacts covered by FR-TEST-001, not shipped runtime units; same rule as
 TwigInspectorBundle). `tests/`, `demo/` apps and caches are outside `src/` and out of scope. Built files that live
 under `src/` (the Vite IIFEs, the layered stylesheet and the inline theme-boot copy) are committed (Packagist installs
 no Node toolchain); they are listed in their own table as **outputs** of named sources (`FR-BUILD-*`) and are never
@@ -401,6 +401,7 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | `Resources/assets/src/nowo-ui-image-crop.ts` | Opt-in crop step for image file inputs (`nowo-ui-image-crop-core.ts`: options, geometry, output) | FR-JS-001 |
 | `Resources/assets/src/nowo-ui-emoji-picker.ts` | Opt-in emoji picker over a text input (`nowo-ui-emoji-table.ts`: its table) | FR-JS-001 |
 | `Resources/assets/src/nowo-ui-combobox.ts` | Opt-in async grouped combobox over a text input (same-origin search, text-only listbox) | FR-JS-001 |
+| `Resources/assets/src/nowo-ui-context-menu.ts` | 2.54 opt-in context menus: the kebab's items on right-click, keyboard and long press (proxy items) | FR-JS-001, FR-CTXMENU-001 |
 | `Resources/assets/src/nowo-ui-show-more.ts` | Opt-in line-clamp fold with a real button | FR-JS-001 |
 | `Resources/assets/src/nowo-ui-motion-core.ts` | Closing with an effect: fade, then the real close, with a fallback timer | FR-JS-001 |
 | `Resources/assets/src/nowo-ui-sortable.ts` | Opt-in reorder by pointer, touch and keyboard over host markup | FR-JS-001 |
@@ -630,6 +631,7 @@ Produced by `pnpm run build` (`vite.config.ts`, one `VITE_ENTRY` per IIFE; `buil
 | `Resources/assets/src/nowo-ui-emoji-table.ts` | Small offline emoji table bundled only into the emoji picker | FR-JS-001 |
 | `Resources/public/js/nowo-ui-emoji-picker.js` | Build output of `nowo-ui-emoji-picker.ts` | FR-BUILD-001, FR-JS-001 |
 | `Resources/public/js/nowo-ui-combobox.js` | Build output of `nowo-ui-combobox.ts` | FR-BUILD-001, FR-JS-001 |
+| `Resources/public/js/nowo-ui-context-menu.js` | Build output of `nowo-ui-context-menu.ts` | FR-BUILD-001, FR-JS-001 |
 | `Resources/public/js/nowo-ui-show-more.js` | Build output of `nowo-ui-show-more.ts` | FR-BUILD-001, FR-JS-001 |
 | `Resources/public/js/nowo-ui-sortable.js` | Build output of `nowo-ui-sortable.ts` | FR-BUILD-001, FR-JS-001 |
 
@@ -671,11 +673,11 @@ Produced by `pnpm run build` (`vite.config.ts`, one `VITE_ENTRY` per IIFE; `buil
 | Twig views — partials: shell chrome and feedback | 27 |
 | Twig views — partials: filters, tables, pagination, segmented | 26 |
 | Stylesheets (authored) | 4 |
-| TypeScript — kit IIFE sources (`Resources/assets/src/`) | 28 |
+| TypeScript — kit IIFE sources (`Resources/assets/src/`) | 29 |
 | TypeScript — Thinking Orbs (vendored MIT, `Resources/assets/src/orb/`) | 14 |
 | TypeScript — morphicons (optional, `Resources/assets/morphicons/`) | 1 |
 | Stimulus peers (`Resources/assets/stimulus-peers/`) | 27 |
-| Build outputs (generated, committed, never hand-edited) | 19 |
+| Build outputs (generated, committed, never hand-edited) | 20 |
 | Brand appearance (spec 220) | 6 |
 | Avatar URL policy | 4 |
 | Error illustration SPI | 2 |
@@ -686,9 +688,9 @@ Produced by `pnpm run build` (`vite.config.ts`, one `VITE_ENTRY` per IIFE; `buil
 | Side panel, rail, tree, edge tabs and layout state | 19 |
 | Overlay registry, scroll regions and small helpers | 10 |
 | Default theme stylesheet and token lint | 2 |
-| **Total** | **406** |
+| **Total** | **408** |
 
-Excluded: co-located Vitest `*.test.ts` (80 files at this audit).
+Excluded: co-located Vitest `*.test.ts` (81 files at this audit).
 
 Audit (2026-11-16):
 
