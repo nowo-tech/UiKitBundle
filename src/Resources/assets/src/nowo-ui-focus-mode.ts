@@ -15,7 +15,8 @@
  * page has a toggle, neither a text field nor a link / button / other control is focused, no modifier is pressed and no
  * dialog / menu is open. Escape leaves fullscreen first, then focus mode, only when nothing else owns it (see
  * overlayOwnsKeys) and no text field is focused. Ctrl / Cmd combinations (Ctrl+K search…) are never touched.
- * A second copy of this script only re-applies the state and the API (window flag Symbol.for('nowo-ui.focus-mode.bound')).
+ * A second copy of this script only assigns the API (window flag Symbol.for('nowo-ui.focus-mode.bound')); the inert
+ * watcher is one per page (Symbol.for('nowo-ui.focus-mode.inert-watcher')), whichever copy hides the regions.
  * Hidden elements: `inert` written by the host during focus mode is the host's (kept on exit).
  * Memory: per area (`data-nowo-ui-focus-area` on the toggle, an ancestor, or anywhere on the page) in localStorage
  * `nowo-ui-focus:<area>` = `on`, restored on load (level 1: browsers only allow fullscreen from a user gesture). Every
@@ -373,9 +374,10 @@ export const BOUND = Symbol.for('nowo-ui.focus-mode.bound');
 export function bindNowoUiFocusMode(): void {
   const host = window as unknown as { NowoUiFocusMode: typeof api; [BOUND]?: true };
   host.NowoUiFocusMode = api;
-  start();
+  // A second copy stops here (audit SK-D1): the first copy's listeners (turbo:load, turbo:frame-load) apply the state.
   if (host[BOUND]) return;
   host[BOUND] = true;
+  start();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
   document.addEventListener('click', onClick);
   document.addEventListener('keydown', onKeydown);

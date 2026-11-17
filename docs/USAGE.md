@@ -2530,9 +2530,10 @@ data-nowo-ui-focus-shortcut="F"`; `data-nowo-ui-focus-fullscreen="false"` withou
   `inert` the host writes on a hidden element during focus mode (a modal library making the page inert) becomes the
   host's and stays after exit; `inert` the host removes from a hidden element stays until exit (the element is hidden),
   then is gone.
-- **Loaded twice:** a second copy of the script (a Turbo body script, two bundles printing it) re-applies the state and
-  the API only; the listeners are bound once (`Symbol.for('nowo-ui.focus-mode.bound')` on `window`), and a click another
-  handler already took (`defaultPrevented`) toggles nothing.
+- **Loaded twice:** a second copy of the script (a Turbo body script, two bundles printing it) only assigns the API;
+  the listeners and the state belong to the first copy (`Symbol.for('nowo-ui.focus-mode.bound')` on `window`, which
+  re-applies the state on `turbo:load`), the `inert` watcher is one per page, and a click another handler already took
+  (`defaultPrevented`) toggles nothing.
 - **Motion / CSP:** no animation of its own; delegated listeners, no inline handlers, styles or scripts; kit tokens only.
 
 ### Events and API

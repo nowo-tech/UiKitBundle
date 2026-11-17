@@ -119,7 +119,12 @@ function hideBranches(region: Element, kept: Element[]): void {
  * (a modal library making the page inert) takes it over: it stays after exit. A host that removes it gets that on exit,
  * while the element stays inert as long as it is hidden. Only `inert` writes made after hiding are watched.
  */
-let inertWatcher: MutationObserver | null = null;
+const WATCHER = Symbol.for('nowo-ui.focus-mode.inert-watcher');
+
+/** The one watcher of the page, shared by every copy of the script (audit SK-D1), or null before the first hide. */
+function currentWatcher(): MutationObserver | null {
+  return (window as unknown as Record<symbol, MutationObserver | undefined>)[WATCHER] ?? null;
+}
 
 function onInertRecords(records: MutationRecord[]): void {
   for (const record of records) {
@@ -131,15 +136,16 @@ function onInertRecords(records: MutationRecord[]): void {
       // Removed by the host: keep the hidden element inert until exit, which then removes it (the host's wish).
       el.setAttribute(HIDDEN_ATTR, 'inert');
       el.setAttribute('inert', '');
-      inertWatcher?.takeRecords();
+      currentWatcher()?.takeRecords();
     }
   }
 }
 
 function watchInert(): void {
   if (typeof MutationObserver !== 'function') return;
-  inertWatcher ??= new MutationObserver(onInertRecords);
-  document.querySelectorAll(`[${HIDDEN_ATTR}]`).forEach((el) => inertWatcher?.observe(el, { attributes: true, attributeFilter: ['inert'] }));
+  const host = window as unknown as Record<symbol, MutationObserver | undefined>;
+  const watcher = (host[WATCHER] ??= new MutationObserver(onInertRecords));
+  document.querySelectorAll(`[${HIDDEN_ATTR}]`).forEach((el) => watcher.observe(el, { attributes: true, attributeFilter: ['inert'] }));
 }
 
 /** Hides the shell's regions; returns the hidden elements (whole regions and branches). */
@@ -157,7 +163,8 @@ export function hideRegions(shell: HTMLElement): Element[] {
     }
   }
   // Our own writes above happened before observing, so they never reach the watcher.
-  if (inertWatcher) onInertRecords(inertWatcher.takeRecords());
+  const watcher = currentWatcher();
+  if (watcher) onInertRecords(watcher.takeRecords());
   watchInert();
 
   return [...document.querySelectorAll(`[${HIDDEN_ATTR}]`)];
@@ -165,9 +172,10 @@ export function hideRegions(shell: HTMLElement): Element[] {
 
 /** Shows again everything focus mode hid (only the `inert` it still owns is removed). */
 export function restoreRegions(): void {
-  if (inertWatcher) {
-    onInertRecords(inertWatcher.takeRecords());
-    inertWatcher.disconnect();
+  const watcher = currentWatcher();
+  if (watcher) {
+    onInertRecords(watcher.takeRecords());
+    watcher.disconnect();
   }
   document.querySelectorAll(`[${HIDDEN_ATTR}]`).forEach((el) => {
     if (el.getAttribute(HIDDEN_ATTR) === 'inert') el.removeAttribute('inert');

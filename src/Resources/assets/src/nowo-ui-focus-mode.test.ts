@@ -68,6 +68,7 @@ describe('nowo-ui-focus-mode (2.55)', () => {
     events = [];
     document.addEventListener('nowo-ui:focus-mode:change', listener);
     mod.bindNowoUiFocusMode();
+    mod.start();
   });
 
   afterEach(() => {
@@ -483,6 +484,7 @@ describe('nowo-ui-focus-mode audit SK fixes', () => {
     document.body.innerHTML = MARKUP;
     fullscreen(false);
     mod.bindNowoUiFocusMode();
+    mod.start();
   });
 
   afterEach(() => {
@@ -509,6 +511,43 @@ describe('nowo-ui-focus-mode audit SK fixes', () => {
     click(el('toggle'));
     el('area').removeEventListener('click', stop);
     expect(mod.api.level()).toBe('off');
+  });
+
+  it('SK-D1: a second copy loaded while focus mode is on (remembered area, Turbo) leaves nothing inert behind', async () => {
+    mod.api.exit();
+    localStorage.setItem('nowo-ui-focus:wiki', 'on');
+    document.body.innerHTML = MARKUP;
+    document.dispatchEvent(new Event('turbo:load'));
+    expect(mod.api.level()).toBe('on');
+
+    vi.resetModules();
+    const second = await import('./nowo-ui-focus-mode');
+    await Promise.resolve();
+    const regions = ['aside', 'ftr', 'backdrop', 'dock', 'edge', 'burger', 'chip'];
+    const clean = (): void => {
+      for (const id of regions) {
+        expect(el(id).hasAttribute('inert'), id).toBe(false);
+        expect(el(id).hasAttribute('data-nowo-ui-focus-hidden'), id).toBe(false);
+      }
+      expect(el('panel').hasAttribute('inert')).toBe(true); // inert before focus mode: stays
+    };
+
+    for (const api of [mod.api, second.api]) {
+      api.exit();
+      await Promise.resolve();
+      clean();
+      api.enter();
+      await Promise.resolve();
+      expect(el('aside').getAttribute('data-nowo-ui-focus-hidden')).toBe('inert');
+      api.exit();
+      await Promise.resolve();
+      clean();
+      click(el('toggle'));
+      await Promise.resolve();
+      click(el('toggle'));
+      await Promise.resolve();
+      clean();
+    }
   });
 
   it('SK-L4: inert written by the host during focus mode is the host\'s after exit', async () => {
