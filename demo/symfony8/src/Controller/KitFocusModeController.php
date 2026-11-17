@@ -11,7 +11,7 @@ use Symfony\Component\HttpKernel\Profiler\Profiler;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- * UiKit 2.54 demo: the shell focus mode (`nowo_ui_kit.theme.focus_mode`, enabled in config/packages/nowo_ui_kit.yaml
+ * UiKit 2.55 demo: the shell focus mode (`nowo_ui_kit.theme.focus_mode`, enabled in config/packages/nowo_ui_kit.yaml
  * with `keep: [breadcrumb_min, search, timer_chip]`). A wiki-like page in the kit shell: the page toolbar has the
  * `focus_mode_toggle` partial (area `wiki`) and a fullscreen toggle; the header keeps a search field (Ctrl+K focuses
  * it, js/focus-mode-demo.js) and a timer chip; a side panel, the footer and a messages dock (a host element marked

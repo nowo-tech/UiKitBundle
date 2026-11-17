@@ -15,9 +15,9 @@ use Symfony\Component\DependencyInjection\Extension\Extension;
 use Twig\Environment;
 
 /**
- * 2.54 shell focus mode: `nowo_ui_kit.theme.focus_mode`, the Twig global, the shell root attributes and focus bar of
+ * 2.55 shell focus mode: `nowo_ui_kit.theme.focus_mode`, the Twig global, the shell root attributes and focus bar of
  * `app_shell_open`, the `focus_mode_toggle` / `focus_mode_bar` partials and the scripts partial. Off by default: the
- * shell, the scripts and both partials render exactly the 2.53 markup.
+ * shell, the scripts and both partials render exactly the 2.54 markup.
  */
 final class FocusModeTest extends TestCase
 {

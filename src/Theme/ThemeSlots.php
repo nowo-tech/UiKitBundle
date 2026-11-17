@@ -493,7 +493,7 @@ final class ThemeSlots
             'bootstrap' => 'btn btn-sm btn-outline-secondary',
             'foundation' => 'button clear tiny',
         ]],
-        // Shell focus mode (2.54, partials `focus_mode_toggle`, `focus_mode_bar`): the page's toggle, the focus bar shown
+        // Shell focus mode (2.55, partials `focus_mode_toggle`, `focus_mode_bar`): the page's toggle, the focus bar shown
         // in focus mode (one-line breadcrumb with `keep: [breadcrumb_min]`), its exit and fullscreen buttons
         'focus_mode_toggle' => ['nowo-ui-btn nowo-ui-btn--icon nowo-ui-focus-mode-toggle', [
             'bootstrap' => 'btn btn-sm btn-outline-secondary',

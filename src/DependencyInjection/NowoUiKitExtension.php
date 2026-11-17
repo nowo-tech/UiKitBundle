@@ -139,7 +139,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
                 'nowo_ui_kit_release_check' => $releaseCheck,
                 'nowo_ui_kit_shell' => $config['shell'],
                 'nowo_ui_kit_auth_panel' => $config['auth_panel'],
-                // 2.54: shell focus mode (theme.focus_mode): the shell attributes, the focus bar and the toggle partial.
+                // 2.55: shell focus mode (theme.focus_mode): the shell attributes, the focus bar and the toggle partial.
                 'nowo_ui_kit_focus_mode' => $config['theme']['focus_mode'],
             ],
         ];

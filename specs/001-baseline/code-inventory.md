@@ -1,6 +1,6 @@
 # Code inventory — 100% traceability
 
-**Last audited**: 2026-11-17 (2.54 line: shell focus mode; 2.53.0 line: inset sidebar style, dialog focus return, async combobox; 2.51.0 line: brand appearance, remote dialog, listing ports, side panel, rail, tree, image input, base stylesheet)  
+**Last audited**: 2026-11-17 (2.55 line: shell focus mode; 2.53.0 line: inset sidebar style, dialog focus return, async combobox; 2.51.0 line: brand appearance, remote dialog, listing ports, side panel, rail, tree, image input, base stylesheet)  
 **Baseline spec**: [`spec.md`](spec.md)  
 **Package**: `nowo-tech/ui-kit-bundle`
 
@@ -617,7 +617,7 @@ Produced by `pnpm run build` (`vite.config.ts`, one `VITE_ENTRY` per IIFE; `buil
 | `Resources/assets/src/nowo-ui-edge-tabs.ts` | Opt-in script that opens and closes the fold | FR-EDGETAB-002 |
 | `Resources/public/js/nowo-ui-edge-tabs.js` | Build output of `nowo-ui-edge-tabs.ts` | FR-BUILD-001, FR-EDGETAB-002 |
 
-## Shell focus mode (2.54)
+## Shell focus mode (2.55)
 
 | Source file | Spec section | Requirement IDs |
 | --- | --- | --- |
@@ -695,14 +695,14 @@ Produced by `pnpm run build` (`vite.config.ts`, one `VITE_ENTRY` per IIFE; `buil
 | Listing ports (framework-free, 2.49) | 5 |
 | Compact header, breadcrumbs, page actions, sidebar layout and style | 15 |
 | Side panel, rail, tree, edge tabs and layout state | 19 |
-| Shell focus mode (2.54) | 6 |
+| Shell focus mode (2.55) | 6 |
 | Overlay registry, scroll regions and small helpers | 10 |
 | Default theme stylesheet and token lint | 2 |
 | **Total** | **417** |
 
 Excluded: co-located Vitest `*.test.ts` (81 files at this audit).
 
-Audit (2026-11-17, with the 2.54 focus mode files):
+Audit (2026-11-17, with the 2.55 focus mode files):
 
 ```bash
 git ls-files src | grep -v '\.test\.ts$' | wc -l                      # 417

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Nowo\UiKitBundle\Shell;
 
 /**
- * Shell focus mode (2.54, config `nowo_ui_kit.theme.focus_mode`, Twig global `nowo_ui_kit_focus_mode`): the names and
+ * Shell focus mode (2.55, config `nowo_ui_kit.theme.focus_mode`, Twig global `nowo_ui_kit_focus_mode`): the names and
  * rules the config validates. The runtime is `js/nowo-ui-focus-mode.js`; the markup contract is in docs/USAGE.md.
  *
  * Regions are the shell parts hidden in focus mode. The built-in ones map to the kit shell markup (sidebar = the aside

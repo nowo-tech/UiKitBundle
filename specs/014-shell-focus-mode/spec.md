@@ -2,11 +2,11 @@
 
 **Feature Branch**: `feat/focus-mode`  
 **Created**: 2026-11-17  
-**Status**: Implemented (target 2.54.0)  
+**Status**: Implemented (target 2.55.0)  
 **Input**: Beacon request, approved by the owner on 2026-11-17: a generic focus mode of the kit shell, so WikiBundle and
 TaskBoard can add a toggle instead of each hiding the host chrome on its own.
 
-**Related docs**: [`docs/USAGE.md`](../../docs/USAGE.md#shell-focus-mode-254), [`docs/THEME_SLOTS.md`](../../docs/THEME_SLOTS.md),
+**Related docs**: [`docs/USAGE.md`](../../docs/USAGE.md#shell-focus-mode-255), [`docs/THEME_SLOTS.md`](../../docs/THEME_SLOTS.md),
 [`docs/CONFIGURATION.md`](../../docs/CONFIGURATION.md), [`docs/UPGRADING.md`](../../docs/UPGRADING.md)
 
 ---
@@ -26,7 +26,7 @@ shell, from a control inside focus mode. Config `nowo_ui_kit.theme.focus_mode` (
   `breadcrumb_min` built in), `shortcut` (`F`; null / false = none), `fullscreen` (true). Names are `^[a-z][a-z0-9_]{0,31}$`,
   shortcuts one letter or digit after optional `Ctrl+` / `Alt+` / `Shift+` / `Meta+`; anything else fails the container
   build. While `enabled` is false, `app_shell_open`, the `scripts` partial, `focus_mode_toggle` and `focus_mode_bar` render
-  exactly the 2.53 output. Enabled: the shell root gets `data-nowo-ui-focus-regions` / `-keep-list` / `-shortcut` /
+  exactly the 2.54 output. Enabled: the shell root gets `data-nowo-ui-focus-regions` / `-keep-list` / `-shortcut` /
   `-fullscreen` (`-area` with the `focus_area` option), the main region starts with the focus bar, the scripts partial adds
   `focus-mode`. A page opts out with the `app_shell_open` option `focus_mode: false`.
 - **FR-FOCUSMODE-002 (levels)** — `[data-nowo-ui-focus-mode]` (or `="toggle"`) toggles level 1, `="fullscreen"` enters
@@ -38,11 +38,12 @@ shell, from a control inside focus mode. Config `nowo_ui_kit.theme.focus_mode` (
   level becomes `fullscreen` on `fullscreenchange`, and a browser-side exit (Escape, F11, the API, a removed element)
   returns to level 1. Fullscreen controls are hidden where the browser or the config has no fullscreen.
 - **FR-FOCUSMODE-003 (keyboard and memory)** — The shortcut toggles level 1 only on pages with a toggle outside the focus
-  bar, and never: while an input, textarea, select or contenteditable is focused (a shortcut without Ctrl / Alt / Meta),
+  bar, and never: while an input, textarea, select or contenteditable, or (a shortcut without Ctrl / Alt / Meta) a link,
+  button or other interactive control is focused (WCAG 2.1.4: hosts remap or disable it with `shortcut`),
   with another modifier, on key repeat, during composition, when the event was already handled (`defaultPrevented`) or
   while a dialog, menu, listbox, popover, open kit menu, open popup (`aria-expanded` combobox / popup button) or the phone
   aside drawer owns the keys. Escape (no modifier) leaves fullscreen first, then focus mode, under the same "nothing else
-  owns it" rule; Ctrl / Cmd combinations (Ctrl+K search) are never handled. The state is remembered per area
+  owns it" rule and never from a focused text field; Ctrl / Cmd combinations (Ctrl+K search) are never handled. The state is remembered per area
   (`data-nowo-ui-focus-area` on the toggle, an ancestor or the page) in localStorage `nowo-ui-focus:<area>` = `on` and
   restored quietly on load and after `turbo:load` (level 1 only: fullscreen needs a user gesture); every storage access is
   wrapped in try / catch, and without storage nothing is remembered.
@@ -55,7 +56,15 @@ shell, from a control inside focus mode. Config `nowo_ui_kit.theme.focus_mode` (
 - **FR-FOCUSMODE-005 (CSP and integration)** — Delegated listeners on the document, no inline handlers, styles or scripts;
   kit tokens only. Event `nowo-ui:focus-mode:change` `{level, previous, area, source}` on the shell; API
   `window.NowoUiFocusMode` (`enter`, `exit`, `toggle`, `fullscreen`, `level`). Works with Turbo (`turbo:load`,
-  `turbo:frame-load`) and in FrankenPHP worker mode (no server state; the Twig global is the processed config).
+  `turbo:frame-load`) and in FrankenPHP worker mode (no server state; the Twig global is the processed config). A
+  second copy of the script binds nothing (`Symbol.for('nowo-ui.focus-mode.bound')`), and a click already handled
+  (`defaultPrevented`) toggles nothing. `inert` the host writes on a hidden element during focus mode stays the host's.
+
+## Audit SK (2026-11-17) fixes
+
+SK-M2 (second copy, `defaultPrevented`), SK-L3 (Escape stays with text fields), SK-L4 (host `inert` ownership), SK-L5
+(2.55 labels, spec 014, SECURITY.md), I6 (`F` ignored on focused controls, WCAG 2.1.4 note), I7 (`<html>` state cleared
+without a focus-mode shell), I8 (live region created on start), I9 (e2e in Chromium, Firefox and WebKit).
 
 ## Out of scope
 

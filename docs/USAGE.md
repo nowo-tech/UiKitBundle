@@ -52,7 +52,7 @@
 - [Side panel and drawer (2.25)](#side-panel-and-drawer-225)
   - [Drawer breakpoint and remembered state (2.48)](#drawer-breakpoint-and-remembered-state-248)
 - [Collapsible column rail (2.48)](#collapsible-column-rail-248)
-- [Shell focus mode (2.54)](#shell-focus-mode-254)
+- [Shell focus mode (2.55)](#shell-focus-mode-255)
 - [Reading column and wide content (2.48)](#reading-column-and-wide-content-248)
 - [Remote form dialog (2.28)](#remote-form-dialog-228)
 - [Small element options (2.34)](#small-element-options-234)
@@ -2419,7 +2419,7 @@ and `script_names: nowo_ui_script_names()|merge(['rail'])`.
   `data-nowo-ui-rail-*`) are dropped from it, so they are never printed twice or changed.
 - **CSP:** delegated listeners, no inline handlers or styles.
 
-## Shell focus mode (2.54)
+## Shell focus mode (2.55)
 
 A focus mode for the kit shell: the page's work area goes full width and the chrome around it leaves. Two levels:
 
@@ -2428,7 +2428,7 @@ A focus mode for the kit shell: the page's work area goes full width and the chr
 2. **Fullscreen** (optional) — from inside focus mode, the browser's real fullscreen (Fullscreen API) on the shell:
    `data-focus-mode="fullscreen"`.
 
-Turn it on once in the config ([CONFIGURATION](CONFIGURATION.md#shell-focus-mode-254)):
+Turn it on once in the config ([CONFIGURATION](CONFIGURATION.md#shell-focus-mode-255)):
 
 ```yaml
 nowo_ui_kit:
@@ -2495,11 +2495,18 @@ data-nowo-ui-focus-shortcut="F"`; `data-nowo-ui-focus-fullscreen="false"` withou
 ### Keyboard
 
 - **`F`** (config `shortcut`; `null` disables it) toggles level 1 on pages with a toggle, never while an input,
-  textarea, select or contenteditable is focused, with a modifier pressed, on key repeat, or while a dialog, menu,
+  textarea, select or contenteditable is focused, while a link, button or other interactive control (`summary`, tabs,
+  checkboxes, menu items, options…) has the focus, with a modifier pressed, on key repeat, or while a dialog, menu,
   listbox, popover or open popup owns the keys. A shortcut with Ctrl / Alt / Meta (`Alt+Shift+F`) also works while typing.
+- **WCAG 2.1.4 (Character Key Shortcuts):** `F` is a single-character shortcut, the default the owner asked for. It only
+  fires where it cannot be typed by mistake (see above), but WCAG asks that users can turn such a shortcut off or remap
+  it: a host whose users need that sets `shortcut: 'Alt+Shift+F'` (a modifier) or `shortcut: null`, or exposes the
+  choice in its user settings and passes it per page through `data-nowo-ui-focus-shortcut` on the shell root.
 - **`Escape`** leaves fullscreen first, then focus mode — only when nothing else handles it: an open dialog, menu,
-  popover, combobox list or phone drawer keeps its Escape, and an event already handled (`defaultPrevented`) is ignored.
-  In fullscreen the browser usually takes Escape itself; the state follows it back to level 1.
+  popover, combobox list or phone drawer keeps its Escape, an event already handled (`defaultPrevented`) is ignored, and
+  a focused text field (input, textarea, contenteditable editor) keeps its Escape (clearing a search, leaving an editor's
+  mode): move the focus out of it, or use the exit button. In fullscreen the browser usually takes Escape itself; the
+  state follows it back to level 1.
 - **Ctrl+K** (and every Ctrl / Cmd combination) is never handled: keep the global search with `keep: [search]` and mark it
   `data-nowo-ui-focus-keep="search"`, so a host shortcut that focuses it still finds it (an inert field cannot be focused).
 
@@ -2518,6 +2525,13 @@ data-nowo-ui-focus-shortcut="F"`; `data-nowo-ui-focus-fullscreen="false"` withou
   gets it, and leaving from the focus bar returns it to the toggle that entered.
 - **Announcements:** each change is read from a polite live region (`[data-nowo-ui-focus-status]`, printed by the focus
   bar with the translated `focus_mode.announce_*` texts; created by the script when a host shell has none).
+- **Host `inert`:** focus mode removes on exit only the `inert` it added. An element that was inert before stays inert;
+  `inert` the host writes on a hidden element during focus mode (a modal library making the page inert) becomes the
+  host's and stays after exit; `inert` the host removes from a hidden element stays until exit (the element is hidden),
+  then is gone.
+- **Loaded twice:** a second copy of the script (a Turbo body script, two bundles printing it) re-applies the state and
+  the API only; the listeners are bound once (`Symbol.for('nowo-ui.focus-mode.bound')` on `window`), and a click another
+  handler already took (`defaultPrevented`) toggles nothing.
 - **Motion / CSP:** no animation of its own; delegated listeners, no inline handlers, styles or scripts; kit tokens only.
 
 ### Events and API

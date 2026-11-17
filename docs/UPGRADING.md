@@ -156,7 +156,7 @@
 
 Nothing to change: the shell focus mode is off by default (`nowo_ui_kit.theme.focus_mode.enabled: false`), and while it
 is off the shell, the `scripts` partial and the new `focus_mode_toggle` / `focus_mode_bar` partials render the 2.53
-markup. To adopt it ([USAGE "Shell focus mode"](USAGE.md#shell-focus-mode-254)):
+markup. To adopt it ([USAGE "Shell focus mode"](USAGE.md#shell-focus-mode-255)):
 
 1. Enable it in the host config, with the regions your shell has and what to keep:
 

@@ -1,4 +1,4 @@
-// UiKit 2.54 demo host (/kit/focus-mode): a Beacon-like global search shortcut. Ctrl+K (Cmd+K) focuses the header
+// UiKit 2.55 demo host (/kit/focus-mode): a Beacon-like global search shortcut. Ctrl+K (Cmd+K) focuses the header
 // search field, which focus mode keeps (keep: [search]), so the shortcut works in focus mode too.
 (() => {
   document.addEventListener('keydown', (event) => {

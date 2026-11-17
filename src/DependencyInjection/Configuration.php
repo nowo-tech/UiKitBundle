@@ -690,7 +690,7 @@ final class Configuration implements ConfigurationInterface
                 ->end()
             ->end()
             ->arrayNode('focus_mode')
-                ->info('2.54: shell focus mode — [data-nowo-ui-focus-mode] toggles hide the shell regions (level 1) and optionally enter the browser fullscreen (level 2); js/nowo-ui-focus-mode.js. See docs/USAGE.md#shell-focus-mode-254.')
+                ->info('2.55: shell focus mode — [data-nowo-ui-focus-mode] toggles hide the shell regions (level 1) and optionally enter the browser fullscreen (level 2); js/nowo-ui-focus-mode.js. See docs/USAGE.md#shell-focus-mode-255.')
                 ->addDefaultsIfNotSet()
                 ->children()
                     ->booleanNode('enabled')

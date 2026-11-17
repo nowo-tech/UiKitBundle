@@ -71,7 +71,7 @@ nowo_ui_kit:
             table: { data-acme-table: 'zebra' }
         partials:
             page_header: 'page_contract/theme/_page_header.html.twig'
-        # UiKit 2.54 shell focus mode (/kit/focus-mode): every kit shell page gets the shell attributes and the focus bar;
+        # UiKit 2.55 shell focus mode (/kit/focus-mode): every kit shell page gets the shell attributes and the focus bar;
         # only pages with a focus_mode_toggle react to F. The header keeps the search field and the timer chip; the focus
         # bar shows the one-line breadcrumb.
         focus_mode:

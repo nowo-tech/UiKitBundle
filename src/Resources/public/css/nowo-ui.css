@@ -6650,7 +6650,7 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
 }
 
 /*
- * Shell focus mode (2.54, nowo_ui_kit.theme.focus_mode, js/nowo-ui-focus-mode.js). The script marks every hidden region
+ * Shell focus mode (2.55, nowo_ui_kit.theme.focus_mode, js/nowo-ui-focus-mode.js). The script marks every hidden region
  * (or, around a kept element, every branch without one) with data-nowo-ui-focus-hidden + inert; here they leave the
  * layout. The shell root carries data-focus-mode="on" | "fullscreen": the aside column and the fixed header row
  * collapse, the main region goes full width and the focus bar (exit / fullscreen buttons, optional one-line

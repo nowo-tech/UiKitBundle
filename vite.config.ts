@@ -530,7 +530,7 @@ const configs: Record<Entry, { build: object }> = {
       sourcemap: false,
     },
   },
-  // 2.54: shell focus mode (theme.focus_mode; added to the scripts partial when enabled).
+  // 2.55: shell focus mode (theme.focus_mode; added to the scripts partial when enabled).
   'focus-mode': {
     build: {
       outDir: 'src/Resources/public',
