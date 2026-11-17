@@ -135,6 +135,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **An empty `script_names` list prints no default runtimes** (Beacon report). The `scripts` partial used
+  `script_names|default(nowo_ui_script_names())`, and Twig's `default` filter treats an empty array as unset, so a host
+  passing `script_names: []` (to get only the theme-appended runtimes such as `context-menu` / `focus-mode`) got the whole
+  default list printed again and every runtime twice. The partial now tests `is defined and is not null`: `[]` prints only
+  the theme-appended runtimes (once each), while an undefined or `null` value still prints the defaults. Same fix for
+  `burger_static_icons` / `static_icons` (the `app_shell_open` shell and the `burger` partial): `[]` now means "no static
+  icon in the morph burger" instead of both. The `page_header` partial also drops a needless hash-key quote (`twig-cs-fixer`
+  lint).
+
 ## [2.55.0] - 2026-11-17
 
 ### Added
