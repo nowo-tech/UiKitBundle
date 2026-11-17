@@ -1,6 +1,6 @@
 # Code inventory — 100% traceability
 
-**Last audited**: 2026-11-16 (2.51.0 line: brand appearance, remote dialog, listing ports, side panel, rail, tree, image input, base stylesheet)  
+**Last audited**: 2026-11-17 (2.53.0 line: inset sidebar style, dialog focus return, async combobox; 2.51.0 line: brand appearance, remote dialog, listing ports, side panel, rail, tree, image input, base stylesheet)  
 **Baseline spec**: [`spec.md`](spec.md)  
 **Package**: `nowo-tech/ui-kit-bundle`
 
@@ -10,7 +10,7 @@ one row per file. Paths are relative to `src/`. Requirement IDs are defined in [
 
 **Scope**: every file tracked by Git under `src/` (`git ls-files src`), i.e. PHP, TypeScript, Twig, YAML, CSS, SCSS,
 the built JavaScript and the Stimulus peers README. **Excluded**: the co-located Vitest files `*.test.ts` under
-`Resources/assets/` (78 files at this audit — test artifacts covered by FR-TEST-001, not shipped runtime units; same rule as
+`Resources/assets/` (80 files at this audit — test artifacts covered by FR-TEST-001, not shipped runtime units; same rule as
 TwigInspectorBundle). `tests/`, `demo/` apps and caches are outside `src/` and out of scope. Built files that live
 under `src/` (the Vite IIFEs, the layered stylesheet and the inline theme-boot copy) are committed (Packagist installs
 no Node toolchain); they are listed in their own table as **outputs** of named sources (`FR-BUILD-*`) and are never
@@ -417,6 +417,7 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | `Resources/assets/src/nowo-ui-open-modal-core.ts` | Side-effect-free open-modal-on-load helpers | FR-OPENMODAL-001 |
 | `Resources/assets/src/nowo-ui-open-modal.ts` | Open-modal-on-load IIFE | FR-OPENMODAL-001 |
 | `Resources/assets/src/nowo-ui-dialog.ts` | 2.1: generic native dialog runtime (backdrop close, focus return) | FR-DIALOG-001 |
+| `Resources/assets/src/nowo-ui-focus-return.ts` | 2.52.2: returns focus to the opener (or its menu toggle) when a dialog closes (WCAG 2.4.3) | FR-DIALOG-002 |
 | `Resources/assets/src/nowo-ui-popover.ts` | 2.4: popover menu placement and keyboard | FR-MENU-001 |
 | `Resources/assets/src/nowo-ui-segmented.ts` | 2.4: segmented radio group synced to its checkbox | FR-SEGMENTED-001 |
 | `Resources/assets/src/nowo-ui-autosubmit.ts` | 2.6: `data-nowo-ui-autosubmit` submits on change | FR-AUTOSUBMIT-001 |
@@ -582,6 +583,8 @@ Produced by `pnpm run build` (`vite.config.ts`, one `VITE_ENTRY` per IIFE; `buil
 | `Shell/SafeHref.php` | Scheme guard for host-supplied hrefs and image sources | FR-HEADER-003 |
 | `Shell/SidebarLayout.php` | Sidebar layout enum: `below-header` or `full-height` | FR-SIDEBARLAYOUT-001 |
 | `Shell/SidebarLayoutResolver.php` | Resolves the sidebar layout of the current request | FR-SIDEBARLAYOUT-001 |
+| `Shell/SidebarStyle.php` | Shell chrome style enum: `classic` or `inset` (2.52) | FR-SIDEBARSTYLE-001 |
+| `Shell/SidebarStyleResolver.php` | Resolves the sidebar style: `sidebar_style` option, request attribute, then config | FR-SIDEBARSTYLE-001 |
 | `Resources/views/shell/_brand_parts.html.twig` | Brand made of icon and name for the full-height aside head | FR-SIDEBARLAYOUT-001 |
 | `Resources/views/partials/_header_crumbs.html.twig` | Compact breadcrumb partial, truncated levels, current page last | FR-HEADER-001 |
 | `Resources/views/partials/_header_context.html.twig` | Compact header filling: page actions trigger and crumbs | FR-HEADER-002 |
@@ -668,7 +671,7 @@ Produced by `pnpm run build` (`vite.config.ts`, one `VITE_ENTRY` per IIFE; `buil
 | Twig views — partials: shell chrome and feedback | 27 |
 | Twig views — partials: filters, tables, pagination, segmented | 26 |
 | Stylesheets (authored) | 4 |
-| TypeScript — kit IIFE sources (`Resources/assets/src/`) | 27 |
+| TypeScript — kit IIFE sources (`Resources/assets/src/`) | 28 |
 | TypeScript — Thinking Orbs (vendored MIT, `Resources/assets/src/orb/`) | 14 |
 | TypeScript — morphicons (optional, `Resources/assets/morphicons/`) | 1 |
 | Stimulus peers (`Resources/assets/stimulus-peers/`) | 27 |
@@ -679,13 +682,13 @@ Produced by `pnpm run build` (`vite.config.ts`, one `VITE_ENTRY` per IIFE; `buil
 | Remote form dialog (2.28 / 2.33) | 10 |
 | Image input | 8 |
 | Listing ports (framework-free, 2.49) | 5 |
-| Compact header, breadcrumbs, page actions and sidebar layout | 13 |
+| Compact header, breadcrumbs, page actions, sidebar layout and style | 15 |
 | Side panel, rail, tree, edge tabs and layout state | 19 |
 | Overlay registry, scroll regions and small helpers | 10 |
 | Default theme stylesheet and token lint | 2 |
-| **Total** | **403** |
+| **Total** | **406** |
 
-Excluded: co-located Vitest `*.test.ts` (78 files at this audit).
+Excluded: co-located Vitest `*.test.ts` (80 files at this audit).
 
 Audit (2026-11-16):
 

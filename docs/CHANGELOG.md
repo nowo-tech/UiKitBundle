@@ -133,6 +133,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Documentation
+
+- Spec Kit baseline: `code-inventory.md` maps `Shell/SidebarStyle*.php` and `nowo-ui-focus-return.ts` (406 units, 2.53.0 line); `spec.md` gains FR-SIDEBARSTYLE-001 and FR-DIALOG-002 (REQ-SPECKIT-003).
+
 ## [2.53.0] - 2026-11-16
 
 ### Added
