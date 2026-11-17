@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.54.0](#to-2540)
 - [To 2.53.0](#to-2530)
 - [To 2.52.2](#to-2522)
 - [To 2.52.1](#to-2521)
@@ -153,6 +154,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.54.0
+
+From **2.53.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 Nothing to change. Context menus are opt-in and off by default: without `theme.context_menus`, the `context_menu` partial option
 or a `data-nowo-ui-context-menu` attribute, the markup of the `kebab`, `row_actions`, `menu` and `scripts` partials is unchanged and
