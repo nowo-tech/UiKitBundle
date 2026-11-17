@@ -189,8 +189,9 @@ describe('nowo-ui-context-menu', () => {
       expect(mod.resolveHost(document.getElementById('p3'))?.source.id).toBe('k');
       expect(mod.resolveHost(document.getElementById('p4'))).toBeNull();
       expect(mod.resolveHost(document.getElementById('p5'))).toBeNull();
-      expect(mod.resolveHost(document.getElementById('p6'))?.source.id).toBe('m6');
-      expect(mod.resolveHost(document.getElementById('p7'))?.source.id).toBe('plain');
+      // Only a kebab / menu / row-actions root or a panel inside one (audit SK-L2): not a wrapper, not any element.
+      expect(mod.resolveHost(document.getElementById('p6'))).toBeNull();
+      expect(mod.resolveHost(document.getElementById('p7'))).toBeNull();
       expect(mod.resolveHost(document.getElementById('p8'))).toBeNull();
     });
 
@@ -248,6 +249,32 @@ describe('nowo-ui-context-menu', () => {
       const titled = document.createElement('button');
       titled.title = 'By title';
       expect(mod.labelOf(titled)).toBe('By title');
+    });
+
+    it('never mirrors inert, aria-hidden or unrendered entries; :disabled and fieldset[disabled] are disabled (audit SK-L1)', () => {
+      document.body.innerHTML = `
+        <div id="src" data-nowo-ui-popover-menu>
+          <ul class="nowo-ui-menu__panel" data-nowo-ui-popover-panel popover style="display: none">
+            <li><a href="#ok">Shown</a></li>
+            <li inert><a href="#inert">Inert</a></li>
+            <li><a href="#inert2" inert>Inert item</a></li>
+            <li aria-hidden="true"><a href="#ah">Aria hidden</a></li>
+            <li style="display: none"><a href="#dn">Display none wrapper</a></li>
+            <li><a href="#dn2" style="display: none">Display none item</a></li>
+            <li><a href="#vh" style="visibility: hidden">Visibility hidden</a></li>
+            <li><a href="#vc" style="visibility: collapse">Visibility collapse</a></li>
+            <li><form><fieldset disabled><button type="submit" id="fs">In disabled fieldset</button></fieldset></form></li>
+            <li><select disabled id="sel"></select><button type="button" id="dis" disabled>Disabled</button></li>
+            <li><details data-nowo-ui-menu><summary>More</summary><ul class="nowo-ui-menu__panel" style="display: none"><li><a href="#n">Nested</a></li></ul></details></li>
+          </ul>
+        </div>`;
+      const list = mod.collectEntries(document.getElementById('src')!);
+      const labelsOf = (entries: mod.Entry[]): string[] => entries.map((entry) => (entry.kind === 'separator' ? '-' : entry.label));
+      expect(labelsOf(list)).toEqual(['Shown', 'In disabled fieldset', 'Disabled', 'More']);
+      expect((list[1] as { disabled: boolean }).disabled).toBe(true);
+      expect((list[2] as { disabled: boolean }).disabled).toBe(true);
+      expect((list[0] as { disabled: boolean }).disabled).toBe(false);
+      expect(labelsOf((list[3] as { children: mod.Entry[] }).children)).toEqual(['Nested']);
     });
 
     it('a menu panel itself can be the source', () => {
@@ -800,20 +827,62 @@ describe('nowo-ui-context-menu', () => {
       expect(rowClick).toHaveBeenCalledTimes(1);
     });
 
-    it('a click on a menu item right after the press is not swallowed, and the suppression expires', () => {
+    it('a click on a menu item right after the press is not swallowed', () => {
       const spy = vi.fn();
       document.getElementById('edit')!.addEventListener('click', spy);
       pointer('pointerdown', document.getElementById('c1')!);
       vi.advanceTimersByTime(mod.LONG_PRESS_MS);
       items()[0]!.click();
       expect(spy).toHaveBeenCalledTimes(1);
-      pointer('pointerdown', document.getElementById('c1')!);
-      vi.advanceTimersByTime(mod.LONG_PRESS_MS);
-      vi.advanceTimersByTime(mod.SUPPRESS_MS);
+    });
+
+    it("the suppression follows the press's own pointerup (not a fixed delay), and a new pointer ends it", () => {
+      const cell = document.getElementById('c1')!;
       const later = vi.fn();
       document.getElementById('c3')!.addEventListener('click', later);
+      pointer('pointerdown', cell);
+      vi.advanceTimersByTime(mod.LONG_PRESS_MS);
+      // A slow click, long after opening, while the finger is still down: still the press's own.
+      vi.advanceTimersByTime(mod.SUPPRESS_MS * 3);
+      pointer('pointerup', cell, { pointerId: 99 });
+      vi.advanceTimersByTime(mod.CLICK_GRACE_MS);
+      const slow = new MouseEvent('click', { bubbles: true, cancelable: true });
+      document.getElementById('c3')!.dispatchEvent(slow);
+      expect(slow.defaultPrevented).toBe(true);
+      // Its pointerup: the click right after it is swallowed, a click later is not.
+      pointer('pointerdown', cell);
+      vi.advanceTimersByTime(mod.LONG_PRESS_MS);
+      pointer('pointerup', cell);
+      pointer('pointerup', cell);
+      vi.advanceTimersByTime(mod.CLICK_GRACE_MS);
       document.getElementById('c3')!.click();
       expect(later).toHaveBeenCalledTimes(1);
+      // No click ever came, but a new touch starts: the old suppression is gone.
+      pointer('pointerdown', cell);
+      vi.advanceTimersByTime(mod.LONG_PRESS_MS);
+      pointer('pointerdown', document.getElementById('c3')!, { pointerId: 8, pointerType: 'mouse' });
+      document.getElementById('c3')!.click();
+      expect(later).toHaveBeenCalledTimes(2);
+      // pointercancel ends it like pointerup.
+      pointer('pointerdown', cell);
+      vi.advanceTimersByTime(mod.LONG_PRESS_MS);
+      pointer('pointercancel', cell);
+      vi.advanceTimersByTime(mod.CLICK_GRACE_MS);
+      document.getElementById('c3')!.click();
+      expect(later).toHaveBeenCalledTimes(3);
+    });
+
+    it('a second copy of the script (Turbo re-runs body scripts) binds nothing: one long press, one menu', async () => {
+      // The module under test bound once at import (window flag set); a fresh copy must see the flag.
+      vi.resetModules();
+      const second = await import('./nowo-ui-context-menu');
+      expect(second).not.toBe(mod);
+      expect((window as unknown as Record<symbol, unknown>)[Symbol.for('nowo-ui.context-menu.bound')]).toBe(true);
+      pointer('pointerdown', document.getElementById('c1')!);
+      vi.advanceTimersByTime(mod.LONG_PRESS_MS);
+      expect(document.querySelectorAll('.nowo-ui-context-menu')).toHaveLength(1);
+      expect(second.isContextMenuOpen()).toBe(false);
+      expect(mod.isContextMenuOpen()).toBe(true);
     });
 
     it('moving the finger, lifting it, cancelling or scrolling cancels the press', () => {

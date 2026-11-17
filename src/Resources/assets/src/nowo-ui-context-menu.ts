@@ -56,6 +56,8 @@ export const MOVE_TOLERANCE_PX = 10;
 export const TYPEAHEAD_MS = 500;
 /** How long the browser's own `contextmenu` / `click` following a keyboard or touch open is swallowed (ms). */
 export const SUPPRESS_MS = 800;
+/** After the pointerup that ends a long press, how long its click is still swallowed (ms). */
+export const CLICK_GRACE_MS = 100;
 
 export type Trigger = 'pointer' | 'keyboard' | 'touch';
 
@@ -86,6 +88,8 @@ let typeaheadTimer: ReturnType<typeof setTimeout> | null = null;
 let suppressContextMenuUntil = 0;
 let suppressClick = false;
 let suppressClickTimer: ReturnType<typeof setTimeout> | null = null;
+/** The pointer whose long press opened the menu: the click that ends it follows its pointerup. */
+let suppressPointer: number | null = null;
 type Press = { id: number; x: number; y: number; target: Element; timer: ReturnType<typeof setTimeout> };
 let press: Press | null = null;
 
@@ -103,7 +107,28 @@ export function labelOf(el: Element): string {
 }
 
 function isDisabled(el: HTMLElement): boolean {
-  return (el as HTMLButtonElement).disabled === true || el.getAttribute('aria-disabled') === 'true' || el.classList.contains('is-disabled');
+  return (
+    (el as HTMLButtonElement).disabled === true ||
+    el.matches(':disabled') ||
+    el.closest('fieldset[disabled]') !== null ||
+    el.getAttribute('aria-disabled') === 'true' ||
+    el.classList.contains('is-disabled')
+  );
+}
+
+/**
+ * Whether a kebab entry is rendered, judged between the entry and its own panel: the closed popover / <details> panel
+ * itself is never rendered, so it does not count; `display: none` on the entry or a wrapper inside the panel, or
+ * `visibility: hidden` on the entry, does.
+ */
+function isRendered(el: Element, container: Element): boolean {
+  for (let node: Element | null = el; node && node !== container && !node.matches(PANEL); node = node.parentElement) {
+    const style = getComputedStyle(node);
+    if (style.display === 'none' || (node === el && (style.visibility === 'hidden' || style.visibility === 'collapse'))) {
+      return false;
+    }
+  }
+  return true;
 }
 
 function isDanger(el: HTMLElement): boolean {
@@ -127,7 +152,8 @@ function toggleLabel(root: Element): string {
 function walk(container: Element): Entry[] {
   const out: Entry[] = [];
   const visit = (el: Element): void => {
-    if (el.matches('dialog, template, script, style, [hidden]') || el.matches(TOGGLE)) {
+    // Inert or aria-hidden entries are not offered: what the kebab hides stays hidden.
+    if (el.matches('dialog, template, script, style, [hidden], [inert], [aria-hidden="true"]') || el.matches(TOGGLE)) {
       return;
     }
     if (el.matches(NESTED_ROOT)) {
@@ -150,7 +176,7 @@ function walk(container: Element): Entry[] {
     }
     if (el.matches(CONTROL) && el instanceof HTMLElement) {
       const label = labelOf(el);
-      if (label) {
+      if (label && isRendered(el, container)) {
         out.push({
           kind: 'item',
           label,
@@ -196,10 +222,8 @@ function explicitSource(host: HTMLElement, value: string): HTMLElement | null {
   if (!el) {
     return null;
   }
-  if (el.matches(SOURCE)) {
-    return el;
-  }
-  return el.closest<HTMLElement>(SOURCE) ?? el.querySelector<HTMLElement>(SOURCE) ?? el;
+  // Only a kebab / menu / row-actions root, or a panel inside one: never an arbitrary element of the page.
+  return el.matches(SOURCE) ? el : el.closest<HTMLElement>(SOURCE);
 }
 
 /** The host element and kebab source a target belongs to, or null (no context menu there). */
@@ -556,7 +580,7 @@ function activate(item: HTMLElement): void {
   const returnTo = open.returnTo;
   closeContextMenu(true);
   // The forwarded click is the user's choice, not the end of a long press.
-  suppressClick = false;
+  clearClickSuppression();
   const original = entry.original;
   // After the kit's own capture-phase recorder (document), before the item's handlers: a dialog the item opens
   // returns focus to the element the context menu was opened from, else the kebab's toggle.
@@ -778,11 +802,12 @@ function onContextMenu(event: MouseEvent): void {
   if (press) {
     // Android fires its own contextmenu during a long press: open now, once.
     const at = { x: press.x, y: press.y };
+    const pointerId = press.id;
     cancelPress();
     const resolved = resolveHost(target);
     if (resolved && !keepsNativeMenu(target) && openContextMenu(resolved.host, resolved.source, at, 'touch')) {
       event.preventDefault();
-      armClickSuppression();
+      armClickSuppression(pointerId);
     }
     return;
   }
@@ -824,19 +849,26 @@ function cancelPress(): void {
   }
 }
 
-function armClickSuppression(): void {
-  suppressClick = true;
-  suppressContextMenuUntil = Date.now() + SUPPRESS_MS;
+function clearClickSuppression(): void {
+  suppressClick = false;
+  suppressPointer = null;
   if (suppressClickTimer) {
     clearTimeout(suppressClickTimer);
-  }
-  suppressClickTimer = setTimeout(() => {
-    suppressClick = false;
     suppressClickTimer = null;
-  }, SUPPRESS_MS);
+  }
+}
+
+/** Swallows the click that ends the long press of `pointerId`: until shortly after that pointer's pointerup / pointercancel. */
+function armClickSuppression(pointerId: number): void {
+  clearClickSuppression();
+  suppressClick = true;
+  suppressPointer = pointerId;
+  suppressContextMenuUntil = Date.now() + SUPPRESS_MS;
 }
 
 function onPointerDown(event: PointerEvent): void {
+  // A new pointer: the long press before it is over (its click never came).
+  clearClickSuppression();
   if (event.pointerType !== 'touch' && event.pointerType !== 'pen') {
     return;
   }
@@ -852,7 +884,7 @@ function onPointerDown(event: PointerEvent): void {
     press = null;
     const resolved = resolveHost(target);
     if (resolved && !keepsNativeMenu(target) && openContextMenu(resolved.host, resolved.source, { x, y }, 'touch')) {
-      armClickSuppression();
+      armClickSuppression(id);
     }
   }, LONG_PRESS_MS);
   press = { id, x, y, target, timer };
@@ -868,6 +900,10 @@ function onPointerEnd(event: PointerEvent): void {
   if (press && event.pointerId === press.id) {
     cancelPress();
   }
+  if (suppressClick && event.pointerId === suppressPointer && !suppressClickTimer) {
+    // The click (if the engine sends one) follows the pointerup at once.
+    suppressClickTimer = setTimeout(clearClickSuppression, CLICK_GRACE_MS);
+  }
 }
 
 function onPressScroll(): void {
@@ -877,7 +913,7 @@ function onPressScroll(): void {
 /** The click that ends a long press must not activate what is under the finger (the menu itself excepted). */
 function onClickCapture(event: MouseEvent): void {
   if (suppressClick && !insideMenu(event.target)) {
-    suppressClick = false;
+    clearClickSuppression();
     event.preventDefault();
     event.stopPropagation();
   }
@@ -907,7 +943,7 @@ export function bindNowoUiContextMenu(): void {
 export function unbindNowoUiContextMenu(): void {
   closeContextMenu(false);
   cancelPress();
-  suppressClick = false;
+  clearClickSuppression();
   suppressContextMenuUntil = 0;
   if (!bound) {
     return;
@@ -925,4 +961,10 @@ export function unbindNowoUiContextMenu(): void {
   document.removeEventListener('turbo:before-render', onTurbo);
 }
 
-bindNowoUiContextMenu();
+// A second copy of the script (Turbo runs body scripts again on every visit) must not bind again: two copies would
+// each open a menu on a long press. A symbol: an element with some id cannot turn this off.
+const BOUND_KEY = Symbol.for('nowo-ui.context-menu.bound');
+if (typeof window !== 'undefined' && !(window as unknown as Record<symbol, unknown>)[BOUND_KEY]) {
+  (window as unknown as Record<symbol, unknown>)[BOUND_KEY] = true;
+  bindNowoUiContextMenu();
+}
