@@ -10,6 +10,8 @@ const POLICY = "style-src-attr 'none'";
 async function noTooling(page: Page): Promise<void> {
   await page.route('**/_wdt/**', (route) => route.abort());
   await page.route('https://cdn.jsdelivr.net/**', (route) => route.abort());
+  // Bootstrap is vendored under /third-party/ now; this spec still runs without it, as it did when it came from the (blocked) CDN.
+  await page.route('**/third-party/bootstrap*/**', (route) => route.abort());
 }
 
 async function withPolicy(page: Page, path: string, policy: string | null = POLICY): Promise<void> {

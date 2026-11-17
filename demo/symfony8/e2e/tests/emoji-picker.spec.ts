@@ -9,6 +9,8 @@ type Violation = { directive: string };
 async function watchCsp(page: Page): Promise<() => Promise<Violation[]>> {
   await page.route('**/_wdt/**', (route) => route.abort());
   await page.route('https://cdn.jsdelivr.net/**', (route) => route.abort());
+  // Bootstrap is vendored under /third-party/ now; this spec still runs without it, as it did when it came from the (blocked) CDN.
+  await page.route('**/third-party/bootstrap*/**', (route) => route.abort());
   await page.addInitScript(() => {
     const seen: { directive: string }[] = [];
     (window as unknown as { cspSeen: typeof seen }).cspSeen = seen;
