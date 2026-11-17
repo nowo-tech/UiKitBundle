@@ -131,7 +131,7 @@
     label_attr_names: burger_label_attr_names|default({}),
     attr: burger_attr|default({}),
     icon: burger_icon|default('svg'),
-    static_icons: burger_static_icons|default(['open', 'close']),
+    static_icons: burger_static_icons is defined and burger_static_icons is not null ? burger_static_icons : ['open', 'close'],
     bundle: bundle,
 } %}
 {% set _brand_cfg = _cfg.brand|default({}) %}
