@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.55.0](#to-2550)
 - [To 2.54.0](#to-2540)
 - [To 2.53.0](#to-2530)
 - [To 2.52.2](#to-2522)
@@ -154,6 +155,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.55.0
+
+From **2.54.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 Nothing to change: the shell focus mode is off by default (`nowo_ui_kit.theme.focus_mode.enabled: false`), and while it
 is off the shell, the `scripts` partial and the new `focus_mode_toggle` / `focus_mode_bar` partials render the 2.54
