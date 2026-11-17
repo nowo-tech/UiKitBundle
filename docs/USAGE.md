@@ -2826,8 +2826,9 @@ Then pick one of:
   <li data-nowo-ui-context-menu>…{{ include(nowo_ui_partial('menu'), {items: items}) }}</li>
   ```
 
-  An empty value takes the first kebab / menu / row actions inside the element; a value is the id of one (or of its panel; `#`
-  optional). `data-nowo-ui-context-menu="off"` keeps the browser's menu on an element (and its content) under the theme flag.
+  An empty value takes the first kebab / menu / row actions inside the element; a value is the id of one (or of a panel inside
+  one; `#` optional). Any other id (a plain element, a wrapper) gives no context menu: only a kebab, menu or row-actions root
+  is ever a source. `data-nowo-ui-context-menu="off"` keeps the browser's menu on an element (and its content) under the theme flag.
 
 Give the row or card `tabindex="0"` (or let your existing focus handling reach it) so the keyboard can open its menu; focus goes
 back to it when the menu closes.
@@ -2854,7 +2855,10 @@ Links, buttons and submit buttons of the kebab's panel (a row-actions cluster: i
 `aria-label`, their icon, their danger look and their disabled state; `<hr>` / `role="separator"` entries; never the toggle, nor
 anything inside a `<dialog>` (confirm dialogs stay where they are and open from the forwarded click). A nested menu inside the panel
 (`details[data-nowo-ui-menu]`, a popover menu, or an `li` holding a nested `ul`) becomes a submenu named by its toggle / first child.
-Hidden (`[hidden]`) entries are skipped. A kebab with no item gets no context menu (the browser's menu shows).
+Entries the kebab hides are skipped: `[hidden]`, `inert` and `aria-hidden="true"` subtrees, and entries that are not rendered
+(`display: none` on the entry or a wrapper inside its panel, `visibility: hidden` on the entry; the closed panel itself does not
+count). `:disabled` controls, controls in a `fieldset[disabled]`, `aria-disabled="true"` and `.is-disabled` are shown disabled and
+never run. A kebab with no item gets no context menu (the browser's menu shows).
 
 ### When the browser's menu stays
 
@@ -2883,7 +2887,8 @@ popover opening closes it. It closes on an outside click, a scroll of the page o
 window losing focus, and before Turbo caches the page. Rows added later (Turbo frames, live lists) work: everything is delegated.
 
 **Long press** (touch or pen, `pointer: coarse`): about 500 ms without moving more than 10 px opens the menu at the finger; moving,
-lifting the finger or scrolling first cancels it, and the click that ends the press is swallowed (the row is not followed). The
+lifting the finger or scrolling first cancels it, and the click that ends the press (the one right after that finger's
+pointerup) is swallowed, so the row is not followed. The
 listeners are passive: a swipe that starts on a row still scrolls. On fingers the items are at least 44 px tall. Android's own
 long-press `contextmenu` opens the same menu once. Check iOS Safari on a real device (its text-selection timing is not emulated).
 
@@ -2903,6 +2908,10 @@ Render your row / card actions with the kit's `kebab`, `row_actions` or `menu` p
 `data-nowo-ui-context-menu-scope` attribute (or put `data-nowo-ui-context-menu` on it yourself), and make it focusable. Do not
 build a second item list: whatever is in the kebab is the context menu. Hosts load the runtime (or set the theme flag). Server side
 nothing changes: stateless markup, safe in FrankenPHP worker mode.
+
+**User HTML.** The attributes are a contract between your templates and the kit. If your bundle renders user HTML (a wiki
+page, a chat message) through a sanitizer that keeps `data-*`, strip `data-nowo-ui-context-menu*` (and
+`data-nowo-ui-card`) from it, or a user could make their own content open another element's kebab items on right-click.
 
 Demo: `/kit/context-menu` (`demo/symfony8`), e2e `context-menu.spec.ts` (Chromium, Firefox, WebKit) and
 `context-menu-touch.spec.ts` (touch emulation), `make test-e2e-context-menu`.

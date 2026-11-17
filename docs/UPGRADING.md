@@ -165,9 +165,11 @@ no runtime is loaded. To adopt them, see [USAGE.md "Context menus"](USAGE.md#con
    `tr`, `[role="row"]` or UiKit card). Make the row / card focusable for the keyboard.
 3. A host that overrides the `kebab`, `row_actions` or `menu` partial keeps its markup: print
    `data-nowo-ui-context-menu-source` on the root yourself, or put `data-nowo-ui-context-menu` on the row.
-4. A host that already handles `contextmenu` on rows keeps it: the runtime listens on `document` and leaves a right-click whose
-   `contextmenu` event your handler already prevented; or cancel `nowo-ui:context-menu:open`, or use
-   `data-nowo-ui-context-menu="off"`.
+4. A host that already handles `contextmenu` on rows keeps it: the runtime listens on `document` (bubble phase) and leaves a
+   right-click whose `contextmenu` event your handler already prevented, provided your handler runs before it (a listener on
+   the element or an ancestor, or on `document` added before the runtime loaded; not a `window` listener, nor a `document`
+   listener added later); or cancel `nowo-ui:context-menu:open`, or use `data-nowo-ui-context-menu="off"`.
+5. Bundles that render user HTML through a sanitizer keeping `data-*` must strip `data-nowo-ui-context-menu*` from it.
 
 A host translation key `context_menu.label` in the `NowoUiKitBundle` domain overrides the menu's name ("Actions").
 

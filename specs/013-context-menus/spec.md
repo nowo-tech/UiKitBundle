@@ -21,10 +21,12 @@ attribute `data-nowo-ui-context-menu`. Without the opt-in nothing changes.
 
 - **FR-CTXMENU-ITEMS-001** — The context menu shows only the kebab's own entries (links, buttons, submit buttons, separators, nested
   menus as submenus; never the toggle nor `<dialog>` content), with their label (`aria-label` or text), icon, danger and disabled
-  state. Choosing one forwards `click()` to the kebab entry: no new item, no new authorization surface, POST / confirm / dialog /
+  state. Hidden, `inert`, `aria-hidden` and unrendered entries are skipped; `:disabled` and `fieldset[disabled]` controls are
+  disabled. Choosing one forwards `click()` to the kebab entry: no new item, no new authorization surface, POST / confirm / dialog /
   Stimulus behaviour unchanged. A kebab without entries gets no context menu.
 - **FR-CTXMENU-HOST-001** — Host resolution by delegation (dynamic rows work): `[data-nowo-ui-context-menu]` (empty = first
-  kebab / menu / row actions inside; a value = the id of one or of its panel; `off` = native menu), else the nearest
+  kebab / menu / row actions inside; a value = the id of one or of a panel inside one, never any other element; `off` = native
+  menu), else the nearest
   `[data-nowo-ui-context-menu-scope]`, `tr`, `[role="row"]` or `[data-nowo-ui-card]` owning a `[data-nowo-ui-context-menu-source]`.
 - **FR-CTXMENU-OPTIN-001** — Default off. `theme.context_menus: true` makes the `kebab` and `row_actions` partials print
   `data-nowo-ui-context-menu-source` and `data-nowo-ui-context-menu-label` (translation `context_menu.label`, 7 locales) and the
@@ -38,7 +40,8 @@ attribute `data-nowo-ui-context-menu`. Without the opt-in nothing changes.
   element, else the kebab toggle), Tab closes. A dialog opened by a forwarded item returns focus to the element (focus-return
   chain, FR-DIALOG-002).
 - **FR-CTXMENU-TOUCH-001** — Long press (touch / pen): `LONG_PRESS_MS` 500 ms, cancelled by a move over 10 px, lifting, cancel or
-  scroll; the click ending the press is swallowed (menu items excepted); listeners passive (scrolling unaffected); Android's own
+  scroll; the click ending the press (right after that pointer's pointerup / pointercancel) is swallowed (menu items
+  excepted); listeners passive (scrolling unaffected); Android's own
   long-press `contextmenu` opens the menu once; items at least 44 px tall under `pointer: coarse`.
 - **FR-CTXMENU-LIFECYCLE-001** — One menu at a time (also closes open kit popovers and `<details>` menus); closes on an outside
   pointerdown, a scroll of the page (position changed) or of a scroller around the host, resize, window blur,
@@ -48,7 +51,8 @@ attribute `data-nowo-ui-context-menu`. Without the opt-in nothing changes.
 - **FR-CTXMENU-PLATFORM-001** — `popover="manual"` top-layer panel (inside an open modal `<dialog>` around the host), `hidden` /
   `position: fixed` fallback without the Popover API; placed at the pointer (flipped and clamped to the viewport) or under the
   focused element; coordinates through the CSSOM; no inline script, handler or style attribute, no `eval` (strict CSP). Styles from
-  the menu panel rules and `--nowo-ui-*` tokens. Server side stateless (FrankenPHP worker mode, kernel reset off).
+  the menu panel rules and `--nowo-ui-*` tokens. Server side stateless (FrankenPHP worker mode, kernel reset off). A second copy of the
+  script (Turbo body scripts) binds nothing (`Symbol.for('nowo-ui.context-menu.bound')` window flag).
 
 ## Verification
 

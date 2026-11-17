@@ -148,6 +148,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   time; closes on an outside click, scroll, resize, window blur, Turbo cache and another kit popover opening. Top-layer
   `popover="manual"` panel (fixed-position fallback), placed through the CSSOM: strict-CSP safe. Events
   `nowo-ui:context-menu:open` (cancelable) / `nowo-ui:context-menu:close`. New translation key `context_menu.label` (7 locales).
+  Hidden, inert, aria-hidden, unrendered and disabled kebab entries are never run; a second copy of the script binds nothing.
+  Sanitizers of user HTML must strip `data-nowo-ui-context-menu*` (docs/SECURITY.md).
   Demo `/kit/context-menu`; e2e in Chromium, Firefox, WebKit and touch emulation. See [USAGE.md](USAGE.md#context-menus).
 
 ### Changed (demo)
