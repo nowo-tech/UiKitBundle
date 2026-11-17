@@ -133,6 +133,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Shell focus mode** (Beacon request; spec `013-shell-focus-mode`, [USAGE](USAGE.md#shell-focus-mode-254)). Config
+  `nowo_ui_kit.theme.focus_mode` (`enabled` false by default, `regions`, `keep`, `shortcut`, `fullscreen`); partials
+  `focus_mode_toggle` (the button a bundle puts in its toolbar; renders nothing while focus mode is off) and
+  `focus_mode_bar` (exit / fullscreen buttons, one-line breadcrumb with `keep: [breadcrumb_min]`, polite live region);
+  runtime `js/nowo-ui-focus-mode.js` (`focus-mode`, added to the `scripts` partial when enabled). Level 1 sets
+  `data-focus-mode="on"` on the shell root and hides the regions `sidebar`, `header`, `footer`, `side_panels`,
+  `edge_tabs` and `dock` (+ any `data-nowo-ui-focus-region="<name>"`) with `inert` + `display: none`, keeping
+  `data-nowo-ui-focus-keep` elements; level 2 adds the Fullscreen API on the shell (`data-focus-mode="fullscreen"`), stays
+  in level 1 without an error when it is unsupported or refused, and follows a browser-side exit. `F` toggles (never
+  while typing, with a modifier or with a dialog / menu open), Escape leaves fullscreen first and then focus mode only
+  when nothing else owns it, Ctrl+K is untouched. Remembered per `data-nowo-ui-focus-area` in localStorage
+  (`nowo-ui-focus:<area>`, every access in try / catch). Event `nowo-ui:focus-mode:change`, API `window.NowoUiFocusMode`,
+  slots `focus_mode_toggle`, `focus_bar`, `focus_bar_exit`, `focus_bar_fullscreen`, `focus_mode.*` strings in 7 locales.
+  `app_shell_open` options `focus_mode`, `focus_area`, `focus_crumbs`, `focus_header`, `focus_home_href`. Off by default:
+  the shell, the scripts and both partials render the 2.53 markup byte for byte.
+- Demo: `/kit/focus-mode` (wiki-like page with the toggles, a kept search field and timer chip, a messages dock) and the
+  Playwright spec `focus-mode.spec.ts`; the demo config enables focus mode.
+
 ### Changed (demo)
 
 - Demo no longer loads Bootstrap, Bootstrap Icons or Tailwind from a CDN (REQ-DEMO-014 / UI-003; the whole demo is the host-theme exemption). Bootstrap 5.3.3 and Bootstrap Icons 1.11.3 are vendored in `demo/symfony8/public/third-party/`; the Tailwind demo serves a prebuilt `public/css/tailwind.css` (Tailwind CLI 3.4.17 pinned in its `package.json`, `make build-css`) instead of the Play CDN runtime JIT. Rendered pages are pixel-identical to the CDN version (35 pages, light and dark); demo screenshots refreshed. No change to `src/`.
@@ -140,6 +160,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Documentation
 
 - Spec Kit baseline: `code-inventory.md` maps `Shell/SidebarStyle*.php` and `nowo-ui-focus-return.ts` (406 units, 2.53.0 line); `spec.md` gains FR-SIDEBARSTYLE-001 and FR-DIALOG-002 (REQ-SPECKIT-003).
+- Spec Kit: feature spec `013-shell-focus-mode`; `code-inventory.md` maps the six focus mode files (417 units); `spec.md` gains FR-FOCUSMODE-001..004.
 
 ## [2.53.0] - 2026-11-16
 

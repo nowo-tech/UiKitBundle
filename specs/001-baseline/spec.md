@@ -403,6 +403,10 @@ fonts painted above the fold.
 - **FR-SIDEPANEL-001**: `side_panel`, `side_panel_container` and `side_panel_toggle` render a complementary panel (inline column or overlay drawer at 767 px or less) whose open state the server renders, so it works without JavaScript; `nowo-ui-side-panel.js` toggles it with shortcuts from `nowo-ui-shortcut-core.ts`.
 - **FR-RAIL-001**: The `rail_toggle` partial collapses an in-page column to a thin rail (`data-nowo-ui-rail-host`), driven by the opt-in `nowo-ui-rail.js`.
 - **FR-LAYOUTSTATE-001**: Open and collapsed state of side panels and rails is remembered in localStorage without a host store (`nowo-ui-layout-state-core.ts`) and applied before first paint by the optional `nowo-ui-layout-state.js`.
+- **FR-FOCUSMODE-001**: `nowo_ui_kit.theme.focus_mode` (off by default) configures the shell focus mode: regions, keep list, shortcut, fullscreen; the `focus_mode_toggle` partial renders nothing while it is off (spec 013).
+- **FR-FOCUSMODE-002**: Level 1 hides the configured shell regions with `inert` + `data-nowo-ui-focus-hidden` (kept elements stay), the shell root carries `data-focus-mode`, the focus bar shows; level 2 adds the Fullscreen API on the shell, without an error where it is unsupported or refused, and follows the browser out of it (spec 013).
+- **FR-FOCUSMODE-003**: `F` (configurable, disable-able) toggles level 1 only on pages with a toggle, never while typing, with a modifier or with a dialog / menu open; Escape leaves fullscreen first, then focus mode, only when nothing else owns it; the state is remembered per area in localStorage, every access in try / catch (spec 013).
+- **FR-FOCUSMODE-004**: Focus stays where it was unless hidden (then the exit control); every change is announced in a polite live region with texts in every UiKit locale (spec 013).
 - **FR-TREE-001**: The `tree` partial renders a navigation tree following the WAI-ARIA treeview pattern (plain links without JavaScript); `nowo-ui-tree.js` adds keyboard and disclosure behaviour.
 - **FR-EDGETAB-002**: The `edge_tabs_launcher` partial and the opt-in `nowo-ui-edge-tabs.js` fold the page-edge tabs behind one launcher tab on phones; the script only opens and closes the fold.
 - **FR-OVERLAY-001**: `nowo-ui-overlay.js` is the single owner of "a modal overlay is open" for UiKit, host scripts and other bundles (also bundled into the dialog and side-panel scripts).
@@ -445,7 +449,7 @@ fonts painted above the fold.
 
 ## Success criteria
 
-- **SC-001**: Every production file under `src/` (excluding the 78 co-located `*.test.ts`) appears exactly once in [`code-inventory.md`](code-inventory.md) with semantic requirement IDs: **403/403 mapped** (135 PHP, 86 TS, the rest Twig, YAML, CSS, SCSS, built JS and Markdown), audited 2026-11-16.
+- **SC-001**: Every production file under `src/` (excluding the 81 co-located `*.test.ts`) appears exactly once in [`code-inventory.md`](code-inventory.md) with semantic requirement IDs: **417/417 mapped** (139 PHP, 90 TS, the rest Twig, YAML, CSS, SCSS, built JS and Markdown), audited 2026-11-17.
 - **SC-002**: Every FR id used in the inventory is defined in this spec (domain-grouped list above).
 - **SC-003**: PHPUnit + Vitest + `coverage-check` (100% PHP lines) pass in CI; `make release-check` includes `check-no-raw-html-form`.
 - **SC-004**: FrankenPHP demos boot on ports 8092 / 8093 with HTTP 200; the order page passes the Playwright e2e with axe.

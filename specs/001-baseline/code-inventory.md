@@ -1,6 +1,6 @@
 # Code inventory — 100% traceability
 
-**Last audited**: 2026-11-17 (2.53.0 line: inset sidebar style, dialog focus return, async combobox; 2.51.0 line: brand appearance, remote dialog, listing ports, side panel, rail, tree, image input, base stylesheet)  
+**Last audited**: 2026-11-17 (2.54 line: shell focus mode; 2.53.0 line: inset sidebar style, dialog focus return, async combobox; 2.51.0 line: brand appearance, remote dialog, listing ports, side panel, rail, tree, image input, base stylesheet)  
 **Baseline spec**: [`spec.md`](spec.md)  
 **Package**: `nowo-tech/ui-kit-bundle`
 
@@ -10,7 +10,7 @@ one row per file. Paths are relative to `src/`. Requirement IDs are defined in [
 
 **Scope**: every file tracked by Git under `src/` (`git ls-files src`), i.e. PHP, TypeScript, Twig, YAML, CSS, SCSS,
 the built JavaScript and the Stimulus peers README. **Excluded**: the co-located Vitest files `*.test.ts` under
-`Resources/assets/` (80 files at this audit — test artifacts covered by FR-TEST-001, not shipped runtime units; same rule as
+`Resources/assets/` (81 files at this audit — test artifacts covered by FR-TEST-001, not shipped runtime units; same rule as
 TwigInspectorBundle). `tests/`, `demo/` apps and caches are outside `src/` and out of scope. Built files that live
 under `src/` (the Vite IIFEs, the layered stylesheet and the inline theme-boot copy) are committed (Packagist installs
 no Node toolchain); they are listed in their own table as **outputs** of named sources (`FR-BUILD-*`) and are never
@@ -617,6 +617,17 @@ Produced by `pnpm run build` (`vite.config.ts`, one `VITE_ENTRY` per IIFE; `buil
 | `Resources/assets/src/nowo-ui-edge-tabs.ts` | Opt-in script that opens and closes the fold | FR-EDGETAB-002 |
 | `Resources/public/js/nowo-ui-edge-tabs.js` | Build output of `nowo-ui-edge-tabs.ts` | FR-BUILD-001, FR-EDGETAB-002 |
 
+## Shell focus mode (2.54)
+
+| Source file | Spec section | Requirement IDs |
+| --- | --- | --- |
+| `Shell/FocusMode.php` | Region / keep names and shortcut rules validated by `theme.focus_mode` | FR-FOCUSMODE-001 |
+| `Resources/views/partials/_focus_mode_toggle.html.twig` | The page's focus mode toggle (renders nothing while focus mode is off in the config) | FR-FOCUSMODE-001 |
+| `Resources/views/partials/_focus_mode_bar.html.twig` | Focus bar: exit / fullscreen buttons, one-line breadcrumb, live region | FR-FOCUSMODE-002, FR-FOCUSMODE-004 |
+| `Resources/assets/src/nowo-ui-focus-mode-core.ts` | Side-effect-free helpers: regions, keep list, memory, key rules | FR-FOCUSMODE-002, FR-FOCUSMODE-003 |
+| `Resources/assets/src/nowo-ui-focus-mode.ts` | Runtime: toggles, F / Escape, fullscreen, live region, Turbo | FR-FOCUSMODE-002, FR-FOCUSMODE-003, FR-FOCUSMODE-004 |
+| `Resources/public/js/nowo-ui-focus-mode.js` | Build output of `nowo-ui-focus-mode.ts` | FR-BUILD-001, FR-FOCUSMODE-002 |
+
 ## Overlay registry, scroll regions and small helpers
 
 | Source file | Spec section | Requirement IDs |
@@ -684,17 +695,18 @@ Produced by `pnpm run build` (`vite.config.ts`, one `VITE_ENTRY` per IIFE; `buil
 | Listing ports (framework-free, 2.49) | 5 |
 | Compact header, breadcrumbs, page actions, sidebar layout and style | 15 |
 | Side panel, rail, tree, edge tabs and layout state | 19 |
+| Shell focus mode (2.54) | 6 |
 | Overlay registry, scroll regions and small helpers | 10 |
 | Default theme stylesheet and token lint | 2 |
-| **Total** | **406** |
+| **Total** | **417** |
 
-Excluded: co-located Vitest `*.test.ts` (80 files at this audit).
+Excluded: co-located Vitest `*.test.ts` (81 files at this audit).
 
-Audit (2026-11-16):
+Audit (2026-11-17, with the 2.54 focus mode files):
 
 ```bash
-git ls-files src | grep -v '\.test\.ts$' | wc -l                      # 403
-git ls-files src | grep -v '\.test\.ts$' | grep -c '\.php$'           # 135
-git ls-files src | grep -v '\.test\.ts$' | grep -c '\.ts$'            # 86
-git ls-files src | grep -c '\.test\.ts$'                              # 78 (excluded)
+git ls-files src | grep -v '\.test\.ts$' | wc -l                      # 417
+git ls-files src | grep -v '\.test\.ts$' | grep -c '\.php$'           # 139
+git ls-files src | grep -v '\.test\.ts$' | grep -c '\.ts$'            # 90
+git ls-files src | grep -c '\.test\.ts$'                              # 81 (excluded)
 ```

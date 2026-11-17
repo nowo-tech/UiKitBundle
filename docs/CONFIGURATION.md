@@ -14,6 +14,7 @@
 - [Auth panel (2.44)](#auth-panel-244)
 - [Compact header (2.27)](#compact-header-227)
 - [Remote dialog (2.28)](#remote-dialog-228)
+- [Shell focus mode (2.54)](#shell-focus-mode-254)
 - [Font preload (2.21)](#font-preload-221)
 - [List scaffold filters (2.30)](#list-scaffold-filters-230)
 - [Examples](#examples)
@@ -492,6 +493,33 @@ nowo_ui_kit:
 | `remote_dialog.request_header` / `redirect_header` / `location_header` | `X-Nowo-Dialog` / `X-Nowo-Redirect` / `X-Nowo-Dialog-Location` | 2.33: the header names of the contract, read by `RemoteDialogResponder`, the listener, `nowo_ui_dialog_request()` and both drivers (the partial prints the non-default ones on the `<dialog>`). Header tokens (letters, digits, `-`, ≤ 64 characters), three different names, none of them a standard HTTP name (`Accept`, `Authorization`, `Cache-Control`, `Cookie`, `Location`, `Sec-*`…); anything else fails at compile time. Service `Nowo\UiKitBundle\Dialog\RemoteDialogHeaders` |
 | `theme.menu_semantics` | `null` | Default ARIA of popover menus with items: `null` = 2.27 markup, `menu` = APG menu button, `disclosure` = no `aria-haspopup`. The `menu` partial option wins |
 | `theme.dialog.height` | `content` | 2.31 (dialog rule v2): `content` = every kit dialog is as tall as its content, capped at `min(size height token, 100dvh - 2rem)`, only the body scrolls; `size` = the 2.29 / 2.30 size's height for a dialog with a field, list, table or fold (prints `--nowo-ui-dialog-fill: 1` with the theme tokens). Markup is the same either way |
+
+## Shell focus mode (2.54)
+
+Off by default. Enabled, the kit shell (`app_shell_open`) gets the focus mode attributes and the focus bar, the `scripts`
+partial loads `js/nowo-ui-focus-mode.js` and the `focus_mode_toggle` partial renders its button. Usage, attributes and
+keyboard: [USAGE "Shell focus mode"](USAGE.md#shell-focus-mode-254).
+
+```yaml
+nowo_ui_kit:
+    theme:
+        focus_mode:
+            enabled: true
+            regions: [sidebar, header, footer, side_panels, edge_tabs, dock]   # the default
+            keep: [breadcrumb_min, search, timer_chip]
+            shortcut: F             # null or false: no shortcut
+            fullscreen: true        # false: no level 2 (no fullscreen controls)
+```
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `theme.focus_mode.enabled` | `false` | `false`: no shell attribute, no focus bar, no runtime, the toggle partial renders nothing — the 2.53 markup byte for byte |
+| `theme.focus_mode.regions` | all six built-in | Shell regions hidden in focus mode. Built in: `sidebar` (the aside and its phone backdrop), `header` (the top bar), `footer`, `side_panels` (2.25 side panels, their toggles and backdrops), `edge_tabs` (the 2.41 launcher), `dock` (only marked elements). Any region also takes the elements marked `data-nowo-ui-focus-region="<name>"`, so a host can add its own names. A list in a later config file replaces the earlier one |
+| `theme.focus_mode.keep` | `[]` | Elements kept visible inside hidden regions: those marked `data-nowo-ui-focus-keep="<name>"` with a listed name (e.g. `search`, `timer_chip`). `breadcrumb_min` is built in: the focus bar shows a one-line breadcrumb (the `header_crumbs` partial) next to its exit button |
+| `theme.focus_mode.shortcut` | `F` | Toggles level 1 on pages with a toggle; one letter or digit after optional `Ctrl+` / `Alt+` / `Shift+` / `Meta+` (`Alt+Shift+F`). Without a modifier it never fires while typing. `null` / `false` / `''`: no shortcut |
+| `theme.focus_mode.fullscreen` | `true` | Offer level 2 (the browser fullscreen on the shell). `false` hides the fullscreen button of the bar and renders no `level: 'fullscreen'` toggle |
+
+Names are a lower-case letter then up to 31 of `a-z`, `0-9`, `_`; an invalid name or shortcut fails at compile time.
 
 ## Font preload (2.21)
 
