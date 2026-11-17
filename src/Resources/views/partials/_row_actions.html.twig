@@ -24,6 +24,10 @@
       nowo_ui_kit_row_actions_confirm): onsubmit="return confirm(…)"; native | dialog: no inline handler, the form
       carries the confirm-submit Stimulus peer (data-controller / data-action / message value; dialog adds
       mode value "dialog"). Host data-controller / data-action tokens are kept in front of the peer's.
+    - context_menu (2.54, bool; default theme.context_menus, false): the root carries data-nowo-ui-context-menu-source,
+      so a right-click, the ContextMenu key, Shift+F10 or a long press on the table row / ARIA row / UiKit card /
+      [data-nowo-ui-context-menu-scope] around it opens the same actions as a context menu (menu or button cluster;
+      opt-in runtime `context-menu`). Nothing else changes: no new action, no new authorization.
 
   Each action:
     kind          edit|delete|view|copy|create|save|cancel|restore|share|config|export|filter|prev|next|close
@@ -56,6 +60,8 @@
 {% set _t = nowo_ui_theme|default(null) %}
 {% set _pt = nowo_ui_page_type|default(null) %}
 {% set _root = ui.row_actions(framework) ~ ' nowo-ui-row-actions--' ~ display|replace({_: '-'}) %}
+{% set _ctx = context_menu ?? (_t and _t.contextMenus is defined ? _t.contextMenus() : false) %}
+{% set _ctx_attrs %}{% if _ctx %} data-nowo-ui-context-menu-source data-nowo-ui-context-menu-label="{{ 'context_menu.label'|trans({}, 'NowoUiKitBundle') }}"{% endif %}{% endset %}
 {% if menu|default(false) %}
     {% set _menu_items = [] %}
     {% for action in actions %}
@@ -67,11 +73,11 @@
             {% set _menu_items = _menu_items|merge([{label: action.label|default(('action.' ~ action.kind|default('edit'))|trans({}, 'NowoUiKitBundle')), href: action.href, danger: action.kind|default('') == 'delete' or (not action.variant|default(null) and nowo_ui_kit_action_variants[action.kind|default('edit')]|default(null) == 'danger'), attr: action.attr|default({})}|merge(nowo_ui_kit_action_icons[action.kind|default('edit')] is defined ? {icon: action.icon|default(action.kind|default('edit'))} : {})]) %}
         {% endif %}
     {% endfor %}
-<div class="{{ _t ? _t.macroClasses('row_actions', _root ~ ' nowo-ui-row-actions--menu', bundle, _pt) : _root ~ ' nowo-ui-row-actions--menu' }}"{{ _t ? _t.renderAttributes('row_actions', bundle, {}, _pt)|raw }}>
+<div class="{{ _t ? _t.macroClasses('row_actions', _root ~ ' nowo-ui-row-actions--menu', bundle, _pt) : _root ~ ' nowo-ui-row-actions--menu' }}"{{ _t ? _t.renderAttributes('row_actions', bundle, {}, _pt)|raw }}{{ _ctx_attrs }}>
     {{ include(_t ? _t.partial('menu', bundle) : '@NowoUiKitBundle/partials/_menu.html.twig', {items: _menu_items, label: menu_label|default(null), align: 'end', popover: popover ?? null, confirm_external: confirm_external|default(false), bundle: bundle, nowo_ui_page_type: _pt}, false) }}
 </div>
 {% else %}
-<div class="{{ _t ? _t.macroClasses('row_actions', _root, bundle, _pt) : _root }}"{{ _t ? _t.renderAttributes('row_actions', bundle, {}, _pt)|raw }}>
+<div class="{{ _t ? _t.macroClasses('row_actions', _root, bundle, _pt) : _root }}"{{ _t ? _t.renderAttributes('row_actions', bundle, {}, _pt)|raw }}{{ _ctx_attrs }}>
     {% for action in actions %}
         {% if action is not iterable or (action.view is defined and action.view) %}
             {{ include(_t ? _t.partial('action', bundle) : '@NowoUiKitBundle/partials/_action.html.twig', {action: action is iterable ? action.view : action, context: 'row', display: display, framework: framework, bundle: bundle, confirm_external: confirm_external|default(false), nowo_ui_page_type: _pt}, false) }}

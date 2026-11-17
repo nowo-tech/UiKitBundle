@@ -38,6 +38,7 @@ type Entry =
   | 'image-input'
   | 'rail'
   | 'layout-state'
+  | 'context-menu'
   | 'demo-peers'
   | 'demo-page-actions';
 
@@ -523,6 +524,22 @@ const configs: Record<Entry, { build: object }> = {
         output: {
           format: 'iife' as const,
           entryFileNames: 'js/nowo-ui-layout-state.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  // 2.54: opt-in context menus (the items of a row's / card's kebab on right-click, keyboard, long press).
+  'context-menu': {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-context-menu.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-context-menu.js',
         },
       },
       minify: true,

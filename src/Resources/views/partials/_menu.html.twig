@@ -37,6 +37,10 @@
       aria-controls, panel role="menu" (labelled by the toggle), li role="none", items role="menuitem" (Action entries
       get it from nowo-ui-popover.js), Up / Down / Home / End roving focus. 'disclosure' = no aria-haspopup, toggle
       aria-controls the panel (a list of links and buttons). Ignored for <details> menus and `content` panels.
+    - context_menu (2.54, bool, default false): the root carries data-nowo-ui-context-menu-source, so the table row /
+      ARIA row / UiKit card / [data-nowo-ui-context-menu-scope] around the menu opens its items as a context menu
+      (right-click, ContextMenu key, Shift+F10, long press; opt-in runtime `context-menu`). The `row_actions` partial
+      marks its own root instead.
 #}
 {% set _b = bundle|default(null) %}
 {% set _pt = nowo_ui_page_type|default(null) %}
@@ -73,6 +77,8 @@
     {%~ set _toggle_class = nowo_ui_class('btn_secondary', _b) ~ ' ' ~ nowo_ui_class('btn_icon', _b) ~ ' nowo-ui-menu__toggle--icon ' ~ nowo_ui_class('menu_toggle_square', _b) %}
 {%~ endif %}
 {% set _menu_items = menu_items|default(false) %}
+{% set _ctx = context_menu|default(false) %}
+{% set _ctx_attrs %}{% if _ctx %} data-nowo-ui-context-menu-source data-nowo-ui-context-menu-label="{{ 'context_menu.label'|trans({}, 'NowoUiKitBundle') }}"{% endif %}{% endset %}
 {% set _panel %}
 {% if _content is not null %}
         <div class="{{ nowo_ui_class('popover', _b) }}"{{ _panel_attrs|raw }}{{ nowo_ui_attrs('popover', _b) }}>{{ _content|raw }}</div>
@@ -101,12 +107,12 @@
     {% endif %}
 {% endset %}
 {% if _popover %}
-<div class="{{ nowo_ui_class('menu', _b) }} nowo-ui-menu--{{ _align }} nowo-ui-menu--popover{{ root_class|default('') ? ' ' ~ root_class }}{{ (attr.class ?? false) ? ' ' ~ attr.class }}" data-nowo-ui-menu data-nowo-ui-popover-menu{% if _ms %} data-nowo-ui-menu-semantics="{{ _ms }}"{% endif %}{% if id|default(null) %} id="{{ id }}"{% endif %}{{ nowo_ui_attrs('menu', _b) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(attr|default({}))) }}>
+<div class="{{ nowo_ui_class('menu', _b) }} nowo-ui-menu--{{ _align }} nowo-ui-menu--popover{{ root_class|default('') ? ' ' ~ root_class }}{{ (attr.class ?? false) ? ' ' ~ attr.class }}" data-nowo-ui-menu data-nowo-ui-popover-menu{{ _ctx_attrs }}{% if _ms %} data-nowo-ui-menu-semantics="{{ _ms }}"{% endif %}{% if id|default(null) %} id="{{ id }}"{% endif %}{{ nowo_ui_attrs('menu', _b) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(attr|default({}))) }}>
     <button type="button" class="{{ _toggle_class }}{{ (toggle_attr.class ?? false) ? ' ' ~ toggle_attr.class }}" popovertarget="{{ _panel_id }}"{% if _ms == 'menu' %} id="{{ _panel_id }}-toggle"{% endif %}{% if _ms != 'disclosure' %} aria-haspopup="menu"{% endif %} aria-expanded="false"{% if _ms %} aria-controls="{{ _panel_id }}"{% endif %} data-nowo-ui-popover-trigger{% if _display == 'icon' %} aria-label="{{ _label }}" title="{{ _label }}"{% endif %}{{ nowo_ui_attrs('menu_toggle', _b) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(toggle_attr|default({}))) }}>{{ _toggle_inner }}</button>
     {{ _panel }}
 </div>
 {% else %}
-<details class="{{ nowo_ui_class('menu', _b) }} nowo-ui-menu--{{ _align }}{{ root_class|default('') ? ' ' ~ root_class }}{{ (attr.class ?? false) ? ' ' ~ attr.class }}" data-nowo-ui-menu{% if id|default(null) %} id="{{ id }}"{% endif %}{% if open|default(false) %} open{% endif %}{{ nowo_ui_attrs('menu', _b) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(attr|default({}))) }}>
+<details class="{{ nowo_ui_class('menu', _b) }} nowo-ui-menu--{{ _align }}{{ root_class|default('') ? ' ' ~ root_class }}{{ (attr.class ?? false) ? ' ' ~ attr.class }}" data-nowo-ui-menu{{ _ctx_attrs }}{% if id|default(null) %} id="{{ id }}"{% endif %}{% if open|default(false) %} open{% endif %}{{ nowo_ui_attrs('menu', _b) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(attr|default({}))) }}>
     <summary class="{{ _toggle_class }}{{ (toggle_attr.class ?? false) ? ' ' ~ toggle_attr.class }}"{% if _display == 'icon' %} aria-label="{{ _label }}" title="{{ _label }}"{% endif %}{{ nowo_ui_attrs('menu_toggle', _b) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(toggle_attr|default({}))) }}>{{ _toggle_inner }}</summary>
     {{ _panel }}
 </details>

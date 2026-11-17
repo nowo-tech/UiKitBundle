@@ -100,6 +100,7 @@ final readonly class Theme
      * @param bool                                                     $formErrorsAfterWidget  2.10: the UiKit form theme prints a field's errors after its widget (default: Symfony's order, before)
      * @param string|null                                              $menuSemantics          2.28: default ARIA of popover menus (`menu` partial option `menu_semantics`); null = as 2.27
      * @param string                                                   $dialogHeight           2.31: `content` (default) = dialogs as tall as their content, capped; `size` = the size's height (2.29 / 2.30)
+     * @param bool                                                     $contextMenus           2.54: kebab / row-action menus also open as a context menu of their row or card (right-click, keyboard, long press)
      */
     public function __construct(
         private string $framework = 'bootstrap5',
@@ -116,6 +117,7 @@ final readonly class Theme
         private bool $formErrorsAfterWidget = false,
         private ?string $menuSemantics = null,
         private string $dialogHeight = 'content',
+        private bool $contextMenus = false,
     ) {
         if (null !== $menuSemantics && !\in_array($menuSemantics, self::MENU_SEMANTICS, true)) {
             throw new InvalidArgumentException(\sprintf('Invalid UiKit theme menu_semantics "%s": use null, "menu" or "disclosure".', $menuSemantics));
@@ -205,7 +207,7 @@ final readonly class Theme
         /** @var array<string, array<string, mixed>> $pages */
         $pages = $theme['pages'] ?? [];
 
-        return new self($framework, $classes, $attributes, $partials, $tokens, $tokensDark, $bundles, false !== ($theme['framework_defaults'] ?? true), $pages, true === ($theme['confirm_message_in_header'] ?? false), true === ($theme['popover_menus'] ?? false), true === ($theme['form_errors_after_widget'] ?? false), self::menuSemanticsOption($theme['menu_semantics'] ?? null), self::dialogHeightOption($theme['dialog'] ?? null));
+        return new self($framework, $classes, $attributes, $partials, $tokens, $tokensDark, $bundles, false !== ($theme['framework_defaults'] ?? true), $pages, true === ($theme['confirm_message_in_header'] ?? false), true === ($theme['popover_menus'] ?? false), true === ($theme['form_errors_after_widget'] ?? false), self::menuSemanticsOption($theme['menu_semantics'] ?? null), self::dialogHeightOption($theme['dialog'] ?? null), true === ($theme['context_menus'] ?? false));
     }
 
     /**
@@ -671,6 +673,16 @@ final readonly class Theme
     public function popoverMenus(): bool
     {
         return $this->popoverMenus;
+    }
+
+    /**
+     * Whether the kebab / row-action partials mark their menu as the context menu of the row or card around them
+     * when the caller does not pass `context_menu` (`theme.context_menus`, 2.54; default false). The `scripts` partial
+     * then also loads the opt-in `context-menu` runtime.
+     */
+    public function contextMenus(): bool
+    {
+        return $this->contextMenus;
     }
 
     /**
