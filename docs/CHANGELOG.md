@@ -136,6 +136,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **`keyset_pager` partial** (`nowo_ui_partial('keyset_pager')`, Beacon ask C9 / UX-1117-28): the pager of a cursor-paged
+  list. A `<nav>` with an aria-label and Newer / Older links (`rel="prev"` / `rel="next"`, decorative icons of the UiKit
+  icon partial) from `next_cursor` / `prev_cursor` (`null` hides the link); `route`, `route_params` and `query` are merged
+  into every URL, built only by `path()`, and the cursor parameter name is `cursor_param` (default `cursor`). Labels
+  default to the new translation keys `keyset_pager.newer` / `.older` / `.nav` (overridable per call, `trans_domain`); an
+  optional per-page selector (`per_page_options`, `per_page`, `per_page_param`) is a list of links back to the first page
+  with `aria-current` on the current one; `testid` names the nav and its links. Slots `keyset_pager`, `keyset_pager_link`,
+  `keyset_pager_per_page`, `keyset_pager_option` with Bootstrap 4/5, Tailwind and Foundation defaults. Translations in
+  en, es, de, fr, it, nl and pt. See [USAGE](USAGE.md#keyset-pager-256).
+
 ## [2.55.1] - 2026-11-17
 
 ### Fixed

@@ -1,0 +1,66 @@
+{#
+  Keyset ("cursor") pager (2.56, theme partial `keyset_pager`): Newer / Older links for a list read by cursor (newest
+  first, a page of N rows, "no total"), plus an optional per-page selector. A nav with an aria-label; the links carry
+  rel="prev" / rel="next". Every URL is built by path() with the given route (the cursor and the per-page value are
+  query parameters of path(), url-encoded and attribute-escaped); a raw query string is never echoed.
+      {{ include(nowo_ui_partial('keyset_pager'), {next_cursor: page.nextCursor, prev_cursor: page.prevCursor, route: route, route_params: route_params, query: query, testid: 'calls'}) }}
+
+  Input:
+    - next_cursor: cursor of the next (older) page; null / '' hides the Older link
+    - prev_cursor: cursor of the previous (newer) page; null / '' (default) hides the Newer link. The first page has none.
+    - route (default: the current route), route_params (default: the current route parameters), query (filters; merged
+      into the link parameters)
+    - cursor_param: name of the cursor query parameter (default `cursor`); a `cursor_param` key inside query is replaced
+    - next_label / prev_label: translation keys (default `keyset_pager.older` / `keyset_pager.newer`, trans_domain
+      NowoUiKitBundle by default); a text that is not a key prints as it is. nav_label: key of the nav's aria-label
+      (default `keyset_pager.nav`)
+    - next_icon / prev_icon: icon kinds of the UiKit icon partial (default `next` / `prev`); icon_set none prints no icon
+    - per_page_options: list of page sizes (default none = no selector), per_page: the current one, per_page_param:
+      its query parameter (default `per_page`). The selector is a list of links, one per option, that return to the
+      first page (no cursor); the current option has aria-current="true". per_page, when given, travels on the
+      Newer / Older links.
+    - testid: data-testid of the nav; the links get `<testid>-newer` / `<testid>-older`, the selector `<testid>-per-page`
+    - bundle: per-bundle theme exceptions
+  Renders nothing without a cursor and without per-page options.
+  Slots: keyset_pager (nav), keyset_pager_link, keyset_pager_per_page, keyset_pager_option.
+#}
+{% set bundle = bundle|default(null) %}
+{% set _next = next_cursor|default(null) %}
+{% set _prev = prev_cursor|default(null) %}
+{% set _has_next = _next is not null and _next is not same as('') %}
+{% set _has_prev = _prev is not null and _prev is not same as('') %}
+{% set _options = per_page_options|default([]) %}
+{% if _has_next or _has_prev or _options is not empty %}
+    {% set cursor_param = cursor_param|default('cursor') %}
+    {% set per_page_param = per_page_param|default('per_page') %}
+    {% set _per_page = per_page|default(null) %}
+    {% set trans_domain = trans_domain|default('NowoUiKitBundle') %}
+    {% set route = route|default(app.request.attributes.get('_route')) %}
+    {% set _params = (route_params|default(app.request.attributes.get('_route_params')|default({})))|merge(query|default({})) %}
+    {% set _base = _params|filter((v, k) => k is not same as(cursor_param)) %}
+    {% set _kept = _per_page is not null ? _base|merge({(per_page_param): _per_page}) : _base %}
+    {% set _icons = nowo_ui_kit_icon_set|default('bootstrap-icons') != 'none' %}
+    {% set _testid = testid|default('') %}
+    <nav class="{{ nowo_ui_class('keyset_pager', bundle) }}" aria-label="{{ (nav_label|default('keyset_pager.nav'))|trans({}, trans_domain) }}" data-nowo-ui-keyset-pager{% if _testid %} data-testid="{{ _testid }}"{% endif %}{{ nowo_ui_attrs('keyset_pager', bundle) }}>
+        {% if _has_prev %}
+            <a class="{{ nowo_ui_class('keyset_pager_link', bundle) }}" href="{{ path(route, _kept|merge({(cursor_param): _prev})) }}" rel="prev"{% if _testid %} data-testid="{{ _testid }}-newer"{% endif %}>
+                {%- if _icons %}<span aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: prev_icon|default('prev'), label: ''}, false)|trim|raw }}</span> {% endif -%}
+                <span>{{ (prev_label|default('keyset_pager.newer'))|trans({}, trans_domain) }}</span>
+            </a>
+        {% endif %}
+        {% if _options is not empty %}
+            <div class="{{ nowo_ui_class('keyset_pager_per_page', bundle) }}"{% if _testid %} data-testid="{{ _testid }}-per-page"{% endif %}>
+                <span>{{ 'pagination.per_page'|trans({}, trans_domain) }}</span>
+                {% for _option in _options %}
+                    <a class="{{ nowo_ui_class('keyset_pager_option', bundle) }}" href="{{ path(route, _base|merge({(per_page_param): _option})) }}"{% if _option == _per_page %} aria-current="true"{% endif %}>{{ _option }}</a>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% if _has_next %}
+            <a class="{{ nowo_ui_class('keyset_pager_link', bundle) }}" href="{{ path(route, _kept|merge({(cursor_param): _next})) }}" rel="next"{% if _testid %} data-testid="{{ _testid }}-older"{% endif %}>
+                <span>{{ (next_label|default('keyset_pager.older'))|trans({}, trans_domain) }}</span>
+                {%- if _icons %} <span aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: next_icon|default('next'), label: ''}, false)|trim|raw }}</span>{% endif %}
+            </a>
+        {% endif %}
+    </nav>
+{% endif %}
