@@ -154,7 +154,7 @@ final class MobileUxTest extends TestCase
             self::assertStringContainsString($ctx, $css, $when);
         }
         self::assertMatchesRegularExpression("/@media \\(max-width: 40rem\\), \\(pointer: coarse\\) and \\(max-width: 64rem\\) \\{\\s*:root\\[data-nowo-ui-edge-tabs-ready\\]:has\\(\\.nowo-ui-edge-tabs-launcher\\[data-nowo-ui-edge-tabs-when='phone'\\]:not\\(\\[hidden\\]\\)\\) \\.nowo-ui-edge-tabs-launcher \\{\\s*display: inline-flex;/", $css);
-        self::assertStringContainsString("[data-nowo-ui-edge-tabs-when='phone']:not([hidden])[data-nowo-ui-edge-tabs-gutter]) .nowo-ui-main {", $css);
+        self::assertStringContainsString("[data-nowo-ui-edge-tabs-when='phone']:not([hidden], [data-nowo-ui-focus-hidden])[data-nowo-ui-edge-tabs-gutter]) .nowo-ui-main {", $css);
     }
 
     /**

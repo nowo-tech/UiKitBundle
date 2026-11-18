@@ -1793,7 +1793,7 @@ a.nowo-ui-pagination__link:hover {
   /* 2.52.1: with an edge-tabs gutter (always, or phone on a coarse-pointer tablet) the gutter rule's end padding
      (specificity 0,7,0) used to replace the centring padding above (0,4,0): the content grew by about 56 px and moved
      off-centre. The gutter now adds to the centring padding, as it narrows the classic content-width box. */
-  :root[data-nowo-ui-edge-tabs-ready]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-gutter]:not([hidden])) .nowo-ui-shell[data-nowo-ui-sidebar-style='inset'].is-main-content > .nowo-ui-main {
+  :root[data-nowo-ui-edge-tabs-ready]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-gutter]:not([hidden], [data-nowo-ui-focus-hidden])) .nowo-ui-shell[data-nowo-ui-sidebar-style='inset'].is-main-content > .nowo-ui-main {
     padding-inline-end: calc(max(1.25rem, calc((100% - 2 * var(--nowo-ui-shell-inset-gap) - var(--nowo-ui-content-max-width)) / 2 + 1.25rem)) + var(--nowo-ui-edge-tabs-gutter, 0px));
   }
 }
@@ -6739,6 +6739,19 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
   display: none !important;
 }
 
+/*
+ * Focus bar offset tokens (2.57). --nowo-ui-focus-bar-height is 0px unless focus mode is on with the sticky crumbs bar:
+ * nowo-ui-focus-mode.js then writes the bar's measured height on <html> (style.setProperty, CSP-safe) and removes it on
+ * exit. --nowo-ui-focus-bar-z is the bar's z-index (override it to stack the bar differently). --nowo-ui-top-offset =
+ * the host's top bar height (--nowo-ui-host-top-height, set by the host, default 0px) + the focus bar: a drawer or sticky
+ * bar uses inset-block-start: var(--nowo-ui-top-offset) to sit below both.
+ */
+:root {
+  --nowo-ui-focus-bar-height: 0px;
+  --nowo-ui-focus-bar-z: 45;
+  --nowo-ui-top-offset: calc(var(--nowo-ui-host-top-height, 0px) + var(--nowo-ui-focus-bar-height, 0px));
+}
+
 .nowo-ui-shell[data-focus-mode] {
   grid-template-rows: auto 1fr auto;
 }
@@ -6769,7 +6782,7 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
   position: fixed;
   inset-block-start: 0.75rem;
   inset-inline-end: 0.75rem;
-  z-index: 45;
+  z-index: var(--nowo-ui-focus-bar-z, 45);
 }
 
 [data-focus-mode] .nowo-ui-focus-bar--crumbs {
@@ -7925,11 +7938,11 @@ select.nowo-ui-pagination__select {
   transform-origin: 100% 50%;
 }
 
-:root[data-nowo-ui-edge-tabs-ready]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always']:not([hidden])[data-nowo-ui-edge-tabs-gutter]) {
+:root[data-nowo-ui-edge-tabs-ready]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always']:not([hidden], [data-nowo-ui-focus-hidden])[data-nowo-ui-edge-tabs-gutter]) {
   --nowo-ui-edge-tabs-gutter: var(--nowo-ui-edge-tab-width, 2.25rem);
 }
 
-:root[data-nowo-ui-edge-tabs-ready]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always']:not([hidden])[data-nowo-ui-edge-tabs-gutter]) .nowo-ui-main {
+:root[data-nowo-ui-edge-tabs-ready]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always']:not([hidden], [data-nowo-ui-focus-hidden])[data-nowo-ui-edge-tabs-gutter]) .nowo-ui-main {
   padding-inline-end: calc(1.25rem + var(--nowo-ui-edge-tabs-gutter));
 }
 
@@ -7956,11 +7969,11 @@ select.nowo-ui-pagination__select {
     transform-origin: 100% 50%;
   }
 
-  :root[data-nowo-ui-edge-tabs-ready]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='phone']:not([hidden])[data-nowo-ui-edge-tabs-gutter]) {
+  :root[data-nowo-ui-edge-tabs-ready]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='phone']:not([hidden], [data-nowo-ui-focus-hidden])[data-nowo-ui-edge-tabs-gutter]) {
     --nowo-ui-edge-tabs-gutter: var(--nowo-ui-edge-tab-width, 2.25rem);
   }
 
-  :root[data-nowo-ui-edge-tabs-ready]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='phone']:not([hidden])[data-nowo-ui-edge-tabs-gutter]) .nowo-ui-main {
+  :root[data-nowo-ui-edge-tabs-ready]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='phone']:not([hidden], [data-nowo-ui-focus-hidden])[data-nowo-ui-edge-tabs-gutter]) .nowo-ui-main {
     padding-inline-end: calc(1.25rem + var(--nowo-ui-edge-tabs-gutter));
   }
 }

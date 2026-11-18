@@ -111,7 +111,33 @@ export function announce(shell: HTMLElement, key: MessageKey): string {
   return text;
 }
 
+const HEIGHT_VAR = '--nowo-ui-focus-bar-height';
+let barObserver: ResizeObserver | null = null;
+
+/** Writes the focus bar's height on <html> (JS DOM, CSP-safe): its measured height with the sticky crumbs bar, else 0px (floating bar). */
+function writeBarHeight(bar: HTMLElement): void {
+  const height = bar.classList.contains('nowo-ui-focus-bar--crumbs') ? Math.ceil(bar.getBoundingClientRect().height) : 0;
+  document.documentElement.style.setProperty(HEIGHT_VAR, `${height}px`);
+}
+
+/** Publishes `--nowo-ui-focus-bar-height` while focus mode is on (updated when the bar resizes); clears it when off. */
+export function syncBarHeight(shell: HTMLElement | null, level: FocusLevel): void {
+  barObserver?.disconnect();
+  barObserver = null;
+  const bar = level === 'off' || !shell ? null : (shell.querySelector<HTMLElement>(BAR) ?? document.querySelector<HTMLElement>(BAR));
+  if (!bar) {
+    document.documentElement.style.removeProperty(HEIGHT_VAR);
+    return;
+  }
+  writeBarHeight(bar);
+  if (typeof ResizeObserver === 'function') {
+    barObserver = new ResizeObserver(() => writeBarHeight(bar));
+    barObserver.observe(bar);
+  }
+}
+
 function setState(shell: HTMLElement, level: FocusLevel): void {
+  syncBarHeight(shell, level);
   if (level === 'off') {
     shell.removeAttribute(STATE_ATTR);
     document.documentElement.removeAttribute(HTML_STATE_ATTR);
@@ -320,7 +346,10 @@ function onKeydown(event: KeyboardEvent): void {
 export function start(): void {
   const shells = [...document.querySelectorAll<HTMLElement>(SHELL)].filter((shell) => isEnabled(shell));
   // A page without a focus-mode shell (a Turbo visit away from one) keeps no stale state (audit I7).
-  if (shells.length === 0) document.documentElement.removeAttribute(HTML_STATE_ATTR);
+  if (shells.length === 0) {
+    document.documentElement.removeAttribute(HTML_STATE_ATTR);
+    syncBarHeight(null, 'off');
+  }
   shells.forEach((shell) => {
     // The live region exists before the first change, so the first message is read (audit I8).
     statusRegion(shell);
@@ -328,6 +357,7 @@ export function start(): void {
     if (level !== 'off') {
       if (level === 'fullscreen' && document.fullscreenElement !== shell) shell.setAttribute(STATE_ATTR, 'on');
       document.documentElement.setAttribute(HTML_STATE_ATTR, levelOf(shell));
+      syncBarHeight(shell, levelOf(shell));
       hideRegions(shell);
       syncToggles(shell);
       return;

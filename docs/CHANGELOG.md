@@ -137,6 +137,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Focus bar offset tokens** (Beacon ask, items 1 and 5 of focus-drawer-1118): `--nowo-ui-focus-bar-height` (`0px`
+  by default; `nowo-ui-focus-mode.js` sets the measured height on `<html>` with `style.setProperty` while the sticky crumbs
+  bar shows, follows it with a `ResizeObserver`, removes it on exit; CSP-safe), `--nowo-ui-focus-bar-z` (the bar's
+  z-index, default `45`) and `--nowo-ui-top-offset` (`--nowo-ui-host-top-height`, set by the host, plus the bar's height).
+  Documented in USAGE and THEMING with a drawer example (`inset-block-start: var(--nowo-ui-top-offset)`).
+
+### Changed
+
+- The built-in `edge_tabs` focus region also hides the tabs printed by the `_edge_tab` partial (not its `inline`
+  link), and the edge-tabs gutter (`--nowo-ui-edge-tabs-gutter`) drops while the region hides the launcher. With focus
+  mode off nothing changes.
+
 ## [2.56.0] - 2026-11-18
 
 ### Added

@@ -579,3 +579,99 @@ describe('nowo-ui-focus-mode audit SK fixes', () => {
     expect(document.documentElement.hasAttribute('data-nowo-ui-focus-state')).toBe(false);
   });
 });
+
+describe('nowo-ui-focus-mode bar offset tokens (2.57)', () => {
+  const VAR = '--nowo-ui-focus-bar-height';
+  const html = (): CSSStyleDeclaration => document.documentElement.style;
+  let observers: { cb: () => void; disconnect: ReturnType<typeof vi.fn>; observe: ReturnType<typeof vi.fn> }[];
+
+  const stubObserver = (): void => {
+    class FakeObserver {
+      disconnect = vi.fn();
+      observe = vi.fn();
+      constructor(public cb: () => void) {
+        observers.push(this);
+      }
+    }
+    vi.stubGlobal('ResizeObserver', FakeObserver);
+  };
+  const markup = (crumbs: boolean): string => `
+    <div data-nowo-ui-shell id="shell" data-nowo-ui-focus-regions="header edge_tabs">
+      <div data-nowo-ui-focus-bar id="bar" class="nowo-ui-focus-bar${crumbs ? ' nowo-ui-focus-bar--crumbs' : ''}"><button type="button" data-nowo-ui-focus-mode="exit">x</button></div>
+      <button type="button" id="toggle" data-nowo-ui-focus-mode>f</button>
+      <div class="nowo-ui-edge-tab" id="tab"><a href="/m" class="nowo-ui-edge-tab__link">m</a></div>
+      <p class="nowo-ui-edge-link" id="inline">inline</p>
+    </div>`;
+  const height = (value: number): void => {
+    vi.spyOn(el('bar'), 'getBoundingClientRect').mockReturnValue({ height: value } as DOMRect);
+  };
+
+  beforeEach(() => {
+    observers = [];
+    localStorage.clear();
+    html().removeProperty(VAR);
+    document.body.innerHTML = markup(true);
+    mod.bindNowoUiFocusMode();
+    mod.start();
+  });
+
+  afterEach(() => {
+    if (document.getElementById('shell')) mod.exit(el('shell'));
+    document.body.innerHTML = '';
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it('sets the measured height of the crumbs bar on enter, updates it on resize and clears it on exit', () => {
+    stubObserver();
+    height(41.2);
+    mod.enter(el('shell'), 'api', el('toggle'));
+    expect(html().getPropertyValue(VAR)).toBe('42px');
+    expect(observers).toHaveLength(1);
+    expect(observers[0].observe).toHaveBeenCalledWith(el('bar'));
+    height(64);
+    observers[0].cb();
+    expect(html().getPropertyValue(VAR)).toBe('64px');
+    mod.exit(el('shell'));
+    expect(observers[0].disconnect).toHaveBeenCalled();
+    expect(html().getPropertyValue(VAR)).toBe('');
+  });
+
+  it('is 0px for the floating bar without crumbs', () => {
+    document.body.innerHTML = markup(false);
+    mod.enter(el('shell'), 'api', el('toggle'));
+    expect(html().getPropertyValue(VAR)).toBe('0px');
+  });
+
+  it('measures once when ResizeObserver is missing', () => {
+    vi.stubGlobal('ResizeObserver', undefined);
+    height(30);
+    mod.enter(el('shell'), 'api', el('toggle'));
+    expect(html().getPropertyValue(VAR)).toBe('30px');
+  });
+
+  it('keeps the value for a server-rendered state and clears it when the page has no shell', () => {
+    el('shell').setAttribute('data-focus-mode', 'on');
+    height(20);
+    mod.start();
+    expect(html().getPropertyValue(VAR)).toBe('20px');
+    document.body.innerHTML = '';
+    mod.start();
+    expect(html().getPropertyValue(VAR)).toBe('');
+  });
+
+  it('clears the value when the shell has no bar', () => {
+    html().setProperty(VAR, '9px');
+    document.querySelector('#bar')?.remove();
+    mod.syncBarHeight(el('shell'), 'on');
+    expect(html().getPropertyValue(VAR)).toBe('');
+  });
+
+  it('the edge_tabs region hides the tabs of the _edge_tab partial and the launcher, not the inline link', () => {
+    mod.enter(el('shell'), 'api', el('toggle'));
+    expect(el('tab').hasAttribute('data-nowo-ui-focus-hidden')).toBe(true);
+    expect(el('inline').hasAttribute('data-nowo-ui-focus-hidden')).toBe(false);
+    mod.exit(el('shell'));
+    expect(el('tab').hasAttribute('data-nowo-ui-focus-hidden')).toBe(false);
+  });
+});
