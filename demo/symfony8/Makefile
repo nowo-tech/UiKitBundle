@@ -78,7 +78,9 @@ update-bundle: ensure-up
 
 
 # REQ-DEMO-013: Playwright e2e + WebP screenshots (official image; @playwright/test pinned to the same version).
-PLAYWRIGHT_IMAGE ?= mcr.microsoft.com/playwright:v1.63.0-jammy
+# The image tag always follows the exact @playwright/test version pinned in e2e/package.json (browsers ship with the image).
+PLAYWRIGHT_VERSION := $(shell sed -n 's/.*"@playwright\/test": "\([0-9.]*\)".*/\1/p' e2e/package.json)
+PLAYWRIGHT_IMAGE ?= mcr.microsoft.com/playwright:v$(PLAYWRIGHT_VERSION)-jammy
 
 test-e2e: ensure-up
 	@mkdir -p e2e/node_modules
@@ -87,7 +89,7 @@ test-e2e: ensure-up
 		-v "$(CURDIR)/e2e:/e2e" -w /e2e \
 		-e DEMO_BASE_URL=http://127.0.0.1:$$PORT \
 		$(PLAYWRIGHT_IMAGE) \
-		bash -lc 'npm install --no-fund --no-audit && npx playwright test --project=chromium'
+		bash -lc 'npm ci --no-fund --no-audit && npx playwright test --project=chromium'
 
 # UiKit sortable in Chromium, Firefox and WebKit, and touch input in Chromium. A hang cannot hold the machine: deadline.
 test-e2e-sortable: ensure-up
@@ -97,7 +99,7 @@ test-e2e-sortable: ensure-up
 		-v "$(CURDIR)/e2e:/e2e" -w /e2e \
 		-e DEMO_BASE_URL=http://127.0.0.1:$$PORT \
 		$(PLAYWRIGHT_IMAGE) \
-		bash -lc 'npm install --no-fund --no-audit && npx playwright test sortable --workers=1 --global-timeout=540000 --project=chromium --project=firefox --project=webkit --project=chromium-touch'
+		bash -lc 'npm ci --no-fund --no-audit && npx playwright test sortable --workers=1 --global-timeout=540000 --project=chromium --project=firefox --project=webkit --project=chromium-touch'
 
 # Emoji picker, show more and the dialog back button in Chromium, Firefox and WebKit, with a deadline.
 test-e2e-widgets: ensure-up
@@ -107,7 +109,7 @@ test-e2e-widgets: ensure-up
 		-v "$(CURDIR)/e2e:/e2e" -w /e2e \
 		-e DEMO_BASE_URL=http://127.0.0.1:$$PORT \
 		$(PLAYWRIGHT_IMAGE) \
-		bash -lc 'npm install --no-fund --no-audit && npx playwright test emoji-picker show-more dialog-back --workers=1 --global-timeout=360000 --project=chromium --project=firefox --project=webkit'
+		bash -lc 'npm ci --no-fund --no-audit && npx playwright test emoji-picker show-more dialog-back --workers=1 --global-timeout=360000 --project=chromium --project=firefox --project=webkit'
 
 # 2.41 phone mode (Beacon mobile UX audit) at 390 x 844 in Chromium and WebKit, with a deadline.
 test-e2e-mobile: ensure-up
@@ -117,7 +119,7 @@ test-e2e-mobile: ensure-up
 		-v "$(CURDIR)/e2e:/e2e" -w /e2e \
 		-e DEMO_BASE_URL=http://127.0.0.1:$$PORT \
 		$(PLAYWRIGHT_IMAGE) \
-		bash -lc 'npm install --no-fund --no-audit && npx playwright test mobile-mux --workers=1 --global-timeout=360000 --project=phone-chromium --project=phone-webkit'
+		bash -lc 'npm ci --no-fund --no-audit && npx playwright test mobile-mux --workers=1 --global-timeout=360000 --project=phone-chromium --project=phone-webkit'
 
 # 2.43 image crop: desktop and phone (touch emulation), Chromium and WebKit, with a deadline.
 test-e2e-image-crop: ensure-up
@@ -127,7 +129,7 @@ test-e2e-image-crop: ensure-up
 		-v "$(CURDIR)/e2e:/e2e" -w /e2e \
 		-e DEMO_BASE_URL=http://127.0.0.1:$$PORT \
 		$(PLAYWRIGHT_IMAGE) \
-		bash -lc 'npm install --no-fund --no-audit && npx playwright test image-crop --workers=2 --global-timeout=420000 --project=chromium --project=webkit --project=phone-chromium --project=phone-webkit'
+		bash -lc 'npm ci --no-fund --no-audit && npx playwright test image-crop --workers=2 --global-timeout=420000 --project=chromium --project=webkit --project=phone-chromium --project=phone-webkit'
 
 # 2.53 combobox: Chromium, Firefox and WebKit, with a deadline.
 test-e2e-combobox: ensure-up
@@ -137,7 +139,7 @@ test-e2e-combobox: ensure-up
 		-v "$(CURDIR)/e2e:/e2e" -w /e2e \
 		-e DEMO_BASE_URL=http://127.0.0.1:$$PORT \
 		$(PLAYWRIGHT_IMAGE) \
-		bash -lc 'npm install --no-fund --no-audit && npx playwright test combobox --workers=1 --global-timeout=360000 --project=chromium --project=firefox --project=webkit'
+		bash -lc 'npm ci --no-fund --no-audit && npx playwright test combobox --workers=1 --global-timeout=360000 --project=chromium --project=firefox --project=webkit'
 
 # 2.54 context menus: Chromium, Firefox, WebKit, and a long press with touch input in Chromium, with a deadline.
 test-e2e-context-menu: ensure-up
@@ -147,7 +149,7 @@ test-e2e-context-menu: ensure-up
 		-v "$(CURDIR)/e2e:/e2e" -w /e2e \
 		-e DEMO_BASE_URL=http://127.0.0.1:$$PORT \
 		$(PLAYWRIGHT_IMAGE) \
-		bash -lc 'npm install --no-fund --no-audit && npx playwright test context-menu --workers=2 --global-timeout=360000 --project=chromium --project=firefox --project=webkit --project=context-menu-touch'
+		bash -lc 'npm ci --no-fund --no-audit && npx playwright test context-menu --workers=2 --global-timeout=360000 --project=chromium --project=firefox --project=webkit --project=context-menu-touch'
 
 demo-screenshots: ensure-up
 	@mkdir -p ../../docs/images/demo e2e/node_modules
@@ -159,7 +161,7 @@ demo-screenshots: ensure-up
 		-e DEMO_BASE_URL=http://127.0.0.1:$$PORT \
 		-e SCREENSHOT_DIR=/screenshots \
 		$(PLAYWRIGHT_IMAGE) \
-		bash -lc 'npm install --no-fund --no-audit && npx playwright test --project=screenshots && node scripts/to-webp.mjs /screenshots'
+		bash -lc 'npm ci --no-fund --no-audit && npx playwright test --project=screenshots && node scripts/to-webp.mjs /screenshots'
 	@echo "Screenshots written under docs/images/demo/ (WebP)"
 
 # REQ-MAKE-008: update-deps (REQ-MAKE-008)
