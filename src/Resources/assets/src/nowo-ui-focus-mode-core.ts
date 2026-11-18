@@ -41,7 +41,7 @@ const BUILT_IN: Record<string, (shell: HTMLElement) => Element[]> = {
   header: (shell) => [...shell.children].filter((child) => child.tagName === 'HEADER'),
   footer: (shell) => [...shell.children].filter((child) => child.tagName === 'FOOTER'),
   side_panels: () => [...document.querySelectorAll('[data-nowo-ui-side-panel], [data-nowo-ui-side-panel-toggle], [data-nowo-ui-side-panel-backdrop]')],
-  edge_tabs: () => [...document.querySelectorAll('[data-nowo-ui-edge-tabs-launcher]')],
+  edge_tabs: () => [...document.querySelectorAll('[data-nowo-ui-edge-tabs-launcher], .nowo-ui-edge-tab')],
 };
 
 const NAME = /^[a-z][a-z0-9_]{0,31}$/;

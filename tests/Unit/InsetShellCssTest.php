@@ -62,9 +62,9 @@ final class InsetShellCssTest extends TestCase
     public function testEdgeTabsGutterAddsToTheCentringPadding(): void
     {
         $css = $this->css();
-        $rule = ":root[data-nowo-ui-edge-tabs-ready]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-gutter]:not([hidden])) .nowo-ui-shell[data-nowo-ui-sidebar-style='inset'].is-main-content > .nowo-ui-main {\n    padding-inline-end: calc(max(1.25rem, calc((100% - 2 * var(--nowo-ui-shell-inset-gap) - var(--nowo-ui-content-max-width)) / 2 + 1.25rem)) + var(--nowo-ui-edge-tabs-gutter, 0px));";
+        $rule = ":root[data-nowo-ui-edge-tabs-ready]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-gutter]:not([hidden], [data-nowo-ui-focus-hidden])) .nowo-ui-shell[data-nowo-ui-sidebar-style='inset'].is-main-content > .nowo-ui-main {\n    padding-inline-end: calc(max(1.25rem, calc((100% - 2 * var(--nowo-ui-shell-inset-gap) - var(--nowo-ui-content-max-width)) / 2 + 1.25rem)) + var(--nowo-ui-edge-tabs-gutter, 0px));";
         self::assertSame(1, substr_count($css, $rule));
-        self::assertStringContainsString(":root[data-nowo-ui-edge-tabs-ready]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always']:not([hidden])[data-nowo-ui-edge-tabs-gutter]) .nowo-ui-main {\n  padding-inline-end: calc(1.25rem + var(--nowo-ui-edge-tabs-gutter));", $css, 'the classic gutter rule is unchanged');
+        self::assertStringContainsString(":root[data-nowo-ui-edge-tabs-ready]:has(.nowo-ui-edge-tabs-launcher[data-nowo-ui-edge-tabs-when='always']:not([hidden], [data-nowo-ui-focus-hidden])[data-nowo-ui-edge-tabs-gutter]) .nowo-ui-main {\n  padding-inline-end: calc(1.25rem + var(--nowo-ui-edge-tabs-gutter));", $css, 'the classic gutter rule only drops while focus mode hides the launcher');
     }
 
     /**

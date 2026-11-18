@@ -628,6 +628,26 @@ Opt-in chrome ([USAGE.md — Host chrome](USAGE.md#host-chrome-117-opt-in)); not
 | `--nowo-ui-scrollbar-thumb` | `color-mix(in srgb, var(--nowo-ui-text) 28%, transparent)` | thumb (and Firefox `scrollbar-color`) |
 | `--nowo-ui-scrollbar-thumb-hover` | `color-mix(in srgb, var(--nowo-ui-text) 45%, transparent)` | thumb on hover |
 
+### Focus bar offset tokens (2.57)
+
+Overlays and sticky bars of a host sit below the [focus bar](USAGE.md#shell-focus-mode-255) with these tokens (declared on `:root`):
+
+| Token | Default | Used by |
+|-------|---------|---------|
+| `--nowo-ui-focus-bar-height` | `0px` | the focus bar's height: `nowo-ui-focus-mode.js` writes the measured height on `<html>` (`style.setProperty`, CSP-safe; a `ResizeObserver` follows a wrapping bar) while focus mode is on with the sticky crumbs bar, `0px` for the floating bar and with focus mode off (the property is removed on exit) |
+| `--nowo-ui-focus-bar-z` | `45` | the focus bar's z-index; a host stacks its drawers above or below it with it |
+| `--nowo-ui-host-top-height` | `0px` | set by the host: the height of its own top bar |
+| `--nowo-ui-top-offset` | `calc(var(--nowo-ui-host-top-height, 0px) + var(--nowo-ui-focus-bar-height, 0px))` | where a host drawer or sticky bar starts |
+
+```css
+.my-drawer {
+  position: fixed;
+  inset-block-start: var(--nowo-ui-top-offset);
+  inset-block-end: 0;
+  z-index: calc(var(--nowo-ui-focus-bar-z) - 1);
+}
+```
+
 The row detail dialog uses the confirm dialog chrome (`--nowo-ui-modal-radius`, `--nowo-ui-shadow-dialog`,
 `--nowo-ui-overlay`); its detail list labels use `--nowo-ui-muted`.
 

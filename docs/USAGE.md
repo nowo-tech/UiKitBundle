@@ -2535,7 +2535,7 @@ button (`aria-pressed`), with `aria-keyshortcuts` and a title naming the shortcu
 | `header` | The shell's top bar (its `<header>`), except kept elements |
 | `footer` | The shell's `<footer>` |
 | `side_panels` | Side panels (2.25), their toggles and backdrops |
-| `edge_tabs` | The page-edge tabs launcher (2.41) |
+| `edge_tabs` | The page-edge tabs launcher (2.41) and, since 2.57, the tabs printed by the `_edge_tab` partial (not its `inline` link). While the launcher is hidden the edge-tabs gutter (`--nowo-ui-edge-tabs-gutter`) is dropped too |
 | `dock` | Only marked elements (`data-nowo-ui-focus-region="dock"`): a messages dock, a chat launcher |
 
 Every region, built-in or not, also takes the elements marked `data-nowo-ui-focus-region="<name>"`. Hidden elements get
@@ -2551,6 +2551,28 @@ BreadcrumbKit's trail.
 attributes itself (`data-nowo-ui-shell data-nowo-ui-focus-regions="sidebar header footer" data-nowo-ui-focus-keep-list="search"
 data-nowo-ui-focus-shortcut="F"`; `data-nowo-ui-focus-fullscreen="false"` without level 2) and includes the
 `focus_mode_bar` partial inside the shell, outside the hidden regions.
+
+### Offset tokens (2.57)
+
+A host drawer or sticky bar that must sit below the focus bar reads CSS custom properties, no JS of its own:
+
+- `--nowo-ui-focus-bar-height`: `0px` unless focus mode is on with the sticky crumbs bar (`breadcrumb_min`); then
+  `nowo-ui-focus-mode.js` sets the bar's measured height on `<html>` with `style.setProperty` (allowed under a strict
+  CSP, it is DOM, not inline markup), follows a bar that wraps with a `ResizeObserver` and removes it on exit. With
+  focus mode off nothing is written.
+- `--nowo-ui-focus-bar-z`: the bar's z-index (default `45`).
+- `--nowo-ui-top-offset`: `--nowo-ui-host-top-height` (the host sets its top bar's height) plus the focus bar's height.
+
+```css
+.my-drawer {
+  position: fixed;
+  inset-block-start: var(--nowo-ui-top-offset);
+  inset-block-end: 0;
+  z-index: calc(var(--nowo-ui-focus-bar-z) - 1);
+}
+```
+
+Token list: [THEMING.md](THEMING.md#focus-bar-offset-tokens-257).
 
 ### Keyboard
 
