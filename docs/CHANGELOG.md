@@ -139,6 +139,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Context menu sheet (2.58.0): the long press that opens a bottom sheet no longer runs the sheet item under the
+  finger.** A sheet covers the bottom of the screen, so the finger that opened it could rest on one of its items, and
+  the click that ends the press activated that item and closed the sheet (reported from the ChatKit message menu). That
+  click is now swallowed inside a sheet too; the next tap runs the item. Menus placed at the finger keep their
+  behaviour.
+- **A right-click or long press right after a backdrop tap closed a sheet opens a menu again at once.** The backdrop tap
+  no longer holds back the browser's `contextmenu` for 800 ms.
+
 ## [2.58.0] - 2026-11-18
 
 ### Added
