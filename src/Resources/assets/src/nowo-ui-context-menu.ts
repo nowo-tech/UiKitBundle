@@ -104,6 +104,8 @@ let typeahead = '';
 let typeaheadTimer: ReturnType<typeof setTimeout> | null = null;
 let suppressContextMenuUntil = 0;
 let suppressClick = false;
+/** 2.58.1: the swallowed click may land inside the menu (a sheet under the finger that opened it). */
+let suppressInMenu = false;
 let suppressClickTimer: ReturnType<typeof setTimeout> | null = null;
 /** The pointer whose long press opened the menu: the click that ends it follows its pointerup. */
 let suppressPointer: number | null = null;
@@ -846,8 +848,9 @@ function onOutsidePointerDown(event: PointerEvent): void {
   const onBackdrop = open !== null && open.backdrop !== null && event.target === open.backdrop;
   closeContextMenu(false);
   if (onBackdrop) {
-    // 2.58: the tap that closes a sheet never reaches what lies under the backdrop.
-    armClickSuppression(event.pointerId);
+    // 2.58: the tap that closes a sheet never reaches what lies under the backdrop (2.58.1: and the next right-click
+    // or long press opens a menu again at once).
+    armClickSuppression(event.pointerId, false);
   }
 }
 
@@ -974,6 +977,7 @@ function cancelPress(): void {
 
 function clearClickSuppression(): void {
   suppressClick = false;
+  suppressInMenu = false;
   suppressPointer = null;
   if (suppressClickTimer) {
     clearTimeout(suppressClickTimer);
@@ -982,11 +986,16 @@ function clearClickSuppression(): void {
 }
 
 /** Swallows the click that ends the long press of `pointerId`: until shortly after that pointer's pointerup / pointercancel. */
-function armClickSuppression(pointerId: number): void {
+function armClickSuppression(pointerId: number, contextMenuToo = true): void {
   clearClickSuppression();
   suppressClick = true;
   suppressPointer = pointerId;
-  suppressContextMenuUntil = Date.now() + SUPPRESS_MS;
+  // 2.58.1: a sheet covers the bottom of the screen, so the finger that opened it may rest on one of its items: the
+  // click that ends that long press is swallowed inside the sheet too.
+  suppressInMenu = open !== null && open.backdrop !== null;
+  if (contextMenuToo) {
+    suppressContextMenuUntil = Date.now() + SUPPRESS_MS;
+  }
 }
 
 function onPointerDown(event: PointerEvent): void {
@@ -1039,7 +1048,7 @@ function onPressScroll(): void {
 
 /** The click that ends a long press must not activate what is under the finger (the menu itself excepted). */
 function onClickCapture(event: MouseEvent): void {
-  if (suppressClick && !insideMenu(event.target)) {
+  if (suppressClick && (suppressInMenu || !insideMenu(event.target))) {
     clearClickSuppression();
     event.preventDefault();
     event.stopPropagation();

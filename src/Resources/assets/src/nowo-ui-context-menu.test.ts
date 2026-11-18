@@ -1116,6 +1116,40 @@ describe('nowo-ui-context-menu', () => {
       expect(later.defaultPrevented).toBe(false);
     });
 
+    it('2.58.1: the click ending the long press that opened a sheet is swallowed on a sheet item too', () => {
+      vi.useFakeTimers();
+      mount(true);
+      narrow(true);
+      const reply = document.getElementById('reply') as HTMLElement;
+      const ran = vi.fn();
+      reply.addEventListener('click', ran);
+      const body = document.getElementById('body')!;
+      pointer('pointerdown', body, { pointerId: 3 });
+      vi.advanceTimersByTime(mod.LONG_PRESS_MS);
+      expect(menu().classList.contains('nowo-ui-context-menu--sheet')).toBe(true);
+      const item = items().find((el) => el.textContent === 'Reply')!;
+      pointer('pointerup', item, { pointerId: 3 });
+      const ending = new MouseEvent('click', { bubbles: true, cancelable: true });
+      item.dispatchEvent(ending);
+      expect(ending.defaultPrevented).toBe(true);
+      expect(mod.isContextMenuOpen()).toBe(true);
+      expect(ran).not.toHaveBeenCalled();
+      // The next tap runs the item.
+      item.click();
+      expect(ran).toHaveBeenCalledTimes(1);
+      vi.useRealTimers();
+    });
+
+    it('2.58.1: after a backdrop tap closed a sheet, a right-click opens a menu again at once', () => {
+      mount(true);
+      narrow(true);
+      contextmenu(document.getElementById('body')!);
+      pointer('pointerdown', document.querySelector<HTMLElement>('[data-nowo-ui-context-menu-backdrop]')!, { pointerId: 5 });
+      expect(mod.isContextMenuOpen()).toBe(false);
+      expect(contextmenu(document.getElementById('body')!).defaultPrevented).toBe(true);
+      expect(mod.isContextMenuOpen()).toBe(true);
+    });
+
     it('a submenu of a sheet is a sheet too, not placed beside its item', () => {
       document.body.innerHTML = `<article id="sm" data-nowo-ui-context-menu-scope><p id="smp">x</p><div data-nowo-ui-kebab data-nowo-ui-context-menu-source data-nowo-ui-sheet><div class="nowo-ui-kebab__menu"><ul><li><span>Move</span><ul><li><a href="#todo">To do</a></li></ul></li></ul></div></div></article>`;
       narrow(true);
