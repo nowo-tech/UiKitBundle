@@ -21,6 +21,11 @@
  * top layer (a `position: fixed` panel without the Popover API) at the pointer, kept inside the viewport; for the
  * keyboard, under the focused element. Coordinates go through the CSSOM; no inline script or style attribute (CSP).
  *
+ * 2.58: a horizontal ROW of items (`[data-nowo-ui-menu-row]` in the kebab, e.g. quick reactions) is shown as one
+ * `role="group"` row: Left / Right move inside it, Up / Down leave it. With `data-nowo-ui-sheet` on the source (kebab
+ * partial `sheet: true`) or on the host, the menu opens as a bottom sheet above a backdrop on narrow screens
+ * (SHEET_QUERY): full width, CSS-placed, a tap on the backdrop closes it without reaching the page.
+ *
  * Events on the host element: `nowo-ui:context-menu:open` (cancelable; detail `{source, trigger}` with trigger
  * `pointer` | `keyboard` | `touch`) and `nowo-ui:context-menu:close` (detail `{source}`).
  */
@@ -46,6 +51,12 @@ export const NATIVE_TARGET = 'input, textarea, select, [contenteditable]:not([co
 const CONTROL = 'a[href], button, input[type="submit"], input[type="button"], [role="menuitem"]';
 /** Nested menus mirrored as submenus. */
 const NESTED_ROOT = '[data-nowo-ui-menu], [data-nowo-ui-kebab], [data-nowo-ui-popover-menu], details';
+/** 2.58: a horizontal row of items inside a kebab panel (quick reactions…). */
+export const ROW_ATTR = 'data-nowo-ui-menu-row';
+/** 2.58: opt-in bottom sheet on narrow screens (on the source or the host). */
+export const SHEET_ATTR = 'data-nowo-ui-sheet';
+/** 2.58: the viewport width below which a sheet-enabled menu opens as a bottom sheet. */
+export const SHEET_QUERY = '(max-width: 40rem)';
 /** Toggles of a menu root (their label names a submenu; they are never items). */
 const TOGGLE = 'summary, [data-nowo-ui-popover-trigger]';
 
@@ -61,17 +72,23 @@ export const CLICK_GRACE_MS = 100;
 
 export type Trigger = 'pointer' | 'keyboard' | 'touch';
 
+export type ItemEntry = { kind: 'item'; label: string; original: HTMLElement; danger: boolean; disabled: boolean; current: boolean; icon: Element | null };
+
 export type Entry =
-  | { kind: 'item'; label: string; original: HTMLElement; danger: boolean; disabled: boolean; current: boolean; icon: Element | null }
+  | ItemEntry
   | { kind: 'separator' }
+  | { kind: 'row'; label: string; children: ItemEntry[] }
   | { kind: 'submenu'; label: string; children: Entry[] };
 
 export type Resolved = { host: HTMLElement; source: HTMLElement };
 
-type Level = { panel: HTMLElement; items: HTMLElement[]; parent: HTMLElement | null };
+/** `rows`: each item of a row => the items of its row (in order); items outside a row are not in the map. */
+type Level = { panel: HTMLElement; items: HTMLElement[]; parent: HTMLElement | null; rows: Map<HTMLElement, HTMLElement[]> };
 
 type OpenState = {
   host: HTMLElement;
+  /** 2.58: the backdrop of a bottom sheet, or null (a menu at the pointer / element). */
+  backdrop: HTMLElement | null;
   source: HTMLElement;
   returnTo: HTMLElement | null;
   levels: Level[];
@@ -154,6 +171,14 @@ function walk(container: Element): Entry[] {
   const visit = (el: Element): void => {
     // Inert or aria-hidden entries are not offered: what the kebab hides stays hidden.
     if (el.matches('dialog, template, script, style, [hidden], [inert], [aria-hidden="true"]') || el.matches(TOGGLE)) {
+      return;
+    }
+    if (el.matches(`[${ROW_ATTR}]`)) {
+      // A row holds items only: separators, submenus and rows inside it are not offered.
+      const children = walk(el).filter((entry): entry is ItemEntry => entry.kind === 'item');
+      if (children.length > 0) {
+        out.push({ kind: 'row', label: el.getAttribute('aria-label')?.trim() ?? '', children });
+      }
       return;
     }
     if (el.matches(NESTED_ROOT)) {
@@ -342,15 +367,52 @@ export function placeBesideItem(panel: HTMLElement, item: Element): void {
   panel.style.top = `${Math.round(clamp(rect.top, height, window.innerHeight))}px`;
 }
 
-function buildPanel(list: Entry[], label: string, sub: boolean): Level {
+function itemButton(entry: ItemEntry | Extract<Entry, { kind: 'submenu' }>): HTMLButtonElement {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.tabIndex = -1;
+  button.setAttribute('role', 'menuitem');
+  button.className = 'nowo-ui-menu__item nowo-ui-context-menu__item';
+  if (entry.kind === 'item') {
+    if (entry.danger) {
+      button.classList.add('nowo-ui-menu__item--danger');
+    }
+    if (entry.current) {
+      button.classList.add('is-current');
+    }
+    if (entry.disabled) {
+      button.setAttribute('aria-disabled', 'true');
+    }
+    if (entry.icon) {
+      const icon = entry.icon.cloneNode(true) as Element;
+      icon.removeAttribute('id');
+      icon.setAttribute('aria-hidden', 'true');
+      button.classList.add('nowo-ui-menu__item--icon');
+      button.appendChild(icon);
+    }
+  } else {
+    button.classList.add('nowo-ui-context-menu__item--submenu');
+    button.setAttribute('aria-haspopup', 'menu');
+    button.setAttribute('aria-expanded', 'false');
+  }
+  const text = document.createElement('span');
+  text.className = 'nowo-ui-context-menu__label';
+  text.textContent = entry.label;
+  button.appendChild(text);
+  entries.set(button, entry);
+  return button;
+}
+
+function buildPanel(list: Entry[], label: string, sub: boolean, sheet: boolean): Level {
   const panel = document.createElement('ul');
-  panel.className = `nowo-ui-menu__panel nowo-ui-context-menu${sub ? ' nowo-ui-context-menu--sub' : ''}`;
+  panel.className = `nowo-ui-menu__panel nowo-ui-context-menu${sub ? ' nowo-ui-context-menu--sub' : ''}${sheet ? ' nowo-ui-context-menu--sheet' : ''}`;
   panel.id = `nowo-ui-context-menu-${++sequence}`;
   panel.setAttribute('role', 'menu');
   panel.setAttribute('aria-label', label);
   panel.tabIndex = -1;
   panel.setAttribute('data-nowo-ui-context-menu-panel', '');
   const items: HTMLElement[] = [];
+  const rows = new Map<HTMLElement, HTMLElement[]>();
   list.forEach((entry) => {
     const li = document.createElement('li');
     if (entry.kind === 'separator') {
@@ -360,38 +422,34 @@ function buildPanel(list: Entry[], label: string, sub: boolean): Level {
       return;
     }
     li.setAttribute('role', 'none');
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.tabIndex = -1;
-    button.setAttribute('role', 'menuitem');
-    button.className = 'nowo-ui-menu__item nowo-ui-context-menu__item';
-    if (entry.kind === 'item') {
-      if (entry.danger) {
-        button.classList.add('nowo-ui-menu__item--danger');
+    if (entry.kind === 'row') {
+      const group = document.createElement('div');
+      group.setAttribute('role', 'group');
+      group.className = 'nowo-ui-context-menu__row';
+      if (entry.label) {
+        group.setAttribute('aria-label', entry.label);
       }
-      if (entry.current) {
-        button.classList.add('is-current');
-      }
-      if (entry.disabled) {
-        button.setAttribute('aria-disabled', 'true');
-      }
-      if (entry.icon) {
-        const icon = entry.icon.cloneNode(true) as Element;
-        icon.removeAttribute('id');
-        icon.setAttribute('aria-hidden', 'true');
-        button.classList.add('nowo-ui-menu__item--icon');
-        button.appendChild(icon);
-      }
-    } else {
-      button.classList.add('nowo-ui-context-menu__item--submenu');
-      button.setAttribute('aria-haspopup', 'menu');
-      button.setAttribute('aria-expanded', 'false');
+      const row = entry.children.map((child) => {
+        const button = itemButton(child);
+        button.classList.add('nowo-ui-context-menu__item--row');
+        // A row item shows what the kebab item shows (an emoji…) and keeps its accessible name.
+        const shown = (child.original.textContent ?? '').replace(/\s+/g, ' ').trim();
+        if (shown !== '' && shown !== child.label) {
+          button.querySelector('.nowo-ui-context-menu__label')!.textContent = shown;
+          button.setAttribute('aria-label', child.label);
+        }
+        group.appendChild(button);
+        return button;
+      });
+      row.forEach((button) => {
+        rows.set(button, row);
+        items.push(button);
+      });
+      li.appendChild(group);
+      panel.appendChild(li);
+      return;
     }
-    const text = document.createElement('span');
-    text.className = 'nowo-ui-context-menu__label';
-    text.textContent = entry.label;
-    button.appendChild(text);
-    entries.set(button, entry);
+    const button = itemButton(entry);
     items.push(button);
     li.appendChild(button);
     panel.appendChild(li);
@@ -399,7 +457,15 @@ function buildPanel(list: Entry[], label: string, sub: boolean): Level {
   panel.addEventListener('keydown', onMenuKeydown);
   panel.addEventListener('click', onMenuClick);
   panel.addEventListener('pointerover', onMenuPointerOver);
-  return { panel, items, parent: null };
+  return { panel, items, parent: null, rows };
+}
+
+/** 2.58: whether the menu of this host / source opens as a bottom sheet (opted in, on a narrow screen). */
+export function opensAsSheet(host: HTMLElement, source: HTMLElement): boolean {
+  if (!host.hasAttribute(SHEET_ATTR) && !source.hasAttribute(SHEET_ATTR)) {
+    return false;
+  }
+  return typeof window.matchMedia === 'function' && window.matchMedia(SHEET_QUERY).matches;
 }
 
 function menuLabel(host: HTMLElement, source: HTMLElement): string {
@@ -451,11 +517,15 @@ function openSubmenu(item: HTMLElement, focusFirst: boolean): void {
     return;
   }
   closeDeeper(depth);
-  const level = buildPanel(entry.children, entry.label, true);
+  const sheet = open.backdrop !== null;
+  const level = buildPanel(entry.children, entry.label, true, sheet);
   level.parent = item;
   open.levels.push(level);
   show(level.panel, containerOf(open.host));
-  placeBesideItem(level.panel, item);
+  if (!sheet) {
+    // A sheet's submenu covers the sheet (CSS places it); Left / Escape go back.
+    placeBesideItem(level.panel, item);
+  }
   item.setAttribute('aria-expanded', 'true');
   item.setAttribute('aria-controls', level.panel.id);
   if (focusFirst) {
@@ -522,11 +592,25 @@ export function openContextMenu(host: HTMLElement, source: HTMLElement, at: { x:
   closeContextMenu(false);
   closeOtherMenus();
   const returnTo = returnTarget(host, source, trigger);
-  const root = buildPanel(list, menuLabel(host, source), false);
-  open = { host, source, returnTo, levels: [root], scrollX: window.scrollX, scrollY: window.scrollY };
+  const sheet = opensAsSheet(host, source);
+  const root = buildPanel(list, menuLabel(host, source), false, sheet);
+  let backdrop: HTMLElement | null = null;
+  if (sheet) {
+    backdrop = document.createElement('div');
+    backdrop.className = 'nowo-ui-context-menu__backdrop';
+    backdrop.setAttribute('data-nowo-ui-context-menu-backdrop', '');
+    backdrop.setAttribute('aria-hidden', 'true');
+  }
+  open = { host, source, backdrop, returnTo, levels: [root], scrollX: window.scrollX, scrollY: window.scrollY };
   host.setAttribute('data-nowo-ui-context-menu-open', '');
+  if (backdrop) {
+    // Shown first: the sheet's panel goes above it in the top layer.
+    show(backdrop, containerOf(host));
+  }
   show(root.panel, containerOf(host));
-  if (at instanceof Element) {
+  if (sheet) {
+    // CSS places the sheet (bottom, full width): no coordinates.
+  } else if (at instanceof Element) {
     placeAtElement(root.panel, at);
   } else {
     placeAtPoint(root.panel, at.x, at.y);
@@ -546,6 +630,9 @@ export function closeContextMenu(returnFocus = true): void {
   closeDeeper(0);
   open = null;
   state.levels.forEach((level) => hide(level.panel));
+  if (state.backdrop) {
+    hide(state.backdrop);
+  }
   state.host.removeAttribute('data-nowo-ui-context-menu-open');
   removeGlobalListeners();
   resetTypeahead();
@@ -626,6 +713,25 @@ function onTypeahead(level: Level, key: string): void {
   }
 }
 
+/**
+ * 2.58: the index Up / Down moves to from `current`: the next (or previous) item outside the current row, wrapping; a
+ * row counts as one stop and is entered on its first item.
+ */
+function stepGroup(level: Level, current: number, direction: 1 | -1): number {
+  const items = level.items;
+  const count = items.length;
+  const group = level.rows.get(items[current]!);
+  let index = current;
+  for (let step = 0; step < count; step++) {
+    index = (index + direction + count) % count;
+    const candidate = level.rows.get(items[index]!);
+    if (group === undefined || candidate !== group) {
+      return candidate === undefined ? index : items.indexOf(candidate[0]!);
+    }
+  }
+  return current;
+}
+
 function onMenuKeydown(event: KeyboardEvent): void {
   if (!open) {
     return;
@@ -641,15 +747,25 @@ function onMenuKeydown(event: KeyboardEvent): void {
   const forward = rtl ? 'ArrowLeft' : 'ArrowRight';
   const back = rtl ? 'ArrowRight' : 'ArrowLeft';
   const key = event.key;
+  const row = current === -1 ? undefined : level.rows.get(items[current]!);
+  if (row && (key === forward || key === back)) {
+    // 2.58: inside a row, Left / Right move between its items (wrapping); they never open or close a submenu.
+    event.preventDefault();
+    event.stopPropagation();
+    const at = row.indexOf(items[current]!);
+    const next = row[(at + (key === forward ? 1 : row.length - 1)) % row.length]!;
+    focusItem(level, items.indexOf(next));
+    return;
+  }
   if (key === 'ArrowDown' || key === 'ArrowUp' || key === 'Home' || key === 'End') {
     event.preventDefault();
     let index = 0;
     if (key === 'End') {
       index = items.length - 1;
     } else if (key === 'ArrowDown') {
-      index = current === -1 ? 0 : (current + 1) % items.length;
+      index = current === -1 ? 0 : stepGroup(level, current, 1);
     } else if (key === 'ArrowUp') {
-      index = current === -1 ? items.length - 1 : (current - 1 + items.length) % items.length;
+      index = current === -1 ? items.length - 1 : stepGroup(level, current, -1);
     }
     focusItem(level, index);
     return;
@@ -724,8 +840,14 @@ function insideMenu(target: EventTarget | null): boolean {
 }
 
 function onOutsidePointerDown(event: PointerEvent): void {
-  if (!insideMenu(event.target)) {
-    closeContextMenu(false);
+  if (insideMenu(event.target)) {
+    return;
+  }
+  const onBackdrop = open !== null && open.backdrop !== null && event.target === open.backdrop;
+  closeContextMenu(false);
+  if (onBackdrop) {
+    // 2.58: the tap that closes a sheet never reaches what lies under the backdrop.
+    armClickSuppression(event.pointerId);
   }
 }
 
@@ -761,7 +883,8 @@ function onWindowBlur(): void {
 /** Another kit popover opening (a kebab, a combobox…) closes this menu. */
 function onToggle(event: Event): void {
   const target = event.target;
-  if (target instanceof Element && target.matches('[data-nowo-ui-context-menu-panel]')) {
+  // The menu's own panels and a sheet's backdrop (2.58) fire their own toggle events.
+  if (target instanceof Element && target.matches('[data-nowo-ui-context-menu-panel], [data-nowo-ui-context-menu-backdrop]')) {
     return;
   }
   if ((event as Event & { newState?: string }).newState === 'open') {
@@ -867,6 +990,10 @@ function armClickSuppression(pointerId: number): void {
 }
 
 function onPointerDown(event: PointerEvent): void {
+  if (event.target instanceof Element && event.target.matches('[data-nowo-ui-context-menu-backdrop]')) {
+    // 2.58: the tap on a sheet's backdrop closed the menu (capture phase) and armed the suppression of its click.
+    return;
+  }
   // A new pointer: the long press before it is over (its click never came).
   clearClickSuppression();
   if (event.pointerType !== 'touch' && event.pointerType !== 'pen') {

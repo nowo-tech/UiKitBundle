@@ -3510,6 +3510,64 @@ button.nowo-ui-kebab__item.is-current {
   background: var(--nowo-ui-surface-muted);
 }
 
+/* 2.58: separators and horizontal rows (quick reactions…) inside a kebab menu (`{separator: true}`, `{row: […]}`). */
+.nowo-ui-kebab__separator {
+  height: 0;
+  margin: 0.25rem 0;
+  border: 0;
+  border-block-start: var(--nowo-ui-border-width, 1px) solid var(--nowo-ui-border);
+}
+
+.nowo-ui-kebab__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.125rem;
+}
+
+.nowo-ui-kebab__row > .nowo-ui-kebab__item {
+  flex: 0 0 auto;
+  min-width: 2.25rem;
+  text-align: center;
+}
+
+/* 2.58: `sheet: true` kebabs open as a bottom sheet on narrow screens (above a backdrop; the popover runtime's inline
+   coordinates are overridden). */
+@media (max-width: 40rem) {
+  .nowo-ui-kebab[data-nowo-ui-sheet] .nowo-ui-kebab__menu {
+    position: fixed;
+    inset: auto 0 0 0 !important;
+    width: auto;
+    min-width: 0;
+    max-height: min(70vh, 32rem);
+    overflow-y: auto;
+    padding: 0.5rem 0.5rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
+    border-width: var(--nowo-ui-border-width, 1px) 0 0;
+    border-radius: calc(var(--nowo-ui-radius) * 2) calc(var(--nowo-ui-radius) * 2) 0 0;
+    z-index: var(--nowo-ui-menu-z-index, var(--nowo-ui-z-modal, 1050));
+  }
+
+  .nowo-ui-kebab[data-nowo-ui-sheet] .nowo-ui-kebab__details[open] > summary::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: var(--nowo-ui-overlay, rgba(15, 23, 42, 0.45));
+    z-index: var(--nowo-ui-menu-z-index, var(--nowo-ui-z-modal, 1050));
+    cursor: default;
+  }
+
+  .nowo-ui-kebab[data-nowo-ui-sheet] .nowo-ui-kebab__item {
+    min-height: 2.75rem;
+    display: flex;
+    align-items: center;
+  }
+
+  .nowo-ui-kebab[data-nowo-ui-sheet] .nowo-ui-kebab__row > .nowo-ui-kebab__item {
+    justify-content: center;
+    min-width: 2.75rem;
+    font-size: 1.25rem;
+  }
+}
+
 /* --- Progress / spinner --- */
 .nowo-ui-progress {
   display: block;
@@ -5156,6 +5214,83 @@ th[data-sort-first='desc']:not([aria-sort]) .nowo-ui-sort__hint--desc {
   height: 0;
   margin: 0.25rem 0;
   border-block-start: var(--nowo-ui-border-width, 1px) solid var(--nowo-ui-border);
+}
+
+/* 2.58: a row of items (quick reactions…): one line, Left / Right inside it (it wraps only in a sheet). */
+.nowo-ui-context-menu__row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.125rem;
+}
+
+.nowo-ui-context-menu--sheet .nowo-ui-context-menu__row {
+  flex-wrap: wrap;
+}
+
+.nowo-ui-menu__item.nowo-ui-context-menu__item--row {
+  flex: 0 0 auto;
+  justify-content: center;
+  width: auto;
+  min-width: 2.25rem;
+  font-size: 1.1rem;
+}
+
+/* 2.58: bottom sheet (`data-nowo-ui-sheet`, narrow screens): full width at the bottom above a backdrop; CSS places it. */
+.nowo-ui-context-menu__backdrop {
+  position: fixed;
+  inset: 0;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--nowo-ui-overlay, rgba(15, 23, 42, 0.45));
+}
+
+.nowo-ui-context-menu__backdrop.nowo-ui-context-menu--fallback,
+.nowo-ui-context-menu__backdrop:not([popover]) {
+  z-index: var(--nowo-ui-menu-z-index, var(--nowo-ui-z-modal, 1050));
+}
+
+.nowo-ui-context-menu__backdrop[popover]::backdrop {
+  background: transparent;
+}
+
+.nowo-ui-menu__panel.nowo-ui-context-menu.nowo-ui-context-menu--sheet {
+  inset: auto 0 0 0;
+  width: auto;
+  min-width: 0;
+  max-width: none;
+  max-height: min(70vh, 32rem);
+  overflow-y: auto;
+  padding: 0.5rem 0.5rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  border-width: var(--nowo-ui-border-width, 1px) 0 0;
+  border-radius: calc(var(--nowo-ui-radius) * 2) calc(var(--nowo-ui-radius) * 2) 0 0;
+}
+
+.nowo-ui-context-menu--sheet .nowo-ui-context-menu__item {
+  min-height: 2.75rem;
+}
+
+.nowo-ui-context-menu--sheet .nowo-ui-context-menu__item--row {
+  min-width: 2.75rem;
+  font-size: 1.25rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .nowo-ui-context-menu--sheet {
+    animation: nowo-ui-context-menu-sheet-in 160ms ease-out;
+  }
+
+  @keyframes nowo-ui-context-menu-sheet-in {
+    from {
+      transform: translateY(100%);
+    }
+
+    to {
+      transform: none;
+    }
+  }
 }
 
 /* Fingers: taller items; no iOS link callout over a row whose long press opens the menu (links keep theirs). */

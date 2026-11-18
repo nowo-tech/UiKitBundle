@@ -37,18 +37,18 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
       testMatch: /.*\.spec\.ts/,
-      testIgnore: /screenshots\.spec\.ts|sortable-touch\.spec\.ts|mobile-mux\.spec\.ts|context-menu-touch\.spec\.ts/,
+      testIgnore: /screenshots\.spec\.ts|sortable-touch\.spec\.ts|mobile-mux\.spec\.ts|context-menu-touch\.spec\.ts|context-menu-sheet\.spec\.ts/,
     },
     // UiKit sortable: the other engines, and touch input in Chromium (make test-e2e-sortable). 2.53: combobox (make test-e2e-combobox).
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
-      testMatch: /(sortable|emoji-picker|combobox|show-more|dialog-back|motion|table-cards|page-actions-focus|context-menu|focus-mode)\.spec\.ts/,
+      testMatch: /(sortable|emoji-picker|combobox|show-more|dialog-back|motion|table-cards|page-actions-focus|context-menu|context-menu-row|focus-mode)\.spec\.ts/,
     },
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
-      testMatch: /(sortable|emoji-picker|combobox|show-more|dialog-back|motion|table-cards|image-crop|page-actions-focus|context-menu|focus-mode)\.spec\.ts/,
+      testMatch: /(sortable|emoji-picker|combobox|show-more|dialog-back|motion|table-cards|image-crop|page-actions-focus|context-menu|context-menu-row|focus-mode)\.spec\.ts/,
     },
     {
       name: 'chromium-touch',
@@ -66,12 +66,12 @@ export default defineConfig({
     {
       name: 'phone-chromium',
       use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } },
-      testMatch: /(mobile-mux|image-crop)\.spec\.ts/,
+      testMatch: /(mobile-mux|image-crop|context-menu-sheet)\.spec\.ts/,
     },
     {
       name: 'phone-webkit',
       use: { ...devices['iPhone 14'], viewport: { width: 390, height: 844 } },
-      testMatch: /(mobile-mux|image-crop)\.spec\.ts/,
+      testMatch: /(mobile-mux|image-crop|context-menu-sheet)\.spec\.ts/,
     },
     // Fetched HTML under a CSP: WebKit let more through than Chromium, so it runs in both.
     {
