@@ -44,6 +44,7 @@
   - [Full-height sidebar layout (2.32)](#full-height-sidebar-layout-232)
   - [Inset sidebar style (2.52)](#inset-sidebar-style-252)
   - [Compact pagination](#compact-pagination-26)
+  - [Keyset pager (2.56)](#keyset-pager-256)
   - [Auth panel brand (2.44)](#auth-panel-brand-244)
 - [Pre-paint theme boot](#pre-paint-theme-boot)
 - [App chrome](#app-chrome-aside-avatar-user-menu-footer)
@@ -2046,6 +2047,64 @@ does. `per_page_selector: false` hides the select, `id` prefixes its id. Slots `
 {{ include(nowo_ui_partial('pagination_compact'), {pagination: {page: 2, per_page: 25, total: 160, total_pages: 7}, route: 'device_index'}) }}
 ```
 
+
+<a id="keyset-pager-256"></a>
+### Keyset pager (2.56)
+
+`keyset_pager` is the pager of a list read by **cursor** (newest first, N rows a page, no total): a `<nav>` with an
+aria-label and "Newer" / "Older" links (`rel="prev"` / `rel="next"`, each with a decorative icon of the UiKit icon
+partial). A page carries the cursors of its neighbours, so the partial takes them directly instead of a `Pagination`.
+
+| Parameter | Meaning |
+| --- | --- |
+| `next_cursor` | cursor of the next (older) page; `null` / `''` hides the Older link |
+| `prev_cursor` | cursor of the previous (newer) page; `null` (default) hides the Newer link |
+| `route`, `route_params`, `query` | route and parameters (default: the current ones); `query` (filters) is merged into every link |
+| `cursor_param` | name of the cursor query parameter (default `cursor`; the same key inside `query` is replaced) |
+| `next_label`, `prev_label`, `nav_label` | translation keys (`keyset_pager.older` / `.newer` / `.nav`, domain `trans_domain`, default `NowoUiKitBundle`); a plain text prints as it is |
+| `next_icon`, `prev_icon` | icon kinds (default `next` / `prev`; `icon_set: none` prints none) |
+| `per_page_options`, `per_page`, `per_page_param` | page sizes (none = no selector), the current one, its query parameter (default `per_page`). The selector is a list of links back to the first page; the current one has `aria-current="true"`; `per_page` travels on Newer / Older |
+| `testid` | `data-testid` of the nav; links `<testid>-newer` / `<testid>-older`, selector `<testid>-per-page` |
+| `bundle` | per-bundle theme exceptions |
+
+Every URL is `path(route, params)`: the cursor and the other values are query parameters (url-encoded, attribute
+escaped); a raw query string is never printed. Nothing renders without a cursor and without per-page options. Slots
+`keyset_pager`, `keyset_pager_link`, `keyset_pager_per_page`, `keyset_pager_option` (Bootstrap 4/5, Tailwind and
+Foundation defaults).
+
+Replace a hand-written pager such as Beacon's API-usage calls table (`api_usage/_calls.html.twig`):
+
+```twig
+{# before #}
+{% if page.nextCursor %}
+    <p class="mt-3"><a class="btn-ghost no-underline" href="{{ path(route, route_params|merge(query)|merge({cursor: page.nextCursor})) }}" data-testid="{{ testid }}-older">{{ ux_icon('tabler:chevron-right', {'aria-hidden': 'true'}) }} {{ 'api_usage.calls.older'|trans }}</a></p>
+{% endif %}
+
+{# after #}
+{{ include(nowo_ui_partial('keyset_pager'), {
+    next_cursor: page.nextCursor,
+    route: route,
+    route_params: route_params,
+    query: query,
+    next_label: 'api_usage.calls.older',
+    trans_domain: 'messages',
+    testid: testid,
+}, false) }}
+```
+
+Fifty per page with a selector and a Newer link (when the controller returns the previous cursor):
+
+```twig
+{{ include(nowo_ui_partial('keyset_pager'), {
+    next_cursor: page.nextCursor,
+    prev_cursor: page.prevCursor,
+    route: route, route_params: route_params, query: query,
+    per_page_options: [25, 50, 100], per_page: 50,
+    testid: testid,
+}, false) }}
+```
+
+The testid of the older link stays `<testid>-older`, so a host test that clicks it keeps working.
 
 <a id="auth-panel-brand-244"></a>
 ### Auth panel brand (2.44)

@@ -278,6 +278,26 @@ final class ThemeSlots
             'bootstrap' => 'form-select form-select-sm',
             'tailwind' => 'border px-2 py-1 text-sm',
         ]],
+        // Keyset (cursor) pager (2.56, partial `keyset_pager`): the nav, its Newer / Older links, the per-page list and its
+        // options (the current one carries aria-current)
+        'keyset_pager' => ['nowo-ui-keyset-pager', [
+            'bootstrap' => 'd-flex flex-wrap align-items-center justify-content-between gap-2 mt-3',
+            'tailwind' => 'flex flex-wrap items-center justify-between gap-2 mt-3',
+            'foundation' => 'grid-x align-justify align-middle mt-3',
+        ]],
+        'keyset_pager_link' => ['nowo-ui-keyset-pager__link', [
+            'bootstrap' => 'btn btn-outline-secondary btn-sm',
+            'tailwind' => 'inline-flex items-center gap-1 font-medium px-2 py-1 text-sm border',
+            'foundation' => 'button secondary tiny',
+        ]],
+        'keyset_pager_per_page' => ['nowo-ui-keyset-pager__per-page', [
+            'bootstrap' => 'd-flex align-items-center gap-2',
+            'tailwind' => 'flex items-center gap-2',
+        ]],
+        'keyset_pager_option' => ['nowo-ui-keyset-pager__option', [
+            'bootstrap' => 'btn btn-link btn-sm',
+            'tailwind' => 'px-2 py-1 text-sm underline',
+        ]],
         // Code: inline <code> (identifiers, short values) and <pre> blocks (payloads, JSON, logs). Monospace,
         // muted surface, scrollable block (max height) — tokens --nowo-ui-font-mono, --nowo-ui-code-*
         // Bootstrap 5 paints <code> pink through --bs-code-color, which nowo-ui.css points at --nowo-ui-code-text
@@ -712,6 +732,7 @@ final class ThemeSlots
         'header_actions' => '@NowoUiKitBundle/partials/_header_actions.html.twig',
         'header_context' => '@NowoUiKitBundle/partials/_header_context.html.twig',
         'header_crumbs' => '@NowoUiKitBundle/partials/_header_crumbs.html.twig',
+        'keyset_pager' => '@NowoUiKitBundle/partials/_keyset_pager.html.twig',
         'list_filters' => '@NowoUiKitBundle/page/_list_filters.html.twig',
         'listing_cells' => '@NowoUiKitBundle/partials/_listing_cells.html.twig',
         'listing_customizer' => '@NowoUiKitBundle/partials/_listing_customizer.html.twig',
