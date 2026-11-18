@@ -54,8 +54,19 @@ attribute `data-nowo-ui-context-menu`. Without the opt-in nothing changes.
   the menu panel rules and `--nowo-ui-*` tokens. Server side stateless (FrankenPHP worker mode, kernel reset off). A second copy of the
   script (Turbo body scripts) binds nothing (`Symbol.for('nowo-ui.context-menu.bound')` window flag).
 
+- **FR-CTXMENU-ROW-001** (2.58) — Kebab item shapes `{separator: true}` (`<hr role="separator">`) and `{row: [items], label}`
+  (`role="group"`, `data-nowo-ui-menu-row`). The context menu mirrors a `[data-nowo-ui-menu-row]` as one `role="group"` row of
+  `menuitem`s (items only; empty rows dropped). Left / Right move inside the row (wrapping, RTL-mirrored) and never open or close a
+  submenu; Up / Down move to the next / previous group, a row counting as one stop entered on its first item.
+- **FR-CTXMENU-SHEET-001** (2.58) — Opt-in `data-nowo-ui-sheet` on the source (kebab partial `sheet: true`) or the host. Below
+  `SHEET_QUERY` (`(max-width: 40rem)`) the kebab menu and the context menu (and its submenus) open as a CSS-placed bottom sheet above
+  a backdrop (no CSSOM coordinates), items at least 44 px tall, slide-in only without `prefers-reduced-motion`. A pointerdown on the
+  backdrop closes the menu and swallows the click that follows. Without the attribute, on wide screens or without `matchMedia`,
+  nothing changes.
+
 ## Verification
 
 Vitest `nowo-ui-context-menu.test.ts`; PHPUnit `ContextMenuTest` and `PageContractConfigurationTest`; Playwright
-`context-menu.spec.ts` (Chromium, Firefox, WebKit, with axe and a CSP violation watch) and `context-menu-touch.spec.ts` (Pixel 7
-touch emulation) on the demo page `/kit/context-menu` (`make test-e2e-context-menu`).
+`context-menu.spec.ts` (Chromium, Firefox, WebKit, with axe and a CSP violation watch), `context-menu-touch.spec.ts` (Pixel 7
+touch emulation), 2.58 `context-menu-row.spec.ts` (Chromium, Firefox, WebKit) and `context-menu-sheet.spec.ts` (phone 390 × 844,
+Chromium and WebKit) on the demo page `/kit/context-menu` (`make test-e2e-context-menu`).

@@ -949,4 +949,182 @@ describe('nowo-ui-context-menu', () => {
       expect(contextmenu(cell).defaultPrevented).toBe(false);
     });
   });
+
+  describe('rows and sheets (2.58)', () => {
+    const ROW_KEBAB = `
+      <article id="msg" tabindex="0" data-nowo-ui-context-menu-scope>
+        <p id="body">Hello</p>
+        <div class="nowo-ui-kebab" id="mk" data-nowo-ui-kebab data-nowo-ui-context-menu-source SHEET>
+          <details class="nowo-ui-kebab__details"><summary class="nowo-ui-kebab__summary" aria-label="Message actions">⋮</summary>
+            <div class="nowo-ui-kebab__menu" role="menu">
+              <div class="nowo-ui-kebab__row" role="group" aria-label="Quick reactions" data-nowo-ui-menu-row>
+                <a id="re1" class="nowo-ui-kebab__item is-current" href="#r1" role="menuitem" aria-label="React 1">1</a>
+                <a id="re2" class="nowo-ui-kebab__item" href="#r2" role="menuitem" aria-label="React 2">2</a>
+                <hr role="separator">
+                <a id="re3" class="nowo-ui-kebab__item" href="#r3" role="menuitem" aria-label="More">+</a>
+                <a class="nowo-ui-kebab__item" href="#x" role="menuitem" hidden>hidden</a>
+              </div>
+              <hr class="nowo-ui-kebab__separator" role="separator">
+              <a id="reply" class="nowo-ui-kebab__item" href="#reply" role="menuitem">Reply</a>
+              <a id="copy" class="nowo-ui-kebab__item" href="#copy" role="menuitem">Copy</a>
+              <div class="nowo-ui-kebab__row" role="group" data-nowo-ui-menu-row><a class="nowo-ui-kebab__item" href="#h" role="menuitem" hidden>none</a></div>
+              <div class="nowo-ui-kebab__row" role="group" data-nowo-ui-menu-row>
+                <a id="tail1" class="nowo-ui-kebab__item" href="#t1" role="menuitem">T1</a>
+                <a id="tail2" class="nowo-ui-kebab__item" href="#t2" role="menuitem">T2</a>
+              </div>
+            </div>
+          </details>
+        </div>
+      </article>`;
+
+    function mount(sheet: boolean): void {
+      document.body.innerHTML = ROW_KEBAB.replace('SHEET', sheet ? 'data-nowo-ui-sheet' : '');
+      document.querySelectorAll('a[href]').forEach((a) => a.addEventListener('click', (event) => event.preventDefault()));
+    }
+
+    function narrow(matches: boolean): void {
+      vi.stubGlobal('matchMedia', (query: string) => ({ matches: matches && query === mod.SHEET_QUERY, media: query }));
+    }
+
+    it('a row of the kebab becomes one group of items; hidden and non-item entries inside it are left out; empty rows vanish', () => {
+      mount(false);
+      const entries = mod.collectEntries(document.getElementById('mk')!);
+      expect(entries.map((entry) => entry.kind)).toEqual(['row', 'separator', 'item', 'item', 'row']);
+      const row = entries[0] as Extract<mod.Entry, { kind: 'row' }>;
+      expect(row.label).toBe('Quick reactions');
+      expect(row.children.map((child) => child.label)).toEqual(['React 1', 'React 2', 'More']);
+      expect((entries[4] as Extract<mod.Entry, { kind: 'row' }>).label).toBe('');
+    });
+
+    it('renders the row as role=group with menuitems; Left / Right move inside it (wrapping), Up / Down leave it', () => {
+      mount(false);
+      contextmenu(document.getElementById('body')!);
+      const group = menu().querySelector('[role="group"]')!;
+      expect(group.getAttribute('aria-label')).toBe('Quick reactions');
+      expect(group.querySelectorAll('[role="menuitem"]')).toHaveLength(3);
+      expect(menu().querySelectorAll('[role="group"]')[1]!.hasAttribute('aria-label')).toBe(false);
+      const [r1, r2, r3, reply, copy, t1, t2] = items();
+      expect(r1!.classList.contains('nowo-ui-context-menu__item--row')).toBe(true);
+      // A row item shows the kebab item's text and keeps its accessible name; same text: no extra aria-label.
+      expect(r1!.textContent).toBe('1');
+      expect(r1!.getAttribute('aria-label')).toBe('React 1');
+      expect(t1!.hasAttribute('aria-label')).toBe(false);
+      expect(r1!.classList.contains('is-current')).toBe(true);
+      expect(document.activeElement).toBe(r1);
+      key(r1!, 'ArrowRight');
+      expect(document.activeElement).toBe(r2);
+      key(r2!, 'ArrowRight');
+      key(r3!, 'ArrowRight');
+      expect(document.activeElement).toBe(r1);
+      key(r1!, 'ArrowLeft');
+      expect(document.activeElement).toBe(r3);
+      key(r3!, 'ArrowDown');
+      expect(document.activeElement).toBe(reply);
+      key(reply!, 'ArrowUp');
+      expect(document.activeElement).toBe(r1);
+      key(r1!, 'ArrowUp');
+      expect(document.activeElement).toBe(t1);
+      key(t1!, 'ArrowRight');
+      expect(document.activeElement).toBe(t2);
+      key(t2!, 'ArrowDown');
+      expect(document.activeElement).toBe(r1);
+      key(r1!, 'ArrowDown');
+      key(reply!, 'ArrowDown');
+      expect(document.activeElement).toBe(copy);
+      key(copy!, 'ArrowDown');
+      expect(document.activeElement).toBe(t1);
+      // A plain item keeps its Left / Right meaning (no submenu here: nothing happens).
+      key(copy!, 'ArrowRight');
+      expect(mod.isContextMenuOpen()).toBe(true);
+      r2!.click();
+      expect(mod.isContextMenuOpen()).toBe(false);
+    });
+
+    it('a menu made of one row only: Up / Down stay on it', () => {
+      document.body.innerHTML = `<article id="solo" data-nowo-ui-context-menu-scope><p id="sp">x</p><div data-nowo-ui-kebab data-nowo-ui-context-menu-source><div class="nowo-ui-kebab__menu"><div data-nowo-ui-menu-row><a href="#a" role="menuitem">A</a><a href="#b" role="menuitem">B</a></div></div></div></article>`;
+      contextmenu(document.getElementById('sp')!);
+      const [a, b] = items();
+      key(a!, 'ArrowRight');
+      key(b!, 'ArrowDown');
+      expect(document.activeElement).toBe(b);
+      key(b!, 'ArrowUp');
+      expect(document.activeElement).toBe(b);
+    });
+
+    it('without the sheet attribute, or on a wide screen, or without matchMedia, the menu is placed at the pointer', () => {
+      mount(false);
+      narrow(true);
+      contextmenu(document.getElementById('body')!);
+      expect(menu().classList.contains('nowo-ui-context-menu--sheet')).toBe(false);
+      expect(document.querySelector('[data-nowo-ui-context-menu-backdrop]')).toBeNull();
+      mod.closeContextMenu(false);
+
+      mount(true);
+      narrow(false);
+      contextmenu(document.getElementById('body')!);
+      expect(menu().classList.contains('nowo-ui-context-menu--sheet')).toBe(false);
+      expect(menu().style.left).toBe('50px');
+      mod.closeContextMenu(false);
+
+      vi.stubGlobal('matchMedia', undefined);
+      expect(mod.opensAsSheet(document.getElementById('msg')!, document.getElementById('mk')!)).toBe(false);
+    });
+
+    it('opens as a bottom sheet above a backdrop on a narrow screen (source or host attribute); no coordinates', () => {
+      mount(true);
+      narrow(true);
+      contextmenu(document.getElementById('body')!);
+      expect(menu().classList.contains('nowo-ui-context-menu--sheet')).toBe(true);
+      expect(menu().style.left).toBe('');
+      const backdrop = document.querySelector<HTMLElement>('[data-nowo-ui-context-menu-backdrop]')!;
+      expect(backdrop.getAttribute('aria-hidden')).toBe('true');
+      expect(backdrop.compareDocumentPosition(menu()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      // The backdrop's own toggle event (the browser fires one for every popover shown) keeps the sheet open.
+      const toggle = new Event('toggle', { bubbles: false });
+      Object.assign(toggle, { newState: 'open' });
+      backdrop.dispatchEvent(toggle);
+      expect(mod.isContextMenuOpen()).toBe(true);
+      mod.closeContextMenu(false);
+      expect(document.querySelector('[data-nowo-ui-context-menu-backdrop]')).toBeNull();
+
+      mount(false);
+      document.getElementById('msg')!.setAttribute('data-nowo-ui-sheet', '');
+      expect(mod.opensAsSheet(document.getElementById('msg')!, document.getElementById('mk')!)).toBe(true);
+    });
+
+    it('a tap on the backdrop closes the sheet and its click never reaches the page; an outside tap without a sheet does not swallow', () => {
+      mount(true);
+      narrow(true);
+      const pageClick = vi.fn();
+      document.getElementById('body')!.addEventListener('click', pageClick);
+      contextmenu(document.getElementById('body')!);
+      const backdrop = document.querySelector<HTMLElement>('[data-nowo-ui-context-menu-backdrop]')!;
+      pointer('pointerdown', backdrop, { pointerId: 9 });
+      expect(mod.isContextMenuOpen()).toBe(false);
+      pointer('pointerup', document.getElementById('body')!, { pointerId: 9 });
+      const click = new MouseEvent('click', { bubbles: true, cancelable: true });
+      document.getElementById('body')!.dispatchEvent(click);
+      expect(click.defaultPrevented).toBe(true);
+      expect(pageClick).not.toHaveBeenCalled();
+
+      mount(false);
+      contextmenu(document.getElementById('body')!);
+      pointer('pointerdown', document.body, { pointerType: 'mouse' });
+      expect(mod.isContextMenuOpen()).toBe(false);
+      const later = new MouseEvent('click', { bubbles: true, cancelable: true });
+      document.body.dispatchEvent(later);
+      expect(later.defaultPrevented).toBe(false);
+    });
+
+    it('a submenu of a sheet is a sheet too, not placed beside its item', () => {
+      document.body.innerHTML = `<article id="sm" data-nowo-ui-context-menu-scope><p id="smp">x</p><div data-nowo-ui-kebab data-nowo-ui-context-menu-source data-nowo-ui-sheet><div class="nowo-ui-kebab__menu"><ul><li><span>Move</span><ul><li><a href="#todo">To do</a></li></ul></li></ul></div></div></article>`;
+      narrow(true);
+      contextmenu(document.getElementById('smp')!);
+      key(items()[0]!, 'ArrowRight');
+      const panels = mod.openPanels();
+      expect(panels).toHaveLength(2);
+      expect(panels[1]!.classList.contains('nowo-ui-context-menu--sheet')).toBe(true);
+      expect(panels[1]!.style.left).toBe('');
+    });
+  });
 });

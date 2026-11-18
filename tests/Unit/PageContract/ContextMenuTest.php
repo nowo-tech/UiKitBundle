@@ -44,6 +44,52 @@ final class ContextMenuTest extends TestCase
         }
     }
 
+    public function testKebabRendersSeparatorsAndRowsOfItems(): void
+    {
+        $tpl = "{% include '@NowoUiKitBundle/partials/_kebab.html.twig' with {popover: popover, items: [
+            {row: [{label: '👍', attr: {'aria-label': 'React 👍', 'data-part': 'react'}}, {label: '…', current: true}], label: 'Quick reactions', attr: {'data-part': 'row', class: 'x-row'}},
+            {separator: true, attr: {'data-part': 'sep', hidden: 'hidden', class: 'x-sep'}},
+            {separator: true},
+            {row: [{label: 'Alone'}]},
+            {label: 'Reply', href: '/r'},
+        ]} %}";
+
+        foreach ([true, false] as $popover) {
+            $c = new Crawler($this->render($tpl, ['popover' => $popover]));
+            $menu = $c->filter('[role="menu"]');
+            $row = $menu->filter('[data-nowo-ui-menu-row]')->first();
+            self::assertSame('group', $row->attr('role'));
+            self::assertSame('Quick reactions', $row->attr('aria-label'));
+            self::assertSame('row', $row->attr('data-part'));
+            self::assertSame('nowo-ui-kebab__row x-row', $row->attr('class'));
+            self::assertCount(2, $row->filter('[role="menuitem"]'));
+            self::assertSame('React 👍', $row->filter('[role="menuitem"]')->first()->attr('aria-label'));
+            self::assertStringContainsString('is-current', (string) $row->filter('[role="menuitem"]')->last()->attr('class'));
+            self::assertNull($menu->filter('[data-nowo-ui-menu-row]')->last()->attr('aria-label'));
+
+            $sep = $menu->filter('hr');
+            self::assertCount(2, $sep);
+            self::assertSame('separator', $sep->first()->attr('role'));
+            self::assertSame('nowo-ui-kebab__separator x-sep', $sep->first()->attr('class'));
+            self::assertSame('hidden', $sep->first()->attr('hidden'));
+            self::assertSame('sep', $sep->first()->attr('data-part'));
+            self::assertSame('nowo-ui-kebab__separator', $sep->last()->attr('class'));
+
+            self::assertSame(['👍', '…', 'Alone', 'Reply'], $menu->filter('[role="menuitem"]')->each(static fn (Crawler $n): string => trim($n->text())));
+        }
+    }
+
+    public function testKebabSheetOptionMarksTheRoot(): void
+    {
+        $tpl = "{% include '@NowoUiKitBundle/partials/_kebab.html.twig' with {items: [{label: 'Edit'}], popover: popover, sheet: sheet} %}";
+
+        foreach ([true, false] as $popover) {
+            self::assertNotNull((new Crawler($this->render($tpl, ['popover' => $popover, 'sheet' => true])))->filter('[data-nowo-ui-kebab]')->attr('data-nowo-ui-sheet'));
+            self::assertStringNotContainsString('data-nowo-ui-sheet', $this->render($tpl, ['popover' => $popover, 'sheet' => false]));
+            self::assertStringNotContainsString('data-nowo-ui-sheet', $this->render("{% include '@NowoUiKitBundle/partials/_kebab.html.twig' with {items: [], popover: popover} %}", ['popover' => $popover]));
+        }
+    }
+
     public function testKebabLabelIsTranslated(): void
     {
         $html = PageContractTwig::create(['t' => "{% include '@NowoUiKitBundle/partials/_kebab.html.twig' with {items: [], context_menu: true} %}"], locale: 'es')->render('t');

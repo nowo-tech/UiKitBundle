@@ -300,7 +300,7 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | `Resources/views/partials/_modal_shell.html.twig` | Generic modal shell (Bootstrap-JS compatible) | FR-PARTIAL-001, FR-JS-001 |
 | `Resources/views/partials/_open_modal_on_load.html.twig` | Open-modal-on-load JSON island | FR-OPENMODAL-001 |
 | `Resources/views/partials/_menu.html.twig` | 2.3: `<details>` menu / popover (2.21 `square`, `menu_items`) | FR-MENU-001, FR-HEADERACTIONS-001 |
-| `Resources/views/partials/_kebab.html.twig` | Kebab overflow menu (details-based, 2.4 popover) | FR-MENU-001, FR-PARTIAL-001 |
+| `Resources/views/partials/_kebab.html.twig` | Kebab overflow menu (details-based, 2.4 popover; 2.58 separators, rows, `sheet`) | FR-MENU-001, FR-PARTIAL-001, FR-CTXMENU-ROW-001, FR-CTXMENU-SHEET-001 |
 
 ## Twig views — partials: page header, key figures and navigation
 
@@ -401,7 +401,7 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | `Resources/assets/src/nowo-ui-image-crop.ts` | Opt-in crop step for image file inputs (`nowo-ui-image-crop-core.ts`: options, geometry, output) | FR-JS-001 |
 | `Resources/assets/src/nowo-ui-emoji-picker.ts` | Opt-in emoji picker over a text input (`nowo-ui-emoji-table.ts`: its table) | FR-JS-001 |
 | `Resources/assets/src/nowo-ui-combobox.ts` | Opt-in async grouped combobox over a text input (same-origin search, text-only listbox) | FR-JS-001 |
-| `Resources/assets/src/nowo-ui-context-menu.ts` | 2.54 opt-in context menus: the kebab's items on right-click, keyboard and long press (proxy items) | FR-JS-001, FR-CTXMENU-001 |
+| `Resources/assets/src/nowo-ui-context-menu.ts` | 2.54 opt-in context menus: the kebab's items on right-click, keyboard and long press (proxy items); 2.58 rows and phone bottom sheet | FR-JS-001, FR-CTXMENU-001, FR-CTXMENU-ROW-001, FR-CTXMENU-SHEET-001 |
 | `Resources/assets/src/nowo-ui-show-more.ts` | Opt-in line-clamp fold with a real button | FR-JS-001 |
 | `Resources/assets/src/nowo-ui-motion-core.ts` | Closing with an effect: fade, then the real close, with a fallback timer | FR-JS-001 |
 | `Resources/assets/src/nowo-ui-sortable.ts` | Opt-in reorder by pointer, touch and keyboard over host markup | FR-JS-001 |

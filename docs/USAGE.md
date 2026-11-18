@@ -3101,6 +3101,43 @@ pointerup) is swallowed, so the row is not followed. The
 listeners are passive: a swipe that starts on a row still scrolls. On fingers the items are at least 44 px tall. Android's own
 long-press `contextmenu` opens the same menu once. Check iOS Safari on a real device (its text-selection timing is not emulated).
 
+### Rows, separators and the phone bottom sheet (2.58)
+
+The `kebab` partial takes two more item shapes, and the context menu mirrors both:
+
+```twig
+{{ include('@NowoUiKitBundle/partials/_kebab.html.twig', {context_menu: true, sheet: true, label: 'Message actions', items: [
+    {row: [
+        {label: '👍', href: '#', attr: {'aria-label': 'React with 👍'}},
+        {label: '❤️', href: '#', attr: {'aria-label': 'React with ❤️'}, current: true},
+        {label: '+', href: '#', attr: {'aria-label': 'More reactions'}},
+    ], label: 'Quick reactions'},
+    {separator: true},
+    {label: 'Reply', href: '#'},
+    {separator: true},
+    {label: 'Delete', href: '#', danger: true},
+]}) }}
+```
+
+- **`{separator: true, attr?}`** prints `<hr class="nowo-ui-kebab__separator" role="separator">`. Like every separator, the
+  context menu collapses doubles and drops a trailing one; `attr: {hidden: 'hidden'}` hides it with its group.
+- **`{row: [items], label, attr?}`** prints `<div class="nowo-ui-kebab__row" role="group" data-nowo-ui-menu-row aria-label="…">`
+  with the items on one line (quick reactions, a toolbar). Any element of your own with `data-nowo-ui-menu-row` inside a kebab
+  panel works the same. In the context menu it is one `role="group"` row of `menuitem`s: **Left / Right** move inside it
+  (wrapping, mirrored in RTL), **Down / Up** leave it, and a row is entered on its first item. Only items are taken from a row
+  (no separator, submenu or nested row); a row whose items are all hidden is left out. `current: true` (`is-current`) shows a
+  chosen item (a reaction you already gave); say it in the item's `aria-label` too.
+- **`sheet: true`** (default false) marks the kebab root `data-nowo-ui-sheet`. Below **40rem** (`SHEET_QUERY`,
+  `(max-width: 40rem)`):
+  - the kebab's own menu opens as a **bottom sheet**: full width at the bottom of the screen, above a backdrop, at most 70 % of
+    the height and scrolling inside, items at least 44 px tall;
+  - its context menu (right-click, long press, Shift+F10, ContextMenu key) opens as a sheet too
+    (`nowo-ui-context-menu--sheet`), above a `.nowo-ui-context-menu__backdrop`. A tap on the backdrop closes it, and its click
+    never reaches the page under it. Submenus open as sheets over the sheet (Left / Escape go back). The sheet slides in unless
+    `prefers-reduced-motion`.
+
+  The attribute on your own host element (`data-nowo-ui-context-menu`) works as well. On wider screens nothing changes.
+
 ### Placement, CSP and theming
 
 A `popover="manual"` panel in the browser top layer (never clipped by a table scroller or a card; inside an open modal `<dialog>`

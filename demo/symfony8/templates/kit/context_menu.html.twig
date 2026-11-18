@@ -94,6 +94,24 @@
                     </ul>
                 </details>
             </article>
+
+            {#- 2.58: a chat-like message whose kebab has a row (quick reactions), separators and `sheet: true` (bottom sheet on phones). -#}
+            <article class="kit-ctx-card" tabindex="0" data-nowo-ui-context-menu-scope data-testid="card-message">
+                <h2 class="h6">Ana: shall we ship it today?</h2>
+                {{ include('@NowoUiKitBundle/partials/_kebab.html.twig', {popover: false, context_menu: true, sheet: true, label: 'Message actions', items: [
+                    {row: [
+                        {label: '👍', href: path('kit_context_menu', {picked: 'react-up'}), attr: {'aria-label': 'React with 👍'}},
+                        {label: '❤️', href: path('kit_context_menu', {picked: 'react-heart'}), attr: {'aria-label': 'React with ❤️'}, current: true},
+                        {label: '😂', href: path('kit_context_menu', {picked: 'react-laugh'}), attr: {'aria-label': 'React with 😂'}},
+                        {label: '+', href: path('kit_context_menu', {picked: 'react-more'}), attr: {'aria-label': 'More reactions'}},
+                    ], label: 'Quick reactions'},
+                    {separator: true},
+                    {label: 'Reply', href: path('kit_context_menu', {picked: 'reply'})},
+                    {label: 'Copy text', href: path('kit_context_menu', {picked: 'copy-text'})},
+                    {separator: true},
+                    {label: 'Delete', href: path('kit_context_menu', {picked: 'delete-message'}), danger: true},
+                ]}, with_context: false) }}
+            </article>
         </div>
         <p class="kit-ctx-spacer" data-testid="spacer">Room to scroll: a swipe that starts on a row still scrolls the page.</p>
     </main>

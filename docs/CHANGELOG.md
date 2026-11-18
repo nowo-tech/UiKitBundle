@@ -138,6 +138,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Context menu rows, separators and phone bottom sheet** (Beacon request for the ChatKit message menu, owner decision
+  D-20261118-02). All opt-in; without them nothing changes.
+  - The `kebab` partial takes `{separator: true}` (`<hr class="nowo-ui-kebab__separator" role="separator">`) and
+    `{row: [items], label}`, a horizontal `role="group"` of items marked `data-nowo-ui-menu-row` (quick reactions, a toolbar).
+  - The `context-menu` runtime mirrors a row as one `role="group"` row of `menuitem`s: Left / Right move inside it (wrapping,
+    mirrored in RTL), Down / Up leave it, and a row is entered on its first item.
+  - New `sheet` option of the `kebab` partial (`data-nowo-ui-sheet`). Below 40rem the kebab menu and its context menu open as a
+    bottom sheet above a backdrop, with items at least 44 px tall. A tap on the backdrop closes the sheet and never reaches the
+    page. Submenus open as sheets too. The slide-in respects `prefers-reduced-motion`.
+  - CSP unchanged: the sheet is placed by CSS, no style attribute or inline script.
+  - Demo `/kit/context-menu` gains a chat-like message card; e2e `context-menu-row.spec.ts` (Chromium, Firefox, WebKit) and
+    `context-menu-sheet.spec.ts` (phone 390 × 844, Chromium and WebKit). See [USAGE.md](USAGE.md#rows-separators-and-the-phone-bottom-sheet-258).
+
 ## [2.57.0] - 2026-11-18
 
 ### Added

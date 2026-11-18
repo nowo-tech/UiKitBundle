@@ -13,13 +13,21 @@
     - context_menu (2.54, bool; default theme.context_menus, false): the root carries data-nowo-ui-context-menu-source,
       so a right-click, the ContextMenu key, Shift+F10 or a long press on the table row / ARIA row / UiKit card /
       [data-nowo-ui-context-menu-scope] around the kebab opens the same items there (opt-in runtime `context-menu`).
+    - sheet (2.58, bool; default false): the root carries data-nowo-ui-sheet. Below 40rem the menu opens as a bottom
+      sheet (full width, above a backdrop), and the context menu of the same items does too.
+
+  Item shapes (2.58):
+    - { separator: true, attr?: {} }: a separator line (<hr role="separator">) between groups of items.
+    - { row: [items], label, attr?: {} }: a horizontal group of items (role="group", data-nowo-ui-menu-row), e.g. quick
+      reactions; the context menu shows it as one row (Left / Right move inside it, Up / Down leave it).
 #}
 {% set label = label|default('action.more'|trans({}, 'NowoUiKitBundle')) %}
 {% set _t = nowo_ui_theme|default(null) %}
 {% set _popover = popover ?? (_t ? _t.popoverMenus() : false) %}
 {% set _ctx = context_menu ?? (_t and _t.contextMenus is defined ? _t.contextMenus() : false) %}
-{% set _items %}
-            {% for item in items|default([]) %}
+{% set _sheet = sheet|default(false) %}
+{% macro _attrs(attr) %}{% for name, value in attr|default({})|filter((v, k) => k != 'class') %} {{ name }}="{{ value }}"{% endfor %}{% endmacro %}
+{% macro _item(item) %}
                 {% set is_current = item.current|default(false) %}
                 <a
                     class="nowo-ui-kebab__item{{ item.danger|default(false) ? ' nowo-ui-kebab__item--danger' : '' }}{{ is_current ? ' is-current' : '' }}{{ (item.attr.class ?? false) ? ' ' ~ item.attr.class }}"
@@ -30,11 +38,31 @@
                         {% for name, value in item.attr|filter((v, k) => k != 'class') %}{{ name }}="{{ value }}" {% endfor %}
                     {% endif %}
                 >{{ item.label }}</a>
-            {% endfor %}
+{% endmacro %}
+{% import _self as _kebab %}
+{% set _items %}
+            {% for item in items|default([]) %}{% if item.separator|default(false) %}
+                <hr class="nowo-ui-kebab__separator{{ (item.attr.class ?? false) ? ' ' ~ item.attr.class }}" role="separator"{{ _kebab._attrs(item.attr ?? {}) }}>
+            {% elseif item.row is defined %}
+                <div class="nowo-ui-kebab__row{{ (item.attr.class ?? false) ? ' ' ~ item.attr.class }}" role="group" data-nowo-ui-menu-row{% if item.label|default('') != '' %} aria-label="{{ item.label }}"{% endif %}{{ _kebab._attrs(item.attr ?? {}) }}>
+                    {% for entry in item.row %}{{ _kebab._item(entry) }}{% endfor %}
+                </div>
+            {% else %}
+                {% set is_current = item.current|default(false) %}
+                <a
+                    class="nowo-ui-kebab__item{{ item.danger|default(false) ? ' nowo-ui-kebab__item--danger' : '' }}{{ is_current ? ' is-current' : '' }}{{ (item.attr.class ?? false) ? ' ' ~ item.attr.class }}"
+                    href="{{ item.href|default('#') }}"
+                    role="menuitem"
+                    {% if is_current %}aria-current="page"{% endif %}
+                    {% if item.attr is defined %}
+                        {% for name, value in item.attr|filter((v, k) => k != 'class') %}{{ name }}="{{ value }}" {% endfor %}
+                    {% endif %}
+                >{{ item.label }}</a>
+            {% endif %}{% endfor %}
 {% endset %}
 {% if _popover %}
 {% set _menu_id = id|default(null) ?: 'nowo-ui-kebab-' ~ random() %}
-<div class="nowo-ui-kebab" data-nowo-ui-kebab data-nowo-ui-popover-menu{% if _ctx %} data-nowo-ui-context-menu-source data-nowo-ui-context-menu-label="{{ 'context_menu.label'|trans({}, 'NowoUiKitBundle') }}"{% endif %}>
+<div class="nowo-ui-kebab" data-nowo-ui-kebab data-nowo-ui-popover-menu{% if _sheet %} data-nowo-ui-sheet{% endif %}{% if _ctx %} data-nowo-ui-context-menu-source data-nowo-ui-context-menu-label="{{ 'context_menu.label'|trans({}, 'NowoUiKitBundle') }}"{% endif %}>
     <button type="button" class="nowo-ui-kebab__summary" popovertarget="{{ _menu_id }}" aria-haspopup="menu" aria-expanded="false" aria-label="{{ label }}" data-nowo-ui-popover-trigger>
         <span class="nowo-ui-kebab__dots" aria-hidden="true">⋮</span>
     </button>
@@ -43,7 +71,7 @@
     </div>
 </div>
 {% else %}
-<div class="nowo-ui-kebab" data-nowo-ui-kebab{% if _ctx %} data-nowo-ui-context-menu-source data-nowo-ui-context-menu-label="{{ 'context_menu.label'|trans({}, 'NowoUiKitBundle') }}"{% endif %}>
+<div class="nowo-ui-kebab" data-nowo-ui-kebab{% if _sheet %} data-nowo-ui-sheet{% endif %}{% if _ctx %} data-nowo-ui-context-menu-source data-nowo-ui-context-menu-label="{{ 'context_menu.label'|trans({}, 'NowoUiKitBundle') }}"{% endif %}>
     <details class="nowo-ui-kebab__details">
         <summary class="nowo-ui-kebab__summary" aria-label="{{ label }}">
             <span class="nowo-ui-kebab__dots" aria-hidden="true">⋮</span>
