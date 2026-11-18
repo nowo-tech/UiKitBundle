@@ -21,14 +21,14 @@ final class KeysetPagerTest extends TestCase
     /**
      * @param array<string, mixed> $vars
      */
-    private static function render(array $vars, string $framework = 'bootstrap5'): string
+    private function render(array $vars, string $framework = 'bootstrap5'): string
     {
         return PageContractTwig::create([], [], $framework)->render(self::TEMPLATE, $vars + ['route' => 'api_usage']);
     }
 
     public function testBothCursors(): void
     {
-        $html = self::render(['next_cursor' => 'n1', 'prev_cursor' => 'p1', 'testid' => 'calls']);
+        $html = $this->render(['next_cursor' => 'n1', 'prev_cursor' => 'p1', 'testid' => 'calls']);
 
         self::assertStringContainsString('<nav class="nowo-ui-keyset-pager d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3" aria-label="Pagination (newer and older)" data-nowo-ui-keyset-pager data-testid="calls">', $html);
         self::assertStringContainsString('href="/api_usage?cursor=p1" rel="prev" data-testid="calls-newer"', $html);
@@ -43,23 +43,23 @@ final class KeysetPagerTest extends TestCase
 
     public function testOneCursorOrNone(): void
     {
-        $older = self::render(['next_cursor' => 'n1']);
+        $older = $this->render(['next_cursor' => 'n1']);
         self::assertStringContainsString('rel="next"', $older);
         self::assertStringNotContainsString('rel="prev"', $older);
         self::assertStringNotContainsString('data-testid', $older);
 
-        $newer = self::render(['prev_cursor' => 'p1', 'next_cursor' => null]);
+        $newer = $this->render(['prev_cursor' => 'p1', 'next_cursor' => null]);
         self::assertStringContainsString('rel="prev"', $newer);
         self::assertStringNotContainsString('rel="next"', $newer);
 
-        self::assertSame('', trim(self::render([])));
-        self::assertSame('', trim(self::render(['next_cursor' => '', 'prev_cursor' => null])));
-        self::assertStringContainsString('cursor=0', self::render(['next_cursor' => 0]), 'a zero cursor is a cursor');
+        self::assertSame('', trim($this->render([])));
+        self::assertSame('', trim($this->render(['next_cursor' => '', 'prev_cursor' => null])));
+        self::assertStringContainsString('cursor=0', $this->render(['next_cursor' => 0]), 'a zero cursor is a cursor');
     }
 
     public function testParamsAreMergedAndTheCursorIsReplaced(): void
     {
-        $html = self::render([
+        $html = $this->render([
             'next_cursor' => 'n2',
             'route' => 'orgs_calls',
             'route_params' => ['id' => 7],
@@ -80,7 +80,7 @@ final class KeysetPagerTest extends TestCase
 
     public function testCustomCursorParam(): void
     {
-        $html = self::render(['next_cursor' => 'n', 'prev_cursor' => 'p', 'cursor_param' => 'after', 'query' => ['after' => 'stale', 'cursor' => 'kept']]);
+        $html = $this->render(['next_cursor' => 'n', 'prev_cursor' => 'p', 'cursor_param' => 'after', 'query' => ['after' => 'stale', 'cursor' => 'kept']]);
 
         self::assertStringContainsString('href="/api_usage?cursor=kept&amp;after=n"', $html);
         self::assertStringContainsString('href="/api_usage?cursor=kept&amp;after=p"', $html);
@@ -89,7 +89,7 @@ final class KeysetPagerTest extends TestCase
 
     public function testLabelsIconsAndNavLabel(): void
     {
-        $html = self::render(['next_cursor' => 'n', 'prev_cursor' => 'p', 'next_label' => 'Older <calls>', 'prev_label' => 'keyset_pager.newer', 'nav_label' => 'Call pages', 'next_icon' => 'chevron_right', 'prev_icon' => 'chevron_left']);
+        $html = $this->render(['next_cursor' => 'n', 'prev_cursor' => 'p', 'next_label' => 'Older <calls>', 'prev_label' => 'keyset_pager.newer', 'nav_label' => 'Call pages', 'next_icon' => 'chevron_right', 'prev_icon' => 'chevron_left']);
 
         self::assertStringContainsString('<span>Older &lt;calls&gt;</span>', $html);
         self::assertStringContainsString('<span>Newer</span>', $html);
@@ -131,7 +131,7 @@ final class KeysetPagerTest extends TestCase
     #[DataProvider('hostileValues')]
     public function testHostileValuesNeverBreakOutOfTheAttributes(string $hostile): void
     {
-        $html = self::render([
+        $html = $this->render([
             'next_cursor' => $hostile,
             'prev_cursor' => $hostile,
             'query' => ['q' => $hostile, $hostile => 'v'],
@@ -175,7 +175,7 @@ final class KeysetPagerTest extends TestCase
 
     public function testPerPageSelector(): void
     {
-        $html = self::render(['next_cursor' => 'n', 'prev_cursor' => 'p', 'per_page_options' => [25, 50, 100], 'per_page' => 50, 'query' => ['status' => 'ok', 'cursor' => 'c'], 'testid' => 'calls']);
+        $html = $this->render(['next_cursor' => 'n', 'prev_cursor' => 'p', 'per_page_options' => [25, 50, 100], 'per_page' => 50, 'query' => ['status' => 'ok', 'cursor' => 'c'], 'testid' => 'calls']);
 
         self::assertStringContainsString('<div class="nowo-ui-keyset-pager__per-page d-flex align-items-center gap-2" data-testid="calls-per-page">', $html);
         self::assertStringContainsString('<span>Per page</span>', $html);
@@ -188,7 +188,7 @@ final class KeysetPagerTest extends TestCase
         self::assertStringContainsString('href="/api_usage?status=ok&amp;per_page=50&amp;cursor=p" rel="prev"', $html);
         self::assertStringNotContainsString('per_page=25&amp;cursor', $html);
 
-        $custom = self::render(['per_page_options' => [10], 'per_page_param' => 'limit', 'per_page' => 10]);
+        $custom = $this->render(['per_page_options' => [10], 'per_page_param' => 'limit', 'per_page' => 10]);
         self::assertStringContainsString('href="/api_usage?limit=10" aria-current="true">10</a>', $custom);
         self::assertStringNotContainsString('rel=', $custom, 'options alone: no cursor links');
         self::assertStringNotContainsString('data-testid', $custom);
@@ -196,7 +196,7 @@ final class KeysetPagerTest extends TestCase
 
     public function testPerPageFromTheQueryTravelsWithoutTheSetting(): void
     {
-        $html = self::render(['next_cursor' => 'n', 'query' => ['per_page' => 25]]);
+        $html = $this->render(['next_cursor' => 'n', 'query' => ['per_page' => 25]]);
 
         self::assertStringContainsString('href="/api_usage?per_page=25&amp;cursor=n"', $html);
     }
@@ -216,7 +216,7 @@ final class KeysetPagerTest extends TestCase
     #[DataProvider('frameworks')]
     public function testFrameworkVariants(string $framework, string $nav, string $link, string $option): void
     {
-        $html = self::render(['next_cursor' => 'n', 'prev_cursor' => 'p', 'per_page_options' => [10, 20], 'per_page' => 10], $framework);
+        $html = $this->render(['next_cursor' => 'n', 'prev_cursor' => 'p', 'per_page_options' => [10, 20], 'per_page' => 10], $framework);
 
         self::assertStringContainsString('<nav class="'.trim('nowo-ui-keyset-pager '.$nav).'"', $html);
         self::assertSame(2, substr_count($html, 'class="'.trim('nowo-ui-keyset-pager__link '.$link).'"'));
