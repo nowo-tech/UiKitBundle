@@ -29,4 +29,25 @@ describe('thin-scrollbars mixin', () => {
     expect(css).toContain('color-mix(in srgb, var(--color-ink) 22%, transparent)');
     expect(css).toContain('color-mix(in srgb, var(--color-ink) 40%, transparent)');
   });
+
+  it('scrollbar() reads the public tokens with the kit fallbacks, Firefox properties only under @supports', () => {
+    const css = compile("@include thin.scrollbar('.chat-list');");
+    expect(css).toContain('@supports not selector(::-webkit-scrollbar)');
+    expect(css).toContain('scrollbar-width: thin');
+    expect(css).toContain('scrollbar-color: var(--nowo-ui-scrollbar-thumb, color-mix(in srgb, var(--nowo-ui-text, currentColor) 28%, transparent)) var(--nowo-ui-scrollbar-track, transparent)');
+    expect(css).toContain('.chat-list::-webkit-scrollbar');
+    expect(css).toContain('width: var(--nowo-ui-scrollbar-size, 6px)');
+    expect(css).toContain('.chat-list::-webkit-scrollbar-button');
+    expect(css).toContain('var(--nowo-ui-scrollbar-thumb-hover, color-mix(in srgb, var(--nowo-ui-text, currentColor) 45%, transparent))');
+    // the standard properties never leave the @supports block
+    expect(css.replace(/@supports not selector\(::-webkit-scrollbar\) \{[^}]*\}\s*\}/s, '')).not.toContain('scrollbar-width');
+  });
+
+  it('scrollbar-none() hides the bar, Firefox property only under @supports', () => {
+    const css = compile("@include thin.scrollbar-none('.tabs-row');");
+    expect(css).toContain('.tabs-row::-webkit-scrollbar');
+    expect(css).toContain('display: none');
+    expect(css).toContain('scrollbar-width: none');
+    expect(css.indexOf('scrollbar-width')).toBeGreaterThan(css.indexOf('@supports not selector(::-webkit-scrollbar)'));
+  });
 });

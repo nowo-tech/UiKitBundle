@@ -309,6 +309,7 @@ final class HostChromePartialsTest extends TestCase
             'form:has(> .nowo-ui-filters-collapse.is-collapsed) > :not(.nowo-ui-filters-collapse)', 'isolation: isolate',
             '.nowo-ui-disclosure-icon {', '.nowo-ui-edge-tab__link {', 'html[data-nowo-ui-thin-scrollbars]', '.nowo-ui-thin-scroll',
             '::-webkit-scrollbar-thumb:hover', '@supports not selector(::-webkit-scrollbar)',
+            '.nowo-ui-scrollbar,', '.nowo-ui-scrollbar-none', '--nowo-ui-scrollbar-track', '--nowo-ui-scrollbar-thumb-hover',
         ] as $needle) {
             self::assertStringContainsString($needle, $css);
         }

@@ -58,6 +58,10 @@
   --nowo-ui-text: #0f172a;
   --nowo-ui-muted: #64748b;
   --nowo-ui-radius: 0.375rem;
+  /* 2.59: scrollbar tokens (docs/THEMING.md — Scrollbars). The thumb tokens are NOT declared here: their default
+   * (text at 28 % / 45 %) is the var() fallback where the bar is painted, so it follows [data-theme] on any element. */
+  --nowo-ui-scrollbar-size: 6px;
+  --nowo-ui-scrollbar-track: transparent;
   /* 2.3: defined (follows the primary on the same element), so host / bundle CSS can read var(--nowo-ui-link) */
   --nowo-ui-link: var(--nowo-ui-primary);
   /* 2.52: inset sidebar style — the shell surface (header, aside, footer) and the content panel */
@@ -4656,44 +4660,86 @@ button.nowo-ui-edge-tab__link {
   cursor: pointer;
 }
 
-/* --- Thin scrollbars ---
- * `.nowo-ui-thin-scroll` on any scroller, or `data-nowo-ui-thin-scrollbars` on <html> for the page and every kit
- * scroller (shell, aside, main, modals, dialogs, table wrappers). Chromium 121+ ignores ::-webkit-scrollbar once the
- * standard scrollbar-width / scrollbar-color are set (and then draws the wide bar with arrow buttons), so the
- * standard properties are for engines without ::-webkit-scrollbar (Firefox) only. Hosts with their own selector
- * lists: the SCSS mixin assets/styles/_thin-scrollbars.scss. */
+/* --- Scrollbars (one source of truth, 2.59) ---
+ * Tokens: --nowo-ui-scrollbar-size (6px) and --nowo-ui-scrollbar-track (transparent) are declared on :root;
+ * --nowo-ui-scrollbar-thumb (text 28 %) and --nowo-ui-scrollbar-thumb-hover (text 45 %) default through the var()
+ * fallback where the bar is painted, so they follow the text colour (light / dark) on any element.
+ * `.nowo-ui-scrollbar` (alias `.nowo-ui-thin-scroll`) on any scroller, or `data-nowo-ui-thin-scrollbars` on <html> for
+ * the page and every kit scroller. `.nowo-ui-scrollbar-none` hides the bar of a scroller meant to scroll without one.
+ * Chromium 121+ ignores ::-webkit-scrollbar once the standard scrollbar-width / scrollbar-color are set (and then
+ * draws the wide bar with arrow buttons), so the standard properties are for engines without ::-webkit-scrollbar
+ * (Firefox) only. Hosts with their own selector lists: the SCSS mixins in assets/styles/_thin-scrollbars.scss. */
 @supports not selector(::-webkit-scrollbar) {
+  .nowo-ui-scrollbar,
   .nowo-ui-thin-scroll,
   html[data-nowo-ui-thin-scrollbars],
-  [data-nowo-ui-thin-scrollbars] :is(body, .nowo-ui-aside, .nowo-ui-main, .nowo-ui-modal, .nowo-ui-modal .modal-body, .nowo-ui-row-detail__content, .nowo-ui-table-wrap, .nowo-ui-responsive-table__scroller) {
+  [data-nowo-ui-thin-scrollbars] :is(body, .nowo-ui-aside, .nowo-ui-main, .nowo-ui-modal, .nowo-ui-modal .modal-body, .nowo-ui-row-detail__content, .nowo-ui-table-wrap, .nowo-ui-responsive-table__scroller, .nowo-ui-dialog, .nowo-ui-dialog__body, .nowo-ui-confirm-dialog, .nowo-ui-confirm__body, .nowo-ui-code-block, .nowo-ui-side-panel, .nowo-ui-combobox__listbox, .nowo-ui-emoji-picker__grid, .nowo-ui-date-range__panel, .nowo-ui-kebab__menu, [data-nowo-ui-scroll-region]) {
     scrollbar-width: thin;
-    scrollbar-color: var(--nowo-ui-scrollbar-thumb, color-mix(in srgb, var(--nowo-ui-text) 28%, transparent)) transparent;
+    scrollbar-color: var(--nowo-ui-scrollbar-thumb, color-mix(in srgb, var(--nowo-ui-text) 28%, transparent)) var(--nowo-ui-scrollbar-track, transparent);
+  }
+
+  .nowo-ui-scrollbar-none {
+    scrollbar-width: none;
   }
 }
 
-:is(.nowo-ui-thin-scroll, html[data-nowo-ui-thin-scrollbars], [data-nowo-ui-thin-scrollbars] :is(body, .nowo-ui-aside, .nowo-ui-main, .nowo-ui-modal, .nowo-ui-modal .modal-body, .nowo-ui-row-detail__content, .nowo-ui-table-wrap, .nowo-ui-responsive-table__scroller))::-webkit-scrollbar {
+:is(
+  .nowo-ui-scrollbar,
+  .nowo-ui-thin-scroll,
+  html[data-nowo-ui-thin-scrollbars],
+  [data-nowo-ui-thin-scrollbars] :is(body, .nowo-ui-aside, .nowo-ui-main, .nowo-ui-modal, .nowo-ui-modal .modal-body, .nowo-ui-row-detail__content, .nowo-ui-table-wrap, .nowo-ui-responsive-table__scroller, .nowo-ui-dialog, .nowo-ui-dialog__body, .nowo-ui-confirm-dialog, .nowo-ui-confirm__body, .nowo-ui-code-block, .nowo-ui-side-panel, .nowo-ui-combobox__listbox, .nowo-ui-emoji-picker__grid, .nowo-ui-date-range__panel, .nowo-ui-kebab__menu, [data-nowo-ui-scroll-region])
+)::-webkit-scrollbar {
   width: var(--nowo-ui-scrollbar-size, 6px);
   height: var(--nowo-ui-scrollbar-size, 6px);
 }
 
-:is(.nowo-ui-thin-scroll, html[data-nowo-ui-thin-scrollbars], [data-nowo-ui-thin-scrollbars] :is(body, .nowo-ui-aside, .nowo-ui-main, .nowo-ui-modal, .nowo-ui-modal .modal-body, .nowo-ui-row-detail__content, .nowo-ui-table-wrap, .nowo-ui-responsive-table__scroller))::-webkit-scrollbar-button {
+:is(
+  .nowo-ui-scrollbar,
+  .nowo-ui-thin-scroll,
+  html[data-nowo-ui-thin-scrollbars],
+  [data-nowo-ui-thin-scrollbars] :is(body, .nowo-ui-aside, .nowo-ui-main, .nowo-ui-modal, .nowo-ui-modal .modal-body, .nowo-ui-row-detail__content, .nowo-ui-table-wrap, .nowo-ui-responsive-table__scroller, .nowo-ui-dialog, .nowo-ui-dialog__body, .nowo-ui-confirm-dialog, .nowo-ui-confirm__body, .nowo-ui-code-block, .nowo-ui-side-panel, .nowo-ui-combobox__listbox, .nowo-ui-emoji-picker__grid, .nowo-ui-date-range__panel, .nowo-ui-kebab__menu, [data-nowo-ui-scroll-region])
+)::-webkit-scrollbar-button {
   display: none;
 }
 
-:is(.nowo-ui-thin-scroll, html[data-nowo-ui-thin-scrollbars], [data-nowo-ui-thin-scrollbars] :is(body, .nowo-ui-aside, .nowo-ui-main, .nowo-ui-modal, .nowo-ui-modal .modal-body, .nowo-ui-row-detail__content, .nowo-ui-table-wrap, .nowo-ui-responsive-table__scroller))::-webkit-scrollbar-track,
-:is(.nowo-ui-thin-scroll, html[data-nowo-ui-thin-scrollbars], [data-nowo-ui-thin-scrollbars] :is(body, .nowo-ui-aside, .nowo-ui-main, .nowo-ui-modal, .nowo-ui-modal .modal-body, .nowo-ui-row-detail__content, .nowo-ui-table-wrap, .nowo-ui-responsive-table__scroller))::-webkit-scrollbar-corner {
-  background: transparent;
+:is(
+  .nowo-ui-scrollbar,
+  .nowo-ui-thin-scroll,
+  html[data-nowo-ui-thin-scrollbars],
+  [data-nowo-ui-thin-scrollbars] :is(body, .nowo-ui-aside, .nowo-ui-main, .nowo-ui-modal, .nowo-ui-modal .modal-body, .nowo-ui-row-detail__content, .nowo-ui-table-wrap, .nowo-ui-responsive-table__scroller, .nowo-ui-dialog, .nowo-ui-dialog__body, .nowo-ui-confirm-dialog, .nowo-ui-confirm__body, .nowo-ui-code-block, .nowo-ui-side-panel, .nowo-ui-combobox__listbox, .nowo-ui-emoji-picker__grid, .nowo-ui-date-range__panel, .nowo-ui-kebab__menu, [data-nowo-ui-scroll-region])
+)::-webkit-scrollbar-track,
+:is(
+  .nowo-ui-scrollbar,
+  .nowo-ui-thin-scroll,
+  html[data-nowo-ui-thin-scrollbars],
+  [data-nowo-ui-thin-scrollbars] :is(body, .nowo-ui-aside, .nowo-ui-main, .nowo-ui-modal, .nowo-ui-modal .modal-body, .nowo-ui-row-detail__content, .nowo-ui-table-wrap, .nowo-ui-responsive-table__scroller, .nowo-ui-dialog, .nowo-ui-dialog__body, .nowo-ui-confirm-dialog, .nowo-ui-confirm__body, .nowo-ui-code-block, .nowo-ui-side-panel, .nowo-ui-combobox__listbox, .nowo-ui-emoji-picker__grid, .nowo-ui-date-range__panel, .nowo-ui-kebab__menu, [data-nowo-ui-scroll-region])
+)::-webkit-scrollbar-corner {
+  background: var(--nowo-ui-scrollbar-track, transparent);
 }
 
-:is(.nowo-ui-thin-scroll, html[data-nowo-ui-thin-scrollbars], [data-nowo-ui-thin-scrollbars] :is(body, .nowo-ui-aside, .nowo-ui-main, .nowo-ui-modal, .nowo-ui-modal .modal-body, .nowo-ui-row-detail__content, .nowo-ui-table-wrap, .nowo-ui-responsive-table__scroller))::-webkit-scrollbar-thumb {
+:is(
+  .nowo-ui-scrollbar,
+  .nowo-ui-thin-scroll,
+  html[data-nowo-ui-thin-scrollbars],
+  [data-nowo-ui-thin-scrollbars] :is(body, .nowo-ui-aside, .nowo-ui-main, .nowo-ui-modal, .nowo-ui-modal .modal-body, .nowo-ui-row-detail__content, .nowo-ui-table-wrap, .nowo-ui-responsive-table__scroller, .nowo-ui-dialog, .nowo-ui-dialog__body, .nowo-ui-confirm-dialog, .nowo-ui-confirm__body, .nowo-ui-code-block, .nowo-ui-side-panel, .nowo-ui-combobox__listbox, .nowo-ui-emoji-picker__grid, .nowo-ui-date-range__panel, .nowo-ui-kebab__menu, [data-nowo-ui-scroll-region])
+)::-webkit-scrollbar-thumb {
   border: 1px solid transparent;
   border-radius: 999px;
   background-color: var(--nowo-ui-scrollbar-thumb, color-mix(in srgb, var(--nowo-ui-text) 28%, transparent));
   background-clip: padding-box;
 }
 
-:is(.nowo-ui-thin-scroll, html[data-nowo-ui-thin-scrollbars], [data-nowo-ui-thin-scrollbars] :is(body, .nowo-ui-aside, .nowo-ui-main, .nowo-ui-modal, .nowo-ui-modal .modal-body, .nowo-ui-row-detail__content, .nowo-ui-table-wrap, .nowo-ui-responsive-table__scroller))::-webkit-scrollbar-thumb:hover {
+:is(
+  .nowo-ui-scrollbar,
+  .nowo-ui-thin-scroll,
+  html[data-nowo-ui-thin-scrollbars],
+  [data-nowo-ui-thin-scrollbars] :is(body, .nowo-ui-aside, .nowo-ui-main, .nowo-ui-modal, .nowo-ui-modal .modal-body, .nowo-ui-row-detail__content, .nowo-ui-table-wrap, .nowo-ui-responsive-table__scroller, .nowo-ui-dialog, .nowo-ui-dialog__body, .nowo-ui-confirm-dialog, .nowo-ui-confirm__body, .nowo-ui-code-block, .nowo-ui-side-panel, .nowo-ui-combobox__listbox, .nowo-ui-emoji-picker__grid, .nowo-ui-date-range__panel, .nowo-ui-kebab__menu, [data-nowo-ui-scroll-region])
+)::-webkit-scrollbar-thumb:hover {
   background-color: var(--nowo-ui-scrollbar-thumb-hover, color-mix(in srgb, var(--nowo-ui-text) 45%, transparent));
+}
+
+.nowo-ui-scrollbar-none::-webkit-scrollbar {
+  display: none;
 }
 
 /* =============================================================================================

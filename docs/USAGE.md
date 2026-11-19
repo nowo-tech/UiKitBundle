@@ -1108,7 +1108,9 @@ One thin bar everywhere (6px, rounded thumb from `--nowo-ui-text`, no arrow butt
 tokens): `.nowo-ui-thin-scroll` on any scroller, or `data-nowo-ui-thin-scrollbars` on `<html>` for the page and every
 kit scroller (`body`, `.nowo-ui-aside`, `.nowo-ui-main`, modals, the row detail dialog, `.nowo-ui-table-wrap`,
 responsive table scrollers). Tokens: `--nowo-ui-scrollbar-size`, `--nowo-ui-scrollbar-thumb`,
-`--nowo-ui-scrollbar-thumb-hover`. Firefox gets `scrollbar-width: thin` (only where `::-webkit-scrollbar` is not
+`--nowo-ui-scrollbar-thumb-hover`, `--nowo-ui-scrollbar-track`; `.nowo-ui-scrollbar` is the preferred class name
+(`.nowo-ui-thin-scroll` stays an alias). Full reference, mixins and a standalone snippet:
+[THEMING.md — Scrollbars](THEMING.md#scrollbars). Firefox gets `scrollbar-width: thin` (only where `::-webkit-scrollbar` is not
 supported: Chromium 121+ would otherwise draw its wide bar).
 
 Hosts with their own selector lists (Sass via Vite / Encore) use the mixin:
