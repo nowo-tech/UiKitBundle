@@ -144,8 +144,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - **Scrollbars: one source of truth (2.59).** Public tokens `--nowo-ui-scrollbar-size` (`6px`),
   `--nowo-ui-scrollbar-thumb` (text at 28 %), `--nowo-ui-scrollbar-thumb-hover` (text at 45 %) and
-  `--nowo-ui-scrollbar-track` (`transparent`) are now declared on `:root` and in the dark theme (they were only
-  fallbacks before). New utility `.nowo-ui-scrollbar` (same bar as `.nowo-ui-thin-scroll`, kept as an alias) and
+  `--nowo-ui-scrollbar-track` (`transparent`) are public; size and track are declared on `:root`, the thumb tokens default
+  through the fallback (text colour at 28 % / 45 %, so light and dark follow `--nowo-ui-text`). New utility `.nowo-ui-scrollbar` (same bar as `.nowo-ui-thin-scroll`, kept as an alias) and
   `.nowo-ui-scrollbar-none` for scrollers that scroll without a visible bar. New SCSS mixins `scrollbar($selectors)`
   and `scrollbar-none($selectors)` in `assets/styles/_thin-scrollbars.scss` read the same tokens with the kit
   fallbacks, so bundles that ship standalone CSS get the identical bar. Firefox's standard `scrollbar-width` /

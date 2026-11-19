@@ -633,14 +633,16 @@ The scrollbar tokens are documented under [Scrollbars](#scrollbars).
 One bar for every scroller: 6px, rounded thumb in the text colour at 28 % (45 % on hover), no arrow buttons,
 transparent track. Hosts restyle it through the tokens only.
 
-| Token | Default (light and dark) | Role |
+| Token | Default | Role |
 |-------|---------|------|
 | `--nowo-ui-scrollbar-size` | `6px` | bar width / height |
-| `--nowo-ui-scrollbar-thumb` | `color-mix(in srgb, var(--nowo-ui-text) 28%, transparent)` | thumb (and Firefox `scrollbar-color`) |
-| `--nowo-ui-scrollbar-thumb-hover` | `color-mix(in srgb, var(--nowo-ui-text) 45%, transparent)` | thumb on hover |
+| `--nowo-ui-scrollbar-thumb` | (fallback) `color-mix(in srgb, var(--nowo-ui-text) 28%, transparent)` | thumb (and Firefox `scrollbar-color`) |
+| `--nowo-ui-scrollbar-thumb-hover` | (fallback) `color-mix(in srgb, var(--nowo-ui-text) 45%, transparent)` | thumb on hover |
 | `--nowo-ui-scrollbar-track` | `transparent` | track and corner |
 
-The thumb tokens are re-derived in the dark theme, so they follow `--nowo-ui-text` there.
+`--nowo-ui-scrollbar-size` and `--nowo-ui-scrollbar-track` are declared on `:root`. The thumb tokens are deliberately not
+declared: their default is the fallback used where the bar is painted, so it follows `--nowo-ui-text` in light and dark
+mode on any element (a `[data-theme="dark"]` subtree included). Set them to override.
 
 **Classes.** `.nowo-ui-scrollbar` on any scroller (`.nowo-ui-thin-scroll` is the same thing under its older name), or
 `data-nowo-ui-thin-scrollbars` on `<html>` for the page and every kit scroller. `.nowo-ui-scrollbar-none` hides the bar

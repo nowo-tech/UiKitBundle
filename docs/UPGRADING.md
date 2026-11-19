@@ -162,8 +162,8 @@
 ## Unreleased
 
 Scrollbars (additive): `--nowo-ui-scrollbar-size`, `--nowo-ui-scrollbar-thumb`, `--nowo-ui-scrollbar-thumb-hover` and
-`--nowo-ui-scrollbar-track` are now declared on `:root` (and the thumb tokens in the dark theme). A host that set the
-first three keeps its values; one that scoped them to a subtree is unaffected. Own scrollers should use
+`--nowo-ui-scrollbar-track` are public (`size` and `track` are now declared on `:root`; the thumb tokens keep their
+fallback default). A host that set the first three keeps its values. Own scrollers should use
 `.nowo-ui-scrollbar` / `.nowo-ui-scrollbar-none` or the SCSS mixins `scrollbar()` / `scrollbar-none()` instead of
 setting `scrollbar-width` / `scrollbar-color` themselves (Chromium 121+ then ignores `::-webkit-scrollbar`). See
 [THEMING.md — Scrollbars](THEMING.md#scrollbars).
