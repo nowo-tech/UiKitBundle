@@ -31,6 +31,7 @@ two token blocks of `nowo-ui.css`. A host theme is a short `:root` block.
 - [Dialog sizes (2.29)](#dialog-sizes-229)
 - [Remote form dialog (2.28)](#remote-form-dialog-228)
 - [Corner tabs, edge tabs, scrollbars (1.17)](#corner-tabs-edge-tabs-scrollbars-117)
+  - [Scrollbars](#scrollbars)
 - [Phone mode (2.41)](#phone-mode-241)
 - [Default-theme polish tokens (2.2)](#default-theme-polish-tokens-22)
 - [Layout and metrics tokens](#layout-and-metrics-tokens)
@@ -624,9 +625,64 @@ Opt-in chrome ([USAGE.md — Host chrome](USAGE.md#host-chrome-117-opt-in)); not
 | `--nowo-ui-edge-tab-step` | `calc(var(--nowo-ui-edge-tab-height) + var(--nowo-ui-edge-tab-gap))` = `3.25rem` | offset per `slot`; set the height (and the gap) rather than the step so the launcher keeps the same gap |
 | `--nowo-ui-edge-tab-slot` | `0` | set by `data-nowo-ui-edge-tab-slot` (1–3); a number, multiplied by the step |
 | `--nowo-ui-edge-tab-z` | `74` | edge tab z-index ([Layers](#layers-public-api-228), public API since 2.28) |
-| `--nowo-ui-scrollbar-size` | `6px` | thin scrollbars (`.nowo-ui-thin-scroll`, `html[data-nowo-ui-thin-scrollbars]`) |
+
+The scrollbar tokens are documented under [Scrollbars](#scrollbars).
+
+### Scrollbars
+
+One bar for every scroller: 6px, rounded thumb in the text colour at 28 % (45 % on hover), no arrow buttons,
+transparent track. Hosts restyle it through the tokens only.
+
+| Token | Default (light and dark) | Role |
+|-------|---------|------|
+| `--nowo-ui-scrollbar-size` | `6px` | bar width / height |
 | `--nowo-ui-scrollbar-thumb` | `color-mix(in srgb, var(--nowo-ui-text) 28%, transparent)` | thumb (and Firefox `scrollbar-color`) |
 | `--nowo-ui-scrollbar-thumb-hover` | `color-mix(in srgb, var(--nowo-ui-text) 45%, transparent)` | thumb on hover |
+| `--nowo-ui-scrollbar-track` | `transparent` | track and corner |
+
+The thumb tokens are re-derived in the dark theme, so they follow `--nowo-ui-text` there.
+
+**Classes.** `.nowo-ui-scrollbar` on any scroller (`.nowo-ui-thin-scroll` is the same thing under its older name), or
+`data-nowo-ui-thin-scrollbars` on `<html>` for the page and every kit scroller. `.nowo-ui-scrollbar-none` hides the bar
+of a scroller meant to scroll without one (a horizontal tab row).
+
+**Sass mixins** (`src/Resources/assets/styles/_thin-scrollbars.scss`):
+
+```scss
+@use '../../vendor/nowo-tech/ui-kit-bundle/src/Resources/assets/styles/thin-scrollbars' as thin;
+
+@include thin.scrollbar('.chat-list, .editor-body');   // reads the tokens
+@include thin.scrollbar-none('.tabs-row');              // hidden bar
+@include thin.thin-scrollbars('.rail', $size: 3px);     // parameterised variant, fixed values instead of tokens
+```
+
+**Why the Firefox properties are fenced.** Chromium 121+ ignores `::-webkit-scrollbar` on any element that sets the
+standard `scrollbar-width` / `scrollbar-color`, and draws its wide native bar with arrow buttons. A scroller that sets
+them looks different from the rest of the page. The kit (and the mixins) therefore put the standard properties only
+under `@supports not selector(::-webkit-scrollbar)`, which is true in Firefox alone. Never set `scrollbar-width` or
+`scrollbar-color` on a scroller outside that block.
+
+**Bundles that ship standalone CSS** (no runtime dependency on the kit) paste this snippet. It reads the same tokens and
+falls back to the same values, so the bar is identical with or without the kit:
+
+```css
+@supports not selector(::-webkit-scrollbar) {
+  .my-scroller {
+    scrollbar-width: thin;
+    scrollbar-color: var(--nowo-ui-scrollbar-thumb, color-mix(in srgb, var(--nowo-ui-text, currentColor) 28%, transparent)) var(--nowo-ui-scrollbar-track, transparent);
+  }
+}
+.my-scroller::-webkit-scrollbar { width: var(--nowo-ui-scrollbar-size, 6px); height: var(--nowo-ui-scrollbar-size, 6px); }
+.my-scroller::-webkit-scrollbar-button { display: none; }
+.my-scroller::-webkit-scrollbar-track, .my-scroller::-webkit-scrollbar-corner { background: var(--nowo-ui-scrollbar-track, transparent); }
+.my-scroller::-webkit-scrollbar-thumb { border: 1px solid transparent; border-radius: 999px; background-clip: padding-box;
+  background-color: var(--nowo-ui-scrollbar-thumb, color-mix(in srgb, var(--nowo-ui-text, currentColor) 28%, transparent)); }
+.my-scroller::-webkit-scrollbar-thumb:hover { background-color: var(--nowo-ui-scrollbar-thumb-hover, color-mix(in srgb, var(--nowo-ui-text, currentColor) 45%, transparent)); }
+
+/* a scroller meant to hide its bar */
+.my-tabs::-webkit-scrollbar { display: none; }
+@supports not selector(::-webkit-scrollbar) { .my-tabs { scrollbar-width: none; } }
+```
 
 ### Focus bar offset tokens (2.57)
 

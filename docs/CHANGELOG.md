@@ -140,6 +140,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Scrollbars: one source of truth (2.59).** Public tokens `--nowo-ui-scrollbar-size` (`6px`),
+  `--nowo-ui-scrollbar-thumb` (text at 28 %), `--nowo-ui-scrollbar-thumb-hover` (text at 45 %) and
+  `--nowo-ui-scrollbar-track` (`transparent`) are now declared on `:root` and in the dark theme (they were only
+  fallbacks before). New utility `.nowo-ui-scrollbar` (same bar as `.nowo-ui-thin-scroll`, kept as an alias) and
+  `.nowo-ui-scrollbar-none` for scrollers that scroll without a visible bar. New SCSS mixins `scrollbar($selectors)`
+  and `scrollbar-none($selectors)` in `assets/styles/_thin-scrollbars.scss` read the same tokens with the kit
+  fallbacks, so bundles that ship standalone CSS get the identical bar. Firefox's standard `scrollbar-width` /
+  `scrollbar-color` apply only under `@supports not selector(::-webkit-scrollbar)` (Chromium 121+ would otherwise
+  drop the `::-webkit-scrollbar` bar). See [THEMING.md — Scrollbars](THEMING.md#scrollbars).
+
+### Changed
+
+- `data-nowo-ui-thin-scrollbars` on `<html>` now also covers the dialogs, confirm dialogs, side panel, code blocks,
+  combobox listbox, emoji picker grid, date range panel, kebab menu and `[data-nowo-ui-scroll-region]` scrollers. The
+  track colour follows `--nowo-ui-scrollbar-track`.
+
 ## [2.58.1] - 2026-11-18
 
 ### Fixed
