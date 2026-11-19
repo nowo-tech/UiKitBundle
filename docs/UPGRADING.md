@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.59.0](#to-2590)
 - [To 2.58.1](#to-2581)
 - [To 2.58.0](#to-2580)
 - [To 2.57.0](#to-2570)
@@ -160,6 +161,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.59.0
+
+From **2.58.1**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 Scrollbars (additive): `--nowo-ui-scrollbar-size`, `--nowo-ui-scrollbar-thumb`, `--nowo-ui-scrollbar-thumb-hover` and
 `--nowo-ui-scrollbar-track` are public (`size` and `track` are now declared on `:root`; the thumb tokens keep their
