@@ -85,6 +85,12 @@
 - [Using it from a DDD / hexagonal application](#using-it-from-a-ddd--hexagonal-application)
   - [Standard host](#standard-host)
   - [DDD host](#ddd-host)
+- [Admin components (2.61)](#admin-components-261)
+  - [Data tables](#data-tables)
+  - [Data display](#data-display)
+  - [Form patterns](#form-patterns)
+  - [Feedback and overlays](#feedback-and-overlays)
+  - [Navigation patterns](#navigation-patterns)
 - [Feature bundles](#feature-bundles)
 - [Demo platform shell (2.60)](#demo-platform-shell-260)
 - [Kitchen sink](#kitchen-sink)
@@ -3898,7 +3904,7 @@ Every template the bundle renders by logical name `@NowoUiKitBundle/<subpath>` c
 | `layout/` | `layout/_bridge.html.twig`, `layout/admin.html.twig`, `layout/document.html.twig`, `layout/guest.html.twig`, `layout/status.html.twig` | Page layouts (`base`, `app`, `auth`, …) — prefer `layout_template` / blocks over forking |
 | `page/` | `page/_auth_form.html.twig`, `page/_detail_list.html.twig`, `page/_list_filters.html.twig`, `page/_page_header.html.twig`, `page/_scaffold.html.twig`, `page/_section_form.html.twig`, `page/_wizard_form.html.twig`, `page/auth.html.twig`, `page/confirm.html.twig`, `page/dashboard.html.twig`, `page/form.html.twig`, `page/list.html.twig`, `page/settings.html.twig`, `page/show.html.twig`, `page/wizard.html.twig` | Page scaffolds of the page contract (REQ-UI-003) — extend and override blocks instead of copying |
 | `shell/` | `shell/_burger.html.twig`, `shell/_close.html.twig`, `shell/_open.html.twig`, `shell/_shell.html.twig` | App shell chrome |
-| `partials/` | `partials/_action.html.twig`, `partials/_action_form_view.html.twig`, `partials/_action_inner.html.twig`, `partials/_action_post.html.twig`, `partials/_action_post_legacy.html.twig`, `partials/_aside.html.twig`, `partials/_aside_nav_items.html.twig`, `partials/_avatar.html.twig`, `partials/_back_link.html.twig`, `partials/_brand.html.twig`, `partials/_breadcrumbs.html.twig`, `partials/_burger.html.twig`, `partials/_card.html.twig`, `partials/_confirm.html.twig`, `partials/_confirm_dialog.html.twig`, `partials/_corner_tab.html.twig`, `partials/_dialog.html.twig`, `partials/_disclosure_icon.html.twig`, `partials/_edge_tab.html.twig`, `partials/_empty.html.twig`, `partials/_filter_actions.html.twig`, `partials/_filters.html.twig`, `partials/_filters_collapse.html.twig`, `partials/_filters_form.html.twig`, `partials/_filters_legacy.html.twig`, `partials/_flashes.html.twig`, `partials/_footer.html.twig`, `partials/_header_actions.html.twig`, `partials/_kebab.html.twig`, `partials/_listing_cells.html.twig`, `partials/_listing_customizer.html.twig`, `partials/_listing_filter_fields.html.twig`, `partials/_listing_head.html.twig`, `partials/_locale_switcher.html.twig`, `partials/_locale_switcher_form.html.twig`, `partials/_locale_switcher_legacy.html.twig`, `partials/_locale_tabs.html.twig`, `partials/_menu.html.twig`, `partials/_modal_shell.html.twig`, `partials/_open_modal_on_load.html.twig`, `partials/_page_header.html.twig`, `partials/_page_loader.html.twig`, `partials/_page_status.html.twig`, `partials/_page_transition.html.twig`, `partials/_pagination.html.twig`, `partials/_pagination_compact.html.twig`, `partials/_pagination_per_page_form.html.twig`, `partials/_pagination_per_page_legacy.html.twig`, `partials/_progress.html.twig`, `partials/_release_version.html.twig`, `partials/_responsive_table.html.twig`, `partials/_row_actions.html.twig`, `partials/_row_actions_form.html.twig`, `partials/_row_actions_legacy.html.twig`, `partials/_row_detail_cell.html.twig`, `partials/_row_detail_head.html.twig`, `partials/_scripts.html.twig`, `partials/_segmented.html.twig`, `partials/_segmented_checkbox_form.html.twig`, `partials/_segmented_field.html.twig`, `partials/_segmented_legacy_checkbox.html.twig`, `partials/_shell.html.twig`, `partials/_sort_header.html.twig`, `partials/_stat_row.html.twig`, `partials/_table.html.twig`, `partials/_tabs.html.twig`, `partials/_theme_boot.html.twig`, `partials/_theme_toggle.html.twig`, `partials/_thinking_orb.html.twig`, `partials/_toasts.html.twig`, `partials/_tour.html.twig`, `partials/_ui_form.html.twig`, `partials/_user_menu.html.twig`, `partials/_user_menu_logout_form.html.twig`, `partials/_user_menu_logout_legacy.html.twig`, `partials/_width_toggle.html.twig` | Reusable partials (one concern each) — the usual surgical override target |
+| `partials/` | `partials/_action.html.twig`, `partials/_action_form_view.html.twig`, `partials/_action_inner.html.twig`, `partials/_action_post.html.twig`, `partials/_action_post_legacy.html.twig`, `partials/_aside.html.twig`, `partials/_aside_nav_items.html.twig`, `partials/_avatar.html.twig`, `partials/_avatar_group.html.twig`, `partials/_back_link.html.twig`, `partials/_brand.html.twig`, `partials/_breadcrumbs.html.twig`, `partials/_bulk_bar.html.twig`, `partials/_bulk_toggle.html.twig`, `partials/_burger.html.twig`, `partials/_card.html.twig`, `partials/_chip.html.twig`, `partials/_code_block.html.twig`, `partials/_confirm.html.twig`, `partials/_confirm_dialog.html.twig`, `partials/_corner_tab.html.twig`, `partials/_dialog.html.twig`, `partials/_disclosure_icon.html.twig`, `partials/_dropzone.html.twig`, `partials/_edge_tab.html.twig`, `partials/_empty.html.twig`, `partials/_error_summary.html.twig`, `partials/_filter_actions.html.twig`, `partials/_filter_bar.html.twig`, `partials/_filters.html.twig`, `partials/_filters_collapse.html.twig`, `partials/_filters_form.html.twig`, `partials/_filters_legacy.html.twig`, `partials/_flashes.html.twig`, `partials/_footer.html.twig`, `partials/_form_fieldset.html.twig`, `partials/_header_actions.html.twig`, `partials/_kebab.html.twig`, `partials/_listing_cells.html.twig`, `partials/_listing_customizer.html.twig`, `partials/_listing_filter_fields.html.twig`, `partials/_listing_head.html.twig`, `partials/_locale_switcher.html.twig`, `partials/_locale_switcher_form.html.twig`, `partials/_locale_switcher_legacy.html.twig`, `partials/_locale_tabs.html.twig`, `partials/_menu.html.twig`, `partials/_modal_shell.html.twig`, `partials/_open_modal_on_load.html.twig`, `partials/_page_header.html.twig`, `partials/_page_loader.html.twig`, `partials/_page_status.html.twig`, `partials/_page_transition.html.twig`, `partials/_pagination.html.twig`, `partials/_pagination_compact.html.twig`, `partials/_pagination_per_page_form.html.twig`, `partials/_pagination_per_page_legacy.html.twig`, `partials/_progress.html.twig`, `partials/_release_version.html.twig`, `partials/_responsive_table.html.twig`, `partials/_row_actions.html.twig`, `partials/_row_actions_form.html.twig`, `partials/_row_actions_legacy.html.twig`, `partials/_row_detail_cell.html.twig`, `partials/_row_detail_head.html.twig`, `partials/_scripts.html.twig`, `partials/_segmented.html.twig`, `partials/_segmented_checkbox_form.html.twig`, `partials/_segmented_field.html.twig`, `partials/_segmented_legacy_checkbox.html.twig`, `partials/_shell.html.twig`, `partials/_skeleton.html.twig`, `partials/_sort_header.html.twig`, `partials/_stat_row.html.twig`, `partials/_steps.html.twig`, `partials/_tab_panels.html.twig`, `partials/_table.html.twig`, `partials/_table_view.html.twig`, `partials/_tabs.html.twig`, `partials/_theme_boot.html.twig`, `partials/_theme_toggle.html.twig`, `partials/_thinking_orb.html.twig`, `partials/_timeline.html.twig`, `partials/_toasts.html.twig`, `partials/_tooltip.html.twig`, `partials/_tour.html.twig`, `partials/_ui_form.html.twig`, `partials/_user_menu.html.twig`, `partials/_user_menu_logout_form.html.twig`, `partials/_user_menu_logout_legacy.html.twig`, `partials/_width_toggle.html.twig` | Reusable partials (one concern each) — the usual surgical override target |
 | `components/` | `components/_icon.html.twig`, `components/_icon_ux.html.twig` | Icon components |
 | `error/` | `error/layout.html.twig`, `error/status.html.twig` | Error page templates |
 | `form/` | `form/nowo_ui_date_range.html.twig`, `form/nowo_ui_kit_fields.html.twig`, `form/nowo_ui_layout.html.twig` | Form themes |
@@ -4032,6 +4038,143 @@ event. Read it through the scalar accessors (2.49); `getRequest()` / `getRespons
 - `ListingCustomizerViewBuilder::forRequest()` / `build()` and `ListingLayout::filterRequest()` still take a `Request`:
   they are controller helpers (UI layer), not ports. `buildForContext()` is the request-free entry point.
 - Nothing stops entities from being passed as `Table` rows; keep to arrays or read models by convention.
+
+## Admin components (2.61)
+
+Building blocks for admin screens, shown on the catalogue pages `/catalogue/admin/{data-tables, data-display,
+form-patterns, overlays, navigation-patterns}` of the demo. Every one is a theme partial (`nowo_ui_partial('<name>')`,
+replaceable through `theme.partials`), paints with `--nowo-ui-*` tokens only (light and dark), prints no inline style
+or handler (CSP), works without JavaScript (the opt-in runtimes only enhance), and keeps no state in PHP: the same
+input renders the same markup in a FrankenPHP worker with the kernel kept alive. Strings ship in the 7 locales.
+
+Include the partials without the surrounding context when they sit inside another embed (a `_section` card has its
+own `title`, `id`, `empty`…): `include(nowo_ui_partial('steps'), {…}, false)` or `{% embed … with {…} only %}`.
+
+Opt-in runtimes (add them to `script_names` or print them after `nowo_ui_partial('scripts')`):
+
+| Runtime | For |
+|---|---|
+| `filter-sheet` | `filter_bar`: the phone sheet |
+| `bulk-select` | `bulk_bar` / `bulk_toggle` |
+| `table-view` | `table_view`: density and columns |
+| `tooltip` | `tooltip`: placement, Escape, touch |
+| `dropzone` | `dropzone` |
+| `form-busy` | loading button on submit, error summary focus |
+| `clipboard` | `code_block` copy button (2.61: `data-nowo-ui-clipboard-target`, `data-nowo-ui-clipboard-reveal`) |
+
+`tabs` (client tab panels), `toast` (client toasts), `confirm` and `popover` (kebab menus) are default runtimes.
+
+### Data tables
+
+```twig
+{% embed nowo_ui_partial('filter_bar') with {form: filter_form, id: 'invoice-filters', reset_href: path('invoice_index'), columns: columns} only %}
+    {% block filter_bar_extra %}
+        {{ include(nowo_ui_partial('table_view'), {table: 'invoices', persist: 'invoices', columns: columns}, false) }}
+    {% endblock %}
+{% endembed %}
+{{ include(nowo_ui_partial('bulk_bar'), {form_id: 'invoice-bulk', total: total, all_field: bulk_form.all.vars.id, actions: [
+    {label: 'Archive', value: 'archive'},
+    {label: 'Delete', value: 'delete', variant: 'danger'},
+]}, false) }}
+{{ form_start(bulk_form) }}{# attr.id = invoice-bulk #}
+    <div class="nowo-ui-table-wrap" role="region" tabindex="0" aria-label="Invoices">
+        <table class="nowo-ui-data-table" id="invoices">
+            <thead><tr>
+                <th scope="col" class="nowo-ui-bulk-cell">{{ include(nowo_ui_partial('bulk_toggle'), {}, false) }}</th>
+                <th scope="col" data-nowo-ui-column="number" aria-sort="ascending">{{ include(nowo_ui_partial('sort_header'), {…}, false) }}</th>
+                …
+            </tr></thead>
+            <tbody>{% for row in rows %}<tr>
+                <td class="nowo-ui-bulk-cell">{{ form_widget(bulk_form.ids[row.number]) }}</td>
+                …
+                <td>{{ include('@NowoUiKitBundle/partials/_kebab.html.twig', {label: 'Actions for ' ~ row.number, popover: true, menu_semantics: 'menu', items: […]}, false) }}</td>
+            </tr>{% endfor %}</tbody>
+        </table>
+    </div>
+{{ form_end(bulk_form) }}
+```
+
+- **`filter_bar`** — a GET filter form (`form`, a FormView) as one row of fields; below 48rem, with `filter-sheet`,
+  the fields fold behind a "Filters (n)" button and open in a bottom sheet (modal `<dialog>`: the same nodes move in
+  and back, focus in on open and back to the button on close). The count is the fields with a value (`active_count`
+  overrides). Options: `id`, `title`, `heading_level`, `reset_href`, `submit_label`, `reset_label`, `close_label`,
+  `attr`; blocks `filter_bar_extra` (the button row) and `filter_bar_actions`. Root `data-nowo-ui-region="filters"`.
+- **`bulk_bar`** + **`bulk_toggle`** — row checkboxes are the form's own widgets (a ChoiceType `expanded`, `multiple`,
+  `choice_name` = the id, `choice_attr` `data-nowo-ui-bulk-item` and an `aria-label`), the actions are submit buttons
+  (`form="<form_id>"`, `name` / `value`). The runtime adds the polite count, the page toggle (checked / mixed), the
+  selected-row highlight, `aria-disabled` actions while nothing is selected, "Clear selection", and with `total` +
+  `all_field` (a HiddenType) the explicit second step "Select all N rows" (`all_field` = 1).
+- **`table_view`** — a density toggle (`nowo-ui-data-table--compact`) and a column menu (header cells carry
+  `data-nowo-ui-column="<key>"`; `locked` columns cannot be hidden; never the last one). Browser-only memory in
+  `localStorage` under `persist`; a stored layout for every device stays the listing customizer's job.
+- **Sortable headers** — the `sort_header` partial (2.20) in a `<th aria-sort>`. **Row actions** — the `kebab` partial
+  with `popover: true` and, new in 2.61, `menu_semantics: 'menu'` (APG menu button: focus on the first item, arrows,
+  Home / End, Escape back to the toggle); or the `row_actions` / `menu` partials.
+- **Footer** — `section_footer` with `<div class="nowo-ui-table-footer">` around the `pagination` partial
+  (`variant: 'compact'`, `per_page_choices`).
+- `.nowo-ui-stack` stacks blocks inside a card body with one gap; `.nowo-ui-table-wrap` is now the containing block
+  of the visually hidden texts in it (they no longer widen the page).
+
+### Data display
+
+- **`.nowo-ui-dl`** — a plain `<dl>` of `<div><dt><dd></div>`: term | value from 30rem, stacked below.
+  `--grid` (label over value, several per row), `--stacked`.
+- **Stat tiles** — `View\Stat` takes `delta` ("+12 %"), `trend` (`up` | `down` | `flat`: an arrow and a visually
+  hidden word), `deltaTone` (`positive` | `negative` | `neutral`; default from the trend) and `icon` (decorative).
+  `attr: {class: 'nowo-ui-stat-row--tiles'}` on the `stat_row` partial lays them out as KPI cards.
+- **`timeline`** — `items: [{title, datetime, time, text, tone, meta | meta_template + meta_context}]`, an `<ol>` with
+  `<time datetime>`; `label`, `heading_level` (3–6; default `<p>` titles).
+- **`avatar_group`** — `people: [{name, src, initials, presence}]`, `max`, `size`; one name for the group, "+N", and
+  presence as a dot plus words in the avatar's name. **`chip`** — `label`, `avatar`, `remove_href` (a GET link);
+  `<ul class="nowo-ui-chips">` for a list.
+- **Progress** — the `progress` partial with `attr: {class: 'nowo-ui-progress-field--success|warning|danger'}`.
+- **`code_block`** — `code`, `language`, `id`, `wrap`; the copy button appears once `clipboard` runs.
+- **Empty state** — `View\EmptyState` takes `icon`: the `empty` partial then renders the illustrated layout (icon,
+  title, message, action, centred).
+- **`skeleton`** — `variant` (`text` | `list` | `card` | `table`), `lines`, `rows`, `label`: a region with
+  `aria-busy="true"` and one visually hidden "Loading…" status; the pulse only runs with motion allowed. Replace the
+  whole region when the data arrives.
+
+### Form patterns
+
+- **`error_summary`** — `form` (FormView): a heading and one link per error to its field (an expanded choice links to
+  its first box); renders nothing for a valid form. With `form-busy` it takes the focus on load and its links focus
+  the field.
+- **`form_fieldset`** — `field` (an expanded ChoiceType or a compound field) inside `<fieldset>` + `<legend>`, the
+  widget with `nowo-ui-choice-group` (`inline`), help and errors linked by `aria-describedby`; `boxed`, `legend`.
+- **Input group** — `<div class="nowo-ui-input-group">` around `form_widget()` and
+  `<span class="nowo-ui-input-group__addon">` (a unit the user must hear gets an id and goes in `aria-describedby`).
+- **Switch** — a CheckboxType with `row_attr: {class: 'nowo-ui-form-row--switch'}` and `attr: {role: 'switch'}`.
+- **Two columns** — `<div class="nowo-ui-form-grid">` around the rows (one column below 40rem);
+  `nowo-ui-form-grid__full` spans the row; fieldsets and the error summary span it by default.
+- **Read-only view** — the values in a `.nowo-ui-dl` inside `.nowo-ui-readonly-view` (an empty value shows "—").
+- **Sticky footer** — `attr: {class: 'nowo-ui-card--sticky-footer'}` on the form card: its footer stays in sight.
+- **Loading button** — `aria-busy="true"` on any `.nowo-ui-btn` draws a spinner (static with reduced motion);
+  `data-nowo-ui-busy-on-submit` on a form sets it on the submitter after validation and ignores a second submit.
+- **`dropzone`** — `field` (a FileType), `prompt`, `hint`, `max_bytes`: the file input stays the control; the
+  runtime adds drop, the file list with sizes, the size / `accept` checks (`setCustomValidity`) and a polite status.
+
+### Feedback and overlays
+
+- **Client toasts** — `toasts` partial with `client: true`: the stack stays in the page and carries a `<template>`;
+  `window.nowoUiToast({message, title, type, timeout})` or a button with `data-nowo-ui-toast-show` and
+  `data-nowo-ui-toast-message` / `-title` / `-type` / `-timeout` adds one. Every toast pauses while hovered or focused
+  and leaves without animation with reduced motion (also for flash toasts).
+- **`tooltip`** — embed it and fill `tooltip_trigger` (the control carries `aria-describedby="{{ tooltip_id }}"`), or
+  pass `trigger` (trusted HTML). Shown on hover and focus, kept while hovered, Escape hides it, a tap toggles it on
+  touch screens; with the runtime it is `position: fixed`, so table scrollers never clip it.
+- **Destructive confirm** — a danger `View\Confirm` (e.g. `Action::delete()`): the dialog now opens on Cancel
+  (`autofocus`), not on the close button.
+- **Detail drawer** — the `side_panel` partial with `layout: 'overlay'` and a `side_panel_toggle` (2.25).
+
+### Navigation patterns
+
+- **Breadcrumbs** — `View\PageHeader` `breadcrumbs` (2.0) in the `page_header` partial.
+- **`tab_panels`** — `id`, `items: [{id, label, content (trusted HTML) | content_template + content_context}]`,
+  `label`, `active`, `heading_level`: WAI-ARIA tabs over panels in the page; without JavaScript the panels are
+  stacked under their headings.
+- **`steps`** — `items: [{label, status (done | current | upcoming), hint, href}]`, `label`: numbered, done steps link
+  back, `aria-current="step"`, the state in words; horizontal from 40rem.
 
 ## Feature bundles
 

@@ -125,6 +125,12 @@ keeps the theme slots and `css_framework` mapping.
 **Priority.** P1 = next minor releases. P2 = when a host asks or a related item is open. P3 = idea, no plan yet.
 **Size.** S = a few days. M = one to two weeks. L = more.
 
+**Done in 2.61 (admin components, [USAGE.md](USAGE.md#admin-components-261)):** tooltip, statistic card (delta,
+trend, icon), bulk selection, activity timeline, avatar group and presence — marked ✅ below. Also added in 2.61,
+outside this list: filter bar with a phone sheet, table density and column visibility, client-side tab panels, form
+patterns (error summary, fieldset, input group, switch, form grid, read-only view, sticky footer, busy button),
+dropzone, skeleton, illustrated empty state, chip, code block with copy, steps, client toasts.
+
 ### Layout and chrome
 
 | Pri | Idea | Why for a Symfony host | Size | Fit | Constraints |
@@ -142,7 +148,7 @@ keeps the theme slots and `css_framework` mapping.
 | Pri | Idea | Why for a Symfony host | Size | Fit | Constraints |
 |-----|------|------------------------|------|-----|-------------|
 | P1 | **Alert (callout) partial** — tone, optional title and icon, soft or outline style, optional dismiss. | Page-level notices (beta, quota, missing setup) today reuse flashes or ad-hoc markup. | S | UiKit partial + macro | Dismiss needs JS and hides the button without it; `role="alert"` only for urgent tones; icon is decorative. |
-| P1 | **Tooltip partial** — short text on hover and focus, built on the popover core. | Icon-only buttons and truncated cells need a visible name. | S | UiKit partial + `nowo-ui-popover` | `aria-describedby`; stays while hovered; Escape closes (WCAG 1.4.13); never the only place for key information. |
+| ✅ 2.61 | **Tooltip partial** — short text on hover and focus, built on the popover core. | Icon-only buttons and truncated cells need a visible name. | S | UiKit partial + `nowo-ui-popover` | `aria-describedby`; stays while hovered; Escape closes (WCAG 1.4.13); never the only place for key information. |
 | P2 | **Busy overlay for a region** — cover a card, section or form with a spinner and a message while it works. | Fragment reloads and long submits; the page loader covers the whole page only. | S | UiKit partial + overlay JS | `aria-busy="true"` on the region; message in a live region; inputs disabled, not only covered. |
 | P2 | **Toast placements and actions** — top or bottom, start or end, and one action button (for example "Undo"). | Undo after delete and links to the new record. | S | UiKit toasts | Toasts with an action do not auto-hide; the action is reachable by keyboard. |
 | P2 | **Idle timeout warning** — a dialog before the session expires with a countdown and "stay signed in". | Avoid lost work in long forms. | M | UiKit dialog + peer; keep-alive route in the host or AuthKitBundle | Countdown announced at set steps, not every second; works with the host session lifetime; no timer when the tab is hidden. |
@@ -151,10 +157,10 @@ keeps the theme slots and `css_framework` mapping.
 
 | Pri | Idea | Why for a Symfony host | Size | Fit | Constraints |
 |-----|------|------------------------|------|-----|-------------|
-| P1 | **Statistic card** — extend `View\Stat` with a delta (up or down, percent or absolute), a period hint and an optional icon. | Dashboards and list headers (users, revenue, errors) show trends, not just values. | S–M | UiKit `_stat_row` + `View\Stat` | Direction in text and icon, not colour only; the host computes the numbers. |
-| P1 | **Bulk selection in lists** — a header checkbox, row checkboxes and a bulk-actions bar with the selected count. | Delete, archive or export many rows at once in every admin list. | M | UiKit listing / table + peer | Works as a plain form with checkboxes and a submit; "select all on every page" is an explicit second step; count in a live region. |
-| P2 | **Activity timeline** — a vertical list of events: time, title, text, tone or icon, and a slot for attachments or avatars. | Audit trails, workflow history, ticket logs. | M | UiKit partial; data from AuditKitBundle, HttpLogBundle, WorkflowBundle | An ordered list with `<time datetime>`; relative time through RelativeTimeBundle when installed. |
-| P2 | **Avatar group and status** — stacked avatars with a "+N" overflow, and an optional presence dot. | Team members on cards, assignees, who is online. | S | UiKit `_avatar` | The group has one accessible name ("5 members"); status in text, not only the dot; presence data from UserKitBundle. |
+| ✅ 2.61 | **Statistic card** — extend `View\Stat` with a delta (up or down, percent or absolute), a period hint and an optional icon. | Dashboards and list headers (users, revenue, errors) show trends, not just values. | S–M | UiKit `_stat_row` + `View\Stat` | Direction in text and icon, not colour only; the host computes the numbers. |
+| ✅ 2.61 | **Bulk selection in lists** — a header checkbox, row checkboxes and a bulk-actions bar with the selected count. | Delete, archive or export many rows at once in every admin list. | M | UiKit listing / table + peer | Works as a plain form with checkboxes and a submit; "select all on every page" is an explicit second step; count in a live region. |
+| ✅ 2.61 | **Activity timeline** — a vertical list of events: time, title, text, tone or icon, and a slot for attachments or avatars. | Audit trails, workflow history, ticket logs. | M | UiKit partial; data from AuditKitBundle, HttpLogBundle, WorkflowBundle | An ordered list with `<time datetime>`; relative time through RelativeTimeBundle when installed. |
+| ✅ 2.61 | **Avatar group and status** — stacked avatars with a "+N" overflow, and an optional presence dot. | Team members on cards, assignees, who is online. | S | UiKit `_avatar` | The group has one accessible name ("5 members"); status in text, not only the dot; presence data from UserKitBundle. |
 | P2 | **Card actions** — collapse, reload the body, full screen, and remove, from the card header. | Dashboard widgets that refresh or expand. | M | UiKit card + collapse panel + fragment reload | Full screen uses a dialog; Escape exits; reload keeps focus; remove asks the host to persist. |
 | P2 | **Accordion** — a group of `<details>` with an exclusive mode. | FAQ blocks and long settings. | S | UiKit partial | Native `<details name>`; no JS; summary is a heading level the host chooses. |
 | P2 | **Dropdown menu** — a generic menu button with headers, dividers, icons and a split-button form. | Actions beyond the kebab (export as, create from template). | S–M | UiKit menu (2.28 semantics) | Keyboard model of a menu button; items are links or forms, never `javascript:`. |

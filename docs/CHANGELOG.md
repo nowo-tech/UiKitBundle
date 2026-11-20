@@ -143,6 +143,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Admin components (2.61).** New theme partials for admin screens, each with tokens-only CSS (light and dark), no
+  inline style or handler, a no-JavaScript fallback, and strings in the 7 locales: `filter_bar` (filter row that
+  becomes a bottom sheet on phones, runtime `filter-sheet`), `bulk_bar` + `bulk_toggle` (bulk selection with a polite
+  count, mixed page toggle and an explicit "select all N rows" step, runtime `bulk-select`), `table_view` (row density
+  and column visibility, remembered in the browser, runtime `table-view`), `tab_panels` (client-side WAI-ARIA tabs,
+  progressive), `error_summary`, `form_fieldset`, `dropzone` (runtime `dropzone`), `timeline`, `skeleton`,
+  `avatar_group`, `chip`, `code_block`, `tooltip` (runtime `tooltip`) and `steps`. CSS patterns: `.nowo-ui-dl`,
+  `.nowo-ui-stat-row--tiles`, `.nowo-ui-input-group`, `.nowo-ui-form-row--switch`, `.nowo-ui-choice-group`,
+  `.nowo-ui-form-grid`, `.nowo-ui-readonly-view`, `.nowo-ui-card--sticky-footer`, `.nowo-ui-btn[aria-busy]`,
+  `.nowo-ui-progress-field--<tone>`, `.nowo-ui-table-footer`, `.nowo-ui-stack`. Runtime `form-busy`: busy submit
+  button (`data-nowo-ui-busy-on-submit`) and error summary focus. `View\Stat` gains `delta`, `trend`, `deltaTone`
+  and `icon`; `View\EmptyState` gains `icon` (illustrated empty state). Client toasts (`toasts` partial,
+  `client: true`, `window.nowoUiToast()`, `data-nowo-ui-toast-show`). `kebab` takes `menu_semantics: 'menu'` (APG
+  menu button). Clipboard copies an element's text (`data-nowo-ui-clipboard-target`). Catalogue: five new pages under
+  "Admin components" (`/catalogue/admin/{group}`). See docs/USAGE.md "Admin components (2.61)".
+
 - **Demo platform shell (2.60).** New layout `@NowoUiKit/demo_platform/layout.html.twig` that every nowo-tech bundle
   demo can extend, so all demos look like one "nowo · bundles" platform: a top bar (platform brand, bundle name and
   optional version, locale pills, theme toggle, sign-in button or UiKit user menu), the aside navigation grouped in
@@ -180,6 +196,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   hover now darkens the primary (`color-mix(… 85%, black)`, 6.6:1); the default dark theme sets
   `--nowo-ui-primary-hover` to a white mix (its primary carries dark text, 8.5:1). Hosts that set
   `--nowo-ui-primary-hover` or `--nowo-ui-btn-primary-hover-bg` are unchanged.
+
+### Changed
+
+- **Toasts** pause their countdown while hovered or focused and leave without animation with reduced motion.
+- **Destructive confirm**: a danger `View\Confirm` without a type-to-confirm value opens on Cancel (`autofocus`).
+- **Table scroller**: `.nowo-ui-table-wrap` is `position: relative`, so visually hidden texts inside it no longer
+  widen the page on phones.
+- **Demo**: the UiKit demo uses `icon_set: svg_inline` (the demo platform shell loads no icon font).
+
 
 ## [2.59.0] - 2026-11-19
 
