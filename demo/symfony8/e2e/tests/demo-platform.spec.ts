@@ -22,31 +22,78 @@ async function axe(page: Page): Promise<string[]> {
     .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`);
 }
 
-/** The demo layout + style rules (docs/USAGE.md "Demo platform shell"; same function as the rollout brief's spec). */
+/** The demo layout + style rules (docs/USAGE.md "Demo platform shell"; same function as the rollout brief's spec): layout grammar,
+ * no demo styles / host tokens / framework classes, closed drawer inert, 44 px targets on coarse pointers, input borders 3:1. */
+/* eslint-disable */
+// prettier-ignore
 function demoPlatformRules(): string[] {
-  const issues: string[] = [];
+  const issues = [];
   const main = document.querySelector('#nowo-ui-content');
-  if (!main || !document.querySelector('[data-testid="demo-platform"]')) return ['no-demo-platform-shell'];
-  const carded = (el: Element) => el.closest('.nowo-ui-card, [data-nowo-ui-region="table"], [data-nowo-ui-region="form"], .nowo-ui-form-panel, dialog');
-  const skip = (el: Element) => el.closest('dialog, [data-nowo-ui-region="filters"], .nowo-ui-filters, .nowo-ui-page-header');
+  const shell = document.querySelector('[data-testid="demo-platform"]');
+  if (!main || !shell) return ['no-demo-platform-shell'];
+  const visible = (el) => !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
+  const carded = (el) => el.closest('.nowo-ui-card, [data-nowo-ui-region="table"], [data-nowo-ui-region="form"], .nowo-ui-form-panel, dialog');
+  const skip = (el) => el.closest('dialog, [data-nowo-ui-region="filters"], .nowo-ui-filters, .nowo-ui-page-header');
+
+  // Layout grammar.
   main.querySelectorAll('table').forEach((t) => { if (!carded(t)) issues.push('table-outside-card'); });
   main.querySelectorAll('form').forEach((f) => {
     if (f.querySelector('input:not([type="hidden"]), select, textarea') && !carded(f) && !skip(f) && !f.closest('table')) issues.push('form-outside-card');
   });
-  const visible = (el: HTMLElement) => !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
-  const primaries = [...main.querySelectorAll<HTMLElement>('.nowo-ui-btn--primary')].filter((b) => visible(b) && !b.closest('table, dialog, [data-nowo-ui-region="filters"], .nowo-ui-filters, form'));
+  const primaries = [...main.querySelectorAll('.nowo-ui-btn--primary')].filter((b) => visible(b) && !b.closest('table, dialog, [data-nowo-ui-region="filters"], .nowo-ui-filters, form'));
   if (primaries.length > 1) issues.push(`primary-buttons:${primaries.length}`);
   const header = main.querySelector('.nowo-ui-page-header');
   const flashes = main.querySelector('.nowo-ui-flashes');
   if (header && flashes && (flashes.compareDocumentPosition(header) & Node.DOCUMENT_POSITION_FOLLOWING)) issues.push('flashes-before-page-header');
   if (document.documentElement.scrollWidth > document.documentElement.clientWidth + 1) issues.push('page-scrolls-horizontally');
+
+  // Styles: no demo styles, no host theme tokens, no CDN / foreign stylesheet, no framework classes inside the shell.
   document.querySelectorAll('style').forEach((s) => {
-    if (!/sf-toolbar|sfwdt|sf-minitoolbar|sf-display/.test(s.textContent || '') && !s.closest('[id^="sfwdt"], .sf-toolbar') && !s.matches('[data-nowo-ui-theme-tokens], [data-nowo-ui-appearance]')) issues.push('style-element');
+    if (s.matches('[data-nowo-ui-theme-tokens], [data-nowo-ui-appearance]')) { issues.push('host-theme-tokens'); return; }
+    if (!/sf-toolbar|sfwdt|sf-minitoolbar|sf-display/.test(s.textContent || '') && !s.closest('[id^="sfwdt"], .sf-toolbar')) issues.push('style-element');
   });
-  document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]').forEach((l) => {
+  document.querySelectorAll('link[rel="stylesheet"]').forEach((l) => {
     const path = new URL(l.href, location.href).pathname;
     if (!path.startsWith('/bundles/') && !path.startsWith('/_wdt/') && !path.startsWith('/_profiler/')) issues.push(`stylesheet:${path}`);
   });
+  const framework = /^(acme-.*|nav-tabs|nav-link|nav-item|alert|alert-.*|form-check.*|form-control|form-select|form-label|btn|btn-.*|card|card-.*|badge|row|col|col-.*|table|table-.*)$/;
+  shell.querySelectorAll('[class]').forEach((el) => {
+    for (const c of el.classList) { if (framework.test(c)) { issues.push(`framework-class:${c}`); break; } }
+  });
+
+  // Drawer: below 901 px a closed drawer is inert and the burger says so.
+  const aside = shell.querySelector('[data-nowo-ui-aside]');
+  if (aside && window.innerWidth < 901) {
+    const open = shell.classList.contains('is-aside-open-mobile');
+    if (!open && !aside.hasAttribute('inert')) issues.push('drawer-not-inert');
+    shell.querySelectorAll('[data-nowo-ui-burger]').forEach((b) => {
+      if (visible(b) && b.getAttribute('aria-expanded') !== (open ? 'true' : 'false')) issues.push('burger-state');
+    });
+  }
+
+  // Touch: 44 px targets on coarse pointers (checkbox / radio 24 px, their label carries the 44 px row).
+  if (window.matchMedia('(pointer: coarse)').matches) {
+    const controls = [...shell.querySelectorAll('.nowo-ui-btn, button, summary, input:not([type="hidden"]), select, textarea, [role="tab"], .nowo-ui-aside__link, .nowo-ui-demo-platform__locale')]
+      .filter((el) => visible(el) && !el.closest('[inert], table'));
+    for (const el of controls) {
+      const r = el.getBoundingClientRect();
+      const small = el.matches('input[type="checkbox"], input[type="radio"]') ? r.height < 24 || r.width < 24 : r.height < 43.5;
+      if (small) { issues.push(`target-under-44px:${(el.className && String(el.className).split(' ')[0]) || el.tagName.toLowerCase()}`); }
+    }
+  }
+
+  // Inputs: boundary 3:1 or more against the surface behind them (WCAG 1.4.11).
+  const rgb = (c) => { const m = c.match(/[\d.]+/g); return m ? m.slice(0, 4).map(Number) : null; };
+  const lum = (c) => { const v = c.slice(0, 3).map((x) => { const s = x / 255; return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4; }); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
+  const bgOf = (el) => { for (let n = el.parentElement; n; n = n.parentElement) { const c = rgb(getComputedStyle(n).backgroundColor); if (c && (c.length < 4 || c[3] > 0)) return c; } return [255, 255, 255]; };
+  shell.querySelectorAll('input:not([type="hidden"], [type="checkbox"], [type="radio"]), select, textarea').forEach((el) => {
+    if (!visible(el) || el.closest('[inert]')) return;
+    const border = rgb(getComputedStyle(el).borderTopColor);
+    if (!border) return;
+    const a = lum(border); const b = lum(bgOf(el));
+    if ((Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05) < 3) issues.push(`input-border-under-3:1:${el.id || el.name || el.tagName.toLowerCase()}`);
+  });
+
   return [...new Set(issues)];
 }
 
@@ -91,9 +138,22 @@ test.describe('Demo platform shell', () => {
     await page.goto('/kit/demo-platform');
     const aside = page.locator('#nowo-ui-demo-aside');
     await expect(aside).not.toBeInViewport();
-    await page.locator('[data-nowo-ui-burger]').first().click();
+    await expect(aside).toHaveAttribute('inert', '');
+    const burger = page.locator('[data-nowo-ui-burger]').first();
+    await expect(burger).toHaveAttribute('aria-expanded', 'false');
+    await burger.focus();
+    await page.keyboard.press('Enter');
     await expect(page.getByTestId('demo-platform')).toHaveClass(/is-aside-open-mobile/);
     await expect(aside).toBeInViewport();
+    await expect(aside).not.toHaveAttribute('inert', '');
+    await expect(burger).toHaveAttribute('aria-expanded', 'true');
+    await expect(page.locator('#nowo-ui-demo-aside a:focus')).toHaveCount(1);
+    await expect(page.locator('html')).toHaveClass(/nowo-ui-drawer-open/);
+    await expect(page.locator('.nowo-ui-main')).toHaveAttribute('inert', '');
+    await page.keyboard.press('Escape');
+    await expect(burger).toBeFocused();
+    await expect(aside).toHaveAttribute('inert', '');
+    await expect(page.locator('html')).not.toHaveClass(/nowo-ui-drawer-open/);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
   });
@@ -103,6 +163,10 @@ test.describe('Demo platform shell', () => {
       await page.setViewportSize({ width, height: 900 });
       await page.goto('/kit/demo-platform/messages');
       expect(await page.evaluate(demoPlatformRules)).toEqual([]);
+      for (const group of ['layout', 'cards-tables', 'forms', 'feedback', 'navigation', 'dialogs', 'badges-tokens']) {
+        await page.goto(`/catalogue/${group}`);
+        expect(await page.evaluate(demoPlatformRules), group).toEqual([]);
+      }
     }
     await expect(page.getByTestId('kit-demo-platform-table').getByRole('region', { name: 'Latest messages' })).toBeVisible();
     await expect(page.getByTestId('kit-demo-platform-empty')).toContainText('No archived messages yet.');

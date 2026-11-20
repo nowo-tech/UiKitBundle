@@ -1,6 +1,6 @@
 {% extends 'catalogue/_base.html.twig' %}
 {% block nowo_ui_page_header %}
-    {{ include(nowo_ui_partial('page_header', 'DemoDefaultTheme'), {title: 'Badges and tokens', intro: 'Status colours come from tokens only; no colour literal in a demo.'}) }}
+    {{ include(nowo_ui_partial('page_header', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', title: 'Badges and tokens', intro: 'Status colours come from tokens only; no colour literal in a demo.'}) }}
 {% endblock %}
 {% block body %}
     {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Badges', kind: 'content', testid: 'catalogue-badges'} %}

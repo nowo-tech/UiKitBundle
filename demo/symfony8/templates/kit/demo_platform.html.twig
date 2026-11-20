@@ -5,7 +5,7 @@
 #}
 {% extends '@NowoUiKit/demo_platform/layout.html.twig' %}
 {% set nowo_ui_document_title = 'Demo platform · UiKit 2.60' %}
-{% set nowo_ui_bundle = 'DemoDefaultTheme' %}
+{% set nowo_ui_bundle = 'DemoPlatformCatalogue' %}
 {% set nowo_ui_demo_platform = {
     bundle: 'Acme Inbox',
     version: '1.4',
@@ -26,7 +26,7 @@
 
 {% block nowo_ui_page_header %}
     {% set _toolbar %}<a class="nowo-ui-btn nowo-ui-btn--primary nowo-ui-btn--sm" href="{{ path('kit_demo_platform', {page: 'messages'}) }}">New message</a>{% endset %}
-    {{ include(nowo_ui_partial('page_header', 'DemoDefaultTheme'), {title: page|capitalize, intro: 'A bundle demo inside the shared nowo · bundles platform shell.', toolbar: _toolbar}) }}
+    {{ include(nowo_ui_partial('page_header', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', title: page|capitalize, intro: 'A bundle demo inside the shared nowo · bundles platform shell.', toolbar: _toolbar}) }}
 {% endblock %}
 
 {% block body %}
