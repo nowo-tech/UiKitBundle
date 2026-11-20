@@ -197,7 +197,7 @@
             logout_href: (_auth.logout_href ?? null) ?: ((_auth.logout_route ?? null) ? path(_auth.logout_route) : null),
         }) %}
     {% endif %}
-    {{ include(nowo_ui_partial('app_shell_open', _bundle), _shell, with_context = false) }}
+    {{ include(nowo_ui_partial('app_shell_open', _bundle), _shell, false) }}
         <main class="{{ nowo_ui_class('content', _bundle) }} nowo-ui-demo-platform__content" id="nowo-ui-content" tabindex="-1"{% if _bundle %} data-nowo-ui-bundle="{{ _bundle }}"{% endif %}{{ nowo_ui_attrs('content', _bundle) }}>
             {% block nowo_ui_page_header %}{% endblock %}
             {% block nowo_ui_flashes %}
@@ -205,7 +205,7 @@
             {% endblock %}
             {% block nowo_ui_content %}{% block body %}{% endblock %}{% endblock %}
         </main>
-    {{ include(nowo_ui_partial('app_shell_close', _bundle), {footer_html: _footer|trim is same as('') ? false : _footer, bundle: _bundle}, with_context = false) }}
+    {{ include(nowo_ui_partial('app_shell_close', _bundle), {footer_html: _footer|trim is same as('') ? false : _footer, bundle: _bundle}, false) }}
     {% block nowo_ui_modals %}{% endblock %}
 {% endblock %}
 

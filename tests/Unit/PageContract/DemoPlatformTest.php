@@ -91,7 +91,7 @@ TWIG;
         self::assertMatchesRegularExpression('#href="/admin_index"\s+data-testid="nav-admin"\s*>Forms</a>#', $html);
 
         // Content and footer.
-        self::assertMatchesRegularExpression('#<main class="nowo-ui-content nowo-ui-demo-platform__content" id="nowo-ui-content" tabindex="-1">\s*<header class="nowo-ui-page-header#', $html);
+        self::assertMatchesRegularExpression('#<main class="nowo-ui-content nowo-ui-demo-platform__content" id="nowo-ui-content" tabindex="-1">\s*<div class="nowo-ui-page-header#', $html);
         self::assertStringContainsString('<p data-testid="page-body">BODY</p>', $html);
         self::assertStringContainsString('<footer class="nowo-ui-footer" role="contentinfo">', $html);
         self::assertStringContainsString('<p class="nowo-ui-footer__meta">nowo · bundles · Contact Form demo</p>', $html);
