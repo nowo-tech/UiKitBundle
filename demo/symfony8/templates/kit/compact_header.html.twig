@@ -5,6 +5,9 @@
   (merged into script_names). nowo_ui_kit.header.compact_actions is `bar` in this demo's config.
 #}
 {% extends '@NowoUiKit/layout/document.html.twig' %}
+{#- Shell lab: UiKit's default theme (the catalogue's exception, no host class map); partials read `bundle`. -#}
+{% set bundle = 'DemoPlatformCatalogue' %}
+{% set nowo_ui_bundle = 'DemoPlatformCatalogue' %}
 {% set nowo_ui_document_title = 'Compact header · UiKit 2.27' %}
 {#- The layout's own theme boot would run before nowo_ui_head; print it here, after the <meta> CSP, so the policy
     covers it (it carries the request nonce). -#}
@@ -17,27 +20,27 @@
 
 {% block nowo_ui_styles %}
     {{ parent() }}
-    <link rel="stylesheet" href="{{ asset('css/compact-header-demo.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/nowo-ui-demo-platform.css', 'nowo_ui_kit') }}">
 {% endblock %}
 
 {% block nowo_ui_body %}
     {% set compact = nowo_ui_header_presentation() == 'compact' %}
-    <div class="kit-compact-demo" dir="{{ dir }}" data-testid="compact-demo">
-        <a class="{{ nowo_ui_class('skip_link') }}" href="#main-content" data-testid="skip-link">Skip to main content</a>
-        {% set brand_html %}<a class="nowo-ui-header__brand kit-compact-demo__brand" href="{{ path('kit_compact_header', query) }}" data-testid="brand"><span class="kit-compact-demo__switcher" aria-hidden="true"></span><span class="kit-compact-demo__brand-name">Acme Sales</span></a>{% endset %}
+    <div dir="{{ dir }}" data-testid="compact-demo">
+        <a class="{{ nowo_ui_class('skip_link', 'DemoPlatformCatalogue') }}" href="#main-content" data-testid="skip-link">Skip to main content</a>
+        {% set brand_html %}<a class="nowo-ui-header__brand nowo-ui-lab-brand" href="{{ path('kit_compact_header', query) }}" data-testid="brand"><span class="nowo-ui-lab-brand__switcher" aria-hidden="true"></span><span class="nowo-ui-lab-brand__name">Acme Sales</span></a>{% endset %}
         {% set header_end %}
-            <a class="{{ nowo_ui_class('btn_secondary') }} {{ nowo_ui_class('btn_icon') }} kit-compact-demo__control" href="{{ path('kit_compact_header', query|merge({at: 'search'})) }}" aria-label="Search" title="Search" data-testid="control-search"><span class="kit-compact-demo__glyph kit-compact-demo__glyph--search" aria-hidden="true"></span></a>
-            <a class="{{ nowo_ui_class('btn_secondary') }} {{ nowo_ui_class('btn_icon') }} kit-compact-demo__control" href="{{ path('kit_compact_header', query|merge({at: 'help'})) }}" aria-label="Help" title="Help" data-testid="control-help"><span class="kit-compact-demo__glyph kit-compact-demo__glyph--help" aria-hidden="true"></span></a>
+            <a class="{{ nowo_ui_class('btn_secondary', 'DemoPlatformCatalogue') }} {{ nowo_ui_class('btn_icon', 'DemoPlatformCatalogue') }}" href="{{ path('kit_compact_header', query|merge({at: 'search'})) }}" aria-label="Search" title="Search" data-testid="control-search"><span class="nowo-ui-lab-glyph nowo-ui-lab-glyph--search" aria-hidden="true"></span></a>
+            <a class="{{ nowo_ui_class('btn_secondary', 'DemoPlatformCatalogue') }} {{ nowo_ui_class('btn_icon', 'DemoPlatformCatalogue') }}" href="{{ path('kit_compact_header', query|merge({at: 'help'})) }}" aria-label="Help" title="Help" data-testid="control-help"><span class="nowo-ui-lab-glyph nowo-ui-lab-glyph--help" aria-hidden="true"></span></a>
             {{ include('@NowoUiKitBundle/partials/_theme_toggle.html.twig', {compact: true}) }}
         {% endset %}
-        {% set header_context = compact ? include(nowo_ui_partial('header_context'), {
+        {% set header_context = compact ? include(nowo_ui_partial('header_context', 'DemoPlatformCatalogue'), {
             actions: header.actions,
             actions_attr: {'data-testid': 'page-actions'},
             home_href: path('nowo_ui_kit_kitchen_sink'),
             header: header,
             attr: {'data-testid': 'header-context'},
         }) : '' %}
-        {{ include(nowo_ui_partial('app_shell_open'), {
+        {{ include(nowo_ui_partial('app_shell_open', 'DemoPlatformCatalogue'), {
             brand_html: brand_html,
             header_end: header_end,
             header_context: header_context,
@@ -52,10 +55,10 @@
         }) }}
             <main id="main-content" tabindex="-1" class="nowo-ui-content" data-testid="compact-main">
                 {{ nowo_ui_page_header(header, {bundle: 'DemoDefaultTheme'}) }}
-                <section class="{{ nowo_ui_class('card') }}" data-testid="presentation-switch" aria-labelledby="presentation-title">
-                    <div class="{{ nowo_ui_class('card_body') }}">
-                        <h2 id="presentation-title" class="kit-compact-demo__subtitle">Header presentation</h2>
-                        <p class="kit-compact-demo__switch">
+                <section class="{{ nowo_ui_class('card', 'DemoPlatformCatalogue') }}" data-testid="presentation-switch" aria-labelledby="presentation-title">
+                    <div class="{{ nowo_ui_class('card_body', 'DemoPlatformCatalogue') }}">
+                        <h2 id="presentation-title" class="nowo-ui-lab-subtitle">Header presentation</h2>
+                        <p class="nowo-ui-lab-switch">
                             <a href="{{ path('kit_compact_header', query|merge({presentation: 'standard'})) }}"{% if not compact %} aria-current="page"{% endif %} data-testid="to-standard">Standard</a>
                             <a href="{{ path('kit_compact_header', query|filter((v, k) => k != 'presentation')) }}"{% if compact %} aria-current="page"{% endif %} data-testid="to-compact">Compact</a>
                             <a href="{{ path('kit_compact_header', query|merge({dir: query.dir is defined ? null : 'rtl'})|filter(v => v is not null)) }}" data-testid="to-rtl">{{ dir == 'rtl' ? 'Left to right' : 'Right to left' }}</a>
@@ -63,10 +66,10 @@
                         {% if at %}<p data-testid="visited">Visited: {{ at }}</p>{% endif %}
                     </div>
                 </section>
-                <section class="{{ nowo_ui_class('card') }}" aria-labelledby="lines-title">
-                    <div class="{{ nowo_ui_class('card_body') }}">
-                        <h2 id="lines-title" class="kit-compact-demo__subtitle">Lines</h2>
-                        <ul class="kit-compact-demo__lines" data-testid="lines">
+                <section class="{{ nowo_ui_class('card', 'DemoPlatformCatalogue') }}" aria-labelledby="lines-title">
+                    <div class="{{ nowo_ui_class('card_body', 'DemoPlatformCatalogue') }}">
+                        <h2 id="lines-title" class="nowo-ui-lab-subtitle">Lines</h2>
+                        <ul class="nowo-ui-lab-lines" data-testid="lines">
                             <li>Preventive maintenance, 12 visits — 4 800 €</li>
                             <li>On-call support, business hours — 2 400 €</li>
                             <li>Spare parts allowance — 1 200 €</li>
@@ -74,10 +77,10 @@
                     </div>
                 </section>
             </main>
-        {{ include(nowo_ui_partial('app_shell_close'), {footer_html: false}) }}
+        {{ include(nowo_ui_partial('app_shell_close', 'DemoPlatformCatalogue'), {footer_html: false}) }}
     </div>
 {% endblock %}
 
 {% block nowo_ui_scripts %}
-    {{ include(nowo_ui_partial('scripts'), {script_names: nowo_ui_script_names()|merge(['header-crumbs'])}) }}
+    {{ include(nowo_ui_partial('scripts', 'DemoPlatformCatalogue'), {script_names: nowo_ui_script_names()|merge(['header-crumbs'])}) }}
 {% endblock %}

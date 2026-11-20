@@ -8,24 +8,27 @@
   search field (js/focus-mode-demo.js, a host script).
 #}
 {% extends '@NowoUiKit/layout/document.html.twig' %}
+{#- Shell lab: UiKit's default theme (the catalogue's exception, no host class map); partials read `bundle`. -#}
+{% set bundle = 'DemoPlatformCatalogue' %}
+{% set nowo_ui_bundle = 'DemoPlatformCatalogue' %}
 {% set nowo_ui_document_title = 'Focus mode · UiKit 2.55' %}
 
 {% block nowo_ui_styles %}
     {{ parent() }}
-    <link rel="stylesheet" href="{{ asset('css/focus-mode-demo.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/nowo-ui-demo-platform.css', 'nowo_ui_kit') }}">
 {% endblock %}
 
 {% block nowo_ui_body %}
-    <a class="{{ nowo_ui_class('skip_link') }}" href="#main-content">Skip to main content</a>
+    <a class="{{ nowo_ui_class('skip_link', 'DemoPlatformCatalogue') }}" href="#main-content">Skip to main content</a>
     {% set header_end %}
         {# twig-005-ignore: host search box, never submitted #}
-        <input type="search" id="kit-focus-search" class="form-control form-control-sm kit-focus-search" placeholder="Search (Ctrl+K)" aria-label="Search" aria-keyshortcuts="Control+K" data-nowo-ui-focus-keep="search" data-testid="search">
-        <span class="kit-focus-chip" data-nowo-ui-focus-keep="timer_chip" data-testid="timer-chip" title="Tracked today">01:25</span>
-        <a class="{{ nowo_ui_class('btn_secondary') }}" href="{{ path('nowo_ui_kit_kitchen_sink') }}" data-testid="header-link">Kitchen sink</a>
+        <input type="search" id="kit-focus-search" class="{{ nowo_ui_class('input', 'DemoPlatformCatalogue') }} nowo-ui-lab-search" placeholder="Search (Ctrl+K)" aria-label="Search" aria-keyshortcuts="Control+K" data-nowo-ui-focus-keep="search" data-testid="search">
+        <span class="nowo-ui-lab-chip" data-nowo-ui-focus-keep="timer_chip" data-testid="timer-chip" title="Tracked today">01:25</span>
+        <a class="{{ nowo_ui_class('btn_secondary', 'DemoPlatformCatalogue') }}" href="{{ path('nowo_ui_kit_kitchen_sink') }}" data-testid="header-link">Kitchen sink</a>
         {{ include('@NowoUiKitBundle/partials/_theme_toggle.html.twig', {compact: true}) }}
     {% endset %}
     {% set crumbs = [{label: 'Wiki', href: path('kit_focus_mode')}, {label: 'Engineering', href: path('kit_focus_mode')}, {label: 'Runbooks', href: path('kit_focus_mode')}, {label: 'Deploying the API'}] %}
-    {{ include(nowo_ui_partial('app_shell_open'), {
+    {{ include(nowo_ui_partial('app_shell_open', 'DemoPlatformCatalogue'), {
         brand: 'Acme Wiki',
         header_end: header_end,
         aside_label: 'Wiki',
@@ -42,22 +45,22 @@
         <main id="main-content" tabindex="-1" class="nowo-ui-content" data-testid="focus-main" data-nowo-ui-focus-area="wiki">
             {% embed '@NowoUiKitBundle/partials/_side_panel_container.html.twig' with {open: true} %}
                 {% block nowo_ui_side_panel_main %}
-                    <article class="{{ nowo_ui_class('card') }}" data-testid="article">
-                        <div class="{{ nowo_ui_class('card_header') }} kit-focus-toolbar">
-                            <h1 class="{{ nowo_ui_class('card_title') }}">Deploying the API</h1>
-                            <div class="kit-focus-toolbar__actions">
-                                {{ include(nowo_ui_partial('focus_mode_toggle'), {area: 'wiki', show_label: true, attr: {'data-testid': 'focus-toggle'}}) }}
-                                {{ include(nowo_ui_partial('focus_mode_toggle'), {area: 'wiki', level: 'fullscreen', attr: {'data-testid': 'fullscreen-toggle'}}) }}
-                                <button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-nowo-ui-dialog-open="kit-focus-dialog" data-testid="open-dialog">Page info</button>
+                    <article class="{{ nowo_ui_class('card', 'DemoPlatformCatalogue') }}" data-testid="article">
+                        <div class="{{ nowo_ui_class('card_header', 'DemoPlatformCatalogue') }} nowo-ui-lab-toolbar">
+                            <h1 class="{{ nowo_ui_class('card_title', 'DemoPlatformCatalogue') }}">Deploying the API</h1>
+                            <div class="nowo-ui-lab-toolbar__actions">
+                                {{ include(nowo_ui_partial('focus_mode_toggle', 'DemoPlatformCatalogue'), {area: 'wiki', show_label: true, attr: {'data-testid': 'focus-toggle'}}) }}
+                                {{ include(nowo_ui_partial('focus_mode_toggle', 'DemoPlatformCatalogue'), {area: 'wiki', level: 'fullscreen', attr: {'data-testid': 'fullscreen-toggle'}}) }}
+                                <button type="button" class="{{ nowo_ui_class('btn_secondary', 'DemoPlatformCatalogue') }}" data-nowo-ui-dialog-open="kit-focus-dialog" data-testid="open-dialog">Page info</button>
                             </div>
                         </div>
-                        <div class="{{ nowo_ui_class('card_body') }}">
+                        <div class="{{ nowo_ui_class('card_body', 'DemoPlatformCatalogue') }}">
                             <p>Focus mode hides the shell around the page: the navigation, the top bar (but the search field and the
                                 timer chip, which this host keeps), the comments panel, the footer and the messages dock.
                                 Press <kbd>F</kbd> to toggle it, <kbd>Esc</kbd> to leave it.</p>
                             <label for="kit-focus-editor">Notes</label>
                             {# twig-005-ignore: demo editor, never submitted #}
-                            <textarea id="kit-focus-editor" class="form-control" rows="4" data-testid="editor">Typing F here never toggles focus mode.</textarea>
+                            <textarea id="kit-focus-editor" class="{{ nowo_ui_class('input', 'DemoPlatformCatalogue') }}" rows="4" data-testid="editor">Typing F here never toggles focus mode.</textarea>
                             {% for i in 1..6 %}<p>Step {{ i }}: run the migration, then roll the workers one by one and watch the error rate.</p>{% endfor %}
                         </div>
                     </article>
@@ -69,9 +72,9 @@
                 {% endblock %}
             {% endembed %}
         </main>
-    {{ include(nowo_ui_partial('app_shell_close'), {footer_copyright: '© Acme', footer_links: [{label: 'Privacy', href: path('kit_focus_mode')}]}) }}
-    <div class="kit-focus-dock" data-nowo-ui-focus-region="dock" data-testid="dock" role="complementary" aria-label="Messages">Messages (2)</div>
-    {{ include(nowo_ui_partial('dialog'), {id: 'kit-focus-dialog', title: 'Page info', body: '<p>Escape closes this dialog first; focus mode stays on.</p>'}) }}
+    {{ include(nowo_ui_partial('app_shell_close', 'DemoPlatformCatalogue'), {footer_copyright: '© Acme', footer_links: [{label: 'Privacy', href: path('kit_focus_mode')}]}) }}
+    <div class="nowo-ui-lab-dock" data-nowo-ui-focus-region="dock" data-testid="dock" role="complementary" aria-label="Messages">Messages (2)</div>
+    {{ include(nowo_ui_partial('dialog', 'DemoPlatformCatalogue'), {id: 'kit-focus-dialog', title: 'Page info', body: '<p>Escape closes this dialog first; focus mode stays on.</p>'}) }}
 {% endblock %}
 
 {% block nowo_ui_scripts %}

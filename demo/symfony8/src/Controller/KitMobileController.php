@@ -37,7 +37,7 @@ final class KitMobileController extends AbstractController
             new Column('role', 'Role'),
             new Column('status', 'Status'),
             new Column('id', 'Id', phone: 'hide'),
-        ], self::USERS, label: 'Users (Column::phone)');
+        ], self::USERS, bundle: 'DemoPlatformCatalogue', label: 'Users (Column::phone)');
 
         // 2.42: a listing layout (ListingField::$phone) as a viewer customized it: Role first, Status hidden.
         $fields = [

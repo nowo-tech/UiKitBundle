@@ -2,8 +2,11 @@
   UiKit demo (2.41, MUX-150): a public page on the kit guest layout with the guest header (brand linked home, sign-in).
 #}
 {% extends '@NowoUiKit/layout/guest.html.twig' %}
+{#- Shell lab: UiKit's default theme (the catalogue's exception, no host class map); partials read `bundle`. -#}
+{% set bundle = 'DemoPlatformCatalogue' %}
+{% set nowo_ui_bundle = 'DemoPlatformCatalogue' %}
 {% set nowo_ui_document_title = 'Legal notice · UiKit' %}
-{% set nowo_ui_guest_header = {home_href: path('kit_mobile'), sign_in_href: '#sign-in', brand: 'UiKit demo', testid: 'guest-header'} %}
+{% set nowo_ui_guest_header = {home_href: path('kit_mobile'), sign_in_href: '#sign-in', brand: 'UiKit demo', testid: 'guest-header', bundle: 'DemoPlatformCatalogue'} %}
 
 {% block nowo_ui_head %}
     <meta http-equiv="Content-Security-Policy" content="style-src-attr 'none'; script-src-attr 'none'">

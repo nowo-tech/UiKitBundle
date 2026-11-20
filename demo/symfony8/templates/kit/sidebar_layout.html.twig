@@ -1,32 +1,35 @@
 {#
   UiKit 2.32 demo: the app shell's sidebar layout (KitSidebarLayoutController). The layout comes from the request
   attribute _nowo_ui_sidebar_layout; the brand from the brand parts (brand_icon_html + brand_name + brand_href), which
-  fill both the aside head and the header; no template override and no layout CSS of its own (the demo stylesheet only
-  pins the footer for ?footer=fixed and draws the logo). 2.52: the sidebar style comes from the request attribute
+  fill both the aside head and the header; no template override and no layout CSS of its own (the Shell lab section of
+  css/nowo-ui-demo-platform.css only pins the footer for ?footer=fixed and draws the logo). 2.52: the sidebar style comes from the request attribute
   _nowo_ui_sidebar_style (?style=inset); ?width=content constrains the content; ?panel=column|drawer adds a kit side
   panel (a sticky column, or an open overlay drawer).
 #}
 {% extends '@NowoUiKit/layout/document.html.twig' %}
+{#- Shell lab: UiKit's default theme (the catalogue's exception, no host class map); partials read `bundle`. -#}
+{% set bundle = 'DemoPlatformCatalogue' %}
+{% set nowo_ui_bundle = 'DemoPlatformCatalogue' %}
 {% set nowo_ui_document_title = 'Sidebar layout · UiKit 2.32' %}
 
 {% block nowo_ui_styles %}
     {{ parent() }}
-    <link rel="stylesheet" href="{{ asset('css/sidebar-layout-demo.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/nowo-ui-demo-platform.css', 'nowo_ui_kit') }}">
 {% endblock %}
 
 {% block nowo_ui_body %}
-    <a class="{{ nowo_ui_class('skip_link') }}" href="#main-content">Skip to main content</a>
-    {% set logo %}<svg class="kit-sidebar-demo__logo" viewBox="0 0 24 24" width="24" height="24" focusable="false"><rect x="2" y="2" width="20" height="20" rx="6" fill="currentColor"/><path d="M7 15.5 12 7l5 8.5H7Z" fill="#fff"/></svg>{% endset %}
+    <a class="{{ nowo_ui_class('skip_link', 'DemoPlatformCatalogue') }}" href="#main-content">Skip to main content</a>
+    {% set logo %}<svg class="nowo-ui-lab-logo" viewBox="0 0 24 24" width="24" height="24" focusable="false"><rect x="2" y="2" width="20" height="20" rx="6" fill="currentColor"/><path d="M7 15.5 12 7l5 8.5H7Z" fill="#fff"/></svg>{% endset %}
     {% set header_end %}
-        <a class="{{ nowo_ui_class('btn_secondary') }}" href="{{ path('kit_sidebar_layout', query|merge({layout: nowo_ui_sidebar_layout() == 'full-height' ? 'below-header' : 'full-height'})) }}" data-testid="switch-layout">{{ nowo_ui_sidebar_layout() == 'full-height' ? 'Below header' : 'Full height' }}</a>
+        <a class="{{ nowo_ui_class('btn_secondary', 'DemoPlatformCatalogue') }}" href="{{ path('kit_sidebar_layout', query|merge({layout: nowo_ui_sidebar_layout() == 'full-height' ? 'below-header' : 'full-height'})) }}" data-testid="switch-layout">{{ nowo_ui_sidebar_layout() == 'full-height' ? 'Below header' : 'Full height' }}</a>
         {{ include('@NowoUiKitBundle/partials/_theme_toggle.html.twig', {compact: true}) }}
     {% endset %}
-    {% set header_context = compact ? include(nowo_ui_partial('header_context'), {
+    {% set header_context = compact ? include(nowo_ui_partial('header_context', 'DemoPlatformCatalogue'), {
         home_href: path('nowo_ui_kit_kitchen_sink'),
         crumbs: [{label: 'Billing', href: path('kit_sidebar_layout', query)}, {label: 'Invoices'}],
         attr: {'data-testid': 'header-context'},
     }) : '' %}
-    {{ include(nowo_ui_partial('app_shell_open'), {
+    {{ include(nowo_ui_partial('app_shell_open', 'DemoPlatformCatalogue'), {
         brand_icon_html: logo,
         brand_name: 'Acme Billing',
         brand_href: path('kit_sidebar_layout', query),
@@ -47,14 +50,14 @@
         initials: 'AL',
         email: 'ada@example.com',
         burger_icon: 'morph',
-        shell_attr: {'data-nowo-ui-sidebar-default': mode, 'data-testid': 'shell', 'data-demo-footer': footer_fixed ? 'fixed' : null, class: content_width ? 'is-main-content' : null},
+        shell_attr: {'data-nowo-ui-sidebar-default': mode, 'data-testid': 'shell', 'data-nowo-ui-lab-footer': footer_fixed ? 'fixed' : null, class: content_width ? 'is-main-content' : null},
     }) }}
     {% set invoices %}
-            <section class="{{ nowo_ui_class('card') }}">
-                <div class="{{ nowo_ui_class('card_header') }}">
-                    <h1 class="{{ nowo_ui_class('card_title') }}">Invoices</h1>
+            <section class="{{ nowo_ui_class('card', 'DemoPlatformCatalogue') }}">
+                <div class="{{ nowo_ui_class('card_header', 'DemoPlatformCatalogue') }}">
+                    <h1 class="{{ nowo_ui_class('card_title', 'DemoPlatformCatalogue') }}">Invoices</h1>
                 </div>
-                <div class="{{ nowo_ui_class('card_body') }}">
+                <div class="{{ nowo_ui_class('card_body', 'DemoPlatformCatalogue') }}">
                     <p>Layout <strong data-testid="layout">{{ nowo_ui_sidebar_layout() }}</strong>, style <strong data-testid="style">{{ nowo_ui_sidebar_style() }}</strong>, aside <strong>{{ mode }}</strong>{{ hover ? ', hover expand on' }}{{ footer_fixed ? ', fixed footer' }}{{ content_width ? ', content width' }}.</p>
                     <p><a href="{{ path('kit_sidebar_layout', query|merge({style: nowo_ui_sidebar_style() == 'inset' ? 'classic' : 'inset'})) }}" data-testid="switch-style">Switch to the {{ nowo_ui_sidebar_style() == 'inset' ? 'classic' : 'inset' }} style</a></p>
                     <ul class="kit-demo-rows" data-testid="kit-rows">
@@ -88,7 +91,7 @@
             {{ invoices }}
 {% endif %}
         </main>
-    {{ include(nowo_ui_partial('app_shell_close'), {footer_copyright: '© Acme', footer_links: [{label: 'Privacy', href: path('kit_sidebar_layout', query|merge({at: 'privacy'}))}]}) }}
+    {{ include(nowo_ui_partial('app_shell_close', 'DemoPlatformCatalogue'), {footer_copyright: '© Acme', footer_links: [{label: 'Privacy', href: path('kit_sidebar_layout', query|merge({at: 'privacy'}))}]}) }}
 {% endblock %}
 
 {% block nowo_ui_scripts %}
