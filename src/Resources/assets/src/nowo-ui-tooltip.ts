@@ -83,7 +83,9 @@ function onOut(event: Event): void {
 function onKeydown(event: KeyboardEvent): void {
   const open = document.querySelectorAll(`${ROOT}.is-open`);
   if (event.key === 'Escape' && open.length > 0) {
-    // 2.61 (audit XJ-8): Escape hides the tooltip only; a surrounding dialog stays open.
+    // 2.61 (audit XJ-8): Escape hides the tooltip only; a surrounding dialog stays open (preventDefault: a native
+    // modal <dialog> would otherwise get its cancel from the same key press).
+    event.preventDefault();
     event.stopPropagation();
     open.forEach(closeTooltip);
   }

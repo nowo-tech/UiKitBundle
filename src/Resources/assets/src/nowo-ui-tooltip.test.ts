@@ -116,7 +116,9 @@ describe('nowo-ui-tooltip', () => {
     mod.openTooltip(root);
     const outer = vi.fn();
     document.body.addEventListener('keydown', outer);
-    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    const esc = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+    trigger.dispatchEvent(esc);
+    expect(esc.defaultPrevented).toBe(true);
     expect(root.classList.contains('is-open')).toBe(false);
     expect(outer).not.toHaveBeenCalled();
     trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));

@@ -172,7 +172,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   Partial-scoped options: `toast_client` (only `true`), `filter_id`, `code_id`, `tooltip_id` (an inherited `client` or
   `id` is ignored). `chip` `remove_href`, `steps` `href` and `filter_bar` `reset_href` go through
   `nowo_ui_safe_href()`. Code copies are not trimmed; a refused `execCommand` copy reports a failure. Escape on a
-  tooltip or the columns menu does not close a surrounding dialog. The busy button clears after
+  tooltip (also a native modal `<dialog>`: the key press is prevented) or the columns menu does not close a
+  surrounding dialog. Every click on a bulk action with `confirm` asks (XJ-10). The busy button clears after
   `data-nowo-ui-busy-timeout`. `data-nowo-ui-confirm-cancel-first` forces the Cancel-first focus on or off.
 
 ## [2.60.0] - 2026-11-20
