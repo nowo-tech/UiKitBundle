@@ -39,6 +39,7 @@ final class DemoStyleLintTest extends TestCase
 <div style="margin-top: 1rem">x</div>
 <div style="display:none">x</div> {# nowo-ui-demo-style-lint-ignore: shown by the widget script #}
 <p class="nowo-ui-muted">ok</p>
+{{ nowo_ui_tokens(nonce) }}
 TWIG;
         $findings = (new DemoStyleLint())->lintTemplate($twig);
 
@@ -46,6 +47,7 @@ TWIG;
             ['line' => 4, 'rule' => 'stylesheet-link', 'match' => '<link rel="stylesheet" href="{{ asset(\'css/demo.css\') }}">'],
             ['line' => 5, 'rule' => 'style-element', 'match' => '<style'],
             ['line' => 6, 'rule' => 'style-attribute', 'match' => 'style="'],
+            ['line' => 9, 'rule' => 'host-tokens', 'match' => 'nowo_ui_tokens('],
         ], $findings);
     }
 
