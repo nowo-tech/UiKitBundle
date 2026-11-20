@@ -1,10 +1,12 @@
 {% extends 'catalogue/_base.html.twig' %}
-{% form_theme catalogue_form '@NowoUiKitBundle/form/nowo_ui_layout.html.twig' %}
+{% form_theme catalogue_form with ['form_div_layout.html.twig'] only %}
+{% form_theme catalogue_invalid with ['form_div_layout.html.twig'] only %}
+{% form_theme catalogue_states with ['form_div_layout.html.twig'] only %}
 {% block nowo_ui_page_header %}
-    {{ include(nowo_ui_partial('page_header', 'DemoDefaultTheme'), {title: 'Forms', intro: 'Forms always sit in a card; the actions go at the bottom right, the primary button last.'}) }}
+    {{ include(nowo_ui_partial('page_header', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', title: 'Forms', intro: 'Forms always sit in a card; the actions go at the bottom right, the primary button last. Required fields carry an asterisk.'}) }}
 {% endblock %}
 {% block body %}
-    {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Contact details', intro: 'kind: form — Symfony form, UiKit form theme.', kind: 'form', testid: 'catalogue-form'} %}
+    {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Contact details', intro: 'kind: form — a Symfony form with the FormKit demo profile classes.', kind: 'form', testid: 'catalogue-form'} %}
         {% block section_body %}
             {{ form_start(catalogue_form, {attr: {id: 'catalogue-contact-form'}}) }}
                 {{ form_widget(catalogue_form) }}
@@ -13,6 +15,32 @@
         {% block section_footer %}
             <a class="nowo-ui-btn nowo-ui-btn--outline" href="{{ path('catalogue', {group: 'forms'}) }}">Cancel</a>
             <button type="submit" form="catalogue-contact-form" class="nowo-ui-btn nowo-ui-btn--primary">Save</button>
+        {% endblock %}
+    {% endembed %}
+    {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'After a failed submit', intro: 'Error summary first, then each field marks itself invalid and says what to fix.', kind: 'form', testid: 'catalogue-form-invalid'} %}
+        {% block section_body %}
+            <div class="nowo-ui-flash nowo-ui-flash--error nowo-ui-demo-flash" role="alert">
+                <p class="nowo-ui-demo-flash__text"><strong>2 fields need attention:</strong> <a href="#catalogue_invalid_name">Name</a>, <a href="#catalogue_invalid_email">Email</a>.</p>
+            </div>
+            {{ form_start(catalogue_invalid, {attr: {id: 'catalogue-invalid-form', novalidate: 'novalidate'}}) }}
+                {{ form_widget(catalogue_invalid) }}
+            {{ form_end(catalogue_invalid) }}
+        {% endblock %}
+        {% block section_footer %}
+            <a class="nowo-ui-btn nowo-ui-btn--outline" href="{{ path('catalogue', {group: 'forms'}) }}">Cancel</a>
+            <button type="submit" form="catalogue-invalid-form" class="nowo-ui-btn nowo-ui-btn--outline">Save again</button>
+        {% endblock %}
+    {% endembed %}
+    {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Field and button states', intro: 'Read-only, disabled; default, disabled and danger buttons.', kind: 'form', testid: 'catalogue-states'} %}
+        {% block section_body %}
+            {{ form_start(catalogue_states) }}
+                {{ form_widget(catalogue_states) }}
+            {{ form_end(catalogue_states) }}
+            <div class="nowo-ui-row-actions">
+                <button type="button" class="nowo-ui-btn nowo-ui-btn--outline">Outline</button>
+                <button type="button" class="nowo-ui-btn nowo-ui-btn--outline" disabled>Disabled</button>
+                <button type="button" class="nowo-ui-btn nowo-ui-btn--danger">Delete</button>
+            </div>
         {% endblock %}
     {% endembed %}
 {% endblock %}

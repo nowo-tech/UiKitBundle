@@ -4191,8 +4191,11 @@ Every nowo-tech bundle demo extends one layout, `@NowoUiKit/demo_platform/layout
 like one platform ("nowo · bundles"): the same top bar, aside, content width, typography, tokens (light and dark) and
 footer. It is UiKit's [app shell](#app-shell-26) (below-header layout, classic style) with UiKit's default theme
 (`css/nowo-ui-base.css` is linked whatever `nowo_ui_kit.base_stylesheet` says), `nowo-ui-shell.js` for the burger and
-the phone drawer, and a small stylesheet of its own (`css/nowo-ui-demo-platform.css`: the platform brand, the locale
-pills, spacing; tokens only). It is meant for demo apps; a product keeps its own shell.
+the accessible phone drawer, and a stylesheet of its own (`css/nowo-ui-demo-platform.css`). **The shell owns its look**:
+it never prints a host's theme tokens or appearance style; the platform stylesheet carries the light and dark tokens
+(cards above the page in dark mode, input borders 3:1 or more), a five-step type scale (`--nowo-ui-text-xs|sm|md|lg|xl`),
+one spacing scale (`--nowo-ui-space-1..4`), one button size per slot, 44 px targets on coarse pointers and reduced
+motion. It is meant for demo apps; a product keeps its own shell.
 
 | Region | Content |
 |---|---|
@@ -4266,6 +4269,16 @@ aside group under that heading (`<nav aria-labelledby>`); items without a sectio
 float over the page (a chat dock, a cookie banner, a page builder canvas) render in `body` / `nowo_ui_modals` as
 before: the shell never clips its content area and fixed elements cover the viewport.
 
+**Drawer.** The shell root carries `data-nowo-ui-drawer-a11y` (any two-mode app shell can opt in): a hidden aside (the
+closed phone drawer, a collapsed desktop aside) is `inert`; the burgers carry the real `aria-expanded`, label and glyph
+on load and on breakpoint changes; opening the phone drawer moves the focus to the current link, makes the rest of the
+page inert and locks the page scroll (`nowo-ui-drawer-open` on `<html>`); the burger, the backdrop, Escape or a link
+close it and the focus returns to the burger.
+
+**Flashes** use `@NowoUiKit/demo_platform/_flashes.html.twig`: icon, a visually hidden type prefix, `role="status"`
+(success, info) or `role="alert"` (warning, error), and a dismiss button (`[data-nowo-ui-dismiss]` inside
+`[data-nowo-ui-dismissible]`, handled by `nowo-ui-shell.js`). Pass `flash_messages` to render fixed messages.
+
 **Accessibility.** A skip link (first focusable element) to `#nowo-ui-content` (`tabindex="-1"`); one banner, one
 named complementary landmark (the aside), one `main`, one `contentinfo`; every `nav` is named (`aria-label` or
 `aria-labelledby` its section heading); the burger has `aria-controls` / `aria-expanded` and names its next action;
@@ -4291,7 +4304,8 @@ never hand-rolls card markup or writes CSS:
    is right-aligned).
 6. **Lists and detail views** in a section (`kind: 'list'` / `'detail'`); card grids use `.nowo-ui-cards`.
 7. **Empty, loading and error states**: `state: 'empty' | 'loading' | 'error'` (or `empty: true`) on the section, with
-   `state_message`; never a hand-written "no rows" paragraph.
+   `state_title` (empty) and `state_message`: a centred empty block with an icon, skeleton lines with `aria-busy` on the
+   body, a danger alert with an icon and a type prefix; never a hand-written "no rows" paragraph.
 8. **One spacing scale and one gap**: `--nowo-ui-demo-space-1..4` (0.25 / 0.5 / 1 / 1.5 rem) and
    `--nowo-ui-demo-gap` (1 rem) between every block of the content area and between cards of a grid.
 9. **One primary button per view** (the page header's main action, or a form's submit); everything else outline /
@@ -4302,8 +4316,16 @@ never hand-rolls card markup or writes CSS:
     the bundles' own assets (`bundles/…`). What a demo needs and UiKit lacks becomes a UiKit class or block.
     `vendor/bin/nowo-ui-demo-style-lint demo/symfony8` enforces it (exit 1 on a finding; `--allow=<glob>` only for
     the documented exemptions).
-12. **Phones**: the aside is a drawer, the locale pills move into it, tables scroll inside their card, the page never
-    scrolls sideways.
+12. **Phones**: the aside is an accessible drawer (inert when closed, focus in and out, scroll lock), the locale pills
+    open it, controls are 44 px high on coarse pointers, tables scroll inside their card (cells never wrap
+    mid-value; `.nowo-ui-cell--wrap` opts a long-text column in, `.nowo-ui-cell--num` / `--date` align and keep
+    values whole), dialogs are bottom sheets, and the page never scrolls sideways.
+13. **Forms**: required fields carry an asterisk (Symfony's `required` label class), optional ones may say so in their
+    help; `aria-invalid` fields turn red with their error under the label; after a failed submit an error summary
+    links to the fields; checkboxes are 18 px (24 px on touch) with the label beside them; disabled and read-only
+    controls look it.
+14. **No host theme**: the shell prints no `<style data-nowo-ui-theme-tokens>`; `nowo-ui-demo-style-lint` fails on a
+    template calling `nowo_ui_tokens()`, `nowo_ui_theme_tokens()` or `nowo_ui_appearance_style()`.
 
 **Screenshots of a demo.** The Symfony toolbar is not part of the platform: take README screenshots with the profiler
 toolbar hidden (`APP_DEBUG=0`, or `web_profiler.toolbar: false` for the capture).

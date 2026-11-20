@@ -141,6 +141,48 @@ nowo_ui_kit:
                 partials:
                     page_header: '@NowoUiKitBundle/partials/_page_header.html.twig'
 
+            # The demo platform catalogue (/catalogue/…, templates/catalogue): UiKit's default theme only — no host class map,
+            # no framework classes (the shell loads no CSS framework), the kit page header.
+            DemoPlatformCatalogue:
+                framework_defaults: false
+                classes:
+                    action_danger: ''
+                    auth_panel: ''
+                    badge_danger: ''
+                    badge_info: ''
+                    badge_neutral: ''
+                    badge_success: ''
+                    badge_warning: ''
+                    btn_danger: ''
+                    btn_primary: ''
+                    btn_secondary: ''
+                    card: ''
+                    card_header: ''
+                    cards: ''
+                    confirm: ''
+                    confirm_page: ''
+                    confirm_title: ''
+                    detail_list: ''
+                    detail_list_meta: ''
+                    filters: ''
+                    kpi: ''
+                    kpi_link: ''
+                    kpi_value: ''
+                    kpis: ''
+                    menu_toggle: ''
+                    page_intro: ''
+                    page_title: ''
+                    sort_link: ''
+                    tab_active: ''
+                    table: ''
+                    table_row: ''
+                    tabs: ''
+                    wizard_step_active: ''
+                attributes:
+                    table: { data-acme-table: false, data-acme-page: false }
+                partials:
+                    page_header: '@NowoUiKitBundle/partials/_page_header.html.twig'
+
     # UiKit 2.6 kit error pages (templates/bundles/TwigBundle/Exception/error.html.twig is the one-line include;
     # previews: /kit/errors/{code}). Illustrations: public/illustrations/error-<code>.webp + .png.
     error_pages:

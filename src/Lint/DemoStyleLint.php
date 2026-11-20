@@ -20,7 +20,9 @@ use SplFileInfo;
  * - `style-element`: a `<style` element in a Twig template;
  * - `style-attribute`: a `style="…"` attribute in a Twig template;
  * - `stylesheet-link`: a `<link rel="stylesheet">` in a Twig template whose href is not a bundle asset (`bundles/…`)
- *   or UiKit's own package (`'nowo_ui_kit'`).
+ *   or UiKit's own package (`'nowo_ui_kit'`);
+ * - `host-tokens`: a template that prints a host theme or appearance style (`nowo_ui_tokens()`,
+ *   `nowo_ui_theme_tokens()`, `nowo_ui_appearance_style()`): the demo platform shell owns its tokens.
  *
  * Twig comments are skipped; a line holding `nowo-ui-demo-style-lint-ignore` is skipped (say why next to it). Files
  * matching an allow-list glob (`fnmatch()` on the path relative to the demo directory) are skipped: the documented
@@ -62,6 +64,9 @@ final readonly class DemoStyleLint
             }
             if (preg_match('/\sstyle\s*=\s*["\']/i', $line, $m)) {
                 $findings[] = ['line' => $index + 1, 'rule' => 'style-attribute', 'match' => trim($m[0])];
+            }
+            if (preg_match('/\bnowo_ui_(?:theme_tokens|tokens|appearance_style)\s*\(/', $line, $m)) {
+                $findings[] = ['line' => $index + 1, 'rule' => 'host-tokens', 'match' => $m[0]];
             }
             if (preg_match_all('/<link\b[^>]*\brel\s*=\s*["\']stylesheet["\'][^>]*>/i', $line, $links) > 0) {
                 foreach ($links[0] as $link) {

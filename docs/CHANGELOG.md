@@ -172,6 +172,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   Accessibility: skip link, named landmarks, `aria-current` on the current item and locale, no inline style or
   handler. New translation keys `demo_platform.*` (7 locales). Demo page `/kit/demo-platform` with an axe e2e. See
   [USAGE.md — Demo platform shell](USAGE.md#demo-platform-shell-260).
+- **Demo platform after the UX review (2.60).** The shell owns its light and dark tokens and never prints host theme
+  tokens; five-step type scale, one spacing scale (`--nowo-ui-space-1..4`), one button size per slot, 44 px targets on
+  coarse pointers, input borders 3:1 or more with an outline focus ring, cards above the page in dark mode; flashes
+  with icon, type prefix, live region and dismiss (`demo_platform/_flashes.html.twig`); sections with a centred empty
+  state (icon, `state_title`), skeleton loading and an error alert; required / invalid / checkbox / error styles;
+  tables, badges and code never break mid-token; phone dialogs as bottom sheets; the brand links to the demo home;
+  `nowo-ui-demo-style-lint` fails on host token output.
 - **Demo layout grammar (2.60).** `@NowoUiKit/demo_platform/_section.html.twig`: the one content card of a demo
   (header with title, intro and actions on the right; `kind` table / form / list / detail / content — a table body
   is a focusable scroll region, a form footer lays its actions out at the bottom right; `state` empty / loading /
@@ -184,6 +191,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `css/nowo-ui-tom-select.css`) instead of a CDN. `make token-lint` allow-lists `css/vendor/`.
 - **`bin/nowo-ui-demo-style-lint` (2.60)** (`Nowo\UiKitBundle\Lint\DemoStyleLint`): fails when a demo app has a
   stylesheet of its own, a `<style>`, a `style=""` or a stylesheet link other than UiKit's and the bundles' assets.
+- **Accessible drawer (2.60, opt-in).** `data-nowo-ui-drawer-a11y` on a two-mode app shell root: the hidden aside is
+  `inert`, the burgers carry the real state on load and on breakpoint changes, opening the phone drawer moves the focus
+  in, makes the page inert and locks the scroll (`html.nowo-ui-drawer-open`), closing returns the focus to the burger.
+  Generic `[data-nowo-ui-dismiss]` / `[data-nowo-ui-dismissible]` handler in `nowo-ui-shell.js`.
+- **States (2.60).** Disabled and read-only buttons and inputs, `aria-invalid` inputs, `.nowo-ui-cell--num` /
+  `--date` / `--nowrap`, `.nowo-ui-flash--danger` (alias of `--error`), reduced motion for the shell transitions,
+  `--nowo-ui-shadow-drawer`.
 - **Tree toggle outside the tree partial (2.60).** `button.nowo-ui-tree__toggle` (reset button, chevron that turns with
   its own `aria-expanded`, or with the `aria-expanded` of the button that holds a `.nowo-ui-tree__toggle` span),
   `.nowo-ui-tree__disclosure` (a full-width disclosure row: label + toggle) and `.nowo-ui-collapse` (a script-driven
