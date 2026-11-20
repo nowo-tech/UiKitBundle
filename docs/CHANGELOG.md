@@ -156,6 +156,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   Accessibility: skip link, named landmarks, `aria-current` on the current item and locale, no inline style or
   handler. New translation keys `demo_platform.*` (7 locales). Demo page `/kit/demo-platform` with an axe e2e. See
   [USAGE.md — Demo platform shell](USAGE.md#demo-platform-shell-260).
+- **Tree toggle outside the tree partial (2.60).** `button.nowo-ui-tree__toggle` (reset button, chevron that turns with
+  its own `aria-expanded`, or with the `aria-expanded` of the button that holds a `.nowo-ui-tree__toggle` span),
+  `.nowo-ui-tree__disclosure` (a full-width disclosure row: label + toggle) and `.nowo-ui-collapse` (a script-driven
+  panel hidden until `.show` / `.is-open`), so a bundle menu (DashboardMenu `toggle_style: kit`) gets the kit toggles
+  without a CSS framework.
 
 ## [2.59.0] - 2026-11-19
 
