@@ -5,7 +5,10 @@
 {% endblock %}
 {% block body %}
     {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Page header', intro: 'Title, subtitle and the page actions on the right; one primary action per view.', kind: 'detail'} %}
-        {% block section_body %}<p><code class="nowo-ui-code">{% verbatim %}{{ include(nowo_ui_partial('page_header', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', title, intro, toolbar}) }}{% endverbatim %}</code></p>{% endblock %}
+        {% block section_body %}
+            <p><code class="nowo-ui-code">{% verbatim %}{{ include(nowo_ui_partial('page_header'), {title, intro, toolbar}) }}{% endverbatim %}</code></p>
+            <p class="nowo-ui-muted">Bundle demos copy this plain form. UiKit's own catalogue templates pass an internal theme key (<code class="nowo-ui-code">DemoPlatformCatalogue</code>) only because the UiKit demo app also hosts a host-theme showcase; a bundle demo never passes one.</p>
+        {% endblock %}
     {% endembed %}
     <div class="nowo-ui-cards">
         {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Section card', intro: 'Header with title and actions, body, optional footer.', kind: 'detail'} %}
