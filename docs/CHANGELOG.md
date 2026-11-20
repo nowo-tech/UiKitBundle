@@ -163,7 +163,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 
 - **Toasts** pause their countdown while hovered or focused and leave without animation with reduced motion.
-- **Destructive confirm**: a danger `View\Confirm` without a type-to-confirm value opens on Cancel (`autofocus`).
+- **Destructive confirm**: a danger `View\Confirm` without a type-to-confirm value opens on Cancel (the confirm runtime focuses it; markup unchanged).
 - **Table scroller**: `.nowo-ui-table-wrap` is `position: relative`, so visually hidden texts inside it no longer
   widen the page on phones.
 - **Demo**: the UiKit demo uses `icon_set: svg_inline` (the demo platform shell loads no icon font).
