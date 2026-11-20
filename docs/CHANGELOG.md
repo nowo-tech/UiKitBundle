@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.60.0] - 2026-11-20](#2600---2026-11-20)
 - [[2.59.0] - 2026-11-19](#2590---2026-11-19)
 - [[2.58.1] - 2026-11-18](#2581---2026-11-18)
 - [[2.58.0] - 2026-11-18](#2580---2026-11-18)
@@ -159,6 +160,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   menu button). Clipboard copies an element's text (`data-nowo-ui-clipboard-target`). Catalogue: five new pages under
   "Admin components" (`/catalogue/admin/{group}`). See docs/USAGE.md "Admin components (2.61)".
 
+### Changed
+
+- **Toasts** pause their countdown while hovered or focused and leave without animation with reduced motion.
+- **Destructive confirm**: a danger `View\Confirm` without a type-to-confirm value opens on Cancel (the confirm runtime focuses it; markup unchanged).
+- **Table scroller**: `.nowo-ui-table-wrap` is `position: relative`, so visually hidden texts inside it no longer
+  widen the page on phones.
+- **Demo**: the UiKit demo uses `icon_set: svg_inline` (the demo platform shell loads no icon font).
+
+## [2.60.0] - 2026-11-20
+
+### Added
+
 - **Demo platform shell (2.60).** New layout `@NowoUiKit/demo_platform/layout.html.twig` that every nowo-tech bundle
   demo can extend, so all demos look like one "nowo · bundles" platform: a top bar (platform brand, bundle name and
   optional version, locale pills, theme toggle, sign-in button or UiKit user menu), the aside navigation grouped in
@@ -210,15 +223,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   hover now darkens the primary (`color-mix(… 85%, black)`, 6.6:1); the default dark theme sets
   `--nowo-ui-primary-hover` to a white mix (its primary carries dark text, 8.5:1). Hosts that set
   `--nowo-ui-primary-hover` or `--nowo-ui-btn-primary-hover-bg` are unchanged.
-
-### Changed
-
-- **Toasts** pause their countdown while hovered or focused and leave without animation with reduced motion.
-- **Destructive confirm**: a danger `View\Confirm` without a type-to-confirm value opens on Cancel (`autofocus`).
-- **Table scroller**: `.nowo-ui-table-wrap` is `position: relative`, so visually hidden texts inside it no longer
-  widen the page on phones.
-- **Demo**: the UiKit demo uses `icon_set: svg_inline` (the demo platform shell loads no icon font).
-
 
 ## [2.59.0] - 2026-11-19
 
@@ -3302,7 +3306,7 @@ Supersedes 1.17.3: same runtime code and CSS, release gate hardened so the tagge
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.59.0...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.60.0...HEAD
 [1.10.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.4...v1.10.0
 [1.8.4]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.3...v1.8.4
 [1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0

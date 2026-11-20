@@ -168,9 +168,10 @@ test.describe('Demo platform shell', () => {
         expect(await page.evaluate(demoPlatformRules), group).toEqual([]);
       }
     }
+    await page.goto('/kit/demo-platform/messages');
     await expect(page.getByTestId('kit-demo-platform-table').getByRole('region', { name: 'Latest messages' })).toBeVisible();
     await expect(page.getByTestId('kit-demo-platform-empty')).toContainText('No archived messages yet.');
-    await expect(page.locator('[data-nowo-ui-demo-state="loading"]')).toHaveAttribute('aria-busy', 'true');
+    await expect(page.locator('.nowo-ui-demo-section__body:has(> [data-nowo-ui-demo-state="loading"])')).toHaveAttribute('aria-busy', 'true');
     await expect(page.locator('[data-nowo-ui-demo-state="error"]')).toHaveAttribute('role', 'alert');
   });
 

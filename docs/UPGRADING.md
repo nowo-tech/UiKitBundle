@@ -3,6 +3,8 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.61.0](#to-2610)
+- [To 2.60.0](#to-2600)
 - [To 2.59.0](#to-2590)
 - [To 2.58.1](#to-2581)
 - [To 2.58.0](#to-2580)
@@ -161,6 +163,31 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.61.0
+
+From **2.60.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+Additive: new theme partials (`filter_bar`, `bulk_bar`, `bulk_toggle`, `table_view`, `tab_panels`, `error_summary`,
+`form_fieldset`, `dropzone`, `timeline`, `skeleton`, `avatar_group`, `chip`, `code_block`, `tooltip`, `steps`) and
+opt-in runtimes (`tooltip`, `dropzone`, `bulk-select`, `table-view`, `filter-sheet`, `form-busy`): add the runtimes a
+page uses to `script_names` (they are not in the default list). Existing partials print the same markup.
+Behaviour changes, no action needed: toasts pause while hovered or focused and skip the leave animation with reduced
+motion; a destructive confirm dialog opens on its Cancel button; `.nowo-ui-table-wrap` is `position: relative`
+(a host that positioned something absolutely against an ancestor of the scroller should check it). See
+[USAGE.md — Admin components (2.61)](USAGE.md#admin-components-261).
+
+## To 2.60.0
+
+From **2.59.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 ## To 2.59.0
 
