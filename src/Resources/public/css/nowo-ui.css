@@ -8733,7 +8733,7 @@ form:has(> .nowo-ui-filters-collapse.is-collapsed[data-nowo-ui-motion-ready]) > 
 @media (prefers-reduced-motion: reduce) {
   .nowo-ui-shell,
   .nowo-ui-shell :is(.nowo-ui-aside, .nowo-ui-aside__inner, .nowo-ui-main, .nowo-ui-aside-backdrop, .nowo-ui-burger) {
-    transition: none !important;
+    transition: none;
   }
 }
 }
