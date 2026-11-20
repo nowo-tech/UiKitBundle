@@ -39,8 +39,8 @@ importers:
         specifier: 1.108.2
         version: 1.108.2
       tom-select:
-        specifier: 2.6.2
-        version: 2.6.2
+        specifier: 2.7.0
+        version: 2.7.0
       typescript:
         specifier: ~7.0.2
         version: 7.0.2
@@ -921,8 +921,8 @@ packages:
     resolution: {integrity: sha512-LgO3D9yZJjApUiuUfl9iFAwrtaX4+lok3wJIqttGoKCHlWUqHqbQpnxCf82L8FjgKsh4iGo78hqJwgL8F6To2A==}
     engines: {node: '>=14.0.0'}
 
-  tom-select@2.6.2:
-    resolution: {integrity: sha512-eiXIkk82XzzUTOVQDFpy+ZGejuqdTvMukyUyeZBQaKnqW42UoTiTZnrod/eX0rkqJEc4rZY9DZ3zdjV07i29wQ==}
+  tom-select@2.7.0:
+    resolution: {integrity: sha512-i/iuTfrzYfGPAILfgPdU9/CCSm8XcnomjO2bHjAcFQPV7od0ghVngjaMfB5x5Agkrpe+49/tK6soegrwWyi6Lg==}
 
   tslib@2.9.1:
     resolution: {integrity: sha512-a4Ux9VKuIMHsOS7ENbEq6hK2ZGYIT27Rtl0E4eD9KqwxhKiQeMZE/9xb3IdYwWaSOyIBQLExhQgXDTYoiCxnWA==}
@@ -1706,7 +1706,7 @@ snapshots:
 
   tinyrainbow@3.2.0: {}
 
-  tom-select@2.6.2:
+  tom-select@2.7.0:
     dependencies:
       '@orchidjs/sifter': 1.1.0
       '@orchidjs/unicode-variants': 1.2.2
