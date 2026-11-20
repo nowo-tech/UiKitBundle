@@ -1,0 +1,17 @@
+{#- UiKit 2.61 admin components in the catalogue: same shell and default theme as the other catalogue pages, plus the
+    opt-in runtimes of these components. A POST answers with a toast (`notice`), never with stored data. Partials are
+    included without the surrounding context (`false` / `only`) so a section's own variables (title, id…) never leak
+    into them. -#}
+{% extends 'catalogue/_base.html.twig' %}
+
+{% block nowo_ui_flashes %}
+    {{ include(nowo_ui_partial('toasts', 'DemoDefaultTheme'), {toast_client: true, flashes: notice ? {success: [notice]} : {}, toast_roles: false, bundle: 'DemoDefaultTheme'}, false) }}
+{% endblock %}
+
+{% block nowo_ui_scripts %}
+    {{ parent() }}
+    {% set _nonce = app.request.attributes.get('csp_nonce') %}
+    {% for _script in ['clipboard', 'tooltip', 'dropzone', 'bulk-select', 'table-view', 'filter-sheet', 'form-busy', 'side-panel'] %}
+        <script src="{{ asset('js/nowo-ui-' ~ _script ~ '.js', 'nowo_ui_kit') }}" defer{% if _nonce %} nonce="{{ _nonce }}"{% endif %}></script>
+    {% endfor %}
+{% endblock %}

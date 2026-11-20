@@ -1,0 +1,61 @@
+{% extends 'catalogue/admin/_base.html.twig' %}
+{% block nowo_ui_page_header %}
+    {{ include(nowo_ui_partial('page_header', 'DemoDefaultTheme'), {title: 'Feedback and overlays', intro: 'Toasts, tooltips, a destructive confirm, a detail drawer and a button that shows it is working.'}, false) }}
+{% endblock %}
+{% block body %}
+    <div class="nowo-ui-cards">
+        {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Toasts', intro: 'A polite live region; each toast can be dismissed, pauses while hovered or focused, and leaves without animation with reduced motion.', kind: 'content', testid: 'catalogue-toasts'} %}
+            {% block section_body %}
+                <div class="nowo-ui-toolbar">
+                    <button type="button" class="nowo-ui-btn nowo-ui-btn--outline" data-nowo-ui-toast-show data-nowo-ui-toast-type="success" data-nowo-ui-toast-title="Saved" data-nowo-ui-toast-message="Invoice INV-1042 saved." data-testid="catalogue-toast-success">Success toast</button>
+                    <button type="button" class="nowo-ui-btn nowo-ui-btn--outline" data-nowo-ui-toast-show data-nowo-ui-toast-type="info" data-nowo-ui-toast-message="The export is being prepared.">Info toast</button>
+                    <button type="button" class="nowo-ui-btn nowo-ui-btn--outline" data-nowo-ui-toast-show data-nowo-ui-toast-type="error" data-nowo-ui-toast-title="Bank feed" data-nowo-ui-toast-message="The bank feed could not be refreshed." data-nowo-ui-toast-timeout="0">Error toast (stays)</button>
+                </div>
+            {% endblock %}
+        {% endembed %}
+        {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Tooltips', intro: 'On hover and on keyboard focus; Escape hides them; they describe, never replace, the control name.', kind: 'content', testid: 'catalogue-tooltips'} %}
+            {% block section_body %}
+                <div class="nowo-ui-toolbar">
+                    {% embed nowo_ui_partial('tooltip') with {text: 'Sends the invoice again to the billing email.', tooltip_id: 'catalogue-tip-resend'} %}
+                        {% block tooltip_trigger %}<button type="button" class="nowo-ui-btn nowo-ui-btn--outline" aria-describedby="{{ tooltip_id }}" data-testid="catalogue-tooltip-trigger">Resend</button>{% endblock %}
+                    {% endembed %}
+                    {% embed nowo_ui_partial('tooltip') with {text: 'Archived invoices stay searchable but leave the default list.', tooltip_id: 'catalogue-tip-archive'} %}
+                        {% block tooltip_trigger %}<button type="button" class="nowo-ui-btn nowo-ui-btn--outline" aria-label="Archive" aria-describedby="{{ tooltip_id }}">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: 'archive', label: ''}, false) }}</button>{% endblock %}
+                    {% endembed %}
+                </div>
+            {% endblock %}
+        {% endembed %}
+    </div>
+    <div class="nowo-ui-cards">
+        {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Destructive confirm', intro: 'Danger button, a message that says what is lost, and the dialog opens on Cancel.', kind: 'content', testid: 'catalogue-confirm'} %}
+            {% block section_body %}
+                {{ include(nowo_ui_partial('action', 'DemoDefaultTheme'), {action: delete_action, context: 'toolbar', bundle: 'DemoDefaultTheme'}, false) }}
+            {% endblock %}
+        {% endembed %}
+        {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Detail drawer', intro: 'The side panel as a drawer: focus moves in, Escape or Close returns it to the button, the page behind is inert.', kind: 'content', testid: 'catalogue-drawer'} %}
+            {% block section_body %}
+                {{ include(nowo_ui_partial('side_panel_toggle', 'DemoDefaultTheme'), {target: 'catalogue-invoice-panel', label: 'Show invoice details', attr: {class: 'nowo-ui-btn nowo-ui-btn--outline'}, bundle: 'DemoDefaultTheme'}, false) }}
+            {% endblock %}
+        {% endembed %}
+        {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Loading button', intro: 'aria-busy on the button while the form posts; a second click is ignored.', kind: 'form', testid: 'catalogue-busy'} %}
+            {% block section_body %}
+                <p class="nowo-ui-muted">The button below shows the busy state as it looks while a form is being sent.</p>
+            {% endblock %}
+            {% block section_footer %}
+                <button type="button" class="nowo-ui-btn nowo-ui-btn--outline" aria-busy="true" aria-disabled="true">Saving…</button>
+            {% endblock %}
+        {% endembed %}
+    </div>
+{% endblock %}
+{% block nowo_ui_modals %}
+    {{ parent() }}
+    {% embed nowo_ui_partial('side_panel', 'DemoDefaultTheme') with {id: 'catalogue-invoice-panel', title: 'Invoice INV-1042', layout: 'overlay', bundle: 'DemoDefaultTheme'} %}
+        {% block nowo_ui_side_panel_body %}
+            <dl class="nowo-ui-dl nowo-ui-dl--stacked">
+                <div><dt>Customer</dt><dd>Analytical Engines Ltd</dd></div>
+                <div><dt>Amount</dt><dd>1,240.00 €</dd></div>
+                <div><dt>Status</dt><dd><span class="nowo-ui-badge nowo-ui-badge--success">Paid</span></dd></div>
+            </dl>
+        {% endblock %}
+    {% endembed %}
+{% endblock %}

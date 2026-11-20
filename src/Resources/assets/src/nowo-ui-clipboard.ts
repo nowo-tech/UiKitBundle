@@ -3,6 +3,9 @@
  * Text: data-nowo-ui-clipboard-text
  * URL body: data-nowo-ui-clipboard-url (fetch same-origin, then copy)
  * Flash label: data-nowo-ui-clipboard-label / data-nowo-ui-clipboard-done-label
+ * 2.61: element text: data-nowo-ui-clipboard-target (the id of an element whose textContent is copied, e.g. the
+ * <code> of the `code_block` partial); controls with data-nowo-ui-clipboard-reveal are rendered `hidden` (they can
+ * do nothing without this script) and shown once it runs.
  */
 
 import { setButtonLabel } from './nowo-ui-button-label';
@@ -23,8 +26,12 @@ function fallbackCopy(value: string): void {
   area.style.left = '-9999px';
   document.body.appendChild(area);
   area.select();
-  document.execCommand('copy');
+  // 2.61 (audit XJ-8): a refused copy (execCommand returns false) is a failure, not a silent success.
+  const copied = document.execCommand('copy');
   area.remove();
+  if (!copied) {
+    throw new Error('copy refused');
+  }
 }
 
 function flashDone(target: HTMLElement, label: string, doneLabel: string): void {
@@ -42,9 +49,10 @@ function flashDone(target: HTMLElement, label: string, doneLabel: string): void 
   target.setAttribute('data-nowo-ui-clipboard-flash-timer', String(id));
 }
 
-export async function copyText(value: string, flashTarget: HTMLElement | null = null): Promise<boolean> {
-  const trimmed = value.trim();
-  if (trimmed === '') {
+export async function copyText(value: string, flashTarget: HTMLElement | null = null, trim = true): Promise<boolean> {
+  // 2.61 (audit XJ-4): an element's text (data-nowo-ui-clipboard-target, e.g. code) is copied as it is, not trimmed.
+  const trimmed = trim ? value.trim() : value;
+  if (trimmed.trim() === '') {
     return false;
   }
   try {
@@ -114,11 +122,12 @@ function onDocumentClick(event: MouseEvent): void {
 
   const copyBtn = target.closest('[data-nowo-ui-clipboard-copy]');
   const flashTarget = copyBtn instanceof HTMLElement ? copyBtn : host;
-  const text = host.getAttribute('data-nowo-ui-clipboard-text') ?? '';
+  const targetId = host.getAttribute('data-nowo-ui-clipboard-target') ?? '';
+  const text = targetId !== '' ? (document.getElementById(targetId)?.textContent ?? '') : (host.getAttribute('data-nowo-ui-clipboard-text') ?? '');
   const url = host.getAttribute('data-nowo-ui-clipboard-url') ?? '';
 
   if (text.trim() !== '') {
-    void copyText(text, flashTarget);
+    void copyText(text, flashTarget, targetId === '');
     return;
   }
   if (url.trim() !== '') {
@@ -128,7 +137,15 @@ function onDocumentClick(event: MouseEvent): void {
 
 let clipboardBound = false;
 
+/** Shows the copy controls that wait for this script (idempotent). */
+export function revealClipboardControls(root: ParentNode = document): void {
+  root.querySelectorAll<HTMLElement>('[data-nowo-ui-clipboard-reveal][hidden]').forEach((el) => {
+    el.hidden = false;
+  });
+}
+
 export function bindNowoUiClipboard(): void {
+  revealClipboardControls();
   if (clipboardBound) {
     return;
   }

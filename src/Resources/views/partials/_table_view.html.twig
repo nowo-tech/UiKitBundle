@@ -1,0 +1,46 @@
+{#
+  Table view controls (2.61, theme partial `table_view`): a row-density toggle (comfortable / compact) and a column
+  visibility menu for one table. js/nowo-ui-table-view.js shows them (they are `hidden` without the script), toggles
+  `nowo-ui-data-table--compact` on the table and `hidden` on the header cell with the matching
+  data-nowo-ui-column="<key>" and on the cell at the same position in every row, and remembers the choice in
+  localStorage under `persist` (browser only: the server keeps no state). For a layout stored by the host, use the
+  listing customizer instead.
+
+  Required:
+    - table: id of the <table> (its <th> carry data-nowo-ui-column="<key>")
+    - columns: list of {key, label (View\Label|string), visible (default true), locked (default false: cannot be hidden)}
+  Optional:
+    - density: comfortable (default) | compact — the server-rendered state
+    - persist: key (1–64 of A-Z a-z 0-9 _ . : -) for localStorage `nowo-ui-table-view:<key>`; invalid = not remembered
+    - labels: {density, comfortable, compact, columns, columns_label} (View\Label|string)
+    - attr: extra root attributes (no on*)
+#}
+{% set _labels = labels|default({}) %}
+{% set _l = {
+    density: 'table_view.density'|trans({}, 'NowoUiKitBundle'),
+    comfortable: 'table_view.comfortable'|trans({}, 'NowoUiKitBundle'),
+    compact: 'table_view.compact'|trans({}, 'NowoUiKitBundle'),
+    columns: 'table_view.columns'|trans({}, 'NowoUiKitBundle'),
+    columns_label: 'table_view.columns_label'|trans({}, 'NowoUiKitBundle'),
+} %}
+{% for _k, _v in _labels %}{% if _v is not null %}{% set _l = _l|merge({(_k): _v|nowo_ui_trans}) %}{% endif %}{% endfor %}
+{% set _density = (density ?? 'comfortable') == 'compact' ? 'compact' : 'comfortable' %}
+{% set _persist = (persist ?? null) and persist matches '/^[A-Za-z0-9_.:-]{1,64}$/' ? persist : null %}
+{% set _attr = nowo_ui_safe_attrs(attr|default({}), ['hidden', 'data-nowo-ui-table-view', 'data-nowo-ui-table-view-table', 'data-nowo-ui-table-view-persist']) %}
+<div class="nowo-ui-table-view{{ (_attr.class ?? false) ? ' ' ~ _attr.class }}" data-nowo-ui-table-view data-nowo-ui-table-view-table="{{ table }}"{% if _persist %} data-nowo-ui-table-view-persist="{{ _persist }}"{% endif %} hidden{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(_attr)) }}>
+    <div class="nowo-ui-table-view__group" role="group" aria-label="{{ _l.density }}">
+        {% for _d in ['comfortable', 'compact'] %}
+            <button type="button" class="nowo-ui-btn nowo-ui-btn--sm" aria-pressed="{{ _d == _density ? 'true' : 'false' }}" data-nowo-ui-density="{{ _d }}">{{ _l[_d] }}</button>
+        {% endfor %}
+    </div>
+    {% if columns|default([]) is not empty %}
+        <details class="nowo-ui-table-view__columns" data-nowo-ui-table-view-columns>
+            <summary class="nowo-ui-btn nowo-ui-btn--outline nowo-ui-btn--sm">{{ _l.columns }}</summary>
+            <div class="nowo-ui-table-view__panel" role="group" aria-label="{{ _l.columns_label }}">
+                {% for _c in columns %}
+                    <button type="button" class="nowo-ui-table-view__column" aria-pressed="{{ (_c.visible ?? true) ? 'true' : 'false' }}" data-nowo-ui-column="{{ _c.key }}"{% if _c.locked ?? false %} disabled{% endif %}><span class="nowo-ui-table-view__check" aria-hidden="true"></span>{{ _c.label|nowo_ui_trans }}</button>
+                {% endfor %}
+            </div>
+        </details>
+    {% endif %}
+</div>

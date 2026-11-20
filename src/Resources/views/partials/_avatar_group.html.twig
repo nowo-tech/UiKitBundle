@@ -1,0 +1,29 @@
+{#
+  Avatar group (2.61, theme partial `avatar_group`): stacked avatars with a "+N" overflow and one accessible name
+  ("5 people"); each avatar keeps its own name for hover / screen readers through the `avatar` partial. Optional
+  presence (online | away | busy | offline) adds a dot AND a visually hidden word, never the dot alone.
+
+  Required:
+    - people: list of {name, src?, initials?, presence?}
+  Optional:
+    - max (default 4): avatars shown before the "+N"
+    - size: avatar size (xs | sm | null | lg)
+    - label (View\Label|string): the group's name (default avatar_group.label with the count)
+    - attr: extra root attributes (no on*)
+#}
+{% set _people = people|default([]) %}
+{% set _max = max(1, max|default(4)) %}
+{% set _attr = nowo_ui_safe_attrs(attr|default({}), ['role', 'aria-label']) %}
+<ul class="nowo-ui-avatar-group{{ (_attr.class ?? false) ? ' ' ~ _attr.class }}" aria-label="{{ (label ?? null) ? label|nowo_ui_trans : 'avatar_group.label'|trans({'%count%': _people|length}, 'NowoUiKitBundle') }}"{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(_attr)) }}>
+    {% for _p in _people|slice(0, _max) %}
+        {% set _presence = (_p.presence ?? null) in ['online', 'away', 'busy', 'offline'] ? _p.presence : null %}
+        <li>
+            {%- if _presence %}<span class="nowo-ui-presence nowo-ui-presence--{{ _presence }}">{% endif -%}
+            {{ include('@NowoUiKitBundle/partials/_avatar.html.twig', {name: _p.name, src: _p.src ?? null, initials: _p.initials ?? null, size: size ?? null, alt: _presence ? _p.name ~ ' (' ~ ('presence.' ~ _presence)|trans({}, 'NowoUiKitBundle') ~ ')' : null}, false)|trim|raw }}
+            {%- if _presence %}<span class="nowo-ui-presence__dot" aria-hidden="true"></span></span>{% endif -%}
+        </li>
+    {% endfor %}
+    {% if _people|length > _max %}
+        <li><span class="nowo-ui-avatar-group__more" role="img" aria-label="{{ 'avatar_group.more'|trans({'%count%': _people|length - _max}, 'NowoUiKitBundle') }}">+{{ _people|length - _max }}</span></li>
+    {% endif %}
+</ul>

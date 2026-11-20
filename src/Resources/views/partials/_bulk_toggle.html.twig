@@ -1,0 +1,11 @@
+{#
+  "Select every row on this page" box (2.61, theme partial `bulk_toggle`) for the header cell of a bulk-selection
+  table (<th class="nowo-ui-bulk-cell" scope="col">). js/nowo-ui-bulk-select.js shows it (it is `hidden` without the
+  script, where it could do nothing), keeps it checked / mixed / clear from the row boxes and toggles them. It has no
+  name, so it is never submitted.
+
+  Optional:
+    - label (View\Label|string): accessible name (default bulk.select_page)
+#}
+{# twig-005-ignore: nameless "select all" box driven by js/nowo-ui-bulk-select.js, never submitted #}
+<input type="checkbox" class="nowo-ui-bulk-toggle" aria-label="{{ (label ?? null) ? label|nowo_ui_trans : 'bulk.select_page'|trans({}, 'NowoUiKitBundle') }}" data-nowo-ui-bulk-all hidden>

@@ -1,0 +1,25 @@
+{#
+  Fieldset row (2.61, theme partial `form_fieldset`): a choice group (radios or checkboxes: ChoiceType
+  `expanded: true`) or a compound field as a <fieldset> with its label as the <legend>, so the group has one name.
+  The widget gets the `nowo-ui-choice-group` class (`--inline` lays the choices on one row); help and errors follow
+  the group and are linked to it with aria-describedby.
+
+      {{ include(nowo_ui_partial('form_fieldset'), {field: form.plan, inline: true}) }}
+
+  Required:
+    - field: FormView (rendered with form_widget / form_errors / form_help, REQ-TWIG-005)
+  Optional:
+    - legend (View\Label|string): default the field's label (translated with its domain)
+    - inline (default false), boxed (default false: a border around the group)
+    - attr: extra attributes of the <fieldset> (no on*)
+#}
+{% set _v = field.vars %}
+{% set _legend = (legend ?? null) ? legend|nowo_ui_trans : (_v.label is same as(false) or _v.label is empty ? _v.name|humanize : (_v.translation_domain is same as(false) ? _v.label : _v.label|trans(_v.label_translation_parameters|default({}), _v.translation_domain))) %}
+{% set _describedby = ((_v.help ?? null) ? [_v.id ~ '_help'] : [])|merge(_v.errors|default([])|length > 0 ? [_v.id ~ '_error1'] : []) %}
+{% set _attr = nowo_ui_safe_attrs(attr|default({}), ['aria-describedby', 'aria-invalid']) %}
+<fieldset class="nowo-ui-fieldset{{ (boxed ?? false) ? ' nowo-ui-fieldset--boxed' }}{{ (_attr.class ?? false) ? ' ' ~ _attr.class }}"{% if _describedby is not empty %} aria-describedby="{{ _describedby|join(' ') }}"{% endif %}{% if _v.errors|default([])|length > 0 %} data-nowo-ui-invalid{% endif %}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(_attr)) }}>
+    <legend class="nowo-ui-fieldset__legend">{{ _legend }}</legend>
+    {{ form_widget(field, {attr: _v.attr|merge({class: ((_v.attr.class ?? '') ~ ' nowo-ui-choice-group' ~ ((inline ?? false) ? ' nowo-ui-choice-group--inline'))|trim})}) }}
+    {{ form_errors(field) }}
+    {{ form_help(field) }}
+</fieldset>

@@ -3377,6 +3377,1480 @@ table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr:hover > td {
   display: block !important;
 }
 
+/* ==========================================================================================================
+ * Admin components (2.61). One section so it stays apart from the shell rules: filter bar + phone sheet, bulk
+ * selection bar, table view controls (density, columns), definition list, stat tiles, client-side tab panels,
+ * form patterns (error summary, fieldset, choice group, input group, switch, form grid, read-only view, sticky
+ * footer), dropzone, timeline, skeleton, illustrated empty state, avatar group, chip, progress tones, busy button,
+ * code block with copy, tooltip, steps. Tokens only (light and dark follow the base tokens); every animation sits
+ * behind prefers-reduced-motion: no-preference and [data-motion='reduce'].
+ * ========================================================================================================== */
+
+/* Vertical stack of blocks inside a card body (2.61): filter bar, bulk bar, table… one gap, no margins. */
+.nowo-ui-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+/* --- Filter bar (2.61): inline fields on wide screens, a bottom sheet on phones (js/nowo-ui-filter-sheet.js) --- */
+.nowo-ui-filter-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.nowo-ui-filter-sheet__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nowo-ui-filter-sheet__toggle {
+  display: none;
+}
+
+.nowo-ui-filter-sheet__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--nowo-ui-primary);
+  color: var(--nowo-ui-primary-contrast);
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+}
+
+.nowo-ui-filter-sheet__panel {
+  min-width: 0;
+}
+
+.nowo-ui-filter-sheet__panel form,
+.nowo-ui-filter-sheet__fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.nowo-ui-filter-sheet__fields > * {
+  flex: 1 1 12rem;
+  min-width: 0;
+  margin: 0;
+}
+
+/* Each filter row stacks its label over its control, whatever the host's row layout. */
+.nowo-ui-filter-sheet__fields > :not(.nowo-ui-filter-sheet__actions) {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.25rem;
+}
+
+.nowo-ui-filter-sheet__actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nowo-ui-filter-sheet__dialog {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  max-height: 85dvh;
+  margin: auto 0 0;
+  padding: 0;
+  overflow: auto;
+  border: 0;
+  border-radius: calc(var(--nowo-ui-radius) * 2) calc(var(--nowo-ui-radius) * 2) 0 0;
+  background: var(--nowo-ui-surface);
+  color: var(--nowo-ui-text);
+}
+
+.nowo-ui-filter-sheet__dialog::backdrop {
+  background: color-mix(in srgb, var(--nowo-ui-text) 45%, transparent);
+}
+
+.nowo-ui-filter-sheet__dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--nowo-ui-border);
+}
+
+.nowo-ui-filter-sheet__dialog-title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.nowo-ui-filter-sheet__dialog-body {
+  padding: 1rem;
+}
+
+.nowo-ui-filter-sheet__dialog-body .nowo-ui-filter-sheet__fields > *,
+.nowo-ui-filter-sheet__dialog-body .nowo-ui-filter-sheet__actions {
+  flex-basis: 100%;
+}
+
+@media (max-width: 47.99rem) {
+  .nowo-ui-filter-sheet[data-nowo-ui-filter-sheet-ready] .nowo-ui-filter-sheet__toggle {
+    display: inline-flex;
+  }
+
+  .nowo-ui-filter-sheet[data-nowo-ui-filter-sheet-ready] > .nowo-ui-filter-sheet__panel {
+    display: none;
+  }
+}
+
+/* --- Bulk selection bar (2.61, js/nowo-ui-bulk-select.js) --- */
+.nowo-ui-bulk-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--nowo-ui-border);
+  border-radius: var(--nowo-ui-radius);
+  background: var(--nowo-ui-surface-muted);
+}
+
+.nowo-ui-bulk-bar[data-nowo-ui-bulk-active] {
+  border-color: var(--nowo-ui-info-border);
+  background: var(--nowo-ui-info-bg);
+  color: var(--nowo-ui-info-text);
+}
+
+.nowo-ui-bulk-bar__count {
+  margin: 0;
+  font-weight: 600;
+}
+
+.nowo-ui-bulk-bar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-inline-start: auto;
+}
+
+.nowo-ui-bulk-bar__actions [aria-disabled='true'],
+.nowo-ui-bulk-bar__actions :disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.nowo-ui-bulk-bar__all[hidden],
+.nowo-ui-bulk-bar__clear[hidden] {
+  display: none !important;
+}
+
+.nowo-ui-bulk-cell {
+  width: 2.75rem;
+  text-align: center;
+}
+
+.nowo-ui-bulk-cell input[type='checkbox'] {
+  width: 1.125rem;
+  height: 1.125rem;
+  margin: 0;
+  accent-color: var(--nowo-ui-primary);
+  vertical-align: middle;
+}
+
+tr[data-nowo-ui-bulk-selected] > td,
+tr[data-nowo-ui-bulk-selected] > th {
+  background: color-mix(in srgb, var(--nowo-ui-primary) 8%, var(--nowo-ui-surface));
+}
+
+/* --- Table view controls (2.61): density toggle + column visibility (js/nowo-ui-table-view.js) --- */
+.nowo-ui-table-view {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nowo-ui-table-view[hidden] {
+  display: none !important;
+}
+
+.nowo-ui-table-view__group {
+  display: inline-flex;
+  border: 1px solid var(--nowo-ui-border-strong);
+  border-radius: var(--nowo-ui-radius);
+  overflow: hidden;
+}
+
+.nowo-ui-table-view__group > .nowo-ui-btn {
+  border: 0;
+  border-radius: 0;
+  background: var(--nowo-ui-surface);
+  color: var(--nowo-ui-text);
+}
+
+.nowo-ui-table-view__group > .nowo-ui-btn + .nowo-ui-btn {
+  border-inline-start: 1px solid var(--nowo-ui-border-strong);
+}
+
+.nowo-ui-table-view__group > .nowo-ui-btn[aria-pressed='true'] {
+  background: var(--nowo-ui-primary);
+  color: var(--nowo-ui-primary-contrast);
+}
+
+.nowo-ui-table-view__columns {
+  position: relative;
+}
+
+.nowo-ui-table-view__columns > summary {
+  list-style: none;
+}
+
+.nowo-ui-table-view__columns > summary::-webkit-details-marker {
+  display: none;
+}
+
+.nowo-ui-table-view__panel {
+  position: absolute;
+  z-index: 30;
+  inset-inline-end: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 12rem;
+  margin-top: 0.25rem;
+  padding: 0.375rem;
+  border: 1px solid var(--nowo-ui-border);
+  border-radius: var(--nowo-ui-radius);
+  background: var(--nowo-ui-surface);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--nowo-ui-text) 16%, transparent);
+}
+
+.nowo-ui-table-view__column {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 2.25rem;
+  padding: 0.25rem 0.5rem;
+  border: 0;
+  border-radius: var(--nowo-ui-radius);
+  background: none;
+  color: var(--nowo-ui-text);
+  font: inherit;
+  font-size: 0.875rem;
+  text-align: start;
+  cursor: pointer;
+}
+
+.nowo-ui-table-view__column:hover {
+  background: var(--nowo-ui-surface-muted);
+}
+
+.nowo-ui-table-view__column:focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, var(--nowo-ui-primary));
+  outline-offset: -2px;
+}
+
+.nowo-ui-table-view__check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 1rem;
+  height: 1rem;
+  border: 1.5px solid var(--nowo-ui-border-strong);
+  border-radius: 0.2rem;
+}
+
+.nowo-ui-table-view__column[aria-pressed='true'] .nowo-ui-table-view__check {
+  border-color: var(--nowo-ui-primary);
+  background: var(--nowo-ui-primary);
+}
+
+.nowo-ui-table-view__column[aria-pressed='true'] .nowo-ui-table-view__check::after {
+  width: 0.3rem;
+  height: 0.55rem;
+  margin-top: -0.1rem;
+  border: solid var(--nowo-ui-primary-contrast);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  content: '';
+}
+
+.nowo-ui-table-view__column:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* A table scroller is the containing block of the visually hidden texts inside it (e.g. "Actions" in a header
+ * cell), so they never widen the page beyond the scroller (2.61). */
+.nowo-ui-table-wrap {
+  position: relative;
+}
+
+/* Card footer of a table: the info line + per-page on the start, pages on the end (2.61). */
+.nowo-ui-table-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  width: 100%;
+}
+
+.nowo-ui-table-footer .nowo-ui-pagination,
+.nowo-ui-table-footer nav {
+  margin: 0;
+}
+
+/* --- Definition list (2.61): term | value on wide screens, stacked on phones --- */
+.nowo-ui-dl {
+  display: grid;
+  grid-template-columns: minmax(8rem, max-content) minmax(0, 1fr);
+  gap: 0.5rem 1.5rem;
+  margin: 0;
+}
+
+.nowo-ui-dl > div {
+  display: contents;
+}
+
+.nowo-ui-dl dt {
+  color: var(--nowo-ui-muted);
+  font-weight: 500;
+}
+
+.nowo-ui-dl dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: break-word;
+}
+
+.nowo-ui-dl--stacked,
+.nowo-ui-dl--grid {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+.nowo-ui-dl--stacked > div,
+.nowo-ui-dl--grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.nowo-ui-dl--grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 12rem), 1fr));
+  gap: 1rem 1.5rem;
+}
+
+.nowo-ui-dl--grid dt,
+.nowo-ui-dl--stacked dt {
+  font-size: 0.8125rem;
+}
+
+@media (max-width: 29.99rem) {
+  .nowo-ui-dl {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.125rem;
+  }
+
+  .nowo-ui-dl dd + dt {
+    margin-top: 0.625rem;
+  }
+}
+
+/* --- Stat tiles (2.61): View\Stat delta / trend / icon; `nowo-ui-stat-row--tiles` cards --- */
+.nowo-ui-stat-row--tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: 1rem;
+}
+
+.nowo-ui-stat-row--tiles > .nowo-ui-stat {
+  position: relative;
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--nowo-ui-border);
+  border-radius: calc(var(--nowo-ui-radius) * 1.5);
+  background: var(--nowo-ui-surface);
+}
+
+.nowo-ui-stat-row--tiles .nowo-ui-stat__value {
+  font-size: 1.5rem;
+  font-weight: 650;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.nowo-ui-stat__icon {
+  position: absolute;
+  inset-block-start: 1rem;
+  inset-inline-end: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--nowo-ui-primary) 12%, var(--nowo-ui-surface));
+  color: var(--nowo-ui-primary);
+}
+
+.nowo-ui-stat__delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.nowo-ui-stat__delta--positive {
+  color: var(--nowo-ui-success-text);
+}
+
+.nowo-ui-stat__delta--negative {
+  color: var(--nowo-ui-danger-text);
+}
+
+.nowo-ui-stat__delta--neutral {
+  color: var(--nowo-ui-muted);
+}
+
+.nowo-ui-stat__delta-arrow {
+  width: 0.75rem;
+  height: 0.75rem;
+  fill: currentColor;
+}
+
+.nowo-ui-stat__delta--down .nowo-ui-stat__delta-arrow {
+  transform: rotate(180deg);
+}
+
+.nowo-ui-stat__delta--flat .nowo-ui-stat__delta-arrow {
+  transform: rotate(90deg);
+}
+
+/* --- Client-side tab panels (2.61, partial `tab_panels`; js/nowo-ui-tabs.js) --- */
+.nowo-ui-tab-panels__list {
+  display: flex;
+  gap: 0.25rem;
+  margin: 0 0 1rem;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--nowo-ui-border);
+  scrollbar-width: thin;
+}
+
+.nowo-ui-tab-panels__list[hidden] {
+  display: none !important;
+}
+
+.nowo-ui-tab-panels__tab {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 2.5rem;
+  margin-bottom: -1px;
+  padding: 0.5rem 0.875rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--nowo-ui-muted);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.nowo-ui-tab-panels__tab:hover {
+  color: var(--nowo-ui-text);
+}
+
+.nowo-ui-tab-panels__tab[aria-selected='true'] {
+  border-bottom-color: var(--nowo-ui-primary);
+  color: var(--nowo-ui-primary);
+}
+
+.nowo-ui-tab-panels__tab:focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, var(--nowo-ui-primary));
+  outline-offset: -2px;
+}
+
+.nowo-ui-tab-panels__panel + .nowo-ui-tab-panels__panel {
+  margin-top: 1rem;
+}
+
+.nowo-ui-tab-panels[data-nowo-ui-tabs-ready] .nowo-ui-tab-panels__panel + .nowo-ui-tab-panels__panel {
+  margin-top: 0;
+}
+
+.nowo-ui-tab-panels__panel:focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, var(--nowo-ui-primary));
+  outline-offset: 2px;
+}
+
+.nowo-ui-tab-panels__heading {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+/* --- Form patterns (2.61) --- */
+.nowo-ui-error-summary {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--nowo-ui-danger-border);
+  border-inline-start-width: 4px;
+  border-inline-start-color: var(--nowo-ui-danger-text);
+  border-radius: var(--nowo-ui-radius);
+  background: var(--nowo-ui-danger-bg);
+  color: var(--nowo-ui-danger-text-strong);
+}
+
+.nowo-ui-error-summary:focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, var(--nowo-ui-primary));
+  outline-offset: 2px;
+}
+
+.nowo-ui-error-summary__title {
+  margin: 0 0 0.375rem;
+  font-size: 1rem;
+}
+
+.nowo-ui-error-summary__list {
+  margin: 0;
+  padding-inline-start: 1.25rem;
+}
+
+.nowo-ui-error-summary__list a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.nowo-ui-fieldset {
+  min-width: 0;
+  margin: 0 0 1rem;
+  padding: 0;
+  border: 0;
+}
+
+.nowo-ui-fieldset__legend {
+  margin: 0 0 0.375rem;
+  padding: 0;
+  font-weight: 600;
+}
+
+.nowo-ui-fieldset--boxed {
+  padding: 0.75rem 1rem 1rem;
+  border: 1px solid var(--nowo-ui-border);
+  border-radius: var(--nowo-ui-radius);
+}
+
+.nowo-ui-fieldset--boxed > .nowo-ui-fieldset__legend {
+  padding: 0 0.25rem;
+}
+
+.nowo-ui-choice-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.nowo-ui-choice-group--inline {
+  flex-flow: row wrap;
+  gap: 0.5rem 1.25rem;
+}
+
+.nowo-ui-choice-group input[type='radio'],
+.nowo-ui-choice-group input[type='checkbox'] {
+  width: 1.125rem;
+  height: 1.125rem;
+  margin: 0;
+  accent-color: var(--nowo-ui-primary);
+}
+
+.nowo-ui-input-group {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.nowo-ui-input-group > .nowo-ui-input,
+.nowo-ui-input-group > input,
+.nowo-ui-input-group > select {
+  flex: 1 1 auto;
+  min-width: 0;
+  border-radius: 0;
+}
+
+.nowo-ui-input-group__addon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  padding: 0 0.75rem;
+  border: 1px solid var(--nowo-ui-border-strong);
+  background: var(--nowo-ui-surface-muted);
+  color: var(--nowo-ui-muted);
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.nowo-ui-input-group > :first-child {
+  border-start-start-radius: var(--nowo-ui-radius);
+  border-end-start-radius: var(--nowo-ui-radius);
+}
+
+.nowo-ui-input-group > :last-child {
+  border-start-end-radius: var(--nowo-ui-radius);
+  border-end-end-radius: var(--nowo-ui-radius);
+}
+
+.nowo-ui-input-group > .nowo-ui-input-group__addon:first-child {
+  border-inline-end: 0;
+}
+
+.nowo-ui-input-group > .nowo-ui-input-group__addon:last-child {
+  border-inline-start: 0;
+}
+
+/* Switch: a checkbox row with `nowo-ui-form-row--switch` (widget attr role="switch"). */
+.nowo-ui-form-row--switch .nowo-ui-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 2.75rem;
+  cursor: pointer;
+}
+
+.nowo-ui-form-row--switch input[type='checkbox'] {
+  position: relative;
+  flex: 0 0 auto;
+  width: 2.5rem;
+  height: 1.5rem;
+  margin: 0;
+  border: 1.5px solid var(--nowo-ui-border-strong);
+  border-radius: 999px;
+  background: var(--nowo-ui-surface-muted);
+  cursor: pointer;
+  appearance: none;
+}
+
+.nowo-ui-form-row--switch input[type='checkbox']::before {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 0.1875rem;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  background: var(--nowo-ui-muted);
+  transform: translateY(-50%);
+  content: '';
+}
+
+.nowo-ui-form-row--switch input[type='checkbox']:checked {
+  border-color: var(--nowo-ui-primary);
+  background: var(--nowo-ui-primary);
+}
+
+.nowo-ui-form-row--switch input[type='checkbox']:checked::before {
+  background: var(--nowo-ui-primary-contrast);
+  transform: translate(1rem, -50%);
+}
+
+[dir='rtl'] .nowo-ui-form-row--switch input[type='checkbox']:checked::before {
+  transform: translate(-1rem, -50%);
+}
+
+.nowo-ui-form-row--switch input[type='checkbox']:focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, var(--nowo-ui-primary));
+  outline-offset: 2px;
+}
+
+.nowo-ui-form-row--switch input[type='checkbox']:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-motion='reduce']) .nowo-ui-form-row--switch input[type='checkbox']::before {
+    transition: transform 0.15s ease;
+  }
+}
+
+/* Multi-column form: rows side by side from 40rem; `nowo-ui-form-grid__full` spans the row. */
+.nowo-ui-form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 1.25rem;
+}
+
+/* Every cell stacks label, errors, control and help, and its text controls take the cell width. */
+.nowo-ui-form-grid > :not(.nowo-ui-fieldset):not(.nowo-ui-error-summary) {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.25rem;
+  min-width: 0;
+  margin: 0 0 1rem;
+}
+
+.nowo-ui-form-grid > .nowo-ui-form-grid__full {
+  margin: 0;
+}
+
+.nowo-ui-form-grid input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='hidden']),
+.nowo-ui-form-grid select,
+.nowo-ui-form-grid textarea {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+}
+
+.nowo-ui-form-grid .nowo-ui-input-group > input {
+  width: auto;
+}
+
+@media (min-width: 40rem) {
+  .nowo-ui-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nowo-ui-form-grid > .nowo-ui-form-grid__full,
+  .nowo-ui-form-grid > .nowo-ui-fieldset,
+  .nowo-ui-form-grid > .nowo-ui-error-summary {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Read-only view of a form: a definition list of the values, with the same rhythm as the form rows. */
+.nowo-ui-readonly-view .nowo-ui-dl dd:empty::before {
+  color: var(--nowo-ui-muted);
+  content: '—';
+}
+
+/* Sticky form footer: a card whose footer stays at the bottom of the viewport while the form scrolls. */
+.nowo-ui-card--sticky-footer > .nowo-ui-card__footer {
+  position: sticky;
+  z-index: 5;
+  inset-block-end: 0;
+  border-top: 1px solid var(--nowo-ui-border);
+  background: var(--nowo-ui-surface);
+  box-shadow: 0 -6px 16px color-mix(in srgb, var(--nowo-ui-text) 8%, transparent);
+}
+
+/* --- Dropzone (2.61): progressive enhancement over a file input (js/nowo-ui-dropzone.js) --- */
+.nowo-ui-dropzone {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 1.25rem 1rem;
+  border: 2px dashed var(--nowo-ui-border-strong);
+  border-radius: calc(var(--nowo-ui-radius) * 1.5);
+  background: var(--nowo-ui-surface-muted);
+  text-align: center;
+}
+
+.nowo-ui-dropzone__icon {
+  width: 2rem;
+  height: 2rem;
+  color: var(--nowo-ui-muted);
+}
+
+.nowo-ui-dropzone__prompt {
+  margin: 0;
+  font-weight: 500;
+}
+
+.nowo-ui-dropzone__hint {
+  margin: 0;
+  color: var(--nowo-ui-muted);
+  font-size: 0.8125rem;
+}
+
+.nowo-ui-dropzone input[type='file'] {
+  max-width: 100%;
+}
+
+.nowo-ui-dropzone[data-nowo-ui-dropzone-ready] input[type='file'] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.nowo-ui-dropzone[data-nowo-ui-dropzone-ready]:focus-within {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, var(--nowo-ui-primary));
+  outline-offset: 2px;
+}
+
+.nowo-ui-dropzone.is-dragover {
+  border-color: var(--nowo-ui-primary);
+  background: color-mix(in srgb, var(--nowo-ui-primary) 8%, var(--nowo-ui-surface));
+}
+
+.nowo-ui-dropzone__files {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  text-align: start;
+}
+
+.nowo-ui-dropzone__files:empty {
+  display: none;
+}
+
+.nowo-ui-dropzone__file {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.375rem 0.625rem;
+  border: 1px solid var(--nowo-ui-border);
+  border-radius: var(--nowo-ui-radius);
+  background: var(--nowo-ui-surface);
+  font-size: 0.875rem;
+}
+
+.nowo-ui-dropzone__file-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nowo-ui-dropzone__file-size {
+  flex: 0 0 auto;
+  color: var(--nowo-ui-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.nowo-ui-dropzone__file--invalid {
+  border-color: var(--nowo-ui-danger-border);
+  color: var(--nowo-ui-danger-text);
+}
+
+/* --- Timeline / activity log (2.61, partial `timeline`) --- */
+.nowo-ui-timeline {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nowo-ui-timeline__item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr);
+  gap: 0 0.75rem;
+  padding-bottom: 1.25rem;
+}
+
+.nowo-ui-timeline__item::before {
+  position: absolute;
+  inset-block: 1.5rem 0;
+  inset-inline-start: calc(0.75rem - 1px);
+  width: 2px;
+  background: var(--nowo-ui-border);
+  content: '';
+}
+
+.nowo-ui-timeline__item:last-child {
+  padding-bottom: 0;
+}
+
+.nowo-ui-timeline__item:last-child::before {
+  display: none;
+}
+
+.nowo-ui-timeline__marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2px solid var(--nowo-ui-surface);
+  border-radius: 999px;
+  background: var(--nowo-ui-muted);
+  box-shadow: 0 0 0 1px var(--nowo-ui-border);
+}
+
+.nowo-ui-timeline__item--success .nowo-ui-timeline__marker {
+  background: var(--nowo-ui-success-text);
+}
+
+.nowo-ui-timeline__item--warning .nowo-ui-timeline__marker {
+  background: var(--nowo-ui-warning-text);
+}
+
+.nowo-ui-timeline__item--danger .nowo-ui-timeline__marker {
+  background: var(--nowo-ui-danger-text);
+}
+
+.nowo-ui-timeline__item--info .nowo-ui-timeline__marker {
+  background: var(--nowo-ui-info-text);
+}
+
+.nowo-ui-timeline__item--primary .nowo-ui-timeline__marker {
+  background: var(--nowo-ui-primary);
+}
+
+.nowo-ui-timeline__body {
+  min-width: 0;
+}
+
+.nowo-ui-timeline__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.125rem 0.75rem;
+}
+
+.nowo-ui-timeline__title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.nowo-ui-timeline__time {
+  color: var(--nowo-ui-muted);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.nowo-ui-timeline__text {
+  margin: 0.25rem 0 0;
+  color: var(--nowo-ui-muted);
+}
+
+.nowo-ui-timeline__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+/* --- Skeleton loading (2.61, partial `skeleton`): aria-busy on the region, shimmer only with motion --- */
+.nowo-ui-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.nowo-ui-skeleton__line,
+.nowo-ui-skeleton__block,
+.nowo-ui-skeleton__circle {
+  display: block;
+  border-radius: var(--nowo-ui-radius);
+  background: color-mix(in srgb, var(--nowo-ui-text) 9%, var(--nowo-ui-surface));
+}
+
+.nowo-ui-skeleton__line {
+  height: 0.875rem;
+}
+
+.nowo-ui-skeleton__line:nth-child(3n + 2) {
+  width: 92%;
+}
+
+.nowo-ui-skeleton__line:nth-child(3n) {
+  width: 64%;
+}
+
+.nowo-ui-skeleton__block {
+  height: 6rem;
+}
+
+.nowo-ui-skeleton__row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.nowo-ui-skeleton__row > .nowo-ui-skeleton__line {
+  flex: 1 1 auto;
+}
+
+.nowo-ui-skeleton__circle {
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-motion='reduce']) .nowo-ui-skeleton__line,
+  :root:not([data-motion='reduce']) .nowo-ui-skeleton__block,
+  :root:not([data-motion='reduce']) .nowo-ui-skeleton__circle {
+    animation: nowo-ui-skeleton-pulse 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes nowo-ui-skeleton-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* --- Empty state with icon and title (2.61, View\EmptyState::icon) --- */
+.nowo-ui-empty--illustrated {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 1.5rem 1rem;
+  text-align: center;
+}
+
+.nowo-ui-empty__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: 0.25rem;
+  border-radius: 999px;
+  background: var(--nowo-ui-surface-muted);
+  color: var(--nowo-ui-muted);
+  font-size: 1.25rem;
+}
+
+.nowo-ui-empty--illustrated .nowo-ui-empty__title {
+  margin: 0;
+  color: var(--nowo-ui-text);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.nowo-ui-empty--illustrated .nowo-ui-empty__message {
+  max-width: 32rem;
+  margin: 0;
+}
+
+.nowo-ui-empty--illustrated .nowo-ui-empty__action {
+  margin-top: 0.5rem;
+}
+
+/* --- Avatar group and chip (2.61) --- */
+.nowo-ui-avatar-group {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nowo-ui-avatar-group > li {
+  display: inline-flex;
+}
+
+.nowo-ui-avatar-group > li + li {
+  margin-inline-start: -0.5rem;
+}
+
+.nowo-ui-avatar-group .nowo-ui-avatar {
+  box-shadow: 0 0 0 2px var(--nowo-ui-surface);
+}
+
+.nowo-ui-avatar-group__more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.375rem;
+  border-radius: 999px;
+  background: var(--nowo-ui-surface-muted);
+  box-shadow: 0 0 0 2px var(--nowo-ui-surface);
+  color: var(--nowo-ui-text);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.nowo-ui-presence {
+  position: relative;
+  display: inline-flex;
+}
+
+.nowo-ui-presence__dot {
+  position: absolute;
+  inset-block-end: 0;
+  inset-inline-end: 0;
+  width: 0.625rem;
+  height: 0.625rem;
+  border: 2px solid var(--nowo-ui-surface);
+  border-radius: 999px;
+  background: var(--nowo-ui-muted);
+}
+
+.nowo-ui-presence--online .nowo-ui-presence__dot {
+  background: var(--nowo-ui-success-text);
+}
+
+.nowo-ui-presence--busy .nowo-ui-presence__dot {
+  background: var(--nowo-ui-danger-text);
+}
+
+.nowo-ui-presence--away .nowo-ui-presence__dot {
+  background: var(--nowo-ui-warning-text);
+}
+
+.nowo-ui-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  max-width: 100%;
+  min-height: 1.75rem;
+  padding: 0.125rem 0.625rem;
+  border: 1px solid var(--nowo-ui-border-strong);
+  border-radius: 999px;
+  background: var(--nowo-ui-surface);
+  color: var(--nowo-ui-text);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.nowo-ui-chip .nowo-ui-avatar {
+  margin-inline-start: -0.5rem;
+}
+
+.nowo-ui-chip__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nowo-ui-chip__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-inline-end: -0.375rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--nowo-ui-muted);
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.nowo-ui-chip__remove:hover {
+  background: var(--nowo-ui-surface-muted);
+  color: var(--nowo-ui-text);
+}
+
+.nowo-ui-chip__remove:focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, var(--nowo-ui-primary));
+  outline-offset: 1px;
+}
+
+.nowo-ui-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* --- Busy (loading) button (2.61): aria-busy="true"; js/nowo-ui-form-busy.js sets it on submit --- */
+.nowo-ui-btn[aria-busy='true'] {
+  position: relative;
+  cursor: progress;
+}
+
+.nowo-ui-btn[aria-busy='true']::before {
+  flex: 0 0 auto;
+  width: 0.875rem;
+  height: 0.875rem;
+  border: 2px solid currentColor;
+  border-inline-end-color: transparent;
+  border-radius: 999px;
+  content: '';
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-motion='reduce']) .nowo-ui-btn[aria-busy='true']::before {
+    animation: nowo-ui-spin 0.7s linear infinite;
+  }
+}
+
+/* --- Code block with a copy button (2.61, partial `code_block`; js/nowo-ui-clipboard.js) --- */
+.nowo-ui-code-panel {
+  min-width: 0;
+  margin: 0 0 1rem;
+  overflow: hidden;
+  border: 1px solid var(--nowo-ui-code-border, var(--nowo-ui-border));
+  border-radius: var(--nowo-ui-code-radius, var(--nowo-ui-radius));
+}
+
+.nowo-ui-code-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.25rem 0.25rem 0.25rem 0.75rem;
+  border-bottom: 1px solid var(--nowo-ui-code-border, var(--nowo-ui-border));
+  background: var(--nowo-ui-surface-muted);
+}
+
+.nowo-ui-code-panel__lang {
+  color: var(--nowo-ui-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.nowo-ui-code-panel > .nowo-ui-code-block {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  overflow-wrap: normal;
+}
+
+/* --- Tooltip (2.61, partial `tooltip`; js/nowo-ui-tooltip.js): hover AND focus, Escape dismisses --- */
+.nowo-ui-tooltip {
+  position: relative;
+  display: inline-flex;
+}
+
+.nowo-ui-tooltip__bubble {
+  position: absolute;
+  z-index: 60;
+  inset-block-end: calc(100% + 0.375rem);
+  inset-inline-start: 50%;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: min(18rem, calc(100vw - 1rem));
+  padding: 0.375rem 0.625rem;
+  border-radius: var(--nowo-ui-radius);
+  background: var(--nowo-ui-text);
+  color: var(--nowo-ui-surface);
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.35;
+  text-align: start;
+  white-space: normal;
+  pointer-events: auto;
+  visibility: hidden;
+  opacity: 0;
+  transform: translateX(-50%);
+}
+
+[dir='rtl'] .nowo-ui-tooltip__bubble {
+  transform: translateX(50%);
+}
+
+.nowo-ui-tooltip:hover > .nowo-ui-tooltip__bubble,
+.nowo-ui-tooltip:focus-within > .nowo-ui-tooltip__bubble,
+.nowo-ui-tooltip.is-open > .nowo-ui-tooltip__bubble {
+  visibility: visible;
+  opacity: 1;
+}
+
+.nowo-ui-tooltip.is-dismissed > .nowo-ui-tooltip__bubble {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.nowo-ui-tooltip[data-nowo-ui-tooltip-ready] > .nowo-ui-tooltip__bubble {
+  position: fixed;
+  inset: auto;
+  transform: none;
+}
+
+.nowo-ui-tooltip[data-nowo-ui-tooltip-ready]:not(.is-open) > .nowo-ui-tooltip__bubble {
+  visibility: hidden;
+  opacity: 0;
+}
+
+/* --- Steps (2.61, partial `steps`): numbered, horizontal from 40rem, vertical on phones --- */
+.nowo-ui-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+  counter-reset: nowo-ui-step;
+}
+
+.nowo-ui-steps__item {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  counter-increment: nowo-ui-step;
+}
+
+.nowo-ui-steps__marker {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 2px solid var(--nowo-ui-border-strong);
+  border-radius: 999px;
+  background: var(--nowo-ui-surface);
+  color: var(--nowo-ui-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.nowo-ui-steps__marker::before {
+  content: counter(nowo-ui-step);
+}
+
+.nowo-ui-steps__item--done .nowo-ui-steps__marker {
+  border-color: var(--nowo-ui-primary);
+  background: var(--nowo-ui-primary);
+  color: var(--nowo-ui-primary-contrast);
+}
+
+.nowo-ui-steps__item--done .nowo-ui-steps__marker::before {
+  content: '\2713';
+}
+
+.nowo-ui-steps__item--current .nowo-ui-steps__marker {
+  border-color: var(--nowo-ui-primary);
+  color: var(--nowo-ui-primary);
+}
+
+.nowo-ui-steps__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.nowo-ui-steps__label {
+  color: var(--nowo-ui-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.nowo-ui-steps__item--current .nowo-ui-steps__label,
+.nowo-ui-steps__item--done .nowo-ui-steps__label {
+  color: var(--nowo-ui-text);
+}
+
+.nowo-ui-steps__item--current .nowo-ui-steps__label {
+  font-weight: 650;
+}
+
+.nowo-ui-steps__hint {
+  color: var(--nowo-ui-muted);
+  font-size: 0.75rem;
+}
+
+.nowo-ui-steps__link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.nowo-ui-steps__link:hover .nowo-ui-steps__label {
+  text-decoration: underline;
+}
+
+@media (min-width: 40rem) {
+  .nowo-ui-steps {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .nowo-ui-steps__item:not(:last-child)::after {
+    flex: 1 1 1.5rem;
+    min-width: 1rem;
+    height: 2px;
+    margin-inline-start: 0.25rem;
+    background: var(--nowo-ui-border);
+    content: '';
+  }
+
+  .nowo-ui-steps__item--done:not(:last-child)::after {
+    background: var(--nowo-ui-primary);
+  }
+}
+
+/* --- Progress tones (2.61): `nowo-ui-progress-field--<tone>` on the progress partial's wrapper --- */
+.nowo-ui-progress-field--success .nowo-ui-progress-meter {
+  accent-color: var(--nowo-ui-success-text);
+}
+
+.nowo-ui-progress-field--success .nowo-ui-progress-meter::-webkit-progress-value {
+  background: var(--nowo-ui-success-text);
+}
+
+.nowo-ui-progress-field--success .nowo-ui-progress-meter::-moz-progress-bar {
+  background: var(--nowo-ui-success-text);
+}
+
+.nowo-ui-progress-field--warning .nowo-ui-progress-meter {
+  accent-color: var(--nowo-ui-warning-text);
+}
+
+.nowo-ui-progress-field--warning .nowo-ui-progress-meter::-webkit-progress-value {
+  background: var(--nowo-ui-warning-text);
+}
+
+.nowo-ui-progress-field--warning .nowo-ui-progress-meter::-moz-progress-bar {
+  background: var(--nowo-ui-warning-text);
+}
+
+.nowo-ui-progress-field--danger .nowo-ui-progress-meter {
+  accent-color: var(--nowo-ui-danger-text);
+}
+
+.nowo-ui-progress-field--danger .nowo-ui-progress-meter::-webkit-progress-value {
+  background: var(--nowo-ui-danger-text);
+}
+
+.nowo-ui-progress-field--danger .nowo-ui-progress-meter::-moz-progress-bar {
+  background: var(--nowo-ui-danger-text);
+}
+
+/* Coarse pointers: the admin controls keep a 44 px hit area (2.61). */
+@media (pointer: coarse) {
+  .nowo-ui-table-view__column,
+  .nowo-ui-tab-panels__tab {
+    min-height: 2.75rem;
+  }
+
+  .nowo-ui-chip__remove {
+    width: 2.75rem;
+    height: 2.75rem;
+    margin-block: -0.5rem;
+  }
+}
+
 /* --- Locale switcher --- */
 .nowo-ui-locale-switcher {
   position: relative;

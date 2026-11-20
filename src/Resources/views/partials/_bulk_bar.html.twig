@@ -1,0 +1,46 @@
+{#
+  Bulk selection bar (2.61, theme partial `bulk_bar`): the selected count and the bulk actions of a list whose rows
+  carry checkboxes. It works as a plain form: the row checkboxes (data-nowo-ui-bulk-item, e.g. a ChoiceType
+  `expanded: true, multiple: true` rendered one widget per row with `choice_attr`) and the action buttons
+  (`form="<form_id>"`, name / value) submit to the host route. js/nowo-ui-bulk-select.js adds the live count (polite
+  status), the "select every row on this page" box (partial `bulk_toggle`), the "select all N rows" second step, the
+  clear button, the selected-row highlight, and keeps the actions aria-disabled while nothing is selected.
+
+  Required:
+    - form_id: id of the form element holding the row checkboxes (the scope of the script)
+  Optional:
+    - actions: list of {label, name (default `bulk_action`), value, variant (outline (default) | danger), confirm
+      (View\Label|string: asked before the submit, data-nowo-ui-bulk-confirm), attr}
+    - total: rows across every page; with all_field, once every row of the page is selected the bar offers
+      "Select all <total> rows", which sets the hidden field all_field (id) to 1 (the host then acts on the filter,
+      not on the ids)
+    - all_field: id of a hidden input of the form
+    - label (aria-label of the bar, default bulk.region), attr (no on*)
+  Block (embed): bulk_bar_actions (instead of `actions`).
+#}
+{% if false %}{% block bulk_bar_actions %}{% endblock %}{% endif %}
+{% set _attr = nowo_ui_safe_attrs(attr|default({}), ['role', 'data-nowo-ui-bulk-bar', 'data-nowo-ui-bulk-scope']) %}
+{% set _total = total ?? null %}
+{% set _block %}{{ block('bulk_bar_actions') }}{% endset %}
+<div class="nowo-ui-bulk-bar{{ (_attr.class ?? false) ? ' ' ~ _attr.class }}" role="region" aria-label="{{ (label ?? null) ? label|nowo_ui_trans : 'bulk.region'|trans({}, 'NowoUiKitBundle') }}" data-nowo-ui-bulk-bar data-nowo-ui-bulk-scope="{{ form_id }}"
+    data-nowo-ui-bulk-none="{{ 'bulk.none'|trans({}, 'NowoUiKitBundle') }}"
+    data-nowo-ui-bulk-one="{{ 'bulk.one'|trans({}, 'NowoUiKitBundle') }}"
+    data-nowo-ui-bulk-many="{{ 'bulk.many'|trans({}, 'NowoUiKitBundle') }}"
+    {%- if _total is not null and (all_field ?? null) %} data-nowo-ui-bulk-total="{{ _total }}" data-nowo-ui-bulk-all-field="{{ all_field }}" data-nowo-ui-bulk-all-pages="{{ 'bulk.all_pages'|trans({'%count%': _total}, 'NowoUiKitBundle') }}"{% endif %}
+    {{- nowo_ui_html_attrs(nowo_ui_attrs_without_class(_attr)) }}>
+    <p class="nowo-ui-bulk-bar__count" role="status" data-nowo-ui-bulk-status>{{ 'bulk.none'|trans({}, 'NowoUiKitBundle') }}</p>
+    {% if _total is not null and (all_field ?? null) %}
+        <button type="button" class="nowo-ui-btn nowo-ui-btn--link nowo-ui-btn--sm nowo-ui-bulk-bar__all" data-nowo-ui-bulk-select-all-pages hidden>{{ 'bulk.select_all_pages'|trans({'%count%': _total}, 'NowoUiKitBundle') }}</button>
+    {% endif %}
+    <div class="nowo-ui-bulk-bar__actions">
+        {% if _block|trim is not same as('') %}
+            {{ _block }}
+        {% else %}
+            {% for _a in actions|default([]) %}
+                {% set _a_attr = nowo_ui_safe_attrs(_a.attr|default({}), ['type', 'form', 'name', 'value', 'data-nowo-ui-bulk-action', 'data-nowo-ui-bulk-confirm']) %}
+                <button type="submit" form="{{ form_id }}" name="{{ _a.name|default('bulk_action') }}" value="{{ _a.value }}" class="nowo-ui-btn nowo-ui-btn--{{ (_a.variant ?? 'outline') == 'danger' ? 'danger' : 'outline' }} nowo-ui-btn--sm{{ (_a_attr.class ?? false) ? ' ' ~ _a_attr.class }}" data-nowo-ui-bulk-action{% if _a.confirm ?? null %} data-nowo-ui-bulk-confirm="{{ _a.confirm|nowo_ui_trans }}"{% endif %}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(_a_attr)) }}>{{ _a.label|nowo_ui_trans }}</button>
+            {% endfor %}
+        {% endif %}
+    </div>
+    <button type="button" class="nowo-ui-btn nowo-ui-btn--link nowo-ui-btn--sm nowo-ui-bulk-bar__clear" data-nowo-ui-bulk-clear hidden>{{ 'bulk.clear'|trans({}, 'NowoUiKitBundle') }}</button>
+</div>

@@ -1,0 +1,30 @@
+{#
+  Steps (2.61, theme partial `steps`): the progress of a multi-step task (a wizard, an onboarding, an order) as a
+  numbered list: done steps show a check, the current one carries aria-current="step", and each state is also in a
+  visually hidden word (never colour alone). Horizontal from 40rem, vertical on phones. A done step with `href` is a
+  link back to it (href through nowo_ui_safe_href(): an unsafe scheme renders the step without a link). The wizard scaffold keeps its own indicator; this partial is for any other page.
+
+  Required:
+    - items: list of {label (View\Label|string), status (done | current | upcoming; default upcoming), hint
+      (View\Label|string), href (done steps only)}
+  Optional:
+    - label (View\Label|string): accessible name of the list (default wizard.steps)
+    - attr: extra root attributes (no on*)
+#}
+{% set _attr = nowo_ui_safe_attrs(attr|default({}), ['aria-label']) %}
+<ol class="nowo-ui-steps{{ (_attr.class ?? false) ? ' ' ~ _attr.class }}" aria-label="{{ (label ?? null) ? label|nowo_ui_trans : 'wizard.steps'|trans({}, 'NowoUiKitBundle') }}"{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(_attr)) }}>
+    {% for _s in items|default([]) %}
+        {% set _href = nowo_ui_safe_href(_s.href ?? null) %}
+        {% set _status = (_s.status ?? 'upcoming') in ['done', 'current', 'upcoming'] ? (_s.status ?? 'upcoming') : 'upcoming' %}
+        {% set _inner %}
+            <span class="nowo-ui-steps__marker" aria-hidden="true"></span>
+            <span class="nowo-ui-steps__text">
+                <span class="nowo-ui-steps__label">{{ _s.label|nowo_ui_trans }}<span class="visually-hidden"> ({{ ('steps.' ~ _status)|trans({}, 'NowoUiKitBundle') }})</span></span>
+                {% if _s.hint ?? null %}<span class="nowo-ui-steps__hint">{{ _s.hint|nowo_ui_trans }}</span>{% endif %}
+            </span>
+        {% endset %}
+        <li class="nowo-ui-steps__item nowo-ui-steps__item--{{ _status }}"{% if _status == 'current' %} aria-current="step"{% endif %}>
+            {% if _status == 'done' and _href %}<a class="nowo-ui-steps__link" href="{{ _href }}">{{ _inner }}</a>{% else %}{{ _inner }}{% endif %}
+        </li>
+    {% endfor %}
+</ol>

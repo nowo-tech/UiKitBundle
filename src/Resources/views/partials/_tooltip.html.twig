@@ -1,0 +1,26 @@
+{#
+  Tooltip (2.61, theme partial `tooltip`): short help text for a control, shown on hover AND on keyboard focus, linked
+  with aria-describedby (the control keeps its own name). It stays while the pointer is over it, Escape hides it
+  (WCAG 1.4.13), and it never holds the only copy of key information. Without JavaScript CSS shows it on :hover /
+  :focus-within; js/nowo-ui-tooltip.js places it in the viewport (position: fixed, so table scrollers never clip it),
+  adds Escape and a tap toggle on touch screens.
+
+      {% embed nowo_ui_partial('tooltip') with {text: 'Exports the filtered rows as CSV'} only %}
+          {% block tooltip_trigger %}<a class="nowo-ui-btn nowo-ui-btn--outline nowo-ui-btn--sm" href="…" aria-describedby="{{ tooltip_id }}">Export</a>{% endblock %}
+      {% endembed %}
+
+  Required:
+    - text (View\Label|string)
+  Optional:
+    - tooltip_id: the bubble id (default nowo-ui-tooltip-<random>; a partial-scoped name: an inherited `id` is never
+      used), also the variable the embed block reads
+    - trigger: TRUSTED HTML of the control (printed raw) when not embedding; it must carry aria-describedby="<id>"
+    - attr: extra root attributes (no on*)
+  Block (embed): tooltip_trigger.
+#}
+{% set tooltip_id = tooltip_id ?? ('nowo-ui-tooltip-' ~ random()) %}
+{% set _attr = nowo_ui_safe_attrs(attr|default({}), ['data-nowo-ui-tooltip']) %}
+<span class="nowo-ui-tooltip{{ (_attr.class ?? false) ? ' ' ~ _attr.class }}" data-nowo-ui-tooltip{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(_attr)) }}>
+    {%- block tooltip_trigger %}{{ (trigger ?? '')|raw }}{% endblock -%}
+    <span class="nowo-ui-tooltip__bubble" id="{{ tooltip_id }}" role="tooltip">{{ text|nowo_ui_trans }}</span>
+</span>

@@ -1,0 +1,26 @@
+{#
+  Code block with a copy button (2.61, theme partial `code_block`): a titled panel with the language and a "Copy"
+  button over a scrollable <pre><code>. js/nowo-ui-clipboard.js (opt-in runtime `clipboard`) copies the text of the code
+  element (data-nowo-ui-clipboard-target) and says "Copied" on the button for a moment; without the script the
+  button is not shown (`hidden`) and the code stays selectable.
+
+  Required:
+    - code: the text (escaped)
+  Optional:
+    - code_id (default nowo-ui-code-<random>): id of the <code> element (a partial-scoped name: an inherited `id` is
+      never used)
+    - language: short label (e.g. YAML, Twig); also the region name
+    - wrap (default false): wrap long lines instead of scrolling
+    - attr: extra root attributes (no on*)
+#}
+{% set _id = code_id ?? ('nowo-ui-code-' ~ random()) %}
+{% set _copy = 'code_block.copy'|trans({}, 'NowoUiKitBundle') %}
+{% set _done = 'code_block.copied'|trans({}, 'NowoUiKitBundle') %}
+{% set _attr = nowo_ui_safe_attrs(attr|default({}), []) %}
+<div class="nowo-ui-code-panel{{ (_attr.class ?? false) ? ' ' ~ _attr.class }}"{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(_attr)) }}>
+    <div class="nowo-ui-code-panel__header">
+        <span class="nowo-ui-code-panel__lang">{{ language ?? '' }}</span>
+        <button type="button" class="nowo-ui-btn nowo-ui-btn--outline nowo-ui-btn--sm" data-nowo-ui-clipboard data-nowo-ui-clipboard-target="{{ _id }}" data-nowo-ui-clipboard-label="{{ _copy }}" data-nowo-ui-clipboard-done-label="{{ _done }}" aria-label="{{ _copy }}" data-nowo-ui-clipboard-reveal hidden>{{ _copy }}</button>
+    </div>
+    <pre class="nowo-ui-code-block{{ (wrap ?? false) ? ' nowo-ui-code-block--wrap' }}" tabindex="0"{% if language ?? null %} aria-label="{{ language }}"{% endif %}><code id="{{ _id }}">{{ code }}</code></pre>
+</div>

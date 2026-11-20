@@ -1,0 +1,20 @@
+{#
+  Chip (2.61, theme partial `chip`): a compact label for a person, tag or active filter, optionally with an avatar
+  and a remove link (a GET URL without that value: works without JavaScript). Use `nowo-ui-chips` on a <ul> for a
+  list of chips.
+
+  Required:
+    - label (View\Label|string)
+  Optional:
+    - avatar: {name, src?, initials?} (decorative: the label names the person)
+    - remove_href: URL that removes it (through nowo_ui_safe_href(): an unsafe scheme renders no remove link); remove_label (default chip.remove with %label%)
+    - attr: extra root attributes (no on*)
+#}
+{% set _label = label|nowo_ui_trans %}
+{% set _remove = nowo_ui_safe_href(remove_href ?? null) %}
+{% set _attr = nowo_ui_safe_attrs(attr|default({}), []) %}
+<span class="nowo-ui-chip{{ (_attr.class ?? false) ? ' ' ~ _attr.class }}"{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(_attr)) }}>
+    {%- if avatar ?? null %}{{ include('@NowoUiKitBundle/partials/_avatar.html.twig', {name: avatar.name, src: avatar.src ?? null, initials: avatar.initials ?? null, size: 'xs', decorative: true}, false)|trim|raw }}{% endif -%}
+    <span class="nowo-ui-chip__label">{{ _label }}</span>
+    {%- if _remove %}<a class="nowo-ui-chip__remove" href="{{ _remove }}" aria-label="{{ (remove_label ?? null) ? remove_label|nowo_ui_trans : 'chip.remove'|trans({'%label%': _label}, 'NowoUiKitBundle') }}"><span aria-hidden="true">&times;</span></a>{% endif -%}
+</span>

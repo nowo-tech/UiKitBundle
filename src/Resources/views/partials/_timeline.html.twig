@@ -1,0 +1,38 @@
+{#
+  Timeline / activity log (2.61, theme partial `timeline`): an ordered list of events, newest first or oldest first as
+  given, each with a <time datetime>, a title, optional text, a tone marker and an optional slot for avatars,
+  badges or attachments. The tone is never the only meaning: the title says what happened.
+
+  Required:
+    - items: list of {title (View\Label|string), datetime (ISO 8601 for the datetime attribute), time (text shown; default
+      datetime), text (View\Label|string), tone (neutral (default) | primary | info | success | warning | danger),
+      meta (TRUSTED HTML printed raw, e.g. a rendered avatar or badge: never user input), meta_template + meta_context}
+  Optional:
+    - label (View\Label|string): accessible name of the list (aria-label)
+    - heading_level (3–6, default none: titles are <p>; give one when the events are sections of the page)
+    - attr: extra root attributes (no on*)
+#}
+{% set _tones = ['neutral', 'primary', 'info', 'success', 'warning', 'danger'] %}
+{% set _level = heading_level ?? null %}
+{% set _tag = _level in [3, 4, 5, 6] ? 'h' ~ _level : 'p' %}
+{% set _attr = nowo_ui_safe_attrs(attr|default({}), ['aria-label']) %}
+<ol class="nowo-ui-timeline{{ (_attr.class ?? false) ? ' ' ~ _attr.class }}"{% if label ?? null %} aria-label="{{ label|nowo_ui_trans }}"{% endif %}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(_attr)) }}>
+    {% for _e in items|default([]) %}
+        {% set _tone = (_e.tone ?? 'neutral') in _tones ? (_e.tone ?? 'neutral') : 'neutral' %}
+        <li class="nowo-ui-timeline__item nowo-ui-timeline__item--{{ _tone }}">
+            <span class="nowo-ui-timeline__marker" aria-hidden="true"></span>
+            <div class="nowo-ui-timeline__body">
+                <div class="nowo-ui-timeline__header">
+                    <{{ _tag }} class="nowo-ui-timeline__title">{{ _e.title|nowo_ui_trans }}</{{ _tag }}>
+                    {% if _e.datetime ?? null %}<time class="nowo-ui-timeline__time" datetime="{{ _e.datetime }}">{{ _e.time ?? _e.datetime }}</time>{% endif %}
+                </div>
+                {% if _e.text ?? null %}<p class="nowo-ui-timeline__text">{{ _e.text|nowo_ui_trans }}</p>{% endif %}
+                {% if _e.meta_template ?? null %}
+                    <div class="nowo-ui-timeline__meta">{{ include(_e.meta_template, _e.meta_context|default({})) }}</div>
+                {% elseif _e.meta ?? null %}
+                    <div class="nowo-ui-timeline__meta">{{ _e.meta|raw }}</div>
+                {% endif %}
+            </div>
+        </li>
+    {% endfor %}
+</ol>

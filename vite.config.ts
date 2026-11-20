@@ -40,6 +40,12 @@ type Entry =
   | 'layout-state'
   | 'context-menu'
   | 'focus-mode'
+  | 'tooltip'
+  | 'dropzone'
+  | 'bulk-select'
+  | 'table-view'
+  | 'filter-sheet'
+  | 'form-busy'
   | 'demo-peers'
   | 'demo-page-actions';
 
@@ -564,6 +570,102 @@ const configs: Record<Entry, { build: object }> = {
     },
   },
   // Demo only (UiKit 2.23 demos): Stimulus + the kit peers those pages use, committed to demo/symfony8/public/js.
+  // 2.61 admin components
+  'tooltip': {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-tooltip.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-tooltip.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  // 2.61 admin components
+  'dropzone': {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-dropzone.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-dropzone.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  // 2.61 admin components
+  'bulk-select': {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-bulk-select.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-bulk-select.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  // 2.61 admin components
+  'table-view': {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-table-view.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-table-view.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  // 2.61 admin components
+  'filter-sheet': {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-filter-sheet.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-filter-sheet.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  // 2.61 admin components
+  'form-busy': {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-form-busy.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-form-busy.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
   'demo-peers': {
     build: {
       outDir: 'demo/symfony8/public',

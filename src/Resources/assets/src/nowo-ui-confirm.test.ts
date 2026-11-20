@@ -283,4 +283,28 @@ describe('nowo-ui-confirm missing confirm-submit peer warning', () => {
     expect(warn).not.toHaveBeenCalled();
     expect(ask).not.toHaveBeenCalled();
   });
+
+  it('2.61: a destructive confirm opens on Cancel, a neutral one keeps the browser focus', () => {
+    document.body.innerHTML = `
+      <dialog id="danger" data-nowo-ui-confirm><header><button type="button" class="nowo-ui-confirm__close" data-nowo-confirm-close>×</button></header>
+        <div class="nowo-ui-confirm__footer"><button type="button" id="cancel" data-nowo-confirm-close>Cancel</button><form><button type="submit" class="nowo-ui-btn nowo-ui-btn--danger">Delete</button></form></div></dialog>
+      <dialog id="neutral" data-nowo-ui-confirm><div class="nowo-ui-confirm__footer"><button type="button" id="cancel2" data-nowo-confirm-close>Cancel</button><form><button type="submit" class="nowo-ui-btn nowo-ui-btn--primary">Archive</button></form></div></dialog>`;
+    const danger = document.getElementById('danger') as HTMLDialogElement;
+    const neutral = document.getElementById('neutral') as HTMLDialogElement;
+    danger.showModal = function showModal(this: HTMLDialogElement) { this.setAttribute('open', ''); };
+    neutral.showModal = function showModal(this: HTMLDialogElement) { this.setAttribute('open', ''); };
+    mod.openConfirm(danger);
+    expect(document.activeElement?.id).toBe('cancel');
+    expect(mod.safeCancel(neutral)).toBeNull();
+    mod.openConfirm(neutral);
+    expect(document.activeElement?.id).not.toBe('cancel2');
+  });
+
+  it('XJ-7: data-nowo-ui-confirm-cancel-first forces the Cancel-first focus on or off', () => {
+    document.body.innerHTML = `
+      <dialog id="themed" data-nowo-ui-confirm data-nowo-ui-confirm-cancel-first="true"><div class="nowo-ui-confirm__footer"><button type="button" id="c1" data-nowo-confirm-close>Cancel</button><button type="submit" class="host-danger">Delete</button></div></dialog>
+      <dialog id="off" data-nowo-ui-confirm data-nowo-ui-confirm-cancel-first="false"><div class="nowo-ui-confirm__footer"><button type="button" data-nowo-confirm-close>Cancel</button><button type="submit" class="nowo-ui-btn nowo-ui-btn--danger">Delete</button></div></dialog>`;
+    expect(mod.safeCancel(document.getElementById('themed') as HTMLDialogElement)?.id).toBe('c1');
+    expect(mod.safeCancel(document.getElementById('off') as HTMLDialogElement)).toBeNull();
+  });
 });

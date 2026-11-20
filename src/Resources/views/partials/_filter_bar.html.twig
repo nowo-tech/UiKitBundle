@@ -1,0 +1,80 @@
+{#
+  Filter bar (2.61, theme partial `filter_bar`): the filters of a list in one row of fields above the table. On wide
+  screens the fields stay inline; below 48rem, once js/nowo-ui-filter-sheet.js runs, they fold behind a "Filters (n)"
+  button that opens them in a bottom sheet (a modal <dialog>: focus moves in, Escape and the close button return it
+  to the button). The fields are the same nodes in both places, so their values and the GET submit never change.
+  Without the script the fields stay inline at every width (stacked on phones). Stateless: everything comes from the
+  options; the active count is read from the FormView.
+
+      {{ include(nowo_ui_partial('filter_bar'), {form: filter_form, reset_href: path('invoice_index')}) }}
+
+  Required:
+    - form: FormView of the filter form (GET; rendered with form_start / form_row / form_end, REQ-TWIG-005)
+  Optional:
+    - filter_id (default nowo-ui-filter-bar): root id; the sheet is "<id>-dialog", its heading "<id>-title" (a
+      partial-scoped name: an inherited `id` is never used)
+    - title (View\Label|string): sheet heading and button text (default filter_bar.title)
+    - heading_level (2–6, default 2)
+    - active_count: number shown on the phone button (default: the form fields with a value; hidden fields, _token,
+      page, per_page, sort and dir excluded)
+    - reset_href: URL of the unfiltered list (a "Reset" link next to Apply; through nowo_ui_safe_href(), an unsafe
+      scheme renders no link)
+    - submit_label / reset_label / close_label (View\Label|string)
+    - attr: extra root attributes (no on*; id and the data-nowo-ui-* contract are the partial's)
+  Blocks (embed): filter_bar_extra (content on the button row, e.g. the table view controls), filter_bar_actions
+  (more buttons after Apply / Reset).
+#}
+{% if false %}{% block filter_bar_extra %}{% endblock %}{% block filter_bar_actions %}{% endblock %}{% endif %}
+{% set _id = filter_id ?? 'nowo-ui-filter-bar' %}
+{% set _reset = nowo_ui_safe_href(reset_href ?? null) %}
+{% set _title = (title ?? null) ? title|nowo_ui_trans : 'filter_bar.title'|trans({}, 'NowoUiKitBundle') %}
+{% set _level = heading_level|default(2) in [2, 3, 4, 5, 6] ? heading_level|default(2) : 2 %}
+{% set _count = active_count ?? null %}
+{% if _count is null %}
+    {% set _count = 0 %}
+    {% for _child in form.children|default([]) %}
+        {% set _v = _child.vars %}
+        {% if _v.name not in ['_token', 'page', 'per_page', 'sort', 'dir'] and 'hidden' not in _v.block_prefixes %}
+            {% if _v.checked is defined %}
+                {% set _count = _count + (_v.checked ? 1 : 0) %}
+            {% elseif _v.value is iterable %}
+                {% set _count = _count + (_v.value|length > 0 ? 1 : 0) %}
+            {% elseif _v.value is not null and _v.value is not same as('') %}
+                {% set _count = _count + 1 %}
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+{% endif %}
+{% set _attr = nowo_ui_safe_attrs(attr|default({}), ['id', 'data-nowo-ui-filter-sheet', 'data-nowo-ui-region']) %}
+{% set _extra %}{{ block('filter_bar_extra') }}{% endset %}
+{% set _more_actions %}{{ block('filter_bar_actions') }}{% endset %}
+<div id="{{ _id }}" class="nowo-ui-filter-sheet{{ (_attr.class ?? false) ? ' ' ~ _attr.class }}" data-nowo-ui-filter-sheet data-nowo-ui-region="filters"{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(_attr)) }}>
+    <div class="nowo-ui-filter-sheet__bar">
+        <button type="button" class="nowo-ui-btn nowo-ui-btn--outline nowo-ui-filter-sheet__toggle" aria-haspopup="dialog" aria-controls="{{ _id }}-dialog" data-nowo-ui-filter-sheet-open>
+            {{- _title -}}
+            {%- if _count > 0 %} <span class="nowo-ui-filter-sheet__count"><span aria-hidden="true">{{ _count }}</span><span class="visually-hidden">{{ 'filter_bar.active'|trans({'%count%': _count}, 'NowoUiKitBundle') }}</span></span>{% endif -%}
+        </button>
+        {{ _extra }}
+    </div>
+    <div class="nowo-ui-filter-sheet__panel" data-nowo-ui-filter-sheet-panel>
+        {{ form_start(form, {attr: form.vars.attr|merge({class: ((form.vars.attr.class ?? '') ~ ' nowo-ui-filter-sheet__form')|trim})}) }}
+            <div class="nowo-ui-filter-sheet__fields">
+                {% for _child in form.children|default([]) %}
+                    {% if not _child.rendered and 'hidden' not in _child.vars.block_prefixes and 'button' not in _child.vars.block_prefixes %}{{ form_row(_child) }}{% endif %}
+                {% endfor %}
+                <div class="nowo-ui-filter-sheet__actions">
+                    <button type="submit" class="nowo-ui-btn nowo-ui-btn--outline">{{ (submit_label ?? null) ? submit_label|nowo_ui_trans : 'filter_bar.apply'|trans({}, 'NowoUiKitBundle') }}</button>
+                    {% if _reset %}<a class="nowo-ui-btn nowo-ui-btn--link" href="{{ _reset }}">{{ (reset_label ?? null) ? reset_label|nowo_ui_trans : 'filter_bar.reset'|trans({}, 'NowoUiKitBundle') }}</a>{% endif %}
+                    {{ _more_actions }}
+                </div>
+            </div>
+        {{ form_end(form) }}
+    </div>
+    <dialog id="{{ _id }}-dialog" class="nowo-ui-filter-sheet__dialog" aria-labelledby="{{ _id }}-title" data-nowo-ui-filter-sheet-dialog>
+        <div class="nowo-ui-filter-sheet__dialog-header">
+            <h{{ _level }} id="{{ _id }}-title" class="nowo-ui-filter-sheet__dialog-title">{{ _title }}</h{{ _level }}>
+            <button type="button" class="nowo-ui-btn nowo-ui-btn--outline nowo-ui-btn--sm" data-nowo-ui-filter-sheet-close>{{ (close_label ?? null) ? close_label|nowo_ui_trans : 'filter_bar.close'|trans({}, 'NowoUiKitBundle') }}</button>
+        </div>
+        <div class="nowo-ui-filter-sheet__dialog-body" data-nowo-ui-filter-sheet-slot></div>
+    </dialog>
+</div>
