@@ -1,7 +1,8 @@
 /*
  * nowo-ui-demo-platform.css — the "nowo · bundles" demo platform shell (2.60).
  *
- * Linked only by @NowoUiKit/demo_platform/layout.html.twig, after nowo-ui-base.css and nowo-ui.css. The shell itself
+ * Linked by @NowoUiKit/demo_platform/layout.html.twig, after nowo-ui-base.css and nowo-ui.css, and by the "Shell lab"
+ * full-page previews of the UiKit demo (last section: their host parts, unlayered). The shell itself
  * (header, aside, phone drawer, footer, content width) is UiKit's app shell, painted by nowo-ui.css. This file owns the
  * platform look: its light and dark tokens (no host theme reaches the shell), one type scale, one spacing scale, the
  * brand, the locale pills, the layout grammar (docs/USAGE.md "Demo platform shell") and touch targets.
@@ -1038,4 +1039,207 @@
   }
 }
 
+}
+
+/* --- Shell lab (UiKit demo) -----------------------------------------------------------------------------------------
+ * The full-page previews of the kit's own shells (app shell, sidebar layouts, focus mode, compact header, wiki layout,
+ * phone mode) show what a host gets with UiKit alone: the kit's palette, no platform tokens (no .nowo-ui-demo-platform
+ * on those pages, so nothing above applies). These rules are the host side of those pages — a logo, a fixed footer,
+ * a timer chip, a host select — and stay unlayered, like a host's own stylesheet, so the previews keep the cascade a
+ * real host has. */
+
+.nowo-ui-lab-logo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  color: var(--nowo-ui-primary);
+}
+
+/* Sidebar layouts ?footer=fixed: a host's fixed footer follows the aside through --nowo-ui-shell-inset-start. */
+[data-nowo-ui-lab-footer='fixed'] > .nowo-ui-footer {
+  position: fixed;
+  bottom: 0;
+  inset-inline: var(--nowo-ui-shell-inset-start, 0px) 0;
+  z-index: 30;
+  transition: inset-inline-start var(--nowo-ui-aside-duration) var(--nowo-ui-aside-ease);
+}
+
+[data-nowo-ui-lab-footer='fixed'] > .nowo-ui-main {
+  padding-bottom: 4.5rem;
+}
+
+/* Focus mode: the host's timer chip, search field, messages dock and page toolbar. */
+.nowo-ui-lab-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border: 1px solid var(--nowo-ui-border);
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.nowo-ui-lab-search {
+  max-width: 14rem;
+}
+
+.nowo-ui-lab-dock {
+  position: fixed;
+  inset-block-end: 1rem;
+  inset-inline-end: 1rem;
+  z-index: 35;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--nowo-ui-border);
+  border-radius: var(--nowo-ui-radius);
+  background: var(--nowo-ui-surface);
+}
+
+.nowo-ui-lab-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.nowo-ui-lab-toolbar__actions {
+  display: flex;
+  gap: 0.375rem;
+}
+
+/* Compact header: the brand's app-switcher square and two text glyphs (the page loads no icon font). */
+.nowo-ui-lab-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.nowo-ui-lab-brand__switcher {
+  display: inline-block;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 0.35rem;
+  background: var(--nowo-ui-primary);
+}
+
+.nowo-ui-lab-glyph::before {
+  display: inline-block;
+  min-width: 1em;
+  line-height: 1;
+  text-align: center;
+}
+
+.nowo-ui-lab-glyph--search::before { content: "⌕"; }
+.nowo-ui-lab-glyph--help::before { content: "?"; }
+
+.nowo-ui-lab-subtitle {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.nowo-ui-lab-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 0;
+}
+
+.nowo-ui-lab-switch [aria-current="page"] {
+  font-weight: 600;
+}
+
+.nowo-ui-lab-lines {
+  margin: 0;
+  padding-inline-start: 1.25rem;
+}
+
+@media (max-width: 30rem) {
+  .nowo-ui-lab-brand__name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+}
+
+/* Phone mode: a host header, host selects (one with a fixed height and native appearance, as some hosts ship), a
+   tiny host badge and a host drawer — fixed and transformed (the containing block of the edge tab on its left edge);
+   it starts under the 3.5rem header, so a 0.75rem tab top keeps the kit's slot rhythm. */
+.nowo-ui-lab-phone-header {
+  position: sticky;
+  top: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 3.5rem;
+  padding: 0 1rem;
+  border-bottom: 1px solid var(--nowo-ui-border);
+  background: var(--nowo-ui-surface);
+}
+
+.nowo-ui-lab-selects {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 28rem;
+}
+
+.nowo-ui-lab-selects label {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.nowo-ui-lab-legacy-select {
+  box-sizing: border-box;
+  height: 2.375rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.nowo-ui-lab-host-select {
+  width: 100%;
+}
+
+.nowo-ui-lab-tiny-badge {
+  --nowo-ui-badge-font-size: 0.625rem;
+}
+
+.nowo-ui-lab-nowrap {
+  white-space: nowrap;
+}
+
+.nowo-ui-lab-drawer {
+  position: fixed;
+  top: 3.5rem;
+  right: 0;
+  bottom: 0;
+  z-index: 75;
+  width: min(20rem, 85vw);
+  box-sizing: border-box;
+  padding: 1rem;
+  border-left: 1px solid var(--nowo-ui-border);
+  background: var(--nowo-ui-surface);
+  transform: translateX(100%);
+}
+
+.nowo-ui-lab-drawer[data-open] {
+  transform: translateX(0);
+}
+
+.nowo-ui-lab-drawer .nowo-ui-edge-tab__link {
+  --nowo-ui-edge-tab-top: 0.75rem;
+
+  position: absolute;
+  right: 100%;
+}
+
+.nowo-ui-lab-drawer:not([data-open]) .nowo-ui-lab-drawer__body {
+  visibility: hidden;
 }
