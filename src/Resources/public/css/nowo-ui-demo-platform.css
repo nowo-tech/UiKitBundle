@@ -16,8 +16,17 @@
 /* --- Top bar: platform brand / bundle name ---------------------------------------------------------------------- */
 
 .nowo-ui-demo-platform .nowo-ui-header__start {
+  flex: 1 1 auto;
   min-width: 0;
   gap: 0.625rem;
+}
+
+.nowo-ui-demo-platform .nowo-ui-header__end {
+  flex: none;
+}
+
+.nowo-ui-demo-platform .nowo-ui-header__end > * {
+  white-space: nowrap;
 }
 
 .nowo-ui-demo-platform__platform {
@@ -86,6 +95,12 @@
   background: var(--nowo-ui-surface);
 }
 
+.nowo-ui-demo-platform__locales--aside {
+  display: none;
+  align-self: flex-start;
+  margin: 0.75rem 0.5rem 0;
+}
+
 .nowo-ui-demo-platform__locale {
   display: inline-flex;
   align-items: center;
@@ -132,10 +147,25 @@
   margin-top: 0.5rem;
 }
 
+/* A bundle's own markup (a rendered menu in the aside_end block or in a page) may carry framework-only button classes
+   (`btn btn-link`); without a framework they would paint as browser-default buttons (white in dark mode). Keep them
+   transparent and in the text colour. This layer is below any unlayered bundle CSS, so a bundle's own styles win. */
+:is(.nowo-ui-demo-platform__aside, .nowo-ui-demo-platform__content) button:not([class*='nowo-ui-']) {
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+
 /* --- Content ---------------------------------------------------------------------------------------------------- */
 
 .nowo-ui-demo-platform__content:focus {
   outline: none;
+}
+
+/* Long unbreakable text (route names, code samples, URLs) wraps instead of widening the page past the viewport. */
+.nowo-ui-demo-platform__content {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 /* Cards and sections stacked in the content area get one vertical rhythm. */
@@ -146,10 +176,27 @@
 /* --- Phones ----------------------------------------------------------------------------------------------------- */
 
 @media (max-width: 600px) {
-  .nowo-ui-demo-platform__platform-name,
+  /* The platform name leaves the bar but stays the link's accessible name (the mark is aria-hidden). */
+  .nowo-ui-demo-platform__platform-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
   .nowo-ui-demo-platform__sep,
-  .nowo-ui-demo-platform__version {
+  .nowo-ui-demo-platform__version,
+  .nowo-ui-demo-platform__locales--bar {
     display: none;
+  }
+
+  .nowo-ui-demo-platform__locales--aside {
+    display: inline-flex;
   }
 
   .nowo-ui-demo-platform .nowo-ui-header {

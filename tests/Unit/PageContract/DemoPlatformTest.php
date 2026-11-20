@@ -75,9 +75,12 @@ TWIG;
         self::assertStringNotContainsString('demo-platform-sign-in', $html);
 
         // Locale pills: current route with _locale swapped, the current one marked.
-        self::assertStringContainsString('<nav class="nowo-ui-demo-platform__locales" aria-label="Language" data-testid="demo-platform-locales">', $html);
+        self::assertStringContainsString('<nav class="nowo-ui-demo-platform__locales nowo-ui-demo-platform__locales--bar" aria-label="Language" data-testid="demo-platform-locales">', $html);
         self::assertStringContainsString('href="/form_show?slug=contact&amp;_locale=en" hreflang="en" lang="en" aria-current="true"', $html);
         self::assertStringContainsString('href="/form_show?slug=contact&amp;_locale=es" hreflang="es" lang="es">', $html);
+        // The same pills at the end of the aside, for phones (CSS shows one set), without the test id.
+        self::assertStringContainsString('<nav class="nowo-ui-demo-platform__locales nowo-ui-demo-platform__locales--aside" aria-label="Language">', $html);
+        self::assertSame(1, substr_count($html, 'data-testid="demo-platform-locales"'));
 
         // Aside: unnamed first group, then one group per section, current item by route + params.
         self::assertStringContainsString('<aside id="nowo-ui-demo-aside" class="nowo-ui-app-shell__aside nowo-ui-aside" data-nowo-ui-aside aria-label="Demo navigation">', $html);

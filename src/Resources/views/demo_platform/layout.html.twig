@@ -142,13 +142,7 @@
     {% set _header_end %}
         {{ block('nowo_ui_demo_platform_header_end') }}
         {% if _locales|length > 1 %}
-            <nav class="nowo-ui-demo-platform__locales" aria-label="{{ 'demo_platform.language'|trans({}, 'NowoUiKitBundle') }}" data-testid="demo-platform-locales">
-                {% for _l in _locales %}
-                    <a class="nowo-ui-demo-platform__locale" href="{{ _l.href }}" hreflang="{{ _l.code }}" lang="{{ _l.code }}"{% if _l.current %} aria-current="true"{% endif %}>
-                        <span aria-hidden="true">{{ _l.code|upper }}</span><span class="visually-hidden">{{ _l.label }}</span>
-                    </a>
-                {% endfor %}
-            </nav>
+            {{ block('nowo_ui_demo_platform_locales') }}
         {% endif %}
         {{ include('@NowoUiKitBundle/partials/_theme_toggle.html.twig', {compact: true}, false) }}
         {% if _auth and not _user %}
@@ -171,6 +165,10 @@
                 </nav>
             {% endfor %}
             {{ block('nowo_ui_demo_platform_aside_end') }}
+            {% if _locales|length > 1 %}
+                {#- Phones: the top bar has no room for the pills; the drawer carries them (CSS shows one of the two). -#}
+                {% with {_locales_variant: 'aside'} %}{{ block('nowo_ui_demo_platform_locales') }}{% endwith %}
+            {% endif %}
         </div>
     {% endset %}
 
@@ -212,6 +210,18 @@
 {#- Extension points, printed with block() inside the body (a block cannot be defined inside a captured set). -#}
 {% block nowo_ui_demo_platform_header_end %}{% endblock %}
 {% block nowo_ui_demo_platform_aside_end %}{% endblock %}
+{#- Locale pills (internal; printed in the top bar, and in the aside for phones). -#}
+{% block nowo_ui_demo_platform_locales -%}
+    {% set _aside_variant = (_locales_variant ?? null) == 'aside' %}
+    <nav class="nowo-ui-demo-platform__locales{{ _aside_variant ? ' nowo-ui-demo-platform__locales--aside' : ' nowo-ui-demo-platform__locales--bar' }}" aria-label="{{ 'demo_platform.language'|trans({}, 'NowoUiKitBundle') }}"{% if not _aside_variant %} data-testid="demo-platform-locales"{% endif %}>
+        {% for _l in _locales %}
+            <a class="nowo-ui-demo-platform__locale" href="{{ _l.href }}" hreflang="{{ _l.code }}" lang="{{ _l.code }}"{% if _l.current %} aria-current="true"{% endif %}>
+                <span aria-hidden="true">{{ _l.code|upper }}</span><span class="visually-hidden">{{ _l.label }}</span>
+            </a>
+        {% endfor %}
+    </nav>
+{%- endblock %}
+
 {% block nowo_ui_demo_platform_footer %}
             {% if (_p.footer ?? true) is not same as(false) %}
                 {% set _footer_links = [] %}
