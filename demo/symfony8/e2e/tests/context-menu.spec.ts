@@ -37,9 +37,10 @@ test.describe('context menu', () => {
     const csp = await watchCsp(page);
     await page.goto(PAGE);
     const cell = row(page, '1042').locator('td').first();
-    const box = (await cell.boundingBox())!;
     await cell.click({ button: 'right', position: { x: 8, y: 8 } });
     await expect(menu(page)).toBeVisible();
+    // measured after the click: Playwright may scroll the cell into view first (the shell's sticky bar pads the scroll)
+    const box = (await cell.boundingBox())!;
     await expect(menu(page)).toHaveAttribute('role', 'menu');
     await expect(page.getByRole('menu', { name: 'Actions' })).toBeVisible();
     const items = menu(page).getByRole('menuitem');

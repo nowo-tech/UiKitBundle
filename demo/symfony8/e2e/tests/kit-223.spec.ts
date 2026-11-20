@@ -89,6 +89,9 @@ test.describe('2.23 pagination modes', () => {
     await expect
       .poll(
         async () => {
+          // out of view and back: the sentinel re-enters the viewport after each append, whatever the shell's height
+          await page.mouse.wheel(0, -4000);
+          await page.waitForTimeout(100);
           await page.mouse.wheel(0, 4000);
           return rows(page).count();
         },
