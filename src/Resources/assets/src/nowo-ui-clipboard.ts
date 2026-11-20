@@ -3,6 +3,9 @@
  * Text: data-nowo-ui-clipboard-text
  * URL body: data-nowo-ui-clipboard-url (fetch same-origin, then copy)
  * Flash label: data-nowo-ui-clipboard-label / data-nowo-ui-clipboard-done-label
+ * 2.61: element text: data-nowo-ui-clipboard-target (the id of an element whose textContent is copied, e.g. the
+ * <code> of the `code_block` partial); controls with data-nowo-ui-clipboard-reveal are rendered `hidden` (they can
+ * do nothing without this script) and shown once it runs.
  */
 
 import { setButtonLabel } from './nowo-ui-button-label';
@@ -114,7 +117,8 @@ function onDocumentClick(event: MouseEvent): void {
 
   const copyBtn = target.closest('[data-nowo-ui-clipboard-copy]');
   const flashTarget = copyBtn instanceof HTMLElement ? copyBtn : host;
-  const text = host.getAttribute('data-nowo-ui-clipboard-text') ?? '';
+  const targetId = host.getAttribute('data-nowo-ui-clipboard-target') ?? '';
+  const text = targetId !== '' ? (document.getElementById(targetId)?.textContent ?? '') : (host.getAttribute('data-nowo-ui-clipboard-text') ?? '');
   const url = host.getAttribute('data-nowo-ui-clipboard-url') ?? '';
 
   if (text.trim() !== '') {
@@ -128,7 +132,15 @@ function onDocumentClick(event: MouseEvent): void {
 
 let clipboardBound = false;
 
+/** Shows the copy controls that wait for this script (idempotent). */
+export function revealClipboardControls(root: ParentNode = document): void {
+  root.querySelectorAll<HTMLElement>('[data-nowo-ui-clipboard-reveal][hidden]').forEach((el) => {
+    el.hidden = false;
+  });
+}
+
 export function bindNowoUiClipboard(): void {
+  revealClipboardControls();
   if (clipboardBound) {
     return;
   }

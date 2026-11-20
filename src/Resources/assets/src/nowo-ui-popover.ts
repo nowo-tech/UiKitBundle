@@ -39,9 +39,20 @@ export function isMenu(panel: HTMLElement): boolean {
   return panel.closest(ROOT)?.matches(MENU_SEMANTICS) === true;
 }
 
-/** The menu items of a panel (one control per entry), with their roles set; disabled controls are skipped. */
+/**
+ * The menu items of a panel (one control per entry), with their roles set; disabled controls are skipped.
+ * 2.61: a panel without <li> entries (the `kebab` partial with `menu_semantics: 'menu'`) uses its own
+ * [role="menuitem"] controls, direct or inside a [data-nowo-ui-menu-row] group, in document order.
+ */
 export function menuItems(panel: HTMLElement): HTMLElement[] {
   const items: HTMLElement[] = [];
+  if (panel.querySelector(':scope > li') === null) {
+    panel.querySelectorAll<HTMLElement>(':scope > [role="menuitem"], :scope > [data-nowo-ui-menu-row] > [role="menuitem"]').forEach((control) => {
+      control.setAttribute('tabindex', '-1');
+      items.push(control);
+    });
+    return items;
+  }
   panel.querySelectorAll<HTMLElement>(':scope > li').forEach((li) => {
     li.setAttribute('role', 'none');
     const control = li.querySelector<HTMLElement>('a[href], button:not([disabled]), input[type="submit"]:not([disabled])');

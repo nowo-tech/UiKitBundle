@@ -21,6 +21,10 @@
  * `askConfirm()` of `stimulus-peers/ask_confirm.ts` for code without the peers: a `Promise<boolean>`, a kit `<dialog>`
  * built when asked, for actions whose target is only known at runtime.
  *
+ * Safe first focus (2.61): a dialog whose confirm button is destructive (`.nowo-ui-btn--danger` submit, the danger
+ * `View\Confirm`) and that has no type-to-confirm input opens on its Cancel button (the footer's
+ * [data-nowo-confirm-close]), not on the ✕ or the danger action. The markup is unchanged.
+ *
  * Focus return (2.52.2, WCAG 2.4.3): closing a confirm dialog (Escape, Cancel, Confirm, ×, backdrop) focuses the
  * element that opened it; when that opener cannot take focus (a hidden trigger a page-actions menu item forwarded its
  * click to), the menu item, else the menu's toggle — never a hidden element (nowo-ui-focus-return.ts).
@@ -90,8 +94,16 @@ export function openConfirm(id: string | HTMLDialogElement | null, opener: Eleme
     rememberOpener(dialog, opener);
     const input = resetExpected(dialog);
     dialog.showModal();
-    input?.focus();
+    (input ?? safeCancel(dialog))?.focus();
   }
+}
+
+/** The Cancel button of a destructive confirm (see the module comment), else null. */
+export function safeCancel(dialog: HTMLDialogElement): HTMLElement | null {
+  if (dialog.querySelector('button[type="submit"].nowo-ui-btn--danger, [data-nowo-confirm-submit].nowo-ui-btn--danger') === null) {
+    return null;
+  }
+  return dialog.querySelector<HTMLElement>('.nowo-ui-confirm__footer [data-nowo-confirm-close]');
 }
 
 export function closeConfirm(el: HTMLDialogElement | null): void {

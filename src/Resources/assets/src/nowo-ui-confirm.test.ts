@@ -283,4 +283,20 @@ describe('nowo-ui-confirm missing confirm-submit peer warning', () => {
     expect(warn).not.toHaveBeenCalled();
     expect(ask).not.toHaveBeenCalled();
   });
+
+  it('2.61: a destructive confirm opens on Cancel, a neutral one keeps the browser focus', () => {
+    document.body.innerHTML = `
+      <dialog id="danger" data-nowo-ui-confirm><header><button type="button" class="nowo-ui-confirm__close" data-nowo-confirm-close>×</button></header>
+        <div class="nowo-ui-confirm__footer"><button type="button" id="cancel" data-nowo-confirm-close>Cancel</button><form><button type="submit" class="nowo-ui-btn nowo-ui-btn--danger">Delete</button></form></div></dialog>
+      <dialog id="neutral" data-nowo-ui-confirm><div class="nowo-ui-confirm__footer"><button type="button" id="cancel2" data-nowo-confirm-close>Cancel</button><form><button type="submit" class="nowo-ui-btn nowo-ui-btn--primary">Archive</button></form></div></dialog>`;
+    const danger = document.getElementById('danger') as HTMLDialogElement;
+    const neutral = document.getElementById('neutral') as HTMLDialogElement;
+    danger.showModal = function showModal(this: HTMLDialogElement) { this.setAttribute('open', ''); };
+    neutral.showModal = function showModal(this: HTMLDialogElement) { this.setAttribute('open', ''); };
+    mod.openConfirm(danger);
+    expect(document.activeElement?.id).toBe('cancel');
+    expect(mod.safeCancel(neutral)).toBeNull();
+    mod.openConfirm(neutral);
+    expect(document.activeElement?.id).not.toBe('cancel2');
+  });
 });
