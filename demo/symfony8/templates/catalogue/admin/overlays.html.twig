@@ -16,10 +16,10 @@
         {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Tooltips', intro: 'On hover and on keyboard focus; Escape hides them; they describe, never replace, the control name.', kind: 'content', testid: 'catalogue-tooltips'} %}
             {% block section_body %}
                 <div class="nowo-ui-toolbar">
-                    {% embed nowo_ui_partial('tooltip') with {text: 'Sends the invoice again to the billing email.', id: 'catalogue-tip-resend'} %}
+                    {% embed nowo_ui_partial('tooltip') with {text: 'Sends the invoice again to the billing email.', tooltip_id: 'catalogue-tip-resend'} %}
                         {% block tooltip_trigger %}<button type="button" class="nowo-ui-btn nowo-ui-btn--outline" aria-describedby="{{ tooltip_id }}" data-testid="catalogue-tooltip-trigger">Resend</button>{% endblock %}
                     {% endembed %}
-                    {% embed nowo_ui_partial('tooltip') with {text: 'Archived invoices stay searchable but leave the default list.', id: 'catalogue-tip-archive'} %}
+                    {% embed nowo_ui_partial('tooltip') with {text: 'Archived invoices stay searchable but leave the default list.', tooltip_id: 'catalogue-tip-archive'} %}
                         {% block tooltip_trigger %}<button type="button" class="nowo-ui-btn nowo-ui-btn--outline" aria-label="Archive" aria-describedby="{{ tooltip_id }}">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: 'archive', label: ''}, false) }}</button>{% endblock %}
                     {% endembed %}
                 </div>

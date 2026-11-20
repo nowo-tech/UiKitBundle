@@ -10,6 +10,11 @@
  * - keeps the bar's actions aria-disabled (clicks ignored) while nothing is selected, and shows "Clear selection";
  * - with data-nowo-ui-bulk-total + -all-field: once every row of the page is selected, offers "Select all N rows",
  *   which sets that hidden field to 1; any change of a row box clears it again.
+ * - 2.61 (audit XJ-1): the "every page" field is cleared whenever the page is not fully selected (a bound form
+ *   re-rendered after a POST, or a browser restoring hidden inputs, could leave it at 1 while the bar shows fewer
+ *   rows); hosts render it empty with autocomplete="off".
+ * - Danger actions with data-nowo-ui-bulk-confirm="<question>" ask first (window.nowoUiAskConfirm when the confirm
+ *   runtime is loaded, else window.confirm) and submit only on yes.
  * Without the script the boxes and the action buttons are a plain form.
  */
 
@@ -62,6 +67,9 @@ export function update(bar: Element): void {
     }
   });
   const field = allField(bar);
+  if (field !== null && field.value === '1' && !full) {
+    field.value = '';
+  }
   const total = Number.parseInt(bar.getAttribute('data-nowo-ui-bulk-total') ?? '', 10);
   const everything = field !== null && field.value === '1' && full;
   const status = bar.querySelector('[data-nowo-ui-bulk-status]');
@@ -128,6 +136,14 @@ function onClick(event: MouseEvent): void {
     event.preventDefault();
     return;
   }
+  const ask = target.closest<HTMLButtonElement>('button[data-nowo-ui-bulk-action][data-nowo-ui-bulk-confirm]');
+  if (ask) {
+    // requestSubmit() below fires no click, so every click on a confirm action asks (audit XJ-10: no "confirmed"
+    // mark that a cancelled submit or the back / forward cache could keep).
+    event.preventDefault();
+    void confirmThenSubmit(ask, form);
+    return;
+  }
   if (target.closest('[data-nowo-ui-bulk-clear]')) {
     itemsOf(form).forEach((item) => {
       item.checked = false;
@@ -143,6 +159,17 @@ function onClick(event: MouseEvent): void {
     }
     update(bar);
   }
+}
+
+/** Asks the action's question, then submits the form with that button as the submitter (name / value kept). */
+export async function confirmThenSubmit(button: HTMLButtonElement, form: HTMLFormElement): Promise<boolean> {
+  const question = button.getAttribute('data-nowo-ui-bulk-confirm') ?? '';
+  const yes = typeof window.nowoUiAskConfirm === 'function' ? await window.nowoUiAskConfirm(question, { danger: true }) : window.confirm(question);
+  if (!yes) {
+    return false;
+  }
+  form.requestSubmit(button);
+  return true;
 }
 
 export function upgradeBulkBars(scope: ParentNode = document): void {

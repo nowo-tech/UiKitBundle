@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.61.0] - 2026-11-20](#2610---2026-11-20)
 - [[2.60.0] - 2026-11-20](#2600---2026-11-20)
 - [[2.59.0] - 2026-11-19](#2590---2026-11-19)
 - [[2.58.1] - 2026-11-18](#2581---2026-11-18)
@@ -144,6 +145,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- **Demo platform helpers** in `css/nowo-ui-demo-platform.css`: `.nowo-ui-measure-sm|md|lg|xl`, `.nowo-ui-inline`,
+  `.nowo-ui-list-plain`, `.nowo-ui-stack-sm`, `.nowo-ui-image-round`, `.nowo-ui-mono`, `.nowo-ui-card--row`,
+  `.nowo-ui-spacer-tall`, a board (`.nowo-ui-board`, `.nowo-ui-board-card`, sortable handle and steps); under the
+  shell, dialogs are bottom sheets on phones, the page scroll leaves room for the sticky bar and `color-scheme`
+  follows the theme. `.nowo-ui-dialog-fill` (kit CSS) lets dialogs fill the viewport height.
+
+### Changed
+
+- **Demo**: no CSS framework and no demo stylesheet. The component showcases run on the demo platform shell under
+  "Component showcases" (with the 2.23 scaffold pages); the full-page previews of the kit's own shells (app shell,
+  sidebar layouts, focus mode, compact header, wiki layout, phone mode, kitchen sink) are the "Shell lab", on UiKit's
+  default theme; `/page-contract` stays the one host-theme preview (Acme). Their few host-side rules moved into
+  `css/nowo-ui-demo-platform.css` (helpers, a board, the Shell lab section). Bootstrap is now only an e2e fixture
+  (`card-intro-contrast.spec.ts`). `make demo-style-lint` checks the demo.
+
+## [2.61.0] - 2026-11-20
+
+### Added
+
 - **Admin components (2.61).** New theme partials for admin screens, each with tokens-only CSS (light and dark), no
   inline style or handler, a no-JavaScript fallback, and strings in the 7 locales: `filter_bar` (filter row that
   becomes a bottom sheet on phones, runtime `filter-sheet`), `bulk_bar` + `bulk_toggle` (bulk selection with a polite
@@ -156,7 +176,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `.nowo-ui-progress-field--<tone>`, `.nowo-ui-table-footer`, `.nowo-ui-stack`. Runtime `form-busy`: busy submit
   button (`data-nowo-ui-busy-on-submit`) and error summary focus. `View\Stat` gains `delta`, `trend`, `deltaTone`
   and `icon`; `View\EmptyState` gains `icon` (illustrated empty state). Client toasts (`toasts` partial,
-  `client: true`, `window.nowoUiToast()`, `data-nowo-ui-toast-show`). `kebab` takes `menu_semantics: 'menu'` (APG
+  `toast_client: true`, `window.nowoUiToast()`, `data-nowo-ui-toast-show`). `kebab` takes `menu_semantics: 'menu'` (APG
   menu button). Clipboard copies an element's text (`data-nowo-ui-clipboard-target`). Catalogue: five new pages under
   "Admin components" (`/catalogue/admin/{group}`). See docs/USAGE.md "Admin components (2.61)".
 
@@ -167,12 +187,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Table scroller**: `.nowo-ui-table-wrap` is `position: relative`, so visually hidden texts inside it no longer
   widen the page on phones.
 - **Demo**: the UiKit demo uses `icon_set: svg_inline` (the demo platform shell loads no icon font).
-- **Demo**: no CSS framework and no demo stylesheet. The component showcases run on the demo platform shell under
-  "Component showcases" (with the 2.23 scaffold pages); the full-page previews of the kit's own shells (app shell,
-  sidebar layouts, focus mode, compact header, wiki layout, phone mode, kitchen sink) are the "Shell lab", on UiKit's
-  default theme; `/page-contract` stays the one host-theme preview (Acme). Their few host-side rules moved into
-  `css/nowo-ui-demo-platform.css` (helpers, a board, the Shell lab section). Bootstrap is now only an e2e fixture
-  (`card-intro-contrast.spec.ts`). `make demo-style-lint` checks the demo.
+- **Admin components hardening (audit XJ, before 2.61.0).** The bulk "every page" field is cleared whenever the page
+  is not fully selected (render it empty with `autocomplete="off"`); danger bulk actions can ask first (`confirm`).
+  Partial-scoped options: `toast_client` (only `true`), `filter_id`, `code_id`, `tooltip_id` (an inherited `client` or
+  `id` is ignored). `chip` `remove_href`, `steps` `href` and `filter_bar` `reset_href` go through
+  `nowo_ui_safe_href()`. Code copies are not trimmed; a refused `execCommand` copy reports a failure. Escape on a
+  tooltip (also a native modal `<dialog>`: the key press is prevented) or the columns menu does not close a
+  surrounding dialog. Every click on a bulk action with `confirm` asks (XJ-10). The busy button clears after
+  `data-nowo-ui-busy-timeout`. `data-nowo-ui-confirm-cancel-first` forces the Cancel-first focus on or off.
 
 ## [2.60.0] - 2026-11-20
 
@@ -3312,7 +3334,7 @@ Supersedes 1.17.3: same runtime code and CSS, release gate hardened so the tagge
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.60.0...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.61.0...HEAD
 [1.10.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.4...v1.10.0
 [1.8.4]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.3...v1.8.4
 [1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0

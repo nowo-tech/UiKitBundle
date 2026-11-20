@@ -26,8 +26,12 @@ function fallbackCopy(value: string): void {
   area.style.left = '-9999px';
   document.body.appendChild(area);
   area.select();
-  document.execCommand('copy');
+  // 2.61 (audit XJ-8): a refused copy (execCommand returns false) is a failure, not a silent success.
+  const copied = document.execCommand('copy');
   area.remove();
+  if (!copied) {
+    throw new Error('copy refused');
+  }
 }
 
 function flashDone(target: HTMLElement, label: string, doneLabel: string): void {
@@ -45,9 +49,10 @@ function flashDone(target: HTMLElement, label: string, doneLabel: string): void 
   target.setAttribute('data-nowo-ui-clipboard-flash-timer', String(id));
 }
 
-export async function copyText(value: string, flashTarget: HTMLElement | null = null): Promise<boolean> {
-  const trimmed = value.trim();
-  if (trimmed === '') {
+export async function copyText(value: string, flashTarget: HTMLElement | null = null, trim = true): Promise<boolean> {
+  // 2.61 (audit XJ-4): an element's text (data-nowo-ui-clipboard-target, e.g. code) is copied as it is, not trimmed.
+  const trimmed = trim ? value.trim() : value;
+  if (trimmed.trim() === '') {
     return false;
   }
   try {
@@ -122,7 +127,7 @@ function onDocumentClick(event: MouseEvent): void {
   const url = host.getAttribute('data-nowo-ui-clipboard-url') ?? '';
 
   if (text.trim() !== '') {
-    void copyText(text, flashTarget);
+    void copyText(text, flashTarget, targetId === '');
     return;
   }
   if (url.trim() !== '') {

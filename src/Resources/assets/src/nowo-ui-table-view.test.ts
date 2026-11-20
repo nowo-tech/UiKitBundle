@@ -104,4 +104,14 @@ describe('nowo-ui-table-view', () => {
     document.dispatchEvent(new MouseEvent('click'));
     expect((document.querySelectorAll('[data-nowo-ui-table-view]')[1] as HTMLElement).hidden).toBe(true);
   });
+
+  it('XJ-8: Escape in the columns menu does not reach a surrounding dialog', () => {
+    const menu = document.querySelector('details') as HTMLDetailsElement;
+    menu.open = true;
+    const outer = vi.fn();
+    document.body.addEventListener('keydown', outer);
+    document.getElementById('b-customer')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(menu.open).toBe(false);
+    expect(outer).not.toHaveBeenCalled();
+  });
 });

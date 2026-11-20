@@ -23,7 +23,9 @@
  *
  * Safe first focus (2.61): a dialog whose confirm button is destructive (`.nowo-ui-btn--danger` submit, the danger
  * `View\Confirm`) and that has no type-to-confirm input opens on its Cancel button (the footer's
- * [data-nowo-confirm-close]), not on the ✕ or the danger action. The markup is unchanged.
+ * [data-nowo-confirm-close]), not on the ✕ or the danger action. The markup is unchanged. A host whose theme
+ * replaces the danger button classes sets data-nowo-ui-confirm-cancel-first="true" on the dialog (the `confirm` slot
+ * attributes); "false" turns it off (audit XJ-7).
  *
  * Focus return (2.52.2, WCAG 2.4.3): closing a confirm dialog (Escape, Cancel, Confirm, ×, backdrop) focuses the
  * element that opened it; when that opener cannot take focus (a hidden trigger a page-actions menu item forwarded its
@@ -100,7 +102,9 @@ export function openConfirm(id: string | HTMLDialogElement | null, opener: Eleme
 
 /** The Cancel button of a destructive confirm (see the module comment), else null. */
 export function safeCancel(dialog: HTMLDialogElement): HTMLElement | null {
-  if (dialog.querySelector('button[type="submit"].nowo-ui-btn--danger, [data-nowo-confirm-submit].nowo-ui-btn--danger') === null) {
+  const flag = dialog.getAttribute('data-nowo-ui-confirm-cancel-first');
+  const danger = flag !== null ? flag !== 'false' : dialog.querySelector('button[type="submit"].nowo-ui-btn--danger, [data-nowo-confirm-submit].nowo-ui-btn--danger') !== null;
+  if (!danger) {
     return null;
   }
   return dialog.querySelector<HTMLElement>('.nowo-ui-confirm__footer [data-nowo-confirm-close]');

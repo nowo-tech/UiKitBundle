@@ -9,7 +9,8 @@
   Required:
     - form_id: id of the form element holding the row checkboxes (the scope of the script)
   Optional:
-    - actions: list of {label, name (default `bulk_action`), value, variant (outline (default) | danger), attr}
+    - actions: list of {label, name (default `bulk_action`), value, variant (outline (default) | danger), confirm
+      (View\Label|string: asked before the submit, data-nowo-ui-bulk-confirm), attr}
     - total: rows across every page; with all_field, once every row of the page is selected the bar offers
       "Select all <total> rows", which sets the hidden field all_field (id) to 1 (the host then acts on the filter,
       not on the ids)
@@ -36,8 +37,8 @@
             {{ _block }}
         {% else %}
             {% for _a in actions|default([]) %}
-                {% set _a_attr = nowo_ui_safe_attrs(_a.attr|default({}), ['type', 'form', 'name', 'value', 'data-nowo-ui-bulk-action']) %}
-                <button type="submit" form="{{ form_id }}" name="{{ _a.name|default('bulk_action') }}" value="{{ _a.value }}" class="nowo-ui-btn nowo-ui-btn--{{ (_a.variant ?? 'outline') == 'danger' ? 'danger' : 'outline' }} nowo-ui-btn--sm{{ (_a_attr.class ?? false) ? ' ' ~ _a_attr.class }}" data-nowo-ui-bulk-action{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(_a_attr)) }}>{{ _a.label|nowo_ui_trans }}</button>
+                {% set _a_attr = nowo_ui_safe_attrs(_a.attr|default({}), ['type', 'form', 'name', 'value', 'data-nowo-ui-bulk-action', 'data-nowo-ui-bulk-confirm']) %}
+                <button type="submit" form="{{ form_id }}" name="{{ _a.name|default('bulk_action') }}" value="{{ _a.value }}" class="nowo-ui-btn nowo-ui-btn--{{ (_a.variant ?? 'outline') == 'danger' ? 'danger' : 'outline' }} nowo-ui-btn--sm{{ (_a_attr.class ?? false) ? ' ' ~ _a_attr.class }}" data-nowo-ui-bulk-action{% if _a.confirm ?? null %} data-nowo-ui-bulk-confirm="{{ _a.confirm|nowo_ui_trans }}"{% endif %}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(_a_attr)) }}>{{ _a.label|nowo_ui_trans }}</button>
             {% endfor %}
         {% endif %}
     </div>

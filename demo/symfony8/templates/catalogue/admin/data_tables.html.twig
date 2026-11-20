@@ -15,18 +15,18 @@
     ] %}
     {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Invoices', intro: 'Filter, select rows and act on them; sort by a column header; change the density or hide columns.', kind: 'content', testid: 'catalogue-data-table'} %}
         {% block section_actions %}
-            {% embed nowo_ui_partial('tooltip') with {text: 'Downloads the filtered invoices as a CSV file.', id: 'catalogue-export-tip'} %}
+            {% embed nowo_ui_partial('tooltip') with {text: 'Downloads the filtered invoices as a CSV file.', tooltip_id: 'catalogue-export-tip'} %}
                 {% block tooltip_trigger %}<a class="nowo-ui-btn nowo-ui-btn--outline nowo-ui-btn--sm" href="#" aria-describedby="{{ tooltip_id }}">Export</a>{% endblock %}
             {% endembed %}
         {% endblock %}
         {% block section_body %}
             <div class="nowo-ui-stack">
-                {% embed nowo_ui_partial('filter_bar') with {form: filter_form, id: 'catalogue-filters', reset_href: path('catalogue_admin', {group: 'data-tables'}), columns: _columns} only %}
+                {% embed nowo_ui_partial('filter_bar') with {form: filter_form, filter_id: 'catalogue-filters', reset_href: path('catalogue_admin', {group: 'data-tables'}), columns: _columns} only %}
                     {% block filter_bar_extra %}
                         {{ include(nowo_ui_partial('table_view'), {table: 'catalogue-invoices', persist: 'catalogue-invoices', columns: columns|map(c => {key: c.key, label: c.label, locked: c.locked ?? false})}, false) }}
                     {% endblock %}
                 {% endembed %}
-                {{ include(nowo_ui_partial('bulk_bar'), {form_id: 'catalogue-bulk', total: pagination.total, all_field: bulk_form.all.vars.id, actions: [{label: 'Archive', value: 'archive'}, {label: 'Delete', value: 'delete', variant: 'danger'}]}, false) }}
+                {{ include(nowo_ui_partial('bulk_bar'), {form_id: 'catalogue-bulk', total: pagination.total, all_field: bulk_form.all.vars.id, actions: [{label: 'Archive', value: 'archive'}, {label: 'Delete', value: 'delete', variant: 'danger', confirm: 'Delete the selected invoices? This cannot be undone.'}]}, false) }}
                 {{ form_start(bulk_form) }}
                     {{ form_widget(bulk_form.all) }}
                     <div class="nowo-ui-table-wrap" role="region" tabindex="0" aria-label="Invoices">

@@ -43,4 +43,19 @@ describe('nowo-ui-clipboard target + reveal', () => {
     await Promise.resolve();
     expect(writeText).not.toHaveBeenCalled();
   });
+
+  it('XJ-4: keeps the leading / trailing whitespace of the target text', async () => {
+    document.getElementById('code-1')!.textContent = '  indented:\n    yes\n';
+    document.getElementById('copy')!.click();
+    await Promise.resolve();
+    expect(writeText).toHaveBeenCalledWith('  indented:\n    yes\n');
+  });
+
+  it('XJ-8: a refused execCommand copy counts as a failure', async () => {
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined });
+    document.execCommand = () => false;
+    expect(await mod.copyText('x', null)).toBe(false);
+    document.execCommand = () => true;
+    expect(await mod.copyText('x', null)).toBe(true);
+  });
 });

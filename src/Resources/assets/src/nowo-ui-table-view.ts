@@ -161,6 +161,8 @@ function onKeydown(event: KeyboardEvent): void {
   }
   const menu = event.target.closest<HTMLDetailsElement>('[data-nowo-ui-table-view-columns][open]');
   if (menu) {
+    // 2.61 (audit XJ-8): Escape closes the columns menu only, not a surrounding dialog or drawer.
+    event.stopPropagation();
     menu.open = false;
     menu.querySelector<HTMLElement>('summary')?.focus();
   }
@@ -175,7 +177,7 @@ export function bindNowoUiTableView(): void {
   }
   bound = true;
   document.addEventListener('click', onClick);
-  document.addEventListener('keydown', onKeydown);
+  document.addEventListener('keydown', onKeydown, true);
 }
 
 bindNowoUiTableView();

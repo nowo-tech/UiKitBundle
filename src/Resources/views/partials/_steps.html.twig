@@ -2,7 +2,7 @@
   Steps (2.61, theme partial `steps`): the progress of a multi-step task (a wizard, an onboarding, an order) as a
   numbered list: done steps show a check, the current one carries aria-current="step", and each state is also in a
   visually hidden word (never colour alone). Horizontal from 40rem, vertical on phones. A done step with `href` is a
-  link back to it. The wizard scaffold keeps its own indicator; this partial is for any other page.
+  link back to it (href through nowo_ui_safe_href(): an unsafe scheme renders the step without a link). The wizard scaffold keeps its own indicator; this partial is for any other page.
 
   Required:
     - items: list of {label (View\Label|string), status (done | current | upcoming; default upcoming), hint
@@ -14,6 +14,7 @@
 {% set _attr = nowo_ui_safe_attrs(attr|default({}), ['aria-label']) %}
 <ol class="nowo-ui-steps{{ (_attr.class ?? false) ? ' ' ~ _attr.class }}" aria-label="{{ (label ?? null) ? label|nowo_ui_trans : 'wizard.steps'|trans({}, 'NowoUiKitBundle') }}"{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(_attr)) }}>
     {% for _s in items|default([]) %}
+        {% set _href = nowo_ui_safe_href(_s.href ?? null) %}
         {% set _status = (_s.status ?? 'upcoming') in ['done', 'current', 'upcoming'] ? (_s.status ?? 'upcoming') : 'upcoming' %}
         {% set _inner %}
             <span class="nowo-ui-steps__marker" aria-hidden="true"></span>
@@ -23,7 +24,7 @@
             </span>
         {% endset %}
         <li class="nowo-ui-steps__item nowo-ui-steps__item--{{ _status }}"{% if _status == 'current' %} aria-current="step"{% endif %}>
-            {% if _status == 'done' and (_s.href ?? null) %}<a class="nowo-ui-steps__link" href="{{ _s.href }}">{{ _inner }}</a>{% else %}{{ _inner }}{% endif %}
+            {% if _status == 'done' and _href %}<a class="nowo-ui-steps__link" href="{{ _href }}">{{ _inner }}</a>{% else %}{{ _inner }}{% endif %}
         </li>
     {% endfor %}
 </ol>

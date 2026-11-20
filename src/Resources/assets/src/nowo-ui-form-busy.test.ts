@@ -48,7 +48,7 @@ describe('nowo-ui-form-busy', () => {
   it('marks the submitter busy and ignores a second submit', () => {
     const form = document.getElementById('f')!;
     expect(submit(form, document.getElementById('save')).defaultPrevented).toBe(false);
-    vi.runAllTimers();
+    vi.advanceTimersByTime(1);
     expect(document.getElementById('save')!.getAttribute('aria-busy')).toBe('true');
     expect(document.getElementById('save')!.getAttribute('aria-disabled')).toBe('true');
     expect(submit(form).defaultPrevented).toBe(true);
@@ -60,22 +60,36 @@ describe('nowo-ui-form-busy', () => {
   it('falls back to the first submit button, and leaves cancelled or plain forms alone', () => {
     const form = document.getElementById('f')!;
     submit(form);
-    vi.runAllTimers();
+    vi.advanceTimersByTime(1);
     expect(document.getElementById('save')!.getAttribute('aria-busy')).toBe('true');
     mod.clearBusy();
     form.addEventListener('submit', (e) => e.preventDefault(), { once: true });
     submit(form);
-    vi.runAllTimers();
+    vi.advanceTimersByTime(1);
     expect(document.getElementById('save')!.hasAttribute('aria-busy')).toBe(false);
     submit(document.getElementById('plain')!);
-    vi.runAllTimers();
+    vi.advanceTimersByTime(1);
     expect(document.getElementById('p')!.hasAttribute('aria-busy')).toBe(false);
     document.dispatchEvent(new Event('submit'));
     const bare = document.createElement('form');
     bare.setAttribute('data-nowo-ui-busy-on-submit', '');
     document.body.appendChild(bare);
     submit(bare);
-    vi.runAllTimers();
+    vi.advanceTimersByTime(1);
     expect(bare.hasAttribute('data-nowo-ui-busy')).toBe(true);
+  });
+
+  it('XJ-6: a form still busy after its timeout is cleared (default 15 s, 0 = never)', () => {
+    const form = document.getElementById('f')!;
+    submit(form, document.getElementById('save'));
+    vi.advanceTimersByTime(1);
+    expect(document.getElementById('save')!.getAttribute('aria-busy')).toBe('true');
+    vi.advanceTimersByTime(15000);
+    expect(document.getElementById('save')!.hasAttribute('aria-busy')).toBe(false);
+    expect(form.hasAttribute('data-nowo-ui-busy')).toBe(false);
+    form.setAttribute('data-nowo-ui-busy-timeout', '0');
+    submit(form, document.getElementById('save'));
+    vi.advanceTimersByTime(60000);
+    expect(document.getElementById('save')!.getAttribute('aria-busy')).toBe('true');
   });
 });

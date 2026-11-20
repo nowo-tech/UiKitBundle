@@ -299,4 +299,12 @@ describe('nowo-ui-confirm missing confirm-submit peer warning', () => {
     mod.openConfirm(neutral);
     expect(document.activeElement?.id).not.toBe('cancel2');
   });
+
+  it('XJ-7: data-nowo-ui-confirm-cancel-first forces the Cancel-first focus on or off', () => {
+    document.body.innerHTML = `
+      <dialog id="themed" data-nowo-ui-confirm data-nowo-ui-confirm-cancel-first="true"><div class="nowo-ui-confirm__footer"><button type="button" id="c1" data-nowo-confirm-close>Cancel</button><button type="submit" class="host-danger">Delete</button></div></dialog>
+      <dialog id="off" data-nowo-ui-confirm data-nowo-ui-confirm-cancel-first="false"><div class="nowo-ui-confirm__footer"><button type="button" data-nowo-confirm-close>Cancel</button><button type="submit" class="nowo-ui-btn nowo-ui-btn--danger">Delete</button></div></dialog>`;
+    expect(mod.safeCancel(document.getElementById('themed') as HTMLDialogElement)?.id).toBe('c1');
+    expect(mod.safeCancel(document.getElementById('off') as HTMLDialogElement)).toBeNull();
+  });
 });
