@@ -10211,4 +10211,11 @@ form:has(> .nowo-ui-filters-collapse.is-collapsed[data-nowo-ui-motion-ready]) > 
     transition: none;
   }
 }
+
+/* 2.60: a page with an element of this class gives every dialog its size's height (what theme.dialog.height: size does),
+   also the dialogs a script moves to <body>. */
+:root:has(.nowo-ui-dialog-fill),
+.nowo-ui-dialog-fill {
+  --nowo-ui-dialog-fill: 1;
+}
 }

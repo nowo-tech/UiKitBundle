@@ -51,6 +51,7 @@
   --nowo-ui-text-md: 0.9375rem;
   --nowo-ui-text-lg: 1.125rem;
   --nowo-ui-text-xl: 1.5rem;
+  color-scheme: light;
 }
 
 /* Dark: the page is the deepest surface and cards sit above it (elevation reads lighter, never darker). */
@@ -68,6 +69,7 @@
   --nowo-ui-card-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
   --nowo-ui-shadow-drawer: 12px 0 32px rgb(0 0 0 / 0.5);
   --nowo-ui-scroll-shadow: rgb(0 0 0 / 0.6);
+  color-scheme: dark;
 }
 
 /* Before the theme script runs (or without JS), the OS preference applies; an explicit light choice wins. */
@@ -85,8 +87,14 @@
     --nowo-ui-focus-ring-color: #93c5fd;
     --nowo-ui-card-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
     --nowo-ui-shadow-drawer: 12px 0 32px rgb(0 0 0 / 0.5);
-  --nowo-ui-scroll-shadow: rgb(0 0 0 / 0.6);
+    --nowo-ui-scroll-shadow: rgb(0 0 0 / 0.6);
+    color-scheme: dark;
   }
+}
+
+/* Anchors and scrollIntoView() stop below the sticky top bar. */
+:root:has(.nowo-ui-demo-platform) {
+  scroll-padding-top: calc(var(--nowo-ui-header-height, 3.25rem) + 0.5rem);
 }
 
 /* --- Type ------------------------------------------------------------------------------------------------------- */
@@ -695,7 +703,7 @@
 }
 
 @media (max-width: 600px) {
-  body:has(.nowo-ui-demo-platform) dialog.nowo-ui-dialog[open] {
+  body:has(.nowo-ui-demo-platform) dialog[open]:not([data-nowo-ui-no-sheet]) {
     width: 100%;
     max-width: none;
     margin: auto 0 0;
@@ -750,11 +758,167 @@
 .nowo-ui-demo-swatch[data-nowo-ui-token='danger-bg'] > .nowo-ui-demo-swatch__chip { background: var(--nowo-ui-danger-bg); }
 .nowo-ui-demo-swatch[data-nowo-ui-token='info-bg'] > .nowo-ui-demo-swatch__chip { background: var(--nowo-ui-info-bg); }
 
+/* --- Layout helpers for demo content (UiKit's own showcases and bundle demos use these, never their own CSS) ----- */
+
+/* Measures: a readable width for a form, a preview or a block. */
+.nowo-ui-measure-sm { max-width: 24rem; }
+.nowo-ui-measure-md { max-width: 28rem; }
+.nowo-ui-measure-lg { max-width: 32rem; }
+.nowo-ui-measure-xl { max-width: 56rem; }
+
+/* A row of inline items (avatars, chips, badges) with the platform gap. */
+.nowo-ui-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--nowo-ui-space-2);
+}
+
+/* A list without bullets (nested lists indent). */
+.nowo-ui-list-plain {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nowo-ui-list-plain .nowo-ui-list-plain {
+  padding-inline-start: var(--nowo-ui-space-3);
+}
+
+.nowo-ui-stack-sm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nowo-ui-space-2);
+}
+
+/* A round image preview (avatar, crop result). */
+.nowo-ui-image-round {
+  width: 6rem;
+  height: 6rem;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.nowo-ui-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--nowo-ui-text-sm);
+}
+
+/* A card whose content and actions sit on one row (a context-menu target, a list card). */
+.nowo-ui-card--row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--nowo-ui-space-3);
+  padding: var(--nowo-ui-space-3);
+}
+
+/* Focusable rows and cards (context menus, keyboard selection) show the platform ring. */
+.nowo-ui-demo-platform__content :is(tr[tabindex], .nowo-ui-card[tabindex]):focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, var(--nowo-ui-primary));
+  outline-offset: -2px;
+}
+
+/* Room below the content, so a touch swipe can scroll the page (touch tests, long-press demos). */
+.nowo-ui-spacer-tall {
+  min-height: 120vh;
+}
+
+/* --- Board (sortable columns of cards) ------------------------------------------------------------------------- */
+
+.nowo-ui-board {
+  display: flex;
+  align-items: stretch;
+  gap: var(--nowo-ui-space-3);
+  overflow-x: auto;
+  padding: var(--nowo-ui-space-2);
+}
+
+.nowo-ui-board__column {
+  display: flex;
+  flex: 0 0 16rem;
+  flex-direction: column;
+  max-height: 22rem;
+  padding: var(--nowo-ui-space-2);
+  border: 1px solid var(--nowo-ui-border);
+  border-radius: var(--nowo-ui-card-radius, var(--nowo-ui-radius));
+  background: var(--nowo-ui-surface-muted);
+}
+
+.nowo-ui-board__title {
+  margin: 0 0 var(--nowo-ui-space-2);
+  font-size: var(--nowo-ui-text-md);
+  font-weight: 600;
+}
+
+.nowo-ui-board__cards {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--nowo-ui-space-2);
+  min-height: 3rem;
+  margin: 0;
+  padding: var(--nowo-ui-space-1);
+  overflow-y: auto;
+  list-style: none;
+}
+
+.nowo-ui-board-card {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--nowo-ui-space-1) var(--nowo-ui-space-2);
+  padding: var(--nowo-ui-space-2) 0.75rem;
+  border: 1px solid var(--nowo-ui-border);
+  border-inline-start: 4px solid var(--nowo-ui-board-card-accent, var(--nowo-ui-border));
+  border-radius: var(--nowo-ui-radius);
+  background: var(--nowo-ui-surface);
+}
+
+.nowo-ui-board-card__moves {
+  display: flex;
+  gap: var(--nowo-ui-space-1);
+  margin-inline-start: auto;
+}
+
+:is(.nowo-ui-board-card__move, .nowo-ui-sortable-handle) {
+  min-width: 1.75rem;
+  min-height: 1.75rem;
+  padding: 0 var(--nowo-ui-space-2);
+  border: 1px solid var(--nowo-ui-border-strong);
+  border-radius: var(--nowo-ui-radius);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+:is(.nowo-ui-board-card__move, .nowo-ui-sortable-handle):focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, var(--nowo-ui-primary));
+  outline-offset: 1px;
+}
+
+.nowo-ui-sortable-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--nowo-ui-space-2);
+  margin: 0;
+  padding: var(--nowo-ui-space-1);
+  list-style: none;
+}
+
+.nowo-ui-sortable-step {
+  padding: var(--nowo-ui-space-2) 0.75rem;
+  border: 1px solid var(--nowo-ui-border);
+  border-radius: var(--nowo-ui-radius);
+  background: var(--nowo-ui-surface);
+}
+
 /* --- Touch: 44 px targets on coarse pointers -------------------------------------------------------------------- */
 
 @media (pointer: coarse) {
   .nowo-ui-demo-platform :is(.nowo-ui-page-header, .nowo-ui-demo-section__actions, .nowo-ui-demo-section__footer, .nowo-ui-form__actions, .nowo-ui-empty__action) .nowo-ui-btn,
-  .nowo-ui-demo-platform :is(.nowo-ui-btn, .nowo-ui-burger, .nowo-ui-theme-toggle, .nowo-ui-demo-platform__locale, .nowo-ui-demo-flash__close, .nowo-ui-tabs__item, .nowo-ui-pagination a, .nowo-ui-pagination button, button.nowo-ui-tree__toggle, .nowo-ui-tree__disclosure, summary),
+  .nowo-ui-demo-platform :is(.nowo-ui-btn, .nowo-ui-burger, .nowo-ui-theme-toggle, .nowo-ui-demo-platform__locale, .nowo-ui-demo-flash__close, .nowo-ui-tabs__item, .nowo-ui-pagination a, .nowo-ui-pagination button, button.nowo-ui-tree__toggle, .nowo-ui-tree__disclosure, .nowo-ui-board-card__move, .nowo-ui-sortable-handle, .nowo-ui-menu__toggle, summary),
   body:has(.nowo-ui-demo-platform) dialog :is(.nowo-ui-btn, button) {
     min-height: 44px;
     min-width: 44px;
@@ -770,7 +934,12 @@
     min-height: 44px;
   }
 
-  .nowo-ui-demo-platform :is(.nowo-ui-input, select, textarea) {
+  .nowo-ui-demo-platform :is(.nowo-ui-input, select, textarea, input:not([type='checkbox'], [type='radio'], [type='hidden'], [type='range'], [type='color'])) {
+    min-height: 44px;
+  }
+
+  /* A Tom Select control: its wrapper is the target (its inner input only takes the text). */
+  .nowo-ui-demo-platform .ts-wrapper .ts-control {
     min-height: 44px;
   }
 
