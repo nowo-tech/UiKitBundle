@@ -287,7 +287,7 @@ TWIG;
         self::assertMatchesRegularExpression('#<div class="nowo-ui-flash nowo-ui-flash--success nowo-ui-demo-flash" role="status" data-nowo-ui-dismissible>#', $html);
         self::assertMatchesRegularExpression('#<div class="nowo-ui-flash nowo-ui-flash--error nowo-ui-demo-flash" role="alert" data-nowo-ui-dismissible>#', $html);
         self::assertMatchesRegularExpression('#<div class="nowo-ui-flash nowo-ui-flash--info nowo-ui-demo-flash" role="status" data-nowo-ui-dismissible>#', $html);
-        self::assertMatchesRegularExpression('#<div class="nowo-ui-flash nowo-ui-flash--warning nowo-ui-demo-flash" role="alert" data-nowo-ui-dismissible>#', $html);
+        self::assertMatchesRegularExpression('#<div class="nowo-ui-flash nowo-ui-flash--warning nowo-ui-demo-flash" role="status" data-nowo-ui-dismissible>#', $html);
         self::assertStringContainsString('<span class="visually-hidden">Error: </span>Failed.', $html);
         self::assertStringContainsString('<span class="visually-hidden">Success: </span>Saved.', $html);
         self::assertSame(4, substr_count($html, 'data-nowo-ui-dismiss aria-label="Dismiss"'));

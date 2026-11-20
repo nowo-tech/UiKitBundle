@@ -1,8 +1,8 @@
 {#
   2.60 demo platform flashes: the session flashes (or flash_messages: {type: [messages]}) under the page header. Each
   message has an icon and a visually hidden type prefix (meaning is never colour only), a dismiss button
-  ([data-nowo-ui-dismiss], js/nowo-ui-shell.js) and the right live region: success / info are role="status", warning /
-  error are role="alert". Types: success, info (notice), warning, error (danger).
+  ([data-nowo-ui-dismiss], js/nowo-ui-shell.js) and the right live region: success, info and warning are role="status" (shown on page load,
+  they must not interrupt), errors are role="alert". Types: success, info (notice), warning, error (danger).
 #}
 {% set _messages = flash_messages is defined and flash_messages is not null ? flash_messages : (app is defined and app ? app.flashes : {}) %}
 {% set _icons = {
@@ -19,7 +19,7 @@
             {% set _type = _label in ['error', 'danger'] ? 'error' : (_label == 'notice' ? 'info' : (_label in ['success', 'warning', 'info'] ? _label : 'info')) %}
             {% for _message in _list %}
                 {% set _text = _message is iterable and _message.title is defined ? _message.title ~ ((_message.message ?? null) ? ' — ' ~ _message.message : '') : _message %}
-                <div class="nowo-ui-flash nowo-ui-flash--{{ _type }} nowo-ui-demo-flash" role="{{ _type in ['error', 'warning'] ? 'alert' : 'status' }}" data-nowo-ui-dismissible>
+                <div class="nowo-ui-flash nowo-ui-flash--{{ _type }} nowo-ui-demo-flash" role="{{ _type == 'error' ? 'alert' : 'status' }}" data-nowo-ui-dismissible>
                     <svg class="nowo-ui-demo-flash__icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">{{ _icons[_type]|raw }}</svg>
                     <p class="nowo-ui-demo-flash__text"><span class="visually-hidden">{{ ('demo_platform.flash_' ~ _type)|trans({}, 'NowoUiKitBundle') }}: </span>{{ _text }}</p>
                     <button type="button" class="nowo-ui-demo-flash__close" data-nowo-ui-dismiss aria-label="{{ 'demo_platform.dismiss'|trans({}, 'NowoUiKitBundle') }}">

@@ -704,7 +704,7 @@ body.nowo-modal-open {
 }
 
 /* The partial's <ul class="pagination"> lays out as a row on every stack (zero specificity: Bootstrap wins). */
-:where(.nowo-ui-pagination__nav) > :where(ul.pagination) {
+:where(.nowo-ui-pagination__nav) > :where(ul.pagination, ul.nowo-ui-pagination__list) {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -8670,6 +8670,7 @@ form:has(> .nowo-ui-filters-collapse.is-collapsed[data-nowo-ui-motion-ready]) > 
 
 .nowo-ui-btn:not(.btn):is(:disabled, [aria-disabled='true'], .is-disabled) {
   opacity: 0.55;
+  pointer-events: none;
   cursor: not-allowed;
   box-shadow: none;
 }

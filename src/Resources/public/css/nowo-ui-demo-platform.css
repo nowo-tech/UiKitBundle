@@ -32,6 +32,7 @@
   --nowo-ui-focus-ring-color: #2563eb;
   --nowo-ui-card-shadow: 0 1px 2px rgb(15 23 42 / 0.05), 0 2px 8px rgb(15 23 42 / 0.04);
   --nowo-ui-shadow-drawer: 12px 0 32px rgb(15 23 42 / 0.18);
+  --nowo-ui-scroll-shadow: rgb(15 23 42 / 0.22);
 
   /* One spacing scale (also under the kit's --nowo-ui-space-* names) and one gap. */
   --nowo-ui-space-1: 0.25rem;
@@ -66,6 +67,26 @@
   --nowo-ui-focus-ring-color: #93c5fd;
   --nowo-ui-card-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
   --nowo-ui-shadow-drawer: 12px 0 32px rgb(0 0 0 / 0.5);
+  --nowo-ui-scroll-shadow: rgb(0 0 0 / 0.6);
+}
+
+/* Before the theme script runs (or without JS), the OS preference applies; an explicit light choice wins. */
+@media (prefers-color-scheme: dark) {
+  :root:has(.nowo-ui-demo-platform):not([data-theme='light']) {
+    --nowo-ui-primary: #60a5fa;
+    --nowo-ui-primary-contrast: #0b1220;
+    --nowo-ui-surface: #172033;
+    --nowo-ui-surface-muted: #0d1424;
+    --nowo-ui-border: #2a3850;
+    --nowo-ui-border-strong: #475569;
+    --nowo-ui-text: #e2e8f0;
+    --nowo-ui-muted: #94a3b8;
+    --nowo-ui-input-border: #7c8ba3;
+    --nowo-ui-focus-ring-color: #93c5fd;
+    --nowo-ui-card-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
+    --nowo-ui-shadow-drawer: 12px 0 32px rgb(0 0 0 / 0.5);
+  --nowo-ui-scroll-shadow: rgb(0 0 0 / 0.6);
+  }
 }
 
 /* --- Type ------------------------------------------------------------------------------------------------------- */
@@ -401,6 +422,18 @@
 .nowo-ui-demo-section__scroll {
   overflow-x: auto;
   max-width: 100%;
+  /* Edge shadows when the table can scroll sideways: two surface covers move with the content (local), two shadows stay
+     at the edges (scroll); a cover hides its shadow at the matching end. */
+  background:
+    linear-gradient(to right, var(--nowo-ui-surface) 30%, transparent) left center / 2.5rem 100% no-repeat local,
+    linear-gradient(to left, var(--nowo-ui-surface) 30%, transparent) right center / 2.5rem 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%, var(--nowo-ui-scroll-shadow), transparent) left center / 0.875rem 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%, var(--nowo-ui-scroll-shadow), transparent) right center / 0.875rem 100% no-repeat scroll,
+    var(--nowo-ui-surface);
+}
+
+.nowo-ui-demo-section__scroll > table {
+  background: transparent;
 }
 
 .nowo-ui-demo-section__scroll:focus-visible {
@@ -623,6 +656,12 @@
   font-size: var(--nowo-ui-text-sm);
 }
 
+/* Checkbox and radio focus: the platform's 2 px ring. */
+.nowo-ui-demo-platform input:is([type='checkbox'], [type='radio']):focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, var(--nowo-ui-primary));
+  outline-offset: 2px;
+}
+
 /* A checkbox row of the plain div layout (label first, box second): the box comes first, the label beside it. */
 .nowo-ui-demo-platform__content :is(form.nowo-ui-form, form > .nowo-ui-form) > div:has(> input:is([type='checkbox'], [type='radio'])) {
   display: flex;
@@ -741,6 +780,29 @@
   }
 
   .nowo-ui-demo-platform :is(.nowo-ui-check, label:has(> input:is([type='checkbox'], [type='radio']))) {
+    min-height: 44px;
+  }
+
+  /* Brand mark and bundle name: 44 px tall link boxes in the 52 px bar. */
+  .nowo-ui-demo-platform .nowo-ui-demo-platform__platform {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .nowo-ui-demo-platform .nowo-ui-demo-platform__bundle {
+    display: inline-block;
+    min-height: 44px;
+    line-height: 44px;
+  }
+
+  /* A checkbox / radio of the plain div layout: the row is a 44 px target, its label one too. */
+  .nowo-ui-demo-platform__content :is(form.nowo-ui-form, form > .nowo-ui-form) > div:has(> input:is([type='checkbox'], [type='radio'])) {
+    min-height: 44px;
+  }
+
+  .nowo-ui-demo-platform__content :is(form.nowo-ui-form, form > .nowo-ui-form) > div:has(> input:is([type='checkbox'], [type='radio'])) > label {
+    display: inline-flex;
+    align-items: center;
     min-height: 44px;
   }
 }
