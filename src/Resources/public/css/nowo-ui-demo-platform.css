@@ -762,6 +762,13 @@
 /* --- Layout helpers for demo content (UiKit's own showcases and bundle demos use these, never their own CSS) ----- */
 
 /* Measures: a readable width for a form, a preview or a block. */
+/* Demo helper: a page with an element of this class gives every dialog its size's height (what the kit's
+   theme.dialog.height: size prints on :root), also the dialogs a script moves to <body>. */
+:root:has(.nowo-ui-dialog-fill),
+.nowo-ui-dialog-fill {
+  --nowo-ui-dialog-fill: 1;
+}
+
 .nowo-ui-measure-sm { max-width: 24rem; }
 .nowo-ui-measure-md { max-width: 28rem; }
 .nowo-ui-measure-lg { max-width: 32rem; }
@@ -1199,8 +1206,11 @@
   box-sizing: border-box;
   height: 2.375rem;
   padding: 0.5rem 0.75rem;
+  border: 1px solid var(--nowo-ui-input-border, var(--nowo-ui-border));
   font-size: 1rem;
   line-height: 1.25;
+  color: var(--nowo-ui-text);
+  background-color: var(--nowo-ui-surface);
 }
 
 .nowo-ui-lab-host-select {

@@ -149,7 +149,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `.nowo-ui-list-plain`, `.nowo-ui-stack-sm`, `.nowo-ui-image-round`, `.nowo-ui-mono`, `.nowo-ui-card--row`,
   `.nowo-ui-spacer-tall`, a board (`.nowo-ui-board`, `.nowo-ui-board-card`, sortable handle and steps); under the
   shell, dialogs are bottom sheets on phones, the page scroll leaves room for the sticky bar and `color-scheme`
-  follows the theme. `.nowo-ui-dialog-fill` (kit CSS) lets dialogs fill the viewport height.
+  follows the theme; `.nowo-ui-dialog-fill` gives the page's dialogs their size's height (as `theme.dialog.height: size`).
 
 ### Changed
 
