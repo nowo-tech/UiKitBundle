@@ -552,13 +552,14 @@ export function bindNowoUiShell(): void {
       if (isRailShell(el)) {
         initSidebarRail(el);
         bindSidebarPeek(el);
-      } else {
-        // A server-rendered "open" drawer never survives a phone load: the drawer starts closed.
-        if (hasDrawerA11y(el) && !isDesktop()) {
-          el.classList.remove('is-aside-open-mobile');
-        }
-        syncDrawer(el);
+        return;
       }
+      // A server-rendered "open" drawer never survives a phone load: the drawer starts closed.
+      const shell: HTMLElement = el;
+      if (hasDrawerA11y(shell) && !isDesktop()) {
+        shell.classList.remove('is-aside-open-mobile');
+      }
+      syncDrawer(shell);
     }
   });
 }
