@@ -2,7 +2,9 @@
  * Form busy runtime (2.61): the loading button and the error summary focus.
  * - A form with data-nowo-ui-busy-on-submit: once the browser has validated it and nothing cancelled the submit, the
  *   submit button (the submitter, else the first one) gets aria-busy="true" (CSS spinner) and aria-disabled, and a
- *   second submit is ignored (no double post). A page restored from the back / forward cache is cleared.
+ *   second submit is ignored (no double post). A page restored from the back / forward cache is cleared, and so is a
+ *   form still busy after data-nowo-ui-busy-timeout ms (default 15000; 0 = never), e.g. a submit that answered with a
+ *   download and never left the page (audit XJ-6).
  * - The first [data-nowo-ui-error-summary] of the page takes the focus on load (once), so the errors are announced;
  *   its links focus their field instead of only scrolling to it.
  */
@@ -36,6 +38,10 @@ function onSubmit(event: Event): void {
     if (button) {
       button.setAttribute('aria-busy', 'true');
       button.setAttribute('aria-disabled', 'true');
+    }
+    const limit = Number.parseInt(form.getAttribute('data-nowo-ui-busy-timeout') ?? '15000', 10);
+    if (Number.isFinite(limit) && limit > 0) {
+      window.setTimeout(() => clearBusy(form.parentElement ?? document), limit);
     }
   }, 0);
 }

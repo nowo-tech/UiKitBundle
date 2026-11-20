@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as mod from './nowo-ui-tooltip';
 
 function rect(el: Element, box: { top: number; bottom: number; left: number; width: number }): void {
@@ -110,5 +110,16 @@ describe('nowo-ui-tooltip', () => {
     document.getElementById('outside')!.dispatchEvent(new MouseEvent('mouseout', { bubbles: true }));
     document.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
     expect(root.classList.contains('is-open')).toBe(false);
+  });
+
+  it('XJ-8: Escape on an open tooltip does not reach a surrounding dialog', () => {
+    mod.openTooltip(root);
+    const outer = vi.fn();
+    document.body.addEventListener('keydown', outer);
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(root.classList.contains('is-open')).toBe(false);
+    expect(outer).not.toHaveBeenCalled();
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect(outer).toHaveBeenCalledTimes(1);
   });
 });

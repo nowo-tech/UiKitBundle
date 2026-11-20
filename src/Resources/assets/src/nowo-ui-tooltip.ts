@@ -81,8 +81,11 @@ function onOut(event: Event): void {
 }
 
 function onKeydown(event: KeyboardEvent): void {
-  if (event.key === 'Escape') {
-    document.querySelectorAll(`${ROOT}.is-open`).forEach(closeTooltip);
+  const open = document.querySelectorAll(`${ROOT}.is-open`);
+  if (event.key === 'Escape' && open.length > 0) {
+    // 2.61 (audit XJ-8): Escape hides the tooltip only; a surrounding dialog stays open.
+    event.stopPropagation();
+    open.forEach(closeTooltip);
   }
 }
 
@@ -136,7 +139,7 @@ export function bindNowoUiTooltip(): void {
   });
   document.addEventListener('mouseout', onOut);
   document.addEventListener('focusout', onOut);
-  document.addEventListener('keydown', onKeydown);
+  document.addEventListener('keydown', onKeydown, true);
   document.addEventListener('pointerdown', onPointerDown);
   window.addEventListener('scroll', onViewportChange, { capture: true, passive: true });
   window.addEventListener('resize', onViewportChange, { passive: true });
