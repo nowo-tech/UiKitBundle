@@ -153,7 +153,7 @@ test.describe('emoji picker', () => {
         const { style } = root;
         style.setProperty('position', 'fixed');
         style.setProperty('width', '120px');
-        style.setProperty('z-index', '5');
+        style.setProperty('z-index', '45'); // above the demo platform's sticky top bar (40)
         style.setProperty(spot === 'top-left' ? 'top' : 'bottom', '0');
         style.setProperty(spot === 'bottom-right' ? 'right' : 'left', '0');
       }, where);

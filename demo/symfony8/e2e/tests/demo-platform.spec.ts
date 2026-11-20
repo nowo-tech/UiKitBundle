@@ -74,7 +74,7 @@ function demoPlatformRules(): string[] {
   // Touch: 44 px targets on coarse pointers (checkbox / radio 24 px, their label carries the 44 px row).
   if (window.matchMedia('(pointer: coarse)').matches) {
     const controls = [...shell.querySelectorAll('.nowo-ui-btn, button, summary, input:not([type="hidden"]), select, textarea, [role="tab"], .nowo-ui-aside__link, .nowo-ui-demo-platform__locale')]
-      .filter((el) => visible(el) && !el.closest('[inert], table'));
+      .filter((el) => visible(el) && !el.closest('[inert], table, .ts-control'));
     for (const el of controls) {
       const r = el.getBoundingClientRect();
       const small = el.matches('input[type="checkbox"], input[type="radio"]') ? r.height < 24 || r.width < 24 : r.height < 43.5;

@@ -178,7 +178,8 @@ test.describe('context menu', () => {
     await page.setViewportSize({ width: 420, height: 500 });
     await page.goto(PAGE);
     const box = (await row(page, '1041').boundingBox())!;
-    await page.mouse.click(Math.min(box.x + box.width, 420) - 10, box.y + box.height / 2, { button: 'right' });
+    // The row's visible right end: the demo platform keeps a 16 px gutter (and the card's own padding) on phones.
+    await page.mouse.click(Math.min(box.x + box.width, 420 - 32) - 10, box.y + box.height / 2, { button: 'right' });
     await expect(menu(page)).toBeVisible();
     const panel = (await menu(page).boundingBox())!;
     expect(panel.x).toBeGreaterThanOrEqual(0);

@@ -28,8 +28,9 @@ for (const [width, height] of [[1280, 900], [390, 844]] as const) {
     // Sizes are read while a dialog could still be scaling in: no scale under reduced motion.
     test.use({ viewport: { width, height }, reducedMotion: 'reduce' });
 
-    const md = { w: Math.min(640, width - 32), h: Math.min(576, height - 32) };
-    const wide = { w: Math.min(896, width - 32), h: Math.min(832, height - 32) };
+    // 2.60 demo platform: up to 600 px, dialogs are bottom sheets (the full width); above, the 16 px gutter rule.
+    const md = { w: width <= 600 ? width : Math.min(640, width - 32), h: Math.min(576, height - 32) };
+    const wide = { w: width <= 600 ? width : Math.min(896, width - 32), h: Math.min(832, height - 32) };
 
     /** The body's content fits (no scroll) and the dialog is header + body + footer, no empty area (2.31). */
     async function fitsContent(page: Page, dialog: string): Promise<void> {
@@ -108,7 +109,7 @@ for (const [width, height] of [[1280, 900], [390, 844]] as const) {
       await open(page, 'open-long', 'long-dialog');
       await page.getByTestId('long-save').click();
       await expect(page).toHaveURL(/\/kit\/dialogs\?submitted=1$/);
-      await expect(page.getByRole('status')).toHaveText('Submitted.');
+      await expect(page.getByTestId('dialogs-status')).toHaveText('Submitted.');
     });
 
     test('View\\Confirm on the dialog anatomy: tinted header and footer, content height (2.31)', async ({ page }) => {
