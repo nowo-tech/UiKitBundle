@@ -1,0 +1,26 @@
+{#- The fields of the catalogue's customer form (variable f: the FormView), shared by the invalid and the live example. -#}
+<div class="nowo-ui-form-grid">
+    {{ form_row(f.name) }}
+    {{ form_row(f.email) }}
+    <div class="nowo-ui-form-row">
+        {{ form_label(f.website) }}
+        {{ form_errors(f.website) }}
+        <div class="nowo-ui-input-group">
+            <span class="nowo-ui-input-group__addon" aria-hidden="true">https://</span>
+            {{ form_widget(f.website) }}
+        </div>
+    </div>
+    <div class="nowo-ui-form-row">
+        {{ form_label(f.credit) }}
+        {{ form_errors(f.credit) }}
+        <div class="nowo-ui-input-group">
+            {{ form_widget(f.credit, {attr: f.credit.vars.attr|merge({'aria-describedby': f.credit.vars.id ~ '_help ' ~ f.credit.vars.id ~ '_unit'})}) }}
+            <span class="nowo-ui-input-group__addon" id="{{ f.credit.vars.id }}_unit">EUR</span>
+        </div>
+        {{ form_help(f.credit) }}
+    </div>
+    {{ include(nowo_ui_partial('form_fieldset'), {field: f.plan, inline: true}, false) }}
+    {{ form_row(f.vat) }}
+    <div class="nowo-ui-form-grid__full">{{ form_row(f.reminders) }}</div>
+    <div class="nowo-ui-form-grid__full">{{ include(nowo_ui_partial('dropzone'), {field: f.contract, hint: 'PDF or image, up to 5 MB each.', max_bytes: 5242880}, false) }}</div>
+</div>

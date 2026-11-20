@@ -1,0 +1,86 @@
+{% extends 'catalogue/admin/_base.html.twig' %}
+{% form_theme filter_form '@NowoUiKitBundle/form/nowo_ui_layout.html.twig' %}
+{% form_theme bulk_form '@NowoUiKitBundle/form/nowo_ui_layout.html.twig' %}
+{% block nowo_ui_page_header %}
+    {% set _toolbar %}<a class="nowo-ui-btn nowo-ui-btn--primary" href="#">New invoice</a>{% endset %}
+    {{ include(nowo_ui_partial('page_header', 'DemoDefaultTheme'), {title: 'Data tables', intro: 'Filters (a sheet on phones), bulk selection, sortable headers, density and columns, row actions and a footer with the pages and the page size.', toolbar: _toolbar}, false) }}
+{% endblock %}
+{% block body %}
+    {% set _columns = [
+        {key: 'number', label: 'Number', locked: true, sort: 'number'},
+        {key: 'customer', label: 'Customer', sort: 'customer'},
+        {key: 'issued', label: 'Issued', sort: 'issued'},
+        {key: 'amount', label: 'Amount', sort: 'amount', num: true},
+        {key: 'status', label: 'Status'},
+    ] %}
+    {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Invoices', intro: 'Filter, select rows and act on them; sort by a column header; change the density or hide columns.', kind: 'content', testid: 'catalogue-data-table'} %}
+        {% block section_actions %}
+            {% embed nowo_ui_partial('tooltip') with {text: 'Downloads the filtered invoices as a CSV file.', id: 'catalogue-export-tip'} %}
+                {% block tooltip_trigger %}<a class="nowo-ui-btn nowo-ui-btn--outline nowo-ui-btn--sm" href="#" aria-describedby="{{ tooltip_id }}">Export</a>{% endblock %}
+            {% endembed %}
+        {% endblock %}
+        {% block section_body %}
+            <div class="nowo-ui-stack">
+                {% embed nowo_ui_partial('filter_bar') with {form: filter_form, id: 'catalogue-filters', reset_href: path('catalogue_admin', {group: 'data-tables'}), columns: _columns} only %}
+                    {% block filter_bar_extra %}
+                        {{ include(nowo_ui_partial('table_view'), {table: 'catalogue-invoices', persist: 'catalogue-invoices', columns: columns|map(c => {key: c.key, label: c.label, locked: c.locked ?? false})}, false) }}
+                    {% endblock %}
+                {% endembed %}
+                {{ include(nowo_ui_partial('bulk_bar'), {form_id: 'catalogue-bulk', total: pagination.total, all_field: bulk_form.all.vars.id, actions: [{label: 'Archive', value: 'archive'}, {label: 'Delete', value: 'delete', variant: 'danger'}]}, false) }}
+                {{ form_start(bulk_form) }}
+                    {{ form_widget(bulk_form.all) }}
+                    <div class="nowo-ui-table-wrap" role="region" tabindex="0" aria-label="Invoices">
+                        <table class="nowo-ui-data-table" id="catalogue-invoices">
+                            <thead>
+                                <tr>
+                                    <th scope="col" class="nowo-ui-bulk-cell">{{ include(nowo_ui_partial('bulk_toggle'), {}, false) }}</th>
+                                    {% for c in _columns %}
+                                        {% set _active = sort == (c.sort ?? null) %}
+                                        <th scope="col" data-nowo-ui-column="{{ c.key }}"{% if c.num ?? false %} class="nowo-ui-cell--num"{% endif %}{% if _active %} aria-sort="{{ dir == 'asc' ? 'ascending' : 'descending' }}"{% endif %}>
+                                            {%- if c.sort ?? null -%}
+                                                {{ include(nowo_ui_partial('sort_header', 'DemoDefaultTheme'), {label: c.label, href: path('catalogue_admin', {group: 'data-tables'}|merge(query)|merge({sort: c.sort, dir: _active and dir == 'asc' ? 'desc' : 'asc', page: 1})), active: _active, direction: dir, next_direction: _active and dir == 'asc' ? 'desc' : 'asc', bundle: 'DemoDefaultTheme'}, false) }}
+                                            {%- else -%}{{ c.label }}{%- endif -%}
+                                        </th>
+                                    {% endfor %}
+                                    <th scope="col"><span class="visually-hidden">Actions</span></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in rows %}
+                                    <tr>
+                                        <td class="nowo-ui-bulk-cell">{{ form_widget(bulk_form.ids[row.number]) }}</td>
+                                        <th scope="row">{{ row.number }}</th>
+                                        <td>{{ row.customer }}</td>
+                                        <td><time datetime="{{ row.issued }}">{{ row.issued }}</time></td>
+                                        <td class="nowo-ui-cell--num">{{ row.amount|number_format(2, '.', ',') }} €</td>
+                                        <td><span class="nowo-ui-badge nowo-ui-badge--{{ statuses[row.status][1] }}">{{ statuses[row.status][0] }}</span></td>
+                                        <td>
+                                            {{ include('@NowoUiKitBundle/partials/_kebab.html.twig', {
+                                                label: 'Actions for ' ~ row.number,
+                                                popover: true,
+                                                menu_semantics: 'menu',
+                                                id: 'row-menu-' ~ row.number,
+                                                items: [
+                                                    {label: 'View', href: '#'},
+                                                    {label: 'Edit', href: '#'},
+                                                    {label: 'Duplicate', href: '#'},
+                                                    {separator: true},
+                                                    {label: 'Delete', href: '#', danger: true},
+                                                ],
+                                            }, false) }}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {{ form_end(bulk_form) }}
+            </div>
+        {% endblock %}
+        {% block section_footer %}
+            <div class="nowo-ui-table-footer">
+                {{ include(nowo_ui_partial('pagination', 'DemoDefaultTheme'), {pagination: pagination, item_count: rows|length, route: 'catalogue_admin', route_params: {group: 'data-tables'}, query: query, per_page_choices: per_page_choices, variant: 'compact', bundle: 'DemoDefaultTheme'}, false) }}
+            </div>
+        {% endblock %}
+    {% endembed %}
+{% endblock %}

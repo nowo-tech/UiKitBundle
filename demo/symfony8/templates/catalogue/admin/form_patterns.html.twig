@@ -1,0 +1,43 @@
+{% extends 'catalogue/admin/_base.html.twig' %}
+{% form_theme invalid_form '@NowoUiKitBundle/form/nowo_ui_layout.html.twig' %}
+{% form_theme patterns_form '@NowoUiKitBundle/form/nowo_ui_layout.html.twig' %}
+{% block nowo_ui_page_header %}
+    {{ include(nowo_ui_partial('page_header', 'DemoDefaultTheme'), {title: 'Form patterns', intro: 'Error summary, fieldsets, input groups, switches, two columns, file drop, a read-only view and a footer that stays in sight.'}, false) }}
+{% endblock %}
+{% block body %}
+    {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'New customer (sent with errors)', intro: 'The state after a failed submit: the error summary lists every problem, links to its field and takes the focus on load.', kind: 'form', testid: 'catalogue-invalid-form'} %}
+        {% block section_body %}
+            {{ include(nowo_ui_partial('error_summary'), {form: invalid_form}, false) }}
+            {{ form_start(invalid_form, {action: path('catalogue_admin', {group: 'form-patterns'})}) }}
+                {{ include('catalogue/admin/_customer_fields.html.twig', {f: invalid_form}, false) }}
+            {{ form_end(invalid_form) }}
+        {% endblock %}
+    {% endembed %}
+    {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'New customer', intro: 'Two columns from 40rem; the footer sticks to the bottom while the form scrolls; Save shows a busy state while it posts.', kind: 'form', testid: 'catalogue-form-patterns', attr: {class: 'nowo-ui-card--sticky-footer'}} %}
+        {% block section_body %}
+            {{ include(nowo_ui_partial('error_summary'), {form: patterns_form}, false) }}
+            {{ form_start(patterns_form, {action: path('catalogue_admin', {group: 'form-patterns'})}) }}
+                {{ include('catalogue/admin/_customer_fields.html.twig', {f: patterns_form}, false) }}
+            {{ form_end(patterns_form) }}
+        {% endblock %}
+        {% block section_footer %}
+            <a class="nowo-ui-btn nowo-ui-btn--outline" href="{{ path('catalogue_admin', {group: 'form-patterns'}) }}">Cancel</a>
+            <button type="submit" form="customer-form" class="nowo-ui-btn nowo-ui-btn--primary">Save customer</button>
+        {% endblock %}
+    {% endembed %}
+    {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Customer (read only)', intro: 'The same fields as a definition list when the user may not edit them.', kind: 'detail', testid: 'catalogue-readonly'} %}
+        {% block section_actions %}<a class="nowo-ui-btn nowo-ui-btn--outline nowo-ui-btn--sm" href="#">Edit</a>{% endblock %}
+        {% block section_body %}
+            <div class="nowo-ui-readonly-view">
+                <dl class="nowo-ui-dl nowo-ui-dl--grid">
+                    <div><dt>Company name</dt><dd>Analytical Engines Ltd</dd></div>
+                    <div><dt>Billing email</dt><dd>billing@analytical.example</dd></div>
+                    <div><dt>Website</dt><dd>https://analytical.example</dd></div>
+                    <div><dt>Credit limit</dt><dd></dd></div>
+                    <div><dt>Plan</dt><dd>Business</dd></div>
+                    <div><dt>Payment reminders</dt><dd>On</dd></div>
+                </dl>
+            </div>
+        {% endblock %}
+    {% endembed %}
+{% endblock %}

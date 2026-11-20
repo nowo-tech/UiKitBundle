@@ -1,6 +1,8 @@
 nowo_ui_kit:
     css_framework: bootstrap5
-    icon_set: bootstrap-icons
+    # 2.61: the kit's inline SVG icons. The demo platform shell loads no icon font, so with bootstrap-icons the
+    # catalogue's sort arrows, menu toggles and stat / empty-state icons were blank.
+    icon_set: svg_inline
     row_actions_display: icon
 
     # 2.51 note: `base_stylesheet: true` would link UiKit's default theme (css/nowo-ui-base.css) on EVERY page of
