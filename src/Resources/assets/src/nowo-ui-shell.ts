@@ -411,6 +411,13 @@ function onDocumentClick(event: MouseEvent): void {
     return;
   }
 
+  // 2.60: an aria-disabled button or link never acts (CSS removes pointer events; this stops keyboard activation).
+  if (target.closest('.nowo-ui-btn[aria-disabled="true"]')) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    return;
+  }
+
   const burger = target.closest('[data-nowo-ui-burger]');
   if (burger) {
     event.preventDefault();

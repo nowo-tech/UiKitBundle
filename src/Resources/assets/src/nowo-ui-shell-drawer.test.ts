@@ -118,6 +118,13 @@ describe('nowo-ui-shell accessible drawer', () => {
     expect(document.documentElement.classList.contains(mod.DRAWER_OPEN_ROOT_CLASS)).toBe(false);
   });
 
+  it('an aria-disabled button link does not navigate (keyboard Enter dispatches a click)', () => {
+    document.body.insertAdjacentHTML('beforeend', '<a href="/x" class="nowo-ui-btn" aria-disabled="true" id="off">Off</a>');
+    const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+    (document.getElementById('off') as HTMLElement).dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+  });
+
   it('a dismiss button removes its dismissible box', () => {
     document.body.insertAdjacentHTML('beforeend', '<div data-nowo-ui-dismissible id="box"><button type="button" data-nowo-ui-dismiss>x</button></div>');
     (document.querySelector('[data-nowo-ui-dismiss]') as HTMLElement).click();
