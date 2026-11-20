@@ -11,19 +11,22 @@
   Required:
     - form: FormView of the filter form (GET; rendered with form_start / form_row / form_end, REQ-TWIG-005)
   Optional:
-    - id (default nowo-ui-filter-bar): root id; the sheet is "<id>-dialog", its heading "<id>-title"
+    - filter_id (default nowo-ui-filter-bar): root id; the sheet is "<id>-dialog", its heading "<id>-title" (a
+      partial-scoped name: an inherited `id` is never used)
     - title (View\Label|string): sheet heading and button text (default filter_bar.title)
     - heading_level (2–6, default 2)
     - active_count: number shown on the phone button (default: the form fields with a value; hidden fields, _token,
       page, per_page, sort and dir excluded)
-    - reset_href: URL of the unfiltered list (a "Reset" link next to Apply)
+    - reset_href: URL of the unfiltered list (a "Reset" link next to Apply; through nowo_ui_safe_href(), an unsafe
+      scheme renders no link)
     - submit_label / reset_label / close_label (View\Label|string)
     - attr: extra root attributes (no on*; id and the data-nowo-ui-* contract are the partial's)
   Blocks (embed): filter_bar_extra (content on the button row, e.g. the table view controls), filter_bar_actions
   (more buttons after Apply / Reset).
 #}
 {% if false %}{% block filter_bar_extra %}{% endblock %}{% block filter_bar_actions %}{% endblock %}{% endif %}
-{% set _id = id|default('nowo-ui-filter-bar') %}
+{% set _id = filter_id ?? 'nowo-ui-filter-bar' %}
+{% set _reset = nowo_ui_safe_href(reset_href ?? null) %}
 {% set _title = (title ?? null) ? title|nowo_ui_trans : 'filter_bar.title'|trans({}, 'NowoUiKitBundle') %}
 {% set _level = heading_level|default(2) in [2, 3, 4, 5, 6] ? heading_level|default(2) : 2 %}
 {% set _count = active_count ?? null %}
@@ -61,7 +64,7 @@
                 {% endfor %}
                 <div class="nowo-ui-filter-sheet__actions">
                     <button type="submit" class="nowo-ui-btn nowo-ui-btn--outline">{{ (submit_label ?? null) ? submit_label|nowo_ui_trans : 'filter_bar.apply'|trans({}, 'NowoUiKitBundle') }}</button>
-                    {% if reset_href ?? null %}<a class="nowo-ui-btn nowo-ui-btn--link" href="{{ reset_href }}">{{ (reset_label ?? null) ? reset_label|nowo_ui_trans : 'filter_bar.reset'|trans({}, 'NowoUiKitBundle') }}</a>{% endif %}
+                    {% if _reset %}<a class="nowo-ui-btn nowo-ui-btn--link" href="{{ _reset }}">{{ (reset_label ?? null) ? reset_label|nowo_ui_trans : 'filter_bar.reset'|trans({}, 'NowoUiKitBundle') }}</a>{% endif %}
                     {{ _more_actions }}
                 </div>
             </div>

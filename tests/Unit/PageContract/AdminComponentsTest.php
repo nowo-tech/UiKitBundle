@@ -52,7 +52,7 @@ final class AdminComponentsTest extends TestCase
             ->add('page', HiddenType::class)
             ->getForm();
         $form->submit(['q' => 'ada', 'status' => '', 'tags' => ['a'], 'mine' => '1', 'page' => '3']);
-        $html = $this->render("{{ include(nowo_ui_partial('filter_bar'), {form: form, id: 'fb', reset_href: '/invoices'}) }}", ['form' => $form->createView()]);
+        $html = $this->render("{{ include(nowo_ui_partial('filter_bar'), {form: form, filter_id: 'fb', reset_href: '/invoices'}) }}", ['form' => $form->createView()]);
 
         self::assertStringContainsString('<div id="fb" class="nowo-ui-filter-sheet" data-nowo-ui-filter-sheet data-nowo-ui-region="filters">', $html);
         self::assertStringContainsString('aria-haspopup="dialog" aria-controls="fb-dialog" data-nowo-ui-filter-sheet-open>Filters <span class="nowo-ui-filter-sheet__count"><span aria-hidden="true">3</span><span class="visually-hidden">3 active</span></span></button>', $html);
@@ -81,14 +81,14 @@ final class AdminComponentsTest extends TestCase
 
     public function testBulkBarAndToggle(): void
     {
-        $html = $this->render("{{ include(nowo_ui_partial('bulk_bar'), {form_id: 'bulk', total: 42, all_field: 'bulk_all', actions: [{label: 'Archive', value: 'archive'}, {label: 'Delete', value: 'delete', variant: 'danger', name: 'op', attr: {'data-testid': 'del', class: 'x'}}]}) }}");
+        $html = $this->render("{{ include(nowo_ui_partial('bulk_bar'), {form_id: 'bulk', total: 42, all_field: 'bulk_all', actions: [{label: 'Archive', value: 'archive'}, {label: 'Delete', value: 'delete', variant: 'danger', name: 'op', confirm: 'Delete <them>?', attr: {'data-testid': 'del', class: 'x'}}]}) }}");
         self::assertStringContainsString('<div class="nowo-ui-bulk-bar" role="region" aria-label="Bulk actions" data-nowo-ui-bulk-bar data-nowo-ui-bulk-scope="bulk"', $html);
         self::assertStringContainsString('data-nowo-ui-bulk-many="%count% rows selected"', $html);
         self::assertStringContainsString('data-nowo-ui-bulk-total="42" data-nowo-ui-bulk-all-field="bulk_all" data-nowo-ui-bulk-all-pages="All 42 rows selected"', $html);
         self::assertStringContainsString('<p class="nowo-ui-bulk-bar__count" role="status" data-nowo-ui-bulk-status>No rows selected</p>', $html);
         self::assertStringContainsString('data-nowo-ui-bulk-select-all-pages hidden>Select all 42 rows</button>', $html);
         self::assertStringContainsString('<button type="submit" form="bulk" name="bulk_action" value="archive" class="nowo-ui-btn nowo-ui-btn--outline nowo-ui-btn--sm" data-nowo-ui-bulk-action>Archive</button>', $html);
-        self::assertStringContainsString('<button type="submit" form="bulk" name="op" value="delete" class="nowo-ui-btn nowo-ui-btn--danger nowo-ui-btn--sm x" data-nowo-ui-bulk-action data-testid="del">Delete</button>', $html);
+        self::assertStringContainsString('<button type="submit" form="bulk" name="op" value="delete" class="nowo-ui-btn nowo-ui-btn--danger nowo-ui-btn--sm x" data-nowo-ui-bulk-action data-nowo-ui-bulk-confirm="Delete &lt;them&gt;?" data-testid="del">Delete</button>', $html);
         self::assertStringContainsString('data-nowo-ui-bulk-clear hidden>Clear selection</button>', $html);
 
         $plain = $this->render("{% embed nowo_ui_partial('bulk_bar') with {form_id: 'f', label: 'Rows'} %}{% block bulk_bar_actions %}<i data-own></i>{% endblock %}{% endembed %}");
@@ -248,12 +248,12 @@ final class AdminComponentsTest extends TestCase
 
     public function testCodeBlockTooltipAndSteps(): void
     {
-        $html = $this->render("{{ include(nowo_ui_partial('code_block'), {id: 'c1', language: 'YAML', code: 'a: <b>', wrap: true}) }}");
+        $html = $this->render("{{ include(nowo_ui_partial('code_block'), {code_id: 'c1', language: 'YAML', code: 'a: <b>', wrap: true}) }}");
         self::assertStringContainsString('<button type="button" class="nowo-ui-btn nowo-ui-btn--outline nowo-ui-btn--sm" data-nowo-ui-clipboard data-nowo-ui-clipboard-target="c1" data-nowo-ui-clipboard-label="Copy code" data-nowo-ui-clipboard-done-label="Copied" aria-label="Copy code" data-nowo-ui-clipboard-reveal hidden>Copy code</button>', $html);
         self::assertStringContainsString('<pre class="nowo-ui-code-block nowo-ui-code-block--wrap" tabindex="0" aria-label="YAML"><code id="c1">a: &lt;b&gt;</code></pre>', $html);
         self::assertMatchesRegularExpression('#<code id="nowo-ui-code-\d+">x</code>#', $this->render("{{ include(nowo_ui_partial('code_block'), {code: 'x'}) }}"));
 
-        $html = $this->render("{% embed nowo_ui_partial('tooltip') with {text: 'Exports <all>', id: 'tip'} %}{% block tooltip_trigger %}<button aria-describedby=\"{{ tooltip_id }}\">Export</button>{% endblock %}{% endembed %}");
+        $html = $this->render("{% embed nowo_ui_partial('tooltip') with {text: 'Exports <all>', tooltip_id: 'tip'} %}{% block tooltip_trigger %}<button aria-describedby=\"{{ tooltip_id }}\">Export</button>{% endblock %}{% endembed %}");
         self::assertStringContainsString('<span class="nowo-ui-tooltip" data-nowo-ui-tooltip><button aria-describedby="tip">Export</button><span class="nowo-ui-tooltip__bubble" id="tip" role="tooltip">Exports &lt;all&gt;</span>', $html);
         self::assertMatchesRegularExpression('#<span class="nowo-ui-tooltip" data-nowo-ui-tooltip><b>t</b><span class="nowo-ui-tooltip__bubble" id="nowo-ui-tooltip-\d+" role="tooltip">Help</span>#', $this->render("{{ include(nowo_ui_partial('tooltip'), {text: 'Help', trigger: '<b>t</b>'}) }}"));
 
@@ -321,7 +321,7 @@ final class AdminComponentsTest extends TestCase
 
     public function testClientToastsPrintTheStackAndTheTemplate(): void
     {
-        $html = $this->render("{{ include(nowo_ui_partial('toasts'), {client: true, flashes: {}, timeouts: {error: 0}}) }}");
+        $html = $this->render("{{ include(nowo_ui_partial('toasts'), {toast_client: true, flashes: {}, timeouts: {error: 0}}) }}");
         self::assertStringContainsString('data-nowo-ui-toast-stack data-nowo-ui-toast-client', $html);
         self::assertStringContainsString('aria-live="polite"', $html);
         self::assertStringContainsString('<template data-nowo-ui-toast-template>', $html);
@@ -333,6 +333,48 @@ final class AdminComponentsTest extends TestCase
         self::assertStringContainsString('Saved.', $flashes);
         self::assertStringNotContainsString('data-nowo-ui-toast-template', $flashes);
         self::assertStringNotContainsString('data-nowo-ui-toast-client', $flashes);
+    }
+
+    public function testToastsIgnoreAnInheritedClientVariableAndKeepThe260Markup(): void
+    {
+        // Audit XJ-2: a page variable `client` (any value) never turns client toasts on; only toast_client: true does.
+        $fixture = (string) file_get_contents(PageContractTwig::root().'/tests/Fixtures/bc-2.60/toasts.html');
+        $flashes = ['success' => ['Invoice saved.'], 'error' => [['title' => 'Bank feed', 'message' => 'Could not refresh.']]];
+        self::assertSame($fixture, $this->render("{{ include(nowo_ui_partial('toasts'), {flashes: flashes}) }}", ['flashes' => $flashes]));
+        self::assertSame($fixture, $this->render("{{ include(nowo_ui_partial('toasts'), {flashes: flashes}) }}", ['flashes' => $flashes, 'client' => true]));
+        self::assertSame($fixture, $this->render("{{ include(nowo_ui_partial('toasts'), {flashes: flashes, toast_client: 'yes'}) }}", ['flashes' => $flashes]));
+        self::assertStringContainsString('data-nowo-ui-toast-template', $this->render("{{ include(nowo_ui_partial('toasts'), {flashes: flashes, toast_client: true}) }}", ['flashes' => $flashes]));
+    }
+
+    public function testLinkOptionsDropUnsafeSchemes(): void
+    {
+        // Audit XJ-3: chip remove_href, steps href and filter_bar reset_href go through nowo_ui_safe_href().
+        $chip = $this->render("{{ include(nowo_ui_partial('chip'), {label: 'x', remove_href: 'javascript:alert(1)'}) }}");
+        self::assertStringNotContainsString('nowo-ui-chip__remove', $chip);
+        self::assertStringNotContainsString('javascript', $chip);
+        self::assertStringContainsString('href="https://example.com/x"', $this->render("{{ include(nowo_ui_partial('chip'), {label: 'x', remove_href: 'https://example.com/x'}) }}"));
+
+        $steps = $this->render("{{ include(nowo_ui_partial('steps'), {items: [{label: 'A', status: 'done', href: 'data:text/html,x'}, {label: 'B', status: 'done', href: '/b'}]}) }}");
+        self::assertStringNotContainsString('data:text', $steps);
+        self::assertSame(1, substr_count($steps, 'nowo-ui-steps__link'));
+        self::assertStringContainsString('href="/b"', $steps);
+
+        $bar = $this->render("{{ include(nowo_ui_partial('filter_bar'), {form: form, reset_href: 'javascript:void(0)'}) }}", ['form' => $this->searchForm()]);
+        self::assertStringNotContainsString('javascript', $bar);
+        self::assertStringNotContainsString('>Reset</a>', $bar);
+    }
+
+    public function testIdsNeverComeFromTheInheritedContext(): void
+    {
+        // Audit XJ-4: an `id` in the including template never reaches code_block, tooltip or filter_bar.
+        $context = ['id' => 'page-id', 'form' => $this->searchForm()];
+        $code = $this->render("{{ include(nowo_ui_partial('code_block'), {code: 'x'}) }}", $context);
+        self::assertMatchesRegularExpression('#<code id="nowo-ui-code-\d+">x</code>#', $code);
+        $tip = $this->render("{{ include(nowo_ui_partial('tooltip'), {text: 'Help', trigger: '<b>t</b>'}) }}", $context);
+        self::assertMatchesRegularExpression('#id="nowo-ui-tooltip-\d+" role="tooltip"#', $tip);
+        $bar = $this->render("{{ include(nowo_ui_partial('filter_bar'), {form: form}) }}", $context);
+        self::assertStringContainsString('<div id="nowo-ui-filter-bar" class="nowo-ui-filter-sheet"', $bar);
+        self::assertStringNotContainsString('page-id', $code.$tip.$bar);
     }
 
     public function testNoInlineStyleOrHandlerAndTheSameOutputOnAReusedEnvironment(): void
