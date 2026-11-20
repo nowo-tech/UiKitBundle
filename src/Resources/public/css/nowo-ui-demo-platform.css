@@ -715,7 +715,7 @@
 
 @media (pointer: coarse) {
   .nowo-ui-demo-platform :is(.nowo-ui-page-header, .nowo-ui-demo-section__actions, .nowo-ui-demo-section__footer, .nowo-ui-form__actions, .nowo-ui-empty__action) .nowo-ui-btn,
-  .nowo-ui-demo-platform :is(.nowo-ui-btn, .nowo-ui-burger, .nowo-ui-theme-toggle, .nowo-ui-demo-platform__locale, .nowo-ui-demo-flash__close, .nowo-ui-tabs__item, .nowo-ui-pagination a, .nowo-ui-pagination button, summary),
+  .nowo-ui-demo-platform :is(.nowo-ui-btn, .nowo-ui-burger, .nowo-ui-theme-toggle, .nowo-ui-demo-platform__locale, .nowo-ui-demo-flash__close, .nowo-ui-tabs__item, .nowo-ui-pagination a, .nowo-ui-pagination button, button.nowo-ui-tree__toggle, .nowo-ui-tree__disclosure, summary),
   body:has(.nowo-ui-demo-platform) dialog :is(.nowo-ui-btn, button) {
     min-height: 44px;
     min-width: 44px;
