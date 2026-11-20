@@ -5,10 +5,9 @@
   map and partial.
 
   Everything the document needs around the components — body font stack, page gutters, masthead height — comes from
-  nowo-ui-base.css, UiKit's opt-in default theme, linked below. (A real host turns it on once with
-  `nowo_ui_kit.base_stylesheet: true` and the UiKit layouts link it; this layout links it by hand because the rest
-  of this demo app deliberately keeps Bootstrap.) This page is the proof that a host with no theme of its own is
-  presentable out of the box.
+  nowo-ui-base.css, UiKit's opt-in default theme, linked below (a real host turns it on once with
+  `nowo_ui_kit.base_stylesheet: true` and the UiKit layouts link it). This page is the proof that a host with no theme
+  of its own is presentable out of the box.
 #}
 {% extends '@NowoUiKit/layout/admin.html.twig' %}
 
@@ -18,8 +17,6 @@
         demo host's tokens. -#}
     <link rel="stylesheet" href="{{ asset('css/nowo-ui-base.css', 'nowo_ui_kit') }}">
     <link rel="stylesheet" href="{{ asset('css/nowo-ui.css', 'nowo_ui_kit') }}">
-    {#- Icons only: UiKit ships no icon font, and this demo runs with icon_set: bootstrap-icons. -#}
-    <link href="/third-party/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
 {% endblock %}
 
 {#- Masthead: UiKit's own header / brand / nav classes, no framework markup (REQ-DEMO-014 rule 2). -#}

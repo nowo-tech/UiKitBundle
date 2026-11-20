@@ -111,7 +111,7 @@
             {% if blocked %}
                 <li class="nowo-ui-board-card" tabindex="0" data-testid="card-blocked" data-nowo-ui-sortable-item="blocked" data-nowo-ui-sortable-label="Blocked card">
                     Blocked style
-                    <a href="#evil" data-testid="link-blocked" style="position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:9999;background:url(/kit-e2e-exfil.png);color:rgb(255,0,0)">a link</a>
+                    <a href="#evil" data-testid="link-blocked" style="position:fixed;left:0;top:0;width:100vw;height:100vh;z-index:9999;background:url(/kit-e2e-exfil.png);color:rgb(255,0,0)">a link</a>{# nowo-ui-demo-style-lint-ignore: CSP e2e fixture, the page must block this inline style #}
                 </li>
             {% endif %}
         </ul>

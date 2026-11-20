@@ -1,13 +1,11 @@
 # Vendored demo assets
 
-Served from the repo so the demo loads no CDN (REQ-DEMO-014 exemption; the UiKit demo is a host-theme demo).
+Served from the repo so the demo loads no CDN. The demo loads no CSS framework and no icon font: the only vendored
+asset is the Inter font of the page contract host theme (`/page-contract`, the demo's one host-theme preview).
 
-| Asset | Version | Source |
-| --- | --- | --- |
-| Bootstrap CSS + JS bundle | 5.3.3 | `bootstrap@5.3.3` on npm (`dist/css/bootstrap.min.css`, `dist/js/bootstrap.bundle.min.js`), MIT, see `bootstrap/LICENSE`. The trailing `sourceMappingURL` comments were removed (no maps are vendored). |
-| Bootstrap Icons | 1.11.3 | `bootstrap-icons@1.11.3` on npm (`font/bootstrap-icons.min.css`, `font/fonts/*`), MIT, see `bootstrap-icons/LICENSE`. |
-
-To upgrade, replace the files from the npm tarball of the new version and update this table and the version in `e2e/tests/card-intro-contrast.spec.ts`.
+The Bootstrap 5.3.3 stylesheet that `e2e/tests/card-intro-contrast.spec.ts` injects (a Bootstrap host, layered and
+unlayered) is an e2e fixture: `e2e/fixtures/bootstrap-5.3.3.min.css` (`bootstrap@5.3.3` on npm,
+`dist/css/bootstrap.min.css`, MIT, see `e2e/fixtures/bootstrap-LICENSE`).
 
 ## Inter (font)
 

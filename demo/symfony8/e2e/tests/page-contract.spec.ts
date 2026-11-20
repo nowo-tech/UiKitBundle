@@ -290,7 +290,7 @@ test.describe('page contract — validation round 3 (REQ-UI-003)', () => {
     await page.locator('td.nowo-ui-table__actions button[data-nowo-confirm-open]').first().click();
     const dialog = page.locator('dialog[data-nowo-ui-confirm][open]');
     await expect(dialog.locator('h2')).toHaveText('Delete order #1042?');
-    await expect(dialog.locator('.nowo-ui-confirm__submit')).toHaveClass(/btn-danger/);
+    await expect(dialog.locator('.nowo-ui-confirm__submit')).toHaveClass(/nowo-ui-btn--danger/);
     const box = await dialog.boundingBox();
     // UiKit 2.29 unified dialog sizes: a confirm is medium, min(40rem, 100vw - 2rem)
     const viewport = page.viewportSize()!.width;
@@ -367,12 +367,10 @@ test.describe('page contract — default theme view', () => {
     expect(primary).toBe('#2563eb');
   });
 
-  test('badges: one subtle set, readable text / background pair (UiKit 2.2, Bootstrap *-subtle / *-emphasis)', async ({ page }) => {
+  test('badges: one subtle set, readable text / background pair (UiKit 2.2; no CSS framework classes since 2.60)', async ({ page }) => {
     await page.goto('/page-contract/default/orders');
     const paid = page.locator('.nowo-ui-badge--success').first();
-    await expect(paid).toHaveClass(/\bbg-success-subtle\b/);
-    await expect(paid).toHaveClass(/\btext-success-emphasis\b/);
-    await expect(paid).not.toHaveClass(/\bms-2\b/);
+    await expect(paid).not.toHaveClass(/\b(bg|text)-success\b|\bms-2\b/);
     const [color, background] = await paid.evaluate((el) => [getComputedStyle(el).color, getComputedStyle(el).backgroundColor]);
     expect(color).not.toBe('rgb(255, 255, 255)');
     expect(background).not.toBe(color);
