@@ -1,6 +1,6 @@
 {% extends 'catalogue/_base.html.twig' %}
 {% block nowo_ui_page_header %}
-    {{ include(nowo_ui_partial('page_header'), {title: 'Navigation', intro: 'The aside nav (sections, current item), tabs and pagination.'}) }}
+    {{ include(nowo_ui_partial('page_header', 'DemoDefaultTheme'), {title: 'Navigation', intro: 'The aside nav (sections, current item), tabs and pagination.'}) }}
 {% endblock %}
 {% block body %}
     {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Tabs', intro: 'Server-side tabs: one panel at a time.', kind: 'content'} %}

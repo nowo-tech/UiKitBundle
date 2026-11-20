@@ -1,11 +1,11 @@
 {% extends 'catalogue/_base.html.twig' %}
 {% block nowo_ui_page_header %}
     {% set _toolbar %}<a class="nowo-ui-btn nowo-ui-btn--outline" href="{{ path('catalogue', {group: 'cards-tables'}) }}">Cards and tables</a><a class="nowo-ui-btn nowo-ui-btn--primary" href="{{ path('catalogue', {group: 'forms'}) }}">Forms</a>{% endset %}
-    {{ include(nowo_ui_partial('page_header'), {title: 'Layout', intro: 'The page grammar every demo follows: page header, flashes, then section cards on one spacing scale.', toolbar: _toolbar}) }}
+    {{ include(nowo_ui_partial('page_header', 'DemoDefaultTheme'), {title: 'Layout', intro: 'The page grammar every demo follows: page header, flashes, then section cards on one spacing scale.', toolbar: _toolbar}) }}
 {% endblock %}
 {% block body %}
     {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Page header', intro: 'Title, subtitle and the page actions on the right; one primary action per view.', kind: 'detail'} %}
-        {% block section_body %}<p><code class="nowo-ui-code">{% verbatim %}{{ include(nowo_ui_partial('page_header'), {title, intro, toolbar}) }}{% endverbatim %}</code></p>{% endblock %}
+        {% block section_body %}<p><code class="nowo-ui-code">{% verbatim %}{{ include(nowo_ui_partial('page_header', 'DemoDefaultTheme'), {title, intro, toolbar}) }}{% endverbatim %}</code></p>{% endblock %}
     {% endembed %}
     <div class="nowo-ui-cards">
         {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Section card', intro: 'Header with title and actions, body, optional footer.', kind: 'detail'} %}

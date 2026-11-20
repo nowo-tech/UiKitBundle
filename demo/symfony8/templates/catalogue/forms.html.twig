@@ -1,7 +1,7 @@
 {% extends 'catalogue/_base.html.twig' %}
 {% form_theme catalogue_form '@NowoUiKitBundle/form/nowo_ui_layout.html.twig' %}
 {% block nowo_ui_page_header %}
-    {{ include(nowo_ui_partial('page_header'), {title: 'Forms', intro: 'Forms always sit in a card; the actions go at the bottom right, the primary button last.'}) }}
+    {{ include(nowo_ui_partial('page_header', 'DemoDefaultTheme'), {title: 'Forms', intro: 'Forms always sit in a card; the actions go at the bottom right, the primary button last.'}) }}
 {% endblock %}
 {% block body %}
     {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Contact details', intro: 'kind: form — Symfony form, UiKit form theme.', kind: 'form', testid: 'catalogue-form'} %}

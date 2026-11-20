@@ -298,31 +298,61 @@
 
 /* A bundle form rendered with Symfony's plain div layout (no form theme on the rows): label above its control, the
    controls on one width. A checkbox / radio keeps its label on the same line. */
-.nowo-ui-demo-platform__content form.nowo-ui-form > div > label:first-child:not(:has(+ :is(input[type='checkbox'], input[type='radio']))) {
+.nowo-ui-demo-platform__content :is(form.nowo-ui-form, form > .nowo-ui-form) > div > label:first-child:not(:has(+ :is(input[type='checkbox'], input[type='radio']))) {
   display: block;
   margin-bottom: var(--nowo-ui-form-label-gap, var(--nowo-ui-demo-space-1));
   font-weight: 500;
 }
 
+/* The demo platform loads no CSS framework, so a control that still carries a framework class from a host form theme
+   (Bootstrap's .form-control next to .nowo-ui-input) is painted by the kit like any other kit input. */
+.nowo-ui-demo-platform .nowo-ui-input.form-control {
+  background-color: var(--nowo-ui-input-bg, var(--nowo-ui-surface));
+  color: var(--nowo-ui-input-text, var(--nowo-ui-text));
+}
+
+.nowo-ui-demo-platform .nowo-ui-input.form-control::placeholder {
+  color: var(--nowo-ui-input-placeholder, var(--nowo-ui-muted));
+  opacity: 1;
+}
+
+.nowo-ui-demo-platform .nowo-ui-input.form-control:focus {
+  outline: 0;
+  border-color: var(--nowo-ui-input-focus-border, var(--nowo-ui-primary));
+  box-shadow: var(--nowo-ui-focus-ring, 0 0 0 0.2rem var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent)));
+}
+
+/* form_widget(form) wraps the rows in the root form's own element (.nowo-ui-form): stack them like the form element's
+   rows, and drop the 1rem a framework form theme puts under each row (mb-3) — the gap replaces it. */
+.nowo-ui-demo-platform__content form > .nowo-ui-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nowo-ui-form-row-gap, 1rem);
+}
+
+.nowo-ui-demo-platform__content :is(form.nowo-ui-form, form > .nowo-ui-form) > .mb-3 {
+  margin-bottom: 0 !important;
+}
+
 /* A compound widget in a plain form row (role="group": e.g. a phone prefix select + number) lays its controls out on
    one line; the first control keeps its content width. */
-.nowo-ui-demo-platform__content form.nowo-ui-form > div > [role='group'] {
+.nowo-ui-demo-platform__content :is(form.nowo-ui-form, form > .nowo-ui-form) > div > [role='group'] {
   display: flex;
   flex-wrap: wrap;
   gap: var(--nowo-ui-demo-space-2);
   max-width: 36rem;
 }
 
-.nowo-ui-demo-platform__content form.nowo-ui-form > div > [role='group'] > :is(input, select):not([type='hidden']) {
+.nowo-ui-demo-platform__content :is(form.nowo-ui-form, form > .nowo-ui-form) > div > [role='group'] > :is(input, select):not([type='hidden']) {
   flex: 1 1 12rem;
   min-width: 0;
 }
 
-.nowo-ui-demo-platform__content form.nowo-ui-form > div > [role='group'] > select:first-child {
+.nowo-ui-demo-platform__content :is(form.nowo-ui-form, form > .nowo-ui-form) > div > [role='group'] > select:first-child {
   flex: 0 0 9rem;
 }
 
-.nowo-ui-demo-platform__content form.nowo-ui-form > div > :is(input:not([type='checkbox'], [type='radio'], [type='hidden']), select, textarea) {
+.nowo-ui-demo-platform__content :is(form.nowo-ui-form, form > .nowo-ui-form) > div > :is(input:not([type='checkbox'], [type='radio'], [type='hidden']), select, textarea) {
   display: block;
   width: 100%;
   max-width: 36rem;

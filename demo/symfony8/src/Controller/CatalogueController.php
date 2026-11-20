@@ -25,6 +25,9 @@ use Symfony\Component\Routing\Attribute\Route;
  */
 final class CatalogueController extends AbstractController
 {
+    /** What a demo's FormKit `demo` profile gives every control. */
+    private const INPUT = ['class' => 'nowo-ui-input'];
+
     public const GROUPS = ['layout', 'cards-tables', 'forms', 'feedback', 'navigation', 'dialogs', 'badges-tokens'];
 
     public function __construct(
@@ -39,11 +42,11 @@ final class CatalogueController extends AbstractController
         $this->profiler?->disable();
         $context = ['group' => $group];
         if ('forms' === $group) {
-            $context['catalogue_form'] = $forms->createNamedBuilder('catalogue_contact', options: ['csrf_protection' => false, 'attr' => ['class' => 'nowo-ui-form']])
-                ->add('name', TextType::class, ['label' => 'Name', 'help' => 'As it appears on the invoice.'])
-                ->add('email', EmailType::class, ['label' => 'Email'])
-                ->add('topic', ChoiceType::class, ['label' => 'Topic', 'choices' => ['Billing' => 'billing', 'Support' => 'support', 'Sales' => 'sales']])
-                ->add('message', TextareaType::class, ['label' => 'Message', 'required' => false])
+            $context['catalogue_form'] = $forms->createNamedBuilder('catalogue_contact', options: ['attr' => ['class' => 'nowo-ui-form']])
+                ->add('name', TextType::class, ['label' => 'Name', 'help' => 'As it appears on the invoice.', 'attr' => self::INPUT])
+                ->add('email', EmailType::class, ['label' => 'Email', 'attr' => self::INPUT])
+                ->add('topic', ChoiceType::class, ['label' => 'Topic', 'choices' => ['Billing' => 'billing', 'Support' => 'support', 'Sales' => 'sales'], 'attr' => self::INPUT])
+                ->add('message', TextareaType::class, ['label' => 'Message', 'required' => false, 'attr' => self::INPUT])
                 ->add('consent', CheckboxType::class, ['label' => 'I agree to be contacted'])
                 ->getForm()
                 ->createView();
