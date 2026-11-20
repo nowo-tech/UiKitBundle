@@ -425,7 +425,8 @@
   color: var(--nowo-ui-success-text);
 }
 
-.nowo-ui-flash--error {
+.nowo-ui-flash--error,
+.nowo-ui-flash--danger {
   background: var(--nowo-ui-danger-bg);
   border-color: var(--nowo-ui-danger-border);
   color: var(--nowo-ui-danger-text-strong);
@@ -1397,7 +1398,7 @@ html.nowo-ui-drawer-open {
 
   .nowo-ui-shell.is-aside-open-mobile .nowo-ui-aside {
     transform: translate3d(0, 0, 0);
-    box-shadow: 12px 0 32px rgba(15, 23, 42, 0.18);
+    box-shadow: var(--nowo-ui-shadow-drawer, 12px 0 32px rgba(15, 23, 42, 0.18));
   }
 
   .nowo-ui-shell.is-aside-collapsed {
@@ -1541,7 +1542,7 @@ html.nowo-ui-drawer-open {
     z-index: 45;
     justify-self: start;
     width: var(--nowo-ui-aside-peek-width, 15.5rem);
-    box-shadow: 12px 0 32px rgba(15, 23, 42, 0.18);
+    box-shadow: var(--nowo-ui-shadow-drawer, 12px 0 32px rgba(15, 23, 42, 0.18));
   }
 
   .nowo-ui-shell.is-aside-rail.is-aside-peek .nowo-ui-aside__inner {
@@ -8674,6 +8675,65 @@ form:has(> .nowo-ui-filters-collapse.is-collapsed[data-nowo-ui-motion-ready]) > 
 @starting-style {
   [data-tab-style='icon'] .nowo-ui-tabs__item[data-rail-label]:not(.nowo-ui-tabs__item--active, .is-active, [aria-current='page']):is(:hover, :focus-visible)::after {
     opacity: 0;
+  }
+}
+
+/* --------------------------------------------------------------------------------------------------------------------
+ * 2.60 — states every host form and table needs: disabled buttons and inputs, invalid inputs, numeric cells, the shell
+ * without motion when the user asks for less
+ * ------------------------------------------------------------------------------------------------------------------ */
+
+.nowo-ui-btn:not(.btn):is(:disabled, [aria-disabled='true'], .is-disabled) {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.nowo-ui-btn:not(.btn):is(:disabled, [aria-disabled='true'], .is-disabled):hover {
+  background: var(--nowo-ui-btn-bg, var(--nowo-ui-surface));
+  border-color: var(--nowo-ui-btn-border, var(--nowo-ui-border-strong));
+}
+
+.nowo-ui-btn--primary:not(.btn):is(:disabled, [aria-disabled='true'], .is-disabled):hover {
+  background: var(--nowo-ui-btn-primary-bg, var(--nowo-ui-primary));
+  border-color: var(--nowo-ui-btn-primary-bg, var(--nowo-ui-primary));
+}
+
+.nowo-ui-input:not(.form-control):is(:disabled, [readonly]) {
+  background-color: var(--nowo-ui-input-disabled-bg, var(--nowo-ui-surface-muted));
+  color: var(--nowo-ui-muted);
+  cursor: not-allowed;
+}
+
+.nowo-ui-input:not(.form-control)[readonly] {
+  cursor: default;
+}
+
+/* aria-invalid (Symfony sets it on a field with errors) paints like the --invalid modifier. */
+.nowo-ui-input:not(.form-control)[aria-invalid='true'] {
+  border-color: var(--nowo-ui-danger);
+}
+
+.nowo-ui-input:not(.form-control)[aria-invalid='true']:focus {
+  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--nowo-ui-danger) 30%, transparent);
+}
+
+/* Numeric and date cells: right aligned (numbers), tabular figures, never wrapped mid-value. */
+.nowo-ui-cell--num {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.nowo-ui-cell--nowrap,
+.nowo-ui-cell--date {
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nowo-ui-shell,
+  .nowo-ui-shell :is(.nowo-ui-aside, .nowo-ui-aside__inner, .nowo-ui-main, .nowo-ui-aside-backdrop, .nowo-ui-burger) {
+    transition: none !important;
   }
 }
 }
