@@ -766,6 +766,22 @@ final class ThemeSlots
         'tour' => '@NowoUiKitBundle/partials/_tour.html.twig',
         'tree' => '@NowoUiKitBundle/partials/_tree.html.twig',
         'wizard_form' => '@NowoUiKitBundle/page/_wizard_form.html.twig',
+        // 2.61 admin components
+        'avatar_group' => '@NowoUiKitBundle/partials/_avatar_group.html.twig',
+        'bulk_bar' => '@NowoUiKitBundle/partials/_bulk_bar.html.twig',
+        'bulk_toggle' => '@NowoUiKitBundle/partials/_bulk_toggle.html.twig',
+        'chip' => '@NowoUiKitBundle/partials/_chip.html.twig',
+        'code_block' => '@NowoUiKitBundle/partials/_code_block.html.twig',
+        'dropzone' => '@NowoUiKitBundle/partials/_dropzone.html.twig',
+        'error_summary' => '@NowoUiKitBundle/partials/_error_summary.html.twig',
+        'filter_bar' => '@NowoUiKitBundle/partials/_filter_bar.html.twig',
+        'form_fieldset' => '@NowoUiKitBundle/partials/_form_fieldset.html.twig',
+        'skeleton' => '@NowoUiKitBundle/partials/_skeleton.html.twig',
+        'steps' => '@NowoUiKitBundle/partials/_steps.html.twig',
+        'tab_panels' => '@NowoUiKitBundle/partials/_tab_panels.html.twig',
+        'table_view' => '@NowoUiKitBundle/partials/_table_view.html.twig',
+        'timeline' => '@NowoUiKitBundle/partials/_timeline.html.twig',
+        'tooltip' => '@NowoUiKitBundle/partials/_tooltip.html.twig',
     ];
 
     /**

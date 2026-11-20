@@ -10,6 +10,10 @@
     - attr: extra root attributes (no on*), bundle, nowo_ui_page_type
   2.23: View\Stat::attributes on the tile <div>, Stat::valueAttributes on the value <dd> (escaped, no on*; empty =
   unchanged markup), for hosts that update figures live (data-uptime-24h…).
+  2.61 (statistic card): View\Stat::delta / trend / deltaTone print a <dd class="nowo-ui-stat__delta"> under the value
+  (arrow + visually hidden direction word + the delta text; nowo-ui-stat__delta--<trend> and --<tone>), and
+  Stat::icon a decorative icon <dd> in the tile. `attr: {class: 'nowo-ui-stat-row--tiles'}` lays the tiles out as
+  cards (KPI tiles) anywhere on a page. Without them: unchanged markup.
   Slots: stat_row, stat, stat_label, stat_value, stat_hint. Tokens: --nowo-ui-stat-min-width, --nowo-ui-stat-gap,
   --nowo-ui-stat-bg, --nowo-ui-stat-border, --nowo-ui-stat-value-size (light / dark through the base tokens).
 #}
@@ -20,6 +24,9 @@
         <div class="{{ nowo_ui_class('stat', _b) }} nowo-ui-stat--{{ stat.tone }}{{ (stat.attributes.class ?? false) ? ' ' ~ stat.attributes.class }}"{{ nowo_ui_attrs('stat', _b) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(stat.attributes ?? {})) }}>
             <dt class="{{ nowo_ui_class('stat_label', _b) }}">{{ stat.label|nowo_ui_trans }}</dt>
             <dd class="{{ nowo_ui_class('stat_value', _b) }}{{ (stat.valueAttributes.class ?? false) ? ' ' ~ stat.valueAttributes.class }}"{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(stat.valueAttributes ?? {})) }}>{% if stat.href %}<a href="{{ stat.href }}">{{ stat.value|nowo_ui_trans }}</a>{% else %}{{ stat.value|nowo_ui_trans }}{% endif %}</dd>
+            {#- 2.61 delta and icon: on the value's line, so a tile without them prints the 2.60 markup byte for byte -#}
+            {%- if stat.delta is defined and stat.delta is not null %}<dd class="nowo-ui-stat__delta nowo-ui-stat__delta--{{ stat.trend ?? 'flat' }} nowo-ui-stat__delta--{{ stat.resolvedDeltaTone() }}">{% if stat.trend is not null %}<svg class="nowo-ui-stat__delta-arrow" viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M6 1.5 11 8H1z"/></svg><span class="visually-hidden">{{ ('stat.trend_' ~ stat.trend)|trans({}, 'NowoUiKitBundle') }} </span>{% endif %}{{ stat.delta|nowo_ui_trans }}</dd>{% endif %}
+            {%- if stat.icon is defined and stat.icon is not null %}<dd class="nowo-ui-stat__icon" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: stat.icon, label: ''}, false)|trim|raw }}</dd>{% endif %}{{ '' }}
             {% if stat.hint is not null %}
                 <dd class="{{ nowo_ui_class('stat_hint', _b) }}">{{ stat.hint|nowo_ui_trans }}</dd>
             {% endif %}

@@ -1,0 +1,37 @@
+{#
+  Client-side tab panels (2.61, theme partial `tab_panels`): the WAI-ARIA tabs pattern over panels that are all in
+  the page (js/nowo-ui-tabs.js: role="tablist", roving tabindex, Left / Right (mirrored in RTL), Home / End, automatic
+  activation, `nowo-ui:tabs:change`). Progressive: without the script every panel is shown in order under its own
+  heading and the tab list stays hidden; the script shows the list, turns the panels into tab panels and hides the
+  headings visually (they stay for screen readers). For tabs that load another page use the `tabs` partial (links).
+
+  Required:
+    - id: root id (tabs "tab-<id>-<item.id>", panels "tab-<id>-<item.id>-panel")
+    - items: list of {id, label (View\Label|string), content (TRUSTED HTML, printed raw: never user input) or
+      content_template + content_context (escaped by Twig)}
+  Optional:
+    - label (View\Label|string): accessible name of the tab list (default tabs.nav)
+    - active: the item id shown first (default: the first item)
+    - heading_level (2–6, default 3): the panel headings
+    - attr: extra root attributes (no on*)
+#}
+{% set _items = items|default([]) %}
+{% set _active = active ?? (_items|first).id ?? '' %}
+{% set _level = heading_level|default(3) in [2, 3, 4, 5, 6] ? heading_level|default(3) : 3 %}
+{% set _attr = nowo_ui_safe_attrs(attr|default({}), ['id', 'data-nowo-ui-tabs', 'data-nowo-ui-tabs-upgrade', 'data-nowo-ui-tabs-active']) %}
+<div id="{{ id }}" class="nowo-ui-tab-panels{{ (_attr.class ?? false) ? ' ' ~ _attr.class }}" data-nowo-ui-tabs data-nowo-ui-tabs-upgrade data-nowo-ui-tabs-active="{{ id ~ '-' ~ _active }}"{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(_attr)) }}>
+    <div role="tablist" class="nowo-ui-tab-panels__list" aria-label="{{ (label ?? null) ? label|nowo_ui_trans : 'tabs.nav'|trans({}, 'NowoUiKitBundle') }}" data-nowo-ui-tabs-list hidden>
+        {%- for _item in _items %}
+            {%- set _tid = id ~ '-' ~ _item.id %}
+            {%- set _on = _item.id == _active %}
+        <button type="button" role="tab" id="tab-{{ _tid }}" class="nowo-ui-tab-panels__tab" aria-controls="tab-{{ _tid }}-panel" aria-selected="{{ _on ? 'true' : 'false' }}" tabindex="{{ _on ? '0' : '-1' }}" data-nowo-ui-tabs-trigger data-nowo-ui-tab-id="{{ _tid }}"{% if _on %} data-active{% endif %}>{{ _item.label|nowo_ui_trans }}</button>
+        {%- endfor %}
+    </div>
+    {%- for _item in _items %}
+        {%- set _tid = id ~ '-' ~ _item.id %}
+    <section id="tab-{{ _tid }}-panel" class="nowo-ui-tab-panels__panel" tabindex="0" aria-labelledby="tab-{{ _tid }}-heading" data-nowo-ui-tabs-panel data-nowo-ui-tab-id="{{ _tid }}">
+        <h{{ _level }} id="tab-{{ _tid }}-heading" class="nowo-ui-tab-panels__heading" data-nowo-ui-tabs-legend>{{ _item.label|nowo_ui_trans }}</h{{ _level }}>
+        {% if _item.content_template ?? null %}{{ include(_item.content_template, _item.content_context|default({})) }}{% else %}{{ (_item.content ?? '')|raw }}{% endif %}
+    </section>
+    {%- endfor %}
+</div>

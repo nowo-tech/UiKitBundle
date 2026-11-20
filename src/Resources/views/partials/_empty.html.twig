@@ -8,6 +8,8 @@
     - bundle: per-bundle theme exceptions (slot `empty`)
     - region: data-nowo-ui-region on the root (scaffolds pass `empty`)
   The empty-state action renders through the theme partial `action`.
+  2.61: View\EmptyState::icon adds the illustrated layout (root modifier nowo-ui-empty--illustrated, a decorative icon
+  in a circle, title as a heading-like line, centred); title and message keep their elements.
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 {% set framework = framework|default(null) %}
@@ -18,7 +20,9 @@
 {% if empty is defined and empty %}
     {% set _title = empty.title is null ? null : (empty.title.key is defined ? empty.title.key|trans(empty.title.params, empty.title.domain) : empty.title) %}
     {% set _message = empty.message is null ? 'empty.default'|trans({}, 'NowoUiKitBundle') : (empty.message.key is defined ? empty.message.key|trans(empty.message.params, empty.message.domain) : empty.message) %}
-    <div class="{{ _class }}"{{ _t ? _t.renderAttributes('empty', bundle, {}, _pt)|raw }}{% if region|default(null) %} data-nowo-ui-region="{{ region }}"{% endif %}>
+    {%- set _icon = empty.icon is defined ? empty.icon : null %}
+    <div class="{{ _class }}{{ _icon ? ' nowo-ui-empty--illustrated' }}"{{ _t ? _t.renderAttributes('empty', bundle, {}, _pt)|raw }}{% if region|default(null) %} data-nowo-ui-region="{{ region }}"{% endif %}>
+        {%- if _icon %}<span class="nowo-ui-empty__icon" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _icon, label: ''}, false) }}</span>{% endif %}
         {% if _title %}<p class="nowo-ui-empty__title">{{ _title }}</p>{% endif %}
         <p class="nowo-ui-empty__message">{{ _message }}</p>
         {% if empty.action %}

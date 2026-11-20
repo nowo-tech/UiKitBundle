@@ -1,0 +1,31 @@
+{#
+  Error summary (2.61, theme partial `error_summary`): at the top of a form that came back invalid, a heading and one
+  link per error to its field (`#<field id>`), so keyboard and screen reader users reach each problem. It is
+  focusable (tabindex="-1") and carries data-nowo-ui-error-summary: js/nowo-ui-form-busy.js moves the focus to it
+  on load, so the error is announced once. Renders nothing for a valid form.
+
+  Required:
+    - form: FormView (its own errors and every child's, recursively)
+  Optional:
+    - title (View\Label|string; default error_summary.title), heading_level (2–6, default 2), attr (no on*)
+#}
+{% macro _items(view, root_id) %}
+    {%- set _v = view.vars -%}
+    {%- set _label = _v.label is same as(false) or _v.label is empty ? _v.name|humanize : (_v.translation_domain is same as(false) ? _v.label : _v.label|trans(_v.label_translation_parameters|default({}), _v.translation_domain)) -%}
+    {#- an expanded choice (radio / checkbox group) links to its first box, the element that takes focus -#}
+    {%- set _target = (_v.expanded ?? false) and view.children|length > 0 ? (view.children|first).vars.id : _v.id -%}
+    {%- for _e in _v.errors|default([]) -%}
+        <li>{% if _v.id != root_id %}<a href="#{{ _target }}">{{ _label }}: {{ _e.message }}</a>{% else %}{{ _e.message }}{% endif %}</li>
+    {%- endfor -%}
+    {%- if not (_v.expanded ?? false) -%}{%- for _c in view.children|default([]) -%}{{ _self._items(_c, root_id) }}{%- endfor -%}{%- endif -%}
+{% endmacro %}
+{% set _list = _self._items(form, form.vars.id)|trim %}
+{% if _list is not same as('') %}
+    {% set _level = heading_level|default(2) in [2, 3, 4, 5, 6] ? heading_level|default(2) : 2 %}
+    {% set _attr = nowo_ui_safe_attrs(attr|default({}), ['tabindex', 'role', 'aria-labelledby', 'data-nowo-ui-error-summary']) %}
+    {% set _id = form.vars.id ~ '-error-summary' %}
+    <div class="nowo-ui-error-summary{{ (_attr.class ?? false) ? ' ' ~ _attr.class }}" tabindex="-1" aria-labelledby="{{ _id }}-title" data-nowo-ui-error-summary{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(_attr)) }}>
+        <h{{ _level }} id="{{ _id }}-title" class="nowo-ui-error-summary__title">{{ (title ?? null) ? title|nowo_ui_trans : 'error_summary.title'|trans({}, 'NowoUiKitBundle') }}</h{{ _level }}>
+        <ul class="nowo-ui-error-summary__list">{{ _list }}</ul>
+    </div>
+{% endif %}

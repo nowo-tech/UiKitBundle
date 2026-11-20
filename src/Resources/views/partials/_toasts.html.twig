@@ -16,6 +16,11 @@
     - toast_type_classes (2.9): extra class per flash type {error, warning, info, success, default}
     - toast_flash_slots (2.9, default true): false ignores the flash_<type> slot classes on toasts (a host whose
       flash_<type> slots style inline flashes keeps them off its toasts)
+  2.61, client (default false): the stack is printed even without flashes and stays in the page (data-nowo-ui-toast-
+  client), followed by a <template data-nowo-ui-toast-template>, so js/nowo-ui-toast.js can add toasts from the page:
+  window.nowoUiToast({message, title, type, timeout}) or a button with data-nowo-ui-toast-show and
+  data-nowo-ui-toast-message / -title / -type / -timeout (no inline script). Client toasts use the same timeouts
+  (error / warning: `timeouts.error`), pause while hovered or focused, and leave without animation with reduced motion.
   Blocks (2.9, for a host template that extends this one): toast_attributes (inside each toast tag — the loop
   variables label, message, flashType, structured are available), toast_text (a plain string message, e.g. a host
   translation filter), toast_dismiss_attributes (inside the dismiss button tag).
@@ -32,10 +37,11 @@
 {% set _timeouts = {error: 8000, warning: 8000, default: 5000}|merge(timeouts|default({})) %}
 {% set _cls = {toast: '', content: '', title: '', message: '', dismiss: ''}|merge(toast_classes|default({})) %}
 {% set _type_cls = toast_type_classes|default({}) %}
-{% if toast_messages is not empty %}
+{% set _client = client ?? false %}
+{% if toast_messages is not empty or _client %}
     <div
         class="nowo-ui-toast-stack{{ _extra ? ' ' ~ _extra }}"
-        data-nowo-ui-toast-stack
+        data-nowo-ui-toast-stack{% if _client %} data-nowo-ui-toast-client{% endif %}
         aria-live="polite"
         aria-atomic="false"
         aria-relevant="additions"
@@ -79,4 +85,15 @@
             {% endfor %}
         {% endfor %}
     </div>
+    {% if _client %}
+        <template data-nowo-ui-toast-template>
+            <div class="nowo-ui-toast nowo-ui-flash{{ _cls.toast ? ' ' ~ _cls.toast }}" data-nowo-ui-toast data-timeout="{{ _timeouts.default }}" data-timeout-urgent="{{ _timeouts.error }}">
+                <div class="nowo-ui-toast__content{{ _cls.content ? ' ' ~ _cls.content }}">
+                    <p class="nowo-ui-toast__title{{ _cls.title ? ' ' ~ _cls.title }}" data-nowo-ui-toast-title hidden></p>
+                    <p class="nowo-ui-toast__message{{ _cls.message ? ' ' ~ _cls.message }}" data-nowo-ui-toast-message></p>
+                </div>
+                <button type="button" class="nowo-ui-toast__dismiss{{ _cls.dismiss ? ' ' ~ _cls.dismiss }}" data-nowo-ui-toast-dismiss aria-label="{{ 'toast.dismiss'|trans({}, 'NowoUiKitBundle') }}"><span aria-hidden="true">&times;</span></button>
+            </div>
+        </template>
+    {% endif %}
 {% endif %}

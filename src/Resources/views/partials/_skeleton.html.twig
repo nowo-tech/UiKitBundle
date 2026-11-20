@@ -1,0 +1,30 @@
+{#
+  Skeleton loading (2.61, theme partial `skeleton`): grey placeholders where content is coming, inside a region that
+  says it is busy (aria-busy="true") with a visually hidden status line, so screen readers hear "Loading…" once
+  instead of the placeholders. The pulse runs only with prefers-reduced-motion: no-preference. The host replaces the
+  whole region (and its aria-busy) when the content arrives.
+
+  Optional:
+    - variant: text (default: lines) | list (avatar + line rows) | card (a block over lines) | table (rows of cells)
+    - lines (text, default 3), rows (list / table, default 3)
+    - label (View\Label|string): the status text and region name (default loader.loading)
+    - attr: extra root attributes (no on*)
+#}
+{% set _variant = (variant ?? 'text') in ['text', 'list', 'card', 'table'] ? variant ?? 'text' : 'text' %}
+{% set _label = (label ?? null) ? label|nowo_ui_trans : 'loader.loading'|trans({}, 'NowoUiKitBundle') %}
+{% set _attr = nowo_ui_safe_attrs(attr|default({}), ['role', 'aria-busy', 'aria-label', 'data-nowo-ui-skeleton']) %}
+<div class="nowo-ui-skeleton nowo-ui-skeleton--{{ _variant }}{{ (_attr.class ?? false) ? ' ' ~ _attr.class }}" role="region" aria-busy="true" aria-label="{{ _label }}" data-nowo-ui-skeleton{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(_attr)) }}>
+    <p class="visually-hidden" role="status">{{ _label }}</p>
+    {% if _variant == 'card' %}
+        <span class="nowo-ui-skeleton__block" aria-hidden="true"></span>
+    {% endif %}
+    {% if _variant in ['list', 'table'] %}
+        {% for _i in 1..max(1, rows|default(3)) %}
+            <div class="nowo-ui-skeleton__row" aria-hidden="true">
+                {% if _variant == 'list' %}<span class="nowo-ui-skeleton__circle"></span><span class="nowo-ui-skeleton__line"></span>{% else %}<span class="nowo-ui-skeleton__line"></span><span class="nowo-ui-skeleton__line"></span><span class="nowo-ui-skeleton__line"></span>{% endif %}
+            </div>
+        {% endfor %}
+    {% else %}
+        {% for _i in 1..max(1, lines|default(3)) %}<span class="nowo-ui-skeleton__line" aria-hidden="true"></span>{% endfor %}
+    {% endif %}
+</div>

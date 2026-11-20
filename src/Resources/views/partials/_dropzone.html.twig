@@ -1,0 +1,36 @@
+{#
+  File dropzone (2.61, theme partial `dropzone`): progressive enhancement over a FileType field. Without JavaScript it
+  is the field's own file input with its label and hint. js/nowo-ui-dropzone.js stretches the input over the
+  box (so a click, Enter or Space opens the picker as before), accepts dropped files into the same input
+  (DataTransfer), lists the chosen files with their size, flags files over `max_bytes` or outside `accept`, and
+  announces the selection in a polite live region. The upload itself stays the form's normal submit.
+
+  Required:
+    - field: FormView of a FileType (form_widget / form_errors / form_help, REQ-TWIG-005)
+  Optional:
+    - prompt (View\Label|string): main line (default dropzone.prompt)
+    - hint (View\Label|string): second line (e.g. "PDF or PNG, up to 5 MB")
+    - max_bytes: per-file limit checked in the browser (the server still validates)
+    - attr: extra root attributes (no on*)
+#}
+{% set _v = field.vars %}
+{% set _attr = nowo_ui_safe_attrs(attr|default({}), ['data-nowo-ui-dropzone', 'data-nowo-ui-dropzone-max']) %}
+<div class="nowo-ui-form-row nowo-ui-dropzone-row">
+    {{ form_label(field) }}
+    <div class="nowo-ui-dropzone{{ (_attr.class ?? false) ? ' ' ~ _attr.class }}" data-nowo-ui-dropzone{% if max_bytes ?? null %} data-nowo-ui-dropzone-max="{{ max_bytes }}"{% endif %}
+        data-nowo-ui-dropzone-one="{{ 'dropzone.selected_one'|trans({}, 'NowoUiKitBundle') }}"
+        data-nowo-ui-dropzone-many="{{ 'dropzone.selected_many'|trans({}, 'NowoUiKitBundle') }}"
+        data-nowo-ui-dropzone-none="{{ 'dropzone.none'|trans({}, 'NowoUiKitBundle') }}"
+        data-nowo-ui-dropzone-too-large="{{ 'dropzone.too_large'|trans({}, 'NowoUiKitBundle') }}"
+        data-nowo-ui-dropzone-wrong-type="{{ 'dropzone.wrong_type'|trans({}, 'NowoUiKitBundle') }}"
+        {{- nowo_ui_html_attrs(nowo_ui_attrs_without_class(_attr)) }}>
+        <svg class="nowo-ui-dropzone__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 0-4.5 4.5M12 4l4.5 4.5M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+        <p class="nowo-ui-dropzone__prompt" aria-hidden="true">{{ (prompt ?? null) ? prompt|nowo_ui_trans : 'dropzone.prompt'|trans({}, 'NowoUiKitBundle') }}</p>
+        {% if hint ?? null %}<p class="nowo-ui-dropzone__hint" id="{{ _v.id }}_dropzone_hint">{{ hint|nowo_ui_trans }}</p>{% endif %}
+        {{ form_widget(field, {attr: _v.attr|merge({'aria-describedby': ((_v.attr['aria-describedby'] ?? '') ~ ((hint ?? null) ? ' ' ~ _v.id ~ '_dropzone_hint') ~ ' ' ~ _v.id ~ '_dropzone_status')|trim})}) }}
+        <ul class="nowo-ui-dropzone__files" data-nowo-ui-dropzone-files></ul>
+        <p class="visually-hidden" id="{{ _v.id }}_dropzone_status" role="status" data-nowo-ui-dropzone-status></p>
+    </div>
+    {{ form_errors(field) }}
+    {{ form_help(field) }}
+</div>

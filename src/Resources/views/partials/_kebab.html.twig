@@ -13,6 +13,9 @@
     - context_menu (2.54, bool; default theme.context_menus, false): the root carries data-nowo-ui-context-menu-source,
       so a right-click, the ContextMenu key, Shift+F10 or a long press on the table row / ARIA row / UiKit card /
       [data-nowo-ui-context-menu-scope] around the kebab opens the same items there (opt-in runtime `context-menu`).
+    - menu_semantics (2.61; null by default): 'menu' marks the popover root data-nowo-ui-menu-semantics="menu", so
+      nowo-ui-popover.js runs the APG menu button keyboard on the items (opening focuses the first one, Up / Down /
+      Home / End move, Escape returns to the toggle). Only with `popover`; the <details> kebab is unchanged.
     - sheet (2.58, bool; default false): the root carries data-nowo-ui-sheet. Below 40rem the menu opens as a bottom
       sheet (full width, above a backdrop), and the context menu of the same items does too.
 
@@ -62,8 +65,8 @@
 {% endset %}
 {% if _popover %}
 {% set _menu_id = id|default(null) ?: 'nowo-ui-kebab-' ~ random() %}
-<div class="nowo-ui-kebab" data-nowo-ui-kebab data-nowo-ui-popover-menu{% if _sheet %} data-nowo-ui-sheet{% endif %}{% if _ctx %} data-nowo-ui-context-menu-source data-nowo-ui-context-menu-label="{{ 'context_menu.label'|trans({}, 'NowoUiKitBundle') }}"{% endif %}>
-    <button type="button" class="nowo-ui-kebab__summary" popovertarget="{{ _menu_id }}" aria-haspopup="menu" aria-expanded="false" aria-label="{{ label }}" data-nowo-ui-popover-trigger>
+<div class="nowo-ui-kebab" data-nowo-ui-kebab data-nowo-ui-popover-menu{% if (menu_semantics ?? null) == 'menu' %} data-nowo-ui-menu-semantics="menu"{% endif %}{% if _sheet %} data-nowo-ui-sheet{% endif %}{% if _ctx %} data-nowo-ui-context-menu-source data-nowo-ui-context-menu-label="{{ 'context_menu.label'|trans({}, 'NowoUiKitBundle') }}"{% endif %}>
+    <button type="button" class="nowo-ui-kebab__summary" popovertarget="{{ _menu_id }}" aria-haspopup="menu" aria-expanded="false" aria-label="{{ label }}"{% if (menu_semantics ?? null) == 'menu' %} aria-controls="{{ _menu_id }}"{% endif %} data-nowo-ui-popover-trigger>
         <span class="nowo-ui-kebab__dots" aria-hidden="true">⋮</span>
     </button>
     <div class="nowo-ui-kebab__menu" id="{{ _menu_id }}" role="menu" popover data-nowo-ui-popover-panel>
