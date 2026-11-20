@@ -33,20 +33,20 @@ final class PrimaryHoverContrastTest extends TestCase
         self::assertSame(1, preg_match('/:root:where\(:not\(\[data-nowo-ui-host-tokens\]\)\),\s*:where\(:root\[data-nowo-ui-host-tokens\]\) \{(.*?)\}/s', $css, $light));
         self::assertSame(1, preg_match('/\[data-theme="dark"\]:where\(:not\(\[data-nowo-ui-host-tokens\], \[data-nowo-ui-host-tokens\] \*\)\),\s*:where\([^)]*\) \{(.*?)\}/s', $css, $dark));
 
-        $lightHover = self::mix(self::token($light[1], 'primary'), [0, 0, 0], 0.85);
-        $darkHover = self::mix(self::token($dark[1], 'primary'), [255, 255, 255], 0.85);
+        $lightHover = $this->mix($this->token($light[1], 'primary'), [0, 0, 0], 0.85);
+        $darkHover = $this->mix($this->token($dark[1], 'primary'), [255, 255, 255], 0.85);
 
-        self::assertGreaterThanOrEqual(4.5, self::contrast($lightHover, self::token($light[1], 'primary-contrast')));
-        self::assertGreaterThanOrEqual(4.5, self::contrast($darkHover, self::token($dark[1], 'primary-contrast')));
+        self::assertGreaterThanOrEqual(4.5, $this->contrast($lightHover, $this->token($light[1], 'primary-contrast')));
+        self::assertGreaterThanOrEqual(4.5, $this->contrast($darkHover, $this->token($dark[1], 'primary-contrast')));
         // The resting colours keep AA too.
-        self::assertGreaterThanOrEqual(4.5, self::contrast(self::token($light[1], 'primary'), self::token($light[1], 'primary-contrast')));
-        self::assertGreaterThanOrEqual(4.5, self::contrast(self::token($dark[1], 'primary'), self::token($dark[1], 'primary-contrast')));
+        self::assertGreaterThanOrEqual(4.5, $this->contrast($this->token($light[1], 'primary'), $this->token($light[1], 'primary-contrast')));
+        self::assertGreaterThanOrEqual(4.5, $this->contrast($this->token($dark[1], 'primary'), $this->token($dark[1], 'primary-contrast')));
     }
 
     /**
      * @return array{int, int, int}
      */
-    private static function token(string $block, string $name): array
+    private function token(string $block, string $name): array
     {
         self::assertSame(1, preg_match('/--nowo-ui-'.preg_quote($name, '/').':\s*#([0-9a-f]{6});/i', $block, $m), $name);
         $hex = $m[1];
@@ -62,7 +62,7 @@ final class PrimaryHoverContrastTest extends TestCase
      *
      * @return array{int, int, int}
      */
-    private static function mix(array $a, array $b, float $p): array
+    private function mix(array $a, array $b, float $p): array
     {
         return [(int) round($a[0] * $p + $b[0] * (1 - $p)), (int) round($a[1] * $p + $b[1] * (1 - $p)), (int) round($a[2] * $p + $b[2] * (1 - $p))];
     }
@@ -71,10 +71,10 @@ final class PrimaryHoverContrastTest extends TestCase
      * @param array{int, int, int} $a
      * @param array{int, int, int} $b
      */
-    private static function contrast(array $a, array $b): float
+    private function contrast(array $a, array $b): float
     {
-        $l1 = self::luminance($a);
-        $l2 = self::luminance($b);
+        $l1 = $this->luminance($a);
+        $l2 = $this->luminance($b);
 
         return (max($l1, $l2) + 0.05) / (min($l1, $l2) + 0.05);
     }
@@ -82,7 +82,7 @@ final class PrimaryHoverContrastTest extends TestCase
     /**
      * @param array{int, int, int} $rgb
      */
-    private static function luminance(array $rgb): float
+    private function luminance(array $rgb): float
     {
         $c = array_map(static function (int $v): float {
             $s = $v / 255;
