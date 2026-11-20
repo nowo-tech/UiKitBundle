@@ -1,0 +1,34 @@
+{#- UiKit demo on the demo platform shell (2.60): the component catalogue. UiKit's default theme only — the host theme
+    showcase (Acme tokens, Bootstrap) keeps its own pages under "Showcases". -#}
+{% extends '@NowoUiKit/demo_platform/layout.html.twig' %}
+{% set nowo_ui_demo_platform = {
+    bundle: 'UiKit',
+    home_route: 'catalogue',
+    repository: 'https://github.com/nowo-tech/UiKitBundle',
+    translation_domain: false,
+    nav: [
+        {label: 'Layout', route: 'catalogue', params: {group: 'layout'}, section: 'Catalogue', testid: 'catalogue-nav-layout'},
+        {label: 'Cards and tables', route: 'catalogue', params: {group: 'cards-tables'}, section: 'Catalogue', testid: 'catalogue-nav-cards-tables'},
+        {label: 'Forms', route: 'catalogue', params: {group: 'forms'}, section: 'Catalogue', testid: 'catalogue-nav-forms'},
+        {label: 'Feedback states', route: 'catalogue', params: {group: 'feedback'}, section: 'Catalogue', testid: 'catalogue-nav-feedback'},
+        {label: 'Navigation', route: 'catalogue', params: {group: 'navigation'}, section: 'Catalogue', testid: 'catalogue-nav-navigation'},
+        {label: 'Dialogs', route: 'catalogue', params: {group: 'dialogs'}, section: 'Catalogue', testid: 'catalogue-nav-dialogs'},
+        {label: 'Badges and tokens', route: 'catalogue', params: {group: 'badges-tokens'}, section: 'Catalogue', testid: 'catalogue-nav-badges-tokens'},
+        {label: 'Demo platform sample', route: 'kit_demo_platform', active: ['kit_demo_platform'], section: 'Showcases'},
+        {label: 'Kitchen sink (host theme)', route: 'nowo_ui_kit_kitchen_sink', section: 'Showcases'},
+        {label: 'Page contract (host theme)', route: 'page_contract_index', section: 'Showcases'},
+        {label: 'Sidebar layouts', route: 'kit_sidebar_layout', section: 'Showcases'},
+        {label: 'Focus mode', route: 'kit_focus_mode', section: 'Showcases'},
+    ],
+} %}
+{% set nowo_ui_document_title = 'UiKit catalogue' %}
+{#- The demo's default-theme exception (config/packages/nowo_ui_kit.yaml): no host class map, the kit page header. -#}
+{% set nowo_ui_bundle = 'DemoPlatformCatalogue' %}
+
+{#- No host tokens here: the catalogue shows UiKit's defaults, like every bundle demo. -#}
+{% block nowo_ui_styles %}
+    {%- if not nowo_ui_base_stylesheet() %}<link rel="stylesheet" href="{{ asset('css/nowo-ui-base.css', 'nowo_ui_kit') }}">
+    {% endif -%}
+    <link rel="stylesheet" href="{{ asset('css/nowo-ui.css', 'nowo_ui_kit') }}">
+    <link rel="stylesheet" href="{{ asset('css/nowo-ui-demo-platform.css', 'nowo_ui_kit') }}">
+{% endblock %}

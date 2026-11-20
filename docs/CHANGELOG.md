@@ -141,6 +141,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Demo platform shell (2.60).** New layout `@NowoUiKit/demo_platform/layout.html.twig` that every nowo-tech bundle
+  demo can extend, so all demos look like one "nowo · bundles" platform: a top bar (platform brand, bundle name and
+  optional version, locale pills, theme toggle, sign-in button or UiKit user menu), the aside navigation grouped in
+  sections (a drawer behind the burger on phones), a content area at `--nowo-ui-content-max-width` with the page
+  header and flashes, and a footer with the repository link. It is the app shell (below-header, classic) with UiKit's
+  default theme always on (`css/nowo-ui-base.css`), `nowo-ui-shell.js`, and a new tokens-only stylesheet
+  `css/nowo-ui-demo-platform.css`. A demo declares everything in one Twig variable, `nowo_ui_demo_platform` (bundle,
+  home route, repository, locales, nav items with route / params / `active` prefixes / section / test id, auth links),
+  set in its `base.html.twig`; extension blocks `nowo_ui_demo_platform_header_end`, `nowo_ui_demo_platform_aside_end`
+  and `nowo_ui_demo_platform_footer`. No config, service or listener: worker-safe with the kernel kept alive.
+  Accessibility: skip link, named landmarks, `aria-current` on the current item and locale, no inline style or
+  handler. New translation keys `demo_platform.*` (7 locales). Demo page `/kit/demo-platform` with an axe e2e. See
+  [USAGE.md — Demo platform shell](USAGE.md#demo-platform-shell-260).
+- **Demo platform after the UX review (2.60).** The shell owns its light and dark tokens and never prints host theme
+  tokens; five-step type scale, one spacing scale (`--nowo-ui-space-1..4`), one button size per slot, 44 px targets on
+  coarse pointers, input borders 3:1 or more with an outline focus ring, cards above the page in dark mode; flashes
+  with icon, type prefix, live region and dismiss (`demo_platform/_flashes.html.twig`); sections with a centred empty
+  state (icon, `state_title`), skeleton loading and an error alert; required / invalid / checkbox / error styles;
+  tables, badges and code never break mid-token; phone dialogs as bottom sheets; the brand links to the demo home;
+  `nowo-ui-demo-style-lint` fails on host token output.
+- **Demo layout grammar (2.60).** `@NowoUiKit/demo_platform/_section.html.twig`: the one content card of a demo
+  (header with title, intro and actions on the right; `kind` table / form / list / detail / content — a table body
+  is a focusable scroll region, a form footer lays its actions out at the bottom right; `state` empty / loading /
+  error with the kit blocks). The demo platform stylesheet adds one spacing scale (`--nowo-ui-demo-space-1..4`,
+  `--nowo-ui-demo-gap`), paints the scaffolds' table / form regions and `nowo-ui-form-panel` as cards, stacks plain
+  Symfony form rows (label above control, `role="group"` widgets on one line) and keeps unclassed bundle buttons
+  transparent. Rules in [USAGE.md — Demo platform shell](USAGE.md#demo-platform-shell-260).
+- **Vendored Tom Select theme (2.60).** `css/vendor/tom-select.default.min.css` (Tom Select 2.6.2 default theme,
+  Apache-2.0, see [THIRD_PARTY.md](THIRD_PARTY.md)), so hosts and bundles load it from UiKit's asset package (then
+  `css/nowo-ui-tom-select.css`) instead of a CDN. `make token-lint` allow-lists `css/vendor/`.
+- **`bin/nowo-ui-demo-style-lint` (2.60)** (`Nowo\UiKitBundle\Lint\DemoStyleLint`): fails when a demo app has a
+  stylesheet of its own, a `<style>`, a `style=""` or a stylesheet link other than UiKit's and the bundles' assets.
+- **Accessible drawer (2.60, opt-in).** `data-nowo-ui-drawer-a11y` on a two-mode app shell root: the hidden aside is
+  `inert`, the burgers carry the real state on load and on breakpoint changes, opening the phone drawer moves the focus
+  in, makes the page inert and locks the scroll (`html.nowo-ui-drawer-open`), closing returns the focus to the burger.
+  Generic `[data-nowo-ui-dismiss]` / `[data-nowo-ui-dismissible]` handler in `nowo-ui-shell.js`.
+- **States (2.60).** Disabled and read-only buttons and inputs, `aria-invalid` inputs, `.nowo-ui-cell--num` /
+  `--date` / `--nowrap`, `.nowo-ui-flash--danger` (alias of `--error`), reduced motion for the shell transitions,
+  `--nowo-ui-shadow-drawer`.
+- **Tree toggle outside the tree partial (2.60).** `button.nowo-ui-tree__toggle` (reset button, chevron that turns with
+  its own `aria-expanded`, or with the `aria-expanded` of the button that holds a `.nowo-ui-tree__toggle` span),
+  `.nowo-ui-tree__disclosure` (a full-width disclosure row: label + toggle) and `.nowo-ui-collapse` (a script-driven
+  panel hidden until `.show` / `.is-open`), so a bundle menu (DashboardMenu `toggle_style: kit`) gets the kit toggles
+  without a CSS framework.
+
+### Fixed
+
+- The primary button hover kept its text below WCAG AA in the default light theme (white mix, 3.97:1). The light
+  hover now darkens the primary (`color-mix(… 85%, black)`, 6.6:1); the default dark theme sets
+  `--nowo-ui-primary-hover` to a white mix (its primary carries dark text, 8.5:1). Hosts that set
+  `--nowo-ui-primary-hover` or `--nowo-ui-btn-primary-hover-bg` are unchanged.
+
 ## [2.59.0] - 2026-11-19
 
 ### Added

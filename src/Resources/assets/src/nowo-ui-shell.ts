@@ -14,6 +14,15 @@
  * focus inside keeps it open. Short delays keep a pointer that only crosses the rail from opening it; touch never peeks.
  * Every `[data-nowo-ui-burger]` of a shell (the header's and, in the full-height layout, the aside head's) is kept in
  * sync.
+ *
+ * Accessible drawer (2.60, opt-in with `data-nowo-ui-drawer-a11y` on a two-mode shell root, set by the demo platform
+ * shell): a hidden aside (closed phone drawer, collapsed desktop aside) is `inert`, so its links leave the tab order; the
+ * burgers carry the real state (aria-expanded, next-action label, glyph) on load and on every breakpoint change; opening
+ * the phone drawer moves the focus into it (the current link, else the first one), makes the rest of the page inert and
+ * locks the page scroll (`nowo-ui-drawer-open` on <html>); closing it (burger, backdrop, Escape, a link) gives the page
+ * back and returns the focus to the burger when it was inside the drawer. Shells without the attribute are unchanged.
+ *
+ * Dismissible messages (2.60): a click on `[data-nowo-ui-dismiss]` removes its `[data-nowo-ui-dismissible]` ancestor.
  */
 
 import {
@@ -73,12 +82,89 @@ export function toggleAside(shell: HTMLElement | null, forceOpen?: boolean): voi
     shell.classList.remove('is-aside-open-mobile');
     document.body.classList.remove('nowo-ui-aside-open');
     burgers.forEach((btn) => setExpanded(btn, !collapsed));
+    syncDrawer(shell);
     return;
   }
   const open = typeof forceOpen === 'boolean' ? forceOpen : !shell.classList.contains('is-aside-open-mobile');
   shell.classList.toggle('is-aside-open-mobile', open);
   document.body.classList.toggle('nowo-ui-aside-open', open);
   burgers.forEach((btn) => setExpanded(btn, open));
+  syncDrawer(shell, open ? 'open' : 'close');
+}
+
+export const DRAWER_A11Y_ATTRIBUTE = 'data-nowo-ui-drawer-a11y';
+export const DRAWER_OPEN_ROOT_CLASS = 'nowo-ui-drawer-open';
+/** Regions made inert while the phone drawer is open (the burger's own header start stays usable). */
+const DRAWER_INERT_SELECTOR = '.nowo-ui-main, [data-nowo-ui-shell] > footer, [data-nowo-ui-shell] > .nowo-ui-footer, .nowo-ui-header__end, .nowo-ui-header__context';
+
+function hasDrawerA11y(shell: HTMLElement): boolean {
+  return shell.hasAttribute(DRAWER_A11Y_ATTRIBUTE) && !isRailShell(shell);
+}
+
+function setInert(el: Element | null, inert: boolean): void {
+  if (!(el instanceof HTMLElement)) {
+    return;
+  }
+  if (inert) {
+    el.setAttribute('inert', '');
+  } else {
+    el.removeAttribute('inert');
+  }
+}
+
+/** Whether the aside of an accessible-drawer shell is shown now (phone: open drawer; desktop: not collapsed). */
+export function isAsideShown(shell: HTMLElement): boolean {
+  return isDesktop() ? !shell.classList.contains('is-aside-collapsed') : shell.classList.contains('is-aside-open-mobile');
+}
+
+/**
+ * Bring an accessible-drawer shell in line with its state: inert aside when hidden, burger state, page inert + scroll
+ * lock while the phone drawer is open. `transition` moves the focus: `open` into the drawer, `close` back to the burger
+ * when the focus was inside the drawer (or on the page behind it).
+ */
+export function syncDrawer(shell: HTMLElement, transition: 'open' | 'close' | null = null): void {
+  if (!hasDrawerA11y(shell)) {
+    return;
+  }
+  const aside = shell.querySelector('[data-nowo-ui-aside]');
+  const shown = isAsideShown(shell);
+  const drawerOpen = !isDesktop() && shown;
+  const focusWasInside = aside instanceof HTMLElement && aside.contains(document.activeElement);
+  setInert(aside, !shown);
+  shell.querySelectorAll(DRAWER_INERT_SELECTOR).forEach((el) => setInert(el, drawerOpen));
+  document.documentElement.classList.toggle(DRAWER_OPEN_ROOT_CLASS, drawerOpen);
+  shell.querySelectorAll('[data-nowo-ui-burger]').forEach((btn) => {
+    if (!(btn instanceof HTMLElement)) {
+      return;
+    }
+    setExpanded(btn, shown);
+    btn.setAttribute('data-nowo-ui-burger-glyph', shown ? 'close' : 'open');
+    const label = shown ? btn.getAttribute('data-label-hide') : btn.getAttribute('data-label-expand');
+    if (label) {
+      btn.setAttribute('aria-label', label);
+      btn.setAttribute('title', label);
+    }
+  });
+  if (transition === 'open' && drawerOpen && aside instanceof HTMLElement) {
+    const target = aside.querySelector<HTMLElement>('[aria-current="page"]') ?? aside.querySelector<HTMLElement>('a[href], button:not([disabled])');
+    target?.focus();
+  } else if (transition === 'close' && (focusWasInside || document.activeElement === document.body)) {
+    const burger = Array.from(shell.querySelectorAll<HTMLElement>('[data-nowo-ui-burger]')).find((el) => isShown(el));
+    burger?.focus();
+  }
+}
+
+function onDrawerViewportChange(): void {
+  document.querySelectorAll(`[data-nowo-ui-shell][${DRAWER_A11Y_ATTRIBUTE}]`).forEach((el) => {
+    if (el instanceof HTMLElement) {
+      // Leaving the phone layout with the drawer open: the desktop aside takes over, nothing stays locked.
+      if (isDesktop()) {
+        el.classList.remove('is-aside-open-mobile');
+        document.body.classList.remove('nowo-ui-aside-open');
+      }
+      syncDrawer(el);
+    }
+  });
 }
 
 export const PEEK_CLASS = 'is-aside-peek';
@@ -325,6 +411,13 @@ function onDocumentClick(event: MouseEvent): void {
     return;
   }
 
+  // 2.60: an aria-disabled button or link never acts (CSS removes pointer events; this stops keyboard activation).
+  if (target.closest('.nowo-ui-btn[aria-disabled="true"]')) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    return;
+  }
+
   const burger = target.closest('[data-nowo-ui-burger]');
   if (burger) {
     event.preventDefault();
@@ -355,7 +448,19 @@ function onDocumentClick(event: MouseEvent): void {
     const shell = shellRoot(asideLink);
     if (isRailShell(shell) && isMobileSidebar(sidebarOptionsFrom(shell))) {
       setSidebarMode(shell, 'hidden');
+    } else if (shell && hasDrawerA11y(shell) && shell.classList.contains('is-aside-open-mobile')) {
+      toggleAside(shell, false);
     }
+  }
+
+  const dismiss = target.closest('[data-nowo-ui-dismiss]');
+  if (dismiss) {
+    const box = dismiss.closest('[data-nowo-ui-dismissible]');
+    if (box) {
+      event.preventDefault();
+      box.remove();
+    }
+    return;
   }
 
   const widthToggle = target.closest('[data-nowo-ui-width-toggle]');
@@ -376,7 +481,7 @@ function onDocumentClick(event: MouseEvent): void {
 }
 
 function onDocumentKeydown(event: KeyboardEvent): void {
-  if (event.key !== 'Escape') {
+  if (event.key !== 'Escape' || event.defaultPrevented || document.querySelector('dialog[open]')) {
     return;
   }
   const shell = document.querySelector('[data-nowo-ui-shell].is-aside-open-mobile');
@@ -437,6 +542,9 @@ export function bindNowoUiShell(): void {
       const query = window.matchMedia(sidebarOptionsFrom(railShell).mobileQuery);
       query.addEventListener?.('change', onViewportChange);
     }
+    if (document.querySelector(`[data-nowo-ui-shell][${DRAWER_A11Y_ATTRIBUTE}]`) && typeof window.matchMedia === 'function') {
+      window.matchMedia('(min-width: 901px)').addEventListener?.('change', onDrawerViewportChange);
+    }
   }
   document.querySelectorAll('[data-nowo-ui-shell]').forEach((el) => {
     if (el instanceof HTMLElement) {
@@ -444,7 +552,14 @@ export function bindNowoUiShell(): void {
       if (isRailShell(el)) {
         initSidebarRail(el);
         bindSidebarPeek(el);
+        return;
       }
+      // A server-rendered "open" drawer never survives a phone load: the drawer starts closed.
+      const shell: HTMLElement = el;
+      if (hasDrawerA11y(shell) && !isDesktop()) {
+        shell.classList.remove('is-aside-open-mobile');
+      }
+      syncDrawer(shell);
     }
   });
 }

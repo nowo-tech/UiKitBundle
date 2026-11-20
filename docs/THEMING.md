@@ -184,7 +184,7 @@ Declared in `nowo-ui.css` (light on `:root`, dark on `[data-theme="dark"]`).
 | `--nowo-ui-focus-ring` | `0 0 0 0.2rem var(--nowo-ui-focus-ring-color)` | `box-shadow` of focused inputs (and Bootstrap controls with the bridge) |
 | `--nowo-ui-link` | `var(--nowo-ui-primary)` | `.nowo-ui-link`, `.nowo-ui-btn--link` |
 | `--nowo-ui-link-hover` | `var(--nowo-ui-link)` | link hover |
-| `--nowo-ui-primary-hover` | `color-mix(in srgb, var(--nowo-ui-primary) 85%, white)` | primary button hover (custom / Tailwind stacks) |
+| `--nowo-ui-primary-hover` | light: `color-mix(in srgb, var(--nowo-ui-primary) 85%, black)`; dark: `color-mix(in srgb, var(--nowo-ui-primary) 85%, white)` (2.60: the hover keeps the button text at 4.5:1 or more; it was a white mix in light, 3.97:1) | primary button hover (custom / Tailwind stacks) |
 | `--nowo-ui-accent` | `var(--nowo-ui-primary)` | `accent-color` of checkboxes / radios in kit surfaces |
 | `--nowo-ui-font-mono` *(2.1)* | `ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace` | `.nowo-ui-code`, `.nowo-ui-code-block` (slots `code`, `code_block`) |
 | `--nowo-ui-code-bg` *(2.1)* | `color-mix(in srgb, var(--nowo-ui-text) 7%, var(--nowo-ui-surface))` (2.2; 2.1: `var(--nowo-ui-surface-muted)`) | inline code and code block background |
@@ -204,6 +204,7 @@ Declared in `nowo-ui.css` (light on `:root`, dark on `[data-theme="dark"]`).
 | `--nowo-ui-shadow-popover` | `0 10px 28px rgba(15, 23, 42, 0.12)` | user menu, locale switcher, kebab menu |
 | `--nowo-ui-shadow-toast` | `0 10px 28px rgba(15, 23, 42, 0.14)` | toasts |
 | `--nowo-ui-shadow-dialog` | modal `0 8px 32px rgba(0, 0, 0, 0.18)`, confirm `0 16px 40px rgba(15, 23, 42, 0.2)` | modal, confirm |
+| `--nowo-ui-shadow-drawer` | `12px 0 32px rgba(15, 23, 42, 0.18)` | open phone drawer of the app shell (2.60) |
 
 ## Buttons
 
@@ -247,6 +248,7 @@ The link variant uses `--nowo-ui-link` / `--nowo-ui-link-hover`.
 | `--nowo-ui-input-border` | `var(--nowo-ui-border-strong)` |
 | `--nowo-ui-input-radius` | `var(--nowo-ui-radius)` |
 | `--nowo-ui-input-placeholder` | `var(--nowo-ui-muted)` |
+| `--nowo-ui-input-disabled-bg` | `var(--nowo-ui-surface-muted)` (2.60: disabled and read-only kit inputs) |
 | `--nowo-ui-input-focus-border` | `var(--nowo-ui-primary)` (+ `--nowo-ui-focus-ring` shadow) |
 | `--nowo-ui-accent` | `var(--nowo-ui-primary)` — checkboxes / radios in `.nowo-ui-check`, filter bars, searches, tables, lists, cards, modals, confirms |
 

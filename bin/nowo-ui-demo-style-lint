@@ -1,0 +1,63 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/*
+ * nowo-ui-demo-style-lint (UiKit 2.60): a bundle demo has no styles of its own — no demo stylesheet, no <style>, no
+ * style="" and no stylesheet link but bundle assets and UiKit's. See Nowo\UiKitBundle\Lint\DemoStyleLint.
+ *
+ *   vendor/bin/nowo-ui-demo-style-lint [--allow=<glob>]... [<demo app dir>...]   (default: the current directory)
+ *
+ * Exit code 0 = clean, 1 = findings (one "<dir>/<file>:<line>: [<rule>] <match>" line each), 2 = usage error.
+ */
+
+use Nowo\UiKitBundle\Lint\DemoStyleLint;
+
+$autoload = null;
+foreach ([$GLOBALS['_composer_autoload_path'] ?? null, __DIR__.'/../vendor/autoload.php', __DIR__.'/../../../autoload.php'] as $candidate) {
+    if (is_string($candidate) && is_file($candidate)) {
+        $autoload = $candidate;
+        break;
+    }
+}
+if (null === $autoload) {
+    fwrite(STDERR, "nowo-ui-demo-style-lint: vendor/autoload.php not found (run composer install).\n");
+    exit(2);
+}
+require $autoload;
+
+$allow = [];
+$paths = [];
+foreach (array_slice($argv, 1) as $arg) {
+    if (str_starts_with($arg, '--allow=')) {
+        $allow[] = substr($arg, 8);
+    } elseif ('--help' === $arg || '-h' === $arg) {
+        fwrite(STDOUT, "Usage: nowo-ui-demo-style-lint [--allow=<glob>]... [<demo app dir>...]\n");
+        exit(0);
+    } elseif (str_starts_with($arg, '-')) {
+        fwrite(STDERR, sprintf("nowo-ui-demo-style-lint: unknown option %s\n", $arg));
+        exit(2);
+    } else {
+        $paths[] = $arg;
+    }
+}
+
+$lint = new DemoStyleLint($allow);
+$count = 0;
+foreach ([] === $paths ? ['.'] : $paths as $path) {
+    try {
+        $results = $lint->lintDemo($path);
+    } catch (\InvalidArgumentException $e) {
+        fwrite(STDERR, $e->getMessage()."\n");
+        exit(2);
+    }
+    foreach ($results as $file => $findings) {
+        foreach ($findings as $finding) {
+            fwrite(STDOUT, sprintf("%s/%s:%d: [%s] %s\n", rtrim($path, '/'), $file, $finding['line'], $finding['rule'], $finding['match']));
+            ++$count;
+        }
+    }
+}
+fwrite(STDERR, sprintf("nowo-ui-demo-style-lint: %d finding(s).\n", $count));
+exit($count > 0 ? 1 : 0);

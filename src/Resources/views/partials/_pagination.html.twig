@@ -91,10 +91,14 @@
                 {% endfor %}
             </p>
         {% endif %}
+        {#- 2.60: framework_classes false (or nowo_ui_pagination_framework_classes false in the context, set by the demo
+            platform shell) drops Bootstrap's `pagination` / `page-item` on a non-Bootstrap stack: nowo-ui-pagination__list /
+            __item instead. Default: the 2.59 markup. -#}
+        {% set _fw_classes = (framework_classes ?? (nowo_ui_pagination_framework_classes ?? true)) is not same as(false) or ui.is_bootstrap(framework)|trim == '1' %}
         {% if total_pages > 1 %}
             <nav class="nowo-ui-pagination__nav" aria-label="{{ nav_label|trans({}, nav_trans_domain) }}">
-                <ul class="pagination">
-                    <li class="page-item{% if page <= 1 %} disabled{% endif %}">
+                <ul class="{{ _fw_classes ? 'pagination' : 'nowo-ui-pagination__list' }}">
+                    <li class="{{ _fw_classes ? 'page-item' : 'nowo-ui-pagination__item' }}{% if page <= 1 %} disabled{% endif %}">
                         {% if page > 1 %}
                             <a class="{{ _link_class }}" href="{{ path(route, base_params|merge({(page_param): page - 1})) }}" aria-label="{{ 'pagination.previous'|trans({}, trans_domain) }}">«</a>
                         {% else %}
@@ -104,21 +108,21 @@
 
                     {% for p in 1..total_pages %}
                         {% if p == page %}
-                            <li class="page-item active" aria-current="page">
+                            <li class="{{ _fw_classes ? 'page-item' : 'nowo-ui-pagination__item' }} active" aria-current="page">
                                 <span class="{{ _active_class }}">{{ p }}</span>
                             </li>
                         {% elseif p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
-                            <li class="page-item">
+                            <li class="{{ _fw_classes ? 'page-item' : 'nowo-ui-pagination__item' }}">
                                 <a class="{{ _link_class }}" href="{{ path(route, base_params|merge({(page_param): p})) }}">{{ p }}</a>
                             </li>
                         {% elseif p == page - 3 or p == page + 3 %}
-                            <li class="page-item disabled" aria-hidden="true">
+                            <li class="{{ _fw_classes ? 'page-item' : 'nowo-ui-pagination__item' }} disabled" aria-hidden="true">
                                 <span class="page-link nowo-ui-pagination__ellipsis">…</span>
                             </li>
                         {% endif %}
                     {% endfor %}
 
-                    <li class="page-item{% if page >= total_pages %} disabled{% endif %}">
+                    <li class="{{ _fw_classes ? 'page-item' : 'nowo-ui-pagination__item' }}{% if page >= total_pages %} disabled{% endif %}">
                         {% if page < total_pages %}
                             <a class="{{ _link_class }}" href="{{ path(route, base_params|merge({(page_param): page + 1})) }}" aria-label="{{ 'pagination.next'|trans({}, trans_domain) }}">»</a>
                         {% else %}

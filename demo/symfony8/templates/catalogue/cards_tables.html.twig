@@ -1,0 +1,30 @@
+{% extends 'catalogue/_base.html.twig' %}
+{% block nowo_ui_page_header %}
+    {% set _toolbar %}<a class="nowo-ui-btn nowo-ui-btn--primary" href="#">New invoice</a>{% endset %}
+    {{ include(nowo_ui_partial('page_header', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', title: 'Cards and tables', intro: 'Tables always sit in a card; a wide table scrolls inside it, never the page.', toolbar: _toolbar}) }}
+{% endblock %}
+{% block body %}
+    {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Invoices', intro: 'kind: table — a focusable scroll region.', kind: 'table', testid: 'catalogue-table'} %}
+        {% block section_actions %}<a class="nowo-ui-btn nowo-ui-btn--outline" href="#">Export</a>{% endblock %}
+        {% block section_body %}
+            <table class="nowo-ui-data-table">
+                <thead><tr><th scope="col">Number</th><th scope="col">Customer</th><th scope="col">Issued</th><th scope="col">Due</th><th scope="col" class="nowo-ui-cell--num">Amount</th><th scope="col">Status</th></tr></thead>
+                <tbody>
+                    {% for row in [['INV-1042', 'Analytical Engines Ltd', '2026-11-02', '2026-12-02', '1,240.00 €', 'Paid', 'success'], ['INV-1043', 'Hopper Compilers', '2026-11-05', '2026-12-05', '860.50 €', 'Due', 'warning'], ['INV-1044', 'Turing Machines', '2026-11-09', '2026-11-19', '2,075.00 €', 'Overdue', 'danger']] %}
+                        <tr><td>{{ row[0] }}</td><td>{{ row[1] }}</td><td class="nowo-ui-cell--date"><time datetime="{{ row[2] }}">{{ row[2] }}</time></td><td class="nowo-ui-cell--date"><time datetime="{{ row[3] }}">{{ row[3] }}</time></td><td class="nowo-ui-cell--num">{{ row[4] }}</td><td><span class="nowo-ui-badge nowo-ui-badge--{{ row[6] }}">{{ row[5] }}</span></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endblock %}
+    {% endembed %}
+    {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Credit notes', kind: 'table', empty: true, state_title: 'No credit notes yet', state_message: 'Credit notes refund all or part of an invoice.'} %}
+        {% block section_empty_action %}<a class="nowo-ui-btn nowo-ui-btn--outline" href="#">Create a credit note</a>{% endblock %}
+    {% endembed %}
+    <div class="nowo-ui-cards">
+        {% for card in [{t: 'Customers', n: '128'}, {t: 'Open invoices', n: '14'}, {t: 'Overdue', n: '3'}] %}
+            {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: card.t, kind: 'detail', heading_level: 2} %}
+                {% block section_body %}<p><strong>{{ card.n }}</strong></p>{% endblock %}
+            {% endembed %}
+        {% endfor %}
+    </div>
+{% endblock %}
