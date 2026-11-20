@@ -99,10 +99,8 @@ final readonly class DemoStyleLint
         };
         $iterator = new RecursiveIteratorIterator(new RecursiveCallbackFilterIterator(new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS), $filter));
         $results = [];
+        /** @var SplFileInfo $file the iterator yields files only (leaves) */
         foreach ($iterator as $file) {
-            if (!$file instanceof SplFileInfo || !$file->isFile()) {
-                continue;
-            }
             $relative = ltrim(substr($file->getPathname(), \strlen($root)), '/');
             if ($this->allowed($relative)) {
                 continue;
