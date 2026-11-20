@@ -34,3 +34,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## Tom Select (default theme stylesheet)
+
+`src/Resources/public/css/vendor/tom-select.default.min.css` (2.60) is the unmodified default theme of
+[Tom Select](https://tom-select.js.org) 2.6.2 (`dist/css/tom-select.default.min.css`), shipped so hosts and bundles
+(DashboardMenu's item form autocomplete) load it from UiKit's asset package instead of a CDN. Load
+`css/nowo-ui-tom-select.css` after it for the UiKit token colours.
+
+- **Project:** [orchidjs/tom-select](https://github.com/orchidjs/tom-select)
+- **License:** Apache License 2.0 (<https://www.apache.org/licenses/LICENSE-2.0>); copyright Tom Select contributors.

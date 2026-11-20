@@ -115,7 +115,7 @@ check-twig-extra:
 # deprecated *_legacy fallbacks and `twig-005-ignore` controls excepted; see the script header).
 # 2.40 (spec 220): colour literals outside --nowo-ui-* tokens; the demo views are allow-listed. Not a CI gate yet.
 token-lint: ensure-up
-	@$(COMPOSE) exec -T $(SERVICE_PHP) php bin/nowo-ui-token-lint --allow='*/views/demo/*' src/Resources
+	@$(COMPOSE) exec -T $(SERVICE_PHP) php bin/nowo-ui-token-lint --allow='*/views/demo/*' --allow='*/css/vendor/*' src/Resources
 
 check-no-raw-html-form:
 	@chmod +x .scripts/check-no-raw-html-form.sh

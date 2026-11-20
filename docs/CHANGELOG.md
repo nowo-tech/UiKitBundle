@@ -163,6 +163,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `--nowo-ui-demo-gap`), paints the scaffolds' table / form regions and `nowo-ui-form-panel` as cards, stacks plain
   Symfony form rows (label above control, `role="group"` widgets on one line) and keeps unclassed bundle buttons
   transparent. Rules in [USAGE.md — Demo platform shell](USAGE.md#demo-platform-shell-260).
+- **Vendored Tom Select theme (2.60).** `css/vendor/tom-select.default.min.css` (Tom Select 2.6.2 default theme,
+  Apache-2.0, see [THIRD_PARTY.md](THIRD_PARTY.md)), so hosts and bundles load it from UiKit's asset package (then
+  `css/nowo-ui-tom-select.css`) instead of a CDN. `make token-lint` allow-lists `css/vendor/`.
 - **`bin/nowo-ui-demo-style-lint` (2.60)** (`Nowo\UiKitBundle\Lint\DemoStyleLint`): fails when a demo app has a
   stylesheet of its own, a `<style>`, a `style=""` or a stylesheet link other than UiKit's and the bundles' assets.
 - **Tree toggle outside the tree partial (2.60).** `button.nowo-ui-tree__toggle` (reset button, chevron that turns with
