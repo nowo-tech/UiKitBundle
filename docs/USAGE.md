@@ -4131,6 +4131,37 @@ the locale pills mark the current locale with `aria-current` and read the full l
 theme boot script carries the request CSP nonce). The UiKit demo checks it with axe (wcag2a/2aa/21a/21aa, light and
 dark, desktop and phone): `/kit/demo-platform`, `e2e/tests/demo-platform.spec.ts`.
 
+**Layout rules (the demo layout grammar).** Every demo follows the same rules; UiKit provides each piece, so a demo
+never hand-rolls card markup or writes CSS:
+
+1. **Page header**: `nowo_ui_page_header` with the `page_header` partial — title, subtitle (`intro`), the page actions
+   on the right (`toolbar`). One per page.
+2. **Flashes** sit under the page header (the shell's `nowo_ui_flashes` block; never move them).
+3. **Everything else is a section card**: `{% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title, intro,
+   kind} %}` — card header with the title (+ intro) and the section actions on the right (`section_actions`), the
+   body (`section_body`), an optional footer (`section_footer`).
+4. **Tables** always in a section with `kind: 'table'`: the body is a focusable scroll region, so a wide table scrolls
+   inside the card, never the page (also on phones). The scaffolds' table region (`[data-nowo-ui-region="table"]`) is
+   painted as a card by the shell.
+5. **Forms** always in a card: `kind: 'form'` with the actions in `section_footer` (bottom right, primary button
+   last), or a UiKit form scaffold / `nowo-ui-form-panel` (painted as a card by the shell; `.nowo-ui-form__actions`
+   is right-aligned).
+6. **Lists and detail views** in a section (`kind: 'list'` / `'detail'`); card grids use `.nowo-ui-cards`.
+7. **Empty, loading and error states**: `state: 'empty' | 'loading' | 'error'` (or `empty: true`) on the section, with
+   `state_message`; never a hand-written "no rows" paragraph.
+8. **One spacing scale and one gap**: `--nowo-ui-demo-space-1..4` (0.25 / 0.5 / 1 / 1.5 rem) and
+   `--nowo-ui-demo-gap` (1 rem) between every block of the content area and between cards of a grid.
+9. **One primary button per view** (the page header's main action, or a form's submit); everything else outline /
+   secondary. Row actions and dialogs do not count.
+10. **Badges and status colours from tokens only**: `nowo-ui-badge` + `--info` / `--success` / `--warning` /
+    `--danger` / `--neutral`; no colour literal.
+11. **No demo styles**: a demo has no stylesheet, no `<style>`, no `style=""` and links no stylesheet but UiKit's and
+    the bundles' own assets (`bundles/…`). What a demo needs and UiKit lacks becomes a UiKit class or block.
+    `vendor/bin/nowo-ui-demo-style-lint demo/symfony8` enforces it (exit 1 on a finding; `--allow=<glob>` only for
+    the documented exemptions).
+12. **Phones**: the aside is a drawer, the locale pills move into it, tables scroll inside their card, the page never
+    scrolls sideways.
+
 **Screenshots of a demo.** The Symfony toolbar is not part of the platform: take README screenshots with the profiler
 toolbar hidden (`APP_DEBUG=0`, or `web_profiler.toolbar: false` for the capture).
 

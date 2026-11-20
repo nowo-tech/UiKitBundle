@@ -168,9 +168,164 @@
   overflow-wrap: anywhere;
 }
 
-/* Cards and sections stacked in the content area get one vertical rhythm. */
-.nowo-ui-demo-platform__content > :is(.nowo-ui-card, section, .nowo-ui-cards) + :is(.nowo-ui-card, section, .nowo-ui-cards, p) {
-  margin-top: 1rem;
+/* --- Layout grammar (2.60; docs/USAGE.md "Demo platform shell" — layout rules) -----------------------------------
+ * One spacing scale and one gap: every block of the content area (page header, flashes, cards, card grids, scaffold
+ * regions) is stacked with --nowo-ui-demo-gap; card grids use the same gap. */
+.nowo-ui-demo-platform {
+  --nowo-ui-demo-space-1: 0.25rem;
+  --nowo-ui-demo-space-2: 0.5rem;
+  --nowo-ui-demo-space-3: 1rem;
+  --nowo-ui-demo-space-4: 1.5rem;
+  --nowo-ui-demo-gap: var(--nowo-ui-demo-space-3);
+}
+
+.nowo-ui-demo-platform__content > * {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.nowo-ui-demo-platform__content > * + * {
+  margin-top: var(--nowo-ui-demo-gap);
+}
+
+.nowo-ui-demo-platform__content .nowo-ui-cards {
+  gap: var(--nowo-ui-demo-gap);
+}
+
+.nowo-ui-demo-platform__content .nowo-ui-cards > .nowo-ui-card {
+  margin-bottom: 0;
+}
+
+/* Page header: title and subtitle on the start side, the actions on the end side. */
+.nowo-ui-demo-platform__content > .nowo-ui-page-header {
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 0;
+}
+
+/* Sections (demo_platform/_section.html.twig): header = title (+ intro) and actions on the right; form footer = actions
+   at the bottom right; table body = a scroll region inside the card. */
+.nowo-ui-demo-section__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--nowo-ui-demo-space-2) var(--nowo-ui-demo-space-3);
+}
+
+.nowo-ui-demo-section__heading {
+  min-width: 0;
+}
+
+.nowo-ui-demo-section__heading > * {
+  margin: 0;
+}
+
+.nowo-ui-demo-section__heading > * + * {
+  margin-top: var(--nowo-ui-demo-space-1);
+}
+
+.nowo-ui-demo-section__actions,
+.nowo-ui-demo-section__footer,
+.nowo-ui-demo-platform__content .nowo-ui-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--nowo-ui-demo-space-2);
+}
+
+.nowo-ui-demo-section__footer {
+  padding: var(--nowo-ui-demo-space-3);
+  border-top: 1px solid var(--nowo-ui-border);
+}
+
+.nowo-ui-demo-section__body > * {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.nowo-ui-demo-section__body > * + * {
+  margin-top: var(--nowo-ui-demo-space-3);
+}
+
+/* Sections in a card grid stretch to the row height; their footers line up at the bottom. */
+.nowo-ui-cards > .nowo-ui-demo-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.nowo-ui-cards > .nowo-ui-demo-section > .nowo-ui-demo-section__body {
+  flex: 1 1 auto;
+}
+
+.nowo-ui-demo-section--table > .nowo-ui-demo-section__body {
+  padding: 0;
+}
+
+.nowo-ui-demo-section__scroll {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.nowo-ui-demo-section__scroll:focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, var(--nowo-ui-primary));
+  outline-offset: -2px;
+}
+
+.nowo-ui-demo-section--table .nowo-ui-demo-section__state {
+  padding: var(--nowo-ui-demo-space-3);
+  margin: 0;
+}
+
+/* The scaffolds' table and form regions (bundle pages rendered by the UiKit list / form scaffolds) follow the same
+   grammar inside the shell: a table or a form that is not already in a card is painted as one, and a table scrolls
+   inside it, never the page. */
+.nowo-ui-demo-platform__content :is([data-nowo-ui-region='table'], [data-nowo-ui-region='form'], .nowo-ui-form-panel):not(.nowo-ui-card *, dialog *, .nowo-ui-form-panel *) {
+  border: 1px solid var(--nowo-ui-card-border, var(--nowo-ui-border));
+  border-radius: var(--nowo-ui-card-radius, var(--nowo-ui-radius));
+  background: var(--nowo-ui-card-bg, var(--nowo-ui-surface));
+}
+
+.nowo-ui-demo-platform__content [data-nowo-ui-region='table']:not(.nowo-ui-card *, dialog *) {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.nowo-ui-demo-platform__content :is([data-nowo-ui-region='form'], .nowo-ui-form-panel):not(.nowo-ui-card *, dialog *, .nowo-ui-form-panel *) {
+  padding: var(--nowo-ui-demo-space-3);
+}
+
+/* A bundle form rendered with Symfony's plain div layout (no form theme on the rows): label above its control, the
+   controls on one width. A checkbox / radio keeps its label on the same line. */
+.nowo-ui-demo-platform__content form.nowo-ui-form > div > label:first-child:not(:has(+ :is(input[type='checkbox'], input[type='radio']))) {
+  display: block;
+  margin-bottom: var(--nowo-ui-form-label-gap, var(--nowo-ui-demo-space-1));
+  font-weight: 500;
+}
+
+/* A compound widget in a plain form row (role="group": e.g. a phone prefix select + number) lays its controls out on
+   one line; the first control keeps its content width. */
+.nowo-ui-demo-platform__content form.nowo-ui-form > div > [role='group'] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--nowo-ui-demo-space-2);
+  max-width: 36rem;
+}
+
+.nowo-ui-demo-platform__content form.nowo-ui-form > div > [role='group'] > :is(input, select):not([type='hidden']) {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.nowo-ui-demo-platform__content form.nowo-ui-form > div > [role='group'] > select:first-child {
+  flex: 0 0 9rem;
+}
+
+.nowo-ui-demo-platform__content form.nowo-ui-form > div > :is(input:not([type='checkbox'], [type='radio'], [type='hidden']), select, textarea) {
+  display: block;
+  width: 100%;
+  max-width: 36rem;
 }
 
 /* --- Phones ----------------------------------------------------------------------------------------------------- */

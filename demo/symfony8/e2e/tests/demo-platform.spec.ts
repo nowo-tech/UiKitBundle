@@ -22,6 +22,34 @@ async function axe(page: Page): Promise<string[]> {
     .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`);
 }
 
+/** The demo layout + style rules (docs/USAGE.md "Demo platform shell"; same function as the rollout brief's spec). */
+function demoPlatformRules(): string[] {
+  const issues: string[] = [];
+  const main = document.querySelector('#nowo-ui-content');
+  if (!main || !document.querySelector('[data-testid="demo-platform"]')) return ['no-demo-platform-shell'];
+  const carded = (el: Element) => el.closest('.nowo-ui-card, [data-nowo-ui-region="table"], [data-nowo-ui-region="form"], .nowo-ui-form-panel, dialog');
+  const skip = (el: Element) => el.closest('dialog, [data-nowo-ui-region="filters"], .nowo-ui-filters, .nowo-ui-page-header');
+  main.querySelectorAll('table').forEach((t) => { if (!carded(t)) issues.push('table-outside-card'); });
+  main.querySelectorAll('form').forEach((f) => {
+    if (f.querySelector('input:not([type="hidden"]), select, textarea') && !carded(f) && !skip(f) && !f.closest('table')) issues.push('form-outside-card');
+  });
+  const visible = (el: HTMLElement) => !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
+  const primaries = [...main.querySelectorAll<HTMLElement>('.nowo-ui-btn--primary')].filter((b) => visible(b) && !b.closest('table, dialog, [data-nowo-ui-region="filters"], .nowo-ui-filters, form'));
+  if (primaries.length > 1) issues.push(`primary-buttons:${primaries.length}`);
+  const header = main.querySelector('.nowo-ui-page-header');
+  const flashes = main.querySelector('.nowo-ui-flashes');
+  if (header && flashes && (flashes.compareDocumentPosition(header) & Node.DOCUMENT_POSITION_FOLLOWING)) issues.push('flashes-before-page-header');
+  if (document.documentElement.scrollWidth > document.documentElement.clientWidth + 1) issues.push('page-scrolls-horizontally');
+  document.querySelectorAll('style').forEach((s) => {
+    if (!/sf-toolbar|sfwdt|sf-minitoolbar|sf-display/.test(s.textContent || '') && !s.closest('[id^="sfwdt"], .sf-toolbar') && !s.matches('[data-nowo-ui-theme-tokens], [data-nowo-ui-appearance]')) issues.push('style-element');
+  });
+  document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]').forEach((l) => {
+    const path = new URL(l.href, location.href).pathname;
+    if (!path.startsWith('/bundles/') && !path.startsWith('/_wdt/') && !path.startsWith('/_profiler/')) issues.push(`stylesheet:${path}`);
+  });
+  return [...new Set(issues)];
+}
+
 test.describe('Demo platform shell', () => {
   test('regions, current item and skip link', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -68,6 +96,29 @@ test.describe('Demo platform shell', () => {
     await expect(aside).toBeInViewport();
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
+  });
+
+  test('layout grammar: sections, states, one primary, no page scroll on phones', async ({ page }) => {
+    for (const width of [1440, 390]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto('/kit/demo-platform/messages');
+      expect(await page.evaluate(demoPlatformRules)).toEqual([]);
+    }
+    await expect(page.getByTestId('kit-demo-platform-table').getByRole('region', { name: 'Latest messages' })).toBeVisible();
+    await expect(page.getByTestId('kit-demo-platform-empty')).toContainText('No archived messages yet.');
+    await expect(page.locator('[data-nowo-ui-demo-state="loading"]')).toHaveAttribute('aria-busy', 'true');
+    await expect(page.locator('[data-nowo-ui-demo-state="error"]')).toHaveAttribute('role', 'alert');
+  });
+
+  test('primary button hover keeps AA contrast (2.60 token fix)', async ({ page }) => {
+    for (const theme of ['light', 'dark'] as Theme[]) {
+      await page.goto('/kit/demo-platform');
+      await setTheme(page, theme);
+      const primary = page.locator('.nowo-ui-page-header .nowo-ui-btn--primary').first();
+      await primary.hover();
+      const result = await new AxeBuilder({ page }).include('.nowo-ui-page-header').withRules(['color-contrast']).analyze();
+      expect(result.violations.map((v) => v.id)).toEqual([]);
+    }
   });
 
   for (const theme of ['light', 'dark'] as Theme[]) {

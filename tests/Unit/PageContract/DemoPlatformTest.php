@@ -230,6 +230,41 @@ TWIG;
         self::assertSame(1, substr_count($b, 'aria-current="page"'));
     }
 
+    public function testSectionKindsActionsFooterAndStates(): void
+    {
+        $tpl = <<<'TWIG'
+{% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Orders', intro: 'Latest first.', kind: 'table', id: 'orders', testid: 'orders'} %}
+    {% block section_actions %}<a class="nowo-ui-btn nowo-ui-btn--primary" href="/new">New</a>{% endblock %}
+    {% block section_body %}<table class="nowo-ui-data-table"><tr><td>1</td></tr></table>{% endblock %}
+{% endembed %}
+{% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Edit', kind: 'form'} %}
+    {% block section_body %}<p>FIELDS</p>{% endblock %}
+    {% block section_footer %}<a class="nowo-ui-btn nowo-ui-btn--outline" href="/">Cancel</a><button class="nowo-ui-btn nowo-ui-btn--primary">Save</button>{% endblock %}
+{% endembed %}
+{% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Archive', kind: 'table', empty: true, state_message: 'Nothing archived.'} %}
+    {% block section_empty_action %}<a class="nowo-ui-btn nowo-ui-btn--outline" href="/import">Import</a>{% endblock %}
+{% endembed %}
+{% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Sync', state: 'loading'} %}{% endembed %}
+{% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Log', state: 'error', attr: {class: 'extra', 'data-x': '1'}} %}{% endembed %}
+TWIG;
+        $html = PageContractTwig::create(['t' => $tpl], [], 'custom')->render('t');
+
+        self::assertStringContainsString('<section class="nowo-ui-card nowo-ui-demo-section nowo-ui-demo-section--table" id="orders" data-nowo-ui-demo-section="table" data-testid="orders">', $html);
+        self::assertMatchesRegularExpression('#<header class="nowo-ui-card__header nowo-ui-demo-section__header">\s*<div class="nowo-ui-demo-section__heading">\s*<h2 class="nowo-ui-card__title" id="orders-title">Orders</h2>\s*<p class="nowo-ui-card__intro nowo-ui-muted">Latest first.</p>\s*</div>\s*<div class="nowo-ui-demo-section__actions"><a class="nowo-ui-btn nowo-ui-btn--primary" href="/new">New</a></div>#', $html);
+        self::assertMatchesRegularExpression('#<div class="nowo-ui-table-wrap nowo-ui-demo-section__scroll" role="region" tabindex="0" aria-label="Orders">\s*<table#', $html);
+        self::assertMatchesRegularExpression('#<footer class="nowo-ui-card__footer nowo-ui-demo-section__footer"><a class="nowo-ui-btn nowo-ui-btn--outline" href="/">Cancel</a><button class="nowo-ui-btn nowo-ui-btn--primary">Save</button></footer>#', $html);
+        self::assertStringContainsString('data-nowo-ui-demo-state="empty"', $html);
+        self::assertStringContainsString('<p class="nowo-ui-empty__message">Nothing archived.</p>', $html);
+        self::assertStringContainsString('<div class="nowo-ui-empty__action"><a class="nowo-ui-btn nowo-ui-btn--outline" href="/import">Import</a></div>', $html);
+        self::assertMatchesRegularExpression('#role="status" aria-busy="true" data-nowo-ui-demo-state="loading">Loading…</p>#', $html);
+        self::assertMatchesRegularExpression('#role="alert" data-nowo-ui-demo-state="error">Something went wrong. Try again.</div>#', $html);
+        self::assertStringContainsString('nowo-ui-demo-section--content extra"', $html);
+        self::assertSame(0, preg_match('/\son[a-z]+=/i', $html), 'no inline handlers, even from attr');
+        // A section with neither title nor actions prints no header; the blocks never print outside their slots.
+        self::assertSame(5, substr_count($html, '<header class="nowo-ui-card__header'));
+        self::assertSame(1, substr_count($html, 'FIELDS'));
+    }
+
     /**
      * @param array<string, mixed> $params
      */

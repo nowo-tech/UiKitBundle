@@ -1,0 +1,67 @@
+{#
+  2.60 demo platform section: the one content block of the demo layout grammar. Every table, form, list and detail
+  view of a demo sits in one of these cards, so demos never hand-roll card markup:
+
+      {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Submissions', kind: 'table', empty: rows is empty} %}
+          {% block section_actions %}<a class="nowo-ui-btn nowo-ui-btn--primary nowo-ui-btn--sm" href="…">Export</a>{% endblock %}
+          {% block section_body %}<table class="nowo-ui-data-table">…</table>{% endblock %}
+      {% endembed %}
+
+  Options:
+    - title (text, escaped; required for kind table: it names the scroll region), intro (text), heading_level (2)
+    - kind: table | form | list | detail | content (default content). table: the body is a focusable scroll region
+      (role region + aria-label = title), so a wide table scrolls inside the card, never the page. form: the footer
+      lays the actions out at the bottom right, primary button last
+    - state: null (default) | empty | loading | error. empty / loading / error replace the body with the UiKit empty
+      block (message: state_message, default the kit's text; the empty one may carry an action in section_empty_action),
+      a busy status line, or a danger alert
+    - empty (bool): shortcut for state: 'empty'
+    - id, testid, attr (extra root attributes; no on*)
+  Blocks: section_actions (header, right; one primary per view), section_body, section_footer (form actions),
+  section_empty_action.
+#}
+{#- The blocks an embed fills; printed with block() below, never here. -#}
+{% if false %}{% block section_actions %}{% endblock %}{% block section_body %}{% endblock %}{% block section_footer %}{% endblock %}{% block section_empty_action %}{% endblock %}{% endif %}
+{% set _kind = kind|default('content') %}
+{% set _state = (state ?? null) ?: ((empty ?? false) ? 'empty' : null) %}
+{% set _title = title ?? null %}
+{% set _level = heading_level|default(2) %}
+{% set _id = id ?? null %}
+{% set _attr = nowo_ui_safe_attrs(attr|default({}), ['class', 'id', 'data-nowo-ui-demo-section']) %}
+<section class="nowo-ui-card nowo-ui-demo-section nowo-ui-demo-section--{{ _kind }}{{ (attr.class ?? false) ? ' ' ~ attr.class }}"{% if _id %} id="{{ _id }}"{% endif %} data-nowo-ui-demo-section="{{ _kind }}"{% if testid ?? null %} data-testid="{{ testid }}"{% endif %}{{ nowo_ui_html_attrs(_attr) }}>
+    {% set _actions %}{{ block('section_actions') }}{% endset %}
+    {% if _title or _actions|trim is not same as('') %}
+        <header class="nowo-ui-card__header nowo-ui-demo-section__header">
+            <div class="nowo-ui-demo-section__heading">
+                {% if _title %}<h{{ _level }} class="nowo-ui-card__title"{% if _id %} id="{{ _id }}-title"{% endif %}>{{ _title }}</h{{ _level }}>{% endif %}
+                {% if intro ?? null %}<p class="nowo-ui-card__intro nowo-ui-muted">{{ intro }}</p>{% endif %}
+            </div>
+            {% if _actions|trim is not same as('') %}
+                <div class="nowo-ui-demo-section__actions">{{ _actions }}</div>
+            {% endif %}
+        </header>
+    {% endif %}
+    <div class="nowo-ui-card__body nowo-ui-demo-section__body">
+        {% if _state == 'empty' %}
+            <div class="nowo-ui-empty nowo-ui-muted nowo-ui-demo-section__state" data-nowo-ui-demo-state="empty">
+                <p class="nowo-ui-empty__message">{{ (state_message ?? null) ?: 'empty.default'|trans({}, 'NowoUiKitBundle') }}</p>
+                {% set _empty_action %}{{ block('section_empty_action') }}{% endset %}
+                {% if _empty_action|trim is not same as('') %}<div class="nowo-ui-empty__action">{{ _empty_action }}</div>{% endif %}
+            </div>
+        {% elseif _state == 'loading' %}
+            <p class="nowo-ui-muted nowo-ui-demo-section__state" role="status" aria-busy="true" data-nowo-ui-demo-state="loading">{{ (state_message ?? null) ?: 'demo_platform.loading'|trans({}, 'NowoUiKitBundle') }}</p>
+        {% elseif _state == 'error' %}
+            <div class="nowo-ui-flash nowo-ui-flash--danger nowo-ui-demo-section__state" role="alert" data-nowo-ui-demo-state="error">{{ (state_message ?? null) ?: 'demo_platform.error'|trans({}, 'NowoUiKitBundle') }}</div>
+        {% elseif _kind == 'table' %}
+            <div class="nowo-ui-table-wrap nowo-ui-demo-section__scroll" role="region" tabindex="0"{% if _title %} aria-label="{{ _title }}"{% endif %}>
+                {{ block('section_body') }}
+            </div>
+        {% else %}
+            {{ block('section_body') }}
+        {% endif %}
+    </div>
+    {% set _footer %}{{ block('section_footer') }}{% endset %}
+    {% if _footer|trim is not same as('') %}
+        <footer class="nowo-ui-card__footer nowo-ui-demo-section__footer">{{ _footer }}</footer>
+    {% endif %}
+</section>

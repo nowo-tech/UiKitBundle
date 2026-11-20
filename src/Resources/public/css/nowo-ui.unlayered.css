@@ -151,9 +151,25 @@
 }
 
 .nowo-ui-btn--primary:not(.btn):hover {
+  background: var(--nowo-ui-btn-primary-hover-bg, var(--nowo-ui-primary-hover, color-mix(in srgb, var(--nowo-ui-primary) 85%, black)));
+  border-color: var(--nowo-ui-btn-primary-hover-bg, var(--nowo-ui-primary-hover, color-mix(in srgb, var(--nowo-ui-primary) 85%, black)));
+  color: var(--nowo-ui-btn-primary-text, var(--nowo-ui-primary-contrast));
+}
+
+/* 2.60: the default hover darkens the primary (85 % + black) so white text keeps WCAG AA (a white mix gave 3.97:1);
+   the dark theme's primary carries dark text, so there the hover lightens it (85 % + white). Hosts that set
+   --nowo-ui-primary-hover / --nowo-ui-btn-primary-hover-bg keep their colour in both themes. */
+:where([data-theme='dark']) .nowo-ui-btn--primary:not(.btn):hover {
   background: var(--nowo-ui-btn-primary-hover-bg, var(--nowo-ui-primary-hover, color-mix(in srgb, var(--nowo-ui-primary) 85%, white)));
   border-color: var(--nowo-ui-btn-primary-hover-bg, var(--nowo-ui-primary-hover, color-mix(in srgb, var(--nowo-ui-primary) 85%, white)));
-  color: var(--nowo-ui-btn-primary-text, var(--nowo-ui-primary-contrast));
+}
+
+:where([data-theme='dark']) .nowo-ui-bs-tokens .btn-primary,
+.nowo-ui-bs-tokens:where([data-theme='dark']) .btn-primary {
+  --bs-btn-hover-bg: var(--nowo-ui-btn-primary-hover-bg, var(--nowo-ui-primary-hover, color-mix(in srgb, var(--nowo-ui-primary) 85%, white)));
+  --bs-btn-hover-border-color: var(--nowo-ui-btn-primary-hover-bg, var(--nowo-ui-primary-hover, color-mix(in srgb, var(--nowo-ui-primary) 85%, white)));
+  --bs-btn-active-bg: var(--nowo-ui-btn-primary-hover-bg, var(--nowo-ui-primary-hover, color-mix(in srgb, var(--nowo-ui-primary) 85%, white)));
+  --bs-btn-active-border-color: var(--nowo-ui-btn-primary-hover-bg, var(--nowo-ui-primary-hover, color-mix(in srgb, var(--nowo-ui-primary) 85%, white)));
 }
 
 .nowo-ui-btn--danger {
@@ -3653,11 +3669,11 @@ button.nowo-ui-kebab__item.is-current {
   --bs-btn-bg: var(--nowo-ui-btn-primary-bg, var(--nowo-ui-primary));
   --bs-btn-border-color: var(--nowo-ui-btn-primary-border, var(--nowo-ui-btn-primary-bg, var(--nowo-ui-primary)));
   --bs-btn-hover-color: var(--nowo-ui-btn-primary-text, var(--nowo-ui-primary-contrast));
-  --bs-btn-hover-bg: var(--nowo-ui-btn-primary-hover-bg, var(--nowo-ui-primary-hover, color-mix(in srgb, var(--nowo-ui-primary) 85%, white)));
-  --bs-btn-hover-border-color: var(--nowo-ui-btn-primary-hover-bg, var(--nowo-ui-primary-hover, color-mix(in srgb, var(--nowo-ui-primary) 85%, white)));
+  --bs-btn-hover-bg: var(--nowo-ui-btn-primary-hover-bg, var(--nowo-ui-primary-hover, color-mix(in srgb, var(--nowo-ui-primary) 85%, black)));
+  --bs-btn-hover-border-color: var(--nowo-ui-btn-primary-hover-bg, var(--nowo-ui-primary-hover, color-mix(in srgb, var(--nowo-ui-primary) 85%, black)));
   --bs-btn-active-color: var(--nowo-ui-btn-primary-text, var(--nowo-ui-primary-contrast));
-  --bs-btn-active-bg: var(--nowo-ui-btn-primary-hover-bg, var(--nowo-ui-primary-hover, color-mix(in srgb, var(--nowo-ui-primary) 85%, white)));
-  --bs-btn-active-border-color: var(--nowo-ui-btn-primary-hover-bg, var(--nowo-ui-primary-hover, color-mix(in srgb, var(--nowo-ui-primary) 85%, white)));
+  --bs-btn-active-bg: var(--nowo-ui-btn-primary-hover-bg, var(--nowo-ui-primary-hover, color-mix(in srgb, var(--nowo-ui-primary) 85%, black)));
+  --bs-btn-active-border-color: var(--nowo-ui-btn-primary-hover-bg, var(--nowo-ui-primary-hover, color-mix(in srgb, var(--nowo-ui-primary) 85%, black)));
   --bs-btn-disabled-color: var(--nowo-ui-btn-primary-text, var(--nowo-ui-primary-contrast));
   --bs-btn-disabled-bg: var(--nowo-ui-btn-primary-bg, var(--nowo-ui-primary));
   --bs-btn-disabled-border-color: var(--nowo-ui-btn-primary-bg, var(--nowo-ui-primary));
@@ -5441,7 +5457,18 @@ button.nowo-ui-tree__toggle:hover {
 /* A collapsible panel driven by a host or bundle script without a CSS framework: hidden until the script adds .show
    (Bootstrap's collapse convention) or .is-open. */
 .nowo-ui-collapse:not(.show, .is-open) {
-  display: none;
+  display: none !important;
+}
+/* An item whose link (or label span) is followed by its toggle button: link and toggle on one row, the child panel
+   under both. */
+li:has(> :is(a, span) + button.nowo-ui-tree__toggle) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 0.25rem;
+}
+li:has(> :is(a, span) + button.nowo-ui-tree__toggle) > :not(a, span, button.nowo-ui-tree__toggle) {
+  grid-column: 1 / -1;
 }
 /* A whole-menu disclosure row (label + tree toggle), e.g. a collapsible menu heading. */
 .nowo-ui-tree__disclosure {

@@ -184,7 +184,7 @@ Declared in `nowo-ui.css` (light on `:root`, dark on `[data-theme="dark"]`).
 | `--nowo-ui-focus-ring` | `0 0 0 0.2rem var(--nowo-ui-focus-ring-color)` | `box-shadow` of focused inputs (and Bootstrap controls with the bridge) |
 | `--nowo-ui-link` | `var(--nowo-ui-primary)` | `.nowo-ui-link`, `.nowo-ui-btn--link` |
 | `--nowo-ui-link-hover` | `var(--nowo-ui-link)` | link hover |
-| `--nowo-ui-primary-hover` | `color-mix(in srgb, var(--nowo-ui-primary) 85%, white)` | primary button hover (custom / Tailwind stacks) |
+| `--nowo-ui-primary-hover` | light: `color-mix(in srgb, var(--nowo-ui-primary) 85%, black)`; dark: `color-mix(in srgb, var(--nowo-ui-primary) 85%, white)` (2.60: the hover keeps the button text at 4.5:1 or more; it was a white mix in light, 3.97:1) | primary button hover (custom / Tailwind stacks) |
 | `--nowo-ui-accent` | `var(--nowo-ui-primary)` | `accent-color` of checkboxes / radios in kit surfaces |
 | `--nowo-ui-font-mono` *(2.1)* | `ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace` | `.nowo-ui-code`, `.nowo-ui-code-block` (slots `code`, `code_block`) |
 | `--nowo-ui-code-bg` *(2.1)* | `color-mix(in srgb, var(--nowo-ui-text) 7%, var(--nowo-ui-surface))` (2.2; 2.1: `var(--nowo-ui-surface-muted)`) | inline code and code block background |

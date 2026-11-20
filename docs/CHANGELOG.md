@@ -156,11 +156,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   Accessibility: skip link, named landmarks, `aria-current` on the current item and locale, no inline style or
   handler. New translation keys `demo_platform.*` (7 locales). Demo page `/kit/demo-platform` with an axe e2e. See
   [USAGE.md — Demo platform shell](USAGE.md#demo-platform-shell-260).
+- **Demo layout grammar (2.60).** `@NowoUiKit/demo_platform/_section.html.twig`: the one content card of a demo
+  (header with title, intro and actions on the right; `kind` table / form / list / detail / content — a table body
+  is a focusable scroll region, a form footer lays its actions out at the bottom right; `state` empty / loading /
+  error with the kit blocks). The demo platform stylesheet adds one spacing scale (`--nowo-ui-demo-space-1..4`,
+  `--nowo-ui-demo-gap`), paints the scaffolds' table / form regions and `nowo-ui-form-panel` as cards, stacks plain
+  Symfony form rows (label above control, `role="group"` widgets on one line) and keeps unclassed bundle buttons
+  transparent. Rules in [USAGE.md — Demo platform shell](USAGE.md#demo-platform-shell-260).
+- **`bin/nowo-ui-demo-style-lint` (2.60)** (`Nowo\UiKitBundle\Lint\DemoStyleLint`): fails when a demo app has a
+  stylesheet of its own, a `<style>`, a `style=""` or a stylesheet link other than UiKit's and the bundles' assets.
 - **Tree toggle outside the tree partial (2.60).** `button.nowo-ui-tree__toggle` (reset button, chevron that turns with
   its own `aria-expanded`, or with the `aria-expanded` of the button that holds a `.nowo-ui-tree__toggle` span),
   `.nowo-ui-tree__disclosure` (a full-width disclosure row: label + toggle) and `.nowo-ui-collapse` (a script-driven
   panel hidden until `.show` / `.is-open`), so a bundle menu (DashboardMenu `toggle_style: kit`) gets the kit toggles
   without a CSS framework.
+
+### Fixed
+
+- The primary button hover kept its text below WCAG AA in the default light theme (white mix, 3.97:1). The light
+  hover now darkens the primary (`color-mix(… 85%, black)`, 6.6:1); the default dark theme sets
+  `--nowo-ui-primary-hover` to a white mix (its primary carries dark text, 8.5:1). Hosts that set
+  `--nowo-ui-primary-hover` or `--nowo-ui-btn-primary-hover-bg` are unchanged.
 
 ## [2.59.0] - 2026-11-19
 

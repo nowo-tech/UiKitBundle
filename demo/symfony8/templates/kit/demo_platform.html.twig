@@ -31,25 +31,27 @@
 {% block body %}
     <div class="nowo-ui-cards" data-testid="kit-demo-platform-cards">
         {% for card in ['Inbox', 'Rules', 'Webhooks'] %}
-            <section class="nowo-ui-card">
-                <div class="nowo-ui-card__header"><h2 class="nowo-ui-card__title">{{ card }}</h2></div>
-                <div class="nowo-ui-card__body"><p class="nowo-ui-muted">Cards, badges and tables come from UiKit, so every demo shares one look.</p><span class="nowo-ui-badge nowo-ui-badge--info">{{ loop.index }} active</span></div>
-            </section>
+            {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: card, kind: 'detail', heading_level: 2} %}
+                {% block section_body %}<p class="nowo-ui-muted">Cards, badges and tables come from UiKit, so every demo shares one look.</p><span class="nowo-ui-badge nowo-ui-badge--info">{{ loop.index }} active</span>{% endblock %}
+            {% endembed %}
         {% endfor %}
     </div>
-    <section class="nowo-ui-card">
-        <div class="nowo-ui-card__header"><h2 class="nowo-ui-card__title">Latest messages</h2></div>
-        <div class="nowo-ui-card__body">
-            <div class="nowo-ui-table-wrap">
-                <table class="nowo-ui-data-table">
-                    <thead><tr><th scope="col">From</th><th scope="col">Subject</th><th scope="col">Status</th></tr></thead>
-                    <tbody>
-                        {% for row in [['Ada Lovelace', 'Analytical engine notes', 'New'], ['Grace Hopper', 'Compiler question', 'Answered'], ['Alan Turing', 'Lunch on Friday?', 'New']] %}
-                            <tr><td>{{ row[0] }}</td><td>{{ row[1] }}</td><td><span class="nowo-ui-badge">{{ row[2] }}</span></td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </section>
+    {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Latest messages', kind: 'table', testid: 'kit-demo-platform-table'} %}
+        {% block section_actions %}<a class="nowo-ui-btn nowo-ui-btn--outline nowo-ui-btn--sm" href="{{ path('kit_demo_platform', {page: 'messages'}) }}">Export</a>{% endblock %}
+        {% block section_body %}
+            <table class="nowo-ui-data-table">
+                <thead><tr><th scope="col">From</th><th scope="col">Subject</th><th scope="col">Status</th></tr></thead>
+                <tbody>
+                    {% for row in [['Ada Lovelace', 'Analytical engine notes', 'New'], ['Grace Hopper', 'Compiler question', 'Answered'], ['Alan Turing', 'Lunch on Friday?', 'New']] %}
+                        <tr><td>{{ row[0] }}</td><td>{{ row[1] }}</td><td><span class="nowo-ui-badge{{ row[2] == 'New' ? ' nowo-ui-badge--info' : ' nowo-ui-badge--success' }}">{{ row[2] }}</span></td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endblock %}
+    {% endembed %}
+    <div class="nowo-ui-cards">
+        {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Archived', kind: 'table', empty: true, state_message: 'No archived messages yet.', testid: 'kit-demo-platform-empty'} %}{% endembed %}
+        {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Sync', kind: 'list', state: 'loading'} %}{% endembed %}
+        {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Webhook log', kind: 'list', state: 'error'} %}{% endembed %}
+    </div>
 {% endblock %}

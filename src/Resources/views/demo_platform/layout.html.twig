@@ -138,7 +138,8 @@
     {% endset %}
 
     {% set _auth = _p.auth ?? null %}
-    {% set _user = app is defined and app ? (app.user ?? null) : null %}
+    {#- app.user throws without SecurityBundle: read it only when the demo declares auth. -#}
+    {% set _user = _auth and app is defined and app ? (app.user ?? null) : null %}
     {% set _header_end %}
         {{ block('nowo_ui_demo_platform_header_end') }}
         {% if _locales|length > 1 %}
