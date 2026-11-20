@@ -4047,6 +4047,16 @@ replaceable through `theme.partials`), paints with `--nowo-ui-*` tokens only (li
 or handler (CSP), works without JavaScript (the opt-in runtimes only enhance), and keeps no state in PHP: the same
 input renders the same markup in a FrankenPHP worker with the kernel kept alive. Strings ship in the 7 locales.
 
+**Trusted HTML options.** `tab_panels` items' `content`, `timeline` items' `meta` and `tooltip`'s `trigger` are printed
+raw. Prefer the escaped forms: `content_template` + `content_context`, `meta_template` + `meta_context`, and the
+`tooltip_trigger` embed block. Use the raw options only for markup the host built itself, never for user or tenant
+data.
+
+Option names are partial-scoped where an inherited variable would be dangerous: `filter_bar` takes `filter_id`,
+`code_block` `code_id`, `tooltip` `tooltip_id`, `toasts` `toast_client` (only `true`); a page's own `id` or `client`
+never reaches them. Link options (`chip` `remove_href`, `steps` `href`, `filter_bar` `reset_href`) go through
+`nowo_ui_safe_href()`: an unsafe scheme renders no link.
+
 Include the partials without the surrounding context when they sit inside another embed (a `_section` card has its
 own `title`, `id`, `empty`…): `include(nowo_ui_partial('steps'), {…}, false)` or `{% embed … with {…} only %}`.
 
@@ -4067,7 +4077,7 @@ Opt-in runtimes (add them to `script_names` or print them after `nowo_ui_partial
 ### Data tables
 
 ```twig
-{% embed nowo_ui_partial('filter_bar') with {form: filter_form, id: 'invoice-filters', reset_href: path('invoice_index'), columns: columns} only %}
+{% embed nowo_ui_partial('filter_bar') with {form: filter_form, filter_id: 'invoice-filters', reset_href: path('invoice_index'), columns: columns} only %}
     {% block filter_bar_extra %}
         {{ include(nowo_ui_partial('table_view'), {table: 'invoices', persist: 'invoices', columns: columns}, false) }}
     {% endblock %}
@@ -4097,13 +4107,17 @@ Opt-in runtimes (add them to `script_names` or print them after `nowo_ui_partial
 - **`filter_bar`** — a GET filter form (`form`, a FormView) as one row of fields; below 48rem, with `filter-sheet`,
   the fields fold behind a "Filters (n)" button and open in a bottom sheet (modal `<dialog>`: the same nodes move in
   and back, focus in on open and back to the button on close). The count is the fields with a value (`active_count`
-  overrides). Options: `id`, `title`, `heading_level`, `reset_href`, `submit_label`, `reset_label`, `close_label`,
+  overrides). Options: `filter_id` (root id), `title`, `heading_level`, `reset_href` (a safe URL, else no link), `submit_label`, `reset_label`, `close_label`,
   `attr`; blocks `filter_bar_extra` (the button row) and `filter_bar_actions`. Root `data-nowo-ui-region="filters"`.
 - **`bulk_bar`** + **`bulk_toggle`** — row checkboxes are the form's own widgets (a ChoiceType `expanded`, `multiple`,
   `choice_name` = the id, `choice_attr` `data-nowo-ui-bulk-item` and an `aria-label`), the actions are submit buttons
   (`form="<form_id>"`, `name` / `value`). The runtime adds the polite count, the page toggle (checked / mixed), the
   selected-row highlight, `aria-disabled` actions while nothing is selected, "Clear selection", and with `total` +
-  `all_field` (a HiddenType) the explicit second step "Select all N rows" (`all_field` = 1).
+  `all_field` (a HiddenType) the explicit second step "Select all N rows" (`all_field` = 1). Render `all_field`
+  **empty, with `autocomplete="off"`** (e.g. `HiddenType` with `'data' => ''` and `'attr' => ['autocomplete' => 'off']`,
+  never bound to the submitted value): the runtime clears it whenever the page is not fully selected, but a host that
+  re-renders a bound form after a POST must not print `1`. A danger action can ask first: `confirm: 'Delete the
+  selected invoices?'` (runtime question of the confirm runtime, else the browser's `confirm()`).
 - **`table_view`** — a density toggle (`nowo-ui-data-table--compact`) and a column menu (header cells carry
   `data-nowo-ui-column="<key>"`; `locked` columns cannot be hidden; never the last one). Browser-only memory in
   `localStorage` under `persist`; a stored layout for every device stays the listing customizer's job.
@@ -4128,7 +4142,8 @@ Opt-in runtimes (add them to `script_names` or print them after `nowo_ui_partial
   presence as a dot plus words in the avatar's name. **`chip`** — `label`, `avatar`, `remove_href` (a GET link);
   `<ul class="nowo-ui-chips">` for a list.
 - **Progress** — the `progress` partial with `attr: {class: 'nowo-ui-progress-field--success|warning|danger'}`.
-- **`code_block`** — `code`, `language`, `id`, `wrap`; the copy button appears once `clipboard` runs.
+- **`code_block`** — `code`, `language`, `code_id`, `wrap`; the copy button appears once `clipboard` runs and copies
+  the code exactly as shown (no trimming).
 - **Empty state** — `View\EmptyState` takes `icon`: the `empty` partial then renders the illustrated layout (icon,
   title, message, action, centred).
 - **`skeleton`** — `variant` (`text` | `list` | `card` | `table`), `lines`, `rows`, `label`: a region with
@@ -4150,21 +4165,24 @@ Opt-in runtimes (add them to `script_names` or print them after `nowo_ui_partial
 - **Read-only view** — the values in a `.nowo-ui-dl` inside `.nowo-ui-readonly-view` (an empty value shows "—").
 - **Sticky footer** — `attr: {class: 'nowo-ui-card--sticky-footer'}` on the form card: its footer stays in sight.
 - **Loading button** — `aria-busy="true"` on any `.nowo-ui-btn` draws a spinner (static with reduced motion);
-  `data-nowo-ui-busy-on-submit` on a form sets it on the submitter after validation and ignores a second submit.
+  `data-nowo-ui-busy-on-submit` on a form sets it on the submitter after validation and ignores a second submit. The
+  busy state clears on a back / forward cache restore and after `data-nowo-ui-busy-timeout` ms (default 15000, `0` =
+  never), e.g. when the response was a download.
 - **`dropzone`** — `field` (a FileType), `prompt`, `hint`, `max_bytes`: the file input stays the control; the
   runtime adds drop, the file list with sizes, the size / `accept` checks (`setCustomValidity`) and a polite status.
 
 ### Feedback and overlays
 
-- **Client toasts** — `toasts` partial with `client: true`: the stack stays in the page and carries a `<template>`;
+- **Client toasts** — `toasts` partial with `toast_client: true`: the stack stays in the page and carries a `<template>`;
   `window.nowoUiToast({message, title, type, timeout})` or a button with `data-nowo-ui-toast-show` and
   `data-nowo-ui-toast-message` / `-title` / `-type` / `-timeout` adds one. Every toast pauses while hovered or focused
   and leaves without animation with reduced motion (also for flash toasts).
 - **`tooltip`** — embed it and fill `tooltip_trigger` (the control carries `aria-describedby="{{ tooltip_id }}"`), or
   pass `trigger` (trusted HTML). Shown on hover and focus, kept while hovered, Escape hides it, a tap toggles it on
   touch screens; with the runtime it is `position: fixed`, so table scrollers never clip it.
-- **Destructive confirm** — a danger `View\Confirm` (e.g. `Action::delete()`): the dialog now opens on Cancel
-  (`autofocus`), not on the close button.
+- **Destructive confirm** — a danger `View\Confirm` (e.g. `Action::delete()`): the confirm runtime opens the dialog
+  on Cancel, not on the close button (markup unchanged). A theme that replaces the danger button classes sets
+  `data-nowo-ui-confirm-cancel-first: 'true'` in the `confirm` slot attributes (`'false'` turns it off).
 - **Detail drawer** — the `side_panel` partial with `layout: 'overlay'` and a `side_panel_toggle` (2.25).
 
 ### Navigation patterns

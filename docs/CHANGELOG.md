@@ -156,7 +156,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `.nowo-ui-progress-field--<tone>`, `.nowo-ui-table-footer`, `.nowo-ui-stack`. Runtime `form-busy`: busy submit
   button (`data-nowo-ui-busy-on-submit`) and error summary focus. `View\Stat` gains `delta`, `trend`, `deltaTone`
   and `icon`; `View\EmptyState` gains `icon` (illustrated empty state). Client toasts (`toasts` partial,
-  `client: true`, `window.nowoUiToast()`, `data-nowo-ui-toast-show`). `kebab` takes `menu_semantics: 'menu'` (APG
+  `toast_client: true`, `window.nowoUiToast()`, `data-nowo-ui-toast-show`). `kebab` takes `menu_semantics: 'menu'` (APG
   menu button). Clipboard copies an element's text (`data-nowo-ui-clipboard-target`). Catalogue: five new pages under
   "Admin components" (`/catalogue/admin/{group}`). See docs/USAGE.md "Admin components (2.61)".
 
@@ -167,6 +167,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Table scroller**: `.nowo-ui-table-wrap` is `position: relative`, so visually hidden texts inside it no longer
   widen the page on phones.
 - **Demo**: the UiKit demo uses `icon_set: svg_inline` (the demo platform shell loads no icon font).
+- **Admin components hardening (audit XJ, before 2.61.0).** The bulk "every page" field is cleared whenever the page
+  is not fully selected (render it empty with `autocomplete="off"`); danger bulk actions can ask first (`confirm`).
+  Partial-scoped options: `toast_client` (only `true`), `filter_id`, `code_id`, `tooltip_id` (an inherited `client` or
+  `id` is ignored). `chip` `remove_href`, `steps` `href` and `filter_bar` `reset_href` go through
+  `nowo_ui_safe_href()`. Code copies are not trimmed; a refused `execCommand` copy reports a failure. Escape on a
+  tooltip or the columns menu does not close a surrounding dialog. The busy button clears after
+  `data-nowo-ui-busy-timeout`. `data-nowo-ui-confirm-cancel-first` forces the Cancel-first focus on or off.
 
 ## [2.60.0] - 2026-11-20
 
