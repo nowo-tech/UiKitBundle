@@ -1,0 +1,32 @@
+{#
+  2.60 demo platform flashes: the session flashes (or flash_messages: {type: [messages]}) under the page header. Each
+  message has an icon and a visually hidden type prefix (meaning is never colour only), a dismiss button
+  ([data-nowo-ui-dismiss], js/nowo-ui-shell.js) and the right live region: success / info are role="status", warning /
+  error are role="alert". Types: success, info (notice), warning, error (danger).
+#}
+{% set _messages = flash_messages is defined and flash_messages is not null ? flash_messages : (app is defined and app ? app.flashes : {}) %}
+{% set _icons = {
+    success: '<path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+    info: '<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 11v6M12 7.5v.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+    warning: '<path d="M12 3.5l9.5 16.5h-19z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 10v4.5M12 17.5v.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+    error: '<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 9l6 6M15 9l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+} %}
+{% set _any = false %}
+{% for _label, _list in _messages %}{% if _list is not empty %}{% set _any = true %}{% endif %}{% endfor %}
+{% if _any %}
+    <div class="nowo-ui-flashes nowo-ui-demo-flashes" data-testid="demo-platform-flashes">
+        {% for _label, _list in _messages %}
+            {% set _type = _label in ['error', 'danger'] ? 'error' : (_label == 'notice' ? 'info' : (_label in ['success', 'warning', 'info'] ? _label : 'info')) %}
+            {% for _message in _list %}
+                {% set _text = _message is iterable and _message.title is defined ? _message.title ~ ((_message.message ?? null) ? ' — ' ~ _message.message : '') : _message %}
+                <div class="nowo-ui-flash nowo-ui-flash--{{ _type }} nowo-ui-demo-flash" role="{{ _type in ['error', 'warning'] ? 'alert' : 'status' }}" data-nowo-ui-dismissible>
+                    <svg class="nowo-ui-demo-flash__icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">{{ _icons[_type]|raw }}</svg>
+                    <p class="nowo-ui-demo-flash__text"><span class="visually-hidden">{{ ('demo_platform.flash_' ~ _type)|trans({}, 'NowoUiKitBundle') }}: </span>{{ _text }}</p>
+                    <button type="button" class="nowo-ui-demo-flash__close" data-nowo-ui-dismiss aria-label="{{ 'demo_platform.dismiss'|trans({}, 'NowoUiKitBundle') }}">
+                        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    </button>
+                </div>
+            {% endfor %}
+        {% endfor %}
+    </div>
+{% endif %}

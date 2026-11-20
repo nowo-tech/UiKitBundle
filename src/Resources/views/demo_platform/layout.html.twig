@@ -24,7 +24,8 @@
   Keys of nowo_ui_demo_platform (all optional but `bundle`):
     - bundle: bundle name (text); version: shown as a badge after it
     - home_route + home_params, or home_href: link of the bundle name (default: no link)
-    - platform: platform name (default "nowo · bundles"); platform_href (default https://github.com/nowo-tech)
+    - platform: platform name (default "nowo · bundles"); platform_href (default: the demo home, else
+      https://github.com/nowo-tech)
     - translation_domain: domain of nav labels, section names and footer link labels (default `messages`; false =
       print them as given)
     - nav: list of {label, route + params | href, active: [route names; a trailing * matches a prefix], section,
@@ -47,10 +48,11 @@
 #}
 {% extends '@NowoUiKitBundle/layout/document.html.twig' %}
 
+{#- The shell owns its look: UiKit's base theme, the kit and the platform stylesheet (light + dark tokens). It never prints
+    a host's theme tokens or appearance style, so every demo looks the same whatever the host app configures. -#}
 {% block nowo_ui_styles %}
-    {%- if not nowo_ui_base_stylesheet() %}<link rel="stylesheet" href="{{ asset('css/nowo-ui-base.css', 'nowo_ui_kit') }}">
-    {% endif -%}
-    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/nowo-ui-base.css', 'nowo_ui_kit') }}">
+    <link rel="stylesheet" href="{{ asset('css/nowo-ui.css', 'nowo_ui_kit') }}">
     <link rel="stylesheet" href="{{ asset('css/nowo-ui-demo-platform.css', 'nowo_ui_kit') }}">
 {% endblock %}
 
@@ -63,7 +65,7 @@
     {% set _domain = _p.translation_domain ?? 'messages' %}
     {% set _home_href = (_p.home_href ?? null) ?: ((_p.home_route ?? null) ? path(_p.home_route, _p.home_params ?? {}) : null) %}
     {% set _platform = _p.platform ?? 'nowo · bundles' %}
-    {% set _platform_href = nowo_ui_safe_href(_p.platform_href ?? 'https://github.com/nowo-tech') %}
+    {% set _platform_href = nowo_ui_safe_href((_p.platform_href ?? null) ?: (_home_href ?: 'https://github.com/nowo-tech')) %}
 
     {#- Nav: resolve href / current per item, then group consecutive items by section. -#}
     {% set _groups = [] %}
@@ -156,6 +158,10 @@
 
     {% set _aside %}
         <div class="nowo-ui-aside__inner nowo-ui-demo-platform__aside">
+            {% if _locales|length > 1 %}
+                {#- Phones: the top bar has no room for the pills; the drawer carries them first (CSS shows one of the two). -#}
+                {% with {_locales_variant: 'aside'} %}{{ block('nowo_ui_demo_platform_locales') }}{% endwith %}
+            {% endif %}
             {% for _group in _groups %}
                 {% set _heading = _group.section is null ? null : (_domain is same as(false) ? _group.section : _group.section|trans({}, _domain)) %}
                 {% if _heading %}
@@ -166,10 +172,6 @@
                 </nav>
             {% endfor %}
             {{ block('nowo_ui_demo_platform_aside_end') }}
-            {% if _locales|length > 1 %}
-                {#- Phones: the top bar has no room for the pills; the drawer carries them (CSS shows one of the two). -#}
-                {% with {_locales_variant: 'aside'} %}{{ block('nowo_ui_demo_platform_locales') }}{% endwith %}
-            {% endif %}
         </div>
     {% endset %}
 
@@ -186,7 +188,7 @@
         content_width: _p.content_width ?? 'content',
         sidebar_layout: 'below-header',
         sidebar_style: _p.sidebar_style ?? 'classic',
-        shell_attr: {class: 'nowo-ui-demo-platform' ~ ((_p.content_width ?? 'content') == 'full' ? '' : ' is-main-content'), 'data-testid': 'demo-platform'},
+        shell_attr: {class: 'nowo-ui-demo-platform' ~ ((_p.content_width ?? 'content') == 'full' ? '' : ' is-main-content'), 'data-testid': 'demo-platform', 'data-nowo-ui-drawer-a11y': true},
         bundle: _bundle,
     } %}
     {% if _auth and _user %}
@@ -200,7 +202,7 @@
         <main class="{{ nowo_ui_class('content', _bundle) }} nowo-ui-demo-platform__content" id="nowo-ui-content" tabindex="-1"{% if _bundle %} data-nowo-ui-bundle="{{ _bundle }}"{% endif %}{{ nowo_ui_attrs('content', _bundle) }}>
             {% block nowo_ui_page_header %}{% endblock %}
             {% block nowo_ui_flashes %}
-                {{ include(nowo_ui_partial('flashes', _bundle), {bundle: _bundle}) }}
+                {{ include('@NowoUiKit/demo_platform/_flashes.html.twig') }}
             {% endblock %}
             {% block nowo_ui_content %}{% block body %}{% endblock %}{% endblock %}
         </main>

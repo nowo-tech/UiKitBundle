@@ -66,8 +66,8 @@ TWIG;
         self::assertStringNotContainsString('cdn', strtolower($html));
 
         // Top bar: platform brand, bundle name linking home, theme toggle.
-        self::assertMatchesRegularExpression('#<div class="nowo-ui-app-shell nowo-ui-shell is-content-width nowo-ui-demo-platform is-main-content" data-nowo-ui-shell data-testid="demo-platform">#', $html);
-        self::assertStringContainsString('<a class="nowo-ui-demo-platform__platform" href="https://github.com/nowo-tech" data-testid="demo-platform-brand">', $html);
+        self::assertMatchesRegularExpression('#<div class="nowo-ui-app-shell nowo-ui-shell is-content-width nowo-ui-demo-platform is-main-content" data-nowo-ui-shell data-testid="demo-platform" data-nowo-ui-drawer-a11y>#', $html);
+        self::assertStringContainsString('<a class="nowo-ui-demo-platform__platform" href="/demo_home" data-testid="demo-platform-brand">', $html);
         self::assertStringContainsString('<span class="nowo-ui-demo-platform__platform-name">nowo · bundles</span>', $html);
         self::assertStringContainsString('<a class="nowo-ui-demo-platform__bundle" href="/demo_home" data-testid="demo-platform-bundle">Contact Form</a>', $html);
         self::assertStringContainsString('data-nowo-ui-theme-toggle', $html);
@@ -256,13 +256,44 @@ TWIG;
         self::assertStringContainsString('data-nowo-ui-demo-state="empty"', $html);
         self::assertStringContainsString('<p class="nowo-ui-empty__message">Nothing archived.</p>', $html);
         self::assertStringContainsString('<div class="nowo-ui-empty__action"><a class="nowo-ui-btn nowo-ui-btn--outline" href="/import">Import</a></div>', $html);
-        self::assertMatchesRegularExpression('#role="status" aria-busy="true" data-nowo-ui-demo-state="loading">Loading…</p>#', $html);
-        self::assertMatchesRegularExpression('#role="alert" data-nowo-ui-demo-state="error">Something went wrong. Try again.</div>#', $html);
+        self::assertMatchesRegularExpression('#<div class="nowo-ui-card__body nowo-ui-demo-section__body" aria-busy="true">\s*<div class="nowo-ui-demo-section__state nowo-ui-demo-skeleton" data-nowo-ui-demo-state="loading">\s*<p class="visually-hidden" role="status">Loading…</p>#', $html);
+        self::assertSame(3, substr_count($html, '<span class="nowo-ui-demo-skeleton__line'));
+        self::assertMatchesRegularExpression('#<div class="nowo-ui-flash nowo-ui-flash--error nowo-ui-demo-flash nowo-ui-demo-section__state" role="alert" data-nowo-ui-demo-state="error">#', $html);
+        self::assertStringContainsString('<span class="visually-hidden">Error: </span>Something went wrong. Try again.', $html);
+        self::assertStringContainsString('class="nowo-ui-demo-empty__icon"', $html);
         self::assertStringContainsString('nowo-ui-demo-section--content extra"', $html);
         self::assertSame(0, preg_match('/\son[a-z]+=/i', $html), 'no inline handlers, even from attr');
         // A section with neither title nor actions prints no header; the blocks never print outside their slots.
         self::assertSame(5, substr_count($html, '<header class="nowo-ui-card__header'));
         self::assertSame(1, substr_count($html, 'FIELDS'));
+    }
+
+    public function testHostThemeTokensNeverReachTheShell(): void
+    {
+        $twig = PageContractTwig::create(['base' => self::BASE], ['tokens' => ['primary' => '#0f766e', 'radius' => '0.75rem']], 'custom', request: $this->request('demo_home'), messages: self::MESSAGES);
+        $html = $twig->render('base', ['platform' => self::PLATFORM]);
+
+        self::assertStringNotContainsString('data-nowo-ui-theme-tokens', $html);
+        self::assertStringNotContainsString('#0f766e', $html);
+        self::assertSame(1, substr_count($html, 'css/nowo-ui-base.css'));
+        self::assertMatchesRegularExpression('#nowo-ui-base\.css">\s*<link rel="stylesheet" href="/bundles/nowouikit/css/nowo-ui\.css">\s*<link rel="stylesheet" href="/bundles/nowouikit/css/nowo-ui-demo-platform\.css">#', $html);
+    }
+
+    public function testFlashesHaveIconPrefixLiveRegionAndDismiss(): void
+    {
+        $twig = PageContractTwig::create(['f' => "{{ include('@NowoUiKit/demo_platform/_flashes.html.twig', {flash_messages: {success: ['Saved.'], danger: ['Failed.'], notice: ['Heads up.'], warning: ['Careful.']}}) }}"], [], 'custom');
+        $html = $twig->render('f');
+
+        self::assertMatchesRegularExpression('#<div class="nowo-ui-flash nowo-ui-flash--success nowo-ui-demo-flash" role="status" data-nowo-ui-dismissible>#', $html);
+        self::assertMatchesRegularExpression('#<div class="nowo-ui-flash nowo-ui-flash--error nowo-ui-demo-flash" role="alert" data-nowo-ui-dismissible>#', $html);
+        self::assertMatchesRegularExpression('#<div class="nowo-ui-flash nowo-ui-flash--info nowo-ui-demo-flash" role="status" data-nowo-ui-dismissible>#', $html);
+        self::assertMatchesRegularExpression('#<div class="nowo-ui-flash nowo-ui-flash--warning nowo-ui-demo-flash" role="alert" data-nowo-ui-dismissible>#', $html);
+        self::assertStringContainsString('<span class="visually-hidden">Error: </span>Failed.', $html);
+        self::assertStringContainsString('<span class="visually-hidden">Success: </span>Saved.', $html);
+        self::assertSame(4, substr_count($html, 'data-nowo-ui-dismiss aria-label="Dismiss"'));
+        self::assertSame(4, substr_count($html, 'class="nowo-ui-demo-flash__icon"'));
+        // No messages: no wrapper.
+        self::assertSame('', trim(PageContractTwig::create(['e' => "{{ include('@NowoUiKit/demo_platform/_flashes.html.twig', {flash_messages: {success: []}}) }}"], [], 'custom')->render('e')));
     }
 
     /**

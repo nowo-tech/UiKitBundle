@@ -3,7 +3,7 @@
   view of a demo sits in one of these cards, so demos never hand-roll card markup:
 
       {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Submissions', kind: 'table', empty: rows is empty} %}
-          {% block section_actions %}<a class="nowo-ui-btn nowo-ui-btn--primary nowo-ui-btn--sm" href="…">Export</a>{% endblock %}
+          {% block section_actions %}<a class="nowo-ui-btn nowo-ui-btn--outline nowo-ui-btn--sm" href="…">Export</a>{% endblock %}
           {% block section_body %}<table class="nowo-ui-data-table">…</table>{% endblock %}
       {% endembed %}
 
@@ -12,9 +12,9 @@
     - kind: table | form | list | detail | content (default content). table: the body is a focusable scroll region
       (role region + aria-label = title), so a wide table scrolls inside the card, never the page. form: the footer
       lays the actions out at the bottom right, primary button last
-    - state: null (default) | empty | loading | error. empty / loading / error replace the body with the UiKit empty
-      block (message: state_message, default the kit's text; the empty one may carry an action in section_empty_action),
-      a busy status line, or a danger alert
+    - state: null (default) | empty | loading | error. empty: a centred empty block with an icon, an optional title
+      (state_title), the message (state_message, default the kit's text) and an optional action (section_empty_action);
+      loading: skeleton lines, the body marked aria-busy, a visually hidden status message; error: a danger alert
     - empty (bool): shortcut for state: 'empty'
     - id, testid, attr (extra root attributes; no on*)
   Blocks: section_actions (header, right; one primary per view), section_body, section_footer (form actions),
@@ -41,17 +41,27 @@
             {% endif %}
         </header>
     {% endif %}
-    <div class="nowo-ui-card__body nowo-ui-demo-section__body">
+    <div class="nowo-ui-card__body nowo-ui-demo-section__body"{% if _state == 'loading' %} aria-busy="true"{% endif %}>
         {% if _state == 'empty' %}
-            <div class="nowo-ui-empty nowo-ui-muted nowo-ui-demo-section__state" data-nowo-ui-demo-state="empty">
+            <div class="nowo-ui-empty nowo-ui-demo-section__state nowo-ui-demo-empty" data-nowo-ui-demo-state="empty">
+                <svg class="nowo-ui-demo-empty__icon" viewBox="0 0 24 24" width="32" height="32" aria-hidden="true" focusable="false"><path d="M4 13.5l2.5-7A1.5 1.5 0 0 1 7.9 5.5h8.2a1.5 1.5 0 0 1 1.4 1l2.5 7v4A1.5 1.5 0 0 1 18.5 19h-13A1.5 1.5 0 0 1 4 17.5z M4 13.5h4.5l1 2h5l1-2H20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                {% if state_title ?? null %}<p class="nowo-ui-empty__title">{{ state_title }}</p>{% endif %}
                 <p class="nowo-ui-empty__message">{{ (state_message ?? null) ?: 'empty.default'|trans({}, 'NowoUiKitBundle') }}</p>
                 {% set _empty_action %}{{ block('section_empty_action') }}{% endset %}
                 {% if _empty_action|trim is not same as('') %}<div class="nowo-ui-empty__action">{{ _empty_action }}</div>{% endif %}
             </div>
         {% elseif _state == 'loading' %}
-            <p class="nowo-ui-muted nowo-ui-demo-section__state" role="status" aria-busy="true" data-nowo-ui-demo-state="loading">{{ (state_message ?? null) ?: 'demo_platform.loading'|trans({}, 'NowoUiKitBundle') }}</p>
+            <div class="nowo-ui-demo-section__state nowo-ui-demo-skeleton" data-nowo-ui-demo-state="loading">
+                <p class="visually-hidden" role="status">{{ (state_message ?? null) ?: 'demo_platform.loading'|trans({}, 'NowoUiKitBundle') }}</p>
+                <span class="nowo-ui-demo-skeleton__line" aria-hidden="true"></span>
+                <span class="nowo-ui-demo-skeleton__line" aria-hidden="true"></span>
+                <span class="nowo-ui-demo-skeleton__line nowo-ui-demo-skeleton__line--short" aria-hidden="true"></span>
+            </div>
         {% elseif _state == 'error' %}
-            <div class="nowo-ui-flash nowo-ui-flash--danger nowo-ui-demo-section__state" role="alert" data-nowo-ui-demo-state="error">{{ (state_message ?? null) ?: 'demo_platform.error'|trans({}, 'NowoUiKitBundle') }}</div>
+            <div class="nowo-ui-flash nowo-ui-flash--error nowo-ui-demo-flash nowo-ui-demo-section__state" role="alert" data-nowo-ui-demo-state="error">
+                <svg class="nowo-ui-demo-flash__icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 9l6 6M15 9l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <p class="nowo-ui-demo-flash__text"><span class="visually-hidden">{{ 'demo_platform.flash_error'|trans({}, 'NowoUiKitBundle') }}: </span>{{ (state_message ?? null) ?: 'demo_platform.error'|trans({}, 'NowoUiKitBundle') }}</p>
+            </div>
         {% elseif _kind == 'table' %}
             <div class="nowo-ui-table-wrap nowo-ui-demo-section__scroll" role="region" tabindex="0"{% if _title %} aria-label="{{ _title }}"{% endif %}>
                 {{ block('section_body') }}

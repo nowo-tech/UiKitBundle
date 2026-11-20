@@ -2,16 +2,113 @@
  * nowo-ui-demo-platform.css — the "nowo · bundles" demo platform shell (2.60).
  *
  * Linked only by @NowoUiKit/demo_platform/layout.html.twig, after nowo-ui-base.css and nowo-ui.css. The shell itself
- * (header, aside, phone drawer, footer, content width) is UiKit's app shell, painted by nowo-ui.css; this file only adds
- * the platform brand, the locale pills and a few spacing rules. Every colour reads a documented --nowo-ui-* token, so
- * light and dark follow the kit defaults (and a theme, if a demo ever sets one) with no override here.
+ * (header, aside, phone drawer, footer, content width) is UiKit's app shell, painted by nowo-ui.css. This file owns the
+ * platform look: its light and dark tokens (no host theme reaches the shell), one type scale, one spacing scale, the
+ * brand, the locale pills, the layout grammar (docs/USAGE.md "Demo platform shell") and touch targets.
  *
- * Same cascade layer as the kit (`nowo-ui`), loaded after it: a demo's own component CSS (unlayered) still wins.
+ * Same cascade layer as the kit (`nowo-ui`), loaded after it: a bundle's own component CSS (unlayered) still wins.
  * Hand-maintained (no unlayered twin; `pnpm run build:css` does not touch it).
  */
 @layer theme, base, nowo-ui, components, utilities;
 
 @layer nowo-ui {
+
+/* --- Platform tokens: the shell owns them, light and dark ------------------------------------------------------- */
+
+:root:has(.nowo-ui-demo-platform) {
+  --nowo-ui-primary: #2563eb;
+  --nowo-ui-primary-contrast: #ffffff;
+  --nowo-ui-link: var(--nowo-ui-primary);
+  --nowo-ui-surface: #ffffff;
+  --nowo-ui-surface-muted: #f5f7fb;
+  --nowo-ui-border: #e2e8f0;
+  --nowo-ui-border-strong: #cbd5e1;
+  --nowo-ui-text: #0f172a;
+  --nowo-ui-muted: #586579;
+  --nowo-ui-radius: 0.375rem;
+  --nowo-ui-card-radius: 0.625rem;
+  /* WCAG 1.4.11: a control's boundary is 3:1 or more against its surface (4.4:1 here). */
+  --nowo-ui-input-border: #6b7a90;
+  --nowo-ui-focus-ring-color: #2563eb;
+  --nowo-ui-card-shadow: 0 1px 2px rgb(15 23 42 / 0.05), 0 2px 8px rgb(15 23 42 / 0.04);
+  --nowo-ui-shadow-drawer: 12px 0 32px rgb(15 23 42 / 0.18);
+
+  /* One spacing scale (also under the kit's --nowo-ui-space-* names) and one gap. */
+  --nowo-ui-space-1: 0.25rem;
+  --nowo-ui-space-2: 0.5rem;
+  --nowo-ui-space-3: 1rem;
+  --nowo-ui-space-4: 1.5rem;
+  --nowo-ui-demo-space-1: var(--nowo-ui-space-1);
+  --nowo-ui-demo-space-2: var(--nowo-ui-space-2);
+  --nowo-ui-demo-space-3: var(--nowo-ui-space-3);
+  --nowo-ui-demo-space-4: var(--nowo-ui-space-4);
+  --nowo-ui-demo-gap: var(--nowo-ui-space-3);
+
+  /* One type scale: five steps. */
+  --nowo-ui-text-xs: 0.75rem;
+  --nowo-ui-text-sm: 0.875rem;
+  --nowo-ui-text-md: 0.9375rem;
+  --nowo-ui-text-lg: 1.125rem;
+  --nowo-ui-text-xl: 1.5rem;
+}
+
+/* Dark: the page is the deepest surface and cards sit above it (elevation reads lighter, never darker). */
+:root:has(.nowo-ui-demo-platform)[data-theme='dark'] {
+  --nowo-ui-primary: #60a5fa;
+  --nowo-ui-primary-contrast: #0b1220;
+  --nowo-ui-surface: #172033;
+  --nowo-ui-surface-muted: #0d1424;
+  --nowo-ui-border: #2a3850;
+  --nowo-ui-border-strong: #475569;
+  --nowo-ui-text: #e2e8f0;
+  --nowo-ui-muted: #94a3b8;
+  --nowo-ui-input-border: #7c8ba3;
+  --nowo-ui-focus-ring-color: #93c5fd;
+  --nowo-ui-card-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
+  --nowo-ui-shadow-drawer: 12px 0 32px rgb(0 0 0 / 0.5);
+}
+
+/* --- Type ------------------------------------------------------------------------------------------------------- */
+
+.nowo-ui-demo-platform {
+  font-size: var(--nowo-ui-text-md);
+}
+
+.nowo-ui-demo-platform__content .nowo-ui-page-header__title {
+  margin: 0;
+  font-size: var(--nowo-ui-text-xl);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.nowo-ui-demo-platform__content :is(.nowo-ui-page-header__intro, .nowo-ui-card__intro) {
+  margin: 0;
+  font-size: var(--nowo-ui-text-sm);
+  color: var(--nowo-ui-muted);
+}
+
+.nowo-ui-demo-platform__content .nowo-ui-card__title {
+  margin: 0;
+  font-size: var(--nowo-ui-text-lg);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.nowo-ui-demo-platform__content :is(table, .nowo-ui-list, .nowo-ui-aside__nav) {
+  font-size: var(--nowo-ui-text-sm);
+}
+
+.nowo-ui-demo-platform :is(.nowo-ui-badge, .nowo-ui-aside__label, th) {
+  font-size: var(--nowo-ui-text-xs);
+}
+
+/* One button size per slot: page actions, section actions and form footers use the same button. */
+.nowo-ui-demo-platform :is(.nowo-ui-page-header, .nowo-ui-demo-section__actions, .nowo-ui-demo-section__footer, .nowo-ui-form__actions, .nowo-ui-empty__action) .nowo-ui-btn {
+  min-height: 2.25rem;
+  padding: 0.375rem 0.875rem;
+  font-size: var(--nowo-ui-text-sm);
+  font-weight: 500;
+}
 
 /* --- Top bar: platform brand / bundle name ---------------------------------------------------------------------- */
 
@@ -38,7 +135,6 @@
   letter-spacing: -0.01em;
   text-decoration: none;
   white-space: nowrap;
-  border-radius: var(--nowo-ui-radius);
 }
 
 .nowo-ui-demo-platform__mark {
@@ -50,7 +146,7 @@
   border-radius: 0.5rem;
   background: var(--nowo-ui-primary);
   color: var(--nowo-ui-primary-contrast);
-  font-size: 0.875rem;
+  font-size: var(--nowo-ui-text-sm);
   font-weight: 700;
   line-height: 1;
 }
@@ -70,7 +166,6 @@
   text-decoration: none;
   text-overflow: ellipsis;
   white-space: nowrap;
-  border-radius: var(--nowo-ui-radius);
 }
 
 .nowo-ui-demo-platform__bundle:is(a):hover,
@@ -83,7 +178,7 @@
   flex: none;
 }
 
-/* --- Top bar: locale pills -------------------------------------------------------------------------------------- */
+/* --- Locale pills (top bar on desktop, first in the drawer on phones) ------------------------------------------- */
 
 .nowo-ui-demo-platform__locales {
   display: inline-flex;
@@ -98,7 +193,7 @@
 .nowo-ui-demo-platform__locales--aside {
   display: none;
   align-self: flex-start;
-  margin: 0.75rem 0.5rem 0;
+  margin: 0 0.65rem 0.25rem;
 }
 
 .nowo-ui-demo-platform__locale {
@@ -110,7 +205,7 @@
   padding: 0 0.5rem;
   border-radius: 999px;
   color: var(--nowo-ui-muted);
-  font-size: 0.75rem;
+  font-size: var(--nowo-ui-text-xs);
   font-weight: 600;
   letter-spacing: 0.03em;
   text-decoration: none;
@@ -126,31 +221,33 @@
   color: var(--nowo-ui-primary-contrast);
 }
 
-/* One focus ring for every platform control (the kit's own controls carry theirs). */
-:is(.nowo-ui-demo-platform__platform, .nowo-ui-demo-platform__bundle, .nowo-ui-demo-platform__locale):focus-visible {
+/* One focus ring for every platform control and the footer links (the kit's own controls carry theirs). */
+:is(.nowo-ui-demo-platform__platform, .nowo-ui-demo-platform__bundle, .nowo-ui-demo-flash__close),
+.nowo-ui-demo-platform .nowo-ui-footer a {
+  border-radius: var(--nowo-ui-radius);
+}
+
+:is(.nowo-ui-demo-platform__platform, .nowo-ui-demo-platform__bundle, .nowo-ui-demo-platform__locale, .nowo-ui-demo-flash__close):focus-visible,
+.nowo-ui-demo-platform .nowo-ui-footer a:focus-visible {
   outline: 2px solid var(--nowo-ui-focus-ring-color, var(--nowo-ui-primary));
   outline-offset: 2px;
 }
 
-/* --- Aside: groups breathe a little more than the kit default --------------------------------------------------- */
+/* --- Aside ------------------------------------------------------------------------------------------------------ */
 
 .nowo-ui-demo-platform__aside {
   overflow-y: auto;
-  gap: 0.5rem;
+  gap: 0.25rem;
 }
 
+/* Labels line up with the link text (the links' inline padding). */
 .nowo-ui-demo-platform__aside .nowo-ui-aside__label {
-  margin-top: 0.5rem;
+  margin: 0.75rem 0.65rem 0.25rem;
 }
 
-.nowo-ui-demo-platform__aside .nowo-ui-aside__nav + .nowo-ui-aside__nav {
-  margin-top: 0.5rem;
-}
-
-/* A bundle's own markup (a rendered menu in the aside_end block or in a page) may carry framework-only button classes
-   (`btn btn-link`); without a framework they would paint as browser-default buttons (white in dark mode). Keep them
-   transparent and in the text colour. This layer is below any unlayered bundle CSS, so a bundle's own styles win. */
-:is(.nowo-ui-demo-platform__aside, .nowo-ui-demo-platform__content) button:not([class*='nowo-ui-']) {
+/* A bundle's own markup may carry framework-only button classes (`btn btn-link`); without a framework they would paint
+   as browser-default buttons (white in dark mode). Only those get a transparent look; a bare <button> keeps its own. */
+:is(.nowo-ui-demo-platform__aside, .nowo-ui-demo-platform__content) button:is(.btn, [class*='btn-']):not([class*='nowo-ui-']) {
   border: 0;
   background: transparent;
   color: inherit;
@@ -162,22 +259,35 @@
   outline: none;
 }
 
-/* Long unbreakable text (route names, code samples, URLs) wraps instead of widening the page past the viewport. */
+/* Long words in prose break only when they would overflow the column; tables, badges and code never break mid-token
+   (tables scroll inside their card instead). */
 .nowo-ui-demo-platform__content {
   min-width: 0;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
-/* --- Layout grammar (2.60; docs/USAGE.md "Demo platform shell" — layout rules) -----------------------------------
- * One spacing scale and one gap: every block of the content area (page header, flashes, cards, card grids, scaffold
- * regions) is stacked with --nowo-ui-demo-gap; card grids use the same gap. */
-.nowo-ui-demo-platform {
-  --nowo-ui-demo-space-1: 0.25rem;
-  --nowo-ui-demo-space-2: 0.5rem;
-  --nowo-ui-demo-space-3: 1rem;
-  --nowo-ui-demo-space-4: 1.5rem;
-  --nowo-ui-demo-gap: var(--nowo-ui-demo-space-3);
+.nowo-ui-demo-platform__content :is(table, .nowo-ui-badge, code, .nowo-ui-code, kbd) {
+  overflow-wrap: normal;
+  word-break: normal;
 }
+
+.nowo-ui-demo-platform__content :is(.nowo-ui-badge, td code, td .nowo-ui-code, td, th) {
+  white-space: nowrap;
+}
+
+.nowo-ui-demo-platform__content :is(td, th).nowo-ui-cell--wrap {
+  min-width: 12rem;
+  white-space: normal;
+}
+
+/* Primary and info badges differ: primary is filled. */
+.nowo-ui-demo-platform .nowo-ui-badge--primary {
+  border-color: transparent;
+  background: var(--nowo-ui-primary);
+  color: var(--nowo-ui-primary-contrast);
+}
+
+/* --- Layout grammar: one gap between every block --------------------------------------------------------------- */
 
 .nowo-ui-demo-platform__content > * {
   margin-top: 0;
@@ -189,6 +299,8 @@
 }
 
 .nowo-ui-demo-platform__content .nowo-ui-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
   gap: var(--nowo-ui-demo-gap);
 }
 
@@ -196,24 +308,44 @@
   margin-bottom: 0;
 }
 
-/* Page header: title and subtitle on the start side, the actions on the end side. */
+.nowo-ui-demo-platform__content .nowo-ui-card {
+  border-radius: var(--nowo-ui-card-radius);
+  box-shadow: var(--nowo-ui-card-shadow);
+}
+
+.nowo-ui-demo-platform__content :is(.nowo-ui-card__header, .nowo-ui-card__body, .nowo-ui-card__footer) {
+  padding: var(--nowo-ui-space-3);
+}
+
+/* Page header: title and subtitle on the start side, the actions on the end side (also when they wrap). */
 .nowo-ui-demo-platform__content > .nowo-ui-page-header {
   align-items: flex-start;
   justify-content: space-between;
+  gap: var(--nowo-ui-space-2) var(--nowo-ui-space-3);
   margin-bottom: 0;
 }
 
-/* Sections (demo_platform/_section.html.twig): header = title (+ intro) and actions on the right; form footer = actions
-   at the bottom right; table body = a scroll region inside the card. */
+.nowo-ui-demo-platform__content > .nowo-ui-page-header > :first-child {
+  flex: 1 1 18rem;
+  min-width: 0;
+}
+
+.nowo-ui-demo-platform__content > .nowo-ui-page-header > :not(:first-child) {
+  margin-inline-start: auto;
+}
+
+/* --- Sections (demo_platform/_section.html.twig) --------------------------------------------------------------- */
+
 .nowo-ui-demo-section__header {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
   justify-content: space-between;
-  gap: var(--nowo-ui-demo-space-2) var(--nowo-ui-demo-space-3);
+  gap: var(--nowo-ui-space-2) var(--nowo-ui-space-3);
 }
 
 .nowo-ui-demo-section__heading {
+  flex: 1 1 16rem;
   min-width: 0;
 }
 
@@ -222,7 +354,7 @@
 }
 
 .nowo-ui-demo-section__heading > * + * {
-  margin-top: var(--nowo-ui-demo-space-1);
+  margin-top: var(--nowo-ui-space-1);
 }
 
 .nowo-ui-demo-section__actions,
@@ -232,11 +364,14 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
-  gap: var(--nowo-ui-demo-space-2);
+  gap: var(--nowo-ui-space-2);
+}
+
+.nowo-ui-demo-section__actions {
+  margin-inline-start: auto;
 }
 
 .nowo-ui-demo-section__footer {
-  padding: var(--nowo-ui-demo-space-3);
   border-top: 1px solid var(--nowo-ui-border);
 }
 
@@ -246,7 +381,7 @@
 }
 
 .nowo-ui-demo-section__body > * + * {
-  margin-top: var(--nowo-ui-demo-space-3);
+  margin-top: var(--nowo-ui-space-3);
 }
 
 /* Sections in a card grid stretch to the row height; their footers line up at the bottom. */
@@ -259,7 +394,7 @@
   flex: 1 1 auto;
 }
 
-.nowo-ui-demo-section--table > .nowo-ui-demo-section__body {
+.nowo-ui-demo-platform__content .nowo-ui-demo-section--table > .nowo-ui-demo-section__body {
   padding: 0;
 }
 
@@ -274,17 +409,111 @@
 }
 
 .nowo-ui-demo-section--table .nowo-ui-demo-section__state {
-  padding: var(--nowo-ui-demo-space-3);
+  margin: var(--nowo-ui-space-3);
+}
+
+/* Table cells on the platform rhythm. */
+.nowo-ui-demo-platform__content :is(.nowo-ui-data-table, .nowo-ui-table) :is(th, td) {
+  padding: var(--nowo-ui-space-2) var(--nowo-ui-space-3);
+}
+
+/* States: empty (centred, icon, title), loading (skeleton), error (alert with icon). */
+.nowo-ui-demo-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--nowo-ui-space-2);
+  padding: var(--nowo-ui-space-4) var(--nowo-ui-space-3);
+  text-align: center;
+}
+
+.nowo-ui-demo-empty > * {
   margin: 0;
 }
 
-/* The scaffolds' table and form regions (bundle pages rendered by the UiKit list / form scaffolds) follow the same
-   grammar inside the shell: a table or a form that is not already in a card is painted as one, and a table scrolls
-   inside it, never the page. */
+.nowo-ui-demo-empty__icon {
+  color: var(--nowo-ui-muted);
+}
+
+.nowo-ui-demo-empty .nowo-ui-empty__title {
+  color: var(--nowo-ui-text);
+  font-weight: 600;
+}
+
+.nowo-ui-demo-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nowo-ui-space-2);
+}
+
+.nowo-ui-demo-skeleton__line {
+  display: block;
+  height: 0.75rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--nowo-ui-surface-muted) 0%, var(--nowo-ui-border) 50%, var(--nowo-ui-surface-muted) 100%);
+  background-size: 200% 100%;
+  animation: nowo-ui-demo-skeleton 1.4s ease-in-out infinite;
+}
+
+.nowo-ui-demo-skeleton__line--short {
+  width: 60%;
+}
+
+@keyframes nowo-ui-demo-skeleton {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
+
+/* Flashes and section alerts: icon, text, dismiss; meaning never colour only. */
+.nowo-ui-demo-flashes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nowo-ui-space-2);
+}
+
+.nowo-ui-demo-flash {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--nowo-ui-space-2);
+  margin: 0;
+  font-size: var(--nowo-ui-text-sm);
+}
+
+.nowo-ui-demo-flash__icon {
+  flex: none;
+  margin-top: 0.1rem;
+}
+
+.nowo-ui-demo-flash__text {
+  flex: 1 1 auto;
+  margin: 0;
+}
+
+.nowo-ui-demo-flash__close {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin: -0.25rem -0.5rem -0.25rem 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.nowo-ui-demo-flash__close:hover {
+  background: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+/* --- Bundle pages: scaffold tables and forms are cards here too ------------------------------------------------- */
+
 .nowo-ui-demo-platform__content :is([data-nowo-ui-region='table'], [data-nowo-ui-region='form'], .nowo-ui-form-panel):not(.nowo-ui-card *, dialog *, .nowo-ui-form-panel *) {
   border: 1px solid var(--nowo-ui-card-border, var(--nowo-ui-border));
-  border-radius: var(--nowo-ui-card-radius, var(--nowo-ui-radius));
+  border-radius: var(--nowo-ui-card-radius);
   background: var(--nowo-ui-card-bg, var(--nowo-ui-surface));
+  box-shadow: var(--nowo-ui-card-shadow);
 }
 
 .nowo-ui-demo-platform__content [data-nowo-ui-region='table']:not(.nowo-ui-card *, dialog *) {
@@ -293,53 +522,39 @@
 }
 
 .nowo-ui-demo-platform__content :is([data-nowo-ui-region='form'], .nowo-ui-form-panel):not(.nowo-ui-card *, dialog *, .nowo-ui-form-panel *) {
-  padding: var(--nowo-ui-demo-space-3);
+  padding: var(--nowo-ui-space-3);
 }
 
-/* A bundle form rendered with Symfony's plain div layout (no form theme on the rows): label above its control, the
-   controls on one width. A checkbox / radio keeps its label on the same line. */
-.nowo-ui-demo-platform__content :is(form.nowo-ui-form, form > .nowo-ui-form) > div > label:first-child:not(:has(+ :is(input[type='checkbox'], input[type='radio']))) {
-  display: block;
-  margin-bottom: var(--nowo-ui-form-label-gap, var(--nowo-ui-demo-space-1));
-  font-weight: 500;
-}
+/* --- Forms ------------------------------------------------------------------------------------------------------ */
 
-/* The demo platform loads no CSS framework, so a control that still carries a framework class from a host form theme
-   (Bootstrap's .form-control next to .nowo-ui-input) is painted by the kit like any other kit input. */
-.nowo-ui-demo-platform .nowo-ui-input.form-control {
-  background-color: var(--nowo-ui-input-bg, var(--nowo-ui-surface));
-  color: var(--nowo-ui-input-text, var(--nowo-ui-text));
-}
-
-.nowo-ui-demo-platform .nowo-ui-input.form-control::placeholder {
-  color: var(--nowo-ui-input-placeholder, var(--nowo-ui-muted));
-  opacity: 1;
-}
-
-.nowo-ui-demo-platform .nowo-ui-input.form-control:focus {
-  outline: 0;
-  border-color: var(--nowo-ui-input-focus-border, var(--nowo-ui-primary));
-  box-shadow: var(--nowo-ui-focus-ring, 0 0 0 0.2rem var(--nowo-ui-focus-ring-color, color-mix(in srgb, var(--nowo-ui-primary) 35%, transparent)));
-}
-
-/* form_widget(form) wraps the rows in the root form's own element (.nowo-ui-form): stack them like the form element's
-   rows, and drop the 1rem a framework form theme puts under each row (mb-3) — the gap replaces it. */
-.nowo-ui-demo-platform__content form > .nowo-ui-form {
+/* form_widget(form) wraps the rows in the root form's own element (.nowo-ui-form): stack them like the form's rows. A
+   framework form theme's `mb-3` rows make the kit trade its gap for their margin; with no framework loaded here the
+   gap comes back. */
+.nowo-ui-demo-platform__content form > .nowo-ui-form,
+.nowo-ui-demo-platform__content :is(form.nowo-ui-form, form > .nowo-ui-form):has(> .mb-3) {
   display: flex;
   flex-direction: column;
   gap: var(--nowo-ui-form-row-gap, 1rem);
 }
 
-.nowo-ui-demo-platform__content :is(form.nowo-ui-form, form > .nowo-ui-form) > .mb-3 {
-  margin-bottom: 0 !important;
+/* A plain Symfony div layout (no form theme on the rows): label above its control, controls on one width. */
+.nowo-ui-demo-platform__content :is(form.nowo-ui-form, form > .nowo-ui-form) > div > label:first-child:not(:has(+ :is(input[type='checkbox'], input[type='radio']))) {
+  display: block;
+  margin-bottom: var(--nowo-ui-form-label-gap, var(--nowo-ui-space-1));
+  font-weight: 500;
 }
 
-/* A compound widget in a plain form row (role="group": e.g. a phone prefix select + number) lays its controls out on
-   one line; the first control keeps its content width. */
+.nowo-ui-demo-platform__content :is(form.nowo-ui-form, form > .nowo-ui-form) > div > :is(input:not([type='checkbox'], [type='radio'], [type='hidden']), select, textarea) {
+  display: block;
+  width: 100%;
+  max-width: 36rem;
+}
+
+/* A compound widget (role="group": a phone prefix select + number) lays its controls out on one line. */
 .nowo-ui-demo-platform__content :is(form.nowo-ui-form, form > .nowo-ui-form) > div > [role='group'] {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--nowo-ui-demo-space-2);
+  gap: var(--nowo-ui-space-2);
   max-width: 36rem;
 }
 
@@ -352,17 +567,120 @@
   flex: 0 0 9rem;
 }
 
-.nowo-ui-demo-platform__content :is(form.nowo-ui-form, form > .nowo-ui-form) > div > :is(input:not([type='checkbox'], [type='radio'], [type='hidden']), select, textarea) {
-  display: block;
-  width: 100%;
-  max-width: 36rem;
+/* Required fields: one convention, an asterisk after the label (the control carries `required` for assistive tech). */
+.nowo-ui-demo-platform__content form label.required::after {
+  content: ' *';
+  color: var(--nowo-ui-danger-text);
 }
 
-/* Token swatches (catalogue "Badges and tokens"): a chip painted from the token named in data-nowo-ui-token. */
+/* Inputs: the platform border (3:1 or more) and the outline focus ring the buttons use. */
+.nowo-ui-demo-platform .nowo-ui-input,
+.nowo-ui-demo-platform .nowo-ui-input.form-control {
+  border-color: var(--nowo-ui-input-border);
+  background-color: var(--nowo-ui-input-bg, var(--nowo-ui-surface));
+  color: var(--nowo-ui-input-text, var(--nowo-ui-text));
+}
+
+.nowo-ui-demo-platform .nowo-ui-input.form-control::placeholder {
+  color: var(--nowo-ui-input-placeholder, var(--nowo-ui-muted));
+  opacity: 1;
+}
+
+.nowo-ui-demo-platform .nowo-ui-input:focus {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, var(--nowo-ui-primary));
+  outline-offset: 1px;
+  border-color: var(--nowo-ui-primary);
+  box-shadow: none;
+}
+
+.nowo-ui-demo-platform .nowo-ui-input[aria-invalid='true'] {
+  border-color: var(--nowo-ui-danger);
+}
+
+.nowo-ui-demo-platform .nowo-ui-input[aria-invalid='true']:focus {
+  outline-color: var(--nowo-ui-danger);
+}
+
+.nowo-ui-demo-platform .nowo-ui-input:is(:disabled, [readonly]) {
+  background-color: var(--nowo-ui-surface-muted);
+  color: var(--nowo-ui-muted);
+}
+
+/* Field errors (Symfony's form_errors list, kit / FormKit error classes). */
+.nowo-ui-demo-platform__content :is(.nowo-ui-form-error, .nowo-ui-form__error, .form-error-message, .invalid-feedback) {
+  display: block;
+  margin: var(--nowo-ui-space-1) 0 0;
+  color: var(--nowo-ui-danger-text);
+  font-size: var(--nowo-ui-text-sm);
+}
+
+.nowo-ui-demo-platform__content :is(form.nowo-ui-form, form > .nowo-ui-form) > div > ul,
+.nowo-ui-demo-platform__content form ul:has(> li > .form-error-message, > li.nowo-ui-form-error) {
+  margin: var(--nowo-ui-space-1) 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--nowo-ui-danger-text);
+  font-size: var(--nowo-ui-text-sm);
+}
+
+/* A checkbox row of the plain div layout (label first, box second): the box comes first, the label beside it. */
+.nowo-ui-demo-platform__content :is(form.nowo-ui-form, form > .nowo-ui-form) > div:has(> input:is([type='checkbox'], [type='radio'])) {
+  display: flex;
+  flex-direction: row-reverse;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--nowo-ui-space-2);
+}
+
+/* Checkbox and radio: kit size and colour, the label as the hit area. */
+.nowo-ui-demo-platform input:is([type='checkbox'], [type='radio']) {
+  width: 1.125rem;
+  height: 1.125rem;
+  margin: 0;
+  accent-color: var(--nowo-ui-primary);
+  flex: none;
+}
+
+.nowo-ui-demo-platform :is(.nowo-ui-check, label:has(> input:is([type='checkbox'], [type='radio']))) {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nowo-ui-space-2);
+  cursor: pointer;
+}
+
+/* --- Dialogs: a bottom sheet on phones, the page behind does not scroll ----------------------------------------- */
+
+:root:has(.nowo-ui-demo-platform):has(dialog[open]) {
+  overflow: hidden;
+}
+
+@media (max-width: 600px) {
+  body:has(.nowo-ui-demo-platform) dialog.nowo-ui-dialog[open] {
+    width: 100%;
+    max-width: none;
+    margin: auto 0 0;
+    border-radius: var(--nowo-ui-card-radius) var(--nowo-ui-card-radius) 0 0;
+  }
+}
+
+/* --- Footer ----------------------------------------------------------------------------------------------------- */
+
+.nowo-ui-demo-platform .nowo-ui-footer__inner {
+  justify-content: flex-start;
+  gap: var(--nowo-ui-space-2) var(--nowo-ui-space-4);
+}
+
+.nowo-ui-demo-platform .nowo-ui-footer__inner > :last-child {
+  margin-inline-start: auto;
+}
+
+/* --- Token swatches (catalogue "Badges and tokens") ------------------------------------------------------------- */
+
 .nowo-ui-demo-swatches {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
-  gap: var(--nowo-ui-demo-space-2);
+  gap: var(--nowo-ui-space-2);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -371,7 +689,7 @@
 .nowo-ui-demo-swatch {
   display: flex;
   align-items: center;
-  gap: var(--nowo-ui-demo-space-2);
+  gap: var(--nowo-ui-space-2);
 }
 
 .nowo-ui-demo-swatch__chip {
@@ -392,6 +710,53 @@
 .nowo-ui-demo-swatch[data-nowo-ui-token='warning-bg'] > .nowo-ui-demo-swatch__chip { background: var(--nowo-ui-warning-bg); }
 .nowo-ui-demo-swatch[data-nowo-ui-token='danger-bg'] > .nowo-ui-demo-swatch__chip { background: var(--nowo-ui-danger-bg); }
 .nowo-ui-demo-swatch[data-nowo-ui-token='info-bg'] > .nowo-ui-demo-swatch__chip { background: var(--nowo-ui-info-bg); }
+
+/* --- Touch: 44 px targets on coarse pointers -------------------------------------------------------------------- */
+
+@media (pointer: coarse) {
+  .nowo-ui-demo-platform :is(.nowo-ui-page-header, .nowo-ui-demo-section__actions, .nowo-ui-demo-section__footer, .nowo-ui-form__actions, .nowo-ui-empty__action) .nowo-ui-btn,
+  .nowo-ui-demo-platform :is(.nowo-ui-btn, .nowo-ui-burger, .nowo-ui-theme-toggle, .nowo-ui-demo-platform__locale, .nowo-ui-demo-flash__close, .nowo-ui-tabs__item, .nowo-ui-pagination a, .nowo-ui-pagination button, summary),
+  body:has(.nowo-ui-demo-platform) dialog :is(.nowo-ui-btn, button) {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .nowo-ui-demo-platform :is(.nowo-ui-tabs__item, .nowo-ui-footer a) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  .nowo-ui-demo-platform .nowo-ui-aside__link {
+    min-height: 44px;
+  }
+
+  .nowo-ui-demo-platform :is(.nowo-ui-input, select, textarea) {
+    min-height: 44px;
+  }
+
+  .nowo-ui-demo-platform input:is([type='checkbox'], [type='radio']) {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .nowo-ui-demo-platform :is(.nowo-ui-check, label:has(> input:is([type='checkbox'], [type='radio']))) {
+    min-height: 44px;
+  }
+}
+
+/* --- Motion ----------------------------------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .nowo-ui-demo-platform,
+  .nowo-ui-demo-platform *,
+  body:has(.nowo-ui-demo-platform) dialog {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}
 
 /* --- Phones ----------------------------------------------------------------------------------------------------- */
 
@@ -428,13 +793,17 @@
     gap: 0.375rem;
   }
 
-  .nowo-ui-demo-platform__locale {
-    min-width: 2rem;
-    padding: 0 0.375rem;
-  }
-
   .nowo-ui-demo-platform .nowo-ui-main {
     padding: 1rem 1rem 1.5rem;
+  }
+
+  .nowo-ui-demo-platform .nowo-ui-footer__inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nowo-ui-demo-platform .nowo-ui-footer__inner > :last-child {
+    margin-inline-start: 0;
   }
 }
 
