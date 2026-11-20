@@ -138,10 +138,8 @@ function onClick(event: MouseEvent): void {
   }
   const ask = target.closest<HTMLButtonElement>('button[data-nowo-ui-bulk-action][data-nowo-ui-bulk-confirm]');
   if (ask) {
-    if (ask.hasAttribute('data-nowo-ui-bulk-confirmed')) {
-      ask.removeAttribute('data-nowo-ui-bulk-confirmed');
-      return;
-    }
+    // requestSubmit() below fires no click, so every click on a confirm action asks (audit XJ-10: no "confirmed"
+    // mark that a cancelled submit or the back / forward cache could keep).
     event.preventDefault();
     void confirmThenSubmit(ask, form);
     return;
@@ -170,7 +168,6 @@ export async function confirmThenSubmit(button: HTMLButtonElement, form: HTMLFor
   if (!yes) {
     return false;
   }
-  button.setAttribute('data-nowo-ui-bulk-confirmed', '');
   form.requestSubmit(button);
   return true;
 }

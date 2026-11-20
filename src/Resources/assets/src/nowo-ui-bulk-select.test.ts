@@ -162,11 +162,46 @@ describe('nowo-ui-bulk-select', () => {
     window.nowoUiAskConfirm = async () => true;
     expect(await mod.confirmThenSubmit(button, form)).toBe(true);
     expect(submitted).toEqual([button]);
-    // The confirmed click goes through once.
-    const second = new MouseEvent('click', { bubbles: true, cancelable: true });
-    button.dispatchEvent(second);
-    expect(second.defaultPrevented).toBe(false);
+    delete window.nowoUiAskConfirm;
+  });
+
+  it('XJ-10: after a confirmed submit (no click follows requestSubmit) the next click asks again, also after a bfcache restore', async () => {
+    const button = document.getElementById('archive') as HTMLButtonElement;
+    button.setAttribute('data-nowo-ui-bulk-confirm', 'Archive them?');
+    change(box('c1'), true);
+    const form = document.getElementById('bulk') as HTMLFormElement;
+    let submits = 0;
+    form.requestSubmit = () => {
+      submits += 1;
+    };
+    let asked = 0;
+    window.nowoUiAskConfirm = async () => {
+      asked += 1;
+      return true;
+    };
+    const click = (): MouseEvent => {
+      const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+      button.dispatchEvent(event);
+      return event;
+    };
+    expect(click().defaultPrevented).toBe(true);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect([asked, submits]).toEqual([1, 1]);
     expect(button.hasAttribute('data-nowo-ui-bulk-confirmed')).toBe(false);
+    // The submit was cancelled (invalid form, download…): the next click asks again.
+    expect(click().defaultPrevented).toBe(true);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect([asked, submits]).toEqual([2, 2]);
+    // Back / forward cache restore: still asks.
+    const restored = new Event('pageshow');
+    Object.defineProperty(restored, 'persisted', { value: true });
+    window.dispatchEvent(restored);
+    expect(click().defaultPrevented).toBe(true);
+    await Promise.resolve();
+    await Promise.resolve();
+    expect([asked, submits]).toEqual([3, 3]);
     delete window.nowoUiAskConfirm;
   });
 });
