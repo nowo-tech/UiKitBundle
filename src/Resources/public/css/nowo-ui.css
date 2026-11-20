@@ -1137,6 +1137,12 @@ a.nowo-ui-pagination__link:hover {
   outline-offset: 1px;
 }
 
+/* 2.60: accessible drawer (data-nowo-ui-drawer-a11y): js/nowo-ui-shell.js locks the page scroll while the phone drawer
+   is open. */
+html.nowo-ui-drawer-open {
+  overflow: hidden;
+}
+
 .nowo-ui-aside-backdrop {
   position: fixed;
   inset: 0;
