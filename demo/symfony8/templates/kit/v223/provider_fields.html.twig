@@ -5,22 +5,21 @@
 #}
 {% extends 'kit/v223/_layout.html.twig' %}
 {% form_theme form '@NowoUiKitBundle/form/nowo_ui_layout.html.twig' %}
-{% set nowo_ui_document_title = 'Provider fields · UiKit 2.23' %}
+{% set nowo_ui_document_title = 'Mail provider · UiKit 2.23' %}
 
-{% block nowo_ui_content %}
-    <section data-testid="provider-fields">
-        <h1>Mail provider</h1>
+{% block body %}
+    <div data-testid="provider-fields">
         {% if saved %}<p role="status" data-testid="provider-saved">Settings saved.</p>{% endif %}
         {{ form_start(form) }}
             {{ form_widget(form) }}
-            <button type="submit" class="{{ nowo_ui_class('btn_primary') }}">Save</button>
+            <button type="submit" class="{{ nowo_ui_class('btn_primary', 'DemoPlatformCatalogue') }}">Save</button>
         {{ form_end(form) }}
         <h2>Stored values</h2>
-        <dl data-testid="stored">
+        <dl class="nowo-ui-dl" data-testid="stored">
             {% for key, value in stored %}
                 <dt>{{ key }}</dt><dd data-key="{{ key }}">{{ key == 'api_key' ? (value ? 'set (' ~ value|length ~ ' chars)' : 'not set') : value }}</dd>
             {% endfor %}
         </dl>
         <p><a href="{{ path('kit_223_provider_fields', {reset: 1}) }}">Reset</a></p>
-    </section>
+    </div>
 {% endblock %}

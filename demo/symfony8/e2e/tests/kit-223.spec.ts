@@ -84,6 +84,8 @@ test.describe('2.23 pagination modes', () => {
     await page.setViewportSize(DESKTOP);
     await page.goto('/kit/2.23/pagination/infinite?per_page=5');
     await peerReady(page);
+    // the wheel scrolls what is under the pointer: keep it over the content, not the shell's aside
+    await page.mouse.move(DESKTOP.width * 0.6, DESKTOP.height / 2);
     await expect
       .poll(
         async () => {

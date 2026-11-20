@@ -1,22 +1,9 @@
 {#
-  UiKit 2.23 demos: the kit admin layout plus the demo Stimulus app (public/js/demo-peers.js: list-pagination,
-  visible-when, confirm-submit peers) and the Bootstrap CDN of the other demos.
+  UiKit 2.23 demos on the demo platform shell: the page scaffolds (ShowPage / ListPage, layout: this file) and a plain
+  form page, inside the catalogue, plus the demo Stimulus app (public/js/demo-peers.js: list-pagination,
+  visible-when, confirm-submit peers). No CSS framework.
 #}
-{% extends '@NowoUiKitBundle/layout/admin.html.twig' %}
-
-{% block nowo_ui_head %}
-    <style>@layer theme, base, nowo-ui, components, utilities; @import url("/third-party/bootstrap/css/bootstrap.min.css") layer(base);</style>
-{% endblock %}
-
-{% block nowo_ui_navigation %}
-    <nav class="nowo-ui-demo-223-nav" aria-label="UiKit 2.23 demos">
-        <a href="{{ path('kit_223_item_attributes') }}">Item attributes</a> ·
-        <a href="{{ path('kit_223_pagination', {mode: 'pager'}) }}">Pager</a> ·
-        <a href="{{ path('kit_223_pagination', {mode: 'infinite'}) }}">Infinite</a> ·
-        <a href="{{ path('kit_223_pagination', {mode: 'responsive'}) }}">Responsive</a> ·
-        <a href="{{ path('kit_223_provider_fields') }}">Provider fields</a>
-    </nav>
-{% endblock %}
+{% extends 'kit/_showcase.html.twig' %}
 
 {% block nowo_ui_scripts %}
     {{ parent() }}

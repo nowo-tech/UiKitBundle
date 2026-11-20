@@ -28,13 +28,16 @@ use Symfony\Component\Routing\Attribute\Route;
 
 /**
  * UiKit 2.23 demos (docs/USAGE.md): per-item attributes, pagination modes (pager | infinite | responsive) and
- * provider-dependent fields (visible-when peer). The pages use the kit admin layout plus the demo Stimulus app
+ * provider-dependent fields (visible-when peer). The pages run in the catalogue (demo platform shell) plus the demo Stimulus app
  * (public/js/demo-peers.js). Fixtures only; the provider settings are kept in var/ (demo, not a pattern).
  */
 #[Route('/kit/2.23')]
 final class Kit223Controller extends AbstractController
 {
     private const LAYOUT = 'kit/v223/_layout.html.twig';
+
+    /** The catalogue's default-theme exception (config/packages/nowo_ui_kit.yaml): no host class map. */
+    private const BUNDLE = 'DemoPlatformCatalogue';
 
     private const STATUSES = ['up', 'up', 'down', 'up', 'paused'];
 
@@ -52,6 +55,7 @@ final class Kit223Controller extends AbstractController
                 new DetailItem('Status', 'Up', badge: 'success', valueAttributes: ['data-detail-status' => 'up']),
             ], 'check', 'facts')],
             layout: self::LAYOUT,
+            bundle: self::BUNDLE,
             attributes: ['data-testid' => 'item-attributes'],
             stats: [
                 new Stat('Uptime 24h', '99.98 %', 'last 24 h', 'success', attributes: ['data-stat' => 'uptime-24h'], valueAttributes: ['data-uptime-24h' => '99.98']),
@@ -85,6 +89,7 @@ final class Kit223Controller extends AbstractController
             ],
             pagination: $pagination,
             layout: self::LAYOUT,
+            bundle: self::BUNDLE,
             attributes: ['data-testid' => 'pagination-'.$mode],
         )]);
     }
