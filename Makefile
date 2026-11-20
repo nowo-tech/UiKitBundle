@@ -9,7 +9,7 @@ SERVICE_PHP = php
 BUNDLE_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 export DOCKER_CONFIG := $(BUNDLE_ROOT)/.docker
 
-.PHONY: help ensure-up up down down-dev build shell install assets assets-test test-ts test test-coverage test-with-db check-twig-extra igor twig-lint \
+.PHONY: help ensure-up up down down-dev build shell install assets assets-test test-ts test test-coverage test-with-db check-twig-extra demo-style-lint igor twig-lint \
 	test-coverage-with-db coverage-check cs-check cs-fix rector rector-dry phpstan validate-phpdoc qa release-check \
 	release-check-demos demo-smoke composer-sync clean update validate validate-translations \
 	setup-hooks check-no-cursor-coauthor check-open-prs strip-cursor-coauthor-from-history check-clean-tree \
@@ -116,6 +116,11 @@ check-twig-extra:
 # 2.40 (spec 220): colour literals outside --nowo-ui-* tokens; the demo views are allow-listed. Not a CI gate yet.
 token-lint: ensure-up
 	@$(COMPOSE) exec -T $(SERVICE_PHP) php bin/nowo-ui-token-lint --allow='*/views/demo/*' --allow='*/css/vendor/*' --allow='*/css/nowo-ui-demo-platform.css' src/Resources
+
+# 2.60: the UiKit demo has no styles of its own (docs/USAGE.md "Demo platform shell", rule 11). The one exemption is
+# the host-theme preview (/page-contract): the Acme stylesheet, its Inter font and the host layouts that link them.
+demo-style-lint: ensure-up
+	@$(COMPOSE) exec -T $(SERVICE_PHP) php bin/nowo-ui-demo-style-lint --allow='public/css/acme-theme.css' --allow='public/third-party/inter/*' --allow='templates/page_contract/layouts/*' demo/symfony8
 
 check-no-raw-html-form:
 	@chmod +x .scripts/check-no-raw-html-form.sh

@@ -167,6 +167,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Table scroller**: `.nowo-ui-table-wrap` is `position: relative`, so visually hidden texts inside it no longer
   widen the page on phones.
 - **Demo**: the UiKit demo uses `icon_set: svg_inline` (the demo platform shell loads no icon font).
+- **Demo**: no CSS framework and no demo stylesheet. The component showcases run on the demo platform shell under
+  "Component showcases" (with the 2.23 scaffold pages); the full-page previews of the kit's own shells (app shell,
+  sidebar layouts, focus mode, compact header, wiki layout, phone mode, kitchen sink) are the "Shell lab", on UiKit's
+  default theme; `/page-contract` stays the one host-theme preview (Acme). Their few host-side rules moved into
+  `css/nowo-ui-demo-platform.css` (helpers, a board, the Shell lab section). Bootstrap is now only an e2e fixture
+  (`card-intro-contrast.spec.ts`). `make demo-style-lint` checks the demo.
 
 ## [2.60.0] - 2026-11-20
 
