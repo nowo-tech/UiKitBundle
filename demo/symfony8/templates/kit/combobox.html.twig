@@ -2,35 +2,30 @@
   UiKit demo (2.53): the async grouped combobox. ComboboxType for one field; the `combobox` partial around a text field of the form
   with `value_input` for the other. The meta tag repeats the CSP of the response: the debug toolbar can strip that header in worker mode.
 #}
-{% extends '@NowoUiKit/layout/document.html.twig' %}
+{% extends 'kit/_showcase.html.twig' %}
 {% set nowo_ui_document_title = 'Combobox · UiKit' %}
 
 {% block nowo_ui_head %}
     <meta http-equiv="Content-Security-Policy" content="style-src-attr 'none'; script-src-attr 'none'">
 {% endblock %}
 
-{% block nowo_ui_body %}
-    <main id="main-content" class="nowo-ui-content" data-testid="combobox-demo">
-        <h1>Combobox</h1>
+{% block body %}
+    <div id="main-content" data-testid="combobox-demo">
         {% if saved is not null %}<p role="status" data-testid="saved">Saved: page={{ saved.page }} link={{ saved.link }} link_id={{ saved.link_id }}</p>{% endif %}
-        <div class="kit-combobox-demo-form" data-testid="combobox-form">
+        <div class="nowo-ui-measure-md" data-testid="combobox-form">
             {{ form_start(form) }}
             {{ form_row(form.page) }}
             <div>
                 {{ form_label(form.link) }}
-                {{ include(nowo_ui_partial('combobox'), {id: 'link_combobox', input: form_widget(form.link), url: search, value_input: form.link_id.vars.id, attr: {'data-testid': 'link-combobox'}}, with_context: false) }}
+                {{ include(nowo_ui_partial('combobox', 'DemoPlatformCatalogue'), {id: 'link_combobox', input: form_widget(form.link), url: search, value_input: form.link_id.vars.id, attr: {'data-testid': 'link-combobox'}}, with_context: false) }}
             </div>
             {{ form_widget(form.link_id) }}
             {{ form_row(form.save) }}
             {{ form_end(form) }}
         </div>
-    </main>
+    </div>
 {% endblock %}
 
-{% block nowo_ui_styles %}
-    {{ parent() }}
-    <link rel="stylesheet" href="{{ asset('css/combobox-demo.css') }}">
-{% endblock %}
 
 {% block nowo_ui_scripts %}
     {{ parent() }}

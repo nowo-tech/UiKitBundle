@@ -22,7 +22,7 @@ final class KitEmojiShowMoreController extends AbstractController
     {
         $form = $this->createFormBuilder(['icon' => '🚀'])
             ->add('icon', EmojiPickerType::class, ['label' => 'Board icon', 'required' => false])
-            ->add('save', SubmitType::class, ['label' => 'Save'])
+            ->add('save', SubmitType::class, ['label' => 'Save', 'attr' => ['class' => 'nowo-ui-btn nowo-ui-btn--primary']])
             ->getForm();
         $form->handleRequest($request);
         $saved = $form->isSubmitted() && $form->isValid() ? (string) $form->get('icon')->getData() : null;

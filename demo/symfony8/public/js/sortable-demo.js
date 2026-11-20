@@ -24,5 +24,5 @@
     }
   });
   // A colour set through the CSSOM, as TaskBoard does for its columns: the dragged copy must keep it, with no CSP report.
-  document.querySelectorAll('.kit-sortable-card').forEach((card) => card.style.setProperty('--kit-card-accent', '#2563eb'));
+  document.querySelectorAll('.nowo-ui-board-card').forEach((card) => card.style.setProperty('--nowo-ui-board-card-accent', 'var(--nowo-ui-primary)'));
 })();

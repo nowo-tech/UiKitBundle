@@ -4,13 +4,13 @@
   <= 767 px) with a count badge and the Alt+Shift+C shortcut, and an overlay "Outline" panel at the start side. The
   toggles and the close link point to ?panel=1 / ?panel=0, so the page also works without JavaScript.
 #}
-{% extends '@NowoUiKit/layout/document.html.twig' %}
+{% extends 'kit/_showcase.html.twig' %}
 {% set nowo_ui_document_title = 'Side panel · UiKit 2.25' %}
 
-{% block nowo_ui_body %}
-    <main id="main-content" class="nowo-ui-content" data-testid="side-panel-demo">
+{% block body %}
+    <div id="main-content" data-testid="side-panel-demo">
         <div class="kit-side-panel-bar">
-            <h1>Release notes 2.25</h1>
+            <h2>Release notes 2.25</h2>
             {{ include('@NowoUiKitBundle/partials/_theme_toggle.html.twig', {compact: true}) }}
             {{ include('@NowoUiKitBundle/partials/_side_panel_toggle.html.twig', {
                 target: 'demo-outline',
@@ -35,7 +35,7 @@
                     <p>The side panel holds secondary content beside the page: comments, details, an outline. On wide
                         screens it is a column and the page stays usable; on phones it becomes a full-height drawer.</p>
                     <p><a href="#main-content" data-testid="content-link">A link in the content</a></p>
-                    <button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-testid="content-button">A button in the content</button>
+                    <button type="button" class="{{ nowo_ui_class('btn_secondary', 'DemoPlatformCatalogue') }}" data-testid="content-button">A button in the content</button>
                 </article>
             {% endblock %}
             {% block nowo_ui_side_panel_panel %}
@@ -48,11 +48,11 @@
                 } only %}
                     {% block nowo_ui_side_panel_body %}
                         <ul class="kit-side-panel-threads">
-                            <li><button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-testid="thread-1">Ana: is this still true?</button></li>
-                            <li><button type="button" class="{{ nowo_ui_class('btn_secondary') }}">Bo: typo in the second line</button></li>
-                            <li><button type="button" class="{{ nowo_ui_class('btn_secondary') }}">Cy: approved</button></li>
+                            <li><button type="button" class="{{ nowo_ui_class('btn_secondary', 'DemoPlatformCatalogue') }}" data-testid="thread-1">Ana: is this still true?</button></li>
+                            <li><button type="button" class="{{ nowo_ui_class('btn_secondary', 'DemoPlatformCatalogue') }}">Bo: typo in the second line</button></li>
+                            <li><button type="button" class="{{ nowo_ui_class('btn_secondary', 'DemoPlatformCatalogue') }}">Cy: approved</button></li>
                         </ul>
-                        <button type="button" class="{{ nowo_ui_class('btn_primary') }}" data-testid="reply">Reply</button>
+                        <button type="button" class="{{ nowo_ui_class('btn_primary', 'DemoPlatformCatalogue') }}" data-testid="reply">Reply</button>
                     {% endblock %}
                 {% endembed %}
             {% endblock %}
@@ -62,7 +62,7 @@
                 <ol><li><a href="#main-content">Release notes 2.25</a></li></ol>
             {% endblock %}
         {% endembed %}
-    </main>
+    </div>
 {% endblock %}
 
 {% block nowo_ui_scripts %}

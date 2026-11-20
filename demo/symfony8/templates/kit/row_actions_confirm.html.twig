@@ -4,15 +4,15 @@
   (default runtime scripts of the document layout) logs a console warning and, since 2.23, fails closed: it asks with
   window.confirm() and a dismissed prompt keeps the form unsent.
 #}
-{% extends '@NowoUiKit/layout/document.html.twig' %}
+{% extends 'kit/_showcase.html.twig' %}
 {% set nowo_ui_document_title = 'Row actions confirm · UiKit 2.22' %}
 
-{% block nowo_ui_body %}
-    <main id="main-content" class="nowo-ui-content" data-testid="row-actions-confirm">
+{% block body %}
+    <div id="main-content" data-testid="row-actions-confirm">
         {% if submitted %}<p data-testid="row-actions-submitted">Submitted.</p>{% endif %}
         {{ include('@NowoUiKitBundle/partials/_row_actions.html.twig', {
             confirm_mode: 'native',
             actions: [{kind: 'delete', label: 'Delete', href: path('kit_row_actions_confirm'), method: 'POST', confirm_message: 'Delete invoice #1042?'}],
         }) }}
-    </main>
+    </div>
 {% endblock %}

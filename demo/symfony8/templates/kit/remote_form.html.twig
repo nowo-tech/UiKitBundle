@@ -4,29 +4,29 @@
   with fetch (422 re-rendered, 204 + X-Nowo-Redirect followed with the saved label). The page header is marked
   data-nowo-ui-overlay-region, so it becomes inert while the overlay side panel ("Help") is open.
 #}
-{% extends '@NowoUiKit/layout/document.html.twig' %}
+{% extends 'kit/_showcase.html.twig' %}
 {% set nowo_ui_document_title = 'Remote form dialog · UiKit 2.28' %}
 
-{% block nowo_ui_body %}
+{% block body %}
     <header class="kit-remote-form-header" data-nowo-ui-overlay-region data-testid="remote-form-header">
         <a href="{{ path('kit_remote_form') }}" data-testid="header-link">Destinations</a>
         {{ include('@NowoUiKitBundle/partials/_theme_toggle.html.twig', {compact: true}) }}
         {{ include('@NowoUiKitBundle/partials/_side_panel_toggle.html.twig', {target: 'demo-help', label: 'Help', attr: {'data-testid': 'help-toggle'}}, false) }}
     </header>
-    <main id="main-content" class="nowo-ui-content" data-testid="remote-form-demo">
-        <h1>Notification destinations</h1>
+    <div id="main-content" data-testid="remote-form-demo">
+        <h2>Notification destinations</h2>
         {% if saved %}
             <p role="status" data-testid="flash">Destination "{{ saved }}" saved.</p>
         {% endif %}
         {% set _new = path('kit_remote_form_new') %}
-        <a href="{{ _new }}" class="{{ nowo_ui_class('btn_primary') }}" data-testid="destination-add"
+        <a href="{{ _new }}" class="{{ nowo_ui_class('btn_primary', 'DemoPlatformCatalogue') }}" data-testid="destination-add"
             {{- nowo_ui_html_attrs(nowo_ui_remote_form_opener('destination-dialog', 'New destination', false, _new)) }}>Add destination</a>
         {# 2.33: a two-step flow in the same dialog (204 + X-Nowo-Dialog-Location between the steps) #}
         {% set _wizard = path('kit_remote_form_wizard') %}
-        <a href="{{ _wizard }}" class="{{ nowo_ui_class('btn_secondary') }}" data-testid="wizard-add"
+        <a href="{{ _wizard }}" class="{{ nowo_ui_class('btn_secondary', 'DemoPlatformCatalogue') }}" data-testid="wizard-add"
             {{- nowo_ui_html_attrs(nowo_ui_remote_form_opener('destination-dialog', 'New destination (wizard)', false, _wizard)) }}>Add with wizard</a>
-    </main>
-    {{ include(nowo_ui_partial('remote_form_dialog'), {id: 'destination-dialog', invalid_selector: '.is-invalid', attr: {'data-testid': 'destination-dialog'}}) }}
+    </div>
+    {{ include(nowo_ui_partial('remote_form_dialog', 'DemoPlatformCatalogue'), {id: 'destination-dialog', invalid_selector: '.is-invalid', attr: {'data-testid': 'destination-dialog'}}) }}
     {{ include('@NowoUiKitBundle/partials/_side_panel.html.twig', {id: 'demo-help', title: 'Help', layout: 'overlay', content_template: 'kit/_remote_form_help.html.twig', attr: {'data-testid': 'help-panel'}}) }}
 {% endblock %}
 

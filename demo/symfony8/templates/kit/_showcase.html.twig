@@ -1,0 +1,18 @@
+{#- UiKit demo showcase page (2.60): one component on the demo platform shell. The page sets nowo_ui_document_title
+    ("Name · UiKit x.y", its first part is the page title) and fills `body`; the body sits in one card, so tables, forms
+    and fixtures follow the layout grammar. Page styles may only add UiKit's own assets, page scripts the demo's. -#}
+{% extends 'catalogue/_base.html.twig' %}
+{#- Partials read `bundle` from the context: the showcases use the catalogue's theme exception (no host class map). -#}
+{% set bundle = 'DemoPlatformCatalogue' %}
+
+{% block nowo_ui_page_header %}
+    {{ include(nowo_ui_partial('page_header', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', title: (nowo_ui_document_title|default('UiKit')|split(' · ')|first), intro: showcase_intro|default(null)}) }}
+{% endblock %}
+
+{% block nowo_ui_content %}
+    <section class="nowo-ui-card nowo-ui-demo-section nowo-ui-demo-section--content" data-testid="kit-showcase">
+        <div class="nowo-ui-card__body nowo-ui-demo-section__body">
+            {% block body %}{% endblock %}
+        </div>
+    </section>
+{% endblock %}
