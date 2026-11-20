@@ -1,0 +1,238 @@
+{#
+  2.60 demo platform shell: the one layout every nowo-tech bundle demo extends, so that every demo looks like the same
+  "nowo · bundles" platform. It is UiKit's signed-in app shell (shell/_open + shell/_close, below-header layout, classic
+  style) with UiKit's default theme (css/nowo-ui-base.css is always linked, whatever nowo_ui_kit.base_stylesheet says),
+  plus a small stylesheet of its own (css/nowo-ui-demo-platform.css, tokens only) and nowo-ui-shell.js for the burger
+  and the phone drawer. No CDN, no service, no per-request state: everything is computed from the variable below and
+  app.request while the page renders, so it is safe in FrankenPHP worker mode with the kernel kept alive.
+
+  The demo declares its platform in ONE place, a variable set at the top of its templates/base.html.twig:
+
+      {% extends '@NowoUiKit/demo_platform/layout.html.twig' %}
+      {% set nowo_ui_demo_platform = {
+          bundle: 'Contact Form',
+          home_route: 'demo_home',
+          repository: 'https://github.com/nowo-tech/ContactFormBundle',
+          locales: ['en', 'es'],
+          nav: [
+              {label: 'demo.menu_home', route: 'demo_home'},
+              {label: 'demo.form_contact', route: 'nowo_contact_form_public_show', params: {slug: 'contact'}, section: 'demo.nav_public'},
+              {label: 'demo.menu_admin', route: 'nowo_contact_form_admin_index', active: ['nowo_contact_form_admin*'], section: 'demo.nav_admin'},
+          ],
+      } %}
+
+  Keys of nowo_ui_demo_platform (all optional but `bundle`):
+    - bundle: bundle name (text); version: shown as a badge after it
+    - home_route + home_params, or home_href: link of the bundle name (default: no link)
+    - platform: platform name (default "nowo · bundles"); platform_href (default https://github.com/nowo-tech)
+    - translation_domain: domain of nav labels, section names and footer link labels (default `messages`; false =
+      print them as given)
+    - nav: list of {label, route + params | href, active: [route names; a trailing * matches a prefix], section,
+      testid}. An item is current when one of its `active` names matches the current route, else when its route is
+      the current route and its params are a subset of the current route params; the current item gets
+      aria-current="page". Items with the same `section` in a row share one aside group with that heading; items
+      without one go in an unnamed first group. data-testid defaults to demo-nav-<route>.
+    - locales: list of codes or {code, label, href}; default label the native name (nowo_ui_locale_name), default
+      href the current route with `locale_param` (default _locale) set to the code. Nothing is shown without a current
+      route (e.g. on an error page) unless every locale has an href
+    - auth: {login_route | login_href, logout_route | logout_href, login_label}: with a signed-in user (app.user) the
+      UiKit user menu (name = user identifier, logout link), else a "Sign in" button when a login link is given
+    - repository: source link in the footer; footer_links: [{label, href}]; footer: false = no footer
+    - sidebar_style: classic (default) | inset; content_width: content (default) | full
+  Blocks: nowo_ui_demo_platform_header_end (extra top bar actions, before the locale switcher),
+  nowo_ui_demo_platform_aside_end (extra aside content after the nav, e.g. a bundle's own rendered menu),
+  nowo_ui_demo_platform_footer, plus the page contract blocks (nowo_ui_document_title, nowo_ui_head, nowo_ui_styles,
+  nowo_ui_page_header, nowo_ui_flashes, nowo_ui_content (default: block body), nowo_ui_modals, nowo_ui_scripts).
+  Set nowo_ui_kit.layouts.admin (and guest) to the demo's base.html.twig so the bundle's own pages use it too.
+#}
+{% extends '@NowoUiKitBundle/layout/document.html.twig' %}
+
+{% block nowo_ui_styles %}
+    {%- if not nowo_ui_base_stylesheet() %}<link rel="stylesheet" href="{{ asset('css/nowo-ui-base.css', 'nowo_ui_kit') }}">
+    {% endif -%}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/nowo-ui-demo-platform.css', 'nowo_ui_kit') }}">
+{% endblock %}
+
+{% block nowo_ui_body %}
+    {% set _p = nowo_ui_demo_platform|default({}) %}
+    {% set _bundle = nowo_ui_bundle|default(null) %}
+    {% set _request = app is defined and app ? app.request : null %}
+    {% set _route = _request ? _request.attributes.get('_route') : null %}
+    {% set _route_params = _request ? (_request.attributes.get('_route_params') ?? {}) : {} %}
+    {% set _domain = _p.translation_domain ?? 'messages' %}
+    {% set _home_href = (_p.home_href ?? null) ?: ((_p.home_route ?? null) ? path(_p.home_route, _p.home_params ?? {}) : null) %}
+    {% set _platform = _p.platform ?? 'nowo · bundles' %}
+    {% set _platform_href = nowo_ui_safe_href(_p.platform_href ?? 'https://github.com/nowo-tech') %}
+
+    {#- Nav: resolve href / current per item, then group consecutive items by section. -#}
+    {% set _groups = [] %}
+    {% for _item in _p.nav ?? [] %}
+        {% set _item_route = _item.route ?? null %}
+        {% set _item_params = _item.params ?? {} %}
+        {% set _current = false %}
+        {% if _route %}
+            {% for _name in _item.active ?? [] %}
+                {% if _name ends with '*' ? (_route starts with _name|slice(0, -1)) : _route == _name %}
+                    {% set _current = true %}
+                {% endif %}
+            {% endfor %}
+            {% if not _current and _item_route == _route and (_item.active ?? null) is null %}
+                {% set _current = true %}
+                {% for _key, _value in _item_params %}
+                    {% if (_route_params[_key] ?? null) != _value %}{% set _current = false %}{% endif %}
+                {% endfor %}
+            {% endif %}
+        {% endif %}
+        {% set _label = _domain is same as(false) ? _item.label : _item.label|trans({}, _domain) %}
+        {% set _testid = _item.testid ?? (_item_route ? 'demo-nav-' ~ _item_route : null) %}
+        {% set _link = {
+            label: _label,
+            href: (_item.href ?? null) ?: (_item_route ? path(_item_route, _item_params) : '#'),
+            current: _current,
+            attr: _testid ? {'data-testid': _testid} : {},
+        } %}
+        {% set _section = _item.section ?? null %}
+        {% set _last = _groups|last %}
+        {% if _last and _last.section == _section %}
+            {% set _groups = _groups|slice(0, -1)|merge([_last|merge({items: _last.items|merge([_link])})]) %}
+        {% else %}
+            {% set _groups = _groups|merge([{section: _section, items: [_link]}]) %}
+        {% endif %}
+    {% endfor %}
+
+    {#- Locales: codes or {code, label, href}; default href = the current route with the locale param. -#}
+    {% set _locale = _request ? _request.locale : null %}
+    {% set _locale_param = _p.locale_param ?? '_locale' %}
+    {% set _locales = [] %}
+    {% for _l in _p.locales ?? [] %}
+        {% set _code = _l is iterable ? _l.code : _l %}
+        {% set _href = _l is iterable ? (_l.href ?? null) : null %}
+        {% if _href is null and _route %}
+            {% set _href = path(_route, _route_params|merge({(_locale_param): _code})) %}
+        {% endif %}
+        {% if _href is not null %}
+            {% set _locales = _locales|merge([{
+                code: _code,
+                label: (_l is iterable ? (_l.label ?? null) : null) ?: nowo_ui_locale_name(_code, _code),
+                href: _href,
+                current: _code == _locale,
+            }]) %}
+        {% endif %}
+    {% endfor %}
+
+    {% set _brand %}
+        <a class="nowo-ui-demo-platform__platform" href="{{ _platform_href ?: '#' }}" data-testid="demo-platform-brand">
+            <span class="nowo-ui-demo-platform__mark" aria-hidden="true">{{ _platform|slice(0, 1)|upper }}</span>
+            <span class="nowo-ui-demo-platform__platform-name">{{ _platform }}</span>
+        </a>
+        <span class="nowo-ui-demo-platform__sep" aria-hidden="true">/</span>
+        {% if _home_href %}
+            <a class="nowo-ui-demo-platform__bundle" href="{{ _home_href }}" data-testid="demo-platform-bundle">{{ _p.bundle ?? '' }}</a>
+        {% else %}
+            <span class="nowo-ui-demo-platform__bundle" data-testid="demo-platform-bundle">{{ _p.bundle ?? '' }}</span>
+        {% endif %}
+        {% if (_p.version ?? null) %}
+            <span class="nowo-ui-badge nowo-ui-demo-platform__version">{{ _p.version }}</span>
+        {% endif %}
+    {% endset %}
+
+    {% set _auth = _p.auth ?? null %}
+    {% set _user = app is defined and app ? (app.user ?? null) : null %}
+    {% set _header_end %}
+        {{ block('nowo_ui_demo_platform_header_end') }}
+        {% if _locales|length > 1 %}
+            <nav class="nowo-ui-demo-platform__locales" aria-label="{{ 'demo_platform.language'|trans({}, 'NowoUiKitBundle') }}" data-testid="demo-platform-locales">
+                {% for _l in _locales %}
+                    <a class="nowo-ui-demo-platform__locale" href="{{ _l.href }}" hreflang="{{ _l.code }}" lang="{{ _l.code }}"{% if _l.current %} aria-current="true"{% endif %}>
+                        <span aria-hidden="true">{{ _l.code|upper }}</span><span class="visually-hidden">{{ _l.label }}</span>
+                    </a>
+                {% endfor %}
+            </nav>
+        {% endif %}
+        {{ include('@NowoUiKitBundle/partials/_theme_toggle.html.twig', {compact: true}, false) }}
+        {% if _auth and not _user %}
+            {% set _login = (_auth.login_href ?? null) ?: ((_auth.login_route ?? null) ? path(_auth.login_route) : null) %}
+            {% if _login %}
+                <a class="nowo-ui-btn nowo-ui-btn--primary nowo-ui-btn--sm" href="{{ _login }}" data-testid="demo-platform-sign-in">{{ (_auth.login_label ?? null) ?: 'demo_platform.sign_in'|trans({}, 'NowoUiKitBundle') }}</a>
+            {% endif %}
+        {% endif %}
+    {% endset %}
+
+    {% set _aside %}
+        <div class="nowo-ui-aside__inner nowo-ui-demo-platform__aside">
+            {% for _group in _groups %}
+                {% set _heading = _group.section is null ? null : (_domain is same as(false) ? _group.section : _group.section|trans({}, _domain)) %}
+                {% if _heading %}
+                    <p class="nowo-ui-aside__label" id="nowo-ui-demo-nav-{{ loop.index }}">{{ _heading }}</p>
+                {% endif %}
+                <nav class="nowo-ui-aside__nav" {% if _heading %}aria-labelledby="nowo-ui-demo-nav-{{ loop.index }}"{% else %}aria-label="{{ 'demo_platform.nav'|trans({}, 'NowoUiKitBundle') }}"{% endif %}>
+                    {{ include('@NowoUiKitBundle/partials/_aside_nav_items.html.twig', {items: _group.items, prefix: 'nowo-ui-demo-nav-' ~ loop.index}, false) }}
+                </nav>
+            {% endfor %}
+            {{ block('nowo_ui_demo_platform_aside_end') }}
+        </div>
+    {% endset %}
+
+    {% set _footer %}{{ block('nowo_ui_demo_platform_footer') }}{% endset %}
+
+    <a class="nowo-ui-skip-link" href="#nowo-ui-content">{{ 'demo_platform.skip_to_content'|trans({}, 'NowoUiKitBundle') }}</a>
+    {% set _shell = {
+        brand_html: _brand,
+        header_end: _header_end,
+        aside_html: _aside,
+        aside_id: 'nowo-ui-demo-aside',
+        aside_label: 'demo_platform.nav'|trans({}, 'NowoUiKitBundle'),
+        show_user_menu: false,
+        content_width: _p.content_width ?? 'content',
+        sidebar_layout: 'below-header',
+        sidebar_style: _p.sidebar_style ?? 'classic',
+        shell_attr: {class: 'nowo-ui-demo-platform' ~ ((_p.content_width ?? 'content') == 'full' ? '' : ' is-main-content'), 'data-testid': 'demo-platform'},
+        bundle: _bundle,
+    } %}
+    {% if _auth and _user %}
+        {% set _shell = _shell|merge({
+            show_user_menu: true,
+            name: _user.userIdentifier,
+            logout_href: (_auth.logout_href ?? null) ?: ((_auth.logout_route ?? null) ? path(_auth.logout_route) : null),
+        }) %}
+    {% endif %}
+    {{ include(nowo_ui_partial('app_shell_open', _bundle), _shell, with_context = false) }}
+        <main class="{{ nowo_ui_class('content', _bundle) }} nowo-ui-demo-platform__content" id="nowo-ui-content" tabindex="-1"{% if _bundle %} data-nowo-ui-bundle="{{ _bundle }}"{% endif %}{{ nowo_ui_attrs('content', _bundle) }}>
+            {% block nowo_ui_page_header %}{% endblock %}
+            {% block nowo_ui_flashes %}
+                {{ include(nowo_ui_partial('flashes', _bundle), {bundle: _bundle}) }}
+            {% endblock %}
+            {% block nowo_ui_content %}{% block body %}{% endblock %}{% endblock %}
+        </main>
+    {{ include(nowo_ui_partial('app_shell_close', _bundle), {footer_html: _footer|trim is same as('') ? false : _footer, bundle: _bundle}, with_context = false) }}
+    {% block nowo_ui_modals %}{% endblock %}
+{% endblock %}
+
+{#- Extension points, printed with block() inside the body (a block cannot be defined inside a captured set). -#}
+{% block nowo_ui_demo_platform_header_end %}{% endblock %}
+{% block nowo_ui_demo_platform_aside_end %}{% endblock %}
+{% block nowo_ui_demo_platform_footer %}
+            {% if (_p.footer ?? true) is not same as(false) %}
+                {% set _footer_links = [] %}
+                {% for _link in _p.footer_links ?? [] %}
+                    {% set _footer_links = _footer_links|merge([{label: _domain is same as(false) ? _link.label : _link.label|trans({}, _domain), href: _link.href}]) %}
+                {% endfor %}
+                {% if (_p.repository ?? null) and nowo_ui_safe_href(_p.repository) %}
+                    {% set _footer_links = _footer_links|merge([{label: 'demo_platform.source'|trans({}, 'NowoUiKitBundle'), href: nowo_ui_safe_href(_p.repository)}]) %}
+                {% endif %}
+                {{ include('@NowoUiKitBundle/partials/_footer.html.twig', {
+                    brand: 'demo_platform.footer'|trans({'%platform%': _platform, '%bundle%': _p.bundle ?? ''}, 'NowoUiKitBundle'),
+                    links: _footer_links,
+                    copyright: 'demo_platform.footer_note'|trans({}, 'NowoUiKitBundle'),
+                }, false) }}
+            {% endif %}
+{% endblock %}
+
+{% block nowo_ui_scripts %}
+    {{ parent() }}
+    {% if nowo_ui_scripts_enabled ?? true %}
+        {% set _nonce = app is defined and app and app.request ? app.request.attributes.get('csp_nonce') : null %}
+        <script src="{{ asset('js/nowo-ui-shell.js', 'nowo_ui_kit') }}" defer{% if _nonce %} nonce="{{ _nonce }}"{% endif %}></script>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,55 @@
+{#
+  UiKit 2.60 demo: the shared demo platform shell. A bundle demo's templates/base.html.twig is this file without the
+  page blocks: extend the layout and declare the demo in nowo_ui_demo_platform (see docs/USAGE.md, "Demo platform
+  shell").
+#}
+{% extends '@NowoUiKit/demo_platform/layout.html.twig' %}
+{% set nowo_ui_document_title = 'Demo platform · UiKit 2.60' %}
+{% set nowo_ui_demo_platform = {
+    bundle: 'Acme Inbox',
+    version: '1.4',
+    home_route: 'kit_demo_platform',
+    repository: 'https://github.com/nowo-tech/UiKitBundle',
+    translation_domain: false,
+    locales: [
+        {code: 'en', label: 'English', href: path('kit_demo_platform', {page: page})},
+        {code: 'es', label: 'Español', href: path('kit_demo_platform', {page: page, lang: 'es'})},
+    ],
+    nav: [
+        {label: 'Overview', route: 'kit_demo_platform', params: {page: 'overview'}},
+        {label: 'Messages', route: 'kit_demo_platform', params: {page: 'messages'}, section: 'Inbox'},
+        {label: 'Settings', route: 'kit_demo_platform', params: {page: 'settings'}, section: 'Admin'},
+        {label: 'Kitchen sink', route: 'nowo_ui_kit_kitchen_sink', section: 'Admin'},
+    ],
+} %}
+
+{% block nowo_ui_page_header %}
+    {% set _toolbar %}<a class="nowo-ui-btn nowo-ui-btn--primary nowo-ui-btn--sm" href="{{ path('kit_demo_platform', {page: 'messages'}) }}">New message</a>{% endset %}
+    {{ include(nowo_ui_partial('page_header'), {title: page|capitalize, intro: 'A bundle demo inside the shared nowo · bundles platform shell.', toolbar: _toolbar}) }}
+{% endblock %}
+
+{% block body %}
+    <div class="nowo-ui-cards" data-testid="kit-demo-platform-cards">
+        {% for card in ['Inbox', 'Rules', 'Webhooks'] %}
+            <section class="nowo-ui-card">
+                <div class="nowo-ui-card__header"><h2 class="nowo-ui-card__title">{{ card }}</h2></div>
+                <div class="nowo-ui-card__body"><p class="nowo-ui-muted">Cards, badges and tables come from UiKit, so every demo shares one look.</p><span class="nowo-ui-badge nowo-ui-badge--info">{{ loop.index }} active</span></div>
+            </section>
+        {% endfor %}
+    </div>
+    <section class="nowo-ui-card">
+        <div class="nowo-ui-card__header"><h2 class="nowo-ui-card__title">Latest messages</h2></div>
+        <div class="nowo-ui-card__body">
+            <div class="nowo-ui-table-wrap">
+                <table class="nowo-ui-data-table">
+                    <thead><tr><th scope="col">From</th><th scope="col">Subject</th><th scope="col">Status</th></tr></thead>
+                    <tbody>
+                        {% for row in [['Ada Lovelace', 'Analytical engine notes', 'New'], ['Grace Hopper', 'Compiler question', 'Answered'], ['Alan Turing', 'Lunch on Friday?', 'New']] %}
+                            <tr><td>{{ row[0] }}</td><td>{{ row[1] }}</td><td><span class="nowo-ui-badge">{{ row[2] }}</span></td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+{% endblock %}

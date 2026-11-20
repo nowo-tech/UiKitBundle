@@ -1,0 +1,174 @@
+/*
+ * nowo-ui-demo-platform.css — the "nowo · bundles" demo platform shell (2.60).
+ *
+ * Linked only by @NowoUiKit/demo_platform/layout.html.twig, after nowo-ui-base.css and nowo-ui.css. The shell itself
+ * (header, aside, phone drawer, footer, content width) is UiKit's app shell, painted by nowo-ui.css; this file only adds
+ * the platform brand, the locale pills and a few spacing rules. Every colour reads a documented --nowo-ui-* token, so
+ * light and dark follow the kit defaults (and a theme, if a demo ever sets one) with no override here.
+ *
+ * Same cascade layer as the kit (`nowo-ui`), loaded after it: a demo's own component CSS (unlayered) still wins.
+ * Hand-maintained (no unlayered twin; `pnpm run build:css` does not touch it).
+ */
+@layer theme, base, nowo-ui, components, utilities;
+
+@layer nowo-ui {
+
+/* --- Top bar: platform brand / bundle name ---------------------------------------------------------------------- */
+
+.nowo-ui-demo-platform .nowo-ui-header__start {
+  min-width: 0;
+  gap: 0.625rem;
+}
+
+.nowo-ui-demo-platform__platform {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--nowo-ui-text);
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  white-space: nowrap;
+  border-radius: var(--nowo-ui-radius);
+}
+
+.nowo-ui-demo-platform__mark {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.5rem;
+  background: var(--nowo-ui-primary);
+  color: var(--nowo-ui-primary-contrast);
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.nowo-ui-demo-platform__sep {
+  color: var(--nowo-ui-border-strong);
+  font-weight: 300;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.nowo-ui-demo-platform__bundle {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--nowo-ui-text);
+  font-weight: 500;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: var(--nowo-ui-radius);
+}
+
+.nowo-ui-demo-platform__bundle:is(a):hover,
+.nowo-ui-demo-platform__platform:hover .nowo-ui-demo-platform__platform-name {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.nowo-ui-demo-platform__version {
+  flex: none;
+}
+
+/* --- Top bar: locale pills -------------------------------------------------------------------------------------- */
+
+.nowo-ui-demo-platform__locales {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  padding: 0.125rem;
+  border: 1px solid var(--nowo-ui-border);
+  border-radius: 999px;
+  background: var(--nowo-ui-surface);
+}
+
+.nowo-ui-demo-platform__locale {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.25rem;
+  min-height: 1.75rem;
+  padding: 0 0.5rem;
+  border-radius: 999px;
+  color: var(--nowo-ui-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+}
+
+.nowo-ui-demo-platform__locale:hover {
+  color: var(--nowo-ui-text);
+  background: var(--nowo-ui-surface-muted);
+}
+
+.nowo-ui-demo-platform__locale[aria-current] {
+  background: var(--nowo-ui-primary);
+  color: var(--nowo-ui-primary-contrast);
+}
+
+/* One focus ring for every platform control (the kit's own controls carry theirs). */
+:is(.nowo-ui-demo-platform__platform, .nowo-ui-demo-platform__bundle, .nowo-ui-demo-platform__locale):focus-visible {
+  outline: 2px solid var(--nowo-ui-focus-ring-color, var(--nowo-ui-primary));
+  outline-offset: 2px;
+}
+
+/* --- Aside: groups breathe a little more than the kit default --------------------------------------------------- */
+
+.nowo-ui-demo-platform__aside {
+  overflow-y: auto;
+  gap: 0.5rem;
+}
+
+.nowo-ui-demo-platform__aside .nowo-ui-aside__label {
+  margin-top: 0.5rem;
+}
+
+.nowo-ui-demo-platform__aside .nowo-ui-aside__nav + .nowo-ui-aside__nav {
+  margin-top: 0.5rem;
+}
+
+/* --- Content ---------------------------------------------------------------------------------------------------- */
+
+.nowo-ui-demo-platform__content:focus {
+  outline: none;
+}
+
+/* Cards and sections stacked in the content area get one vertical rhythm. */
+.nowo-ui-demo-platform__content > :is(.nowo-ui-card, section, .nowo-ui-cards) + :is(.nowo-ui-card, section, .nowo-ui-cards, p) {
+  margin-top: 1rem;
+}
+
+/* --- Phones ----------------------------------------------------------------------------------------------------- */
+
+@media (max-width: 600px) {
+  .nowo-ui-demo-platform__platform-name,
+  .nowo-ui-demo-platform__sep,
+  .nowo-ui-demo-platform__version {
+    display: none;
+  }
+
+  .nowo-ui-demo-platform .nowo-ui-header {
+    gap: 0.5rem;
+    padding-inline: 0.75rem;
+  }
+
+  .nowo-ui-demo-platform .nowo-ui-header__end {
+    gap: 0.375rem;
+  }
+
+  .nowo-ui-demo-platform__locale {
+    min-width: 2rem;
+    padding: 0 0.375rem;
+  }
+
+  .nowo-ui-demo-platform .nowo-ui-main {
+    padding: 1rem 1rem 1.5rem;
+  }
+}
+
+}
