@@ -1,5 +1,8 @@
 nowo_ui_kit:
-    css_framework: bootstrap5
+    # 2.60: no CSS framework: every page runs on the demo platform shell or is a framework-free preview (Shell lab,
+    # the Acme host-theme page contract).
+    css_framework: custom
+    base_stylesheet: true
     # 2.61: the kit's inline SVG icons. The demo platform shell loads no icon font, so with bootstrap-icons the
     # catalogue's sort arrows, menu toggles and stat / empty-state icons were blank.
     icon_set: svg_inline

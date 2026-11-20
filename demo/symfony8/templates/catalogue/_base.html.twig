@@ -19,6 +19,19 @@
         {label: 'Form patterns', route: 'catalogue_admin', params: {group: 'form-patterns'}, section: 'Admin components', testid: 'catalogue-nav-form-patterns'},
         {label: 'Feedback and overlays', route: 'catalogue_admin', params: {group: 'overlays'}, section: 'Admin components', testid: 'catalogue-nav-overlays'},
         {label: 'Breadcrumbs, tabs and steps', route: 'catalogue_admin', params: {group: 'navigation-patterns'}, section: 'Admin components', testid: 'catalogue-nav-navigation-patterns'},
+        {label: 'Dialogs', route: 'kit_dialogs', section: 'Component showcases'},
+        {label: 'Page actions and dialogs', route: 'kit_page_actions_dialogs', section: 'Component showcases'},
+        {label: 'Remote form dialogs', route: 'kit_remote_form', section: 'Component showcases'},
+        {label: 'Row actions confirm', route: 'kit_row_actions_confirm', section: 'Component showcases'},
+        {label: 'Small options', route: 'kit_small_options', section: 'Component showcases'},
+        {label: 'Side panel', route: 'kit_side_panel', section: 'Component showcases'},
+        {label: 'Avatars', route: 'kit_avatars', section: 'Component showcases'},
+        {label: 'Multi-select and date range', route: 'kit_multi_select', section: 'Component showcases'},
+        {label: 'Combobox', route: 'kit_combobox', section: 'Component showcases'},
+        {label: 'Emoji picker and show more', route: 'kit_emoji_show_more', section: 'Component showcases'},
+        {label: 'Image crop', route: 'kit_image_crop', section: 'Component showcases'},
+        {label: 'Context menu', route: 'kit_context_menu', section: 'Component showcases'},
+        {label: 'Sortable', route: 'kit_sortable', section: 'Component showcases'},
         {label: 'Demo platform sample', route: 'kit_demo_platform', active: ['kit_demo_platform'], section: 'Showcases'},
         {label: 'Kitchen sink (host theme)', route: 'nowo_ui_kit_kitchen_sink', section: 'Showcases'},
         {label: 'Page contract (host theme)', route: 'page_contract_index', section: 'Showcases'},
@@ -26,14 +39,6 @@
         {label: 'Focus mode', route: 'kit_focus_mode', section: 'Showcases'},
     ],
 } %}
-{% set nowo_ui_document_title = 'UiKit catalogue' %}
+{% set nowo_ui_document_title = nowo_ui_document_title|default('UiKit catalogue') %}
 {#- The demo's default-theme exception (config/packages/nowo_ui_kit.yaml): no host class map, the kit page header. -#}
 {% set nowo_ui_bundle = 'DemoPlatformCatalogue' %}
-
-{#- No host tokens here: the catalogue shows UiKit's defaults, like every bundle demo. -#}
-{% block nowo_ui_styles %}
-    {%- if not nowo_ui_base_stylesheet() %}<link rel="stylesheet" href="{{ asset('css/nowo-ui-base.css', 'nowo_ui_kit') }}">
-    {% endif -%}
-    <link rel="stylesheet" href="{{ asset('css/nowo-ui.css', 'nowo_ui_kit') }}">
-    <link rel="stylesheet" href="{{ asset('css/nowo-ui-demo-platform.css', 'nowo_ui_kit') }}">
-{% endblock %}
