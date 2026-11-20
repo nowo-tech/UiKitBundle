@@ -1,0 +1,27 @@
+{% extends 'catalogue/_base.html.twig' %}
+{% block nowo_ui_page_header %}
+    {% set _toolbar %}<a class="nowo-ui-btn nowo-ui-btn--outline" href="{{ path('catalogue', {group: 'cards-tables'}) }}">Cards and tables</a><a class="nowo-ui-btn nowo-ui-btn--primary" href="{{ path('catalogue', {group: 'forms'}) }}">Forms</a>{% endset %}
+    {{ include(nowo_ui_partial('page_header'), {title: 'Layout', intro: 'The page grammar every demo follows: page header, flashes, then section cards on one spacing scale.', toolbar: _toolbar}) }}
+{% endblock %}
+{% block body %}
+    {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Page header', intro: 'Title, subtitle and the page actions on the right; one primary action per view.', kind: 'detail'} %}
+        {% block section_body %}<p><code class="nowo-ui-code">{% verbatim %}{{ include(nowo_ui_partial('page_header'), {title, intro, toolbar}) }}{% endverbatim %}</code></p>{% endblock %}
+    {% endembed %}
+    <div class="nowo-ui-cards">
+        {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Section card', intro: 'Header with title and actions, body, optional footer.', kind: 'detail'} %}
+            {% block section_actions %}<a class="nowo-ui-btn nowo-ui-btn--outline nowo-ui-btn--sm" href="#">Action</a>{% endblock %}
+            {% block section_body %}<p><code class="nowo-ui-code">{% verbatim %}{% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title, kind} %}{% endverbatim %}</code></p>{% endblock %}
+            {% block section_footer %}<a class="nowo-ui-btn nowo-ui-btn--outline nowo-ui-btn--sm" href="#">Footer action</a>{% endblock %}
+        {% endembed %}
+        {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Spacing scale', intro: 'One gap between blocks and between cards.', kind: 'list'} %}
+            {% block section_body %}
+                <ul class="nowo-ui-list">
+                    <li class="nowo-ui-list-item"><code class="nowo-ui-code">--nowo-ui-demo-space-1</code> 0.25rem</li>
+                    <li class="nowo-ui-list-item"><code class="nowo-ui-code">--nowo-ui-demo-space-2</code> 0.5rem</li>
+                    <li class="nowo-ui-list-item"><code class="nowo-ui-code">--nowo-ui-demo-space-3</code> 1rem (the gap)</li>
+                    <li class="nowo-ui-list-item"><code class="nowo-ui-code">--nowo-ui-demo-space-4</code> 1.5rem</li>
+                </ul>
+            {% endblock %}
+        {% endembed %}
+    </div>
+{% endblock %}

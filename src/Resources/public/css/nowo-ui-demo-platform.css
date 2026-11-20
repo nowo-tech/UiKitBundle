@@ -328,6 +328,41 @@
   max-width: 36rem;
 }
 
+/* Token swatches (catalogue "Badges and tokens"): a chip painted from the token named in data-nowo-ui-token. */
+.nowo-ui-demo-swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: var(--nowo-ui-demo-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nowo-ui-demo-swatch {
+  display: flex;
+  align-items: center;
+  gap: var(--nowo-ui-demo-space-2);
+}
+
+.nowo-ui-demo-swatch__chip {
+  flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid var(--nowo-ui-border-strong);
+  border-radius: var(--nowo-ui-radius);
+}
+
+.nowo-ui-demo-swatch[data-nowo-ui-token='primary'] > .nowo-ui-demo-swatch__chip { background: var(--nowo-ui-primary); }
+.nowo-ui-demo-swatch[data-nowo-ui-token='surface'] > .nowo-ui-demo-swatch__chip { background: var(--nowo-ui-surface); }
+.nowo-ui-demo-swatch[data-nowo-ui-token='surface-muted'] > .nowo-ui-demo-swatch__chip { background: var(--nowo-ui-surface-muted); }
+.nowo-ui-demo-swatch[data-nowo-ui-token='border'] > .nowo-ui-demo-swatch__chip { background: var(--nowo-ui-border); }
+.nowo-ui-demo-swatch[data-nowo-ui-token='text'] > .nowo-ui-demo-swatch__chip { background: var(--nowo-ui-text); }
+.nowo-ui-demo-swatch[data-nowo-ui-token='muted'] > .nowo-ui-demo-swatch__chip { background: var(--nowo-ui-muted); }
+.nowo-ui-demo-swatch[data-nowo-ui-token='success-bg'] > .nowo-ui-demo-swatch__chip { background: var(--nowo-ui-success-bg); }
+.nowo-ui-demo-swatch[data-nowo-ui-token='warning-bg'] > .nowo-ui-demo-swatch__chip { background: var(--nowo-ui-warning-bg); }
+.nowo-ui-demo-swatch[data-nowo-ui-token='danger-bg'] > .nowo-ui-demo-swatch__chip { background: var(--nowo-ui-danger-bg); }
+.nowo-ui-demo-swatch[data-nowo-ui-token='info-bg'] > .nowo-ui-demo-swatch__chip { background: var(--nowo-ui-info-bg); }
+
 /* --- Phones ----------------------------------------------------------------------------------------------------- */
 
 @media (max-width: 600px) {

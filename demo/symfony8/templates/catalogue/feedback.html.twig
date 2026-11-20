@@ -1,0 +1,16 @@
+{% extends 'catalogue/_base.html.twig' %}
+{% block nowo_ui_page_header %}
+    {{ include(nowo_ui_partial('page_header'), {title: 'Feedback states', intro: 'Flashes under the page header; empty, loading and error states from the same section block.'}) }}
+{% endblock %}
+{% block nowo_ui_flashes %}
+    {{ include(nowo_ui_partial('flashes'), {flash_messages: {success: ['Invoice INV-1042 saved.'], warning: ['Two invoices are due this week.'], error: ['The bank feed could not be refreshed.']}}) }}
+{% endblock %}
+{% block body %}
+    <div class="nowo-ui-cards">
+        {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Empty', kind: 'list', empty: true, state_message: 'Nothing here yet.', testid: 'catalogue-empty'} %}
+            {% block section_empty_action %}<a class="nowo-ui-btn nowo-ui-btn--outline nowo-ui-btn--sm" href="#">Add the first one</a>{% endblock %}
+        {% endembed %}
+        {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Loading', kind: 'list', state: 'loading', testid: 'catalogue-loading'} %}{% endembed %}
+        {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Error', kind: 'list', state: 'error', testid: 'catalogue-error'} %}{% endembed %}
+    </div>
+{% endblock %}

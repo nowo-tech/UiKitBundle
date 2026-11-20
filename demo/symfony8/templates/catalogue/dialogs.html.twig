@@ -1,0 +1,14 @@
+{% extends 'catalogue/_base.html.twig' %}
+{% block nowo_ui_page_header %}
+    {% set _toolbar %}<button type="button" class="nowo-ui-btn nowo-ui-btn--primary" data-nowo-ui-dialog-open="catalogue-dialog" data-testid="catalogue-dialog-open">Open dialog</button>{% endset %}
+    {{ include(nowo_ui_partial('page_header'), {title: 'Dialogs', intro: 'Native dialog with header, body and footer actions; no inline handlers.', toolbar: _toolbar}) }}
+{% endblock %}
+{% block body %}
+    {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Usage', kind: 'detail'} %}
+        {% block section_body %}<p><code class="nowo-ui-code">{% verbatim %}{{ include(nowo_ui_partial('dialog'), {id, title, body, footer}) }}{% endverbatim %}</code> opened by <code class="nowo-ui-code">data-nowo-ui-dialog-open="id"</code>.</p>{% endblock %}
+    {% endembed %}
+{% endblock %}
+{% block nowo_ui_modals %}
+    {% set _footer %}<button type="button" class="nowo-ui-btn nowo-ui-btn--outline" data-nowo-ui-dialog-close>Cancel</button><button type="button" class="nowo-ui-btn nowo-ui-btn--primary" data-nowo-ui-dialog-close>Confirm</button>{% endset %}
+    {{ include(nowo_ui_partial('dialog'), {id: 'catalogue-dialog', title: 'Archive invoice INV-1042?', body: '<p>The invoice stays in the ledger, marked archived.</p>', footer: _footer}) }}
+{% endblock %}
