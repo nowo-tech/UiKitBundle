@@ -126,4 +126,47 @@ describe('nowo-ui-bulk-select', () => {
     (document.querySelector('[data-nowo-ui-bulk-select-all-pages]') as HTMLElement).click();
     expect(document.querySelector('[data-nowo-ui-bulk-status]')!.textContent).toBe('1 row selected');
   });
+
+  it('XJ-1: a restored or re-rendered all field (1) is cleared when the page is not fully selected', () => {
+    document.body.innerHTML = `
+      <form id="bulk"><input type="hidden" id="all" name="all" value="1">
+        <input type="checkbox" data-nowo-ui-bulk-item id="c1" checked><input type="checkbox" data-nowo-ui-bulk-item id="c2"><input type="checkbox" data-nowo-ui-bulk-item id="c3">
+      </form>
+      ${BAR('data-nowo-ui-bulk-total="42" data-nowo-ui-bulk-all-field="all" data-nowo-ui-bulk-all-pages="All 42 rows selected"')}`;
+    mod.upgradeBulkBars();
+    expect(box('all').value).toBe('');
+    expect(document.querySelector('[data-nowo-ui-bulk-status]')!.textContent).toBe('1 row selected');
+    // Every row of the page selected: "1" is a deliberate choice and stays.
+    box('all').value = '1';
+    box('c2').checked = true;
+    box('c3').checked = true;
+    mod.update(document.querySelector('[data-nowo-ui-bulk-bar]')!);
+    expect(box('all').value).toBe('1');
+  });
+
+  it('a danger action with data-nowo-ui-bulk-confirm asks first and submits only on yes', async () => {
+    const button = document.getElementById('archive') as HTMLButtonElement;
+    button.setAttribute('data-nowo-ui-bulk-confirm', 'Archive them?');
+    change(box('c1'), true);
+    const form = document.getElementById('bulk') as HTMLFormElement;
+    const submitted: Array<HTMLElement | null> = [];
+    form.requestSubmit = (submitter?: HTMLElement | null) => {
+      submitted.push(submitter ?? null);
+    };
+    window.confirm = () => false;
+    const first = new MouseEvent('click', { bubbles: true, cancelable: true });
+    button.dispatchEvent(first);
+    expect(first.defaultPrevented).toBe(true);
+    await Promise.resolve();
+    expect(submitted).toHaveLength(0);
+    window.nowoUiAskConfirm = async () => true;
+    expect(await mod.confirmThenSubmit(button, form)).toBe(true);
+    expect(submitted).toEqual([button]);
+    // The confirmed click goes through once.
+    const second = new MouseEvent('click', { bubbles: true, cancelable: true });
+    button.dispatchEvent(second);
+    expect(second.defaultPrevented).toBe(false);
+    expect(button.hasAttribute('data-nowo-ui-bulk-confirmed')).toBe(false);
+    delete window.nowoUiAskConfirm;
+  });
 });

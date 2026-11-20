@@ -138,7 +138,7 @@ final class AdminCatalogueController extends AbstractController
         $pageRows = \array_slice($rows, ($page - 1) * $perPage, $perPage);
 
         $ids = array_column($pageRows, 'number');
-        $bulk = $forms->createNamedBuilder('bulk', FormType::class, null, ['attr' => ['id' => 'catalogue-bulk']])
+        $makeBulk = static fn (): FormInterface => $forms->createNamedBuilder('bulk', FormType::class, null, ['attr' => ['id' => 'catalogue-bulk']])
             ->add('ids', ChoiceType::class, [
                 'choices' => array_combine($ids, $ids),
                 'expanded' => true,
@@ -147,13 +147,16 @@ final class AdminCatalogueController extends AbstractController
                 'choice_name' => static fn (string $id): string => $id,
                 'choice_attr' => static fn (string $id): array => ['data-nowo-ui-bulk-item' => true, 'aria-label' => 'Select '.$id],
             ])
-            ->add('all', HiddenType::class)
+            ->add('all', HiddenType::class, ['mapped' => false, 'attr' => ['autocomplete' => 'off']])
             ->getForm();
+        $bulk = $makeBulk();
         $bulk->handleRequest($request);
         if ($bulk->isSubmitted()) {
             $count = '1' === $bulk->get('all')->getData() ? $total : \count((array) $bulk->get('ids')->getData());
             $action = 'delete' === $request->request->get('bulk_action') ? 'deleted' : 'archived';
             $notice = 0 === $count ? 'Select at least one invoice first.' : \sprintf('%d invoice%s %s (demo: nothing is stored).', $count, 1 === $count ? '' : 's', $action);
+            // The answer page starts with a fresh, unbound form: "every page" (all) is never printed as 1 (audit XJ-1).
+            $bulk = $makeBulk();
         }
 
         $query = array_filter(['q' => $q, 'status' => $status, 'sort' => $sort, 'dir' => $dir, 'per_page' => $perPage], static fn ($v): bool => '' !== $v && null !== $v);
