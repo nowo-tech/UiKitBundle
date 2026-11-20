@@ -141,6 +141,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Demo platform shell (2.60).** New layout `@NowoUiKit/demo_platform/layout.html.twig` that every nowo-tech bundle
+  demo can extend, so all demos look like one "nowo · bundles" platform: a top bar (platform brand, bundle name and
+  optional version, locale pills, theme toggle, sign-in button or UiKit user menu), the aside navigation grouped in
+  sections (a drawer behind the burger on phones), a content area at `--nowo-ui-content-max-width` with the page
+  header and flashes, and a footer with the repository link. It is the app shell (below-header, classic) with UiKit's
+  default theme always on (`css/nowo-ui-base.css`), `nowo-ui-shell.js`, and a new tokens-only stylesheet
+  `css/nowo-ui-demo-platform.css`. A demo declares everything in one Twig variable, `nowo_ui_demo_platform` (bundle,
+  home route, repository, locales, nav items with route / params / `active` prefixes / section / test id, auth links),
+  set in its `base.html.twig`; extension blocks `nowo_ui_demo_platform_header_end`, `nowo_ui_demo_platform_aside_end`
+  and `nowo_ui_demo_platform_footer`. No config, service or listener: worker-safe with the kernel kept alive.
+  Accessibility: skip link, named landmarks, `aria-current` on the current item and locale, no inline style or
+  handler. New translation keys `demo_platform.*` (7 locales). Demo page `/kit/demo-platform` with an axe e2e. See
+  [USAGE.md — Demo platform shell](USAGE.md#demo-platform-shell-260).
+
 ## [2.59.0] - 2026-11-19
 
 ### Added

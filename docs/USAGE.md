@@ -86,6 +86,7 @@
   - [Standard host](#standard-host)
   - [DDD host](#ddd-host)
 - [Feature bundles](#feature-bundles)
+- [Demo platform shell (2.60)](#demo-platform-shell-260)
 - [Kitchen sink](#kitchen-sink)
 - [Related docs](#related-docs)
 
@@ -4039,6 +4040,99 @@ Other Nowo admin UIs should import `@NowoUiKitBundle/macros/ui.html.twig` and in
 Align `nowo_ui_kit.css_framework` with the feature’s `css_framework`, **or** pass the feature framework as the macros’ trailing `framework` argument.
 
 See [ADOPTION.md](ADOPTION.md).
+
+<a id="demo-platform-shell-260"></a>
+## Demo platform shell (2.60)
+
+Every nowo-tech bundle demo extends one layout, `@NowoUiKit/demo_platform/layout.html.twig`, so that all demos look
+like one platform ("nowo · bundles"): the same top bar, aside, content width, typography, tokens (light and dark) and
+footer. It is UiKit's [app shell](#app-shell-26) (below-header layout, classic style) with UiKit's default theme
+(`css/nowo-ui-base.css` is linked whatever `nowo_ui_kit.base_stylesheet` says), `nowo-ui-shell.js` for the burger and
+the phone drawer, and a small stylesheet of its own (`css/nowo-ui-demo-platform.css`: the platform brand, the locale
+pills, spacing; tokens only). It is meant for demo apps; a product keeps its own shell.
+
+| Region | Content |
+|---|---|
+| Top bar | platform brand (link to the GitHub organisation) / bundle name (link to the demo home), optional version badge, the demo's extra actions, locale pills, theme toggle, sign-in button or user menu |
+| Aside | the demo's navigation, grouped in sections; a drawer behind the burger below 901 px |
+| Content | `<main id="nowo-ui-content">`, max width `--nowo-ui-content-max-width` (72rem): page header, flashes, page body |
+| Footer | "nowo · bundles · <bundle> demo", footer links, the repository's source link |
+
+**One place to declare a demo.** The demo's `templates/base.html.twig` extends the layout and sets one variable; its
+pages keep extending `base.html.twig` and filling `nowo_ui_page_header` and `body` (or `nowo_ui_content`):
+
+```twig
+{# demo/symfony8/templates/base.html.twig #}
+{% extends '@NowoUiKit/demo_platform/layout.html.twig' %}
+{% set nowo_ui_demo_platform = {
+    bundle: 'Contact Form',
+    home_route: 'demo_home',
+    repository: 'https://github.com/nowo-tech/ContactFormBundle',
+    translation_domain: 'messages',
+    locales: ['en', 'es'],
+    nav: [
+        {label: 'demo.menu_home', route: 'demo_home'},
+        {label: 'demo.form_contact', route: 'nowo_contact_form_public_show', params: {slug: 'contact'}, section: 'demo.menu_public_forms'},
+        {label: 'demo.menu_forms', route: 'nowo_contact_form_admin_index', active: ['nowo_contact_form_admin_*', 'nowo_contact_form_submissions_*'], section: 'demo.menu_admin'},
+    ],
+} %}
+{% block nowo_ui_document_title %}{% block title %}Contact Form{% endblock %} — Symfony 8{% endblock %}
+```
+
+```yaml
+# demo/symfony8/config/packages/nowo_ui_kit.yaml: the bundle's own pages use the same shell
+nowo_ui_kit:
+    css_framework: custom
+    base_stylesheet: true   # error pages too; the shell links the base theme anyway
+    layouts:
+        admin: 'base.html.twig'
+        guest: 'base.html.twig'
+```
+
+Why a Twig variable and not bundle config or a PHP listener: the demo already owns `base.html.twig`, nav labels are
+translated and hrefs are generated there (`path()`), and nothing has to be registered — no config schema in UiKit for
+a demo-only concern, no service, no listener, no per-request state. The variable lives in the render context of one
+request, so the shell is safe in FrankenPHP worker mode with the kernel kept alive (no reset needed).
+
+Keys of `nowo_ui_demo_platform` (only `bundle` is required):
+
+| Key | Meaning |
+|---|---|
+| `bundle`, `version` | bundle name (escaped text) and an optional version badge |
+| `home_route` + `home_params`, or `home_href` | link of the bundle name |
+| `platform`, `platform_href` | platform name (default `nowo · bundles`) and its link (default `https://github.com/nowo-tech`; unsafe schemes are dropped) |
+| `translation_domain` | domain of nav labels, section names and footer link labels (default `messages`; `false` prints them as given) |
+| `nav` | list of `{label, route + params \| href, active, section, testid}` (see below) |
+| `locales` | list of codes, or `{code, label, href}`; default label the native name (`nowo_ui_locale_name`), default href the current route with `locale_param` (default `_locale`) set to the code |
+| `auth` | `{login_route \| login_href, logout_route \| logout_href, login_label}`: signed in (`app.user`), the UiKit user menu with the user identifier and the logout link; else a "Sign in" button |
+| `repository`, `footer_links`, `footer` | the footer's source link, extra `{label, href}` links, `false` = no footer |
+| `content_width`, `sidebar_style` | `content` (default) \| `full`; `classic` (default) \| `inset` |
+
+**Nav items.** An item is current (`aria-current="page"`, `is-current`) when one of its `active` route names matches
+the current route (a trailing `*` matches a prefix: `nowo_contact_form_admin_*`); without `active`, when its `route` is
+the current route and its `params` are a subset of the current route params (so `slug: 'contact'` and `slug: 'job'` on
+the same route are told apart). `active: []` never marks the item. Consecutive items with the same `section` share one
+aside group under that heading (`<nav aria-labelledby>`); items without a section form an unnamed first group.
+`data-testid` defaults to `demo-nav-<route>` (keep the e2e selectors a demo had).
+
+**Blocks.** `nowo_ui_demo_platform_header_end` (extra top bar actions, before the locale pills),
+`nowo_ui_demo_platform_aside_end` (extra aside content after the nav: DashboardMenu renders its own menus there),
+`nowo_ui_demo_platform_footer` (replace the footer), and the page contract blocks `nowo_ui_document_title`,
+`nowo_ui_head`, `nowo_ui_styles` (add the bundle's own CSS with `{{ parent() }}`), `nowo_ui_page_header`,
+`nowo_ui_flashes`, `nowo_ui_content` (default: `block body`), `nowo_ui_modals`, `nowo_ui_scripts`. Bundle widgets that
+float over the page (a chat dock, a cookie banner, a page builder canvas) render in `body` / `nowo_ui_modals` as
+before: the shell never clips its content area and fixed elements cover the viewport.
+
+**Accessibility.** A skip link (first focusable element) to `#nowo-ui-content` (`tabindex="-1"`); one banner, one
+named complementary landmark (the aside), one `main`, one `contentinfo`; every `nav` is named (`aria-label` or
+`aria-labelledby` its section heading); the burger has `aria-controls` / `aria-expanded` and names its next action;
+the locale pills mark the current locale with `aria-current` and read the full language name (the visible code is
+`aria-hidden`); focus rings use `--nowo-ui-focus-ring-color`. No inline style, inline handler or inline script (the
+theme boot script carries the request CSP nonce). The UiKit demo checks it with axe (wcag2a/2aa/21a/21aa, light and
+dark, desktop and phone): `/kit/demo-platform`, `e2e/tests/demo-platform.spec.ts`.
+
+**Screenshots of a demo.** The Symfony toolbar is not part of the platform: take README screenshots with the profiler
+toolbar hidden (`APP_DEBUG=0`, or `web_profiler.toolbar: false` for the capture).
 
 ## Kitchen sink
 
