@@ -38,6 +38,35 @@
                     <button type="submit" form="long-form" class="{{ nowo_ui_class('btn_primary', 'DemoPlatformCatalogue') }}" data-testid="long-save">Save</button>
                 {% endblock %}
             {% endembed %}
+            {# 2.63: the phone sheet (full screen at 40rem and below), the steps in the header, dividers between the body sections #}
+            {% embed nowo_ui_partial('confirm_dialog', 'DemoPlatformCatalogue') with {anatomy: true, phone: 'sheet', size: 'wide', trigger_label: 'Import (phone sheet, steps)', title: 'Import contacts', dialog_id: 'sheet-dialog', trigger_testid: 'open-sheet', header_steps: [{label: 'File', status: 'done'}, {label: 'Columns', status: 'current'}, {label: 'Preview'}, {label: 'Result'}], header_steps_label: 'Import steps'} %}
+                {% block body %}
+                    <section class="{{ nowo_ui_class('section', 'DemoPlatformCatalogue') }}" data-testid="sheet-section">
+                        <h3>Columns of people.csv</h3>
+                        <p>2 rows. Choose the field each column fills.</p>
+                    </section>
+                    <section class="{{ nowo_ui_class('section', 'DemoPlatformCatalogue') }}" data-testid="sheet-section">
+                        <h3>Existing e-mails</h3>
+                        <p>Skip rows whose e-mail exists, or update them.</p>
+                    </section>
+                    <section class="{{ nowo_ui_class('section', 'DemoPlatformCatalogue') }}" data-testid="sheet-section">
+                        <h3>Checks</h3>
+                        {# A scrolling body needs something focusable (axe scrollable-region-focusable): a form field, or here a fold #}
+                        <details open>
+                        <summary>12 checks passed</summary>
+                        <ul>
+                            {% for check in ['Header row found', 'Delimiter detected', 'Encoding UTF-8', 'No empty columns', 'Dates in ISO format', 'Phone numbers normalised', 'Countries matched', 'Duplicates inside the file', 'Required fields present', 'Tags split on comma', 'Owners matched', 'Consent column found'] %}
+                                <li>{{ check }}</li>
+                            {% endfor %}
+                        </ul>
+                        </details>
+                    </section>
+                {% endblock %}
+                {% block footer %}
+                    <button type="button" class="{{ nowo_ui_class('btn_secondary', 'DemoPlatformCatalogue') }}" data-nowo-confirm-close data-confirm-dialog-close>Cancel</button>
+                    <button type="button" class="{{ nowo_ui_class('btn_primary', 'DemoPlatformCatalogue') }}" data-testid="sheet-next">Preview</button>
+                {% endblock %}
+            {% endembed %}
             <a class="{{ nowo_ui_class('btn_secondary', 'DemoPlatformCatalogue') }}" href="{{ path('kit_remote_form') }}">Remote form dialog</a>
         </div>
         {# Demo only, do not copy: confirm-submit on a plain button (no form: REQ-TWIG-005); Confirm replays the click,

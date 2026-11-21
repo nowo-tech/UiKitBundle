@@ -568,6 +568,38 @@ value is ignored):
 {% endembed %}
 ```
 
+**Phone sheet, header steps and body sections (2.63).** Three opt-ins of the `confirm_dialog` anatomy; without them
+the dialog is exactly the 2.62 one.
+
+- `phone: 'sheet'` (default `'inset'`; anything else is the default, and it is ignored without `anatomy: true`): at
+  `40rem` and below the dialog fills the screen (`100dvh`, `100vw`, no radius, border or shadow). Header and footer stay
+  in view and only the body scrolls; the notch and the home indicator are kept clear with `env(safe-area-inset-*)`
+  padding (give the page `viewport-fit=cover` to use them). The native modal `<dialog>` still traps focus, closes on
+  Escape and gives focus back to the opener. It is opt-in because the inset dialog is what every existing dialog
+  looks like on a phone and a short confirmation should stay a card; take the sheet for **wide dialogs, long forms and
+  multi-step flows**, where the 16 px gutter wastes the little width there is.
+- `header_steps` (list of the `steps` partial's items `{label, status, hint, href}`) and `header_steps_label`: the
+  steps indicator inside the header, on its own row under the title, so it stays in view while the body scrolls. On
+  phones it is compact: only the current step shows its label (the others stay in the accessibility tree). A
+  `{% block header_steps %}` replaces it with your own markup. Without steps the header markup is unchanged.
+- Sections: put `<section class="{{ nowo_ui_class('section') }}">` blocks (not cards) in the body; every one after the
+  first gets a divider (`border-top`) and the form row gap (`--nowo-ui-form-row-gap`) above and below it. A section
+  that is also a card keeps the card style.
+
+```twig
+{% embed nowo_ui_partial('confirm_dialog') with {
+    anatomy: true, phone: 'sheet', size: 'wide', title: 'Import', dialog_id: 'import', trigger_label: 'Import',
+    header_steps: [{label: 'File', status: 'done'}, {label: 'Columns', status: 'current'}, {label: 'Result'}],
+    header_steps_label: 'Import steps',
+} %}
+    {% block body %}
+        <section class="{{ nowo_ui_class('section') }}">…</section>
+        <section class="{{ nowo_ui_class('section') }}">…</section>
+    {% endblock %}
+    {% block footer %}…{% endblock %}
+{% endembed %}
+```
+
 A form page opened in a dialog uses the `remote_form_dialog` partial (wide); its `.nowo-ui-form__actions` (or a
 `[data-nowo-ui-dialog-actions]` container) move into the dialog footer by themselves.
 
