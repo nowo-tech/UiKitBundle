@@ -143,11 +143,21 @@ test('the other dialogs keep their size on phones (the sheet is opt-in)', async 
  */
 type Mode = 'light' | 'dark';
 
+/**
+ * The demo platform stylesheet re-pins --nowo-ui-muted to a darker #586579, which hides the defect. The 4.5:1 guarantee
+ * is for a host on the bundle's default tokens, so the bundle's own default muted colour is put back on the root.
+ */
+const DEFAULT_MUTED: Record<Mode, string> = { light: '#64748b', dark: '#94a3b8' };
+
 const setMode = (page: Page, mode: Mode): Promise<void> =>
-  page.evaluate((m) => {
-    document.documentElement.setAttribute('data-theme', m);
-    document.documentElement.setAttribute('data-bs-theme', m);
-  }, mode);
+  page.evaluate(
+    ([m, muted]) => {
+      document.documentElement.setAttribute('data-theme', m);
+      document.documentElement.setAttribute('data-bs-theme', m);
+      document.documentElement.style.setProperty('--nowo-ui-muted', muted);
+    },
+    [mode, DEFAULT_MUTED[mode]],
+  );
 
 /** Contrast of each element's text colour against the opaque colour behind it (alpha backgrounds composited). */
 const ratiosOf = (page: Page, selector: string): Promise<number[]> =>

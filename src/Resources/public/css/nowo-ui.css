@@ -7891,7 +7891,7 @@ li:has(> :is(a, span) + button.nowo-ui-tree__toggle) > :not(a, span, button.nowo
   margin: 0;
 }
 
-/* 2.63.1: the muted labels and hints on the tinted header (#f5f6f6 in light) measured 4.39:1 with --nowo-ui-muted; 20% of
+/* 2.63.1: the muted labels and hints on the tinted header (light mode) measured 4.39:1 with --nowo-ui-muted; 20% of
    the text colour mixed in keeps them muted against the current and done labels and reaches 4.5:1 (5.79:1 light, 7.55:1 dark). */
 .nowo-ui-dialog__steps .nowo-ui-steps__label,
 .nowo-ui-dialog__steps .nowo-ui-steps__hint {
