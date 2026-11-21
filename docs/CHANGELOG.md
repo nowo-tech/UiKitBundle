@@ -145,6 +145,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Contrast of the upcoming step labels in the tinted dialog header**: with `header_steps` (and the `header_steps`
+  block) the muted `nowo-ui-steps__label` / `nowo-ui-steps__hint` text measured 4.39:1 (`#64748b` on the `#f5f6f6`
+  header tint) in light mode, below WCAG AA, so axe `color-contrast` failed on desktop (found by CrmKit 0.4.1). Inside
+  `.nowo-ui-dialog__steps` the muted text now mixes 20% of `--nowo-ui-text` into `--nowo-ui-muted` (about `#536178`,
+  5.79:1 on the tint in light; `#a4b1c3`, 7.55:1 in dark, which already passed at 6.41:1). Upcoming steps stay muted
+  against the current and done labels (full text colour), and steps in a page body are unchanged (4.76:1 light, 6.96:1
+  dark). Pure CSS, no markup or token change.
+
 ## [2.63.0] - 2026-11-21
 
 ### Added
