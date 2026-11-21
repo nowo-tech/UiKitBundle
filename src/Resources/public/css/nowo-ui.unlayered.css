@@ -7855,6 +7855,106 @@ li:has(> :is(a, span) + button.nowo-ui-tree__toggle) > :not(a, span, button.nowo
   display: none;
 }
 
+/* Header steps (2.63, `header_steps` of the confirm_dialog anatomy): the steps list on its own row of the header, so it
+   stays in view while the body scrolls; compact: no bottom margin, and on phones only the current step shows its label
+   (the others stay in the accessibility tree, visually hidden). */
+.nowo-ui-dialog__header:has(> .nowo-ui-dialog__steps) {
+  flex-wrap: wrap;
+}
+
+.nowo-ui-dialog__header:has(> .nowo-ui-dialog__steps) > :first-child {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.nowo-ui-dialog__steps {
+  flex: 0 0 100%;
+  min-width: 0;
+}
+
+.nowo-ui-dialog__steps > .nowo-ui-steps {
+  margin: 0;
+}
+
+@media (max-width: 39.99rem) {
+  .nowo-ui-dialog__steps > .nowo-ui-steps--compact {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .nowo-ui-dialog__steps > .nowo-ui-steps--compact > .nowo-ui-steps__item {
+    flex: 0 0 auto;
+  }
+
+  .nowo-ui-dialog__steps > .nowo-ui-steps--compact > .nowo-ui-steps__item--current {
+    flex: 1 1 auto;
+  }
+
+  .nowo-ui-dialog__steps > .nowo-ui-steps--compact > .nowo-ui-steps__item:not(.nowo-ui-steps__item--current) .nowo-ui-steps__text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}
+
+/* Body sections (2.63): `.nowo-ui-section` blocks (not cards) in a dialog body are separated by a divider and the form
+   row gap; a form puts the gap between its children already (flex gap), so there only the divider's padding is added. */
+.nowo-ui-dialog__body .nowo-ui-section:not(.nowo-ui-card) + .nowo-ui-section:not(.nowo-ui-card) {
+  margin-top: var(--nowo-ui-form-row-gap, 1rem);
+  padding-top: var(--nowo-ui-form-row-gap, 1rem);
+  border-top: 1px solid var(--nowo-ui-border);
+}
+
+.nowo-ui-dialog__body form > .nowo-ui-section:not(.nowo-ui-card) + .nowo-ui-section:not(.nowo-ui-card) {
+  margin-top: 0;
+}
+
+/* Phone sheet (2.63, `phone: 'sheet'` of the confirm_dialog anatomy): at 40rem and below the dialog fills the screen;
+   the header and the footer stay, the body scrolls, the notch and the home indicator are kept clear. 100vh first as the
+   fallback of 100dvh. Native modal dialog: focus trap, Escape and focus return are the dialog's own. */
+@media (max-width: 39.99rem) {
+  .nowo-ui-confirm-dialog.nowo-ui-confirm-dialog--sheet.nowo-ui-confirm-dialog--anatomy[open] {
+    --nowo-ui-dialog-w: 100vw;
+    --nowo-ui-dialog-max-h: 100vh;
+    --nowo-ui-dialog-max-h: 100dvh;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: none;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    max-height: none;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .nowo-ui-confirm-dialog--sheet > .nowo-ui-dialog__header {
+    padding-top: calc(1rem + env(safe-area-inset-top, 0px));
+    padding-right: calc(1.25rem + env(safe-area-inset-right, 0px));
+    padding-left: calc(1.25rem + env(safe-area-inset-left, 0px));
+  }
+
+  .nowo-ui-confirm-dialog--sheet > .nowo-ui-dialog__body {
+    padding-right: calc(1.25rem + env(safe-area-inset-right, 0px));
+    padding-left: calc(1.25rem + env(safe-area-inset-left, 0px));
+  }
+
+  .nowo-ui-confirm-dialog--sheet > .nowo-ui-dialog__footer {
+    padding-right: calc(1.25rem + env(safe-area-inset-right, 0px));
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+    padding-left: calc(1.25rem + env(safe-area-inset-left, 0px));
+  }
+}
+
 /* App shell burger (@NowoUiKit/shell/_burger, icon: morph): the static glyph of the state paints before JS (menu when
  * the aside is hidden, X when it is shown), the <morph-icon> replaces it once hydrated (.is-morph-ready). */
 .nowo-ui-app-shell__burger.is-morph-ready .nowo-ui-burger__icon,

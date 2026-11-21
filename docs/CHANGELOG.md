@@ -144,6 +144,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Phone sheet for `confirm_dialog`**: `phone: 'sheet'` (anatomy only; default `'inset'`) makes the dialog fill the screen
+  at 40rem and below (class `nowo-ui-confirm-dialog--sheet`): header and footer stay, the body scrolls, safe areas are
+  kept, and the native modal dialog keeps its focus trap, Escape and focus return. Opt-in, so no existing dialog changes.
+- **Header steps for the `confirm_dialog` anatomy**: `header_steps` (the `steps` partial's items) with
+  `header_steps_label`, or the `header_steps` block, render the steps indicator inside the header (`nowo-ui-dialog__steps`,
+  compact on phones: only the current step shows its label). Without steps the header markup is byte-identical.
+- **Default style for `.nowo-ui-section` dividers in a dialog body**: two non-card sections in a `nowo-ui-dialog__body`
+  are separated by a `border-top` and the form row gap.
+- Demo: "Import (phone sheet, steps)" on `/kit/dialogs`; Playwright e2e `dialog-sheet.spec.ts` (size, sticky header and
+  footer, keyboard, divider, axe on desktop and phone); PHPUnit `DialogSheetStepsSections263Test`.
+
 ## [2.62.0] - 2026-11-21
 
 ### Added

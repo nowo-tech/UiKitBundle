@@ -166,6 +166,19 @@
 
 ## Unreleased
 
+From **2.62.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+Nothing changes unless you use the new options of the `confirm_dialog` anatomy (`anatomy: true`), all optional:
+`phone: 'sheet'` (full-screen sheet at 40rem and below), `header_steps` / `header_steps_label` (or the `header_steps`
+block: steps in the header) and `<section class="nowo-ui-section">` blocks in the body (divider between them). Adopting
+them is deleting your own CSS for the same: a full-screen phone rule, a steps row at the top of the body, a divider
+between sections. See [PAGE_CONTRACT](PAGE_CONTRACT.md#dialog-sizes-and-anatomy-229). If your own stylesheet already
+styles `.nowo-ui-section` inside a dialog body it keeps working; with the layered stylesheet (`nowo-ui.css`) it wins over the kit's rules.
+
 ## To 2.62.0
 
 From **2.61.0**:
