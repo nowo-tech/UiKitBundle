@@ -43,8 +43,11 @@ TWIG;
         // Without the anatomy the option is ignored (a free panel has no header / footer to keep).
         $free = PageContractTwig::create(['t' => "{% embed nowo_ui_partial('confirm_dialog') with opts %}{% block form %}<p>x</p>{% endblock %}{% endembed %}"])->render('t', ['opts' => ['phone' => 'sheet']]);
         self::assertStringNotContainsString('--sheet', $free);
-        // A `phone` in an inherited context cannot switch it on either: an explicit anatomy: true is required.
-        self::assertStringNotContainsString('--sheet', $free);
+        // A `phone` (and steps) merely in the parent context cannot switch it on either: an explicit anatomy: true is required.
+        $inherited = PageContractTwig::create(['t' => "{% embed nowo_ui_partial('confirm_dialog') %}{% block form %}<p>x</p>{% endblock %}{% endembed %}"])
+            ->render('t', ['phone' => 'sheet', 'header_steps' => self::STEPS, 'anatomy' => 'yes']);
+        self::assertStringNotContainsString('--sheet', $inherited);
+        self::assertStringNotContainsString('nowo-ui-dialog__steps', $inherited);
     }
 
     public function testSheetCombinesWithWideAndModifier(): void
@@ -102,6 +105,9 @@ TWIG;
             self::assertMatchesRegularExpression('/\.nowo-ui-dialog__steps \{\s*flex: 0 0 100%;/', $css, $file);
             // Sections: a divider and the row gap between two non-card sections of a dialog body.
             self::assertMatchesRegularExpression('/\.nowo-ui-dialog__body \.nowo-ui-section:not\(\.nowo-ui-card\) \+ \.nowo-ui-section:not\(\.nowo-ui-card\) \{[^}]*padding-top: var\(--nowo-ui-form-row-gap, 1rem\);[^}]*border-top: 1px solid var\(--nowo-ui-border\);/', $css, $file);
+            // Inside a dialog form the flex gap spaces the sections: the margin reset is scoped to the dialog body and wins over the divider's margin.
+            self::assertMatchesRegularExpression('/\n\.nowo-ui-dialog__body form > \.nowo-ui-section:not\(\.nowo-ui-card\) \+ \.nowo-ui-section:not\(\.nowo-ui-card\) \{\s*margin-top: 0;\s*\}/', $css, $file);
+            self::assertStringNotContainsString(':where(form.nowo-ui-form, .nowo-ui-dialog__body form) > .nowo-ui-section', $css, $file.': no reset leaking to page forms');
             self::assertDoesNotMatchRegularExpression('/^[^\/\n]*(url\(http|@import|<style)/m', $css, $file.': no CDN');
         }
     }

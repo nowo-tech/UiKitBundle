@@ -72,6 +72,34 @@ for (const [name, width, height, phone] of [['desktop', 1280, 900, false], ['pho
       expect(borders).toEqual(['0px', '1px', '1px']);
     });
 
+    test('sections inside a form of the dialog body: no doubled gap; a page form outside a dialog keeps its margins', async ({ page }) => {
+      await openSheet(page);
+      const result = await page.evaluate(() => {
+        const make = (): HTMLElement => {
+          const section = document.createElement('section');
+          section.className = 'nowo-ui-section';
+          return section;
+        };
+        const build = (parent: Element): HTMLElement[] => {
+          const form = document.createElement('form');
+          form.className = 'nowo-ui-form';
+          const sections = [make(), make()];
+          sections.forEach((s) => form.append(s));
+          parent.append(form);
+          return sections;
+        };
+        const inDialog = build(document.querySelector('dialog#sheet-dialog > .nowo-ui-dialog__body') as Element);
+        const outside = build(document.body);
+        outside[1].style.marginTop = '7px'; // the host's own margin (CSSOM, no inline attribute in the markup)
+        return {
+          dialogGap: getComputedStyle(inDialog[1]).marginTop,
+          dialogBorder: getComputedStyle(inDialog[1]).borderTopWidth,
+          outsideMargin: getComputedStyle(outside[1]).marginTop,
+        };
+      });
+      expect(result).toEqual({ dialogGap: '0px', dialogBorder: '1px', outsideMargin: '7px' });
+    });
+
     test('keyboard: focus stays in the dialog, Escape closes it and gives focus back', async ({ page }) => {
       await openSheet(page);
       // A native modal dialog keeps Tab inside it; at the ends the browser's own chrome may take it (the page behind never does).

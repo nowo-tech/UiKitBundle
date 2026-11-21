@@ -7912,7 +7912,7 @@ li:has(> :is(a, span) + button.nowo-ui-tree__toggle) > :not(a, span, button.nowo
   border-top: 1px solid var(--nowo-ui-border);
 }
 
-:where(form.nowo-ui-form, .nowo-ui-dialog__body form) > .nowo-ui-section:not(.nowo-ui-card) + .nowo-ui-section:not(.nowo-ui-card) {
+.nowo-ui-dialog__body form > .nowo-ui-section:not(.nowo-ui-card) + .nowo-ui-section:not(.nowo-ui-card) {
   margin-top: 0;
 }
 

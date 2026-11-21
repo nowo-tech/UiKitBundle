@@ -578,6 +578,8 @@ the dialog is exactly the 2.62 one.
   Escape and gives focus back to the opener. It is opt-in because the inset dialog is what every existing dialog
   looks like on a phone and a short confirmation should stay a card; take the sheet for **wide dialogs, long forms and
   multi-step flows**, where the 16 px gutter wastes the little width there is.
+  A body that scrolls must contain something focusable (a form field, a link, a `<details>`), or keyboard users cannot
+  scroll it and axe reports `scrollable-region-focusable`; a body of plain text only needs `tabindex="0"` on a wrapper.
 - `header_steps` (list of the `steps` partial's items `{label, status, hint, href}`) and `header_steps_label`: the
   steps indicator inside the header, on its own row under the title, so it stays in view while the body scrolls. On
   phones it is compact: only the current step shows its label (the others stay in the accessibility tree). A
