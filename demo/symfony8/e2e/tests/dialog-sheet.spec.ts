@@ -136,3 +136,95 @@ test('the other dialogs keep their size on phones (the sheet is opt-in)', async 
   expect(Math.round(box.y)).toBeGreaterThan(0);
   expect(Math.round(box.height)).toBeLessThan(700);
 });
+
+/**
+ * 2.63.1: the upcoming step labels (and hints) in the tinted dialog header measured 4.39:1 (#64748b on #f5f6f6) in
+ * light mode, below WCAG AA. Every steps state keeps 4.5:1 in the header (desktop, light and dark) and in a page body.
+ */
+type Mode = 'light' | 'dark';
+
+const setMode = (page: Page, mode: Mode): Promise<void> =>
+  page.evaluate((m) => {
+    document.documentElement.setAttribute('data-theme', m);
+    document.documentElement.setAttribute('data-bs-theme', m);
+  }, mode);
+
+/** Contrast of each element's text colour against the opaque colour behind it (alpha backgrounds composited). */
+const ratiosOf = (page: Page, selector: string): Promise<number[]> =>
+  page.locator(selector).evaluateAll((nodes) => {
+    const probe = document.createElement('canvas').getContext('2d', { willReadFrequently: true }) as CanvasRenderingContext2D;
+    const rgba = (css: string): number[] => {
+      probe.clearRect(0, 0, 1, 1);
+      probe.fillStyle = '#000';
+      probe.fillStyle = css;
+      probe.fillRect(0, 0, 1, 1);
+      const [r, g, b, a] = probe.getImageData(0, 0, 1, 1).data;
+      return [r, g, b, a / 255];
+    };
+    const over = (top: number[], below: number[]): number[] => [0, 1, 2].map((i) => top[i] * top[3] + below[i] * (1 - top[3])).concat(1);
+    const background = (el: Element | null): number[] => {
+      const layers: number[][] = [];
+      for (let node = el; node; node = node.parentElement) {
+        const color = rgba(getComputedStyle(node).backgroundColor);
+        if (color[3] > 0) {
+          layers.push(color);
+          if (color[3] >= 1) {
+            break;
+          }
+        }
+      }
+      return layers.reduceRight((below, top) => over(top, below), [255, 255, 255, 1]);
+    };
+    const luminance = (c: number[]): number => {
+      const [r, g, b] = c.slice(0, 3).map((v) => {
+        const s = v / 255;
+        return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+    return nodes.map((el) => {
+      const bg = background(el);
+      const fg = over(rgba(getComputedStyle(el).color), bg);
+      const [hi, lo] = [luminance(fg), luminance(bg)].sort((a, b) => b - a);
+      return (hi + 0.05) / (lo + 0.05);
+    });
+  });
+
+for (const mode of ['light', 'dark'] as Mode[]) {
+  test.describe(`header steps contrast on desktop, ${mode}`, () => {
+    test.use({ viewport: { width: 1280, height: 900 }, reducedMotion: 'reduce' });
+
+    test('upcoming, current and done step labels keep 4.5:1 in the header; axe color-contrast finds nothing', async ({ page }) => {
+      await page.goto('/kit/dialogs');
+      await setMode(page, mode);
+      await page.getByTestId('open-sheet').click();
+      const dialog = page.locator('dialog#sheet-dialog');
+      await expect(dialog).toBeVisible();
+      const steps = dialog.locator('> header .nowo-ui-dialog__steps');
+      await expect(steps.locator('.nowo-ui-steps__item--upcoming .nowo-ui-steps__label').first()).toBeVisible();
+      await expect(steps.locator('.nowo-ui-steps__item--done')).toHaveCount(1);
+      await expect(steps.locator('.nowo-ui-steps__item--current')).toHaveCount(1);
+      const ratios = await ratiosOf(page, 'dialog#sheet-dialog > header .nowo-ui-steps__label, dialog#sheet-dialog > header .nowo-ui-steps__hint');
+      expect(ratios.length).toBe(4);
+      for (const ratio of ratios) {
+        expect(ratio).toBeGreaterThanOrEqual(4.5);
+      }
+      const axe = await new AxeBuilder({ page }).include('dialog#sheet-dialog > header').withRules(['color-contrast']).analyze();
+      expect(axe.violations).toEqual([]);
+      expect(axe.passes.map((rule) => rule.id)).toContain('color-contrast');
+    });
+  });
+
+  test(`steps in a page body keep 4.5:1 for every state (${mode})`, async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto('/catalogue/admin/navigation-patterns');
+    await setMode(page, mode);
+    const steps = page.getByTestId('catalogue-steps');
+    await expect(steps.locator('.nowo-ui-steps__item--upcoming')).toHaveCount(1);
+    const ratios = await ratiosOf(page, '[data-testid="catalogue-steps"] .nowo-ui-steps__label, [data-testid="catalogue-steps"] .nowo-ui-steps__hint');
+    expect(ratios.length).toBe(7);
+    for (const ratio of ratios) {
+      expect(ratio).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+}
