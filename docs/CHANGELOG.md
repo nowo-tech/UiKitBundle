@@ -143,6 +143,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Demo platform helpers** in `css/nowo-ui-demo-platform.css`: `.nowo-ui-measure-sm|md|lg|xl`, `.nowo-ui-inline`,
+  `.nowo-ui-list-plain`, `.nowo-ui-stack-sm`, `.nowo-ui-image-round`, `.nowo-ui-mono`, `.nowo-ui-card--row`,
+  `.nowo-ui-spacer-tall`, a board (`.nowo-ui-board`, `.nowo-ui-board-card`, sortable handle and steps); under the
+  shell, dialogs are bottom sheets on phones, the page scroll leaves room for the sticky bar and `color-scheme`
+  follows the theme; `.nowo-ui-dialog-fill` gives the page's dialogs their size's height (as `theme.dialog.height: size`).
+
+### Changed
+
+- **Demo**: no CSS framework and no demo stylesheet. The component showcases run on the demo platform shell under
+  "Component showcases" (with the 2.23 scaffold pages); the full-page previews of the kit's own shells (app shell,
+  sidebar layouts, focus mode, compact header, wiki layout, phone mode, kitchen sink) are the "Shell lab", on UiKit's
+  default theme; `/page-contract` stays the one host-theme preview (Acme). Their few host-side rules moved into
+  `css/nowo-ui-demo-platform.css` (helpers, a board, the Shell lab section). Bootstrap is now only an e2e fixture
+  (`card-intro-contrast.spec.ts`). `make demo-style-lint` checks the demo.
+
 ## [2.61.0] - 2026-11-20
 
 ### Added

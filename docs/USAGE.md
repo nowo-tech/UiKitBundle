@@ -4333,7 +4333,9 @@ never hand-rolls card markup or writes CSS:
 11. **No demo styles**: a demo has no stylesheet, no `<style>`, no `style=""` and links no stylesheet but UiKit's and
     the bundles' own assets (`bundles/…`). What a demo needs and UiKit lacks becomes a UiKit class or block.
     `vendor/bin/nowo-ui-demo-style-lint demo/symfony8` enforces it (exit 1 on a finding; `--allow=<glob>` only for
-    the documented exemptions).
+    the documented exemptions) UiKit's own demo has one: its host-theme preview (`/page-contract`, the Acme
+    stylesheet and font), see `make demo-style-lint`. Its "Shell lab" pages (full-page previews of the kit's shells)
+    take their few host-side rules from the last section of `css/nowo-ui-demo-platform.css`.
 12. **Phones**: the aside is an accessible drawer (inert when closed, focus in and out, scroll lock), the locale pills
     open it, controls are 44 px high on coarse pointers, tables scroll inside their card (cells never wrap
     mid-value; `.nowo-ui-cell--wrap` opts a long-text column in, `.nowo-ui-cell--num` / `--date` align and keep

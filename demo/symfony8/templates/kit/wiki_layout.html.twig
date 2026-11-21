@@ -5,6 +5,9 @@
   closes it before the first paint under 1200 px (audit LV-L2), so the page never loads behind a modal drawer.
 #}
 {% extends '@NowoUiKit/layout/document.html.twig' %}
+{#- Shell lab: UiKit's default theme (the catalogue's exception, no host class map); partials read `bundle`. -#}
+{% set bundle = 'DemoPlatformCatalogue' %}
+{% set nowo_ui_bundle = 'DemoPlatformCatalogue' %}
 {% set nowo_ui_document_title = 'Wiki layout · UiKit 2.48' %}
 
 {% block nowo_ui_head %}
@@ -15,7 +18,7 @@
     <main id="main-content" class="nowo-ui-content" data-testid="wiki-layout-demo">
         <div class="kit-wiki-layout">
             <aside id="wiki-tree" class="kit-wiki-tree" data-nowo-ui-rail-host data-nowo-ui-rail="{{ tree_collapsed ? 'collapsed' : 'expanded' }}" data-testid="tree">
-                {{ include(nowo_ui_partial('rail_toggle'), {
+                {{ include(nowo_ui_partial('rail_toggle', 'DemoPlatformCatalogue'), {
                     target: 'wiki-tree-body',
                     title: 'Pages',
                     collapsed: tree_collapsed,
@@ -42,7 +45,7 @@
                         <article class="nowo-ui-readable" data-testid="wiki-content">
                             <p>The comments panel docks as a column from 1200 px and is a drawer below. A host store renders
                                 it open; under 1200 px it starts closed so the page stays usable.</p>
-                            <button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-testid="content-button">A button in the content</button>
+                            <button type="button" class="{{ nowo_ui_class('btn_secondary', 'DemoPlatformCatalogue') }}" data-testid="content-button">A button in the content</button>
                         </article>
                     {% endblock %}
                     {% block nowo_ui_side_panel_panel %}
@@ -55,7 +58,7 @@
                             attr: {'data-testid': 'comments-panel'},
                         } only %}
                             {% block nowo_ui_side_panel_body %}
-                                <button type="button" class="{{ nowo_ui_class('btn_primary') }}" data-testid="reply">Reply</button>
+                                <button type="button" class="{{ nowo_ui_class('btn_primary', 'DemoPlatformCatalogue') }}" data-testid="reply">Reply</button>
                             {% endblock %}
                         {% endembed %}
                     {% endblock %}

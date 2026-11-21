@@ -10,8 +10,6 @@ const POLICY = "style-src-attr 'none'";
 async function noTooling(page: Page): Promise<void> {
   await page.route('**/_wdt/**', (route) => route.abort());
   await page.route('https://cdn.jsdelivr.net/**', (route) => route.abort());
-  // Bootstrap is vendored under /third-party/ now; this spec still runs without it, as it did when it came from the (blocked) CDN.
-  await page.route('**/third-party/bootstrap*/**', (route) => route.abort());
 }
 
 async function withPolicy(page: Page, path: string, policy: string | null = POLICY): Promise<void> {
@@ -34,6 +32,28 @@ async function changeHtml(route: Route, change: (html: string) => string): Promi
   delete headers['content-encoding'];
   delete headers['content-length'];
   await route.fulfill({ response, headers, body: change(await response.text()) });
+}
+
+/**
+ * Load the next list page until `selector` arrives. What is under test is the fetched HTML, not the trigger: scroll the
+ * sentinel out of view and back, and where the page is too short to scroll (the shell fits five rows on a tall
+ * viewport), press the keyboard-reachable "Load more" button.
+ */
+async function loadNextPage(page: Page, selector: string): Promise<void> {
+  await expect
+    .poll(
+      async () => {
+        await page.evaluate(() => window.scrollTo(0, 0));
+        await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+        const more = page.locator('[data-nowo-ui-pagination-more]');
+        if ((await page.locator(selector).count()) === 0 && (await more.isVisible())) {
+          await more.click();
+        }
+        return page.locator(selector).count();
+      },
+      { timeout: 10_000 },
+    )
+    .toBeGreaterThan(0);
 }
 
 /**
@@ -110,7 +130,7 @@ test.describe('a style attribute in fetched HTML', () => {
     );
     await page.goto('/kit/2.23/pagination/infinite');
     await expect(page.locator('[data-controller~="list-pagination"]')).toHaveAttribute('data-nowo-ui-pagination-active', 'infinite');
-    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await loadNextPage(page, '[data-imported]');
     await expectBlocked(page, '[data-imported]');
     expect(changed).toEqual({ row: true, nav: true, info: true, confirm: true });
     await expectBlocked(page, '[data-imported-nav]');
@@ -147,7 +167,7 @@ test.describe('a style attribute in fetched HTML', () => {
       );
     });
     await expect(page.locator('[data-controller~="list-pagination"]')).toHaveAttribute('data-nowo-ui-pagination-active', 'infinite');
-    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await loadNextPage(page, '#sib');
     await expect(page.locator('#sib')).toBeAttached();
     const position = (selector: string): Promise<string> => page.locator(selector).first().evaluate((el) => getComputedStyle(el).position);
     expect(await position('#grow')).toBe('relative');

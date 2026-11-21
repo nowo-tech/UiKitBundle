@@ -38,7 +38,7 @@ final class KitComboboxController extends AbstractController
             ->add('page', ComboboxType::class, ['label' => 'Wiki page', 'required' => false, 'url' => $search, 'help' => 'Type at least two letters, e.g. "st".'])
             ->add('link', TextType::class, ['label' => 'Link to page', 'required' => false])
             ->add('link_id', HiddenType::class)
-            ->add('save', SubmitType::class, ['label' => 'Save'])
+            ->add('save', SubmitType::class, ['label' => 'Save', 'attr' => ['class' => 'nowo-ui-btn nowo-ui-btn--primary']])
             ->getForm();
         $form->handleRequest($request);
         $saved = $form->isSubmitted() && $form->isValid() ? [

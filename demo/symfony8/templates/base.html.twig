@@ -1,19 +1,18 @@
 <!DOCTYPE html>
+{#-
+  Demo base for the pages that bring their own layout (the kitchen sink, the page contract host theme). No CSS
+  framework: UiKit's document base (nowo-ui-base.css) under whatever the page links in `stylesheets`.
+-#}
 <html lang="en" data-nowo-ui-thin-scrollbars{% block html_attributes %}{% endblock %}>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}UiKit demo{% endblock %}</title>
-    {#- UiKit 2.0 ships nowo-ui.css in @layer nowo-ui: a CDN framework goes into the base layer (below the kit, as the
-        1.x load order did) and the layer order is declared first (PAGE_CONTRACT.md#cascade-layers). -#}
-    <style>@layer theme, base, nowo-ui, components, utilities; @import url("/third-party/bootstrap/css/bootstrap.min.css") layer(base);</style>
-    <link href="/third-party/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/nowo-ui-base.css', 'nowo_ui_kit') }}">
     {% block stylesheets %}{% endblock %}
-    <style>body.page-demo { margin: 0; padding: 0; }</style>
 </head>
 <body class="{% block body_class %}page-demo{% endblock %}">
     {% block body %}{% endblock %}
-    <script src="/third-party/bootstrap/js/bootstrap.bundle.min.js"></script>
     {% block javascripts %}{% endblock %}
 </body>
 </html>

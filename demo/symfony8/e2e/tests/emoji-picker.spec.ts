@@ -9,8 +9,6 @@ type Violation = { directive: string };
 async function watchCsp(page: Page): Promise<() => Promise<Violation[]>> {
   await page.route('**/_wdt/**', (route) => route.abort());
   await page.route('https://cdn.jsdelivr.net/**', (route) => route.abort());
-  // Bootstrap is vendored under /third-party/ now; this spec still runs without it, as it did when it came from the (blocked) CDN.
-  await page.route('**/third-party/bootstrap*/**', (route) => route.abort());
   await page.addInitScript(() => {
     const seen: { directive: string }[] = [];
     (window as unknown as { cspSeen: typeof seen }).cspSeen = seen;
@@ -153,7 +151,7 @@ test.describe('emoji picker', () => {
         const { style } = root;
         style.setProperty('position', 'fixed');
         style.setProperty('width', '120px');
-        style.setProperty('z-index', '5');
+        style.setProperty('z-index', '45'); // above the demo platform's sticky top bar (40)
         style.setProperty(spot === 'top-left' ? 'top' : 'bottom', '0');
         style.setProperty(spot === 'bottom-right' ? 'right' : 'left', '0');
       }, where);

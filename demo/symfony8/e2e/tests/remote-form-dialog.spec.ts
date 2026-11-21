@@ -88,14 +88,14 @@ test.describe('remote form dialog (2.28)', () => {
     await expect(page.getByTestId('destination-dialog')).toBeHidden();
   });
 
-  test('screen width with the 16 px gutter on phones, content height, without horizontal scroll (2.29, 2.31)', async ({ page }) => {
+  test('a bottom sheet on phones (2.60 demo platform), content height, without horizontal scroll (2.29, 2.31)', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/kit/remote-form');
     await page.getByTestId('destination-add').click();
     await expect(page.getByTestId('destination-label')).toBeVisible();
     const box = await page.getByTestId('destination-dialog').boundingBox();
-    expect(Math.round(box?.x ?? 0)).toBe(16);
-    expect(Math.round(box?.width ?? 0)).toBe(358);
+    expect(Math.round(box?.x ?? 0)).toBe(0);
+    expect(Math.round(box?.width ?? 0)).toBe(390);
     // 2.31 (dialog rule v2): the content's height (header + body + footer), capped at 100dvh - 2 × 16 px
     expect(Math.round(box?.height ?? 0)).toBeLessThanOrEqual(812);
     const parts = await page.getByTestId('destination-dialog').evaluate((node) => ['header', '.nowo-ui-dialog__body', 'footer']

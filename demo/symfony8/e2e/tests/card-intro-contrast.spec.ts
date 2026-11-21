@@ -1,17 +1,19 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 /**
  * Card intro contrast (`.nowo-ui-card__intro`, 0.875rem muted text under a card title): WCAG AA 4.5:1 with the
- * default palette in light and dark mode, on the bootstrap5 stack with Bootstrap in the `base` layer (this demo) and
- * with Bootstrap loaded unlayered (the 1.x load order of most host demos), where Bootstrap's own
+ * default palette in light and dark mode, on a Bootstrap host: Bootstrap in the `base` layer (the 2.x load order) and
+ * Bootstrap loaded unlayered (the 1.x load order of most host demos), where Bootstrap's own
  * `.card { --bs-card-cap-bg: rgba(var(--bs-body-color-rgb), .03) }` paints the card header and plain muted text
  * measured 4.48:1. Page: the settings scaffold (one card with an intro per section).
  */
 
 const SETTINGS = '/page-contract/default/settings/notifications';
-/** Bootstrap 5.3.3, vendored under public/third-party/ (no CDN). */
-const BOOTSTRAP_CSS = '/third-party/bootstrap/css/bootstrap.min.css';
+/** Bootstrap 5.3.3, an e2e fixture (the demo itself loads no CSS framework): injected as a <style>, no network. */
+const BOOTSTRAP_CSS = readFileSync(resolve(__dirname, '../fixtures/bootstrap-5.3.3.min.css'), 'utf8');
 
 /** Dark sets data-theme and data-bs-theme together, like the UiKit theme boot / toggle (unless data-nowo-ui-bs-theme="off"). */
 type Mode = 'light' | 'dark';
@@ -60,9 +62,9 @@ const ratiosOf = (page: Page, selector: string): Promise<number[]> =>
 
 const open = async (page: Page, unlayeredBootstrap: boolean, mode: Mode): Promise<void> => {
   await page.goto(SETTINGS);
-  if (unlayeredBootstrap) {
-    await page.addStyleTag({ url: new URL(BOOTSTRAP_CSS, page.url()).href });
-  }
+  await page.addStyleTag({
+    content: unlayeredBootstrap ? BOOTSTRAP_CSS : `@layer theme, base, nowo-ui, components, utilities;\n@layer base {\n${BOOTSTRAP_CSS}\n}`,
+  });
   await page.evaluate((m) => {
     document.documentElement.setAttribute('data-theme', m);
     document.documentElement.setAttribute('data-bs-theme', m);

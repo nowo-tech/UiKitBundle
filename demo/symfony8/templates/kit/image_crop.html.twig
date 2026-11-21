@@ -3,16 +3,15 @@
   input: a dialog crops it and the input then holds the crop. The meta tag repeats the CSP of the response: the debug toolbar can
   strip that header in worker mode.
 #}
-{% extends '@NowoUiKit/layout/document.html.twig' %}
+{% extends 'kit/_showcase.html.twig' %}
 {% set nowo_ui_document_title = 'Image crop · UiKit' %}
 
 {% block nowo_ui_head %}
     <meta http-equiv="Content-Security-Policy" content="style-src-attr 'none'; script-src-attr 'none'; img-src 'self' blob:">
 {% endblock %}
 
-{% block nowo_ui_body %}
-    <main id="main-content" class="nowo-ui-content kit-crop-demo" data-testid="image-crop-demo">
-        <h1>Image crop</h1>
+{% block body %}
+    <div id="main-content" class="nowo-ui-measure-lg" data-testid="image-crop-demo">
         {% if received is not empty %}
             <dl role="status" data-testid="received">
                 {% for field, file in received %}
@@ -22,7 +21,7 @@
             </dl>
         {% endif %}
         <div class="kit-crop-demo__preview">
-            <img id="avatar-preview" class="kit-crop-demo__avatar" alt="Avatar preview" data-testid="avatar-preview" hidden>
+            <img id="avatar-preview" class="nowo-ui-image-round" alt="Avatar preview" data-testid="avatar-preview" hidden>
         </div>
         <div data-testid="crop-form">
             {{ form_start(form) }}
@@ -42,13 +41,9 @@
             {{ form_row(quick.picture) }}
             {{ form_end(quick) }}
         </div>
-    </main>
+    </div>
 {% endblock %}
 
-{% block nowo_ui_styles %}
-    {{ parent() }}
-    <link rel="stylesheet" href="{{ asset('css/image-crop-demo.css') }}">
-{% endblock %}
 
 {% block nowo_ui_scripts %}
     {{ parent() }}

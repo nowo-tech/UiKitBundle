@@ -25,6 +25,8 @@ final class KitMultiSelectController extends AbstractController
                 'label' => 'Status',
                 'required' => false,
                 'multiple' => true,
+                // Tom Select points the <label> at its own control; the original select keeps its name for assistive tech.
+                'attr' => ['aria-label' => 'Status'],
                 'nowo_ui_multi_select' => true,
                 'choices' => ['Active' => 'active', 'Cancelled' => 'cancelled', 'Pending' => 'pending'],
             ])

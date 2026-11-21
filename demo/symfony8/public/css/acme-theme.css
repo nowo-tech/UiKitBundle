@@ -6,15 +6,6 @@
 :root {
   --acme-font: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
   --acme-display: "Georgia", "Times New Roman", serif;
-  --bs-body-font-family: var(--acme-font);
-  --bs-body-color: var(--nowo-ui-text);
-  --bs-body-bg: var(--nowo-ui-surface-muted);
-  --bs-primary: var(--nowo-ui-primary);
-  --bs-primary-rgb: 15, 118, 110;
-  --bs-link-color: var(--nowo-ui-primary);
-  --bs-link-color-rgb: 15, 118, 110;
-  --bs-border-color: var(--nowo-ui-border);
-  --bs-border-radius: var(--nowo-ui-radius);
 }
 
 .acme-body { background: var(--nowo-ui-surface-muted); color: var(--nowo-ui-text); font-family: var(--acme-font); }
@@ -80,7 +71,6 @@ a.acme-kpi:hover { border-color: var(--nowo-ui-primary); }
 .acme-action--danger:hover { background: #fdecea; color: #912018; border-color: #e8a29a; }
 
 /* Tables */
-.acme-table { --bs-table-bg: var(--nowo-ui-surface); --bs-table-hover-bg: #f0f7f5; border-radius: var(--nowo-ui-radius); overflow: hidden; }
 .acme-table thead th { background: #eaf3f0; color: #335b54; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 0; }
 .acme-table[data-acme-table="zebra"] .acme-row:nth-child(even) > td { background: #faf6ee; }
 

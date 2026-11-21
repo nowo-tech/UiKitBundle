@@ -39,7 +39,7 @@ final class KitImageCropController extends AbstractController
             ->add('tiny', FileType::class, ['label' => 'Impossible limit (100 bytes)', 'required' => false,
                 ImageCropTypeExtension::OPTION => ['max_bytes' => 100]])
             ->add('document', FileType::class, ['label' => 'Document (no crop)', 'required' => false])
-            ->add('save', SubmitType::class, ['label' => 'Upload'])
+            ->add('save', SubmitType::class, ['label' => 'Upload', 'attr' => ['class' => 'nowo-ui-btn nowo-ui-btn--primary']])
             ->getForm();
         $form->handleRequest($request);
         // Upload on pick: the kit's autosubmit posts this form when the input changes (after Apply; never after Cancel).

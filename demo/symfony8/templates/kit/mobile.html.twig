@@ -6,6 +6,9 @@
   tag repeats the CSP of the response.
 #}
 {% extends '@NowoUiKit/layout/document.html.twig' %}
+{#- Shell lab: UiKit's default theme (the catalogue's exception, no host class map); partials read `bundle`. -#}
+{% set bundle = 'DemoPlatformCatalogue' %}
+{% set nowo_ui_bundle = 'DemoPlatformCatalogue' %}
 {% set nowo_ui_document_title = 'Phone mode · UiKit' %}
 
 {% block nowo_ui_head %}
@@ -13,25 +16,25 @@
 {% endblock %}
 
 {% block nowo_ui_body %}
-    <header class="kit-mobile-header" data-testid="mobile-header"><strong>UiKit</strong> phone mode</header>
-    <main id="main-content" class="nowo-ui-main nowo-ui-content kit-mobile-main" data-testid="mobile-main">
+    <header class="nowo-ui-lab-phone-header" data-testid="mobile-header"><strong>UiKit</strong> phone mode</header>
+    <main id="main-content" class="nowo-ui-main nowo-ui-content" data-testid="mobile-main">
         <h1>Phone mode</h1>
-        <p class="kit-mobile-lede" data-testid="lede">This line runs to the right edge of the content, where the page-edge tabs used to sit over it on a phone.</p>
+        <p data-testid="lede">This line runs to the right edge of the content, where the page-edge tabs used to sit over it on a phone.</p>
 
         <nav class="nowo-ui-tabs" aria-label="Sections" data-testid="tabs">
             <a class="nowo-ui-tabs__item is-active" href="#users" aria-current="page">Users</a>
             <a class="nowo-ui-tabs__item" href="#invites">Invitations</a>
         </nav>
-        <p>Badges: <span class="nowo-ui-badge" data-testid="badge">Admin</span> <span class="nowo-ui-badge kit-mobile-tiny-badge" data-testid="tiny-badge">10px host</span></p>
+        <p>Badges: <span class="nowo-ui-badge" data-testid="badge">Admin</span> <span class="nowo-ui-badge nowo-ui-lab-tiny-badge" data-testid="tiny-badge">10px host</span></p>
 
         <h2>Selects</h2>
-        <div class="kit-mobile-selects" data-testid="selects">
+        <div class="nowo-ui-lab-selects" data-testid="selects">
             {# twig-005-ignore: demo controls for the select geometry e2e (MUX-40) #}
             <label>Kit input <select class="nowo-ui-input nowo-ui-input--full" data-testid="select-kit"><option>Cualquier estado</option><option>Activo</option></select></label>
             {# twig-005-ignore #}
-            <label>Host select with .nowo-ui-select <select class="nowo-ui-select kit-mobile-host" data-testid="select-opt-in"><option>Cualquier rol</option><option>Admin</option></select></label>
+            <label>Host select with .nowo-ui-select <select class="nowo-ui-select nowo-ui-lab-host-select" data-testid="select-opt-in"><option>Cualquier rol</option><option>Admin</option></select></label>
             {# twig-005-ignore #}
-            <label>Host geometry only (fixed height, native appearance) <select class="kit-mobile-legacy" data-testid="select-legacy"><option>Cualquier actividad</option></select></label>
+            <label>Host geometry only (fixed height, native appearance) <select class="nowo-ui-lab-legacy-select" data-testid="select-legacy"><option>Cualquier actividad</option></select></label>
             {# twig-005-ignore #}
             <label>Per page <select class="nowo-ui-pagination__select" data-testid="select-pager"><option>25 por página</option><option>50 por página</option></select></label>
         </div>
@@ -83,7 +86,7 @@
                             <tr>
                                 <td data-column="name" data-testid="rt-scroll-name">demo.administrator@example-organization.test</td>
                                 <td data-column="role">Administrator</td>
-                                <td data-column="actions" class="kit-mobile-nowrap"><a class="nowo-ui-btn nowo-ui-btn--sm" href="#activity">Actividad</a> <a class="nowo-ui-btn nowo-ui-btn--sm" href="#export">Exportar datos</a> <a class="nowo-ui-btn nowo-ui-btn--sm" href="#sessions">Sesiones</a> <a class="nowo-ui-btn nowo-ui-btn--sm" href="#reset">Restablecer</a></td>
+                                <td data-column="actions" class="nowo-ui-lab-nowrap"><a class="nowo-ui-btn nowo-ui-btn--sm" href="#activity">Actividad</a> <a class="nowo-ui-btn nowo-ui-btn--sm" href="#export">Exportar datos</a> <a class="nowo-ui-btn nowo-ui-btn--sm" href="#sessions">Sesiones</a> <a class="nowo-ui-btn nowo-ui-btn--sm" href="#reset">Restablecer</a></td>
                                 {% include '@NowoUiKitBundle/partials/_row_detail_cell.html.twig' only %}
                             </tr>
                         </tbody>
@@ -97,10 +100,10 @@
             {% embed '@NowoUiKitBundle/partials/_responsive_table.html.twig' with {phone_layout: 'cards', dialog_id: 'rt-listing', attr: {'data-testid': 'rt-listing'}, users: users, users_listing: users_listing} only %}
                 {% block table %}
                     <table class="nowo-ui-table" data-responsive-table-target="table">
-                        <thead><tr>{% include nowo_ui_partial('listing_head') with {listing_layout: users_listing} only %}</tr></thead>
+                        <thead><tr>{% include nowo_ui_partial('listing_head', 'DemoPlatformCatalogue') with {listing_layout: users_listing} only %}</tr></thead>
                         <tbody>
                         {% for row in users %}
-                            <tr>{% include nowo_ui_partial('listing_cells') with {listing_layout: users_listing, cells_template: 'kit/_mobile_listing_cells.html.twig'} %}</tr>
+                            <tr>{% include nowo_ui_partial('listing_cells', 'DemoPlatformCatalogue') with {listing_layout: users_listing, cells_template: 'kit/_mobile_listing_cells.html.twig'} %}</tr>
                         {% endfor %}
                         </tbody>
                     </table>
@@ -110,7 +113,7 @@
 
         <h2>Users (table partial, Column::phone)</h2>
         <div data-testid="column-phone">
-            {{ include(nowo_ui_partial('table'), {table: users_table}, false) }}
+            {{ include(nowo_ui_partial('table', 'DemoPlatformCatalogue'), {table: users_table}, false) }}
         </div>
     </main>
 
@@ -121,17 +124,17 @@
     {{ include('@NowoUiKitBundle/partials/_edge_tab.html.twig', {label: 'Customize the listing', icon: 'filter', slot: 4, button: true, testid: 'edge-customizer', attr: {'data-nowo-ui-dialog-open': 'mobile-customizer'}}, false) }}
     {# 2.42 (MUX-01): like Beacon's drawers, the tab rides on the drawer's edge and is its only close control; while the
        drawer is open it has aria-expanded="true", so the launcher never folds it. #}
-    <aside class="kit-mobile-drawer" id="kit-mobile-drawer" data-testid="drawer" aria-label="Developer notes">
+    <aside class="nowo-ui-lab-drawer" id="kit-mobile-drawer" data-testid="drawer" aria-label="Developer notes">
         {{ include('@NowoUiKitBundle/partials/_edge_tab.html.twig', {label: 'Developer notes', icon: 'view', slot: 5, button: true, testid: 'edge-drawer', attr: {'aria-expanded': 'false', 'aria-controls': 'kit-mobile-drawer'}}, false) }}
-        <div class="kit-mobile-drawer__body" data-testid="drawer-body"><h2>Developer notes</h2><p><a href="#notes-link">A link inside the drawer</a></p></div>
+        <div class="nowo-ui-lab-drawer__body" data-testid="drawer-body"><h2>Developer notes</h2><p><a href="#notes-link">A link inside the drawer</a></p></div>
     </aside>
-    {{ include(nowo_ui_partial('edge_tabs_launcher'), {gutter: true, icon: 'chevron', testid: 'edge-launcher'}, false) }}
-    {{ include(nowo_ui_partial('dialog'), {id: 'mobile-customizer', title: 'Customize the listing', body: '<p data-testid="customizer-body">Columns, filters and rows per page.</p>'}, false) }}
+    {{ include(nowo_ui_partial('edge_tabs_launcher', 'DemoPlatformCatalogue'), {gutter: true, icon: 'chevron', testid: 'edge-launcher'}, false) }}
+    {{ include(nowo_ui_partial('dialog', 'DemoPlatformCatalogue'), {id: 'mobile-customizer', title: 'Customize the listing', body: '<p data-testid="customizer-body">Columns, filters and rows per page.</p>'}, false) }}
 {% endblock %}
 
 {% block nowo_ui_styles %}
     {{ parent() }}
-    <link rel="stylesheet" href="{{ asset('css/mobile-demo.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/nowo-ui-demo-platform.css', 'nowo_ui_kit') }}">
 {% endblock %}
 
 {% block nowo_ui_scripts %}

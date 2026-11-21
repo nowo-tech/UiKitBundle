@@ -1,61 +1,55 @@
 {#
   UiKit 2.29 demo: the two dialog sizes (medium, wide) and the anatomy — header (title, status badge, close),
   body (the only part that scrolls), footer (outside the body, always visible, one primary on the right).
-  2.31 (dialog rule v2): the height is the content's, capped at the size's; `?height=size` prints
-  `--nowo-ui-dialog-fill: 1` (what `theme.dialog.height: size` prints) to show the 2.29 / 2.30 height. The JS confirm
+  2.31 (dialog rule v2): the height is the content's, capped at the size's; `?height=size` puts the
+  `nowo-ui-dialog-fill` class (`--nowo-ui-dialog-fill: 1`, what `theme.dialog.height: size` prints on :root) on the page to show the 2.29 / 2.30 height. The JS confirm
   (`askConfirm`, confirm-submit in dialog mode, public/js/demo-peers.js) has its close button (×).
 #}
-{% extends '@NowoUiKit/layout/document.html.twig' %}
+{% extends 'kit/_showcase.html.twig' %}
 {% set nowo_ui_document_title = 'Dialog sizes · UiKit 2.29' %}
 {% form_theme medium_form '@NowoUiKit/form/nowo_ui_layout.html.twig' %}
 {% form_theme long_form '@NowoUiKit/form/nowo_ui_layout.html.twig' %}
 
-{% block nowo_ui_head %}
-    {#- Demo only, do not copy: an inline <style> switched by a query parameter (no CSP nonce). A host sets
-        nowo_ui_kit.theme.dialog.height: size, or --nowo-ui-dialog-fill in its own stylesheet. -#}
-    {%- if app.request.query.get('height') == 'size' %}<style>:root { --nowo-ui-dialog-fill: 1; }</style>{% endif -%}
-{% endblock %}
 
-{% block nowo_ui_body %}
-    <main id="main-content" class="nowo-ui-content" data-testid="dialogs-demo">
-        <h1>Dialog sizes</h1>
-        {% if submitted %}<p role="status">Submitted.</p>{% endif %}
+{% block body %}
+    <div id="main-content"{% if app.request.query.get('height') == 'size' %} class="nowo-ui-dialog-fill"{% endif %} data-testid="dialogs-demo">
+        {% if submitted %}<p role="status" data-testid="dialogs-status">Submitted.</p>{% endif %}
         <p>Two widths only: medium <code>min(40rem, 100vw - 2rem)</code> and wide <code>min(56rem, 100vw - 2rem)</code>.
             The height is the content's, capped at <code>min(36rem, 100dvh - 2rem)</code> (medium) and
             <code>min(52rem, 100dvh - 2rem)</code> (wide); only the body scrolls.</p>
-        <div class="{{ nowo_ui_class('form_actions') }}">
-            <button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-nowo-ui-dialog-open="medium-dialog" data-testid="open-medium">Medium (form)</button>
-            <button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-nowo-ui-dialog-open="wide-dialog" data-testid="open-wide">Wide (table)</button>
-            {% embed nowo_ui_partial('confirm_dialog') with {anatomy: true, trigger_label: 'Confirm (yes / no)', title: 'Archive this monitor?', dialog_id: 'confirm-dialog', trigger_testid: 'open-confirm'} %}
+        <div class="{{ nowo_ui_class('form_actions', 'DemoPlatformCatalogue') }}">
+            <button type="button" class="{{ nowo_ui_class('btn_secondary', 'DemoPlatformCatalogue') }}" data-nowo-ui-dialog-open="medium-dialog" data-testid="open-medium">Medium (form)</button>
+            <button type="button" class="{{ nowo_ui_class('btn_secondary', 'DemoPlatformCatalogue') }}" data-nowo-ui-dialog-open="wide-dialog" data-testid="open-wide">Wide (table)</button>
+            {% embed nowo_ui_partial('confirm_dialog', 'DemoPlatformCatalogue') with {anatomy: true, trigger_label: 'Confirm (yes / no)', title: 'Archive this monitor?', dialog_id: 'confirm-dialog', trigger_testid: 'open-confirm'} %}
                 {% block body %}<p>It stops checking and leaves the dashboard. You can restore it later.</p>{% endblock %}
                 {% block footer %}
-                    <button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-nowo-confirm-close data-confirm-dialog-close>Cancel</button>
-                    <button type="button" class="{{ nowo_ui_class('btn_danger_solid') }}" data-nowo-confirm-close>Archive</button>
+                    <button type="button" class="{{ nowo_ui_class('btn_secondary', 'DemoPlatformCatalogue') }}" data-nowo-confirm-close data-confirm-dialog-close>Cancel</button>
+                    <button type="button" class="{{ nowo_ui_class('btn_danger_solid', 'DemoPlatformCatalogue') }}" data-nowo-confirm-close>Archive</button>
                 {% endblock %}
             {% endembed %}
-            {% embed nowo_ui_partial('confirm_dialog') with {anatomy: true, trigger_label: 'Long form', title: 'Edit monitor', status: {label: 'Paused', tone: 'warning'}, dialog_id: 'long-dialog', trigger_testid: 'open-long', long_form: long_form} %}
+            {% embed nowo_ui_partial('confirm_dialog', 'DemoPlatformCatalogue') with {anatomy: true, trigger_label: 'Long form', title: 'Edit monitor', status: {label: 'Paused', tone: 'warning'}, dialog_id: 'long-dialog', trigger_testid: 'open-long', long_form: long_form} %}
                 {% block body %}
                     {{ form_start(long_form) }}
                         {{ form_rest(long_form) }}
                     {{ form_end(long_form, {render_rest: false}) }}
                 {% endblock %}
                 {% block footer %}
-                    <button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-nowo-confirm-close data-confirm-dialog-close>Cancel</button>
-                    <button type="submit" form="long-form" class="{{ nowo_ui_class('btn_primary') }}" data-testid="long-save">Save</button>
+                    <button type="button" class="{{ nowo_ui_class('btn_secondary', 'DemoPlatformCatalogue') }}" data-nowo-confirm-close data-confirm-dialog-close>Cancel</button>
+                    <button type="submit" form="long-form" class="{{ nowo_ui_class('btn_primary', 'DemoPlatformCatalogue') }}" data-testid="long-save">Save</button>
                 {% endblock %}
             {% endembed %}
-            <a class="{{ nowo_ui_class('btn_secondary') }}" href="{{ path('kit_remote_form') }}">Remote form dialog</a>
+            <a class="{{ nowo_ui_class('btn_secondary', 'DemoPlatformCatalogue') }}" href="{{ path('kit_remote_form') }}">Remote form dialog</a>
         </div>
         {# Demo only, do not copy: confirm-submit on a plain button (no form: REQ-TWIG-005); Confirm replays the click,
            which does nothing here. A real host puts it on a form built with the Form component (docs/STIMULUS.md). #}
-        <p><button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-controller="confirm-submit" data-confirm-submit-mode-value="dialog" data-confirm-submit-message-value="Reset the demo filters?" data-confirm-submit-danger-value="false" data-action="click->confirm-submit#confirm" data-testid="open-ask-confirm">JS confirm (askConfirm)</button></p>
-        <div class="{{ nowo_ui_class('form_actions') }}">
-            <button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-nowo-confirm-open data-nowo-confirm-target="archive-monitor" data-testid="open-view-confirm">View\Confirm (primary)</button>
-            <button type="button" class="{{ nowo_ui_class('btn_danger') }}" data-nowo-confirm-open data-nowo-confirm-target="delete-monitor" data-testid="open-view-confirm-expect">View\Confirm (danger, type to confirm)</button>
+        <p><button type="button" class="{{ nowo_ui_class('btn_secondary', 'DemoPlatformCatalogue') }}" data-controller="confirm-submit" data-confirm-submit-mode-value="dialog" data-confirm-submit-message-value="Reset the demo filters?" data-confirm-submit-danger-value="false" data-action="click->confirm-submit#confirm" data-testid="open-ask-confirm">JS confirm (askConfirm)</button></p>
+        <div class="{{ nowo_ui_class('form_actions', 'DemoPlatformCatalogue') }}">
+            <button type="button" class="{{ nowo_ui_class('btn_secondary', 'DemoPlatformCatalogue') }}" data-nowo-confirm-open data-nowo-confirm-target="archive-monitor" data-testid="open-view-confirm">View\Confirm (primary)</button>
+            <button type="button" class="{{ nowo_ui_class('btn_danger', 'DemoPlatformCatalogue') }}" data-nowo-confirm-open data-nowo-confirm-target="delete-monitor" data-testid="open-view-confirm-expect">View\Confirm (danger, type to confirm)</button>
         </div>
-        {{ include(nowo_ui_partial('confirm'), {confirm: archive_confirm, action: confirm_action}) }}
-        {{ include(nowo_ui_partial('confirm'), {confirm: delete_confirm, action: confirm_action}) }}
-    </main>
+        {{ include(nowo_ui_partial('confirm', 'DemoPlatformCatalogue'), {confirm: archive_confirm, action: confirm_action}) }}
+        {{ include(nowo_ui_partial('confirm', 'DemoPlatformCatalogue'), {confirm: delete_confirm, action: confirm_action}) }}
+    </div>
 
     {% set _medium_body %}
         {{ form_start(medium_form) }}
@@ -63,13 +57,13 @@
         {{ form_end(medium_form, {render_rest: false}) }}
     {% endset %}
     {% set _medium_footer %}
-        <button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-nowo-ui-dialog-close>Cancel</button>
-        <button type="submit" form="medium-form" class="{{ nowo_ui_class('btn_primary') }}">Save</button>
+        <button type="button" class="{{ nowo_ui_class('btn_secondary', 'DemoPlatformCatalogue') }}" data-nowo-ui-dialog-close>Cancel</button>
+        <button type="submit" form="medium-form" class="{{ nowo_ui_class('btn_primary', 'DemoPlatformCatalogue') }}">Save</button>
     {% endset %}
-    {{ include(nowo_ui_partial('dialog'), {id: 'medium-dialog', title: 'New destination', body: _medium_body, footer: _medium_footer}) }}
+    {{ include(nowo_ui_partial('dialog', 'DemoPlatformCatalogue'), {id: 'medium-dialog', title: 'New destination', body: _medium_body, footer: _medium_footer}) }}
 
     {% set _wide_body %}
-        <table class="{{ nowo_ui_class('table') }}">
+        <table class="{{ nowo_ui_class('table', 'DemoPlatformCatalogue') }}">
             <thead><tr><th scope="col">Document</th><th scope="col">Customer</th><th scope="col">Amount</th><th scope="col">Status</th></tr></thead>
             <tbody>
             {% for row in rows %}
@@ -78,8 +72,8 @@
             </tbody>
         </table>
     {% endset %}
-    {% set _wide_footer %}<button type="button" class="{{ nowo_ui_class('btn_primary') }}" data-nowo-ui-dialog-close>Close</button>{% endset %}
-    {{ include(nowo_ui_partial('dialog'), {id: 'wide-dialog', title: 'Invoices', size: 'wide', status: {label: 'Synced', tone: 'success'}, body: _wide_body, footer: _wide_footer}) }}
+    {% set _wide_footer %}<button type="button" class="{{ nowo_ui_class('btn_primary', 'DemoPlatformCatalogue') }}" data-nowo-ui-dialog-close>Close</button>{% endset %}
+    {{ include(nowo_ui_partial('dialog', 'DemoPlatformCatalogue'), {id: 'wide-dialog', title: 'Invoices', size: 'wide', status: {label: 'Synced', tone: 'success'}, body: _wide_body, footer: _wide_footer}) }}
 {% endblock %}
 
 {% block nowo_ui_scripts %}{{ parent() }}<script src="{{ asset('js/demo-peers.js') }}" defer></script>{% endblock %}
