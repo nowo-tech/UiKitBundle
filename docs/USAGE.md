@@ -578,6 +578,39 @@ The fold toggle needs the **`filters-collapse` Stimulus peer** registered in the
 (`app.register('filters-collapse', FiltersCollapseController)`, [STIMULUS.md](STIMULUS.md)). Without JavaScript the
 card renders open (the cookie is only ever written by the peer) and the button does nothing; the fields always submit.
 
+### Phone sheet (2.65)
+
+`sheet: true` gives the list filter card the **same phone sheet as the `filter_bar` partial**: below 48rem the card
+folds behind a "Filters (n)" button (`n` = the filled fields; hidden fields, `_token`, `page`, `per_page`, `sort` and
+`dir` excluded) that opens it in a native modal `<dialog>` bottom sheet. Off by default (the 2.64 output, byte for byte).
+
+```yaml
+nowo_ui_kit:
+    theme:
+        pages:
+            list:
+                filters:
+                    sheet: true      # default false
+```
+
+- Markup: the form is wrapped in `<div id="nowo-ui-list-filters-<form id>" class="nowo-ui-filter-sheet
+  nowo-ui-filter-sheet--list" data-nowo-ui-filter-sheet>` with the toggle (`data-nowo-ui-filter-sheet-open`,
+  `aria-haspopup="dialog"`, `aria-controls="<root>-dialog"`, `aria-expanded`), the panel holding the unchanged form
+  (`role="search"`, `data-nowo-ui-filters`, `data-nowo-ui-region="filters"`) and the `<dialog id="<root>-dialog"
+  aria-labelledby="<root>-title">` with an `<h2>` and a Close button. The button, count and dialog come from
+  `macros/filter_sheet.html.twig`, shared with `filter_bar`.
+- Runtime: `filter-sheet`. The `scripts` partial appends it by itself when `sheet` is true (no `script_names` change).
+  The runtime moves the same form node into the dialog and back, so values, names and the GET submit never change.
+- Native modal only (Chrome Modern Web Guidance, `dialog`): opened with `showModal()` (never the `open` attribute;
+  without `showModal()` the card simply stays inline); Escape, the Android back gesture and the Close button close it;
+  the browser makes the page inert, keeps the focus inside and returns it to the button. **No** `role="dialog"`,
+  `aria-modal`, focus trap, `inert` toggling, Escape handler or `overflow: hidden` on `html` / `body`: a host that had
+  its own sheet drops all of those. Scroll stays in the sheet through `overscroll-behavior: contain` on
+  `.nowo-ui-filter-sheet__dialog:modal` and on its `::backdrop` (`overflow: hidden`).
+- With `fold.enabled`, the fold toggle stays in the card on wide screens; inside the sheet it is hidden and a folded
+  card shows its fields (the folded state is kept for the wide card).
+- With `header_actions_in_filters`, the page-header actions sit in the card, so on phones they move into the sheet too.
+
 ## Sortable column headers (2.20)
 
 Click-to-sort headers for the list scaffold (`View\ListPage`), the `table` partial (`View\Table`), `listing_head` and
@@ -4064,7 +4097,7 @@ Opt-in runtimes (add them to `script_names` or print them after `nowo_ui_partial
 
 | Runtime | For |
 |---|---|
-| `filter-sheet` | `filter_bar`: the phone sheet |
+| `filter-sheet` | `filter_bar`: the phone sheet; 2.65: also `list_filters` with `theme.pages.list.filters.sheet` (then appended by the `scripts` partial itself) |
 | `bulk-select` | `bulk_bar` / `bulk_toggle` |
 | `table-view` | `table_view`: density and columns |
 | `tooltip` | `tooltip`: placement, Escape, touch |
@@ -4105,8 +4138,9 @@ Opt-in runtimes (add them to `script_names` or print them after `nowo_ui_partial
 ```
 
 - **`filter_bar`** — a GET filter form (`form`, a FormView) as one row of fields; below 48rem, with `filter-sheet`,
-  the fields fold behind a "Filters (n)" button and open in a bottom sheet (modal `<dialog>`: the same nodes move in
-  and back, focus in on open and back to the button on close). The count is the fields with a value (`active_count`
+  the fields fold behind a "Filters (n)" button and open in a bottom sheet (modal `<dialog>` opened with
+  `showModal()` only: the same nodes move in and back, focus in on open; 2.65: the browser returns it to the button,
+  the runtime only does when moving the panel back left it nowhere; scroll contained on the sheet and its backdrop). The count is the fields with a value (`active_count`
   overrides). Options: `filter_id` (root id), `title`, `heading_level`, `reset_href` (a safe URL, else no link), `submit_label`, `reset_label`, `close_label`,
   `attr`; blocks `filter_bar_extra` (the button row) and `filter_bar_actions`. Root `data-nowo-ui-region="filters"`.
 - **`bulk_bar`** + **`bulk_toggle`** — row checkboxes are the form's own widgets (a ChoiceType `expanded`, `multiple`,

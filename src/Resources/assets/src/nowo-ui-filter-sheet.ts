@@ -1,9 +1,16 @@
 /**
- * Filter sheet runtime (2.61, partial `filter_bar`): on phones (CSS below 48rem, once this script marks the root
+ * Filter sheet runtime (2.61, partial `filter_bar`; 2.65 also the `list_filters` partial with
+ * theme.pages.list.filters.sheet): on phones (CSS below 48rem, once this script marks the root
  * data-nowo-ui-filter-sheet-ready) the filter fields fold behind the "Filters" button; a click opens the sheet (a
- * modal <dialog>) and MOVES the same panel node into it, so values, names and the GET submit are unchanged. Closing
- * (the close button, Escape, a submit) moves the panel back and returns the focus to the button. When the screen
- * grows past the phone width while the sheet is open, it closes.
+ * modal <dialog>, always through showModal()) and MOVES the same panel node into it, so values, names and the GET
+ * submit are unchanged. Closing (the close button, Escape / the back gesture, a submit) moves the panel back. The
+ * browser returns the focus to the button (2.65: Chrome Modern Web Guidance, `dialog`); the runtime only focuses the
+ * button itself when moving the panel back would leave the focus nowhere. When the screen grows past the phone width
+ * while the sheet is open, it closes.
+ *
+ * 2.65: no `open` attribute fallback any more. Where showModal() is missing the root is never marked ready, so the
+ * fields simply stay inline at every width. No focus trap, inert, Escape handler or scroll lock: the native modal
+ * and the stylesheet (overscroll-behavior on the dialog and its ::backdrop) provide them.
  */
 
 const ROOT = '[data-nowo-ui-filter-sheet]';
@@ -16,20 +23,27 @@ function parts(root: Element): { panel: HTMLElement; dialog: HTMLDialogElement; 
   return panel && dialog && slot ? { panel, dialog, slot } : null;
 }
 
+/** The native modal is Baseline; without it the sheet is never enabled (the fields stay inline). */
+function canShowModal(dialog: HTMLDialogElement): boolean {
+  return typeof dialog.showModal === 'function' && typeof dialog.close === 'function';
+}
+
 export function openSheet(root: Element): void {
   const p = parts(root);
-  if (!p || p.dialog.open) {
+  if (!p || p.dialog.open || !canShowModal(p.dialog)) {
     return;
   }
   p.slot.appendChild(p.panel);
-  if (typeof p.dialog.showModal === 'function') {
-    p.dialog.showModal();
-  } else {
-    p.dialog.setAttribute('open', '');
-  }
+  p.dialog.showModal();
   root.querySelector('[data-nowo-ui-filter-sheet-open]')?.setAttribute('aria-expanded', 'true');
-  const first = p.panel.querySelector<HTMLElement>('input:not([type="hidden"]), select, textarea, button');
-  first?.focus();
+  // The first field that can take the focus (a hidden or disabled control, e.g. the card's fold toggle that the sheet
+  // hides, refuses it and the next one is tried).
+  for (const field of p.panel.querySelectorAll<HTMLElement>('input:not([type="hidden"]), select, textarea, button')) {
+    field.focus();
+    if (document.activeElement === field) {
+      break;
+    }
+  }
 }
 
 export function closeSheet(root: Element): void {
@@ -37,26 +51,33 @@ export function closeSheet(root: Element): void {
   if (!p) {
     return;
   }
-  if (p.dialog.open) {
-    if (typeof p.dialog.close === 'function') {
-      p.dialog.close();
-    } else {
-      p.dialog.removeAttribute('open');
-    }
+  if (p.dialog.open && canShowModal(p.dialog)) {
+    p.dialog.close();
   }
   restore(root);
 }
 
-/** The panel goes back in front of the dialog and the focus to the button (also after a native Escape close). */
+/**
+ * The panel goes back in front of the dialog (also after a native Escape / back-gesture close). The browser has
+ * already returned the focus to the invoker when the dialog closed; only when the panel had to be moved and the
+ * focus is left on nothing (the body) or inside the moved nodes does the runtime focus the button itself.
+ */
 function restore(root: Element): void {
   const p = parts(root);
-  if (!p || p.panel.parentElement === root) {
+  if (!p) {
     return;
   }
-  root.insertBefore(p.panel, p.dialog);
   const toggle = root.querySelector<HTMLElement>('[data-nowo-ui-filter-sheet-open]');
   toggle?.setAttribute('aria-expanded', 'false');
-  toggle?.focus();
+  if (p.panel.parentElement === root) {
+    return;
+  }
+  const active = document.activeElement;
+  const lost = !active || active === document.body || p.dialog.contains(active);
+  root.insertBefore(p.panel, p.dialog);
+  if (lost) {
+    toggle?.focus();
+  }
 }
 
 function onClick(event: MouseEvent): void {
@@ -80,7 +101,7 @@ function onClick(event: MouseEvent): void {
 export function upgradeFilterSheets(scope: ParentNode = document): void {
   scope.querySelectorAll(ROOT).forEach((root) => {
     const p = parts(root);
-    if (!p || root.hasAttribute('data-nowo-ui-filter-sheet-ready')) {
+    if (!p || !canShowModal(p.dialog) || root.hasAttribute('data-nowo-ui-filter-sheet-ready')) {
       return;
     }
     p.dialog.addEventListener('close', () => restore(root));

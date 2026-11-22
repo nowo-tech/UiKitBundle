@@ -55,6 +55,10 @@ final class ListFiltersOptionsTest extends TestCase
         self::assertSame('fold.icons must be a map {expanded, collapsed}.', ListFiltersOptions::error(['fold' => ['icons' => 'x']]));
         self::assertSame('fold.enabled must be a boolean, string given.', ListFiltersOptions::error(['fold' => ['enabled' => 'yes']]));
         self::assertSame('submit_class must be a string or null, int given.', ListFiltersOptions::error(['submit_class' => 3]));
+        // 2.65: the phone sheet of the list filters (default off)
+        self::assertFalse((new ListFiltersOptions())->sheet);
+        self::assertTrue(ListFiltersOptions::fromConfig(['sheet' => true])->sheet);
+        self::assertSame('sheet must be a boolean, string given.', ListFiltersOptions::error(['sheet' => 'yes']));
     }
 
     public function testThemePrintsTheCustomTrackListAsAToken(): void

@@ -233,7 +233,7 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | `Resources/views/page/_scaffold.html.twig` | Internal scaffold helpers (page header, status badge, actions) | FR-SCAFFOLD-001, FR-STATUS-001 |
 | `Resources/views/page/_page_header.html.twig` | 2.3: public page-header contract (2.21 title row + status + split actions) | FR-PAGEHEADER-001, FR-STATUS-001, FR-HEADERACTIONS-001 |
 | `Resources/views/page/_detail_list.html.twig` | Definition list of detail items (badges, 2.21 `facts` modifier, 2.23 item attributes) | FR-SHOW-001, FR-FACTS-001, FR-ITEMATTR-001 |
-| `Resources/views/page/_list_filters.html.twig` | Filters region of the list scaffold (child loop) | FR-SCAFFOLD-001, FR-LIST-001 |
+| `Resources/views/page/_list_filters.html.twig` | Filters region of the list scaffold (child loop; 2.65 opt-in phone sheet) | FR-SCAFFOLD-001, FR-LIST-001, FR-FILTERSHEET-002 |
 | `Resources/views/page/_section_form.html.twig` | Settings section form (child loop + submit) | FR-FORMPAGE-001 |
 | `Resources/views/page/_wizard_form.html.twig` | Default wizard step body | FR-FORMPAGE-001 |
 | `Resources/views/page/_auth_form.html.twig` | Auth form functions (compiles without symfony/form) | FR-AUTH-001 |
@@ -267,6 +267,7 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | Source file | Spec section | Requirement IDs |
 | --- | --- | --- |
 | `Resources/views/macros/ui.html.twig` | Multi-framework class helpers (`ui.btn`, toolbar, table, …) | FR-MACRO-001, FR-THEME-001 |
+| `Resources/views/macros/filter_sheet.html.twig` | Filter sheet button, active count and native `<dialog>` shared by `filter_bar` and `list_filters` (2.65) | FR-FILTERSHEET-001, FR-FILTERSHEET-002 |
 | `Resources/views/components/_icon.html.twig` | Canonical icon kinds per `icon_set` (incl. 2.20 `sort*`, 2.21 `more`) | FR-ICON-001 |
 | `Resources/views/components/_icon_ux.html.twig` | Isolated optional `ux_icon()` backend | FR-ICON-001 |
 
@@ -572,7 +573,7 @@ Produced by `pnpm run build` (`vite.config.ts`, one `VITE_ENTRY` per IIFE; `buil
 | `Listing/ListingPreferenceReaderInterface.php` | Port reading the preferences of one viewer from a `ListingContext` | FR-LISTING-005 |
 | `Listing/ListingViewerResolverInterface.php` | Optional SPI giving the opaque viewer id | FR-LISTING-005 |
 | `Listing/Http/ListingContextFactory.php` | HTTP adapter: copies only listing cookies, route, scalar parameters and locale | FR-LISTING-005 |
-| `Theme/ListFiltersOptions.php` | Host options of the list scaffold filters (`theme.pages.list.filters`) | FR-LISTING-006 |
+| `Theme/ListFiltersOptions.php` | Host options of the list scaffold filters (`theme.pages.list.filters`; 2.65 `sheet`) | FR-LISTING-006, FR-FILTERSHEET-002 |
 
 ## Compact header, breadcrumbs, page actions and sidebar layout
 
@@ -669,7 +670,7 @@ Produced by `pnpm run build` (`vite.config.ts`, one `VITE_ENTRY` per IIFE; `buil
 | `Resources/views/partials/_dropzone.html.twig` | File dropzone partial | FR-DROPZONE-001 |
 | `Resources/assets/src/nowo-ui-dropzone.ts` | Dropzone runtime | FR-DROPZONE-001 |
 | `Resources/views/partials/_filter_bar.html.twig` | Filter bar partial | FR-FILTERSHEET-001 |
-| `Resources/assets/src/nowo-ui-filter-sheet.ts` | Filter sheet runtime | FR-FILTERSHEET-001 |
+| `Resources/assets/src/nowo-ui-filter-sheet.ts` | Filter sheet runtime (`filter_bar`, 2.65 `list_filters`) | FR-FILTERSHEET-001, FR-FILTERSHEET-002 |
 | `Resources/views/partials/_error_summary.html.twig` | Error summary partial | FR-FORMBUSY-001 |
 | `Resources/assets/src/nowo-ui-form-busy.ts` | Form busy and error summary focus runtime | FR-FORMBUSY-001 |
 | `Resources/views/partials/_table_view.html.twig` | Table view controls partial | FR-TABLEVIEW-001 |

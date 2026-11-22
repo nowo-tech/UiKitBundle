@@ -859,6 +859,10 @@ final class Configuration implements ConfigurationInterface
                                 ->booleanNode('morph')->defaultFalse()->info('Add the <morph-icon> of assets/morphicons to the toggle.')->end()
                             ->end()
                         ->end()
+                        ->booleanNode('sheet')
+                            ->defaultFalse()
+                            ->info('2.65: below 48rem the filters card folds behind a "Filters (n)" button that opens it in a native modal <dialog> bottom sheet (the filter_bar sheet: macros/filter_sheet.html.twig, runtime filter-sheet, appended to the scripts partial by itself). false = the 2.64 output.')
+                        ->end()
                     ->end()
                 ->end()
             ->end();

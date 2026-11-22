@@ -3447,7 +3447,8 @@ table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr:hover > td {
   min-width: 0;
 }
 
-.nowo-ui-filter-sheet__panel form,
+/* 2.65: the list_filters form keeps its own grid (.nowo-ui-filters) inside a list sheet. */
+.nowo-ui-filter-sheet__panel form:not([data-nowo-ui-filters]),
 .nowo-ui-filter-sheet__fields {
   display: flex;
   flex-wrap: wrap;
@@ -3492,7 +3493,16 @@ table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr:hover > td {
   color: var(--nowo-ui-text);
 }
 
+/* 2.65 (Chrome Modern Web Guidance, prevent-page-scroll-under-modal-dialog): scrolling inside the sheet, or at its end,
+ * never chains to the page behind it. No overflow lock on html / body. */
+.nowo-ui-filter-sheet__dialog:modal {
+  overscroll-behavior: contain;
+}
+
+/* ::backdrop is not a scroll container by default: overflow hidden makes it one, so scrolling over it stays put. */
 .nowo-ui-filter-sheet__dialog::backdrop {
+  overflow: hidden;
+  overscroll-behavior: contain;
   background: color-mix(in srgb, var(--nowo-ui-text) 45%, transparent);
 }
 
@@ -3519,9 +3529,23 @@ table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr:hover > td {
   flex-basis: 100%;
 }
 
+/* 2.65: list_filters sheet (theme.pages.list.filters.sheet). The button row exists on phones only; inside the sheet
+ * the card's fold toggle is hidden and a folded card shows its fields (see the folded rules below). */
+.nowo-ui-filter-sheet--list > .nowo-ui-filter-sheet__bar {
+  display: none;
+}
+
+.nowo-ui-filter-sheet__dialog-body .nowo-ui-filters-collapse {
+  display: none !important;
+}
+
 @media (max-width: 47.99rem) {
   .nowo-ui-filter-sheet[data-nowo-ui-filter-sheet-ready] .nowo-ui-filter-sheet__toggle {
     display: inline-flex;
+  }
+
+  .nowo-ui-filter-sheet--list[data-nowo-ui-filter-sheet-ready] > .nowo-ui-filter-sheet__bar {
+    display: flex;
   }
 
   .nowo-ui-filter-sheet[data-nowo-ui-filter-sheet-ready] > .nowo-ui-filter-sheet__panel {
@@ -5791,11 +5815,11 @@ form:has(> .nowo-ui-filters-collapse) {
 /* Folded: only the tab and the summary line stay visible (the fields keep their values and still submit).
  * State-hide rules are !important (2.3.1): inside the nowo-ui cascade layer a normal declaration loses to any unlayered host
  * rule or utility class (.d-flex, .grid, .flex…) on the hidden element; an important layered one wins. */
-form:has(> .nowo-ui-filters-collapse.is-collapsed) > :not(.nowo-ui-filters-collapse) {
+form:has(> .nowo-ui-filters-collapse.is-collapsed):not(.nowo-ui-filter-sheet__dialog-body form) > :not(.nowo-ui-filters-collapse) {
   display: none !important;
 }
 
-form:has(> .nowo-ui-filters-collapse.is-collapsed) {
+form:has(> .nowo-ui-filters-collapse.is-collapsed):not(.nowo-ui-filter-sheet__dialog-body form) {
   padding-top: 0.75rem;
   padding-bottom: 0.75rem;
 }
@@ -10242,7 +10266,7 @@ form:has(> .nowo-ui-filters-collapse[data-nowo-ui-motion-ready]) > :not(.nowo-ui
 }
 
 [data-collapse-panel-target='body'][data-nowo-ui-motion-ready][hidden],
-form:has(> .nowo-ui-filters-collapse.is-collapsed[data-nowo-ui-motion-ready]) > :not(.nowo-ui-filters-collapse) {
+form:has(> .nowo-ui-filters-collapse.is-collapsed[data-nowo-ui-motion-ready]):not(.nowo-ui-filter-sheet__dialog-body form) > :not(.nowo-ui-filters-collapse) {
   opacity: 0;
   transition-duration: var(--nowo-ui-motion-small-close);
   transition-timing-function: var(--nowo-ui-motion-ease-in);
