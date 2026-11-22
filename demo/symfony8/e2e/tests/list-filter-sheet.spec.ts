@@ -38,6 +38,9 @@ test.describe('list filters phone sheet (2.65)', () => {
       expect(await sheet.getAttribute(attr)).toBeNull();
     }
 
+    // Escape is the native close request (no handler of ours). Pressed in a filled search field, Chromium and Firefox
+    // first clear the field, so it is pressed from the sheet's Close button.
+    await sheet.locator('[data-nowo-ui-filter-sheet-close]').focus();
     await page.keyboard.press('Escape');
     await expect(sheet).toBeHidden();
     await expect(toggle).toBeFocused();
