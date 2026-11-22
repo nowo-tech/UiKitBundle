@@ -1,0 +1,14 @@
+{#
+  Form theme of the `option_cards` partial (2.64): the radio / checkbox widget of ONE card is the bare control, with no
+  label of its own (the card is the label, a base theme such as bootstrap_5_layout would add a second one). The
+  partial applies it to each card's FormView; it is not meant to be registered globally.
+#}
+{% use 'form_div_layout.html.twig' %}
+
+{%- block radio_widget -%}
+    <input type="radio" {{ block('widget_attributes') }}{% if value is defined %} value="{{ value }}"{% endif %}{% if checked %} checked="checked"{% endif %} />
+{%- endblock radio_widget -%}
+
+{%- block checkbox_widget -%}
+    <input type="checkbox" {{ block('widget_attributes') }}{% if value is defined %} value="{{ value }}"{% endif %}{% if checked %} checked="checked"{% endif %} />
+{%- endblock checkbox_widget -%}
