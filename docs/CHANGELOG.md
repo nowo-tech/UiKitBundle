@@ -151,6 +151,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- CI: new `release-gates` job runs the `make release-check` gates that CI did not run (`rector-dry`, `validate-phpdoc`, `validate-translations`, `check-twig-extra`) on full-mode PRs and on every push, one check per gate, through the repo's own Makefile targets; a gate the Makefile does not define is skipped with a notice. Light mode does not run them. Not a required check. See `docs/GITHUB_CI.md#release-gates-in-full-mode`.
+
 ### Fixed
 
 - `CookieListingPreferenceStore::load()` now has a PHPDoc description and its `@return` array shape, so `make validate-phpdoc` passes.
