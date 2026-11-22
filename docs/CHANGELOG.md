@@ -151,6 +151,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- `docs/images/demo/`: 39 of the 42 published demo screenshots regenerated from the current demo (the shell and host-theme pages after the demo platform shell and the 2.66 form actions order); `page-contract-form`, `page-contract-settings` and `page-contract-wizard` keep their earlier captures until the host-theme form field layout is fixed.
+
 ### Fixed
 
 - `CookieListingPreferenceStore::load()` now has a PHPDoc description and its `@return` array shape, so `make validate-phpdoc` passes.
