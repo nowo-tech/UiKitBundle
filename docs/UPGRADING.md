@@ -169,6 +169,23 @@
 
 ## Unreleased
 
+- **Form actions order (UX-017).** The form scaffold (`page/form.html.twig`) now puts **Cancel first, then the primary
+  on the right**, like the dialogs and the full-page confirm. Nothing to do for the house order. To keep the 2.65
+  order (primary first, Cancel last) for a while, set:
+
+  ```yaml
+  nowo_ui_kit:
+      theme:
+          form_actions_order: primary_first
+  ```
+
+  Tests that match the exact Cancel markup now see `data-nowo-ui-form-cancel` on the link and
+  `data-nowo-ui-form-actions="cancel_first"` on the row. Bundle forms that write their own actions row (dialog
+  fragments) should include the `form_actions` partial instead
+  (`{{ include(nowo_ui_partial('form_actions', bundle), {submit_label: …, cancel_dialog: true, bundle: bundle}, false) }}`)
+  and may opt their page contract test into the rule (`formActionsOrderChecked(): true`). Do not reverse the row with
+  CSS `order` / `row-reverse`: the focus order must follow the DOM order.
+
 ## To 2.65.0
 
 From **2.64.0**:

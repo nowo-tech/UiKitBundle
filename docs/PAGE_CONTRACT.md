@@ -25,6 +25,7 @@ Normative spec: REQ-UI-003 in `BUNDLES_FULL_SPECS_DETAILS.md` · design and migr
   - [Auth](#auth)
 - [View models](#view-models)
 - [Partials](#partials)
+  - [Form actions order (2.66)](#form-actions-order-266)
 - [Template contract](#template-contract)
   - [Dialogs](#dialogs)
     - [Dialog sizes and anatomy (2.29)](#dialog-sizes-and-anatomy-229)
@@ -223,8 +224,10 @@ layout — see [USAGE](USAGE.md#detail-pages-221).
 | `nowo_ui_form_body` | REQ-TWIG-003 loop: `form_row()` of every child not yet rendered (call `{{ parent() }}` after custom rows) | `form`, `page` |
 | `nowo_ui_form_aside` | empty (side column after the main column) | `page` |
 
-The form renders inside the `form_panel` slot (wrapper on the form scaffold only). Submit + cancel render in the
-`form_actions` slot; `secondaryActions` in the page-header toolbar after the header actions
+The form renders inside the `form_panel` slot (wrapper on the form scaffold only). Submit + cancel render through
+the `form_actions` partial in the `form_actions` slot — 2.66: **Cancel first, then the primary on the right**, the order
+of the dialog footers and the full-page confirm (`theme.form_actions_order: primary_first` keeps the 2.65 order:
+primary first, Cancel last); see [Form actions order](#form-actions-order-266); `secondaryActions` in the page-header toolbar after the header actions
 (`secondaryActionsInHeader: true`, the default) or in a `toolbar` below the form (`false`); `deleteAction` in the
 `danger_zone` through the confirm contract, titled `dangerZoneTitle` (default `form.danger_zone`, slot
 `danger_zone_title`) with an optional `dangerZoneIntro` (slot `danger_zone_intro`).
@@ -455,6 +458,37 @@ with FormKit they set the `locale_tabs` option or use `TranslatableMapType`, whi
 ```twig
 {{ include(nowo_ui_partial('locale_tabs', bundle), {id: 'item-i18n', panels: panels, default_locale: 'es', required_locales: ['es'], bundle: bundle}, false) }}
 ```
+
+### Form actions order (2.66)
+
+One order for every form, page or dialog: **Cancel (secondary) first, then the secondary actions, then the primary
+last, on the right** — the anatomy of the `dialog` / `confirm_dialog` footers, the full-page confirm and the wizard
+(*Back*, *Next*). The form scaffold renders its row through the `form_actions` partial; a bundle form that writes its
+own row (a dialog fragment, a setup step) includes the same partial instead of hand-written buttons:
+
+```twig
+{# full page: Cancel is a link #}
+{{ include(nowo_ui_partial('form_actions', bundle), {submit_label: 'import.submit'|trans({}, 'NowoXBundle'), cancel_href: path('x_index'), bundle: bundle}, false) }}
+{# dialog fragment: Cancel closes the UiKit dialog ([data-nowo-ui-dialog-close]) #}
+{{ include(nowo_ui_partial('form_actions', bundle), {submit_label: label, cancel_dialog: true, submit_attrs: {'data-testid': 'x-import-submit'}, bundle: bundle}, false) }}
+```
+
+Options: `submit_label`, `submit_attrs`, `submit` (false = no submit button), `cancel_href` (link) or `cancel_dialog`
+(`type="button"` closing the dialog), `cancel_label`, `cancel_attrs`, `extra_actions` (trusted HTML between Cancel and
+the primary), `order` (`cancel_first` / `primary_first`; default `theme.form_actions_order`), `bundle`,
+`nowo_ui_page_type`. Cancel carries `data-nowo-ui-form-cancel`, the row `data-nowo-ui-form-actions="<order>"`.
+
+- **Focus order = DOM order.** The partial prints the controls in the visual order; never reorder them with CSS
+  (`order`, `flex-direction: row-reverse`): keyboard and screen reader users would meet them in another order (WCAG
+  2.4.3). Cancel is a link or a `type="button"` button — never a submit button — so Enter in a field still submits the
+  primary (implicit submission takes the first submit button).
+- **Narrow screens.** The row is a wrapping flex row (`form_actions` slot): on a phone the two buttons share one row,
+  the primary at its end; when the labels do not fit, the primary wraps below Cancel, still last, nearest the thumb.
+- **Opt-out.** `nowo_ui_kit.theme.form_actions_order: primary_first` restores the 2.65 order of the form scaffold and
+  the partial default for hosts whose own forms still put the primary first. The confirm page, the wizard and the
+  dialogs always put Cancel / Back first.
+- **Contract test.** `PageContractTestCase::formActionsOrderChecked()` (opt-in) fails a page whose form actions row puts
+  the primary before Cancel.
 
 ## Template contract
 
@@ -1041,7 +1075,7 @@ Each fixture is rendered with a real Twig environment (UiKit + bundle views, tra
 catalogues, Symfony Form when installed, stub `path` / `url` / `asset` / `csrf_token` / `is_granted` /
 `logout_path`) inside a **stub host layout** (every canonical block wrapped in a marker, no `<html>`) and a **stub
 theme** (marker class `pc-<slot>` and attribute `data-pc-<slot>` on every slot, one token, `page_header` partial
-override that renders the header `actions` itself through the `action` partial, like a typical host override). Seven
+override that renders the header `actions` itself through the `action` partial, like a typical host override). Eight
 tests per fixture:
 
 | Test | Fails when |
@@ -1053,15 +1087,16 @@ tests per fixture:
 | `testPageReflectsTheStubTheme` | no `pc-*` slot class or `data-pc-*` slot attribute in `nowo_ui_content`, or a page header that bypasses `nowo_ui_partial('page_header')` |
 | `testPageHasNoRawTranslationKeys` | a dotted id the translator could not find; with `strictMissingTranslations()` (2.3 opt-in, default in 3.0) any missing message — a text translated twice (an already translated label handed to a form theme that translates it again: use `translation_domain: false` or `\|nowo_ui_translatable`), a literal piped through `\|trans`, a humanized label of a form without `translation_domain` — or a `*.label\|placeholder\|help\|title` key in the output |
 | `testPageActionFormsKeepTheirHiddenFields` | a rendered `<form name="…">` of a `FormView`-backed `Action` found in the fixture context lacks a hidden field of that `FormView` (the CSRF token), or carries it more than once (e.g. a template that calls `form_start` / `form_end` on an already rendered `FormView` instead of the `action` partial) |
+| `testPageFormActionsPutCancelFirst` | 2.66, only with `formActionsOrderChecked()` returning true (opt-in): a form actions row (`nowo-ui-form__actions`) puts the primary submit button before Cancel (`data-nowo-ui-form-cancel`, or a secondary link / `type="button"` button) — render the row with the `form_actions` partial |
 
 Hooks: `templatePaths()`, `inlineTemplates()`, `translationDirs()`, `templatesDocument()`, `cssFrameworks()`,
 `allowedClasses()` (documented exceptions), `ignoredMissingTranslations()` (2.3: accepted missing messages,
 `domain:id`, `id` or a `/regex/` on `domain:id`; document why in `docs/TEMPLATES.md`), `strictMissingTranslations()`
-(2.3, opt-in, the default from 3.0: true fails on every missing message; the default false keeps the dotted-id rule), `formThemes()` (null disables the Form extension; add your FormKit
+(2.3, opt-in, the default from 3.0: true fails on every missing message; the default false keeps the dotted-id rule), `formActionsOrderChecked()` (2.66, opt-in: true checks Cancel before the primary in every form actions row), `formThemes()` (null disables the Form extension; add your FormKit
 theme), `locale()`, `configureTwig(Environment)` (register the bundle's Twig extensions; functions added there
 override the stubs). The assertion helpers (`assertExtendsScaffoldOrUnique()`, `assertCanonicalBlocksFilled()`,
 `assertNoForbiddenMarkup()`, `assertNoFrameworkUtilityClasses()`, `assertStubThemeReflected()`,
-`assertNoRawTranslationKeys()`, `assertActionFormsKeepHiddenFields()`) and `renderPage()` / `createTwig()` are protected for the bundle's own tests.
+`assertNoRawTranslationKeys()`, `assertActionFormsKeepHiddenFields()`, `assertFormActionsCancelFirst()`) and `renderPage()` / `createTwig()` are protected for the bundle's own tests.
 Fixtures are rendered several times; their `FormView`s are reset between renders (children and, since 2.1, collection
 prototypes — `vars.prototype` of a `CollectionType` with `prototype: true`).
 

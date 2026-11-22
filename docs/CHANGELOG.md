@@ -149,6 +149,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Form actions partial** (`partials/_form_actions.html.twig`, theme partial `form_actions`, UX-017): one actions row
+  for every form — Cancel (secondary) first, then the secondary actions (`extra_actions`), then the primary last, on the
+  right, the order of the dialog footers, the full-page confirm and the wizard. Cancel is a link (`cancel_href`) or a
+  `type="button"` button closing the UiKit dialog (`cancel_dialog`), marked `data-nowo-ui-form-cancel`; options
+  `submit_label`, `submit_attrs`, `submit`, `cancel_label`, `cancel_attrs`, `order`. The DOM order is the visual and
+  the focus order (no CSS `order` / `row-reverse`); on a phone the row wraps in that order, the primary stays last.
+- `nowo_ui_kit.theme.form_actions_order` (`cancel_first` default, `primary_first`) and `Theme::formActionsOrder()` /
+  `Theme::FORM_ACTIONS_ORDERS`.
+- Page contract test kit: `RenderedPage::formActionsRows()`, `assertFormActionsCancelFirst()` and the opt-in test
+  `testPageFormActionsPutCancelFirst` (`formActionsOrderChecked()`, default false): fails a form actions row whose
+  primary comes before Cancel.
+
+### Changed
+
+- **Form scaffold order** (`page/form.html.twig`): the submit / cancel row renders through the `form_actions` partial,
+  so **Cancel now comes first and the primary second** (2.65: primary first, then Cancel). The Cancel link gains
+  `data-nowo-ui-form-cancel` and the row `data-nowo-ui-form-actions="cancel_first"`; labels, slots and classes are
+  unchanged. Hosts that want the old order set `nowo_ui_kit.theme.form_actions_order: primary_first`. Tests that match
+  the exact Cancel markup or rely on the button position need updating.
+- Demo: the remote form dialog fragment renders its row with the `form_actions` partial.
+
 ## [2.65.0] - 2026-11-22
 
 ### Added

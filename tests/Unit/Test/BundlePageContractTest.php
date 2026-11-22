@@ -221,6 +221,7 @@ final class BundlePageContractTest extends PageContractTestCase
         yield 'page header bypasses the partial' => ['ignores the theme partial override', 'assertStubThemeReflected', "{% extends '@NowoUiKit/page/dashboard.html.twig' %}{% block nowo_ui_page_header %}<h1 class=\"{{ nowo_ui_class('page_title') }}\">Bad</h1>{% endblock %}", $header];
         yield 'missing translation' => ['NowoContractFixtureBundle:fixture.missing', 'assertNoRawTranslationKeys', $dashboard("{{ 'fixture.missing'|trans({}, 'NowoContractFixtureBundle') }}"), $header];
         yield 'action form without its token' => ['rendered form "bad_action" #1 of a FormView-backed action must carry its hidden field "bad_action[_token]" exactly once (got 0)', 'assertActionFormsKeepHiddenFields', $dashboard('{{ form_start(action.form) }}<button>Go</button>{{ form_end(action.form, {render_rest: false}) }}'), $header + ['action' => new Action('custom', 'Go', '/go', method: 'POST', form: ScaffoldFixtures::csrf('bad_action'))]];
+        yield 'primary before cancel' => ['form actions row #1 puts the primary before Cancel (primary, cancel)', 'assertFormActionsCancelFirst', $dashboard("<div class=\"{{ nowo_ui_class('form_actions') }}\"><button type=\"submit\" class=\"{{ nowo_ui_class('btn_primary') }}\">Save</button><a class=\"{{ nowo_ui_class('btn_secondary') }}\" href=\"/x\">Cancel</a></div>"), $header];
         yield 'raw key' => ['raw translation keys: item.name.placeholder', 'assertNoRawTranslationKeys', $dashboard('<input placeholder="item.name.placeholder">'), $header];
     }
 
@@ -281,6 +282,11 @@ final class BundlePageContractTest extends PageContractTestCase
     }
 
     protected static function strictMissingTranslations(): bool
+    {
+        return true;
+    }
+
+    protected static function formActionsOrderChecked(): bool
     {
         return true;
     }

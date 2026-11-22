@@ -176,4 +176,43 @@ final readonly class RenderedPage
 
         return $result;
     }
+
+    /**
+     * The controls of every form actions row (`nowo-ui-form__actions`, document order), each as `cancel` (marked
+     * `data-nowo-ui-form-cancel`, or a secondary link / `type="button"` button), `primary` (a submit button with the
+     * `nowo-ui-btn--primary` class) or `other` (2.66).
+     *
+     * @return list<list<string>> `cancel` / `primary` / `other` per control
+     */
+    public function formActionsRows(): array
+    {
+        $rows = [];
+        foreach ($this->elements('//*[contains(concat(" ", normalize-space(@class), " "), " nowo-ui-form__actions ")]') as $row) {
+            $rows[] = array_map(static function (DOMElement $node): string {
+                $classes = ' '.preg_replace('/\s+/', ' ', $node->getAttribute('class')).' ';
+                $submit = 'a' !== $node->nodeName && \in_array(strtolower($node->getAttribute('type')), ['', 'submit'], true);
+
+                return match (true) {
+                    $node->hasAttribute('data-nowo-ui-form-cancel'),
+                    !$submit && str_contains($classes, ' nowo-ui-btn--secondary ') => 'cancel',
+                    $submit && str_contains($classes, ' nowo-ui-btn--primary ') => 'primary',
+                    default => 'other',
+                };
+            }, $this->elements('.//a | .//button | .//input[@type="submit" or @type="button"]', $row));
+        }
+
+        return $rows;
+    }
+
+    /**
+     * Elements matching an XPath query (optionally relative to a context element).
+     *
+     * @return list<DOMElement>
+     */
+    private function elements(string $query, ?DOMElement $context = null): array
+    {
+        $nodes = iterator_to_array($this->xpath->query($query, $context) ?: [], false);
+
+        return array_values(array_filter($nodes, static fn (mixed $node): bool => $node instanceof DOMElement));
+    }
 }

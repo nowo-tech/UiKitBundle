@@ -4,6 +4,7 @@
 
 - [Import macros](#import-macros)
 - [Partials](#partials)
+  - [Form actions order (2.66)](#form-actions-order-266)
   - [Forms in the partials (REQ-TWIG-005)](#forms-in-the-partials-req-twig-005)
 - [Assets](#assets)
 - [Locale tabs (2.5)](#locale-tabs-25)
@@ -137,6 +138,7 @@ Twig globals (from config):
 | `partials/_tabs.html.twig` | Tab **link** nav (no JS). In-page panels: `nowo-ui-tabs.js` / Stimulus `tabs` peer. 2.16: `icon` per item; the host's `data-tab-style` (`text`, `icon-text`, `icon`) on `<html>` picks what shows |
 | `partials/_filters.html.twig` | Search + apply/clear + actions slot |
 | `partials/_filter_actions.html.twig` | Opt-in filter bar actions: optional pager row + Filter + Clear on one row. See [Filter bar and data table](#filter-bar-and-data-table-opt-in) |
+| `partials/_form_actions.html.twig` | Form actions row (2.66, theme partial `form_actions`): Cancel first, then the primary on the right — the house order of every form, page or dialog. See [Form actions order](#form-actions-order-266) |
 | `partials/_open_modal_on_load.html.twig` | CSP-safe JSON island that opens a modal on load (`?new=1` deep link). See [Open a modal on load](#open-a-modal-on-load-deep-link) |
 | `partials/_card.html.twig` | Card / panel (header/body/footer) |
 | `partials/_modal_shell.html.twig` | Modal shell (Bootstrap-JS structure, kept for BC) |
@@ -215,6 +217,38 @@ Confirm trigger:
     footer: confirm_footer_html
 } %}
 ```
+
+### Form actions order (2.66)
+
+Every form puts **Cancel (secondary) first, then the primary on the right** — the order of the dialog footers, the
+full-page confirm and the wizard. The form scaffold (`page/form.html.twig`) renders its row through the
+`form_actions` partial; a bundle form that writes its own row (a dialog fragment, a setup step) includes the same
+partial instead of hand-written buttons:
+
+```twig
+{{ form_start(form, {attr: {class: nowo_ui_class('form', bundle)}}) }}
+    {% for child in form %}{% if not child.rendered %}{{ form_row(child) }}{% endif %}{% endfor %}
+    {# dialog fragment: Cancel closes the UiKit dialog; on a page pass cancel_href instead #}
+    {{ include(nowo_ui_partial('form_actions', bundle), {submit_label: 'import.submit'|trans({}, 'NowoXBundle'), cancel_dialog: true, bundle: bundle}, false) }}
+{{ form_end(form) }}
+```
+
+```html
+<div class="nowo-ui-form__actions" data-nowo-ui-form-actions="cancel_first">
+    <button type="button" class="nowo-ui-btn nowo-ui-btn--secondary" data-nowo-ui-dialog-close data-nowo-ui-form-cancel>Cancel</button>
+    <button type="submit" class="nowo-ui-btn nowo-ui-btn--primary">Import</button>
+</div>
+```
+
+- The DOM order is the visual and the focus order: the kit never reverses it with CSS `order` / `row-reverse`, and a
+  host theme must not either (WCAG 2.4.3). Cancel is a link or a `type="button"` button, so Enter in a field still
+  submits the primary.
+- On a phone the row wraps in the same order: the primary stays last, at the end of the row (or on its own line below
+  Cancel when the labels do not fit), nearest the thumb.
+- `nowo_ui_kit.theme.form_actions_order: primary_first` restores the 2.65 order (primary, then Cancel) of the form
+  scaffold and the partial default; the partial option `order` wins per row.
+- Bundles opt their page contract test into the rule with `formActionsOrderChecked(): true`
+  ([PAGE_CONTRACT](PAGE_CONTRACT.md#form-actions-order-266)).
 
 ### Forms in the partials (REQ-TWIG-005)
 
@@ -3937,7 +3971,7 @@ Every template the bundle renders by logical name `@NowoUiKitBundle/<subpath>` c
 | `layout/` | `layout/_bridge.html.twig`, `layout/admin.html.twig`, `layout/document.html.twig`, `layout/guest.html.twig`, `layout/status.html.twig` | Page layouts (`base`, `app`, `auth`, …) — prefer `layout_template` / blocks over forking |
 | `page/` | `page/_auth_form.html.twig`, `page/_detail_list.html.twig`, `page/_list_filters.html.twig`, `page/_page_header.html.twig`, `page/_scaffold.html.twig`, `page/_section_form.html.twig`, `page/_wizard_form.html.twig`, `page/auth.html.twig`, `page/confirm.html.twig`, `page/dashboard.html.twig`, `page/form.html.twig`, `page/list.html.twig`, `page/settings.html.twig`, `page/show.html.twig`, `page/wizard.html.twig` | Page scaffolds of the page contract (REQ-UI-003) — extend and override blocks instead of copying |
 | `shell/` | `shell/_burger.html.twig`, `shell/_close.html.twig`, `shell/_open.html.twig`, `shell/_shell.html.twig` | App shell chrome |
-| `partials/` | `partials/_action.html.twig`, `partials/_action_form_view.html.twig`, `partials/_action_inner.html.twig`, `partials/_action_post.html.twig`, `partials/_action_post_legacy.html.twig`, `partials/_aside.html.twig`, `partials/_aside_nav_items.html.twig`, `partials/_avatar.html.twig`, `partials/_avatar_group.html.twig`, `partials/_back_link.html.twig`, `partials/_brand.html.twig`, `partials/_breadcrumbs.html.twig`, `partials/_bulk_bar.html.twig`, `partials/_bulk_toggle.html.twig`, `partials/_burger.html.twig`, `partials/_card.html.twig`, `partials/_chip.html.twig`, `partials/_code_block.html.twig`, `partials/_confirm.html.twig`, `partials/_confirm_dialog.html.twig`, `partials/_corner_tab.html.twig`, `partials/_dialog.html.twig`, `partials/_disclosure_icon.html.twig`, `partials/_dropzone.html.twig`, `partials/_edge_tab.html.twig`, `partials/_empty.html.twig`, `partials/_error_summary.html.twig`, `partials/_filter_actions.html.twig`, `partials/_filter_bar.html.twig`, `partials/_filters.html.twig`, `partials/_filters_collapse.html.twig`, `partials/_filters_form.html.twig`, `partials/_filters_legacy.html.twig`, `partials/_flashes.html.twig`, `partials/_footer.html.twig`, `partials/_form_fieldset.html.twig`, `partials/_header_actions.html.twig`, `partials/_kebab.html.twig`, `partials/_listing_cells.html.twig`, `partials/_listing_customizer.html.twig`, `partials/_listing_filter_fields.html.twig`, `partials/_listing_head.html.twig`, `partials/_locale_switcher.html.twig`, `partials/_locale_switcher_form.html.twig`, `partials/_locale_switcher_legacy.html.twig`, `partials/_locale_tabs.html.twig`, `partials/_menu.html.twig`, `partials/_modal_shell.html.twig`, `partials/_open_modal_on_load.html.twig`, `partials/_option_cards.html.twig`, `form/nowo_ui_option_card_input.html.twig`, `partials/_page_header.html.twig`, `partials/_page_loader.html.twig`, `partials/_page_status.html.twig`, `partials/_page_transition.html.twig`, `partials/_pagination.html.twig`, `partials/_pagination_compact.html.twig`, `partials/_pagination_per_page_form.html.twig`, `partials/_pagination_per_page_legacy.html.twig`, `partials/_progress.html.twig`, `partials/_release_version.html.twig`, `partials/_responsive_table.html.twig`, `partials/_row_actions.html.twig`, `partials/_row_actions_form.html.twig`, `partials/_row_actions_legacy.html.twig`, `partials/_row_detail_cell.html.twig`, `partials/_row_detail_head.html.twig`, `partials/_scripts.html.twig`, `partials/_segmented.html.twig`, `partials/_segmented_checkbox_form.html.twig`, `partials/_segmented_field.html.twig`, `partials/_segmented_legacy_checkbox.html.twig`, `partials/_shell.html.twig`, `partials/_skeleton.html.twig`, `partials/_sort_header.html.twig`, `partials/_stat_row.html.twig`, `partials/_steps.html.twig`, `partials/_tab_panels.html.twig`, `partials/_table.html.twig`, `partials/_table_view.html.twig`, `partials/_tabs.html.twig`, `partials/_theme_boot.html.twig`, `partials/_theme_toggle.html.twig`, `partials/_thinking_orb.html.twig`, `partials/_timeline.html.twig`, `partials/_toasts.html.twig`, `partials/_tooltip.html.twig`, `partials/_tour.html.twig`, `partials/_ui_form.html.twig`, `partials/_user_menu.html.twig`, `partials/_user_menu_logout_form.html.twig`, `partials/_user_menu_logout_legacy.html.twig`, `partials/_width_toggle.html.twig` | Reusable partials (one concern each) — the usual surgical override target |
+| `partials/` | `partials/_action.html.twig`, `partials/_action_form_view.html.twig`, `partials/_action_inner.html.twig`, `partials/_action_post.html.twig`, `partials/_action_post_legacy.html.twig`, `partials/_aside.html.twig`, `partials/_aside_nav_items.html.twig`, `partials/_avatar.html.twig`, `partials/_avatar_group.html.twig`, `partials/_back_link.html.twig`, `partials/_brand.html.twig`, `partials/_breadcrumbs.html.twig`, `partials/_bulk_bar.html.twig`, `partials/_bulk_toggle.html.twig`, `partials/_burger.html.twig`, `partials/_card.html.twig`, `partials/_chip.html.twig`, `partials/_code_block.html.twig`, `partials/_confirm.html.twig`, `partials/_confirm_dialog.html.twig`, `partials/_corner_tab.html.twig`, `partials/_dialog.html.twig`, `partials/_disclosure_icon.html.twig`, `partials/_dropzone.html.twig`, `partials/_edge_tab.html.twig`, `partials/_empty.html.twig`, `partials/_error_summary.html.twig`, `partials/_filter_actions.html.twig`, `partials/_filter_bar.html.twig`, `partials/_filters.html.twig`, `partials/_filters_collapse.html.twig`, `partials/_filters_form.html.twig`, `partials/_filters_legacy.html.twig`, `partials/_flashes.html.twig`, `partials/_footer.html.twig`, `partials/_form_actions.html.twig`, `partials/_form_fieldset.html.twig`, `partials/_header_actions.html.twig`, `partials/_kebab.html.twig`, `partials/_listing_cells.html.twig`, `partials/_listing_customizer.html.twig`, `partials/_listing_filter_fields.html.twig`, `partials/_listing_head.html.twig`, `partials/_locale_switcher.html.twig`, `partials/_locale_switcher_form.html.twig`, `partials/_locale_switcher_legacy.html.twig`, `partials/_locale_tabs.html.twig`, `partials/_menu.html.twig`, `partials/_modal_shell.html.twig`, `partials/_open_modal_on_load.html.twig`, `partials/_option_cards.html.twig`, `form/nowo_ui_option_card_input.html.twig`, `partials/_page_header.html.twig`, `partials/_page_loader.html.twig`, `partials/_page_status.html.twig`, `partials/_page_transition.html.twig`, `partials/_pagination.html.twig`, `partials/_pagination_compact.html.twig`, `partials/_pagination_per_page_form.html.twig`, `partials/_pagination_per_page_legacy.html.twig`, `partials/_progress.html.twig`, `partials/_release_version.html.twig`, `partials/_responsive_table.html.twig`, `partials/_row_actions.html.twig`, `partials/_row_actions_form.html.twig`, `partials/_row_actions_legacy.html.twig`, `partials/_row_detail_cell.html.twig`, `partials/_row_detail_head.html.twig`, `partials/_scripts.html.twig`, `partials/_segmented.html.twig`, `partials/_segmented_checkbox_form.html.twig`, `partials/_segmented_field.html.twig`, `partials/_segmented_legacy_checkbox.html.twig`, `partials/_shell.html.twig`, `partials/_skeleton.html.twig`, `partials/_sort_header.html.twig`, `partials/_stat_row.html.twig`, `partials/_steps.html.twig`, `partials/_tab_panels.html.twig`, `partials/_table.html.twig`, `partials/_table_view.html.twig`, `partials/_tabs.html.twig`, `partials/_theme_boot.html.twig`, `partials/_theme_toggle.html.twig`, `partials/_thinking_orb.html.twig`, `partials/_timeline.html.twig`, `partials/_toasts.html.twig`, `partials/_tooltip.html.twig`, `partials/_tour.html.twig`, `partials/_ui_form.html.twig`, `partials/_user_menu.html.twig`, `partials/_user_menu_logout_form.html.twig`, `partials/_user_menu_logout_legacy.html.twig`, `partials/_width_toggle.html.twig` | Reusable partials (one concern each) — the usual surgical override target |
 | `components/` | `components/_icon.html.twig`, `components/_icon_ux.html.twig` | Icon components |
 | `error/` | `error/layout.html.twig`, `error/status.html.twig` | Error page templates |
 | `form/` | `form/nowo_ui_date_range.html.twig`, `form/nowo_ui_kit_fields.html.twig`, `form/nowo_ui_layout.html.twig`, `form/nowo_ui_option_card_input.html.twig` | Form themes |

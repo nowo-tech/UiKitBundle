@@ -182,9 +182,9 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 
 | Source file | Spec section | Requirement IDs |
 | --- | --- | --- |
-| `Test/PageContractTestCase.php` | Shared REQ-UI-003 page contract test for UI bundles | FR-TESTKIT-001 |
+| `Test/PageContractTestCase.php` | Shared REQ-UI-003 page contract test for UI bundles | FR-TESTKIT-001, FR-FORMACTIONS-001 |
 | `Test/PageFixture.php` | One page fixture (template + context) | FR-TESTKIT-001 |
-| `Test/RenderedPage.php` | Rendered page with contract assertions and missing translation ids | FR-TESTKIT-001 |
+| `Test/RenderedPage.php` | Rendered page with contract assertions and missing translation ids | FR-TESTKIT-001, FR-FORMACTIONS-001 |
 | `Test/StubHost.php` | Stub host layouts and marker theme | FR-TESTKIT-001 |
 | `Test/ContractStubExtension.php` | Deterministic stand-ins for `path`, `url`, `asset`, `csrf_token`, … | FR-TESTKIT-001 |
 | `Test/FrameworkClasses.php` | Framework utility-class detection and per-framework allow-lists | FR-TESTKIT-001 |
@@ -224,7 +224,7 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | --- | --- | --- |
 | `Resources/views/page/list.html.twig` | List scaffold (filters, table, row actions, pagination, empty state, sorting; 2.23 rows marker for pagination modes) | FR-SCAFFOLD-001, FR-LIST-001, FR-SORT-002, FR-PAGINATION-002 |
 | `Resources/views/page/show.html.twig` | Show scaffold (sections, audit meta, 2.21 stats row) | FR-SCAFFOLD-001, FR-SHOW-001, FR-STAT-001 |
-| `Resources/views/page/form.html.twig` | Form scaffold | FR-SCAFFOLD-001, FR-FORMPAGE-001 |
+| `Resources/views/page/form.html.twig` | Form scaffold | FR-SCAFFOLD-001, FR-FORMPAGE-001, FR-FORMACTIONS-001 |
 | `Resources/views/page/settings.html.twig` | Settings scaffold (section tabs) | FR-SCAFFOLD-001, FR-FORMPAGE-001 |
 | `Resources/views/page/wizard.html.twig` | Wizard scaffold (steps indicator) | FR-SCAFFOLD-001, FR-FORMPAGE-001 |
 | `Resources/views/page/dashboard.html.twig` | Dashboard scaffold (KPI tiles, cards) | FR-SCAFFOLD-001, FR-DASHBOARD-001 |
@@ -685,6 +685,7 @@ Produced by `pnpm run build` (`vite.config.ts`, one `VITE_ENTRY` per IIFE; `buil
 | `Resources/views/partials/_tab_panels.html.twig` | Client-side tab panels | FR-DISPLAY-001 |
 | `Resources/views/partials/_timeline.html.twig` | Timeline | FR-DISPLAY-001 |
 | `Resources/views/partials/_form_fieldset.html.twig` | Fieldset row | FR-FIELDSET-001 |
+| `Resources/views/partials/_form_actions.html.twig` | Form actions row: Cancel first, then the primary on the right (theme partial `form_actions`) | FR-FORMACTIONS-001 |
 | `Resources/views/partials/_keyset_pager.html.twig` | Keyset pager | FR-PAGER-002 |
 | `Resources/views/partials/_option_cards.html.twig` | Option cards | FR-OPTIONCARD-001 |
 | `Resources/views/form/nowo_ui_option_card_input.html.twig` | Form theme of one option card | FR-OPTIONCARD-001 |

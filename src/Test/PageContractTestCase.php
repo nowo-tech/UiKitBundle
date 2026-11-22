@@ -37,7 +37,7 @@ use Twig\RuntimeLoader\FactoryRuntimeLoader;
 
 /**
  * Shared page contract test (REQ-UI-003 "Contract tests"). A UI bundle extends it once, returns one
- * {@see PageFixture} per page from {@see self::pageFixtures()} and gets seven tests per page, rendered with a real
+ * {@see PageFixture} per page from {@see self::pageFixtures()} and gets eight tests per page, rendered with a real
  * Twig environment (UiKit views + the bundle's views, translator with the bundle catalogues, Symfony Form when
  * installed) against a **stub host layout** and a **stub theme** ({@see StubHost}):
  *
@@ -53,7 +53,8 @@ use Twig\RuntimeLoader\FactoryRuntimeLoader;
  *    `*.label|placeholder|help|title` keys in the output;
  * 7. every rendered form of a FormView-backed {@see Action} (`Action::$form`, e.g. a CSRF-only form) carries each
  *    hidden field of that FormView (the CSRF token) exactly once, however often the page renders the action (the
- *    stub `page_header` override renders the header `actions` itself, after the scaffold pre-rendered `toolbar`).
+ *    stub `page_header` override renders the header `actions` itself, after the scaffold pre-rendered `toolbar`);
+ * 8. (2.66, opt-in with {@see self::formActionsOrderChecked()}) every form actions row puts Cancel before the primary.
  *
  * The assertion helpers are protected so a bundle can reuse them in its own tests. PHPUnit is not a runtime
  * dependency of UiKit: bundles need `phpunit/phpunit` (and `symfony/form` for form pages) in `require-dev`.
@@ -131,6 +132,17 @@ abstract class PageContractTestCase extends TestCase
     public function testPageActionFormsKeepTheirHiddenFields(PageFixture $fixture): void
     {
         $this->assertActionFormsKeepHiddenFields($this->renderPage($fixture));
+    }
+
+    #[DataProvider('contractPages')]
+    public function testPageFormActionsPutCancelFirst(PageFixture $fixture): void
+    {
+        if (!static::formActionsOrderChecked()) {
+            $this->addToAssertionCount(1);
+
+            return;
+        }
+        $this->assertFormActionsCancelFirst($this->renderPage($fixture));
     }
 
     /**
@@ -213,6 +225,16 @@ abstract class PageContractTestCase extends TestCase
      * through `|trans` are caught. The default (false) keeps the 2.2 rule: dotted ids only. Bundles should opt in now.
      */
     protected static function strictMissingTranslations(): bool
+    {
+        return false;
+    }
+
+    /**
+     * Form actions order rule (2.66, opt-in): return true and {@see self::testPageFormActionsPutCancelFirst()} checks
+     * that every form actions row of the page puts Cancel before the primary (the house order, `form_actions`
+     * partial). The stub theme keeps the default `theme.form_actions_order` (`cancel_first`).
+     */
+    protected static function formActionsOrderChecked(): bool
     {
         return false;
     }
@@ -395,6 +417,23 @@ abstract class PageContractTestCase extends TestCase
                     self::assertSame([$value], $values[$field], \sprintf('Page "%s": rendered form "%s" #%d of a FormView-backed action must carry its hidden field "%s" exactly once (got %d); render it through the UiKit action partial (nowo_ui_partial(\'action\')), not form_start / form_end of an already rendered FormView.', $page->template, $form, $index + 1, $field, \count($values[$field])));
                 }
             }
+        }
+    }
+
+    /**
+     * Every form actions row ({@see RenderedPage::formActionsRows()}) with a Cancel and a primary puts every Cancel
+     * before every primary: Cancel (secondary) first, then the primary on the right, in DOM (= focus) order.
+     */
+    protected function assertFormActionsCancelFirst(RenderedPage $page): void
+    {
+        $this->addToAssertionCount(1);
+        foreach ($page->formActionsRows() as $index => $controls) {
+            $cancel = array_keys($controls, 'cancel', true);
+            $primary = array_keys($controls, 'primary', true);
+            if ([] === $cancel || [] === $primary) {
+                continue;
+            }
+            self::assertLessThan(min($primary), max($cancel), \sprintf('Page "%s": form actions row #%d puts the primary before Cancel (%s); render it with the UiKit `form_actions` partial (Cancel first, then the primary on the right).', $page->template, $index + 1, implode(', ', $controls)));
         }
     }
 
