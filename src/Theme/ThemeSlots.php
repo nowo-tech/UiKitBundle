@@ -245,7 +245,8 @@ final class ThemeSlots
         // Form rows and labels (2.10, UiKit form theme `form_row` / `checkbox_row` and `form_label`): no class of
         // their own, so a host adds its row spacing / label style without a form theme. 2.15.4: Bootstrap rows get
         // `mb-3` like bootstrap_5_layout (text and checkbox rows alike; a class the row already has is not added
-        // twice); the other stacks rely on the form flex gap of nowo-ui.css
+        // twice); the other stacks rely on the form flex gap of nowo-ui.css. 2.66.2: the theme also adds its own row
+        // hook `nowo-ui-form-row` to every row, on which nowo-ui.css stacks the label above the control
         'form_row' => ['', ['bootstrap' => 'mb-3']],
         // 2.10.1: checkbox / radio rows (`checkbox_row`); separate from form_row, whose column utilities centre them
         'form_row_check' => ['', ['bootstrap' => 'mb-3']],

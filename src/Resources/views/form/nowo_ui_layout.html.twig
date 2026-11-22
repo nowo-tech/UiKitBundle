@@ -14,6 +14,8 @@
   `form_label` slot (all empty by default; 2.15.4: Bootstrap rows `mb-3`, never added twice);
   2.15.4: file inputs get the `input` slot (Bootstrap `form-control`);
   theme.form_errors_after_widget prints a field's errors after its widget (and, on a checkbox row, before the help).
+  2.66.2: every row also carries `nowo-ui-form-row` (nowo-ui.css stacks its label above its control) and money /
+  percent widgets render their symbol in a `nowo-ui-input-group`.
   2.15: the `nowo_ui_date_range_*` blocks of DateRangeType (form/nowo_ui_date_range.html.twig).
 #}
 {% use 'form_div_layout.html.twig' %}
@@ -29,8 +31,11 @@
 {#- 2.10: form_row (Symfony) builds the widget's aria attributes; only the markup is themed here. -#}
 {%- block form_row_render -%}
     {%- set _row_attr = row_attr -%}
-    {#- the `form_row` slot classes, skipping one the row already has (a bundle may pass the same in row_attr) -#}
+    {#- 2.66.2: every row is a `nowo-ui-form-row` (like the checkbox rows), the hook nowo-ui.css stacks its label above
+        its control with; then the `form_row` slot classes, skipping one the row already has (a bundle may pass the
+        same in row_attr) -#}
     {%- set _classes = (_row_attr.class|default(''))|split(' ')|filter(c => c != '') -%}
+    {%- if 'nowo-ui-form-row' not in _classes -%}{%- set _classes = _classes|merge(['nowo-ui-form-row']) -%}{%- endif -%}
     {%- for _c in nowo_ui_class('form_row')|split(' ')|filter(c => c != '') -%}
         {%- if _c not in _classes -%}{%- set _classes = _classes|merge([_c]) -%}{%- endif -%}
     {%- endfor -%}
@@ -64,6 +69,34 @@
     {%- endif -%}
     {{- parent() -}}
 {%- endblock form_widget_simple -%}
+
+{#- 2.66.2: money and percent fields put their symbol in a kit input group (`nowo-ui-input-group`, addon
+    `nowo-ui-input-group__addon`) like bootstrap_5_layout does, instead of the bare text of form_div_layout -#}
+{%- block money_widget -%}
+    {%- set _prepend = not (money_pattern starts with '{{') -%}
+    {%- set _append = not (money_pattern ends with '}}') -%}
+    {%- if _prepend or _append -%}
+        <div class="nowo-ui-input-group">
+            {%- if _prepend -%}<span class="nowo-ui-input-group__addon">{{ money_pattern|form_encode_currency|trim }}</span>{%- endif -%}
+            {{- block('form_widget_simple') -}}
+            {%- if _append -%}<span class="nowo-ui-input-group__addon">{{ money_pattern|form_encode_currency|trim }}</span>{%- endif -%}
+        </div>
+    {%- else -%}
+        {{- block('form_widget_simple') -}}
+    {%- endif -%}
+{%- endblock money_widget -%}
+
+{%- block percent_widget -%}
+    {%- set type = type|default('text') -%}
+    {%- if symbol -%}
+        <div class="nowo-ui-input-group">
+            {{- block('form_widget_simple') -}}
+            <span class="nowo-ui-input-group__addon">{{ symbol|default('%') }}</span>
+        </div>
+    {%- else -%}
+        {{- block('form_widget_simple') -}}
+    {%- endif -%}
+{%- endblock percent_widget -%}
 
 {%- block textarea_widget -%}
     {%- set attr = attr|merge({class: (attr.class|default('') ~ ' ' ~ nowo_ui_class('input_full'))|trim}) -%}

@@ -159,6 +159,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - `CookieListingPreferenceStore::load()` now has a PHPDoc description and its `@return` array shape, so `make validate-phpdoc` passes.
 - `docs/UPGRADING.md`: the duplicated "To 2.61.0" and "To 2.6.0" sections are merged into one each, keeping all their text.
+- Form theme `@NowoUiKit/form/nowo_ui_layout.html.twig` without a CSS framework (`custom`, `none`, and the default theme): a
+  row's label now sits above its control instead of on the same line, and a money / percent field shows its symbol in
+  an input group (`nowo-ui-input-group`, addon `nowo-ui-input-group__addon`) instead of as bare text between the label
+  and the input. Every row of the theme now carries `nowo-ui-form-row` (checkbox / radio rows already did), and
+  `nowo-ui.css` makes the label of a text, select or textarea row a block as wide as its text, `--nowo-ui-form-label-gap`
+  above the control (zero specificity, so a host row or label class still wins). The kit never stacked these rows on
+  its own: Bootstrap's `.form-control` (a block) did. It showed when 29ce390 (#132, 2.62.0, "every UiKit showcase on the
+  demo platform shell") moved the demo from Bootstrap and `bootstrap_5_layout` to this theme with no framework: the
+  host-theme form, settings and wizard pages printed "Customer" against its field, "Total€" with no group and selects
+  inline. The `/page-contract/default/…` default-theme pages had the same inline rows before. Regression check:
+  label / control geometry in `demo/symfony8/e2e/tests/page-contract.spec.ts`.
 
 ## [2.66.1] - 2026-11-22
 
