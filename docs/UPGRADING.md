@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.66.0](#to-2660)
 - [To 2.65.0](#to-2650)
 - [To 2.64.0](#to-2640)
 - [To 2.63.2](#to-2632)
@@ -168,6 +169,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.66.0
+
+From **2.65.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 - **Form actions order (UX-017).** The form scaffold (`page/form.html.twig`) now puts **Cancel first, then the primary
   on the right**, like the dialogs and the full-page confirm. Nothing to do for the house order. To keep the 2.65
