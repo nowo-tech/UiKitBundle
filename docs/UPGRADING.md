@@ -170,6 +170,26 @@
 
 ## Unreleased
 
+From **2.66.0** (`composer update nowo-tech/ui-kit-bundle`):
+
+- **Form actions order: the 2.65 default is back** (owner decision 2026-11-22). Page forms put the primary first, then
+  Cancel, again; the form scaffold prints the 2.65 row byte for byte. Hosts that want Cancel first in their page forms
+  (the 2.66.0 default) set:
+
+  ```yaml
+  nowo_ui_kit:
+      theme:
+          form_actions_order: cancel_first
+  ```
+
+  Hosts that set `form_actions_order: primary_first` for 2.66.0 can drop it. Dialogs, dialog form fragments (Cancel
+  closes the dialog), the full-page confirm and the wizard keep Cancel / Back first in either case.
+- **Contract tests.** A bundle that opted in with `formActionsOrderChecked(): true` now gets
+  `testPageFormActionsFollowTheConfiguredOrder` (was `testPageFormActionsPutCancelFirst`): page form rows must follow
+  the stub theme's order (default `primary_first`), dialog / confirm / wizard rows Cancel first. Use
+  `assertFormActionsOrder($page)` (or compare with `configuredFormActionsOrder()`) instead of hard-coding Cancel first
+  for page forms; return `cancel_first` from `formActionsOrder()` to test a cancel-first host.
+
 ## To 2.66.0
 
 From **2.65.0**:

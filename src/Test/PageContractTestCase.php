@@ -54,7 +54,10 @@ use Twig\RuntimeLoader\FactoryRuntimeLoader;
  * 7. every rendered form of a FormView-backed {@see Action} (`Action::$form`, e.g. a CSRF-only form) carries each
  *    hidden field of that FormView (the CSRF token) exactly once, however often the page renders the action (the
  *    stub `page_header` override renders the header `actions` itself, after the scaffold pre-rendered `toolbar`);
- * 8. (2.66, opt-in with {@see self::formActionsOrderChecked()}) every form actions row puts Cancel before the primary.
+ * 8. (2.66, opt-in with {@see self::formActionsOrderChecked()}) every form actions row follows the configured order
+ *    (2.66.1, {@see self::assertFormActionsOrder()}): a page form row follows the stub theme's
+ *    `theme.form_actions_order` ({@see self::formActionsOrder()}; UiKit default `primary_first`), a dialog, full-page
+ *    confirm or wizard row keeps Cancel / Back first.
  *
  * The assertion helpers are protected so a bundle can reuse them in its own tests. PHPUnit is not a runtime
  * dependency of UiKit: bundles need `phpunit/phpunit` (and `symfony/form` for form pages) in `require-dev`.
@@ -135,14 +138,14 @@ abstract class PageContractTestCase extends TestCase
     }
 
     #[DataProvider('contractPages')]
-    public function testPageFormActionsPutCancelFirst(PageFixture $fixture): void
+    public function testPageFormActionsFollowTheConfiguredOrder(PageFixture $fixture): void
     {
         if (!static::formActionsOrderChecked()) {
             $this->addToAssertionCount(1);
 
             return;
         }
-        $this->assertFormActionsCancelFirst($this->renderPage($fixture));
+        $this->assertFormActionsOrder($this->renderPage($fixture));
     }
 
     /**
@@ -230,13 +233,32 @@ abstract class PageContractTestCase extends TestCase
     }
 
     /**
-     * Form actions order rule (2.66, opt-in): return true and {@see self::testPageFormActionsPutCancelFirst()} checks
-     * that every form actions row of the page puts Cancel before the primary (the house order, `form_actions`
-     * partial). The stub theme keeps the default `theme.form_actions_order` (`cancel_first`).
+     * Form actions order rule (2.66, opt-in): return true and
+     * {@see self::testPageFormActionsFollowTheConfiguredOrder()} checks every form actions row of the page with
+     * {@see self::assertFormActionsOrder()} — page form rows in the stub theme's order ({@see self::formActionsOrder()}),
+     * dialog / confirm / wizard rows Cancel first (2.66.1; 2.66.0 checked Cancel first everywhere).
      */
     protected static function formActionsOrderChecked(): bool
     {
         return false;
+    }
+
+    /**
+     * `theme.form_actions_order` of the stub theme (2.66.1): null (default) = the UiKit default (`primary_first`);
+     * return `cancel_first` to render and check the pages the way a host with that option sees them.
+     */
+    protected static function formActionsOrder(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * The order the stub theme renders page form rows in: {@see self::formActionsOrder()} or the UiKit default
+     * (`primary_first`).
+     */
+    final protected static function configuredFormActionsOrder(): string
+    {
+        return Theme::fromConfig('none', null !== static::formActionsOrder() ? ['form_actions_order' => static::formActionsOrder()] : [])->formActionsOrder();
     }
 
     /**
@@ -422,19 +444,51 @@ abstract class PageContractTestCase extends TestCase
 
     /**
      * Every form actions row ({@see RenderedPage::formActionsRows()}) with a Cancel and a primary puts every Cancel
-     * before every primary: Cancel (secondary) first, then the primary on the right, in DOM (= focus) order.
+     * before every primary: Cancel (secondary) first, then the primary on the right, in DOM (= focus) order. Use it for
+     * rows that are Cancel first whatever the theme says (dialogs, confirm, wizard) or for a host that opts in with
+     * `cancel_first`; {@see self::assertFormActionsOrder()} follows the configured order.
      */
     protected function assertFormActionsCancelFirst(RenderedPage $page): void
     {
         $this->addToAssertionCount(1);
         foreach ($page->formActionsRows() as $index => $controls) {
-            $cancel = array_keys($controls, 'cancel', true);
-            $primary = array_keys($controls, 'primary', true);
-            if ([] === $cancel || [] === $primary) {
-                continue;
-            }
-            self::assertLessThan(min($primary), max($cancel), \sprintf('Page "%s": form actions row #%d puts the primary before Cancel (%s); render it with the UiKit `form_actions` partial (Cancel first, then the primary on the right).', $page->template, $index + 1, implode(', ', $controls)));
+            $this->assertFormActionsRowOrder($page, $index, $controls, 'cancel_first');
         }
+    }
+
+    /**
+     * Every form actions row follows the configured order (2.66.1): a page form row
+     * ({@see RenderedPage::formActionsRowAnatomies()} `form`) in `$order` — null = the stub theme's
+     * `theme.form_actions_order` ({@see self::configuredFormActionsOrder()}, UiKit default `primary_first`) — and a
+     * dialog, full-page confirm or wizard row Cancel / Back first. Rows without both a Cancel and a primary are
+     * skipped. The DOM order is the focus order, so this checks what the keyboard user meets.
+     */
+    protected function assertFormActionsOrder(RenderedPage $page, ?string $order = null): void
+    {
+        $order ??= self::configuredFormActionsOrder();
+        $this->addToAssertionCount(1);
+        $anatomies = $page->formActionsRowAnatomies();
+        foreach ($page->formActionsRows() as $index => $controls) {
+            $this->assertFormActionsRowOrder($page, $index, $controls, 'form' === ($anatomies[$index] ?? 'form') ? $order : 'cancel_first');
+        }
+    }
+
+    /**
+     * @param list<string> $controls `cancel` / `primary` / `other` per control
+     */
+    private function assertFormActionsRowOrder(RenderedPage $page, int $index, array $controls, string $order): void
+    {
+        $cancel = array_keys($controls, 'cancel', true);
+        $primary = array_keys($controls, 'primary', true);
+        if ([] === $cancel || [] === $primary) {
+            return;
+        }
+        if ('primary_first' === $order) {
+            self::assertLessThan(min($cancel), max($primary), \sprintf('Page "%s": form actions row #%d puts Cancel before the primary (%s); theme.form_actions_order is primary_first: render it with the UiKit form scaffold or `form_actions` partial (the primary first, then Cancel).', $page->template, $index + 1, implode(', ', $controls)));
+
+            return;
+        }
+        self::assertLessThan(min($primary), max($cancel), \sprintf('Page "%s": form actions row #%d puts the primary before Cancel (%s); render it with the UiKit `form_actions` partial (Cancel first, then the primary on the right).', $page->template, $index + 1, implode(', ', $controls)));
     }
 
     /**
@@ -648,7 +702,7 @@ abstract class PageContractTestCase extends TestCase
         $requestStack = new RequestStack();
         $requestStack->push($request);
         $twig->addExtension(new ThemeExtension(
-            Theme::fromConfig($framework, StubHost::theme()),
+            Theme::fromConfig($framework, StubHost::theme() + (null !== static::formActionsOrder() ? ['form_actions_order' => static::formActionsOrder()] : [])),
             ['admin' => StubHost::LAYOUT_ADMIN, 'guest' => StubHost::LAYOUT_GUEST],
             ['breadcrumb_kit' => false, 'collection' => null],
             $collector,

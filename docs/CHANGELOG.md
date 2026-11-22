@@ -150,6 +150,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- **Form actions order: `primary_first` is the default again** (owner decision 2026-11-22). The 2.66.0 change of the
+  `nowo_ui_kit.theme.form_actions_order` default to `cancel_first` (UX-017) is reverted: the form scaffold
+  (`page/form.html.twig`) and the `form_actions` partial put the primary first, then Cancel, as in 2.65.
+  `cancel_first` stays as an opt-in (`form_actions_order: cancel_first`). With the default and no override of the
+  `form_actions` partial, the form scaffold prints the 2.65 actions row byte for byte (no `data-nowo-ui-form-actions`
+  / `data-nowo-ui-form-cancel` markers; `tests/Fixtures/bc-2.42/page_form.html` restored); with `cancel_first`, or a
+  host / bundle override of the partial, it renders the row through the partial.
+- Dialog, confirm and wizard anatomies keep Cancel / Back first, as before 2.66: a `form_actions` row whose Cancel
+  closes the UiKit dialog (`cancel_dialog`, or `data-nowo-ui-dialog-close` in `cancel_attrs` on a `cancel_href` link)
+  defaults to `cancel_first` whatever the theme says; the partial option `order` still wins. Only page form rows follow
+  the option.
+- Page contract test kit: the opt-in order test (`formActionsOrderChecked()`) is now
+  `testPageFormActionsFollowTheConfiguredOrder` (was `testPageFormActionsPutCancelFirst`) and checks the **configured**
+  order with the new `assertFormActionsOrder(RenderedPage $page, ?string $order = null)`: page form rows in the stub
+  theme's order, dialog / confirm / wizard rows Cancel first. New hook `formActionsOrder(): ?string` (null = the UiKit
+  default; return `cancel_first` to render and check the pages as a cancel-first host), `configuredFormActionsOrder()`
+  and `RenderedPage::formActionsRowAnatomies()` (`dialog` / `confirm` / `wizard` / `form`). `assertFormActionsCancelFirst()`
+  is unchanged. The DOM order stays the visual and focus order (Chrome Modern Web Guidance `forms` /
+  `accessibility`: no CSS reordering; Cancel is never a submit button).
+
 ## [2.66.0] - 2026-11-22
 
 ### Added

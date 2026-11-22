@@ -1,8 +1,13 @@
 {#
-  Form actions row (2.66, theme partial `form_actions`): Cancel (secondary) first, then the secondary actions, then the
-  primary last, on the right — the order of the dialog footers (`dialog` / `confirm_dialog`) and the full-page
-  confirm. One row for every bundle form: the form scaffold renders it, a bundle's own form (dialog fragment, wizard
-  step) includes it instead of writing the buttons by hand.
+  Form actions row (2.66, theme partial `form_actions`). One row for every bundle form: the form scaffold renders it
+  (theme.form_actions_order cancel_first, or when a host / bundle overrides this partial), a bundle's own form (dialog
+  fragment, wizard step) includes it instead of writing the buttons by hand.
+
+  Order (2.66.1, owner decision): a page form row follows theme.form_actions_order — `primary_first` (the default, the
+  2.65 order: the primary, the secondary actions, then Cancel) or `cancel_first` (opt-in: Cancel, the secondary
+  actions, then the primary last, on the right). A dialog row — Cancel closes the UiKit dialog (`cancel_dialog`, or
+  `data-nowo-ui-dialog-close` in `cancel_attrs`) — keeps Cancel first whatever the theme says, like the dialog footers
+  (`dialog` / `confirm_dialog`), the full-page confirm and the wizard. The `order` option wins over both.
 
   The DOM order is the visual and the focus order: never reorder it with CSS (`order`, `row-reverse`). Cancel is a
   link or a `type="button"` button, never a submit button, so Enter in a field still submits the primary. On a narrow
@@ -20,15 +25,18 @@
     - cancel_attrs: extra attributes of Cancel (`class` is appended; e.g. `data-nowo-ui-dialog-close` on a cancel_href
       link that closes a remote form dialog and stays a link without JavaScript)
     - extra_actions: pre-rendered trusted HTML (secondary actions), printed between Cancel and the primary
-    - order: `cancel_first` | `primary_first` (default: theme.form_actions_order, `cancel_first`); `primary_first`
-      prints the primary, the extra actions, then Cancel (the 2.65 order of the form scaffold)
+    - order: `cancel_first` | `primary_first` (default: `cancel_first` for a dialog row, else
+      theme.form_actions_order, `primary_first`); `primary_first` prints the primary, the extra actions, then Cancel
+      (the 2.65 order of the form scaffold)
   Every element carries the `form_actions` slot class and attributes; Cancel is marked `data-nowo-ui-form-cancel`
   (the page contract test kit checks the order with it, PageContractTestCase::formActionsOrderChecked()).
 #}
 {% set bundle = bundle|default(null) %}
-{% set _order = order is defined and order is not null ? order : nowo_ui_theme.formActionsOrder() %}
 {% set _cancel_href = cancel_href|default(null) %}
 {% set _cancel_dialog = _cancel_href is empty and cancel_dialog|default(false) %}
+{% set _dialog_close = (cancel_attrs|default({}))['data-nowo-ui-dialog-close'] ?? null %}
+{% set _in_dialog = _cancel_dialog or (_cancel_href is not empty and _dialog_close is not null and _dialog_close is not same as(false)) %}
+{% set _order = order is defined and order is not null ? order : (_in_dialog ? 'cancel_first' : nowo_ui_theme.formActionsOrder()) %}
 {% set _cancel_label = cancel_label|default(null) is null ? 'action.cancel'|trans({}, 'NowoUiKitBundle') : cancel_label|nowo_ui_trans %}
 {% set _cancel_attrs = nowo_ui_safe_attrs(cancel_attrs|default({}), ['type', 'href', 'data-nowo-ui-form-cancel']) %}
 {% set _submit_attrs = nowo_ui_safe_attrs(submit_attrs|default({}), ['type']) %}

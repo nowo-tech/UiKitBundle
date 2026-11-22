@@ -56,8 +56,8 @@ final class PageContractHooksTest extends TestCase
         self::assertSame([], $case::unique());
         self::assertSame(['dashboard'], array_keys(iterator_to_array($case::contractPages())));
 
-        // 2.66: the form actions order rule is opt-in; off, a primary-first row passes
-        $case->testPageFormActionsPutCancelFirst(new PageFixture('@NowoUiKit/page/dashboard.html.twig'));
+        // 2.66: the form actions order rule is opt-in; off, any row passes
+        $case->testPageFormActionsFollowTheConfiguredOrder(new PageFixture('@NowoUiKit/page/dashboard.html.twig'));
         self::assertSame(1, $case->numberOfAssertionsPerformed());
     }
 

@@ -36,9 +36,9 @@ final readonly class Theme
     public const DIALOG_HEIGHTS = ['content', 'size'];
 
     /**
-     * 2.66 (`theme.form_actions_order`): order of the form actions row. `cancel_first` (default, the house order of
-     * the dialog footers and the full-page confirm) = Cancel, secondary actions, then the primary last (on the right);
-     * `primary_first` = the 2.65 order of the form scaffold (primary, secondary actions, Cancel).
+     * 2.66 (`theme.form_actions_order`): order of the form actions row. `primary_first` (default since 2.66.1, the 2.65
+     * order of the form scaffold) = primary, secondary actions, Cancel; `cancel_first` (opt-in, the order of the dialog
+     * footers and the full-page confirm) = Cancel, secondary actions, then the primary last (on the right).
      */
     public const FORM_ACTIONS_ORDERS = ['cancel_first', 'primary_first'];
 
@@ -108,7 +108,7 @@ final readonly class Theme
      * @param string|null                                              $menuSemantics          2.28: default ARIA of popover menus (`menu` partial option `menu_semantics`); null = as 2.27
      * @param string                                                   $dialogHeight           2.31: `content` (default) = dialogs as tall as their content, capped; `size` = the size's height (2.29 / 2.30)
      * @param bool                                                     $contextMenus           2.54: kebab / row-action menus also open as a context menu of their row or card (right-click, keyboard, long press)
-     * @param string                                                   $formActionsOrder       2.66: `cancel_first` (default) or `primary_first` ({@see self::FORM_ACTIONS_ORDERS})
+     * @param string                                                   $formActionsOrder       2.66: `primary_first` (default since 2.66.1) or `cancel_first` ({@see self::FORM_ACTIONS_ORDERS})
      */
     public function __construct(
         private string $framework = 'bootstrap5',
@@ -126,7 +126,7 @@ final readonly class Theme
         private ?string $menuSemantics = null,
         private string $dialogHeight = 'content',
         private bool $contextMenus = false,
-        private string $formActionsOrder = 'cancel_first',
+        private string $formActionsOrder = 'primary_first',
     ) {
         if (null !== $menuSemantics && !\in_array($menuSemantics, self::MENU_SEMANTICS, true)) {
             throw new InvalidArgumentException(\sprintf('Invalid UiKit theme menu_semantics "%s": use null, "menu" or "disclosure".', $menuSemantics));
@@ -236,11 +236,11 @@ final readonly class Theme
     }
 
     /**
-     * `theme.form_actions_order` from the processed config (2.66; missing = `cancel_first`).
+     * `theme.form_actions_order` from the processed config (2.66; missing = `primary_first` since 2.66.1).
      */
     private static function formActionsOrderOption(mixed $order): string
     {
-        $order ??= 'cancel_first';
+        $order ??= 'primary_first';
         if (!\is_string($order) || !\in_array($order, self::FORM_ACTIONS_ORDERS, true)) {
             throw new InvalidArgumentException(\sprintf('Invalid UiKit theme form_actions_order "%s": use "cancel_first" or "primary_first".', \is_string($order) ? $order : get_debug_type($order)));
         }
@@ -683,9 +683,10 @@ final readonly class Theme
     }
 
     /**
-     * Order of the form actions row (`theme.form_actions_order`, 2.66): `cancel_first` (default) = Cancel, secondary
-     * actions, then the primary last; `primary_first` = the 2.65 order of the form scaffold. Read by the form scaffold
-     * and the `form_actions` partial (its `order` option wins). The DOM order is the visual and focus order.
+     * Order of the form actions row (`theme.form_actions_order`, 2.66): `primary_first` (default since 2.66.1, the
+     * 2.65 order of the form scaffold) = primary, secondary actions, Cancel; `cancel_first` (opt-in) = Cancel,
+     * secondary actions, then the primary last. Read by the form scaffold and the `form_actions` partial (its `order`
+     * option wins; a row whose Cancel closes a dialog keeps Cancel first). The DOM order is the visual and focus order.
      */
     public function formActionsOrder(): string
     {

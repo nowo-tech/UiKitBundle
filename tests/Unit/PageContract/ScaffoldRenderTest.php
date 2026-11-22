@@ -176,9 +176,9 @@ final class ScaffoldRenderTest extends TestCase
         self::assertStringContainsString('<input type="text" id="item_name" name="item[name]"', $html);
         self::assertStringContainsString('<input type="checkbox" id="item_active" name="item[active]"', $html);
         self::assertStringContainsString('<button type="submit" class="nowo-ui-btn nowo-ui-btn--primary btn btn-primary btn-moss">Save</button>', $html);
-        self::assertStringContainsString('<a class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary" href="/items" data-nowo-ui-form-cancel>Cancel</a>', $html);
-        // 2.66: Cancel first, then the primary on the right
-        self::assertLessThan(strpos($html, '>Save</button>'), strpos($html, '>Cancel</a>'));
+        self::assertStringContainsString('<a class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary" href="/items">Cancel</a>', $html);
+        // 2.66.1: the default theme.form_actions_order (primary_first) keeps the 2.65 row: the primary, then Cancel
+        self::assertLessThan(strpos($html, '>Cancel</a>'), strpos($html, '>Save</button>'));
         self::assertStringContainsString('class="nowo-ui-btn nowo-ui-btn--link btn btn-link nowo-ui-action--custom" href="/dup"', $html);
         self::assertStringContainsString('<h2 class="nowo-ui-danger-zone__title">Danger zone</h2>', $html);
         self::assertMatchesRegularExpression('#<form name="csrf" method="post" action="/items/1" class="nowo-ui-action__form">\s*<button type="submit" class="nowo-ui-btn nowo-ui-btn--danger nowo-ui-btn--solid btn btn-danger nowo-ui-confirm__submit">Delete</button>#', $html);
