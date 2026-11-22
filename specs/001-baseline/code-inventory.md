@@ -1,6 +1,6 @@
 # Code inventory — 100% traceability
 
-**Last audited**: 2026-11-17 (2.55 line: shell focus mode; 2.54.0 line: context menus; 2.53.0 line: inset sidebar style, dialog focus return, async combobox; 2.51.0 line: brand appearance, remote dialog, listing ports, side panel, rail, tree, image input, base stylesheet)  
+**Last audited**: 2026-11-22 (v2.64.0: 2.56-2.64 components, runtimes, demo platform and lint mapped; 2026-11-17: 2.55 line: shell focus mode; 2.54.0 line: context menus; 2.53.0 line: inset sidebar style, dialog focus return, async combobox; 2.51.0 line: brand appearance, remote dialog, listing ports, side panel, rail, tree, image input, base stylesheet)  
 **Baseline spec**: [`spec.md`](spec.md)  
 **Package**: `nowo-tech/ui-kit-bundle`
 
@@ -10,7 +10,7 @@ one row per file. Paths are relative to `src/`. Requirement IDs are defined in [
 
 **Scope**: every file tracked by Git under `src/` (`git ls-files src`), i.e. PHP, TypeScript, Twig, YAML, CSS, SCSS,
 the built JavaScript and the Stimulus peers README. **Excluded**: the co-located Vitest files `*.test.ts` under
-`Resources/assets/` (82 files at this audit — test artifacts covered by FR-TEST-001, not shipped runtime units; same rule as
+`Resources/assets/` (93 files at this audit — test artifacts covered by FR-TEST-001, not shipped runtime units; same rule as
 TwigInspectorBundle). `tests/`, `demo/` apps and caches are outside `src/` and out of scope. Built files that live
 under `src/` (the Vite IIFEs, the layered stylesheet and the inline theme-boot copy) are committed (Packagist installs
 no Node toolchain); they are listed in their own table as **outputs** of named sources (`FR-BUILD-*`) and are never
@@ -653,6 +653,52 @@ Produced by `pnpm run build` (`vite.config.ts`, one `VITE_ENTRY` per IIFE; `buil
 | `Resources/public/css/nowo-ui-base.css` | Opt-in default theme (2.51) | FR-BASESTYLE-001 |
 | `Lint/TokenLint.php` | Colour-literal lint of bundle CSS, SCSS and Twig (`bin/nowo-ui-token-lint`) | FR-LINT-001 |
 
+## Components and runtimes of 2.56-2.64
+
+| Source file | Spec section | Requirement IDs |
+| --- | --- | --- |
+| `Resources/views/demo_platform/layout.html.twig` | Demo platform shell | FR-DEMO-002 |
+| `Resources/views/demo_platform/_section.html.twig` | Demo platform content block | FR-DEMO-002 |
+| `Resources/views/demo_platform/_flashes.html.twig` | Demo platform flashes | FR-DEMO-002 |
+| `Resources/public/css/nowo-ui-demo-platform.css` | Demo platform stylesheet (tokens only) | FR-DEMO-002 |
+| `Lint/DemoStyleLint.php` | Demo style lint (`bin/nowo-ui-demo-style-lint`) | FR-LINT-002 |
+| `Resources/public/css/vendor/tom-select.default.min.css` | Vendored Tom Select 2.6.2 default theme | FR-VENDOR-001 |
+| `Resources/views/partials/_bulk_bar.html.twig` | Bulk selection bar | FR-BULK-001 |
+| `Resources/views/partials/_bulk_toggle.html.twig` | Select-every-row box | FR-BULK-001 |
+| `Resources/assets/src/nowo-ui-bulk-select.ts` | Bulk selection runtime | FR-BULK-001 |
+| `Resources/views/partials/_dropzone.html.twig` | File dropzone partial | FR-DROPZONE-001 |
+| `Resources/assets/src/nowo-ui-dropzone.ts` | Dropzone runtime | FR-DROPZONE-001 |
+| `Resources/views/partials/_filter_bar.html.twig` | Filter bar partial | FR-FILTERSHEET-001 |
+| `Resources/assets/src/nowo-ui-filter-sheet.ts` | Filter sheet runtime | FR-FILTERSHEET-001 |
+| `Resources/views/partials/_error_summary.html.twig` | Error summary partial | FR-FORMBUSY-001 |
+| `Resources/assets/src/nowo-ui-form-busy.ts` | Form busy and error summary focus runtime | FR-FORMBUSY-001 |
+| `Resources/views/partials/_table_view.html.twig` | Table view controls partial | FR-TABLEVIEW-001 |
+| `Resources/assets/src/nowo-ui-table-view.ts` | Table view runtime | FR-TABLEVIEW-001 |
+| `Resources/views/partials/_tooltip.html.twig` | Tooltip partial | FR-TOOLTIP-001 |
+| `Resources/assets/src/nowo-ui-tooltip.ts` | Tooltip runtime | FR-TOOLTIP-001 |
+| `Resources/views/partials/_avatar_group.html.twig` | Avatar group | FR-DISPLAY-001 |
+| `Resources/views/partials/_chip.html.twig` | Chip | FR-DISPLAY-001 |
+| `Resources/views/partials/_code_block.html.twig` | Code block with copy button | FR-DISPLAY-001 |
+| `Resources/views/partials/_skeleton.html.twig` | Skeleton loading | FR-DISPLAY-001 |
+| `Resources/views/partials/_steps.html.twig` | Steps | FR-DISPLAY-001 |
+| `Resources/views/partials/_tab_panels.html.twig` | Client-side tab panels | FR-DISPLAY-001 |
+| `Resources/views/partials/_timeline.html.twig` | Timeline | FR-DISPLAY-001 |
+| `Resources/views/partials/_form_fieldset.html.twig` | Fieldset row | FR-FIELDSET-001 |
+| `Resources/views/partials/_keyset_pager.html.twig` | Keyset pager | FR-PAGER-002 |
+| `Resources/views/partials/_option_cards.html.twig` | Option cards | FR-OPTIONCARD-001 |
+| `Resources/views/form/nowo_ui_option_card_input.html.twig` | Form theme of one option card | FR-OPTIONCARD-001 |
+
+Built outputs of the six runtimes above (committed, never hand-edited; same rules as the build outputs table):
+
+| Source file | Produced by | Requirement IDs |
+| --- | --- | --- |
+| `Resources/public/js/nowo-ui-bulk-select.js` | `assets/src/nowo-ui-bulk-select.ts` | FR-BUILD-001, FR-BULK-001 |
+| `Resources/public/js/nowo-ui-dropzone.js` | `assets/src/nowo-ui-dropzone.ts` | FR-BUILD-001, FR-DROPZONE-001 |
+| `Resources/public/js/nowo-ui-filter-sheet.js` | `assets/src/nowo-ui-filter-sheet.ts` | FR-BUILD-001, FR-FILTERSHEET-001 |
+| `Resources/public/js/nowo-ui-form-busy.js` | `assets/src/nowo-ui-form-busy.ts` | FR-BUILD-001, FR-FORMBUSY-001 |
+| `Resources/public/js/nowo-ui-table-view.js` | `assets/src/nowo-ui-table-view.ts` | FR-BUILD-001, FR-TABLEVIEW-001 |
+| `Resources/public/js/nowo-ui-tooltip.js` | `assets/src/nowo-ui-tooltip.ts` | FR-BUILD-001, FR-TOOLTIP-001 |
+
 ## Coverage summary
 
 | Category | Mapped |
@@ -700,15 +746,16 @@ Produced by `pnpm run build` (`vite.config.ts`, one `VITE_ENTRY` per IIFE; `buil
 | Shell focus mode (2.55) | 6 |
 | Overlay registry, scroll regions and small helpers | 10 |
 | Default theme stylesheet and token lint | 2 |
-| **Total** | **419** |
+| Components and runtimes of 2.56-2.64 (30 sources) and their 6 built outputs | 36 |
+| **Total** | **455** |
 
-Excluded: co-located Vitest `*.test.ts` (82 files at this audit).
+Excluded: co-located Vitest `*.test.ts` (93 files at this audit).
 
-Audit (2026-11-17, 2.54.0 context menus + 2.55 focus mode files):
+Audit (2026-11-22, v2.64.0; previously 2026-11-17, 2.54.0 context menus + 2.55 focus mode files):
 
 ```bash
-git ls-files src | grep -v '\.test\.ts$' | wc -l                      # 419
-git ls-files src | grep -v '\.test\.ts$' | grep -c '\.php$'           # 139
-git ls-files src | grep -v '\.test\.ts$' | grep -c '\.ts$'            # 91
-git ls-files src | grep -c '\.test\.ts$'                              # 82 (excluded)
+git ls-files src | grep -v '\.test\.ts$' | wc -l                      # 455
+git ls-files src | grep -v '\.test\.ts$' | grep -c '\.php$'           # 140
+git ls-files src | grep -v '\.test\.ts$' | grep -c '\.ts$'            # 97
+git ls-files src | grep -c '\.test\.ts$'                              # 93 (excluded)
 ```

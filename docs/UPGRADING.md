@@ -31,10 +31,8 @@
 - [To 2.49.1](#to-2491)
   - [To 2.49.1](#to-2491-1)
 - [To 2.49.0](#to-2490)
-- [To 2.49.0](#to-2490-1)
 - [To 2.48.1](#to-2481)
 - [To 2.48.0](#to-2480)
-- [To 2.48.0](#to-2480-1)
 - [To 2.47.0](#to-2470)
 - [To 2.46.0](#to-2460)
 - [To 2.45.0](#to-2450)
@@ -520,14 +518,6 @@ From **2.48.1**:
 composer update nowo-tech/ui-kit-bundle
 ```
 
-## To 2.49.0
-
-From **2.48.1**:
-
-```bash
-composer update nowo-tech/ui-kit-bundle
-```
-
 Target **2.49.0** (minor, REQ-ARCH-001 rule 3). **Nothing to change**: no markup, CSS, JS or template variable changes,
 and every existing port keeps working. Two framework-typed signatures are deprecated and removed in **3.0**:
 
@@ -603,14 +593,6 @@ overlay on Turbo visits. Turbo's progress bar already covers them. To keep the k
 ```js
 document.addEventListener('turbo:visit', () => window.nowoUiShowPageLoader?.());
 document.addEventListener('turbo:load', () => window.nowoUiHidePageLoader?.());
-```
-
-## To 2.48.0
-
-From **2.47.0**:
-
-```bash
-composer update nowo-tech/ui-kit-bundle
 ```
 
 ## To 2.48.0
