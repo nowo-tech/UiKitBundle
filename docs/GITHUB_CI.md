@@ -23,6 +23,10 @@ Canonical per-repo doc for **REQ-GIT-001** (no Cursor co-author trailers). Copy 
   - [Classification](#classification)
   - [What still runs in light mode](#what-still-runs-in-light-mode)
   - [Concurrency](#concurrency)
+- [Release gates in full mode](#release-gates-in-full-mode)
+  - [How a cell decides to run or skip](#how-a-cell-decides-to-run-or-skip)
+  - [Running the target without the Docker stack](#running-the-target-without-the-docker-stack)
+  - [In light mode](#in-light-mode)
 - [Acceptance criteria](#acceptance-criteria)
 - [References](#references)
 
@@ -253,7 +257,8 @@ with a repository variable of the same name (`gh variable set NOWO_CI_PR_MODE -R
   audit`, the whole PHPUnit suite.
 - PHPStan, Code Style Check, Dependency floor (where the repo has it), Git history and the semantic PR title.
 
-Skipped in light mode in this repo: Vite / TypeScript, Code Coverage and the non-representative PHP cells.
+Skipped in light mode in this repo: Vite / TypeScript, Code Coverage, the non-representative PHP cells and the
+[release gates](#release-gates-in-full-mode).
 
 The other matrix cells still start and report success after one echo step: a matrix job skipped with a job-level
 `if:` reports its un-expanded name (`PHP ${{ matrix.php }} - …`), so the required contexts `PHP x - Symfony y` would
@@ -280,6 +285,61 @@ A new push to a PR cancels its superseded run. Push runs use their own `run_id` 
 
 ---
 
+## Release gates in full mode
+
+`make release-check` runs gates that were not in CI, so they only failed when someone tried to release. The
+`release-gates` job of `ci.yml` runs four of them on every full-mode PR and on every push to `main` / `master`:
+
+| Check name in the PR | Runs | In this repo |
+|----------------------|------|--------------|
+| `Release gate (make rector-dry)` | `composer rector-dry` (`rector process --dry-run`) | defined |
+| `Release gate (make validate-phpdoc)` | `php .scripts/complete-public-phpdoc.php` | defined |
+| `Release gate (make validate-translations)` | `php .scripts/check-translation-parity.php` | defined |
+| `Release gate (make check-twig-extra)` | `.scripts/check-twig-extra.sh` | defined |
+
+It is a matrix job with one cell per gate (`fail-fast: false`), so the checks list names the gate that failed and
+one failing gate does not hide the others. The gates are **not required checks**. The job block is identical in
+every bundle: nothing in it names a script, a translation file or a repo.
+
+### How a cell decides to run or skip
+
+The cell asks the repo's own Makefile, with `make -n -o ensure-up -o install <gate>` (a dry run that prints the
+recipe without running it):
+
+| make's answer | Cell |
+|---------------|------|
+| `No rule to make target '<gate>'.  Stop.` | passes with a `Release gate <gate> skipped` notice: the repo does not define the gate |
+| `Nothing to be done for '<gate>'.` | passes with the same notice: the target is only declared (for example in `.PHONY`) |
+| no `Makefile` | passes with the same notice |
+| any other make error (broken Makefile, missing `include`) | **fails**: a broken Makefile must not hide a gate |
+| a recipe | prints the recipe, installs Composer dependencies (PHP 8.4) and runs the target |
+
+A skipped cell does not set up PHP or install anything. The reason is also written to the job summary.
+
+### Running the target without the Docker stack
+
+Makefile recipes run through `$(COMPOSE) exec -T $(SERVICE_PHP) <command>`. The cell runs
+`make -o ensure-up -o install COMPOSE=<shim> COMPOSE_BIN=<shim> <gate>`, where the shim (written inline by the step)
+drops the compose prefix and runs `<command>` on the runner: global options (`-f`, `--project-directory`, …) and
+`exec` / `run` options are dropped, `-e VAR=value` is exported, and an absolute binary path missing on the runner
+(`/usr/bin/composer`) is looked up on `PATH`. `-o ensure-up -o install` keeps make from starting the stack. Any
+other compose call (`up`, `ps`, …) fails the cell with a message, so a recipe that needs the stack shows up red
+instead of passing silently. CI therefore runs the same recipe as `make release-check`.
+
+Limits: a recipe that calls `$(MAKE) <other target>` runs the sub-make without the `-o` flags (make does not pass
+them down), so a sub-target depending on `ensure-up` fails the cell; a recipe that calls `docker` without
+`$(COMPOSE)` / `$(COMPOSE_BIN)` fails the same way.
+
+Reproduce a red cell locally with `make <gate>` (inside the Docker stack, as usual).
+
+### In light mode
+
+In light mode the four cells start and pass after one echo step (`Light mode, this gate runs on full-mode PRs and on
+every push.`), like the non-representative test cells: the job is never skipped at job level, so the
+`Release gate (make …)` contexts keep their names if they are ever made required. Nothing is installed or run.
+
+---
+
 ## Acceptance criteria
 
 A bundle complies when:
@@ -298,6 +358,6 @@ A bundle complies when:
 
 - [CONTRIBUTING.md](CONTRIBUTING.md) — hooks and contribution flow
 - [RELEASE.md](RELEASE.md) — post-tag co-author check before push
-- [.github/workflows/ci.yml](../.github/workflows/ci.yml) — `git-hygiene` job, `changes` job (light mode)
+- [.github/workflows/ci.yml](../.github/workflows/ci.yml) — `git-hygiene` job, `changes` job (light mode), `release-gates` job
 - Shared templates: `repositories/bundles/.scripts/templates/`
 - Spec detail: `repositories/bundles/BUNDLES_FULL_SPECS_DETAILS.md` → REQ-GIT-001
