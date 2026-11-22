@@ -1,0 +1,51 @@
+{#
+  Filter sheet pieces (2.65), shared by partials/_filter_bar.html.twig and page/_list_filters.html.twig (opt-in
+  theme.pages.list.filters.sheet), so both phone sheets print the same "Filters (n)" button and the same native modal
+  <dialog> driven by js/nowo-ui-filter-sheet.js. Not a theme partial: override `filter_bar` / `list_filters` instead.
+
+      {% import '@NowoUiKitBundle/macros/filter_sheet.html.twig' as filter_sheet %}
+
+  Root contract (the partial prints it): a wrapper with class nowo-ui-filter-sheet and data-nowo-ui-filter-sheet
+  holding the toggle (data-nowo-ui-filter-sheet-open), the panel (data-nowo-ui-filter-sheet-panel) with the form, then
+  the dialog below. The dialog has no role, aria-modal, inert or scroll lock of its own: showModal() provides them.
+#}
+
+{#- Number of filled filter fields of a FormView (hidden fields, _token, page, per_page, sort and dir excluded): a
+    checkbox when checked, a multiple value when not empty, any other non-empty value once. Prints the number (callers: `((filter_sheet.active_count(form) ~ "")|trim) + 0`). -#}
+{% macro active_count(form) -%}
+    {%- set _count = 0 -%}
+    {%- for _child in form.children|default([]) -%}
+        {%- set _v = _child.vars -%}
+        {%- if _v.name not in ['_token', 'page', 'per_page', 'sort', 'dir'] and 'hidden' not in _v.block_prefixes -%}
+            {%- if _v.checked is defined -%}
+                {%- set _count = _count + (_v.checked ? 1 : 0) -%}
+            {%- elseif _v.value is iterable -%}
+                {%- set _count = _count + (_v.value|length > 0 ? 1 : 0) -%}
+            {%- elseif _v.value is not null and _v.value is not same as('') -%}
+                {%- set _count = _count + 1 -%}
+            {%- endif -%}
+        {%- endif -%}
+    {%- endfor -%}
+    {{- _count -}}
+{%- endmacro %}
+
+{#- The phone "Filters (n)" button (hidden by the stylesheet until the runtime marks the root ready, below 48rem). -#}
+{% macro toggle(id, title, count) -%}
+<button type="button" class="nowo-ui-btn nowo-ui-btn--outline nowo-ui-filter-sheet__toggle" aria-haspopup="dialog" aria-controls="{{ id }}-dialog" data-nowo-ui-filter-sheet-open>
+            {{- title -}}
+            {%- if count > 0 %} <span class="nowo-ui-filter-sheet__count"><span aria-hidden="true">{{ count }}</span><span class="visually-hidden">{{ 'filter_bar.active'|trans({'%count%': count}, 'NowoUiKitBundle') }}</span></span>{% endif -%}
+        </button>
+{%- endmacro %}
+
+{#- The bottom sheet: a native modal <dialog> (opened by showModal() only) named by its heading; the runtime moves
+    the panel into the slot and back. level: heading level 2-6 (anything else = 2). -#}
+{% macro dialog(id, title, level, close_label) -%}
+{%- set _level = level in [2, 3, 4, 5, 6] ? level : 2 -%}
+<dialog id="{{ id }}-dialog" class="nowo-ui-filter-sheet__dialog" aria-labelledby="{{ id }}-title" data-nowo-ui-filter-sheet-dialog>
+        <div class="nowo-ui-filter-sheet__dialog-header">
+            <h{{ _level }} id="{{ id }}-title" class="nowo-ui-filter-sheet__dialog-title">{{ title }}</h{{ _level }}>
+            <button type="button" class="nowo-ui-btn nowo-ui-btn--outline nowo-ui-btn--sm" data-nowo-ui-filter-sheet-close>{{ close_label ? close_label|nowo_ui_trans : 'filter_bar.close'|trans({}, 'NowoUiKitBundle') }}</button>
+        </div>
+        <div class="nowo-ui-filter-sheet__dialog-body" data-nowo-ui-filter-sheet-slot></div>
+    </dialog>
+{%- endmacro %}

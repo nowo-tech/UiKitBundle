@@ -25,7 +25,7 @@ final class StateHideCssTest extends TestCase
      */
     public static function stateRules(): iterable
     {
-        yield 'folded filters hide the fields' => ['form:has(> .nowo-ui-filters-collapse.is-collapsed) > :not(.nowo-ui-filters-collapse)', 'display: none !important;'];
+        yield 'folded filters hide the fields' => ['form:has(> .nowo-ui-filters-collapse.is-collapsed):not(.nowo-ui-filter-sheet__dialog-body form) > :not(.nowo-ui-filters-collapse)', 'display: none !important;'];
         yield 'filters summary [hidden]' => ['.nowo-ui-filters-collapse__summary[hidden]', 'display: none !important;'];
         yield 'row detail button [hidden]' => ['.nowo-ui-row-detail-btn[hidden]', 'display: none !important;'];
         yield 'closed dialog' => ['.nowo-ui-dialog:not([open])', 'display: none !important;'];

@@ -943,6 +943,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *                     testids?: bool|Param, // data-testid filters-collapse-toggle / filters-collapse-summary. // Default: false
  *                     morph?: bool|Param, // Add the <morph-icon> of assets/morphicons to the toggle. // Default: false
  *                 },
+ *                 sheet?: bool|Param, // 2.65: below 48rem the filters card folds behind a "Filters (n)" button that opens it in a native modal <dialog> bottom sheet (the filter_bar sheet: macros/filter_sheet.html.twig, runtime filter-sheet, appended to the scripts partial by itself). false = the 2.64 output. // Default: false
  *             },
  *         }>,
  *     },

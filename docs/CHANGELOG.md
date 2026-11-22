@@ -148,6 +148,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **List filters phone sheet** (`nowo_ui_kit.theme.pages.list.filters.sheet`, default `false`): the list scaffold
+  filter card (`list_filters` partial, so `ListPage` lists) gets the `filter_bar` phone sheet. Below 48rem the card
+  folds behind a "Filters (n)" button that opens the same form node in a native modal `<dialog>` bottom sheet; the
+  `scripts` partial appends the `filter-sheet` runtime by itself when the option is on. Inside the sheet the fold
+  toggle is hidden and a folded card shows its fields. Off, the output is byte-identical to 2.64.
+- `macros/filter_sheet.html.twig`: the "Filters (n)" button, the active-filter count and the sheet `<dialog>`, shared
+  by `filter_bar` and `list_filters` (the `filter_bar` markup is unchanged).
+
+### Changed
+
+- **Filter sheet follows Chrome Modern Web Guidance** (`dialog`, `prevent-page-scroll-under-modal-dialog`):
+  `.nowo-ui-filter-sheet__dialog:modal` gets `overscroll-behavior: contain` and its `::backdrop` `overflow: hidden;
+  overscroll-behavior: contain`, so scrolling over the backdrop or at the end of the sheet no longer scrolls the page.
+  `js/nowo-ui-filter-sheet.js` opens the sheet with `showModal()` only: the `open` attribute fallback is gone and,
+  where `showModal()` is missing, the fields stay inline instead of folding. The browser returns the focus to the
+  button on close; the runtime only focuses it itself when moving the panel back left the focus nowhere.
+- The folded filter-card rules (`form:has(> .nowo-ui-filters-collapse.is-collapsed) …`) skip a form inside the sheet
+  (`:not(.nowo-ui-filter-sheet__dialog-body form)`); `.nowo-ui-filter-sheet__panel form` skips the list filter form
+  (`:not([data-nowo-ui-filters])`) so it keeps its grid. Hosts that copied these selectors keep working.
+
 ## [2.64.0] - 2026-11-22
 
 ### Added

@@ -57,6 +57,13 @@ describe('nowo-ui-filter-sheet', () => {
     expect(document.querySelectorAll('#panel')).toHaveLength(1);
   });
 
+  it('focuses the first field that takes the focus (a disabled control is skipped)', () => {
+    const form = document.querySelector('#panel form')!;
+    form.insertAdjacentHTML('afterbegin', '<button type="button" id="fold" disabled>Fold</button>');
+    document.getElementById('open')!.click();
+    expect(document.activeElement?.id).toBe('q');
+  });
+
   it('closes from the button: panel back in place, focus on the toggle', () => {
     document.getElementById('open')!.click();
     document.getElementById('close')!.click();
@@ -78,14 +85,63 @@ describe('nowo-ui-filter-sheet', () => {
     expect(document.getElementById('panel')!.parentElement?.id).toBe('fb');
   });
 
-  it('falls back to the open attribute without showModal / close', () => {
+  it('never opens through the open attribute: without showModal the sheet stays off and the fields inline', async () => {
+    document.body.innerHTML = MARKUP.replace('id="fb"', 'id="fb2"');
     const d = dialog();
     Object.defineProperty(d, 'showModal', { value: undefined });
-    Object.defineProperty(d, 'close', { value: undefined });
-    mod.openSheet(document.getElementById('fb')!);
-    expect(d.hasAttribute('open')).toBe(true);
-    mod.closeSheet(document.getElementById('fb')!);
+    mod.upgradeFilterSheets();
+    const root = document.getElementById('fb2')!;
+    expect(root.hasAttribute('data-nowo-ui-filter-sheet-ready')).toBe(false);
+    mod.openSheet(root);
     expect(d.hasAttribute('open')).toBe(false);
+    expect(document.getElementById('panel')!.parentElement?.id).toBe('fb2');
+    // an open dialog without close() is left alone (no attribute removal either)
+    d.setAttribute('open', '');
+    Object.defineProperty(d, 'close', { value: undefined });
+    mod.closeSheet(root);
+    expect(d.hasAttribute('open')).toBe(true);
+  });
+
+  it('leaves the focus where the browser returned it when it is outside the sheet', () => {
+    const toggle = document.getElementById('open') as HTMLButtonElement;
+    const other = document.createElement('button');
+    document.body.appendChild(other);
+    toggle.click();
+    // the browser restored the focus to the invoker (or elsewhere) before the close event
+    dialog().close();
+    other.focus();
+    dialog().dispatchEvent(new Event('close'));
+    expect(document.getElementById('panel')!.parentElement?.id).toBe('fb');
+    expect(document.activeElement).toBe(other);
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('focuses the button itself when the panel moved back and the focus was left on the body', () => {
+    const toggle = document.getElementById('open') as HTMLButtonElement;
+    toggle.click();
+    // the invoker never had the focus (e.g. Safari does not focus a tapped button): nothing to return to
+    (document.activeElement as HTMLElement | null)?.blur();
+    expect(document.activeElement).toBe(document.body);
+    dialog().close();
+    dialog().dispatchEvent(new Event('close'));
+    expect(document.getElementById('panel')!.parentElement?.id).toBe('fb');
+    expect(document.activeElement).toBe(toggle);
+  });
+
+  it('ignores a close event once the sheet lost its parts', () => {
+    document.getElementById('slot')!.remove();
+    expect(() => dialog().dispatchEvent(new Event('close'))).not.toThrow();
+    expect(document.getElementById('open')!.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('does not touch the focus when the panel was not moved', () => {
+    const toggle = document.getElementById('open') as HTMLButtonElement;
+    const other = document.createElement('button');
+    document.body.appendChild(other);
+    other.focus();
+    mod.closeSheet(document.getElementById('fb')!);
+    expect(document.activeElement).toBe(other);
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
   });
 
   it('ignores clicks outside a sheet and roots without the parts', () => {
