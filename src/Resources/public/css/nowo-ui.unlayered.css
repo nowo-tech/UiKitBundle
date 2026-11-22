@@ -10325,3 +10325,200 @@ form:has(> .nowo-ui-filters-collapse.is-collapsed[data-nowo-ui-motion-ready]) > 
     transition: none;
   }
 }
+
+/* --- Option cards (2.64, partial `option_cards`): clickable radio / checkbox cards, no JavaScript ---
+   A <label> around a native input; the selected card is :has(:checked). Colours come from the base tokens, which already
+   switch in dark mode, so the cards need no dark rules of their own. Every --nowo-ui-option-card-* token is optional. */
+.nowo-ui-option-cards {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.nowo-ui-option-cards__legend {
+  padding: 0;
+  margin: 0 0 0.5rem;
+  color: var(--nowo-ui-option-card-legend-color, var(--nowo-ui-text));
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.nowo-ui-option-cards__legend--sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.nowo-ui-option-cards__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--nowo-ui-option-card-gap, 0.75rem);
+}
+
+@media (min-width: 40rem) {
+  .nowo-ui-option-cards--cols-2 .nowo-ui-option-cards__grid,
+  .nowo-ui-option-cards--cols-3 .nowo-ui-option-cards__grid,
+  .nowo-ui-option-cards--cols-4 .nowo-ui-option-cards__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 48rem) {
+  .nowo-ui-option-cards--cols-3 .nowo-ui-option-cards__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .nowo-ui-option-cards--cols-4 .nowo-ui-option-cards__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.nowo-ui-option-card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--nowo-ui-option-card-inner-gap, 0.75rem);
+  min-width: 0;
+  padding: var(--nowo-ui-option-card-padding, 1rem);
+  border: var(--nowo-ui-option-card-border-width, 2px) solid var(--nowo-ui-option-card-border, var(--nowo-ui-border));
+  border-radius: var(--nowo-ui-option-card-radius, var(--nowo-ui-radius));
+  background: var(--nowo-ui-option-card-bg, var(--nowo-ui-surface));
+  color: var(--nowo-ui-option-card-text, var(--nowo-ui-text));
+  cursor: pointer;
+  transition: border-color 0.12s ease, background-color 0.12s ease;
+}
+
+.nowo-ui-option-card:hover {
+  border-color: var(--nowo-ui-option-card-hover-border, var(--nowo-ui-border-strong));
+}
+
+.nowo-ui-option-card:has(.nowo-ui-option-card__input:checked) {
+  border-color: var(--nowo-ui-option-card-checked-border, var(--nowo-ui-primary));
+  background: var(--nowo-ui-option-card-checked-bg, color-mix(in srgb, var(--nowo-ui-primary) 6%, var(--nowo-ui-surface)));
+}
+
+.nowo-ui-option-card:has(.nowo-ui-option-card__input:focus-visible) {
+  outline: 2px solid var(--nowo-ui-option-card-focus-ring, var(--nowo-ui-focus-ring-color, var(--nowo-ui-primary)));
+  outline-offset: 2px;
+}
+
+.nowo-ui-option-card:has(.nowo-ui-option-card__input:disabled) {
+  opacity: var(--nowo-ui-option-card-disabled-opacity, 0.55);
+  border-color: var(--nowo-ui-option-card-border, var(--nowo-ui-border));
+  cursor: not-allowed;
+}
+
+.nowo-ui-option-card__input {
+  flex: none;
+  width: var(--nowo-ui-option-card-input-size, 1.125rem);
+  height: var(--nowo-ui-option-card-input-size, 1.125rem);
+  margin: 0.0625rem 0 0;
+  accent-color: var(--nowo-ui-primary);
+  cursor: inherit;
+}
+
+.nowo-ui-option-card__body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+.nowo-ui-option-card__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.nowo-ui-option-card__title {
+  min-width: 0;
+  color: var(--nowo-ui-option-card-title-color, var(--nowo-ui-text));
+  font-size: 0.9375rem;
+  font-weight: var(--nowo-ui-option-card-title-weight, 600);
+  line-height: 1.25rem;
+  overflow-wrap: anywhere;
+}
+
+.nowo-ui-option-card__meta {
+  flex: none;
+  color: var(--nowo-ui-option-card-meta-color, var(--nowo-ui-text));
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.nowo-ui-option-card__description {
+  color: var(--nowo-ui-option-card-description-color, var(--nowo-ui-muted));
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.nowo-ui-option-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.nowo-ui-option-card__content {
+  display: block;
+  min-width: 0;
+  font-size: 0.8125rem;
+}
+
+/* Icon variant: a centred column, the input centred at the bottom. */
+.nowo-ui-option-cards--icon .nowo-ui-option-card {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.nowo-ui-option-cards--icon .nowo-ui-option-card__body {
+  flex: 1 1 auto;
+  align-items: center;
+}
+
+.nowo-ui-option-cards--icon .nowo-ui-option-card__header {
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.nowo-ui-option-cards--icon .nowo-ui-option-card__badges {
+  justify-content: center;
+}
+
+.nowo-ui-option-cards--icon .nowo-ui-option-card__input {
+  margin: 0;
+}
+
+.nowo-ui-option-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--nowo-ui-option-card-icon-color, var(--nowo-ui-muted));
+  font-size: var(--nowo-ui-option-card-icon-size, 1.75rem);
+  line-height: 1;
+}
+
+.nowo-ui-option-card__icon svg {
+  width: 1em;
+  height: 1em;
+}
+
+.nowo-ui-option-card:has(.nowo-ui-option-card__input:checked) .nowo-ui-option-card__icon {
+  color: var(--nowo-ui-option-card-checked-icon-color, var(--nowo-ui-primary));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nowo-ui-option-card {
+    transition: none;
+  }
+}

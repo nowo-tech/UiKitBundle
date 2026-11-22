@@ -25,6 +25,45 @@
             <button type="submit" form="customer-form" class="nowo-ui-btn nowo-ui-btn--primary">Save customer</button>
         {% endblock %}
     {% endembed %}
+    {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Option cards', intro: 'Clickable radio and checkbox cards over the form\'s own controls: the selected state is CSS only, arrow keys move between radio cards, and a disabled card cannot be picked.', kind: 'form', testid: 'catalogue-option-cards'} %}
+        {% block section_body %}
+            {{ form_start(option_cards_form, {action: path('catalogue_admin', {group: 'form-patterns'})}) }}
+                <div class="nowo-ui-stack">
+                    {{ include(nowo_ui_partial('option_cards'), {
+                        field: option_cards_form.plan, columns: 3,
+                        options_meta: {
+                            starter: {meta: '$9', description: 'For one person.', badges: ['Popular', {label: 'Save 20%', tone: 'success'}]},
+                            team: {meta: '$29', description: 'For a small team, with shared projects.', content: '<span>Up to <strong>10</strong> seats</span>'},
+                            enterprise: {meta: '$99', description: 'Contact us to enable it.'},
+                        },
+                    }, false) }}
+                    {{ include(nowo_ui_partial('option_cards'), {
+                        field: option_cards_form.addons, columns: 2,
+                        options_meta: {
+                            backup: {meta: '+$5', description: 'Kept for 30 days.'},
+                            sso: {meta: '+$12', description: 'SAML and OIDC.'},
+                        },
+                    }, false) }}
+                    {{ include(nowo_ui_partial('option_cards'), {
+                        field: option_cards_form.device, variant: 'icon', columns: 3,
+                        options_meta: {
+                            laptop: {description: 'Works offline.', icon: 'home'},
+                            tablet: {description: 'Touch first.', icon: 'grid'},
+                            phone: {description: 'Not available yet.', icon: 'more'},
+                        },
+                    }, false) }}
+                    {{ include(nowo_ui_partial('option_cards'), {
+                        field: option_cards_form.channels, variant: 'icon', columns: 4, legend_sr_only: true,
+                        options_meta: {
+                            email: {icon: 'send'},
+                            sms: {icon: 'send'},
+                            push: {icon: 'send'},
+                        },
+                    }, false) }}
+                </div>
+            {{ form_end(option_cards_form) }}
+        {% endblock %}
+    {% endembed %}
     {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Customer (read only)', intro: 'The same fields as a definition list when the user may not edit them.', kind: 'detail', testid: 'catalogue-readonly'} %}
         {% block section_actions %}<a class="nowo-ui-btn nowo-ui-btn--outline nowo-ui-btn--sm" href="#">Edit</a>{% endblock %}
         {% block section_body %}

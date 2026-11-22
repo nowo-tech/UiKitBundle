@@ -445,6 +445,20 @@ final class ThemeSlots
         // Segmented control (2.4, partial `segmented`): radiogroup root and its option buttons (one checkbox behind)
         'segmented' => ['nowo-ui-segmented', []],
         'segmented_option' => ['nowo-ui-segmented__option', []],
+        // Option cards (2.64, partial `option_cards`): clickable radio / checkbox cards. Fieldset root, legend, grid, one
+        // card (<label>), its native input, icon, title row (header + title + meta), description, badges and host content
+        'option_cards' => ['nowo-ui-option-cards', []],
+        'option_cards_legend' => ['nowo-ui-option-cards__legend', []],
+        'option_cards_grid' => ['nowo-ui-option-cards__grid', []],
+        'option_card' => ['nowo-ui-option-card', []],
+        'option_card_input' => ['nowo-ui-option-card__input', []],
+        'option_card_icon' => ['nowo-ui-option-card__icon', []],
+        'option_card_header' => ['nowo-ui-option-card__header', []],
+        'option_card_title' => ['nowo-ui-option-card__title', []],
+        'option_card_meta' => ['nowo-ui-option-card__meta', []],
+        'option_card_description' => ['nowo-ui-option-card__description', []],
+        'option_card_badges' => ['nowo-ui-option-card__badges', []],
+        'option_card_content' => ['nowo-ui-option-card__content', []],
         // Emoji picker (partial `emoji_picker`, EmojiPickerType): root, toggle, panel, its search box, grid and status.
         'emoji_picker' => ['nowo-ui-emoji-picker', []],
         'emoji_picker_toggle' => ['nowo-ui-btn nowo-ui-btn--secondary nowo-ui-emoji-picker__toggle', [
@@ -741,6 +755,7 @@ final class ThemeSlots
         'locale_tabs' => '@NowoUiKitBundle/partials/_locale_tabs.html.twig',
         'menu' => '@NowoUiKitBundle/partials/_menu.html.twig',
         'modal_shell' => '@NowoUiKitBundle/partials/_modal_shell.html.twig',
+        'option_cards' => '@NowoUiKitBundle/partials/_option_cards.html.twig',
         'page_actions' => '@NowoUiKitBundle/partials/_page_actions.html.twig',
         'page_header' => '@NowoUiKitBundle/partials/_page_header.html.twig',
         'page_status' => '@NowoUiKitBundle/partials/_page_status.html.twig',

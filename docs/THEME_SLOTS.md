@@ -93,6 +93,7 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 
 | Slot | Semantic (always) | bootstrap5 / tabler | bootstrap4 | tailwind | foundation |
 | --- | --- | --- | --- | --- | --- |
+acquired by option-cards: uikit rows (slot 2/8, group UiKitBundle)
 | `document` | `nowo-ui-document` | — | — | — | — |
 | `body` | `nowo-ui-body` | — | — | — | — |
 | `page` | `nowo-ui-page` | — | — | — | — |
@@ -228,6 +229,18 @@ the macro output are kept (`nowo_ui_theme.macroClasses()`); the `ui.*` macros ca
 | `popover` | `nowo-ui-popover` | — | — | — | — |
 | `segmented` | `nowo-ui-segmented` | — | — | — | — |
 | `segmented_option` | `nowo-ui-segmented__option` | — | — | — | — |
+| `option_cards` | `nowo-ui-option-cards` | — | — | — | — |
+| `option_cards_legend` | `nowo-ui-option-cards__legend` | — | — | — | — |
+| `option_cards_grid` | `nowo-ui-option-cards__grid` | — | — | — | — |
+| `option_card` | `nowo-ui-option-card` | — | — | — | — |
+| `option_card_input` | `nowo-ui-option-card__input` | — | — | — | — |
+| `option_card_icon` | `nowo-ui-option-card__icon` | — | — | — | — |
+| `option_card_header` | `nowo-ui-option-card__header` | — | — | — | — |
+| `option_card_title` | `nowo-ui-option-card__title` | — | — | — | — |
+| `option_card_meta` | `nowo-ui-option-card__meta` | — | — | — | — |
+| `option_card_description` | `nowo-ui-option-card__description` | — | — | — | — |
+| `option_card_badges` | `nowo-ui-option-card__badges` | — | — | — | — |
+| `option_card_content` | `nowo-ui-option-card__content` | — | — | — | — |
 | `emoji_picker` | `nowo-ui-emoji-picker` | — | — | — | — |
 | `emoji_picker_toggle` | `nowo-ui-btn nowo-ui-btn--secondary nowo-ui-emoji-picker__toggle` | `btn btn-outline-secondary` | `btn btn-outline-secondary` | `inline-flex items-center gap-1 font-medium px-3 py-1.5 text-sm border` | `button secondary` |
 | `emoji_picker_panel` | `nowo-ui-emoji-picker__panel` | — | — | — | — |
@@ -579,6 +592,7 @@ as the UiKit partial (documented in the header comment of each template) and sho
 | `error_summary` *(2.61)* | `partials/_error_summary.html.twig` | `form` (`FormView`), `title`, `heading_level`, `attr` | errors of an invalid form with links to the fields |
 | `filter_bar` *(2.61)* | `partials/_filter_bar.html.twig` | `form` (`FormView`), `filter_id`, `title`, `heading_level`, `active_count`, `reset_href`, `submit_label`, `reset_label`, `close_label`, `attr`; blocks `filter_bar_extra`, `filter_bar_actions` | list filters, a bottom sheet on phones (runtime `filter-sheet`) |
 | `form_fieldset` *(2.61)* | `partials/_form_fieldset.html.twig` | `field` (`FormView`), `legend`, `inline`, `boxed`, `attr` | choice group under a legend |
+| `option_cards` *(2.64)* | `partials/_option_cards.html.twig` | `field` (expanded ChoiceType `FormView`), `options_meta` (by choice value: `{description, meta, icon, badges, content \| content_template + content_context, attr}`), `columns` (1–4), `variant` (`basic` \| `icon`), `legend` (or `false`), `legend_sr_only`, `errors`, `attr`, `bundle`; slots `option_cards`, `option_cards_legend`, `option_cards_grid`, `option_card`, `option_card_input`, `option_card_icon`, `option_card_header`, `option_card_title`, `option_card_meta`, `option_card_description`, `option_card_badges`, `option_card_content` | clickable radio / checkbox cards over the form's own controls, selected state by `:has(:checked)` |
 | `skeleton` *(2.61)* | `partials/_skeleton.html.twig` | `variant` (`text` \| `list` \| `card` \| `table`), `lines`, `rows`, `label`, `attr` | loading placeholders in an `aria-busy` region |
 | `steps` *(2.61)* | `partials/_steps.html.twig` | `items` (`{label, status, hint, href}`), `label`, `attr` | progress of a multi-step task |
 | `tab_panels` *(2.61)* | `partials/_tab_panels.html.twig` | `id`, `items` (`{id, label, content \| content_template + content_context}`), `label`, `active`, `heading_level`, `attr` | client-side WAI-ARIA tabs (runtime `tabs`) |

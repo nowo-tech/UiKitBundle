@@ -16,6 +16,7 @@ two token blocks of `nowo-ui.css`. A host theme is a short `:root` block.
 - [Radii, overlays, shadows](#radii-overlays-shadows)
 - [Buttons](#buttons)
 - [Inputs, checkboxes, radios](#inputs-checkboxes-radios)
+- [Option cards (2.64)](#option-cards-264)
 - [Tables](#tables)
 - [Tabs](#tabs)
 - [Pagination](#pagination)
@@ -251,6 +252,36 @@ The link variant uses `--nowo-ui-link` / `--nowo-ui-link-hover`.
 | `--nowo-ui-input-disabled-bg` | `var(--nowo-ui-surface-muted)` (2.60: disabled and read-only kit inputs) |
 | `--nowo-ui-input-focus-border` | `var(--nowo-ui-primary)` (+ `--nowo-ui-focus-ring` shadow) |
 | `--nowo-ui-accent` | `var(--nowo-ui-primary)` — checkboxes / radios in `.nowo-ui-check`, filter bars, searches, tables, lists, cards, modals, confirms |
+
+## Option cards (2.64)
+
+The `option_cards` partial (clickable radio / checkbox cards). Every token is optional; the defaults follow the base
+tokens, so dark mode needs no extra rules.
+
+| Token | Default |
+|-------|---------|
+| `--nowo-ui-option-card-bg` | `var(--nowo-ui-surface)` |
+| `--nowo-ui-option-card-text` | `var(--nowo-ui-text)` |
+| `--nowo-ui-option-card-border` | `var(--nowo-ui-border)` |
+| `--nowo-ui-option-card-border-width` | `2px` |
+| `--nowo-ui-option-card-radius` | `var(--nowo-ui-radius)` |
+| `--nowo-ui-option-card-padding` | `1rem` |
+| `--nowo-ui-option-card-gap` | `0.75rem` (between cards) |
+| `--nowo-ui-option-card-inner-gap` | `0.75rem` (input to body) |
+| `--nowo-ui-option-card-hover-border` | `var(--nowo-ui-border-strong)` |
+| `--nowo-ui-option-card-checked-border` | `var(--nowo-ui-primary)` |
+| `--nowo-ui-option-card-checked-bg` | `color-mix(in srgb, var(--nowo-ui-primary) 6%, var(--nowo-ui-surface))` |
+| `--nowo-ui-option-card-checked-icon-color` | `var(--nowo-ui-primary)` |
+| `--nowo-ui-option-card-focus-ring` | `var(--nowo-ui-focus-ring-color, var(--nowo-ui-primary))` |
+| `--nowo-ui-option-card-disabled-opacity` | `0.55` |
+| `--nowo-ui-option-card-input-size` | `1.125rem` |
+| `--nowo-ui-option-card-icon-size` | `1.75rem` |
+| `--nowo-ui-option-card-icon-color` | `var(--nowo-ui-muted)` |
+| `--nowo-ui-option-card-title-color` | `var(--nowo-ui-text)` |
+| `--nowo-ui-option-card-title-weight` | `600` |
+| `--nowo-ui-option-card-meta-color` | `var(--nowo-ui-text)` |
+| `--nowo-ui-option-card-description-color` | `var(--nowo-ui-muted)` |
+| `--nowo-ui-option-card-legend-color` | `var(--nowo-ui-text)` |
 
 ## Tables
 

@@ -92,6 +92,7 @@ final class AdminCatalogueController extends AbstractController
                 }
             }
             $context['patterns_form'] = $patterns->createView();
+            $context['option_cards_form'] = $this->optionCardsForm($forms)->createView();
         } elseif ('overlays' === $group) {
             if ($request->isMethod('POST')) {
                 $context['notice'] = 'Invoice INV-1044 deleted (demo: nothing is stored).';
@@ -186,6 +187,19 @@ final class AdminCatalogueController extends AbstractController
             ->add('vat', TextType::class, ['label' => 'VAT number', 'required' => false, 'attr' => self::INPUT])
             ->add('reminders', CheckboxType::class, ['label' => 'Send payment reminders', 'required' => false, 'row_attr' => ['class' => 'nowo-ui-form-row--switch'], 'attr' => ['role' => 'switch']])
             ->add('contract', FileType::class, ['label' => 'Signed contract', 'required' => false, 'multiple' => true, 'attr' => ['accept' => '.pdf,image/*']])
+            ->getForm();
+    }
+
+    /**
+     * The option cards example: four expanded choices (radio and checkbox) of a small unmapped form.
+     */
+    private function optionCardsForm(FormFactoryInterface $forms): FormInterface
+    {
+        return $forms->createNamedBuilder('option_cards', FormType::class, ['plan' => 'starter', 'addons' => ['backup'], 'device' => 'laptop', 'channels' => ['email']], ['attr' => ['id' => 'option-cards-form']])
+            ->add('plan', ChoiceType::class, ['label' => 'Plan (radio, basic)', 'expanded' => true, 'choices' => ['Starter' => 'starter', 'Team' => 'team', 'Enterprise' => 'enterprise'], 'choice_attr' => static fn (string $choice, string $key, string $value): array => 'enterprise' === $value ? ['disabled' => true] : []])
+            ->add('addons', ChoiceType::class, ['label' => 'Add-ons (checkbox, basic)', 'expanded' => true, 'multiple' => true, 'choices' => ['Daily backup' => 'backup', 'Single sign-on' => 'sso']])
+            ->add('device', ChoiceType::class, ['label' => 'Device (radio, icon)', 'expanded' => true, 'choices' => ['Laptop' => 'laptop', 'Tablet' => 'tablet', 'Phone' => 'phone'], 'choice_attr' => static fn (string $choice, string $key, string $value): array => 'phone' === $value ? ['disabled' => true] : []])
+            ->add('channels', ChoiceType::class, ['label' => 'Channels (checkbox, icon)', 'expanded' => true, 'multiple' => true, 'choices' => ['Email' => 'email', 'SMS' => 'sms', 'Push' => 'push'], 'choice_attr' => static fn (string $choice, string $key, string $value): array => 'push' === $value ? ['disabled' => true] : []])
             ->getForm();
     }
 

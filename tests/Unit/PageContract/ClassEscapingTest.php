@@ -16,6 +16,8 @@ use Nowo\UiKitBundle\View\PageHeader;
 use Nowo\UiKitBundle\View\Pagination;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\FormType;
 
 /**
  * Theme class lists accept any printable character (Tailwind arbitrary / child variants such as `[&>li]:mt-1` or
@@ -77,6 +79,9 @@ final class ClassEscapingTest extends TestCase
             '_keyset_pager' => ['next_cursor' => 'n', 'prev_cursor' => 'p', 'route' => 'items', 'per_page_options' => [10, 20], 'per_page' => 10, 'testid' => 't'],
             '_pagination_compact' => ['pagination' => Pagination::fromTotal(95, 2, 10, route: 'items', variant: 'compact')],
         ];
+        $optionCards = static fn (): array => ['field' => PageContractTwig::forms()->createNamedBuilder('f', FormType::class)->add('p', ChoiceType::class, ['expanded' => true, 'choices' => ['A' => 'a']])->getForm()->createView()['p'], 'options_meta' => ['a' => ['description' => 'd', 'badges' => ['b'], 'icon' => 'home']], 'variant' => 'icon'];
+        yield 'host partial _option_cards' => ['host', '@NowoUiKitBundle/partials/_option_cards.html.twig', $optionCards()];
+        yield 'bundle partial _option_cards' => ['bundle', '@NowoUiKitBundle/partials/_option_cards.html.twig', $optionCards() + ['bundle' => 'NowoXBundle']];
         foreach ($partials as $partial => $vars) {
             yield 'host partial '.$partial => ['host', '@NowoUiKitBundle/partials/'.$partial.'.html.twig', $vars];
             yield 'bundle partial '.$partial => ['bundle', '@NowoUiKitBundle/partials/'.$partial.'.html.twig', $vars + ['bundle' => 'NowoXBundle']];

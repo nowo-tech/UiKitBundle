@@ -1,0 +1,104 @@
+{#
+  Option cards (2.64, theme partial `option_cards`): clickable radio or checkbox cards over an expanded ChoiceType
+  (REQ-TWIG-005: the controls come from Symfony Forms). Every card is a <label> around the native control of one choice
+  (form_widget of the child view), inside a <fieldset>: the whole card is the click target, arrow keys (radio) and the
+  post work without JavaScript, and the selected state is painted by CSS (:has(:checked)), never by a script. The
+  choice label is the control's accessible name (aria-labelledby) and the description describes it (aria-describedby).
+  Name, type, value, checked and disabled come from the form: radio, or checkbox when the field is `multiple`.
+
+      {{ include(nowo_ui_partial('option_cards'), {
+          field: form.plan, columns: 3,
+          options_meta: {
+              basic: {meta: '$9', description: 'For one person.', badges: ['Popular']},
+              pro: {meta: '$29', description: 'For a team.'},
+          },
+      }) }}
+
+  Required:
+    - field: FormView of a ChoiceType (or EntityType, EnumType...) with `expanded: true`
+  Optional:
+    - options_meta: map keyed by choice value (what `choice_value` returns, e.g. 'basic'), each entry
+        {description, meta, icon, badges, content | content_template + content_context, attr}
+        description, meta: View\Label|string (translated through nowo_ui_trans)
+        icon: icon name of the UiKit icon partial (variant `icon`; nothing when the icon set is `none`)
+        badges: list of View\Label|string or {label, tone (neutral|primary|info|success|warning|danger)}
+        content: TRUSTED HTML printed raw below the badges (host extras, never user input); content_template +
+          content_context: a template included instead (autoescaped by that template)
+        attr: extra attributes of the card <label> (no on*, no style)
+      The title is the choice label of the form (translated by the form with its translation domain); `choice_attr`
+      keeps landing on each control; `disabled` choices and the field's `disabled` dim the card.
+    - columns: 1-4 (default 2). Responsive: 1 column on phones, at most 2 from 40rem, all of them from 48rem
+    - variant: `basic` (default: control top-left, title with `meta` on the right, description, wrapped badges) |
+      `icon` (centred icon, title, description, the control centred at the bottom)
+    - legend: View\Label|string, `false` for none (default: the field label); legend_sr_only (default false: visually
+      hidden but read by assistive tech)
+    - errors: print form_errors() and form_help() after the cards (default true; false when a form row prints them)
+    - attr: extra attributes of the <fieldset> (no on*, no style; `aria-labelledby` names the group when the legend is
+      `false`)
+    - bundle: per-bundle theme exceptions
+  Card ids derive from the form ids (`<field id>_<n>`). Slots: option_cards (fieldset), option_cards_legend,
+  option_cards_grid, option_card (label), option_card_input, option_card_icon, option_card_header, option_card_title,
+  option_card_meta, option_card_description, option_card_badges, option_card_content. Tokens: --nowo-ui-option-card-*
+  (docs/THEMING.md).
+#}
+{% set bundle = bundle|default(null) %}
+{% set _v = field.vars %}
+{% set _variant = (variant|default('basic')) == 'icon' ? 'icon' : 'basic' %}
+{% set _cols = max(1, min(4, columns|default(2)|round)) %}
+{% set _attr = nowo_ui_safe_attrs(attr|default({}), ['id']) %}
+{% set _tones = ['neutral', 'primary', 'info', 'success', 'warning', 'danger'] %}
+{% set _icons = nowo_ui_kit_icon_set|default('bootstrap-icons') != 'none' %}
+{% set _meta = options_meta|default({}) %}
+{% set _legend = (legend ?? null) is same as(false) ? null : ((legend ?? null) ? legend|nowo_ui_trans : (_v.label is same as(false) ? null : (_v.label is empty ? _v.name|humanize : (_v.translation_domain is same as(false) ? _v.label : _v.label|trans(_v.label_translation_parameters|default({}), _v.translation_domain))))) %}
+<fieldset id="{{ _v.id }}" class="{{ nowo_ui_class('option_cards', bundle) }} nowo-ui-option-cards--{{ _variant }} nowo-ui-option-cards--cols-{{ _cols }}{{ (_attr.class ?? false) ? ' ' ~ _attr.class }}" data-nowo-ui-option-cards{{ nowo_ui_attrs('option_cards', bundle) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(_attr)) }}>
+    {% if _legend %}<legend class="{{ nowo_ui_class('option_cards_legend', bundle) }}{{ (legend_sr_only ?? false) ? ' nowo-ui-option-cards__legend--sr' }}"{{ nowo_ui_attrs('option_cards_legend', bundle) }}>{{ _legend }}</legend>{% endif %}
+    <div class="{{ nowo_ui_class('option_cards_grid', bundle) }}"{{ nowo_ui_attrs('option_cards_grid', bundle) }}>
+        {% for _child in field %}
+            {% form_theme _child '@NowoUiKitBundle/form/nowo_ui_option_card_input.html.twig' %}
+            {% set _c = _child.vars %}
+            {% set _cid = _c.id %}
+            {% set _m = _meta[_c.value] ?? {} %}
+            {% set _lattr = nowo_ui_safe_attrs(_m.attr ?? {}, ['for']) %}
+            {% set _description = _m.description ?? null %}
+            {% set _has_desc = _description is not null and _description is not same as('') %}
+            {% set _label = _c.label is same as(false) or _c.label is empty ? _c.value : _c.label %}
+            {% set _title = _c.translation_domain is same as(false) ? _label : _label|trans(_c.label_translation_parameters|default({}), _c.translation_domain) %}
+            {% set _input_attr = _c.attr|merge({
+                class: (nowo_ui_class('option_card_input', bundle) ~ ' ' ~ (_c.attr.class ?? ''))|trim,
+                'aria-labelledby': _cid ~ '_title',
+            }) %}
+            {% if _has_desc %}{% set _input_attr = _input_attr|merge({'aria-describedby': _cid ~ '_desc'}) %}{% endif %}
+            {% set _control %}{{ form_widget(_child, {attr: _input_attr}) }}{% endset %}
+            <label class="{{ nowo_ui_class('option_card', bundle) }}{{ (_lattr.class ?? false) ? ' ' ~ _lattr.class }}" for="{{ _cid }}"{{ nowo_ui_attrs('option_card', bundle) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(_lattr)) }}>
+                {% if _variant == 'basic' %}{{ _control }}{% endif %}
+                <span class="nowo-ui-option-card__body">
+                    {% if _variant == 'icon' and (_m.icon ?? null) and _icons %}<span class="{{ nowo_ui_class('option_card_icon', bundle) }}" aria-hidden="true"{{ nowo_ui_attrs('option_card_icon', bundle) }}>{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _m.icon, label: ''}, false)|trim|raw }}</span>{% endif %}
+                    <span class="{{ nowo_ui_class('option_card_header', bundle) }}"{{ nowo_ui_attrs('option_card_header', bundle) }}>
+                        <span class="{{ nowo_ui_class('option_card_title', bundle) }}" id="{{ _cid }}_title"{{ nowo_ui_attrs('option_card_title', bundle) }}>{{ _title }}</span>
+                        {% if (_m.meta ?? null) is not null and _m.meta is not same as('') %}<span class="{{ nowo_ui_class('option_card_meta', bundle) }}"{{ nowo_ui_attrs('option_card_meta', bundle) }}>{{ _m.meta|nowo_ui_trans }}</span>{% endif %}
+                    </span>
+                    {% if _has_desc %}<span class="{{ nowo_ui_class('option_card_description', bundle) }}" id="{{ _cid }}_desc"{{ nowo_ui_attrs('option_card_description', bundle) }}>{{ _description|nowo_ui_trans }}</span>{% endif %}
+                    {% if (_m.badges ?? [])|length > 0 %}
+                        <span class="{{ nowo_ui_class('option_card_badges', bundle) }}"{{ nowo_ui_attrs('option_card_badges', bundle) }}>
+                            {% for _b in _m.badges %}
+                                {% set _tone = (_b.tone ?? 'neutral') in _tones ? (_b.tone ?? 'neutral') : 'neutral' %}
+                                <span class="{{ nowo_ui_class('badge_' ~ _tone, bundle) }}"{{ nowo_ui_attrs('badge_' ~ _tone, bundle) }}>{{ (_b.label is defined ? _b.label : _b)|nowo_ui_trans }}</span>
+                            {% endfor %}
+                        </span>
+                    {% endif %}
+                    {% if _m.content_template ?? null %}
+                        <span class="{{ nowo_ui_class('option_card_content', bundle) }}"{{ nowo_ui_attrs('option_card_content', bundle) }}>{{ include(_m.content_template, _m.content_context ?? {}) }}</span>
+                    {% elseif _m.content ?? null %}
+                        <span class="{{ nowo_ui_class('option_card_content', bundle) }}"{{ nowo_ui_attrs('option_card_content', bundle) }}>{{ _m.content|raw }}</span>
+                    {% endif %}
+                </span>
+                {% if _variant == 'icon' %}{{ _control }}{% endif %}
+            </label>
+        {% endfor %}
+    </div>
+    {% do field.setRendered %}
+    {% if errors ?? true %}
+        {{ form_errors(field) }}
+        {{ form_help(field) }}
+    {% endif %}
+</fieldset>
