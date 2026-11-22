@@ -74,6 +74,7 @@ final class ClassEscapingTest extends TestCase
             '_shell' => ['brand' => 'Acme', 'name' => 'Ann', 'initials' => 'A', 'aside_items' => [], 'main' => '<p>main</p>'],
             // 2.6
             '_confirm_dialog' => ['trigger_label' => 'Open', 'dialog_id' => 'd1'],
+            '_option_cards' => ['name' => 'p', 'legend' => 'L', 'options' => [['value' => 'a', 'title' => 'A', 'description' => 'd', 'badges' => ['b'], 'icon' => 'home']], 'variant' => 'icon'],
             '_keyset_pager' => ['next_cursor' => 'n', 'prev_cursor' => 'p', 'route' => 'items', 'per_page_options' => [10, 20], 'per_page' => 10, 'testid' => 't'],
             '_pagination_compact' => ['pagination' => Pagination::fromTotal(95, 2, 10, route: 'items', variant: 'compact')],
         ];

@@ -147,7 +147,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-## [2.63.2] - 2026-11-22
+### Added
+
+- **`option_cards` partial** (`nowo_ui_partial('option_cards')`): clickable radio / checkbox cards, written from
+  scratch in the kit style (the UX pattern of admin templates only). Each card is a `<label>` around a native
+  `<input>` inside a `<fieldset>` + `<legend>` (`legend_sr_only` hides it visually), so the whole card is clickable and
+  arrow keys and the form post work without JavaScript. Vars: `name`, `type` (`radio` | `checkbox`), `options`
+  (`{value, title, meta, description, icon, badges, checked, disabled, attr, input_attr, content | content_template +
+  content_context}`), `columns` (1-4; one column on phones, two from 40rem, all from 48rem), `variant` (`basic`:
+  input top-left, title with `meta` on the right, description, wrapped badges | `icon`: centred icon, title,
+  description, the input centred at the bottom), `legend`, `legend_sr_only`, `id`, `attr`, `bundle`. The title names the
+  input (`aria-labelledby`) and the description describes it (`aria-describedby`). The selected state is a 2 px primary
+  border plus a faint primary tint through `:has(:checked)`; hover raises the border; `:focus-visible` rings the card;
+  a disabled card is dimmed with `cursor: not-allowed`. Twelve theme slots (`option_cards`, `option_cards_legend`,
+  `option_cards_grid`, `option_card`, `option_card_input`, `option_card_icon`, `option_card_header`,
+  `option_card_title`, `option_card_meta`, `option_card_description`, `option_card_badges`, `option_card_content`) and
+  `--nowo-ui-option-card-*` tokens (docs/THEMING.md); Tailwind-free CSS that follows the base tokens in dark mode and
+  needs no inline style (strict CSP). Demo: Form patterns of the admin catalogue. No new strings, no script.
+ - 2026-11-22
 
 ### Fixed
 

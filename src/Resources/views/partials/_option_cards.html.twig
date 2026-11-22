@@ -1,0 +1,89 @@
+{#
+  Option cards (2.64, theme partial `option_cards`): clickable radio or checkbox cards. Every card is a <label> around a
+  native <input>, inside a <fieldset> with a <legend>: the whole card is the click target, arrow keys (radio) and the form
+  post work without JavaScript, and the selected state is painted by CSS (:has(:checked)), never by a script. The title
+  names the input (aria-labelledby), the description describes it (aria-describedby).
+
+      {{ include(nowo_ui_partial('option_cards'), {
+          name: 'plan', type: 'radio', legend: 'Plan', columns: 3,
+          options: [
+              {value: 'basic', title: 'Basic', meta: '$9', description: 'For one person.', badges: ['Popular'], checked: true},
+              {value: 'pro', title: 'Pro', meta: '$29', description: 'For a team.'},
+          ],
+      }) }}
+
+  Input:
+    - name: field name. For `type: checkbox` it is used as given (pass `features[]` to post a list)
+    - type: `radio` (default) | `checkbox`
+    - options: list of {value, title, meta?, description?, icon?, badges?, checked?, disabled?, attr?, input_attr?, content?}
+        title, meta, description: View\Label|string (translated through nowo_ui_trans)
+        icon: icon name of the UiKit icon partial (variant `icon`; nothing when the icon set is `none`)
+        badges: list of View\Label|string or {label, tone (neutral|primary|info|success|warning|danger)}
+        checked: initial state (radio: only the first checked option counts); disabled: dimmed, cannot be picked
+        attr: extra attributes of the <label> (no on*, no style); input_attr: extra attributes of the <input> (name, type,
+          value, checked, disabled, id and the aria-labelledby / aria-describedby links are ours)
+        content: TRUSTED HTML printed raw below the badges (host extras: never user input); content_template +
+          content_context: a template included instead (autoescaped by that template)
+    - columns: 1–4 (default 2). Responsive: 1 column on phones, at most 2 from 40rem, all of them from 48rem
+    - variant: `basic` (default: input top-left, title + meta on one row, description, badges) | `icon` (centred icon,
+      title, description, the input centred at the bottom)
+    - legend (View\Label|string) and legend_sr_only (default false: visually hidden but read by assistive tech)
+    - id: id of the fieldset; the card ids are `<id>-<n>` (default from name; pass an id when two groups share a name)
+    - attr: extra attributes of the <fieldset> (no on*, no style)
+    - bundle: per-bundle theme exceptions
+  Slots: option_cards (fieldset), option_cards_legend, option_cards_grid, option_card (label), option_card_input,
+  option_card_icon, option_card_header, option_card_title, option_card_meta, option_card_description,
+  option_card_badges, option_card_content. Tokens: --nowo-ui-option-card-* (docs/THEMING.md).
+#}
+{% set bundle = bundle|default(null) %}
+{% set _type = (type|default('radio')) == 'checkbox' ? 'checkbox' : 'radio' %}
+{% set _variant = (variant|default('basic')) == 'icon' ? 'icon' : 'basic' %}
+{% set _cols = max(1, min(4, columns|default(2)|round)) %}
+{% set _name = name|default('') %}
+{% set _gid = id|default('nowo-ui-option-cards-' ~ (_name|lower|replace({'[': '-', ']': '', ' ': '-', '.': '-'})|trim('-')|default('group'))) %}
+{% set _attr = nowo_ui_safe_attrs(attr|default({}), ['id']) %}
+{% set _tones = ['neutral', 'primary', 'info', 'success', 'warning', 'danger'] %}
+{% set _icons = nowo_ui_kit_icon_set|default('bootstrap-icons') != 'none' %}
+{% set _options = options|default([]) %}
+{% set _first_checked = null %}
+{% for _o in _options %}
+    {% if _first_checked is null and (_o.checked ?? false) %}{% set _first_checked = loop.index0 %}{% endif %}
+{% endfor %}
+<fieldset id="{{ _gid }}" class="{{ nowo_ui_class('option_cards', bundle) }} nowo-ui-option-cards--{{ _variant }} nowo-ui-option-cards--cols-{{ _cols }}{{ (_attr.class ?? false) ? ' ' ~ _attr.class }}" data-nowo-ui-option-cards{{ nowo_ui_attrs('option_cards', bundle) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(_attr)) }}>
+    {% if legend ?? null %}<legend class="{{ nowo_ui_class('option_cards_legend', bundle) }}{{ (legend_sr_only ?? false) ? ' nowo-ui-option-cards__legend--sr' }}"{{ nowo_ui_attrs('option_cards_legend', bundle) }}>{{ legend|nowo_ui_trans }}</legend>{% endif %}
+    <div class="{{ nowo_ui_class('option_cards_grid', bundle) }}"{{ nowo_ui_attrs('option_cards_grid', bundle) }}>
+        {% for _o in _options %}
+            {% set _cid = _gid ~ '-' ~ loop.index %}
+            {% set _on = _type == 'radio' ? (_first_checked is not null and loop.index0 == _first_checked) : (_o.checked ?? false) %}
+            {% set _lattr = nowo_ui_safe_attrs(_o.attr|default({}), []) %}
+            {% set _iattr = nowo_ui_safe_attrs(_o.input_attr|default({}), ['type', 'name', 'value', 'checked', 'disabled', 'id', 'aria-labelledby', 'aria-describedby']) %}
+            {% set _has_desc = (_o.description ?? null) is not null and _o.description is not same as('') %}
+            {% set _input %}<input class="{{ nowo_ui_class('option_card_input', bundle) }}{{ (_iattr.class ?? false) ? ' ' ~ _iattr.class }}" type="{{ _type }}" name="{{ _name }}" value="{{ _o.value ?? '' }}" id="{{ _cid }}" aria-labelledby="{{ _cid }}-title"{% if _has_desc %} aria-describedby="{{ _cid }}-desc"{% endif %}{% if _on %} checked{% endif %}{% if _o.disabled ?? false %} disabled{% endif %}{{ nowo_ui_attrs('option_card_input', bundle) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(_iattr)) }}>{% endset %}
+            <label class="{{ nowo_ui_class('option_card', bundle) }}{{ (_lattr.class ?? false) ? ' ' ~ _lattr.class }}" for="{{ _cid }}"{{ nowo_ui_attrs('option_card', bundle) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(_lattr)) }}>
+                {% if _variant == 'basic' %}{{ _input }}{% endif %}
+                <span class="nowo-ui-option-card__body">
+                    {% if _variant == 'icon' and (_o.icon ?? null) and _icons %}<span class="{{ nowo_ui_class('option_card_icon', bundle) }}" aria-hidden="true"{{ nowo_ui_attrs('option_card_icon', bundle) }}>{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _o.icon, label: ''}, false)|trim|raw }}</span>{% endif %}
+                    <span class="{{ nowo_ui_class('option_card_header', bundle) }}"{{ nowo_ui_attrs('option_card_header', bundle) }}>
+                        <span class="{{ nowo_ui_class('option_card_title', bundle) }}" id="{{ _cid }}-title"{{ nowo_ui_attrs('option_card_title', bundle) }}>{{ (_o.title ?? _o.value ?? '')|nowo_ui_trans }}</span>
+                        {% if (_o.meta ?? null) is not null and _o.meta is not same as('') %}<span class="{{ nowo_ui_class('option_card_meta', bundle) }}"{{ nowo_ui_attrs('option_card_meta', bundle) }}>{{ _o.meta|nowo_ui_trans }}</span>{% endif %}
+                    </span>
+                    {% if _has_desc %}<span class="{{ nowo_ui_class('option_card_description', bundle) }}" id="{{ _cid }}-desc"{{ nowo_ui_attrs('option_card_description', bundle) }}>{{ _o.description|nowo_ui_trans }}</span>{% endif %}
+                    {% if _o.badges|default([]) is not empty %}
+                        <span class="{{ nowo_ui_class('option_card_badges', bundle) }}"{{ nowo_ui_attrs('option_card_badges', bundle) }}>
+                            {% for _b in _o.badges %}
+                                {% set _tone = (_b.tone ?? 'neutral') in _tones ? (_b.tone ?? 'neutral') : 'neutral' %}
+                                <span class="{{ nowo_ui_class('badge_' ~ _tone, bundle) }}"{{ nowo_ui_attrs('badge_' ~ _tone, bundle) }}>{{ (_b.label is defined ? _b.label : _b)|nowo_ui_trans }}</span>
+                            {% endfor %}
+                        </span>
+                    {% endif %}
+                    {% if _o.content_template ?? null %}
+                        <span class="{{ nowo_ui_class('option_card_content', bundle) }}"{{ nowo_ui_attrs('option_card_content', bundle) }}>{{ include(_o.content_template, _o.content_context|default({})) }}</span>
+                    {% elseif _o.content ?? null %}
+                        <span class="{{ nowo_ui_class('option_card_content', bundle) }}"{{ nowo_ui_attrs('option_card_content', bundle) }}>{{ _o.content|raw }}</span>
+                    {% endif %}
+                </span>
+                {% if _variant == 'icon' %}{{ _input }}{% endif %}
+            </label>
+        {% endfor %}
+    </div>
+</fieldset>
