@@ -40,10 +40,11 @@
                                                 <form name="item" method="post" class="nowo-ui-form" data-nowo-ui-region="form">
                                                                                                                                                 <div><label for="item_name">Name</label><input type="text" id="item_name" name="item[name]" /></div>
                                                                                                                 <div><label for="item_active">Active</label><input type="checkbox" id="item_active" name="item[active]" value="1" /></div>
-                                                                                                                                    <div class="nowo-ui-form__actions d-flex flex-wrap gap-2">
-                        <button type="submit" class="nowo-ui-btn nowo-ui-btn--primary btn btn-primary">Save</button>
-                                                    <a class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary" href="/items">Cancel</a>
-                                            </div>
+                                                                                                                                    <div class="nowo-ui-form__actions d-flex flex-wrap gap-2" data-nowo-ui-form-actions="cancel_first">
+                    <a class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary" href="/items" data-nowo-ui-form-cancel>Cancel</a>
+                                        <button type="submit" class="nowo-ui-btn nowo-ui-btn--primary btn btn-primary">Save</button>
+            </div>
+
                 </form>
                             </div>
                                         <section class="nowo-ui-danger-zone mt-4" data-nowo-ui-region="danger-zone">

@@ -1,0 +1,54 @@
+{#
+  Form actions row (2.66, theme partial `form_actions`): Cancel (secondary) first, then the secondary actions, then the
+  primary last, on the right — the order of the dialog footers (`dialog` / `confirm_dialog`) and the full-page
+  confirm. One row for every bundle form: the form scaffold renders it, a bundle's own form (dialog fragment, wizard
+  step) includes it instead of writing the buttons by hand.
+
+  The DOM order is the visual and the focus order: never reorder it with CSS (`order`, `row-reverse`). Cancel is a
+  link or a `type="button"` button, never a submit button, so Enter in a field still submits the primary. On a narrow
+  screen the row wraps in that order: the primary stays last, at the end of the row nearest the thumb.
+
+  Optional:
+    - bundle, nowo_ui_page_type: theme slot scope
+    - submit_label (View\Label|string; default action.save)
+    - submit_attrs: extra attributes of the submit button (name / value / form / data-*; `class` is appended)
+    - submit: false = no submit button (a row with Cancel and secondary actions only)
+    - cancel_href: Cancel as a link (`btn_secondary` slot)
+    - cancel_dialog: true = Cancel as `<button type="button" data-nowo-ui-dialog-close>` (closes the UiKit dialog
+      around a dialog fragment); ignored with cancel_href
+    - cancel_label (View\Label|string; default action.cancel)
+    - cancel_attrs: extra attributes of Cancel (`class` is appended; e.g. `data-nowo-ui-dialog-close` on a cancel_href
+      link that closes a remote form dialog and stays a link without JavaScript)
+    - extra_actions: pre-rendered trusted HTML (secondary actions), printed between Cancel and the primary
+    - order: `cancel_first` | `primary_first` (default: theme.form_actions_order, `cancel_first`); `primary_first`
+      prints the primary, the extra actions, then Cancel (the 2.65 order of the form scaffold)
+  Every element carries the `form_actions` slot class and attributes; Cancel is marked `data-nowo-ui-form-cancel`
+  (the page contract test kit checks the order with it, PageContractTestCase::formActionsOrderChecked()).
+#}
+{% set bundle = bundle|default(null) %}
+{% set _order = order is defined and order is not null ? order : nowo_ui_theme.formActionsOrder() %}
+{% set _cancel_href = cancel_href|default(null) %}
+{% set _cancel_dialog = _cancel_href is empty and cancel_dialog|default(false) %}
+{% set _cancel_label = cancel_label|default(null) is null ? 'action.cancel'|trans({}, 'NowoUiKitBundle') : cancel_label|nowo_ui_trans %}
+{% set _cancel_attrs = nowo_ui_safe_attrs(cancel_attrs|default({}), ['type', 'href', 'data-nowo-ui-form-cancel']) %}
+{% set _submit_attrs = nowo_ui_safe_attrs(submit_attrs|default({}), ['type']) %}
+{% set _cancel %}
+    {%- if _cancel_href is not empty -%}
+        <a class="{{ (nowo_ui_class('btn_secondary', bundle) ~ ' ' ~ (_cancel_attrs.class ?? ''))|trim }}" href="{{ _cancel_href }}" data-nowo-ui-form-cancel{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(_cancel_attrs)) }}>{{ _cancel_label }}</a>
+    {%- elseif _cancel_dialog -%}
+        <button type="button" class="{{ (nowo_ui_class('btn_secondary', bundle) ~ ' ' ~ (_cancel_attrs.class ?? ''))|trim }}" data-nowo-ui-dialog-close data-nowo-ui-form-cancel{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(_cancel_attrs)) }}>{{ _cancel_label }}</button>
+    {%- endif -%}
+{% endset %}
+{% set _submit %}
+    {%- if submit is not defined or submit is not same as(false) -%}
+        <button type="submit" class="{{ (nowo_ui_class('btn_primary', bundle) ~ ' ' ~ (_submit_attrs.class ?? ''))|trim }}"{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(_submit_attrs)) }}>{{ submit_label|default(null) is null ? 'action.save'|trans({}, 'NowoUiKitBundle') : submit_label|nowo_ui_trans }}</button>
+    {%- endif -%}
+{% endset %}
+{% set _extra = extra_actions|default('') %}
+<div class="{{ nowo_ui_class('form_actions', bundle) }}" data-nowo-ui-form-actions="{{ _order }}"{{ nowo_ui_attrs('form_actions', bundle) }}>
+    {% for _part in _order == 'primary_first' ? [_submit, _extra, _cancel] : [_cancel, _extra, _submit] %}
+        {% if _part|trim is not empty %}
+        {{ _part|raw }}
+        {% endif %}
+    {% endfor %}
+</div>

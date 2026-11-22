@@ -35,6 +35,13 @@ final readonly class Theme
     /** 2.31: values of `theme.dialog.height` (content = dialog rule v2, the default; size = the 2.29 / 2.30 height). */
     public const DIALOG_HEIGHTS = ['content', 'size'];
 
+    /**
+     * 2.66 (`theme.form_actions_order`): order of the form actions row. `cancel_first` (default, the house order of
+     * the dialog footers and the full-page confirm) = Cancel, secondary actions, then the primary last (on the right);
+     * `primary_first` = the 2.65 order of the form scaffold (primary, secondary actions, Cancel).
+     */
+    public const FORM_ACTIONS_ORDERS = ['cancel_first', 'primary_first'];
+
     /** 2.31: the token `theme.dialog.height: size` prints on `:root` (1 = the size's height). */
     public const DIALOG_FILL_TOKEN = 'dialog-fill';
 
@@ -101,6 +108,7 @@ final readonly class Theme
      * @param string|null                                              $menuSemantics          2.28: default ARIA of popover menus (`menu` partial option `menu_semantics`); null = as 2.27
      * @param string                                                   $dialogHeight           2.31: `content` (default) = dialogs as tall as their content, capped; `size` = the size's height (2.29 / 2.30)
      * @param bool                                                     $contextMenus           2.54: kebab / row-action menus also open as a context menu of their row or card (right-click, keyboard, long press)
+     * @param string                                                   $formActionsOrder       2.66: `cancel_first` (default) or `primary_first` ({@see self::FORM_ACTIONS_ORDERS})
      */
     public function __construct(
         private string $framework = 'bootstrap5',
@@ -118,12 +126,16 @@ final readonly class Theme
         private ?string $menuSemantics = null,
         private string $dialogHeight = 'content',
         private bool $contextMenus = false,
+        private string $formActionsOrder = 'cancel_first',
     ) {
         if (null !== $menuSemantics && !\in_array($menuSemantics, self::MENU_SEMANTICS, true)) {
             throw new InvalidArgumentException(\sprintf('Invalid UiKit theme menu_semantics "%s": use null, "menu" or "disclosure".', $menuSemantics));
         }
         if (!\in_array($dialogHeight, self::DIALOG_HEIGHTS, true)) {
             throw new InvalidArgumentException(\sprintf('Invalid UiKit theme dialog.height "%s": use "content" or "size".', $dialogHeight));
+        }
+        if (!\in_array($formActionsOrder, self::FORM_ACTIONS_ORDERS, true)) {
+            throw new InvalidArgumentException(\sprintf('Invalid UiKit theme form_actions_order "%s": use "cancel_first" or "primary_first".', $formActionsOrder));
         }
         $this->classes = $this->normalizeClasses($classes, 'classes');
         $this->pages = $this->normalizePages($pages, 'pages');
@@ -207,7 +219,7 @@ final readonly class Theme
         /** @var array<string, array<string, mixed>> $pages */
         $pages = $theme['pages'] ?? [];
 
-        return new self($framework, $classes, $attributes, $partials, $tokens, $tokensDark, $bundles, false !== ($theme['framework_defaults'] ?? true), $pages, true === ($theme['confirm_message_in_header'] ?? false), true === ($theme['popover_menus'] ?? false), true === ($theme['form_errors_after_widget'] ?? false), self::menuSemanticsOption($theme['menu_semantics'] ?? null), self::dialogHeightOption($theme['dialog'] ?? null), true === ($theme['context_menus'] ?? false));
+        return new self($framework, $classes, $attributes, $partials, $tokens, $tokensDark, $bundles, false !== ($theme['framework_defaults'] ?? true), $pages, true === ($theme['confirm_message_in_header'] ?? false), true === ($theme['popover_menus'] ?? false), true === ($theme['form_errors_after_widget'] ?? false), self::menuSemanticsOption($theme['menu_semantics'] ?? null), self::dialogHeightOption($theme['dialog'] ?? null), true === ($theme['context_menus'] ?? false), self::formActionsOrderOption($theme['form_actions_order'] ?? null));
     }
 
     /**
@@ -221,6 +233,19 @@ final readonly class Theme
         }
 
         return $height;
+    }
+
+    /**
+     * `theme.form_actions_order` from the processed config (2.66; missing = `cancel_first`).
+     */
+    private static function formActionsOrderOption(mixed $order): string
+    {
+        $order ??= 'cancel_first';
+        if (!\is_string($order) || !\in_array($order, self::FORM_ACTIONS_ORDERS, true)) {
+            throw new InvalidArgumentException(\sprintf('Invalid UiKit theme form_actions_order "%s": use "cancel_first" or "primary_first".', \is_string($order) ? $order : get_debug_type($order)));
+        }
+
+        return $order;
     }
 
     /**
@@ -655,6 +680,16 @@ final readonly class Theme
     public function listFilters(): ListFiltersOptions
     {
         return $this->listFilters;
+    }
+
+    /**
+     * Order of the form actions row (`theme.form_actions_order`, 2.66): `cancel_first` (default) = Cancel, secondary
+     * actions, then the primary last; `primary_first` = the 2.65 order of the form scaffold. Read by the form scaffold
+     * and the `form_actions` partial (its `order` option wins). The DOM order is the visual and focus order.
+     */
+    public function formActionsOrder(): string
+    {
+        return $this->formActionsOrder;
     }
 
     /**
