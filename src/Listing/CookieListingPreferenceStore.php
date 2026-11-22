@@ -31,7 +31,12 @@ final readonly class CookieListingPreferenceStore implements ListingPreferenceRe
     public const MAX_LENGTH = 4096;
 
     /**
+     * Reads the listing's preference cookie and returns its columns, filters and table mode, or null when the cookie is
+     * missing, oversized, not valid JSON or holds none of the three members.
+     *
      * A `Request` argument is deprecated since 2.49 (pass a {@see ListingContext}); it is removed in 3.0.
+     *
+     * @return array{columns: array<mixed>|null, filters: array<mixed>|null, mode: string|null}|null
      */
     public function load(string $listingKey, ListingContext|Request $context): ?array
     {
