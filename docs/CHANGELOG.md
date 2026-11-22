@@ -151,6 +151,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- `CookieListingPreferenceStore::load()` now has a PHPDoc description and its `@return` array shape, so `make validate-phpdoc` passes.
+- `docs/UPGRADING.md`: the duplicated "To 2.61.0" and "To 2.6.0" sections are merged into one each, keeping all their text.
+
 ## [2.66.1] - 2026-11-22
 
 ### Changed

@@ -293,14 +293,6 @@ From **2.60.0**:
 composer update nowo-tech/ui-kit-bundle
 ```
 
-## To 2.61.0
-
-From **2.60.0**:
-
-```bash
-composer update nowo-tech/ui-kit-bundle
-```
-
 Additive: new theme partials (`filter_bar`, `bulk_bar`, `bulk_toggle`, `table_view`, `tab_panels`, `error_summary`,
 `form_fieldset`, `dropzone`, `timeline`, `skeleton`, `avatar_group`, `chip`, `code_block`, `tooltip`, `steps`) and
 opt-in runtimes (`tooltip`, `dropzone`, `bulk-select`, `table-view`, `filter-sheet`, `form-busy`): add the runtimes a
@@ -1975,15 +1967,7 @@ composer update nowo-tech/ui-kit-bundle
 
 ## To 2.6.0
 
-From **2.5.3**:
-
-```bash
-composer update nowo-tech/ui-kit-bundle
-```
-
-## To 2.6.0
-
-From **2.5.x**:
+From **2.5.x** (from **2.5.3** it is the same, no extra step):
 
 ```bash
 composer update nowo-tech/ui-kit-bundle
