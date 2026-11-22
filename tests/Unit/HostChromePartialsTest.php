@@ -306,7 +306,7 @@ final class HostChromePartialsTest extends TestCase
         foreach ([
             '.nowo-ui-corner-tab {', '.nowo-ui-corner-tab--under {', '--nowo-ui-corner-tab-width', '--nowo-ui-corner-tab-accent',
             '.nowo-ui-responsive-table[data-table-mode=\'responsive\'] [data-rt-hidden]', '.nowo-ui-row-detail__list {',
-            'form:has(> .nowo-ui-filters-collapse.is-collapsed) > :not(.nowo-ui-filters-collapse)', 'isolation: isolate',
+            'form:has(> .nowo-ui-filters-collapse.is-collapsed):not(.nowo-ui-filter-sheet__dialog-body form) > :not(.nowo-ui-filters-collapse)', 'isolation: isolate',
             '.nowo-ui-disclosure-icon {', '.nowo-ui-edge-tab__link {', 'html[data-nowo-ui-thin-scrollbars]', '.nowo-ui-thin-scroll',
             '::-webkit-scrollbar-thumb:hover', '@supports not selector(::-webkit-scrollbar)',
             '.nowo-ui-scrollbar,', '.nowo-ui-scrollbar-none', '--nowo-ui-scrollbar-track', '--nowo-ui-scrollbar-thumb-hover',

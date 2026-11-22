@@ -739,6 +739,7 @@ final class ThemeSlots
         'edge_tabs_launcher' => '@NowoUiKitBundle/partials/_edge_tabs_launcher.html.twig',
         'empty' => '@NowoUiKitBundle/partials/_empty.html.twig',
         'filters' => '@NowoUiKitBundle/partials/_filters.html.twig',
+        'form_actions' => '@NowoUiKitBundle/partials/_form_actions.html.twig',
         'focus_mode_bar' => '@NowoUiKitBundle/partials/_focus_mode_bar.html.twig',
         'focus_mode_toggle' => '@NowoUiKitBundle/partials/_focus_mode_toggle.html.twig',
         'flashes' => '@NowoUiKitBundle/partials/_flashes.html.twig',

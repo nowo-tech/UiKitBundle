@@ -30,6 +30,12 @@
     - fold: {enabled, cookie, cookie_path, icons, testids, morph} — the partials/_filters_collapse.html.twig toggle as
       the first child of the form (aria-controls = the form id; Stimulus peer filters-collapse; without JS the card
       stays open); page.filtersFold / page.filtersFoldKey win
+    - sheet (2.65, default false = the 2.64 output): the form is wrapped in the filter_bar phone sheet
+      (macros/filter_sheet.html.twig): below 48rem, once js/nowo-ui-filter-sheet.js runs (the `scripts` partial adds
+      it by itself), the card folds behind a "Filters (n)" button that opens it in a native modal <dialog> bottom
+      sheet; the same form node moves in and back. Root id nowo-ui-list-filters-{form id}, the dialog {root id}-dialog,
+      its heading (h2) {root id}-title. Inside the sheet the fold toggle is hidden and the fields always show. Without
+      the script, or wider than 48rem, the card renders as without the option.
 #}
 {% set _b = bundle|default(page.bundle) %}
 {% set _pt = nowo_ui_page_type|default(null) %}
@@ -41,6 +47,17 @@
 {% set _form_attr = {class: nowo_ui_class('filters', _b) ~ (_grid_class ? ' ' ~ _grid_class), role: 'search', 'data-nowo-ui-filters': '', 'data-nowo-ui-region': region|default('filters')}|merge(nowo_ui_theme.attributesFor('filters', _b, {}, _pt)) %}
 {% if _fold and _form_attr.id is not defined %}
     {% set _form_attr = _form_attr|merge({id: 'nowo-ui-filters-' ~ (page.filters.vars.id is not empty ? page.filters.vars.id : 'list')}) %}
+{% endif %}
+{% set _sheet = _opts.sheet %}
+{% if _sheet %}
+    {% import '@NowoUiKitBundle/macros/filter_sheet.html.twig' as filter_sheet %}
+    {% set _sheet_id = 'nowo-ui-list-filters-' ~ (page.filters.vars.id is not empty ? page.filters.vars.id : 'list') %}
+    {% set _sheet_title = 'filter_bar.title'|trans({}, 'NowoUiKitBundle') %}
+<div id="{{ _sheet_id }}" class="nowo-ui-filter-sheet nowo-ui-filter-sheet--list" data-nowo-ui-filter-sheet>
+    <div class="nowo-ui-filter-sheet__bar">
+        {{ filter_sheet.toggle(_sheet_id, _sheet_title, ((filter_sheet.active_count(page.filters) ~ "")|trim) + 0) }}
+    </div>
+    <div class="nowo-ui-filter-sheet__panel" data-nowo-ui-filter-sheet-panel>
 {% endif %}
 {{ form_start(page.filters, {attr: _form_attr}) }}
     {%~ if _fold %}
@@ -127,3 +144,8 @@
         {% endif %}
     </div>
 {{ form_end(page.filters) }}
+{% if _sheet %}
+    </div>
+    {{ filter_sheet.dialog(_sheet_id, _sheet_title, 2, null) }}
+</div>
+{% endif %}

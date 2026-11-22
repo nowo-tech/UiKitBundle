@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.66.1] - 2026-11-22](#2661---2026-11-22)
+- [[2.66.0] - 2026-11-22](#2660---2026-11-22)
+- [[2.65.0] - 2026-11-22](#2650---2026-11-22)
 - [[2.64.0] - 2026-11-22](#2640---2026-11-22)
 - [[2.63.2] - 2026-11-22](#2632---2026-11-22)
 - [[2.63.1] - 2026-11-21](#2631---2026-11-21)
@@ -147,6 +150,84 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - [[1.0.0] - 2026-08-03](#100---2026-08-03)
 
 ## [Unreleased]
+
+### Fixed
+
+- `CookieListingPreferenceStore::load()` now has a PHPDoc description and its `@return` array shape, so `make validate-phpdoc` passes.
+- `docs/UPGRADING.md`: the duplicated "To 2.61.0" and "To 2.6.0" sections are merged into one each, keeping all their text.
+
+## [2.66.1] - 2026-11-22
+
+### Changed
+
+- **Form actions order: `primary_first` is the default again** (owner decision 2026-11-22). The 2.66.0 change of the
+  `nowo_ui_kit.theme.form_actions_order` default to `cancel_first` (UX-017) is reverted: the form scaffold
+  (`page/form.html.twig`) and the `form_actions` partial put the primary first, then Cancel, as in 2.65.
+  `cancel_first` stays as an opt-in (`form_actions_order: cancel_first`). With the default and no override of the
+  `form_actions` partial, the form scaffold prints the 2.65 actions row byte for byte (no `data-nowo-ui-form-actions`
+  / `data-nowo-ui-form-cancel` markers; `tests/Fixtures/bc-2.42/page_form.html` restored); with `cancel_first`, or a
+  host / bundle override of the partial, it renders the row through the partial.
+- Dialog, confirm and wizard anatomies keep Cancel / Back first, as before 2.66: a `form_actions` row whose Cancel
+  closes the UiKit dialog (`cancel_dialog`, or `data-nowo-ui-dialog-close` in `cancel_attrs` on a `cancel_href` link)
+  defaults to `cancel_first` whatever the theme says; the partial option `order` still wins. Only page form rows follow
+  the option.
+- Page contract test kit: the opt-in order test (`formActionsOrderChecked()`) is now
+  `testPageFormActionsFollowTheConfiguredOrder` (was `testPageFormActionsPutCancelFirst`) and checks the **configured**
+  order with the new `assertFormActionsOrder(RenderedPage $page, ?string $order = null)`: page form rows in the stub
+  theme's order, dialog / confirm / wizard rows Cancel first. New hook `formActionsOrder(): ?string` (null = the UiKit
+  default; return `cancel_first` to render and check the pages as a cancel-first host), `configuredFormActionsOrder()`
+  and `RenderedPage::formActionsRowAnatomies()` (`dialog` / `confirm` / `wizard` / `form`). `assertFormActionsCancelFirst()`
+  is unchanged. The DOM order stays the visual and focus order (Chrome Modern Web Guidance `forms` /
+  `accessibility`: no CSS reordering; Cancel is never a submit button).
+
+## [2.66.0] - 2026-11-22
+
+### Added
+
+- **Form actions partial** (`partials/_form_actions.html.twig`, theme partial `form_actions`, UX-017): one actions row
+  for every form — Cancel (secondary) first, then the secondary actions (`extra_actions`), then the primary last, on the
+  right, the order of the dialog footers, the full-page confirm and the wizard. Cancel is a link (`cancel_href`) or a
+  `type="button"` button closing the UiKit dialog (`cancel_dialog`), marked `data-nowo-ui-form-cancel`; options
+  `submit_label`, `submit_attrs`, `submit`, `cancel_label`, `cancel_attrs`, `order`. The DOM order is the visual and
+  the focus order (no CSS `order` / `row-reverse`); on a phone the row wraps in that order, the primary stays last.
+- `nowo_ui_kit.theme.form_actions_order` (`cancel_first` default, `primary_first`) and `Theme::formActionsOrder()` /
+  `Theme::FORM_ACTIONS_ORDERS`.
+- Page contract test kit: `RenderedPage::formActionsRows()`, `assertFormActionsCancelFirst()` and the opt-in test
+  `testPageFormActionsPutCancelFirst` (`formActionsOrderChecked()`, default false): fails a form actions row whose
+  primary comes before Cancel.
+
+### Changed
+
+- **Form scaffold order** (`page/form.html.twig`): the submit / cancel row renders through the `form_actions` partial,
+  so **Cancel now comes first and the primary second** (2.65: primary first, then Cancel). The Cancel link gains
+  `data-nowo-ui-form-cancel` and the row `data-nowo-ui-form-actions="cancel_first"`; labels, slots and classes are
+  unchanged. Hosts that want the old order set `nowo_ui_kit.theme.form_actions_order: primary_first`. Tests that match
+  the exact Cancel markup or rely on the button position need updating.
+- Demo: the remote form dialog fragment renders its row with the `form_actions` partial.
+
+## [2.65.0] - 2026-11-22
+
+### Added
+
+- **List filters phone sheet** (`nowo_ui_kit.theme.pages.list.filters.sheet`, default `false`): the list scaffold
+  filter card (`list_filters` partial, so `ListPage` lists) gets the `filter_bar` phone sheet. Below 48rem the card
+  folds behind a "Filters (n)" button that opens the same form node in a native modal `<dialog>` bottom sheet; the
+  `scripts` partial appends the `filter-sheet` runtime by itself when the option is on. Inside the sheet the fold
+  toggle is hidden and a folded card shows its fields. Off, the output is byte-identical to 2.64.
+- `macros/filter_sheet.html.twig`: the "Filters (n)" button, the active-filter count and the sheet `<dialog>`, shared
+  by `filter_bar` and `list_filters` (the `filter_bar` markup is unchanged).
+
+### Changed
+
+- **Filter sheet follows Chrome Modern Web Guidance** (`dialog`, `prevent-page-scroll-under-modal-dialog`):
+  `.nowo-ui-filter-sheet__dialog:modal` gets `overscroll-behavior: contain` and its `::backdrop` `overflow: hidden;
+  overscroll-behavior: contain`, so scrolling over the backdrop or at the end of the sheet no longer scrolls the page.
+  `js/nowo-ui-filter-sheet.js` opens the sheet with `showModal()` only: the `open` attribute fallback is gone and,
+  where `showModal()` is missing, the fields stay inline instead of folding. The browser returns the focus to the
+  button on close; the runtime only focuses it itself when moving the panel back left the focus nowhere.
+- The folded filter-card rules (`form:has(> .nowo-ui-filters-collapse.is-collapsed) …`) skip a form inside the sheet
+  (`:not(.nowo-ui-filter-sheet__dialog-body form)`); `.nowo-ui-filter-sheet__panel form` skips the list filter form
+  (`:not([data-nowo-ui-filters])`) so it keeps its grid. Hosts that copied these selectors keep working.
 
 ## [2.64.0] - 2026-11-22
 
@@ -3403,7 +3484,7 @@ Supersedes 1.17.3: same runtime code and CSS, release gate hardened so the tagge
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.64.0...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.66.1...HEAD
 [1.10.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.4...v1.10.0
 [1.8.4]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.3...v1.8.4
 [1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0

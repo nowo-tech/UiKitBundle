@@ -3,6 +3,9 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.66.1](#to-2661)
+- [To 2.66.0](#to-2660)
+- [To 2.65.0](#to-2650)
 - [To 2.64.0](#to-2640)
 - [To 2.63.2](#to-2632)
 - [To 2.63.1](#to-2631)
@@ -31,10 +34,8 @@
 - [To 2.49.1](#to-2491)
   - [To 2.49.1](#to-2491-1)
 - [To 2.49.0](#to-2490)
-- [To 2.49.0](#to-2490-1)
 - [To 2.48.1](#to-2481)
 - [To 2.48.0](#to-2480)
-- [To 2.48.0](#to-2480-1)
 - [To 2.47.0](#to-2470)
 - [To 2.46.0](#to-2460)
 - [To 2.45.0](#to-2450)
@@ -170,6 +171,67 @@
 
 ## Unreleased
 
+## To 2.66.1
+
+From **2.66.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+From **2.66.0** (`composer update nowo-tech/ui-kit-bundle`):
+
+- **Form actions order: the 2.65 default is back** (owner decision 2026-11-22). Page forms put the primary first, then
+  Cancel, again; the form scaffold prints the 2.65 row byte for byte. Hosts that want Cancel first in their page forms
+  (the 2.66.0 default) set:
+
+  ```yaml
+  nowo_ui_kit:
+      theme:
+          form_actions_order: cancel_first
+  ```
+
+  Hosts that set `form_actions_order: primary_first` for 2.66.0 can drop it. Dialogs, dialog form fragments (Cancel
+  closes the dialog), the full-page confirm and the wizard keep Cancel / Back first in either case.
+- **Contract tests.** A bundle that opted in with `formActionsOrderChecked(): true` now gets
+  `testPageFormActionsFollowTheConfiguredOrder` (was `testPageFormActionsPutCancelFirst`): page form rows must follow
+  the stub theme's order (default `primary_first`), dialog / confirm / wizard rows Cancel first. Use
+  `assertFormActionsOrder($page)` (or compare with `configuredFormActionsOrder()`) instead of hard-coding Cancel first
+  for page forms; return `cancel_first` from `formActionsOrder()` to test a cancel-first host.
+
+## To 2.66.0
+
+From **2.65.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+- **Form actions order (UX-017).** The form scaffold (`page/form.html.twig`) now puts **Cancel first, then the primary
+  on the right**, like the dialogs and the full-page confirm. Nothing to do for the house order. To keep the 2.65
+  order (primary first, Cancel last) for a while, set:
+
+  ```yaml
+  nowo_ui_kit:
+      theme:
+          form_actions_order: primary_first
+  ```
+
+  Tests that match the exact Cancel markup now see `data-nowo-ui-form-cancel` on the link and
+  `data-nowo-ui-form-actions="cancel_first"` on the row. Bundle forms that write their own actions row (dialog
+  fragments) should include the `form_actions` partial instead
+  (`{{ include(nowo_ui_partial('form_actions', bundle), {submit_label: …, cancel_dialog: true, bundle: bundle}, false) }}`)
+  and may opt their page contract test into the rule (`formActionsOrderChecked(): true`). Do not reverse the row with
+  CSS `order` / `row-reverse`: the focus order must follow the DOM order.
+
+## To 2.65.0
+
+From **2.64.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
 ## To 2.64.0
 
 From **2.63.2**:
@@ -218,14 +280,6 @@ styles `.nowo-ui-section` inside a dialog body it keeps working; with the layere
 ## To 2.62.0
 
 From **2.61.0**:
-
-```bash
-composer update nowo-tech/ui-kit-bundle
-```
-
-## To 2.61.0
-
-From **2.60.0**:
 
 ```bash
 composer update nowo-tech/ui-kit-bundle
@@ -520,14 +574,6 @@ From **2.48.1**:
 composer update nowo-tech/ui-kit-bundle
 ```
 
-## To 2.49.0
-
-From **2.48.1**:
-
-```bash
-composer update nowo-tech/ui-kit-bundle
-```
-
 Target **2.49.0** (minor, REQ-ARCH-001 rule 3). **Nothing to change**: no markup, CSS, JS or template variable changes,
 and every existing port keeps working. Two framework-typed signatures are deprecated and removed in **3.0**:
 
@@ -603,14 +649,6 @@ overlay on Turbo visits. Turbo's progress bar already covers them. To keep the k
 ```js
 document.addEventListener('turbo:visit', () => window.nowoUiShowPageLoader?.());
 document.addEventListener('turbo:load', () => window.nowoUiHidePageLoader?.());
-```
-
-## To 2.48.0
-
-From **2.47.0**:
-
-```bash
-composer update nowo-tech/ui-kit-bundle
 ```
 
 ## To 2.48.0
@@ -1929,15 +1967,7 @@ composer update nowo-tech/ui-kit-bundle
 
 ## To 2.6.0
 
-From **2.5.3**:
-
-```bash
-composer update nowo-tech/ui-kit-bundle
-```
-
-## To 2.6.0
-
-From **2.5.x**:
+From **2.5.x** (from **2.5.3** it is the same, no extra step):
 
 ```bash
 composer update nowo-tech/ui-kit-bundle

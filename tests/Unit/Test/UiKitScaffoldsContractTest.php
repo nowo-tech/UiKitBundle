@@ -31,4 +31,9 @@ final class UiKitScaffoldsContractTest extends PageContractTestCase
     {
         return true;
     }
+
+    protected static function formActionsOrderChecked(): bool
+    {
+        return true;
+    }
 }

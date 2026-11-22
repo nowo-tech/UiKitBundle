@@ -4,6 +4,7 @@
 
 - [Import macros](#import-macros)
 - [Partials](#partials)
+  - [Form actions order (2.66)](#form-actions-order-266)
   - [Forms in the partials (REQ-TWIG-005)](#forms-in-the-partials-req-twig-005)
 - [Assets](#assets)
 - [Locale tabs (2.5)](#locale-tabs-25)
@@ -137,6 +138,7 @@ Twig globals (from config):
 | `partials/_tabs.html.twig` | Tab **link** nav (no JS). In-page panels: `nowo-ui-tabs.js` / Stimulus `tabs` peer. 2.16: `icon` per item; the host's `data-tab-style` (`text`, `icon-text`, `icon`) on `<html>` picks what shows |
 | `partials/_filters.html.twig` | Search + apply/clear + actions slot |
 | `partials/_filter_actions.html.twig` | Opt-in filter bar actions: optional pager row + Filter + Clear on one row. See [Filter bar and data table](#filter-bar-and-data-table-opt-in) |
+| `partials/_form_actions.html.twig` | Form actions row (2.66, theme partial `form_actions`): page forms follow `theme.form_actions_order` (default `primary_first` since 2.66.1, opt-in `cancel_first`); dialog rows keep Cancel first. See [Form actions order](#form-actions-order-266) |
 | `partials/_open_modal_on_load.html.twig` | CSP-safe JSON island that opens a modal on load (`?new=1` deep link). See [Open a modal on load](#open-a-modal-on-load-deep-link) |
 | `partials/_card.html.twig` | Card / panel (header/body/footer) |
 | `partials/_modal_shell.html.twig` | Modal shell (Bootstrap-JS structure, kept for BC) |
@@ -215,6 +217,51 @@ Confirm trigger:
     footer: confirm_footer_html
 } %}
 ```
+
+### Form actions order (2.66)
+
+Page forms follow `nowo_ui_kit.theme.form_actions_order`:
+
+- **`primary_first`** — the default (2.66.1 restores the 2.65 default, owner decision 2026-11-22): the primary first,
+  then the secondary actions, then Cancel. The form scaffold (`page/form.html.twig`) prints the 2.65 row byte for byte.
+- **`cancel_first`** — opt-in: Cancel (secondary) first, then the primary on the right, like the dialog footers. Hosts
+  that want it set:
+
+  ```yaml
+  nowo_ui_kit:
+      theme:
+          form_actions_order: cancel_first
+  ```
+
+Dialogs keep **Cancel first** whatever the option says: the `dialog` / `confirm_dialog` footers, a dialog form
+fragment (Cancel closes the dialog: `cancel_dialog`, or `data-nowo-ui-dialog-close` in `cancel_attrs`), the full-page
+confirm and the wizard (*Back*, *Next*). A bundle form that writes its own row (a dialog fragment, a setup step)
+includes the `form_actions` partial instead of hand-written buttons:
+
+```twig
+{{ form_start(form, {attr: {class: nowo_ui_class('form', bundle)}}) }}
+    {% for child in form %}{% if not child.rendered %}{{ form_row(child) }}{% endif %}{% endfor %}
+    {# dialog fragment: Cancel closes the UiKit dialog; on a page pass cancel_href instead #}
+    {{ include(nowo_ui_partial('form_actions', bundle), {submit_label: 'import.submit'|trans({}, 'NowoXBundle'), cancel_dialog: true, bundle: bundle}, false) }}
+{{ form_end(form) }}
+```
+
+```html
+<div class="nowo-ui-form__actions" data-nowo-ui-form-actions="cancel_first">
+    <button type="button" class="nowo-ui-btn nowo-ui-btn--secondary" data-nowo-ui-dialog-close data-nowo-ui-form-cancel>Cancel</button>
+    <button type="submit" class="nowo-ui-btn nowo-ui-btn--primary">Import</button>
+</div>
+```
+
+- The DOM order is the visual and the focus order: the kit never reverses it with CSS `order` / `row-reverse`, and a
+  host theme must not either (WCAG 2.4.3). Cancel is a link or a `type="button"` button, so Enter in a field still
+  submits the primary.
+- On a phone the row wraps in the same order: the primary stays last, at the end of the row (or on its own line below
+  Cancel when the labels do not fit), nearest the thumb.
+- The partial option `order` (`cancel_first` / `primary_first`) wins per row, over the theme and the dialog rule.
+- Bundles opt their page contract test into the rule with `formActionsOrderChecked(): true`: it follows the configured
+  order (`assertFormActionsOrder()`), so a bundle test never hard-codes Cancel first for page forms
+  ([PAGE_CONTRACT](PAGE_CONTRACT.md#form-actions-order-266)).
 
 ### Forms in the partials (REQ-TWIG-005)
 
@@ -577,6 +624,39 @@ new ListPage($header, $columns, $rows, $filters->createView(), filtersClearHref:
 The fold toggle needs the **`filters-collapse` Stimulus peer** registered in the host app
 (`app.register('filters-collapse', FiltersCollapseController)`, [STIMULUS.md](STIMULUS.md)). Without JavaScript the
 card renders open (the cookie is only ever written by the peer) and the button does nothing; the fields always submit.
+
+### Phone sheet (2.65)
+
+`sheet: true` gives the list filter card the **same phone sheet as the `filter_bar` partial**: below 48rem the card
+folds behind a "Filters (n)" button (`n` = the filled fields; hidden fields, `_token`, `page`, `per_page`, `sort` and
+`dir` excluded) that opens it in a native modal `<dialog>` bottom sheet. Off by default (the 2.64 output, byte for byte).
+
+```yaml
+nowo_ui_kit:
+    theme:
+        pages:
+            list:
+                filters:
+                    sheet: true      # default false
+```
+
+- Markup: the form is wrapped in `<div id="nowo-ui-list-filters-<form id>" class="nowo-ui-filter-sheet
+  nowo-ui-filter-sheet--list" data-nowo-ui-filter-sheet>` with the toggle (`data-nowo-ui-filter-sheet-open`,
+  `aria-haspopup="dialog"`, `aria-controls="<root>-dialog"`, `aria-expanded`), the panel holding the unchanged form
+  (`role="search"`, `data-nowo-ui-filters`, `data-nowo-ui-region="filters"`) and the `<dialog id="<root>-dialog"
+  aria-labelledby="<root>-title">` with an `<h2>` and a Close button. The button, count and dialog come from
+  `macros/filter_sheet.html.twig`, shared with `filter_bar`.
+- Runtime: `filter-sheet`. The `scripts` partial appends it by itself when `sheet` is true (no `script_names` change).
+  The runtime moves the same form node into the dialog and back, so values, names and the GET submit never change.
+- Native modal only (Chrome Modern Web Guidance, `dialog`): opened with `showModal()` (never the `open` attribute;
+  without `showModal()` the card simply stays inline); Escape, the Android back gesture and the Close button close it;
+  the browser makes the page inert, keeps the focus inside and returns it to the button. **No** `role="dialog"`,
+  `aria-modal`, focus trap, `inert` toggling, Escape handler or `overflow: hidden` on `html` / `body`: a host that had
+  its own sheet drops all of those. Scroll stays in the sheet through `overscroll-behavior: contain` on
+  `.nowo-ui-filter-sheet__dialog:modal` and on its `::backdrop` (`overflow: hidden`).
+- With `fold.enabled`, the fold toggle stays in the card on wide screens; inside the sheet it is hidden and a folded
+  card shows its fields (the folded state is kept for the wide card).
+- With `header_actions_in_filters`, the page-header actions sit in the card, so on phones they move into the sheet too.
 
 ## Sortable column headers (2.20)
 
@@ -3904,7 +3984,7 @@ Every template the bundle renders by logical name `@NowoUiKitBundle/<subpath>` c
 | `layout/` | `layout/_bridge.html.twig`, `layout/admin.html.twig`, `layout/document.html.twig`, `layout/guest.html.twig`, `layout/status.html.twig` | Page layouts (`base`, `app`, `auth`, …) — prefer `layout_template` / blocks over forking |
 | `page/` | `page/_auth_form.html.twig`, `page/_detail_list.html.twig`, `page/_list_filters.html.twig`, `page/_page_header.html.twig`, `page/_scaffold.html.twig`, `page/_section_form.html.twig`, `page/_wizard_form.html.twig`, `page/auth.html.twig`, `page/confirm.html.twig`, `page/dashboard.html.twig`, `page/form.html.twig`, `page/list.html.twig`, `page/settings.html.twig`, `page/show.html.twig`, `page/wizard.html.twig` | Page scaffolds of the page contract (REQ-UI-003) — extend and override blocks instead of copying |
 | `shell/` | `shell/_burger.html.twig`, `shell/_close.html.twig`, `shell/_open.html.twig`, `shell/_shell.html.twig` | App shell chrome |
-| `partials/` | `partials/_action.html.twig`, `partials/_action_form_view.html.twig`, `partials/_action_inner.html.twig`, `partials/_action_post.html.twig`, `partials/_action_post_legacy.html.twig`, `partials/_aside.html.twig`, `partials/_aside_nav_items.html.twig`, `partials/_avatar.html.twig`, `partials/_avatar_group.html.twig`, `partials/_back_link.html.twig`, `partials/_brand.html.twig`, `partials/_breadcrumbs.html.twig`, `partials/_bulk_bar.html.twig`, `partials/_bulk_toggle.html.twig`, `partials/_burger.html.twig`, `partials/_card.html.twig`, `partials/_chip.html.twig`, `partials/_code_block.html.twig`, `partials/_confirm.html.twig`, `partials/_confirm_dialog.html.twig`, `partials/_corner_tab.html.twig`, `partials/_dialog.html.twig`, `partials/_disclosure_icon.html.twig`, `partials/_dropzone.html.twig`, `partials/_edge_tab.html.twig`, `partials/_empty.html.twig`, `partials/_error_summary.html.twig`, `partials/_filter_actions.html.twig`, `partials/_filter_bar.html.twig`, `partials/_filters.html.twig`, `partials/_filters_collapse.html.twig`, `partials/_filters_form.html.twig`, `partials/_filters_legacy.html.twig`, `partials/_flashes.html.twig`, `partials/_footer.html.twig`, `partials/_form_fieldset.html.twig`, `partials/_header_actions.html.twig`, `partials/_kebab.html.twig`, `partials/_listing_cells.html.twig`, `partials/_listing_customizer.html.twig`, `partials/_listing_filter_fields.html.twig`, `partials/_listing_head.html.twig`, `partials/_locale_switcher.html.twig`, `partials/_locale_switcher_form.html.twig`, `partials/_locale_switcher_legacy.html.twig`, `partials/_locale_tabs.html.twig`, `partials/_menu.html.twig`, `partials/_modal_shell.html.twig`, `partials/_open_modal_on_load.html.twig`, `partials/_option_cards.html.twig`, `form/nowo_ui_option_card_input.html.twig`, `partials/_page_header.html.twig`, `partials/_page_loader.html.twig`, `partials/_page_status.html.twig`, `partials/_page_transition.html.twig`, `partials/_pagination.html.twig`, `partials/_pagination_compact.html.twig`, `partials/_pagination_per_page_form.html.twig`, `partials/_pagination_per_page_legacy.html.twig`, `partials/_progress.html.twig`, `partials/_release_version.html.twig`, `partials/_responsive_table.html.twig`, `partials/_row_actions.html.twig`, `partials/_row_actions_form.html.twig`, `partials/_row_actions_legacy.html.twig`, `partials/_row_detail_cell.html.twig`, `partials/_row_detail_head.html.twig`, `partials/_scripts.html.twig`, `partials/_segmented.html.twig`, `partials/_segmented_checkbox_form.html.twig`, `partials/_segmented_field.html.twig`, `partials/_segmented_legacy_checkbox.html.twig`, `partials/_shell.html.twig`, `partials/_skeleton.html.twig`, `partials/_sort_header.html.twig`, `partials/_stat_row.html.twig`, `partials/_steps.html.twig`, `partials/_tab_panels.html.twig`, `partials/_table.html.twig`, `partials/_table_view.html.twig`, `partials/_tabs.html.twig`, `partials/_theme_boot.html.twig`, `partials/_theme_toggle.html.twig`, `partials/_thinking_orb.html.twig`, `partials/_timeline.html.twig`, `partials/_toasts.html.twig`, `partials/_tooltip.html.twig`, `partials/_tour.html.twig`, `partials/_ui_form.html.twig`, `partials/_user_menu.html.twig`, `partials/_user_menu_logout_form.html.twig`, `partials/_user_menu_logout_legacy.html.twig`, `partials/_width_toggle.html.twig` | Reusable partials (one concern each) — the usual surgical override target |
+| `partials/` | `partials/_action.html.twig`, `partials/_action_form_view.html.twig`, `partials/_action_inner.html.twig`, `partials/_action_post.html.twig`, `partials/_action_post_legacy.html.twig`, `partials/_aside.html.twig`, `partials/_aside_nav_items.html.twig`, `partials/_avatar.html.twig`, `partials/_avatar_group.html.twig`, `partials/_back_link.html.twig`, `partials/_brand.html.twig`, `partials/_breadcrumbs.html.twig`, `partials/_bulk_bar.html.twig`, `partials/_bulk_toggle.html.twig`, `partials/_burger.html.twig`, `partials/_card.html.twig`, `partials/_chip.html.twig`, `partials/_code_block.html.twig`, `partials/_confirm.html.twig`, `partials/_confirm_dialog.html.twig`, `partials/_corner_tab.html.twig`, `partials/_dialog.html.twig`, `partials/_disclosure_icon.html.twig`, `partials/_dropzone.html.twig`, `partials/_edge_tab.html.twig`, `partials/_empty.html.twig`, `partials/_error_summary.html.twig`, `partials/_filter_actions.html.twig`, `partials/_filter_bar.html.twig`, `partials/_filters.html.twig`, `partials/_filters_collapse.html.twig`, `partials/_filters_form.html.twig`, `partials/_filters_legacy.html.twig`, `partials/_flashes.html.twig`, `partials/_footer.html.twig`, `partials/_form_actions.html.twig`, `partials/_form_fieldset.html.twig`, `partials/_header_actions.html.twig`, `partials/_kebab.html.twig`, `partials/_listing_cells.html.twig`, `partials/_listing_customizer.html.twig`, `partials/_listing_filter_fields.html.twig`, `partials/_listing_head.html.twig`, `partials/_locale_switcher.html.twig`, `partials/_locale_switcher_form.html.twig`, `partials/_locale_switcher_legacy.html.twig`, `partials/_locale_tabs.html.twig`, `partials/_menu.html.twig`, `partials/_modal_shell.html.twig`, `partials/_open_modal_on_load.html.twig`, `partials/_option_cards.html.twig`, `form/nowo_ui_option_card_input.html.twig`, `partials/_page_header.html.twig`, `partials/_page_loader.html.twig`, `partials/_page_status.html.twig`, `partials/_page_transition.html.twig`, `partials/_pagination.html.twig`, `partials/_pagination_compact.html.twig`, `partials/_pagination_per_page_form.html.twig`, `partials/_pagination_per_page_legacy.html.twig`, `partials/_progress.html.twig`, `partials/_release_version.html.twig`, `partials/_responsive_table.html.twig`, `partials/_row_actions.html.twig`, `partials/_row_actions_form.html.twig`, `partials/_row_actions_legacy.html.twig`, `partials/_row_detail_cell.html.twig`, `partials/_row_detail_head.html.twig`, `partials/_scripts.html.twig`, `partials/_segmented.html.twig`, `partials/_segmented_checkbox_form.html.twig`, `partials/_segmented_field.html.twig`, `partials/_segmented_legacy_checkbox.html.twig`, `partials/_shell.html.twig`, `partials/_skeleton.html.twig`, `partials/_sort_header.html.twig`, `partials/_stat_row.html.twig`, `partials/_steps.html.twig`, `partials/_tab_panels.html.twig`, `partials/_table.html.twig`, `partials/_table_view.html.twig`, `partials/_tabs.html.twig`, `partials/_theme_boot.html.twig`, `partials/_theme_toggle.html.twig`, `partials/_thinking_orb.html.twig`, `partials/_timeline.html.twig`, `partials/_toasts.html.twig`, `partials/_tooltip.html.twig`, `partials/_tour.html.twig`, `partials/_ui_form.html.twig`, `partials/_user_menu.html.twig`, `partials/_user_menu_logout_form.html.twig`, `partials/_user_menu_logout_legacy.html.twig`, `partials/_width_toggle.html.twig` | Reusable partials (one concern each) — the usual surgical override target |
 | `components/` | `components/_icon.html.twig`, `components/_icon_ux.html.twig` | Icon components |
 | `error/` | `error/layout.html.twig`, `error/status.html.twig` | Error page templates |
 | `form/` | `form/nowo_ui_date_range.html.twig`, `form/nowo_ui_kit_fields.html.twig`, `form/nowo_ui_layout.html.twig`, `form/nowo_ui_option_card_input.html.twig` | Form themes |
@@ -4064,7 +4144,7 @@ Opt-in runtimes (add them to `script_names` or print them after `nowo_ui_partial
 
 | Runtime | For |
 |---|---|
-| `filter-sheet` | `filter_bar`: the phone sheet |
+| `filter-sheet` | `filter_bar`: the phone sheet; 2.65: also `list_filters` with `theme.pages.list.filters.sheet` (then appended by the `scripts` partial itself) |
 | `bulk-select` | `bulk_bar` / `bulk_toggle` |
 | `table-view` | `table_view`: density and columns |
 | `tooltip` | `tooltip`: placement, Escape, touch |
@@ -4105,8 +4185,9 @@ Opt-in runtimes (add them to `script_names` or print them after `nowo_ui_partial
 ```
 
 - **`filter_bar`** — a GET filter form (`form`, a FormView) as one row of fields; below 48rem, with `filter-sheet`,
-  the fields fold behind a "Filters (n)" button and open in a bottom sheet (modal `<dialog>`: the same nodes move in
-  and back, focus in on open and back to the button on close). The count is the fields with a value (`active_count`
+  the fields fold behind a "Filters (n)" button and open in a bottom sheet (modal `<dialog>` opened with
+  `showModal()` only: the same nodes move in and back, focus in on open; 2.65: the browser returns it to the button,
+  the runtime only does when moving the panel back left it nowhere; scroll contained on the sheet and its backdrop). The count is the fields with a value (`active_count`
   overrides). Options: `filter_id` (root id), `title`, `heading_level`, `reset_href` (a safe URL, else no link), `submit_label`, `reset_label`, `close_label`,
   `attr`; blocks `filter_bar_extra` (the button row) and `filter_bar_actions`. Root `data-nowo-ui-region="filters"`.
 - **`bulk_bar`** + **`bulk_toggle`** — row checkboxes are the form's own widgets (a ChoiceType `expanded`, `multiple`,

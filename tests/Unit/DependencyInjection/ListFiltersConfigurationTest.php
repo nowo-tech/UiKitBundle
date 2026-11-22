@@ -47,6 +47,7 @@ final class ListFiltersConfigurationTest extends TestCase
                 'testids' => false,
                 'morph' => false,
             ],
+            'sheet' => false,
         ], $config['theme']['pages']['list']['filters']);
         self::assertEquals(new ListFiltersOptions(), Theme::fromConfig('bootstrap5', $config['theme'])->listFilters());
     }
@@ -78,6 +79,14 @@ final class ListFiltersConfigurationTest extends TestCase
             'morph' => true,
         ], $options->foldVariables());
         self::assertTrue($options->foldEnabled);
+        self::assertFalse($options->sheet);
+    }
+
+    public function testSheetOptIn265(): void
+    {
+        $config = $this->process(['theme' => ['pages' => ['list' => ['filters' => ['sheet' => true]]]]]);
+        self::assertTrue($config['theme']['pages']['list']['filters']['sheet']);
+        self::assertEquals(new ListFiltersOptions(sheet: true), Theme::fromConfig('bootstrap5', $config['theme'])->listFilters());
     }
 
     /**
@@ -99,6 +108,7 @@ final class ListFiltersConfigurationTest extends TestCase
         yield 'bad icon' => [['theme' => ['pages' => ['list' => ['filters' => ['submit_icon' => 'a b']]]]], 'submit_icon "a b" must be an icon name'];
         yield 'bad fold icon' => [['theme' => ['pages' => ['list' => ['filters' => ['fold' => ['icons' => ['collapsed' => '<x>']]]]]]], 'fold.icons.collapsed "<x>" must be an icon name'];
         yield 'empty class' => [['theme' => ['pages' => ['list' => ['filters' => ['clear_class' => ' ']]]]], 'clear_class must be a non-empty class list'];
+        yield 'sheet not a boolean' => [['theme' => ['pages' => ['list' => ['filters' => ['sheet' => 'yes']]]]], 'Invalid type for path "nowo_ui_kit.theme.pages.list.filters.sheet"'];
         yield 'control character class' => [['theme' => ['pages' => ['list' => ['filters' => ['submit_class' => "a\x00b"]]]]], 'submit_class must be a non-empty class list'];
     }
 

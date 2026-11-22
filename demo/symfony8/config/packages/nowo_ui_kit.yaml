@@ -93,6 +93,9 @@ nowo_ui_kit:
                         enabled: true
                         cookie: acme_filters_collapsed
                         testids: true
+                    # UiKit 2.65: below 48rem the card folds behind "Filters (n)" and opens in the native <dialog> sheet
+                    # of the filter_bar partial (runtime filter-sheet, added to the scripts partial by itself).
+                    sheet: true
             # Show pages: every label sits over its value (detail_item / detail_term / detail_value slots)
             show:
                 classes:

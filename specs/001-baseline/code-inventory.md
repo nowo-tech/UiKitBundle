@@ -1,6 +1,6 @@
 # Code inventory — 100% traceability
 
-**Last audited**: 2026-11-17 (2.55 line: shell focus mode; 2.54.0 line: context menus; 2.53.0 line: inset sidebar style, dialog focus return, async combobox; 2.51.0 line: brand appearance, remote dialog, listing ports, side panel, rail, tree, image input, base stylesheet)  
+**Last audited**: 2026-11-22 (v2.64.0: 2.56-2.64 components, runtimes, demo platform and lint mapped; 2026-11-17: 2.55 line: shell focus mode; 2.54.0 line: context menus; 2.53.0 line: inset sidebar style, dialog focus return, async combobox; 2.51.0 line: brand appearance, remote dialog, listing ports, side panel, rail, tree, image input, base stylesheet)  
 **Baseline spec**: [`spec.md`](spec.md)  
 **Package**: `nowo-tech/ui-kit-bundle`
 
@@ -10,7 +10,7 @@ one row per file. Paths are relative to `src/`. Requirement IDs are defined in [
 
 **Scope**: every file tracked by Git under `src/` (`git ls-files src`), i.e. PHP, TypeScript, Twig, YAML, CSS, SCSS,
 the built JavaScript and the Stimulus peers README. **Excluded**: the co-located Vitest files `*.test.ts` under
-`Resources/assets/` (82 files at this audit — test artifacts covered by FR-TEST-001, not shipped runtime units; same rule as
+`Resources/assets/` (93 files at this audit — test artifacts covered by FR-TEST-001, not shipped runtime units; same rule as
 TwigInspectorBundle). `tests/`, `demo/` apps and caches are outside `src/` and out of scope. Built files that live
 under `src/` (the Vite IIFEs, the layered stylesheet and the inline theme-boot copy) are committed (Packagist installs
 no Node toolchain); they are listed in their own table as **outputs** of named sources (`FR-BUILD-*`) and are never
@@ -182,9 +182,9 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 
 | Source file | Spec section | Requirement IDs |
 | --- | --- | --- |
-| `Test/PageContractTestCase.php` | Shared REQ-UI-003 page contract test for UI bundles | FR-TESTKIT-001 |
+| `Test/PageContractTestCase.php` | Shared REQ-UI-003 page contract test for UI bundles | FR-TESTKIT-001, FR-FORMACTIONS-001 |
 | `Test/PageFixture.php` | One page fixture (template + context) | FR-TESTKIT-001 |
-| `Test/RenderedPage.php` | Rendered page with contract assertions and missing translation ids | FR-TESTKIT-001 |
+| `Test/RenderedPage.php` | Rendered page with contract assertions and missing translation ids | FR-TESTKIT-001, FR-FORMACTIONS-001 |
 | `Test/StubHost.php` | Stub host layouts and marker theme | FR-TESTKIT-001 |
 | `Test/ContractStubExtension.php` | Deterministic stand-ins for `path`, `url`, `asset`, `csrf_token`, … | FR-TESTKIT-001 |
 | `Test/FrameworkClasses.php` | Framework utility-class detection and per-framework allow-lists | FR-TESTKIT-001 |
@@ -224,7 +224,7 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | --- | --- | --- |
 | `Resources/views/page/list.html.twig` | List scaffold (filters, table, row actions, pagination, empty state, sorting; 2.23 rows marker for pagination modes) | FR-SCAFFOLD-001, FR-LIST-001, FR-SORT-002, FR-PAGINATION-002 |
 | `Resources/views/page/show.html.twig` | Show scaffold (sections, audit meta, 2.21 stats row) | FR-SCAFFOLD-001, FR-SHOW-001, FR-STAT-001 |
-| `Resources/views/page/form.html.twig` | Form scaffold | FR-SCAFFOLD-001, FR-FORMPAGE-001 |
+| `Resources/views/page/form.html.twig` | Form scaffold | FR-SCAFFOLD-001, FR-FORMPAGE-001, FR-FORMACTIONS-001 |
 | `Resources/views/page/settings.html.twig` | Settings scaffold (section tabs) | FR-SCAFFOLD-001, FR-FORMPAGE-001 |
 | `Resources/views/page/wizard.html.twig` | Wizard scaffold (steps indicator) | FR-SCAFFOLD-001, FR-FORMPAGE-001 |
 | `Resources/views/page/dashboard.html.twig` | Dashboard scaffold (KPI tiles, cards) | FR-SCAFFOLD-001, FR-DASHBOARD-001 |
@@ -233,7 +233,7 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | `Resources/views/page/_scaffold.html.twig` | Internal scaffold helpers (page header, status badge, actions) | FR-SCAFFOLD-001, FR-STATUS-001 |
 | `Resources/views/page/_page_header.html.twig` | 2.3: public page-header contract (2.21 title row + status + split actions) | FR-PAGEHEADER-001, FR-STATUS-001, FR-HEADERACTIONS-001 |
 | `Resources/views/page/_detail_list.html.twig` | Definition list of detail items (badges, 2.21 `facts` modifier, 2.23 item attributes) | FR-SHOW-001, FR-FACTS-001, FR-ITEMATTR-001 |
-| `Resources/views/page/_list_filters.html.twig` | Filters region of the list scaffold (child loop) | FR-SCAFFOLD-001, FR-LIST-001 |
+| `Resources/views/page/_list_filters.html.twig` | Filters region of the list scaffold (child loop; 2.65 opt-in phone sheet) | FR-SCAFFOLD-001, FR-LIST-001, FR-FILTERSHEET-002 |
 | `Resources/views/page/_section_form.html.twig` | Settings section form (child loop + submit) | FR-FORMPAGE-001 |
 | `Resources/views/page/_wizard_form.html.twig` | Default wizard step body | FR-FORMPAGE-001 |
 | `Resources/views/page/_auth_form.html.twig` | Auth form functions (compiles without symfony/form) | FR-AUTH-001 |
@@ -267,6 +267,7 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | Source file | Spec section | Requirement IDs |
 | --- | --- | --- |
 | `Resources/views/macros/ui.html.twig` | Multi-framework class helpers (`ui.btn`, toolbar, table, …) | FR-MACRO-001, FR-THEME-001 |
+| `Resources/views/macros/filter_sheet.html.twig` | Filter sheet button, active count and native `<dialog>` shared by `filter_bar` and `list_filters` (2.65) | FR-FILTERSHEET-001, FR-FILTERSHEET-002 |
 | `Resources/views/components/_icon.html.twig` | Canonical icon kinds per `icon_set` (incl. 2.20 `sort*`, 2.21 `more`) | FR-ICON-001 |
 | `Resources/views/components/_icon_ux.html.twig` | Isolated optional `ux_icon()` backend | FR-ICON-001 |
 
@@ -572,7 +573,7 @@ Produced by `pnpm run build` (`vite.config.ts`, one `VITE_ENTRY` per IIFE; `buil
 | `Listing/ListingPreferenceReaderInterface.php` | Port reading the preferences of one viewer from a `ListingContext` | FR-LISTING-005 |
 | `Listing/ListingViewerResolverInterface.php` | Optional SPI giving the opaque viewer id | FR-LISTING-005 |
 | `Listing/Http/ListingContextFactory.php` | HTTP adapter: copies only listing cookies, route, scalar parameters and locale | FR-LISTING-005 |
-| `Theme/ListFiltersOptions.php` | Host options of the list scaffold filters (`theme.pages.list.filters`) | FR-LISTING-006 |
+| `Theme/ListFiltersOptions.php` | Host options of the list scaffold filters (`theme.pages.list.filters`; 2.65 `sheet`) | FR-LISTING-006, FR-FILTERSHEET-002 |
 
 ## Compact header, breadcrumbs, page actions and sidebar layout
 
@@ -653,6 +654,53 @@ Produced by `pnpm run build` (`vite.config.ts`, one `VITE_ENTRY` per IIFE; `buil
 | `Resources/public/css/nowo-ui-base.css` | Opt-in default theme (2.51) | FR-BASESTYLE-001 |
 | `Lint/TokenLint.php` | Colour-literal lint of bundle CSS, SCSS and Twig (`bin/nowo-ui-token-lint`) | FR-LINT-001 |
 
+## Components and runtimes of 2.56-2.64
+
+| Source file | Spec section | Requirement IDs |
+| --- | --- | --- |
+| `Resources/views/demo_platform/layout.html.twig` | Demo platform shell | FR-DEMO-002 |
+| `Resources/views/demo_platform/_section.html.twig` | Demo platform content block | FR-DEMO-002 |
+| `Resources/views/demo_platform/_flashes.html.twig` | Demo platform flashes | FR-DEMO-002 |
+| `Resources/public/css/nowo-ui-demo-platform.css` | Demo platform stylesheet (tokens only) | FR-DEMO-002 |
+| `Lint/DemoStyleLint.php` | Demo style lint (`bin/nowo-ui-demo-style-lint`) | FR-LINT-002 |
+| `Resources/public/css/vendor/tom-select.default.min.css` | Vendored Tom Select 2.6.2 default theme | FR-VENDOR-001 |
+| `Resources/views/partials/_bulk_bar.html.twig` | Bulk selection bar | FR-BULK-001 |
+| `Resources/views/partials/_bulk_toggle.html.twig` | Select-every-row box | FR-BULK-001 |
+| `Resources/assets/src/nowo-ui-bulk-select.ts` | Bulk selection runtime | FR-BULK-001 |
+| `Resources/views/partials/_dropzone.html.twig` | File dropzone partial | FR-DROPZONE-001 |
+| `Resources/assets/src/nowo-ui-dropzone.ts` | Dropzone runtime | FR-DROPZONE-001 |
+| `Resources/views/partials/_filter_bar.html.twig` | Filter bar partial | FR-FILTERSHEET-001 |
+| `Resources/assets/src/nowo-ui-filter-sheet.ts` | Filter sheet runtime (`filter_bar`, 2.65 `list_filters`) | FR-FILTERSHEET-001, FR-FILTERSHEET-002 |
+| `Resources/views/partials/_error_summary.html.twig` | Error summary partial | FR-FORMBUSY-001 |
+| `Resources/assets/src/nowo-ui-form-busy.ts` | Form busy and error summary focus runtime | FR-FORMBUSY-001 |
+| `Resources/views/partials/_table_view.html.twig` | Table view controls partial | FR-TABLEVIEW-001 |
+| `Resources/assets/src/nowo-ui-table-view.ts` | Table view runtime | FR-TABLEVIEW-001 |
+| `Resources/views/partials/_tooltip.html.twig` | Tooltip partial | FR-TOOLTIP-001 |
+| `Resources/assets/src/nowo-ui-tooltip.ts` | Tooltip runtime | FR-TOOLTIP-001 |
+| `Resources/views/partials/_avatar_group.html.twig` | Avatar group | FR-DISPLAY-001 |
+| `Resources/views/partials/_chip.html.twig` | Chip | FR-DISPLAY-001 |
+| `Resources/views/partials/_code_block.html.twig` | Code block with copy button | FR-DISPLAY-001 |
+| `Resources/views/partials/_skeleton.html.twig` | Skeleton loading | FR-DISPLAY-001 |
+| `Resources/views/partials/_steps.html.twig` | Steps | FR-DISPLAY-001 |
+| `Resources/views/partials/_tab_panels.html.twig` | Client-side tab panels | FR-DISPLAY-001 |
+| `Resources/views/partials/_timeline.html.twig` | Timeline | FR-DISPLAY-001 |
+| `Resources/views/partials/_form_fieldset.html.twig` | Fieldset row | FR-FIELDSET-001 |
+| `Resources/views/partials/_form_actions.html.twig` | Form actions row in the `theme.form_actions_order` order (default primary first; dialog rows Cancel first; theme partial `form_actions`) | FR-FORMACTIONS-001 |
+| `Resources/views/partials/_keyset_pager.html.twig` | Keyset pager | FR-PAGER-002 |
+| `Resources/views/partials/_option_cards.html.twig` | Option cards | FR-OPTIONCARD-001 |
+| `Resources/views/form/nowo_ui_option_card_input.html.twig` | Form theme of one option card | FR-OPTIONCARD-001 |
+
+Built outputs of the six runtimes above (committed, never hand-edited; same rules as the build outputs table):
+
+| Source file | Produced by | Requirement IDs |
+| --- | --- | --- |
+| `Resources/public/js/nowo-ui-bulk-select.js` | `assets/src/nowo-ui-bulk-select.ts` | FR-BUILD-001, FR-BULK-001 |
+| `Resources/public/js/nowo-ui-dropzone.js` | `assets/src/nowo-ui-dropzone.ts` | FR-BUILD-001, FR-DROPZONE-001 |
+| `Resources/public/js/nowo-ui-filter-sheet.js` | `assets/src/nowo-ui-filter-sheet.ts` | FR-BUILD-001, FR-FILTERSHEET-001 |
+| `Resources/public/js/nowo-ui-form-busy.js` | `assets/src/nowo-ui-form-busy.ts` | FR-BUILD-001, FR-FORMBUSY-001 |
+| `Resources/public/js/nowo-ui-table-view.js` | `assets/src/nowo-ui-table-view.ts` | FR-BUILD-001, FR-TABLEVIEW-001 |
+| `Resources/public/js/nowo-ui-tooltip.js` | `assets/src/nowo-ui-tooltip.ts` | FR-BUILD-001, FR-TOOLTIP-001 |
+
 ## Coverage summary
 
 | Category | Mapped |
@@ -700,15 +748,16 @@ Produced by `pnpm run build` (`vite.config.ts`, one `VITE_ENTRY` per IIFE; `buil
 | Shell focus mode (2.55) | 6 |
 | Overlay registry, scroll regions and small helpers | 10 |
 | Default theme stylesheet and token lint | 2 |
-| **Total** | **419** |
+| Components and runtimes of 2.56-2.64 (30 sources) and their 6 built outputs | 36 |
+| **Total** | **455** |
 
-Excluded: co-located Vitest `*.test.ts` (82 files at this audit).
+Excluded: co-located Vitest `*.test.ts` (93 files at this audit).
 
-Audit (2026-11-17, 2.54.0 context menus + 2.55 focus mode files):
+Audit (2026-11-22, v2.64.0; previously 2026-11-17, 2.54.0 context menus + 2.55 focus mode files):
 
 ```bash
-git ls-files src | grep -v '\.test\.ts$' | wc -l                      # 419
-git ls-files src | grep -v '\.test\.ts$' | grep -c '\.php$'           # 139
-git ls-files src | grep -v '\.test\.ts$' | grep -c '\.ts$'            # 91
-git ls-files src | grep -c '\.test\.ts$'                              # 82 (excluded)
+git ls-files src | grep -v '\.test\.ts$' | wc -l                      # 455
+git ls-files src | grep -v '\.test\.ts$' | grep -c '\.php$'           # 140
+git ls-files src | grep -v '\.test\.ts$' | grep -c '\.ts$'            # 97
+git ls-files src | grep -c '\.test\.ts$'                              # 93 (excluded)
 ```

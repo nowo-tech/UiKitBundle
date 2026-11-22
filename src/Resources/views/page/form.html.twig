@@ -3,7 +3,10 @@
 
   Regions: page header (+ page.secondaryActions in its toolbar when page.secondaryActionsInHeader, the default),
   form panel (`form_panel` slot) with the form (form_start / form_end; form theme from the host / FormKit profile),
-  submit + cancel, secondary actions below the form (secondaryActionsInHeader: false), delete zone
+  the actions row (theme.form_actions_order: primary_first, the default, prints the 2.65 row byte for byte — the primary,
+  then Cancel; cancel_first, or a host / bundle override of the `form_actions` partial, renders the row through that
+  partial: Cancel first, then the primary on the right; 2.66.1), secondary actions below the form
+  (secondaryActionsInHeader: false), delete zone
   (page.deleteAction through the confirm contract; `danger_zone`, `danger_zone_title`, `danger_zone_intro` slots).
   Data blocks: nowo_ui_form_body (default: REQ-TWIG-003 child loop), nowo_ui_form_aside (side column).
   page.formThemes (2.1): form_theme applied to page.form before it renders. page.formAttributes (2.3): extra form-element
@@ -45,13 +48,16 @@
                         {% endfor %}
                         {% endif %}
                     {% endblock %}
-                {% if _form_tag %}
+                {% if _form_tag %}{% set _actions_tpl = nowo_ui_partial('form_actions', _b) %}{% if nowo_ui_theme.formActionsOrder() == 'primary_first' and _actions_tpl == '@NowoUiKitBundle/partials/_form_actions.html.twig' %}
                     <div class="{{ nowo_ui_class('form_actions', _b) }}"{{ nowo_ui_attrs('form_actions', _b) }}>
                         <button type="submit" class="{{ nowo_ui_class('btn_primary', _b) }}">{{ page.submitLabel is null ? 'action.save'|trans({}, 'NowoUiKitBundle') : page.submitLabel|nowo_ui_trans }}</button>
                         {% if page.cancelHref %}
                             <a class="{{ nowo_ui_class('btn_secondary', _b) }}" href="{{ page.cancelHref }}">{{ page.cancelLabel is null ? 'action.cancel'|trans({}, 'NowoUiKitBundle') : page.cancelLabel|nowo_ui_trans }}</a>
                         {% endif %}
                     </div>
+                {%~ else %}
+                    {{ include(_actions_tpl, {submit_label: page.submitLabel, cancel_href: page.cancelHref, cancel_label: page.cancelLabel, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
+                {%~ endif %}
                 {{ form_end(form) }}
                 {% endif %}
             </div>

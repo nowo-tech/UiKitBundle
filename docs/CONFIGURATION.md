@@ -571,6 +571,7 @@ of the list scaffold filter card. Unset (or any key at its default) = the 2.29 m
 | `fold.icons.expanded` / `fold.icons.collapsed` | string | `chevron_up` / `chevron_down` | toggle icons |
 | `fold.testids` | bool | `false` | `data-testid` `filters-collapse-toggle` / `filters-collapse-summary` |
 | `fold.morph` | bool | `false` | add the `<morph-icon>` to the toggle |
+| `sheet` | bool | `false` | 2.65: below 48rem the card folds behind "Filters (n)" and opens in the `filter_bar` native `<dialog>` bottom sheet; the `scripts` partial adds the `filter-sheet` runtime by itself ([USAGE](USAGE.md#phone-sheet-265)) |
 
 Icons: canonical names or set-specific ones (`tabler:filter`; letters, digits, `_ : . -`). Class lists: printable
 characters (printed escaped). Usage and per-call options: [USAGE](USAGE.md#list-scaffold-filter-options-230).

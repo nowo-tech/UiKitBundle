@@ -18,6 +18,9 @@ use InvalidArgumentException;
  * - `grid`: `auto-fit` (default), `auto-fill`, or a custom `grid-template-columns` track list (printed as the
  *   `--nowo-ui-filters-grid-columns` token by `nowo_ui_tokens()`: no inline style, CSP-safe).
  * - `fold*`: the fold toggle of the card (`partials/_filters_collapse.html.twig`, Stimulus peer `filters-collapse`).
+ * - `sheet` (2.65): on phones the card folds behind a "Filters (n)" button that opens it in a native modal `<dialog>`
+ *   bottom sheet, the same markup and runtime as the `filter_bar` partial (`macros/filter_sheet.html.twig`,
+ *   `js/nowo-ui-filter-sheet.js`, appended to the `scripts` partial by itself). Default false: the 2.64 output.
  *
  * Immutable and request-independent (worker safe).
  */
@@ -38,7 +41,7 @@ final readonly class ListFiltersOptions
     public const FOLD_COOKIE = 'nowo_ui_filters_collapsed';
 
     /** Keys of the `filters` config map. */
-    private const KEYS = ['display', 'submit_icon', 'clear_icon', 'submit_class', 'clear_class', 'grid', 'fold'];
+    private const KEYS = ['display', 'submit_icon', 'clear_icon', 'submit_class', 'clear_class', 'grid', 'fold', 'sheet'];
 
     /** Keys of the `filters.fold` config map. */
     private const FOLD_KEYS = ['enabled', 'cookie', 'cookie_path', 'icons', 'testids', 'morph'];
@@ -72,6 +75,7 @@ final readonly class ListFiltersOptions
         public string $foldIconCollapsed = 'chevron_down',
         public bool $foldTestids = false,
         public bool $foldMorph = false,
+        public bool $sheet = false,
     ) {
         if (null !== $display && !\in_array($display, self::DISPLAYS, true)) {
             throw new InvalidArgumentException(\sprintf('display "%s" must be null, %s.', $display, implode(', ', self::DISPLAYS)));
@@ -136,6 +140,7 @@ final readonly class ListFiltersOptions
             self::nullableString($icons, 'collapsed', 'fold.icons.collapsed') ?? 'chevron_down',
             self::bool($fold, 'testids', 'fold.testids'),
             self::bool($fold, 'morph', 'fold.morph'),
+            self::bool($config, 'sheet', 'sheet'),
         );
     }
 

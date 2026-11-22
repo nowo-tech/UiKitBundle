@@ -176,4 +176,66 @@ final readonly class RenderedPage
 
         return $result;
     }
+
+    /**
+     * The controls of every form actions row (`nowo-ui-form__actions`, document order), each as `cancel` (marked
+     * `data-nowo-ui-form-cancel`, or a secondary link / `type="button"` button), `primary` (a submit button with the
+     * `nowo-ui-btn--primary` class) or `other` (2.66).
+     *
+     * @return list<list<string>> `cancel` / `primary` / `other` per control
+     */
+    public function formActionsRows(): array
+    {
+        $rows = [];
+        foreach ($this->elements('//*[contains(concat(" ", normalize-space(@class), " "), " nowo-ui-form__actions ")]') as $row) {
+            $rows[] = array_map(static function (DOMElement $node): string {
+                $classes = ' '.preg_replace('/\s+/', ' ', $node->getAttribute('class')).' ';
+                $submit = 'a' !== $node->nodeName && \in_array(strtolower($node->getAttribute('type')), ['', 'submit'], true);
+
+                return match (true) {
+                    $node->hasAttribute('data-nowo-ui-form-cancel'),
+                    !$submit && str_contains($classes, ' nowo-ui-btn--secondary ') => 'cancel',
+                    $submit && str_contains($classes, ' nowo-ui-btn--primary ') => 'primary',
+                    default => 'other',
+                };
+            }, $this->elements('.//a | .//button | .//input[@type="submit" or @type="button"]', $row));
+        }
+
+        return $rows;
+    }
+
+    /**
+     * The anatomy of every form actions row, in the order of {@see self::formActionsRows()} (2.66.1): `dialog` (inside a
+     * `<dialog>`, or a control closes the UiKit dialog with `data-nowo-ui-dialog-close`: a dialog footer or a dialog
+     * form fragment), `confirm` (full-page confirm), `wizard` (wizard step) — these keep Cancel / Back first — or
+     * `form` (a page form row, which follows `theme.form_actions_order`).
+     *
+     * @return list<'dialog'|'confirm'|'wizard'|'form'>
+     */
+    public function formActionsRowAnatomies(): array
+    {
+        $anatomies = [];
+        foreach ($this->elements('//*[contains(concat(" ", normalize-space(@class), " "), " nowo-ui-form__actions ")]') as $row) {
+            $anatomies[] = match (true) {
+                [] !== $this->elements('ancestor::dialog | .//*[@data-nowo-ui-dialog-close]', $row) => 'dialog',
+                [] !== $this->elements('ancestor::*[@data-nowo-ui-page="confirm"]', $row) => 'confirm',
+                [] !== $this->elements('ancestor::*[@data-nowo-ui-page="wizard"]', $row) => 'wizard',
+                default => 'form',
+            };
+        }
+
+        return $anatomies;
+    }
+
+    /**
+     * Elements matching an XPath query (optionally relative to a context element).
+     *
+     * @return list<DOMElement>
+     */
+    private function elements(string $query, ?DOMElement $context = null): array
+    {
+        $nodes = iterator_to_array($this->xpath->query($query, $context) ?: [], false);
+
+        return array_values(array_filter($nodes, static fn (mixed $node): bool => $node instanceof DOMElement));
+    }
 }
