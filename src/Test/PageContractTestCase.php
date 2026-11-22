@@ -465,7 +465,7 @@ abstract class PageContractTestCase extends TestCase
      */
     protected function assertFormActionsOrder(RenderedPage $page, ?string $order = null): void
     {
-        $order ??= static::configuredFormActionsOrder();
+        $order ??= self::configuredFormActionsOrder();
         $this->addToAssertionCount(1);
         $anatomies = $page->formActionsRowAnatomies();
         foreach ($page->formActionsRows() as $index => $controls) {

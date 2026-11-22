@@ -46,7 +46,7 @@ final class UiKitScaffoldsCancelFirstContractTest extends PageContractTestCase
         return true;
     }
 
-    protected static function formActionsOrder(): ?string
+    protected static function formActionsOrder(): string
     {
         return 'cancel_first';
     }
