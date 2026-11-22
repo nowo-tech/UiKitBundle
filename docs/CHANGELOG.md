@@ -146,6 +146,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Inline `.nowo-ui-link` told apart by more than colour**: a `nowo-ui-link` inside a paragraph, `dd`, `blockquote`,
+  `figcaption`, `label`, `small`, `.nowo-ui-content` or `.nowo-ui-muted` is now underlined (offset 2px, current colour,
+  so light and dark follow the link token), fixing axe `link-in-text-block` (found by the demo-alignment batch 11).
+  Links outside text blocks, and links with their own class (nav, buttons), are unchanged.
+- **`ul.ux-share-links__list` (UxLinkBundle) showed list bullets**: the list is reset (no bullets, no margin or
+  padding, wrapping flex row with a gap). Pure CSS, no markup or token change.
+
 ## [2.63.1] - 2026-11-21
 
 ### Fixed

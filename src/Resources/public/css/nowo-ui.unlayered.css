@@ -230,6 +230,23 @@
   border-radius: 2px;
 }
 
+/* 2.63.2: a link inside running text is told apart from the text by more than colour (axe `link-in-text-block`):
+   underlined in paragraphs and other text blocks. Nav, menu and button-style links keep their own classes. */
+:where(p, dd, blockquote, figcaption, label, small, .nowo-ui-content, .nowo-ui-muted) .nowo-ui-link:not(.nowo-ui-btn) {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* 2.63.2: the share-links list of nowo-tech/ux-link-bundle (`ux-share-links`, a plain `ul`) shows no bullets */
+.ux-share-links__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
 .nowo-ui-input {
   max-width: 20rem;
   min-height: var(--nowo-ui-control-height, auto);
