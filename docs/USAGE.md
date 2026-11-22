@@ -138,7 +138,7 @@ Twig globals (from config):
 | `partials/_tabs.html.twig` | Tab **link** nav (no JS). In-page panels: `nowo-ui-tabs.js` / Stimulus `tabs` peer. 2.16: `icon` per item; the host's `data-tab-style` (`text`, `icon-text`, `icon`) on `<html>` picks what shows |
 | `partials/_filters.html.twig` | Search + apply/clear + actions slot |
 | `partials/_filter_actions.html.twig` | Opt-in filter bar actions: optional pager row + Filter + Clear on one row. See [Filter bar and data table](#filter-bar-and-data-table-opt-in) |
-| `partials/_form_actions.html.twig` | Form actions row (2.66, theme partial `form_actions`): Cancel first, then the primary on the right — the house order of every form, page or dialog. See [Form actions order](#form-actions-order-266) |
+| `partials/_form_actions.html.twig` | Form actions row (2.66, theme partial `form_actions`): page forms follow `theme.form_actions_order` (default `primary_first` since 2.66.1, opt-in `cancel_first`); dialog rows keep Cancel first. See [Form actions order](#form-actions-order-266) |
 | `partials/_open_modal_on_load.html.twig` | CSP-safe JSON island that opens a modal on load (`?new=1` deep link). See [Open a modal on load](#open-a-modal-on-load-deep-link) |
 | `partials/_card.html.twig` | Card / panel (header/body/footer) |
 | `partials/_modal_shell.html.twig` | Modal shell (Bootstrap-JS structure, kept for BC) |
@@ -220,10 +220,23 @@ Confirm trigger:
 
 ### Form actions order (2.66)
 
-Every form puts **Cancel (secondary) first, then the primary on the right** — the order of the dialog footers, the
-full-page confirm and the wizard. The form scaffold (`page/form.html.twig`) renders its row through the
-`form_actions` partial; a bundle form that writes its own row (a dialog fragment, a setup step) includes the same
-partial instead of hand-written buttons:
+Page forms follow `nowo_ui_kit.theme.form_actions_order`:
+
+- **`primary_first`** — the default (2.66.1 restores the 2.65 default, owner decision 2026-11-22): the primary first,
+  then the secondary actions, then Cancel. The form scaffold (`page/form.html.twig`) prints the 2.65 row byte for byte.
+- **`cancel_first`** — opt-in: Cancel (secondary) first, then the primary on the right, like the dialog footers. Hosts
+  that want it set:
+
+  ```yaml
+  nowo_ui_kit:
+      theme:
+          form_actions_order: cancel_first
+  ```
+
+Dialogs keep **Cancel first** whatever the option says: the `dialog` / `confirm_dialog` footers, a dialog form
+fragment (Cancel closes the dialog: `cancel_dialog`, or `data-nowo-ui-dialog-close` in `cancel_attrs`), the full-page
+confirm and the wizard (*Back*, *Next*). A bundle form that writes its own row (a dialog fragment, a setup step)
+includes the `form_actions` partial instead of hand-written buttons:
 
 ```twig
 {{ form_start(form, {attr: {class: nowo_ui_class('form', bundle)}}) }}
@@ -245,9 +258,9 @@ partial instead of hand-written buttons:
   submits the primary.
 - On a phone the row wraps in the same order: the primary stays last, at the end of the row (or on its own line below
   Cancel when the labels do not fit), nearest the thumb.
-- `nowo_ui_kit.theme.form_actions_order: primary_first` restores the 2.65 order (primary, then Cancel) of the form
-  scaffold and the partial default; the partial option `order` wins per row.
-- Bundles opt their page contract test into the rule with `formActionsOrderChecked(): true`
+- The partial option `order` (`cancel_first` / `primary_first`) wins per row, over the theme and the dialog rule.
+- Bundles opt their page contract test into the rule with `formActionsOrderChecked(): true`: it follows the configured
+  order (`assertFormActionsOrder()`), so a bundle test never hard-codes Cancel first for page forms
   ([PAGE_CONTRACT](PAGE_CONTRACT.md#form-actions-order-266)).
 
 ### Forms in the partials (REQ-TWIG-005)

@@ -225,9 +225,9 @@ layout — see [USAGE](USAGE.md#detail-pages-221).
 | `nowo_ui_form_aside` | empty (side column after the main column) | `page` |
 
 The form renders inside the `form_panel` slot (wrapper on the form scaffold only). Submit + cancel render through
-the `form_actions` partial in the `form_actions` slot — 2.66: **Cancel first, then the primary on the right**, the order
-of the dialog footers and the full-page confirm (`theme.form_actions_order: primary_first` keeps the 2.65 order:
-primary first, Cancel last); see [Form actions order](#form-actions-order-266); `secondaryActions` in the page-header toolbar after the header actions
+the `form_actions` slot in the order of `theme.form_actions_order` — `primary_first` (default; 2.66.1 prints the 2.65
+row byte for byte: the primary first, Cancel last) or `cancel_first` (opt-in, through the `form_actions` partial:
+Cancel first, then the primary on the right); see [Form actions order](#form-actions-order-266); `secondaryActions` in the page-header toolbar after the header actions
 (`secondaryActionsInHeader: true`, the default) or in a `toolbar` below the form (`false`); `deleteAction` in the
 `danger_zone` through the confirm contract, titled `dangerZoneTitle` (default `form.danger_zone`, slot
 `danger_zone_title`) with an optional `dangerZoneIntro` (slot `danger_zone_intro`).
@@ -461,21 +461,29 @@ with FormKit they set the `locale_tabs` option or use `TranslatableMapType`, whi
 
 ### Form actions order (2.66)
 
-One order for every form, page or dialog: **Cancel (secondary) first, then the secondary actions, then the primary
-last, on the right** — the anatomy of the `dialog` / `confirm_dialog` footers, the full-page confirm and the wizard
-(*Back*, *Next*). The form scaffold renders its row through the `form_actions` partial; a bundle form that writes its
-own row (a dialog fragment, a setup step) includes the same partial instead of hand-written buttons:
+Two anatomies (2.66.1, owner decision 2026-11-22):
+
+- **Page form rows** follow `nowo_ui_kit.theme.form_actions_order`: `primary_first` (the default, the 2.65 order: the
+  primary, the secondary actions, then Cancel) or `cancel_first` (opt-in: Cancel, the secondary actions, then the
+  primary last, on the right). 2.66.0 defaulted to `cancel_first`; 2.66.1 reverts that default.
+- **Dialog, confirm and wizard rows** keep **Cancel / Back first, the primary last**: the `dialog` / `confirm_dialog`
+  footers, a dialog form fragment (Cancel closes the dialog), the full-page confirm and the wizard (*Back*, *Next*).
+
+With `primary_first` and no override of the `form_actions` partial, the form scaffold prints the 2.65 row; otherwise it
+renders the row through the `form_actions` partial. A bundle form that writes its own row (a dialog fragment, a setup
+step) includes the same partial instead of hand-written buttons:
 
 ```twig
-{# full page: Cancel is a link #}
+{# full page: Cancel is a link; the row follows theme.form_actions_order #}
 {{ include(nowo_ui_partial('form_actions', bundle), {submit_label: 'import.submit'|trans({}, 'NowoXBundle'), cancel_href: path('x_index'), bundle: bundle}, false) }}
-{# dialog fragment: Cancel closes the UiKit dialog ([data-nowo-ui-dialog-close]) #}
+{# dialog fragment: Cancel closes the UiKit dialog ([data-nowo-ui-dialog-close]): always Cancel first #}
 {{ include(nowo_ui_partial('form_actions', bundle), {submit_label: label, cancel_dialog: true, submit_attrs: {'data-testid': 'x-import-submit'}, bundle: bundle}, false) }}
 ```
 
 Options: `submit_label`, `submit_attrs`, `submit` (false = no submit button), `cancel_href` (link) or `cancel_dialog`
 (`type="button"` closing the dialog), `cancel_label`, `cancel_attrs`, `extra_actions` (trusted HTML between Cancel and
-the primary), `order` (`cancel_first` / `primary_first`; default `theme.form_actions_order`), `bundle`,
+the primary), `order` (`cancel_first` / `primary_first`; default `cancel_first` for a dialog row — `cancel_dialog`, or
+`data-nowo-ui-dialog-close` in `cancel_attrs` on a `cancel_href` link — else `theme.form_actions_order`), `bundle`,
 `nowo_ui_page_type`. Cancel carries `data-nowo-ui-form-cancel`, the row `data-nowo-ui-form-actions="<order>"`.
 
 - **Focus order = DOM order.** The partial prints the controls in the visual order; never reorder them with CSS
@@ -484,11 +492,13 @@ the primary), `order` (`cancel_first` / `primary_first`; default `theme.form_act
   primary (implicit submission takes the first submit button).
 - **Narrow screens.** The row is a wrapping flex row (`form_actions` slot): on a phone the two buttons share one row,
   the primary at its end; when the labels do not fit, the primary wraps below Cancel, still last, nearest the thumb.
-- **Opt-out.** `nowo_ui_kit.theme.form_actions_order: primary_first` restores the 2.65 order of the form scaffold and
-  the partial default for hosts whose own forms still put the primary first. The confirm page, the wizard and the
-  dialogs always put Cancel / Back first.
-- **Contract test.** `PageContractTestCase::formActionsOrderChecked()` (opt-in) fails a page whose form actions row puts
-  the primary before Cancel.
+- **Opt-in.** `nowo_ui_kit.theme.form_actions_order: cancel_first` puts Cancel first in the page forms too (the form
+  scaffold and the partial default). The confirm page, the wizard and the dialogs always put Cancel / Back first.
+- **Contract test.** `PageContractTestCase::formActionsOrderChecked()` (opt-in) runs `assertFormActionsOrder()` on
+  every page: page form rows in the configured order (`formActionsOrder()`, the stub theme's option, default null =
+  the UiKit default `primary_first`; return `cancel_first` to test a cancel-first host), dialog / confirm / wizard
+  rows Cancel first (`RenderedPage::formActionsRowAnatomies()`). `assertFormActionsCancelFirst()` stays for rows that
+  are always Cancel first. Do not hard-code Cancel first for page forms in bundle tests.
 
 ## Template contract
 
@@ -1087,16 +1097,16 @@ tests per fixture:
 | `testPageReflectsTheStubTheme` | no `pc-*` slot class or `data-pc-*` slot attribute in `nowo_ui_content`, or a page header that bypasses `nowo_ui_partial('page_header')` |
 | `testPageHasNoRawTranslationKeys` | a dotted id the translator could not find; with `strictMissingTranslations()` (2.3 opt-in, default in 3.0) any missing message — a text translated twice (an already translated label handed to a form theme that translates it again: use `translation_domain: false` or `\|nowo_ui_translatable`), a literal piped through `\|trans`, a humanized label of a form without `translation_domain` — or a `*.label\|placeholder\|help\|title` key in the output |
 | `testPageActionFormsKeepTheirHiddenFields` | a rendered `<form name="…">` of a `FormView`-backed `Action` found in the fixture context lacks a hidden field of that `FormView` (the CSRF token), or carries it more than once (e.g. a template that calls `form_start` / `form_end` on an already rendered `FormView` instead of the `action` partial) |
-| `testPageFormActionsPutCancelFirst` | 2.66, only with `formActionsOrderChecked()` returning true (opt-in): a form actions row (`nowo-ui-form__actions`) puts the primary submit button before Cancel (`data-nowo-ui-form-cancel`, or a secondary link / `type="button"` button) — render the row with the `form_actions` partial |
+| `testPageFormActionsFollowTheConfiguredOrder` | 2.66 (renamed from `testPageFormActionsPutCancelFirst` in 2.66.1), only with `formActionsOrderChecked()` returning true (opt-in): a page form actions row (`nowo-ui-form__actions`) not in the stub theme's `theme.form_actions_order` (`formActionsOrder()` hook; default the UiKit default `primary_first`), or a dialog / confirm / wizard row that puts the primary submit button before Cancel (`data-nowo-ui-form-cancel`, or a secondary link / `type="button"` button) — `assertFormActionsOrder()` |
 
 Hooks: `templatePaths()`, `inlineTemplates()`, `translationDirs()`, `templatesDocument()`, `cssFrameworks()`,
 `allowedClasses()` (documented exceptions), `ignoredMissingTranslations()` (2.3: accepted missing messages,
 `domain:id`, `id` or a `/regex/` on `domain:id`; document why in `docs/TEMPLATES.md`), `strictMissingTranslations()`
-(2.3, opt-in, the default from 3.0: true fails on every missing message; the default false keeps the dotted-id rule), `formActionsOrderChecked()` (2.66, opt-in: true checks Cancel before the primary in every form actions row), `formThemes()` (null disables the Form extension; add your FormKit
+(2.3, opt-in, the default from 3.0: true fails on every missing message; the default false keeps the dotted-id rule), `formActionsOrderChecked()` (2.66, opt-in: true checks every form actions row with `assertFormActionsOrder()`), `formActionsOrder()` (2.66.1: the stub theme's `theme.form_actions_order`, null = the UiKit default `primary_first`), `formThemes()` (null disables the Form extension; add your FormKit
 theme), `locale()`, `configureTwig(Environment)` (register the bundle's Twig extensions; functions added there
 override the stubs). The assertion helpers (`assertExtendsScaffoldOrUnique()`, `assertCanonicalBlocksFilled()`,
 `assertNoForbiddenMarkup()`, `assertNoFrameworkUtilityClasses()`, `assertStubThemeReflected()`,
-`assertNoRawTranslationKeys()`, `assertActionFormsKeepHiddenFields()`, `assertFormActionsCancelFirst()`) and `renderPage()` / `createTwig()` are protected for the bundle's own tests.
+`assertNoRawTranslationKeys()`, `assertActionFormsKeepHiddenFields()`, `assertFormActionsCancelFirst()`, `assertFormActionsOrder()` (2.66.1: page form rows in the configured order, dialog / confirm / wizard rows Cancel first), `configuredFormActionsOrder()`) and `renderPage()` / `createTwig()` are protected for the bundle's own tests.
 Fixtures are rendered several times; their `FormView`s are reset between renders (children and, since 2.1, collection
 prototypes — `vars.prototype` of a `CollectionType` with `prototype: true`).
 

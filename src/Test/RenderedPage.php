@@ -205,6 +205,29 @@ final readonly class RenderedPage
     }
 
     /**
+     * The anatomy of every form actions row, in the order of {@see self::formActionsRows()} (2.66.1): `dialog` (inside a
+     * `<dialog>`, or a control closes the UiKit dialog with `data-nowo-ui-dialog-close`: a dialog footer or a dialog
+     * form fragment), `confirm` (full-page confirm), `wizard` (wizard step) — these keep Cancel / Back first — or
+     * `form` (a page form row, which follows `theme.form_actions_order`).
+     *
+     * @return list<'dialog'|'confirm'|'wizard'|'form'>
+     */
+    public function formActionsRowAnatomies(): array
+    {
+        $anatomies = [];
+        foreach ($this->elements('//*[contains(concat(" ", normalize-space(@class), " "), " nowo-ui-form__actions ")]') as $row) {
+            $anatomies[] = match (true) {
+                [] !== $this->elements('ancestor::dialog | .//*[@data-nowo-ui-dialog-close]', $row) => 'dialog',
+                [] !== $this->elements('ancestor::*[@data-nowo-ui-page="confirm"]', $row) => 'confirm',
+                [] !== $this->elements('ancestor::*[@data-nowo-ui-page="wizard"]', $row) => 'wizard',
+                default => 'form',
+            };
+        }
+
+        return $anatomies;
+    }
+
+    /**
      * Elements matching an XPath query (optionally relative to a context element).
      *
      * @return list<DOMElement>

@@ -685,7 +685,7 @@ Produced by `pnpm run build` (`vite.config.ts`, one `VITE_ENTRY` per IIFE; `buil
 | `Resources/views/partials/_tab_panels.html.twig` | Client-side tab panels | FR-DISPLAY-001 |
 | `Resources/views/partials/_timeline.html.twig` | Timeline | FR-DISPLAY-001 |
 | `Resources/views/partials/_form_fieldset.html.twig` | Fieldset row | FR-FIELDSET-001 |
-| `Resources/views/partials/_form_actions.html.twig` | Form actions row: Cancel first, then the primary on the right (theme partial `form_actions`) | FR-FORMACTIONS-001 |
+| `Resources/views/partials/_form_actions.html.twig` | Form actions row in the `theme.form_actions_order` order (default primary first; dialog rows Cancel first; theme partial `form_actions`) | FR-FORMACTIONS-001 |
 | `Resources/views/partials/_keyset_pager.html.twig` | Keyset pager | FR-PAGER-002 |
 | `Resources/views/partials/_option_cards.html.twig` | Option cards | FR-OPTIONCARD-001 |
 | `Resources/views/form/nowo_ui_option_card_input.html.twig` | Form theme of one option card | FR-OPTIONCARD-001 |

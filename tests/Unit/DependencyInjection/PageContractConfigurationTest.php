@@ -27,11 +27,12 @@ final class PageContractConfigurationTest extends TestCase
         self::assertSame(['admin' => '@NowoUiKit/layout/admin.html.twig', 'guest' => '@NowoUiKit/layout/guest.html.twig'], $config['layouts']);
         self::assertSame(['breadcrumb_kit' => true, 'collection' => null, 'enabled' => true], $config['breadcrumbs']);
         self::assertSame(['brand' => 'auto'], $config['auth_panel'], '2.44: auth_panel.brand defaults to auto (the 2.43 panel)');
-        self::assertSame(['framework_defaults' => true, 'classes' => [], 'attributes' => [], 'partials' => [], 'tokens' => [], 'tokens_dark' => [], 'confirm_message_in_header' => false, 'form_actions_order' => 'cancel_first', 'popover_menus' => false, 'context_menus' => false, 'form_errors_after_widget' => false, 'menu_semantics' => null, 'dialog' => ['height' => 'content'], 'focus_mode' => ['enabled' => false, 'regions' => ['sidebar', 'header', 'footer', 'side_panels', 'edge_tabs', 'dock'], 'keep' => [], 'shortcut' => 'F', 'fullscreen' => true], 'bundles' => [], 'pages' => []], $config['theme']);
+        self::assertSame(['framework_defaults' => true, 'classes' => [], 'attributes' => [], 'partials' => [], 'tokens' => [], 'tokens_dark' => [], 'confirm_message_in_header' => false, 'form_actions_order' => 'primary_first', 'popover_menus' => false, 'context_menus' => false, 'form_errors_after_widget' => false, 'menu_semantics' => null, 'dialog' => ['height' => 'content'], 'focus_mode' => ['enabled' => false, 'regions' => ['sidebar', 'header', 'footer', 'side_panels', 'edge_tabs', 'dock'], 'keep' => [], 'shortcut' => 'F', 'fullscreen' => true], 'bundles' => [], 'pages' => []], $config['theme']);
     }
 
     public function testFormActionsOrder(): void
     {
+        self::assertSame('cancel_first', $this->process(['theme' => ['form_actions_order' => 'cancel_first']])['theme']['form_actions_order']);
         self::assertSame('primary_first', $this->process(['theme' => ['form_actions_order' => 'primary_first']])['theme']['form_actions_order']);
 
         $this->expectException(InvalidConfigurationException::class);

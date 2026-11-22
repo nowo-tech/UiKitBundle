@@ -38,7 +38,8 @@ use Twig\TwigFilter;
  * renders without it. Without `class` the output is byte-identical to UiKit 2.42.0: the fixtures under
  * tests/Fixtures/bc-2.42 were rendered by the 2.42.0 templates (commit 4331a5b) from exactly these scenarios
  * (`data-probe="p"` stands for the other attributes), no whitespace normalisation. `page_form.html` was re-recorded in
- * 2.66 (UX-017: the actions row renders through the `form_actions` partial, Cancel first, then the primary).
+ * 2.66.0 (UX-017, Cancel first) and restored in 2.66.1: with the default theme.form_actions_order (`primary_first`)
+ * the form scaffold prints the 2.65 actions row again, byte for byte.
  */
 final class AttrClassMerge2421Test extends TestCase
 {
