@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.68.0](#to-2680)
 - [To 2.67.0](#to-2670)
 - [To 2.66.1](#to-2661)
 - [To 2.66.0](#to-2660)
@@ -169,6 +170,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.68.0
+
+From **2.67.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 - **Deprecated: one confirm dialog per table row.** Row actions with a `Confirm` in the `table` partial (the list
   scaffold included) still print one `<dialog>` per row by default; opt in to one shared dialog per table now:
