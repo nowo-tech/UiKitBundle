@@ -143,7 +143,7 @@ The bundle does **not** expose CLI commands that mutate production data, file up
 
 | Field | Value |
 | ----- | ----- |
-| **Date** | 2026-11-06 (2.33 to 2.36); later releases below, latest 2026-11-11 |
+| **Date** | 2026-11-06 (2.33 to 2.36); later releases below, latest 2026-11-23 (2.65.0 to 2.68.0, Appendix ZV) |
 | **Method** | Independent audit Appendix GT: code read and browser PoC in three engines, re-verified 2026-11-06, 2.33.1 fixes included; Appendix HG for 2.34.0; Appendices LV, ME and MR for 2.48.0, 2.48.1 and 2.49.0 |
 | **Overall risk** | **Low** |
 | **Grade** | **Pass (good)** |
@@ -188,6 +188,8 @@ goes only into the field and an optional hidden input that must be `type="hidden
 and the label keys. The endpoint is the host's: it checks access, limits the term and the rate, and returns only what the user may
 see. Server side nothing is kept between requests (FrankenPHP worker mode, kernel reset off; igor clean). No style attribute, no inline
 script; attributes and document members are read through the prototypes; importing touches no DOM.
+
+2.65.0 to 2.68.0 (`list_filters` phone sheet, `form_actions` partial, form row hook and money / percent input groups, `nowo_ui_after_page_header` slot, `confirm_dialog` with `dialog_src`, shared table confirm): delta audit Appendix ZV (2026-11-23, monorepo `BUNDLES_SECURITY_ANALYSIS.md`): **Pass (good)**, overall risk **Low**, no Critical, High, Medium or Low; Appendix ZC covers 2.63.1 to 2.64.0. Every new option is opt-in and the defaults print the 2.64 markup. The shared confirm fills its dialog with `textContent` only, and its confirm button submits the row's own hidden POST form (target and CSRF token stay in that form); a toggle without a form, or a script `nowoUiOpenConfirm(id)`, opens nothing. `dialog_src` refuses script URLs (disabled opener) and fetches through the same-origin remote form dialog runtime. Open (Info): ZV-I1, `form_actions` prints `cancel_href` as given, like the form scaffold's `cancelHref`: pass only host values, never request data; ZV-I2, `SafeHref` does not check the origin of a `dialog_src` link (the runtime refuses to fetch another origin): never take `dialog_src` from the request.
 
 ## Secrets and cryptography
 
