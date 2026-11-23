@@ -40,8 +40,8 @@ final class AfterPageHeaderSlotTest extends TestCase
         self::assertIsString($source);
         self::assertSame(1, substr_count($source, self::SLOT), $layout.' declares the slot exactly once.');
 
-        $now = $this->render($layout, $source, $child);
-        $before = $this->render($layout, str_replace(self::SLOT, '', $source), $child);
+        $now = $this->render($source, $child);
+        $before = $this->render(str_replace(self::SLOT, '', $source), $child);
 
         self::assertNotSame('', $now);
         self::assertStringContainsString('<h1>HEADER</h1>', $now);
@@ -54,13 +54,13 @@ final class AfterPageHeaderSlotTest extends TestCase
         $source = file_get_contents(PageContractTwig::root().'/src/Resources/views/'.$layout);
         self::assertIsString($source);
 
-        $html = $this->render($layout, $source, $child.'{% block nowo_ui_after_page_header %}<aside data-after-header>BAR</aside>{% endblock %}');
+        $html = $this->render($source, $child.'{% block nowo_ui_after_page_header %}<aside data-after-header>BAR</aside>{% endblock %}');
 
         self::assertMatchesRegularExpression('#<h1>HEADER</h1>\s*<aside data-after-header>BAR</aside>.*<p>CONTENT</p>#s', $html, $layout);
         self::assertSame(1, substr_count($html, 'data-after-header'));
     }
 
-    private function render(string $layout, string $layoutSource, string $child): string
+    private function render(string $layoutSource, string $child): string
     {
         $twig = PageContractTwig::create([
             'layout_under_test' => $layoutSource,
