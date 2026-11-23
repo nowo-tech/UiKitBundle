@@ -22,7 +22,7 @@ describe('announceScript', () => {
 
     expect(log).toHaveBeenCalledTimes(1);
     expect(String(log.mock.calls[0]?.[0])).toContain('[ui-kit/dialog] script loaded, build: ');
-    expect(log.mock.calls[0]).toContain('abc123def456');
+    expect(String(log.mock.calls[0]?.[0])).toContain('abc123def456');
   });
 
   it('logs without a build id when none is injected', () => {

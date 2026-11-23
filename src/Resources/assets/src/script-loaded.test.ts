@@ -3,11 +3,11 @@
  * The static check covers the whole vite.config.ts entry list (theme-boot is the one inline pre-paint script and
  * stays silent: it is inlined in the <head> of every page); a few entries are evaluated for real.
  */
-import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import viteConfig from '../../../../vite.config.ts?raw';
 
-const config = readFileSync('vite.config.ts', 'utf8');
-const entries = [...config.matchAll(/input: 'src\/Resources\/assets\/src\/(nowo-ui-[a-z-]+)\.ts'/g)].map((m) => m[1] as string);
+const sources = import.meta.glob<string>('./nowo-ui-*.ts', { query: '?raw', import: 'default', eager: true });
+const entries = (viteConfig.match(/input: 'src\/Resources\/assets\/src\/nowo-ui-[a-z-]+\.ts'/g) ?? []).map((m) => m.replace(/^.*\/(nowo-ui-[a-z-]+)\.ts'$/, '$1'));
 
 describe('shipped entries', () => {
   it('lists the entries of the build', () => {
@@ -15,7 +15,7 @@ describe('shipped entries', () => {
   });
 
   it.each(entries.filter((entry) => entry !== 'nowo-ui-theme-boot'))('%s announces itself once, under its own name', (entry) => {
-    const source = readFileSync(`src/Resources/assets/src/${entry}.ts`, 'utf8');
+    const source = sources[`./${entry}.ts`] ?? '';
     const name = `ui-kit/${entry.replace(/^nowo-ui-/, '')}`;
 
     expect(source.split(`announceScript('${name}'`)).toHaveLength(2);
@@ -45,6 +45,6 @@ describe.each(['./nowo-ui-open-modal', './nowo-ui-autosubmit', './nowo-ui-layout
     const lines = log.mock.calls.filter((call) => String(call[0]).includes('script loaded'));
     expect(lines).toHaveLength(1);
     expect(String(lines[0]?.[0])).toContain(`[ui-kit/${entry.replace('./nowo-ui-', '')}] script loaded, build: `);
-    expect(lines[0]).toContain('2026-11-23 14:05 UTC');
+    expect(String(lines[0]?.[0])).toContain('2026-11-23 14:05 UTC');
   });
 });
