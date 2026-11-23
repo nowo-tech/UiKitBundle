@@ -21,6 +21,13 @@
     - foot_html (2.34): pre-rendered rows of the <tfoot> (the list scaffold passes its nowo_ui_list_foot block this way)
     - foot_attr (2.34): extra attributes of the <tfoot>, `class` added to the slot classes, checked by
       nowo_ui_safe_attrs() (no on*, style, srcdoc or unsafe URLs)
+    - confirm_shared (2.68, bool; default nowo_ui_kit.table_confirm == 'shared', else false): the row actions with a
+      Confirm open ONE shared confirm dialog (partial `confirm_shared`, id confirm_shared_id) filled when it opens,
+      instead of one dialog (title, message, POST form + CSRF) per row; each row keeps its own hidden POST form. Same
+      no-JS behaviour (the toggle needs the kit runtime; Action::fallbackHref keeps its <noscript> link). Opt-in:
+      the per-row dialogs are deprecated and stop being the default in 3.0
+    - confirm_shared_id (2.68): id of the shared dialog (default nowo-ui-table-confirm; give each table its own when
+      a page holds two tables with shared confirms)
   Blocks (through {% embed %}): nowo_ui_table_head (header cells), nowo_ui_table_row (cells of one row: `row`,
   `row_key`, `loop`, `table` in context), nowo_ui_table_foot (2.34, rows of the <tfoot>: `table` in context; no <tfoot>
   while it is empty). View\Table::$rowAttributes (2.34) adds attributes to each <tr>.
@@ -32,6 +39,8 @@
 {% set _route = route|default(app is defined and app ? app.request.attributes.get('_route') : null) %}
 {% set _route_params = (app is defined and app ? app.request.attributes.get('_route_params') : {})|default({})|merge(app is defined and app ? app.request.query.all : {}) %}
 {% set _confirms = [] %}
+{% set _confirm_shared = (confirm_shared ?? (nowo_ui_kit_table_confirm|default('per_row') == 'shared')) is same as(true) %}
+{% set _confirm_shared_id = confirm_shared_id|default('nowo-ui-table-confirm') %}
 {% set _tbl = table %}
 {% set _table_attrs = table.clientSort ? table.attributes|merge({'data-controller': ((table.attributes['data-controller'] ?? '') ~ ' table-sort')|trim}) : table.attributes %}
 {% set _cards = table.responsive == 'cards' %}
@@ -98,7 +107,7 @@
                             {% endif %}
                         {% endfor %}
                         <td class="{{ nowo_ui_class('table_cell', _b) }} {{ nowo_ui_class('table_actions_cell', _b) }} nowo-ui-cell--{{ table.actionsAlign }}"{{ nowo_ui_attrs('table_actions_cell', _b) }}>
-                            {{ include(nowo_ui_partial('row_actions', _b), {actions: _row_actions, confirm_external: true, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
+                            {{ include(nowo_ui_partial('row_actions', _b), {actions: _row_actions, confirm_external: true, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}|merge(_confirm_shared ? {confirm_shared: {id: _confirm_shared_id, row: loop.index}} : {}), false) }}
                         </td>
                     {% endif %}{% endset %}
                     {% if not _actions_end %}{{ _actions_cell }}{% endif %}
@@ -116,7 +125,13 @@
         </tbody>{{ _tfoot }}
     </table>
 </div>
-{% if _confirms is not empty %}
+{% if _confirms is not empty and _confirm_shared %}
+    {#- the same guard as the per-row dialogs: one explicit Confirm id with different content throws -#}
+    {% do table.confirmDialogs(_confirms) %}
+    <div class="nowo-ui-list-page__confirms" data-nowo-ui-region="confirms">
+        {{ include(nowo_ui_partial('confirm_shared', _b), {id: _confirm_shared_id, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
+    </div>
+{% elseif _confirms is not empty %}
     <div class="nowo-ui-list-page__confirms" data-nowo-ui-region="confirms">
         {% for _action in table.confirmDialogs(_confirms) %}
             {{ include(nowo_ui_partial('confirm', _b), {

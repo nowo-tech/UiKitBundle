@@ -225,6 +225,9 @@ and nothing the row actions do not show can appear. See [USAGE.md "Context menus
 4. 2.0: `View\Action` + `View\Confirm` render the dialog for you; `Confirm::expectedValue` adds type-to-confirm. Theme
    slots `action_primary` / `action_secondary` / `action_danger` add host classes per resolved variant (e.g. a red
    delete on Tailwind) — [`PAGE_CONTRACT.md`](PAGE_CONTRACT.md#view-models).
+5. 2.68: in a table, prefer **one shared confirm dialog** (`nowo_ui_kit.table_confirm: shared`, or the `table` option
+   `confirm_shared: true`) to one dialog per row: the row keeps its toggle and a hidden POST form (CSRF), the dialog
+   is filled when it opens. The per-row mode is deprecated (default until 3.0).
 
 ## Confirm contract for POST hashes (2.22)
 

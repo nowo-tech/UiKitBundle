@@ -30,6 +30,7 @@ Alias: **`nowo_ui_kit`**
 | `icon_set` | enum | `bootstrap-icons` | `bootstrap-icons`, `tabler-icons`, `ux_icon`, `svg_inline`, `none` — how glyphs are drawn |
 | `row_actions_display` | enum | `icon` | Table/list row actions: `icon` (glyph + visually hidden label), `text` (visible label only), `icon_text` (glyph + visible label) |
 | `row_actions_confirm` | enum | `inline` | How `confirm_message` of 1.x `_row_actions` POST hashes asks (since 2.22.0): `inline` (`onsubmit="return confirm(…)"`, unchanged markup), `native` / `dialog` (no inline handler: the `confirm-submit` Stimulus peer asks with `window.confirm()` / the kit `<dialog>`). See [ROW_ACTIONS.md](ROW_ACTIONS.md#confirm-contract-for-post-hashes-222) |
+| `table_confirm` | enum | `per_row` | Row actions with a `Confirm` in the `table` partial (since 2.68.0): `per_row` (one confirm `<dialog>` with its POST form + CSRF per row; default, **deprecated**, `shared` becomes the default in 3.0) or `shared` (one dialog per table filled when it opens; each row keeps its toggle and a hidden POST form). The `table` option `confirm_shared` wins. See [PAGE_CONTRACT.md](PAGE_CONTRACT.md#view-models) "One shared confirm dialog per table" |
 | `action_icons` | map | `{}` | Opt-in: canonical kind → icon name `[prefix:]name`. Every use of the kind follows it, chrome included. See [Action icons](#action-icons-and-variants) |
 | `action_variants` | map | `{}` | Opt-in: canonical kind → `primary` \| `secondary` \| `danger`, for actions without an explicit variant. See [Action icons](#action-icons-and-variants) |
 | `panel_path_rewrites` | map | `{}` | Legacy path prefix → new prefix (e.g. `/admin/blog: /panel/blog`). Empty = feature disabled (since 1.9.0) |
@@ -48,6 +49,7 @@ Parameters / Twig globals:
 - `%nowo_ui_kit.icon_set%` → `nowo_ui_kit_icon_set`
 - `%nowo_ui_kit.row_actions_display%` → `nowo_ui_kit_row_actions_display`
 - `row_actions_confirm` → Twig global `nowo_ui_kit_row_actions_confirm` (no container parameter)
+- `table_confirm` → Twig global `nowo_ui_kit_table_confirm` (no container parameter)
 - `%nowo_ui_kit.panel_path_rewrites%` — the validated rewrite map (no Twig global)
 - `%nowo_ui_kit.appearance.enabled%` (no Twig global; use the `nowo_ui_appearance*()` functions)
 - `%nowo_ui_kit.appearance.provider_is_default%` (2.40): `true` when `appearance.provider` is null, so a bridge (InstanceSettings' brand) may take the provider over; a host provider always wins

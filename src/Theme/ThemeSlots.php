@@ -732,6 +732,7 @@ final class ThemeSlots
         'card' => '@NowoUiKitBundle/partials/_card.html.twig',
         'confirm' => '@NowoUiKitBundle/partials/_confirm.html.twig',
         'confirm_dialog' => '@NowoUiKitBundle/partials/_confirm_dialog.html.twig',
+        'confirm_shared' => '@NowoUiKitBundle/partials/_confirm_shared.html.twig',
         'detail_list' => '@NowoUiKitBundle/page/_detail_list.html.twig',
         'dialog' => '@NowoUiKitBundle/partials/_dialog.html.twig',
         'emoji_picker' => '@NowoUiKitBundle/partials/_emoji_picker.html.twig',

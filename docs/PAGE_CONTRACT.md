@@ -415,6 +415,22 @@ renders the dialogs once after the table through `ListPage::confirmDialogs()`: o
 Confirm repeated renders once); two actions with the **same explicit id but different content** throw a
 `LogicException` (they would print duplicate DOM ids) — give each its own id or omit it.
 
+**One shared confirm dialog per table (2.68, opt-in).** Per-row dialogs cost a whole dialog (title, message, POST form
+and CSRF) per row, on every page view, opened or not. With **`nowo_ui_kit.table_confirm: shared`** (or the `table`
+partial option `confirm_shared: true`) the table prints **one** dialog (partial `confirm_shared`, id
+`confirm_shared_id`, default `nowo-ui-table-confirm`) and each row prints only its toggle and a hidden POST form
+(target + CSRF, id `<confirmId>-form-<content key>-<row>`, its own submit disabled). The toggle carries the dialog content as `data-nowo-confirm-*`
+attributes (title, message and where it goes, confirm / cancel labels, variant, size, type-to-confirm value, pattern and
+label); `nowo-ui-confirm.js` fills the dialog with `textContent` when it opens, shows the confirm button of the
+variant and binds it to the row form with `form="…"`. Same accessible structure as the per-row dialog (native modal,
+`aria-labelledby` on the filled title, ×, Cancel first and focused for a danger action, type-to-confirm locks the
+button, focus back to the row toggle). Without JavaScript nothing changes: the toggle is a `type="button"` that needs
+the kit runtime in both modes, and `Action::fallbackHref` keeps its `<noscript>` link to the confirmation page. A list
+page of 50 rows with an edit and a delete action each: 50 dialogs → 1, 173,777 → 130,471 bytes (the confirm cost of a
+row drops from about 1.4 kB to 0.5 kB: its toggle attributes and hidden form). Needs the kit
+`action` / `row_actions` / `menu` partials (a theme override of `action` must handle `confirm_shared`). The per-row
+mode stays the default in 2.x and is **deprecated**: `shared` becomes the default in 3.0.
+
 **Row actions per variant.** In row context an action keeps the `ui.action` classes (slot `action`) and adds the
 host classes of `action_primary`, `action_secondary`, `action_danger` or `action_neutral` for its resolved variant
 (`delete` → danger, `create` / `save` → primary, otherwise neutral, or the explicit `variant` — so an explicit

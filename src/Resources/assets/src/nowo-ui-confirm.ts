@@ -27,6 +27,14 @@
  * replaces the danger button classes sets data-nowo-ui-confirm-cancel-first="true" on the dialog (the `confirm` slot
  * attributes); "false" turns it off (audit XJ-7).
  *
+ * Shared dialog (2.68, `table` partial with confirm_shared): one `dialog[data-nowo-confirm-shared]` per table; the
+ * row toggle carries the content (data-nowo-confirm-title / -message / -message-in-header / -confirm-label /
+ * -cancel-label / -variant / -size / -expected-value / -expected-pattern / -expected-label) and the id of its hidden
+ * row POST form (data-nowo-confirm-form). Opening fills the dialog (textContent only), shows the confirm button of the
+ * variant and binds it to that form with `form="…"`, so Confirm submits the row's own form (target + CSRF). A toggle
+ * without a form (disabled action) opens nothing, and so does a shared dialog opened without such a toggle
+ * (`nowoUiOpenConfirm(id)` from script); closing it drops the binding.
+ *
  * Focus return (2.52.2, WCAG 2.4.3): closing a confirm dialog (Escape, Cancel, Confirm, ×, backdrop) focuses the
  * element that opened it; when that opener cannot take focus (a hidden trigger a page-actions menu item forwarded its
  * click to), the menu item, else the menu's toggle — never a hidden element (nowo-ui-focus-return.ts).
@@ -85,6 +93,94 @@ export function resetExpected(scope: ParentNode): HTMLInputElement | null {
   return first;
 }
 
+const SIZES = ['sm', 'lg'];
+
+function slot(dialog: HTMLDialogElement, name: string): HTMLElement | null {
+  return dialog.querySelector<HTMLElement>(`[data-nowo-confirm-slot="${name}"]`);
+}
+
+function setText(el: HTMLElement | null, text: string | null): void {
+  if (el) {
+    el.textContent = text ?? '';
+    el.hidden = text === null || text === '';
+  }
+}
+
+/**
+ * Fills a shared confirm dialog from its row toggle (see the module comment). False when the toggle names no form on
+ * the page (the dialog must not open with a confirm button bound to nothing).
+ */
+export function fillSharedConfirm(dialog: HTMLDialogElement, opener: Element): boolean {
+  const formId = opener.getAttribute('data-nowo-confirm-form');
+  const form = formId ? document.getElementById(formId) : null;
+  if (!formId || !(form instanceof HTMLFormElement)) {
+    return false;
+  }
+  const read = (name: string): string | null => opener.getAttribute(`data-nowo-confirm-${name}`);
+  const title = slot(dialog, 'title');
+  if (title) {
+    title.textContent = read('title') ?? '';
+  }
+  const message = read('message');
+  const inHeader = read('message-in-header') === '1';
+  setText(slot(dialog, 'header-message'), inHeader ? message : null);
+  setText(slot(dialog, 'message'), inHeader ? null : message);
+  const body = slot(dialog, 'body');
+  if (body) {
+    body.hidden = inHeader || message === null || message === '';
+  }
+  const size = read('size');
+  SIZES.forEach((s) => dialog.classList.toggle(`nowo-ui-confirm--${s}`, s === size));
+
+  const cancel = slot(dialog, 'cancel');
+  if (cancel) {
+    cancel.dataset.nowoConfirmDefault ??= cancel.textContent ?? '';
+    cancel.textContent = read('cancel-label') ?? cancel.dataset.nowoConfirmDefault;
+  }
+
+  const expected = read('expected-value');
+  const buttons = Array.from(dialog.querySelectorAll<HTMLButtonElement>('button[data-nowo-confirm-variant]'));
+  const variant = read('variant');
+  const chosen = buttons.find((b) => b.getAttribute('data-nowo-confirm-variant') === variant) ?? buttons[0];
+  buttons.forEach((button) => {
+    const active = button === chosen;
+    button.hidden = !active;
+    button.dataset.nowoConfirmDefault ??= button.textContent ?? '';
+    if (active) {
+      button.setAttribute('form', formId);
+      button.textContent = read('confirm-label') ?? button.dataset.nowoConfirmDefault;
+    } else {
+      button.removeAttribute('form');
+    }
+    button.toggleAttribute('data-nowo-confirm-submit', active && expected !== null);
+    button.disabled = false;
+  });
+
+  const expect = slot(dialog, 'expect');
+  const input = slot(dialog, 'expect-input');
+  if (expect && input instanceof HTMLInputElement) {
+    expect.hidden = expected === null;
+    setText(slot(dialog, 'expect-label'), expected === null ? null : read('expected-label'));
+    if (expected === null) {
+      input.removeAttribute('data-nowo-confirm-expected');
+      input.removeAttribute('pattern');
+      input.removeAttribute('form');
+      input.required = false;
+    } else {
+      input.setAttribute('data-nowo-confirm-expected', expected);
+      input.setAttribute('pattern', read('expected-pattern') ?? '');
+      input.setAttribute('form', formId);
+      input.required = true;
+    }
+  }
+  return true;
+}
+
+/** Drops the row binding of a closed shared dialog (confirm buttons and the type-to-confirm input). */
+export function unbindSharedConfirm(dialog: HTMLDialogElement): void {
+  dialog.querySelectorAll('[data-nowo-confirm-variant], [data-nowo-confirm-slot="expect-input"]').forEach((el) => el.removeAttribute('form'));
+}
+
 /** Opens a confirm dialog; `opener` (2.52.2) is where focus returns on close (see the module comment). */
 export function openConfirm(id: string | HTMLDialogElement | null, opener: Element | null = null): void {
   const dialog = resolveDialog(id);
@@ -92,6 +188,9 @@ export function openConfirm(id: string | HTMLDialogElement | null, opener: Eleme
     return;
   }
   finishClosing(dialog);
+  if (!dialog.open && dialog.hasAttribute('data-nowo-confirm-shared') && !(opener && fillSharedConfirm(dialog, opener))) {
+    return;
+  }
   if (!dialog.open) {
     rememberOpener(dialog, opener);
     const input = resetExpected(dialog);
@@ -103,7 +202,8 @@ export function openConfirm(id: string | HTMLDialogElement | null, opener: Eleme
 /** The Cancel button of a destructive confirm (see the module comment), else null. */
 export function safeCancel(dialog: HTMLDialogElement): HTMLElement | null {
   const flag = dialog.getAttribute('data-nowo-ui-confirm-cancel-first');
-  const danger = flag !== null ? flag !== 'false' : dialog.querySelector('button[type="submit"].nowo-ui-btn--danger, [data-nowo-confirm-submit].nowo-ui-btn--danger') !== null;
+  const danger =
+    flag !== null ? flag !== 'false' : dialog.querySelector('button[type="submit"].nowo-ui-btn--danger:not([hidden]), [data-nowo-confirm-submit].nowo-ui-btn--danger:not([hidden])') !== null;
   if (!danger) {
     return null;
   }
@@ -158,6 +258,9 @@ export function syncAllExpected(root: ParentNode): void {
 function onDialogClose(event: Event): void {
   const target = event.target;
   if (target instanceof HTMLDialogElement) {
+    if (target.hasAttribute('data-nowo-confirm-shared')) {
+      unbindSharedConfirm(target);
+    }
     returnFocus(target);
   }
 }

@@ -21,6 +21,7 @@
     - open (bool), id, attr (root attributes, no on*), toggle_attr, bundle, nowo_ui_page_type
     - root_class (2.27): extra classes appended to the root (the `page_actions` partial adds its slot this way)
     - confirm_external (2.4): passed to the `action` partial (the confirm dialogs are rendered elsewhere)
+    - confirm_shared (2.68): passed to the `action` partial (the shared confirm dialog of a table)
     - square (2.21, bool): with display icon, the toggle is painted like the icon buttons next to it — slots
       btn_secondary + btn_icon + menu_toggle_square instead of menu_toggle — so it has their width and height
     - menu_items (2.21, bool): POST / confirm / dialog actions are drawn as menu items (slot menu_item through the
@@ -93,7 +94,7 @@
                             {% set _danger = (item.variant ?: nowo_ui_kit_action_variants[item.kind]|default(item.resolvedVariant())) == 'danger' %}{% set _action_icon = nowo_ui_kit_icon_set|default('bootstrap-icons') != 'none' and (nowo_ui_kit_action_icons[item.kind] is defined or (item.icon and nowo_ui_kit_action_icons|default({}) is not empty)) ? item.icon ?? item.kind : null %}
                             <li{% if _ms == 'menu' %} role="none"{% endif %}><a class="{{ nowo_ui_class('menu_item', _b) }}{{ _danger ? ' nowo-ui-menu__item--danger' }}{{ _action_icon ? ' nowo-ui-menu__item--icon' }}{{ (item.attributes.class ?? false) ? ' ' ~ item.attributes.class }}" href="{{ _href }}"{% if _ms == 'menu' %} role="menuitem" tabindex="-1"{% endif %}{{ nowo_ui_attrs('menu_item', _b) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(item.attributes)) }}>{% if _action_icon %}{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _action_icon, label: ''}, false)|trim|raw }}{% endif %}{{ item.label is not null ? item.label|nowo_ui_trans : ('action.' ~ item.kind)|trans({}, 'NowoUiKitBundle') }}</a></li>
                         {% else %}
-                            <li class="nowo-ui-menu__entry{{ _menu_items ? ' nowo-ui-menu__entry--item' }}"{% if _ms == 'menu' %} role="none"{% endif %}>{{ include(nowo_ui_partial('action', _b), {action: item, context: 'toolbar', display: 'text', bundle: _b, confirm_external: confirm_external|default(false), menu_item: _menu_items, nowo_ui_page_type: _pt}, false) }}</li>
+                            <li class="nowo-ui-menu__entry{{ _menu_items ? ' nowo-ui-menu__entry--item' }}"{% if _ms == 'menu' %} role="none"{% endif %}>{{ include(nowo_ui_partial('action', _b), {action: item, context: 'toolbar', display: 'text', bundle: _b, confirm_external: confirm_external|default(false), confirm_shared: confirm_shared|default(null), menu_item: _menu_items, nowo_ui_page_type: _pt}, false) }}</li>
                         {% endif %}
                     {% endif %}
                 {% else %}
