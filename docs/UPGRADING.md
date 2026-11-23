@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.69.0](#to-2690)
 - [To 2.68.0](#to-2680)
 - [To 2.67.0](#to-2670)
 - [To 2.66.1](#to-2661)
@@ -170,6 +171,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.69.0
+
+From **2.68.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 **Kits showing a secret once** (ApiToken "new token", webhook signing secrets, recovery codes): nothing changes for
 `temporary-reveal` (BC), but it keeps the secret in a `data-temporary-reveal-secret-value` attribute until it is
