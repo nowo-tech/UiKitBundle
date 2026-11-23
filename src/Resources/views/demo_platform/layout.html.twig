@@ -202,7 +202,7 @@
     {% endif %}
     {{ include(nowo_ui_partial('app_shell_open', _bundle), _shell, false) }}
         <main class="{{ nowo_ui_class('content', _bundle) }} nowo-ui-demo-platform__content" id="nowo-ui-content" tabindex="-1"{% if _bundle %} data-nowo-ui-bundle="{{ _bundle }}"{% endif %}{{ nowo_ui_attrs('content', _bundle) }}>
-            {% block nowo_ui_page_header %}{% endblock %}
+            {% block nowo_ui_page_header %}{% endblock %}{% block nowo_ui_after_page_header %}{% endblock %}
             {% block nowo_ui_flashes %}
                 {{ include('@NowoUiKit/demo_platform/_flashes.html.twig') }}
             {% endblock %}

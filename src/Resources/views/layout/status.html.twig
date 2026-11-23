@@ -37,7 +37,7 @@
 </head>
 <body class="nowo-ui-body nowo-ui-body--status">
     <main class="nowo-ui-status" id="nowo-ui-content"{% if _bundle %} data-nowo-ui-bundle="{{ _bundle }}"{% endif %}>
-        {% block nowo_ui_page_header %}{% endblock %}
+        {% block nowo_ui_page_header %}{% endblock %}{% block nowo_ui_after_page_header %}{% endblock %}
         {% block nowo_ui_flashes %}{% endblock %}
         {% block nowo_ui_content %}{% endblock %}
     </main>
