@@ -481,7 +481,8 @@ slot replaces it instead of adding to it); `form_actions` lost its `mt-3` / `mt-
 `--nowo-ui-form-actions-gap` below the last row (also when rendered after the `</form>`); new `form_columns` slot
 (`nowo-ui-form__columns`): side-by-side fields on an auto-fit grid, `--nowo-ui-form-column-gap` between columns
 (`--nowo-ui-form-column-min` per column); `.form-label` / `.nowo-ui-form__label` sit `--nowo-ui-form-label-gap` above
-their control. Tokens in [THEMING](THEMING.md#default-theme-polish-tokens-22).
+their control. Rows of the UiKit form theme (`nowo-ui-form-row`, every row since 2.66.2) stack their label the same
+way on every stack, with no class on the label. Tokens in [THEMING](THEMING.md#default-theme-polish-tokens-22).
 
 `locale_tabs_nav` *(2.5.3)* is the tab list of the `locale_tabs` partial: the `tabs` classes without their bottom
 margin (`mb-3` by default, or whatever margin a host puts on `tabs`), because the partial spaces the list from the

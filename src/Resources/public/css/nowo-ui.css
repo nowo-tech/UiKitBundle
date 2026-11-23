@@ -7542,6 +7542,16 @@ li:has(> :is(a, span) + button.nowo-ui-tree__toggle) > :not(a, span, button.nowo
   margin-bottom: var(--nowo-ui-form-label-gap, 0.5rem);
 }
 
+/* 2.66.2: a row of the UiKit form theme (`nowo-ui-form-row`, @NowoUiKit/form/nowo_ui_layout.html.twig) stacks its
+   label above its control on every stack, with no framework class on either: the label is a block as wide as its
+   text (only the text is the click target), --nowo-ui-form-label-gap above the control. Checkbox / radio rows keep
+   the box beside its text. Zero specificity: a host row / label class wins. */
+:where(.nowo-ui-form-row:not(.nowo-ui-form-row--check)) > :where(label) {
+  display: block;
+  inline-size: fit-content;
+  margin-block-end: var(--nowo-ui-form-label-gap, 0.5rem);
+}
+
 .nowo-ui-form__columns {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(var(--nowo-ui-form-column-min, 12rem), 100%), 1fr));

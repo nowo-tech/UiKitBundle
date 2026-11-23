@@ -9,6 +9,8 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
+use Symfony\Component\Form\Extension\Core\Type\MoneyType;
+use Symfony\Component\Form\Extension\Core\Type\PercentType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormError;
 
@@ -44,15 +46,15 @@ final class FormThemeRowSpacingTest extends TestCase
         $template = ['t' => "{% form_theme form '".self::THEME."' %}{{ form_row(form.name) }}{{ form_row(form.agree) }}{{ form_row(form.again) }}{{ form_row(form.dup) }}"];
         $html = PageContractTwig::create($template, [], 'bootstrap5')->render('t', ['form' => $form->createView()]);
 
-        self::assertStringContainsString('<div class="mb-3"><label for="item_name">', $html);
+        self::assertStringContainsString('<div class="nowo-ui-form-row mb-3"><label for="item_name">', $html);
         self::assertMatchesRegularExpression('#<div class="nowo-ui-form-row nowo-ui-form-row--check mb-3">\s*<label class="nowo-ui-check form-check"><input type="checkbox" id="item_agree"#', $html);
         self::assertMatchesRegularExpression('#<div class="mb-3 nowo-ui-form-row nowo-ui-form-row--check">\s*<label class="nowo-ui-check form-check"><input type="checkbox" id="item_again"#', $html);
-        self::assertStringContainsString('<div class="mb-3 wide"><label for="item_dup">', $html);
+        self::assertStringContainsString('<div class="mb-3 wide nowo-ui-form-row"><label for="item_dup">', $html);
         self::assertSame(0, substr_count($html, 'mb-3 mb-3'));
 
-        // custom / none: unchanged (no row class)
+        // custom / none: no slot class, only the kit row class (2.66.2)
         $html = PageContractTwig::create($template, [], 'none')->render('t', ['form' => $form->createView()]);
-        self::assertStringContainsString('<div><label for="item_name">', $html);
+        self::assertStringContainsString('<div class="nowo-ui-form-row"><label for="item_name">', $html);
         self::assertMatchesRegularExpression('#<div class="nowo-ui-form-row nowo-ui-form-row--check">\s*<label class="nowo-ui-check">#', $html);
     }
 
@@ -79,5 +81,46 @@ final class FormThemeRowSpacingTest extends TestCase
             $css = (string) file_get_contents(\dirname(__DIR__, 3).'/src/Resources/public/css/'.$file);
             self::assertStringContainsString("form.nowo-ui-filters[data-nowo-ui-region] > .nowo-ui-filters__field.mb-3 {\n  margin-bottom: 0 !important;\n}", $css, $file);
         }
+    }
+
+    /**
+     * 2.66.2 (regression of 2.62.0, #132): without a CSS framework every row stacks its label above its control. The
+     * row carries `nowo-ui-form-row` once (never twice when the bundle passes it in row_attr) and nowo-ui.css makes
+     * the label of a text row a block; checkbox / radio rows keep the box beside its text.
+     */
+    public function testTextRowsCarryTheKitRowClassAndTheCssStacksTheirLabel(): void
+    {
+        $form = PageContractTwig::forms()->createNamedBuilder('item', FormType::class)
+            ->add('name', TextType::class, ['required' => false, 'row_attr' => ['class' => 'nowo-ui-form-row']])
+            ->getForm();
+        $template = ['t' => "{% form_theme form '".self::THEME."' %}{{ form_row(form.name) }}"];
+        foreach (['none', 'custom', 'tailwind', 'bootstrap5'] as $framework) {
+            $html = PageContractTwig::create($template, [], $framework)->render('t', ['form' => $form->createView()]);
+            self::assertSame(1, substr_count($html, 'nowo-ui-form-row'), $framework);
+        }
+
+        foreach (['nowo-ui.unlayered.css', 'nowo-ui.css'] as $file) {
+            $css = (string) file_get_contents(\dirname(__DIR__, 3).'/src/Resources/public/css/'.$file);
+            self::assertStringContainsString(":where(.nowo-ui-form-row:not(.nowo-ui-form-row--check)) > :where(label) {\n  display: block;\n  inline-size: fit-content;\n  margin-block-end: var(--nowo-ui-form-label-gap, 0.5rem);\n}", $css, $file);
+        }
+    }
+
+    /** 2.66.2: money and percent symbols sit in a kit input group, not as bare text between the label and the input. */
+    public function testMoneyAndPercentWidgetsUseTheInputGroup(): void
+    {
+        $form = PageContractTwig::forms()->createNamedBuilder('item', FormType::class)
+            ->add('total', MoneyType::class, ['required' => false, 'currency' => 'EUR'])
+            ->add('rate', PercentType::class, ['required' => false])
+            ->add('plain', PercentType::class, ['required' => false, 'symbol' => false])
+            ->getForm();
+        $template = ['t' => "{% form_theme form '".self::THEME."' %}{{ form_widget(form.total) }}|{{ form_widget(form.rate) }}|{{ form_widget(form.plain) }}"];
+        $html = PageContractTwig::create($template, [], 'custom')->render('t', ['form' => $form->createView()]);
+        [$total, $rate, $plain] = explode('|', $html);
+
+        self::assertMatchesRegularExpression('#^<div class="nowo-ui-input-group">(<span class="nowo-ui-input-group__addon">€</span>)?<input type="text" id="item_total"[^>]*class="nowo-ui-input"[^>]*/>(<span class="nowo-ui-input-group__addon">€</span>)?</div>$#', trim($total));
+        self::assertSame(1, substr_count($total, 'nowo-ui-input-group__addon'));
+        self::assertMatchesRegularExpression('#^<div class="nowo-ui-input-group"><input type="text" id="item_rate"[^>]*/><span class="nowo-ui-input-group__addon">%</span>\s*</div>$#', trim($rate));
+        self::assertStringNotContainsString('nowo-ui-input-group', $plain);
+        self::assertStringContainsString('type="text" id="item_plain"', $plain);
     }
 }

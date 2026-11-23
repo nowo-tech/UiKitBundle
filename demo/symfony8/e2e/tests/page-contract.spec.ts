@@ -77,6 +77,56 @@ test.describe('page contract — host theme', () => {
   });
 });
 
+/**
+ * UiKit 2.66.2 — regression of 2.62.0 (#132, the demo left Bootstrap and bootstrap_5_layout for the UiKit form theme
+ * without a framework): every text / select / textarea row of the UiKit form theme stacks its label above its control,
+ * on the host theme and on the default theme, and the money symbol sits in an input group. Geometry, not a screenshot.
+ */
+const stackedFormPages: Array<{ name: string; path: string }> = [
+  { name: 'host form', path: '/page-contract/orders/1042/edit' },
+  { name: 'host settings', path: '/page-contract/settings' },
+  { name: 'host wizard', path: '/page-contract/onboarding' },
+  { name: 'default form', path: '/page-contract/default/orders/1042/edit' },
+  { name: 'default settings', path: '/page-contract/default/settings' },
+];
+
+test.describe('page contract — form rows stack their label above the control (2.66.2)', () => {
+  for (const { name, path } of stackedFormPages) {
+    test(`${name}: label above its control, left-aligned, not overlapping`, async ({ page }) => {
+      await page.goto(path);
+      const rows = await page.evaluate(() =>
+        Array.from(document.querySelectorAll('form .nowo-ui-form-row:not(.nowo-ui-form-row--check)'))
+          .map((row) => {
+            const label = row.querySelector(':scope > label');
+            const control = row.querySelector(':scope > :is(input, select, textarea, .nowo-ui-input-group, div[id])');
+            if (!label || !control) {
+              return null;
+            }
+            const l = label.getBoundingClientRect();
+            const c = control.getBoundingClientRect();
+            return { label: (label.textContent ?? '').trim(), labelBottom: l.bottom, labelLeft: l.left, controlTop: c.top, controlLeft: c.left };
+          })
+          .filter((row) => row !== null),
+      );
+      expect(rows.length, 'text rows on the page').toBeGreaterThan(0);
+      for (const row of rows) {
+        expect(row!.labelBottom, `${row!.label}: label ends above its control`).toBeLessThanOrEqual(row!.controlTop + 0.5);
+        expect(Math.abs(row!.labelLeft - row!.controlLeft), `${row!.label}: label and control share the left edge`).toBeLessThanOrEqual(1);
+      }
+    });
+  }
+
+  test('host form: the money field puts its currency in an input group', async ({ page }) => {
+    await page.goto('/page-contract/orders/1042/edit');
+    const group = page.locator('.nowo-ui-input-group:has(> #order_total)');
+    await expect(group).toBeVisible();
+    await expect(group.locator('> .nowo-ui-input-group__addon')).toHaveText('€');
+    const [addon, input] = [await group.locator('> .nowo-ui-input-group__addon').boundingBox(), await page.locator('#order_total').boundingBox()];
+    expect(Math.abs(addon!.y - input!.y)).toBeLessThanOrEqual(1);
+    expect(addon!.x + addon!.width).toBeLessThanOrEqual(input!.x + 1);
+  });
+});
+
 test.describe('page contract — validation follow-ups (REQ-UI-003)', () => {
   test('cascade layers: a host utility (@layer utilities) in a slot beats the kit (@layer nowo-ui)', async ({ page }) => {
     await page.goto('/page-contract/dashboard');
