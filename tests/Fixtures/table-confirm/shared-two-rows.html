@@ -1,0 +1,60 @@
+<div class="nowo-ui-table-wrap table-responsive" data-nowo-ui-region="table" data-nowo-ui-responsive="cards">
+    <table class="nowo-ui-table nowo-ui-table--striped table table-striped table-hover align-middle nowo-ui-table--cards">
+                <thead class="nowo-ui-table__head">
+            <tr class="nowo-ui-table__head-row">
+                                                                                                            <th scope="col" class="nowo-ui-table__head-cell nowo-ui-cell--start">name</th>
+                                                                        <th scope="col" class="nowo-ui-table__head-cell nowo-ui-table__actions nowo-ui-cell--end">Actions</th>            </tr>
+        </thead>
+        <tbody>
+                            <tr class="nowo-ui-table__row">
+                                                                                                                <td class="nowo-ui-table__cell nowo-ui-cell--start" data-label="name">A</td>
+                                                                                                                                                                                                                                                                                        <td class="nowo-ui-table__cell nowo-ui-table__actions nowo-ui-cell--end">
+                            <div class="nowo-ui-row-actions d-flex gap-1 nowo-ui-row-actions--icon">
+                                                                                                                <button type="button" class="nowo-ui-action nowo-ui-action--delete nowo-ui-btn nowo-ui-btn--danger nowo-ui-btn--sm btn btn-outline-danger btn-sm" title="Delete" aria-label="Delete" data-nowo-confirm-form="nowo-ui-confirm-d77f012b6949-form-1" data-nowo-confirm-title="Delete A?" data-nowo-confirm-message="This cannot be undone." data-nowo-confirm-confirm-label="Delete" data-nowo-confirm-variant="danger" data-nowo-confirm-open data-nowo-confirm-target="nowo-ui-table-confirm" aria-haspopup="dialog">                <i class="bi bi-trash" aria-hidden="true"></i>
+
+    <span class="visually-hidden">Delete</span>
+</button><div hidden><form method="post" action="/items/1/delete" class="nowo-ui-action__form" id="nowo-ui-confirm-d77f012b6949-form-1">
+    <button type="submit" class="nowo-ui-confirm__row-submit" tabindex="-1">Delete</button><input type="hidden" name="_token" value="tok-1"></form></div>    
+            </div>
+
+                        </td>
+                                    </tr>
+                            <tr class="nowo-ui-table__row">
+                                                                                                                <td class="nowo-ui-table__cell nowo-ui-cell--start" data-label="name">B</td>
+                                                                                                                                                                                                                                                                                        <td class="nowo-ui-table__cell nowo-ui-table__actions nowo-ui-cell--end">
+                            <div class="nowo-ui-row-actions d-flex gap-1 nowo-ui-row-actions--icon">
+                                                                                                                <button type="button" class="nowo-ui-action nowo-ui-action--delete nowo-ui-btn nowo-ui-btn--danger nowo-ui-btn--sm btn btn-outline-danger btn-sm" title="Delete" aria-label="Delete" data-nowo-confirm-form="nowo-ui-confirm-1d21d0c192d5-form-2" data-nowo-confirm-title="Archive B?" data-nowo-confirm-message="Gone." data-nowo-confirm-message-in-header="1" data-nowo-confirm-confirm-label="Archive" data-nowo-confirm-cancel-label="Keep" data-nowo-confirm-variant="primary" data-nowo-confirm-size="lg" data-nowo-confirm-expected-value="B" data-nowo-confirm-expected-pattern="B" data-nowo-confirm-expected-label="Type B to confirm" data-nowo-confirm-open data-nowo-confirm-target="nowo-ui-table-confirm" aria-haspopup="dialog">                <i class="bi bi-trash" aria-hidden="true"></i>
+
+    <span class="visually-hidden">Delete</span>
+</button><div hidden><form method="post" action="/items/2/delete" class="nowo-ui-action__form" id="nowo-ui-confirm-1d21d0c192d5-form-2">
+    <button type="submit" class="nowo-ui-confirm__row-submit" tabindex="-1">Delete</button><input type="hidden" name="_token" value="tok-2"></form></div>    
+            </div>
+
+                        </td>
+                                    </tr>
+                    </tbody>
+    </table>
+</div>
+    <div class="nowo-ui-list-page__confirms" data-nowo-ui-region="confirms">
+        <dialog id="nowo-ui-table-confirm" class="nowo-ui-confirm" data-nowo-ui-confirm data-nowo-confirm-shared aria-labelledby="nowo-ui-table-confirm-title">
+    <div class="nowo-ui-confirm__panel">
+        <header class="nowo-ui-confirm__header">
+            <h2 class="nowo-ui-confirm__title" id="nowo-ui-table-confirm-title" data-nowo-confirm-slot="title"></h2>
+            <p class="nowo-ui-confirm__message" data-nowo-confirm-slot="header-message" hidden></p>
+            <button type="button" class="nowo-ui-confirm__close" data-nowo-confirm-close aria-label="Close" title="Close"><span aria-hidden="true">&times;</span></button>
+        </header>
+        <div class="nowo-ui-confirm__body" data-nowo-confirm-slot="body" hidden><p class="nowo-ui-confirm__message" data-nowo-confirm-slot="message"></p></div>
+        <div class="nowo-ui-confirm__expect" data-nowo-confirm-slot="expect" hidden>
+            <label class="nowo-ui-confirm__expect-label" for="nowo-ui-table-confirm-expected" data-nowo-confirm-slot="expect-label"></label>
+                        <input id="nowo-ui-table-confirm-expected" class="nowo-ui-input form-control nowo-ui-confirm__expect-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" data-nowo-confirm-slot="expect-input">
+        </div>
+        <div class="nowo-ui-confirm__footer">
+            <button type="button" class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary" data-nowo-confirm-close data-nowo-confirm-slot="cancel">Cancel</button>
+                                            <button type="submit" class="nowo-ui-btn nowo-ui-btn--danger nowo-ui-btn--solid btn btn-danger nowo-ui-confirm__submit" data-nowo-confirm-variant="danger" hidden>Confirm</button>
+                                            <button type="submit" class="nowo-ui-btn nowo-ui-btn--primary btn btn-primary nowo-ui-confirm__submit" data-nowo-confirm-variant="primary" hidden>Confirm</button>
+                                            <button type="submit" class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary nowo-ui-confirm__submit" data-nowo-confirm-variant="secondary" hidden>Confirm</button>
+                    </div>
+    </div>
+</dialog>
+
+    </div>

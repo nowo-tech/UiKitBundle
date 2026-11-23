@@ -152,6 +152,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- One shared confirm dialog per table (opt-in): `nowo_ui_kit.table_confirm: shared`, or the `table` partial option `confirm_shared: true` (id `confirm_shared_id`, default `nowo-ui-table-confirm`). Row actions with a `View\Confirm` then print only their toggle (the dialog content as `data-nowo-confirm-*` attributes) and a hidden POST form with their target and CSRF token; the table prints one `confirm_shared` dialog that `nowo-ui-confirm.js` fills with `textContent` when it opens (title, message in the body or header, confirm / cancel labels, variant, size, type-to-confirm) and whose confirm button submits the row form through `form="…"`. Same accessible structure as the per-row dialog (native modal, `aria-labelledby`, ×, Cancel focused first for a danger action, focus back to the row toggle) and the same no-JavaScript behaviour (a `type="button"` toggle, `Action::fallbackHref` `<noscript>` link). A 50-row list with an edit and a delete action per row: 50 dialogs → 1, 173,777 → 130,471 bytes. New partial `confirm_shared`; `row_actions` / `menu` / `action` option `confirm_shared`; `fillSharedConfirm()` in `nowo-ui-confirm.ts`. See `docs/PAGE_CONTRACT.md#view-models` and `docs/UPGRADING.md`.
+
+### Deprecated
+
+- One confirm dialog per table row (`nowo_ui_kit.table_confirm: per_row`, the 2.x default). It stays the default and byte-identical in 2.x; `shared` becomes the default in 3.0.
+
 ## [2.67.0] - 2026-11-23
 
 ### Added

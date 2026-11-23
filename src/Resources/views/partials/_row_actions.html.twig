@@ -11,6 +11,8 @@
     - display: icon | text | icon_text (defaults to nowo_ui_kit_row_actions_display)
     - confirm_external (2.0): true when the confirm dialogs of the actions are rendered elsewhere (the list scaffold
       renders them once after the table): actions with a Confirm print only their toggle button
+    - confirm_shared (2.68): {id, row}, passed to the `action` partial (and the menu): actions with a Confirm open the
+      one shared confirm dialog `id` (the `table` partial with confirm_shared)
     - bundle (2.0): per-bundle theme exceptions (slots row_actions, action, action_primary | action_secondary |
       action_danger | action_neutral (by resolved variant: delete = danger, create / save = primary, other kinds
       neutral, explicit variants as given): host classes; row_action_disabled (disabled actions): host classes
@@ -74,13 +76,13 @@
         {% endif %}
     {% endfor %}
 <div class="{{ _t ? _t.macroClasses('row_actions', _root ~ ' nowo-ui-row-actions--menu', bundle, _pt) : _root ~ ' nowo-ui-row-actions--menu' }}"{{ _t ? _t.renderAttributes('row_actions', bundle, {}, _pt)|raw }}{{ _ctx_attrs }}>
-    {{ include(_t ? _t.partial('menu', bundle) : '@NowoUiKitBundle/partials/_menu.html.twig', {items: _menu_items, label: menu_label|default(null), align: 'end', popover: popover ?? null, confirm_external: confirm_external|default(false), bundle: bundle, nowo_ui_page_type: _pt}, false) }}
+    {{ include(_t ? _t.partial('menu', bundle) : '@NowoUiKitBundle/partials/_menu.html.twig', {items: _menu_items, label: menu_label|default(null), align: 'end', popover: popover ?? null, confirm_external: confirm_external|default(false), confirm_shared: confirm_shared|default(null), bundle: bundle, nowo_ui_page_type: _pt}, false) }}
 </div>
 {% else %}
 <div class="{{ _t ? _t.macroClasses('row_actions', _root, bundle, _pt) : _root }}"{{ _t ? _t.renderAttributes('row_actions', bundle, {}, _pt)|raw }}{{ _ctx_attrs }}>
     {% for action in actions %}
         {% if action is not iterable or (action.view is defined and action.view) %}
-            {{ include(_t ? _t.partial('action', bundle) : '@NowoUiKitBundle/partials/_action.html.twig', {action: action is iterable ? action.view : action, context: 'row', display: display, framework: framework, bundle: bundle, confirm_external: confirm_external|default(false), nowo_ui_page_type: _pt}, false) }}
+            {{ include(_t ? _t.partial('action', bundle) : '@NowoUiKitBundle/partials/_action.html.twig', {action: action is iterable ? action.view : action, context: 'row', display: display, framework: framework, bundle: bundle, confirm_external: confirm_external|default(false), confirm_shared: confirm_shared|default(null), nowo_ui_page_type: _pt}, false) }}
         {% elseif action.visible is not defined or action.visible %}
             {% set kind = action.kind|default('edit') %}
             {% set label = action.label|default(('action.' ~ kind)|trans({}, 'NowoUiKitBundle')) %}

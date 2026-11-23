@@ -1,0 +1,46 @@
+{#
+  Shared confirm <dialog> (2.68, theme partial `confirm_shared`): one dialog for every row action with a View\Confirm
+  of a table (the `table` partial with confirm_shared, or nowo_ui_kit.table_confirm: shared), filled when it opens
+  from the row toggle's data-nowo-confirm-* attributes (js/nowo-ui-confirm.js): title, message (body or header),
+  confirm / cancel labels, variant, size and type-to-confirm. The confirm button submits the row's own hidden POST form
+  (CSRF in it) through its `form` attribute. Same classes, slots and accessible structure as the `confirm` partial
+  (aria-labelledby on the title, close ×, Cancel first and focused for a danger action, type-to-confirm input).
+
+  Required:
+    - id
+  Optional:
+    - bundle, framework, nowo_ui_page_type
+  Not meant to be filled by hand: the row toggles carry the content (the `action` partial with confirm_shared).
+#}
+{% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
+{% set framework = framework|default(null) %}
+{% set bundle = bundle|default(null) %}
+{% set _t = nowo_ui_theme|default(null) %}
+{% set _pt = nowo_ui_page_type|default(null) %}
+{% set _extra = _t ? _t.extraClasses('confirm', bundle, _pt) : '' %}
+{% set _message_class = _t ? _t.macroClasses('confirm_message', 'nowo-ui-confirm__message', bundle, _pt) : 'nowo-ui-confirm__message' %}
+{% set _close_label = 'action.close'|trans({}, 'NowoUiKitBundle') %}
+<dialog id="{{ id }}" class="nowo-ui-confirm{{ _extra ? ' ' ~ _extra }}" data-nowo-ui-confirm data-nowo-confirm-shared aria-labelledby="{{ id }}-title"{{ _t ? _t.renderAttributes('confirm', bundle, {}, _pt)|raw }}>
+    <div class="{{ _t ? _t.macroClasses('confirm_panel', 'nowo-ui-confirm__panel', bundle, _pt) : 'nowo-ui-confirm__panel' }}">
+        <header class="{{ _t ? _t.macroClasses('confirm_header', 'nowo-ui-confirm__header', bundle, _pt) : 'nowo-ui-confirm__header' }}">
+            <h2 class="{{ _t ? _t.macroClasses('confirm_title', 'nowo-ui-confirm__title', bundle, _pt) : 'nowo-ui-confirm__title' }}" id="{{ id }}-title" data-nowo-confirm-slot="title"></h2>
+            <p class="{{ _message_class }}" data-nowo-confirm-slot="header-message" hidden{{ _t ? _t.renderAttributes('confirm_message', bundle, {}, _pt)|raw }}></p>
+            <button type="button" class="{{ _t ? _t.macroClasses('confirm_close', 'nowo-ui-confirm__close', bundle, _pt) : 'nowo-ui-confirm__close' }}" data-nowo-confirm-close aria-label="{{ _close_label }}" title="{{ _close_label }}"{{ _t ? _t.renderAttributes('confirm_close', bundle, {}, _pt)|raw }}><span aria-hidden="true">&times;</span></button>
+        </header>
+        <div class="{{ _t ? _t.macroClasses('confirm_body', 'nowo-ui-confirm__body', bundle, _pt) : 'nowo-ui-confirm__body' }}" data-nowo-confirm-slot="body" hidden><p class="{{ _message_class }}" data-nowo-confirm-slot="message"{{ _t ? _t.renderAttributes('confirm_message', bundle, {}, _pt)|raw }}></p></div>
+        <div class="{{ _t ? _t.macroClasses('confirm_expect', 'nowo-ui-confirm__expect', bundle, _pt) : 'nowo-ui-confirm__expect' }}" data-nowo-confirm-slot="expect" hidden{{ _t ? _t.renderAttributes('confirm_expect', bundle, {}, _pt)|raw }}>
+            <label class="{{ _t ? _t.macroClasses('confirm_expect_label', 'nowo-ui-confirm__expect-label', bundle, _pt) : 'nowo-ui-confirm__expect-label' }}" for="{{ id }}-expected" data-nowo-confirm-slot="expect-label"></label>
+            {# twig-005-ignore: type-to-confirm guard — a nameless input, never submitted (browser validation only; REQ-TWIG-005 exception in docs/PAGE_CONTRACT.md) #}
+            <input id="{{ id }}-expected" class="{{ _t ? _t.classFor('input', bundle, framework, _pt) : 'nowo-ui-input' }} nowo-ui-confirm__expect-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" data-nowo-confirm-slot="expect-input">
+        </div>
+        <div class="{{ _t ? _t.macroClasses('confirm_footer', 'nowo-ui-confirm__footer', bundle, _pt) : 'nowo-ui-confirm__footer' }}">
+            <button type="button" class="{{ _t ? _t.macroClasses('btn_secondary', ui.btn('secondary', null, framework), bundle, _pt) : ui.btn('secondary', null, framework) }}" data-nowo-confirm-close data-nowo-confirm-slot="cancel">{{ 'action.cancel'|trans({}, 'NowoUiKitBundle') }}</button>
+            {% for _variant in ['danger', 'primary', 'secondary'] %}
+                {% set _class = _variant == 'danger'
+                    ? (_t ? _t.classFor('btn_danger_solid', bundle, framework, _pt) : ui.btn('danger', null, framework) ~ ' nowo-ui-btn--solid')
+                    : (_t ? _t.macroClasses('btn_' ~ _variant, ui.btn(_variant, null, framework), bundle, _pt) : ui.btn(_variant, null, framework)) %}
+                <button type="submit" class="{{ _class }} nowo-ui-confirm__submit" data-nowo-confirm-variant="{{ _variant }}" hidden>{{ 'action.confirm'|trans({}, 'NowoUiKitBundle') }}</button>
+            {% endfor %}
+        </div>
+    </div>
+</dialog>
