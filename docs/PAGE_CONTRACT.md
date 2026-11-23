@@ -134,7 +134,7 @@ any printable character (`"`, `'`, `<`, `>`, `&` included), so Tailwind arbitrar
 | Template | Canonical blocks | Notes |
 | --- | --- | --- |
 | `@NowoUiKit/layout/document.html.twig` | `nowo_ui_document_title`, `nowo_ui_head`, `nowo_ui_styles`, `nowo_ui_scripts`, `nowo_ui_body` | `<html>` skeleton: theme boot, `nowo-ui.css` + `nowo_ui_tokens()` (theme tokens, then the appearance), UiKit scripts (asset package `nowo_ui_kit`, never a CDN); `<html data-nowo-ui-host-tokens>` when the theme has tokens |
-| `@NowoUiKit/layout/admin.html.twig` | + `nowo_ui_navigation`, `nowo_ui_page_header`, `nowo_ui_flashes`, `nowo_ui_content`, `nowo_ui_modals` | `nowo_ui_navigation` is empty (hosts put their shell / DashboardMenu there); flashes default to `nowo_ui_partial('flashes')` |
+| `@NowoUiKit/layout/admin.html.twig` | + `nowo_ui_navigation`, `nowo_ui_page_header`, `nowo_ui_flashes`, `nowo_ui_content`, `nowo_ui_modals` | `nowo_ui_navigation` is empty (hosts put their shell / DashboardMenu there); `nowo_ui_after_page_header` (empty, between the header and the flashes) is the host slot, also on guest / status / demo platform / bridge; flashes default to `nowo_ui_partial('flashes')` |
 | `@NowoUiKit/layout/guest.html.twig` | same as admin without `nowo_ui_navigation` | login, reset, setup wizard, maintenance, public status |
 
 Variables: `nowo_ui_document_title` (title when the block is not overridden), `nowo_ui_theme_boot` (`false` skips
@@ -144,6 +144,29 @@ the pre-paint theme boot), `nowo_ui_bundle` (set by every scaffold from `page.bu
 ```twig
 {% block nowo_ui_scripts %}{{ parent() }}<script src="{{ asset('js/board.js') }}" defer></script>{% endblock %}
 ```
+
+### The `nowo_ui_after_page_header` slot
+
+An empty block printed right after `nowo_ui_page_header` and before the flashes and `nowo_ui_content`, in every layout
+that has that sequence: `layout/admin`, `layout/guest`, `layout/status`, `demo_platform/layout` and the host bridge
+`nowo_ui_bridge_body` (`layout/_bridge`). Use it for a bar or notice that belongs under the page title but is produced
+by the host shell, not by a page (a per-record "time on this customer" bar, a read-only banner). Empty by default: with
+nothing filling it the rendered HTML is byte-identical to before. Name: `nowo_ui_*` like the other canonical blocks.
+
+```twig
+{# host layout extending a UiKit layout (or one that {% use %}s the bridge) #}
+{% extends '@NowoUiKit/layout/admin.html.twig' %}
+
+{% block nowo_ui_after_page_header %}
+    {% if record_time_bar is defined %}
+        <div class="record-time-bar" role="region" aria-label="{{ 'time.on_record'|trans }}">{{ record_time_bar|raw }}</div>
+    {% endif %}
+{% endblock %}
+```
+
+Accessibility: the slot is inside the layout's `<main>` (or the bridge's host wrapper), so it adds no landmark and no
+heading by itself. Do not put a second `<main>` or `<h1>` in it; give a region an `aria-label` only if it is a real
+landmark worth navigating to, otherwise plain markup. Flashes still come after it, before the page content.
 
 ## Scaffolds
 

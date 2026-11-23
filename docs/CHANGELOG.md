@@ -151,6 +151,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Layout block `nowo_ui_after_page_header`: an empty slot right after `nowo_ui_page_header` (before the flashes and `nowo_ui_content`) in `layout/admin`, `layout/guest`, `layout/status`, `demo_platform/layout` and the host bridge `nowo_ui_bridge_body`, so a host shell can place a bar below the page title. Empty by default, the rendered HTML is byte-identical to before. See `docs/PAGE_CONTRACT.md#the-nowo_ui_after_page_header-slot`.
+
 ### Changed
 
 - CI: new `release-gates` job runs the `make release-check` gates that CI did not run (`rector-dry`, `validate-phpdoc`, `validate-translations`, `check-twig-extra`) on full-mode PRs and on every push, one check per gate, through the repo's own Makefile targets; a gate the Makefile does not define is skipped with a notice. Light mode does not run them. Not a required check. See `docs/GITHUB_CI.md#release-gates-in-full-mode`.

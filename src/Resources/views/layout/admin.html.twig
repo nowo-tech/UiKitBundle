@@ -12,7 +12,7 @@
     <div class="{{ nowo_ui_class('page', _bundle) }} nowo-ui-page--admin"{{ nowo_ui_attrs('page', _bundle) }}>
         {% block nowo_ui_navigation %}{% endblock %}
         <main class="{{ nowo_ui_class('content', _bundle) }}" id="nowo-ui-content"{% if _bundle %} data-nowo-ui-bundle="{{ _bundle }}"{% endif %}{{ nowo_ui_attrs('content', _bundle) }}>
-            {% block nowo_ui_page_header %}{% endblock %}
+            {% block nowo_ui_page_header %}{% endblock %}{% block nowo_ui_after_page_header %}{% endblock %}
             {% block nowo_ui_flashes %}
                 {{ include(nowo_ui_partial('flashes', _bundle), {bundle: _bundle}) }}
             {% endblock %}
