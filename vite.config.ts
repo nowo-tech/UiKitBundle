@@ -47,7 +47,8 @@ type Entry =
   | 'filter-sheet'
   | 'form-busy'
   | 'demo-peers'
-  | 'demo-page-actions';
+  | 'demo-page-actions'
+  | 'demo-stimulus-dialogs';
 
 const entry = process.env.VITE_ENTRY as Entry | undefined;
 
@@ -691,6 +692,22 @@ const configs: Record<Entry, { build: object }> = {
         output: {
           format: 'iife' as const,
           entryFileNames: 'js/demo-page-actions.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  // Demo only (UiKit 2.69): /kit/stimulus-dialogs — the remote-form-dialog, confirm-shared and confirm-submit peers.
+  'demo-stimulus-dialogs': {
+    build: {
+      outDir: 'demo/symfony8/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'demo/symfony8/assets/demo-stimulus-dialogs.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/demo-stimulus-dialogs.js',
         },
       },
       minify: true,

@@ -57,6 +57,7 @@
 - [Shell focus mode (2.55)](#shell-focus-mode-255)
 - [Reading column and wide content (2.48)](#reading-column-and-wide-content-248)
 - [Remote form dialog (2.28)](#remote-form-dialog-228)
+  - [Stimulus runtime (2.69)](#stimulus-runtime-269)
 - [Small element options (2.34)](#small-element-options-234)
 - [Focusable scroll regions (2.28)](#focusable-scroll-regions-228)
 - [Dialog back button](#dialog-back-button)
@@ -2947,6 +2948,44 @@ nowo_ui_kit:
 
 Names are header tokens (letters, digits, `-`, starting with a letter, ≤ 64 characters), three different names; the
 client falls back to the default for anything else.
+
+### Stimulus runtime (2.69)
+
+Product pages that load only the Stimulus peers (no `js/nowo-ui-dialog.js` / `js/nowo-ui-confirm.js`) switch the
+on-demand dialogs to the peers with **`nowo_ui_kit.dialogs.runtime: stimulus`**, or per partial with
+`runtime: 'stimulus'` (`stimulus: true` on `confirm_dialog`). **Choice:** the openers, toggles and row forms keep one
+markup for both runtimes; only the shells gain the peer attributes, and the shells keep the IIFE settings. So one page
+works with the peers only, the IIFE runtimes only, or both (the peers win: each claims its `<dialog>` with
+`data-nowo-ui-runtime-owner="stimulus"` when it connects, and the IIFE runtimes leave a claimed dialog alone — no
+second request, no second POST). Both runtimes run the same code (`nowo-ui-remote-form-core.ts`,
+`nowo-ui-confirm-core.ts`), so the protocol is identical: `X-Nowo-Dialog: 1` GET fragment, `422` re-rendered in place,
+`204` + `X-Nowo-Redirect` (same-origin path), `204` + `X-Nowo-Dialog-Location` steps, the shared confirm bound to the
+row's own hidden POST form (its target and CSRF token).
+
+| Shell | `runtime: stimulus` adds | Peer |
+|-------|--------------------------|------|
+| `remote_form_dialog` (and `confirm_dialog` with `dialog_src`) | `data-controller="remote-form-dialog"`, the `dialog` / `title` / `body` targets, `data-remote-form-dialog-delegate-value="true"` | `remote-form-dialog`, delegated mode: opens from every `data-nowo-ui-dialog-open="<id>"` + `-src` + `-form` opener of the page; dispatches `remote-form-dialog:*` and `nowo-ui:remote-form:*` |
+| `confirm_shared` (`table_confirm: shared`, `confirm_group`) | `data-controller="confirm-shared"` | `confirm-shared`: fills from the row toggle, binds Confirm to the row form |
+
+```twig
+{# Many rows, one shell: the openers are the same for both runtimes #}
+{% for member in members %}
+    {% embed nowo_ui_partial('confirm_dialog') with {dialog_src: path('member_edit', {id: member.id}), dialog_id: 'member-edit', dialog_shell: false, trigger_label: 'Edit', title: 'Edit member'} %}{% endembed %}
+    {{ include(nowo_ui_partial('row_actions'), {actions: member.actions, menu: true, confirm_group: 'members-confirm', confirm_row: loop.index}) }}
+{% endfor %}
+{% embed nowo_ui_partial('confirm_dialog') with {only_dialog: true, dialog_shell: true, dialog_id: 'member-edit', title: 'Edit member', stimulus: true} %}{% endembed %}
+```
+
+```ts
+// the host's Stimulus app
+app.register('remote-form-dialog', RemoteFormDialogController); // stimulus-peers/remote_form_dialog_controller.ts
+app.register('confirm-shared', ConfirmSharedController);         // stimulus-peers/confirm_shared_controller.ts
+```
+
+The 2.28 ancestor mode (`remote_form_dialog` with `stimulus: true`, openers with `data-action="remote-form-dialog#open"`)
+is unchanged. Dialog accessibility is the native modal `<dialog>` in every mode (`showModal()`: inert page, Escape,
+focus kept inside, `aria-labelledby` title) with focus back to the opener — or the menu item / menu toggle when the
+opener is hidden.
 
 ## Small element options (2.34)
 

@@ -16,6 +16,19 @@
  *         to handle success yourself; the dialog still closes), `:step` {url, status} (2.33, a 204 + location answer:
  *         the next step loads into the same dialog; cancelable), `:failed` {stage, status}, `:closed`.
  * The partial `partials/_remote_form_dialog.html.twig` (`stimulus: true`) renders the dialog with these targets.
+ *
+ * Delegated mode (2.69, `delegate` value; the partial with `runtime: 'stimulus'` or nowo_ui_kit.dialogs.runtime:
+ * stimulus): the controller sits on the <dialog> itself and opens it from any opener of the page with the IIFE opener
+ * attributes — `data-nowo-ui-dialog-open="<dialog id>"` + `data-nowo-ui-dialog-src` + `data-nowo-ui-dialog-form`
+ * (nowo_ui_remote_form_opener(), the `confirm_dialog` partial with dialog_src, many rows sharing one shell) — exactly
+ * as js/nowo-ui-dialog.js does, so the markup is the same for both runtimes. A setting whose value attribute the host
+ * did not set is read from the dialog's `data-nowo-ui-remote-form-*` attributes (the IIFE settings the partial prints),
+ * and every event is also dispatched as the IIFE's `nowo-ui:remote-form:<name>` on the dialog (cancelable ones count
+ * as prevented when either was prevented), so host listeners work whatever the runtime.
+ *
+ * Runtime ownership (2.69): on connect the controller claims its dialog (`data-nowo-ui-runtime-owner="stimulus"`), so
+ * js/nowo-ui-dialog.js, when also loaded, leaves the dialog's openers, close buttons and backdrop to the controller;
+ * the controller closes on `[data-nowo-ui-dialog-close]` (the partial's ×) itself. Disconnecting releases it.
  */
 
 import { Controller } from '@hotwired/stimulus';
@@ -26,10 +39,13 @@ import {
   LOCATION_HEADER,
   openerTitle,
   REDIRECT_HEADER,
+  remoteFormSettings,
   RemoteFormSession,
   REQUEST_HEADER,
+  type RemoteFormEvent,
   type RemoteFormSettings,
 } from '../src/nowo-ui-remote-form-core';
+import { claim, release } from '../src/nowo-ui-runtime-owner';
 
 export { remoteNavigation as navigation } from '../src/nowo-ui-remote-form-core';
 
@@ -46,6 +62,8 @@ export default class extends Controller<HTMLElement> {
     invalidSelector: { type: String, default: '' },
     followOnLoadError: { type: Boolean, default: true },
     closeOnBackdrop: { type: Boolean, default: false },
+    /** 2.69: open from the page's IIFE-style openers of this dialog (see the module comment). */
+    delegate: { type: Boolean, default: false },
   };
 
   declare readonly dialogTarget: HTMLDialogElement;
@@ -62,24 +80,73 @@ export default class extends Controller<HTMLElement> {
   declare readonly invalidSelectorValue: string;
   declare readonly followOnLoadErrorValue: boolean;
   declare readonly closeOnBackdropValue: boolean;
+  declare readonly delegateValue: boolean;
 
   private session: RemoteFormSession | null = null;
+  private dialogElement: HTMLDialogElement | null = null;
+  private readonly onDocumentClick = (event: MouseEvent): void => this.openFromPage(event);
+  private readonly onDialogClick = (event: MouseEvent): void => {
+    const target = event.target;
+    if (target instanceof Element && target.closest('[data-nowo-ui-dialog-close]') && this.dialogElement?.contains(target)) {
+      this.close(event);
+    }
+  };
 
   override connect(): void {
+    const dialog = this.dialogTarget;
+    this.dialogElement = dialog;
     this.session = new RemoteFormSession(
-      this.dialogTarget,
+      dialog,
       () => (this.hasTitleTarget ? this.titleTarget : null),
       () => (this.hasBodyTarget ? this.bodyTarget : null),
       () => this.settings(),
-      (name, detail, cancelable = false) => !this.dispatch(name, { detail, cancelable }).defaultPrevented,
+      (name, detail, cancelable = false) => this.emit(name, detail, cancelable),
       false,
     );
     this.session.bind();
+    claim(dialog);
+    dialog.addEventListener('click', this.onDialogClick);
+    if (this.delegateValue) {
+      document.addEventListener('click', this.onDocumentClick);
+    }
   }
 
   override disconnect(): void {
+    document.removeEventListener('click', this.onDocumentClick);
+    this.dialogElement?.removeEventListener('click', this.onDialogClick);
+    release(this.dialogElement);
+    this.dialogElement = null;
     this.session?.destroy();
     this.session = null;
+  }
+
+  /** Delegated mode: a plain click on an IIFE-style opener of this dialog opens it (same rules as js/nowo-ui-dialog.js). */
+  private openFromPage(event: MouseEvent): void {
+    const target = event.target;
+    const dialog = this.dialogElement;
+    if (!(target instanceof Element) || !dialog || dialog.id === '' || !this.session) {
+      return;
+    }
+    const opener = target.closest('[data-nowo-ui-dialog-open]');
+    if (!(opener instanceof HTMLElement) || opener.getAttribute('data-nowo-ui-dialog-open') !== dialog.id) {
+      return;
+    }
+    if (!opener.hasAttribute('data-nowo-ui-dialog-form') || !opener.hasAttribute('data-nowo-ui-dialog-src') || !isPlainClick(event)) {
+      return;
+    }
+    if (this.session.open(opener.getAttribute('data-nowo-ui-dialog-src'), opener, openerTitle(opener, opener.getAttribute('data-nowo-ui-dialog-title') ?? undefined))) {
+      event.preventDefault();
+    }
+  }
+
+  /** The Stimulus event, and in delegated mode the IIFE's `nowo-ui:remote-form:<name>` too; false when prevented. */
+  private emit(name: RemoteFormEvent, detail: Record<string, unknown>, cancelable: boolean): boolean {
+    let go = !this.dispatch(name, { detail, cancelable }).defaultPrevented;
+    if (this.delegateValue && this.dialogElement) {
+      const legacy = new CustomEvent(`nowo-ui:remote-form:${name}`, { bubbles: true, cancelable, detail });
+      go = this.dialogElement.dispatchEvent(legacy) && go;
+    }
+    return go;
   }
 
   open(event: Event): void {
@@ -110,18 +177,32 @@ export default class extends Controller<HTMLElement> {
     return headerName(this.dialogTarget.getAttribute(`data-nowo-ui-remote-form-${role}-header`), fallback);
   }
 
+  /** Whether a value comes from the dialog's IIFE setting: delegated mode and the host did not set the value (2.69). */
+  private inherits(name: string): boolean {
+    return this.delegateValue && !this.element.hasAttribute(`data-${this.identifier}-${name}-value`);
+  }
+
+  private text(name: 'loading' | 'error' | 'load-error' | 'invalid-selector', value: string, fallback: string): string {
+    return this.inherits(name) ? fallback : value;
+  }
+
+  private flag(name: 'follow-on-load-error' | 'close-on-backdrop', value: boolean, fallback: boolean): boolean {
+    return this.inherits(name) ? fallback : value;
+  }
+
   private settings(): RemoteFormSettings {
+    const dialog = remoteFormSettings(this.dialogTarget);
     return {
       ...DEFAULT_SETTINGS,
-      loading: this.loadingValue,
-      error: this.errorValue,
-      loadError: this.loadErrorValue,
+      loading: this.text('loading', this.loadingValue, dialog.loading),
+      error: this.text('error', this.errorValue, dialog.error),
+      loadError: this.text('load-error', this.loadErrorValue, dialog.loadError),
       requestHeader: this.header(this.requestHeaderValue, 'request', REQUEST_HEADER),
       redirectHeader: this.header(this.redirectHeaderValue, 'redirect', REDIRECT_HEADER),
       locationHeader: this.header(this.locationHeaderValue, 'location', LOCATION_HEADER),
-      invalidSelector: this.invalidSelectorValue,
-      followOnLoadError: this.followOnLoadErrorValue,
-      closeOnBackdrop: this.closeOnBackdropValue,
+      invalidSelector: this.text('invalid-selector', this.invalidSelectorValue, dialog.invalidSelector),
+      followOnLoadError: this.flag('follow-on-load-error', this.followOnLoadErrorValue, dialog.followOnLoadError),
+      closeOnBackdrop: this.flag('close-on-backdrop', this.closeOnBackdropValue, dialog.closeOnBackdrop),
     };
   }
 }

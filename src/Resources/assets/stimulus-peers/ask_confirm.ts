@@ -210,3 +210,44 @@ function pick(options: ConfirmOptions): Partial<{ confirm: string; cancel: strin
 
   return labels;
 }
+
+/** The texts of a confirm-submit element (2.69): message, and the optional title and button labels. */
+export interface ConfirmTexts {
+  message: string;
+  title: string;
+  confirm: string;
+  cancel: string;
+}
+
+/**
+ * Reads the confirm texts of an element (2.69): the Stimulus values of `identifier` (`data-<identifier>-message-value`,
+ * `-title-value`, `-confirm-label-value`, `-cancel-label-value`) win; the title and labels fall back to the plain
+ * attributes `data-confirm-title`, `data-confirm-label` and `data-confirm-cancel-label`. Every text is trimmed.
+ */
+export function confirmTexts(element: Element, identifier: string): ConfirmTexts {
+  const read = (value: string, plain: string | null): string => {
+    const own = element.getAttribute(`data-${identifier}-${value}-value`);
+    const text = own !== null && own.trim() !== '' ? own : plain === null ? null : element.getAttribute(plain);
+
+    return (text ?? '').trim();
+  };
+
+  return {
+    message: read('message', null),
+    title: read('title', 'data-confirm-title'),
+    confirm: read('confirm-label', 'data-confirm-label'),
+    cancel: read('cancel-label', 'data-confirm-cancel-label'),
+  };
+}
+
+/**
+ * The one string `window.confirm()` can show (2.69): the title, a blank line and the message; either alone when the
+ * other is empty; '' when both are (nothing to ask).
+ */
+export function nativeQuestion(texts: Pick<ConfirmTexts, 'message' | 'title'>): string {
+  if (texts.title !== '' && texts.message !== '') {
+    return `${texts.title}\n\n${texts.message}`;
+  }
+
+  return texts.message !== '' ? texts.message : texts.title;
+}

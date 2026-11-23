@@ -26,6 +26,8 @@
       instead of one dialog (title, message, POST form + CSRF) per row; each row keeps its own hidden POST form. Same
       no-JS behaviour (the toggle needs the kit runtime; Action::fallbackHref keeps its <noscript> link). Opt-in:
       the per-row dialogs are deprecated and stop being the default in 3.0
+    - runtime (2.69): iife | stimulus — the runtime of the shared confirm dialog (partial `confirm_shared`; default
+      nowo_ui_kit.dialogs.runtime)
     - confirm_shared_id (2.68): id of the shared dialog (default nowo-ui-table-confirm; give each table its own when
       a page holds two tables with shared confirms)
   Blocks (through {% embed %}): nowo_ui_table_head (header cells), nowo_ui_table_row (cells of one row: `row`,
@@ -107,7 +109,7 @@
                             {% endif %}
                         {% endfor %}
                         <td class="{{ nowo_ui_class('table_cell', _b) }} {{ nowo_ui_class('table_actions_cell', _b) }} nowo-ui-cell--{{ table.actionsAlign }}"{{ nowo_ui_attrs('table_actions_cell', _b) }}>
-                            {{ include(nowo_ui_partial('row_actions', _b), {actions: _row_actions, confirm_external: true, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}|merge(_confirm_shared ? {confirm_shared: {id: _confirm_shared_id, row: loop.index}} : {}), false) }}
+                            {{ include(nowo_ui_partial('row_actions', _b), {actions: _row_actions, confirm_external: true, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}|merge(_confirm_shared ? {confirm_shared: {id: _confirm_shared_id, row: loop.index, render: false}} : {confirm_shared: false}), false) }}
                         </td>
                     {% endif %}{% endset %}
                     {% if not _actions_end %}{{ _actions_cell }}{% endif %}
@@ -129,7 +131,7 @@
     {#- the same guard as the per-row dialogs: one explicit Confirm id with different content throws -#}
     {% do table.confirmDialogs(_confirms) %}
     <div class="nowo-ui-list-page__confirms" data-nowo-ui-region="confirms">
-        {{ include(nowo_ui_partial('confirm_shared', _b), {id: _confirm_shared_id, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
+        {{ include(nowo_ui_partial('confirm_shared', _b), {id: _confirm_shared_id, runtime: runtime ?? null, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
     </div>
 {% elseif _confirms is not empty %}
     <div class="nowo-ui-list-page__confirms" data-nowo-ui-region="confirms">

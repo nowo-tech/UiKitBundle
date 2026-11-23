@@ -8,6 +8,13 @@
     - stimulus: false (default) — js/nowo-ui-dialog.js: openers carry data-nowo-ui-dialog-open="<id>",
       data-nowo-ui-dialog-src="<url>" and data-nowo-ui-dialog-form (see nowo_ui_remote_form_opener()); the settings
       are attributes of the dialog.
+    - runtime: 'stimulus' (2.69; default nowo_ui_kit.dialogs.runtime, `iife`) — the IIFE markup above plus the
+      `remote-form-dialog` peer on the <dialog> itself in delegated mode (data-controller, the dialog / title / body
+      targets, data-remote-form-dialog-delegate-value): the peer opens it from the same openers (data-nowo-ui-dialog-open
+      + -src + -form, nowo_ui_remote_form_opener()), reads the same settings and also dispatches the
+      nowo-ui:remote-form:* events, so a page that loads only the Stimulus peers works, and with js/nowo-ui-dialog.js
+      loaded too the peer claims the dialog and the IIFE runtime leaves it alone (no double request). `stimulus: true`
+      (the ancestor controller above) wins over it.
   The server answers the fragment for `X-Nowo-Dialog: 1`, 422 when invalid, 204 + X-Nowo-Redirect once saved
   (Nowo\UiKitBundle\Dialog\RemoteDialogResponder); 2.33: 204 + X-Nowo-Dialog-Location loads the next step of a
   multi-step flow into the same dialog. Header names configured under nowo_ui_kit.remote_dialog (*_header) are printed
@@ -21,6 +28,7 @@
     - id
   Optional:
     - stimulus (bool, default false)
+    - runtime (2.69): iife | stimulus (see above; default nowo_ui_kit.dialogs.runtime)
     - title (View\Label|string): initial title (the opener's title replaces it)
     - size: lg (default) — the wide size since 2.29, like wide / xl; md / sm = the medium size
     - placement (2.34): center (default) | end | start — the `dialog` partial's side panel (full height, at that edge;
@@ -40,6 +48,8 @@
 {% set _error = _labels.error is defined ? _labels.error|nowo_ui_trans : 'remote_form_dialog.save_failed'|trans({}, 'NowoUiKitBundle') %}
 {% set _title = title|default(null) is null ? '' : title|nowo_ui_trans %}
 {% set _attr = {} %}
+{#- 2.69: the delegated Stimulus shell (runtime stimulus), unless the 2.28 ancestor mode (stimulus: true) is asked -#}
+{% set _delegate = not _stimulus and nowo_ui_dialogs_runtime(runtime ?? null, nowo_ui_kit_dialogs_runtime|default('iife')) == 'stimulus' %}
 {% if _stimulus %}
     {% set _attr = _attr|merge({'data-remote-form-dialog-target': 'dialog'}) %}
 {% else %}
@@ -54,8 +64,16 @@
 {% endif %}
 {#- 2.33: configured (non-default) header names (nowo_ui_kit.remote_dialog.*_header); nothing with the defaults -#}
 {% set _attr = _attr|merge(nowo_ui_remote_dialog_attrs())|merge(attr|default({})) %}
-{% set _title_attr = {tabindex: '-1'}|merge(_stimulus ? {'data-remote-form-dialog-target': 'title'} : {}) %}
-{% set _body_attr = {'data-nowo-ui-dialog-body': true}|merge(_stimulus ? {'data-remote-form-dialog-target': 'body', 'data-action': 'submit->remote-form-dialog#submit'} : {}) %}
+{% if _delegate %}
+    {% set _attr = _attr|merge({
+        'data-controller': ((_attr['data-controller'] ?? '') ~ ' remote-form-dialog')|trim,
+        'data-remote-form-dialog-target': 'dialog',
+        'data-remote-form-dialog-delegate-value': 'true',
+    }) %}
+{% endif %}
+{% set _wired = _stimulus or _delegate %}
+{% set _title_attr = {tabindex: '-1'}|merge(_wired ? {'data-remote-form-dialog-target': 'title'} : {}) %}
+{% set _body_attr = {'data-nowo-ui-dialog-body': true}|merge(_wired ? {'data-remote-form-dialog-target': 'body', 'data-action': 'submit->remote-form-dialog#submit'} : {}) %}
 {{ include(nowo_ui_partial('dialog', _b), {
     id: id,
     title: _title,

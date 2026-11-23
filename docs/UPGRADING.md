@@ -171,6 +171,28 @@
 
 ## Unreleased
 
+Nothing to change: the default output is the 2.68 one (`nowo_ui_kit.dialogs.runtime: iife`).
+
+- **Pages without `js/nowo-ui-dialog.js` / `js/nowo-ui-confirm.js`** (Stimulus-only product pages): set
+  `nowo_ui_kit.dialogs.runtime: stimulus` (or `runtime: 'stimulus'` per partial, `stimulus: true` on `confirm_dialog`)
+  and register the peers `remote-form-dialog` and `confirm-shared` (plus `confirm-submit` if used). The openers keep
+  their markup; the shells gain `data-controller`. Loading the IIFE runtimes as well is safe: the peers claim their
+  dialogs.
+- **Listeners**: in delegated mode the `remote-form-dialog` peer dispatches both `remote-form-dialog:*` and
+  `nowo-ui:remote-form:*`; preventing either cancelable event counts.
+- **`remote-form-dialog` (ancestor mode, 2.28)**: the peer now closes the dialog on `[data-nowo-ui-dialog-close]`
+  itself and marks its dialog `data-nowo-ui-runtime-owner="stimulus"`; with `js/nowo-ui-dialog.js` loaded too, that
+  runtime no longer closes the dialog for it (same result). CSS or tests matching the whole `<dialog>` attribute list at
+  runtime see the new attribute.
+- **`table_confirm: shared`** now also applies to `row_actions` / `menu` / `action` outside the `table` partial (one
+  dialog per group `nowo-ui-menu-confirm`, rendered after the first menu). Pass `confirm_shared: false` to keep one
+  dialog per action, or `confirm_group: '<id>'` per group. Rendering outside HTTP (no request) renders the dialog with
+  every menu: pass `confirm_shared: {id, render: false}` and include `confirm_shared` yourself there. Give
+  `confirm_row` (e.g. `loop.index`) when two rows may hold identical actions. A theme override of `action` / `menu` /
+  `row_actions` must pass `confirm_group`, `confirm_row` and `runtime` through.
+- **`confirm-submit`**: hosts that concatenated a title into `data-confirm-submit-message-value` can move it to
+  `data-confirm-title` and the button label to `data-confirm-label`.
+
 ## To 2.68.0
 
 From **2.67.0**:

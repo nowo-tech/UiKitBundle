@@ -405,7 +405,40 @@ export const DEFAULT_SETTINGS: RemoteFormSettings = {
   closeOnBackdrop: false,
 };
 
+/** Settings of a remote form dialog, read from its attributes. */
+export function remoteFormSettings(dialog: Element): RemoteFormSettings {
+  return {
+    ...DEFAULT_SETTINGS,
+    loading: dialog.getAttribute('data-nowo-ui-remote-form-loading') ?? '',
+    error: dialog.getAttribute('data-nowo-ui-remote-form-error') ?? '',
+    loadError: dialog.getAttribute('data-nowo-ui-remote-form-load-error') ?? '',
+    invalidSelector: dialog.getAttribute('data-nowo-ui-remote-form-invalid') ?? '',
+    followOnLoadError: dialog.getAttribute('data-nowo-ui-remote-form-follow-on-load-error') !== 'false',
+    closeOnBackdrop: dialog.hasAttribute('data-nowo-ui-dialog-backdrop-close'),
+    ...dialogHeaderSettings(dialog),
+  };
+}
+
+/**
+ * 2.33: the header names of a remote form dialog from `data-nowo-ui-remote-form-{request,redirect,location}-header`
+ * (printed by the partial for names configured under `nowo_ui_kit.remote_dialog`), else the defaults.
+ */
+export function dialogHeaderSettings(dialog: Element): Pick<RemoteFormSettings, 'requestHeader' | 'redirectHeader' | 'locationHeader'> {
+  return {
+    requestHeader: headerName(dialog.getAttribute('data-nowo-ui-remote-form-request-header'), REQUEST_HEADER),
+    redirectHeader: headerName(dialog.getAttribute('data-nowo-ui-remote-form-redirect-header'), REDIRECT_HEADER),
+    locationHeader: headerName(dialog.getAttribute('data-nowo-ui-remote-form-location-header'), LOCATION_HEADER),
+  };
+}
+
 /** Emits an event; returns false when a listener prevented it (cancelable events only). */
+/**
+ * The session that last opened each dialog (2.69). Two sessions may be bound to one dialog (the IIFE runtime created
+ * one before a Stimulus peer connected to the same dialog): only the active one handles its submit, close, cancel and
+ * backdrop click, so a form is never posted twice.
+ */
+const activeSessions = new WeakMap<HTMLDialogElement, RemoteFormSession>();
+
 export type RemoteFormEmitter = (name: RemoteFormEvent, detail: Record<string, unknown>, cancelable?: boolean) => boolean;
 
 /**
@@ -419,14 +452,18 @@ export class RemoteFormSession {
   private overlay: OverlayHandle | null = null;
   private url: string | null = null;
   private steps = 0;
-  private readonly onClose = (): void => this.closed();
+  private readonly onClose = (): void => {
+    if (this.isActive()) {
+      this.closed();
+    }
+  };
   private readonly onCancel = (event: Event): void => {
-    if (nestedLayerOwnsEscape(this.dialog, document.activeElement)) {
+    if (this.isActive() && nestedLayerOwnsEscape(this.dialog, document.activeElement)) {
       event.preventDefault();
     }
   };
   private readonly onClick = (event: MouseEvent): void => {
-    if (event.target !== this.dialog || !this.settings().closeOnBackdrop) {
+    if (event.target !== this.dialog || !this.isActive() || !this.settings().closeOnBackdrop) {
       return;
     }
     const rect = this.dialog.getBoundingClientRect();
@@ -469,6 +506,15 @@ export class RemoteFormSession {
     this.controller?.abort();
     this.overlay?.release();
     this.overlay = null;
+    if (this.isActive()) {
+      activeSessions.delete(this.dialog);
+    }
+  }
+
+  /** Whether this session drives its dialog (2.69): it opened it last, or no session has opened it yet. */
+  isActive(): boolean {
+    const active = activeSessions.get(this.dialog);
+    return active === undefined || active === this;
   }
 
   /** Whether the dialog can run (native modal dialog support). */
@@ -486,6 +532,11 @@ export class RemoteFormSession {
     if (!url || !body || !this.supported()) {
       return false;
     }
+    const previous = activeSessions.get(this.dialog);
+    if (previous !== undefined && previous !== this) {
+      previous.controller?.abort();
+    }
+    activeSessions.set(this.dialog, this);
     this.controller?.abort();
     const controller = new AbortController();
     this.controller = controller;
@@ -523,7 +574,7 @@ export class RemoteFormSession {
   /** Handles a submit event that reached the dialog body. Returns whether it was intercepted. */
   async submit(event: Event): Promise<boolean> {
     const form = event.target;
-    if (!(form instanceof HTMLFormElement) || !this.dialog.open || Element.prototype.hasAttribute.call(form, NATIVE_ATTR)) {
+    if (!(form instanceof HTMLFormElement) || !this.dialog.open || !this.isActive() || Element.prototype.hasAttribute.call(form, NATIVE_ATTR)) {
       return false;
     }
     const submitter = (event as SubmitEvent).submitter ?? null;

@@ -186,3 +186,22 @@ describe('askConfirm', () => {
     }
   });
 });
+
+describe('confirmTexts / nativeQuestion (2.69)', () => {
+  it('reads values first, then the plain attributes, trimmed', async () => {
+    const { confirmTexts, nativeQuestion } = await import('./ask_confirm');
+    const el = document.createElement('form');
+    el.setAttribute('data-x-message-value', ' M ');
+    el.setAttribute('data-x-title-value', ' ');
+    el.setAttribute('data-confirm-title', ' T ');
+    el.setAttribute('data-x-confirm-label-value', 'OK');
+    el.setAttribute('data-confirm-label', 'ignored');
+    el.setAttribute('data-confirm-cancel-label', 'No');
+    expect(confirmTexts(el, 'x')).toEqual({ message: 'M', title: 'T', confirm: 'OK', cancel: 'No' });
+    expect(confirmTexts(document.createElement('div'), 'x')).toEqual({ message: '', title: '', confirm: '', cancel: '' });
+    expect(nativeQuestion({ title: 'T', message: 'M' })).toBe('T\n\nM');
+    expect(nativeQuestion({ title: '', message: 'M' })).toBe('M');
+    expect(nativeQuestion({ title: 'T', message: '' })).toBe('T');
+    expect(nativeQuestion({ title: '', message: '' })).toBe('');
+  });
+});

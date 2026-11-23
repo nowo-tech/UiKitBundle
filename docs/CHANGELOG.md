@@ -153,6 +153,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **Stimulus runtime for the on-demand dialogs** (Beacon v1.173 per-row dialogs). New `nowo_ui_kit.dialogs.runtime`
+  (`iife` default | `stimulus`; Twig global `nowo_ui_kit_dialogs_runtime`) and a per-component `runtime` option
+  (`stimulus: true` on `confirm_dialog`): with `stimulus` the `remote_form_dialog` shell, `confirm_dialog` with
+  `dialog_src` and the shared confirm dialog (`confirm_shared` partial, `table_confirm: shared`, the `table` option
+  `runtime`) carry the Stimulus peers, so pages that load only the peers (no `js/nowo-ui-dialog.js` /
+  `js/nowo-ui-confirm.js`) work. The openers, toggles and row forms keep their markup; the shells keep the IIFE
+  attributes and add the peer ones. Same protocol in both runtimes (one shared core): `X-Nowo-Dialog` GET fragment,
+  `422` re-rendered in place, `204` + `X-Nowo-Redirect` (same-origin path), `204` + `X-Nowo-Dialog-Location` steps,
+  shared confirm bound to the row's own hidden POST form (target + CSRF).
+- `remote-form-dialog` peer: **delegated mode** (`data-remote-form-dialog-delegate-value="true"`, controller on the
+  `<dialog>`): opens from any opener of the page with the IIFE attributes (`data-nowo-ui-dialog-open` / `-src` /
+  `-form`, e.g. many rows sharing one shell), reads unset values from the dialog's `data-nowo-ui-remote-form-*`
+  settings and also dispatches the `nowo-ui:remote-form:*` events. In every mode it now closes on
+  `[data-nowo-ui-dialog-close]` (the partial's ×) itself.
+- New Stimulus peer **`confirm-shared`** (`stimulus-peers/confirm_shared_controller.ts`) for the shared confirm dialog
+  (and any kit confirm dialog with an id): fill from the row toggle, `form="…"` binding, type-to-confirm, safe first
+  focus, focus return.
+- **Both runtimes on one page**: a peer claims its dialog when it connects (`data-nowo-ui-runtime-owner="stimulus"`,
+  set by script) and the IIFE runtimes leave a claimed dialog alone (openers, close buttons, backdrop, `close` event),
+  so loading `js/nowo-ui-dialog.js` / `js/nowo-ui-confirm.js` next to the peers never handles a click twice nor posts a
+  form twice; before the peers connect, or without them, the IIFE runtimes drive the same markup. A second copy of
+  either script binds nothing (window-level guard). Two remote form sessions bound to one dialog: only the one that
+  opened it last handles submit / close.
+- `confirm-submit` peer: **title and button labels** — `data-confirm-submit-title-value` / `data-confirm-title`
+  (dialog heading, the message becomes the body), `data-confirm-submit-confirm-label-value` / `data-confirm-label` and
+  `data-confirm-submit-cancel-label-value` / `data-confirm-cancel-label`; native mode asks "title, blank line,
+  message". Without them nothing changes. The IIFE fail-closed fallback of `nowo-ui-confirm.js` asks the title too.
+  Helpers `confirmTexts()` / `nativeQuestion()` in `ask_confirm.ts`.
+- **Shared confirm dialog for menus and row actions outside the `table` partial**: `row_actions` / `menu` / `action`
+  accept `confirm_shared: true` (group `nowo-ui-menu-confirm`), a group id string, or `confirm_group: '<id>'`
+  (+ `confirm_row`, `runtime`): every Confirm action of the group opens ONE `confirm_shared` dialog, rendered once per
+  request and group (after the menu root, never inside its panel), and each row keeps a hidden POST form with its own
+  CSRF token (form id `<confirmId>-form-<10 chars of confirmKey>-<row>`). With `nowo_ui_kit.table_confirm: shared`
+  menus and row actions follow it by default (unless `confirm_external`); `confirm_shared: false` keeps one dialog per
+  action. Twig functions `nowo_ui_confirm_group()`, `nowo_ui_confirm_shared_once()` (ids kept on the main request:
+  worker safe), `nowo_ui_dialogs_runtime()`.
+- Demo `/kit/stimulus-dialogs/{stimulus,iife,both}` and its Playwright e2e (Stimulus-only page, IIFE page, both
+  runtimes: the shared confirm posts the clicked row's target and token, one request per open, one POST per submit).
+
 ## [2.68.0] - 2026-11-23
 
 ### Added

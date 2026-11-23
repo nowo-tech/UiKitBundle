@@ -44,7 +44,7 @@
     "build:table-view": "VITE_ENTRY=table-view vite build",
     "build:filter-sheet": "VITE_ENTRY=filter-sheet vite build",
     "build:form-busy": "VITE_ENTRY=form-busy vite build",
-    "build:demo-peers": "VITE_ENTRY=demo-peers vite build && VITE_ENTRY=demo-page-actions vite build",
+    "build:demo-peers": "VITE_ENTRY=demo-peers vite build && VITE_ENTRY=demo-page-actions vite build && VITE_ENTRY=demo-stimulus-dialogs vite build",
     "watch": "VITE_ENTRY=modal vite build --watch",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.strict-host.json",
     "test": "vitest run",

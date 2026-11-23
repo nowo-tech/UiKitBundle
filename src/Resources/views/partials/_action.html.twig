@@ -25,6 +25,16 @@
       <confirmId>-form-<content key>-<row>, which the shared dialog's confirm button submits (the form's own submit is
       disabled, so Enter in the type-to-confirm input never submits it past the check). Without JavaScript the toggle does
       nothing, as with its own dialog; Action::fallbackHref keeps its <noscript> link
+      2.69: also `true` (the group nowo-ui-menu-confirm), a group id (string) or `{id, row, render}`; without the
+      option, the group nowo-ui-menu-confirm when nowo_ui_kit.table_confirm is shared and confirm_external is not set.
+      A `true` / string group (and that default) renders the shared dialog after the action, once per request and id
+      (nowo_ui_confirm_shared_once()); a hash renders it only with `render: true` (the 2.68 hash of the `table` partial
+      is rendered by the table). false = the per-action dialog
+    - confirm_group (2.69): group id (string), the same as confirm_shared: '<id>'; wins over confirm_shared
+    - confirm_row (2.69): the row part of the hidden form id (int or string, default the hash's `row`, else 0); give
+      it when two rows may hold identical actions (same target and CSRF token)
+    - runtime (2.69): iife | stimulus — runtime of the shared dialog this partial renders (default
+      nowo_ui_kit.dialogs.runtime)
     - menu_item (2.21): true = drawn as an item of a `menu` panel (slot menu_item, `nowo-ui-menu__item--danger` for
       danger actions) instead of a toolbar button — the `menu` partial passes it with `menu_items: true`
 
@@ -96,8 +106,8 @@
     {% set class = class ~ ((action.attributes.class ?? false) ? ' ' ~ action.attributes.class) %}{% set attrs = nowo_ui_attrs_without_class(action.attributes)|merge(context == 'row' or display == 'icon' ? {title: label, 'aria-label': label} : {})|merge(_tip is null ? {} : {title: _tip}) %}
     {% set _wrap_tip = _tip is not null and action.disabled %}
     {% if _wrap_tip %}<span class="nowo-ui-action__tip" title="{{ _tip }}">{% endif %}
-    {% set confirm_id = action.confirmId() %}{% set _shared = confirm_shared|default(null) %}
-    {% if confirm_id and _shared is iterable and _shared.id is defined and _shared.id %}
+    {% set confirm_id = action.confirmId() %}{% set _shared = nowo_ui_confirm_group(confirm_shared ?? null, confirm_group ?? null, confirm_row ?? null, confirm_external|default(false), nowo_ui_kit_table_confirm|default('per_row')) %}
+    {% if confirm_id and _shared %}
         {#- 2.68: the shared confirm dialog — the content rides on the toggle, the POST form stays in the row (hidden) -#}
         {%- set _c = action.confirm %}
         {#- the content key keeps rows of another page (infinite scroll restarts `row`) on their own form -#}
@@ -160,4 +170,8 @@
         <a class="{{ class }}{% if action.disabled %} is-disabled{% endif %}" href="{{ href ?? '#' }}"{% for name, value in attrs %}{% if value is same as(true) %} {{ name }}{% elseif value is not null and value is not same as(false) %} {{ name }}="{{ value }}"{% endif %}{% endfor %}{% if action.disabled %} aria-disabled="true" tabindex="-1"{% endif %}>{{ inner }}</a>
     {% endif %}
 {% if _wrap_tip %}</span>{% endif %}
+{#- 2.69: a shared group this partial renders (confirm_shared true / a group id, or table_confirm: shared): its dialog once per request -#}
+{% if confirm_id and _shared and _shared.render and nowo_ui_confirm_shared_once(_shared.id) %}
+    {{ include(nowo_ui_partial('confirm_shared', bundle), {id: _shared.id, runtime: runtime ?? null, framework: framework, bundle: bundle, nowo_ui_page_type: _pt}, false) }}
+{% endif %}
 {% endif %}

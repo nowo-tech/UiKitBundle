@@ -161,6 +161,7 @@ final class NowoUiKitExtensionTest extends TestCase
             'icon_set' => 'svg_inline',
             'row_actions_display' => 'text',
             'row_actions_confirm' => 'dialog',
+            'dialogs' => ['runtime' => 'stimulus'],
         ]);
         $extension->prepend($container);
 
@@ -176,6 +177,7 @@ final class NowoUiKitExtensionTest extends TestCase
         self::assertSame('svg_inline', $globals['nowo_ui_kit_icon_set']);
         self::assertSame('text', $globals['nowo_ui_kit_row_actions_display']);
         self::assertSame('dialog', $globals['nowo_ui_kit_row_actions_confirm']);
+        self::assertSame('stimulus', $globals['nowo_ui_kit_dialogs_runtime'], '2.69: dialogs.runtime');
         self::assertSame(['brand' => 'auto'], $globals['nowo_ui_kit_auth_panel'], '2.44: auth_panel.brand defaults to auto');
     }
 
