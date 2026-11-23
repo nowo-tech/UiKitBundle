@@ -22,5 +22,5 @@ export function announceScript(name: string, buildTime?: string): void {
     return;
   }
   seen[name] = true;
-  createBundleLogger(name, { buildTime }).scriptLoaded();
+  createBundleLogger(name, buildTime === undefined ? {} : { buildTime }).scriptLoaded();
 }
