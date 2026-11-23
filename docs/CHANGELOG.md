@@ -155,6 +155,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Documentation
+
+- UPGRADING "To 2.70.0": a group confirm dialog moved to `<body>` loses ancestor-scoped CSS and theme wrappers;
+  how to target it instead (audit ZAF-R-I2).
+
 ## [2.70.0] - 2026-11-23
 
 ### Added

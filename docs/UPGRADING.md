@@ -215,6 +215,10 @@ Turbo frame, hinclude / ESI, infinite scroll) no longer breaks it. Still to do b
 - Rendering outside HTTP (no request: CLI, mail, a worker job) prints the dialog with every menu: use the same pair.
 - A theme override of `action` / `menu` / `row_actions` must pass `confirm_shared`, `confirm_group`, `confirm_row` and
   `runtime` through to the partials it includes (and handle the normalized `{id, row, render}` hash in `action`).
+- **Scoped styles**: a group dialog moved to `<body>` is no longer inside its original wrappers, so CSS scoped to an
+  ancestor (`.app .nowo-ui-confirm …`, a region with `[data-bs-theme="dark"]`, a themed container) stops applying to
+  it. Target the dialog itself (`#nowo-ui-menu-confirm`, `dialog[data-nowo-confirm-portal]`) or set the theme
+  attribute on `<html>` / `<body>` (audit ZAF-R-I2).
 - To keep the 2.69 output, pass `confirm_shared: false` to those partials (or keep `table_confirm: per_row` and opt the
   table in with its own `confirm_shared: true`).
 
