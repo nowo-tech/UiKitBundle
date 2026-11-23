@@ -36,6 +36,7 @@ final class RemoteDialogRedirectEvent extends Event
      * @internal built by the kit's redirect listener; listeners only read and change it
      */
     public function __construct(
+        // @igor-ignore - Per-dispatch event built with new by RemoteDialogRedirectListener for one response; never a shared service, so it cannot keep a request across worker requests.
         private readonly Request $request,
         private readonly RedirectResponse $response,
         private string $path,
