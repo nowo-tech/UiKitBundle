@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.70.0](#to-2700)
   - [Shared confirm outside the table (`table_confirm: shared`)](#shared-confirm-outside-the-table-table_confirm-shared)
   - [Stimulus runtime](#stimulus-runtime)
 - [To 2.69.0](#to-2690)
@@ -173,6 +174,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.70.0
+
+From **2.69.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 To **2.70.0**, from **2.69.0**. With the defaults (`nowo_ui_kit.dialogs.runtime: iife`,
 `nowo_ui_kit.table_confirm: per_row`) the output is the 2.69 one: nothing to change. **Hosts with
