@@ -155,6 +155,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Documentation
+
+- UPGRADING "To 2.70.0": a group confirm dialog moved to `<body>` loses ancestor-scoped CSS and theme wrappers;
+  how to target it instead (audit ZAF-R-I2).
+
 ### Added
 
 - **Console**: each shipped script (`nowo-ui-<name>.js`, every one except the inlined pre-paint `nowo-ui-theme-boot.js`; a script loaded twice logs once) logs one line on load, `📦 [ui-kit/<name>] script loaded, build: 2026-11-23 14:05 UTC`, with the house `createBundleLogger`. The build time is read from the committed `build-info.json` (`{sourceHash, builtAt}`): it is reused while the sources are unchanged and renewed only when they change, so rebuilding unchanged sources never rewrites the committed assets (no wall-clock stamp, no user data). Quiet switch: `<html data-nowo-console="quiet">` or `globalThis.NOWO_CONSOLE = 'quiet'` prints nothing; the default is unchanged.
