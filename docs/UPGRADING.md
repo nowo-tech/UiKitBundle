@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.67.0](#to-2670)
 - [To 2.66.1](#to-2661)
 - [To 2.66.0](#to-2660)
 - [To 2.65.0](#to-2650)
@@ -12,7 +13,6 @@
 - [To 2.63.0](#to-2630)
 - [To 2.62.0](#to-2620)
 - [To 2.61.0](#to-2610)
-- [To 2.61.0](#to-2610-1)
 - [To 2.60.0](#to-2600)
 - [To 2.59.0](#to-2590)
 - [To 2.58.1](#to-2581)
@@ -106,7 +106,6 @@
 - [To 2.7.0](#to-270)
 - [To 2.6.1](#to-261)
 - [To 2.6.0](#to-260)
-- [To 2.6.0](#to-260-1)
   - [Error pages](#error-pages)
   - [Confirm dialog](#confirm-dialog)
   - [App shell](#app-shell)
@@ -170,6 +169,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.67.0
+
+From **2.66.1**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 ## To 2.66.1
 
