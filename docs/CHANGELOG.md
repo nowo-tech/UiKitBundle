@@ -152,6 +152,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- `confirm_dialog` on demand: `dialog_src: path(…)` renders only the opener, a real link to that URL (it works without JavaScript), and an empty `remote_form_dialog` shell; the body is fetched when the dialog opens through the existing remote form dialog runtime (`X-Nowo-Dialog: 1`, `aria-busy` while loading, `422` re-rendered in place, `204` + `X-Nowo-Redirect` followed, a failed load follows the link or shows the load error). The `form` / `body` / `footer` blocks are not rendered, so a listing no longer builds a hidden form per row. `dialog_shell: false` renders only the opener (many rows share one shell rendered once with `only_dialog: true, dialog_shell: true` and the same `dialog_id`), and a custom `trigger` block gets `dialog_opener_href` / `dialog_opener_attr`. A `javascript:` / `vbscript:` / `data:` / `blob:` `dialog_src` prints a disabled opener (SafeHref, as `back_link` and `tree`). Only a non-empty string turns the mode on: without `dialog_src` (or with `null` / `''` / `false`, a number or an object) the markup is byte-identical to 2.67.0. See `docs/USAGE.md#confirm-dialog` ("On demand") for the host migration, and `docs/PAGE_CONTRACT.md#dialogs` for the on-demand rule.
+
 ## [2.67.0] - 2026-11-23
 
 ### Added

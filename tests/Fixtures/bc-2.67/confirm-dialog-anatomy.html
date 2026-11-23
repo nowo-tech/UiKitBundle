@@ -1,0 +1,12 @@
+
+<div class="nowo-ui-confirm-dialog-root" data-controller="confirm-dialog">
+                        <button type="button" class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary" data-action="confirm-dialog#open" data-nowo-confirm-open data-nowo-confirm-target="anat-1" aria-haspopup="dialog" aria-controls="anat-1">Edit</button>
+            <dialog class="nowo-ui-confirm-dialog nowo-ui-confirm-dialog--wide nowo-ui-confirm-dialog--sheet nowo-ui-confirm-dialog--anatomy" data-confirm-dialog-target="dialog" id="anat-1" data-nowo-ui-confirm aria-labelledby="anat-1-title">
+            <header class="nowo-ui-dialog__header">
+        <h2 class="nowo-ui-dialog__title" id="anat-1-title">Edit member</h2>
+                    <button type="button" class="nowo-ui-dialog__close" data-confirm-dialog-close data-nowo-confirm-close aria-label="Close" title="Close"><span aria-hidden="true">&times;</span></button>
+            </header>
+    <div class="nowo-ui-dialog__body"><div data-testid="anatomy-body"><form method="post" action="/members/1/edit" data-testid="edit-form"><input name="name"><button type="button" data-confirm-dialog-close>Cancel</button><button type="submit">Save</button></form></div></div>
+    <footer class="nowo-ui-dialog__footer"><button type="submit" form="edit" data-testid="anatomy-footer">Save</button></footer>
+</dialog>
+</div>
