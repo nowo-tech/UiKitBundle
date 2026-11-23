@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as mod from './nowo-ui-secret-once';
 
-const SECRET = 'nowo_tok_7f3a9c1e5b2d4f6a8c0e';
+const SECRET = 'example-one-time-value-for-tests';
 
 function markup(attrs = '', secret = SECRET): string {
   return `

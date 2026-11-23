@@ -19,7 +19,7 @@ use Twig\Error\RuntimeError;
  */
 final class SecretOnceTest extends TestCase
 {
-    private const SECRET = 'nowo_tok_7f3a9c1e5b2d4f6a8c0e';
+    private const SECRET = 'example-one-time-value-for-tests';
 
     public function testItIsAThemePartialAHostCanReplace(): void
     {
