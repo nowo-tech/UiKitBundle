@@ -17,6 +17,12 @@
  * - Every IIFE carries its own copy of this module, so the state lives on `window.NowoUiOverlay` (first copy wins).
  */
 
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/overlay', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
+
 export type OverlayKind = 'dialog' | 'side-panel' | 'drawer' | 'host';
 
 export interface OverlayOptions {

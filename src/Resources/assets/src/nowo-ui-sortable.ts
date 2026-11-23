@@ -31,6 +31,12 @@
  * item cancels a drag; a morph that keeps the item does not. Size and position go through the CSSOM (strict CSP).
  */
 
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/sortable', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
+
 export const ROOT = '[data-nowo-ui-sortable]';
 export const LIST = '[data-nowo-ui-sortable-list]';
 export const ITEM = '[data-nowo-ui-sortable-item]';

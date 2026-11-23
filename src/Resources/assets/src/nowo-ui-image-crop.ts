@@ -63,6 +63,11 @@ import {
   type Size,
   type View,
 } from './nowo-ui-image-crop-core';
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/image-crop', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
 
 /** The crop dialog (its ids are unique per build: a restored page snapshot cannot duplicate them). */
 export const DIALOG = 'dialog[data-nowo-ui-image-crop-dialog]';

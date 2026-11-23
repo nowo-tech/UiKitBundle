@@ -50,6 +50,11 @@ import { bindMotion, closeDialogWithEffect } from './nowo-ui-motion-core';
 import { adoptSharedDialog, EXPECTED, openConfirmDialog, PORTAL, syncExpected, unbindSharedConfirm } from './nowo-ui-confirm-core';
 import { markBound, ownedByStimulus } from './nowo-ui-runtime-owner';
 import { askConfirm, confirmTexts, nativeQuestion, type ConfirmOptions } from '../stimulus-peers/ask_confirm';
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/confirm', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
 
 export { adoptSharedDialog, EXPECTED, fillSharedConfirm, openConfirmDialog, resetExpected, safeCancel, SCOPE, syncExpected, unbindSharedConfirm } from './nowo-ui-confirm-core';
 

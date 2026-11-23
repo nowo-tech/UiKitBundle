@@ -30,6 +30,11 @@
  */
 import { closeWithEffect, finishClosing, isClosing } from './nowo-ui-motion-core';
 import { placeBeside } from './nowo-ui-popover-core';
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/combobox', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
 
 export const ROOT = '[data-nowo-ui-combobox]';
 const LISTBOX = '[data-nowo-ui-combobox-listbox]';

@@ -8,6 +8,13 @@
  * Delegated listeners; one `MutationObserver` for content inserted later and one `ResizeObserver`. Importing touches no DOM. Members are
  * read through the prototypes: a named control or image cannot hide them.
  */
+
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/show-more', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
+
 export const ROOT = '[data-nowo-ui-show-more]';
 const CONTENT = '[data-nowo-ui-show-more-content]';
 const TOGGLE = '[data-nowo-ui-show-more-toggle]';

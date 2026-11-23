@@ -9,6 +9,12 @@
  *   only; every access in try / catch) and applied on load.
  */
 
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/table-view', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
+
 const ROOT = '[data-nowo-ui-table-view]';
 export const STORAGE_PREFIX = 'nowo-ui-table-view:';
 const COMPACT = 'nowo-ui-data-table--compact';

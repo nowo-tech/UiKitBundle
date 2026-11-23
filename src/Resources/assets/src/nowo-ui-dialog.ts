@@ -37,6 +37,11 @@ import { bindMotion, closeDialogWithEffect, finishClosing } from './nowo-ui-moti
 import { overlayRegistry, type OverlayHandle } from './nowo-ui-overlay';
 import { isFragment, isPlainClick, openerTitle, parseFragment, remoteFormSettings, RemoteFormSession, sameOriginHref } from './nowo-ui-remote-form-core';
 import { markBound, ownedByStimulus } from './nowo-ui-runtime-owner';
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/dialog', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
 
 export { dialogHeaderSettings, remoteFormSettings } from './nowo-ui-remote-form-core';
 

@@ -12,6 +12,12 @@
  * un-collapsed, so nothing ever becomes unreachable. No inline handlers or styles (CSP).
  */
 
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/header-crumbs', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
+
 export const TRAIL = '[data-nowo-ui-header-crumbs][data-collapsible="true"]:not([data-collapsed])';
 export const MORE = '[data-nowo-ui-header-crumbs-more]';
 

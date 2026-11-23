@@ -24,6 +24,11 @@
 
 import { applyStoredRail, persistKey, RAIL_HOST, RAIL_PERSIST_ATTR, RAIL_TOGGLE, railHostOf, railIsCollapsed, rememberRail } from './nowo-ui-layout-state-core';
 import { matchesShortcut, parseShortcut } from './nowo-ui-shortcut-core';
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/rail', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
 
 export { RAIL_HOST, RAIL_TOGGLE };
 

@@ -10,6 +10,11 @@
  */
 
 import { applyTheme, isTheme, persistTheme, prefersMatch, readPref, readStoredTheme } from './nowo-ui-theme-core';
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/theme', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
 
 declare global {
   interface Window {

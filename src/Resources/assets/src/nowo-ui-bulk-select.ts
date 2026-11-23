@@ -18,6 +18,12 @@
  * Without the script the boxes and the action buttons are a plain form.
  */
 
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/bulk-select', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
+
 const BAR = '[data-nowo-ui-bulk-bar]';
 const ITEM = 'input[type="checkbox"][data-nowo-ui-bulk-item]';
 const ALL = 'input[type="checkbox"][data-nowo-ui-bulk-all]';

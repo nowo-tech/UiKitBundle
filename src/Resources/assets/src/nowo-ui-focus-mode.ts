@@ -56,6 +56,11 @@ import {
   TOGGLE,
 } from './nowo-ui-focus-mode-core';
 import { matchesShortcut, parseShortcut } from './nowo-ui-shortcut-core';
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/focus-mode', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
 
 export type FocusSource = 'toggle' | 'shortcut' | 'escape' | 'fullscreenchange' | 'restore' | 'api';
 

@@ -7,6 +7,11 @@
  */
 
 import { openModalOnLoad } from './nowo-ui-open-modal-core';
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/open-modal', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
 
 declare global {
   interface Window {

@@ -3,6 +3,12 @@
  * Toggle via helpers or [data-nowo-ui-page-loader-show] / [data-nowo-ui-page-loader-hide].
  */
 
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/page-loader', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
+
 declare global {
   interface Window {
     nowoUiShowPageLoader?: () => void;

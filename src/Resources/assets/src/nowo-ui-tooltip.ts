@@ -10,6 +10,12 @@
  *   viewport, so scroll containers never clip it; coordinates go through the CSSOM (strict CSP).
  */
 
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/tooltip', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
+
 const ROOT = '[data-nowo-ui-tooltip]';
 const BUBBLE = '.nowo-ui-tooltip__bubble';
 const GAP = 6;
