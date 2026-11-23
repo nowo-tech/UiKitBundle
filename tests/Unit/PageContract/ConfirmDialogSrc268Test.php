@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Tests\Unit\PageContract;
 
+use ArrayObject;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -148,7 +149,7 @@ TWIG;
     {
         $twig = PageContractTwig::create(['t' => <<<'TWIG'
 {% embed nowo_ui_partial('confirm_dialog') with {dialog_src: '/members/1/edit', title: 'Edit member'} %}
-    {% block trigger %}<a href="{{ dialog_src }}" class="mine"{{ nowo_ui_html_attrs(dialog_opener_attr) }}>Custom</a>{% endblock %}
+    {% block trigger %}<a href="{{ dialog_opener_href }}" class="mine"{{ nowo_ui_html_attrs(dialog_opener_attr) }}>Custom</a>{% endblock %}
     {% block form %}<form data-testid="edit-form"></form>{% endblock %}
 {% endembed %}
 TWIG]);
@@ -170,6 +171,66 @@ TWIG]);
         }
         self::assertFileExists($file);
         self::assertSame((string) file_get_contents($file), self::render(self::SRC_OPTS));
+    }
+
+    /**
+     * @return iterable<string, array{0: string}>
+     */
+    public static function scriptUrls(): iterable
+    {
+        yield 'javascript' => ['javascript:alert(1)'];
+        yield 'mixed case + blanks' => [' JavaScript:alert(1)'];
+        yield 'vbscript' => ['vbscript:msgbox(1)'];
+        yield 'data' => ['data:text/html,<script>alert(1)</script>'];
+        yield 'blob' => ['blob:https://example.test/1'];
+    }
+
+    #[DataProvider('scriptUrls')]
+    public function testAScriptUrlPrintsADisabledOpenerAndNoLink(string $url): void
+    {
+        $html = self::render(['dialog_src' => $url, 'trigger_label' => 'Edit', 'dialog_id' => 'x', 'title' => 'Edit']);
+        self::assertStringNotContainsString('<a ', $html);
+        self::assertStringNotContainsString('data-nowo-ui-dialog-src', $html);
+        self::assertStringNotContainsString('data-nowo-ui-dialog-open', $html);
+        self::assertStringNotContainsString('edit-form', $html, 'still on demand: no body');
+        self::assertMatchesRegularExpression('~<button type="button"[^>]* disabled[^>]*>Edit</button>~', $html);
+
+        $custom = PageContractTwig::create(['t' => <<<'TWIG'
+{% embed nowo_ui_partial('confirm_dialog') with {dialog_src: url, dialog_id: 'x'} %}
+    {% block trigger %}<a href="{{ dialog_opener_href }}"{{ nowo_ui_html_attrs(dialog_opener_attr) }}>Custom</a>{% endblock %}
+{% endembed %}
+TWIG])->render('t', ['url' => $url]);
+        self::assertStringContainsString('<a href="">Custom</a>', $custom);
+    }
+
+    public function testOnlyAStringTurnsTheModeOn(): void
+    {
+        foreach ([42, 1.5, true, ['/x'], new ArrayObject(['/x'])] as $value) {
+            self::assertSame((string) file_get_contents(\dirname(__DIR__, 2).'/Fixtures/bc-2.67/confirm-dialog-full.html'), self::render(self::bcOptions()['full'] + ['dialog_src' => $value]), get_debug_type($value));
+        }
+    }
+
+    public function testTheSharedShellRecipeRendersOneRemoteShellForManyOpeners(): void
+    {
+        $twig = PageContractTwig::create(['t' => <<<'TWIG'
+{% for id in [1, 2, 3] %}
+    {% embed nowo_ui_partial('confirm_dialog') with {dialog_src: '/members/' ~ id ~ '/edit', dialog_id: 'edit-member', dialog_shell: false, trigger_label: 'Edit', title: 'Edit #' ~ id} %}{% block form %}<form data-testid="edit-form"></form>{% endblock %}{% endembed %}
+{% endfor %}
+{% embed nowo_ui_partial('confirm_dialog') with {only_dialog: true, dialog_shell: true, dialog_id: 'edit-member', title: 'Edit member', size: 'wide'} %}{% block form %}<form data-testid="edit-form"></form>{% endblock %}{% endembed %}
+TWIG]);
+        $html = $twig->render('t');
+        self::assertSame(1, substr_count($html, '<dialog'));
+        self::assertSame(3, substr_count($html, 'data-nowo-ui-dialog-open="edit-member"'));
+        self::assertStringContainsString('<dialog id="edit-member" class="nowo-ui-dialog nowo-ui-dialog--lg nowo-ui-dialog--remote-form"', $html);
+        self::assertMatchesRegularExpression('~<div[^>]*data-nowo-ui-dialog-body[^>]*>\s*</div>~', $html, 'the remote body target the openers load into');
+        self::assertStringNotContainsString('edit-form', $html);
+        self::assertStringNotContainsString('data-confirm-dialog-target', $html, 'not the inline Stimulus dialog');
+
+        // only_dialog without dialog_shell: true (or with false) keeps the 2.67 inline dialog
+        $inline = PageContractTwig::create(['t' => "{% embed nowo_ui_partial('confirm_dialog') with {only_dialog: true, dialog_id: 'only-1', dialog_shell: flag} %}{% endembed %}"]);
+        foreach ([false, null, 'true', 1] as $flag) {
+            self::assertStringContainsString('data-confirm-dialog-target="dialog"', $inline->render('t', ['flag' => $flag]));
+        }
     }
 
     public function testNoRawUnescapedSrc(): void

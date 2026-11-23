@@ -72,17 +72,20 @@
       {% embed nowo_ui_partial('confirm_dialog') with {dialog_src: path('member_edit', {id: m.id}), dialog_id: 'edit-member-' ~ m.id, trigger_label: 'Edit', title: 'Edit member', size: 'wide'} %}{% endembed %}
 
     - dialog_src: URL of the dialog's own page (the full page without JavaScript, its fragment for X-Nowo-Dialog: 1).
-      Any other value than a non-empty string (missing, null, '', false) keeps the inline markup above byte for byte.
+      Only a non-empty string turns the mode on: anything else (missing, null, '', false, a number, an object) keeps
+      the inline markup above byte for byte. A javascript:, vbscript:, data: or blob: URL keeps the mode (no body)
+      but prints a disabled opener and no opener attributes (SafeHref, as the `back_link` and `tree` partials).
       The `form`, `body`, `footer` and `header_steps` blocks are not rendered; `anatomy`, `phone`, `expected_value`,
       `open_on_connect`, `status` and the Stimulus `confirm-dialog` root do not apply (the fragment carries its own
       heading, actions and type-to-confirm). The default trigger is a link `<a href="<dialog_src>">` (a disabled
       `<button>` with trigger_disabled); a custom `trigger` block prints `dialog_opener_attr` with
-      nowo_ui_html_attrs() on its own `<a href="{{ dialog_src }}">`
+      nowo_ui_html_attrs() on its own `<a href="{{ dialog_opener_href }}">` (null for a script URL)
     - dialog_id (default a generated id), title (the dialog title, else the opener's text), size (md default | wide;
       dialog_modifier --lg / --xl → wide), placement, labels, follow_on_load_error, backdrop_close, dialog_testid, dialog_attr: passed to the
       shell (`remote_form_dialog`)
-    - dialog_shell: false renders only the opener (many rows share one shell rendered once with only_dialog: true and
-      the same dialog_id: each opener loads its own dialog_src); only_dialog: true renders only the shell
+    - dialog_shell: false renders only the opener; give it a dialog_id (a generated id matches no shell). Many rows
+      share one shell rendered once with only_dialog: true, dialog_shell: true and the same dialog_id (no dialog_src
+      needed: each opener loads its own); only_dialog: true with a dialog_src renders only the shell too
   Blocks: trigger (the default button), header_steps (2.63), form (the free dialog content: a Symfony form_start / form_end or any panel),
   body / footer (2.29, the anatomy sections, only with anatomy: true).
   Close: [data-confirm-dialog-close] (Stimulus) or [data-nowo-confirm-close] (kit runtime), Escape.
@@ -99,13 +102,19 @@
 {% set _title_id = _anatomy ? (title_id|default(null) ?: ((_dialog_id ?? ('nowo-ui-confirm-dialog-' ~ random(100000, 999999))) ~ '-title')) : null %}
 {% set _labelledby = (aria_labelledby is defined and aria_labelledby) ? aria_labelledby : _title_id %}
 {#- 2.68: on demand — only the opener and an empty remote form dialog shell (see "On demand" above) -#}
-{% set _src = (dialog_src ?? null) is not empty and dialog_src is not same as(true) and dialog_src is not iterable ? dialog_src ~ '' : null %}
-{% if _src is not null %}
+{#- only a non-empty string (a number, a Stringable or a hash keeps the inline markup) -#}
+{% set _src = (dialog_src ?? null) is not empty and dialog_src is not iterable and dialog_src is same as(dialog_src ~ '') ? dialog_src : null %}
+{#- a javascript:, vbscript:, data: or blob: URL (SafeHref, as back_link / tree) opens nothing: no link, a disabled opener -#}
+{% set _src_url = _src is not null and not nowo_ui_theme.hrefRunsScript(_src) ? _src : null %}
+{#- the shared shell of many openers (dialog_shell: false on each): only_dialog + an explicit dialog_shell: true -#}
+{% set _shell_only = _only_dialog and (dialog_shell ?? null) is same as(true) %}
+{% if _src is not null or _shell_only %}
 {% set _src_id = _dialog_id ?: 'nowo-ui-dialog-' ~ random(100000, 999999) %}
 {% set _src_title = (title ?? null) is not empty ? title|nowo_ui_trans : null %}
 {% set _src_modifier = dialog_modifier|default('') %}
 {% set _src_size = (size ?? null) in ['wide', 'lg', 'xl'] or 'nowo-ui-confirm-dialog--lg' in _src_modifier or 'nowo-ui-confirm-dialog--xl' in _src_modifier ? 'lg' : 'md' %}
-{% set dialog_opener_attr = nowo_ui_remote_form_opener(_src_id, _src_title, false, _src)|merge({'aria-haspopup': 'dialog', 'aria-controls': _src_id}) %}
+{% set dialog_opener_href = _src_url %}
+{% set dialog_opener_attr = _src_url is null ? {} : nowo_ui_remote_form_opener(_src_id, _src_title, false, _src_url)|merge({'aria-haspopup': 'dialog', 'aria-controls': _src_id}) %}
 {% if not _only_dialog %}
 <div class="{{ nowo_ui_class('confirm_dialog_root', bundle) }}{{ (attr.class ?? false) ? ' ' ~ attr.class }}" data-nowo-ui-lazy-dialog{{ nowo_ui_attrs('confirm_dialog_root', bundle, nowo_ui_attrs_without_class(attr|default({}))) }}>
     {{ block('trigger') }}
@@ -132,10 +141,10 @@
 <div class="{{ nowo_ui_class('confirm_dialog_root', bundle) }}{{ (attr.class ?? false) ? ' ' ~ attr.class }}" data-controller="confirm-dialog"{% if _expected is not null %} data-confirm-dialog-expected-value="{{ _expected }}"{% endif %}{% if _open_on_connect %} data-confirm-dialog-open-on-connect-value="true"{% endif %}{{ nowo_ui_attrs('confirm_dialog_root', bundle, nowo_ui_attrs_without_class(attr|default({}))) }}>
     {% block trigger %}
         {% if _src is not null %}
-            {% if trigger_label is defined and trigger_disabled|default(false) %}
+            {% if trigger_label is defined and (trigger_disabled|default(false) or _src_url is null) %}
             <button type="button" class="{{ trigger_class|default(nowo_ui_class('confirm_dialog_trigger', bundle)) }}"{% if trigger_title is defined %} title="{{ trigger_title }}"{% endif %}{% if trigger_aria_label is defined %} aria-label="{{ trigger_aria_label }}"{% endif %}{% if trigger_testid is defined %} data-testid="{{ trigger_testid }}"{% endif %} disabled{{ nowo_ui_attrs('confirm_dialog_trigger', bundle) }}>{{ trigger_label }}</button>
             {% elseif trigger_label is defined %}
-            <a href="{{ _src }}" class="{{ trigger_class|default(nowo_ui_class('confirm_dialog_trigger', bundle)) }}"{{ nowo_ui_html_attrs(dialog_opener_attr) }}{% if trigger_title is defined %} title="{{ trigger_title }}"{% endif %}{% if trigger_aria_label is defined %} aria-label="{{ trigger_aria_label }}"{% endif %}{% if trigger_testid is defined %} data-testid="{{ trigger_testid }}"{% endif %}{{ nowo_ui_attrs('confirm_dialog_trigger', bundle) }}>{{ trigger_label }}</a>
+            <a href="{{ _src_url }}" class="{{ trigger_class|default(nowo_ui_class('confirm_dialog_trigger', bundle)) }}"{{ nowo_ui_html_attrs(dialog_opener_attr) }}{% if trigger_title is defined %} title="{{ trigger_title }}"{% endif %}{% if trigger_aria_label is defined %} aria-label="{{ trigger_aria_label }}"{% endif %}{% if trigger_testid is defined %} data-testid="{{ trigger_testid }}"{% endif %}{{ nowo_ui_attrs('confirm_dialog_trigger', bundle) }}>{{ trigger_label }}</a>
             {% endif %}
         {% elseif trigger_label is defined %}
             <button type="button" class="{{ trigger_class|default(nowo_ui_class('confirm_dialog_trigger', bundle)) }}" data-action="confirm-dialog#open"{% if _dialog_id %} data-nowo-confirm-open data-nowo-confirm-target="{{ _dialog_id }}" aria-haspopup="dialog" aria-controls="{{ _dialog_id }}"{% endif %}{% if trigger_title is defined %} title="{{ trigger_title }}"{% endif %}{% if trigger_aria_label is defined %} aria-label="{{ trigger_aria_label }}"{% endif %}{% if trigger_testid is defined %} data-testid="{{ trigger_testid }}"{% endif %}{% if trigger_disabled|default(false) %} disabled{% endif %}{{ nowo_ui_attrs('confirm_dialog_trigger', bundle) }}>{{ trigger_label }}</button>

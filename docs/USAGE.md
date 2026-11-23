@@ -1902,8 +1902,8 @@ for the dialog request (`$dialog->template('member/edit.html.twig', 'member/_edi
 longer builds one form per row for the listing. The fragment's `.nowo-ui-form__actions` (or
 `[data-nowo-ui-dialog-actions]`) move into the dialog footer.
 
-- `dialog_src` is read only when it is a non-empty string: missing, `null`, `''` or `false` keeps the inline markup
-  byte for byte (tests/Fixtures/bc-2.67). It is named after `dialog_id`, not `src`, so an `src` an embed without `only`
+- `dialog_src` is read only when it is a non-empty string: missing, `null`, `''`, `false`, a number or an object keeps
+  the inline markup byte for byte (tests/Fixtures/bc-2.67). It is named after `dialog_id`, not `src`, so an `src` an embed without `only`
   inherits from the page (an image, an iframe) never switches the mode.
 - Not rendered with it: the `form`, `body`, `footer` and `header_steps` blocks and the Stimulus `confirm-dialog` root;
   `anatomy`, `phone`, `status`, `expected_value` and `open_on_connect` do not apply (the fragment carries its own
@@ -1911,10 +1911,20 @@ longer builds one form per row for the listing. The fragment's `.nowo-ui-form__a
 - Passed to the shell: `dialog_id` (generated when missing), `title` (else the opener's text), `size` (`md` default,
   `wide`; a `dialog_modifier` with `--lg` / `--xl` → wide), `placement`, `labels`, `follow_on_load_error`, `backdrop_close`,
   `dialog_testid`, `dialog_attr`.
-- Many rows, one shell: `dialog_shell: false` renders only the opener; render the shell once with `only_dialog: true`
-  and the same `dialog_id`. Each opener loads its own `dialog_src`, and its `title` becomes the dialog title.
+- Many rows, one shell: `dialog_shell: false` (with a `dialog_id`: a generated id matches no shell) renders only the
+  opener; render the shell once with `only_dialog: true, dialog_shell: true` and the same `dialog_id` (no
+  `dialog_src` needed). Each opener loads its own `dialog_src`, and its `title` becomes the dialog title:
+
+  ```twig
+  {% for member in members %}
+      {% embed nowo_ui_partial('confirm_dialog') with {dialog_src: path('member_edit', {id: member.id}), dialog_id: 'edit-member', dialog_shell: false, trigger_label: 'Edit', title: 'Edit ' ~ member.name} %}{% endembed %}
+  {% endfor %}
+  {% embed nowo_ui_partial('confirm_dialog') with {only_dialog: true, dialog_shell: true, dialog_id: 'edit-member', title: 'Edit member', size: 'wide'} %}{% endembed %}
+  ```
+- A `javascript:`, `vbscript:`, `data:` or `blob:` `dialog_src` (SafeHref, as `back_link` and `tree`) keeps the
+  on-demand markup but prints a disabled opener without the opener attributes.
 - A custom `trigger` block prints the opener attributes itself:
-  `<a href="{{ dialog_src }}"{{ nowo_ui_html_attrs(dialog_opener_attr) }}>…</a>`. `trigger_disabled` renders a
+  `<a href="{{ dialog_opener_href }}"{{ nowo_ui_html_attrs(dialog_opener_attr) }}>…</a>` (both empty for a script URL). `trigger_disabled` renders a
   disabled `<button>` (no link).
 - Worker mode (`kernel.reset: false`): the option is plain per-render Twig; nothing is memoised between requests.
 
