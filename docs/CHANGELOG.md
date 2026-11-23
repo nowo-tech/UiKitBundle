@@ -155,6 +155,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- `announceScript()` (console banner) no longer reads or writes the page global `window.__nowoScriptBanners` unguarded: page HTML can clobber it (DOM named access), and under a strict or ESM build the write would throw and stop every UiKit runtime that loads. A module-scope set is the fallback, the global is only trusted when it is a plain object, and every access is wrapped in `try/catch` (audit ZAI-A1). Once-per-page output is unchanged.
+
 ### Documentation
 
 - UPGRADING "To 2.70.0": a group confirm dialog moved to `<body>` loses ancestor-scoped CSS and theme wrappers;
