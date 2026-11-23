@@ -154,6 +154,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- Dev: Igor 0.11 (REQ-CS-008) — `RemoteDialogRedirectEvent::$request` is a per-dispatch event, never a shared service; documented `@igor-ignore` (false positive). `igor-php/igor-php` accepts `^0.11.0` (supersedes #151).
+
 ## [2.69.0] - 2026-11-23
 
 ### Added
