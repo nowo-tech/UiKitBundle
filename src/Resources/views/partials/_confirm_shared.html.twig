@@ -14,6 +14,8 @@
       data-controller="confirm-shared" (stimulus-peers/confirm_shared_controller.ts), which drives the dialog on pages
       without js/nowo-ui-confirm.js; with both loaded the peer claims the dialog and the IIFE runtime leaves it alone.
       The toggles and row forms are the same for both runtimes
+    - portal (2.70, bool): data-nowo-confirm-portal — a menu group dialog (the menu / row_actions / action partials
+      pass it): both runtimes move it to the end of <body> and keep one dialog per id (fragments bring duplicates)
   Not meant to be filled by hand: the row toggles carry the content (the `action` partial with confirm_shared).
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
@@ -26,7 +28,7 @@
 {% set _close_label = 'action.close'|trans({}, 'NowoUiKitBundle') %}
 {#- 2.70: a valid `runtime` option wins over nowo_ui_kit.dialogs.runtime (plain Twig: no extension function needed) -#}
 {% set _stimulus = ((runtime ?? null) in ['iife', 'stimulus'] ? runtime : nowo_ui_kit_dialogs_runtime|default('iife')) == 'stimulus' %}
-<dialog id="{{ id }}" class="nowo-ui-confirm{{ _extra ? ' ' ~ _extra }}" data-nowo-ui-confirm data-nowo-confirm-shared{% if _stimulus %} data-controller="confirm-shared"{% endif %} aria-labelledby="{{ id }}-title"{{ _t ? _t.renderAttributes('confirm', bundle, {}, _pt)|raw }}>
+<dialog id="{{ id }}" class="nowo-ui-confirm{{ _extra ? ' ' ~ _extra }}" data-nowo-ui-confirm data-nowo-confirm-shared{% if portal ?? false %} data-nowo-confirm-portal{% endif %}{% if _stimulus %} data-controller="confirm-shared"{% endif %} aria-labelledby="{{ id }}-title"{{ _t ? _t.renderAttributes('confirm', bundle, {}, _pt)|raw }}>
     <div class="{{ _t ? _t.macroClasses('confirm_panel', 'nowo-ui-confirm__panel', bundle, _pt) : 'nowo-ui-confirm__panel' }}">
         <header class="{{ _t ? _t.macroClasses('confirm_header', 'nowo-ui-confirm__header', bundle, _pt) : 'nowo-ui-confirm__header' }}">
             <h2 class="{{ _t ? _t.macroClasses('confirm_title', 'nowo-ui-confirm__title', bundle, _pt) : 'nowo-ui-confirm__title' }}" id="{{ id }}-title" data-nowo-confirm-slot="title"></h2>

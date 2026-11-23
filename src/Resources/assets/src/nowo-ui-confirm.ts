@@ -47,11 +47,11 @@
 
 import { bindFocusReturn, returnFocus } from './nowo-ui-focus-return';
 import { bindMotion, closeDialogWithEffect } from './nowo-ui-motion-core';
-import { EXPECTED, openConfirmDialog, syncExpected, unbindSharedConfirm } from './nowo-ui-confirm-core';
+import { adoptSharedDialog, EXPECTED, openConfirmDialog, PORTAL, syncExpected, unbindSharedConfirm } from './nowo-ui-confirm-core';
 import { markBound, ownedByStimulus } from './nowo-ui-runtime-owner';
 import { askConfirm, confirmTexts, nativeQuestion, type ConfirmOptions } from '../stimulus-peers/ask_confirm';
 
-export { EXPECTED, fillSharedConfirm, openConfirmDialog, resetExpected, safeCancel, SCOPE, syncExpected, unbindSharedConfirm } from './nowo-ui-confirm-core';
+export { adoptSharedDialog, EXPECTED, fillSharedConfirm, openConfirmDialog, resetExpected, safeCancel, SCOPE, syncExpected, unbindSharedConfirm } from './nowo-ui-confirm-core';
 
 declare global {
   interface Window {
@@ -98,10 +98,13 @@ function onDocumentClick(event: MouseEvent): void {
   const openBtn = target.closest('[data-nowo-confirm-open]');
   if (openBtn) {
     const targetId = openBtn.getAttribute('data-nowo-confirm-target');
-    // 2.70: a dialog claimed by the `confirm-shared` Stimulus peer opens through the peer only.
-    if (targetId && !ownedByStimulus(document.getElementById(targetId))) {
+    // 2.70: a dialog claimed by the `confirm-shared` Stimulus peer opens through the peer only (after adoption: the
+    // first dialog of that id in the document may be a fragment's duplicate of the claimed one).
+    const found = targetId ? resolveDialog(targetId) : null;
+    const dialog = found ? adoptSharedDialog(found) : null;
+    if (dialog && !ownedByStimulus(dialog)) {
       event.preventDefault();
-      openConfirm(targetId, openBtn);
+      openConfirm(dialog, openBtn);
     }
     return;
   }
@@ -204,6 +207,8 @@ export function bindNowoUiConfirm(): void {
   document.addEventListener('input', onDocumentInput);
   document.addEventListener('submit', warnMissingConfirmPeer, true);
   syncAllExpected(document);
+  // 2.70: the menu group dialogs already on the page go to <body>, one per id.
+  document.querySelectorAll<HTMLDialogElement>(`dialog[${PORTAL}]`).forEach((dialog) => adoptSharedDialog(dialog));
   window.nowoUiOpenConfirm = openConfirm;
   window.nowoUiCloseConfirm = closeConfirm;
   window.nowoUiAskConfirm = askConfirm;

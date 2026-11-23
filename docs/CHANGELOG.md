@@ -184,16 +184,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   `data-confirm-submit-cancel-label-value` / `data-confirm-cancel-label`; native mode asks "title, blank line,
   message". Without them nothing changes. The IIFE fail-closed fallback of `nowo-ui-confirm.js` asks the title too.
   Helpers `confirmTexts()` / `nativeQuestion()` in `ask_confirm.ts`.
-- **Shared confirm dialog for menus and row actions outside the `table` partial**: `row_actions` / `menu` / `action`
-  accept `confirm_shared: true` (group `nowo-ui-menu-confirm`), a group id string, or `confirm_group: '<id>'`
-  (+ `confirm_row`, `runtime`): every Confirm action of the group opens ONE `confirm_shared` dialog, rendered once per
-  request and group (after the menu root, never inside its panel), and each row keeps a hidden POST form with its own
-  CSRF token (form id `<confirmId>-form-<10 chars of confirmKey>-<row>`). With `nowo_ui_kit.table_confirm: shared`
-  menus and row actions follow it by default (unless `confirm_external`); `confirm_shared: false` keeps one dialog per
-  action. Twig functions `nowo_ui_confirm_group()`, `nowo_ui_confirm_shared_once()` (ids kept on the main request:
-  worker safe), `nowo_ui_dialogs_runtime()`.
+- **Shared confirm dialog for menus and row actions outside the `table` partial** (opt-in per partial):
+  `row_actions` / `menu` / `action` accept `confirm_shared: true` (group `nowo-ui-menu-confirm`), a group id string, or
+  `confirm_group: '<id>'` (+ `confirm_row`, `runtime`): every Confirm action of the group opens ONE `confirm_shared`
+  dialog, rendered once per request and group (after the first menu, never inside its panel) and moved by both
+  runtimes to the end of `<body>` (`data-nowo-confirm-portal`), one per id (a fragment's duplicate is dropped). Each
+  row keeps a hidden POST form with its own CSRF token (form id `<confirmId>-form-<10 chars of confirmKey>-<row>`).
+  Twig functions `nowo_ui_confirm_group()`, `nowo_ui_confirm_shared_once()` (ids kept on the main request: worker
+  safe), `nowo_ui_dialogs_runtime()`.
 - Demo `/kit/stimulus-dialogs/{stimulus,iife,both}` and its Playwright e2e (Stimulus-only page, IIFE page, both
   runtimes: the shared confirm posts the clicked row's target and token, one request per open, one POST per submit).
+
+### Changed
+
+- **`nowo_ui_kit.table_confirm: shared` now also covers Confirm actions outside the `table` partial.** With it, every
+  Confirm action rendered by `row_actions`, `menu` or `action` without `confirm_external` — row kebabs, button
+  clusters, the page-header actions (Delete in `header_actions` / the "more" menu) — opens the shared group dialog
+  `nowo-ui-menu-confirm` instead of its own per-action dialog. The markup changes (toggle with `data-nowo-confirm-*`,
+  hidden row form, one `<dialog>` per page). With `table_confirm: per_row` (the default) nothing changes. Opt out per
+  partial with `confirm_shared: false`; see UPGRADING.
+- `remote-form-dialog` peer (2.28 ancestor mode): it now closes the dialog on `[data-nowo-ui-dialog-close]` itself and
+  marks its dialog `data-nowo-ui-runtime-owner="stimulus"` while connected, so `js/nowo-ui-dialog.js` leaves it alone.
+- `RemoteFormSession`: the "last opener" registry lives on `window` (`Symbol.for('nowo-ui.remote-form.active')`, shared
+  by every bundled copy), a closed dialog has no active session, a submit another handler already prevented is not
+  posted, and the IIFE runtime's session stands aside while a peer owns the dialog (audit ZAF-M1: no double POST when
+  `js/nowo-ui-dialog.js` and the peers are both loaded).
 
 ## [2.69.0] - 2026-11-23
 

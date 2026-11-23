@@ -133,5 +133,5 @@
 </details>
 {% endif %}
 {% if _shared and _shared.render and _has_confirm and nowo_ui_confirm_shared_once(_shared.id) %}
-    {{ include(nowo_ui_partial('confirm_shared', _b), {id: _shared.id, runtime: runtime ?? null, bundle: _b, nowo_ui_page_type: _pt}, false) }}
+    {{ include(nowo_ui_partial('confirm_shared', _b), {id: _shared.id, portal: true, runtime: runtime ?? null, bundle: _b, nowo_ui_page_type: _pt}, false) }}
 {% endif %}

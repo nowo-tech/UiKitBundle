@@ -129,6 +129,9 @@ export function remoteSession(dialog: HTMLDialogElement): RemoteFormSession {
       () => dialog.querySelector<HTMLElement>('[data-nowo-ui-dialog-body]') ?? dialog.querySelector<HTMLElement>('.nowo-ui-dialog__body'),
       () => remoteFormSettings(dialog),
       (name, detail, cancelable = false) => dialog.dispatchEvent(new CustomEvent(`nowo-ui:remote-form:${name}`, { bubbles: true, cancelable, detail })),
+      true,
+      // 2.70 (ZAF-M1): inert while a Stimulus peer owns the dialog (no submit, close, cancel or backdrop handling).
+      () => ownedByStimulus(dialog),
     );
     created.bind();
     sessions.set(dialog, created);
@@ -140,7 +143,7 @@ export function remoteSession(dialog: HTMLDialogElement): RemoteFormSession {
 /** Opens `url` as a remote form in dialog `id`; false when it cannot (the caller follows the link instead). */
 export function openRemoteForm(id: string | HTMLDialogElement | null, url: string, opener: HTMLElement | null = null): boolean {
   const dialog = resolveDialog(id);
-  if (!dialog) {
+  if (!dialog || ownedByStimulus(dialog)) {
     return false;
   }
   const title = opener ? openerTitle(opener, opener.getAttribute('data-nowo-ui-dialog-title') ?? undefined) : (document.getElementById(`${dialog.id}-title`)?.textContent ?? '');

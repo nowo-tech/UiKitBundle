@@ -128,6 +128,39 @@ for (const runtime of ['stimulus', 'iife', 'both'] as const) {
       await expect(dialog).toBeHidden();
     });
 
+    if (runtime === 'both') {
+      test('a remote form opened before the peers start, then saved after they claim it: one POST (ZAF-M1)', async ({ page }) => {
+        // Hold the peers' script: the IIFE runtime drives the dialog first.
+        let release: () => void = () => undefined;
+        const gate = new Promise<void>((resolve) => {
+          release = resolve;
+        });
+        await page.route('**/js/demo-stimulus-dialogs.js', async (route) => {
+          await gate;
+          await route.continue();
+        });
+        const requests = track(page);
+        await page.goto(`/kit/stimulus-dialogs/${runtime}`, { waitUntil: 'commit' });
+        await page.waitForFunction(() => typeof window.nowoUiOpenRemoteForm === 'function');
+        const dialog = page.getByTestId('member-edit-dialog');
+        await page.getByTestId('edit-1').click();
+        await expect(page.getByTestId('destination-label')).toBeFocused();
+        await expect(dialog).not.toHaveAttribute('data-nowo-ui-runtime-owner', /.*/);
+        await page.keyboard.press('Escape');
+        await expect(dialog).toBeHidden();
+
+        release();
+        await expect(dialog).toHaveAttribute('data-nowo-ui-runtime-owner', 'stimulus');
+        await page.getByTestId('edit-2').click();
+        await expect(page.getByTestId('destination-label')).toBeFocused();
+        await page.getByTestId('destination-label').fill('Once');
+        await page.getByTestId('destination-save').click();
+        await expect(page.getByTestId('status')).toHaveText('Saved Once (Bob).');
+        expect(requests.filter((r) => r.method === 'POST')).toHaveLength(1);
+        expect(requests.filter((r) => r.method === 'GET')).toHaveLength(2);
+      });
+    }
+
     if (runtime !== 'iife') {
       test('confirm-submit shows the title and the button labels', async ({ page }) => {
         await page.goto(`/kit/stimulus-dialogs/${runtime}`);

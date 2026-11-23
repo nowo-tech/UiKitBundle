@@ -7,6 +7,33 @@
 import { rememberOpener } from './nowo-ui-focus-return';
 import { finishClosing } from './nowo-ui-motion-core';
 
+/** 2.70: a group dialog of menus / row actions (not the table's): moved to <body>, one per id (adoptSharedDialog). */
+export const PORTAL = 'data-nowo-confirm-portal';
+
+/**
+ * The one dialog of a menu group (2.70, audit ZAF-L1 / ZAF-L2). Twig prints it inside the first menu of the group, so
+ * it is moved to the end of <body>: removing that row (Turbo Stream), a display:none responsive copy or a fragment
+ * replaced later no longer takes it away. A fragment (fetch, Turbo frame, ESI) that brings another dialog with the same
+ * id adds a duplicate: the one already in <body> (else the first in document order) is kept, the closed newcomers are
+ * removed. A dialog without PORTAL or without an id is returned as it is. An open dialog is never moved or removed.
+ */
+export function adoptSharedDialog(dialog: HTMLDialogElement): HTMLDialogElement {
+  if (!dialog.hasAttribute(PORTAL) || dialog.id === '') {
+    return dialog;
+  }
+  const same = Array.from(document.querySelectorAll<HTMLDialogElement>(`dialog[${PORTAL}]`)).filter((d) => d.id === dialog.id);
+  const keeper = same.find((d) => d.parentElement === document.body) ?? same[0] ?? dialog;
+  same.forEach((d) => {
+    if (d !== keeper && !d.open) {
+      d.remove();
+    }
+  });
+  if (keeper.parentElement !== document.body && !keeper.open) {
+    document.body.append(keeper);
+  }
+  return keeper;
+}
+
 export const EXPECTED = 'input[data-nowo-confirm-expected]';
 export const SCOPE = 'dialog[data-nowo-ui-confirm], [data-nowo-confirm-scope]';
 
@@ -137,11 +164,12 @@ export function safeCancel(dialog: HTMLDialogElement): HTMLElement | null {
 }
 
 /**
- * Opens a resolved confirm dialog (both runtimes): a shared dialog is filled from `opener` first and stays closed when
+ * Opens a resolved confirm dialog (both runtimes; a menu group dialog is adopted first, adoptSharedDialog()): a shared dialog is filled from `opener` first and stays closed when
  * that opener names no row form; then the opener is remembered for focus return (2.52.2), the type-to-confirm input is
  * cleared and focused, else a destructive dialog focuses Cancel. Returns whether the dialog is open afterwards.
  */
-export function openConfirmDialog(dialog: HTMLDialogElement, opener: Element | null = null): boolean {
+export function openConfirmDialog(target: HTMLDialogElement, opener: Element | null = null): boolean {
+  const dialog = adoptSharedDialog(target);
   if (typeof dialog.showModal !== 'function') {
     return false;
   }

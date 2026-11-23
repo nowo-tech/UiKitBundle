@@ -28,7 +28,8 @@
  *
  * Runtime ownership (2.70): on connect the controller claims its dialog (`data-nowo-ui-runtime-owner="stimulus"`), so
  * js/nowo-ui-dialog.js, when also loaded, leaves the dialog's openers, close buttons and backdrop to the controller;
- * the controller closes on `[data-nowo-ui-dialog-close]` (the partial's ×) itself. Disconnecting releases it.
+ * the controller closes on `[data-nowo-ui-dialog-close]` (the partial's ×) itself, and on a
+ * `[data-nowo-ui-dialog-close="<dialog id>"]` anywhere on the page. Disconnecting releases it.
  */
 
 import { Controller } from '@hotwired/stimulus';
@@ -106,9 +107,7 @@ export default class extends Controller<HTMLElement> {
     this.session.bind();
     claim(dialog);
     dialog.addEventListener('click', this.onDialogClick);
-    if (this.delegateValue) {
-      document.addEventListener('click', this.onDocumentClick);
-    }
+    document.addEventListener('click', this.onDocumentClick);
   }
 
   override disconnect(): void {
@@ -125,6 +124,15 @@ export default class extends Controller<HTMLElement> {
     const target = event.target;
     const dialog = this.dialogElement;
     if (!(target instanceof Element) || !dialog || dialog.id === '' || !this.session) {
+      return;
+    }
+    // 2.70 (ZAF-I7): a close button outside the dialog that names it (data-nowo-ui-dialog-close="<id>").
+    const closer = target.closest('[data-nowo-ui-dialog-close]');
+    if (closer && !dialog.contains(closer) && closer.getAttribute('data-nowo-ui-dialog-close') === dialog.id) {
+      this.close(event);
+      return;
+    }
+    if (!this.delegateValue) {
       return;
     }
     const opener = target.closest('[data-nowo-ui-dialog-open]');

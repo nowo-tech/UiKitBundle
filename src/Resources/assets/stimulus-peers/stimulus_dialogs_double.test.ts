@@ -241,6 +241,22 @@ describe('both runtimes loaded (2.70)', () => {
     expect(submit.disabled).toBe(true);
   });
 
+  it('the IIFE page: the group dialog goes to <body> on open and a fragment duplicate is dropped', async () => {
+    await mount(IIFE, false);
+    const dialog = confirmDialog();
+    const fragment = document.createElement('div');
+    fragment.innerHTML = dialog.outerHTML;
+    document.querySelector('[data-testid="rows"]')!.prepend(fragment);
+    polyfill(fragment.querySelector('dialog')!);
+    expect(document.querySelectorAll('#members-confirm')).toHaveLength(2);
+    // getElementById now returns the newcomer (first in document order): the open still uses one dialog.
+    click(toggles()[1]!);
+    expect(document.querySelectorAll('#members-confirm')).toHaveLength(1);
+    const kept = confirmDialog();
+    expect(kept.parentElement).toBe(document.body);
+    expect(kept.open).toBe(true);
+  });
+
   it('a session only handles its dialog while it is the active one', () => {
     const dialog = document.createElement('dialog');
     dialog.innerHTML = '<h2></h2><div class="b"></div>';

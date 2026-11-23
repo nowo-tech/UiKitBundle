@@ -164,6 +164,7 @@ TWIG;
         $html = $this->twig(['t' => $t])->render('t', ['page' => $page]);
         self::assertSame(1, substr_count($html, '<dialog'));
         self::assertStringContainsString('data-controller="confirm-shared"', $html);
+        self::assertStringNotContainsString('data-nowo-confirm-portal', $html, 'the table dialog stays in its confirms region');
     }
 
     // ---- menus and row actions outside the table -----------------------------------------------------------------
@@ -182,6 +183,7 @@ TWIG;
         self::assertSame(2, substr_count($html, '<dialog'), 'one shared confirm + one remote form shell');
         self::assertSame(1, substr_count($html, '<dialog id="members-confirm"'));
         self::assertStringNotContainsString('data-controller="confirm-shared"', $html);
+        self::assertStringContainsString('<dialog id="members-confirm" class="nowo-ui-confirm" data-nowo-ui-confirm data-nowo-confirm-shared data-nowo-confirm-portal aria-labelledby', $html, 'a menu group dialog is moved to <body> by the runtimes');
 
         // The dialog is not inside a <details> panel (a closed one would hide it).
         $dialogAt = (int) strpos($html, '<dialog id="members-confirm"');
@@ -210,7 +212,7 @@ TWIG;
             self::assertSame((string) file_get_contents($file), $html);
         }
         $stimulus = $this->page('stimulus');
-        self::assertStringContainsString('<dialog id="members-confirm" class="nowo-ui-confirm" data-nowo-ui-confirm data-nowo-confirm-shared data-controller="confirm-shared"', $stimulus);
+        self::assertStringContainsString('<dialog id="members-confirm" class="nowo-ui-confirm" data-nowo-ui-confirm data-nowo-confirm-shared data-nowo-confirm-portal data-controller="confirm-shared"', $stimulus);
         self::assertStringContainsString('data-remote-form-dialog-delegate-value="true"', $stimulus);
         self::assertSame(
             $this->withoutPeers($stimulus),

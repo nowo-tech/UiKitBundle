@@ -3,6 +3,8 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+  - [Shared confirm outside the table (`table_confirm: shared`)](#shared-confirm-outside-the-table-table_confirm-shared)
+  - [Stimulus runtime](#stimulus-runtime)
 - [To 2.69.0](#to-2690)
 - [To 2.68.0](#to-2680)
 - [To 2.67.0](#to-2670)
@@ -172,25 +174,55 @@
 
 ## Unreleased
 
-To 2.70.0, from **2.69.0**: nothing to change, the default output is the 2.69 one (`nowo_ui_kit.dialogs.runtime: iife`).
+To **2.70.0**, from **2.69.0**. With the defaults (`nowo_ui_kit.dialogs.runtime: iife`,
+`nowo_ui_kit.table_confirm: per_row`) the output is the 2.69 one: nothing to change. **Hosts with
+`table_confirm: shared` must read "Shared confirm outside the table" below.**
+
+### Shared confirm outside the table (`table_confirm: shared`)
+
+Until 2.69, `table_confirm: shared` only changed the `table` partial. From 2.70 it is also the default of `row_actions`,
+`menu` and `action` whenever they are not told the dialogs live elsewhere (`confirm_external`):
+
+- **Page-header actions** (`header_actions`, the page header "more" menu, a toolbar Delete through `action`): the
+  Delete with a `Confirm` now opens the group dialog `nowo-ui-menu-confirm`, printed once after the first such action;
+  its toggle carries the content as `data-nowo-confirm-*` and a hidden POST form keeps the target and CSRF token. Tests
+  or CSS that looked for the action's own `<dialog id="nowo-ui-confirm-…">` must look for `#nowo-ui-menu-confirm`
+  (or pass `confirm_shared: false`).
+- **`row_actions` in a host loop** (outside `table`): one dialog for every row instead of one per row. Pass
+  `confirm_row: loop.index` (or the row key) so two rows with identical actions never share a hidden form id, and
+  `confirm_group: '<id>'` to give a list its own dialog.
+- **`menu`** (kebab, popover or `<details>`): the dialog is printed after the menu root, never inside the panel.
+- **`action`** alone: the dialog is printed after the action.
+
+Where the dialog ends up: both runtimes move a group dialog (`data-nowo-confirm-portal`) to the end of `<body>` — when
+`js/nowo-ui-confirm.js` binds and when it opens, or when the `confirm-shared` peer connects — and keep one per id, so
+removing the first row (Turbo Stream), a `display: none` responsive copy or a fragment that brings a second copy (fetch,
+Turbo frame, hinclude / ESI, infinite scroll) no longer breaks it. Still to do by hand:
+
+- A row action rendered into a variable that is then thrown away (`{% set x %}…{% endset %}` never printed, a header
+  override that re-renders the actions) uses up the "once per request" render: print the dialog yourself, e.g.
+  `{{ include(nowo_ui_partial('confirm_shared'), {id: 'nowo-ui-menu-confirm', portal: true}) }}`, and pass
+  `confirm_shared: {id: 'nowo-ui-menu-confirm', render: false}` to the partials.
+- Rendering outside HTTP (no request: CLI, mail, a worker job) prints the dialog with every menu: use the same pair.
+- A theme override of `action` / `menu` / `row_actions` must pass `confirm_shared`, `confirm_group`, `confirm_row` and
+  `runtime` through to the partials it includes (and handle the normalized `{id, row, render}` hash in `action`).
+- To keep the 2.69 output, pass `confirm_shared: false` to those partials (or keep `table_confirm: per_row` and opt the
+  table in with its own `confirm_shared: true`).
+
+### Stimulus runtime
 
 - **Pages without `js/nowo-ui-dialog.js` / `js/nowo-ui-confirm.js`** (Stimulus-only product pages): set
   `nowo_ui_kit.dialogs.runtime: stimulus` (or `runtime: 'stimulus'` per partial, `stimulus: true` on `confirm_dialog`)
   and register the peers `remote-form-dialog` and `confirm-shared` (plus `confirm-submit` if used). The openers keep
   their markup; the shells gain `data-controller`. Loading the IIFE runtimes as well is safe: the peers claim their
-  dialogs.
+  dialogs, and an IIFE session opened before the peers connected stands aside afterwards (one POST).
 - **Listeners**: in delegated mode the `remote-form-dialog` peer dispatches both `remote-form-dialog:*` and
-  `nowo-ui:remote-form:*`; preventing either cancelable event counts.
+  `nowo-ui:remote-form:*`; preventing either cancelable event counts. A submit event a host handler already prevented
+  is no longer posted by the remote form dialog (either runtime).
 - **`remote-form-dialog` (ancestor mode, 2.28)**: the peer now closes the dialog on `[data-nowo-ui-dialog-close]`
-  itself and marks its dialog `data-nowo-ui-runtime-owner="stimulus"`; with `js/nowo-ui-dialog.js` loaded too, that
-  runtime no longer closes the dialog for it (same result). CSS or tests matching the whole `<dialog>` attribute list at
-  runtime see the new attribute.
-- **`table_confirm: shared`** now also applies to `row_actions` / `menu` / `action` outside the `table` partial (one
-  dialog per group `nowo-ui-menu-confirm`, rendered after the first menu). Pass `confirm_shared: false` to keep one
-  dialog per action, or `confirm_group: '<id>'` per group. Rendering outside HTTP (no request) renders the dialog with
-  every menu: pass `confirm_shared: {id, render: false}` and include `confirm_shared` yourself there. Give
-  `confirm_row` (e.g. `loop.index`) when two rows may hold identical actions. A theme override of `action` / `menu` /
-  `row_actions` must pass `confirm_group`, `confirm_row` and `runtime` through.
+  (inside it, or anywhere with `="<dialog id>"`) itself and marks its dialog `data-nowo-ui-runtime-owner="stimulus"`;
+  with `js/nowo-ui-dialog.js` loaded too, that runtime no longer closes the dialog for it (same result). CSS or tests
+  matching the whole `<dialog>` attribute list at runtime see the new attribute.
 - **`confirm-submit`**: hosts that concatenated a title into `data-confirm-submit-message-value` can move it to
   `data-confirm-title` and the button label to `data-confirm-label`.
 

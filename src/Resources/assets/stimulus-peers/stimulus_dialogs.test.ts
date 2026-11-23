@@ -360,3 +360,85 @@ describe('confirm-shared / remote-form-dialog edge cases (2.70)', () => {
     expect(document.querySelector('h2')!.textContent).toBe('Edit Ann');
   });
 });
+
+describe('menu group dialogs (2.70, ZAF-L1 / L2 / I7)', () => {
+  let application: Application;
+
+  afterEach(() => {
+    application.unload(['confirm-shared', 'remote-form-dialog']);
+    application.stop();
+    document.body.innerHTML = '';
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+    window.NowoUiOverlay?.releaseAll();
+  });
+
+  it('moves the group dialog to <body>, survives the removal of its row and drops a fragment duplicate', async () => {
+    document.body.innerHTML = FIXTURE;
+    document.querySelectorAll('dialog').forEach((d) => polyfill(d));
+    application = Application.start();
+    application.register('confirm-shared', ConfirmSharedController);
+    await tick();
+    await tick();
+    const dialog = document.getElementById('members-confirm') as HTMLDialogElement;
+    expect(dialog.parentElement).toBe(document.body);
+    expect(dialog.getAttribute(OWNER_ATTR)).toBe('stimulus');
+    // The first row (where Twig printed the dialog) goes away: the other rows still confirm.
+    document.querySelector('[data-row="1"]')!.remove();
+    // A fragment brings another copy of the dialog (a second main request).
+    const fragment = document.createElement('div');
+    fragment.innerHTML = dialog.outerHTML.replace(/ data-nowo-ui-runtime-owner="stimulus"/, '');
+    document.querySelector('[data-testid="rows"]')!.prepend(fragment);
+    polyfill(fragment.querySelector('dialog')!);
+    await tick();
+    await tick();
+    expect(document.querySelectorAll('#members-confirm')).toHaveLength(1);
+    expect(document.getElementById('members-confirm')).toBe(dialog);
+    const toggle = document.querySelector<HTMLElement>('[data-nowo-confirm-target="members-confirm"]')!;
+    click(toggle);
+    expect(dialog.open).toBe(true);
+    expect(document.querySelectorAll('dialog[open]')).toHaveLength(1);
+  });
+
+  it('closes the remote shell from a close button outside it that names it', async () => {
+    document.body.innerHTML = FIXTURE;
+    document.querySelectorAll('dialog').forEach((d) => polyfill(d));
+    application = Application.start();
+    application.register('remote-form-dialog', RemoteFormDialogController);
+    await tick();
+    vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>(() => undefined)));
+    const remote = document.getElementById('member-edit') as HTMLDialogElement;
+    const outside = document.createElement('button');
+    outside.setAttribute('data-nowo-ui-dialog-close', 'member-edit');
+    const other = document.createElement('button');
+    other.setAttribute('data-nowo-ui-dialog-close', 'other');
+    document.body.append(outside, other);
+    click(document.querySelector('[data-testid="edit-1"]')!);
+    expect(remote.open).toBe(true);
+    click(other);
+    expect(remote.open).toBe(true);
+    click(outside);
+    expect(remote.open).toBe(false);
+  });
+});
+
+describe('adoptSharedDialog (2.70)', () => {
+  it('leaves dialogs without the portal or an id alone and never moves an open one', async () => {
+    const { adoptSharedDialog } = await import('../src/nowo-ui-confirm-core');
+    document.body.innerHTML = '<div id="w"><dialog id="t"></dialog><dialog data-nowo-confirm-portal></dialog><dialog id="g" data-nowo-confirm-portal open></dialog></div>';
+    const plain = document.getElementById('t') as HTMLDialogElement;
+    expect(adoptSharedDialog(plain)).toBe(plain);
+    expect(plain.parentElement?.id).toBe('w');
+    const anonymous = document.querySelector('dialog[data-nowo-confirm-portal]:not([id])') as HTMLDialogElement;
+    expect(adoptSharedDialog(anonymous)).toBe(anonymous);
+    const open = document.getElementById('g') as HTMLDialogElement;
+    expect(adoptSharedDialog(open)).toBe(open);
+    expect(open.parentElement?.id).toBe('w');
+    const detached = document.createElement('dialog');
+    detached.id = 'x';
+    detached.setAttribute('data-nowo-confirm-portal', '');
+    expect(adoptSharedDialog(detached)).toBe(detached);
+    expect(detached.parentElement).toBe(document.body);
+    document.body.innerHTML = '';
+  });
+});

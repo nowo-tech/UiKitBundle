@@ -16,12 +16,16 @@
  * (else its menu item / menu toggle, never a hidden element). Also works on a plain (not shared) kit confirm dialog
  * with an id.
  *
+ * Menu groups (2.70): a dialog with data-nowo-confirm-portal (printed by the menu / row_actions / action partials) is
+ * moved to the end of <body> when the controller connects, and a second dialog with the same id (from a fragment)
+ * removes itself, so N copies never stack on one click.
+ *
  * Runtime ownership: on connect the dialog is claimed (`data-nowo-ui-runtime-owner="stimulus"`), so
  * js/nowo-ui-confirm.js, when also loaded, leaves it to this controller (no double open or double binding).
  */
 
 import { Controller } from '@hotwired/stimulus';
-import { EXPECTED, openConfirmDialog, syncExpected, unbindSharedConfirm } from '../src/nowo-ui-confirm-core';
+import { adoptSharedDialog, EXPECTED, openConfirmDialog, syncExpected, unbindSharedConfirm } from '../src/nowo-ui-confirm-core';
 import { bindFocusReturn, returnFocus } from '../src/nowo-ui-focus-return';
 import { bindMotion, closeDialogWithEffect } from '../src/nowo-ui-motion-core';
 import { claim, release } from '../src/nowo-ui-runtime-owner';
@@ -71,6 +75,13 @@ export default class extends Controller<HTMLElement> {
   override connect(): void {
     const dialog = this.element instanceof HTMLDialogElement ? this.element : this.element.querySelector('dialog[data-nowo-ui-confirm]');
     if (!(dialog instanceof HTMLDialogElement)) {
+      return;
+    }
+    // 2.70: a menu group dialog goes to <body> (Stimulus then reconnects it there) and a duplicate of an id already on
+    // the page removes itself (audit ZAF-L1 / ZAF-L2).
+    const parent = dialog.parentElement;
+    const keeper = adoptSharedDialog(dialog);
+    if (keeper !== dialog || (this.element === dialog && dialog.parentElement !== parent)) {
       return;
     }
     this.dialog = dialog;
