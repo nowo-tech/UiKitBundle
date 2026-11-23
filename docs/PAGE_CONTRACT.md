@@ -583,6 +583,13 @@ keep the `confirm` contract (`View\Confirm`).
 {{ include(nowo_ui_partial('dialog', bundle), {id: 'payload-42', title: 'Payload', size: 'lg', body: payload_html, bundle: bundle}) }}
 ```
 
+**Dialog content on demand (2.68).** A page never renders the body or form of a dialog it has not opened. The opener is
+a link to the dialog's own page (it works without JavaScript); the dialog fetches that page's fragment when it opens
+(`remote_form_dialog`, `X-Nowo-Dialog: 1`), posts inside it and answers a `422` in place. `confirm_dialog` does it with
+`dialog_src: path(…)` ([USAGE](USAGE.md#confirm-dialog)); the `dialog` partial with an opener carrying
+`data-nowo-ui-dialog-src` (read-only content) or `nowo_ui_remote_form_opener()` (a form). A bare yes / no confirmation
+can stay attribute-built (`data-nowo-confirm`).
+
 #### Dialog sizes and anatomy (2.29)
 
 **Rule for every kit dialog** (owner rule, symfony-beacon `docs/identity/UI-PATTERNS.md` §16; height: dialog rule v2,
