@@ -154,6 +154,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 
 - CI: new `release-gates` job runs the `make release-check` gates that CI did not run (`rector-dry`, `validate-phpdoc`, `validate-translations`, `check-twig-extra`) on full-mode PRs and on every push, one check per gate, through the repo's own Makefile targets; a gate the Makefile does not define is skipped with a notice. Light mode does not run them. Not a required check. See `docs/GITHUB_CI.md#release-gates-in-full-mode`.
+- `docs/images/demo/`: 39 of the 42 published demo screenshots regenerated from the current demo (the shell and host-theme pages after the demo platform shell and the 2.66 form actions order); `page-contract-form`, `page-contract-settings` and `page-contract-wizard` keep their earlier captures until the host-theme form field layout is fixed.
 
 ### Fixed
 
