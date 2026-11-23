@@ -38,6 +38,7 @@ Optional **Stimulus peer** TypeScript sources live under `src/Resources/assets/s
 - [Theme boot](#theme-boot)
 - [Locale / kebab](#locale--kebab)
 - [Remote form dialog (2.28)](#remote-form-dialog-228)
+- [Confirm shared (2.70)](#confirm-shared-270)
 - [Scroll regions (2.28)](#scroll-regions-228)
 - [Emoji picker and show more](#emoji-picker-and-show-more)
 - [Combobox](#combobox)
@@ -147,6 +148,9 @@ No kit IIFE. Two modes (2.8): `native` (default, `window.confirm`) and `dialog` 
 | `data-confirm-submit-blocked-value` | When true, always block submit |
 | `data-confirm-submit-mode-value` | `native` or `dialog` for this element (default: the factory's `mode`, else `native`) — 2.8 |
 | `data-confirm-submit-danger-value` | Dialog mode: `false` paints Confirm as the primary button instead of the danger one (default `true`) — 2.8 |
+| `data-confirm-submit-title-value` / `data-confirm-title` | 2.70: dialog heading (the message becomes the body); native mode asks "title, blank line, message"; a title alone is asked too |
+| `data-confirm-submit-confirm-label-value` / `data-confirm-label` | 2.70: Confirm button label (default `<html data-confirm-ok>`, else "Confirm") |
+| `data-confirm-submit-cancel-label-value` / `data-confirm-cancel-label` | 2.70: Cancel button label (default `<html data-confirm-cancel>`, else "Cancel") |
 | `data-action="submit->confirm-submit#confirm"` | Hook on the form (every submit) |
 | `data-action="click->confirm-submit#confirm"` | Hook on one button (e.g. “Reset” next to “Save”; other buttons submit without prompt) |
 
@@ -683,6 +687,8 @@ attributes). Contract and server side: [USAGE — Remote form dialog](USAGE.md#r
 | Value | `closeOnBackdrop` | Default `false` |
 | Action | `open` (on an opener link: `href`, optional `data-remote-form-dialog-title`), `close`, `submit` | Modified clicks (Ctrl / Cmd / Shift / middle) keep the browser's new tab |
 | Event | `remote-form-dialog:loaded`, `:invalid`, `:saved` (cancelable), `:step` (2.33, cancelable, `{url, status}`), `:failed`, `:closed` | Same details as the IIFE events; `:step` = a `204` + `X-Nowo-Dialog-Location` answer, the next step loads into the same dialog ([USAGE](USAGE.md#multi-step-flows-233)) |
+| Value | `delegate` (2.70) | Default `false`. `true` (the shell with `runtime: 'stimulus'`): the controller sits on the `<dialog>` and opens it from every IIFE-style opener of the page (`data-nowo-ui-dialog-open="<dialog id>"` + `data-nowo-ui-dialog-src` + `data-nowo-ui-dialog-form`, title `data-nowo-ui-dialog-title`); unset values come from the dialog's `data-nowo-ui-remote-form-*` settings; events are also dispatched as `nowo-ui:remote-form:*` ([USAGE](USAGE.md#stimulus-runtime-270)) |
+| Owner | `data-nowo-ui-runtime-owner="stimulus"` (2.70) | Set on the dialog while connected: `js/nowo-ui-dialog.js` then leaves it alone. The controller closes on `[data-nowo-ui-dialog-close]` itself |
 
 ```html
 <section data-controller="remote-form-dialog" data-remote-form-dialog-loading-value="Loading…" data-remote-form-dialog-error-value="Could not save.">
@@ -690,6 +696,19 @@ attributes). Contract and server side: [USAGE — Remote form dialog](USAGE.md#r
   {{ include(nowo_ui_partial('remote_form_dialog'), {id: 'destination-dialog', stimulus: true}) }}
 </section>
 ```
+
+## Confirm shared (2.70)
+
+Stimulus peer `stimulus-peers/confirm_shared_controller.ts`, identifier **`confirm-shared`**, on the shared confirm
+`<dialog>` (partial `confirm_shared` with `runtime: 'stimulus'` or `nowo_ui_kit.dialogs.runtime: stimulus`). The kit
+IIFE equivalent is `js/nowo-ui-confirm.js`; markup of the toggles and row forms is the same for both.
+
+| Kind | Name | Notes |
+|------|------|-------|
+| Element | `<dialog data-nowo-ui-confirm data-nowo-confirm-shared data-controller="confirm-shared">` | Or a wrapper holding a `dialog[data-nowo-ui-confirm]` with an id |
+| Toggle | `data-nowo-confirm-open data-nowo-confirm-target="<dialog id>"` + `data-nowo-confirm-form` and the `data-nowo-confirm-*` content | Fills the dialog (textContent), binds the visible confirm button to the row form with `form="…"`; no form = nothing opens |
+| Close | `[data-nowo-confirm-close]`, Escape | Drops the binding, focus back to the toggle (else its menu item / toggle) |
+| Owner | `data-nowo-ui-runtime-owner="stimulus"` | Set while connected: `js/nowo-ui-confirm.js` leaves the dialog alone |
 
 ## Scroll regions (2.28)
 

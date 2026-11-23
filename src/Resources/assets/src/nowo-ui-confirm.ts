@@ -35,14 +35,23 @@
  * without a form (disabled action) opens nothing, and so does a shared dialog opened without such a toggle
  * (`nowoUiOpenConfirm(id)` from script); closing it drops the binding.
  *
+ * Stimulus runtime (2.70): a dialog claimed by the `confirm-shared` peer (data-nowo-ui-runtime-owner, set by the peer
+ * when it connects; nowo-ui-runtime-owner.ts) is left to the peer — no open, close, input or close-event handling here —
+ * so this script can stay loaded next to the peers without handling a click twice. A second copy of this script binds
+ * nothing. The shared logic lives in nowo-ui-confirm-core.ts, used by both.
+ *
  * Focus return (2.52.2, WCAG 2.4.3): closing a confirm dialog (Escape, Cancel, Confirm, ×, backdrop) focuses the
  * element that opened it; when that opener cannot take focus (a hidden trigger a page-actions menu item forwarded its
  * click to), the menu item, else the menu's toggle — never a hidden element (nowo-ui-focus-return.ts).
  */
 
-import { bindFocusReturn, rememberOpener, returnFocus } from './nowo-ui-focus-return';
-import { bindMotion, closeDialogWithEffect, finishClosing } from './nowo-ui-motion-core';
-import { askConfirm, type ConfirmOptions } from '../stimulus-peers/ask_confirm';
+import { bindFocusReturn, returnFocus } from './nowo-ui-focus-return';
+import { bindMotion, closeDialogWithEffect } from './nowo-ui-motion-core';
+import { adoptSharedDialog, EXPECTED, openConfirmDialog, PORTAL, syncExpected, unbindSharedConfirm } from './nowo-ui-confirm-core';
+import { markBound, ownedByStimulus } from './nowo-ui-runtime-owner';
+import { askConfirm, confirmTexts, nativeQuestion, type ConfirmOptions } from '../stimulus-peers/ask_confirm';
+
+export { adoptSharedDialog, EXPECTED, fillSharedConfirm, openConfirmDialog, resetExpected, safeCancel, SCOPE, syncExpected, unbindSharedConfirm } from './nowo-ui-confirm-core';
 
 declare global {
   interface Window {
@@ -63,151 +72,12 @@ function resolveDialog(id: string | HTMLDialogElement | null): HTMLDialogElement
   return id;
 }
 
-const EXPECTED = 'input[data-nowo-confirm-expected]';
-const SCOPE = 'dialog[data-nowo-ui-confirm], [data-nowo-confirm-scope]';
-
-/** Enables the scope's confirm buttons only when the input holds exactly the expected value. */
-export function syncExpected(input: HTMLInputElement): void {
-  const scope = input.closest(SCOPE);
-  if (!scope) {
-    return;
-  }
-  const matches = input.value === input.getAttribute('data-nowo-confirm-expected');
-  scope.querySelectorAll('[data-nowo-confirm-submit]').forEach((button) => {
-    if (button instanceof HTMLButtonElement) {
-      button.disabled = !matches;
-    }
-  });
-}
-
-/** Clears the expected-value inputs of a scope (dialog open) and re-locks its confirm buttons. */
-export function resetExpected(scope: ParentNode): HTMLInputElement | null {
-  let first: HTMLInputElement | null = null;
-  scope.querySelectorAll(EXPECTED).forEach((input) => {
-    if (input instanceof HTMLInputElement) {
-      input.value = '';
-      syncExpected(input);
-      first ??= input;
-    }
-  });
-  return first;
-}
-
-const SIZES = ['sm', 'lg'];
-
-function slot(dialog: HTMLDialogElement, name: string): HTMLElement | null {
-  return dialog.querySelector<HTMLElement>(`[data-nowo-confirm-slot="${name}"]`);
-}
-
-function setText(el: HTMLElement | null, text: string | null): void {
-  if (el) {
-    el.textContent = text ?? '';
-    el.hidden = text === null || text === '';
-  }
-}
-
-/**
- * Fills a shared confirm dialog from its row toggle (see the module comment). False when the toggle names no form on
- * the page (the dialog must not open with a confirm button bound to nothing).
- */
-export function fillSharedConfirm(dialog: HTMLDialogElement, opener: Element): boolean {
-  const formId = opener.getAttribute('data-nowo-confirm-form');
-  const form = formId ? document.getElementById(formId) : null;
-  if (!formId || !(form instanceof HTMLFormElement)) {
-    return false;
-  }
-  const read = (name: string): string | null => opener.getAttribute(`data-nowo-confirm-${name}`);
-  const title = slot(dialog, 'title');
-  if (title) {
-    title.textContent = read('title') ?? '';
-  }
-  const message = read('message');
-  const inHeader = read('message-in-header') === '1';
-  setText(slot(dialog, 'header-message'), inHeader ? message : null);
-  setText(slot(dialog, 'message'), inHeader ? null : message);
-  const body = slot(dialog, 'body');
-  if (body) {
-    body.hidden = inHeader || message === null || message === '';
-  }
-  const size = read('size');
-  SIZES.forEach((s) => dialog.classList.toggle(`nowo-ui-confirm--${s}`, s === size));
-
-  const cancel = slot(dialog, 'cancel');
-  if (cancel) {
-    cancel.dataset.nowoConfirmDefault ??= cancel.textContent ?? '';
-    cancel.textContent = read('cancel-label') ?? cancel.dataset.nowoConfirmDefault;
-  }
-
-  const expected = read('expected-value');
-  const buttons = Array.from(dialog.querySelectorAll<HTMLButtonElement>('button[data-nowo-confirm-variant]'));
-  const variant = read('variant');
-  const chosen = buttons.find((b) => b.getAttribute('data-nowo-confirm-variant') === variant) ?? buttons[0];
-  buttons.forEach((button) => {
-    const active = button === chosen;
-    button.hidden = !active;
-    button.dataset.nowoConfirmDefault ??= button.textContent ?? '';
-    if (active) {
-      button.setAttribute('form', formId);
-      button.textContent = read('confirm-label') ?? button.dataset.nowoConfirmDefault;
-    } else {
-      button.removeAttribute('form');
-    }
-    button.toggleAttribute('data-nowo-confirm-submit', active && expected !== null);
-    button.disabled = false;
-  });
-
-  const expect = slot(dialog, 'expect');
-  const input = slot(dialog, 'expect-input');
-  if (expect && input instanceof HTMLInputElement) {
-    expect.hidden = expected === null;
-    setText(slot(dialog, 'expect-label'), expected === null ? null : read('expected-label'));
-    if (expected === null) {
-      input.removeAttribute('data-nowo-confirm-expected');
-      input.removeAttribute('pattern');
-      input.removeAttribute('form');
-      input.required = false;
-    } else {
-      input.setAttribute('data-nowo-confirm-expected', expected);
-      input.setAttribute('pattern', read('expected-pattern') ?? '');
-      input.setAttribute('form', formId);
-      input.required = true;
-    }
-  }
-  return true;
-}
-
-/** Drops the row binding of a closed shared dialog (confirm buttons and the type-to-confirm input). */
-export function unbindSharedConfirm(dialog: HTMLDialogElement): void {
-  dialog.querySelectorAll('[data-nowo-confirm-variant], [data-nowo-confirm-slot="expect-input"]').forEach((el) => el.removeAttribute('form'));
-}
-
 /** Opens a confirm dialog; `opener` (2.52.2) is where focus returns on close (see the module comment). */
 export function openConfirm(id: string | HTMLDialogElement | null, opener: Element | null = null): void {
   const dialog = resolveDialog(id);
-  if (!dialog || typeof dialog.showModal !== 'function') {
-    return;
+  if (dialog) {
+    openConfirmDialog(dialog, opener);
   }
-  finishClosing(dialog);
-  if (!dialog.open && dialog.hasAttribute('data-nowo-confirm-shared') && !(opener && fillSharedConfirm(dialog, opener))) {
-    return;
-  }
-  if (!dialog.open) {
-    rememberOpener(dialog, opener);
-    const input = resetExpected(dialog);
-    dialog.showModal();
-    (input ?? safeCancel(dialog))?.focus();
-  }
-}
-
-/** The Cancel button of a destructive confirm (see the module comment), else null. */
-export function safeCancel(dialog: HTMLDialogElement): HTMLElement | null {
-  const flag = dialog.getAttribute('data-nowo-ui-confirm-cancel-first');
-  const danger =
-    flag !== null ? flag !== 'false' : dialog.querySelector('button[type="submit"].nowo-ui-btn--danger:not([hidden]), [data-nowo-confirm-submit].nowo-ui-btn--danger:not([hidden])') !== null;
-  if (!danger) {
-    return null;
-  }
-  return dialog.querySelector<HTMLElement>('.nowo-ui-confirm__footer [data-nowo-confirm-close]');
 }
 
 export function closeConfirm(el: HTMLDialogElement | null): void {
@@ -228,9 +98,13 @@ function onDocumentClick(event: MouseEvent): void {
   const openBtn = target.closest('[data-nowo-confirm-open]');
   if (openBtn) {
     const targetId = openBtn.getAttribute('data-nowo-confirm-target');
-    if (targetId) {
+    // 2.70: a dialog claimed by the `confirm-shared` Stimulus peer opens through the peer only (after adoption: the
+    // first dialog of that id in the document may be a fragment's duplicate of the claimed one).
+    const found = targetId ? resolveDialog(targetId) : null;
+    const dialog = found ? adoptSharedDialog(found) : null;
+    if (dialog && !ownedByStimulus(dialog)) {
       event.preventDefault();
-      openConfirm(targetId, openBtn);
+      openConfirm(dialog, openBtn);
     }
     return;
   }
@@ -238,7 +112,7 @@ function onDocumentClick(event: MouseEvent): void {
   const closeBtn = target.closest('[data-nowo-confirm-close]');
   if (closeBtn) {
     const dialog = closeBtn.closest('dialog[data-nowo-ui-confirm]');
-    if (dialog instanceof HTMLDialogElement) {
+    if (dialog instanceof HTMLDialogElement && !ownedByStimulus(dialog)) {
       event.preventDefault();
       closeConfirm(dialog);
     }
@@ -257,7 +131,7 @@ export function syncAllExpected(root: ParentNode): void {
 /** A dialog closed (native `close`, captured): focus back to its opener or the nearest visible fallback. */
 function onDialogClose(event: Event): void {
   const target = event.target;
-  if (target instanceof HTMLDialogElement) {
+  if (target instanceof HTMLDialogElement && !ownedByStimulus(target)) {
     if (target.hasAttribute('data-nowo-confirm-shared')) {
       unbindSharedConfirm(target);
     }
@@ -267,7 +141,7 @@ function onDialogClose(event: Event): void {
 
 function onDocumentInput(event: Event): void {
   const target = event.target;
-  if (target instanceof HTMLInputElement && target.matches(EXPECTED)) {
+  if (target instanceof HTMLInputElement && target.matches(EXPECTED) && !ownedByStimulus(target.closest('dialog'))) {
     syncExpected(target);
   }
 }
@@ -298,8 +172,9 @@ export function warnMissingConfirmPeer(event: Event): void {
   if (isBlocked(form.getAttribute('data-confirm-submit-blocked-value'))) {
     event.preventDefault();
   } else {
-    const message = (form.getAttribute('data-confirm-submit-message-value') ?? '').trim();
-    if (message !== '' && !window.confirm(message)) {
+    // 2.70: the title (data-confirm-submit-title-value / data-confirm-title) is asked too, above the message.
+    const question = nativeQuestion(confirmTexts(form, 'confirm-submit'));
+    if (question !== '' && !window.confirm(question)) {
       event.preventDefault();
     }
   }
@@ -320,6 +195,10 @@ export function bindNowoUiConfirm(): void {
     return;
   }
   confirmBound = true;
+  // 2.70: a second copy of this script (another bundle's) binds nothing more.
+  if (!markBound('confirm')) {
+    return;
+  }
   bindMotion();
   bindFocusReturn();
   // `close` does not bubble: listen in the capture phase. Only dialogs with a remembered opener are touched.
@@ -328,6 +207,8 @@ export function bindNowoUiConfirm(): void {
   document.addEventListener('input', onDocumentInput);
   document.addEventListener('submit', warnMissingConfirmPeer, true);
   syncAllExpected(document);
+  // 2.70: the menu group dialogs already on the page go to <body>, one per id.
+  document.querySelectorAll<HTMLDialogElement>(`dialog[${PORTAL}]`).forEach((dialog) => adoptSharedDialog(dialog));
   window.nowoUiOpenConfirm = openConfirm;
   window.nowoUiCloseConfirm = closeConfirm;
   window.nowoUiAskConfirm = askConfirm;

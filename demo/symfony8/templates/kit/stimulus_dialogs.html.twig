@@ -1,0 +1,64 @@
+{#
+  UiKit 2.70 demo: on-demand dialogs driven by the Stimulus peers (KitStimulusDialogsController).
+    - /kit/stimulus-dialogs/stimulus: no js/nowo-ui-dialog.js, no js/nowo-ui-confirm.js — only public/js/demo-stimulus-dialogs.js
+      (the remote-form-dialog, confirm-shared and confirm-submit peers), as on a Beacon product page;
+    - /iife: the default markup on the IIFE runtimes;
+    - /both: the Stimulus markup with both runtimes loaded (the peers claim their dialogs, the IIFE runtimes leave them).
+  Row kebabs: `row_actions` with menu, confirm_group (one shared confirm dialog for every menu of the group, rendered
+  once, outside the menus) and confirm_row; each row keeps a hidden POST form with its own token. "Edit" openers:
+  `confirm_dialog` with dialog_src and dialog_shell: false, all loading into one shell. The response forbids inline
+  scripts, style attributes and handlers (CSP).
+#}
+{% extends 'kit/_showcase.html.twig' %}
+{% set nowo_ui_document_title = 'Stimulus dialogs · UiKit 2.70' %}
+{% set showcase_intro = 'Runtime: ' ~ runtime %}
+
+{% block body %}
+    <div data-testid="stimulus-dialogs" data-runtime="{{ runtime }}">
+        <p role="status" data-testid="status">
+            {%- if removed %}Removed {{ removed }}.{% elseif saved %}Saved {{ saved }}.{% elseif reset %}Filters reset.{% endif -%}
+        </p>
+        <table class="{{ nowo_ui_class('table') }}" aria-label="Members">
+            <thead><tr><th scope="col">Member</th><th scope="col">Actions</th></tr></thead>
+            <tbody>
+            {% for m in members %}
+                <tr data-testid="member-{{ m.id }}">
+                    <td>{{ m.name }}</td>
+                    <td class="kit-stimulus-dialogs__actions">
+                        {{ include(nowo_ui_partial('row_actions'), {actions: m.actions, menu: true, menu_label: 'Actions for ' ~ m.name, confirm_group: 'members-confirm', confirm_row: loop.index, runtime: markup_runtime}, false) }}
+                        {% embed nowo_ui_partial('confirm_dialog') with {dialog_src: path('kit_stimulus_dialogs_edit', {runtime: runtime, id: m.id}), dialog_id: 'member-edit', dialog_shell: false, trigger_label: 'Edit ' ~ m.name, title: 'Edit member', trigger_testid: 'edit-' ~ m.id} %}{% endembed %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% embed nowo_ui_partial('confirm_dialog') with {only_dialog: true, dialog_shell: true, dialog_id: 'member-edit', title: 'Edit member', runtime: markup_runtime, dialog_testid: 'member-edit-dialog'} %}{% endembed %}
+
+        {#- 2.70: the confirm-submit peer with a title and button labels (dialog mode) -#}
+        {% if runtime != 'iife' %}
+            {{ form_start(reset_form, {attr: {
+                'data-controller': 'confirm-submit',
+                'data-confirm-submit-mode-value': 'dialog',
+                'data-confirm-submit-message-value': 'Saved filters and column choices go back to the defaults.',
+                'data-confirm-title': 'Reset filters?',
+                'data-confirm-label': 'Reset',
+                'data-confirm-cancel-label': 'Keep them',
+                'data-confirm-submit-danger-value': 'false',
+                'data-action': 'submit->confirm-submit#confirm',
+            }}) }}
+                <button type="submit" class="{{ nowo_ui_class('btn_secondary') }}" data-testid="reset">Reset filters</button>
+            {{ form_end(reset_form) }}
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block nowo_ui_scripts %}
+    {% if runtime == 'stimulus' %}
+        {#- A Beacon product page: the kit runtimes without dialog / confirm, plus the Stimulus peers -#}
+        {{ include(nowo_ui_partial('scripts'), {script_names: nowo_ui_script_names()|filter((n) => n not in ['dialog', 'confirm'])}, false) }}
+        <script src="{{ asset('js/nowo-ui-shell.js', 'nowo_ui_kit') }}" defer></script>
+    {% else %}
+        {{ parent() }}
+    {% endif %}
+    {% if runtime != 'iife' %}<script src="{{ asset('js/demo-stimulus-dialogs.js') }}" defer></script>{% endif %}
+{% endblock %}

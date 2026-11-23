@@ -35,6 +35,7 @@ use Stringable;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\Forms;
 use Symfony\Component\Form\FormView;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Twig\Environment;
@@ -212,6 +213,10 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             // 2.33: the dialog attributes of configured (non-default) header names; empty with the defaults.
             new TwigFunction('nowo_ui_remote_dialog_attrs', fn (): array => ($this->remoteDialogHeaders ?? RemoteDialogHeaders::defaults())->dialogAttributes()),
             new TwigFunction('nowo_ui_remote_form_opener', self::remoteFormOpener(...)),
+            // 2.70: the shared confirm group of a menu / row actions / action, and its dialog once per request.
+            new TwigFunction('nowo_ui_confirm_group', self::confirmGroup(...)),
+            new TwigFunction('nowo_ui_confirm_shared_once', $this->confirmSharedOnce(...)),
+            new TwigFunction('nowo_ui_dialogs_runtime', self::dialogsRuntime(...)),
             new TwigFunction('nowo_ui_dialog_status', PageStatus::fromOption(...)),
             // 2.40 (spec 220 S1): registered with the appearance on or off; never throw.
             new TwigFunction('nowo_ui_appearance_or_null', $this->appearanceView->current(...)),
@@ -234,6 +239,91 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
         $value = max(0, min(0 + $max, 0 + $value));
 
         return ['value' => $value, 'max' => 0 + $max, 'percent' => (int) round($value / (0 + $max) * 100)];
+    }
+
+    /** Default id of the shared confirm dialog of menus and row actions outside a table (2.70). */
+    public const MENU_CONFIRM_ID = 'nowo-ui-menu-confirm';
+
+    /** Request attribute holding the shared confirm dialog ids already rendered (2.70). */
+    public const CONFIRM_SHARED_ATTRIBUTE = '_nowo_ui_confirm_shared';
+
+    /**
+     * The shared confirm group of an `action` / `menu` / `row_actions` partial (2.70), or null for the per-action dialogs.
+     *
+     * - a hash with a non-empty `id` (the 2.68 `{id, row}` of the `table` partial): that group, `row` (default 0) and
+     *   `render` (default false: the dialog is rendered elsewhere, as the table does);
+     * - `true`: the group {@see self::MENU_CONFIRM_ID}; a non-empty string: the group of that dialog id. Both render the
+     *   dialog with the first menu of the group (once per request, {@see self::confirmSharedOnce()});
+     * - null (the option not given): the group {@see self::MENU_CONFIRM_ID} when `nowo_ui_kit.table_confirm` is `shared`
+     *   and the dialogs are not rendered elsewhere (`confirm_external`), else null;
+     * - anything else (false, an empty string or hash, a number): null.
+     *
+     * `group` (the partials' `confirm_group` option) wins over `value` when it is a non-empty string; `row` (the
+     * `confirm_row` option) over the hash's when it is an int or a non-empty string.
+     *
+     * @return array{id: string, row: int|string, render: bool}|null
+     */
+    public static function confirmGroup(mixed $value, mixed $group = null, mixed $row = null, bool $external = false, mixed $tableConfirm = 'per_row'): ?array
+    {
+        if (\is_string($group) && '' !== trim($group)) {
+            $value = $group;
+        }
+        $value ??= !$external && 'shared' === $tableConfirm;
+        $result = match (true) {
+            true === $value => ['id' => self::MENU_CONFIRM_ID, 'row' => 0, 'render' => true],
+            \is_string($value) && '' !== trim($value) => ['id' => trim($value), 'row' => 0, 'render' => true],
+            \is_array($value) && \is_string($value['id'] ?? null) && '' !== trim($value['id']) => [
+                'id' => trim($value['id']),
+                'row' => \is_int($value['row'] ?? null) || (\is_string($value['row'] ?? null) && '' !== $value['row']) ? $value['row'] : 0,
+                'render' => true === ($value['render'] ?? false),
+            ],
+            default => null,
+        };
+        if (null !== $result && (\is_int($row) || (\is_string($row) && '' !== $row))) {
+            $result['row'] = $row;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Whether the shared confirm dialog `id` still has to be rendered in this request (2.70): true the first time per
+     * main request, false afterwards. The ids live in an attribute of the main request (nothing kept in the service, so
+     * a worker serving many requests starts each one empty). Without a request (CLI rendering) it is always true.
+     */
+    public function confirmSharedOnce(string $id): bool
+    {
+        $request = $this->requestStack?->getMainRequest();
+        if (!$request instanceof Request) {
+            return true;
+        }
+        $rendered = $request->attributes->get(self::CONFIRM_SHARED_ATTRIBUTE);
+        $rendered = \is_array($rendered) ? $rendered : [];
+        if (isset($rendered[$id])) {
+            return false;
+        }
+        $rendered[$id] = true;
+        $request->attributes->set(self::CONFIRM_SHARED_ATTRIBUTE, $rendered); // @igor-ignore — ids on the main Request object (dies with it), never on this service
+
+        return true;
+    }
+
+    /**
+     * The dialog runtime a shell is wired for (2.70): `stimulus` or `iife` from the partial option `runtime`, else a
+     * boolean `stimulus` option (true = stimulus, false = iife), else the configured `nowo_ui_kit.dialogs.runtime`, else `iife`.
+     */
+    public static function dialogsRuntime(mixed $runtime = null, mixed $configured = 'iife', mixed $stimulus = null): string
+    {
+        if (\is_bool($stimulus) && !\in_array($runtime, ['iife', 'stimulus'], true)) {
+            return $stimulus ? 'stimulus' : 'iife';
+        }
+        foreach ([$runtime, $configured] as $value) {
+            if (\in_array($value, ['iife', 'stimulus'], true)) {
+                return $value;
+            }
+        }
+
+        return 'iife';
     }
 
     /**

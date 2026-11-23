@@ -7,6 +7,8 @@ They are **not** built into the kit IIFEs. Prefer the no-build scripts under `sr
 |------|---------------------|--------------------|
 | `clipboard_copy_controller.ts` | `clipboard-copy` | `nowo-ui-clipboard.js` |
 | `confirm_dialog_controller.ts` | `confirm-dialog` | `nowo-ui-confirm.js` |
+| `confirm_shared_controller.ts` | `confirm-shared` | `nowo-ui-confirm.js` (2.70: the shared confirm dialog on pages without the IIFE; both may be loaded) |
+| `remote_form_dialog_controller.ts` | `remote-form-dialog` | `nowo-ui-dialog.js` (2.28; 2.70 delegated mode, both may be loaded) |
 | `confirm_submit_controller.ts` | `confirm-submit` | — (peer only; form `submit` or button `click`; 2.8 `dialog` mode and `createConfirmSubmitController()`) |
 | `ask_confirm.ts` | — (module: `askConfirm()`, `pageConfirmLabels()`, 2.8) | `window.nowoUiAskConfirm` in `nowo-ui-confirm.js` (2.34) |
 | `page_loader_controller.ts` | `page-loader` | `nowo-ui-page-loader.js` |

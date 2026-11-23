@@ -405,6 +405,58 @@ export const DEFAULT_SETTINGS: RemoteFormSettings = {
   closeOnBackdrop: false,
 };
 
+/** Settings of a remote form dialog, read from its attributes. */
+export function remoteFormSettings(dialog: Element): RemoteFormSettings {
+  return {
+    ...DEFAULT_SETTINGS,
+    loading: dialog.getAttribute('data-nowo-ui-remote-form-loading') ?? '',
+    error: dialog.getAttribute('data-nowo-ui-remote-form-error') ?? '',
+    loadError: dialog.getAttribute('data-nowo-ui-remote-form-load-error') ?? '',
+    invalidSelector: dialog.getAttribute('data-nowo-ui-remote-form-invalid') ?? '',
+    followOnLoadError: dialog.getAttribute('data-nowo-ui-remote-form-follow-on-load-error') !== 'false',
+    closeOnBackdrop: dialog.hasAttribute('data-nowo-ui-dialog-backdrop-close'),
+    ...dialogHeaderSettings(dialog),
+  };
+}
+
+/**
+ * 2.33: the header names of a remote form dialog from `data-nowo-ui-remote-form-{request,redirect,location}-header`
+ * (printed by the partial for names configured under `nowo_ui_kit.remote_dialog`), else the defaults.
+ */
+export function dialogHeaderSettings(dialog: Element): Pick<RemoteFormSettings, 'requestHeader' | 'redirectHeader' | 'locationHeader'> {
+  return {
+    requestHeader: headerName(dialog.getAttribute('data-nowo-ui-remote-form-request-header'), REQUEST_HEADER),
+    redirectHeader: headerName(dialog.getAttribute('data-nowo-ui-remote-form-redirect-header'), REDIRECT_HEADER),
+    locationHeader: headerName(dialog.getAttribute('data-nowo-ui-remote-form-location-header'), LOCATION_HEADER),
+  };
+}
+
+/**
+ * The session that last opened each dialog (2.70). Two sessions may be bound to one dialog (the IIFE runtime created
+ * one before a Stimulus peer connected to the same dialog): only the active one handles its submit, close, cancel and
+ * backdrop click, so a form is never posted twice. The map lives on `window` under Symbol.for('nowo-ui.remote-form.active')
+ * (audit ZAF-M1): js/nowo-ui-dialog.js and the host's Stimulus bundle each carry their own copy of this module, and
+ * both must see the same registry. A closed dialog maps to CLOSED: no session is active until the next open.
+ */
+const ACTIVE_KEY = Symbol.for('nowo-ui.remote-form.active');
+const CLOSED = 'closed';
+
+/** What another copy of the session class exposes through the shared registry. */
+interface ActiveSession {
+  abortRequest(): void;
+}
+
+function activeSessions(): WeakMap<HTMLDialogElement, ActiveSession | typeof CLOSED> {
+  const registry = window as unknown as Record<symbol, unknown>;
+  const existing = registry[ACTIVE_KEY];
+  if (existing instanceof WeakMap) {
+    return existing as WeakMap<HTMLDialogElement, ActiveSession | typeof CLOSED>;
+  }
+  const created = new WeakMap<HTMLDialogElement, ActiveSession | typeof CLOSED>();
+  registry[ACTIVE_KEY] = created;
+  return created;
+}
+
 /** Emits an event; returns false when a listener prevented it (cancelable events only). */
 export type RemoteFormEmitter = (name: RemoteFormEvent, detail: Record<string, unknown>, cancelable?: boolean) => boolean;
 
@@ -419,14 +471,18 @@ export class RemoteFormSession {
   private overlay: OverlayHandle | null = null;
   private url: string | null = null;
   private steps = 0;
-  private readonly onClose = (): void => this.closed();
+  private readonly onClose = (): void => {
+    if (this.isActive()) {
+      this.closed();
+    }
+  };
   private readonly onCancel = (event: Event): void => {
-    if (nestedLayerOwnsEscape(this.dialog, document.activeElement)) {
+    if (this.isActive() && nestedLayerOwnsEscape(this.dialog, document.activeElement)) {
       event.preventDefault();
     }
   };
   private readonly onClick = (event: MouseEvent): void => {
-    if (event.target !== this.dialog || !this.settings().closeOnBackdrop) {
+    if (event.target !== this.dialog || !this.isActive() || !this.settings().closeOnBackdrop) {
       return;
     }
     const rect = this.dialog.getBoundingClientRect();
@@ -448,6 +504,8 @@ export class RemoteFormSession {
     private readonly settings: () => RemoteFormSettings,
     private readonly emit: RemoteFormEmitter,
     private readonly listenSubmit = true,
+    /** 2.70 (ZAF-M1): true while this session must stand aside (the IIFE's, on a dialog a Stimulus peer claimed). */
+    private readonly yields: () => boolean = () => false,
   ) {}
 
   bind(): void {
@@ -469,6 +527,26 @@ export class RemoteFormSession {
     this.controller?.abort();
     this.overlay?.release();
     this.overlay = null;
+    if (activeSessions().get(this.dialog) === this) {
+      activeSessions().delete(this.dialog);
+    }
+  }
+
+  /**
+   * Whether this session drives its dialog (2.70): it does not stand aside, and it opened the dialog last or no session
+   * has opened it yet (a closed dialog has no active session).
+   */
+  isActive(): boolean {
+    if (this.yields()) {
+      return false;
+    }
+    const active = activeSessions().get(this.dialog);
+    return active === undefined || active === this;
+  }
+
+  /** Aborts the request in flight (another session, maybe of another copy of this module, took the dialog over). */
+  abortRequest(): void {
+    this.controller?.abort();
   }
 
   /** Whether the dialog can run (native modal dialog support). */
@@ -483,9 +561,14 @@ export class RemoteFormSession {
   open(href: string | null, opener: HTMLElement | null, titleText: string): boolean {
     const url = sameOriginHref(href);
     const body = this.body();
-    if (!url || !body || !this.supported()) {
+    if (!url || !body || !this.supported() || this.yields()) {
       return false;
     }
+    const previous = activeSessions().get(this.dialog);
+    if (previous !== undefined && previous !== CLOSED && previous !== this) {
+      previous.abortRequest();
+    }
+    activeSessions().set(this.dialog, this);
     this.controller?.abort();
     const controller = new AbortController();
     this.controller = controller;
@@ -523,7 +606,8 @@ export class RemoteFormSession {
   /** Handles a submit event that reached the dialog body. Returns whether it was intercepted. */
   async submit(event: Event): Promise<boolean> {
     const form = event.target;
-    if (!(form instanceof HTMLFormElement) || !this.dialog.open || Element.prototype.hasAttribute.call(form, NATIVE_ATTR)) {
+    // 2.70 (ZAF-M1): a submit another handler already took (the peer's, or a host's) is not posted again.
+    if (event.defaultPrevented || !(form instanceof HTMLFormElement) || !this.dialog.open || !this.isActive() || Element.prototype.hasAttribute.call(form, NATIVE_ATTR)) {
       return false;
     }
     const submitter = (event as SubmitEvent).submitter ?? null;
@@ -757,6 +841,7 @@ export class RemoteFormSession {
     if (this.dialog.open) {
       return;
     }
+    activeSessions().set(this.dialog, CLOSED);
     this.controller?.abort();
     this.controller = null;
     this.busy = false;

@@ -175,3 +175,66 @@ describe('confirm-submit peer, dialog mode', () => {
     expect(document.querySelector('dialog.nowo-ui-confirm h2')!.textContent).toBe('Go?');
   });
 });
+
+describe('confirm-submit peer, title and labels (2.70)', () => {
+  let application: Application;
+
+  const start = async (html: string, mode: 'dialog' | 'native' = 'dialog'): Promise<HTMLFormElement> => {
+    document.body.innerHTML = html;
+    application = Application.start();
+    application.register('confirm-submit', createConfirmSubmitController({ mode }));
+    await Promise.resolve();
+    return document.querySelector('form')!;
+  };
+
+  afterEach(() => {
+    application.unload('confirm-submit');
+    application.stop();
+    document.body.innerHTML = '';
+    vi.restoreAllMocks();
+  });
+
+  it('shows the title as the heading, the message as the body and the confirm / cancel labels (plain attributes)', async () => {
+    const form = await start(`
+      <form data-controller="confirm-submit" data-confirm-submit-message-value="Ann loses access." data-confirm-title="Remove Ann?"
+            data-confirm-label="Remove" data-confirm-cancel-label="Keep" data-action="submit->confirm-submit#confirm"><button type="submit">x</button></form>`);
+    form.querySelector('button')!.click();
+    const dialog = document.querySelector('dialog')!;
+    expect(dialog.querySelector('h2')!.textContent).toBe('Remove Ann?');
+    expect(dialog.querySelector('.nowo-ui-confirm__body')!.textContent).toBe('Ann loses access.');
+    const buttons = Array.from(dialog.querySelectorAll<HTMLButtonElement>('.nowo-ui-confirm__footer button')).map((b) => b.textContent);
+    expect(buttons).toEqual(['Keep', 'Remove']);
+  });
+
+  it('Stimulus values win over the plain attributes; a title alone is asked', async () => {
+    const form = await start(`
+      <form data-controller="confirm-submit" data-confirm-submit-title-value="Value title" data-confirm-title="Plain title"
+            data-confirm-submit-confirm-label-value="Go" data-action="submit->confirm-submit#confirm"><button type="submit">x</button></form>`);
+    form.querySelector('button')!.click();
+    const dialog = document.querySelector('dialog')!;
+    expect(dialog.querySelector('h2')!.textContent).toBe('Value title');
+    expect(dialog.querySelector('.nowo-ui-confirm__body')).toBeNull();
+    expect(Array.from(dialog.querySelectorAll('.nowo-ui-confirm__footer button')).map((b) => b.textContent)).toEqual(['Cancel', 'Go']);
+  });
+
+  it('native mode asks the title, a blank line and the message', async () => {
+    const form = await start(
+      `<form data-controller="confirm-submit" data-confirm-submit-message-value="Gone." data-confirm-submit-title-value="Delete?" data-action="submit->confirm-submit#confirm"></form>`,
+      'native',
+    );
+    const ask = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    const event = new Event('submit', { cancelable: true });
+    form.dispatchEvent(event);
+    expect(ask).toHaveBeenCalledWith('Delete?\n\nGone.');
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it('without message and title the submit goes through unasked (BC)', async () => {
+    const form = await start(`<form data-controller="confirm-submit" data-confirm-submit-message-value="  " data-action="submit->confirm-submit#confirm"></form>`, 'native');
+    const ask = vi.spyOn(window, 'confirm');
+    const event = new Event('submit', { cancelable: true });
+    form.dispatchEvent(event);
+    expect(ask).not.toHaveBeenCalled();
+    expect(event.defaultPrevented).toBe(false);
+  });
+});

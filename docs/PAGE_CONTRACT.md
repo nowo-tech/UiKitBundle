@@ -431,6 +431,17 @@ row drops from about 1.4 kB to 0.5 kB: its toggle attributes and hidden form). N
 `action` / `row_actions` / `menu` partials (a theme override of `action` must handle `confirm_shared`). The per-row
 mode stays the default in 2.x and is **deprecated**: `shared` becomes the default in 3.0.
 
+**Menus and row actions outside the table (2.70).** Row kebabs rendered by a host loop (`row_actions` with `menu`,
+the `menu` partial, or `action`) print one dialog per Confirm action by default. `confirm_shared: true` (group
+`nowo-ui-menu-confirm`), `confirm_shared: '<id>'` or `confirm_group: '<id>'` make every Confirm action of the group open
+ONE `confirm_shared` dialog: the first menu of the group renders it (after the menu root, outside its `<details>` /
+popover panel, which would hide it), once per request and id (`nowo_ui_confirm_shared_once()`, ids kept on the main
+request), and each row keeps its toggle and a hidden POST form with its own CSRF token, id
+`<confirmId>-form-<10 chars of confirmKey>-<row>` (`confirm_row`, default 0; pass `loop.index` when two rows may hold
+identical actions). With `nowo_ui_kit.table_confirm: shared` menus and row actions follow it by default (not with
+`confirm_external`); `confirm_shared: false` opts out. The dialog's runtime follows `nowo_ui_kit.dialogs.runtime` /
+`runtime` ([USAGE](USAGE.md#stimulus-runtime-270)).
+
 **Row actions per variant.** In row context an action keeps the `ui.action` classes (slot `action`) and adds the
 host classes of `action_primary`, `action_secondary`, `action_danger` or `action_neutral` for its resolved variant
 (`delete` → danger, `create` / `save` → primary, otherwise neutral, or the explicit `variant` — so an explicit

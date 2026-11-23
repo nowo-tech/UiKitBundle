@@ -27,11 +27,18 @@
  * `data-confirm-submit-blocked-value="true"` always cancels (e.g. last owner cannot be removed); an empty message
  * lets the event through unchanged; `data-confirm-submit-danger-value="false"` keeps the primary button in the dialog
  * for a non-destructive confirmation.
+ *
+ * Title and button labels (2.70): `data-confirm-submit-title-value` (or the plain `data-confirm-title`) is the dialog
+ * heading, the message its body; `data-confirm-submit-confirm-label-value` / `data-confirm-label` and
+ * `data-confirm-submit-cancel-label-value` / `data-confirm-cancel-label` name the buttons (default the page's
+ * `<html data-confirm-ok / data-confirm-cancel>`). `native` mode shows the title, a blank line and the message in
+ * `window.confirm()`. Without them the 2.8 behaviour is unchanged (the message is the heading); with a title and no
+ * message the title alone is asked.
  */
 
 import { Controller } from '@hotwired/stimulus';
 
-import { askConfirm, pageConfirmLabels, type ConfirmClasses } from './ask_confirm';
+import { askConfirm, confirmTexts, nativeQuestion, pageConfirmLabels, type ConfirmClasses } from './ask_confirm';
 
 export type ConfirmMode = 'native' | 'dialog';
 
@@ -54,6 +61,12 @@ export function createConfirmSubmitController(options: ConfirmSubmitOptions = {}
       blocked: { type: Boolean, default: false },
       danger: { type: Boolean, default: true },
       mode: { type: String, default: '' },
+      /** 2.70: dialog heading (fallback attribute data-confirm-title). */
+      title: { type: String, default: '' },
+      /** 2.70: Confirm button label (fallback attribute data-confirm-label). */
+      confirmLabel: { type: String, default: '' },
+      /** 2.70: Cancel button label (fallback attribute data-confirm-cancel-label). */
+      cancelLabel: { type: String, default: '' },
     };
 
     declare readonly messageValue: string;
@@ -77,20 +90,30 @@ export function createConfirmSubmitController(options: ConfirmSubmitOptions = {}
         event.preventDefault();
         return;
       }
-      const message = this.messageValue.trim();
-      if (message === '' || this.approved) {
+      const texts = { ...confirmTexts(this.element, this.identifier), message: this.messageValue.trim() };
+      const question = nativeQuestion(texts);
+      if (question === '' || this.approved) {
         this.approved = false;
         return;
       }
       if ((this.modeValue || options.mode) !== 'dialog') {
-        if (!window.confirm(message)) {
+        if (!window.confirm(question)) {
           event.preventDefault();
         }
         return;
       }
       event.preventDefault();
       const submitter = event instanceof SubmitEvent ? event.submitter : null;
-      void askConfirm(message, { ...pageConfirmLabels(), danger: this.dangerValue, classes: options.classes }).then((ok) => {
+      const labels = pageConfirmLabels();
+      const asked = texts.message !== '' ? texts.message : texts.title;
+      const title = texts.message !== '' && texts.title !== '' ? texts.title : undefined;
+      void askConfirm(asked, {
+        confirm: texts.confirm || labels.confirm,
+        cancel: texts.cancel || labels.cancel,
+        title,
+        danger: this.dangerValue,
+        classes: options.classes,
+      }).then((ok) => {
         if (ok) {
           this.replay(submitter);
         }
