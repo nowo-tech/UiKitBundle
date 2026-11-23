@@ -153,6 +153,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- **One-time secret** (theme partial `secret_once`, opt-in runtime `secret-once`, owner decision 2026-11-23 for the
+  ApiToken "new token" page): the secret is printed exactly once, as the escaped text of the value element — no
+  `data-*` attribute, hidden input, `title`, `aria-label` or second text node, and the runtime makes no copy (Clipboard
+  API from the node; the `execCommand` fallback is fed by a `copy` listener, no temporary `<textarea>`). Without
+  JavaScript it is plain selectable text; with it, it starts masked (CSS `display: none` by state, static bullet
+  mask), a toggle button (`aria-pressed`) reveals it, Copy announces the result in a `role="status"` region.
+  `clear_on_hide` / `clear_after` wipe the text in place and disable the controls (`aria-disabled`); by default
+  (`wipe_on_leave`, audit ZAB S3-L1) it is also wiped when its enclosing `<dialog>` closes and on `pagehide`, so it
+  never comes back from the back/forward cache. Strings in the 7 locales, light / dark tokens, no inline style or
+  script. Demo on `/catalogue/admin/data-display`; Vitest, PHPUnit page contract and Playwright (the secret counted in
+  `document.documentElement.outerHTML`: 1 before and after reveal / copy, 0 once cleared) tests. The
+  `temporary-reveal` Stimulus peer is unchanged.
+
 ## [2.68.0] - 2026-11-23
 
 ### Added

@@ -800,6 +800,8 @@ final class ThemeSlots
         'table_view' => '@NowoUiKitBundle/partials/_table_view.html.twig',
         'timeline' => '@NowoUiKitBundle/partials/_timeline.html.twig',
         'tooltip' => '@NowoUiKitBundle/partials/_tooltip.html.twig',
+        // 2.69: one-time secret (runtime secret-once)
+        'secret_once' => '@NowoUiKitBundle/partials/_secret_once.html.twig',
     ];
 
     /**

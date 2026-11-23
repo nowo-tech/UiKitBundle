@@ -73,6 +73,12 @@ final class AdminCatalogueController extends AbstractController
                 new Stat('Overdue', 3, 'over 30 days', tone: 'danger', delta: '+1', trend: 'up', deltaTone: 'negative', icon: 'archive'),
                 new Stat('Customers', 128, 'active this year', delta: '0 %', trend: 'flat', icon: 'config'),
             ];
+            // 2.69 one-time secrets: fresh demo values on every request, as a host shows a new token only once.
+            $context['secrets'] = [
+                'token' => 'demo_tok_'.bin2hex(random_bytes(12)),
+                'recovery' => 'demo_rec_'.bin2hex(random_bytes(8)),
+                'dialog' => 'demo_dlg_'.bin2hex(random_bytes(12)),
+            ];
             $context['empty_state'] = new EmptyState('No credit notes yet', 'Credit notes you issue appear here, with their invoice and refund status.', Action::create('#', 'Create a credit note'), icon: 'create');
         } elseif ('form-patterns' === $group) {
             // The demo has no validator: the invalid example gets its errors by hand, as a host's validation would add them.
@@ -111,7 +117,13 @@ final class AdminCatalogueController extends AbstractController
             );
         }
 
-        return $this->render('catalogue/admin/'.str_replace('-', '_', $group).'.html.twig', $context);
+        $response = $this->render('catalogue/admin/'.str_replace('-', '_', $group).'.html.twig', $context);
+        if ('data-display' === $group) {
+            // One-time secrets on the page: never stored by the browser, so back / forward cannot replay them.
+            $response->headers->set('Cache-Control', 'no-store, private');
+        }
+
+        return $response;
     }
 
     /**
