@@ -4392,6 +4392,14 @@ attribute, hidden input, `title`, `aria-label` or second text node carries it, a
 (no temporary `<textarea>` for the copy fallback either). That is the difference with the `temporary-reveal` Stimulus
 peer, which reads the secret from an attribute (kept as it is, for BC).
 
+**Required of the host:**
+
+- send the page **and every fragment that carries the secret** (a remote dialog's `data-nowo-ui-dialog-src`
+  answer, a Turbo frame) with `Cache-Control: no-store, private`. A response replayed from the HTTP cache (reload, Back
+  after a bfcache eviction, the dialog runtime's `fetch()`) shows the secret again and no script can wipe it;
+- on Turbo Drive pages, also `<meta name="turbo-cache-control" content="no-cache">` (the runtime wipes on
+  `turbo:before-cache` too, the meta keeps Turbo from showing a preview of the page).
+
 - **Without JavaScript** the secret is plain text, never hidden server-side; `user-select: all` selects it whole on
   one click. The buttons are `hidden` until the runtime runs.
 - **Masked** (default once the runtime runs; `revealed: true` starts revealed): the value element gets
@@ -4404,18 +4412,23 @@ peer, which reads the secret from an attribute (kept as it is, for BC).
   no DOM copy) and says "Copied" / "Copy failed" in a `role="status"` region next to the buttons. Both buttons are
   described by the visible label.
 - **Clearing**: `clear_on_hide: true` wipes the text in place when it is hidden; `clear_after: <ms>` wipes it after
-  that delay. Then the state is `cleared`, a note says so, and both buttons are `aria-disabled` (they keep focus, the
+  that delay, counted from the moment the runtime upgrades the root (page load, or the insertion of the fragment that
+  carries it). Then the state is `cleared`, a note says so, and both buttons are `aria-disabled` (they keep focus, the
   clicks do nothing).
-- **Leaving** (default, `wipe_on_leave: false` to opt out): the text is wiped when the enclosing `<dialog>` closes and
-  on `pagehide`, so a closed dialog or a page restored from the back/forward cache never shows it again.
+- **Leaving** (default, `wipe_on_leave: false` to opt out): the text is wiped when the enclosing `<dialog>` closes, on
+  `pagehide` and on `turbo:before-cache`, so a closed dialog, a page restored from the back/forward cache or a Turbo
+  snapshot never shows it again.
+- **Content inserted later** (a remote dialog fragment, a Turbo frame, a host swap) is upgraded by a
+  `MutationObserver` and on `nowo-ui:dialog-loaded`: masked, Copy shown, `clear_after` armed. Loading the script twice
+  binds its listeners once.
 
 Options: `secret` (required), `label`, `hint`, `secret_id` (partial-scoped; `-label` / `-hint` ids derive from it),
 `revealed`, `clear_on_hide`, `clear_after`, `wipe_on_leave`, `labels` (`show`, `copy`, `copied`, `copy_failed`,
 `masked`, `cleared`), `attr`. Strings ship in the 7 locales. The demo shows it on `/catalogue/admin/data-display`.
 
 **Limits** (say so on the page): the runtime cannot clear the system clipboard, nor what the user already
-saw or pasted; send the page with `Cache-Control: no-store` so the response itself is not cached; a short flash
-of the plain value is possible before the deferred script runs (it is the progressive enhancement baseline).
+saw or pasted; a short flash of the plain value is possible before the deferred script runs (it is the progressive
+enhancement baseline).
 
 ## Feature bundles
 

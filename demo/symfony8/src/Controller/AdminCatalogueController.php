@@ -127,6 +127,20 @@ final class AdminCatalogueController extends AbstractController
     }
 
     /**
+     * 2.69 (audit ZAE-M1): a one-time secret served as a remote dialog fragment, like a host's "token created" answer.
+     * A fresh demo value per request; never cached (Cache-Control: no-store).
+     */
+    #[Route('/catalogue/admin/secret-fragment', name: 'catalogue_admin_secret_fragment', methods: ['GET'])]
+    public function secretFragment(): Response
+    {
+        $this->profiler?->disable();
+        $response = $this->render('catalogue/admin/_secret_fragment.html.twig', ['secret' => 'demo_frg_'.bin2hex(random_bytes(12))]);
+        $response->headers->set('Cache-Control', 'no-store, private');
+
+        return $response;
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function dataTables(Request $request, FormFactoryInterface $forms, ?string &$notice): array

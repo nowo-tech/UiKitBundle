@@ -105,6 +105,58 @@ test.describe('one-time secret', () => {
     await expect(page.getByTestId('secret-dialog')).toHaveAttribute('data-nowo-ui-secret-once-state', 'cleared');
   });
 
+  test('a secret in a remote dialog fragment is upgraded: masked, copy, clear_after; wiped on close', async ({ page, context }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    await page.goto(PATH);
+    await page.getByTestId('secret-remote-open').click();
+    const root = page.getByTestId('secret-remote');
+    await expect(root).toHaveAttribute('data-nowo-ui-secret-once-state', 'masked');
+    const secret = await secretOf(page, 'secret-remote');
+    expect(secret).toMatch(/^demo_frg_/);
+    expect(await count(page, secret)).toBe(1);
+    await expect(root.locator('[data-nowo-ui-secret-once-value]')).toBeHidden();
+    await root.getByRole('button', { name: 'Copy' }).click();
+    await expect(root.locator('[role="status"]')).toHaveText('Copied');
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(secret);
+    expect(await count(page, secret)).toBe(1);
+    // clear_after (4 s from the upgrade)
+    await expect(root).toHaveAttribute('data-nowo-ui-secret-once-state', 'cleared', { timeout: 8000 });
+    expect(await count(page, secret)).toBe(0);
+
+    // a second load, closed before clear_after: wiped by the close
+    await page.keyboard.press('Escape');
+    await page.getByTestId('secret-remote-open').click();
+    await expect(page.getByTestId('secret-remote')).toHaveAttribute('data-nowo-ui-secret-once-state', 'masked');
+    const second = await secretOf(page, 'secret-remote');
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('secret-remote-box')).toBeHidden();
+    expect(await count(page, second)).toBe(0);
+  });
+
+  test('turbo:before-cache wipes the secret before a snapshot', async ({ page }) => {
+    await page.goto(PATH);
+    const secret = await secretOf(page, 'secret-token');
+    await page.evaluate(() => document.dispatchEvent(new Event('turbo:before-cache')));
+    expect(await count(page, secret)).toBe(0);
+  });
+
+  test('loading the runtime twice binds once: Show still reveals', async ({ page }) => {
+    await page.goto(PATH);
+    await page.evaluate(async () => {
+      const src = document.querySelector<HTMLScriptElement>('script[src*="nowo-ui-secret-once"]')!.src;
+      await new Promise<void>((resolve) => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.nonce = document.querySelector<HTMLScriptElement>('script[nonce]')?.nonce ?? '';
+        s.onload = () => resolve();
+        document.head.append(s);
+      });
+    });
+    const root = page.getByTestId('secret-token');
+    await root.getByRole('button', { name: 'Show' }).click();
+    await expect(root).toHaveAttribute('data-nowo-ui-secret-once-state', 'revealed');
+  });
+
   test('pagehide wipes every secret, so back / forward never brings one back', async ({ page }) => {
     await page.goto(PATH);
     const secrets = [await secretOf(page, 'secret-token'), await secretOf(page, 'secret-recovery'), await secretOf(page, 'secret-dialog')];

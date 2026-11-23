@@ -82,6 +82,7 @@
                 {{ include(nowo_ui_partial('secret_once'), {secret: secrets.token, secret_id: 'catalogue-secret-token', label: 'API token', hint: 'Copy it now: it is shown only once.', attr: {'data-testid': 'secret-token'}}, false) }}
                 {{ include(nowo_ui_partial('secret_once'), {secret: secrets.recovery, secret_id: 'catalogue-secret-recovery', label: 'Recovery code', revealed: true, clear_on_hide: true, attr: {'data-testid': 'secret-recovery'}}, false) }}
                 <button type="button" class="nowo-ui-btn nowo-ui-btn--outline" data-nowo-ui-dialog-open="catalogue-secret-dialog" data-testid="secret-dialog-open">Show the webhook secret</button>
+                <a class="nowo-ui-btn nowo-ui-btn--outline" href="{{ path('catalogue_admin_secret_fragment') }}" data-nowo-ui-dialog-open="catalogue-secret-remote" data-nowo-ui-dialog-src="{{ path('catalogue_admin_secret_fragment') }}" data-testid="secret-remote-open">Create a deploy key</a>
             {% endblock %}
         {% endembed %}
         {% set _secret_dialog_body = include(nowo_ui_partial('secret_once'), {secret: secrets.dialog, secret_id: 'catalogue-secret-dialog-value', label: 'Webhook signing secret', hint: 'Closing this dialog removes it from the page.', attr: {'data-testid': 'secret-dialog'}}, false) %}
@@ -98,5 +99,6 @@
             {% endblock %}
         {% endembed %}
     </div>
+    {{ include(nowo_ui_partial('dialog'), {id: 'catalogue-secret-remote', title: 'Deploy key', body: '', attr: {'data-testid': 'secret-remote-box'}}, false) }}
     {{ include(nowo_ui_partial('dialog'), {id: 'catalogue-secret-dialog', title: 'Webhook secret', body: _secret_dialog_body, attr: {'data-testid': 'secret-dialog-box'}}, false) }}
 {% endblock %}

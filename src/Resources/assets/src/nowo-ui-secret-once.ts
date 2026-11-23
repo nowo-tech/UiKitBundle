@@ -17,6 +17,10 @@
  * - Leaving (audit ZAB S3-L1): by default the text is also wiped when the enclosing <dialog> closes (`close`) and on
  *   `pagehide`, so a closed dialog or a page restored from the back/forward cache never shows it again. Opt out per
  *   root with `data-nowo-ui-secret-once-keep-on-leave`.
+ * - Turbo: `turbo:before-cache` wipes too (the snapshot never keeps the secret); kept roots are upgraded again.
+ * - Content inserted later (remote dialog fragments, Turbo frames, swaps) is upgraded by a MutationObserver and on
+ *   `nowo-ui:dialog-loaded`; `upgrade()` is idempotent per node. `clear-after` counts from that upgrade.
+ * - The listeners are bound once per window (Symbol.for guard), even if the script is loaded twice.
  * - `data-nowo-ui-secret-once-revealed`: start revealed. Without it the secret starts masked.
  * - Without this script the secret stays visible as plain text (`user-select: all`), the buttons stay `hidden`.
  */
@@ -246,19 +250,58 @@ function onClick(event: MouseEvent): void {
   void copy(root, button);
 }
 
-let bound = false;
+/** Upgrades the roots in (or being) each element a mutation added: remote dialog fragments, Turbo frames, swaps. */
+export function onMutations(records: MutationRecord[]): void {
+  for (const record of records) {
+    record.addedNodes.forEach((node) => {
+      if (!(node instanceof HTMLElement)) {
+        return;
+      }
+      if (node.matches(ROOT)) {
+        upgrade(node);
+      }
+      upgradeAll(node);
+    });
+  }
+}
+
+/**
+ * Turbo snapshot (audit ZAE-M2): `turbo:before-cache` runs before Turbo clones the page into its cache, where neither
+ * `pagehide` nor a dialog `close` happens. Wipe what may be wiped; a kept root loses its `ready` mark so the restored
+ * copy is upgraded again (masked, `clear-after` re-armed).
+ */
+export function onBeforeCache(): void {
+  wipeOnLeave();
+  document.querySelectorAll<HTMLElement>(ROOT).forEach((root) => {
+    if ('cleared' !== stateOf(root)) {
+      root.removeAttribute(READY);
+    }
+  });
+}
+
+/** One binding per window, even when the script is loaded twice (audit ZAE-L2: a second click listener toggles back). */
+const BOUND_KEY = Symbol.for('nowo-ui.secret-once.bound');
 
 export function bindNowoUiSecretOnce(): void {
   upgradeAll();
-  if (bound) {
+  const flags = window as unknown as Record<symbol, unknown>;
+  if (flags[BOUND_KEY]) {
     return;
   }
-  bound = true;
+  flags[BOUND_KEY] = true;
   document.addEventListener('click', onClick);
+  // `close` does not bubble: capture phase.
   document.addEventListener('close', onDialogClose, true);
   window.addEventListener('pagehide', () => wipeOnLeave());
-  // Turbo / fragment swaps: upgrade the roots a new body brings.
+  document.addEventListener('turbo:before-cache', onBeforeCache);
+  // Content inserted later (audit ZAE-M1): remote dialog fragments (`nowo-ui:dialog-loaded`), Turbo, host swaps.
   document.addEventListener('turbo:load', () => upgradeAll());
+  document.addEventListener('nowo-ui:dialog-loaded', (event) => {
+    if (event.target instanceof Element) {
+      upgradeAll(event.target);
+    }
+  });
+  new MutationObserver(onMutations).observe(document, { childList: true, subtree: true });
 }
 
 /** Test helper: forget the VoiceOver repeat guard. */

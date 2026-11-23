@@ -183,8 +183,10 @@ runtime:
 ```
 
 Remove any `data-*-secret-value`, `data-clipboard-copy-text-value` or `data-nowo-ui-clipboard-text` that carried the
-secret, and send the response with `Cache-Control: no-store`. The text is wiped on dialog close and `pagehide` by
-default; pass `wipe_on_leave: false` only when the page must keep it (it then can come back from the back/forward cache).
+secret. **Required:** send the page and every fragment that carries the secret (remote dialog answer, Turbo frame)
+with `Cache-Control: no-store, private`, and on Turbo Drive pages print
+`<meta name="turbo-cache-control" content="no-cache">`. Fragments inserted later are upgraded by the runtime itself. The text is wiped on dialog close and `pagehide` by
+default (and on `turbo:before-cache`); pass `wipe_on_leave: false` only when the page must keep it (it then can come back from the back/forward cache).
 
 ## To 2.68.0
 

@@ -301,4 +301,64 @@ describe('nowo-ui-secret-once', () => {
     window.dispatchEvent(new Event('pagehide'));
     expect(count()).toBe(0);
   });
+
+  it('upgrades roots inserted later (MutationObserver): masked, controls shown, clear_after armed', async () => {
+    document.body.innerHTML = '<dialog id="remote"><div data-body></div></dialog>';
+    const body = el('[data-body]');
+    const holder = document.createElement('div');
+    holder.innerHTML = markup('data-nowo-ui-secret-once-clear-after="3000"');
+    body.replaceChildren(holder);
+    await Promise.resolve();
+    await vi.waitFor(() => expect(mod.stateOf(root())).toBe('masked'));
+    expect(el('[data-nowo-ui-secret-once-controls]').hidden).toBe(false);
+    vi.advanceTimersByTime(3000);
+    expect(mod.stateOf(root())).toBe('cleared');
+    expect(count()).toBe(0);
+
+    // the inserted node itself can be the root; text nodes are ignored
+    const direct = document.createElement('div');
+    direct.innerHTML = markup();
+    const node = direct.firstElementChild as HTMLElement;
+    mod.onMutations([{ addedNodes: [document.createTextNode('x'), node] as unknown as NodeList } as MutationRecord]);
+    expect(mod.stateOf(node)).toBe('masked');
+  });
+
+  it('upgrades a remote dialog fragment on nowo-ui:dialog-loaded at once', () => {
+    document.body.innerHTML = `<dialog id="d">${markup()}</dialog>`;
+    expect(mod.stateOf(root())).toBeNull();
+    el('#d').dispatchEvent(new CustomEvent('nowo-ui:dialog-loaded', { bubbles: true, detail: { url: '/x' } }));
+    expect(mod.stateOf(root())).toBe('masked');
+    // an event without an element target is ignored
+    document.dispatchEvent(new CustomEvent('nowo-ui:dialog-loaded'));
+  });
+
+  it('turbo:before-cache wipes the secret; a kept root loses ready so its restored copy is upgraded again', () => {
+    document.body.innerHTML = `${markup()}${markup('data-nowo-ui-secret-once-keep-on-leave').replace(SECRET, 'kept-value')}`;
+    mod.upgradeAll();
+    const [wiped, kept] = Array.from(document.querySelectorAll<HTMLElement>('[data-nowo-ui-secret-once]'));
+    mod.reveal(kept);
+    document.dispatchEvent(new Event('turbo:before-cache'));
+    expect(count()).toBe(0);
+    expect(mod.stateOf(wiped)).toBe('cleared');
+    expect(wiped.hasAttribute('data-nowo-ui-secret-once-ready')).toBe(true);
+    expect(kept.hasAttribute('data-nowo-ui-secret-once-ready')).toBe(false);
+    expect(document.documentElement.outerHTML).toContain('kept-value');
+    mod.upgrade(kept);
+    expect(mod.stateOf(kept)).toBe('masked');
+  });
+
+  it('binds once per window even when the script is loaded twice', async () => {
+    vi.resetModules();
+    const second = await import('./nowo-ui-secret-once');
+    second.bindNowoUiSecretOnce();
+    document.body.innerHTML = markup();
+    mod.upgradeAll();
+    el('[data-nowo-ui-secret-once-toggle]').click();
+    expect(mod.stateOf(root())).toBe('revealed');
+    const write = stubClipboard(async () => undefined);
+    el('[data-nowo-ui-secret-once-copy]').click();
+    await vi.waitFor(() => expect(write).toHaveBeenCalledTimes(1));
+    await Promise.resolve();
+    expect(write).toHaveBeenCalledTimes(1);
+  });
 });

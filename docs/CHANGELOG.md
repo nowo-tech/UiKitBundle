@@ -163,7 +163,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   mask), a toggle button (`aria-pressed`) reveals it, Copy announces the result in a `role="status"` region.
   `clear_on_hide` / `clear_after` wipe the text in place and disable the controls (`aria-disabled`); by default
   (`wipe_on_leave`, audit ZAB S3-L1) it is also wiped when its enclosing `<dialog>` closes and on `pagehide`, so it
-  never comes back from the back/forward cache. Strings in the 7 locales, light / dark tokens, no inline style or
+  never comes back from the back/forward cache, nor stays in a Turbo snapshot (`turbo:before-cache`). Roots inserted
+  later (remote dialog fragments, Turbo frames) are upgraded by a `MutationObserver` / `nowo-ui:dialog-loaded`; the
+  listeners are bound once per window. Hosts must send the page and its fragments with `Cache-Control: no-store`. Strings in the 7 locales, light / dark tokens, no inline style or
   script. Demo on `/catalogue/admin/data-display`; Vitest, PHPUnit page contract and Playwright (the secret counted in
   `document.documentElement.outerHTML`: 1 before and after reveal / copy, 0 once cleared) tests. The
   `temporary-reveal` Stimulus peer is unchanged.
