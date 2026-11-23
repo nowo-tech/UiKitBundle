@@ -1869,6 +1869,55 @@ with `only` (passing what it needs), or pass `anatomy: false` (and its own `titl
 {% endembed %}
 ```
 
+**On demand (2.68, `dialog_src`).** A page never renders the body or the form of a dialog it has not opened: a hidden
+edit form per listing row builds the whole form tree on every page view (one host page reached 474 MB and its
+FrankenPHP workers ran out of memory). Pass **`dialog_src`**, the URL of the dialog's own page, and the partial renders
+only the opener, a real link `<a href="<dialog_src>">` (it works without JavaScript and as a deep link), and an empty
+[remote form dialog](#remote-form-dialog-228) shell. On open, `js/nowo-ui-dialog.js` fetches that page with
+`X-Nowo-Dialog: 1` (`aria-busy` on the body while it loads), posts the form inside the dialog, re-renders a `422` in
+place with focus on the first invalid field, and follows `204` + `X-Nowo-Redirect` once saved. A failed load follows
+the link (the full page); with `follow_on_load_error: false` it shows the load error (`labels.load_error`) in the
+dialog instead, as a `role="alert"` line. On close the body is emptied again and focus returns to the opener. The server side is the one of the remote
+form dialog: `RemoteDialogResponder` and `RemoteDialog::vary()`. A bare yes / no confirmation can stay
+attribute-built (`data-nowo-confirm`, [PAGE_CONTRACT](PAGE_CONTRACT.md#confirm)).
+
+Migration, inline embed → `dialog_src`:
+
+```twig
+{# Before: the form of every row is in the page, hidden #}
+{% embed nowo_ui_partial('confirm_dialog') with {anatomy: true, trigger_label: 'Edit', title: 'Edit member', dialog_id: 'edit-member-' ~ member.id, size: 'wide'} %}
+    {% block body %}{{ form_start(forms[member.id], {attr: {id: 'edit-member-form-' ~ member.id}}) }}…{{ form_end(forms[member.id]) }}{% endblock %}
+    {% block footer %}
+        <button type="button" class="{{ nowo_ui_class('btn_secondary') }}" data-confirm-dialog-close>Cancel</button>
+        <button type="submit" form="edit-member-form-{{ member.id }}" class="{{ nowo_ui_class('btn_primary') }}">Save</button>
+    {% endblock %}
+{% endembed %}
+
+{# After: only the link and an empty shell; the form is the member_edit page (its fragment in the dialog) #}
+{% embed nowo_ui_partial('confirm_dialog') with {dialog_src: path('member_edit', {id: member.id}), trigger_label: 'Edit', title: 'Edit member', dialog_id: 'edit-member-' ~ member.id, size: 'wide'} %}{% endembed %}
+```
+
+The form, its Cancel / Save and its heading move to the `member_edit` page, whose action renders the fragment template
+for the dialog request (`$dialog->template('member/edit.html.twig', 'member/_edit_form.html.twig')`); the controller no
+longer builds one form per row for the listing. The fragment's `.nowo-ui-form__actions` (or
+`[data-nowo-ui-dialog-actions]`) move into the dialog footer.
+
+- `dialog_src` is read only when it is a non-empty string: missing, `null`, `''` or `false` keeps the inline markup
+  byte for byte (tests/Fixtures/bc-2.67). It is named after `dialog_id`, not `src`, so an `src` an embed without `only`
+  inherits from the page (an image, an iframe) never switches the mode.
+- Not rendered with it: the `form`, `body`, `footer` and `header_steps` blocks and the Stimulus `confirm-dialog` root;
+  `anatomy`, `phone`, `status`, `expected_value` and `open_on_connect` do not apply (the fragment carries its own
+  heading, actions and type-to-confirm).
+- Passed to the shell: `dialog_id` (generated when missing), `title` (else the opener's text), `size` (`md` default,
+  `wide`; a `dialog_modifier` with `--lg` / `--xl` → wide), `placement`, `labels`, `follow_on_load_error`, `backdrop_close`,
+  `dialog_testid`, `dialog_attr`.
+- Many rows, one shell: `dialog_shell: false` renders only the opener; render the shell once with `only_dialog: true`
+  and the same `dialog_id`. Each opener loads its own `dialog_src`, and its `title` becomes the dialog title.
+- A custom `trigger` block prints the opener attributes itself:
+  `<a href="{{ dialog_src }}"{{ nowo_ui_html_attrs(dialog_opener_attr) }}>…</a>`. `trigger_disabled` renders a
+  disabled `<button>` (no link).
+- Worker mode (`kernel.reset: false`): the option is plain per-render Twig; nothing is memoised between requests.
+
 <a id="app-shell-26"></a>
 ### App shell
 
