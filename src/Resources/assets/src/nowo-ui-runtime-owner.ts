@@ -1,5 +1,5 @@
 /**
- * Dialog runtime ownership (2.69): which runtime drives a kit dialog when both the IIFE runtimes (js/nowo-ui-dialog.js,
+ * Dialog runtime ownership (2.70): which runtime drives a kit dialog when both the IIFE runtimes (js/nowo-ui-dialog.js,
  * js/nowo-ui-confirm.js) and the Stimulus peers (`remote-form-dialog`, `confirm-shared`) are on the page.
  *
  * A Stimulus peer claims its <dialog> when it connects (`data-nowo-ui-runtime-owner="stimulus"`, set by script, never

@@ -176,7 +176,7 @@ describe('confirm-submit peer, dialog mode', () => {
   });
 });
 
-describe('confirm-submit peer, title and labels (2.69)', () => {
+describe('confirm-submit peer, title and labels (2.70)', () => {
   let application: Application;
 
   const start = async (html: string, mode: 'dialog' | 'native' = 'dialog'): Promise<HTMLFormElement> => {

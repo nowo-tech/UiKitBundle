@@ -17,7 +17,7 @@
  *         the next step loads into the same dialog; cancelable), `:failed` {stage, status}, `:closed`.
  * The partial `partials/_remote_form_dialog.html.twig` (`stimulus: true`) renders the dialog with these targets.
  *
- * Delegated mode (2.69, `delegate` value; the partial with `runtime: 'stimulus'` or nowo_ui_kit.dialogs.runtime:
+ * Delegated mode (2.70, `delegate` value; the partial with `runtime: 'stimulus'` or nowo_ui_kit.dialogs.runtime:
  * stimulus): the controller sits on the <dialog> itself and opens it from any opener of the page with the IIFE opener
  * attributes — `data-nowo-ui-dialog-open="<dialog id>"` + `data-nowo-ui-dialog-src` + `data-nowo-ui-dialog-form`
  * (nowo_ui_remote_form_opener(), the `confirm_dialog` partial with dialog_src, many rows sharing one shell) — exactly
@@ -26,7 +26,7 @@
  * and every event is also dispatched as the IIFE's `nowo-ui:remote-form:<name>` on the dialog (cancelable ones count
  * as prevented when either was prevented), so host listeners work whatever the runtime.
  *
- * Runtime ownership (2.69): on connect the controller claims its dialog (`data-nowo-ui-runtime-owner="stimulus"`), so
+ * Runtime ownership (2.70): on connect the controller claims its dialog (`data-nowo-ui-runtime-owner="stimulus"`), so
  * js/nowo-ui-dialog.js, when also loaded, leaves the dialog's openers, close buttons and backdrop to the controller;
  * the controller closes on `[data-nowo-ui-dialog-close]` (the partial's ×) itself. Disconnecting releases it.
  */
@@ -62,7 +62,7 @@ export default class extends Controller<HTMLElement> {
     invalidSelector: { type: String, default: '' },
     followOnLoadError: { type: Boolean, default: true },
     closeOnBackdrop: { type: Boolean, default: false },
-    /** 2.69: open from the page's IIFE-style openers of this dialog (see the module comment). */
+    /** 2.70: open from the page's IIFE-style openers of this dialog (see the module comment). */
     delegate: { type: Boolean, default: false },
   };
 
@@ -177,7 +177,7 @@ export default class extends Controller<HTMLElement> {
     return headerName(this.dialogTarget.getAttribute(`data-nowo-ui-remote-form-${role}-header`), fallback);
   }
 
-  /** Whether a value comes from the dialog's IIFE setting: delegated mode and the host did not set the value (2.69). */
+  /** Whether a value comes from the dialog's IIFE setting: delegated mode and the host did not set the value (2.70). */
   private inherits(name: string): boolean {
     return this.delegateValue && !this.element.hasAttribute(`data-${this.identifier}-${name}-value`);
   }

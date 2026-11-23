@@ -1,5 +1,5 @@
 /**
- * Confirm dialog core (2.69): what the IIFE runtime (nowo-ui-confirm.ts) and the `confirm-shared` Stimulus peer share —
+ * Confirm dialog core (2.70): what the IIFE runtime (nowo-ui-confirm.ts) and the `confirm-shared` Stimulus peer share —
  * type-to-confirm locking, the shared dialog fill from its row toggle (2.68), the safe first focus (2.61) and the open
  * sequence itself — so both runtimes behave the same. No document listeners here: importing it binds nothing.
  */

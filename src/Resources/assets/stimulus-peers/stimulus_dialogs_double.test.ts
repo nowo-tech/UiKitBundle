@@ -1,5 +1,5 @@
 /**
- * 2.69 — both runtimes on one page: js/nowo-ui-dialog.js + js/nowo-ui-confirm.js (imported: they bind on import) next
+ * 2.70 — both runtimes on one page: js/nowo-ui-dialog.js + js/nowo-ui-confirm.js (imported: they bind on import) next
  * to the `remote-form-dialog` / `confirm-shared` peers. A dialog claimed by a peer is driven by the peer only: one
  * request per open, one POST per submit, one fill per toggle. Before the peers connect (or after they stop) the IIFE
  * runtimes drive the same markup, with the same protocol. Fixtures: tests/Fixtures/stimulus-dialogs/page-*.html.
@@ -45,7 +45,7 @@ function click(el: Element, init: MouseEventInit = {}): MouseEvent {
 
 const FORM = '<form method="post" action="/members/1/edit"><input name="name"><button type="submit">Save</button></form>';
 
-describe('both runtimes loaded (2.69)', () => {
+describe('both runtimes loaded (2.70)', () => {
   let application: Application | null = null;
   const confirmDialog = (): HTMLDialogElement => document.getElementById('members-confirm') as HTMLDialogElement;
   const remote = (): HTMLDialogElement => document.getElementById('member-edit') as HTMLDialogElement;
@@ -81,8 +81,8 @@ describe('both runtimes loaded (2.69)', () => {
   it('binds each runtime once per window, whatever the number of copies', () => {
     expect(markBound('dialog')).toBe(false);
     expect(markBound('confirm')).toBe(false);
-    expect(markBound('2.69-test')).toBe(true);
-    expect(markBound('2.69-test')).toBe(false);
+    expect(markBound('2.70-test')).toBe(true);
+    expect(markBound('2.70-test')).toBe(false);
     dialogRuntime.bindNowoUiDialog();
     confirmRuntime.bindNowoUiConfirm();
     expect(typeof window.nowoUiOpenRemoteForm).toBe('function');
@@ -270,7 +270,7 @@ describe('both runtimes loaded (2.69)', () => {
   });
 });
 
-describe('openConfirmDialog (2.69)', () => {
+describe('openConfirmDialog (2.70)', () => {
   it('returns false without showModal and true for an already open dialog', async () => {
     const { openConfirmDialog } = await import('../src/nowo-ui-confirm-core');
     const dialog = document.createElement('dialog');

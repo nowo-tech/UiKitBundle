@@ -137,7 +137,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
                 'nowo_ui_kit_row_actions_display' => $config['row_actions_display'],
                 'nowo_ui_kit_row_actions_confirm' => $config['row_actions_confirm'],
                 'nowo_ui_kit_table_confirm' => $config['table_confirm'],
-                // 2.69: iife | stimulus — the runtime the on-demand dialog shells are wired for.
+                // 2.70: iife | stimulus — the runtime the on-demand dialog shells are wired for.
                 'nowo_ui_kit_dialogs_runtime' => $config['dialogs']['runtime'],
                 'nowo_ui_kit_release_check' => $releaseCheck,
                 'nowo_ui_kit_shell' => $config['shell'],

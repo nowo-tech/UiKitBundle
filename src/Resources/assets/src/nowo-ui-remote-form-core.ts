@@ -433,7 +433,7 @@ export function dialogHeaderSettings(dialog: Element): Pick<RemoteFormSettings, 
 
 /** Emits an event; returns false when a listener prevented it (cancelable events only). */
 /**
- * The session that last opened each dialog (2.69). Two sessions may be bound to one dialog (the IIFE runtime created
+ * The session that last opened each dialog (2.70). Two sessions may be bound to one dialog (the IIFE runtime created
  * one before a Stimulus peer connected to the same dialog): only the active one handles its submit, close, cancel and
  * backdrop click, so a form is never posted twice.
  */
@@ -511,7 +511,7 @@ export class RemoteFormSession {
     }
   }
 
-  /** Whether this session drives its dialog (2.69): it opened it last, or no session has opened it yet. */
+  /** Whether this session drives its dialog (2.70): it opened it last, or no session has opened it yet. */
   isActive(): boolean {
     const active = activeSessions.get(this.dialog);
     return active === undefined || active === this;

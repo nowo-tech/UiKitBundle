@@ -1,5 +1,5 @@
 /**
- * Demo Stimulus app of /kit/stimulus-dialogs/{stimulus,both} (UiKit 2.69): the kit peers a Beacon product page
+ * Demo Stimulus app of /kit/stimulus-dialogs/{stimulus,both} (UiKit 2.70): the kit peers a Beacon product page
  * registers instead of loading js/nowo-ui-dialog.js / js/nowo-ui-confirm.js — `remote-form-dialog` (the remote form
  * shell in delegated mode), `confirm-shared` (the shared confirm dialog of the row kebabs) and `confirm-submit` (title
  * and button labels). Built by the bundle root (`pnpm run build:demo-peers`) into public/js/demo-stimulus-dialogs.js

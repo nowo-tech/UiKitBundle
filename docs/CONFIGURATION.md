@@ -14,7 +14,7 @@
 - [Auth panel (2.44)](#auth-panel-244)
 - [Compact header (2.27)](#compact-header-227)
 - [Remote dialog (2.28)](#remote-dialog-228)
-- [Dialogs runtime (2.69)](#dialogs-runtime-269)
+- [Dialogs runtime (2.70)](#dialogs-runtime-270)
 - [Shell focus mode (2.55)](#shell-focus-mode-255)
 - [Font preload (2.21)](#font-preload-221)
 - [List scaffold filters (2.30)](#list-scaffold-filters-230)
@@ -31,8 +31,8 @@ Alias: **`nowo_ui_kit`**
 | `icon_set` | enum | `bootstrap-icons` | `bootstrap-icons`, `tabler-icons`, `ux_icon`, `svg_inline`, `none` — how glyphs are drawn |
 | `row_actions_display` | enum | `icon` | Table/list row actions: `icon` (glyph + visually hidden label), `text` (visible label only), `icon_text` (glyph + visible label) |
 | `row_actions_confirm` | enum | `inline` | How `confirm_message` of 1.x `_row_actions` POST hashes asks (since 2.22.0): `inline` (`onsubmit="return confirm(…)"`, unchanged markup), `native` / `dialog` (no inline handler: the `confirm-submit` Stimulus peer asks with `window.confirm()` / the kit `<dialog>`). See [ROW_ACTIONS.md](ROW_ACTIONS.md#confirm-contract-for-post-hashes-222) |
-| `dialogs.runtime` | enum | `iife` | 2.69: `iife` or `stimulus` — the runtime of the on-demand dialog shells ([Dialogs runtime](#dialogs-runtime-269)) |
-| `table_confirm` | enum | `per_row` | Row actions with a `Confirm` in the `table` partial (since 2.68.0): `per_row` (one confirm `<dialog>` with its POST form + CSRF per row; default, **deprecated**, `shared` becomes the default in 3.0) or `shared` (one dialog per table filled when it opens; each row keeps its toggle and a hidden POST form). The `table` option `confirm_shared` wins. 2.69: menus and row actions outside the `table` partial follow it too (one dialog per group, `confirm_group`). See [PAGE_CONTRACT.md](PAGE_CONTRACT.md#view-models) "One shared confirm dialog per table" |
+| `dialogs.runtime` | enum | `iife` | 2.70: `iife` or `stimulus` — the runtime of the on-demand dialog shells ([Dialogs runtime](#dialogs-runtime-270)) |
+| `table_confirm` | enum | `per_row` | Row actions with a `Confirm` in the `table` partial (since 2.68.0): `per_row` (one confirm `<dialog>` with its POST form + CSRF per row; default, **deprecated**, `shared` becomes the default in 3.0) or `shared` (one dialog per table filled when it opens; each row keeps its toggle and a hidden POST form). The `table` option `confirm_shared` wins. 2.70: menus and row actions outside the `table` partial follow it too (one dialog per group, `confirm_group`). See [PAGE_CONTRACT.md](PAGE_CONTRACT.md#view-models) "One shared confirm dialog per table" |
 | `action_icons` | map | `{}` | Opt-in: canonical kind → icon name `[prefix:]name`. Every use of the kind follows it, chrome included. See [Action icons](#action-icons-and-variants) |
 | `action_variants` | map | `{}` | Opt-in: canonical kind → `primary` \| `secondary` \| `danger`, for actions without an explicit variant. See [Action icons](#action-icons-and-variants) |
 | `panel_path_rewrites` | map | `{}` | Legacy path prefix → new prefix (e.g. `/admin/blog: /panel/blog`). Empty = feature disabled (since 1.9.0) |
@@ -52,7 +52,7 @@ Parameters / Twig globals:
 - `%nowo_ui_kit.row_actions_display%` → `nowo_ui_kit_row_actions_display`
 - `row_actions_confirm` → Twig global `nowo_ui_kit_row_actions_confirm` (no container parameter)
 - `table_confirm` → Twig global `nowo_ui_kit_table_confirm` (no container parameter)
-- `dialogs.runtime` → Twig global `nowo_ui_kit_dialogs_runtime` (2.69; no container parameter)
+- `dialogs.runtime` → Twig global `nowo_ui_kit_dialogs_runtime` (2.70; no container parameter)
 - `%nowo_ui_kit.panel_path_rewrites%` — the validated rewrite map (no Twig global)
 - `%nowo_ui_kit.appearance.enabled%` (no Twig global; use the `nowo_ui_appearance*()` functions)
 - `%nowo_ui_kit.appearance.provider_is_default%` (2.40): `true` when `appearance.provider` is null, so a bridge (InstanceSettings' brand) may take the provider over; a host provider always wins
@@ -499,7 +499,7 @@ nowo_ui_kit:
 | `theme.menu_semantics` | `null` | Default ARIA of popover menus with items: `null` = 2.27 markup, `menu` = APG menu button, `disclosure` = no `aria-haspopup`. The `menu` partial option wins |
 | `theme.dialog.height` | `content` | 2.31 (dialog rule v2): `content` = every kit dialog is as tall as its content, capped at `min(size height token, 100dvh - 2rem)`, only the body scrolls; `size` = the 2.29 / 2.30 size's height for a dialog with a field, list, table or fold (prints `--nowo-ui-dialog-fill: 1` with the theme tokens). Markup is the same either way |
 
-## Dialogs runtime (2.69)
+## Dialogs runtime (2.70)
 
 ```yaml
 nowo_ui_kit:
@@ -509,7 +509,7 @@ nowo_ui_kit:
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `dialogs.runtime` | `iife` | The runtime the on-demand dialog shells are wired for: the `remote_form_dialog` shell, `confirm_dialog` with `dialog_src`, the shared confirm dialog (`confirm_shared`, `table_confirm: shared`, menus with `confirm_group`). `iife` = the 2.68 markup, driven by `js/nowo-ui-dialog.js` / `js/nowo-ui-confirm.js`. `stimulus` = the same markup plus the Stimulus peers on the shells (`remote-form-dialog` in delegated mode, `confirm-shared`), for pages that load only the peers; with the IIFE runtimes loaded too the peers claim their dialogs and the IIFE runtimes leave them alone. The partial option `runtime` (and `stimulus: true` on `confirm_dialog`) wins. See [USAGE](USAGE.md#stimulus-runtime-269) |
+| `dialogs.runtime` | `iife` | The runtime the on-demand dialog shells are wired for: the `remote_form_dialog` shell, `confirm_dialog` with `dialog_src`, the shared confirm dialog (`confirm_shared`, `table_confirm: shared`, menus with `confirm_group`). `iife` = the 2.68 markup, driven by `js/nowo-ui-dialog.js` / `js/nowo-ui-confirm.js`. `stimulus` = the same markup plus the Stimulus peers on the shells (`remote-form-dialog` in delegated mode, `confirm-shared`), for pages that load only the peers; with the IIFE runtimes loaded too the peers claim their dialogs and the IIFE runtimes leave them alone. The partial option `runtime` (and `stimulus: true` on `confirm_dialog`) wins. See [USAGE](USAGE.md#stimulus-runtime-270) |
 
 ## Shell focus mode (2.55)
 

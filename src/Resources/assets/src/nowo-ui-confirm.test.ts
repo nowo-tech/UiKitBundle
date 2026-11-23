@@ -271,7 +271,7 @@ describe('nowo-ui-confirm missing confirm-submit peer warning', () => {
     expect(ask).not.toHaveBeenCalled();
   });
 
-  it('2.69: asks the title too (no peer): title, blank line, message', () => {
+  it('2.70: asks the title too (no peer): title, blank line, message', () => {
     document.body.innerHTML = '<form id="t" data-confirm-submit-message-value="Gone." data-confirm-title="Delete Ann?"></form>';
     vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const ask = vi.spyOn(window, 'confirm').mockReturnValue(true);

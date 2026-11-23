@@ -1,8 +1,8 @@
 /**
- * 2.69 — the Stimulus runtime of the on-demand dialogs on a page WITHOUT js/nowo-ui-dialog.js / js/nowo-ui-confirm.js
+ * 2.70 — the Stimulus runtime of the on-demand dialogs on a page WITHOUT js/nowo-ui-dialog.js / js/nowo-ui-confirm.js
  * (Beacon product pages): the `remote-form-dialog` peer in delegated mode on the remote form shell and the
  * `confirm-shared` peer on the shared confirm dialog of two row kebab menus. The markup is
- * tests/Fixtures/stimulus-dialogs/page-stimulus.html, rendered by the Twig partials (StimulusDialogs269Test).
+ * tests/Fixtures/stimulus-dialogs/page-stimulus.html, rendered by the Twig partials (StimulusDialogs270Test).
  */
 import { Application } from '@hotwired/stimulus';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -39,7 +39,7 @@ function click(el: Element, init: MouseEventInit = {}): MouseEvent {
   return event;
 }
 
-describe('Stimulus-only dialogs (2.69)', () => {
+describe('Stimulus-only dialogs (2.70)', () => {
   let application: Application;
   const confirmDialog = (): HTMLDialogElement => document.getElementById('members-confirm') as HTMLDialogElement;
   const remote = (): HTMLDialogElement => document.getElementById('member-edit') as HTMLDialogElement;
@@ -269,7 +269,7 @@ describe('Stimulus-only dialogs (2.69)', () => {
   });
 });
 
-describe('confirm-shared / remote-form-dialog edge cases (2.69)', () => {
+describe('confirm-shared / remote-form-dialog edge cases (2.70)', () => {
   let application: Application;
   const start = async (html: string): Promise<void> => {
     document.body.innerHTML = html;

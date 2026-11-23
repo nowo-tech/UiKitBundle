@@ -698,7 +698,7 @@ const configs: Record<Entry, { build: object }> = {
       sourcemap: false,
     },
   },
-  // Demo only (UiKit 2.69): /kit/stimulus-dialogs — the remote-form-dialog, confirm-shared and confirm-submit peers.
+  // Demo only (UiKit 2.70): /kit/stimulus-dialogs — the remote-form-dialog, confirm-shared and confirm-submit peers.
   'demo-stimulus-dialogs': {
     build: {
       outDir: 'demo/symfony8/public',

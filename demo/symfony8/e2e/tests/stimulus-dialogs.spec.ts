@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 
 /**
- * UiKit 2.69 on /kit/stimulus-dialogs/{stimulus,iife,both}: the on-demand dialogs driven by the Stimulus peers.
+ * UiKit 2.70 on /kit/stimulus-dialogs/{stimulus,iife,both}: the on-demand dialogs driven by the Stimulus peers.
  * - stimulus: the page loads NO js/nowo-ui-dialog.js / js/nowo-ui-confirm.js (a Beacon product page): the row kebabs
  *   share one confirm dialog (confirm-shared peer) and the "Edit" openers one remote form shell (remote-form-dialog
  *   peer, delegated mode); the same protocol as the IIFE runtime (X-Nowo-Dialog GET, 422 in place, 204 +
@@ -31,7 +31,7 @@ function track(page: Page): { method: string; path: string; headers: Record<stri
 }
 
 for (const runtime of ['stimulus', 'iife', 'both'] as const) {
-  test.describe(`stimulus dialogs (2.69), runtime ${runtime}`, () => {
+  test.describe(`stimulus dialogs (2.70), runtime ${runtime}`, () => {
     test.use({ reducedMotion: 'reduce' });
 
     test.beforeEach(async ({ page }) => {

@@ -187,7 +187,7 @@ describe('askConfirm', () => {
   });
 });
 
-describe('confirmTexts / nativeQuestion (2.69)', () => {
+describe('confirmTexts / nativeQuestion (2.70)', () => {
   it('reads values first, then the plain attributes, trimmed', async () => {
     const { confirmTexts, nativeQuestion } = await import('./ask_confirm');
     const el = document.createElement('form');

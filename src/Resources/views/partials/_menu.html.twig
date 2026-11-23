@@ -21,16 +21,16 @@
     - open (bool), id, attr (root attributes, no on*), toggle_attr, bundle, nowo_ui_page_type
     - root_class (2.27): extra classes appended to the root (the `page_actions` partial adds its slot this way)
     - confirm_external (2.4): passed to the `action` partial (the confirm dialogs are rendered elsewhere)
-    - confirm_shared (2.68): passed to the `action` partial (the shared confirm dialog of a table). 2.69: also `true`
+    - confirm_shared (2.68): passed to the `action` partial (the shared confirm dialog of a table). 2.70: also `true`
       (group nowo-ui-menu-confirm) or a group id (string): every Confirm item of the menu opens ONE shared confirm
       dialog (partial `confirm_shared`), each row keeping only a hidden POST form with its own CSRF token (form id
       <confirmId>-form-<10 chars of confirmKey>-<row>); the dialog is rendered after this menu, outside its panel, once
       per request and group id, so every menu of the same group on the page shares it. Without the option the group
       nowo-ui-menu-confirm when nowo_ui_kit.table_confirm is shared (and confirm_external is not set); false = one
       dialog per action
-    - confirm_group (2.69): group id (string) — menus with the same group share one dialog; wins over confirm_shared
-    - confirm_row (2.69): row part of the hidden form ids (e.g. loop.index), when two rows may hold identical actions
-    - runtime (2.69): iife | stimulus — runtime of the shared dialog (default nowo_ui_kit.dialogs.runtime)
+    - confirm_group (2.70): group id (string) — menus with the same group share one dialog; wins over confirm_shared
+    - confirm_row (2.70): row part of the hidden form ids (e.g. loop.index), when two rows may hold identical actions
+    - runtime (2.70): iife | stimulus — runtime of the shared dialog (default nowo_ui_kit.dialogs.runtime)
     - square (2.21, bool): with display icon, the toggle is painted like the icon buttons next to it — slots
       btn_secondary + btn_icon + menu_toggle_square instead of menu_toggle — so it has their width and height
     - menu_items (2.21, bool): POST / confirm / dialog actions are drawn as menu items (slot menu_item through the
@@ -87,7 +87,7 @@
     {%~ set _toggle_class = nowo_ui_class('btn_secondary', _b) ~ ' ' ~ nowo_ui_class('btn_icon', _b) ~ ' nowo-ui-menu__toggle--icon ' ~ nowo_ui_class('menu_toggle_square', _b) %}
 {%~ endif %}
 {% set _menu_items = menu_items|default(false) %}
-{#- 2.69: the shared confirm group (one dialog per group, rendered after the menu root, never inside its panel) -#}
+{#- 2.70: the shared confirm group (one dialog per group, rendered after the menu root, never inside its panel) -#}
 {% set _shared = nowo_ui_confirm_group(confirm_shared ?? null, confirm_group ?? null, confirm_row ?? null, confirm_external|default(false), nowo_ui_kit_table_confirm|default('per_row')) %}
 {% set _shared_child = _shared ? _shared|merge({render: false}) : false %}
 {% set _has_confirm = false %}

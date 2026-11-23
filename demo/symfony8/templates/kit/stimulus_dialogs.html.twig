@@ -1,5 +1,5 @@
 {#
-  UiKit 2.69 demo: on-demand dialogs driven by the Stimulus peers (KitStimulusDialogsController).
+  UiKit 2.70 demo: on-demand dialogs driven by the Stimulus peers (KitStimulusDialogsController).
     - /kit/stimulus-dialogs/stimulus: no js/nowo-ui-dialog.js, no js/nowo-ui-confirm.js — only public/js/demo-stimulus-dialogs.js
       (the remote-form-dialog, confirm-shared and confirm-submit peers), as on a Beacon product page;
     - /iife: the default markup on the IIFE runtimes;
@@ -10,7 +10,7 @@
   scripts, style attributes and handlers (CSP).
 #}
 {% extends 'kit/_showcase.html.twig' %}
-{% set nowo_ui_document_title = 'Stimulus dialogs · UiKit 2.69' %}
+{% set nowo_ui_document_title = 'Stimulus dialogs · UiKit 2.70' %}
 {% set showcase_intro = 'Runtime: ' ~ runtime %}
 
 {% block body %}
@@ -34,7 +34,7 @@
         </table>
         {% embed nowo_ui_partial('confirm_dialog') with {only_dialog: true, dialog_shell: true, dialog_id: 'member-edit', title: 'Edit member', runtime: markup_runtime, dialog_testid: 'member-edit-dialog'} %}{% endembed %}
 
-        {#- 2.69: the confirm-submit peer with a title and button labels (dialog mode) -#}
+        {#- 2.70: the confirm-submit peer with a title and button labels (dialog mode) -#}
         {% if runtime != 'iife' %}
             {{ form_start(reset_form, {attr: {
                 'data-controller': 'confirm-submit',

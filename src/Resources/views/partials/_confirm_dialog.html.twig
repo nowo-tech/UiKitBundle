@@ -83,7 +83,7 @@
     - dialog_id (default a generated id), title (the dialog title, else the opener's text), size (md default | wide;
       dialog_modifier --lg / --xl → wide), placement, labels, follow_on_load_error, backdrop_close, dialog_testid, dialog_attr: passed to the
       shell (`remote_form_dialog`)
-    - runtime (2.69): iife | stimulus, or stimulus (bool: true = stimulus); default nowo_ui_kit.dialogs.runtime. With
+    - runtime (2.70): iife | stimulus, or stimulus (bool: true = stimulus); default nowo_ui_kit.dialogs.runtime. With
       stimulus the shell carries the `remote-form-dialog` peer in delegated mode (the `remote_form_dialog` partial's
       `runtime`): pages that load only the Stimulus peers open it, and the IIFE runtime, when loaded too, leaves it to
       the peer. The opener markup is the same for both runtimes

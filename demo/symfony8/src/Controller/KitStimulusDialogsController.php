@@ -20,7 +20,7 @@ use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- * UiKit 2.69 demo: the on-demand dialogs driven by the Stimulus peers. `/kit/stimulus-dialogs/stimulus` loads NO
+ * UiKit 2.70 demo: the on-demand dialogs driven by the Stimulus peers. `/kit/stimulus-dialogs/stimulus` loads NO
  * js/nowo-ui-dialog.js / js/nowo-ui-confirm.js (a Beacon product page): row kebab menus share one confirm dialog
  * (`confirm_group`, the `confirm-shared` peer) and the rows' "Edit" openers share one remote form shell (`runtime:
  * 'stimulus'`, the `remote-form-dialog` peer in delegated mode). `/iife` is the same page on the IIFE runtimes (default
@@ -65,7 +65,7 @@ final class KitStimulusDialogsController extends AbstractController
             'removed' => self::MEMBERS[$removed] ?? null,
             'saved' => 1 === preg_match('/^[\pL\pN .()-]{1,60}$/u', $saved) ? $saved : null,
             'reset' => $request->query->getBoolean('reset'),
-            // The confirm-submit demo (2.69): a nameless GET form whose one hidden field is `reset=1` (REQ-TWIG-005).
+            // The confirm-submit demo (2.70): a nameless GET form whose one hidden field is `reset=1` (REQ-TWIG-005).
             'reset_form' => $this->container->get('form.factory')->createNamedBuilder('', FormType::class, ['reset' => '1'], [
                 'method' => 'GET',
                 'action' => $this->generateUrl('kit_stimulus_dialogs', ['runtime' => $runtime]),

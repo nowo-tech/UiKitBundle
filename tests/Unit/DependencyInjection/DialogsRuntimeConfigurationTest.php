@@ -10,7 +10,7 @@ use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Definition\Processor;
 
 /**
- * 2.69 `nowo_ui_kit.dialogs.runtime`: iife (default, the 2.68 markup) | stimulus (the on-demand dialog shells carry the
+ * 2.70 `nowo_ui_kit.dialogs.runtime`: iife (default, the 2.68 markup) | stimulus (the on-demand dialog shells carry the
  * Stimulus peers).
  */
 final class DialogsRuntimeConfigurationTest extends TestCase

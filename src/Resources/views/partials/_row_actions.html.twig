@@ -13,13 +13,13 @@
       renders them once after the table): actions with a Confirm print only their toggle button
     - confirm_shared (2.68): {id, row}, passed to the `action` partial (and the menu): actions with a Confirm open the
       one shared confirm dialog `id` (the `table` partial with confirm_shared)
-      2.69: also `true` or a group id (string): the actions with a Confirm (buttons or menu items, `menu: true`) open
+      2.70: also `true` or a group id (string): the actions with a Confirm (buttons or menu items, `menu: true`) open
       ONE shared confirm dialog per group, rendered once per request and id (after the menu root, or after the first
       such button of the cluster; the `menu` / `action` partials normalise these options); each row keeps a hidden
       POST form with its own CSRF token. Default: the group nowo-ui-menu-confirm when nowo_ui_kit.table_confirm is
       shared and confirm_external is not set; false = one dialog per action (see the `menu` partial)
-    - confirm_group (2.69): group id (string), wins over confirm_shared; confirm_row (2.69): row part of the form ids
-    - runtime (2.69): iife | stimulus — runtime of the shared dialog (default nowo_ui_kit.dialogs.runtime)
+    - confirm_group (2.70): group id (string), wins over confirm_shared; confirm_row (2.70): row part of the form ids
+    - runtime (2.70): iife | stimulus — runtime of the shared dialog (default nowo_ui_kit.dialogs.runtime)
     - bundle (2.0): per-bundle theme exceptions (slots row_actions, action, action_primary | action_secondary |
       action_danger | action_neutral (by resolved variant: delete = danger, create / save = primary, other kinds
       neutral, explicit variants as given): host classes; row_action_disabled (disabled actions): host classes

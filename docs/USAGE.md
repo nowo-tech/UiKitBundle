@@ -57,7 +57,7 @@
 - [Shell focus mode (2.55)](#shell-focus-mode-255)
 - [Reading column and wide content (2.48)](#reading-column-and-wide-content-248)
 - [Remote form dialog (2.28)](#remote-form-dialog-228)
-  - [Stimulus runtime (2.69)](#stimulus-runtime-269)
+  - [Stimulus runtime (2.70)](#stimulus-runtime-270)
 - [Small element options (2.34)](#small-element-options-234)
 - [Focusable scroll regions (2.28)](#focusable-scroll-regions-228)
 - [Dialog back button](#dialog-back-button)
@@ -2949,7 +2949,7 @@ nowo_ui_kit:
 Names are header tokens (letters, digits, `-`, starting with a letter, ≤ 64 characters), three different names; the
 client falls back to the default for anything else.
 
-### Stimulus runtime (2.69)
+### Stimulus runtime (2.70)
 
 Product pages that load only the Stimulus peers (no `js/nowo-ui-dialog.js` / `js/nowo-ui-confirm.js`) switch the
 on-demand dialogs to the peers with **`nowo_ui_kit.dialogs.runtime: stimulus`**, or per partial with

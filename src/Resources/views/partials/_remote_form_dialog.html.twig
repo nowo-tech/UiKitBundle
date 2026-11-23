@@ -8,7 +8,7 @@
     - stimulus: false (default) — js/nowo-ui-dialog.js: openers carry data-nowo-ui-dialog-open="<id>",
       data-nowo-ui-dialog-src="<url>" and data-nowo-ui-dialog-form (see nowo_ui_remote_form_opener()); the settings
       are attributes of the dialog.
-    - runtime: 'stimulus' (2.69; default nowo_ui_kit.dialogs.runtime, `iife`) — the IIFE markup above plus the
+    - runtime: 'stimulus' (2.70; default nowo_ui_kit.dialogs.runtime, `iife`) — the IIFE markup above plus the
       `remote-form-dialog` peer on the <dialog> itself in delegated mode (data-controller, the dialog / title / body
       targets, data-remote-form-dialog-delegate-value): the peer opens it from the same openers (data-nowo-ui-dialog-open
       + -src + -form, nowo_ui_remote_form_opener()), reads the same settings and also dispatches the
@@ -28,7 +28,7 @@
     - id
   Optional:
     - stimulus (bool, default false)
-    - runtime (2.69): iife | stimulus (see above; default nowo_ui_kit.dialogs.runtime)
+    - runtime (2.70): iife | stimulus (see above; default nowo_ui_kit.dialogs.runtime)
     - title (View\Label|string): initial title (the opener's title replaces it)
     - size: lg (default) — the wide size since 2.29, like wide / xl; md / sm = the medium size
     - placement (2.34): center (default) | end | start — the `dialog` partial's side panel (full height, at that edge;
@@ -48,7 +48,7 @@
 {% set _error = _labels.error is defined ? _labels.error|nowo_ui_trans : 'remote_form_dialog.save_failed'|trans({}, 'NowoUiKitBundle') %}
 {% set _title = title|default(null) is null ? '' : title|nowo_ui_trans %}
 {% set _attr = {} %}
-{#- 2.69: the delegated Stimulus shell (runtime stimulus), unless the 2.28 ancestor mode (stimulus: true) is asked -#}
+{#- 2.70: the delegated Stimulus shell (runtime stimulus), unless the 2.28 ancestor mode (stimulus: true) is asked -#}
 {% set _delegate = not _stimulus and nowo_ui_dialogs_runtime(runtime ?? null, nowo_ui_kit_dialogs_runtime|default('iife')) == 'stimulus' %}
 {% if _stimulus %}
     {% set _attr = _attr|merge({'data-remote-form-dialog-target': 'dialog'}) %}

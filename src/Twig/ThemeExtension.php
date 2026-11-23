@@ -213,7 +213,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             // 2.33: the dialog attributes of configured (non-default) header names; empty with the defaults.
             new TwigFunction('nowo_ui_remote_dialog_attrs', fn (): array => ($this->remoteDialogHeaders ?? RemoteDialogHeaders::defaults())->dialogAttributes()),
             new TwigFunction('nowo_ui_remote_form_opener', self::remoteFormOpener(...)),
-            // 2.69: the shared confirm group of a menu / row actions / action, and its dialog once per request.
+            // 2.70: the shared confirm group of a menu / row actions / action, and its dialog once per request.
             new TwigFunction('nowo_ui_confirm_group', self::confirmGroup(...)),
             new TwigFunction('nowo_ui_confirm_shared_once', $this->confirmSharedOnce(...)),
             new TwigFunction('nowo_ui_dialogs_runtime', self::dialogsRuntime(...)),
@@ -241,14 +241,14 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
         return ['value' => $value, 'max' => 0 + $max, 'percent' => (int) round($value / (0 + $max) * 100)];
     }
 
-    /** Default id of the shared confirm dialog of menus and row actions outside a table (2.69). */
+    /** Default id of the shared confirm dialog of menus and row actions outside a table (2.70). */
     public const MENU_CONFIRM_ID = 'nowo-ui-menu-confirm';
 
-    /** Request attribute holding the shared confirm dialog ids already rendered (2.69). */
+    /** Request attribute holding the shared confirm dialog ids already rendered (2.70). */
     public const CONFIRM_SHARED_ATTRIBUTE = '_nowo_ui_confirm_shared';
 
     /**
-     * The shared confirm group of an `action` / `menu` / `row_actions` partial (2.69), or null for the per-action dialogs.
+     * The shared confirm group of an `action` / `menu` / `row_actions` partial (2.70), or null for the per-action dialogs.
      *
      * - a hash with a non-empty `id` (the 2.68 `{id, row}` of the `table` partial): that group, `row` (default 0) and
      *   `render` (default false: the dialog is rendered elsewhere, as the table does);
@@ -287,7 +287,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
     }
 
     /**
-     * Whether the shared confirm dialog `id` still has to be rendered in this request (2.69): true the first time per
+     * Whether the shared confirm dialog `id` still has to be rendered in this request (2.70): true the first time per
      * main request, false afterwards. The ids live in an attribute of the main request (nothing kept in the service, so
      * a worker serving many requests starts each one empty). Without a request (CLI rendering) it is always true.
      */
@@ -309,7 +309,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
     }
 
     /**
-     * The dialog runtime a shell is wired for (2.69): `stimulus` or `iife` from the partial option `runtime`, else a
+     * The dialog runtime a shell is wired for (2.70): `stimulus` or `iife` from the partial option `runtime`, else a
      * boolean `stimulus` option (true = stimulus, false = iife), else the configured `nowo_ui_kit.dialogs.runtime`, else `iife`.
      */
     public static function dialogsRuntime(mixed $runtime = null, mixed $configured = 'iife', mixed $stimulus = null): string

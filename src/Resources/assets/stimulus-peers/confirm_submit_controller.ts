@@ -28,7 +28,7 @@
  * lets the event through unchanged; `data-confirm-submit-danger-value="false"` keeps the primary button in the dialog
  * for a non-destructive confirmation.
  *
- * Title and button labels (2.69): `data-confirm-submit-title-value` (or the plain `data-confirm-title`) is the dialog
+ * Title and button labels (2.70): `data-confirm-submit-title-value` (or the plain `data-confirm-title`) is the dialog
  * heading, the message its body; `data-confirm-submit-confirm-label-value` / `data-confirm-label` and
  * `data-confirm-submit-cancel-label-value` / `data-confirm-cancel-label` name the buttons (default the page's
  * `<html data-confirm-ok / data-confirm-cancel>`). `native` mode shows the title, a blank line and the message in
@@ -61,11 +61,11 @@ export function createConfirmSubmitController(options: ConfirmSubmitOptions = {}
       blocked: { type: Boolean, default: false },
       danger: { type: Boolean, default: true },
       mode: { type: String, default: '' },
-      /** 2.69: dialog heading (fallback attribute data-confirm-title). */
+      /** 2.70: dialog heading (fallback attribute data-confirm-title). */
       title: { type: String, default: '' },
-      /** 2.69: Confirm button label (fallback attribute data-confirm-label). */
+      /** 2.70: Confirm button label (fallback attribute data-confirm-label). */
       confirmLabel: { type: String, default: '' },
-      /** 2.69: Cancel button label (fallback attribute data-confirm-cancel-label). */
+      /** 2.70: Cancel button label (fallback attribute data-confirm-cancel-label). */
       cancelLabel: { type: String, default: '' },
     };
 

@@ -35,7 +35,7 @@
  * without a form (disabled action) opens nothing, and so does a shared dialog opened without such a toggle
  * (`nowoUiOpenConfirm(id)` from script); closing it drops the binding.
  *
- * Stimulus runtime (2.69): a dialog claimed by the `confirm-shared` peer (data-nowo-ui-runtime-owner, set by the peer
+ * Stimulus runtime (2.70): a dialog claimed by the `confirm-shared` peer (data-nowo-ui-runtime-owner, set by the peer
  * when it connects; nowo-ui-runtime-owner.ts) is left to the peer — no open, close, input or close-event handling here —
  * so this script can stay loaded next to the peers without handling a click twice. A second copy of this script binds
  * nothing. The shared logic lives in nowo-ui-confirm-core.ts, used by both.
@@ -98,7 +98,7 @@ function onDocumentClick(event: MouseEvent): void {
   const openBtn = target.closest('[data-nowo-confirm-open]');
   if (openBtn) {
     const targetId = openBtn.getAttribute('data-nowo-confirm-target');
-    // 2.69: a dialog claimed by the `confirm-shared` Stimulus peer opens through the peer only.
+    // 2.70: a dialog claimed by the `confirm-shared` Stimulus peer opens through the peer only.
     if (targetId && !ownedByStimulus(document.getElementById(targetId))) {
       event.preventDefault();
       openConfirm(targetId, openBtn);
@@ -169,7 +169,7 @@ export function warnMissingConfirmPeer(event: Event): void {
   if (isBlocked(form.getAttribute('data-confirm-submit-blocked-value'))) {
     event.preventDefault();
   } else {
-    // 2.69: the title (data-confirm-submit-title-value / data-confirm-title) is asked too, above the message.
+    // 2.70: the title (data-confirm-submit-title-value / data-confirm-title) is asked too, above the message.
     const question = nativeQuestion(confirmTexts(form, 'confirm-submit'));
     if (question !== '' && !window.confirm(question)) {
       event.preventDefault();
@@ -192,7 +192,7 @@ export function bindNowoUiConfirm(): void {
     return;
   }
   confirmBound = true;
-  // 2.69: a second copy of this script (another bundle's) binds nothing more.
+  // 2.70: a second copy of this script (another bundle's) binds nothing more.
   if (!markBound('confirm')) {
     return;
   }

@@ -211,7 +211,7 @@ function pick(options: ConfirmOptions): Partial<{ confirm: string; cancel: strin
   return labels;
 }
 
-/** The texts of a confirm-submit element (2.69): message, and the optional title and button labels. */
+/** The texts of a confirm-submit element (2.70): message, and the optional title and button labels. */
 export interface ConfirmTexts {
   message: string;
   title: string;
@@ -220,7 +220,7 @@ export interface ConfirmTexts {
 }
 
 /**
- * Reads the confirm texts of an element (2.69): the Stimulus values of `identifier` (`data-<identifier>-message-value`,
+ * Reads the confirm texts of an element (2.70): the Stimulus values of `identifier` (`data-<identifier>-message-value`,
  * `-title-value`, `-confirm-label-value`, `-cancel-label-value`) win; the title and labels fall back to the plain
  * attributes `data-confirm-title`, `data-confirm-label` and `data-confirm-cancel-label`. Every text is trimmed.
  */
@@ -241,7 +241,7 @@ export function confirmTexts(element: Element, identifier: string): ConfirmTexts
 }
 
 /**
- * The one string `window.confirm()` can show (2.69): the title, a blank line and the message; either alone when the
+ * The one string `window.confirm()` can show (2.70): the title, a blank line and the message; either alone when the
  * other is empty; '' when both are (nothing to ask).
  */
 export function nativeQuestion(texts: Pick<ConfirmTexts, 'message' | 'title'>): string {

@@ -1,5 +1,5 @@
 /**
- * Optional Stimulus peer (2.69) — the shared confirm <dialog> (partial `confirm_shared`, 2.68) without the IIFE runtime
+ * Optional Stimulus peer (2.70) — the shared confirm <dialog> (partial `confirm_shared`, 2.68) without the IIFE runtime
  * js/nowo-ui-confirm.js: for pages that load only the Stimulus peers.
  *
  * Identifier: `confirm-shared`. Put it on the shared <dialog> itself (the partial prints it with `runtime: 'stimulus'`,

@@ -23,7 +23,7 @@
  * `window.nowoUiOpenRemoteForm(id, url, opener?)` opens one from script.
  * Overlay (2.28): every dialog opened here registers with the overlay registry (nowo-ui-overlay.ts: `nowo:overlay-*`
  * events, html[data-nowo-overlay]) until it closes.
- * Stimulus runtime (2.69): a dialog claimed by the `remote-form-dialog` peer (data-nowo-ui-runtime-owner, set by the
+ * Stimulus runtime (2.70): a dialog claimed by the `remote-form-dialog` peer (data-nowo-ui-runtime-owner, set by the
  * peer when it connects; nowo-ui-runtime-owner.ts) is left to the peer — its openers, close buttons, backdrop and
  * `close` event — so this script can stay loaded next to the peers without handling a click twice. A second copy of
  * this script binds nothing.
@@ -250,7 +250,7 @@ function onDocumentClick(event: MouseEvent): void {
   closeMenus(target);
 
   const openBtn = target.closest('[data-nowo-ui-dialog-open]');
-  // 2.69: a dialog claimed by a Stimulus peer (remote-form-dialog) is opened and closed by the peer only.
+  // 2.70: a dialog claimed by a Stimulus peer (remote-form-dialog) is opened and closed by the peer only.
   if (openBtn && ownedByStimulus(resolveDialog(openBtn.getAttribute('data-nowo-ui-dialog-open')))) {
     return;
   }
@@ -306,7 +306,7 @@ export function bindNowoUiDialog(): void {
     return;
   }
   dialogBound = true;
-  // 2.69: a second copy of this script (another bundle's) binds nothing more.
+  // 2.70: a second copy of this script (another bundle's) binds nothing more.
   if (!markBound('dialog')) {
     return;
   }

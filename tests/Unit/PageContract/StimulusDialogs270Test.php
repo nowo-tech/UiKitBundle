@@ -15,11 +15,11 @@ use Symfony\Component\HttpFoundation\RequestStack;
 use Twig\Environment;
 
 /**
- * 2.69 — the Stimulus runtime of the on-demand dialogs (`nowo_ui_kit.dialogs.runtime`, the partials' `runtime` /
+ * 2.70 — the Stimulus runtime of the on-demand dialogs (`nowo_ui_kit.dialogs.runtime`, the partials' `runtime` /
  * `stimulus` option) and the shared confirm dialog of menus and row actions outside the `table` partial
  * (`confirm_shared` / `confirm_group`). The default output is the 2.68 one (the bc-* fixtures of the other tests).
  */
-final class StimulusDialogs269Test extends TestCase
+final class StimulusDialogs270Test extends TestCase
 {
     private const SHELL = "{{ include(nowo_ui_partial('remote_form_dialog'), opts, false) }}";
 
