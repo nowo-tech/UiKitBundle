@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.69.0] - 2026-11-23](#2690---2026-11-23)
 - [[2.68.0] - 2026-11-23](#2680---2026-11-23)
 - [[2.67.0] - 2026-11-23](#2670---2026-11-23)
 - [[2.66.1] - 2026-11-22](#2661---2026-11-22)
@@ -193,6 +194,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   worker safe), `nowo_ui_dialogs_runtime()`.
 - Demo `/kit/stimulus-dialogs/{stimulus,iife,both}` and its Playwright e2e (Stimulus-only page, IIFE page, both
   runtimes: the shared confirm posts the clicked row's target and token, one request per open, one POST per submit).
+
+## [2.69.0] - 2026-11-23
+
+### Added
+
+- **One-time secret** (theme partial `secret_once`, opt-in runtime `secret-once`, owner decision 2026-11-23 for the
+  ApiToken "new token" page): the secret is printed exactly once, as the escaped text of the value element — no
+  `data-*` attribute, hidden input, `title`, `aria-label` or second text node, and the runtime makes no copy (Clipboard
+  API from the node; the `execCommand` fallback is fed by a `copy` listener, no temporary `<textarea>`). Without
+  JavaScript it is plain selectable text; with it, it starts masked (CSS `display: none` by state, static bullet
+  mask), a toggle button (`aria-pressed`) reveals it, Copy announces the result in a `role="status"` region.
+  `clear_on_hide` / `clear_after` wipe the text in place and disable the controls (`aria-disabled`); by default
+  (`wipe_on_leave`, audit ZAB S3-L1) it is also wiped when its enclosing `<dialog>` closes and on `pagehide`, so it
+  never comes back from the back/forward cache, nor stays in a Turbo snapshot (`turbo:before-cache`). Roots inserted
+  later (remote dialog fragments, Turbo frames) are upgraded by a `MutationObserver` / `nowo-ui:dialog-loaded`; the
+  listeners are bound once per window. Hosts must send the page and its fragments with `Cache-Control: no-store`. Strings in the 7 locales, light / dark tokens, no inline style or
+  script. Demo on `/catalogue/admin/data-display`; Vitest, PHPUnit page contract and Playwright (the secret counted in
+  `document.documentElement.outerHTML`: 1 before and after reveal / copy, 0 once cleared) tests. The
+  `temporary-reveal` Stimulus peer is unchanged.
 
 ## [2.68.0] - 2026-11-23
 
@@ -3560,7 +3580,7 @@ Supersedes 1.17.3: same runtime code and CSS, release gate hardened so the tagge
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.68.0...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.69.0...HEAD
 [1.10.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.4...v1.10.0
 [1.8.4]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.3...v1.8.4
 [1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0

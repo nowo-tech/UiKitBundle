@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.69.0](#to-2690)
 - [To 2.68.0](#to-2680)
 - [To 2.67.0](#to-2670)
 - [To 2.66.1](#to-2661)
@@ -171,7 +172,7 @@
 
 ## Unreleased
 
-Nothing to change: the default output is the 2.68 one (`nowo_ui_kit.dialogs.runtime: iife`).
+To 2.70.0, from **2.69.0**: nothing to change, the default output is the 2.69 one (`nowo_ui_kit.dialogs.runtime: iife`).
 
 - **Pages without `js/nowo-ui-dialog.js` / `js/nowo-ui-confirm.js`** (Stimulus-only product pages): set
   `nowo_ui_kit.dialogs.runtime: stimulus` (or `runtime: 'stimulus'` per partial, `stimulus: true` on `confirm_dialog`)
@@ -192,6 +193,31 @@ Nothing to change: the default output is the 2.68 one (`nowo_ui_kit.dialogs.runt
   `row_actions` must pass `confirm_group`, `confirm_row` and `runtime` through.
 - **`confirm-submit`**: hosts that concatenated a title into `data-confirm-submit-message-value` can move it to
   `data-confirm-title` and the button label to `data-confirm-label`.
+
+## To 2.69.0
+
+From **2.68.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+**Kits showing a secret once** (ApiToken "new token", webhook signing secrets, recovery codes): nothing changes for
+`temporary-reveal` (BC), but it keeps the secret in a `data-temporary-reveal-secret-value` attribute until it is
+cleared. To have it in the HTML only once, replace the markup with the `secret_once` partial and load the `secret-once`
+runtime:
+
+```twig
+{{ include(nowo_ui_partial('secret_once'), {secret: plain_token, label: 'API token', hint: 'Copy it now: it is shown only once.', clear_on_hide: true}, false) }}
+{# with the page's other runtimes #}
+{{ include(nowo_ui_partial('scripts'), {script_names: nowo_ui_script_names()|merge(['secret-once'])}) }}
+```
+
+Remove any `data-*-secret-value`, `data-clipboard-copy-text-value` or `data-nowo-ui-clipboard-text` that carried the
+secret. **Required:** send the page and every fragment that carries the secret (remote dialog answer, Turbo frame)
+with `Cache-Control: no-store, private`, and on Turbo Drive pages print
+`<meta name="turbo-cache-control" content="no-cache">`. Fragments inserted later are upgraded by the runtime itself. The text is wiped on dialog close and `pagehide` by
+default (and on `turbo:before-cache`); pass `wipe_on_leave: false` only when the page must keep it (it then can come back from the back/forward cache).
 
 ## To 2.68.0
 

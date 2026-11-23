@@ -93,6 +93,7 @@
   - [Form patterns](#form-patterns)
   - [Feedback and overlays](#feedback-and-overlays)
   - [Navigation patterns](#navigation-patterns)
+- [One-time secrets (2.69)](#one-time-secrets-269)
 - [Feature bundles](#feature-bundles)
 - [Demo platform shell (2.60)](#demo-platform-shell-260)
 - [Kitchen sink](#kitchen-sink)
@@ -4249,6 +4250,7 @@ Opt-in runtimes (add them to `script_names` or print them after `nowo_ui_partial
 | `dropzone` | `dropzone` |
 | `form-busy` | loading button on submit, error summary focus |
 | `clipboard` | `code_block` copy button (2.61: `data-nowo-ui-clipboard-target`, `data-nowo-ui-clipboard-reveal`) |
+| `secret-once` | `secret_once` (2.69): mask, reveal, copy and wipe a one-time secret ([One-time secrets](#one-time-secrets-269)) |
 
 `tabs` (client tab panels), `toast` (client toasts), `confirm` and `popover` (kebab menus) are default runtimes.
 
@@ -4408,6 +4410,64 @@ Opt-in runtimes (add them to `script_names` or print them after `nowo_ui_partial
   stacked under their headings.
 - **`steps`** — `items: [{label, status (done | current | upcoming), hint, href}]`, `label`: numbered, done steps link
   back, `aria-current="step"`, the state in words; horizontal from 40rem.
+
+## One-time secrets (2.69)
+
+For a value shown once and never again: a new API token, a webhook signing secret, recovery codes. Theme partial
+`secret_once`, opt-in runtime `secret-once` (add it to `script_names` or print `js/nowo-ui-secret-once.js` after
+`nowo_ui_partial('scripts')`).
+
+```twig
+{{ include(nowo_ui_partial('secret_once'), {
+    secret: plain_token,
+    label: 'api_token.new.label'|trans,
+    hint: 'api_token.new.hint'|trans,
+    clear_on_hide: true,
+}, false) }}
+```
+
+**The secret is in the HTML exactly once**: the escaped text of `<code data-nowo-ui-secret-once-value>`. No `data-*`
+attribute, hidden input, `title`, `aria-label` or second text node carries it, and the runtime never makes a copy
+(no temporary `<textarea>` for the copy fallback either). That is the difference with the `temporary-reveal` Stimulus
+peer, which reads the secret from an attribute (kept as it is, for BC).
+
+**Required of the host:**
+
+- send the page **and every fragment that carries the secret** (a remote dialog's `data-nowo-ui-dialog-src`
+  answer, a Turbo frame) with `Cache-Control: no-store, private`. A response replayed from the HTTP cache (reload, Back
+  after a bfcache eviction, the dialog runtime's `fetch()`) shows the secret again and no script can wipe it;
+- on Turbo Drive pages, also `<meta name="turbo-cache-control" content="no-cache">` (the runtime wipes on
+  `turbo:before-cache` too, the meta keeps Turbo from showing a preview of the page).
+
+- **Without JavaScript** the secret is plain text, never hidden server-side; `user-select: all` selects it whole on
+  one click. The buttons are `hidden` until the runtime runs.
+- **Masked** (default once the runtime runs; `revealed: true` starts revealed): the value element gets
+  `display: none` through the root's `data-nowo-ui-secret-once-state="masked"` and a static bullet mask is shown, so the
+  secret is not painted, not selectable, not in the accessibility tree and not found by find-in-page, while the node
+  keeps its text. The value element has `translate="no"`, `spellcheck="false"`, `autocomplete="off"` and
+  `autocapitalize="off"`.
+- **Show** is a toggle button (`aria-pressed`, `aria-controls` the value, a constant label); **Copy** writes the node's
+  text with `navigator.clipboard.writeText()` (falls back to `execCommand('copy')` fed by a `copy` listener, still with
+  no DOM copy) and says "Copied" / "Copy failed" in a `role="status"` region next to the buttons. Both buttons are
+  described by the visible label.
+- **Clearing**: `clear_on_hide: true` wipes the text in place when it is hidden; `clear_after: <ms>` wipes it after
+  that delay, counted from the moment the runtime upgrades the root (page load, or the insertion of the fragment that
+  carries it). Then the state is `cleared`, a note says so, and both buttons are `aria-disabled` (they keep focus, the
+  clicks do nothing).
+- **Leaving** (default, `wipe_on_leave: false` to opt out): the text is wiped when the enclosing `<dialog>` closes, on
+  `pagehide` and on `turbo:before-cache`, so a closed dialog, a page restored from the back/forward cache or a Turbo
+  snapshot never shows it again.
+- **Content inserted later** (a remote dialog fragment, a Turbo frame, a host swap) is upgraded by a
+  `MutationObserver` and on `nowo-ui:dialog-loaded`: masked, Copy shown, `clear_after` armed. Loading the script twice
+  binds its listeners once.
+
+Options: `secret` (required), `label`, `hint`, `secret_id` (partial-scoped; `-label` / `-hint` ids derive from it),
+`revealed`, `clear_on_hide`, `clear_after`, `wipe_on_leave`, `labels` (`show`, `copy`, `copied`, `copy_failed`,
+`masked`, `cleared`), `attr`. Strings ship in the 7 locales. The demo shows it on `/catalogue/admin/data-display`.
+
+**Limits** (say so on the page): the runtime cannot clear the system clipboard, nor what the user already
+saw or pasted; a short flash of the plain value is possible before the deferred script runs (it is the progressive
+enhancement baseline).
 
 ## Feature bundles
 
