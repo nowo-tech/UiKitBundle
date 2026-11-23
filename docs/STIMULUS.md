@@ -293,6 +293,9 @@ No kit IIFE (1.15). Shows a secret masked, reveals it on demand and hides it aga
 | target `toggle` + `data-action="temporary-reveal#toggle"` | Button (`aria-pressed`, label) |
 
 Masking keeps URLs readable (`https://user:••••••••@host/…`); any other secret is replaced by bullets.
+
+The secret sits in a `data-*` attribute until it is cleared. For a value that must be in the HTML only once (a new API
+token), use the `secret_once` partial and its kit runtime `secret-once` instead (2.69, [USAGE](USAGE.md#one-time-secrets-269)).
 Peer: `temporary_reveal_controller.ts` (exports `maskSecret()`).
 
 ## Collapse panel (Stimulus peer only)
