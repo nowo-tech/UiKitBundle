@@ -25,6 +25,12 @@
  * - Without this script the secret stays visible as plain text (`user-select: all`), the buttons stay `hidden`.
  */
 
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/secret-once', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
+
 export type SecretOnceState = 'masked' | 'revealed' | 'cleared';
 
 const ROOT = '[data-nowo-ui-secret-once]';

@@ -18,6 +18,12 @@
  * - Delegated listeners, no inline handlers or style attributes (strict CSP).
  */
 
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/tree', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
+
 export const TREE = '[data-nowo-ui-tree]';
 export const ITEM = '[data-nowo-ui-tree-item]';
 export const NODE = '[data-nowo-ui-tree-node]';

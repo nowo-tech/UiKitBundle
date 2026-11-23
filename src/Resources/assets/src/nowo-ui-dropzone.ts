@@ -7,6 +7,12 @@
  * data-nowo-ui-dropzone-one / -many / -none / -too-large / -wrong-type attributes (%count%, %name%, %size%).
  */
 
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/dropzone', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
+
 const ROOT = '[data-nowo-ui-dropzone]';
 
 export function formatBytes(bytes: number): string {

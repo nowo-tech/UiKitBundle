@@ -98,6 +98,7 @@
 - [Demo platform shell (2.60)](#demo-platform-shell-260)
 - [Kitchen sink](#kitchen-sink)
 - [Related docs](#related-docs)
+- [Browser console](#browser-console)
 
 ## Import macros
 
@@ -4656,3 +4657,7 @@ A host that needs its own wiring extends the partial instead of copying it (2.9)
 
 The stack root takes the `toasts` slot classes and attributes (e.g. `data-controller: toast-stack`). Defaults keep
 the 1.x markup: a role per toast, 8 s for errors and warnings, 5 s otherwise.
+
+## Browser console
+
+The bundle's script logs one line when it loads (`📦 [ui-kit/<name>] script loaded, build: 2026-11-23 14:05 UTC`) so a developer can tell which build a page runs. To silence it, set `<html data-nowo-console="quiet">` or `globalThis.NOWO_CONSOLE = 'quiet'` before the script loads; nothing is printed then. The default is unchanged.

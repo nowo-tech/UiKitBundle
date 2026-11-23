@@ -9,6 +9,12 @@
  *   its links focus their field instead of only scrolling to it.
  */
 
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/form-busy', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
+
 const BUSY_FORM = 'form[data-nowo-ui-busy-on-submit]';
 
 function submitterOf(form: HTMLFormElement, event: SubmitEvent): HTMLElement | null {

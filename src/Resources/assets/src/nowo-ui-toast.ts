@@ -13,6 +13,12 @@
  *   through textContent (never HTML). The stack is a polite live region, so the new toast is announced once.
  */
 
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/toast', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
+
 declare global {
   interface Window {
     nowoUiDismissToast?: (el: HTMLElement | null) => void;

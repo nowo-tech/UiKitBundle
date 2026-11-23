@@ -10,6 +10,12 @@
  * `checkbox_segment` Stimulus controller.
  */
 
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/segmented', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
+
 export const GROUP = '[data-nowo-ui-segmented]';
 export const OPTION = '[data-nowo-ui-segmented-option]';
 export const INPUT = '[data-nowo-ui-segmented-input]';

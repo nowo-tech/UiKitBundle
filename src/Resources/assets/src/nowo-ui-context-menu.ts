@@ -32,6 +32,11 @@
 
 import { recordInvoker } from './nowo-ui-focus-return';
 import { EDGE_PX, GAP_PX } from './nowo-ui-popover-core';
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/context-menu', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
 
 /** Explicit host attribute. */
 export const ATTR = 'data-nowo-ui-context-menu';

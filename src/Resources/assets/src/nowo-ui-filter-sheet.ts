@@ -13,6 +13,12 @@
  * and the stylesheet (overscroll-behavior on the dialog and its ::backdrop) provide them.
  */
 
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/filter-sheet', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
+
 const ROOT = '[data-nowo-ui-filter-sheet]';
 export const PHONE_QUERY = '(max-width: 47.99rem)';
 

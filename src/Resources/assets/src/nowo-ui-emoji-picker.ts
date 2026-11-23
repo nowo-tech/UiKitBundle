@@ -20,6 +20,11 @@
 import { EMOJI } from './nowo-ui-emoji-table';
 import { closeWithEffect, finishClosing, isClosing } from './nowo-ui-motion-core';
 import { EDGE_PX, placeBeside } from './nowo-ui-popover-core';
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/emoji-picker', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
 
 export const ROOT = '[data-nowo-ui-emoji-picker]';
 const TOGGLE = '[data-nowo-ui-emoji-picker-toggle]';

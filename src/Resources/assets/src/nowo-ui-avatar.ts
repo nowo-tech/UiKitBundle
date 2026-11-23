@@ -16,6 +16,12 @@
  *   failed URLs; the server-side policy is the gate.
  */
 
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/avatar', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
+
 export const AVATAR_IMAGE = 'img.nowo-ui-avatar__image, img[data-nowo-avatar-image]';
 
 const failed = new Set<string>();

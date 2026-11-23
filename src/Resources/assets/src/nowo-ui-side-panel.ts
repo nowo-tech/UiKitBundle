@@ -49,6 +49,11 @@ export type OpenOptions = { focus?: HTMLElement | string | false; source?: SideP
 import { overlayRegistry, type OverlayHandle } from './nowo-ui-overlay';
 import { applyStoredPanel, closeStartingDrawer, DRAWER_QUERIES, panelIsDrawer, PANEL_PERSIST_ATTR, PANEL_READY_ATTR, rememberPanel } from './nowo-ui-layout-state-core';
 import { matchesShortcut, parseShortcut } from './nowo-ui-shortcut-core';
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/side-panel', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
 
 export { matchesShortcut, parseShortcut, type Shortcut } from './nowo-ui-shortcut-core';
 

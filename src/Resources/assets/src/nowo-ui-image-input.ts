@@ -16,6 +16,13 @@
  * Events on the root (bubbling): `nowo-ui:image-input:change` {state, file}. CSP: no style attribute, no inline script; the
  * preview needs `img-src blob:`. Delegated listeners plus one MutationObserver for boxes inserted later. Importing touches no DOM.
  */
+
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/image-input', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
+
 export const ROOT = '[data-nowo-ui-image-input]';
 const FILE = '[data-nowo-ui-image-input-file]';
 const FRAME = '[data-nowo-ui-image-input-frame]';

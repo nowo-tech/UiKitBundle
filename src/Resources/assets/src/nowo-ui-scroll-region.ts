@@ -20,6 +20,12 @@
  * `role="group"` instead of `region` (any other value: `region`).
  */
 
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/scroll-region', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
+
 export const REGION =
   '[data-nowo-ui-region="table"], [data-nowo-ui-scroll-region], :is(.nowo-ui-rendered-content, [data-nowo-ui-rendered-content]) :is(pre, table)';
 export const MARK = 'data-nowo-ui-scroll-focusable';

@@ -6,6 +6,12 @@
  * Without JavaScript the markup keeps a `<noscript>` submit button.
  */
 
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/autosubmit', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
+
 export const AUTOSUBMIT = '[data-nowo-ui-autosubmit]';
 
 /** Submits the form of a changed control (no-op for controls outside a form). */

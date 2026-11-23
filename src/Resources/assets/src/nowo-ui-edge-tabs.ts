@@ -32,6 +32,13 @@
  *
  * Delegated listeners on the document; importing touches no DOM. Members are read through the prototypes.
  */
+
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/edge-tabs', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
+
 export const LAUNCHER = '[data-nowo-ui-edge-tabs-launcher]';
 export const TAB = '.nowo-ui-edge-tab__link';
 export const OPEN = 'data-nowo-ui-edge-tabs-open';

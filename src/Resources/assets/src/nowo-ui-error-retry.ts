@@ -6,6 +6,11 @@
  * `error-retry-countdown` peer on their own markup instead.
  */
 import { RetryCountdown, parseSeconds } from './nowo-ui-error-retry-core';
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/error-retry', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
 
 export const ROOT = '[data-nowo-ui-error-retry]';
 

@@ -28,6 +28,11 @@ export const PANEL = '[data-nowo-ui-popover-panel]';
 import { bindFocusReturn } from './nowo-ui-focus-return';
 import { closeWithEffect, finishClosing, isClosing } from './nowo-ui-motion-core';
 import { placeBeside } from './nowo-ui-popover-core';
+import { announceScript } from './script-banner';
+
+declare const __UI_KIT_BUILD_TIME__: string;
+
+announceScript('ui-kit/popover', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
 
 export { EDGE_PX, GAP_PX } from './nowo-ui-popover-core';
 
