@@ -46,6 +46,7 @@ type Entry =
   | 'table-view'
   | 'filter-sheet'
   | 'form-busy'
+  | 'secret-once'
   | 'demo-peers'
   | 'demo-page-actions';
 
@@ -660,6 +661,22 @@ const configs: Record<Entry, { build: object }> = {
         output: {
           format: 'iife' as const,
           entryFileNames: 'js/nowo-ui-form-busy.js',
+        },
+      },
+      minify: true,
+      sourcemap: false,
+    },
+  },
+  // 2.69: one-time secret (partial secret_once): mask, reveal, copy from the single text node, clear.
+  'secret-once': {
+    build: {
+      outDir: 'src/Resources/public',
+      emptyOutDir: false,
+      rollupOptions: {
+        input: 'src/Resources/assets/src/nowo-ui-secret-once.ts',
+        output: {
+          format: 'iife' as const,
+          entryFileNames: 'js/nowo-ui-secret-once.js',
         },
       },
       minify: true,

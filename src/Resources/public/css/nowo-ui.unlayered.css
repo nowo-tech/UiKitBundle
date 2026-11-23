@@ -4892,6 +4892,123 @@ tr[data-nowo-ui-bulk-selected] > th {
   }
 }
 
+/*
+ * One-time secret (2.69, partial `secret_once`; js/nowo-ui-secret-once.js). The secret is the text of
+ * .nowo-ui-secret-once__value, printed once. Without the runtime (no data-nowo-ui-secret-once-state) it is plain,
+ * selectable text and the mask / cleared notes are not shown. Masked, the value is display: none (not painted, not
+ * selectable, not in the accessibility tree or find-in-page) while the node keeps its text; cleared, its text is gone.
+ */
+.nowo-ui-secret-once {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+  margin: 0 0 1rem;
+}
+
+.nowo-ui-secret-once__label {
+  font-weight: 600;
+}
+
+.nowo-ui-secret-once__field {
+  min-width: 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--nowo-ui-code-border, var(--nowo-ui-border));
+  border-radius: var(--nowo-ui-code-radius, var(--nowo-ui-radius));
+  background: var(--nowo-ui-code-bg, color-mix(in srgb, var(--nowo-ui-text) 7%, var(--nowo-ui-surface)));
+  color: var(--nowo-ui-code-text, var(--nowo-ui-text));
+  font-family: var(--nowo-ui-font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace);
+  line-height: 1.5;
+}
+
+.nowo-ui-secret-once__value {
+  padding: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+  -webkit-user-select: all;
+  user-select: all;
+}
+
+.nowo-ui-secret-once__mask,
+.nowo-ui-secret-once__cleared {
+  display: none;
+}
+
+.nowo-ui-secret-once__mask {
+  letter-spacing: 0.1em;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.nowo-ui-secret-once__cleared {
+  color: var(--nowo-ui-muted);
+  font-family: inherit;
+  font-style: italic;
+}
+
+.nowo-ui-secret-once[data-nowo-ui-secret-once-state='masked'] .nowo-ui-secret-once__value,
+.nowo-ui-secret-once[data-nowo-ui-secret-once-state='cleared'] .nowo-ui-secret-once__value {
+  display: none;
+}
+
+.nowo-ui-secret-once[data-nowo-ui-secret-once-state='masked'] .nowo-ui-secret-once__mask,
+.nowo-ui-secret-once[data-nowo-ui-secret-once-state='cleared'] .nowo-ui-secret-once__cleared {
+  display: inline;
+}
+
+.nowo-ui-secret-once__actions:not([hidden]) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.nowo-ui-secret-once__actions .nowo-ui-btn {
+  min-inline-size: 1.5rem;
+  min-block-size: 1.5rem;
+}
+
+/* Pressed (revealed): filled, so the state reads without colour alone and the hover tint never applies. */
+.nowo-ui-secret-once__actions .nowo-ui-btn[aria-pressed='true'] {
+  border-color: var(--nowo-ui-primary);
+  background: var(--nowo-ui-primary);
+  color: var(--nowo-ui-primary-contrast);
+}
+
+.nowo-ui-secret-once__actions .nowo-ui-btn[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.nowo-ui-secret-once__actions .nowo-ui-btn[data-copied] {
+  border-color: var(--nowo-ui-success-text);
+  color: var(--nowo-ui-success-text);
+}
+
+.nowo-ui-secret-once__actions .nowo-ui-btn[data-failed] {
+  border-color: var(--nowo-ui-danger-text);
+  color: var(--nowo-ui-danger-text);
+}
+
+.nowo-ui-secret-once__status {
+  color: var(--nowo-ui-muted);
+  font-size: 0.875rem;
+}
+
+.nowo-ui-secret-once__hint {
+  margin: 0;
+  color: var(--nowo-ui-muted);
+  font-size: 0.875rem;
+}
+
+@media (pointer: coarse) {
+  .nowo-ui-secret-once__actions .nowo-ui-btn {
+    min-height: 2.75rem;
+  }
+}
+
 /* --- Locale switcher --- */
 .nowo-ui-locale-switcher {
   position: relative;
