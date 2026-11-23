@@ -32,7 +32,8 @@
  * -cancel-label / -variant / -size / -expected-value / -expected-pattern / -expected-label) and the id of its hidden
  * row POST form (data-nowo-confirm-form). Opening fills the dialog (textContent only), shows the confirm button of the
  * variant and binds it to that form with `form="…"`, so Confirm submits the row's own form (target + CSRF). A toggle
- * without a form (disabled action) opens nothing.
+ * without a form (disabled action) opens nothing, and so does a shared dialog opened without such a toggle
+ * (`nowoUiOpenConfirm(id)` from script); closing it drops the binding.
  *
  * Focus return (2.52.2, WCAG 2.4.3): closing a confirm dialog (Escape, Cancel, Confirm, ×, backdrop) focuses the
  * element that opened it; when that opener cannot take focus (a hidden trigger a page-actions menu item forwarded its
@@ -175,6 +176,11 @@ export function fillSharedConfirm(dialog: HTMLDialogElement, opener: Element): b
   return true;
 }
 
+/** Drops the row binding of a closed shared dialog (confirm buttons and the type-to-confirm input). */
+export function unbindSharedConfirm(dialog: HTMLDialogElement): void {
+  dialog.querySelectorAll('[data-nowo-confirm-variant], [data-nowo-confirm-slot="expect-input"]').forEach((el) => el.removeAttribute('form'));
+}
+
 /** Opens a confirm dialog; `opener` (2.52.2) is where focus returns on close (see the module comment). */
 export function openConfirm(id: string | HTMLDialogElement | null, opener: Element | null = null): void {
   const dialog = resolveDialog(id);
@@ -182,6 +188,9 @@ export function openConfirm(id: string | HTMLDialogElement | null, opener: Eleme
     return;
   }
   finishClosing(dialog);
+  if (!dialog.open && dialog.hasAttribute('data-nowo-confirm-shared') && !(opener && fillSharedConfirm(dialog, opener))) {
+    return;
+  }
   if (!dialog.open) {
     rememberOpener(dialog, opener);
     const input = resetExpected(dialog);
@@ -221,10 +230,6 @@ function onDocumentClick(event: MouseEvent): void {
     const targetId = openBtn.getAttribute('data-nowo-confirm-target');
     if (targetId) {
       event.preventDefault();
-      const dialog = resolveDialog(targetId);
-      if (dialog?.hasAttribute('data-nowo-confirm-shared') && !dialog.open && !fillSharedConfirm(dialog, openBtn)) {
-        return;
-      }
       openConfirm(targetId, openBtn);
     }
     return;
@@ -253,6 +258,9 @@ export function syncAllExpected(root: ParentNode): void {
 function onDialogClose(event: Event): void {
   const target = event.target;
   if (target instanceof HTMLDialogElement) {
+    if (target.hasAttribute('data-nowo-confirm-shared')) {
+      unbindSharedConfirm(target);
+    }
     returnFocus(target);
   }
 }

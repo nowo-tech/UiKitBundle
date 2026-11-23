@@ -126,6 +126,8 @@
     </table>
 </div>
 {% if _confirms is not empty and _confirm_shared %}
+    {#- the same guard as the per-row dialogs: one explicit Confirm id with different content throws -#}
+    {% do table.confirmDialogs(_confirms) %}
     <div class="nowo-ui-list-page__confirms" data-nowo-ui-region="confirms">
         {{ include(nowo_ui_partial('confirm_shared', _b), {id: _confirm_shared_id, bundle: _b, nowo_ui_page_type: nowo_ui_page_type}, false) }}
     </div>

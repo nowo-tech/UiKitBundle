@@ -10,6 +10,7 @@ use Nowo\UiKitBundle\View\Confirm;
 use Nowo\UiKitBundle\View\ListPage;
 use Nowo\UiKitBundle\View\PageHeader;
 use PHPUnit\Framework\TestCase;
+use Throwable;
 
 /**
  * 2.68 — one shared confirm dialog per table (`confirm_shared`, or nowo_ui_kit.table_confirm: shared). The default
@@ -148,8 +149,9 @@ final class TableSharedConfirm268Test extends TestCase
         $action = Action::delete('/items/1/delete', 't', new Confirm('Delete?'));
         $html = $twig->render('t', ['action' => $action]);
         self::assertStringContainsString('data-nowo-confirm-target="shared-x"', $html);
-        self::assertStringContainsString('data-nowo-confirm-form="'.$action->confirmId().'-form-7"', $html);
-        self::assertStringContainsString('id="'.$action->confirmId().'-form-7"', $html);
+        $formId = $action->confirmId().'-form-'.substr((string) $action->confirmKey(), 0, 10).'-7';
+        self::assertStringContainsString('data-nowo-confirm-form="'.$formId.'"', $html);
+        self::assertStringContainsString('id="'.$formId.'"', $html);
         self::assertStringNotContainsString('<dialog', $html);
     }
 
@@ -169,6 +171,39 @@ final class TableSharedConfirm268Test extends TestCase
         }
         self::assertFileExists($file);
         self::assertSame((string) file_get_contents($file), $html);
+    }
+
+    public function testAnExplicitIdWithDifferentContentStillThrowsInSharedMode(): void
+    {
+        $page = new ListPage(new PageHeader('Items'), [new Column('name')], [1 => ['name' => 'A'], 2 => ['name' => 'B']], rowActions: static fn (array $row, int|string $key): array => [
+            Action::delete('/items/'.$key.'/delete', 't', new Confirm('Delete '.$row['name'].'?', id: 'del')),
+        ]);
+        try {
+            self::render($page, 'shared');
+            self::fail('expected the duplicate-id guard');
+        } catch (Throwable $e) {
+            $message = $e->getMessage().' '.($e->getPrevious()?->getMessage() ?? '');
+            self::assertStringContainsString('Confirm id "del" is used by row actions with different content', $message);
+        }
+    }
+
+    public function testRowFormIdsNeverCollideAcrossPagesOfAnExplicitId(): void
+    {
+        // Two pages of an infinite-scroll list render `row` 1 again: an explicit Confirm id with another target must
+        // not reuse page 1's form id (getElementById would return the wrong row's form).
+        $page = static fn (int $id): ListPage => new ListPage(new PageHeader('Items'), [new Column('name')], [$id => ['name' => 'X']], rowActions: [
+            Action::delete('/items/'.$id.'/delete', 't', new Confirm('Delete?', id: 'del')),
+        ]);
+        preg_match('~data-nowo-confirm-form="([^"]+)"~', self::render($page(1), 'shared'), $one);
+        preg_match('~data-nowo-confirm-form="([^"]+)"~', self::render($page(2), 'shared'), $two);
+        self::assertNotSame($one[1], $two[1]);
+        self::assertStringStartsWith('del-form-', $one[1]);
+    }
+
+    public function testTheHiddenRowSubmitIsDisabled(): void
+    {
+        $html = self::render(self::page(1), 'shared');
+        self::assertMatchesRegularExpression('~<div hidden>\s*<form[^>]*>\s*<button type="submit" class="nowo-ui-confirm__row-submit" tabindex="-1" disabled>~', $html, 'Enter in the type-to-confirm input never submits past the check');
     }
 
     /** Sizes for the report (50 rows, kit default theme). */

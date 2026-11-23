@@ -126,6 +126,31 @@ describe('shared table confirm (2.68)', () => {
     expect(document.activeElement).toBe(toggles[1]);
   });
 
+  it('binds Confirm to the row form whose own submit is disabled', () => {
+    click(toggles[0]);
+    const submit = visibleSubmit();
+    const form = document.getElementById(toggles[0].getAttribute('data-nowo-confirm-form')!) as HTMLFormElement;
+    expect(submit.form).toBe(form);
+    const own = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+    expect(own.disabled).toBe(true);
+    expect(own.tabIndex).toBe(-1);
+  });
+
+  it('drops the binding on close and refuses to open from script without a row toggle', () => {
+    click(toggles[0]);
+    expect(visibleSubmit().hasAttribute('form')).toBe(true);
+    mod.closeConfirm(dialog);
+    expect(dialog.open).toBe(false);
+    expect(dialog.querySelectorAll('[form]')).toHaveLength(0);
+    window.nowoUiOpenConfirm?.('nowo-ui-table-confirm');
+    expect(dialog.open).toBe(false);
+    mod.openConfirm('nowo-ui-table-confirm', document.body);
+    expect(dialog.open).toBe(false);
+    mod.openConfirm('nowo-ui-table-confirm', toggles[1]);
+    expect(dialog.open).toBe(true);
+    expect(visibleSubmit().getAttribute('form')).toBe(toggles[1].getAttribute('data-nowo-confirm-form'));
+  });
+
   it('does not open when the toggle names no form on the page', () => {
     const formId = toggles[0].getAttribute('data-nowo-confirm-form')!;
     document.getElementById(formId)?.remove();

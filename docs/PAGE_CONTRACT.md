@@ -419,7 +419,7 @@ Confirm repeated renders once); two actions with the **same explicit id but diff
 and CSRF) per row, on every page view, opened or not. With **`nowo_ui_kit.table_confirm: shared`** (or the `table`
 partial option `confirm_shared: true`) the table prints **one** dialog (partial `confirm_shared`, id
 `confirm_shared_id`, default `nowo-ui-table-confirm`) and each row prints only its toggle and a hidden POST form
-(target + CSRF, id `<confirmId>-form-<row>`). The toggle carries the dialog content as `data-nowo-confirm-*`
+(target + CSRF, id `<confirmId>-form-<content key>-<row>`, its own submit disabled). The toggle carries the dialog content as `data-nowo-confirm-*`
 attributes (title, message and where it goes, confirm / cancel labels, variant, size, type-to-confirm value, pattern and
 label); `nowo-ui-confirm.js` fills the dialog with `textContent` when it opens, shows the confirm button of the
 variant and binds it to the row form with `form="…"`. Same accessible structure as the per-row dialog (native modal,

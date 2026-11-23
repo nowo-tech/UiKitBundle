@@ -181,8 +181,8 @@
   or per table: `{{ include(nowo_ui_partial('table'), {table: t, confirm_shared: true}) }}`. Check host tests and
   themes that rely on the per-row markup: a row toggle's `data-nowo-confirm-target` is the shared id
   (`nowo-ui-table-confirm`, option `confirm_shared_id`) instead of `confirmId()`, the region `confirms` holds one
-  `dialog[data-nowo-confirm-shared]` filled on open, and the row's POST form (`#<confirmId>-form-<row>`) sits hidden
-  in the actions cell; a theme override of the `action` partial must handle `confirm_shared`. A deep link that opens a
+  `dialog[data-nowo-confirm-shared]` filled on open, and the row's POST form (`#<confirmId>-form-<content key>-<row>`) sits hidden
+  in the actions cell; a theme override of the `action` partial must handle `confirm_shared`, and host overrides of the `action`, `row_actions` or `menu` partials must forward `confirm_shared` to the partial they include, or their toggles open nothing. A deep link that opens a
   row confirm by id (`_open_modal_on_load`) needs the per-row mode. `shared` becomes the default in 3.0.
 
 ## To 2.67.0

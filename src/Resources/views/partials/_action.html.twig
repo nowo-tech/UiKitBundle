@@ -22,7 +22,8 @@
     - confirm_shared (2.68): {id, row} = an action with a Confirm opens the one shared confirm dialog `id` (partial
       `confirm_shared`, rendered once by the `table` partial) instead of its own: the toggle carries the dialog content
       as data-nowo-confirm-* attributes and the row prints only a hidden POST form (target + CSRF) with the id
-      <confirmId>-form-<row>, which the shared dialog's confirm button submits. Without JavaScript the toggle does
+      <confirmId>-form-<content key>-<row>, which the shared dialog's confirm button submits (the form's own submit is
+      disabled, so Enter in the type-to-confirm input never submits it past the check). Without JavaScript the toggle does
       nothing, as with its own dialog; Action::fallbackHref keeps its <noscript> link
     - menu_item (2.21): true = drawn as an item of a `menu` panel (slot menu_item, `nowo-ui-menu__item--danger` for
       danger actions) instead of a toolbar button — the `menu` partial passes it with `menu_items: true`
@@ -99,7 +100,8 @@
     {% if confirm_id and _shared is iterable and _shared.id is defined and _shared.id %}
         {#- 2.68: the shared confirm dialog — the content rides on the toggle, the POST form stays in the row (hidden) -#}
         {%- set _c = action.confirm %}
-        {%- set _form_id = confirm_id ~ '-form-' ~ (_shared.row ?? 0) %}
+        {#- the content key keeps rows of another page (infinite scroll restarts `row`) on their own form -#}
+        {%- set _form_id = confirm_id ~ '-form-' ~ action.confirmKey()|slice(0, 10) ~ '-' ~ (_shared.row ?? 0) %}
         {%- set _c_message = _c.message is null ? null : _c.message|nowo_ui_trans %}
         {%- set _c_attrs = {
             'data-nowo-confirm-form': action.disabled ? null : _form_id,
@@ -120,7 +122,7 @@
             action: action,
             action_href: href,
             button_class: 'nowo-ui-confirm__row-submit',
-            button_attrs: {tabindex: '-1'},
+            button_attrs: {tabindex: '-1', disabled: true},
             button_html: label,
             form_id: _form_id,
         }, false)|trim }}</div>{% endif %}
