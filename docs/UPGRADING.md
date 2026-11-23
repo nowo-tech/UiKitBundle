@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.71.0](#to-2710)
 - [To 2.70.0](#to-2700)
   - [Shared confirm outside the table (`table_confirm: shared`)](#shared-confirm-outside-the-table-table_confirm-shared)
   - [Stimulus runtime](#stimulus-runtime)
@@ -174,6 +175,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.71.0
+
+From **2.70.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 ## To 2.70.0
 
