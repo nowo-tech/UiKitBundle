@@ -209,6 +209,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   by every bundled copy), a closed dialog has no active session, a submit another handler already prevented is not
   posted, and the IIFE runtime's session stands aside while a peer owns the dialog (audit ZAF-M1: no double POST when
   `js/nowo-ui-dialog.js` and the peers are both loaded).
+- Dev: Igor 0.11 (REQ-CS-008) — `RemoteDialogRedirectEvent::$request` is a per-dispatch event, never a shared service; documented `@igor-ignore` (false positive). `igor-php/igor-php` accepts `^0.11.0` (supersedes #151).
 
 ## [2.69.0] - 2026-11-23
 
