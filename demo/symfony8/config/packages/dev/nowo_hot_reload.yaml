@@ -4,7 +4,9 @@ nowo_hot_reload:
     auto_inject: true
     # /demo/compact-header asserts a strict CSP with zero violations: no injected dev script there (UiKit 2.27 demo).
     # /kit/stimulus-dialogs (UiKit 2.70) asserts the same: its dialogs and their CSP are the subject.
-    ignore_path_prefixes: ['/_wdt', '/_profiler', '/demo/compact-header', '/kit/stimulus-dialogs']
+    # /kit/mobile (UiKit 2.72): the injected morph / preserve observer restarts the edge-tab unfold animations the
+    # phone e2e measures.
+    ignore_path_prefixes: ['/_wdt', '/_profiler', '/demo/compact-header', '/kit/stimulus-dialogs', '/kit/mobile']
     require_frankenphp_env: true
     allow_production: false
     idiomorph: true
@@ -13,6 +15,8 @@ nowo_hot_reload:
         - '.sf-toolbar'
         - '.sf-minitoolbar'
     preserve_observe: true
+    # UiKit 2.72: reuse the nonce the Web Profiler put in script-src (App\EventSubscriber\HotReloadCspNonceBridge).
+    csp_nonce_request_attribute: _hot_reload_csp_nonce
     csp_augment_script_src: true
     csp_script_src_hosts:
         - 'https://cdn.jsdelivr.net'
