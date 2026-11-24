@@ -251,7 +251,15 @@ test.describe('page contract — validation round 3 (REQ-UI-003)', () => {
     await expect(page.locator('.nowo-ui-pagination a[href*="page=2"]').first()).toHaveAttribute('href', /filters%5Bq%5D=e/);
     const cell = page.locator('tbody tr').first().locator('td.nowo-ui-table__actions');
     await expect(cell).toHaveClass(/\bnowo-ui-cell--end\b/);
-    expect(await cell.locator('.nowo-ui-row-actions').evaluate((el) => getComputedStyle(el).justifyContent)).toBe('flex-end');
+    // Chromium 159 serializes a computed `flex-end` as "flow-end": accept both names and check the geometry, which is
+    // what the rule is for (the last action ends at the cell's content edge).
+    const actions = cell.locator('.nowo-ui-row-actions');
+    expect(['flex-end', 'flow-end', 'end']).toContain(await actions.evaluate((el) => getComputedStyle(el).justifyContent));
+    const [lastRight, contentRight] = await actions.evaluate((el) => {
+      const last = el.lastElementChild as Element;
+      return [last.getBoundingClientRect().right, el.getBoundingClientRect().right - parseFloat(getComputedStyle(el).paddingRight)];
+    });
+    expect(Math.abs(contentRight - lastRight)).toBeLessThanOrEqual(1);
   });
 
   test('list (phone): badges keep their width in card mode', async ({ page }) => {
