@@ -885,6 +885,15 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     remote_dialog?: array{ // 2.28 remote form dialog (X-Nowo-Dialog requests).
  *         convert_redirects?: bool|Param, // Turn a RedirectResponse answered to a dialog request (X-Nowo-Dialog: 1, main request) into 204 + X-Nowo-Redirect when its Location is a same-origin path, so redirectToRoute() controllers work in the dialog without code changes. // Default: false
  *         step_routes?: list<scalar|Param|null>,
+ *         direct_get?: array{ // 2.73: remote dialog content opened directly (address bar, bookmark, a link from another site). A top-level GET of a route listed here (Sec-Fetch-Mode: navigate, no dialog header, not from a page of this origin unless redirect_same_origin) answered 200 is redirected (302) to its owning page with a reopen query (`<query_parameter>[route]` + `[params]`), and the owning page opens the dialog on that route. Opt-in per route, empty by default; a kit prepends its own routes. Denied requests (403/404) are never redirected.
+ *             query_parameter?: scalar|Param|null, // Name of the reopen query parameter on the owning page. // Default: "_dialog"
+ *             routes?: array<string, array{ // Default: []
+ *                 page?: scalar|Param|null,
+ *                 dialog?: scalar|Param|null,
+ *                 page_parameters?: list<scalar|Param|null>,
+ *                 redirect_same_origin?: bool|Param, // Also redirect a navigation started from a page of this origin (Sec-Fetch-Site: same-origin: a link followed without JavaScript or opened in a new tab). Default false: those keep the route's own page (the no-JS fallback). // Default: false
+ *             }>,
+ *         },
  *         request_header?: scalar|Param|null, // 2.33: request header the dialog sends with "1" (both drivers, RemoteDialogResponder, the redirect listener, nowo_ui_dialog_request()). // Default: "X-Nowo-Dialog"
  *         redirect_header?: scalar|Param|null, // 2.33: response header of the success answer (204 + <path>: the dialog closes and the page goes there). // Default: "X-Nowo-Redirect"
  *         location_header?: scalar|Param|null, // 2.33: response header of the step answer (204 + <path>: the dialog stays open and loads the next step). // Default: "X-Nowo-Dialog-Location"

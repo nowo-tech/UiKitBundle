@@ -9,6 +9,7 @@ use Nowo\UiKitBundle\Appearance\Appearance;
 use Nowo\UiKitBundle\Appearance\AppearanceView;
 use Nowo\UiKitBundle\Dialog\RemoteDialog;
 use Nowo\UiKitBundle\Dialog\RemoteDialogHeaders;
+use Nowo\UiKitBundle\Dialog\RemoteDialogReopen;
 use Nowo\UiKitBundle\Form\ActionCsrfType;
 use Nowo\UiKitBundle\Form\ImageCrop;
 use Nowo\UiKitBundle\Form\UiFormViews;
@@ -153,6 +154,7 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
         private readonly AppearanceView $appearanceView = new AppearanceView(),
         private readonly bool $baseStylesheet = false,
         string $sidebarStyle = 'classic',
+        private readonly ?RemoteDialogReopen $remoteDialogReopen = null,
     ) {
         $this->uiForms = new UiFormViews($actionForms);
         $this->presentationResolver = new HeaderPresentationResolver($requestStack, $header['presentation'], $header['compact_actions']);
@@ -212,6 +214,8 @@ final class ThemeExtension extends AbstractExtension implements GlobalsInterface
             new TwigFunction('nowo_ui_dialog_request', fn (): bool => RemoteDialog::isRequest($this->requestStack?->getCurrentRequest(), $this->remoteDialogHeaders)),
             // 2.33: the dialog attributes of configured (non-default) header names; empty with the defaults.
             new TwigFunction('nowo_ui_remote_dialog_attrs', fn (): array => ($this->remoteDialogHeaders ?? RemoteDialogHeaders::defaults())->dialogAttributes()),
+            // 2.73: the reopen safe list (and target) of a remote form dialog on its owning page; empty when unused.
+            new TwigFunction('nowo_ui_remote_dialog_reopen_attrs', fn (string $id): array => $this->remoteDialogReopen?->dialogAttributes($id) ?? []),
             new TwigFunction('nowo_ui_remote_form_opener', self::remoteFormOpener(...)),
             // 2.70: the shared confirm group of a menu / row actions / action, and its dialog once per request.
             new TwigFunction('nowo_ui_confirm_group', self::confirmGroup(...)),

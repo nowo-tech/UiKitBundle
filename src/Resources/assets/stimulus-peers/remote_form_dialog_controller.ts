@@ -16,6 +16,8 @@
  *         to handle success yourself; the dialog still closes), `:step` {url, status} (2.33, a 204 + location answer:
  *         the next step loads into the same dialog; cancelable), `:failed` {stage, status}, `:closed`.
  * The partial `partials/_remote_form_dialog.html.twig` (`stimulus: true`) renders the dialog with these targets.
+ * Reopen (2.73): on connect, a dialog whose page URL carries a safe-listed reopen query (`remote_dialog.direct_get`,
+ * nowo-ui-remote-dialog-reopen.ts) opens on that route once; the IIFE runtime leaves such a dialog to the peer.
  *
  * Delegated mode (2.70, `delegate` value; the partial with `runtime: 'stimulus'` or nowo_ui_kit.dialogs.runtime:
  * stimulus): the controller sits on the <dialog> itself and opens it from any opener of the page with the IIFE opener
@@ -46,6 +48,7 @@ import {
   type RemoteFormEvent,
   type RemoteFormSettings,
 } from '../src/nowo-ui-remote-form-core';
+import { reopenFromLocation, reopenOpener } from '../src/nowo-ui-remote-dialog-reopen';
 import { claim, release } from '../src/nowo-ui-runtime-owner';
 
 export { remoteNavigation as navigation } from '../src/nowo-ui-remote-form-core';
@@ -108,6 +111,12 @@ export default class extends Controller<HTMLElement> {
     claim(dialog);
     dialog.addEventListener('click', this.onDialogClick);
     document.addEventListener('click', this.onDocumentClick);
+    // 2.73: the page URL asks for this dialog (direct-GET contract): open it once, no bounce on a failed load.
+    reopenFromLocation(dialog, (url) => {
+      const opener = reopenOpener(dialog, url);
+      const title = opener ? openerTitle(opener, opener.getAttribute('data-nowo-ui-dialog-title') ?? undefined) : (this.hasTitleTarget ? (this.titleTarget.textContent ?? '') : '');
+      return this.session?.open(url, opener, title, { followOnLoadError: false }) ?? false;
+    });
   }
 
   override disconnect(): void {

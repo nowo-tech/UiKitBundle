@@ -205,3 +205,12 @@ nowo_ui_kit:
     # top bar (the page_actions partial); the standard presentation (every other page) is unchanged.
     header:
         compact_actions: bar
+
+    # UiKit 2.73 (/kit/remote-form): the remote dialog URLs opened directly (address bar, bookmark) land on the list
+    # page with the dialog open on that step; links of the page followed without JavaScript keep the full pages.
+    remote_dialog:
+        direct_get:
+            routes:
+                kit_remote_form_new: { page: kit_remote_form, dialog: destination-dialog }
+                kit_remote_form_wizard: { page: kit_remote_form, dialog: destination-dialog }
+                kit_remote_form_wizard_channel: { page: kit_remote_form, dialog: destination-dialog }

@@ -177,6 +177,27 @@
 
 ## Unreleased
 
+No breaking change. To send direct visits of remote dialog URLs to their owning page, list those routes under
+`nowo_ui_kit.remote_dialog.direct_get.routes` (USAGE "Remote dialog content opened directly"):
+
+```yaml
+nowo_ui_kit:
+    remote_dialog:
+        direct_get:
+            routes:
+                project_member_edit: { page: project_members, dialog: member-dialog, page_parameters: [project] }
+```
+
+- The owning page must render the dialog with the `remote_form_dialog` partial and that `id`; nothing else changes.
+- The redirect needs fetch metadata (`Sec-Fetch-Mode`), which browsers send only to HTTPS origins and `localhost`.
+- A link of your own pages followed without JavaScript (or in a new tab) still gets the route's own page; set
+  `redirect_same_origin: true` on a route that has no page of its own.
+- A page whose dialogs run on the delegated Stimulus runtime must load the `remote-form-dialog` peer to reopen them.
+- A host that overrides `partials/_remote_form_dialog.html.twig` merges `nowo_ui_remote_dialog_reopen_attrs(id)` into
+  the dialog attributes, as the kit's partial does.
+- Rebuilt assets: `js/nowo-ui-dialog.js` (run `assets:install`), and the `remote-form-dialog` peer for hosts that
+  bundle the peers.
+
 ## To 2.72.0
 
 From **2.71.0**:
