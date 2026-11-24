@@ -15,8 +15,7 @@ nowo_hot_reload:
         - '.sf-toolbar'
         - '.sf-minitoolbar'
     preserve_observe: true
-    # UiKit 2.72: reuse the nonce the Web Profiler put in script-src (App\EventSubscriber\HotReloadCspNonceBridge).
-    csp_nonce_request_attribute: _hot_reload_csp_nonce
+    # HotReload >= 1.8 reuses the nonce the Web Profiler put in the response script-src for its injected scripts.
     csp_augment_script_src: true
     csp_script_src_hosts:
         - 'https://cdn.jsdelivr.net'

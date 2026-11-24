@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0418000233fb89508a642e43971c02bb",
+    "content-hash": "0b11d491761057d48b6c7fe02a3b06cb",
     "packages": [
         {
             "name": "nowo-tech/ui-kit-bundle",
@@ -12,7 +12,7 @@
             "dist": {
                 "type": "path",
                 "url": "/var/ui-kit-bundle",
-                "reference": "aea82b6a6dcf7f6acbba8353db80b4d937ae3768"
+                "reference": "b647747ba535be315855e81dabfafcef2bf895b6"
             },
             "require": {
                 "php": ">=8.2 <8.6",
@@ -4078,22 +4078,23 @@
         },
         {
             "name": "nowo-tech/hot-reload-bundle",
-            "version": "v1.6.0",
+            "version": "v1.8.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nowo-tech/HotReloadBundle.git",
-                "reference": "b408bcc6a35e6f008c09b8cdf878aba3b4d4f202"
+                "reference": "4d5870b85fab309b98effe7269086ee13ca71df6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nowo-tech/HotReloadBundle/zipball/b408bcc6a35e6f008c09b8cdf878aba3b4d4f202",
-                "reference": "b408bcc6a35e6f008c09b8cdf878aba3b4d4f202",
+                "url": "https://api.github.com/repos/nowo-tech/HotReloadBundle/zipball/4d5870b85fab309b98effe7269086ee13ca71df6",
+                "reference": "4d5870b85fab309b98effe7269086ee13ca71df6",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.2 <8.6",
                 "symfony/config": "^7.4 || ^8.0",
                 "symfony/dependency-injection": "^7.4 || ^8.0",
+                "symfony/deprecation-contracts": "^3.0",
                 "symfony/http-foundation": "^7.4 || ^8.0",
                 "symfony/http-kernel": "^7.4 || ^8.0",
                 "twig/extra-bundle": "^3.12",
@@ -4101,14 +4102,16 @@
             },
             "require-dev": {
                 "friendsofphp/php-cs-fixer": "^3.0",
-                "igor-php/igor-php": "^0.10.1",
+                "igor-php/igor-php": "^0.10.1 || ^0.11.0",
                 "nowo-tech/phpstan-frankenphp": "^1.0",
                 "phpstan/extension-installer": "^1.4",
                 "phpstan/phpstan": "^2.0",
                 "phpstan/phpstan-symfony": "^2.0",
                 "phpunit/phpunit": "^10.0",
                 "rector/rector": "^2.0",
+                "symfony/console": "^7.4 || ^8.0",
                 "symfony/framework-bundle": "^7.4 || ^8.0",
+                "symfony/var-dumper": "^7.4 || ^8.0",
                 "symfony/yaml": "^7.4 || ^8.0",
                 "twig/twig": "^3.12"
             },
@@ -4165,7 +4168,8 @@
                 "issues": "https://github.com/nowo-tech/HotReloadBundle/issues",
                 "source": "https://github.com/nowo-tech/HotReloadBundle"
             },
-            "time": "2026-10-13T08:52:16+00:00"
+            "time": "2026-11-24T10:36:54+00:00",
+            "published-time": "2026-11-24T10:38:40+00:00"
         },
         {
             "name": "nowo-tech/twig-inspector-bundle",
