@@ -58,7 +58,7 @@ final class AdminComponentsTest extends TestCase
         self::assertStringContainsString('aria-haspopup="dialog" aria-controls="fb-dialog" data-nowo-ui-filter-sheet-open>Filters <span class="nowo-ui-filter-sheet__count"><span aria-hidden="true">3</span><span class="visually-hidden">3 active</span></span></button>', $html);
         self::assertMatchesRegularExpression('#<form[^>]*method="get"[^>]*class="nowo-ui-filter-sheet__form"|<form[^>]*class="nowo-ui-filter-sheet__form"[^>]*method="get"#', $html);
         self::assertStringContainsString('<a class="nowo-ui-btn nowo-ui-btn--link" href="/invoices">Reset</a>', $html);
-        self::assertStringContainsString('<dialog id="fb-dialog" class="nowo-ui-filter-sheet__dialog" aria-labelledby="fb-title" data-nowo-ui-filter-sheet-dialog>', $html);
+        self::assertStringContainsString('<dialog id="fb-dialog" class="nowo-ui-filter-sheet__dialog" aria-labelledby="fb-title" closedby="any" data-nowo-ui-filter-sheet-dialog>', $html);
         self::assertStringContainsString('<h2 id="fb-title" class="nowo-ui-filter-sheet__dialog-title">Filters</h2>', $html);
         self::assertStringContainsString('name="page"', $html);
         self::assertStringNotContainsString('style=', $html);
@@ -68,7 +68,7 @@ final class AdminComponentsTest extends TestCase
         self::assertStringContainsString('data-nowo-ui-filter-sheet-open>Refine</button>', $html);
         self::assertStringContainsString('<h2 id="nowo-ui-filter-bar-title"', $html);
         self::assertStringContainsString('>Go</button>', $html);
-        self::assertStringContainsString('>Done</button>', $html);
+        self::assertMatchesRegularExpression('#<button type="button" class="nowo-ui-btn nowo-ui-btn--icon nowo-ui-filter-sheet__close" title="Done" aria-label="Done" data-nowo-ui-filter-sheet-close>.*<span class="visually-hidden">Done</span>\s*</button>#s', $html);
         self::assertStringNotContainsString('href="', $html);
     }
 

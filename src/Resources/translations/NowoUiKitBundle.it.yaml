@@ -113,6 +113,9 @@ filters.search_placeholder: Cerca…
 filters.apply: Applica
 filters.clear: Cancella
 filters.any: Qualsiasi
+filters.filter: "Filtra"
+filters.clear_filters: "Cancella filtri"
+filters.more: "Altri filtri"
 multi_select.remove: Rimuovi
 multi_select.no_results: Nessun risultato
 date_range.from: Dal

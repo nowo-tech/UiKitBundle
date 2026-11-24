@@ -43,12 +43,12 @@ export default defineConfig({
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
-      testMatch: /(sortable|emoji-picker|combobox|show-more|dialog-back|motion|table-cards|page-actions-focus|context-menu|context-menu-row|focus-mode|list-filter-sheet)\.spec\.ts/,
+      testMatch: /(sortable|emoji-picker|combobox|show-more|dialog-back|motion|table-cards|page-actions-focus|context-menu|context-menu-row|focus-mode|list-filter-sheet|list-filter-standard)\.spec\.ts/,
     },
     {
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
-      testMatch: /(sortable|emoji-picker|combobox|show-more|dialog-back|motion|table-cards|image-crop|page-actions-focus|context-menu|context-menu-row|focus-mode|list-filter-sheet)\.spec\.ts/,
+      testMatch: /(sortable|emoji-picker|combobox|show-more|dialog-back|motion|table-cards|image-crop|page-actions-focus|context-menu|context-menu-row|focus-mode|list-filter-sheet|list-filter-standard)\.spec\.ts/,
     },
     {
       name: 'chromium-touch',

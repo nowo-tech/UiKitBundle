@@ -43,8 +43,8 @@ final class ListFiltersHostOptionsTest extends TestCase
         self::assertMatchesRegularExpression('#<button type="button" class="nowo-ui-filters-collapse__toggle [^"]*"[^>]* aria-expanded="true" aria-controls="nowo-ui-filters-filters" aria-label="Hide filters" title="Hide filters" data-testid="filters-collapse-toggle">#', $html);
         self::assertStringContainsString('data-testid="filters-collapse-summary" hidden>', $html);
         // icon-only apply / clear with the host classes and translated accessible names
-        self::assertMatchesRegularExpression('#<button type="submit" class="btn-primary btn-icon issue-filters__submit nowo-ui-filters__submit nowo-ui-btn--icon" title="Apply" aria-label="Apply"><i class="bi bi-funnel[^"]*"[^>]*></i>\s*<span class="visually-hidden">Apply</span></button>#', $html);
-        self::assertMatchesRegularExpression('#<a class="btn-ghost btn-icon issue-filters__clear nowo-ui-btn--icon" href="/orders" title="Clear" aria-label="Clear"><i class="bi bi-x-circle[^"]*"[^>]*></i>\s*<span class="visually-hidden">Clear</span></a>#', $html);
+        self::assertMatchesRegularExpression('#<button type="submit" class="btn-primary btn-icon issue-filters__submit nowo-ui-filters__submit nowo-ui-filter-bar__action--icon-only" title="Filter" aria-label="Filter"><i class="bi bi-funnel[^"]*"[^>]*></i>\s*<span class="visually-hidden">Filter</span></button>#', $html);
+        self::assertMatchesRegularExpression('#<a class="btn-ghost btn-icon issue-filters__clear nowo-ui-filter-bar__action--icon-only" href="/orders" title="Clear filters" aria-label="Clear filters"><i class="bi bi-x-circle[^"]*"[^>]*></i>\s*<span class="visually-hidden">Clear filters</span></a>#', $html);
     }
 
     public function testFoldedStateComesFromTheCookieAndThePageKey(): void
@@ -67,8 +67,8 @@ final class ListFiltersHostOptionsTest extends TestCase
         self::assertStringNotContainsString('nowo-ui-filters-collapse', $html);
         self::assertStringNotContainsString(' id="nowo-ui-filters-', $html);
         self::assertStringContainsString('class="nowo-ui-filters nowo-ui-search d-grid gap-3 mb-3 nowo-ui-filters--grid-auto-fit"', $html);
-        self::assertStringContainsString('<button type="submit" class="btn-primary btn-icon issue-filters__submit nowo-ui-filters__submit">Apply</button>', $html);
-        self::assertStringContainsString('<a class="btn-ghost btn-icon issue-filters__clear" href="/orders">Clear</a>', $html);
+        self::assertStringContainsString('<button type="submit" class="btn-primary btn-icon issue-filters__submit nowo-ui-filters__submit">Filter</button>', $html);
+        self::assertStringContainsString('<a class="btn-ghost btn-icon issue-filters__clear" href="/orders">Clear filters</a>', $html);
 
         // fold per call without host options, the form keeps a host id
         $page = new ListPage(new PageHeader('Orders'), filters: $this->form(), filtersFold: true, filtersGrid: 'auto-fill');
@@ -92,20 +92,20 @@ final class ListFiltersHostOptionsTest extends TestCase
             filterActions: [new Action('export', 'CSV', '/orders.csv', icon: 'export')],
         );
         $html = $this->render($page, $theme, partial: true);
-        self::assertMatchesRegularExpression('#<button type="submit" class="nowo-ui-btn nowo-ui-btn--primary btn btn-primary nowo-ui-filters__submit"><i class="bi bi-check-lg[^"]*"[^>]*></i>\s*<span class="nowo-ui-action__label">Apply</span></button>#', $html);
+        self::assertMatchesRegularExpression('#<button type="submit" class="nowo-ui-btn nowo-ui-btn--primary btn btn-primary nowo-ui-filters__submit"><i class="bi bi-check-lg[^"]*"[^>]*></i>\s*<span class="nowo-ui-action__label">Filter</span></button>#', $html);
         self::assertMatchesRegularExpression('#<a class="app-clear nowo-ui-action--close" href="/orders">\s*<i class="bi bi-x-lg[^"]*"[^>]*></i>\s*<span class="nowo-ui-action__label">Reset</span></a>#', $html);
         self::assertMatchesRegularExpression('#nowo-ui-action--export" href="/orders.csv">\s*<i class="bi bi-download#', $html);
 
         // the plain clear link with icon_text: the icon + a visible label
         $html = $this->render(new ListPage(new PageHeader('Orders'), filters: $this->form(), filtersClearHref: '/orders'), ['display' => 'icon_text'], partial: true);
-        self::assertMatchesRegularExpression('#<a class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary" href="/orders"><i class="bi bi-x-circle[^"]*"[^>]*></i>\s*<span class="nowo-ui-action__label">Clear</span></a>#', $html);
+        self::assertMatchesRegularExpression('#<a class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary" href="/orders"><i class="bi bi-x-circle[^"]*"[^>]*></i>\s*<span class="nowo-ui-action__label">Clear filters</span></a>#', $html);
 
         // icon set none: text only
         $twig = PageContractTwig::create([], ['pages' => ['list' => ['filters' => ['display' => 'icon']]]], request: $this->request());
         $twig->addGlobal('nowo_ui_kit_icon_set', 'none');
         $html = $twig->render('@NowoUiKitBundle/page/_list_filters.html.twig', ['page' => new ListPage(new PageHeader('Orders'), filters: $this->form(), filtersClearHref: '/orders')]);
-        self::assertStringContainsString('nowo-ui-filters__submit">Apply</button>', $html);
-        self::assertStringContainsString('href="/orders">Clear</a>', $html);
+        self::assertStringContainsString('nowo-ui-filters__submit">Filter</button>', $html);
+        self::assertStringContainsString('href="/orders">Clear filters</a>', $html);
     }
 
     /**

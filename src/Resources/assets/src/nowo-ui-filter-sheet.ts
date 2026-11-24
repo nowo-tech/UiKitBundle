@@ -11,6 +11,10 @@
  * 2.65: no `open` attribute fallback any more. Where showModal() is missing the root is never marked ready, so the
  * fields simply stay inline at every width. No focus trap, inert, Escape handler or scroll lock: the native modal
  * and the stylesheet (overscroll-behavior on the dialog and its ::backdrop) provide them.
+ *
+ * 2.72 light dismiss (Chrome Modern Web Guidance, light-dismiss-a-dialog): the dialog carries closedby="any", so a
+ * click on the dimmed backdrop closes it natively; where `closedBy` is unsupported (Safari) a click whose target is the
+ * dialog itself and that falls outside its box closes it here.
  */
 
 import { announceScript } from './script-banner';
@@ -104,6 +108,27 @@ function onClick(event: MouseEvent): void {
   }
 }
 
+/** Whether the browser handles closedby="any" itself. */
+export function supportsClosedBy(): boolean {
+  return typeof HTMLDialogElement !== 'undefined' && 'closedBy' in HTMLDialogElement.prototype;
+}
+
+/** Fallback light dismiss: a click on the backdrop targets the dialog element, outside its rendered box. */
+export function onBackdropClick(dialog: HTMLDialogElement, event: MouseEvent): void {
+  if (event.target !== dialog || !dialog.open) {
+    return;
+  }
+  const rect = dialog.getBoundingClientRect();
+  const inside =
+    rect.top <= event.clientY &&
+    event.clientY <= rect.top + rect.height &&
+    rect.left <= event.clientX &&
+    event.clientX <= rect.left + rect.width;
+  if (!inside) {
+    dialog.close();
+  }
+}
+
 export function upgradeFilterSheets(scope: ParentNode = document): void {
   scope.querySelectorAll(ROOT).forEach((root) => {
     const p = parts(root);
@@ -111,6 +136,10 @@ export function upgradeFilterSheets(scope: ParentNode = document): void {
       return;
     }
     p.dialog.addEventListener('close', () => restore(root));
+    if (!supportsClosedBy()) {
+      const dialog = p.dialog;
+      dialog.addEventListener('click', (event) => onBackdropClick(dialog, event));
+    }
     root.querySelector('[data-nowo-ui-filter-sheet-open]')?.setAttribute('aria-expanded', 'false');
     root.setAttribute('data-nowo-ui-filter-sheet-ready', '');
   });

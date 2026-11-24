@@ -13,6 +13,7 @@
 - [Open a modal on load (deep link)](#open-a-modal-on-load-deep-link)
 - [Filter bar and data table (opt-in)](#filter-bar-and-data-table-opt-in)
 - [List scaffold filter options (2.30)](#list-scaffold-filter-options-230)
+- [List filters standard (2.72)](#list-filters-standard-272)
 - [Sortable column headers (2.20)](#sortable-column-headers-220)
   - [Server-side lists](#server-side-lists)
   - [Client-side tables](#client-side-tables)
@@ -660,6 +661,42 @@ nowo_ui_kit:
 - With `fold.enabled`, the fold toggle stays in the card on wide screens; inside the sheet it is hidden and a folded
   card shows its fields (the folded state is kept for the wide card).
 - With `header_actions_in_filters`, the page-header actions sit in the card, so on phones they move into the sheet too.
+
+## List filters standard (2.72)
+
+Beacon's filter standard (UI-PATTERNS §8) through the list scaffold, with no template override:
+
+```php
+new ListPage(
+    $header, $columns, $rows, $filterForm->createView(),
+    filtersClearHref: $this->generateUrl('contact_index'),
+    filterFields: [
+        new FilterField('q', 'Search contacts…'),                                   // one grid column
+        new FilterField('role', more: true),                                        // under "More filters"
+        new FilterField('created_from', more: true),
+        new FilterField('per_page', rowClass: 'issue-filters__pager', pager: true), // compact, before the actions
+    ],
+    filtersDisplay: 'icon',
+    // or: filtersMore: ['role', 'created_from'], filtersMoreOpen: null (open while one is set)
+);
+```
+
+- **More filters**: the folded rows render in `<details class="nowo-ui-filters-more filters-more"
+  data-nowo-ui-filters-more>` after the actions (summary `filters-more__summary`, chevron `filters-more__chevron`,
+  fields `filters-more__fields`, so a host's Beacon-style `.filters-more` rules apply as they are). The summary shows the
+  number of set hidden filters (`data-nowo-ui-filters-more-count`), and the disclosure is open while one is set.
+- **Pager**: the field renders at its natural width as the first item of the actions group (`nowo-ui-filters__pager`
+  + its `rowClass`); the group also gets `nowo-ui-filter-bar__actions nowo-ui-filter-bar__actions--pager`. Give the
+  select an `aria-label` ("Results per page") and short option labels ("25 per page").
+- **Actions**: default labels "Filter" / "Clear filters"; icon-only buttons are squares as tall as the fields
+  (`nowo-ui-filter-bar__action--icon-only`).
+- **Selects** keep the host's padding and height: with host `input` slot classes a collapsed choice gets only those.
+- **Phone sheet** (`theme.pages.list.filters.sheet: true`): icon close button (X) with `aria-label`, a dimmed backdrop
+  that closes it on click (`closedby="any"` + fallback), Filter / Clear sticky at the bottom, no card inside, the pager
+  compact with the actions.
+
+![List filters standard, desktop](images/demo/kit-list-filters-standard-desktop.webp)
+![List filters standard, phone sheet](images/demo/kit-list-filters-standard-phone.webp)
 
 ## Sortable column headers (2.20)
 

@@ -27,7 +27,7 @@ final class ListHeaderActionsPlacementTest extends TestCase
 
         self::assertStringNotContainsString('nowo-ui-action--create', $header);
         self::assertStringNotContainsString('nowo-ui-toolbar', $header);
-        self::assertMatchesRegularExpression('#nowo-ui-filters__submit">Apply</button>\s*<div class="nowo-ui-filters__header-actions" data-nowo-ui-region="header-actions">\s*<a class="[^"]*nowo-ui-action--create" href="/orders/new">#', $filters);
+        self::assertMatchesRegularExpression('#nowo-ui-filters__submit">Filter</button>\s*<div class="nowo-ui-filters__header-actions" data-nowo-ui-region="header-actions">\s*<a class="[^"]*nowo-ui-action--create" href="/orders/new">#', $filters);
         self::assertSame(1, substr_count($html, 'nowo-ui-action--create'));
 
         // a host page_header override that falls back to header.actions (actions|default(header.actions)) does not

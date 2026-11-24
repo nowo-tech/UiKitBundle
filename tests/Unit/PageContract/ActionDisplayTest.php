@@ -54,7 +54,7 @@ final class ActionDisplayTest extends TestCase
         );
         $html = PageContractTwig::create()->render('@NowoUiKit/page/list.html.twig', ['page' => $page]);
 
-        self::assertMatchesRegularExpression('#<button type="submit" class="nowo-ui-btn nowo-ui-btn--primary btn btn-primary nowo-ui-filters__submit nowo-ui-btn--icon" data-testid="apply" title="Apply filters" aria-label="Apply filters"><i class="bi bi-funnel[^"]*"[^>]*></i>\s*<span class="visually-hidden">Apply filters</span></button>#', $html);
+        self::assertMatchesRegularExpression('#<button type="submit" class="nowo-ui-btn nowo-ui-btn--primary btn btn-primary nowo-ui-filters__submit nowo-ui-filter-bar__action--icon-only" data-testid="apply" title="Apply filters" aria-label="Apply filters"><i class="bi bi-funnel[^"]*"[^>]*></i>\s*<span class="visually-hidden">Apply filters</span></button>#', $html);
         self::assertMatchesRegularExpression('#nowo-ui-action--close nowo-ui-btn--icon" href="/orders" title="Reset" aria-label="Reset">#', $html);
         self::assertMatchesRegularExpression('#nowo-ui-action--export" href="/orders.csv"><span class="nowo-ui-action__label">CSV</span></a>#', $html);
         // row context: the cluster display (icon) unless the Action has its own
@@ -63,9 +63,9 @@ final class ActionDisplayTest extends TestCase
 
         // icon_text submit without an icon uses the filter icon; text keeps the bare label
         $html = PageContractTwig::create()->render('@NowoUiKit/page/list.html.twig', ['page' => new ListPage(new PageHeader('Orders'), filters: $this->filters(), filtersDisplay: 'icon_text')]);
-        self::assertMatchesRegularExpression('#nowo-ui-filters__submit"><i class="bi bi-funnel[^"]*"[^>]*></i>\s*<span class="nowo-ui-action__label">Apply</span></button>#', $html);
+        self::assertMatchesRegularExpression('#nowo-ui-filters__submit"><i class="bi bi-funnel[^"]*"[^>]*></i>\s*<span class="nowo-ui-action__label">Filter</span></button>#', $html);
         $html = PageContractTwig::create()->render('@NowoUiKit/page/list.html.twig', ['page' => new ListPage(new PageHeader('Orders'), filters: $this->filters(), filtersSubmit: new Action('filter', icon: 'filter', display: 'text'))]);
-        self::assertStringContainsString('nowo-ui-filters__submit">Apply</button>', $html);
+        self::assertStringContainsString('nowo-ui-filters__submit">Filter</button>', $html);
     }
 
     public function testInvalidDisplaysAreRejected(): void

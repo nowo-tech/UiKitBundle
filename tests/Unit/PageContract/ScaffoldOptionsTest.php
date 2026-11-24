@@ -78,7 +78,7 @@ final class ScaffoldOptionsTest extends TestCase
 
         // defaults: plain apply button, no field options
         $html = PageContractTwig::create()->render('@NowoUiKit/page/list.html.twig', ['page' => new ListPage(new PageHeader('Orders'), filters: $this->filtersForm(), filtersSubmit: new Action('filter', variant: 'secondary'))]);
-        self::assertStringContainsString('<button type="submit" class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary nowo-ui-filters__submit">Apply</button>', $html);
+        self::assertStringContainsString('<button type="submit" class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary nowo-ui-filters__submit">Filter</button>', $html);
         self::assertStringContainsString('<div class="nowo-ui-filters__field">', $html);
     }
 

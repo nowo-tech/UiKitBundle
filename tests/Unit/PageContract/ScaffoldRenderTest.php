@@ -82,7 +82,7 @@ final class ScaffoldRenderTest extends TestCase
         self::assertStringContainsString('<a class="nowo-ui-breadcrumbs__link" href="/">Home</a>', $html);
         self::assertStringContainsString('<a class="nowo-ui-btn nowo-ui-btn--primary btn btn-primary btn-moss nowo-ui-action--create" href="/items/new">', $html);
         self::assertStringContainsString('class="nowo-ui-filters nowo-ui-search d-grid gap-3 mb-3" role="search"', $html);
-        self::assertStringContainsString('<a class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary" href="/items">Clear</a>', $html);
+        self::assertStringContainsString('<a class="nowo-ui-btn nowo-ui-btn--secondary btn btn-outline-secondary" href="/items">Clear filters</a>', $html);
         // bundle exception replaces the host table class; attributes from the theme
         self::assertStringContainsString('<table class="nowo-ui-table nowo-ui-table--striped table table-striped table-hover align-middle data-table data-table--dense nowo-ui-table--cards" data-controller="table">', $html);
         self::assertStringContainsString('<caption class="nowo-ui-table__caption">All items</caption>', $html);

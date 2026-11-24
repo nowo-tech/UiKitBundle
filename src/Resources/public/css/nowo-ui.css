@@ -2853,6 +2853,111 @@ form.nowo-ui-filters[data-nowo-ui-region] > .nowo-ui-filters__field--full {
   grid-column: 1 / -1;
 }
 
+/* 2.72 (Beacon filter standard): list-filter icon-only actions are squares as tall as the fields
+   (`nowo-ui-filter-bar__action--icon-only`, no `btn_icon` slot); a pager field (FilterField::pager, e.g. "N per page")
+   sits compact at the start of the actions group; FilterField::more / ListPage::filtersMore fold under a
+   "More filters" disclosure that closes the card (class `filters-more` too, Beacon's UX-039 block). */
+form.nowo-ui-filters[data-nowo-ui-region] .nowo-ui-filters__actions .nowo-ui-filter-bar__action--icon-only {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--nowo-ui-filter-control-height, var(--nowo-ui-control-height, 2.375rem));
+  min-inline-size: var(--nowo-ui-filter-control-height, var(--nowo-ui-control-height, 2.375rem));
+  block-size: var(--nowo-ui-filter-control-height, var(--nowo-ui-control-height, 2.375rem));
+  /* a host's unlayered button padding would squeeze the glyph out of the square */
+  padding: 0 !important;
+}
+
+form.nowo-ui-filters[data-nowo-ui-region] .nowo-ui-filters__actions .nowo-ui-filter-bar__action--icon-only > :is(svg, i, img) {
+  flex: none;
+}
+
+form.nowo-ui-filters[data-nowo-ui-region] > .nowo-ui-filters__actions.nowo-ui-filter-bar__actions--pager {
+  flex-wrap: nowrap;
+  align-items: flex-end;
+}
+
+form.nowo-ui-filters[data-nowo-ui-region] .nowo-ui-filters__pager {
+  flex: 0 0 auto;
+  inline-size: auto;
+  min-inline-size: 0;
+  margin: 0;
+}
+
+form.nowo-ui-filters[data-nowo-ui-region] .nowo-ui-filters__pager :is(select, input) {
+  inline-size: auto;
+  max-inline-size: 100%;
+}
+
+form.nowo-ui-filters[data-nowo-ui-region] > .nowo-ui-filters-more {
+  grid-column: 1 / -1;
+  min-width: 0;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--nowo-ui-border);
+}
+
+.nowo-ui-filters-more__summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-block-size: 2rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  list-style: none;
+}
+
+.nowo-ui-filters-more__summary::-webkit-details-marker {
+  display: none;
+}
+
+.nowo-ui-filters-more__summary:focus-visible {
+  outline: 2px solid var(--nowo-ui-primary);
+  outline-offset: 2px;
+}
+
+.nowo-ui-filters-more__icon,
+.nowo-ui-filters-more__chevron {
+  display: inline-flex;
+}
+
+.nowo-ui-filters-more__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--nowo-ui-primary);
+  color: var(--nowo-ui-primary-contrast);
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+}
+
+.nowo-ui-filters-more[open] .nowo-ui-filters-more__chevron {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .nowo-ui-filters-more__chevron {
+    transition: transform 0.15s ease;
+  }
+}
+
+.nowo-ui-filters-more__fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--nowo-ui-filters-field-min, 12rem)), 1fr));
+  gap: var(--nowo-ui-filters-gap, 0.75rem 1rem);
+  align-items: end;
+  padding-top: 0.5rem;
+}
+
+.nowo-ui-filters-more__fields > * {
+  min-width: 0;
+  margin: 0;
+}
+
 /* --- Filter bar (opt-in, 1.12) ---
  * One control height for every single-line field and button in the bar in every engine (an explicit
  * height, not only min-height: WebKit gives native selects a taller intrinsic box, Firefox a shorter
@@ -3542,6 +3647,59 @@ table.nowo-ui-data-table.nowo-ui-data-table > tbody > tr:hover > td {
 .nowo-ui-filter-sheet__dialog-body .nowo-ui-filter-sheet__fields > *,
 .nowo-ui-filter-sheet__dialog-body .nowo-ui-filter-sheet__actions {
   flex-basis: 100%;
+}
+
+/* 2.72 (Beacon filter standard): the icon close (X) button, Filter / Clear sticky at the bottom of the sheet, and no
+   card inside the sheet: the list form drops its panel chrome there (!important: a host's unlayered card classes on the
+   `filters` slot would otherwise win over this layer). */
+.nowo-ui-filter-sheet__close {
+  flex: 0 0 auto;
+}
+
+.nowo-ui-filter-sheet__close.nowo-ui-btn--icon {
+  inline-size: var(--nowo-ui-control-height, 2.375rem);
+  block-size: var(--nowo-ui-control-height, 2.375rem);
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+}
+
+.nowo-ui-filter-sheet__dialog-header {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+  background: var(--nowo-ui-surface);
+}
+
+.nowo-ui-filter-sheet__dialog-body form[data-nowo-ui-filters] {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.nowo-ui-filter-sheet__dialog-body form[data-nowo-ui-filters] > * {
+  grid-column: 1 / -1 !important;
+}
+
+.nowo-ui-filter-sheet__dialog-body form[data-nowo-ui-filters] > .nowo-ui-filters__actions,
+.nowo-ui-filter-sheet__dialog-body .nowo-ui-filter-sheet__actions {
+  position: sticky;
+  inset-block-end: 0;
+  z-index: 1;
+  order: 2;
+  margin-inline: -1rem;
+  margin-block-end: -1rem;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--nowo-ui-border);
+  background: var(--nowo-ui-surface);
+}
+
+.nowo-ui-filter-sheet__dialog-body form[data-nowo-ui-filters] > .nowo-ui-filters-more {
+  order: 1;
 }
 
 /* 2.65: list_filters sheet (theme.pages.list.filters.sheet). The button row exists on phones only; inside the sheet
