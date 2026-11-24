@@ -156,36 +156,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-Target: 2.72.0 (Beacon filter standard, UI-PATTERNS §8; CrmKit filter bars aligned without a template override).
+### Fixed
 
-### Added
-
-- **"More filters" fold** in the list scaffold filters: `FilterField(more: true)` and/or `ListPage(filtersMore: [...])` fold
-  those fields under `<details class="nowo-ui-filters-more filters-more" data-nowo-ui-filters-more>` after the actions;
-  the summary shows how many of them are set and the disclosure stays open while one is (`ListPage::filtersMoreOpen`
-  forces it open / closed). Empty by default: no disclosure.
-- **Compact pager field**: `FilterField(pager: true, rowClass: ...)` renders a field (a "N per page" select) at its
-  natural width as the first item of the actions group, right before Filter / Clear (row class
-  `nowo-ui-filters__pager` + the field `rowClass`; the group gets `nowo-ui-filter-bar__actions--pager`).
-- Translations `filters.filter`, `filters.clear_filters`, `filters.more` in all 7 locales.
-- Phone filter sheet: light dismiss (`closedby="any"`, with a backdrop-click fallback where `closedBy` is unsupported),
-  Filter / Clear sticky at the bottom, no card chrome inside the sheet (header sticky at the top).
-- Demo: `/page-contract/orders/filter-standard`, Playwright e2e (Chromium, Firefox, WebKit) and WebP screenshots
-  `docs/images/demo/kit-list-filters-standard-{desktop,phone}.webp`.
-
-### Changed
-
-- List filters default labels are "Filter" / "Clear filters" (were "Apply" / "Clear"); `ListPage::filtersSubmit` /
-  `filtersClear` labels still win.
-- Icon-only list-filter Filter / Clear get `nowo-ui-filter-bar__action--icon-only` (squares at field height) instead of
-  the `btn_icon` slot classes.
-- A collapsed choice in the list filters gets only the host's `input` slot classes when the host sets some (the
-  kit-painted `nowo-ui-input` only without them), and every class is printed once: the host's select padding / height
-  are no longer overridden.
-- The phone sheet's close button is an icon (X) with `aria-label` / `title` (a text button with the `none` icon set).
-- REQ-ASSETS-005: the pre-paint `nowo-ui-theme-boot.js` (and its inline copy) now prints the "script loaded" console line
-  too, from a zero-delay task after the preferences are applied (never between the boot and the first paint; a
-  throwing console is swallowed). The inline script grows by about 1.5 KB.
+- `announceScript()` (console banner) no longer reads or writes the page global `window.__nowoScriptBanners` unguarded: page HTML can clobber it (DOM named access), and under a strict or ESM build the write would throw and stop every UiKit runtime that loads. A module-scope set is the fallback, the global is only trusted when it is a plain object, and every access is wrapped in `try/catch` (audit ZAI-A1). Once-per-page output is unchanged.
 
 ## [2.71.0] - 2026-11-23
 
