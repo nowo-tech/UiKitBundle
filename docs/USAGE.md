@@ -3050,8 +3050,29 @@ nowo_ui_kit:
 ```
 
 A kit marks its own routes with `prependExtensionConfig('nowo_ui_kit', ['remote_dialog' => ['direct_get' => ['routes'
-=> […]]]])` (behind an option of its own, so the host decides); the host adds routes or overrides an entry. The owning
-page needs nothing new: the `remote_form_dialog` partial with that `id` prints the reopen contract.
+=> […]]]])` (behind an option of its own, so the host decides); the host adds routes or overrides an entry. A host entry
+**replaces** the kit's entry for that route whole (no merged `page_parameters`), and `routes.<route>: false` (or
+`{enabled: false}`) unmarks a route a kit marked. An owning page cannot itself be a marked route (`a → b → a` would
+loop, `a → b → c` would drop the first dialog): the container build fails. The owning page needs nothing new: the
+`remote_form_dialog` partial with that `id` prints the reopen contract.
+
+**Rules for a marked route** (it is fetched by the owning page from a link, so treat it as any GET):
+
+- **A safe GET, with no state change.** The reopen query of a link from anywhere (another site, an e-mail) makes the
+  owning page fetch that route from script: a same-origin request with the dialog header and every cookie, including
+  `SameSite=Strict` ones the cross-site navigation would not have sent. Never change state, consume a one-time token
+  or pre-fill a form the user may submit unread from a marked route's GET.
+- **The controller runs twice on a direct GET:** once for the navigation (its answer is replaced by the redirect),
+  then for the dialog fetch. A flash message read by the fragment is consumed by the first run and lost in the
+  dialog; counters, "mark as read" and one-time tokens fire twice. Keep the GET idempotent and read flashes on the
+  owning page.
+- **Never ESI-include a marked route** (`render_esi()`, Varnish ESI): an ESI sub-request is a main request that
+  inherits the page's `Sec-Fetch-*` headers, so the fragment would be answered with the `302` and the include fails.
+- **After a login hop**, the last redirect back to the route is same-origin (`Sec-Fetch-Site: same-origin`): a route
+  with the default `redirect_same_origin: false` then shows its own page, not the owning page with the dialog. Set
+  `redirect_same_origin: true` when the dialog must open after login too.
+- The `302` carries every route parameter and scalar query value whole; when one cannot be carried (a nested value,
+  one over 512 characters, more than 32 values) the route keeps its own answer rather than reopening another state.
 
 **Server** (`Nowo\UiKitBundle\Dialog\RemoteDialogDirectGetListener`, `kernel.response`, priority -5, registered only
 when `routes` is not empty). It converts an answer to a `302` only when all of these hold:

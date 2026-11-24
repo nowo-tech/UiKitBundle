@@ -887,9 +887,10 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         step_routes?: list<scalar|Param|null>,
  *         direct_get?: array{ // 2.73: remote dialog content opened directly (address bar, bookmark, a link from another site). A top-level GET of a route listed here (Sec-Fetch-Mode: navigate, no dialog header, not from a page of this origin unless redirect_same_origin) answered 200 is redirected (302) to its owning page with a reopen query (`<query_parameter>[route]` + `[params]`), and the owning page opens the dialog on that route. Opt-in per route, empty by default; a kit prepends its own routes. Denied requests (403/404) are never redirected.
  *             query_parameter?: scalar|Param|null, // Name of the reopen query parameter on the owning page. // Default: "_dialog"
- *             routes?: array<string, array{ // Default: []
- *                 page?: scalar|Param|null,
- *                 dialog?: scalar|Param|null,
+ *             routes?: array<string, bool|array{ // Default: []
+ *                 enabled?: bool|Param, // false (or the entry itself set to false) unmarks a route a kit marked. // Default: true
+ *                 page?: scalar|Param|null, // Default: null
+ *                 dialog?: scalar|Param|null, // Default: null
  *                 page_parameters?: list<scalar|Param|null>,
  *                 redirect_same_origin?: bool|Param, // Also redirect a navigation started from a page of this origin (Sec-Fetch-Site: same-origin: a link followed without JavaScript or opened in a new tab). Default false: those keep the route's own page (the no-JS fallback). // Default: false
  *             }>,

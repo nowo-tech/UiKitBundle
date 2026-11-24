@@ -55,14 +55,29 @@ final readonly class RemoteDialogReopen
 
     /**
      * The owning page path (with the reopen query) for a request of a marked route, null when it cannot be generated
-     * (no router, a page parameter missing, a parameter the page route rejects, not a same-origin path).
+     * (no router, a page parameter missing, a parameter the page route rejects, not a same-origin path) or when a value
+     * could not be carried whole (a nested value, one over 512 characters, more than 32 values; 2.73 audit L5).
      */
     public function redirectTarget(Request $request, RemoteDialogContent $entry): ?string
     {
         if (!$this->urls instanceof UrlGeneratorInterface) {
             return null;
         }
-        $routeParams = $this->scalars($request->attributes->get('_route_params'));
+        $rawRoute = $request->attributes->get('_route_params');
+        $rawRoute = \is_array($rawRoute) ? $rawRoute : [];
+        $rawQuery = $request->query->all();
+        unset($rawQuery[$this->map->parameter]);
+        $routeParams = $this->scalars($rawRoute);
+        $query = $this->scalars($rawQuery);
+        // Strict, like reopenTarget(): a value that cannot be carried (nested, too long) or too many values would reopen
+        // the dialog on another state than the URL asked for, so the route keeps its own answer.
+        if (\count($routeParams) !== \count($rawRoute) || \count($query) !== \count($rawQuery)) {
+            return null;
+        }
+        $params = $routeParams + $query;
+        if (\count($params) > self::MAX_PARAMETERS) {
+            return null;
+        }
         $pageParams = [];
         foreach ($entry->pageParameters as $name) {
             if (!\array_key_exists($name, $routeParams)) {
@@ -70,9 +85,6 @@ final readonly class RemoteDialogReopen
             }
             $pageParams[$name] = $routeParams[$name];
         }
-        $query = $this->scalars($request->query->all());
-        unset($query[$this->map->parameter]);
-        $params = \array_slice($routeParams + $query, 0, self::MAX_PARAMETERS, true);
         $reopen = ['route' => $entry->route];
         if ([] !== $params) {
             $reopen['params'] = $params;
