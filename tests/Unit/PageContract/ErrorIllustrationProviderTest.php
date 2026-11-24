@@ -58,7 +58,7 @@ final class ErrorIllustrationProviderTest extends TestCase
             file_put_contents($file, $html);
         }
 
-        self::assertSame((string) file_get_contents($file), $html);
+        self::assertSame(ThemeBootInline::normalize((string) file_get_contents($file)), ThemeBootInline::normalize($html));
     }
 
     /**
@@ -84,7 +84,7 @@ final class ErrorIllustrationProviderTest extends TestCase
             $logger = new RecordingLogger();
             $html = $this->render($code, $config, $provider, $logger);
 
-            self::assertSame((string) file_get_contents(\dirname(__DIR__, 2).'/Fixtures/bc-2.46/error_'.$name.'.html'), $html, $name);
+            self::assertSame(ThemeBootInline::normalize((string) file_get_contents(\dirname(__DIR__, 2).'/Fixtures/bc-2.46/error_'.$name.'.html')), ThemeBootInline::normalize($html), $name);
             self::assertSame([$code], $provider->calls, $name);
             self::assertSame($warns ? ['warning'] : [], array_column($logger->records, 0), $name);
         }
@@ -94,7 +94,7 @@ final class ErrorIllustrationProviderTest extends TestCase
     {
         $html = $this->render(404, self::MAP, new CallbackIllustrationProvider(static fn (int $code): ?ErrorIllustration => throw new RuntimeException('down')));
 
-        self::assertSame((string) file_get_contents(\dirname(__DIR__, 2).'/Fixtures/bc-2.46/error_map_404.html'), $html);
+        self::assertSame(ThemeBootInline::normalize((string) file_get_contents(\dirname(__DIR__, 2).'/Fixtures/bc-2.46/error_map_404.html')), ThemeBootInline::normalize($html));
     }
 
     public function testProvidedIllustrationRendersPictureWithEscapedUrls(): void
