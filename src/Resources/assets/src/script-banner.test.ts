@@ -41,6 +41,26 @@ describe('announceScript', () => {
     expect(String(log.mock.calls[1]?.[0])).toContain('[ui-kit/other] script loaded');
   });
 
+  it('never throws when page HTML clobbers the registry global, and still announces once', () => {
+    document.body.innerHTML =
+      '<img id="__nowoScriptBanners" name="ui-kit/confirm"><img id="__nowoScriptBanners" name="ui-kit/confirm">';
+    Object.defineProperty(window, '__nowoScriptBanners', {
+      get: () => document.getElementsByName('ui-kit/confirm'),
+      set: () => {
+        throw new TypeError('read-only');
+      },
+      configurable: true,
+    });
+    try {
+      expect(() => announceScript('ui-kit/confirm')).not.toThrow();
+      expect(() => announceScript('ui-kit/confirm')).not.toThrow();
+      expect(log).toHaveBeenCalledTimes(1);
+    } finally {
+      delete (window as { __nowoScriptBanners?: unknown }).__nowoScriptBanners;
+      document.body.innerHTML = '';
+    }
+  });
+
   it('does nothing without a window', () => {
     vi.stubGlobal('window', undefined);
     try {
