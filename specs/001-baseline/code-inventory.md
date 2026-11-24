@@ -1,6 +1,6 @@
 # Code inventory — 100% traceability
 
-**Last audited**: 2026-11-22 (v2.64.0: 2.56-2.64 components, runtimes, demo platform and lint mapped; 2026-11-17: 2.55 line: shell focus mode; 2.54.0 line: context menus; 2.53.0 line: inset sidebar style, dialog focus return, async combobox; 2.51.0 line: brand appearance, remote dialog, listing ports, side panel, rail, tree, image input, base stylesheet)  
+**Last audited**: 2026-11-24 (v2.72.0: every `src/` file mapped again — 2.65-2.71 confirm runtimes, one-time secret and console banner; 2026-11-22 v2.64.0: 2.56-2.64 components, runtimes, demo platform and lint mapped; 2026-11-17: 2.55 line: shell focus mode; 2.54.0 line: context menus; 2.53.0 line: inset sidebar style, dialog focus return, async combobox; 2.51.0 line: brand appearance, remote dialog, listing ports, side panel, rail, tree, image input, base stylesheet)  
 **Baseline spec**: [`spec.md`](spec.md)  
 **Package**: `nowo-tech/ui-kit-bundle`
 
@@ -10,7 +10,7 @@ one row per file. Paths are relative to `src/`. Requirement IDs are defined in [
 
 **Scope**: every file tracked by Git under `src/` (`git ls-files src`), i.e. PHP, TypeScript, Twig, YAML, CSS, SCSS,
 the built JavaScript and the Stimulus peers README. **Excluded**: the co-located Vitest files `*.test.ts` under
-`Resources/assets/` (93 files at this audit — test artifacts covered by FR-TEST-001, not shipped runtime units; same rule as
+`Resources/assets/` (104 files at this audit — test artifacts covered by FR-TEST-001, not shipped runtime units; same rule as
 TwigInspectorBundle). `tests/`, `demo/` apps and caches are outside `src/` and out of scope. Built files that live
 under `src/` (the Vite IIFEs, the layered stylesheet and the inline theme-boot copy) are committed (Packagist installs
 no Node toolchain); they are listed in their own table as **outputs** of named sources (`FR-BUILD-*`) and are never
@@ -156,11 +156,11 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | `View/HeaderActions.php` | 2.21: split of header actions into icons / primary / more | FR-HEADERACTIONS-001 |
 | `View/AreaNav.php` | Area navigation tab bar of a bundle area | FR-AREANAV-001 |
 | `View/AreaNavItem.php` | One area tab (2.17 `icon`) | FR-AREANAV-001, FR-TABS-001 |
-| `View/ListPage.php` | List scaffold model: filters, table, row actions, pagination, empty state, 2.20 `sorting` / `clientSort` | FR-LIST-001, FR-SORT-002 |
+| `View/ListPage.php` | List scaffold model: filters, table, row actions, pagination, empty state, 2.20 `sorting` / `clientSort`, 2.72 `filtersMore` / `filtersMoreOpen` | FR-LIST-001, FR-SORT-002 |
 | `View/SafeAttributes.php` | 2.34: check of the per-element attribute options (no on*, style, srcdoc, unsafe URLs) | FR-SEC-001 |
 | `View/Table.php` | Data table model (columns, rows, caption, sort, responsive cards, 2.34 `rowAttributes`) | FR-LIST-001, FR-SORT-002 |
 | `View/Column.php` | Table column (priority, required, 2.20 sort key / first / type / value key) | FR-LIST-001, FR-SORT-002 |
-| `View/FilterField.php` | Filter field options (width, row attributes) | FR-LIST-001 |
+| `View/FilterField.php` | Filter field options (width, row attributes; 2.72 `more` / `pager` placement) | FR-LIST-001 |
 | `View/EmptyState.php` | Empty state of a list | FR-LIST-001 |
 | `View/Pagination.php` | Pagination shape (`fromArray`, `fromPagerfanta`, `fromKnp`, `fromTotal`, compact variant; 2.23 modes `pager` / `infinite` / `responsive`, `withMode()`) | FR-PAGINATION-001, FR-PAGINATION-002 |
 | `View/ShowPage.php` | Show scaffold model: sections, audit meta, 2.21 `stats` | FR-SHOW-001, FR-STAT-001 |
@@ -233,7 +233,7 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | `Resources/views/page/_scaffold.html.twig` | Internal scaffold helpers (page header, status badge, actions) | FR-SCAFFOLD-001, FR-STATUS-001 |
 | `Resources/views/page/_page_header.html.twig` | 2.3: public page-header contract (2.21 title row + status + split actions) | FR-PAGEHEADER-001, FR-STATUS-001, FR-HEADERACTIONS-001 |
 | `Resources/views/page/_detail_list.html.twig` | Definition list of detail items (badges, 2.21 `facts` modifier, 2.23 item attributes) | FR-SHOW-001, FR-FACTS-001, FR-ITEMATTR-001 |
-| `Resources/views/page/_list_filters.html.twig` | Filters region of the list scaffold (child loop; 2.65 opt-in phone sheet) | FR-SCAFFOLD-001, FR-LIST-001, FR-FILTERSHEET-002 |
+| `Resources/views/page/_list_filters.html.twig` | Filters region of the list scaffold (child loop; 2.65 opt-in phone sheet; 2.72 Beacon filter standard: More filters fold, compact pager, icon-only actions) | FR-SCAFFOLD-001, FR-LIST-001, FR-FILTERSHEET-002 |
 | `Resources/views/page/_section_form.html.twig` | Settings section form (child loop + submit) | FR-FORMPAGE-001 |
 | `Resources/views/page/_wizard_form.html.twig` | Default wizard step body | FR-FORMPAGE-001 |
 | `Resources/views/page/_auth_form.html.twig` | Auth form functions (compiles without symfony/form) | FR-AUTH-001 |
@@ -267,7 +267,7 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 | Source file | Spec section | Requirement IDs |
 | --- | --- | --- |
 | `Resources/views/macros/ui.html.twig` | Multi-framework class helpers (`ui.btn`, toolbar, table, …) | FR-MACRO-001, FR-THEME-001 |
-| `Resources/views/macros/filter_sheet.html.twig` | Filter sheet button, active count and native `<dialog>` shared by `filter_bar` and `list_filters` (2.65) | FR-FILTERSHEET-001, FR-FILTERSHEET-002 |
+| `Resources/views/macros/filter_sheet.html.twig` | Filter sheet button, active count and native `<dialog>` shared by `filter_bar` and `list_filters` (2.65; 2.72 icon close button, light dismiss) | FR-FILTERSHEET-001, FR-FILTERSHEET-002 |
 | `Resources/views/components/_icon.html.twig` | Canonical icon kinds per `icon_set` (incl. 2.20 `sort*`, 2.21 `more`) | FR-ICON-001 |
 | `Resources/views/components/_icon_ux.html.twig` | Isolated optional `ux_icon()` backend | FR-ICON-001 |
 
@@ -701,6 +701,20 @@ Built outputs of the six runtimes above (committed, never hand-edited; same rule
 | `Resources/public/js/nowo-ui-table-view.js` | `assets/src/nowo-ui-table-view.ts` | FR-BUILD-001, FR-TABLEVIEW-001 |
 | `Resources/public/js/nowo-ui-tooltip.js` | `assets/src/nowo-ui-tooltip.ts` | FR-BUILD-001, FR-TOOLTIP-001 |
 
+## Confirm runtimes, one-time secret and console banner (2.65-2.72)
+
+| Source file | Spec section | Requirement IDs |
+| --- | --- | --- |
+| `Resources/assets/src/logger.ts` | Shared bundle logger of the IIFE runtimes (level-gated console output) | FR-JS-001 |
+| `Resources/assets/src/script-banner.ts` | REQ-ASSETS-005 "script loaded" console banner, once per runtime, with the build time of `build-info.json` | FR-JS-001, FR-BUILD-001 |
+| `Resources/assets/src/nowo-ui-confirm-core.ts` | Confirm dialog core shared by the IIFE runtime and the `confirm-shared` peer (type-to-confirm, shared dialog fill, safe first focus) | FR-JS-001, FR-CONFIRM-001 |
+| `Resources/assets/src/nowo-ui-runtime-owner.ts` | Dialog runtime ownership between the IIFE runtimes and the Stimulus peers | FR-JS-001, FR-PEER-001 |
+| `Resources/assets/src/nowo-ui-secret-once.ts` | One-time secret runtime (`secret-once`): reveal / hide / copy without duplicating the secret in the DOM | FR-JS-001, FR-CLIPBOARD-001 |
+| `Resources/assets/stimulus-peers/confirm_shared_controller.ts` | Stimulus peer `confirm-shared`: the shared confirm `<dialog>` without the IIFE runtime | FR-PEER-001, FR-CONFIRM-001 |
+| `Resources/views/partials/_confirm_shared.html.twig` | Shared confirm `<dialog>` of a table's row actions (theme partial `confirm_shared`) | FR-CONFIRM-001, FR-PARTIAL-001 |
+| `Resources/views/partials/_secret_once.html.twig` | One-time secret (theme partial `secret_once`): printed once, reveal / copy controls | FR-PARTIAL-001, FR-CLIPBOARD-001 |
+| `Resources/public/js/nowo-ui-secret-once.js` | Build output of `assets/src/nowo-ui-secret-once.ts` | FR-BUILD-001, FR-JS-001 |
+
 ## Coverage summary
 
 | Category | Mapped |
@@ -749,15 +763,16 @@ Built outputs of the six runtimes above (committed, never hand-edited; same rule
 | Overlay registry, scroll regions and small helpers | 10 |
 | Default theme stylesheet and token lint | 2 |
 | Components and runtimes of 2.56-2.64 (30 sources) and their 6 built outputs | 36 |
-| **Total** | **455** |
+| Confirm runtimes, one-time secret and console banner (2.65-2.72) | 9 |
+| **Total** | **466** |
 
-Excluded: co-located Vitest `*.test.ts` (93 files at this audit).
+Excluded: co-located Vitest `*.test.ts` (104 files at this audit).
 
-Audit (2026-11-22, v2.64.0; previously 2026-11-17, 2.54.0 context menus + 2.55 focus mode files):
+Audit (2026-11-24, v2.72.0; previously 2026-11-22, v2.64.0):
 
 ```bash
-git ls-files src | grep -v '\.test\.ts$' | wc -l                      # 455
+git ls-files src | grep -v '\.test\.ts$' | wc -l                      # 466
 git ls-files src | grep -v '\.test\.ts$' | grep -c '\.php$'           # 140
-git ls-files src | grep -v '\.test\.ts$' | grep -c '\.ts$'            # 97
-git ls-files src | grep -c '\.test\.ts$'                              # 93 (excluded)
+git ls-files src | grep -v '\.test\.ts$' | grep -c '\.ts$'            # 103
+git ls-files src | grep -c '\.test\.ts$'                              # 104 (excluded)
 ```
