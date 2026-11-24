@@ -10,6 +10,8 @@ use Nowo\UiKitBundle\Appearance\AppearancePreset;
 use Nowo\UiKitBundle\Appearance\BorderStrength;
 use Nowo\UiKitBundle\Appearance\BuiltInAppearancePresets;
 use Nowo\UiKitBundle\Appearance\CornerStyle;
+use Nowo\UiKitBundle\Dialog\RemoteDialogContent;
+use Nowo\UiKitBundle\Dialog\RemoteDialogContentMap;
 use Nowo\UiKitBundle\Dialog\RemoteDialogHeaders;
 use Nowo\UiKitBundle\Enum\CssFramework;
 use Nowo\UiKitBundle\Enum\IconSet;
@@ -445,6 +447,52 @@ final class Configuration implements ConfigurationInterface
                                 ->end()
                             ->end()
                             ->defaultValue([])
+                        ->end()
+                        ->arrayNode('direct_get')
+                            ->info('2.73: remote dialog content opened directly (address bar, bookmark, a link from another site). A top-level GET of a route listed here (Sec-Fetch-Mode: navigate, no dialog header, not from a page of this origin unless redirect_same_origin) answered 200 is redirected (302) to its owning page with a reopen query (`<query_parameter>[route]` + `[params]`), and the owning page opens the dialog on that route. Opt-in per route, empty by default; a kit prepends its own routes. Denied requests (403/404) are never redirected.')
+                            ->addDefaultsIfNotSet()
+                            ->children()
+                                ->scalarNode('query_parameter')
+                                    ->defaultValue(RemoteDialogContentMap::DEFAULT_PARAMETER)
+                                    ->info('Name of the reopen query parameter on the owning page.')
+                                    ->validate()
+                                        ->ifTrue(static fn (mixed $name): bool => !\is_string($name) || !RemoteDialogContent::isParameterName($name))
+                                        ->thenInvalid('remote_dialog.direct_get.query_parameter must be a query parameter name of letters, digits and "_", %s given.')
+                                    ->end()
+                                ->end()
+                                ->arrayNode('routes')
+                                    ->info('Dialog content route name => {page: owning page route, dialog: dialog element id, page_parameters: route parameters copied to the page route, redirect_same_origin: false}.')
+                                    ->useAttributeAsKey('route')
+                                    ->normalizeKeys(false)
+                                    ->arrayPrototype()
+                                        ->children()
+                                            ->scalarNode('page')->isRequired()->cannotBeEmpty()->end()
+                                            ->scalarNode('dialog')->isRequired()->cannotBeEmpty()->end()
+                                            ->arrayNode('page_parameters')
+                                                ->scalarPrototype()->end()
+                                                ->defaultValue([])
+                                            ->end()
+                                            ->booleanNode('redirect_same_origin')
+                                                ->defaultFalse()
+                                                ->info('Also redirect a navigation started from a page of this origin (Sec-Fetch-Site: same-origin: a link followed without JavaScript or opened in a new tab). Default false: those keep the route\'s own page (the no-JS fallback).')
+                                            ->end()
+                                        ->end()
+                                    ->end()
+                                    ->defaultValue([])
+                                    ->validate()
+                                        ->always(static function (array $routes): array {
+                                            foreach ($routes as $route => $entry) {
+                                                $error = RemoteDialogContent::invalid((string) $route, (string) $entry['page'], (string) $entry['dialog'], $entry['page_parameters']);
+                                                if (null !== $error) {
+                                                    throw new InvalidConfigurationException('Invalid nowo_ui_kit.remote_dialog.direct_get.routes: '.$error);
+                                                }
+                                            }
+
+                                            return $routes;
+                                        })
+                                    ->end()
+                                ->end()
+                            ->end()
                         ->end()
                         ->scalarNode('request_header')
                             ->defaultValue(RemoteDialogHeaders::DEFAULT_REQUEST)

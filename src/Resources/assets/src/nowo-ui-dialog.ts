@@ -20,7 +20,8 @@
  * data-nowo-ui-remote-form-loading / -error / -invalid / -follow-on-load-error, data-nowo-ui-dialog-backdrop-close,
  * and (2.33) -request-header / -redirect-header / -location-header. A 204 + X-Nowo-Dialog-Location answer loads the
  * next step into the same dialog (event nowo-ui:remote-form:step).
- * `window.nowoUiOpenRemoteForm(id, url, opener?)` opens one from script.
+ * `window.nowoUiOpenRemoteForm(id, url, opener?)` opens one from script. 2.73: a remote form dialog whose page URL
+ * carries a safe-listed reopen query (`nowo_ui_kit.remote_dialog.direct_get`) opens on load (reopenRemoteForms()).
  * Overlay (2.28): every dialog opened here registers with the overlay registry (nowo-ui-overlay.ts: `nowo:overlay-*`
  * events, html[data-nowo-overlay]) until it closes.
  * Stimulus runtime (2.70): a dialog claimed by the `remote-form-dialog` peer (data-nowo-ui-runtime-owner, set by the
@@ -36,6 +37,7 @@ import { bindFocusReturn, handOverOpener, isFocusable, rememberOpener, returnFoc
 import { bindMotion, closeDialogWithEffect, finishClosing } from './nowo-ui-motion-core';
 import { overlayRegistry, type OverlayHandle } from './nowo-ui-overlay';
 import { isFragment, isPlainClick, openerTitle, parseFragment, remoteFormSettings, RemoteFormSession, sameOriginHref } from './nowo-ui-remote-form-core';
+import { reopenFromLocation, reopenOpener, REOPEN_URL_ATTR } from './nowo-ui-remote-dialog-reopen';
 import { markBound, ownedByStimulus } from './nowo-ui-runtime-owner';
 import { announceScript } from './script-banner';
 
@@ -153,6 +155,24 @@ export function openRemoteForm(id: string | HTMLDialogElement | null, url: strin
   }
   const title = opener ? openerTitle(opener, opener.getAttribute('data-nowo-ui-dialog-title') ?? undefined) : (document.getElementById(`${dialog.id}-title`)?.textContent ?? '');
   return remoteSession(dialog).open(url, opener, title);
+}
+
+/**
+ * 2.73: reopens the remote form dialogs of this page that the page URL asks for (direct-GET contract,
+ * nowo-ui-remote-dialog-reopen.ts). A dialog a Stimulus peer drives or will drive (`data-remote-form-dialog-target`)
+ * is left to the peer. A failed load shows the alert in the dialog instead of following the dialog URL (no bounce).
+ */
+export function reopenRemoteForms(root: ParentNode = document): void {
+  for (const dialog of root.querySelectorAll<HTMLDialogElement>(`${DIALOG}[${REOPEN_URL_ATTR}]`)) {
+    if (ownedByStimulus(dialog) || dialog.hasAttribute('data-remote-form-dialog-target')) {
+      continue;
+    }
+    reopenFromLocation(dialog, (url) => {
+      const opener = reopenOpener(dialog, url);
+      const title = opener ? openerTitle(opener, opener.getAttribute('data-nowo-ui-dialog-title') ?? undefined) : (document.getElementById(`${dialog.id}-title`)?.textContent ?? '');
+      return remoteSession(dialog).open(url, opener, title, { followOnLoadError: false });
+    });
+  }
 }
 
 /** Same-origin absolute http(s) URL of a dialog source, null for another origin or scheme, or an invalid URL. */
@@ -327,6 +347,12 @@ export function bindNowoUiDialog(): void {
   window.nowoUiOpenDialog = openDialog;
   window.nowoUiCloseDialog = closeDialog;
   window.nowoUiOpenRemoteForm = openRemoteForm;
+  // 2.73: a dialog the page URL asks for (direct-GET contract) opens once the document is parsed.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => reopenRemoteForms(), { once: true });
+  } else {
+    reopenRemoteForms();
+  }
 }
 
 bindNowoUiDialog();

@@ -468,6 +468,8 @@ export class RemoteFormSession {
   private opener: HTMLElement | null = null;
   private controller: AbortController | null = null;
   private busy = false;
+  /** 2.73: followOnLoadError of the current open, null = the setting. */
+  private followOverride: boolean | null = null;
   private overlay: OverlayHandle | null = null;
   private url: string | null = null;
   private steps = 0;
@@ -556,9 +558,10 @@ export class RemoteFormSession {
 
   /**
    * Opens the dialog for `href` (resolved same-origin). Returns false when nothing was done (the caller then lets the
-   * link navigate).
+   * link navigate). 2.73: `options.followOnLoadError` overrides the setting for this open and its steps (a dialog
+   * reopened from the page URL passes false: following the dialog URL as a page would bounce back to this page).
    */
-  open(href: string | null, opener: HTMLElement | null, titleText: string): boolean {
+  open(href: string | null, opener: HTMLElement | null, titleText: string, options: { followOnLoadError?: boolean } = {}): boolean {
     const url = sameOriginHref(href);
     const body = this.body();
     if (!url || !body || !this.supported() || this.yields()) {
@@ -575,6 +578,7 @@ export class RemoteFormSession {
     this.opener = opener;
     this.url = url;
     this.steps = 0;
+    this.followOverride = options.followOnLoadError ?? null;
     const title = this.title();
     if (title) {
       title.textContent = titleText;
@@ -740,7 +744,7 @@ export class RemoteFormSession {
       }
       const status = null;
       this.emit('failed', { stage: 'load', status });
-      if (this.settings().followOnLoadError) {
+      if (this.followOverride ?? this.settings().followOnLoadError) {
         this.close();
         remoteNavigation.assign(fallback);
       } else if (body) {

@@ -16,8 +16,11 @@ use Nowo\UiKitBundle\Appearance\AppearanceView;
 use Nowo\UiKitBundle\Appearance\BrandAppearanceProvider;
 use Nowo\UiKitBundle\Appearance\ConfigAppearanceProvider;
 use Nowo\UiKitBundle\DependencyInjection\Compiler\BrandAppearanceProviderPass;
+use Nowo\UiKitBundle\Dialog\RemoteDialogContentMap;
+use Nowo\UiKitBundle\Dialog\RemoteDialogDirectGetListener;
 use Nowo\UiKitBundle\Dialog\RemoteDialogHeaders;
 use Nowo\UiKitBundle\Dialog\RemoteDialogRedirectListener;
+use Nowo\UiKitBundle\Dialog\RemoteDialogReopen;
 use Nowo\UiKitBundle\Dialog\RemoteDialogResponder;
 use Nowo\UiKitBundle\Enum\CssFramework;
 use Nowo\UiKitBundle\EventSubscriber\LegacyPanelPathRedirectSubscriber;
@@ -352,6 +355,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
             ->setArgument('$sidebarLayout', $config['shell']['sidebar_layout'])
             ->setArgument('$sidebarStyle', $config['shell']['sidebar_style'])
             ->setArgument('$remoteDialogHeaders', new Reference('nowo_ui_kit.remote_dialog_headers'))
+            ->setArgument('$remoteDialogReopen', new Reference('nowo_ui_kit.remote_dialog_reopen'))
             ->setArgument('$appearanceView', new Reference('nowo_ui_kit.appearance.view'))
             ->setArgument('$baseStylesheet', $config['base_stylesheet'])
             ->addTag('twig.extension');
@@ -368,7 +372,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
      */
     private function registerRemoteDialog(ContainerBuilder $container, array $config): void
     {
-        /** @var array{convert_redirects: bool, step_routes: list<string>, request_header: string, redirect_header: string, location_header: string} $remoteDialog */
+        /** @var array{convert_redirects: bool, step_routes: list<string>, direct_get: array{query_parameter: string, routes: array<string, array{page: string, dialog: string, page_parameters: list<string>, redirect_same_origin: bool}>}, request_header: string, redirect_header: string, location_header: string} $remoteDialog */
         $remoteDialog = $config['remote_dialog'];
         $container->register('nowo_ui_kit.remote_dialog_headers', RemoteDialogHeaders::class)
             ->setArguments([$remoteDialog['request_header'], $remoteDialog['redirect_header'], $remoteDialog['location_header']]);
@@ -383,6 +387,23 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
             ])
             ->setPublic(true);
         $container->setAlias(RemoteDialogResponder::class, 'nowo_ui_kit.remote_dialog_responder')->setPublic(true);
+
+        // 2.73: remote dialog content opened directly (top-level GET → owning page with the dialog reopened).
+        $container->register('nowo_ui_kit.remote_dialog_content_map', RemoteDialogContentMap::class)
+            ->setArguments([$remoteDialog['direct_get']['routes'], $remoteDialog['direct_get']['query_parameter']]);
+        $container->register('nowo_ui_kit.remote_dialog_reopen', RemoteDialogReopen::class)
+            ->setArguments([
+                new Reference('nowo_ui_kit.remote_dialog_content_map'),
+                new Reference('router', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+                new Reference('request_stack', ContainerInterface::NULL_ON_INVALID_REFERENCE),
+            ]);
+        $container->setAlias(RemoteDialogReopen::class, 'nowo_ui_kit.remote_dialog_reopen');
+        if ([] !== $remoteDialog['direct_get']['routes']) {
+            // After the controller (and so the firewall and its access check); before the session listener (-1000).
+            $container->register('nowo_ui_kit.remote_dialog_direct_get_listener', RemoteDialogDirectGetListener::class)
+                ->setArguments([new Reference('nowo_ui_kit.remote_dialog_reopen'), $headers])
+                ->addTag('kernel.event_listener', ['event' => 'kernel.response', 'priority' => -5]);
+        }
 
         // 2.33: also for step routes alone (convert_redirects off), with the RemoteDialogRedirectEvent hook.
         if ($remoteDialog['convert_redirects'] || [] !== $remoteDialog['step_routes']) {

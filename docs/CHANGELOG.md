@@ -157,6 +157,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Remote dialog content opened directly (Beacon D-20261124-05): `nowo_ui_kit.remote_dialog.direct_get` marks routes whose answer is loaded into a remote form dialog, each with its owning page route and dialog id (opt-in per route, empty by default; kits prepend their own). A top-level navigation to such a route (`Sec-Fetch-Mode: navigate`, no `X-Nowo-Dialog` header; not a link of the same origin, which keeps the no-JS page unless `redirect_same_origin`) answered `200` HTML is redirected (`302`) to the owning page with a reopen query (`_dialog[route]` + `_dialog[params]`), and the page opens the dialog on that route. The redirect runs on `kernel.response`, after the firewall and the controller's own access check, so denied requests keep their `403` / `404`; POSTs, `422` re-renders, dialog fetches and unmarked routes are unchanged. On the owning page the `remote_form_dialog` partial prints the dialog's safe list and the target the router generated again (`nowo_ui_remote_dialog_reopen_attrs()`); both runtimes open it only for a safe-listed route and a same-origin path, then drop the parameter with `history.replaceState`. New services `RemoteDialogContentMap`, `RemoteDialogReopen`, `RemoteDialogDirectGetListener`; new module `nowo-ui-remote-dialog-reopen.ts`. `RemoteFormSession::open()` takes an optional `{followOnLoadError}` (a reopened dialog shows its alert instead of following the URL).
+
+### Changed
+
+- PHP-CS-Fixer also covers the demo PHP (REQ-CS-009), except the Flex-managed `config/bundles.php` and `config/reference.php`.
+
 ## [2.72.0] - 2026-11-24
 
 ### Fixed

@@ -65,6 +65,7 @@ This bundle is **FrankenPHP worker mode friendly** (including when the kernel is
 - **Inset sidebar style** (2.52, opt-in): `nowo_ui_kit.shell.sidebar_style: inset` (per request / per user: `_nowo_ui_sidebar_style` / the `sidebar_style` option) — GitLab-like shell: header, aside and footer on one surface without borders, the content in an inset rounded panel (`--nowo-ui-shell-inset-*` tokens, light and dark); phones unchanged — see [docs/USAGE.md](docs/USAGE.md#inset-sidebar-style-252)
 - **Shell focus mode** (2.55, opt-in): `nowo_ui_kit.theme.focus_mode` — a `focus_mode_toggle` partial (`[data-nowo-ui-focus-mode]`) hides the shell regions (sidebar, top bar, footer, side panels, edge tabs, a host's dock; `keep` list for a search field, a timer chip, a one-line breadcrumb) so the work area goes full width, with an optional second step into the browser fullscreen; `F` / Escape, remembered per area, live-region announcements, `inert` regions — see [docs/USAGE.md](docs/USAGE.md#shell-focus-mode-255)
 - **Remote form dialog** (2.28): a form page opened in a native `<dialog>` and posted back with `fetch` (`422` re-rendered, `204` + `X-Nowo-Redirect` followed, same-origin only) — IIFE mode of `nowo-ui-dialog.js`, Stimulus peer `remote-form-dialog`, partial `remote_form_dialog`, server helper `RemoteDialogResponder` — see [docs/USAGE.md](docs/USAGE.md#remote-form-dialog-228)
+- **Remote dialog content opened directly** (2.73, opt-in per route): a dialog URL opened from the address bar lands on its owning page with the dialog open on that step (`remote_dialog.direct_get`; denied requests keep their 403/404) — see [docs/USAGE.md](docs/USAGE.md#remote-dialog-content-opened-directly-273)
 - **Overlay registry** (2.28): `window.NowoUiOverlay` keeps the shell `inert` under drawers, marks `html[data-nowo-overlay]` and dispatches `nowo:overlay-open` / `nowo:overlay-close` (ChatKit's dock listens); the layer scale (`--nowo-ui-z-*`) is public API — see [docs/USAGE.md](docs/USAGE.md#overlays-and-the-shell-228)
 - TypeScript → IIFEs: modal, shell, toast, confirm, page-loader, theme, theme-boot, orb, clipboard, tabs, release, open-modal
 - Pre-paint theme boot (1.15): `_theme_boot.html.twig` inlines a blocking script (CSP nonce) that applies theme / density / motion / font scale / contrast from `<html>` attributes before first paint, sharing storage keys with the theme toggle
@@ -195,8 +196,8 @@ and Stimulus peers run with Vitest (happy-dom). Figures below are the CI `Code C
 
 | Suite | Coverage |
 |-------|----------|
-| PHP (PHPUnit) | 100% lines (4947/4947, 2884 tests; CI fails under 100%) |
-| TypeScript (Vitest) | 99.2% lines (9395/9470), 99.03% statements, 93.67% branches (gated set, see [COVERAGE.md](docs/COVERAGE.md); thresholds 90% lines / 85% branches) |
+| PHP (PHPUnit) | 100% lines (5125/5125, 2932 tests; CI fails under 100%) |
+| TypeScript (Vitest) | 99.2% lines (9465/9541), 99.02% statements, 93.57% branches (gated set, see [COVERAGE.md](docs/COVERAGE.md); thresholds 90% lines / 85% branches) |
 | Python | N/A |
 
 ```bash
