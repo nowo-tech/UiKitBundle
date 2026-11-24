@@ -58,14 +58,14 @@ final class KitchenSinkController extends AbstractController
                 'host_chrome' => $forms->createNamed('', HostChromeFilterType::class)->createView(),
             ],
             'layout_template' => 'base.html.twig',
-            'pagination'      => [
-                'page'        => 2,
-                'per_page'    => 10,
-                'total'       => 42,
+            'pagination' => [
+                'page' => 2,
+                'per_page' => 10,
+                'total' => 42,
                 'total_pages' => 5,
             ],
-            'item_count'   => 10,
-            'route'        => 'nowo_ui_kit_kitchen_sink',
+            'item_count' => 10,
+            'route' => 'nowo_ui_kit_kitchen_sink',
             'route_params' => [],
         ]);
     }

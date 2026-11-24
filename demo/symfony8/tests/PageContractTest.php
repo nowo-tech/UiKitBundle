@@ -78,7 +78,7 @@ final class PageContractTest extends PageContractTestCase
 
     protected static function templatePaths(): array
     {
-        return [FilesystemLoader::MAIN_NAMESPACE => \dirname(__DIR__).'/templates'];
+        return [FilesystemLoader::MAIN_NAMESPACE => dirname(__DIR__).'/templates'];
     }
 
     protected static function strictMissingTranslations(): bool

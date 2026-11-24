@@ -13,6 +13,7 @@ use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormFactoryInterface;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Profiler\Profiler;
 use Symfony\Component\Routing\Attribute\Route;
@@ -60,7 +61,7 @@ final class CatalogueController extends AbstractController
         return $this->render('catalogue/'.str_replace('-', '_', $group).'.html.twig', $context);
     }
 
-    private function contactForm(FormFactoryInterface $forms, string $name): \Symfony\Component\Form\FormInterface
+    private function contactForm(FormFactoryInterface $forms, string $name): FormInterface
     {
         return $forms->createNamedBuilder($name, options: ['attr' => ['class' => 'nowo-ui-form']])
             ->add('name', TextType::class, ['label' => 'Name', 'help' => 'As it appears on the invoice.', 'attr' => self::INPUT])
