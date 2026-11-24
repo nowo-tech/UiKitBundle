@@ -1,34 +1,45 @@
 import { test, expect, type Page } from '@playwright/test';
-import { mkdirSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { ensureOutDir, hideDebugToolbar, shotPath } from './shot-helpers';
 
 /**
- * REQ-DEMO-013 / REQ-UI-003 — host-theme demo screenshots in full demo context: host chrome (sidebar / header)
- * → page content → Symfony WebProfiler toolbar, captured as a padded union clip on a viewport tall enough for the
- * whole page. README: host-theme list, host-theme dashboard, default-theme list with the delete confirm open.
- * docs/PAGE_CONTRACT.md links the remaining scaffolds.
+ * REQ-DEMO-013 — README and docs screenshots, never with the Symfony debug toolbar.
+ *
+ * README: the component catalogue on the shared nowo-tech demo platform shell (top bar, sidebar navigation, page
+ * header, section cards), the same frame as every other nowo-tech bundle demo — data tables, form patterns and a
+ * confirm dialog, light theme, full page at 1280 px.
+ *
+ * docs/PAGE_CONTRACT.md: the host-theme preview (/page-contract, Acme tokens and stylesheet: the one page whose purpose
+ * is a non-default theme) and its default-theme twin. docs/USAGE.md: the kit templates of the Shell lab (app shell,
+ * error pages, confirm dialog). Those are captured as a padded union clip of the page chrome and content.
  */
-const outDir = process.env.SCREENSHOT_DIR ? resolve(process.env.SCREENSHOT_DIR) : resolve(__dirname, '../../../../docs/images/demo');
-
 const WIDTH = 1280;
 const PAD = 16;
 const CHROME = 'aside, nav, header, main, .acme-guest, .nowo-ui-content';
 
 test.beforeAll(() => {
-  mkdirSync(outDir, { recursive: true });
+  ensureOutDir();
 });
 
-test.use({ viewport: { width: WIDTH, height: 900 } });
+test.use({ viewport: { width: WIDTH, height: 800 }, colorScheme: 'light', reducedMotion: 'reduce' });
 
-/** Open a page, wait for the profiler toolbar and grow the viewport so the content ends above the toolbar. */
+test.beforeEach(async ({ page }) => {
+  await hideDebugToolbar(page);
+});
+
+/** Demo platform shell page: wait for the shell and the fonts, then a full-page capture. */
+async function shell(page: Page, path: string, file: string, ready: string): Promise<void> {
+  await page.goto(path);
+  await expect(page.getByTestId('demo-platform')).toBeVisible();
+  await expect(page.locator(ready).first()).toBeVisible();
+  await page.evaluate(() => document.fonts.ready);
+  await page.screenshot({ path: shotPath(file), fullPage: true });
+}
+
+/** Open a Shell lab / host-theme page and grow the viewport so the whole content fits. */
 async function open(page: Page, path: string): Promise<void> {
   await page.setViewportSize({ width: WIDTH, height: 900 });
   await page.goto(path);
-  const toolbar = page.locator('.sf-toolbar .sf-toolbarreset');
-  await expect(toolbar).toBeVisible({ timeout: 15_000 });
-  // the toolbar first renders a "Loading…" stub: wait for the real panels
-  await expect(page.locator('.sf-toolbar').first()).not.toContainText('Loading', { timeout: 15_000 });
-  const toolbarHeight = Math.ceil((await toolbar.boundingBox())?.height ?? 36);
+  await page.evaluate(() => document.fonts.ready);
   const contentBottom = await page.evaluate((sel) => Math.max(...[...document.querySelectorAll(sel)]
     .filter((el) => !el.closest('.sf-toolbar, dialog'))
     .map((el) => {
@@ -37,14 +48,15 @@ async function open(page: Page, path: string): Promise<void> {
       const last = kids.length ? kids[kids.length - 1] : el;
       return last.getBoundingClientRect().bottom + window.scrollY;
     })), CHROME);
-  await page.setViewportSize({ width: WIDTH, height: Math.max(720, Math.ceil(contentBottom) + 32 + toolbarHeight) });
+  await page.setViewportSize({ width: WIDTH, height: Math.max(720, Math.ceil(contentBottom) + 32) });
   await page.evaluate(() => window.scrollTo(0, 0));
 }
 
-/** Padded union of the chrome, the main content and the profiler toolbar, clamped to the viewport. */
+/** Padded union of the chrome and the main content, clamped to the viewport. */
 async function shoot(page: Page, file: string): Promise<void> {
   const box = await page.evaluate((sel) => {
-    const els = [...document.querySelectorAll(`${sel}, .sf-toolbar .sf-toolbarreset`)]
+    const els = [...document.querySelectorAll(sel)]
+      .filter((el) => !el.closest('.sf-toolbar'))
       .map((el) => el.getBoundingClientRect())
       .filter((r) => r.width > 0 && r.height > 0);
     return {
@@ -58,7 +70,7 @@ async function shoot(page: Page, file: string): Promise<void> {
   const x = Math.max(0, box.x - PAD);
   const y = Math.max(0, box.y - PAD);
   await page.screenshot({
-    path: resolve(outDir, `${file}.png`),
+    path: shotPath(file),
     clip: { x, y, width: Math.min(vp.width, box.r + PAD) - x, height: Math.min(vp.height, box.b + PAD) - y },
   });
 }
@@ -77,7 +89,26 @@ const gallery: Array<{ file: string; path: string; ready: string }> = [
   { file: 'kit-app-shell', path: '/kit/shell', ready: '[data-nowo-ui-pagination="compact"]' },
 ];
 
-test.describe('page contract screenshots — README', () => {
+test.describe('demo platform screenshots — README', () => {
+  test('catalogue data tables (filters, bulk bar, sortable headers, row actions, card footer)', async ({ page }) => {
+    await shell(page, '/catalogue/admin/data-tables', 'catalogue-data-tables', '.nowo-ui-data-table tbody tr');
+  });
+
+  test('catalogue form patterns (error summary, fieldsets, option cards, file drop)', async ({ page }) => {
+    await shell(page, '/catalogue/admin/form-patterns', 'catalogue-form-patterns', 'form');
+  });
+
+  test('catalogue confirm dialog open', async ({ page }) => {
+    await page.goto('/catalogue/dialogs');
+    await expect(page.getByTestId('demo-platform')).toBeVisible();
+    await page.getByTestId('catalogue-dialog-open').click();
+    await expect(page.locator('dialog[open]')).toBeVisible();
+    await page.waitForTimeout(300); // dialog open transition
+    await page.screenshot({ path: shotPath('catalogue-dialog') });
+  });
+});
+
+test.describe('page contract screenshots — PAGE_CONTRACT.md gallery', () => {
   test('host-theme orders list (filters, badges, row actions, pagination)', async ({ page }) => {
     await open(page, '/page-contract/orders');
     await expect(page.locator('table.acme-table tbody tr')).toHaveCount(5);
@@ -97,9 +128,7 @@ test.describe('page contract screenshots — README', () => {
     await page.waitForTimeout(300); // dialog open transition
     await shoot(page, 'page-contract-default-list');
   });
-});
 
-test.describe('page contract screenshots — PAGE_CONTRACT.md gallery', () => {
   test('overview — host shell with every scaffold', async ({ page }) => {
     await open(page, '/page-contract');
     await expect(page.locator('[data-nowo-ui-page="dashboard"]')).toBeVisible();

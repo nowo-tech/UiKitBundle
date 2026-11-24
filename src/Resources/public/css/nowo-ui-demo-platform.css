@@ -615,9 +615,11 @@
   color: var(--nowo-ui-danger-text);
 }
 
-/* Inputs: the platform border (3:1 or more) and the outline focus ring the buttons use. */
+/* Inputs: the platform border (3:1 or more) and the outline focus ring the buttons use. The pagination per-page select
+   (table card footer) is a field too and gets the same border. */
 .nowo-ui-demo-platform .nowo-ui-input,
-.nowo-ui-demo-platform .nowo-ui-input.form-control {
+.nowo-ui-demo-platform .nowo-ui-input.form-control,
+.nowo-ui-demo-platform select.nowo-ui-pagination__select {
   border-color: var(--nowo-ui-input-border);
   background-color: var(--nowo-ui-input-bg, var(--nowo-ui-surface));
   color: var(--nowo-ui-input-text, var(--nowo-ui-text));

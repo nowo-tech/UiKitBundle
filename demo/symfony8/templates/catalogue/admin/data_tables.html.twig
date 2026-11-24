@@ -3,7 +3,7 @@
 {% form_theme bulk_form '@NowoUiKitBundle/form/nowo_ui_layout.html.twig' %}
 {% block nowo_ui_page_header %}
     {% set _toolbar %}<a class="nowo-ui-btn nowo-ui-btn--primary" href="#">New invoice</a>{% endset %}
-    {{ include(nowo_ui_partial('page_header', 'DemoDefaultTheme'), {title: 'Data tables', intro: 'Filters (a sheet on phones), bulk selection, sortable headers, density and columns, row actions and a footer with the pages and the page size.', toolbar: _toolbar}, false) }}
+    {{ include(nowo_ui_partial('page_header', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', title: 'Data tables', intro: 'Filters (a sheet on phones), bulk selection, sortable headers, density and columns, row actions and a footer with the pages and the page size.', toolbar: _toolbar}, false) }}
 {% endblock %}
 {% block body %}
     {% set _columns = [
@@ -15,30 +15,30 @@
     ] %}
     {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Invoices', intro: 'Filter, select rows and act on them; sort by a column header; change the density or hide columns.', kind: 'content', testid: 'catalogue-data-table'} %}
         {% block section_actions %}
-            {% embed nowo_ui_partial('tooltip') with {text: 'Downloads the filtered invoices as a CSV file.', tooltip_id: 'catalogue-export-tip'} %}
+            {% embed nowo_ui_partial('tooltip', 'DemoPlatformCatalogue') with {bundle: 'DemoPlatformCatalogue', text: 'Downloads the filtered invoices as a CSV file.', tooltip_id: 'catalogue-export-tip'} %}
                 {% block tooltip_trigger %}<a class="nowo-ui-btn nowo-ui-btn--outline nowo-ui-btn--sm" href="#" aria-describedby="{{ tooltip_id }}">Export</a>{% endblock %}
             {% endembed %}
         {% endblock %}
         {% block section_body %}
             <div class="nowo-ui-stack">
-                {% embed nowo_ui_partial('filter_bar') with {form: filter_form, filter_id: 'catalogue-filters', reset_href: path('catalogue_admin', {group: 'data-tables'}), columns: _columns} only %}
+                {% embed nowo_ui_partial('filter_bar', 'DemoPlatformCatalogue') with {bundle: 'DemoPlatformCatalogue', form: filter_form, filter_id: 'catalogue-filters', reset_href: path('catalogue_admin', {group: 'data-tables'}), columns: _columns} only %}
                     {% block filter_bar_extra %}
-                        {{ include(nowo_ui_partial('table_view'), {table: 'catalogue-invoices', persist: 'catalogue-invoices', columns: columns|map(c => {key: c.key, label: c.label, locked: c.locked ?? false})}, false) }}
+                        {{ include(nowo_ui_partial('table_view', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', table: 'catalogue-invoices', persist: 'catalogue-invoices', columns: columns|map(c => {key: c.key, label: c.label, locked: c.locked ?? false})}, false) }}
                     {% endblock %}
                 {% endembed %}
-                {{ include(nowo_ui_partial('bulk_bar'), {form_id: 'catalogue-bulk', total: pagination.total, all_field: bulk_form.all.vars.id, actions: [{label: 'Archive', value: 'archive'}, {label: 'Delete', value: 'delete', variant: 'danger', confirm: 'Delete the selected invoices? This cannot be undone.'}]}, false) }}
+                {{ include(nowo_ui_partial('bulk_bar', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', form_id: 'catalogue-bulk', total: pagination.total, all_field: bulk_form.all.vars.id, actions: [{label: 'Archive', value: 'archive'}, {label: 'Delete', value: 'delete', variant: 'danger', confirm: 'Delete the selected invoices? This cannot be undone.'}]}, false) }}
                 {{ form_start(bulk_form) }}
                     {{ form_widget(bulk_form.all) }}
                     <div class="nowo-ui-table-wrap" role="region" tabindex="0" aria-label="Invoices">
                         <table class="nowo-ui-data-table" id="catalogue-invoices">
                             <thead>
                                 <tr>
-                                    <th scope="col" class="nowo-ui-bulk-cell">{{ include(nowo_ui_partial('bulk_toggle'), {}, false) }}</th>
+                                    <th scope="col" class="nowo-ui-bulk-cell">{{ include(nowo_ui_partial('bulk_toggle', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue'}, false) }}</th>
                                     {% for c in _columns %}
                                         {% set _active = sort == (c.sort ?? null) %}
                                         <th scope="col" data-nowo-ui-column="{{ c.key }}"{% if c.num ?? false %} class="nowo-ui-cell--num"{% endif %}{% if _active %} aria-sort="{{ dir == 'asc' ? 'ascending' : 'descending' }}"{% endif %}>
                                             {%- if c.sort ?? null -%}
-                                                {{ include(nowo_ui_partial('sort_header', 'DemoDefaultTheme'), {label: c.label, href: path('catalogue_admin', {group: 'data-tables'}|merge(query)|merge({sort: c.sort, dir: _active and dir == 'asc' ? 'desc' : 'asc', page: 1})), active: _active, direction: dir, next_direction: _active and dir == 'asc' ? 'desc' : 'asc', bundle: 'DemoDefaultTheme'}, false) }}
+                                                {{ include(nowo_ui_partial('sort_header', 'DemoPlatformCatalogue'), {label: c.label, href: path('catalogue_admin', {group: 'data-tables'}|merge(query)|merge({sort: c.sort, dir: _active and dir == 'asc' ? 'desc' : 'asc', page: 1})), active: _active, direction: dir, next_direction: _active and dir == 'asc' ? 'desc' : 'asc', bundle: 'DemoPlatformCatalogue'}, false) }}
                                             {%- else -%}{{ c.label }}{%- endif -%}
                                         </th>
                                     {% endfor %}
@@ -79,7 +79,7 @@
         {% endblock %}
         {% block section_footer %}
             <div class="nowo-ui-table-footer">
-                {{ include(nowo_ui_partial('pagination', 'DemoDefaultTheme'), {pagination: pagination, item_count: rows|length, route: 'catalogue_admin', route_params: {group: 'data-tables'}, query: query, per_page_choices: per_page_choices, variant: 'compact', bundle: 'DemoDefaultTheme'}, false) }}
+                {{ include(nowo_ui_partial('pagination', 'DemoPlatformCatalogue'), {pagination: pagination, item_count: rows|length, route: 'catalogue_admin', route_params: {group: 'data-tables'}, query: query, per_page_choices: per_page_choices, variant: 'compact', bundle: 'DemoPlatformCatalogue'}, false) }}
             </div>
         {% endblock %}
     {% endembed %}

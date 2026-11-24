@@ -1,6 +1,6 @@
 {% extends 'catalogue/admin/_base.html.twig' %}
 {% block nowo_ui_page_header %}
-    {{ include(nowo_ui_partial('page_header', 'DemoDefaultTheme'), {header: header, bundle: 'DemoDefaultTheme'}, false) }}
+    {{ include(nowo_ui_partial('page_header', 'DemoPlatformCatalogue'), {header: header, bundle: 'DemoPlatformCatalogue'}, false) }}
 {% endblock %}
 {% block body %}
     {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Tabs in the page', intro: 'role="tablist": Left and Right move between tabs, Home and End jump; without JavaScript the panels are stacked under their headings.', kind: 'content', testid: 'catalogue-tab-panels'} %}
@@ -8,7 +8,7 @@
             {% set _details %}<dl class="nowo-ui-dl"><div><dt>Customer</dt><dd>Analytical Engines Ltd</dd></div><div><dt>Amount</dt><dd>1,240.00 €</dd></div></dl>{% endset %}
             {% set _lines %}<p>3 lines: consulting (10 h), licence, support.</p>{% endset %}
             {% set _history %}<p>Issued 2 Nov, reminder 3 Nov, paid 4 Nov.</p>{% endset %}
-            {{ include(nowo_ui_partial('tab_panels'), {id: 'catalogue-invoice-tabs', label: 'Invoice INV-1042', items: [
+            {{ include(nowo_ui_partial('tab_panels', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', id: 'catalogue-invoice-tabs', label: 'Invoice INV-1042', items: [
                 {id: 'details', label: 'Details', content: _details},
                 {id: 'lines', label: 'Lines', content: _lines},
                 {id: 'history', label: 'History', content: _history},
@@ -17,7 +17,7 @@
     {% endembed %}
     {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Steps', intro: 'Numbered, done steps link back, the current one carries aria-current="step"; vertical on phones.', kind: 'content', testid: 'catalogue-steps'} %}
         {% block section_body %}
-            {{ include(nowo_ui_partial('steps'), {label: 'Set up billing', items: [
+            {{ include(nowo_ui_partial('steps', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', label: 'Set up billing', items: [
                 {label: 'Company', hint: 'Name and address', status: 'done', href: '#'},
                 {label: 'Bank account', hint: 'IBAN and mandate', status: 'done', href: '#'},
                 {label: 'Invoice numbering', hint: 'Series and prefix', status: 'current'},

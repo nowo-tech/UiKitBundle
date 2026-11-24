@@ -7,8 +7,8 @@
     {% else %}
         {{ form_row(form.channel, {attr: {'data-testid': 'wizard-channel', autofocus: true}}) }}
     {% endif %}
-    <div class="{{ nowo_ui_class('form_actions') }}">
-        <a href="{{ path('kit_remote_form') }}" class="{{ nowo_ui_class('btn_secondary') }}" data-nowo-ui-dialog-close data-testid="wizard-cancel">Cancel</a>
-        <button type="submit" class="{{ nowo_ui_class('btn_primary') }}" data-testid="wizard-next">{{ step == 1 ? 'Next' : 'Save' }}</button>
+    <div class="{{ nowo_ui_class('form_actions', 'DemoPlatformCatalogue') }}">
+        <a href="{{ path('kit_remote_form') }}" class="{{ nowo_ui_class('btn_secondary', 'DemoPlatformCatalogue') }}" data-nowo-ui-dialog-close data-testid="wizard-cancel">Cancel</a>
+        <button type="submit" class="{{ nowo_ui_class('btn_primary', 'DemoPlatformCatalogue') }}" data-testid="wizard-next">{{ step == 1 ? 'Next' : 'Save' }}</button>
     </div>
 {{ form_end(form) }}

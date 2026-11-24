@@ -1,9 +1,9 @@
 {% extends 'catalogue/admin/_base.html.twig' %}
 {% block nowo_ui_page_header %}
-    {{ include(nowo_ui_partial('page_header', 'DemoDefaultTheme'), {title: 'Data display', intro: 'Key figures, record details, activity, people, progress, code, and the empty and loading states.'}, false) }}
+    {{ include(nowo_ui_partial('page_header', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', title: 'Data display', intro: 'Key figures, record details, activity, people, progress, code, and the empty and loading states.'}, false) }}
 {% endblock %}
 {% block body %}
-    {{ include(nowo_ui_partial('stat_row', 'DemoDefaultTheme'), {items: stats, label: 'Billing this month', attr: {class: 'nowo-ui-stat-row--tiles', 'data-testid': 'catalogue-stat-tiles'}, bundle: 'DemoDefaultTheme'}, false) }}
+    {{ include(nowo_ui_partial('stat_row', 'DemoPlatformCatalogue'), {items: stats, label: 'Billing this month', attr: {class: 'nowo-ui-stat-row--tiles', 'data-testid': 'catalogue-stat-tiles'}, bundle: 'DemoPlatformCatalogue'}, false) }}
     <div class="nowo-ui-cards">
         {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Invoice INV-1042', intro: '.nowo-ui-dl — term and value side by side, stacked on phones.', kind: 'detail', testid: 'catalogue-dl'} %}
             {% block section_body %}
@@ -32,8 +32,8 @@
     <div class="nowo-ui-cards">
         {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Activity', intro: 'Timeline: an ordered list with <time datetime>, a title, text and a tone.', kind: 'list', testid: 'catalogue-timeline'} %}
             {% block section_body %}
-                {% set _avatars %}{{ include(nowo_ui_partial('avatar_group'), {people: [{name: 'Ada Lovelace'}, {name: 'Grace Hopper'}], size: 'sm'}, false) }}{% endset %}
-                {{ include(nowo_ui_partial('timeline'), {label: 'Invoice activity', items: [
+                {% set _avatars %}{{ include(nowo_ui_partial('avatar_group', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', people: [{name: 'Ada Lovelace'}, {name: 'Grace Hopper'}], size: 'sm'}, false) }}{% endset %}
+                {{ include(nowo_ui_partial('timeline', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', label: 'Invoice activity', items: [
                     {title: 'Payment received', datetime: '2026-11-04T09:12', time: '4 Nov, 09:12', text: '1,240.00 € by bank transfer.', tone: 'success'},
                     {title: 'Reminder sent', datetime: '2026-11-03T08:00', time: '3 Nov, 08:00', text: 'Sent to billing@analytical.example.', tone: 'info', meta: _avatars},
                     {title: 'Due date changed', datetime: '2026-11-02T16:40', time: '2 Nov, 16:40', text: 'From 25 November to 2 December.', tone: 'warning'},
@@ -44,7 +44,7 @@
         {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'People and tags', intro: 'Avatar group with "+N" and presence; chips with a remove link.', kind: 'content', testid: 'catalogue-people'} %}
             {% block section_body %}
                 <div class="nowo-ui-stack">
-                    {{ include(nowo_ui_partial('avatar_group'), {label: 'Team: 6 people', max: 4, people: [
+                    {{ include(nowo_ui_partial('avatar_group', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', label: 'Team: 6 people', max: 4, people: [
                         {name: 'Ada Lovelace', presence: 'online'},
                         {name: 'Grace Hopper', presence: 'away'},
                         {name: 'Alan Turing', presence: 'busy'},
@@ -53,9 +53,9 @@
                         {name: 'Charles Babbage'},
                     ]}, false) }}
                     <ul class="nowo-ui-chips" aria-label="Active filters">
-                        <li>{{ include(nowo_ui_partial('chip'), {label: 'Status: Due', remove_href: path('catalogue_admin', {group: 'data-display'})}, false) }}</li>
-                        <li>{{ include(nowo_ui_partial('chip'), {label: 'Customer: Hopper Compilers', remove_href: path('catalogue_admin', {group: 'data-display'})}, false) }}</li>
-                        <li>{{ include(nowo_ui_partial('chip'), {label: 'Ada Lovelace', avatar: {name: 'Ada Lovelace'}}, false) }}</li>
+                        <li>{{ include(nowo_ui_partial('chip', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', label: 'Status: Due', remove_href: path('catalogue_admin', {group: 'data-display'})}, false) }}</li>
+                        <li>{{ include(nowo_ui_partial('chip', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', label: 'Customer: Hopper Compilers', remove_href: path('catalogue_admin', {group: 'data-display'})}, false) }}</li>
+                        <li>{{ include(nowo_ui_partial('chip', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', label: 'Ada Lovelace', avatar: {name: 'Ada Lovelace'}}, false) }}</li>
                     </ul>
                 </div>
             {% endblock %}
@@ -65,40 +65,40 @@
         {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Progress', intro: 'Native <progress> with a label and the value; tones for success, warning and danger.', kind: 'content', testid: 'catalogue-progress'} %}
             {% block section_body %}
                 <div class="nowo-ui-stack">
-                    {{ include(nowo_ui_partial('progress', 'DemoDefaultTheme'), {label: 'Backup', percent: 64, id: 'catalogue-progress-backup', bundle: 'DemoDefaultTheme'}, false) }}
-                    {{ include(nowo_ui_partial('progress', 'DemoDefaultTheme'), {label: 'Storage used', percent: 82, id: 'catalogue-progress-storage', attr: {class: 'nowo-ui-progress-field--warning'}, bundle: 'DemoDefaultTheme'}, false) }}
-                    {{ include(nowo_ui_partial('progress', 'DemoDefaultTheme'), {label: 'Import', percent: 100, id: 'catalogue-progress-import', attr: {class: 'nowo-ui-progress-field--success'}, bundle: 'DemoDefaultTheme'}, false) }}
-                    {{ include(nowo_ui_partial('progress', 'DemoDefaultTheme'), {label: 'Indexing', indeterminate: true, id: 'catalogue-progress-index', bundle: 'DemoDefaultTheme'}, false) }}
+                    {{ include(nowo_ui_partial('progress', 'DemoPlatformCatalogue'), {label: 'Backup', percent: 64, id: 'catalogue-progress-backup', bundle: 'DemoPlatformCatalogue'}, false) }}
+                    {{ include(nowo_ui_partial('progress', 'DemoPlatformCatalogue'), {label: 'Storage used', percent: 82, id: 'catalogue-progress-storage', attr: {class: 'nowo-ui-progress-field--warning'}, bundle: 'DemoPlatformCatalogue'}, false) }}
+                    {{ include(nowo_ui_partial('progress', 'DemoPlatformCatalogue'), {label: 'Import', percent: 100, id: 'catalogue-progress-import', attr: {class: 'nowo-ui-progress-field--success'}, bundle: 'DemoPlatformCatalogue'}, false) }}
+                    {{ include(nowo_ui_partial('progress', 'DemoPlatformCatalogue'), {label: 'Indexing', indeterminate: true, id: 'catalogue-progress-index', bundle: 'DemoPlatformCatalogue'}, false) }}
                 </div>
             {% endblock %}
         {% endembed %}
         {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Code', intro: 'Code block with a copy button (shown when the clipboard runtime runs).', kind: 'content', testid: 'catalogue-code'} %}
             {% block section_body %}
-                {{ include(nowo_ui_partial('code_block'), {code_id: 'catalogue-code-config', language: 'YAML', code: "nowo_ui_kit:\n    css_framework: custom\n    base_stylesheet: true\n    layouts:\n        admin: 'base.html.twig'\n        guest: 'base.html.twig'"}, false) }}
+                {{ include(nowo_ui_partial('code_block', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', code_id: 'catalogue-code-config', language: 'YAML', code: "nowo_ui_kit:\n    css_framework: custom\n    base_stylesheet: true\n    layouts:\n        admin: 'base.html.twig'\n        guest: 'base.html.twig'"}, false) }}
             {% endblock %}
         {% endembed %}
         {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'One-time secrets', intro: 'A new token shown once: masked, revealed on demand, copied from its only copy on the page; the recovery code is wiped when hidden. Demo values change on every load.', kind: 'content', testid: 'catalogue-secret-once'} %}
             {% block section_body %}
-                {{ include(nowo_ui_partial('secret_once'), {secret: secrets.token, secret_id: 'catalogue-secret-token', label: 'API token', hint: 'Copy it now: it is shown only once.', attr: {'data-testid': 'secret-token'}}, false) }}
-                {{ include(nowo_ui_partial('secret_once'), {secret: secrets.recovery, secret_id: 'catalogue-secret-recovery', label: 'Recovery code', revealed: true, clear_on_hide: true, attr: {'data-testid': 'secret-recovery'}}, false) }}
+                {{ include(nowo_ui_partial('secret_once', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', secret: secrets.token, secret_id: 'catalogue-secret-token', label: 'API token', hint: 'Copy it now: it is shown only once.', attr: {'data-testid': 'secret-token'}}, false) }}
+                {{ include(nowo_ui_partial('secret_once', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', secret: secrets.recovery, secret_id: 'catalogue-secret-recovery', label: 'Recovery code', revealed: true, clear_on_hide: true, attr: {'data-testid': 'secret-recovery'}}, false) }}
                 <button type="button" class="nowo-ui-btn nowo-ui-btn--outline" data-nowo-ui-dialog-open="catalogue-secret-dialog" data-testid="secret-dialog-open">Show the webhook secret</button>
                 <a class="nowo-ui-btn nowo-ui-btn--outline" href="{{ path('catalogue_admin_secret_fragment') }}" data-nowo-ui-dialog-open="catalogue-secret-remote" data-nowo-ui-dialog-src="{{ path('catalogue_admin_secret_fragment') }}" data-testid="secret-remote-open">Create a deploy key</a>
             {% endblock %}
         {% endembed %}
-        {% set _secret_dialog_body = include(nowo_ui_partial('secret_once'), {secret: secrets.dialog, secret_id: 'catalogue-secret-dialog-value', label: 'Webhook signing secret', hint: 'Closing this dialog removes it from the page.', attr: {'data-testid': 'secret-dialog'}}, false) %}
+        {% set _secret_dialog_body = include(nowo_ui_partial('secret_once', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', secret: secrets.dialog, secret_id: 'catalogue-secret-dialog-value', label: 'Webhook signing secret', hint: 'Closing this dialog removes it from the page.', attr: {'data-testid': 'secret-dialog'}}, false) %}
     </div>
     <div class="nowo-ui-cards">
         {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Credit notes', intro: 'Empty state with an icon, a title, a message and one action.', kind: 'list', testid: 'catalogue-empty-illustrated'} %}
             {% block section_body %}
-                {{ include(nowo_ui_partial('empty', 'DemoDefaultTheme'), {empty: empty_state, bundle: 'DemoDefaultTheme'}, false) }}
+                {{ include(nowo_ui_partial('empty', 'DemoPlatformCatalogue'), {empty: empty_state, bundle: 'DemoPlatformCatalogue'}, false) }}
             {% endblock %}
         {% endembed %}
         {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Payments', intro: 'Skeleton while loading: the region says it is busy (aria-busy) and announces "Loading…" once.', kind: 'list', testid: 'catalogue-skeleton'} %}
             {% block section_body %}
-                {{ include(nowo_ui_partial('skeleton'), {variant: 'list', rows: 3, label: 'Loading payments…'}, false) }}
+                {{ include(nowo_ui_partial('skeleton', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', variant: 'list', rows: 3, label: 'Loading payments…'}, false) }}
             {% endblock %}
         {% endembed %}
     </div>
-    {{ include(nowo_ui_partial('dialog'), {id: 'catalogue-secret-remote', title: 'Deploy key', body: '', attr: {'data-testid': 'secret-remote-box'}}, false) }}
-    {{ include(nowo_ui_partial('dialog'), {id: 'catalogue-secret-dialog', title: 'Webhook secret', body: _secret_dialog_body, attr: {'data-testid': 'secret-dialog-box'}}, false) }}
+    {{ include(nowo_ui_partial('dialog', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', id: 'catalogue-secret-remote', title: 'Deploy key', body: '', attr: {'data-testid': 'secret-remote-box'}}, false) }}
+    {{ include(nowo_ui_partial('dialog', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', id: 'catalogue-secret-dialog', title: 'Webhook secret', body: _secret_dialog_body, attr: {'data-testid': 'secret-dialog-box'}}, false) }}
 {% endblock %}

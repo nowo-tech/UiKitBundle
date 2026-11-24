@@ -1,19 +1,20 @@
 import { test, expect, type Page } from '@playwright/test';
-import { mkdirSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { ensureOutDir, hideDebugToolbar, shotPath } from './shot-helpers';
 
 /**
  * UiKit 2.52 inset sidebar style screenshots (/demo/sidebar-layout?style=inset): both sidebar layouts at 1280 px,
  * expanded and icons-only rail (collapsed), and the phone layout at 390 px, light and dark. Viewport captures,
  * converted to WebP by `make demo-screenshots` (scripts/to-webp.mjs) — REQ-DEMO-013.
  */
-const outDir = process.env.SCREENSHOT_DIR ? resolve(process.env.SCREENSHOT_DIR) : resolve(__dirname, '../../../../docs/images/demo');
-
 test.beforeAll(() => {
-  mkdirSync(outDir, { recursive: true });
+  ensureOutDir();
 });
 
 test.use({ reducedMotion: 'reduce' });
+
+test.beforeEach(async ({ page }) => {
+  await hideDebugToolbar(page);
+});
 
 async function shot(page: Page, query: string, file: string, theme: 'light' | 'dark', width: number, height: number): Promise<void> {
   await page.setViewportSize({ width, height });
@@ -24,9 +25,8 @@ async function shot(page: Page, query: string, file: string, theme: 'light' | 'd
   }, theme);
   await expect(page.locator('[data-nowo-ui-shell]')).toHaveAttribute('data-nowo-ui-sidebar-mode', /expanded|rail|hidden/);
   await expect(page.locator('[data-nowo-ui-shell]')).toHaveAttribute('data-nowo-ui-sidebar-style', 'inset');
-  await page.locator('.sf-toolbar').evaluateAll((els) => els.forEach((el) => el.remove()));
   await page.waitForTimeout(450);
-  await page.screenshot({ path: resolve(outDir, `${file}.png`) });
+  await page.screenshot({ path: shotPath(`${file}`) });
 }
 
 for (const theme of ['light', 'dark'] as const) {

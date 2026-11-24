@@ -5,7 +5,7 @@
 {% extends 'catalogue/_base.html.twig' %}
 
 {% block nowo_ui_flashes %}
-    {{ include(nowo_ui_partial('toasts', 'DemoDefaultTheme'), {toast_client: true, flashes: notice ? {success: [notice]} : {}, toast_roles: false, bundle: 'DemoDefaultTheme'}, false) }}
+    {{ include(nowo_ui_partial('toasts', 'DemoPlatformCatalogue'), {toast_client: true, flashes: notice ? {success: [notice]} : {}, toast_roles: false, bundle: 'DemoPlatformCatalogue'}, false) }}
 {% endblock %}
 
 {% block nowo_ui_scripts %}

@@ -14,6 +14,7 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormInterface;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Profiler\Profiler;
 use Symfony\Component\Routing\Attribute\Route;
@@ -36,6 +37,13 @@ final class CatalogueController extends AbstractController
         #[Autowire(service: 'profiler')]
         private readonly ?Profiler $profiler = null,
     ) {
+    }
+
+    /** The demo opens on the catalogue (demo platform shell); the kitchen sink lives in the Shell lab (/kitchen-sink). */
+    #[Route('/', name: 'demo_home', methods: ['GET'])]
+    public function home(): RedirectResponse
+    {
+        return $this->redirectToRoute('catalogue');
     }
 
     #[Route('/catalogue/{group}', name: 'catalogue', requirements: ['group' => 'layout|cards-tables|forms|feedback|navigation|dialogs|badges-tokens'], defaults: ['group' => 'layout'])]

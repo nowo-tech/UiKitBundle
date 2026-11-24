@@ -91,7 +91,7 @@ for (const unlayeredBootstrap of [false, true]) {
 /** 2.24: the tree badge on the tinted current row (and on a plain row) keeps 4.5:1 in light and dark. */
 for (const mode of ['light', 'dark'] as Mode[]) {
   test(`tree badge keeps 4.5:1 on the current row (${mode})`, async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/kitchen-sink');
     await page.evaluate((m) => {
       document.documentElement.setAttribute('data-theme', m);
       document.documentElement.setAttribute('data-bs-theme', m);

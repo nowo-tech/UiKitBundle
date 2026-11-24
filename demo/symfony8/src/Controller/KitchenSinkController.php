@@ -26,7 +26,7 @@ final class KitchenSinkController extends AbstractController
         ['name' => 'archive-10.zip', 'owner' => 'Ada Lovelace', 'size' => '96 MB', 'bytes' => 100663296, 'updated' => '2026-09-30 18:22'],
     ];
 
-    #[Route('/', name: 'nowo_ui_kit_kitchen_sink')]
+    #[Route('/kitchen-sink', name: 'nowo_ui_kit_kitchen_sink')]
     public function __invoke(Request $request, FormFactoryInterface $forms): Response
     {
         // 2.20 sortable headers: server-side (?sort= / ?dir= links read by a SortRequest) and client-side (Stimulus peer table-sort)

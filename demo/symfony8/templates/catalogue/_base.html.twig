@@ -51,3 +51,5 @@
 {% set nowo_ui_document_title = nowo_ui_document_title|default('UiKit catalogue') %}
 {#- The demo's default-theme exception (config/packages/nowo_ui_kit.yaml): no host class map, the kit page header. -#}
 {% set nowo_ui_bundle = 'DemoPlatformCatalogue' %}
+{#- Partials included with the context read `bundle`: no host class map on the catalogue either. -#}
+{% set bundle = 'DemoPlatformCatalogue' %}
