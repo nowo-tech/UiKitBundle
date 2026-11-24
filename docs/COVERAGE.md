@@ -11,7 +11,7 @@
 
 `make coverage-check` / `composer coverage-check` enforce **100%** line coverage on the PHPUnit includable `src/` set (`REQ-TEST-003` / `REQ-TEST-006`).
 
-Latest run (2026-11-01, 2.21.x + `chore/req-100`): **100%** PHP lines (3253/3253, 1109 tests, `tests/Unit` + `tests/Integration`).
+Latest run (2026-11-24, 2.72.0 branch): **100%** PHP lines (4947/4947, 2884 tests, `tests/Unit` + `tests/Integration`).
 
 Published README percentage must match the latest `coverage-output.txt` / CI artifact.
 
@@ -19,7 +19,7 @@ Published README percentage must match the latest `coverage-output.txt` / CI art
 
 `make test-ts` / `pnpm run test:coverage` reports Vitest v8 coverage for the gated set in `vitest.config.ts`: every top-level IIFE source `src/Resources/assets/src/*.ts`, the Stimulus peers listed in `coverage.include` and `morphicons/index.ts` (excluding `*.test.ts`). Thresholds: lines/statements/functions ≥ 90%, branches ≥ 85%.
 
-Latest run (2026-11-01): **100%** lines (2810/2810) / statements (2884/2884) / functions (580/580), **95.76%** branches (2036/2126).
+Latest run (2026-11-24, 2.72.0 branch): **99.2%** lines (9395/9470) / **99.03%** statements (9875/9971) / **99.25%** functions (1856/1870), **93.67%** branches (7224/7712). The 75 uncovered lines are defensive branches spread over about 20 runtimes (combobox, shell, image input, remote form core, sortable…); all above the thresholds.
 
 Outside the gate: the vendored orb engine (`src/orb/`, see below) and the peers not yet listed in `coverage.include` (`clipboard_copy_controller.ts`, `confirm_dialog_controller.ts`, `release_status_controller.ts`, `toast_stack_controller.ts`).
 
