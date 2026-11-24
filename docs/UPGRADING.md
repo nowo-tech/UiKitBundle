@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.72.0](#to-2720)
 - [To 2.71.0](#to-2710)
 - [To 2.70.0](#to-2700)
   - [Shared confirm outside the table (`table_confirm: shared`)](#shared-confirm-outside-the-table-table_confirm-shared)
@@ -175,6 +176,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.72.0
+
+From **2.71.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 Target 2.72.0 (Beacon filter standard). No API removal; new constructor arguments are appended (named arguments).
 
