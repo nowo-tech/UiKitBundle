@@ -22,7 +22,9 @@ use Symfony\Component\HttpKernel\Event\ResponseEvent;
  * a login redirect, never a 200, so it is never redirected (no route or resource oracle). POSTs, 422 re-renders, the
  * dialog's own fetches and unmarked routes are left as they are. The redirect is a `302` to the owning page with the
  * reopen query ({@see RemoteDialogReopen::redirectTarget()}); the cookies of the converted answer are kept. Every
- * answer of a marked route varies on the dialog request header and the two `Sec-Fetch-*` headers. Stateless.
+ * answer of a marked route varies on the dialog request header and `Sec-Fetch-Mode` / `-Dest` / `-Site`. Stateless.
+ *
+ * @internal wiring of `remote_dialog.direct_get`; hosts and kits configure it, they do not call it (no public port: REQ-ARCH-001 rule 3)
  */
 final readonly class RemoteDialogDirectGetListener
 {
