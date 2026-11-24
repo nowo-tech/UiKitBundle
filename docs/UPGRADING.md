@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.74.0](#to-2740)
 - [To 2.73.0](#to-2730)
 - [To 2.72.0](#to-2720)
 - [To 2.71.0](#to-2710)
@@ -177,6 +178,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.74.0
+
+From **2.73.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 No breaking change. `remote_dialog.direct_get` entries keep working as in 2.73.0. When a dialog route's parameters
 do not match its owning page's by name, use the new options (USAGE "Owning page parameters: map, defaults, resolver"):
