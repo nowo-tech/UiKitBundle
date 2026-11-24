@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * PHP-CS-Fixer configuration (PSR-12 + Symfony canonical, REQ-CS-001).
+ * PHP-CS-Fixer configuration (PER-CS + Symfony canonical, REQ-CS-001 / REQ-CS-009).
  * Run: make cs-check | make cs-fix.
  */
 use PhpCsFixer\Config;
@@ -19,7 +19,8 @@ return (new Config())
     ->setParallelConfig(new ParallelConfig(2))
     ->setRiskyAllowed(true)
     ->setRules([
-        '@PSR12'                 => true,
+        '@PER-CS'                => true,
+        '@PER-CS:risky'          => true,
         '@Symfony'               => true,
         '@Symfony:risky'         => true,
         'declare_strict_types'   => true,
