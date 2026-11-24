@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## Table of contents
 
 - [[Unreleased]](#unreleased)
+- [[2.71.0] - 2026-11-23](#2710---2026-11-23)
 - [[2.70.0] - 2026-11-23](#2700---2026-11-23)
 - [[2.69.0] - 2026-11-23](#2690---2026-11-23)
 - [[2.68.0] - 2026-11-23](#2680---2026-11-23)
@@ -158,6 +159,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Fixed
 
 - `announceScript()` (console banner) no longer reads or writes the page global `window.__nowoScriptBanners` unguarded: page HTML can clobber it (DOM named access), and under a strict or ESM build the write would throw and stop every UiKit runtime that loads. A module-scope set is the fallback, the global is only trusted when it is a plain object, and every access is wrapped in `try/catch` (audit ZAI-A1). Once-per-page output is unchanged.
+
+## [2.71.0] - 2026-11-23
 
 ### Documentation
 
@@ -3612,7 +3615,7 @@ Supersedes 1.17.3: same runtime code and CSS, release gate hardened so the tagge
 - **Twig namespace** `NowoUiKitBundle` with application override path support (REQ-TWIG-001/002).
 - Kitchen sink demo template and minimal Symfony 8 demo under `demo/symfony8`.
 
-[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.70.0...HEAD
+[Unreleased]: https://github.com/nowo-tech/UiKitBundle/compare/v2.71.0...HEAD
 [1.10.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.4...v1.10.0
 [1.8.4]: https://github.com/nowo-tech/UiKitBundle/compare/v1.8.3...v1.8.4
 [1.4.0]: https://github.com/nowo-tech/UiKitBundle/compare/v1.3.0...v1.4.0

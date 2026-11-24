@@ -23,6 +23,7 @@ English product roadmap for extracting shared admin UI from **Nowo Twig bundles*
   - [Routed to other bundles](#routed-to-other-bundles)
 - [Out of scope](#out-of-scope)
 - [Adoption notes](#adoption-notes)
+- [Requested for CrmKit (Beacon spec 254, 2026-11-23)](#requested-for-crmkit-beacon-spec-254-2026-11-23)
 
 ## Sources observed
 
@@ -226,3 +227,15 @@ dropzone, skeleton, illustrated empty state, chip, code block with copy, steps, 
 - New kit surfaces always emit **`nowo-ui-*`** semantic classes; framework extras stay optional via `css_framework`.
 
 Status legend: ✅ done in kit · ⏳ consumer migration · ❌ out of scope / other package.
+
+## Requested for CrmKit (Beacon spec 254, 2026-11-23)
+
+Beacon spec 254 "CRM HubSpot parity" (owner decision D-20261123-11) and the owner's reuse rule of 2026-11-23 ("if a
+nowo bundle already does, or nearly does, a CRM capability, use it or extend it") send these pieces here instead of
+building CRM-only copies in CrmKitBundle. Each piece is opt-in, generic (no CRM dependency) and gets its own contract
+revision before it is built. Versions are planned next minors and move if this bundle releases something else first.
+Plan and reuse matrix: [CrmKitBundle docs/ROADMAP.md](https://github.com/nowo-tech/CrmKitBundle/blob/main/docs/ROADMAP.md#reuse-matrix).
+
+| Version | Piece | Used by |
+| --- | --- | --- |
+| 2.72.0 | **Rule builder**: rows of field / operator / value (operators and value widgets per field type), add / remove / reorder, all / any, on a FormKit collection, works without JavaScript | CrmKit E-1 dynamic segments; AutomationKit conditions (F-3) |
