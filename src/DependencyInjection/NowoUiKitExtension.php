@@ -397,7 +397,6 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
                 new Reference('router', ContainerInterface::NULL_ON_INVALID_REFERENCE),
                 new Reference('request_stack', ContainerInterface::NULL_ON_INVALID_REFERENCE),
             ]);
-        $container->setAlias(RemoteDialogReopen::class, 'nowo_ui_kit.remote_dialog_reopen');
         if ([] !== $remoteDialog['direct_get']['routes']) {
             // After the controller (and so the firewall and its access check); before the session listener (-1000).
             $container->register('nowo_ui_kit.remote_dialog_direct_get_listener', RemoteDialogDirectGetListener::class)

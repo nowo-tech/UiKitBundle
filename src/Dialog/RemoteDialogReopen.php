@@ -22,6 +22,8 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
  *    ({@see RemoteDialogTarget}); a foreign or unknown route, or parameters the route rejects, are ignored.
  *
  * Stateless: reads the request it is given, else the current one (FrankenPHP worker safe).
+ *
+ * @internal wiring of `remote_dialog.direct_get`; hosts and kits configure it, they do not call it (no public port: REQ-ARCH-001 rule 3)
  */
 final readonly class RemoteDialogReopen
 {
