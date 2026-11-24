@@ -50,7 +50,13 @@ describe.each(['./nowo-ui-open-modal', './nowo-ui-autosubmit', './nowo-ui-layout
 });
 
 describe('theme-boot', () => {
+  // Fake timers in every test: the import schedules the banner, and a stray real timer would log into a later test.
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
   afterEach(() => {
+    vi.clearAllTimers();
     vi.useRealTimers();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
@@ -58,7 +64,6 @@ describe('theme-boot', () => {
   });
 
   it('announces itself only after the preferences are applied (off the pre-paint path)', async () => {
-    vi.useFakeTimers();
     vi.resetModules();
     delete window.__nowoScriptBanners;
     vi.stubGlobal('__UI_KIT_BUILD_TIME__', '2026-11-24 08:00 UTC');

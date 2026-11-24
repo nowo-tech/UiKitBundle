@@ -125,7 +125,7 @@ final class ListFiltersStandard272Test extends TestCase
         self::assertCount(0, $c->filter('[onmouseover], [data-y]'));
         foreach (['.nowo-ui-filters-more__fields', '.nowo-ui-filters__actions'] as $scope) {
             $row = $c->filter($scope.' > div')->first();
-            self::assertStringContainsString('onmouseover=&quot;alert(1)&quot;', (string) $row->outerHtml(), $scope);
+            self::assertStringContainsString('onmouseover=&quot;alert(1)&quot;', $row->outerHtml(), $scope);
             self::assertNull($row->attr('onmouseover'), $scope);
         }
     }
