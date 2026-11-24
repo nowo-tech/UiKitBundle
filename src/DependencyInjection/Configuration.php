@@ -461,7 +461,7 @@ final class Configuration implements ConfigurationInterface
                                     ->end()
                                 ->end()
                                 ->arrayNode('routes')
-                                    ->info('Dialog content route name => {page: owning page route, dialog: dialog element id, page_parameters: route parameters copied to the page route, redirect_same_origin: false}, or false to unmark a route a kit marked. A later entry replaces an earlier one whole. An owning page cannot itself be a marked route.')
+                                    ->info('Dialog content route name => {page: owning page route, dialog: dialog element id, page_parameters: route parameters copied to the page route (list, or 2.74 map {pageParam: dialogParam}), page_defaults: {} (2.74), page_resolver: null (2.74), redirect_same_origin: false}, or false to unmark a route a kit marked. A later entry replaces an earlier one whole. An owning page cannot itself be a marked route.')
                                     ->useAttributeAsKey('route')
                                     ->normalizeKeys(false)
                                     ->arrayPrototype()
@@ -476,8 +476,21 @@ final class Configuration implements ConfigurationInterface
                                             ->scalarNode('page')->defaultNull()->end()
                                             ->scalarNode('dialog')->defaultNull()->end()
                                             ->arrayNode('page_parameters')
+                                                ->info('Route parameters of the owning page: a list copies them by identical name from the dialog route; 2.74: a map {pageParam: dialogParam} renames them (e.g. {id: projectId}).')
+                                                ->normalizeKeys(false)
                                                 ->scalarPrototype()->end()
                                                 ->defaultValue([])
+                                            ->end()
+                                            ->arrayNode('page_defaults')
+                                                ->info('2.74: fixed parameters of the owning page route (strings or integers), e.g. {section: access}. Checked against the page route when the cache is warmed.')
+                                                ->useAttributeAsKey('name')
+                                                ->normalizeKeys(false)
+                                                ->scalarPrototype()->end()
+                                                ->defaultValue([])
+                                            ->end()
+                                            ->scalarNode('page_resolver')
+                                                ->defaultNull()
+                                                ->info('2.74: id of a Nowo\\UiKitBundle\\Dialog\\RemoteDialogPageResolverInterface service for page parameters that come from the record (it runs after the controller\'s access check; null or an exception = no redirect).')
                                             ->end()
                                             ->booleanNode('redirect_same_origin')
                                                 ->defaultFalse()
@@ -494,9 +507,16 @@ final class Configuration implements ConfigurationInterface
                                                     continue;
                                                 }
                                                 unset($entry['enabled']);
-                                                $error = RemoteDialogContent::invalid((string) $route, (string) $entry['page'], (string) $entry['dialog'], $entry['page_parameters']);
+                                                $error = RemoteDialogContent::invalid((string) $route, (string) $entry['page'], (string) $entry['dialog'], $entry['page_parameters'], $entry['page_defaults'], $entry['page_resolver']);
                                                 if (null !== $error) {
                                                     throw new InvalidConfigurationException('Invalid nowo_ui_kit.remote_dialog.direct_get.routes: '.$error);
+                                                }
+                                                // 2.74 options left out when unused: a 2.73 entry reaches the container unchanged.
+                                                if ([] === $entry['page_defaults']) {
+                                                    unset($entry['page_defaults']);
+                                                }
+                                                if (null === $entry['page_resolver']) {
+                                                    unset($entry['page_resolver']);
                                                 }
                                                 $marked[$route] = $entry;
                                             }
@@ -509,6 +529,20 @@ final class Configuration implements ConfigurationInterface
                                         })
                                     ->end()
                                 ->end()
+                            ->end()
+                            ->validate()
+                                ->always(static function (array $directGet): array {
+                                    $entries = [];
+                                    foreach ($directGet['routes'] as $route => $entry) {
+                                        $entries[(string) $route] = new RemoteDialogContent((string) $route, (string) $entry['page'], (string) $entry['dialog'], $entry['page_parameters'], (bool) $entry['redirect_same_origin'], $entry['page_defaults'] ?? [], $entry['page_resolver'] ?? null);
+                                    }
+                                    $error = RemoteDialogContentMap::reopenClash($entries, (string) $directGet['query_parameter']);
+                                    if (null !== $error) {
+                                        throw new InvalidConfigurationException('Invalid nowo_ui_kit.remote_dialog.direct_get.routes: '.$error);
+                                    }
+
+                                    return $directGet;
+                                })
                             ->end()
                         ->end()
                         ->scalarNode('request_header')

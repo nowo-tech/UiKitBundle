@@ -60,6 +60,7 @@
 - [Remote form dialog (2.28)](#remote-form-dialog-228)
   - [Stimulus runtime (2.70)](#stimulus-runtime-270)
   - [Remote dialog content opened directly (2.73)](#remote-dialog-content-opened-directly-273)
+  - [Owning page parameters: map, defaults, resolver (2.74)](#owning-page-parameters-map-defaults-resolver-274)
 - [Small element options (2.34)](#small-element-options-234)
 - [Focusable scroll regions (2.28)](#focusable-scroll-regions-228)
 - [Dialog back button](#dialog-back-button)
@@ -3123,6 +3124,90 @@ the URL is clean while the dialog is open and after it closes, and a reload does
 dialog's alert instead of following the dialog URL (that would bounce back to the page). A dialog that a Stimulus peer
 drives (`data-remote-form-dialog-target`) is reopened by the peer only, so a page of the delegated runtime must load
 the peers.
+
+### Owning page parameters: map, defaults, resolver (2.74)
+
+In 2.73 `page_parameters` copies route parameters from the dialog route to the owning page **by identical name**. When
+the names differ, when the page needs a fixed value, or when the page parameter comes from the record, an entry takes:
+
+- **`page_parameters` as a map** `{pageParam: dialogParam}`: the page parameter `pageParam` gets the value of the
+  dialog route parameter `dialogParam`. The list form stays (a list item `name` is `{name: name}`), and both can be
+  mixed. A dialog route parameter that is not mapped is **not** copied to the page (it still travels in the reopen
+  query, so the dialog reopens on the same URL).
+- **`page_defaults`** `{pageParam: value}`: fixed page route parameters (strings or integers, ≤ 512 characters). A
+  parameter is either mapped or defaulted, not both.
+- **`page_resolver: <service id>`**: a service implementing `Nowo\UiKitBundle\Dialog\RemoteDialogPageResolverInterface`
+  for page parameters that come from the record:
+
+  ```php
+  public function resolve(string $route, array $params): ?array; // ['route' => <page>, 'params' => [...]] or null
+  ```
+
+  It receives the dialog route name and its route parameters (strings) and returns the owning page route (it must be the
+  entry's `page`, anything else makes no redirect) with its parameters, which are merged over the mapped ones and the
+  defaults. It runs only for a direct GET the listener converts, so **after** the firewall and the controller's own
+  access check answered `200`. Returning `null`, throwing, or returning another route or a value that cannot be carried
+  (nested, over 512 characters, more than 32 values) makes **no redirect**: the route keeps its own answer, exactly as
+  when the page link cannot be generated, so the answer never tells whether a record exists. An exception is logged as
+  a warning with the route name and the exception class only (no parameter, no message). The resolver must be read-only
+  and keep no request, user or record in properties (FrankenPHP worker mode without kernel reset).
+
+The four shapes Beacon uses:
+
+```yaml
+nowo_ui_kit:
+    remote_dialog:
+        direct_get:
+            routes:
+                # /projects/{projectId}/access/members/{memberId} → project_settings_section /projects/{id}/settings/{section}
+                project_access_member_edit:
+                    page: project_settings_section
+                    dialog: project-settings-dialog
+                    page_parameters: { id: projectId }
+                    page_defaults: { section: access }
+                # /projects/{projectId}/notifications/destinations/{id}: the content {id} is a destination, never the page's {id}
+                notification_destination_edit:
+                    page: project_settings_section
+                    dialog: project-settings-dialog
+                    page_parameters: { id: projectId }
+                    page_defaults: { section: notifications }
+                # /admin/projects/{projectId}/edit → admin_project_show /admin/projects/{id}
+                admin_project_edit:
+                    page: admin_project_show
+                    dialog: admin-project-dialog
+                    page_parameters: { id: projectId }
+                # /working-time/corrections/{uuid}/contest → working_time_day /working-time/days/{uuid of the day}
+                working_time_correction_contest:
+                    page: working_time_day
+                    dialog: working-time-day-dialog
+                    page_resolver: App\WorkingTime\CorrectionDayResolver
+```
+
+```php
+final readonly class CorrectionDayResolver implements RemoteDialogPageResolverInterface
+{
+    public function __construct(private CorrectionReader $corrections) {}
+
+    public function resolve(string $route, array $params): ?array
+    {
+        // The controller already checked access (this runs on its 200); stay read-only and fail closed.
+        $day = $this->corrections->dayUuidOf($params['uuid'] ?? '');
+
+        return null === $day ? null : ['route' => 'working_time_day', 'params' => ['uuid' => $day]];
+    }
+}
+```
+
+**Checked when the container is built.** The map, the defaults and the resolver id are validated with the
+configuration (parameter names, value types, a parameter both mapped and defaulted, a page parameter named like the
+reopen `query_parameter`). The resolver service must exist and implement the interface (compiler pass). Entries that
+use any of the three options are then checked against the route collection by a non-optional cache warmer, which the
+kernel runs right after it builds a new container and on `cache:warmup`: the dialog and page routes exist (a localized
+route through its `.<locale>` variants), every mapped page parameter and default is a variable of the page route,
+every mapped dialog parameter is a variable or a default of the dialog route, a default matches the page route's
+requirement, and, without a resolver, every required page variable is mapped or defaulted. Any error stops the boot
+with a message naming the entry. 2.73 entries (a plain list, no defaults, no resolver) are not checked and get no new
+service, so they behave exactly as before.
 
 ## Small element options (2.34)
 

@@ -16,9 +16,11 @@ use Nowo\UiKitBundle\Appearance\AppearanceView;
 use Nowo\UiKitBundle\Appearance\BrandAppearanceProvider;
 use Nowo\UiKitBundle\Appearance\ConfigAppearanceProvider;
 use Nowo\UiKitBundle\DependencyInjection\Compiler\BrandAppearanceProviderPass;
+use Nowo\UiKitBundle\DependencyInjection\Compiler\RemoteDialogPageResolverPass;
 use Nowo\UiKitBundle\Dialog\RemoteDialogContentMap;
 use Nowo\UiKitBundle\Dialog\RemoteDialogDirectGetListener;
 use Nowo\UiKitBundle\Dialog\RemoteDialogHeaders;
+use Nowo\UiKitBundle\Dialog\RemoteDialogPageMappingCheck;
 use Nowo\UiKitBundle\Dialog\RemoteDialogRedirectListener;
 use Nowo\UiKitBundle\Dialog\RemoteDialogReopen;
 use Nowo\UiKitBundle\Dialog\RemoteDialogResponder;
@@ -60,6 +62,7 @@ use Symfony\Component\Asset\Package;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\Argument\ServiceClosureArgument;
 use Symfony\Component\DependencyInjection\Argument\TaggedIteratorArgument;
+use Symfony\Component\DependencyInjection\Compiler\ServiceLocatorTagPass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Definition;
@@ -364,6 +367,36 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
     }
 
     /**
+     * 2.74: only when an entry uses `page_parameters` as a map, `page_defaults` or `page_resolver` (a 2.73
+     * configuration gets no new service): the resolvers as a service locator plus a logger on the reopen service, the
+     * hidden parameter {@see RemoteDialogPageResolverPass} checks, and the non-optional cache warmer that checks the
+     * entries against the route collection when the container is built.
+     *
+     * @param array<string, array{page: string, dialog: string, page_parameters: array<int|string, string>, redirect_same_origin: bool, page_defaults?: array<string, string|int>, page_resolver?: string|null}> $routes
+     */
+    private function registerRemoteDialogPageMapping(ContainerBuilder $container, Definition $reopen, array $routes, string $parameter): void
+    {
+        $map = new RemoteDialogContentMap($routes, $parameter);
+        if ([] === $map->mappedEntries()) {
+            return;
+        }
+        $resolvers = $map->resolvers();
+        if ([] !== $resolvers) {
+            $container->setParameter(RemoteDialogPageResolverPass::PARAMETER, $resolvers);
+            $references = [];
+            foreach ($resolvers as $id) {
+                $references[$id] = new Reference($id);
+            }
+            $reopen->setArgument(3, ServiceLocatorTagPass::register($container, $references));
+            $reopen->setArgument(4, new Reference('logger', ContainerInterface::NULL_ON_INVALID_REFERENCE));
+            $reopen->addTag('monolog.logger', ['channel' => 'nowo_ui_kit']);
+        }
+        $container->register('nowo_ui_kit.remote_dialog_page_mapping_check', RemoteDialogPageMappingCheck::class)
+            ->setArguments([new Reference('nowo_ui_kit.remote_dialog_content_map'), new Reference('router')])
+            ->addTag('kernel.cache_warmer');
+    }
+
+    /**
      * 2.28 remote form dialog: the public `RemoteDialogResponder` service (autowirable) and, with
      * `remote_dialog.convert_redirects`, the `kernel.response` listener that turns redirects of dialog requests into
      * `204` + `X-Nowo-Redirect`.
@@ -372,7 +405,7 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
      */
     private function registerRemoteDialog(ContainerBuilder $container, array $config): void
     {
-        /** @var array{convert_redirects: bool, step_routes: list<string>, direct_get: array{query_parameter: string, routes: array<string, array{page: string, dialog: string, page_parameters: list<string>, redirect_same_origin: bool}>}, request_header: string, redirect_header: string, location_header: string} $remoteDialog */
+        /** @var array{convert_redirects: bool, step_routes: list<string>, direct_get: array{query_parameter: string, routes: array<string, array{page: string, dialog: string, page_parameters: array<int|string, string>, redirect_same_origin: bool, page_defaults?: array<string, string|int>, page_resolver?: string|null}>}, request_header: string, redirect_header: string, location_header: string} $remoteDialog */
         $remoteDialog = $config['remote_dialog'];
         $container->register('nowo_ui_kit.remote_dialog_headers', RemoteDialogHeaders::class)
             ->setArguments([$remoteDialog['request_header'], $remoteDialog['redirect_header'], $remoteDialog['location_header']]);
@@ -391,12 +424,13 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
         // 2.73: remote dialog content opened directly (top-level GET → owning page with the dialog reopened).
         $container->register('nowo_ui_kit.remote_dialog_content_map', RemoteDialogContentMap::class)
             ->setArguments([$remoteDialog['direct_get']['routes'], $remoteDialog['direct_get']['query_parameter']]);
-        $container->register('nowo_ui_kit.remote_dialog_reopen', RemoteDialogReopen::class)
+        $reopen = $container->register('nowo_ui_kit.remote_dialog_reopen', RemoteDialogReopen::class)
             ->setArguments([
                 new Reference('nowo_ui_kit.remote_dialog_content_map'),
                 new Reference('router', ContainerInterface::NULL_ON_INVALID_REFERENCE),
                 new Reference('request_stack', ContainerInterface::NULL_ON_INVALID_REFERENCE),
             ]);
+        $this->registerRemoteDialogPageMapping($container, $reopen, $remoteDialog['direct_get']['routes'], $remoteDialog['direct_get']['query_parameter']);
         if ([] !== $remoteDialog['direct_get']['routes']) {
             // After the controller (and so the firewall and its access check); before the session listener (-1000).
             $container->register('nowo_ui_kit.remote_dialog_direct_get_listener', RemoteDialogDirectGetListener::class)
