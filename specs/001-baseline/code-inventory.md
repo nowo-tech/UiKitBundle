@@ -1,6 +1,6 @@
 # Code inventory — 100% traceability
 
-**Last audited**: 2026-11-24 (2.73.0 line: remote dialog content opened directly mapped, Coverage summary category counts recounted; v2.72.0: every `src/` file mapped again — 2.65-2.71 confirm runtimes, one-time secret and console banner; 2026-11-22 v2.64.0: 2.56-2.64 components, runtimes, demo platform and lint mapped; 2026-11-17: 2.55 line: shell focus mode; 2.54.0 line: context menus; 2.53.0 line: inset sidebar style, dialog focus return, async combobox; 2.51.0 line: brand appearance, remote dialog, listing ports, side panel, rail, tree, image input, base stylesheet)  
+**Last audited**: 2026-11-24 (2.74.0 line: owning page parameters — resolver SPI, mapping check, resolver pass mapped, 474 files; 2.73.0 line: remote dialog content opened directly mapped, Coverage summary category counts recounted; v2.72.0: every `src/` file mapped again — 2.65-2.71 confirm runtimes, one-time secret and console banner; 2026-11-22 v2.64.0: 2.56-2.64 components, runtimes, demo platform and lint mapped; 2026-11-17: 2.55 line: shell focus mode; 2.54.0 line: context menus; 2.53.0 line: inset sidebar style, dialog focus return, async combobox; 2.51.0 line: brand appearance, remote dialog, listing ports, side panel, rail, tree, image input, base stylesheet)  
 **Baseline spec**: [`spec.md`](spec.md)  
 **Package**: `nowo-tech/ui-kit-bundle`
 
