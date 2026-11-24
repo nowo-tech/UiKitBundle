@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.73.0](#to-2730)
 - [To 2.72.0](#to-2720)
 - [To 2.71.0](#to-2710)
 - [To 2.70.0](#to-2700)
@@ -176,6 +177,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.73.0
+
+From **2.72.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 No breaking change. To send direct visits of remote dialog URLs to their owning page, list those routes under
 `nowo_ui_kit.remote_dialog.direct_get.routes` (USAGE "Remote dialog content opened directly"):
