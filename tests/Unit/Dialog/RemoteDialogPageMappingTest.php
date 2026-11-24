@@ -10,6 +10,8 @@ use Nowo\UiKitBundle\DependencyInjection\Compiler\RemoteDialogPageResolverPass;
 use Nowo\UiKitBundle\DependencyInjection\NowoUiKitExtension;
 use Nowo\UiKitBundle\Dialog\RemoteDialogContent;
 use Nowo\UiKitBundle\Dialog\RemoteDialogContentMap;
+use Nowo\UiKitBundle\Dialog\RemoteDialogControllerRanListener;
+use Nowo\UiKitBundle\Dialog\RemoteDialogDirectGetListener;
 use Nowo\UiKitBundle\Dialog\RemoteDialogPageMappingCheck;
 use Nowo\UiKitBundle\Dialog\RemoteDialogPageResolverInterface;
 use Nowo\UiKitBundle\Dialog\RemoteDialogReopen;
@@ -26,6 +28,12 @@ use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException as 
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\DependencyInjection\ServiceLocator;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpKernel\Event\ControllerArgumentsEvent;
+use Symfony\Component\HttpKernel\Event\ExceptionEvent;
+use Symfony\Component\HttpKernel\Event\ResponseEvent;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\Routing\Generator\UrlGenerator;
 use Symfony\Component\Routing\RequestContext;
 use Symfony\Component\Routing\Route;
@@ -112,7 +120,13 @@ final class RemoteDialogPageMappingTest extends TestCase
         self::assertNotNull(RemoteDialogContentMap::reopenClash(['a' => new RemoteDialogContent('a', 'p', 'd', [], false, ['reopen' => 'x'])], 'reopen'));
         self::assertNull(RemoteDialogContentMap::reopenClash(['a' => new RemoteDialogContent('a', 'p', 'd', [], false, ['reopen' => 'x'])], '_dialog'));
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('name of the reopen query parameter');
+        // Audit ZBD-I1: the router's _fragment is reserved too.
+        self::assertNotNull(RemoteDialogContentMap::reopenClash(['a' => new RemoteDialogContent('a', 'p', 'd', ['_fragment' => 'id'])], '_dialog'));
+        self::assertTrue(RemoteDialogContentMap::isReservedPageParameter('_fragment', '_dialog'));
+        self::assertTrue(RemoteDialogContentMap::isReservedPageParameter('_dialog', '_dialog'));
+        self::assertFalse(RemoteDialogContentMap::isReservedPageParameter('id', '_dialog'));
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('is reserved (the reopen query parameter "_dialog" or "_fragment")');
         new RemoteDialogContentMap(['a' => ['page' => 'p', 'dialog' => 'd', 'page_defaults' => ['_dialog' => 'x']]]);
     }
 
@@ -151,6 +165,11 @@ final class RemoteDialogPageMappingTest extends TestCase
         $reopen = $container->getDefinition('nowo_ui_kit.remote_dialog_reopen');
         self::assertInstanceOf(Reference::class, $reopen->getArgument(3));
         self::assertSame('logger', (string) $reopen->getArgument(4));
+        $ran = $container->getDefinition('nowo_ui_kit.remote_dialog_controller_ran_listener');
+        self::assertSame([
+            ['event' => 'kernel.controller_arguments', 'method' => 'onControllerArguments', 'priority' => -1024],
+            ['event' => 'kernel.exception', 'method' => 'onException', 'priority' => 2048],
+        ], $ran->getTag('kernel.event_listener'));
 
         $defaultsOnly = new ContainerBuilder();
         (new NowoUiKitExtension())->load([['remote_dialog' => ['direct_get' => ['routes' => [
@@ -158,6 +177,7 @@ final class RemoteDialogPageMappingTest extends TestCase
         ]]]]], $defaultsOnly);
         self::assertTrue($defaultsOnly->hasDefinition('nowo_ui_kit.remote_dialog_page_mapping_check'));
         self::assertCount(3, $defaultsOnly->getDefinition('nowo_ui_kit.remote_dialog_reopen')->getArguments());
+        self::assertFalse($defaultsOnly->hasDefinition('nowo_ui_kit.remote_dialog_controller_ran_listener'));
     }
 
     /**
@@ -307,10 +327,13 @@ final class RemoteDialogPageMappingTest extends TestCase
     /**
      * @param array<string, mixed> $routeParams
      */
-    private function dialogRequest(string $route, array $routeParams, string $path = '/x'): Request
+    private function dialogRequest(string $route, array $routeParams, string $path = '/x', bool $controllerRan = true): Request
     {
         $request = Request::create($path);
         $request->attributes->add(['_route' => $route, '_route_params' => $routeParams]);
+        if ($controllerRan) {
+            $request->attributes->set(RemoteDialogControllerRanListener::ATTRIBUTE, true);
+        }
 
         return $request;
     }
@@ -386,6 +409,8 @@ final class RemoteDialogPageMappingTest extends TestCase
         yield 'integer key' => [['route' => 'working_time_day', 'params' => ['x']]];
         yield 'too many params' => [['route' => 'working_time_day', 'params' => ['uuid' => '1'] + array_fill_keys(array_map(static fn (int $i): string => 'p'.$i, range(1, 32)), 'x')]];
         yield 'missing page parameter' => [['route' => 'working_time_day', 'params' => []]];
+        yield 'reopen parameter (audit ZBD-I1)' => [['route' => 'working_time_day', 'params' => ['uuid' => '1', '_dialog' => 'x']]];
+        yield 'fragment (audit ZBD-I1)' => [['route' => 'working_time_day', 'params' => ['uuid' => '1', '_fragment' => 'f']]];
     }
 
     #[DataProvider('answersThatMakeNoRedirect')]
@@ -416,6 +441,59 @@ final class RemoteDialogPageMappingTest extends TestCase
         // No locator at all (a host that built the service itself).
         $bare = new RemoteDialogReopen(new RemoteDialogContentMap(['working_time_contest' => ['page' => 'working_time_day', 'dialog' => 'd', 'page_resolver' => 'r']]), new UrlGenerator($this->beaconRoutes(), new RequestContext()));
         self::assertNull($this->target($bare, $this->dialogRequest('working_time_contest', ['uuid' => 'corr-42'])));
+    }
+
+    /**
+     * Audit ZBD-L1: a 200 the controller did not produce (entry point, interstitial, exception page) never reaches the
+     * resolver; map and defaults entries are unaffected.
+     */
+    public function testAResolverRunsOnlyWhenTheControllerRan(): void
+    {
+        $day = new FixedPageResolver(['route' => 'working_time_day', 'params' => ['uuid' => 'day-1']]);
+        $reopen = $this->reopen(['app.day_resolver' => static fn (): object => $day]);
+
+        self::assertNull($this->target($reopen, $this->dialogRequest('working_time_contest', ['uuid' => 'corr-42'], '/x', false)));
+        $forged = $this->dialogRequest('working_time_contest', ['uuid' => 'corr-42'], '/x', false);
+        $forged->attributes->set(RemoteDialogControllerRanListener::ATTRIBUTE, '1');
+        self::assertNull($this->target($reopen, $forged));
+        self::assertSame([], $day->calls);
+        self::assertNotNull($this->target($reopen, $this->dialogRequest('admin_project_edit', ['projectId' => 'p7'], '/x', false)));
+        self::assertNotNull($this->target($reopen, $this->dialogRequest('working_time_contest', ['uuid' => 'corr-42'])));
+    }
+
+    public function testTheControllerRanListenerMarksAndClearsTheRequest(): void
+    {
+        $kernel = $this->createStub(HttpKernelInterface::class);
+        $request = Request::create('/x');
+        $listener = new RemoteDialogControllerRanListener();
+
+        $listener->onControllerArguments(new ControllerArgumentsEvent($kernel, static fn (): Response => new Response(), [], $request, HttpKernelInterface::MAIN_REQUEST));
+        self::assertTrue($request->attributes->get(RemoteDialogControllerRanListener::ATTRIBUTE));
+        $listener->onException(new ExceptionEvent($kernel, $request, HttpKernelInterface::MAIN_REQUEST, new RuntimeException('x')));
+        self::assertFalse($request->attributes->has(RemoteDialogControllerRanListener::ATTRIBUTE));
+    }
+
+    public function testAStreamedAnswerNeverReachesTheResolver(): void
+    {
+        $day = new FixedPageResolver(['route' => 'working_time_day', 'params' => ['uuid' => 'day-1']]);
+        $reopen = $this->reopen(['app.day_resolver' => static fn (): object => $day]);
+        $navigate = ['HTTP_SEC_FETCH_MODE' => 'navigate', 'HTTP_SEC_FETCH_DEST' => 'document'];
+
+        $request = Request::create('/working-time/corrections/corr-42/contest', 'GET', [], [], [], $navigate);
+        $request->attributes->add(['_route' => 'working_time_contest', '_route_params' => ['uuid' => 'corr-42'], RemoteDialogControllerRanListener::ATTRIBUTE => true]);
+        $event = new ResponseEvent($this->createStub(HttpKernelInterface::class), $request, HttpKernelInterface::MAIN_REQUEST, new StreamedResponse(static function (): void {
+        }, 200, ['Content-Type' => 'text/html']));
+        (new RemoteDialogDirectGetListener($reopen))($event);
+        self::assertSame(200, $event->getResponse()->getStatusCode());
+        self::assertSame([], $day->calls);
+
+        // An entry without resolver keeps its 2.73 behaviour for a streamed answer.
+        $admin = Request::create('/admin/projects/p7/edit', 'GET', [], [], [], $navigate);
+        $admin->attributes->add(['_route' => 'admin_project_edit', '_route_params' => ['projectId' => 'p7']]);
+        $event = new ResponseEvent($this->createStub(HttpKernelInterface::class), $admin, HttpKernelInterface::MAIN_REQUEST, new StreamedResponse(static function (): void {
+        }, 200, ['Content-Type' => 'text/html']));
+        (new RemoteDialogDirectGetListener($reopen))($event);
+        self::assertSame(302, $event->getResponse()->getStatusCode());
     }
 
     public function testAMappedDialogParameterTheRequestLacksMakesNoRedirect(): void

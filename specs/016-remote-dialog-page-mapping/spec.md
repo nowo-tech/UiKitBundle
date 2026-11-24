@@ -49,10 +49,13 @@ behave and wire exactly as in 2.73.
   merged into the page route parameters. A page parameter is mapped or defaulted, not both.
 - **FR-PAGEMAP-003 (resolver)** — `page_resolver: <service id>`, a `RemoteDialogPageResolverInterface`
   (`resolve(string $route, array $params): ?array{route, params}`), receives the dialog route name and its route
-  parameters as strings, and runs only when the listener converts a direct GET (after the firewall and the controller's
-  access check answered `200`). Its `params` are merged over mapped and default ones. `null`, an exception, another
-  route than the entry's `page`, or values that cannot be carried whole (nested, > 512 characters, > 32 values) make no
-  redirect: the same answer as "no page link" (no existence oracle). An exception is logged as a warning with the route
+  parameters as strings, and runs only when the listener converts a direct GET: a `200` HTML answer, not a
+  `StreamedResponse`, of a request whose controller ran without an exception (`RemoteDialogControllerRanListener`:
+  request attribute set on `kernel.controller_arguments` at -1024, after `#[IsGranted]`, removed on `kernel.exception`;
+  audit ZBD-L1). That is not an access check: the resolver must check access to the record itself and return null
+  otherwise. Its `params` are merged over mapped and default ones. `null`, an exception, another route than the entry's
+  `page`, a reserved key (the reopen `query_parameter`, `_fragment`; audit ZBD-I1), or values that cannot be carried
+  whole (nested, > 512 characters, > 32 values) make no redirect: the same answer as "no page link" (no existence oracle). An exception is logged as a warning with the route
   name and exception class only.
 - **FR-PAGEMAP-004 (build-time validation)** — The configuration refuses invalid names and values, a parameter both
   mapped and defaulted, an invalid service id and a mapped or default page parameter named like `query_parameter`.
@@ -61,7 +64,9 @@ behave and wire exactly as in 2.73.
   on `cache:warmup`) checks entries that use the new options against the route collection: both routes exist (localized
   routes through their `.<locale>` variants), mapped page parameters and defaults are page route variables, mapped
   dialog parameters are dialog route variables or defaults, defaults match the page route's requirements, and without a
-  resolver every required page variable is mapped or defaulted.
+  resolver every required page variable is mapped or defaulted. The warmer fails the first boot after a container dump
+  and `cache:warmup` / `cache:clear` only (a later boot on the same cache is not re-checked; runtime fails closed), so
+  `cache:warmup` in CI / deploy is the gate (audit ZBD-L2).
 - **FR-PAGEMAP-005 (BC, worker)** — An entry without the new options reaches the container unchanged (no
   `page_defaults` / `page_resolver` keys, no warmer, no locator, same `RemoteDialogReopen` arguments) and produces the
   same redirect as 2.73. Every new service is stateless and `readonly`; resolvers are fetched from a service locator per
@@ -74,7 +79,9 @@ behave and wire exactly as in 2.73.
   shapes, resolver answers that make no redirect, exception logging without the record.
 - **SC-2** — `tests/Integration/RemoteDialogPageMappingKernelTest.php`: booted kernel with the four Beacon shapes
   (redirect + owning page reopen target), denied correction keeps `404`, resolver miss / failure keeps `200`, dialog
-  fetch unchanged, three boot failures (unknown parameter, missing required page parameter, resolver of another class).
+  fetch unchanged, three boot failures (unknown parameter, missing required page parameter, resolver of another class),
+  and a `200` the controller did not authorise (interstitial before it, inline login page from an exception, streamed
+  answer) never reaches the resolver (audit ZBD-L1).
 - **SC-3** — Existing 2.73 tests unchanged and green; PHP line coverage stays 100 %.
 
 ## Non-goals

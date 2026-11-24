@@ -197,9 +197,13 @@ nowo_ui_kit:
                     page_resolver: App\WorkingTime\CorrectionDayResolver   # implements RemoteDialogPageResolverInterface
 ```
 
-- Entries that use these options are checked against your routes when the container is built (cache warm-up): a
-  wrong parameter name or a missing required page parameter now stops the boot instead of silently making no redirect.
-- A resolver must be read-only and stateless between requests; returning `null` keeps the route's own page.
+- Entries that use these options are checked against your routes when the container is built: a wrong parameter
+  name or a missing required page parameter fails the first boot and `cache:warmup` / `cache:clear`. Run
+  `bin/console cache:warmup` in CI / deploy, it is the real gate (a later boot on the same cache is not re-checked; at
+  runtime a wrong mapping just makes no redirect).
+- A resolver must **check access to the record itself** (e.g. `isGranted('VIEW', $record)`) and return `null`
+  otherwise: it runs on a `200` answer whose controller ran, which is not proof of access. It must be read-only and
+  stateless between requests; returning `null` keeps the route's own page.
 - A host that builds `RemoteDialogReopen` itself can pass the resolvers as a PSR-11 locator (4th argument).
 
 ## To 2.73.0

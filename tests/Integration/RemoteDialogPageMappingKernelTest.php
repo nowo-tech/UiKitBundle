@@ -7,6 +7,7 @@ namespace Nowo\UiKitBundle\Tests\Integration;
 use LogicException;
 use Nowo\UiKitBundle\Dialog\RemoteDialogPageResolverInterface;
 use Nowo\UiKitBundle\NowoUiKitBundle;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use RuntimeException;
@@ -16,11 +17,16 @@ use Symfony\Bundle\TwigBundle\TwigBundle;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpKernel\Event\ExceptionEvent;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Kernel;
+use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 use Twig\Environment;
 
@@ -145,6 +151,32 @@ final class RemoteDialogPageMappingKernelTest extends TestCase
         }
     }
 
+    /**
+     * Audit ZBD-L1: a 200 the controller did not produce — an interstitial answered before it, an inline login page
+     * rendered from the exception, a streamed answer whose check runs in its callback — never reaches the resolver.
+     *
+     * @return iterable<string, array{0: string, 1: string}>
+     */
+    public static function answersTheControllerDidNotAuthorise(): iterable
+    {
+        yield 'interstitial before the controller' => ['interstitial', '<p>accept the terms</p>'];
+        yield 'inline login page rendered as 200' => ['inline-login', '<form data-login></form>'];
+        yield 'streamed answer' => ['streamed', ''];
+    }
+
+    #[DataProvider('answersTheControllerDidNotAuthorise')]
+    public function testAnAnswerTheControllerDidNotAuthoriseNeverReachesTheResolver(string $uuid, string $content): void
+    {
+        $response = $this->request('/working-time/corrections/'.$uuid.'/contest');
+
+        self::assertSame(200, $response->getStatusCode());
+        self::assertFalse($response->headers->has('Location'));
+        if ('' !== $content) {
+            self::assertSame($content, $response->getContent());
+        }
+        self::assertNotContains($uuid, DayOfCorrectionResolver::$asked);
+    }
+
     public function testADialogFetchStillGetsTheFragment(): void
     {
         $response = $this->request('/projects/p7/access/members/m3', ['HTTP_X_NOWO_DIALOG' => '1', 'HTTP_SEC_FETCH_MODE' => 'same-origin']);
@@ -197,7 +229,34 @@ final class DayOfCorrectionResolver implements RemoteDialogPageResolverInterface
             throw new RuntimeException('lookup failed');
         }
 
-        return 'corr-42' === $uuid ? ['route' => 'working_time_day', 'params' => ['uuid' => 'day-2026-11-24']] : null;
+        return 'orphan' === $uuid ? null : ['route' => 'working_time_day', 'params' => ['uuid' => 'day-2026-11-24']];
+    }
+}
+
+/**
+ * @internal host answers that are 200 without the controller's authorisation (audit ZBD-L1)
+ */
+final class HostAnswersSubscriber implements EventSubscriberInterface
+{
+    public static function getSubscribedEvents(): array
+    {
+        return [KernelEvents::REQUEST => ['onRequest', 8], KernelEvents::EXCEPTION => ['onException', 0]];
+    }
+
+    public function onRequest(RequestEvent $event): void
+    {
+        if (str_contains($event->getRequest()->getPathInfo(), '/interstitial/')) {
+            $event->setResponse(new Response('<p>accept the terms</p>'));
+        }
+    }
+
+    public function onException(ExceptionEvent $event): void
+    {
+        if ('inline-login' === $event->getThrowable()->getMessage()) {
+            // As Security's ExceptionListener does for an entry point that answers 200.
+            $event->setResponse(new Response('<form data-login></form>'));
+            $event->allowCustomResponseCode();
+        }
     }
 }
 
@@ -244,6 +303,7 @@ final class PageMappingTestKernel extends Kernel
         $container->loadFromExtension('twig', ['default_path' => '%kernel.project_dir%/templates']);
         $container->register('logger', NullLogger::class);
         $container->register('app.day_of_correction', DayOfCorrectionResolver::class);
+        $container->register('app.host_answers', HostAnswersSubscriber::class)->addTag('kernel.event_subscriber');
         $container->loadFromExtension('nowo_ui_kit', ['remote_dialog' => ['direct_get' => ['routes' => $this->routes ?? [
             'project_access_member_edit' => ['page' => 'project_settings_section', 'dialog' => 'project-settings', 'page_parameters' => ['id' => 'projectId'], 'page_defaults' => ['section' => 'access']],
             'notification_destination_edit' => ['page' => 'project_settings_section', 'dialog' => 'project-settings', 'page_parameters' => ['id' => 'projectId'], 'page_defaults' => ['section' => 'notifications']],
@@ -288,6 +348,14 @@ final class PageMappingTestKernel extends Kernel
         // The controller's own access check runs first: a correction the user may not see is a 404.
         if ('hidden' === $uuid) {
             throw new NotFoundHttpException();
+        }
+        if ('inline-login' === $uuid) {
+            throw new RuntimeException('inline-login');
+        }
+        if ('streamed' === $uuid) {
+            return new StreamedResponse(static function (): void {
+                echo '<form data-correction="streamed"></form>';
+            }, 200, ['Content-Type' => 'text/html; charset=UTF-8']);
         }
 
         return new Response(\sprintf('<form data-correction="%s"></form>', $uuid));
