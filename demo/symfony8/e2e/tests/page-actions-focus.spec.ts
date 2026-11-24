@@ -188,12 +188,23 @@ test.describe('focus return from page-actions dialogs (2.52.2)', () => {
     await expect(page.getByTestId('destination-visible')).toBeFocused();
   });
 
-  test('axe: the page and the dialogs opened from the menu', async ({ page }) => {
+  // Firefox (Playwright 1.65.1) crashes its content process when a dialog of this page opens after axe scanned the
+  // document (the closed <dialog> elements included): every scan runs in a page of its own, dialogs opened first.
+  test('axe: the page', async ({ page }) => {
     await page.goto('/kit/page-actions-dialogs');
     expect((await (await axe(page)).analyze()).violations).toEqual([]);
+  });
+
+  test('axe: the confirm dialog opened from the menu', async ({ page }) => {
+    await page.goto('/kit/page-actions-dialogs');
     await openFromMenu(page, 'pa-archive', 'pa-archive-dialog');
     expect((await (await axe(page)).include('[data-testid="pa-archive-dialog"]').analyze()).violations).toEqual([]);
     await page.keyboard.press('Escape');
+    await expectToggleFocused(page);
+  });
+
+  test('axe: the remote form dialog opened from the menu', async ({ page }) => {
+    await page.goto('/kit/page-actions-dialogs');
     await openFromMenu(page, 'pa-destination', 'pa-destination-dialog');
     await expect(page.getByTestId('destination-label')).toBeVisible();
     expect((await (await axe(page)).include('[data-testid="pa-destination-dialog"]').analyze()).violations).toEqual([]);

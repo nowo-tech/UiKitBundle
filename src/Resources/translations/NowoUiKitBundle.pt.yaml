@@ -113,6 +113,9 @@ filters.search_placeholder: Pesquisar…
 filters.apply: Aplicar
 filters.clear: Limpar
 filters.any: Qualquer
+filters.filter: "Filtrar"
+filters.clear_filters: "Limpar filtros"
+filters.more: "Mais filtros"
 multi_select.remove: Remover
 multi_select.no_results: Sem resultados
 date_range.from: De

@@ -13,13 +13,14 @@ async function open(page: Page, path = '/kit/mobile'): Promise<void> {
 }
 
 /** 2.45: the tabs unfold / fold with an animation; wait for it before measuring. */
-const settled = (l: Locator): Promise<unknown> => l.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
+// A cancelled or replaced animation rejects `finished` with an AbortError: that animation is done too.
+const settled = (l: Locator): Promise<unknown> => l.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished.catch(() => undefined))));
 
 /**
  * 2.46: the chevron morphs (CSS `d`) where the browser supports it, else it turns (rotate). True once it points down.
  */
 async function chevronDown(launcher: Locator): Promise<boolean> {
-  await launcher.evaluate((el) => Promise.all([...el.querySelectorAll('*')].flatMap((n) => n.getAnimations()).map((a) => a.finished)));
+  await launcher.evaluate((el) => Promise.all([...el.querySelectorAll('*')].flatMap((n) => n.getAnimations()).map((a) => a.finished.catch(() => undefined))));
   return launcher.evaluate((el) => {
     if (CSS.supports('d', "path('M0 0')")) {
       const [upper, lower] = [...el.querySelectorAll('path')].map((p) => getComputedStyle(p).getPropertyValue('d').replace(/\s+/g, ' '));
@@ -172,9 +173,10 @@ test.describe('phone mode', () => {
     // The reverse runs on close.
     await page.keyboard.press('Escape');
     await expect(launcher).toHaveAttribute('aria-expanded', 'false');
-    await launcher.evaluate((el) => Promise.all([...el.querySelectorAll('*')].flatMap((n) => n.getAnimations()).map((a) => a.finished)));
-    const back = await launcher.evaluate((el) => (CSS.supports('d', "path('M0 0')") ? getComputedStyle(el.querySelector('path')!).getPropertyValue('d') : getComputedStyle(el.querySelector('.nowo-ui-edge-tab__icon')!).transform));
-    expect(back.replace(/\s+/g, ' ')).toMatch(morphs ? /M ?15[ ,]6 ?L ?9[ ,]12/ : /^(none|matrix\(1, 0, 0, 1, 0, 0\))$/);
+    await launcher.evaluate((el) => Promise.all([...el.querySelectorAll('*')].flatMap((n) => n.getAnimations()).map((a) => a.finished.catch(() => undefined))));
+    // WebKit can start the closing transition after the animations were collected above: poll the end state.
+    const back = (): Promise<string> => launcher.evaluate((el) => (CSS.supports('d', "path('M0 0')") ? getComputedStyle(el.querySelector('path')!).getPropertyValue('d') : getComputedStyle(el.querySelector('.nowo-ui-edge-tab__icon')!).transform).replace(/\s+/g, ' '));
+    await expect.poll(back).toMatch(morphs ? /M ?15[ ,]6 ?L ?9[ ,]12/ : /^(none|matrix\(1, 0, 0, 1, 0, 0\))$/);
   });
 
   test('2.46: reduced motion — the chevron and the tabs change at once', async ({ page }) => {

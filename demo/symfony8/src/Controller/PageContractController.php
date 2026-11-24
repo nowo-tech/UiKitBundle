@@ -35,6 +35,7 @@ use Nowo\UiKitBundle\View\WizardStep;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\MoneyType;
@@ -168,6 +169,46 @@ final class PageContractController extends AbstractController
             // host theme: the primary actions sit at the end of the filter row (default view: page header)
             headerActionsInFilters: null === $theme,
             sorting: $sort,
+        )]);
+    }
+
+    /**
+     * 2.72 Beacon filter standard: the rarer filters fold under "More filters" (FilterField more / ListPage
+     * filtersMore; open while one of them is set), "N per page" sits compact right before the icon-only Filter / Clear
+     * buttons (FilterField pager), and the default labels are "Filter" / "Clear filters".
+     */
+    #[Route('/orders/filter-standard', name: 'page_contract_orders_standard')]
+    public function listStandard(Request $request): Response
+    {
+        $perPage = [10, 25, 50];
+        $filters = $this->container->get('form.factory')->createNamedBuilder('filters', options: ['method' => 'GET'])
+            ->add('q', SearchType::class, ['required' => false, 'label' => 'Customer', 'attr' => ['placeholder' => 'Search customers…']])
+            ->add('status', ChoiceType::class, ['required' => false, 'label' => 'Status', 'placeholder' => 'Any status', 'choices' => ['Paid' => 'paid', 'Pending' => 'pending', 'Shipped' => 'shipped', 'Refunded' => 'refunded']])
+            ->add('channel', ChoiceType::class, ['required' => false, 'label' => 'Channel', 'placeholder' => 'Any channel', 'choices' => ['Web' => 'web', 'Shop' => 'shop', 'Phone' => 'phone']])
+            ->add('placed_from', DateType::class, ['required' => false, 'label' => 'Placed from', 'widget' => 'single_text'])
+            ->add('gift', CheckboxType::class, ['required' => false, 'label' => 'Gift-wrapped only'])
+            ->add('per_page', ChoiceType::class, ['required' => false, 'label' => 'Results per page', 'label_attr' => ['class' => 'visually-hidden'], 'placeholder' => false, 'attr' => ['aria-label' => 'Results per page'], 'choices' => array_combine(array_map(static fn (int $n): string => $n.' per page', $perPage), $perPage), 'data' => 25])
+            ->getForm();
+        $filters->handleRequest($request);
+        $clear = $this->generateUrl('page_contract_orders_standard');
+
+        return $this->render('page_contract/orders/index.html.twig', ['page' => new ListPage(
+            $this->header(null, 'Orders (filter standard)', 'More filters, compact per page and icon-only actions.', 'Orders'),
+            [new Column('id', '#', required: true), new Column('customer', 'Customer', required: true), new Column('placed', 'Placed', priority: 3), new Column('status', 'Status'), new Column('total', 'Total', align: 'end')],
+            self::ORDERS,
+            $filters->createView(),
+            pagination: new Pagination(1, 5, 42, route: 'page_contract_orders_standard'),
+            filtersClearHref: $clear,
+            attributes: ['data-testid' => 'orders-standard'],
+            filterFields: [
+                new FilterField('q', 'Search customers…'),
+                new FilterField('channel', more: true),
+                new FilterField('placed_from', more: true),
+                new FilterField('gift', more: true),
+                new FilterField('per_page', rowClass: 'demo-filters__pager', pager: true),
+            ],
+            filtersDisplay: 'icon',
+            filtersFold: false,
         )]);
     }
 

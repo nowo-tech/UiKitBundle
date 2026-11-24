@@ -113,6 +113,9 @@ filters.search_placeholder: Zoeken…
 filters.apply: Toepassen
 filters.clear: Wissen
 filters.any: Alle
+filters.filter: "Filteren"
+filters.clear_filters: "Filters wissen"
+filters.more: "Meer filters"
 multi_select.remove: Verwijderen
 multi_select.no_results: Geen resultaten
 date_range.from: Van

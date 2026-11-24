@@ -39,14 +39,15 @@ test.describe('context menu', () => {
     const cell = row(page, '1042').locator('td').first();
     await cell.click({ button: 'right', position: { x: 8, y: 8 } });
     await expect(menu(page)).toBeVisible();
-    // measured after the click: Playwright may scroll the cell into view first (the shell's sticky bar pads the scroll)
-    const box = (await cell.boundingBox())!;
     await expect(menu(page)).toHaveAttribute('role', 'menu');
     await expect(page.getByRole('menu', { name: 'Actions' })).toBeVisible();
     const items = menu(page).getByRole('menuitem');
     await expect(items).toHaveText(['Edit', 'Duplicate', 'Download PDF', 'Delete']);
     await expect(items.first()).toBeFocused();
-    const panel = (await menu(page).boundingBox())!;
+    // Cell and panel measured in one frame: Playwright may scroll the cell into view around the click (the shell's
+    // sticky bar pads the scroll), and two separate measurements could straddle that scroll.
+    const handle = await cell.elementHandle();
+    const [box, panel] = await menu(page).evaluate((el, td) => [(td as Element).getBoundingClientRect().toJSON(), el.getBoundingClientRect().toJSON()], handle);
     expect(Math.abs(panel.x - (box.x + 8))).toBeLessThan(3);
     expect(Math.abs(panel.y - (box.y + 8))).toBeLessThan(3);
     expect(await menu(page).evaluate((el) => el.matches(':popover-open'))).toBe(true);

@@ -38,13 +38,23 @@
 {%- endmacro %}
 
 {#- The bottom sheet: a native modal <dialog> (opened by showModal() only) named by its heading; the runtime moves
-    the panel into the slot and back. level: heading level 2-6 (anything else = 2). -#}
+    the panel into the slot and back. level: heading level 2-6 (anything else = 2).
+    2.72: light dismiss (closedby="any"; the runtime closes on a backdrop click where the attribute is unsupported) and
+    an icon close button (X, aria-label + title = the close label; a text button with the `none` icon set). -#}
 {% macro dialog(id, title, level, close_label) -%}
 {%- set _level = level in [2, 3, 4, 5, 6] ? level : 2 -%}
-<dialog id="{{ id }}-dialog" class="nowo-ui-filter-sheet__dialog" aria-labelledby="{{ id }}-title" data-nowo-ui-filter-sheet-dialog>
+{%- set _close = close_label ? close_label|nowo_ui_trans : 'filter_bar.close'|trans({}, 'NowoUiKitBundle') -%}
+<dialog id="{{ id }}-dialog" class="nowo-ui-filter-sheet__dialog" aria-labelledby="{{ id }}-title" closedby="any" data-nowo-ui-filter-sheet-dialog>
         <div class="nowo-ui-filter-sheet__dialog-header">
             <h{{ _level }} id="{{ id }}-title" class="nowo-ui-filter-sheet__dialog-title">{{ title }}</h{{ _level }}>
-            <button type="button" class="nowo-ui-btn nowo-ui-btn--outline nowo-ui-btn--sm" data-nowo-ui-filter-sheet-close>{{ close_label ? close_label|nowo_ui_trans : 'filter_bar.close'|trans({}, 'NowoUiKitBundle') }}</button>
+            {%- if nowo_ui_kit_icon_set|default('bootstrap-icons') == 'none' %}
+            <button type="button" class="nowo-ui-btn nowo-ui-btn--outline nowo-ui-btn--sm nowo-ui-filter-sheet__close" data-nowo-ui-filter-sheet-close>{{ _close }}</button>
+            {%- else %}
+            <button type="button" class="nowo-ui-btn nowo-ui-btn--icon nowo-ui-filter-sheet__close" title="{{ _close }}" aria-label="{{ _close }}" data-nowo-ui-filter-sheet-close>
+                {{- include('@NowoUiKitBundle/components/_icon.html.twig', {name: 'close', label: _close}, false)|trim|raw -}}
+                <span class="visually-hidden">{{ _close }}</span>
+            </button>
+            {%- endif %}
         </div>
         <div class="nowo-ui-filter-sheet__dialog-body" data-nowo-ui-filter-sheet-slot></div>
     </dialog>

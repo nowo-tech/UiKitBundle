@@ -37,6 +37,9 @@ use Symfony\Component\Form\FormView;
  * fold toggle of the filters card or not; null = `fold.enabled`), `filtersFoldKey` (page key the fold state is
  * remembered for; default the current route) and `filtersGrid` (`auto-fit` | `auto-fill`; null = the host `grid`).
  * `rowAttributes` (2.34): extra attributes of each `<tr>`, see {@see Table}.
+ * 2.72 "More filters" fold: `filtersMore` (form child names folded under the disclosure after the actions, merged with
+ * the {@see FilterField::$more} fields) and `filtersMoreOpen` (true / false force the disclosure open / closed; null =
+ * open while one of its fields is set). Empty (the default): no disclosure, the 2.71 output.
  */
 final readonly class ListPage
 {
@@ -70,6 +73,9 @@ final readonly class ListPage
     /** @var list<Action> */
     public array $filterActions;
 
+    /** @var list<string> form child names folded under "More filters" (2.72; `filtersMore` + {@see FilterField::$more}) */
+    public array $filtersMore;
+
     /**
      * @param iterable<Column>                                                 $columns
      * @param iterable<mixed>                                                  $rows
@@ -78,6 +84,7 @@ final readonly class ListPage
      * @param iterable<Action>                                                 $filterActions extra actions after apply / clear
      * @param array<string, string|int|float|bool|null>                        $attributes    extra attributes of the scaffold root (data-testid…; no on* handlers)
      * @param (callable(mixed, int|string): array<string, mixed>)|null         $rowAttributes
+     * @param iterable<string>                                                 $filtersMore   form child names folded under "More filters" (2.72)
      */
     public function __construct(
         public PageHeader $header,
@@ -112,6 +119,8 @@ final readonly class ListPage
         public ?string $filtersFoldKey = null,
         public ?string $filtersGrid = null,
         ?callable $rowAttributes = null,
+        iterable $filtersMore = [],
+        public ?bool $filtersMoreOpen = null,
     ) {
         if (null !== $filtersGrid && !\in_array($filtersGrid, ListFiltersOptions::GRID_MODES, true)) {
             throw new InvalidArgumentException(\sprintf('Invalid ListPage filtersGrid "%s" (%s).', $filtersGrid, implode('|', ListFiltersOptions::GRID_MODES)));
@@ -134,6 +143,22 @@ final readonly class ListPage
             $fields[$field->name] = $field;
         }
         $this->filterFields = $fields;
+        $more = [];
+        foreach ($filtersMore as $name) {
+            if (1 !== preg_match('/^[A-Za-z0-9_][A-Za-z0-9_-]*$/', $name)) {
+                throw new InvalidArgumentException(\sprintf('Invalid ListPage filtersMore entry "%s" (a form child name).', $name));
+            }
+            if (isset($fields[$name]) && $fields[$name]->pager) {
+                throw new InvalidArgumentException(\sprintf('ListPage filtersMore entry "%s" is a pager field.', $name));
+            }
+            $more[$name] = true;
+        }
+        foreach ($fields as $name => $field) {
+            if ($field->more) {
+                $more[$name] = true;
+            }
+        }
+        $this->filtersMore = array_map(strval(...), array_keys($more));
         $this->filterActions = ViewList::of($filterActions, Action::class, 'ListPage filterActions');
         if (!\in_array($responsive, self::RESPONSIVE, true)) {
             throw new InvalidArgumentException(\sprintf('Invalid ListPage responsive "%s" (%s).', $responsive, implode('|', self::RESPONSIVE)));
@@ -156,6 +181,22 @@ final readonly class ListPage
         $this->table = new Table($this->columns, $this->rows, $rowActions, $caption, $captionVisible, null, 'asc', $actionsLabel, $actionsLabelVisible, $actionsAlign, $actionsPosition, $responsive, $bundle, sorting: $sorting, clientSort: $clientSort, rowAttributes: $rowAttributes);
         $this->sort = $this->table->sort;
         $this->direction = $this->table->direction;
+    }
+
+    /**
+     * Whether a filter child renders under "More filters" (2.72).
+     */
+    public function isFilterMore(string $name): bool
+    {
+        return \in_array($name, $this->filtersMore, true);
+    }
+
+    /**
+     * Whether a filter child renders compact in the actions group (2.72, {@see FilterField::$pager}).
+     */
+    public function isFilterPager(string $name): bool
+    {
+        return isset($this->filterFields[$name]) && $this->filterFields[$name]->pager;
     }
 
     public function hasRowActions(): bool

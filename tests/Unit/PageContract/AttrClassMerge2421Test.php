@@ -67,7 +67,7 @@ final class AttrClassMerge2421Test extends TestCase
             file_put_contents($file, $html);
         }
 
-        self::assertSame((string) file_get_contents($file), $html);
+        self::assertSame(FilterStandard272::upgrade((string) file_get_contents($file), 'list_filters_submit' !== $name), $html);
     }
 
     #[DataProvider('scenarios')]

@@ -24,7 +24,8 @@ use Symfony\Component\HttpFoundation\Request;
  * 2.30 list-filter host options (`theme.pages.list.filters`: fold toggle, default display, button classes / icons,
  * grid track mode; `ListPage::filtersFold` / `filtersGrid`) are opt-in: list pages rendered without them print
  * byte-identical to UiKit 2.29. The fixtures under tests/Fixtures/bc-2.29 were rendered by UiKit 2.29.1 (origin/main
- * 93beca6) from exactly these scenarios; no whitespace normalisation.
+ * 93beca6) from exactly these scenarios; no whitespace normalisation. 2.72 changed the default labels and the icon-only
+ * class on purpose ({@see FilterStandard272}); the fixtures are compared after that upgrade.
  */
 final class ListFilters230BcTest extends TestCase
 {
@@ -43,7 +44,7 @@ final class ListFilters230BcTest extends TestCase
     {
         $file = \dirname(__DIR__, 2).'/Fixtures/bc-2.29/'.$name.'.html';
         self::assertFileExists($file);
-        self::assertSame(file_get_contents($file), self::renders()[$name](), $name.' must render exactly as UiKit 2.29 printed it');
+        self::assertSame(FilterStandard272::upgrade((string) file_get_contents($file)), self::renders()[$name](), $name.' must render exactly as UiKit 2.29 printed it (plus the 2.72 labels / icon-only class)');
     }
 
     /**

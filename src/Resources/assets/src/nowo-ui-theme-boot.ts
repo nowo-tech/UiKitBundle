@@ -20,8 +20,13 @@
  * Outputs on <html>: data-theme (+ data-bs-theme for Bootstrap 5.3, 2.15.4; `data-nowo-ui-bs-theme="off"` opts out),
  * data-ui-density, data-motion, data-font-scale, data-contrast; resolved
  * values are mirrored to `window.nowoUiPrefs` for later scripts.
+ *
+ * 2.72 (REQ-ASSETS-005): the "script loaded" console line, like every other shipped script. It is printed only after
+ * the preferences are applied, from a zero-delay task, so it never sits between the boot and the first paint; a
+ * console failure never reaches the page.
  */
 
+import { announceScript } from './script-banner';
 import { sidebarOptionsFrom, syncSidebarStorageFromCookie } from './nowo-ui-sidebar-core';
 import {
   applyTheme,
@@ -88,5 +93,17 @@ export function applyThemeBoot(root: HTMLElement = document.documentElement): No
   return prefs;
 }
 
+declare const __UI_KIT_BUILD_TIME__: string;
+
+/** The console line, off the pre-paint path (after the attributes are written). */
+export function announceThemeBoot(): void {
+  try {
+    announceScript('ui-kit/theme-boot', typeof __UI_KIT_BUILD_TIME__ !== 'undefined' ? __UI_KIT_BUILD_TIME__ : undefined);
+  } catch {
+    // A console that throws never breaks the page.
+  }
+}
+
 window.nowoUiThemeBoot = () => applyThemeBoot();
 applyThemeBoot();
+setTimeout(announceThemeBoot, 0);

@@ -10,6 +10,8 @@ import AxeBuilder from '@axe-core/playwright';
 type Mode = 'light' | 'dark';
 
 async function watchCsp(page: Page): Promise<string[]> {
+  // The dev toolbar (another bundle's collector templates) is not under test: blocked, like the other CSP specs.
+  await page.route('**/_wdt/**', (route) => route.abort());
   const violations: string[] = [];
   page.on('console', (msg) => {
     if (/Content Security Policy/i.test(msg.text())) violations.push(msg.text());

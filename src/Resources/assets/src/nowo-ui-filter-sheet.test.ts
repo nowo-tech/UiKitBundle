@@ -154,4 +154,55 @@ describe('nowo-ui-filter-sheet', () => {
     document.getElementById('fb')!.click();
     expect(dialog().open).toBe(false);
   });
+
+  it('closes on a backdrop click outside the dialog box (fallback without closedBy)', () => {
+    document.getElementById('open')!.click();
+    expect(dialog().open).toBe(true);
+    vi.spyOn(dialog(), 'getBoundingClientRect').mockReturnValue({ top: 100, left: 0, width: 300, height: 200 } as DOMRect);
+    // inside the box (dialog padding): stays open
+    dialog().dispatchEvent(new MouseEvent('click', { clientX: 10, clientY: 150, bubbles: true }));
+    expect(dialog().open).toBe(true);
+    // a click on a child never closes it
+    document.getElementById('slot')!.dispatchEvent(new MouseEvent('click', { clientX: 10, clientY: 10, bubbles: true }));
+    expect(dialog().open).toBe(true);
+    // above the box (the backdrop): closes and the panel goes back
+    dialog().dispatchEvent(new MouseEvent('click', { clientX: 10, clientY: 10, bubbles: true }));
+    expect(dialog().open).toBe(false);
+    expect(document.getElementById('panel')!.parentElement!.id).toBe('fb');
+  });
+
+  it('ignores a backdrop click on a closed dialog and detects closedBy support', () => {
+    const d = dialog();
+    expect(() => mod.onBackdropClick(d, new MouseEvent('click'))).not.toThrow();
+    expect(d.open).toBe(false);
+    expect(typeof mod.supportsClosedBy()).toBe('boolean');
+    Object.defineProperty(HTMLDialogElement.prototype, 'closedBy', { configurable: true, value: 'any' });
+    try {
+      expect(mod.supportsClosedBy()).toBe(true);
+    } finally {
+      delete (HTMLDialogElement.prototype as unknown as Record<string, unknown>).closedBy;
+    }
+  });
+
+  it('leaves light dismiss to the browser when closedBy is supported', async () => {
+    Object.defineProperty(HTMLDialogElement.prototype, 'closedBy', { configurable: true, value: 'any' });
+    try {
+      document.body.innerHTML = MARKUP;
+      vi.resetModules();
+      mod = await import('./nowo-ui-filter-sheet');
+      document.getElementById('open')!.click();
+      vi.spyOn(dialog(), 'getBoundingClientRect').mockReturnValue({ top: 100, left: 0, width: 300, height: 200 } as DOMRect);
+      dialog().dispatchEvent(new MouseEvent('click', { clientX: 10, clientY: 10, bubbles: true }));
+      expect(dialog().open).toBe(true);
+    } finally {
+      delete (HTMLDialogElement.prototype as unknown as Record<string, unknown>).closedBy;
+    }
+  });
+
+  it('binds the document listener once', () => {
+    const spy = vi.spyOn(document, 'addEventListener');
+    mod.bindNowoUiFilterSheet();
+    expect(spy).not.toHaveBeenCalledWith('click', expect.any(Function));
+    spy.mockRestore();
+  });
 });

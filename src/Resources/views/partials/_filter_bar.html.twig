@@ -33,7 +33,7 @@
 {% set _title = (title ?? null) ? title|nowo_ui_trans : 'filter_bar.title'|trans({}, 'NowoUiKitBundle') %}
 {% set _count = active_count ?? null %}
 {% if _count is null %}
-    {% set _count = ((filter_sheet.active_count(form) ~ "")|trim) + 0 %}
+    {% set _count = ((filter_sheet.active_count(form) ~ '')|trim) + 0 %}
 {% endif %}
 {% set _attr = nowo_ui_safe_attrs(attr|default({}), ['id', 'data-nowo-ui-filter-sheet', 'data-nowo-ui-region']) %}
 {% set _extra %}{{ block('filter_bar_extra') }}{% endset %}

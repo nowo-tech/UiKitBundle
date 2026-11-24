@@ -176,6 +176,22 @@
 
 ## Unreleased
 
+Target 2.72.0 (Beacon filter standard). No API removal; new constructor arguments are appended (named arguments).
+
+- **Labels**: the list filters (`page/_list_filters.html.twig`) default to "Filter" / "Clear filters" (keys
+  `filters.filter` / `filters.clear_filters`). To keep "Apply" / "Clear", pass `filtersSubmit: new Action('filter',
+  new Label('filters.apply', 'NowoUiKitBundle'))` / a `filtersClear` Action, or override the two new keys in your
+  translations. `filters.apply` / `filters.clear` stay for the `_filter_actions` partial.
+- **Icon-only buttons**: they carry `nowo-ui-filter-bar__action--icon-only` (a square as tall as the fields,
+  `--nowo-ui-filter-control-height` / `--nowo-ui-control-height`) instead of your `btn_icon` slot classes. A host that
+  styled them through `btn_icon` adds its rule to that class (or uses `submit_class` / `clear_class`).
+- **Selects**: with host `input` slot classes, a collapsed choice no longer gets `nowo-ui-input` (your form theme's
+  select class and padding win). Without host classes nothing changes.
+- **Sheet**: the close button is an icon; tests that read its text find it in a visually hidden span. The dialog has
+  `closedby="any"`.
+- **Opt in** to the new placement with `FilterField(more: true)`, `ListPage(filtersMore: [...], filtersMoreOpen: ...)`
+  and `FilterField(pager: true, rowClass: 'your-pager')`.
+
 ## To 2.71.0
 
 From **2.70.0**:
