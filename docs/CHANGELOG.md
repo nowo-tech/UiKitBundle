@@ -159,6 +159,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- Demo and screenshots moved to the shared demo shell: the demo opens on the component catalogue (`/` redirects there; the kitchen sink moved to `/kitchen-sink` in the Shell lab), the admin catalogue pages and the Stimulus dialogs showcase no longer pick up the host-theme (Acme) classes, and the README shows the catalogue on the nowo-tech demo platform shell. Every README / docs screenshot is regenerated without the Symfony debug toolbar; 13 unreferenced sidebar screenshots are removed.
+
+### Fixed
+
+- Demo platform shell: the pagination per-page select (table card footer) uses the platform input border (3:1 or more), like the other fields.
+
 ## [2.74.0] - 2026-11-24
 
 ### Added

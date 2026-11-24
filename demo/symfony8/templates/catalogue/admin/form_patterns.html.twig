@@ -2,12 +2,12 @@
 {% form_theme invalid_form '@NowoUiKitBundle/form/nowo_ui_layout.html.twig' %}
 {% form_theme patterns_form '@NowoUiKitBundle/form/nowo_ui_layout.html.twig' %}
 {% block nowo_ui_page_header %}
-    {{ include(nowo_ui_partial('page_header', 'DemoDefaultTheme'), {title: 'Form patterns', intro: 'Error summary, fieldsets, input groups, switches, two columns, file drop, a read-only view and a footer that stays in sight.'}, false) }}
+    {{ include(nowo_ui_partial('page_header', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', title: 'Form patterns', intro: 'Error summary, fieldsets, input groups, switches, two columns, file drop, a read-only view and a footer that stays in sight.'}, false) }}
 {% endblock %}
 {% block body %}
     {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'New customer (sent with errors)', intro: 'The state after a failed submit: the error summary lists every problem, links to its field and takes the focus on load.', kind: 'form', testid: 'catalogue-invalid-form'} %}
         {% block section_body %}
-            {{ include(nowo_ui_partial('error_summary'), {form: invalid_form}, false) }}
+            {{ include(nowo_ui_partial('error_summary', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', form: invalid_form}, false) }}
             {{ form_start(invalid_form, {action: path('catalogue_admin', {group: 'form-patterns'})}) }}
                 {{ include('catalogue/admin/_customer_fields.html.twig', {f: invalid_form}, false) }}
             {{ form_end(invalid_form) }}
@@ -15,7 +15,7 @@
     {% endembed %}
     {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'New customer', intro: 'Two columns from 40rem; the footer sticks to the bottom while the form scrolls; Save shows a busy state while it posts.', kind: 'form', testid: 'catalogue-form-patterns', attr: {class: 'nowo-ui-card--sticky-footer'}} %}
         {% block section_body %}
-            {{ include(nowo_ui_partial('error_summary'), {form: patterns_form}, false) }}
+            {{ include(nowo_ui_partial('error_summary', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', form: patterns_form}, false) }}
             {{ form_start(patterns_form, {action: path('catalogue_admin', {group: 'form-patterns'})}) }}
                 {{ include('catalogue/admin/_customer_fields.html.twig', {f: patterns_form}, false) }}
             {{ form_end(patterns_form) }}
@@ -29,7 +29,7 @@
         {% block section_body %}
             {{ form_start(option_cards_form, {action: path('catalogue_admin', {group: 'form-patterns'})}) }}
                 <div class="nowo-ui-stack">
-                    {{ include(nowo_ui_partial('option_cards'), {
+                    {{ include(nowo_ui_partial('option_cards', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue',
                         field: option_cards_form.plan, columns: 3,
                         options_meta: {
                             starter: {meta: '$9', description: 'For one person.', badges: ['Popular', {label: 'Save 20%', tone: 'success'}]},
@@ -37,14 +37,14 @@
                             enterprise: {meta: '$99', description: 'Contact us to enable it.'},
                         },
                     }, false) }}
-                    {{ include(nowo_ui_partial('option_cards'), {
+                    {{ include(nowo_ui_partial('option_cards', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue',
                         field: option_cards_form.addons, columns: 2,
                         options_meta: {
                             backup: {meta: '+$5', description: 'Kept for 30 days.'},
                             sso: {meta: '+$12', description: 'SAML and OIDC.'},
                         },
                     }, false) }}
-                    {{ include(nowo_ui_partial('option_cards'), {
+                    {{ include(nowo_ui_partial('option_cards', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue',
                         field: option_cards_form.device, variant: 'icon', columns: 3,
                         options_meta: {
                             laptop: {description: 'Works offline.', icon: 'home'},
@@ -52,7 +52,7 @@
                             phone: {description: 'Not available yet.', icon: 'more'},
                         },
                     }, false) }}
-                    {{ include(nowo_ui_partial('option_cards'), {
+                    {{ include(nowo_ui_partial('option_cards', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue',
                         field: option_cards_form.channels, variant: 'icon', columns: 4, legend_sr_only: true,
                         options_meta: {
                             email: {icon: 'send'},

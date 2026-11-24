@@ -1,4 +1,4 @@
-# Ui Kit Bundle — Symfony 8 demo (Bootstrap)
+# Ui Kit Bundle — Symfony 8 demo
 
 Runs with **FrankenPHP** (Caddy + PHP). Default mode: `FRANKENPHP_MODE=worker` (see [DEMO-FRANKENPHP.md](../../docs/DEMO-FRANKENPHP.md)).
 
@@ -8,7 +8,10 @@ make up
 # open http://localhost:8092/
 ```
 
-Kitchen sink: macros, shell chrome, modal, pagination, tabs.
+`/` opens the component catalogue on the shared nowo-tech demo platform shell (top bar, sidebar navigation, page
+header, section cards: the same frame as every nowo-tech bundle demo). The sidebar groups the catalogue, the admin
+components, the component showcases, the **Shell lab** (full-page previews of the kit's own shells, including the kitchen
+sink at `/kitchen-sink`) and the one **host-theme** preview (`/page-contract`).
 
 ## Page contract host-theme demo (REQ-UI-003)
 
@@ -19,7 +22,7 @@ Kitchen sink: macros, shell chrome, modal, pagination, tabs.
 
 - `layouts.admin` / `layouts.guest` → `templates/page_contract/layouts/*.html.twig` (one-file bridges into
   `base.html.twig` that render every canonical block, add `data-nowo-ui-host-tokens` and call
-  `nowo_ui_tokens()`); `base.html.twig` imports Bootstrap into the `base` cascade layer below `nowo-ui`;
+  `nowo_ui_tokens()`); `base.html.twig` loads only UiKit's document base (no CSS framework);
 - `theme.tokens` (palette + radius), `theme.classes` (class map → `public/css/acme-theme.css`, incl. a
   `@layer utilities` class on `kpi_value` and `action_danger` for delete row actions), `theme.attributes.table`,
   `theme.pages.list` (page-type attribute), `theme.partials.page_header`

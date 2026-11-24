@@ -18,21 +18,21 @@
         <p role="status" data-testid="status">
             {%- if removed %}Removed {{ removed }}.{% elseif saved %}Saved {{ saved }}.{% elseif reset %}Filters reset.{% endif -%}
         </p>
-        <table class="{{ nowo_ui_class('table') }}" aria-label="Members">
+        <table class="{{ nowo_ui_class('table', 'DemoPlatformCatalogue') }}" aria-label="Members">
             <thead><tr><th scope="col">Member</th><th scope="col">Actions</th></tr></thead>
             <tbody>
             {% for m in members %}
                 <tr data-testid="member-{{ m.id }}">
                     <td>{{ m.name }}</td>
                     <td class="kit-stimulus-dialogs__actions">
-                        {{ include(nowo_ui_partial('row_actions'), {actions: m.actions, menu: true, menu_label: 'Actions for ' ~ m.name, confirm_group: 'members-confirm', confirm_row: loop.index, runtime: markup_runtime}, false) }}
-                        {% embed nowo_ui_partial('confirm_dialog') with {dialog_src: path('kit_stimulus_dialogs_edit', {runtime: runtime, id: m.id}), dialog_id: 'member-edit', dialog_shell: false, trigger_label: 'Edit ' ~ m.name, title: 'Edit member', trigger_testid: 'edit-' ~ m.id} %}{% endembed %}
+                        {{ include(nowo_ui_partial('row_actions', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', actions: m.actions, menu: true, menu_label: 'Actions for ' ~ m.name, confirm_group: 'members-confirm', confirm_row: loop.index, runtime: markup_runtime}, false) }}
+                        {% embed nowo_ui_partial('confirm_dialog', 'DemoPlatformCatalogue') with {bundle: 'DemoPlatformCatalogue', dialog_src: path('kit_stimulus_dialogs_edit', {runtime: runtime, id: m.id}), dialog_id: 'member-edit', dialog_shell: false, trigger_label: 'Edit ' ~ m.name, title: 'Edit member', trigger_testid: 'edit-' ~ m.id} %}{% endembed %}
                     </td>
                 </tr>
             {% endfor %}
             </tbody>
         </table>
-        {% embed nowo_ui_partial('confirm_dialog') with {only_dialog: true, dialog_shell: true, dialog_id: 'member-edit', title: 'Edit member', runtime: markup_runtime, dialog_testid: 'member-edit-dialog'} %}{% endembed %}
+        {% embed nowo_ui_partial('confirm_dialog', 'DemoPlatformCatalogue') with {bundle: 'DemoPlatformCatalogue', only_dialog: true, dialog_shell: true, dialog_id: 'member-edit', title: 'Edit member', runtime: markup_runtime, dialog_testid: 'member-edit-dialog'} %}{% endembed %}
 
         {#- 2.70: the confirm-submit peer with a title and button labels (dialog mode) -#}
         {% if runtime != 'iife' %}
@@ -46,7 +46,7 @@
                 'data-confirm-submit-danger-value': 'false',
                 'data-action': 'submit->confirm-submit#confirm',
             }}) }}
-                <button type="submit" class="{{ nowo_ui_class('btn_secondary') }}" data-testid="reset">Reset filters</button>
+                <button type="submit" class="{{ nowo_ui_class('btn_secondary', 'DemoPlatformCatalogue') }}" data-testid="reset">Reset filters</button>
             {{ form_end(reset_form) }}
         {% endif %}
     </div>
@@ -55,7 +55,7 @@
 {% block nowo_ui_scripts %}
     {% if runtime == 'stimulus' %}
         {#- A Beacon product page: the kit runtimes without dialog / confirm, plus the Stimulus peers -#}
-        {{ include(nowo_ui_partial('scripts'), {script_names: nowo_ui_script_names()|filter((n) => n not in ['dialog', 'confirm'])}, false) }}
+        {{ include(nowo_ui_partial('scripts', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', script_names: nowo_ui_script_names()|filter((n) => n not in ['dialog', 'confirm'])}, false) }}
         <script src="{{ asset('js/nowo-ui-shell.js', 'nowo_ui_kit') }}" defer></script>
     {% else %}
         {{ parent() }}

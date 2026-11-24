@@ -19,8 +19,8 @@
         </div>
         {{ form_help(f.credit) }}
     </div>
-    {{ include(nowo_ui_partial('form_fieldset'), {field: f.plan, inline: true}, false) }}
+    {{ include(nowo_ui_partial('form_fieldset', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', field: f.plan, inline: true}, false) }}
     {{ form_row(f.vat) }}
     <div class="nowo-ui-form-grid__full">{{ form_row(f.reminders) }}</div>
-    <div class="nowo-ui-form-grid__full">{{ include(nowo_ui_partial('dropzone'), {field: f.contract, hint: 'PDF or image, up to 5 MB each.', max_bytes: 5242880}, false) }}</div>
+    <div class="nowo-ui-form-grid__full">{{ include(nowo_ui_partial('dropzone', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', field: f.contract, hint: 'PDF or image, up to 5 MB each.', max_bytes: 5242880}, false) }}</div>
 </div>

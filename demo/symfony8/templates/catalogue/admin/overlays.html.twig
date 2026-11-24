@@ -1,6 +1,6 @@
 {% extends 'catalogue/admin/_base.html.twig' %}
 {% block nowo_ui_page_header %}
-    {{ include(nowo_ui_partial('page_header', 'DemoDefaultTheme'), {title: 'Feedback and overlays', intro: 'Toasts, tooltips, a destructive confirm, a detail drawer and a button that shows it is working.'}, false) }}
+    {{ include(nowo_ui_partial('page_header', 'DemoPlatformCatalogue'), {bundle: 'DemoPlatformCatalogue', title: 'Feedback and overlays', intro: 'Toasts, tooltips, a destructive confirm, a detail drawer and a button that shows it is working.'}, false) }}
 {% endblock %}
 {% block body %}
     <div class="nowo-ui-cards">
@@ -16,10 +16,10 @@
         {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Tooltips', intro: 'On hover and on keyboard focus; Escape hides them; they describe, never replace, the control name.', kind: 'content', testid: 'catalogue-tooltips'} %}
             {% block section_body %}
                 <div class="nowo-ui-toolbar">
-                    {% embed nowo_ui_partial('tooltip') with {text: 'Sends the invoice again to the billing email.', tooltip_id: 'catalogue-tip-resend'} %}
+                    {% embed nowo_ui_partial('tooltip', 'DemoPlatformCatalogue') with {bundle: 'DemoPlatformCatalogue', text: 'Sends the invoice again to the billing email.', tooltip_id: 'catalogue-tip-resend'} %}
                         {% block tooltip_trigger %}<button type="button" class="nowo-ui-btn nowo-ui-btn--outline" aria-describedby="{{ tooltip_id }}" data-testid="catalogue-tooltip-trigger">Resend</button>{% endblock %}
                     {% endembed %}
-                    {% embed nowo_ui_partial('tooltip') with {text: 'Archived invoices stay searchable but leave the default list.', tooltip_id: 'catalogue-tip-archive'} %}
+                    {% embed nowo_ui_partial('tooltip', 'DemoPlatformCatalogue') with {bundle: 'DemoPlatformCatalogue', text: 'Archived invoices stay searchable but leave the default list.', tooltip_id: 'catalogue-tip-archive'} %}
                         {% block tooltip_trigger %}<button type="button" class="nowo-ui-btn nowo-ui-btn--outline" aria-label="Archive" aria-describedby="{{ tooltip_id }}">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: 'archive', label: ''}, false) }}</button>{% endblock %}
                     {% endembed %}
                 </div>
@@ -29,12 +29,12 @@
     <div class="nowo-ui-cards">
         {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Destructive confirm', intro: 'Danger button, a message that says what is lost, and the dialog opens on Cancel.', kind: 'content', testid: 'catalogue-confirm'} %}
             {% block section_body %}
-                {{ include(nowo_ui_partial('action', 'DemoDefaultTheme'), {action: delete_action, context: 'toolbar', bundle: 'DemoDefaultTheme'}, false) }}
+                {{ include(nowo_ui_partial('action', 'DemoPlatformCatalogue'), {action: delete_action, context: 'toolbar', bundle: 'DemoPlatformCatalogue'}, false) }}
             {% endblock %}
         {% endembed %}
         {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Detail drawer', intro: 'The side panel as a drawer: focus moves in, Escape or Close returns it to the button, the page behind is inert.', kind: 'content', testid: 'catalogue-drawer'} %}
             {% block section_body %}
-                {{ include(nowo_ui_partial('side_panel_toggle', 'DemoDefaultTheme'), {target: 'catalogue-invoice-panel', label: 'Show invoice details', attr: {class: 'nowo-ui-btn nowo-ui-btn--outline'}, bundle: 'DemoDefaultTheme'}, false) }}
+                {{ include(nowo_ui_partial('side_panel_toggle', 'DemoPlatformCatalogue'), {target: 'catalogue-invoice-panel', label: 'Show invoice details', attr: {class: 'nowo-ui-btn nowo-ui-btn--outline'}, bundle: 'DemoPlatformCatalogue'}, false) }}
             {% endblock %}
         {% endembed %}
         {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Loading button', intro: 'aria-busy on the button while the form posts; a second click is ignored.', kind: 'form', testid: 'catalogue-busy'} %}
@@ -49,7 +49,7 @@
 {% endblock %}
 {% block nowo_ui_modals %}
     {{ parent() }}
-    {% embed nowo_ui_partial('side_panel', 'DemoDefaultTheme') with {id: 'catalogue-invoice-panel', title: 'Invoice INV-1042', layout: 'overlay', bundle: 'DemoDefaultTheme'} %}
+    {% embed nowo_ui_partial('side_panel', 'DemoPlatformCatalogue') with {id: 'catalogue-invoice-panel', title: 'Invoice INV-1042', layout: 'overlay', bundle: 'DemoPlatformCatalogue'} %}
         {% block nowo_ui_side_panel_body %}
             <dl class="nowo-ui-dl nowo-ui-dl--stacked">
                 <div><dt>Customer</dt><dd>Analytical Engines Ltd</dd></div>

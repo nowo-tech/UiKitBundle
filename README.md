@@ -15,19 +15,22 @@ This bundle is **FrankenPHP worker mode friendly** (including when the kernel is
 <table>
   <tr>
     <td align="center" width="33%">
-      <img src="docs/images/demo/page-contract-list.webp" alt="Orders list scaffold re-skinned by a host theme: Acme sidebar, filters card, zebra table with status badges and row actions, pagination, Symfony profiler toolbar" />
-      <br /><sub>List scaffold — host theme (tokens + class map + partial override)</sub>
+      <img src="docs/images/demo/catalogue-data-tables.webp" alt="Invoices data table in the nowo-tech demo shell: filters, bulk selection bar, sortable headers, status badges, row action menus and the pagination card footer" />
+      <br /><sub>Data tables — filters, bulk actions, sorting, row actions, pagination</sub>
     </td>
     <td align="center" width="33%">
-      <img src="docs/images/demo/page-contract-dashboard.webp" alt="Dashboard scaffold with the host theme: KPI tiles, recent orders and low-stock cards, section tabs" />
-      <br /><sub>Dashboard scaffold — KPI tiles and cards grid</sub>
+      <img src="docs/images/demo/catalogue-form-patterns.webp" alt="Form patterns in the nowo-tech demo shell: error summary linked to the fields, input groups, two-column layout, file drop and option cards" />
+      <br /><sub>Form patterns — error summary, input groups, file drop, option cards</sub>
     </td>
     <td align="center" width="33%">
-      <img src="docs/images/demo/page-contract-default-list.webp" alt="The same orders list with UiKit's default theme and the row delete confirm dialog open" />
-      <br /><sub>Same list, UiKit default theme — row delete confirm dialog</sub>
+      <img src="docs/images/demo/catalogue-dialog.webp" alt="Destructive confirm dialog open over the component catalogue, Cancel focused first" />
+      <br /><sub>Dialogs — destructive confirm with Cancel focused first</sub>
     </td>
   </tr>
 </table>
+
+The same kit re-skinned by a host theme (tokens, class map, one partial override): see the
+[page contract gallery](docs/PAGE_CONTRACT.md).
 
 ## Table of contents
 
@@ -137,7 +140,7 @@ FrankenPHP demos (Caddy + PHP). Runtime mode: **`FRANKENPHP_MODE`** (`worker` de
 
 | Demo | Port | Notes |
 |------|------|--------|
-| [demo/symfony8](demo/symfony8/) | 8092 | Bootstrap 5 kitchen sink; page contract host-theme demo at `/page-contract` |
+| [demo/symfony8](demo/symfony8/) | 8092 | Component catalogue on the shared nowo-tech demo platform shell (`/`); Shell lab full-page previews (kitchen sink at `/kitchen-sink`); page contract host-theme demo at `/page-contract` |
 | [demo/symfony8-tailwind](demo/symfony8-tailwind/) | 8093 | Tailwind kitchen sink |
 
 ```bash
