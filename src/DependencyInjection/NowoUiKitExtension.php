@@ -18,6 +18,7 @@ use Nowo\UiKitBundle\Appearance\ConfigAppearanceProvider;
 use Nowo\UiKitBundle\DependencyInjection\Compiler\BrandAppearanceProviderPass;
 use Nowo\UiKitBundle\DependencyInjection\Compiler\RemoteDialogPageResolverPass;
 use Nowo\UiKitBundle\Dialog\RemoteDialogContentMap;
+use Nowo\UiKitBundle\Dialog\RemoteDialogControllerRanListener;
 use Nowo\UiKitBundle\Dialog\RemoteDialogDirectGetListener;
 use Nowo\UiKitBundle\Dialog\RemoteDialogHeaders;
 use Nowo\UiKitBundle\Dialog\RemoteDialogPageMappingCheck;
@@ -390,6 +391,10 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
             $reopen->setArgument(3, ServiceLocatorTagPass::register($container, $references));
             $reopen->setArgument(4, new Reference('logger', ContainerInterface::NULL_ON_INVALID_REFERENCE));
             $reopen->addTag('monolog.logger', ['channel' => 'nowo_ui_kit']);
+            // Audit ZBD-L1: resolvers run only for a request whose controller ran without an exception.
+            $container->register('nowo_ui_kit.remote_dialog_controller_ran_listener', RemoteDialogControllerRanListener::class)
+                ->addTag('kernel.event_listener', ['event' => 'kernel.controller_arguments', 'method' => 'onControllerArguments', 'priority' => -1024])
+                ->addTag('kernel.event_listener', ['event' => 'kernel.exception', 'method' => 'onException', 'priority' => 2048]);
         }
         $container->register('nowo_ui_kit.remote_dialog_page_mapping_check', RemoteDialogPageMappingCheck::class)
             ->setArguments([new Reference('nowo_ui_kit.remote_dialog_content_map'), new Reference('router')])

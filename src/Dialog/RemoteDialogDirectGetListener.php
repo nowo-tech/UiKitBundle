@@ -7,6 +7,7 @@ namespace Nowo\UiKitBundle\Dialog;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 
 /**
@@ -71,6 +72,11 @@ final readonly class RemoteDialogDirectGetListener
             return;
         }
         if (Response::HTTP_OK !== $response->getStatusCode() || !$this->isHtml($response) || !self::isTopLevelNavigation($request, $this->headers)) {
+            return;
+        }
+        // Audit ZBD-L1: a streamed answer may check access only inside its callback, which has not run yet: no page
+        // resolver for it (a 2.73 entry without resolver is unchanged).
+        if (null !== $entry->pageResolver && $response instanceof StreamedResponse) {
             return;
         }
         // A link of this origin followed as a page (no JavaScript, or a new tab) keeps the route's own page.

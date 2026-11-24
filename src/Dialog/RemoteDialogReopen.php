@@ -67,8 +67,9 @@ final readonly class RemoteDialogReopen
      * The owning page path (with the reopen query) for a request of a marked route, null when it cannot be generated
      * (no router, a page parameter missing, a parameter the page route rejects, not a same-origin path) or when a value
      * could not be carried whole (a nested value, one over 512 characters, more than 32 values; 2.73 audit L5).
-     * 2.74: also null when the entry's page resolver returns null, throws, or returns another route or an invalid
-     * answer: the route keeps its own answer, as when the page link cannot be generated.
+     * 2.74: also null when the entry's page resolver returns null, throws, or returns another route, a reserved
+     * parameter name or an invalid answer, or when the request's controller did not run (audit ZBD-L1): the route
+     * keeps its own answer, as when the page link cannot be generated.
      */
     public function redirectTarget(Request $request, RemoteDialogContent $entry): ?string
     {
@@ -101,6 +102,11 @@ final readonly class RemoteDialogReopen
             $pageParams[$name] = $value;
         }
         if (null !== $entry->pageResolver) {
+            // Audit ZBD-L1: only for a request whose controller ran without an exception (not a 200 answered by an
+            // entry point or an interstitial before it), see RemoteDialogControllerRanListener.
+            if (true !== $request->attributes->get(RemoteDialogControllerRanListener::ATTRIBUTE)) {
+                return null;
+            }
             $resolved = $this->resolvePage($entry, $routeParams);
             if (null === $resolved) {
                 return null;
@@ -122,7 +128,8 @@ final readonly class RemoteDialogReopen
 
     /**
      * 2.74: the page parameters the entry's resolver returns for the dialog route parameters, or null (no resolver
-     * service, null, an exception, another route than the entry's page, or parameters that cannot be carried whole).
+     * service, null, an exception, another route than the entry's page, a reserved parameter name, or parameters that
+     * cannot be carried whole).
      * Every failure gives the same answer as "no page link", so nothing tells whether the record exists.
      *
      * @param array<string, string> $routeParams
@@ -162,6 +169,12 @@ final readonly class RemoteDialogReopen
             return null;
         }
         $raw = $resolved['params'];
+        // Audit ZBD-I1: the same reserved names as the configuration (the reopen parameter, `_fragment`).
+        foreach (array_keys($raw) as $name) {
+            if (\is_string($name) && RemoteDialogContentMap::isReservedPageParameter($name, $this->map->parameter)) {
+                return null;
+            }
+        }
         $params = $this->scalars($raw);
         if (\count($params) !== \count($raw) || \count($params) > self::MAX_PARAMETERS) {
             return null;

@@ -13,8 +13,10 @@ use Symfony\Component\Routing\RouterInterface;
 /**
  * 2.74, non-optional cache warmer (registered only when a `remote_dialog.direct_get` entry uses `page_parameters` as a
  * map, `page_defaults` or `page_resolver`): checks those entries against the route collection when the container is
- * built (the kernel runs non-optional warmers right after it dumps a new container) and on `cache:warmup`. An error
- * stops the boot with a message naming the entry, so a wrong mapping never ships as a silent "no redirect":
+ * built (the kernel runs non-optional warmers right after it dumps a new container) and on `cache:warmup` /
+ * `cache:clear`. An error fails that boot or command with a message naming the entry. A later boot on the same cache
+ * directory does not run it again (the container is already dumped), so `cache:warmup` in CI / deploy is the real gate
+ * (audit ZBD-L2); at runtime a wrong mapping fails closed (no redirect). It checks:
  *
  *  - the dialog route and the owning page route exist (a localized route counts through its `.<locale>` variants);
  *  - every mapped page parameter and every `page_defaults` key is a variable of the page route;

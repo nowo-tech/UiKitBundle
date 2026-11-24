@@ -3145,9 +3145,13 @@ the names differ, when the page needs a fixed value, or when the page parameter 
 
   It receives the dialog route name and its route parameters (strings) and returns the owning page route (it must be the
   entry's `page`, anything else makes no redirect) with its parameters, which are merged over the mapped ones and the
-  defaults. It runs only for a direct GET the listener converts, so **after** the firewall and the controller's own
-  access check answered `200`. Returning `null`, throwing, or returning another route or a value that cannot be carried
-  (nested, over 512 characters, more than 32 values) makes **no redirect**: the route keeps its own answer, exactly as
+  defaults. It runs only for a direct GET the listener converts: a `200` HTML answer, not streamed, of a request whose
+  controller ran without an exception (a `200` from an authentication entry point or an interstitial before the
+  controller never reaches it). **That is not an access check: the resolver must check access to the record itself**
+  (e.g. `isGranted('VIEW', $record)`) and return `null` when the user may not see it, because a host can answer `200`
+  to a denial or check access lazily, and the resolved page id ends up in the `Location`. Returning `null`, throwing,
+  or returning another route, a reserved parameter (the reopen `query_parameter`, `_fragment`) or a value that cannot be
+  carried (nested, over 512 characters, more than 32 values) makes **no redirect**: the route keeps its own answer, exactly as
   when the page link cannot be generated, so the answer never tells whether a record exists. An exception is logged as
   a warning with the route name and the exception class only (no parameter, no message). The resolver must be read-only
   and keep no request, user or record in properties (FrankenPHP worker mode without kernel reset).
@@ -3186,14 +3190,17 @@ nowo_ui_kit:
 ```php
 final readonly class CorrectionDayResolver implements RemoteDialogPageResolverInterface
 {
-    public function __construct(private CorrectionReader $corrections) {}
+    public function __construct(private CorrectionReader $corrections, private AuthorizationCheckerInterface $auth) {}
 
     public function resolve(string $route, array $params): ?array
     {
-        // The controller already checked access (this runs on its 200); stay read-only and fail closed.
-        $day = $this->corrections->dayUuidOf($params['uuid'] ?? '');
+        // Check access here too (a 200 is not proof of access); stay read-only and fail closed.
+        $correction = $this->corrections->find($params['uuid'] ?? '');
+        if (null === $correction || !$this->auth->isGranted('VIEW', $correction)) {
+            return null;
+        }
 
-        return null === $day ? null : ['route' => 'working_time_day', 'params' => ['uuid' => $day]];
+        return ['route' => 'working_time_day', 'params' => ['uuid' => $correction->dayUuid()]];
     }
 }
 ```
@@ -3205,8 +3212,11 @@ use any of the three options are then checked against the route collection by a 
 kernel runs right after it builds a new container and on `cache:warmup`: the dialog and page routes exist (a localized
 route through its `.<locale>` variants), every mapped page parameter and default is a variable of the page route,
 every mapped dialog parameter is a variable or a default of the dialog route, a default matches the page route's
-requirement, and, without a resolver, every required page variable is mapped or defaulted. Any error stops the boot
-with a message naming the entry. 2.73 entries (a plain list, no defaults, no resolver) are not checked and get no new
+requirement, and, without a resolver, every required page variable is mapped or defaulted. Any error fails that boot
+or `cache:warmup` / `cache:clear` with a message naming the entry. **Run `bin/console cache:warmup` in CI / deploy: it
+is the real gate.** A later boot on the same cache directory does not run the warmer again (the container is already
+dumped), and a route change in dev that does not rebuild the container is not re-checked; at runtime a wrong mapping
+fails closed (no redirect). 2.73 entries (a plain list, no defaults, no resolver) are not checked and get no new
 service, so they behave exactly as before.
 
 ## Small element options (2.34)

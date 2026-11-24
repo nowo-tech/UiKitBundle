@@ -115,12 +115,18 @@ The bundle does **not** expose CLI commands that mutate production data, file up
   - An owning page that is itself a marked route fails the container build (no redirect loop, audit L3); a value
     that cannot be carried whole cancels the redirect instead of reopening another state (audit L5).
   - Owning page parameters (2.74: `page_parameters` map, `page_defaults`, `page_resolver`): the page URL is still generated
-    by the router from the configured page route, and the `page_resolver` runs only after the controller answered `200`
-    (its access check passed). A resolver answer that is `null`, an exception, another route than the entry's page or a
-    value that cannot be carried (nested, > 512 characters, > 32 values) makes no redirect, the same answer as "no page
+    by the router from the configured page route. The `page_resolver` runs only for a `200` HTML, non-streamed answer of
+    a request whose controller ran without an exception (`RemoteDialogControllerRanListener`: marked on
+    `kernel.controller_arguments` after `#[IsGranted]`, cleared on `kernel.exception`; audit ZBD-L1). That is not an
+    access check: a host may answer `200` to a denial or check lazily, and the resolved page id goes into the
+    `Location`, so **the resolver must check access to the record itself** and return null otherwise. A resolver answer that is `null`, an exception, another route than the entry's page or a
+    value that cannot be carried (nested, > 512 characters, > 32 values) or a reserved key (the reopen query parameter,
+    `_fragment`; audit ZBD-I1) makes no redirect, the same answer as "no page
     link", so a direct GET never tells whether a record exists. Exceptions are logged with the route name and the
     exception class only. Mappings are checked at container build (names, types, reopen-parameter clash, resolver
-    service and interface) and against the route collection by a non-optional cache warmer. Resolvers must be
+    service and interface) and against the route collection by a non-optional cache warmer, which fails the first boot
+    and `cache:warmup` / `cache:clear` only: run `cache:warmup` in CI (audit ZBD-L2); at runtime a wrong mapping fails
+    closed. Resolvers must be
     read-only and stateless (worker mode).
 - Remote dialog steps and fragments (2.33, audit Appendix GT):
   - `X-Nowo-Dialog-Location` is honoured only on a 2xx answer and under the same rule as `X-Nowo-Redirect`; an invalid

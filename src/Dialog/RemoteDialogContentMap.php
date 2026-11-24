@@ -62,20 +62,35 @@ final readonly class RemoteDialogContentMap
     }
 
     /**
-     * 2.74: the error of an entry using the page mapping options whose mapped or default page parameter has the name of
-     * the reopen query parameter (it would replace the reopen query), or null (also used by the configuration).
+     * 2.74: the error of an entry using the page mapping options whose mapped or default page parameter is reserved
+     * ({@see isReservedPageParameter()}: it would replace the reopen query or set the URL fragment), or null (also used
+     * by the configuration).
      *
      * @param array<array-key, RemoteDialogContent> $routes
      */
     public static function reopenClash(array $routes, string $parameter): ?string
     {
         foreach ($routes as $route => $entry) {
-            if ($entry->usesPageMapping() && (\array_key_exists($parameter, $entry->pageParameterMap()) || \array_key_exists($parameter, $entry->pageDefaults))) {
-                return \sprintf('The page parameter "%s" of remote dialog route "%s" has the name of the reopen query parameter.', $parameter, (string) $route);
+            if (!$entry->usesPageMapping()) {
+                continue;
+            }
+            foreach ([...array_keys($entry->pageParameterMap()), ...array_keys($entry->pageDefaults)] as $name) {
+                if (self::isReservedPageParameter((string) $name, $parameter)) {
+                    return \sprintf('The page parameter "%s" of remote dialog route "%s" is reserved (the reopen query parameter "%s" or "_fragment").', (string) $name, (string) $route, $parameter);
+                }
             }
         }
 
         return null;
+    }
+
+    /**
+     * 2.74: whether a page parameter name is reserved: the reopen query parameter (it would replace the reopen query)
+     * or the router's `_fragment`. Used for the configuration and for the keys a page resolver returns (audit ZBD-I1).
+     */
+    public static function isReservedPageParameter(string $name, string $parameter): bool
+    {
+        return $name === $parameter || '_fragment' === $name;
     }
 
     /**
