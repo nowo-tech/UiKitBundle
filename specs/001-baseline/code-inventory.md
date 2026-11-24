@@ -724,7 +724,7 @@ Built outputs of the six runtimes above (committed, never hand-edited; same rule
 | Routing and legacy panel paths | 3 |
 | Release check (optional) | 3 |
 | Appearance SPI (opt-in) | 11 |
-| Forms | 15 |
+| Forms | 16 |
 | Listing (customizer, preferences, sorting) | 12 |
 | Navigation | 2 |
 | Theme | 3 |
@@ -739,18 +739,18 @@ Built outputs of the six runtimes above (committed, never hand-edited; same rule
 | Twig views — app shell (`Resources/views/shell/`) | 4 |
 | Twig views — error pages (`Resources/views/error/`) | 2 |
 | Twig views — form themes (`Resources/views/form/`) | 3 |
-| Twig views — macros and components (`Resources/views/{macros,components}/`) | 3 |
+| Twig views — macros and components (`Resources/views/{macros,components}/`) | 4 |
 | Twig views — kitchen sink demo (`Resources/views/demo/`) | 4 |
-| Twig views — partials: actions, confirm, dialogs, menus (`Resources/views/partials/`) | 16 |
+| Twig views — partials: actions, confirm, dialogs, menus (`Resources/views/partials/`) | 18 |
 | Twig views — partials: page header, key figures and navigation | 11 |
 | Twig views — partials: shell chrome and feedback | 27 |
 | Twig views — partials: filters, tables, pagination, segmented | 26 |
 | Stylesheets (authored) | 4 |
-| TypeScript — kit IIFE sources (`Resources/assets/src/`) | 29 |
+| TypeScript — kit IIFE sources (`Resources/assets/src/`) | 30 |
 | TypeScript — Thinking Orbs (vendored MIT, `Resources/assets/src/orb/`) | 14 |
 | TypeScript — morphicons (optional, `Resources/assets/morphicons/`) | 1 |
 | Stimulus peers (`Resources/assets/stimulus-peers/`) | 27 |
-| Build outputs (generated, committed, never hand-edited) | 20 |
+| Build outputs (generated, committed, never hand-edited) | 19 |
 | Brand appearance (spec 220) | 6 |
 | Avatar URL policy | 4 |
 | Error illustration SPI | 2 |
@@ -760,9 +760,9 @@ Built outputs of the six runtimes above (committed, never hand-edited; same rule
 | Compact header, breadcrumbs, page actions, sidebar layout and style | 15 |
 | Side panel, rail, tree, edge tabs and layout state | 19 |
 | Shell focus mode (2.55) | 6 |
-| Overlay registry, scroll regions and small helpers | 10 |
+| Overlay registry, scroll regions and small helpers | 12 |
 | Default theme stylesheet and token lint | 2 |
-| Components and runtimes of 2.56-2.64 (30 sources) and their 6 built outputs | 36 |
+| Components and runtimes of 2.56-2.64 (31 sources) and their 6 built outputs | 37 |
 | Confirm runtimes, one-time secret and console banner (2.65-2.72) | 9 |
 | **Total** | **466** |
 
