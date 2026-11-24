@@ -115,6 +115,21 @@ final class ListFiltersStandard272Test extends TestCase
         self::assertCount(0, (new Crawler($this->render(['q' => 'x'])))->filter('.nowo-ui-filter-bar__actions'));
     }
 
+    public function testHostileRowClassOnMoreAndPagerRowsIsEscaped(): void
+    {
+        $hostile = 'x" onmouseover="alert(1)" data-y=\'<b>';
+        $html = $this->render(['role' => 'admin'], fields: [new FilterField('role', rowClass: $hostile, more: true), new FilterField('per_page', rowClass: $hostile, pager: true)]);
+        self::assertStringNotContainsString('onmouseover="', $html);
+        self::assertStringNotContainsString("data-y='<b>", $html);
+        $c = new Crawler($html);
+        self::assertCount(0, $c->filter('[onmouseover], [data-y]'));
+        foreach (['.nowo-ui-filters-more__fields', '.nowo-ui-filters__actions'] as $scope) {
+            $row = $c->filter($scope.' > div')->first();
+            self::assertStringContainsString('onmouseover=&quot;alert(1)&quot;', (string) $row->outerHtml(), $scope);
+            self::assertNull($row->attr('onmouseover'), $scope);
+        }
+    }
+
     public function testIconOnlyActionsUseTheFilterBarClassAndTheNewLabels(): void
     {
         $twig = PageContractTwig::create([], ['classes' => ['btn_icon' => 'btn-icon'], 'pages' => ['list' => ['filters' => ['display' => 'icon']]]], request: $this->request());
