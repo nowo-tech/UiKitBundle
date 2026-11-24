@@ -246,7 +246,8 @@ test.describe('sortable', () => {
     await page.mouse.up();
     expect(await csp()).toEqual([]);
     await page.evaluate(() => document.querySelector('h1')!.setAttribute('style', 'color: red'));
-    await expect.poll(async () => (await csp()).map((v) => v.directive)).toEqual(['style-src-attr']);
+    // Chromium 159 can report one blocked style attribute twice (same source position): compare the distinct directives.
+    await expect.poll(async () => [...new Set((await csp()).map((v) => v.directive))]).toEqual(['style-src-attr']);
     await expect(page.locator('h1')).not.toHaveCSS('color', 'rgb(255, 0, 0)');
   });
 
