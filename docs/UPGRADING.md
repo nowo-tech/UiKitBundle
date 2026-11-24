@@ -178,6 +178,30 @@
 
 ## Unreleased
 
+No breaking change. `remote_dialog.direct_get` entries keep working as in 2.73.0. When a dialog route's parameters
+do not match its owning page's by name, use the new options (USAGE "Owning page parameters: map, defaults, resolver"):
+
+```yaml
+nowo_ui_kit:
+    remote_dialog:
+        direct_get:
+            routes:
+                project_access_member_edit:
+                    page: project_settings_section
+                    dialog: project-settings-dialog
+                    page_parameters: { id: projectId }   # map: page parameter <- dialog parameter
+                    page_defaults: { section: access }   # fixed page parameters
+                working_time_correction_contest:
+                    page: working_time_day
+                    dialog: working-time-day-dialog
+                    page_resolver: App\WorkingTime\CorrectionDayResolver   # implements RemoteDialogPageResolverInterface
+```
+
+- Entries that use these options are checked against your routes when the container is built (cache warm-up): a
+  wrong parameter name or a missing required page parameter now stops the boot instead of silently making no redirect.
+- A resolver must be read-only and stateless between requests; returning `null` keeps the route's own page.
+- A host that builds `RemoteDialogReopen` itself can pass the resolvers as a PSR-11 locator (4th argument).
+
 ## To 2.73.0
 
 From **2.72.0**:

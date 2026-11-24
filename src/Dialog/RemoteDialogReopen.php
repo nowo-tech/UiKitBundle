@@ -4,17 +4,21 @@ declare(strict_types=1);
 
 namespace Nowo\UiKitBundle\Dialog;
 
+use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Routing\Exception\ExceptionInterface as RoutingException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Throwable;
 
 /**
  * 2.73: both ends of the direct-GET contract of remote dialog content ({@see RemoteDialogContentMap}).
  *
  *  - {@see redirectTarget()}: the owning page URL a top-level GET of a marked route is redirected to, with the reopen
  *    query `_dialog[route]=<dialog route>&_dialog[params][<name>]=<value>…` (the dialog route's parameters and its
- *    scalar query values);
+ *    scalar query values); 2.74: the page parameters are the mapped ones, the entry's `page_defaults` and what its
+ *    `page_resolver` returns;
  *  - {@see dialogAttributes()}: on the owning page, the attributes of the remote form dialog: its safe list (the
  *    routes marked for this page and this dialog id) and, when the request carries a reopen query naming one of them,
  *    that route and its URL, generated again by the router from the route name and parameters. The query never
@@ -41,10 +45,16 @@ final readonly class RemoteDialogReopen
     /** At most this many characters per parameter value. */
     private const MAX_VALUE_LENGTH = 512;
 
+    /**
+     * @param ContainerInterface|null $resolvers 2.74: the {@see RemoteDialogPageResolverInterface} services named by the
+     *                                           entries, keyed by service id (a service locator)
+     */
     public function __construct(
         private RemoteDialogContentMap $map,
         private ?UrlGeneratorInterface $urls = null,
         private ?RequestStack $requests = null,
+        private ?ContainerInterface $resolvers = null,
+        private ?LoggerInterface $logger = null,
     ) {
     }
 
@@ -57,6 +67,8 @@ final readonly class RemoteDialogReopen
      * The owning page path (with the reopen query) for a request of a marked route, null when it cannot be generated
      * (no router, a page parameter missing, a parameter the page route rejects, not a same-origin path) or when a value
      * could not be carried whole (a nested value, one over 512 characters, more than 32 values; 2.73 audit L5).
+     * 2.74: also null when the entry's page resolver returns null, throws, or returns another route or an invalid
+     * answer: the route keeps its own answer, as when the page link cannot be generated.
      */
     public function redirectTarget(Request $request, RemoteDialogContent $entry): ?string
     {
@@ -79,11 +91,21 @@ final readonly class RemoteDialogReopen
             return null;
         }
         $pageParams = [];
-        foreach ($entry->pageParameters as $name) {
+        foreach ($entry->pageParameterMap() as $pageName => $name) {
             if (!\array_key_exists($name, $routeParams)) {
                 return null;
             }
-            $pageParams[$name] = $routeParams[$name];
+            $pageParams[$pageName] = $routeParams[$name];
+        }
+        foreach ($entry->pageDefaults as $name => $value) {
+            $pageParams[$name] = $value;
+        }
+        if (null !== $entry->pageResolver) {
+            $resolved = $this->resolvePage($entry, $routeParams);
+            if (null === $resolved) {
+                return null;
+            }
+            $pageParams = array_replace($pageParams, $resolved);
         }
         $reopen = ['route' => $entry->route];
         if ([] !== $params) {
@@ -96,6 +118,56 @@ final readonly class RemoteDialogReopen
         }
 
         return RemoteDialogTarget::tryPath($url, $request);
+    }
+
+    /**
+     * 2.74: the page parameters the entry's resolver returns for the dialog route parameters, or null (no resolver
+     * service, null, an exception, another route than the entry's page, or parameters that cannot be carried whole).
+     * Every failure gives the same answer as "no page link", so nothing tells whether the record exists.
+     *
+     * @param array<string, string> $routeParams
+     *
+     * @return array<string, string>|null
+     */
+    private function resolvePage(RemoteDialogContent $entry, array $routeParams): ?array
+    {
+        try {
+            $resolver = $this->resolvers?->get((string) $entry->pageResolver);
+            if (!$resolver instanceof RemoteDialogPageResolverInterface) {
+                return null;
+            }
+            $resolved = $resolver->resolve($entry->route, $routeParams);
+        } catch (Throwable $exception) {
+            // Logged without the parameters or the message (they may name the record); the answer stays "no link".
+            $this->logger?->warning('The remote dialog page resolver of route "{route}" failed ({exception_class}); no direct-GET redirect.', [
+                'route' => $entry->route,
+                'exception_class' => $exception::class,
+            ]);
+
+            return null;
+        }
+
+        return $this->resolvedParams($resolved, $entry->page);
+    }
+
+    /**
+     * The parameters of a resolver answer when it names the entry's page and every value can be carried whole, else
+     * null. The answer comes from host code, so its shape is checked rather than trusted.
+     *
+     * @return array<string, string>|null
+     */
+    private function resolvedParams(mixed $resolved, string $page): ?array
+    {
+        if (!\is_array($resolved) || ($resolved['route'] ?? null) !== $page || !\is_array($resolved['params'] ?? null)) {
+            return null;
+        }
+        $raw = $resolved['params'];
+        $params = $this->scalars($raw);
+        if (\count($params) !== \count($raw) || \count($params) > self::MAX_PARAMETERS) {
+            return null;
+        }
+
+        return $params;
     }
 
     /**

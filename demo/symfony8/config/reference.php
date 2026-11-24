@@ -892,6 +892,8 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *                 page?: scalar|Param|null, // Default: null
  *                 dialog?: scalar|Param|null, // Default: null
  *                 page_parameters?: list<scalar|Param|null>,
+ *                 page_defaults?: array<string, scalar|Param|null>,
+ *                 page_resolver?: scalar|Param|null, // 2.74: id of a Nowo\UiKitBundle\Dialog\RemoteDialogPageResolverInterface service for page parameters that come from the record (it runs after the controller's access check; null or an exception = no redirect). // Default: null
  *                 redirect_same_origin?: bool|Param, // Also redirect a navigation started from a page of this origin (Sec-Fetch-Site: same-origin: a link followed without JavaScript or opened in a new tab). Default false: those keep the route's own page (the no-JS fallback). // Default: false
  *             }>,
  *         },

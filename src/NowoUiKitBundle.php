@@ -6,6 +6,7 @@ namespace Nowo\UiKitBundle;
 
 use Nowo\UiKitBundle\DependencyInjection\Compiler\BrandAppearanceProviderPass;
 use Nowo\UiKitBundle\DependencyInjection\Compiler\ErrorIllustrationProviderPass;
+use Nowo\UiKitBundle\DependencyInjection\Compiler\RemoteDialogPageResolverPass;
 use Nowo\UiKitBundle\DependencyInjection\Compiler\TwigPathsPass;
 use Nowo\UiKitBundle\DependencyInjection\NowoUiKitExtension;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -20,6 +21,7 @@ final class NowoUiKitBundle extends Bundle
         $container->addCompilerPass(new TwigPathsPass());
         $container->addCompilerPass(new BrandAppearanceProviderPass());
         $container->addCompilerPass(new ErrorIllustrationProviderPass());
+        $container->addCompilerPass(new RemoteDialogPageResolverPass());
     }
 
     public function getContainerExtension(): ExtensionInterface

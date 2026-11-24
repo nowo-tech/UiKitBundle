@@ -114,6 +114,14 @@ The bundle does **not** expose CLI commands that mutate production data, file up
     `Surrogate-Capability` on main requests too), so this is a documented rule.
   - An owning page that is itself a marked route fails the container build (no redirect loop, audit L3); a value
     that cannot be carried whole cancels the redirect instead of reopening another state (audit L5).
+  - Owning page parameters (2.74: `page_parameters` map, `page_defaults`, `page_resolver`): the page URL is still generated
+    by the router from the configured page route, and the `page_resolver` runs only after the controller answered `200`
+    (its access check passed). A resolver answer that is `null`, an exception, another route than the entry's page or a
+    value that cannot be carried (nested, > 512 characters, > 32 values) makes no redirect, the same answer as "no page
+    link", so a direct GET never tells whether a record exists. Exceptions are logged with the route name and the
+    exception class only. Mappings are checked at container build (names, types, reopen-parameter clash, resolver
+    service and interface) and against the route collection by a non-optional cache warmer. Resolvers must be
+    read-only and stateless (worker mode).
 - Remote dialog steps and fragments (2.33, audit Appendix GT):
   - `X-Nowo-Dialog-Location` is honoured only on a 2xx answer and under the same rule as `X-Nowo-Redirect`; an invalid
     value is ignored with a warning and never fetched. A load follows at most 5 steps in a row, then warns. The counter

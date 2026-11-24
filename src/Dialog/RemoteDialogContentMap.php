@@ -20,9 +20,10 @@ final readonly class RemoteDialogContentMap
     private array $routes;
 
     /**
-     * @param array<string, array{page: string, dialog: string, page_parameters?: list<string>, redirect_same_origin?: bool}|RemoteDialogContent> $routes
+     * @param array<string, array{page: string, dialog: string, page_parameters?: array<int|string, string>, redirect_same_origin?: bool, page_defaults?: array<string, string|int>, page_resolver?: string|null}|RemoteDialogContent> $routes
      *
-     * @throws InvalidArgumentException for an invalid entry or parameter name
+     * @throws InvalidArgumentException for an invalid entry or parameter name, or a page parameter named like the
+     *                                  reopen parameter
      */
     public function __construct(array $routes = [], public string $parameter = self::DEFAULT_PARAMETER)
     {
@@ -33,9 +34,9 @@ final readonly class RemoteDialogContentMap
         foreach ($routes as $route => $entry) {
             $entries[(string) $route] = $entry instanceof RemoteDialogContent
                 ? $entry
-                : new RemoteDialogContent((string) $route, $entry['page'], $entry['dialog'], $entry['page_parameters'] ?? [], (bool) ($entry['redirect_same_origin'] ?? false));
+                : new RemoteDialogContent((string) $route, $entry['page'], $entry['dialog'], $entry['page_parameters'] ?? [], (bool) ($entry['redirect_same_origin'] ?? false), $entry['page_defaults'] ?? [], $entry['page_resolver'] ?? null);
         }
-        $error = self::cycle($entries);
+        $error = self::cycle($entries) ?? self::reopenClash($entries, $parameter);
         if (null !== $error) {
             throw new InvalidArgumentException($error);
         }
@@ -58,6 +59,53 @@ final readonly class RemoteDialogContentMap
         }
 
         return null;
+    }
+
+    /**
+     * 2.74: the error of an entry using the page mapping options whose mapped or default page parameter has the name of
+     * the reopen query parameter (it would replace the reopen query), or null (also used by the configuration).
+     *
+     * @param array<array-key, RemoteDialogContent> $routes
+     */
+    public static function reopenClash(array $routes, string $parameter): ?string
+    {
+        foreach ($routes as $route => $entry) {
+            if ($entry->usesPageMapping() && (\array_key_exists($parameter, $entry->pageParameterMap()) || \array_key_exists($parameter, $entry->pageDefaults))) {
+                return \sprintf('The page parameter "%s" of remote dialog route "%s" has the name of the reopen query parameter.', $parameter, (string) $route);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * 2.74: the service ids of the page resolvers the entries name, sorted, without duplicates.
+     *
+     * @return list<string>
+     */
+    public function resolvers(): array
+    {
+        $ids = [];
+        foreach ($this->routes as $entry) {
+            if (null !== $entry->pageResolver) {
+                $ids[$entry->pageResolver] = true;
+            }
+        }
+        $ids = array_keys($ids);
+        sort($ids);
+
+        return $ids;
+    }
+
+    /**
+     * 2.74: the entries that use the page mapping options, keyed by route (checked against the route collection when
+     * the cache is warmed).
+     *
+     * @return array<string, RemoteDialogContent>
+     */
+    public function mappedEntries(): array
+    {
+        return array_filter($this->routes, static fn (RemoteDialogContent $entry): bool => $entry->usesPageMapping());
     }
 
     public function isEmpty(): bool
