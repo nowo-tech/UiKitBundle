@@ -183,6 +183,9 @@ Target: 2.72.0 (Beacon filter standard, UI-PATTERNS §8; CrmKit filter bars alig
   kit-painted `nowo-ui-input` only without them), and every class is printed once: the host's select padding / height
   are no longer overridden.
 - The phone sheet's close button is an icon (X) with `aria-label` / `title` (a text button with the `none` icon set).
+- REQ-ASSETS-005: the pre-paint `nowo-ui-theme-boot.js` (and its inline copy) now prints the "script loaded" console line
+  too, from a zero-delay task after the preferences are applied (never between the boot and the first paint; a
+  throwing console is swallowed). The inline script grows by about 1.5 KB.
 
 ## [2.71.0] - 2026-11-23
 
