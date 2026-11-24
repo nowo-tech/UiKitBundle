@@ -9,11 +9,20 @@ declare(strict_types=1);
 use PhpCsFixer\Config;
 use PhpCsFixer\Finder;
 use PhpCsFixer\Runner\Parallel\ParallelConfig;
+use Symfony\Component\Finder\SplFileInfo;
+
+// REQ-CS-009: the demo PHP too, except the Flex-managed config/bundles.php and config/reference.php.
+$demoDirs = array_values(array_filter(
+    glob(__DIR__ . '/demo/*/*', \GLOB_ONLYDIR) ?: [],
+    static fn (string $dir): bool => \in_array(basename($dir), ['src', 'tests', 'config', 'public'], true),
+));
 
 $finder = Finder::create()
     ->in(__DIR__ . '/src')
     ->in(__DIR__ . '/tests')
-    ->name('*.php');
+    ->in($demoDirs)
+    ->name('*.php')
+    ->filter(static fn (SplFileInfo $file): bool => 1 !== preg_match('#/demo/[^/]+/config/(bundles|reference)\.php$#', str_replace('\\', '/', $file->getPathname())));
 
 return (new Config())
     ->setParallelConfig(new ParallelConfig(2))
