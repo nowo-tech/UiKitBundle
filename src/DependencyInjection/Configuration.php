@@ -461,13 +461,20 @@ final class Configuration implements ConfigurationInterface
                                     ->end()
                                 ->end()
                                 ->arrayNode('routes')
-                                    ->info('Dialog content route name => {page: owning page route, dialog: dialog element id, page_parameters: route parameters copied to the page route, redirect_same_origin: false}.')
+                                    ->info('Dialog content route name => {page: owning page route, dialog: dialog element id, page_parameters: route parameters copied to the page route, redirect_same_origin: false}, or false to unmark a route a kit marked. A later entry replaces an earlier one whole. An owning page cannot itself be a marked route.')
                                     ->useAttributeAsKey('route')
                                     ->normalizeKeys(false)
                                     ->arrayPrototype()
+                                        // A later entry (the host's) replaces an earlier one (a kit's) whole; `false` unmarks it.
+                                        ->performNoDeepMerging()
+                                        ->treatFalseLike(['enabled' => false])
                                         ->children()
-                                            ->scalarNode('page')->isRequired()->cannotBeEmpty()->end()
-                                            ->scalarNode('dialog')->isRequired()->cannotBeEmpty()->end()
+                                            ->booleanNode('enabled')
+                                                ->defaultTrue()
+                                                ->info('false (or the entry itself set to false) unmarks a route a kit marked.')
+                                            ->end()
+                                            ->scalarNode('page')->defaultNull()->end()
+                                            ->scalarNode('dialog')->defaultNull()->end()
                                             ->arrayNode('page_parameters')
                                                 ->scalarPrototype()->end()
                                                 ->defaultValue([])
@@ -481,14 +488,24 @@ final class Configuration implements ConfigurationInterface
                                     ->defaultValue([])
                                     ->validate()
                                         ->always(static function (array $routes): array {
+                                            $marked = [];
                                             foreach ($routes as $route => $entry) {
+                                                if (false === $entry['enabled']) {
+                                                    continue;
+                                                }
+                                                unset($entry['enabled']);
                                                 $error = RemoteDialogContent::invalid((string) $route, (string) $entry['page'], (string) $entry['dialog'], $entry['page_parameters']);
                                                 if (null !== $error) {
                                                     throw new InvalidConfigurationException('Invalid nowo_ui_kit.remote_dialog.direct_get.routes: '.$error);
                                                 }
+                                                $marked[$route] = $entry;
+                                            }
+                                            $error = RemoteDialogContentMap::cycle($marked);
+                                            if (null !== $error) {
+                                                throw new InvalidConfigurationException('Invalid nowo_ui_kit.remote_dialog.direct_get.routes: '.$error);
                                             }
 
-                                            return $routes;
+                                            return $marked;
                                         })
                                     ->end()
                                 ->end()

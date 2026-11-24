@@ -166,7 +166,7 @@ final class RemoteDialogContentTest extends TestCase
     private function stepRequest(string $method = 'GET'): Request
     {
         $request = Request::create('/step/7', $method, [], [], [], ['HTTP_SEC_FETCH_MODE' => 'navigate']);
-        $request->attributes->add(['_route' => 'step', '_route_params' => ['id' => '7', 'flag' => true, 'list' => ['x']]]);
+        $request->attributes->add(['_route' => 'step', '_route_params' => ['id' => '7', 'flag' => true]]);
 
         return $request;
     }
@@ -232,6 +232,116 @@ final class RemoteDialogContentTest extends TestCase
         self::assertInstanceOf(RemoteDialogContent::class, $entry);
 
         self::assertNull($reopen->redirectTarget($this->stepRequest(), $entry));
+    }
+
+    /**
+     * @return iterable<string, array{0: array<string, mixed>, 1: array<string, mixed>}>
+     */
+    public static function valuesThatCannotBeCarried(): iterable
+    {
+        yield 'nested query value' => [['id' => '7'], ['filter' => ['x' => '1']]];
+        yield 'query value over 512 characters' => [['id' => '7'], ['q' => str_repeat('a', 513)]];
+        yield 'integer query key' => [['id' => '7'], ['x']];
+        yield 'non-scalar route parameter' => [['id' => '7', 'list' => ['x']], []];
+        yield 'more than 32 values' => [['id' => '7'], array_fill_keys(array_map(static fn (int $i): string => 'p'.$i, range(1, 32)), 'x')];
+    }
+
+    /**
+     * 2.73 audit L5: a value that cannot be carried whole keeps the route's own answer (no redirect to another state).
+     *
+     * @param array<string, mixed> $routeParams
+     * @param array<mixed>         $query
+     */
+    #[DataProvider('valuesThatCannotBeCarried')]
+    public function testARedirectThatWouldDropAValueIsNotMade(array $routeParams, array $query): void
+    {
+        $request = Request::create('/step/7', 'GET', $query, [], [], ['HTTP_SEC_FETCH_MODE' => 'navigate']);
+        $request->attributes->add(['_route' => 'step', '_route_params' => $routeParams]);
+        $reopen = $this->reopen();
+        $entry = $reopen->map()->get('step');
+        self::assertInstanceOf(RemoteDialogContent::class, $entry);
+        self::assertNull($reopen->redirectTarget($request, $entry));
+
+        $event = new ResponseEvent($this->createStub(HttpKernelInterface::class), $request, HttpKernelInterface::MAIN_REQUEST, new Response('<p>x</p>'));
+        (new RemoteDialogDirectGetListener($reopen))($event);
+        self::assertSame(200, $event->getResponse()->getStatusCode());
+    }
+
+    public function testExactly32ValuesAndAnOldReopenParameterAreCarried(): void
+    {
+        $query = array_fill_keys(array_map(static fn (int $i): string => 'p'.$i, range(1, 31)), 'x') + ['_dialog' => ['route' => 'stale']];
+        $request = Request::create('/step/7', 'GET', $query);
+        $request->attributes->add(['_route' => 'step', '_route_params' => ['id' => '7']]);
+        $reopen = $this->reopen();
+        $entry = $reopen->map()->get('step');
+        self::assertInstanceOf(RemoteDialogContent::class, $entry);
+        $target = (string) $reopen->redirectTarget($request, $entry);
+        parse_str((string) parse_url($target, \PHP_URL_QUERY), $parsed);
+        self::assertIsArray($parsed['_dialog'] ?? null);
+        self::assertSame('step', $parsed['_dialog']['route']);
+        self::assertCount(32, $parsed['_dialog']['params']);
+    }
+
+    /**
+     * 2.73 audit L3: an owning page that is itself a marked route would redirect again (A → B → A loop).
+     */
+    public function testAnOwningPageThatIsAMarkedRouteIsRefused(): void
+    {
+        self::assertNotNull(RemoteDialogContentMap::cycle(['a' => ['page' => 'b'], 'b' => ['page' => 'a']]));
+        self::assertNull(RemoteDialogContentMap::cycle(['a' => ['page' => 'p'], 'b' => ['page' => 'p']]));
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('is itself a marked dialog route');
+        new RemoteDialogContentMap(['a' => ['page' => 'b', 'dialog' => 'd'], 'b' => ['page' => 'c', 'dialog' => 'd']]);
+    }
+
+    /**
+     * @return iterable<string, array{0: list<array<string, mixed>>}>
+     */
+    public static function cyclicConfigs(): iterable
+    {
+        yield 'two routes owning each other' => [[['routes' => ['a' => ['page' => 'b', 'dialog' => 'd'], 'b' => ['page' => 'a', 'dialog' => 'd']]]]];
+        yield 'chain' => [[['routes' => ['a' => ['page' => 'b', 'dialog' => 'd'], 'b' => ['page' => 'c', 'dialog' => 'd']]]]];
+        yield 'kit entry plus host entry' => [[['routes' => ['kit_step' => ['page' => 'kit_page', 'dialog' => 'd']]], ['routes' => ['kit_page' => ['page' => 'kit_step', 'dialog' => 'd']]]]];
+    }
+
+    /**
+     * @param list<array<string, mixed>> $configs
+     */
+    #[DataProvider('cyclicConfigs')]
+    public function testACyclicConfigurationIsRefusedAtBuild(array $configs): void
+    {
+        $this->expectException(InvalidConfigurationException::class);
+        $this->expectExceptionMessage('is itself a marked dialog route');
+        (new NowoUiKitExtension())->load(array_map(static fn (array $directGet): array => ['remote_dialog' => ['direct_get' => $directGet]], $configs), new ContainerBuilder());
+    }
+
+    /**
+     * 2.73 audit I8: a host entry replaces a kit's entry whole (no merged page_parameters), and `false` unmarks it.
+     */
+    public function testAHostEntryReplacesOrUnmarksAKitEntry(): void
+    {
+        $kit = ['remote_dialog' => ['direct_get' => ['routes' => [
+            'kit_step' => ['page' => 'kit_page', 'dialog' => 'kit-dialog', 'page_parameters' => ['tenant'], 'redirect_same_origin' => true],
+            'kit_other' => ['page' => 'kit_page', 'dialog' => 'kit-dialog'],
+            'kit_third' => ['page' => 'kit_page', 'dialog' => 'kit-dialog'],
+        ]]]];
+        $host = ['remote_dialog' => ['direct_get' => ['routes' => [
+            'kit_step' => ['page' => 'host_page', 'dialog' => 'host-dialog', 'page_parameters' => ['id']],
+            'kit_other' => false,
+            'kit_third' => ['enabled' => false],
+        ]]]];
+        $container = new ContainerBuilder();
+        (new NowoUiKitExtension())->load([$kit, $host], $container);
+
+        self::assertSame([
+            ['kit_step' => ['page' => 'host_page', 'dialog' => 'host-dialog', 'page_parameters' => ['id'], 'redirect_same_origin' => false]],
+            '_dialog',
+        ], $container->getDefinition('nowo_ui_kit.remote_dialog_content_map')->getArguments());
+
+        $unmarked = new ContainerBuilder();
+        (new NowoUiKitExtension())->load([$kit, ['remote_dialog' => ['direct_get' => ['routes' => ['kit_step' => false, 'kit_other' => false, 'kit_third' => false]]]]], $unmarked);
+        self::assertSame([[], '_dialog'], $unmarked->getDefinition('nowo_ui_kit.remote_dialog_content_map')->getArguments());
+        self::assertFalse($unmarked->hasDefinition('nowo_ui_kit.remote_dialog_direct_get_listener'));
     }
 
     public function testTooManyReopenParametersAreIgnored(): void

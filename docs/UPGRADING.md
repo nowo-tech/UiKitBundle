@@ -190,6 +190,8 @@ nowo_ui_kit:
 
 - The owning page must render the dialog with the `remote_form_dialog` partial and that `id`; nothing else changes.
 - The redirect needs fetch metadata (`Sec-Fetch-Mode`), which browsers send only to HTTPS origins and `localhost`.
+- Marked routes must be safe GETs (no state change, no flash read in the fragment): a direct GET runs the controller
+  twice. Never ESI-include one. A kit's marked route is unmarked with `routes.<route>: false`.
 - A link of your own pages followed without JavaScript (or in a new tab) still gets the route's own page; set
   `redirect_same_origin: true` on a route that has no page of its own.
 - A page whose dialogs run on the delegated Stimulus runtime must load the `remote-form-dialog` peer to reopen them.

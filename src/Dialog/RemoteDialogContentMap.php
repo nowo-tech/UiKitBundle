@@ -35,7 +35,29 @@ final readonly class RemoteDialogContentMap
                 ? $entry
                 : new RemoteDialogContent((string) $route, $entry['page'], $entry['dialog'], $entry['page_parameters'] ?? [], (bool) ($entry['redirect_same_origin'] ?? false));
         }
+        $error = self::cycle($entries);
+        if (null !== $error) {
+            throw new InvalidArgumentException($error);
+        }
         $this->routes = $entries;
+    }
+
+    /**
+     * The error of an owning page that is itself a marked route (a redirect loop A → B → A, or a chain that drops the
+     * first dialog), or null (also used by the configuration).
+     *
+     * @param array<array-key, RemoteDialogContent|array{page: string, ...}> $routes
+     */
+    public static function cycle(array $routes): ?string
+    {
+        foreach ($routes as $route => $entry) {
+            $page = $entry instanceof RemoteDialogContent ? $entry->page : $entry['page'];
+            if (\array_key_exists($page, $routes)) {
+                return \sprintf('The owning page "%s" of remote dialog route "%s" is itself a marked dialog route: a direct visit would redirect again (loop).', $page, (string) $route);
+            }
+        }
+
+        return null;
     }
 
     public function isEmpty(): bool

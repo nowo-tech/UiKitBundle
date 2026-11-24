@@ -105,6 +105,15 @@ The bundle does **not** expose CLI commands that mutate production data, file up
     parameters of ≤ 512 characters) and checked same-origin on the server and again in the browser (no other origin,
     `//`, backslash, dot segment or `javascript:`): no open redirect, no script URL. The parameter is removed from
     history with `replaceState` once the dialog opens; a failed load never navigates to the dialog URL.
+  - Marked routes must be **safe GETs** (audit L1, L2): a reopen link from another site makes the owning page fetch the
+    route same-origin with every cookie (`SameSite=Strict` too) and the dialog header, and a direct GET runs the
+    controller twice (navigation, then dialog fetch). No state change, no one-time-token consumption, no flash read
+    in the fragment, no form pre-filled from query values the user may submit unread.
+  - Never ESI-include a marked route (audit L4): an ESI sub-request is a main request with the parent's `Sec-Fetch-*`
+    headers and would get the `302`. No reliable server-side ESI signal exists (`HttpCache` sets
+    `Surrogate-Capability` on main requests too), so this is a documented rule.
+  - An owning page that is itself a marked route fails the container build (no redirect loop, audit L3); a value
+    that cannot be carried whole cancels the redirect instead of reopening another state (audit L5).
 - Remote dialog steps and fragments (2.33, audit Appendix GT):
   - `X-Nowo-Dialog-Location` is honoured only on a 2xx answer and under the same rule as `X-Nowo-Redirect`; an invalid
     value is ignored with a warning and never fetched. A load follows at most 5 steps in a row, then warns. The counter
