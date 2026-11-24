@@ -7,6 +7,9 @@ on:
     branches: [main, master]
   pull_request:
     branches: [main, master]
+  # Dispatched by dependabot-assets.yml on a Dependabot branch after it pushed the rebuilt assets (a push made with
+  # GITHUB_TOKEN starts no workflow), so the required checks run on the rebuilt head (audit ZAWD-L2).
+  workflow_dispatch:
 
 # Superseded PR runs are cancelled. Push runs (main/master) get their own group (run_id), so a main run is never
 # cancelled, not even while pending: tag_when_green.sh needs a completed run on every release commit.
@@ -265,7 +268,7 @@ jobs:
   code-style-check:
     name: Code Style Check
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Checkout code
