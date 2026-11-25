@@ -72,6 +72,9 @@
 .nowo-ui-page-header,
 .nowo-ui-toolbar {
   display: flex;
+  /* 2.74.1: explicit row — a toolbar that is also a dialog form (`:where(form.nowo-ui-form, .nowo-ui-dialog__body form)`
+     is a flex column) kept the column and stacked its actions at 390px; they stay inline and wrap when they do not fit */
+  flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.35rem;
@@ -2956,6 +2959,43 @@ form.nowo-ui-filters[data-nowo-ui-region] > .nowo-ui-filters-more {
 .nowo-ui-filters-more__fields > * {
   min-width: 0;
   margin: 0;
+}
+
+/* 2.74.1: the rows of the "More filters" panel are not direct children of the form, so the field rules above never
+   reached them: label and control sat side by side at the control's intrinsic width. They now stack like the rows of
+   the main grid (label above, control filling the track) and span like them (lg = 2 tracks, full = the whole row). */
+.nowo-ui-filters-more__fields > .nowo-ui-filters__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.nowo-ui-filters-more__fields > .nowo-ui-filters__field :is(input, select, textarea):not([type='checkbox'], [type='radio']) {
+  width: 100%;
+  max-width: none;
+}
+
+.nowo-ui-filters-more__fields > .nowo-ui-filters__field--full {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 48rem) {
+  .nowo-ui-filters-more__fields > .nowo-ui-filters__field--lg {
+    grid-column: span 2;
+  }
+}
+
+/* 2.74.1: one control height for every single-line field of the list filters (the search input was 36px, the
+   selects 38px+). Same token as the filter bar and the icon-only actions (--nowo-ui-filter-control-height, default
+   --nowo-ui-control-height); :where() keeps specificity at zero so a host that sizes its fields on purpose wins. */
+:where(form.nowo-ui-filters[data-nowo-ui-region]) {
+  --nowo-ui-filter-control-height: var(--nowo-ui-control-height, 2.375rem);
+}
+
+:where(form.nowo-ui-filters[data-nowo-ui-region]) :where(input:not([type='checkbox'], [type='radio'], [type='color'], [type='range'], [type='file'], [type='hidden']), select:not([multiple], [size])) {
+  box-sizing: border-box;
+  block-size: var(--nowo-ui-filter-control-height);
+  min-block-size: var(--nowo-ui-filter-control-height);
 }
 
 /* --- Filter bar (opt-in, 1.12) ---

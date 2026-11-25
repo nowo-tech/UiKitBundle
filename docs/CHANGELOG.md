@@ -166,6 +166,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Fixed
 
 - Demo platform shell: the pagination per-page select (table card footer) uses the platform input border (3:1 or more), like the other fields.
+- List filters, "More filters" panel: its rows stack label above control and the control fills the grid track like the main row (they sat side by side at the control's intrinsic width in the default theme); `lg` / `full` widths span there too.
+- List filters: the search input, selects and date fields share one height (`--nowo-ui-filter-control-height`, default `--nowo-ui-control-height`), with zero specificity so a host that sizes its fields wins.
+- `toolbar` / page header: `flex-direction: row` is explicit, so a toolbar that is also a dialog form (CrmKit HubSpot "Replace key" / "Disconnect") keeps its actions inline and wrapping instead of stacking at 390px.
 
 ## [2.74.0] - 2026-11-24
 
