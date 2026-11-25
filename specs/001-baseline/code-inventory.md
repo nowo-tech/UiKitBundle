@@ -1,6 +1,6 @@
 # Code inventory — 100% traceability
 
-**Last audited**: 2026-11-24 (2.74.0 line: owning page parameters — resolver SPI, mapping check, resolver pass, controller-ran listener mapped, 475 files; 2.73.0 line: remote dialog content opened directly mapped, Coverage summary category counts recounted; v2.72.0: every `src/` file mapped again — 2.65-2.71 confirm runtimes, one-time secret and console banner; 2026-11-22 v2.64.0: 2.56-2.64 components, runtimes, demo platform and lint mapped; 2026-11-17: 2.55 line: shell focus mode; 2.54.0 line: context menus; 2.53.0 line: inset sidebar style, dialog focus return, async combobox; 2.51.0 line: brand appearance, remote dialog, listing ports, side panel, rail, tree, image input, base stylesheet)  
+**Last audited**: 2026-11-27 (2.74.1, 475/475 re-verified; 2026-11-24, 2.74.0 line: owning page parameters — resolver SPI, mapping check, resolver pass, controller-ran listener mapped, 475 files; 2.73.0 line: remote dialog content opened directly mapped, Coverage summary category counts recounted; v2.72.0: every `src/` file mapped again — 2.65-2.71 confirm runtimes, one-time secret and console banner; 2026-11-22 v2.64.0: 2.56-2.64 components, runtimes, demo platform and lint mapped; 2026-11-17: 2.55 line: shell focus mode; 2.54.0 line: context menus; 2.53.0 line: inset sidebar style, dialog focus return, async combobox; 2.51.0 line: brand appearance, remote dialog, listing ports, side panel, rail, tree, image input, base stylesheet)  
 **Baseline spec**: [`spec.md`](spec.md)  
 **Package**: `nowo-tech/ui-kit-bundle`
 
@@ -386,7 +386,7 @@ edited by hand. `find src -type f` finds no file beyond `git ls-files src` (no u
 
 | Source file | Spec section | Requirement IDs |
 | --- | --- | --- |
-| `Resources/public/css/nowo-ui.unlayered.css` | Semantic `nowo-ui-*` styles and tokens, unlayered source (1.x cascade) | FR-CSS-001, FR-THEME-001 |
+| `Resources/public/css/nowo-ui.unlayered.css` | Semantic `nowo-ui-*` styles and tokens, unlayered source (1.x cascade); 2.74.1: "More filters" rows stack and fill, shared filter control height token, explicit toolbar `flex-direction: row` | FR-CSS-001, FR-THEME-001 |
 | `Resources/public/css/nowo-ui-tom-select.css` | 2.2: Tom Select chips painted from the primary token | FR-CSS-003 |
 | `Resources/public/css/nowo-ui-multi-select.css` | 2.14: standalone `multi-select` skin | FR-MULTISELECT-001 |
 | `Resources/assets/styles/_thin-scrollbars.scss` | 1.17: thin scrollbars Sass mixin for host selectors | FR-SCROLLBAR-001 |
@@ -670,7 +670,7 @@ Produced by `pnpm run build` (`vite.config.ts`, one `VITE_ENTRY` per IIFE; `buil
 | `Resources/views/demo_platform/layout.html.twig` | Demo platform shell | FR-DEMO-002 |
 | `Resources/views/demo_platform/_section.html.twig` | Demo platform content block | FR-DEMO-002 |
 | `Resources/views/demo_platform/_flashes.html.twig` | Demo platform flashes | FR-DEMO-002 |
-| `Resources/public/css/nowo-ui-demo-platform.css` | Demo platform stylesheet (tokens only) | FR-DEMO-002 |
+| `Resources/public/css/nowo-ui-demo-platform.css` | Demo platform stylesheet (tokens only; 2.74.1: the pagination per-page select gets the platform input border) | FR-DEMO-002 |
 | `Lint/DemoStyleLint.php` | Demo style lint (`bin/nowo-ui-demo-style-lint`) | FR-LINT-002 |
 | `Resources/public/css/vendor/tom-select.default.min.css` | Vendored Tom Select 2.6.2 default theme | FR-VENDOR-001 |
 | `Resources/views/partials/_bulk_bar.html.twig` | Bulk selection bar | FR-BULK-001 |

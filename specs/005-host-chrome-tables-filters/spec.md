@@ -28,6 +28,7 @@ generic pieces into the kit, opt-in, with neutral `nowo-ui-*` names, `--nowo-ui-
   state from a cookie (configurable name, page key default = route), "N active filters" from a FormView (or
   `active_count`), corner tab under the fields (`isolation: isolate`, z-index -1), values kept while folded.
   `_filters.html.twig` gains `collapsible` / `collapse`.
+  Since 2.74.1 the "More filters" panel rows stack label above control and the control fills its grid track (`lg` / `full` widths span there too), and every list filter control (search input, selects, dates) shares one height, `--nowo-ui-filter-control-height` (default `--nowo-ui-control-height`, zero specificity so a host that sizes its fields wins).
 - **FR-003 (corner tab)**: `.nowo-ui-corner-tab` (+ `--under`, `.nowo-ui-corner-host`), `_corner_tab.html.twig`,
   tokens `--nowo-ui-corner-tab-{width,height,icon,accent}`; used by the table toggle and the filter fold.
 - **FR-004 (disclosure chevron)**: `_disclosure_icon.html.twig` (static icons from `aria-expanded` / `<details open>`)
