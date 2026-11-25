@@ -76,4 +76,43 @@ test.describe('list filters standard (2.72)', () => {
     await close.click();
     await expect(sheet).toBeHidden();
   });
+
+  // 2.74.1: every single-line control of the bar has the same height, and the "More filters" rows stack like the main row
+  test('one control height, and the More filters rows fill their track (2.74.1)', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto(`${URL}?filters%5Bchannel%5D=web`);
+    const form = page.locator('form[data-nowo-ui-filters]');
+    await expect(form.locator('details.nowo-ui-filters-more')).toHaveAttribute('open', '');
+    const heights = await form.evaluate((f) =>
+      [...f.querySelectorAll<HTMLElement>('input:not([type=checkbox]):not([type=hidden]), select')].map((e) => Math.round(e.getBoundingClientRect().height * 100) / 100),
+    );
+    expect(heights.length).toBeGreaterThanOrEqual(4);
+    expect(new Set(heights).size).toBe(1);
+
+    const more = form.locator('.nowo-ui-filters-more__fields');
+    const row = more.locator('> .nowo-ui-filters__field').filter({ has: page.locator('#filters_placed_from') });
+    const rowBox = (await row.boundingBox())!;
+    const inputBox = (await row.locator('#filters_placed_from').boundingBox())!;
+    const labelBox = (await row.locator('label').first().boundingBox())!;
+    expect(inputBox.width).toBeGreaterThanOrEqual(rowBox.width - 1); // fills the track, like the main row
+    expect(labelBox.y + labelBox.height).toBeLessThanOrEqual(inputBox.y + 1); // label above the control
+    const main = (await form.locator('#filters_q').boundingBox())!;
+    expect(Math.abs(inputBox.width - main.width)).toBeLessThanOrEqual(1); // same track width as the main row
+  });
+
+  test('a toolbar that is also a dialog form keeps its actions inline and wrapping (2.74.1)', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 700 });
+    await page.goto(URL);
+    const styles = await page.evaluate(() => {
+      const body = document.createElement('div');
+      body.className = 'nowo-ui-dialog__body';
+      body.innerHTML = '<form class="nowo-ui-toolbar"><a href="#" class="nowo-ui-btn">Replace the key</a><button type="button" class="nowo-ui-btn">Disconnect</button></form>';
+      document.body.appendChild(body);
+      const form = body.querySelector('form')!;
+      const [a, b] = [...form.children].map((c) => c.getBoundingClientRect());
+      const cs = getComputedStyle(form);
+      return { direction: cs.flexDirection, wrap: cs.flexWrap, sameRow: Math.abs(a.top - b.top) < 2 };
+    });
+    expect(styles).toEqual({ direction: 'row', wrap: 'wrap', sameRow: true });
+  });
 });
