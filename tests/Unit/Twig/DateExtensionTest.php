@@ -27,18 +27,18 @@ final class DateExtensionTest extends TestCase
     /**
      * @param array<string, string> $templates
      */
-    private static function twig(array $templates, ?DateFormatterInterface $formatter = null, string $zone = 'UTC'): Environment
+    private function twig(array $templates, ?DateFormatterInterface $formatter = null, string $zone = 'UTC'): Environment
     {
         $twig = new Environment(new ArrayLoader($templates));
         $twig->getExtension(CoreExtension::class)->setTimezone($zone);
-        $twig->addExtension(null === $formatter ? new DateExtension() : new DateExtension($formatter));
+        $twig->addExtension($formatter instanceof DateFormatterInterface ? new DateExtension($formatter) : new DateExtension());
 
         return $twig;
     }
 
     public function testNowoDateKeepsTheIsoOutputByDefault(): void
     {
-        $twig = self::twig([
+        $twig = $this->twig([
             'default' => '{{ at|nowo_date }}',
             'date' => '{{ at|nowo_date("date") }}',
             'seconds' => '{{ at|nowo_date("datetime_seconds", true) }}',
@@ -56,7 +56,7 @@ final class DateExtensionTest extends TestCase
 
     public function testValuesAreReadLikeTwigDateInTwigsZone(): void
     {
-        $twig = self::twig(['t' => '{{ at|nowo_date("datetime", true) }}'], null, 'Europe/Madrid');
+        $twig = $this->twig(['t' => '{{ at|nowo_date("datetime", true) }}'], null, 'Europe/Madrid');
         $mutable = new DateTime(self::AT);
 
         self::assertSame('2026-11-27 17:14 CET', $twig->render('t', ['at' => $mutable]));
@@ -69,7 +69,7 @@ final class DateExtensionTest extends TestCase
 
     public function testNullAndEmptyPrintNothing(): void
     {
-        $twig = self::twig(['d' => '[{{ at|nowo_date }}]', 't' => '[{{ at|nowo_time_tag }}]']);
+        $twig = $this->twig(['d' => '[{{ at|nowo_date }}]', 't' => '[{{ at|nowo_time_tag }}]']);
 
         foreach ([null, ''] as $empty) {
             self::assertSame('[]', $twig->render('d', ['at' => $empty]));
@@ -79,7 +79,7 @@ final class DateExtensionTest extends TestCase
 
     public function testOtherValuesAreRefused(): void
     {
-        $twig = self::twig(['d' => '{{ at|nowo_date }}']);
+        $twig = $this->twig(['d' => '{{ at|nowo_date }}']);
 
         try {
             $twig->render('d', ['at' => new stdClass()]);
@@ -91,7 +91,7 @@ final class DateExtensionTest extends TestCase
 
     public function testAnUnknownKindIsRefused(): void
     {
-        $twig = self::twig(['d' => '{{ at|nowo_date("Y-m-d") }}']);
+        $twig = $this->twig(['d' => '{{ at|nowo_date("Y-m-d") }}']);
 
         $this->expectException(RuntimeError::class);
         $twig->render('d', ['at' => new DateTimeImmutable(self::AT)]);
@@ -99,7 +99,7 @@ final class DateExtensionTest extends TestCase
 
     public function testTimeTagOfAnInstant(): void
     {
-        $twig = self::twig([
+        $twig = $this->twig([
             'default' => '{{ at|nowo_time_tag }}',
             'zone' => '{{ at|nowo_time_tag("time", true) }}',
             'seconds' => '{{ at|nowo_time_tag("datetime_seconds") }}',
@@ -113,7 +113,7 @@ final class DateExtensionTest extends TestCase
 
     public function testTimeTagOfADayOrMonth(): void
     {
-        $twig = self::twig([
+        $twig = $this->twig([
             'date' => '{{ at|nowo_time_tag("date") }}',
             'month' => '{{ at|nowo_time_tag("month") }}',
         ]);
@@ -125,7 +125,7 @@ final class DateExtensionTest extends TestCase
 
     public function testTimeTagEscapesEveryValueAndKeepsItsOwnAttributes(): void
     {
-        $twig = self::twig(['t' => '{{ at|nowo_time_tag("datetime", false, attrs) }}'], new class implements DateFormatterInterface {
+        $twig = $this->twig(['t' => '{{ at|nowo_time_tag("datetime", false, attrs) }}'], new class implements DateFormatterInterface {
             public function format(DateTimeInterface $date, string $kind = self::DATETIME, bool $zone = false): string
             {
                 return '<b>"'.$kind.'" & \'x\'</b>'.($zone ? ' z' : '');
@@ -149,7 +149,7 @@ final class DateExtensionTest extends TestCase
 
     public function testTimeTagRefusesAnInvalidAttributeName(): void
     {
-        $twig = self::twig(['t' => '{{ at|nowo_time_tag("datetime", false, {"x onclick": "y"}) }}']);
+        $twig = $this->twig(['t' => '{{ at|nowo_time_tag("datetime", false, {"x onclick": "y"}) }}']);
 
         try {
             $twig->render('t', ['at' => new DateTimeImmutable(self::AT)]);
@@ -161,7 +161,7 @@ final class DateExtensionTest extends TestCase
 
     public function testTheTimeTagIsNotEscapedTwiceAndNowoDateIsEscaped(): void
     {
-        $twig = self::twig(['t' => '{{ at|nowo_time_tag }}|{{ at|nowo_date }}'], new class implements DateFormatterInterface {
+        $twig = $this->twig(['t' => '{{ at|nowo_time_tag }}|{{ at|nowo_date }}'], new class implements DateFormatterInterface {
             public function format(DateTimeInterface $date, string $kind = self::DATETIME, bool $zone = false): string
             {
                 return 'a<b';
@@ -197,7 +197,7 @@ final class DateExtensionTest extends TestCase
 
     public function testRepeatedCallsShareNothing(): void
     {
-        $twig = self::twig(['t' => '{{ at|nowo_date("datetime", true) }}']);
+        $twig = $this->twig(['t' => '{{ at|nowo_date("datetime", true) }}']);
         $core = $twig->getExtension(CoreExtension::class);
 
         for ($i = 0; $i < 3; ++$i) {

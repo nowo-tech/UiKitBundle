@@ -54,9 +54,9 @@ final class DateExtension extends AbstractExtension
      */
     public function date(Environment $env, mixed $date, string $kind = DateFormatterInterface::DATETIME, bool $zone = false): string
     {
-        $date = self::dateOf($env, $date);
+        $date = $this->dateOf($env, $date);
 
-        return null === $date ? '' : $this->formatter->format($date, $kind, $zone);
+        return $date instanceof DateTimeImmutable ? $this->formatter->format($date, $kind, $zone) : '';
     }
 
     /**
@@ -69,8 +69,8 @@ final class DateExtension extends AbstractExtension
      */
     public function timeTag(Environment $env, mixed $date, string $kind = DateFormatterInterface::DATETIME, bool $zone = false, array $attributes = []): string
     {
-        $date = self::dateOf($env, $date);
-        if (null === $date) {
+        $date = $this->dateOf($env, $date);
+        if (!$date instanceof DateTimeImmutable) {
             return '';
         }
         $text = $this->formatter->format($date, $kind, $zone);
@@ -90,17 +90,17 @@ final class DateExtension extends AbstractExtension
             if (1 !== preg_match(self::ATTRIBUTE_NAME, (string) $name)) {
                 throw new InvalidArgumentException(\sprintf('nowo_time_tag: invalid attribute name "%s".', $name));
             }
-            $html .= ' '.$name.'="'.self::escape(\is_bool($value) ? ($value ? 'true' : 'false') : (string) $value).'"';
+            $html .= ' '.$name.'="'.$this->escape(\is_bool($value) ? ($value ? 'true' : 'false') : (string) $value).'"';
         }
 
-        return $html.'>'.self::escape($text).'</time>';
+        return $html.'>'.$this->escape($text).'</time>';
     }
 
     /**
      * Like Twig's `|date`: a date, a timestamp (int or digit string) or a date string, in Twig's time zone (an
      * immutable copy, the caller's object is never changed); null and '' are no date.
      */
-    private static function dateOf(Environment $env, mixed $date): ?DateTimeImmutable
+    private function dateOf(Environment $env, mixed $date): ?DateTimeImmutable
     {
         if (null === $date || '' === $date) {
             return null;
@@ -119,7 +119,7 @@ final class DateExtension extends AbstractExtension
         return (new DateTimeImmutable($date, $zone))->setTimezone($zone);
     }
 
-    private static function escape(string $value): string
+    private function escape(string $value): string
     {
         return htmlspecialchars($value, \ENT_QUOTES | \ENT_SUBSTITUTE | \ENT_HTML5, 'UTF-8');
     }
