@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [Unreleased](#unreleased)
+- [To 2.77.0](#to-2770)
 - [To 2.76.0](#to-2760)
 - [To 2.75.0](#to-2750)
 - [To 2.74.1](#to-2741)
@@ -181,6 +182,14 @@
   - [Install](#install)
 
 ## Unreleased
+
+## To 2.77.0
+
+From **2.76.0**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
 
 ## To 2.76.0
 
