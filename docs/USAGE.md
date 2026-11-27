@@ -21,6 +21,7 @@
 - [Detail pages (2.21)](#detail-pages-221)
 - [Live item attributes (2.23)](#live-item-attributes-223)
 - [Pagination modes (2.23)](#pagination-modes-223)
+  - [Keyset cursors with infinite scroll (2.77)](#keyset-cursors-with-infinite-scroll-277)
 - [Provider-dependent fields (2.23)](#provider-dependent-fields-223)
 - [Host chrome (1.17, opt-in)](#host-chrome-117-opt-in)
   - [Responsive table](#responsive-table)
@@ -905,6 +906,70 @@ $pagination = Pagination::fromRequest($request, $total)->withMode('responsive', 
   are refused (`redirect: 'error'`) and a non-`basic` / off-origin response is rejected. Imported rows, dialogs and
   links go through the fragment filter ("Fragment trust" below), nested `<template>` content included, and also lose
   `srcdoc` and script URLs of `src`, `data` and `poster`.
+
+### Keyset cursors with infinite scroll (2.77)
+
+By default each "Load more" fetch is the next page by number: the query reads `OFFSET (page - 1) * perPage` and counts
+the whole filtered set again for the "Showing x–y of N" line, which the peer throws away. For large lists, give the
+next request a **cursor** (the sort key and id of the last row) and skip the count on the follow-up fetches:
+
+```php
+use Nowo\UiKitBundle\View\Pagination;
+use Nowo\UiKitBundle\View\PaginationRequest;
+
+$perPage = 25;
+$page = max(1, $request->query->getInt('page', 1));
+// The cursor comes from the client: verify it (signature, shape, row still there) and fall back to the offset
+$cursor = $this->cursors->decode($request->query->get('after'));
+$rows = null !== $cursor
+    ? $repository->after($filters, $cursor, $perPage + 1)                 // WHERE (sort, id) < (:sort, :id) … LIMIT 26
+    : $repository->page($filters, ($page - 1) * $perPage, $perPage + 1);  // OFFSET fallback (first page, reload)
+$hasNext = \count($rows) > $perPage;
+$rows = \array_slice($rows, 0, $perPage);
+
+$pagination = PaginationRequest::isLoadMore($request)
+    // "Load more" fetch: no COUNT(*), no "of N" line, the next URL while a next page exists
+    ? Pagination::progressiveFetch($page, $perPage, $hasNext, query: $filters)
+    : Pagination::fromRequest($request, $repository->count($filters), $perPage)->withMode('infinite');
+
+// Always declare the cursor name, also on the last page, so no other link keeps a stale cursor
+$pagination = $pagination->withNextQuery($hasNext ? ['after' => $this->cursors->encode(end($rows))] : [], ['after']);
+
+return PaginationRequest::vary($this->render('orders/index.html.twig', ['pagination' => $pagination]));
+```
+
+- `withNextQuery(array $query, ?array $cursorParams = null)` merges `$query` **only** into the next URL: the peer's
+  `data-nowo-ui-pagination-next` and the pager's Next link. The page numbers, Previous and the per-page links are
+  unchanged, and the page parameter still moves to `page + 1`, so the next URL is
+  `/orders?q=x&per_page=25&page=3&after=…`. The URL is built server-side from the current route (or `route`) with the
+  router, which escapes the cursor; the peer only follows that URL and never builds one from attributes.
+- Values are scalars cast to strings (null drops the key, up to 2048 bytes each); arrays, objects and the page /
+  per-page parameter names are refused. The kit treats the cursor as an **opaque string**: it never reads, signs or
+  validates it. Hosts must sign it (or validate its shape) and treat a malformed, tampered or stale cursor as "no
+  cursor" (fall back to the offset of `page`), and the query must still apply the user's access rules.
+- `cursorParams` (default: the keys of `$query`) are the query parameters the peer **removes from the address bar**
+  when it rewrites `?page=` with `history.replaceState`, printed as `data-nowo-ui-pagination-cursor-params="after"`.
+  A reload or a shared link then lands on `?page=N` (offset), never in the middle of a cursor walk.
+- The next-query and cursor names are also removed from every other link (Previous, page numbers, per page, the
+  compact per-page form), so after a full-page Next (`?page=2&after=X`, no JavaScript or the `pager` side of
+  `responsive`) `fromRequest()`'s query does not leave the stale `after=X` on them. Pass the cursor names on the last
+  page too (`withNextQuery([], ['after'])`). Never reuse a filter name as a cursor name: it would be dropped from
+  those links and from the address bar.
+- `PaginationRequest::isLoadMore($request)` is true when the request carries `X-Nowo-Ui-Pagination: 1`, the header the
+  peer sends with every fetch. It is a hint to skip work, not an authorisation: anyone can send it. A response whose
+  body depends on it must send `Vary: X-Nowo-Ui-Pagination` (`PaginationRequest::vary($response)` adds it once),
+  otherwise an HTTP cache can serve the "Load more" variant to a normal navigation of the same URL, or the reverse.
+- `Pagination::progressiveFetch(page, perPage, hasNext, route, query, routeParams, pageParam, perPageParam, mode)` (mode
+  `infinite` by default) and `$pagination->withoutTotal(bool $hasNext)` build a pagination without a row count
+  (`totalKnown` false, `total` 0). The partials then print "Showing x–y" without "of N" (nothing on an empty page),
+  Previous / Next without page numbers or the per-page selector (the compact variant: no "Page n of m"), and the next
+  URL only while `hasNext`. A direct include of the partial should pass `item_count` (the rows actually rendered):
+  without a total the default is a full page, so a short last page would read "Showing 51–75" for 60 rows (the list
+  scaffold passes it). The page is clamped so `offset()` and `page + 1` stay integers. The peer hides the stale "of N" line of the first page when a response has no info line,
+  and shows "Load more" while a next URL exists.
+- Partial variables for 1.x includes: `next_query` and `cursor_params` on `pagination` / `pagination_compact`.
+- Order by a unique, stable key (`ORDER BY sort DESC, id DESC`) so equal sort values never repeat or vanish between
+  fetches.
 
 ## Provider-dependent fields (2.23)
 

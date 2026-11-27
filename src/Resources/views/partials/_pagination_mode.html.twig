@@ -7,11 +7,13 @@
   Input:
     - part: `attrs` (the root attributes) or `extras` (the load-more region and the live region)
     - mode: infinite | responsive; mode_narrow / mode_wide: pager | infinite; breakpoint: media query; auto_loads
-    - next_href: URL of the next page (same filters / sort / per_page; null on the last page)
+    - next_href: URL of the next page (same filters / sort / per_page; null on the last page), built server-side
+    - cursor_params (2.77): query parameter names the peer strips from the address bar (keyset cursors); none = no attribute
     - bundle, trans_domain
   Root attributes: data-controller="list-pagination", data-nowo-ui-pagination-mode, -narrow, -wide, -query (media
   query of the narrow side), -auto (automatic loads before the button only), -next, -loaded-text (%count%),
-  -error-text. Extras: [data-nowo-ui-pagination-more-region] (hidden until the peer shows it) with the sentinel
+  -error-text and (2.77, only when cursor_params is not empty) -cursor-params (space-separated names). Extras:
+  [data-nowo-ui-pagination-more-region] (hidden until the peer shows it) with the sentinel
   [data-nowo-ui-pagination-sentinel] and the "Load more" button [data-nowo-ui-pagination-more] (slot btn_secondary),
   and the polite live region [data-nowo-ui-pagination-status].
 #}
@@ -30,6 +32,7 @@
         'data-nowo-ui-pagination-next': next_href|default(null),
         'data-nowo-ui-pagination-loaded-text': 'pagination.loaded'|trans({}, _domain),
         'data-nowo-ui-pagination-error-text': 'pagination.load_error'|trans({}, _domain),
+        'data-nowo-ui-pagination-cursor-params': cursor_params|default([]) is not empty ? cursor_params|join(' ') : null,
     }) -}}
 {%- else -%}
     <div class="nowo-ui-pagination__more" data-nowo-ui-pagination-more-region hidden>

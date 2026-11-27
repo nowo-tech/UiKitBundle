@@ -23,6 +23,12 @@
  * redirects are refused (`redirect: 'error'`) and a non-`basic` or off-origin response is rejected; imported nodes go
  * through the fragment filter (audit CS L1, GT-I6), see sanitizeImported().
  *
+ * Keyset cursors (2.77): the server may put a cursor in the next URL (`View\Pagination::withNextQuery()`); the peer
+ * still only follows that server-built URL, never one assembled from attributes. `data-nowo-ui-pagination-cursor-params`
+ * (space-separated names) lists the query parameters dropped from the address written by `history.replaceState`, so
+ * a reload or a shared link lands on `?page=N` instead of the middle of a cursor walk. A response without a total
+ * (no info line) hides the stale "of N" line; "Load more" stays while a next URL exists.
+ *
  * In `responsive` mode `-narrow` applies while `-query` matches, `-wide` otherwise, switched live on matchMedia
  * change. Going back to `pager` stops loading, shows the links again and keeps the rows already appended. The mode in
  * force is reflected as `data-nowo-ui-pagination-active="pager|infinite"` on the root (styling / tests); while a page
@@ -68,6 +74,26 @@ export function sameOriginUrl(href: string | null, base: string = window.locatio
   } catch {
     return null;
   }
+}
+
+/** Query parameter names of a `data-nowo-ui-pagination-cursor-params` value (space-separated; blanks ignored). */
+export function cursorParams(value: string | null): string[] {
+  return (value ?? '').split(/\s+/).filter((name) => name !== '');
+}
+
+/**
+ * The address to write with `history.replaceState` after loading `url` (2.77): a copy without the `params` query
+ * parameters (keyset cursors). Unchanged (same string) when none of them is present.
+ */
+export function historyUrl(url: URL, params: readonly string[]): string {
+  const copy = new URL(url.toString());
+  const present = params.filter((name) => copy.searchParams.has(name));
+  if (present.length === 0) {
+    return url.toString();
+  }
+  present.forEach((name) => copy.searchParams.delete(name));
+
+  return copy.toString();
 }
 
 const URL_ATTRIBUTES = ['href', 'src', 'action', 'formaction', 'xlink:href', 'data', 'poster'];
@@ -228,6 +254,7 @@ export class ListPaginationController extends Controller {
     }
     this.mergeConfirms(doc, rows);
 
+    const stripped = cursorParams(this.element.getAttribute('data-nowo-ui-pagination-cursor-params'));
     const roots = Array.from(document.querySelectorAll(ROOT_SELECTOR));
     const nextRoot = doc.querySelectorAll(ROOT_SELECTOR)[Math.max(0, roots.indexOf(this.element))];
     const next = nextRoot ? nextRoot.getAttribute('data-nowo-ui-pagination-next') : null;
@@ -235,6 +262,10 @@ export class ListPaginationController extends Controller {
       this.element.setAttribute('data-nowo-ui-pagination-next', next);
     } else {
       this.element.removeAttribute('data-nowo-ui-pagination-next');
+    }
+    const nextParams = nextRoot ? nextRoot.getAttribute('data-nowo-ui-pagination-cursor-params') : null;
+    if (nextParams !== null && cursorParams(nextParams).length > 0) {
+      this.element.setAttribute('data-nowo-ui-pagination-cursor-params', cursorParams(nextParams).join(' '));
     }
     if (nextRoot) {
       for (const selector of ['.nowo-ui-pagination__nav', '.nowo-ui-pagination__info']) {
@@ -244,9 +275,14 @@ export class ListPaginationController extends Controller {
           mine.replaceChildren(...Array.from(theirs.childNodes).map((node) => importForPage(node)));
         }
       }
+      // 2.77: a response without a total may have no info line; the "Showing x–y of N" in place would be stale
+      const info = this.element.querySelector('.nowo-ui-pagination__info');
+      if (info instanceof HTMLElement) {
+        info.hidden = nextRoot.querySelector('.nowo-ui-pagination__info') === null;
+      }
     }
     if (typeof history !== 'undefined' && typeof history.replaceState === 'function') {
-      history.replaceState(history.state, '', url.toString());
+      history.replaceState(history.state, '', historyUrl(url, stripped));
     }
     const page = Number.parseInt(url.searchParams.get('page') ?? '', 10);
     rows.dispatchEvent(new CustomEvent(APPENDED_EVENT, { bubbles: true, detail: { rows: appended, page: Number.isNaN(page) ? null : page, url: url.toString() } }));

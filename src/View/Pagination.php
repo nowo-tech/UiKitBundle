@@ -30,6 +30,13 @@ use Symfony\Component\HttpFoundation\Request;
  * {@see self::$modeNarrow} / {@see self::$modeWide} by the {@see self::$breakpoint} media query. See
  * {@see self::withMode()} and docs/USAGE.md#pagination-modes-223.
  *
+ * 2.77: keyset cursors for the infinite peer — {@see self::withNextQuery()} merges query parameters (e.g.
+ * `['after' => $cursor]`) only into the "next" URL (`data-nowo-ui-pagination-next` and the pager's Next link), and
+ * names the parameters the peer strips from the address bar ({@see self::$cursorParams}, default the next-query keys),
+ * so a reload or a shared link falls back to `?page=N`. {@see self::withoutTotal()} / {@see self::progressiveFetch()}
+ * build a pagination without a row count for the "Load more" requests ({@see PaginationRequest::isLoadMore()}): no
+ * "of N" line, the next URL while `$hasNext`. The cursor is opaque to the kit (a string): hosts sign or validate it.
+ *
  * @implements ArrayAccess<array-key, mixed>
  */
 final readonly class Pagination implements ArrayAccess
@@ -67,6 +74,9 @@ final readonly class Pagination implements ArrayAccess
     /** Automatic loads before only the "Load more" button loads more (2.23). */
     public const DEFAULT_AUTO_LOADS = 3;
 
+    /** Longest next-query value accepted (2.77): a cursor is short, an unbounded one is a mistake. */
+    public const MAX_NEXT_QUERY_VALUE_LENGTH = 2048;
+
     public int $page;
 
     public int $perPage;
@@ -74,6 +84,12 @@ final readonly class Pagination implements ArrayAccess
     public int $total;
 
     public int $totalPages;
+
+    /** @var array<string, string> query parameters merged only into the next URL (2.77) */
+    public array $nextQuery;
+
+    /** @var list<string> query parameters the peer strips from the address bar (2.77; default the next-query keys) */
+    public array $cursorParams;
 
     /**
      * @param array<string, mixed>      $query          extra query parameters kept across pages (filters, sort)
@@ -85,6 +101,9 @@ final readonly class Pagination implements ArrayAccess
      * @param string                    $modeWide       `responsive`: mode above the breakpoint, `pager` | `infinite` (2.23)
      * @param string                    $breakpoint     `responsive`: media query of the narrow side (2.23)
      * @param int                       $autoLoads      pages loaded on scroll before only "Load more" loads (2.23; 0 = button only)
+     * @param array<string, mixed>      $nextQuery      parameters merged only into the next URL, e.g. a keyset cursor (2.77; scalar values, cast to strings, null dropped)
+     * @param list<string>|null         $cursorParams   parameters the peer strips from the address bar (2.77; null: the next-query keys)
+     * @param bool                      $totalKnown     false: no row count (2.77, "Load more" requests); `$total` is 0 and `$totalPages` page (+1 with a next page)
      */
     public function __construct(
         int $page,
@@ -103,6 +122,9 @@ final readonly class Pagination implements ArrayAccess
         public string $modeWide = self::MODE_PAGER,
         public string $breakpoint = self::DEFAULT_BREAKPOINT,
         public int $autoLoads = self::DEFAULT_AUTO_LOADS,
+        array $nextQuery = [],
+        ?array $cursorParams = null,
+        public bool $totalKnown = true,
     ) {
         if (!\in_array($variant, self::VARIANTS, true)) {
             throw new InvalidArgumentException(\sprintf('Unknown pagination variant "%s" (known: %s).', $variant, implode(', ', self::VARIANTS)));
@@ -121,10 +143,38 @@ final readonly class Pagination implements ArrayAccess
         if ($autoLoads < 0) {
             throw new InvalidArgumentException('Pagination autoLoads must be 0 or more.');
         }
+        $this->nextQuery = $this->normaliseNextQuery($nextQuery, $pageParam, $perPageParam);
+        $this->cursorParams = $this->normaliseCursorParams($cursorParams ?? array_keys($this->nextQuery), $pageParam, $perPageParam);
         $this->perPage = max(1, $perPage);
-        $this->total = max(0, $total);
-        $this->totalPages = max(1, $totalPages ?? (int) ceil($this->total / $this->perPage));
-        $this->page = max(1, $page);
+        $this->total = $totalKnown ? max(0, $total) : 0;
+        $this->page = $totalKnown ? max(1, $page) : self::clampPage($page, $this->perPage);
+        $this->totalPages = $totalKnown ? max(1, $totalPages ?? (int) ceil($this->total / $this->perPage)) : max($this->page, $totalPages ?? $this->page);
+    }
+
+    /**
+     * Pagination of a "Load more" request without a row count (2.77): `$hasNext` says whether a next page exists
+     * (e.g. the query read `$perPage + 1` rows). Mode `infinite` by default, so the partial prints the peer contract
+     * the peer reads (the next URL); no "of N" info line, no page numbers. Pair with {@see self::withNextQuery()}.
+     *
+     * @param array<string, mixed>      $query
+     * @param array<string, mixed>|null $routeParams
+     *
+     * @return self Fluent interface
+     */
+    public static function progressiveFetch(
+        int $page,
+        int $perPage,
+        bool $hasNext,
+        ?string $route = null,
+        array $query = [],
+        ?array $routeParams = null,
+        string $pageParam = 'page',
+        string $perPageParam = 'per_page',
+        string $mode = self::MODE_INFINITE,
+    ): self {
+        $page = self::clampPage($page, $perPage);
+
+        return new self($page, $perPage, 0, $page + ($hasNext ? 1 : 0), $route, $query, $routeParams, $pageParam, $perPageParam, mode: $mode, totalKnown: false);
     }
 
     /**
@@ -287,16 +337,23 @@ final readonly class Pagination implements ArrayAccess
      */
     public function from(): int
     {
+        if (!$this->totalKnown) {
+            return $this->offset() + 1;
+        }
+
         return 0 === $this->total ? 0 : ($this->page - 1) * $this->perPage + 1;
     }
 
     /**
      * Index of the last item on this page.
      *
-     * @param int|null $itemCount rows actually rendered (default: computed from total)
+     * @param int|null $itemCount rows actually rendered (default: computed from total; a full page without a total)
      */
     public function to(?int $itemCount = null): int
     {
+        if (!$this->totalKnown) {
+            return $this->offset() + max(0, $itemCount ?? $this->perPage);
+        }
         if (0 === $this->total) {
             return 0;
         }
@@ -328,7 +385,7 @@ final readonly class Pagination implements ArrayAccess
      */
     public function withVariant(string $variant): self
     {
-        return new self($this->page, $this->perPage, $this->total, $this->totalPages, $this->route, $this->query, $this->routeParams, $this->pageParam, $this->perPageParam, $this->allowedPerPage, $variant, $this->mode, $this->modeNarrow, $this->modeWide, $this->breakpoint, $this->autoLoads);
+        return new self($this->page, $this->perPage, $this->total, $this->totalPages, $this->route, $this->query, $this->routeParams, $this->pageParam, $this->perPageParam, $this->allowedPerPage, $variant, $this->mode, $this->modeNarrow, $this->modeWide, $this->breakpoint, $this->autoLoads, $this->nextQuery, $this->cursorParams, $this->totalKnown);
     }
 
     /**
@@ -339,7 +396,40 @@ final readonly class Pagination implements ArrayAccess
      */
     public function withMode(string $mode, ?string $narrow = null, ?string $wide = null, ?string $breakpoint = null, ?int $autoLoads = null): self
     {
-        return new self($this->page, $this->perPage, $this->total, $this->totalPages, $this->route, $this->query, $this->routeParams, $this->pageParam, $this->perPageParam, $this->allowedPerPage, $this->variant, $mode, $narrow ?? $this->modeNarrow, $wide ?? $this->modeWide, $breakpoint ?? $this->breakpoint, $autoLoads ?? $this->autoLoads);
+        return new self($this->page, $this->perPage, $this->total, $this->totalPages, $this->route, $this->query, $this->routeParams, $this->pageParam, $this->perPageParam, $this->allowedPerPage, $this->variant, $mode, $narrow ?? $this->modeNarrow, $wide ?? $this->modeWide, $breakpoint ?? $this->breakpoint, $autoLoads ?? $this->autoLoads, $this->nextQuery, $this->cursorParams, $this->totalKnown);
+    }
+
+    /**
+     * Same pagination with query parameters merged only into the next URL (2.77): the infinite peer's
+     * `data-nowo-ui-pagination-next` and the pager's Next link — e.g. `['after' => $cursor]` for a keyset read. Every
+     * other link (numbers, Previous, per page) is unchanged; the page parameter still moves to page + 1, so a reload
+     * without the cursor falls back to the offset. `$cursorParams` are the parameters the peer strips from the address
+     * bar after loading more (default: the keys of `$query`); both are also removed from the query of every other link
+     * (no stale cursor after a full-page Next). Pass `$cursorParams` on the last page too (`withNextQuery([], ['after'])`)
+     * and never reuse a filter name for a cursor. Values are scalars cast to strings (null drops the key),
+     * the URL is built and escaped server-side by the router; the kit does not read or trust the cursor.
+     *
+     * @param array<string, mixed> $query
+     * @param list<string>|null    $cursorParams
+     *
+     * @return self Fluent interface
+     */
+    public function withNextQuery(array $query, ?array $cursorParams = null): self
+    {
+        return new self($this->page, $this->perPage, $this->total, $this->totalPages, $this->route, $this->query, $this->routeParams, $this->pageParam, $this->perPageParam, $this->allowedPerPage, $this->variant, $this->mode, $this->modeNarrow, $this->modeWide, $this->breakpoint, $this->autoLoads, $query, $cursorParams, $this->totalKnown);
+    }
+
+    /**
+     * Same pagination without a row count (2.77, see {@see self::progressiveFetch()}): `$hasNext` decides whether the
+     * next URL is printed.
+     *
+     * @return self Fluent interface
+     */
+    public function withoutTotal(bool $hasNext): self
+    {
+        $page = self::clampPage($this->page, $this->perPage);
+
+        return new self($page, $this->perPage, 0, $page + ($hasNext ? 1 : 0), $this->route, $this->query, $this->routeParams, $this->pageParam, $this->perPageParam, $this->allowedPerPage, $this->variant, $this->mode, $this->modeNarrow, $this->modeWide, $this->breakpoint, $this->autoLoads, $this->nextQuery, $this->cursorParams, false);
     }
 
     /**
@@ -390,6 +480,61 @@ final readonly class Pagination implements ArrayAccess
     }
 
     /**
+     * Page of a pagination without a total (2.77): at least 1, and small enough that `offset()`, `to()` and
+     * `page + 1` stay integers (a crafted `?page=9223372036854775807` must not turn into a TypeError).
+     */
+    private static function clampPage(int $page, int $perPage): int
+    {
+        return max(1, min($page, intdiv(\PHP_INT_MAX, max(1, $perPage)) - 1));
+    }
+
+    /**
+     * @param array<mixed, mixed> $query
+     *
+     * @return array<string, string>
+     */
+    private function normaliseNextQuery(array $query, string $pageParam, string $perPageParam): array
+    {
+        $normalised = [];
+        foreach ($query as $name => $value) {
+            if (!\is_string($name) || '' === trim($name) || $name === $pageParam || $name === $perPageParam) {
+                throw new InvalidArgumentException(\sprintf('Invalid pagination next-query parameter "%s": a non-empty name other than the page / per-page parameters.', (string) $name));
+            }
+            if (null === $value) {
+                continue;
+            }
+            if (!\is_scalar($value)) {
+                throw new InvalidArgumentException(\sprintf('Invalid pagination next-query value for "%s": scalars only (the cursor is an opaque string).', $name));
+            }
+            $value = \is_bool($value) ? ($value ? '1' : '0') : (string) $value;
+            if (\strlen($value) > self::MAX_NEXT_QUERY_VALUE_LENGTH) {
+                throw new InvalidArgumentException(\sprintf('Pagination next-query value for "%s" is longer than %d bytes.', $name, self::MAX_NEXT_QUERY_VALUE_LENGTH));
+            }
+            $normalised[$name] = $value;
+        }
+
+        return $normalised;
+    }
+
+    /**
+     * @param array<mixed, mixed> $params
+     *
+     * @return list<string>
+     */
+    private function normaliseCursorParams(array $params, string $pageParam, string $perPageParam): array
+    {
+        $normalised = [];
+        foreach ($params as $param) {
+            if (!\is_string($param) || 1 !== preg_match('/^[^\s&=#"<>]{1,100}$/', $param) || $param === $pageParam || $param === $perPageParam) {
+                throw new InvalidArgumentException(\sprintf('Invalid pagination cursor parameter "%s": a query parameter name (no blanks, &, =, #, quotes or angle brackets) other than the page / per-page parameters.', \is_string($param) ? $param : get_debug_type($param)));
+            }
+            $normalised[] = $param;
+        }
+
+        return array_values(array_unique($normalised));
+    }
+
+    /**
      * @param list<string> $methods
      */
     private static function assertMethods(object $object, array $methods, string $library): void
@@ -412,7 +557,7 @@ final readonly class Pagination implements ArrayAccess
     /**
      * Value of a 1.x key ({@see self::toArray()}), `offset` / `limit` (2.4, the `PagePagination` array keys for the
      * query), `variant` / `allowed_per_page` (2.6), `mode` / `mode_narrow` / `mode_wide` / `breakpoint` / `auto_loads`
-     * (2.23), null when unknown.
+     * (2.23), `next_query` / `cursor_params` / `total_known` / `has_next` (2.77), null when unknown.
      */
     public function offsetGet(mixed $offset): mixed
     {
@@ -426,6 +571,10 @@ final readonly class Pagination implements ArrayAccess
             'mode_wide' => $this->modeWide,
             'breakpoint' => $this->breakpoint,
             'auto_loads' => $this->autoLoads,
+            'next_query' => $this->nextQuery,
+            'cursor_params' => $this->cursorParams,
+            'total_known' => $this->totalKnown,
+            'has_next' => $this->hasNext(),
             default => \is_string($offset) ? ($this->toArray()[$offset] ?? null) : null,
         };
     }

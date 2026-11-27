@@ -414,7 +414,10 @@ in the nearest ancestor. Runtime state: `data-nowo-ui-pagination-active` (`pager
 `data-nowo-ui-pagination-loading`, `aria-busy` on the rows. Event: `nowo-ui:rows-appended` on the rows region (bubbles;
 detail `{rows, page, url}`). Request header `X-Nowo-Ui-Pagination: 1`. Imported rows, confirm dialogs and pager links go
 through the fragment filter (audit GT-I6), nested `<template>` content included, plus `srcdoc` and script URLs of `src`,
-`data` and `poster`. See [USAGE](USAGE.md#pagination-modes-223).
+`data` and `poster`. 2.77: `-cursor-params` (space-separated query parameter names, e.g. keyset cursors) are dropped
+from the address written by `history.replaceState`; the peer still only follows the server-built `-next` URL
+(same-origin only). A response without an info line (no total) hides the old one. See
+[USAGE](USAGE.md#pagination-modes-223) and [keyset cursors](USAGE.md#keyset-cursors-with-infinite-scroll-277).
 
 ## Visible when (2.23)
 

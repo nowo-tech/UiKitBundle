@@ -1,7 +1,7 @@
 import { Application } from '@hotwired/stimulus';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import ListPaginationController, { APPENDED_EVENT, findRowsRegion, isSameOriginResponse, normaliseMode, resolveMode, sameOriginUrl, sanitizeImported } from './list_pagination_controller';
+import ListPaginationController, { APPENDED_EVENT, cursorParams, findRowsRegion, historyUrl, isSameOriginResponse, normaliseMode, resolveMode, sameOriginUrl, sanitizeImported } from './list_pagination_controller';
 
 const flush = async (): Promise<void> => {
   for (let i = 0; i < 6; i += 1) {
@@ -396,5 +396,105 @@ describe('list-pagination peer, responsive mode', () => {
     expect(rowTexts()).toHaveLength(4);
     root.remove();
     await flush();
+  });
+});
+
+// 2.77: keyset cursors in the server-built next URL, stripped from the address bar; responses without a total
+function keysetHtml(page: number, last: number, withInfo: boolean, params = 'after'): string {
+  const next = page < last ? ` data-nowo-ui-pagination-next="/monitors?status=up&amp;per_page=2&amp;page=${page + 1}&amp;after=c%2B${page}"` : '';
+  const info = withInfo ? `<p class="nowo-ui-pagination__info">Showing 1–2 of 6</p>` : '';
+
+  return pageHtml(page, last)
+    .replace(/ data-nowo-ui-pagination-next="[^"]*"/, next)
+    .replace('data-nowo-ui-pagination-auto="2"', `data-nowo-ui-pagination-auto="2" data-nowo-ui-pagination-cursor-params="${params}"`)
+    .replace(/<p class="nowo-ui-pagination__info">[^<]*<\/p>/, info);
+}
+
+describe('list-pagination peer, keyset cursors', () => {
+  it('parses cursor parameter names and strips them from the history URL only when present', () => {
+    expect(cursorParams(null)).toEqual([]);
+    expect(cursorParams('  after  before ')).toEqual(['after', 'before']);
+    const url = new URL('http://localhost/monitors?status=a+b&page=2&after=xyz&before=1');
+    expect(historyUrl(url, ['after', 'before'])).toBe('http://localhost/monitors?status=a+b&page=2');
+    expect(historyUrl(url, [])).toBe(url.toString());
+    const plain = new URL('http://localhost/monitors?status=a%20b&page=2');
+    expect(historyUrl(plain, ['after'])).toBe('http://localhost/monitors?status=a%20b&page=2');
+  });
+
+  it('follows the server-given next URL with the cursor and keeps the cursor out of the address bar', async () => {
+    fetchMock.mockImplementation(async (url: string) => {
+      const page = Number(new URL(url).searchParams.get('page'));
+
+      return { ok: true, status: 200, text: async () => keysetHtml(page, 3, false) };
+    });
+    const root = await mount(keysetHtml(1, 3, true));
+    expect(root.querySelector<HTMLElement>('[data-nowo-ui-pagination-more-region]')!.hidden).toBe(false);
+
+    root.querySelector<HTMLButtonElement>('[data-nowo-ui-pagination-more]')!.click();
+    await flush();
+    expect(fetchMock.mock.calls[0]![0]).toBe(`${window.location.origin}/monitors?status=up&per_page=2&page=2&after=c%2B1`);
+    expect(fetchMock.mock.calls[0]![1]).toMatchObject({ headers: { 'X-Nowo-Ui-Pagination': '1' } });
+    expect(rowTexts()).toEqual(['p1-r1', 'p1-r2', 'p2-r1', 'p2-r2']);
+    expect(window.location.search).toBe('?status=up&per_page=2&page=2');
+    // the response had no total: the stale "of 6" line is hidden, Load more stays while a next URL exists
+    expect(root.querySelector<HTMLElement>('.nowo-ui-pagination__info')!.hidden).toBe(true);
+    expect(root.getAttribute('data-nowo-ui-pagination-next')).toBe('/monitors?status=up&per_page=2&page=3&after=c%2B2');
+    expect(root.querySelector<HTMLElement>('[data-nowo-ui-pagination-more-region]')!.hidden).toBe(false);
+
+    root.querySelector<HTMLButtonElement>('[data-nowo-ui-pagination-more]')!.click();
+    await flush();
+    expect(fetchMock.mock.calls[1]![0]).toContain('after=c%2B2');
+    expect(window.location.search).toBe('?status=up&per_page=2&page=3');
+    expect(root.hasAttribute('data-nowo-ui-pagination-next')).toBe(false);
+    expect(root.querySelector<HTMLElement>('[data-nowo-ui-pagination-more-region]')!.hidden).toBe(true);
+  });
+
+  it('shows the info line again when a response has one and takes the response cursor parameters', async () => {
+    fetchMock.mockImplementation(async () => ({ ok: true, status: 200, text: async () => keysetHtml(2, 3, true, 'cursor') }));
+    const root = await mount(keysetHtml(1, 3, false));
+    expect(root.querySelector('.nowo-ui-pagination__info')).toBeNull();
+    root.querySelector<HTMLButtonElement>('[data-nowo-ui-pagination-more]')!.click();
+    await flush();
+    expect(root.getAttribute('data-nowo-ui-pagination-cursor-params')).toBe('cursor');
+    expect(window.location.search).toBe('?status=up&per_page=2&page=2');
+  });
+
+  // audit ZDQ-UK-I4: regression guards for the WHATWG parsing tricks (all resolve off-origin or to origin "null")
+  it.each([
+    'javascript:alert(1)',
+    'data:text/html,x',
+    '/\\evil.example/monitors?after=x',
+    '\\\\evil.example/monitors?after=x',
+    '/\t/evil.example/monitors?after=x',
+    '/\n/evil.example/monitors?after=x',
+    '//user@evil.example/monitors',
+    'http://localhost@evil.example/monitors',
+    'https://localhost/monitors',
+  ])('sameOriginUrl refuses %j against an http://localhost base', (href) => {
+    expect(sameOriginUrl(href, 'http://localhost/monitors?page=1')).toBeNull();
+  });
+
+  it('sameOriginUrl keeps a same-host relative path with a scheme-relative-looking segment harmless', () => {
+    expect(sameOriginUrl('http:evil', 'http://localhost/monitors/x')?.toString()).toBe('http://localhost/monitors/evil');
+  });
+
+  it('refuses a foreign or protocol-relative next URL even with a cursor', async () => {
+    for (const foreign of ['https://evil.example/monitors?after=x', '//evil.example/monitors?after=x']) {
+      const root = await mount(keysetHtml(1, 3, true).replace(/data-nowo-ui-pagination-next="[^"]*"/, `data-nowo-ui-pagination-next="${foreign}"`));
+      expect(root.querySelector<HTMLElement>('[data-nowo-ui-pagination-more-region]')!.hidden).toBe(true);
+      root.querySelector<HTMLButtonElement>('[data-nowo-ui-pagination-more]')!.click();
+      await flush();
+      app?.stop();
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('drops the next URL when the response offers a foreign one', async () => {
+    fetchMock.mockImplementation(async () => ({ ok: true, status: 200, text: async () => keysetHtml(2, 3, false).replace(/data-nowo-ui-pagination-next="[^"]*"/, 'data-nowo-ui-pagination-next="https://evil.example/x?after=1"') }));
+    const root = await mount(keysetHtml(1, 3, true));
+    root.querySelector<HTMLButtonElement>('[data-nowo-ui-pagination-more]')!.click();
+    await flush();
+    expect(root.hasAttribute('data-nowo-ui-pagination-next')).toBe(false);
+    expect(root.querySelector<HTMLElement>('[data-nowo-ui-pagination-more-region]')!.hidden).toBe(true);
   });
 });

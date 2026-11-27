@@ -1,5 +1,6 @@
 pagination.nav: Paginação
 pagination.showing: A mostrar %from%–%to% de %total%
+pagination.showing_range: A mostrar %from%–%to%
 pagination.previous: Anterior
 pagination.next: Seguinte
 pagination.per_page: Por página

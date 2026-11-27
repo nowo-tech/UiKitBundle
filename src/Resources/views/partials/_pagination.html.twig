@@ -31,12 +31,23 @@
       mode_narrow / mode_wide (pager | infinite), breakpoint (media query, default `(max-width: 900px)`), auto_loads
       (default 3). Adds the `list-pagination` peer contract (partial `_pagination_mode`): the links stay as the no-JS
       fallback; the peer appends the next pages into [data-nowo-ui-list-rows]. Needs the ThemeExtension.
+    - next_query (2.77): query parameters merged only into the next URL (the peer's data-nowo-ui-pagination-next and the
+      pager's Next link), e.g. {after: cursor} (default: the View\Pagination's nextQuery, else none = unchanged markup);
+      cursor_params: parameter names the peer strips from the address bar after loading more (default: the
+      View\Pagination's cursorParams, else the next_query keys; printed as data-nowo-ui-pagination-cursor-params).
+      Both names are removed from `query` for every link but Next (no stale cursor on Previous / numbers / per page).
+      Trusted template input: escaped, not validated like View\Pagination::withNextQuery().
+      A View\Pagination without a total (Pagination::progressiveFetch() / withoutTotal(), 2.77) prints "Showing x–y"
+      without "of N", Previous / Next only and the next URL while a next page exists.
 #}
 {% import '@NowoUiKitBundle/macros/ui.html.twig' as ui %}
 {% set bundle = bundle|default(null) %}
 {% set _pm_source = pagination_model is defined and pagination_model ? pagination_model : pagination %}
 {% set _pm_mode = pagination_mode|default(_pm_source.mode ?? 'pager') %}
 {% set _pm_on = _pm_mode in ['infinite', 'responsive'] %}
+{% set _next_query = next_query|default(_pm_source.next_query ?? {}) %}
+{% set _cursor_params = cursor_params ?? (next_query is defined and next_query ? next_query|keys : (_pm_source.cursor_params ?? [])) %}
+{% set _total_known = (_pm_source.total_known ?? true) is not same as(false) %}
 {% set _variant = variant|default(pagination_model is defined and pagination_model ? pagination_model.variant : (pagination is iterable ? pagination.variant|default('full') : pagination.variant)) %}
 {% if _variant == 'compact' %}
     {{ include(nowo_ui_theme is defined and nowo_ui_theme ? nowo_ui_theme.partial('pagination_compact', bundle) : '@NowoUiKitBundle/partials/_pagination_compact.html.twig', {pagination: pagination_model is defined and pagination_model ? pagination_model : pagination}) }}
@@ -48,7 +59,8 @@
     {% set item_count = item_count|default(pagination.to() - pagination.from() + 1) %}
     {% set pagination = pagination.toArray() %}
 {% endif %}
-{% set query = query|default(pagination.query|default({})) %}
+{% set _cursor_strip = _next_query|keys|merge(_cursor_params) %}
+{% set query = query|default(pagination.query|default({}))|filter((v, k) => k not in _cursor_strip) %}
 {% set nav_label = nav_label|default('pagination.nav') %}
 {% set framework = framework|default(null) %}
 {% set trans_domain = trans_domain|default('NowoUiKitBundle') %}
@@ -68,18 +80,24 @@
 {% if total_pages < 1 %}
     {% set total_pages = 1 %}
 {% endif %}
-{% if total > 0 %}
+{% if total > 0 or not _total_known %}
     {% set from = (page - 1) * per_page + 1 %}
     {% set to = (page - 1) * per_page + item_count %}
     {% set base_params = route_params|merge(query)|merge({(per_page_param): per_page}) %}
     {%- if _pm_on %}
-        {% set _pm_vars = {mode: _pm_mode, mode_narrow: mode_narrow|default(_pm_source.mode_narrow ?? 'infinite'), mode_wide: mode_wide|default(_pm_source.mode_wide ?? 'pager'), breakpoint: breakpoint|default(_pm_source.breakpoint ?? '(max-width: 900px)'), auto_loads: auto_loads ?? (_pm_source.auto_loads ?? 3), next_href: page < total_pages ? path(route, base_params|merge({(page_param): page + 1})) : null, bundle: bundle, trans_domain: trans_domain} %}
+        {% set _pm_vars = {mode: _pm_mode, mode_narrow: mode_narrow|default(_pm_source.mode_narrow ?? 'infinite'), mode_wide: mode_wide|default(_pm_source.mode_wide ?? 'pager'), breakpoint: breakpoint|default(_pm_source.breakpoint ?? '(max-width: 900px)'), auto_loads: auto_loads ?? (_pm_source.auto_loads ?? 3), next_href: page < total_pages ? path(route, base_params|merge({(page_param): page + 1})|merge(_next_query)) : null, cursor_params: _cursor_params, bundle: bundle, trans_domain: trans_domain} %}
     {%- endif %}
     <div class="{{ _t ? _t.macroClasses('pagination', ui.pagination_wrap(framework), bundle, _pt) : ui.pagination_wrap(framework) }}"{{ _t ? _t.renderAttributes('pagination', bundle, {}, _pt)|raw }}{% if region|default(null) %} data-nowo-ui-region="{{ region }}"{% endif %}{% if _pm_on %}{{ include('@NowoUiKitBundle/partials/_pagination_mode.html.twig', _pm_vars|merge({part: 'attrs'}), false) }}{% endif %}>
+        {%~ if _total_known %}
         <p class="nowo-ui-pagination__info{{ _info_extra ? ' ' ~ _info_extra }}">
             {{ 'pagination.showing'|trans({'%from%': from, '%to%': to, '%total%': total}, trans_domain) }}
         </p>
-        {% if per_page_choices is not empty %}
+        {%~ elseif item_count > 0 %}
+        <p class="nowo-ui-pagination__info{{ _info_extra ? ' ' ~ _info_extra }}">
+            {{ 'pagination.showing_range'|trans({'%from%': from, '%to%': to}, trans_domain) }}
+        </p>
+        {%~ endif %}
+        {% if per_page_choices is not empty and _total_known %}
             <p class="nowo-ui-pagination__per-page" data-nowo-ui-region="per-page">
                 <span class="nowo-ui-pagination__per-page-label">{{ 'pagination.per_page'|trans({}, trans_domain) }}</span>
                 {% for _choice in per_page_choices %}
@@ -106,7 +124,7 @@
                         {% endif %}
                     </li>
 
-                    {% for p in 1..total_pages %}
+                    {% for p in _total_known ? 1..total_pages : [] %}
                         {% if p == page %}
                             <li class="{{ _fw_classes ? 'page-item' : 'nowo-ui-pagination__item' }} active" aria-current="page">
                                 <span class="{{ _active_class }}">{{ p }}</span>
@@ -124,7 +142,7 @@
 
                     <li class="{{ _fw_classes ? 'page-item' : 'nowo-ui-pagination__item' }}{% if page >= total_pages %} disabled{% endif %}">
                         {% if page < total_pages %}
-                            <a class="{{ _link_class }}" href="{{ path(route, base_params|merge({(page_param): page + 1})) }}" aria-label="{{ 'pagination.next'|trans({}, trans_domain) }}">»</a>
+                            <a class="{{ _link_class }}" href="{{ path(route, base_params|merge({(page_param): page + 1})|merge(_next_query)) }}" aria-label="{{ 'pagination.next'|trans({}, trans_domain) }}">»</a>
                         {% else %}
                             <span class="{{ _disabled_class }}" aria-disabled="true" aria-label="{{ 'pagination.next'|trans({}, trans_domain) }}">»</span>
                         {% endif %}

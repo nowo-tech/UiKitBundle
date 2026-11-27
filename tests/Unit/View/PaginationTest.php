@@ -6,6 +6,7 @@ namespace Nowo\UiKitBundle\Tests\Unit\View;
 
 use InvalidArgumentException;
 use Nowo\UiKitBundle\View\Pagination;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 use Symfony\Component\HttpFoundation\Request;
@@ -215,5 +216,104 @@ final class PaginationTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Unknown pagination variant "tiny"');
         $full->withVariant('tiny');
+    }
+
+    public function testNextQueryAndCursorParams(): void
+    {
+        $plain = new Pagination(2, 10, 45);
+        self::assertSame([[], [], true], [$plain->nextQuery, $plain->cursorParams, $plain->totalKnown]);
+        self::assertSame([[], [], true, true], [$plain['next_query'], $plain['cursor_params'], $plain['total_known'], $plain['has_next']]);
+        self::assertArrayNotHasKey('next_query', $plain->toArray());
+
+        $keyset = $plain->withMode('infinite')->withNextQuery(['after' => 'abc', 'n' => 42, 'flag' => true, 'off' => false, 'gone' => null]);
+        self::assertSame(['after' => 'abc', 'n' => '42', 'flag' => '1', 'off' => '0'], $keyset->nextQuery);
+        self::assertSame(['after', 'n', 'flag', 'off'], $keyset->cursorParams);
+        self::assertSame('infinite', $keyset->mode);
+        // kept by the other withers
+        $kept = $keyset->withVariant('compact')->withMode('responsive');
+        self::assertSame([$keyset->nextQuery, $keyset->cursorParams], [$kept->nextQuery, $kept->cursorParams]);
+
+        $explicit = $plain->withNextQuery(['after' => 'abc'], ['after', 'since', 'after']);
+        self::assertSame(['after', 'since'], $explicit->cursorParams);
+        self::assertSame([], $plain->withNextQuery([], [])->cursorParams);
+
+        $max = str_repeat('a', Pagination::MAX_NEXT_QUERY_VALUE_LENGTH);
+        self::assertSame($max, $plain->withNextQuery(['after' => $max])->nextQuery['after']);
+    }
+
+    /**
+     * @return iterable<string, array{0: array<mixed>, 1?: list<mixed>|null}>
+     */
+    public static function invalidNextQueries(): iterable
+    {
+        yield 'list key' => [['abc']];
+        yield 'empty key' => [[' ' => 'x']];
+        yield 'page param' => [['page' => '3']];
+        yield 'per page param' => [['per_page' => '3']];
+        yield 'array value' => [['after' => ['a']]];
+        yield 'object value' => [['after' => new stdClass()]];
+        yield 'too long' => [['after' => str_repeat('a', Pagination::MAX_NEXT_QUERY_VALUE_LENGTH + 1)]];
+        yield 'key with blank as cursor param' => [['a b' => 'x']];
+        yield 'cursor param not a string' => [['after' => 'x'], [1]];
+        yield 'cursor param markup' => [['after' => 'x'], ['"><x']];
+        yield 'cursor param page' => [['after' => 'x'], ['page']];
+        yield 'cursor param per page' => [['after' => 'x'], ['per_page']];
+        yield 'cursor param empty' => [['after' => 'x'], ['']];
+    }
+
+    /**
+     * @param array<mixed>     $query
+     * @param list<mixed>|null $cursorParams
+     */
+    #[DataProvider('invalidNextQueries')]
+    public function testInvalidNextQueriesAreRejected(array $query, ?array $cursorParams = null): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        /* @phpstan-ignore argument.type, argument.type */
+        (new Pagination(1, 10, 50))->withNextQuery($query, $cursorParams);
+    }
+
+    public function testPaginationWithoutTotal(): void
+    {
+        $fetch = Pagination::progressiveFetch(3, 10, true, 'orders', ['q' => 'x'], ['org' => 1], 'p', 'n');
+        self::assertSame([3, 10, 0, 4, false], [$fetch->page, $fetch->perPage, $fetch->total, $fetch->totalPages, $fetch->totalKnown]);
+        self::assertSame(['orders', ['q' => 'x'], ['org' => 1], 'p', 'n', 'infinite'], [$fetch->route, $fetch->query, $fetch->routeParams, $fetch->pageParam, $fetch->perPageParam, $fetch->mode]);
+        self::assertTrue($fetch->hasNext());
+        self::assertTrue($fetch->hasPrevious());
+        self::assertSame([21, 30, 24, 20], [$fetch->from(), $fetch->to(), $fetch->to(4), $fetch->to(-1)]);
+        self::assertSame([false, true], [$fetch['total_known'], $fetch['has_next']]);
+        self::assertSame(20, $fetch->offset());
+
+        $last = Pagination::progressiveFetch(0, 10, false, mode: Pagination::MODE_RESPONSIVE);
+        self::assertSame([1, 1, false, 'responsive'], [$last->page, $last->totalPages, $last->hasNext(), $last->mode]);
+
+        $known = Pagination::fromTotal(95, 2, 10, variant: 'compact')->withNextQuery(['after' => 'k']);
+        $unknown = $known->withoutTotal(false);
+        self::assertSame([0, 2, false, false, 'compact', ['after' => 'k']], [$unknown->total, $unknown->totalPages, $unknown->totalKnown, $unknown->hasNext(), $unknown->variant, $unknown->nextQuery]);
+        self::assertFalse($unknown->withMode('infinite')->totalKnown);
+        self::assertSame(3, $known->withoutTotal(true)->totalPages);
+
+        // the constructor clamps a total-less totalPages to at least the page
+        $ctor = new Pagination(5, 10, 99, 2, totalKnown: false);
+        self::assertSame([0, 5, false], [$ctor->total, $ctor->totalPages, $ctor->hasNext()]);
+        self::assertSame(5, (new Pagination(5, 10, 0, totalKnown: false))->totalPages);
+    }
+
+    public function testHugePagesWithoutTotalStayIntegers(): void
+    {
+        $max = intdiv(\PHP_INT_MAX, 25) - 1;
+        $fetch = Pagination::progressiveFetch(\PHP_INT_MAX, 25, true);
+        self::assertSame([$max, $max + 1], [$fetch->page, $fetch->totalPages]);
+        self::assertIsInt($fetch->offset());
+        self::assertIsInt($fetch->to());
+
+        $one = Pagination::progressiveFetch(\PHP_INT_MAX, 1, true);
+        self::assertSame(\PHP_INT_MAX - 1, $one->page);
+        self::assertSame(\PHP_INT_MAX, $one->totalPages);
+
+        $known = new Pagination(\PHP_INT_MAX, 25, 10);
+        $unknown = $known->withoutTotal(true);
+        self::assertSame([$max, $max + 1], [$unknown->page, $unknown->totalPages]);
+        self::assertSame($max, (new Pagination(\PHP_INT_MAX, 25, 0, totalKnown: false))->page);
     }
 }

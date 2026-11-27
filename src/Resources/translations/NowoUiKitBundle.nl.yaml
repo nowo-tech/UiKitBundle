@@ -1,5 +1,6 @@
 pagination.nav: Paginering
 pagination.showing: '%from%–%to% van %total% weergegeven'
+pagination.showing_range: '%from%–%to% weergegeven'
 pagination.previous: Vorige
 pagination.next: Volgende
 pagination.per_page: Per pagina
