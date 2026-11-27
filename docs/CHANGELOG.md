@@ -161,6 +161,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- `partials/_edge_tab.html.twig` (button variant): the tab's inner markup is now a Twig `content` block (override it with `embed`) and a `content` variable (trusted markup, for `include`) replaces the icon span; the new `wrap` option (default true) set to false prints the button alone, without the positioned `.nowo-ui-edge-tab` slot (`class` and `testid` then go on the button). Classes, `title` / `aria-label`, `pinned` and `attr` are kept and the default output is byte-identical, so hosts need no action. See [USAGE.md](USAGE.md#page-edge-tab-and-route-links).
+
 ## [2.75.0] - 2026-11-27
 
 ### Added
