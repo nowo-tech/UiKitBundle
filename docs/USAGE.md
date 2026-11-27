@@ -1116,6 +1116,21 @@ flow instead), `class`, `testid`; 2.12.1: `attr` (extra attributes: `true` bare,
 2.13: `button` (a `<button type="button">` instead of the link, `href` not needed — the [guided tour](#guided-tour)
 tab; `attr` then wires it, e.g. `{'data-action': …}`).
 
+2.76: on the `button` variant, `content` replaces the icon span and `wrap: false` prints the button alone (no positioned
+`.nowo-ui-edge-tab` slot), e.g. for a tab that hangs off a sliding drawer; `class` and `testid` then go on the button.
+The inner markup is the `content` block, so use `embed` to fill it with your own markup (an `include` can pass the
+`content` variable instead, trusted markup printed raw). Classes, `title` / `aria-label`, `pinned` and `attr` are kept;
+with no override the output is unchanged.
+
+```twig
+{% embed '@NowoUiKitBundle/partials/_edge_tab.html.twig' with {button: true, label: 'Details', wrap: false, attr: {'aria-expanded': 'false'}} only %}
+    {% block content %}
+        <span class="nowo-ui-edge-tab__icon" aria-hidden="true">{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: 'view'}, false) }}</span>
+        <span class="sr-only">Details</span>
+    {% endblock %}
+{% endembed %}
+```
+
 `nowo_ui_route_link(route = current route)` returns `{url, path, testid, prefix}` (or `null`) from the
 `nowo_ui_kit.route_links` map ([CONFIGURATION.md](CONFIGURATION.md#route-links)): a key matches the route itself or
 any route starting with `<key>_`; the longest key wins.

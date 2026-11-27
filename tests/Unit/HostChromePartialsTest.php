@@ -248,6 +248,39 @@ final class HostChromePartialsTest extends TestCase
         self::assertSame(1, substr_count($link, 'Dashboard'));
     }
 
+    public function testEdgeTabButtonContentBlock(): void
+    {
+        $partial = '@NowoUiKitBundle/partials/_edge_tab.html.twig';
+        $default = $this->render("{% include '".$partial."' with {button: true, label: 'Tour', attr: {'data-probe': 'p'}} only %}");
+        self::assertSame(
+            '<div class="nowo-ui-edge-tab" data-nowo-ui-edge-tab-slot="0">'."\n"
+            .'        <button type="button" class="nowo-ui-edge-tab__link" title="Tour" aria-label="Tour" data-probe="p">'."\n"
+            .'            <span class="nowo-ui-edge-tab__icon" aria-hidden="true"><i class="bi bi-book" aria-hidden="true"></i></span>'."\n"
+            .'        </button>'."\n"
+            .'    </div>',
+            $default,
+            'without a content override the output is unchanged',
+        );
+        self::assertSame($default, $this->render("{% embed '".$partial."' with {button: true, label: 'Tour', attr: {'data-probe': 'p'}} only %}{% endembed %}"));
+
+        $embedded = $this->render("{% embed '".$partial."' with {button: true, label: 'Close', pinned: true} only %}{% block content %}<span class=\"mine\">x</span>{% endblock %}{% endembed %}");
+        self::assertStringContainsString('<button type="button" class="nowo-ui-edge-tab__link" title="Close" aria-label="Close" data-nowo-ui-edge-tab-pinned>', $embedded);
+        self::assertStringContainsString('<span class="mine">x</span>', $embedded);
+        self::assertStringNotContainsString('nowo-ui-edge-tab__icon', $embedded);
+        self::assertStringContainsString('<div class="nowo-ui-edge-tab" data-nowo-ui-edge-tab-slot="0">', $embedded);
+
+        $variable = $this->render("{% include '".$partial."' with {button: true, content: '<b>y</b>'} only %}");
+        self::assertStringContainsString('<b>y</b>', $variable);
+        self::assertStringNotContainsString('nowo-ui-edge-tab__icon', $variable);
+
+        $bare = $this->render("{% include '".$partial."' with {button: true, wrap: false, class: 'mine', testid: 't', label: 'L', content: '<b>y</b>', attr: {class: 'extra'}} only %}");
+        self::assertSame('<button type="button" class="nowo-ui-edge-tab__link extra mine" title="L" aria-label="L" data-testid="t">'."\n".'            <b>y</b>'."\n".'        </button>', $bare);
+        $bareDefault = $this->render("{% include '".$partial."' with {button: true, wrap: false} only %}");
+        self::assertStringStartsWith('<button type="button" class="nowo-ui-edge-tab__link"', $bareDefault);
+        self::assertStringNotContainsString('data-testid', $bareDefault);
+        self::assertStringNotContainsString('<div', $bareDefault);
+    }
+
     public function testEdgeTab(): void
     {
         $tab = $this->render("{% include '@NowoUiKitBundle/partials/_edge_tab.html.twig' with {href: 'https://docs/x.md'} only %}");
