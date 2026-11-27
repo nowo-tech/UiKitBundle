@@ -7,6 +7,7 @@ namespace Nowo\UiKitBundle\Tests\Unit\View;
 use Nowo\UiKitBundle\View\PaginationRequest;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 final class PaginationRequestTest extends TestCase
 {
@@ -23,5 +24,15 @@ final class PaginationRequestTest extends TestCase
             $request->headers->set('X-Nowo-Ui-Pagination', $value);
             self::assertFalse(PaginationRequest::isLoadMore($request), var_export($value, true));
         }
+    }
+
+    public function testVaryKeepsTheOtherEntries(): void
+    {
+        $response = new Response();
+        $response->setVary('Accept-Language');
+        self::assertSame($response, PaginationRequest::vary($response));
+        self::assertSame(['Accept-Language', 'X-Nowo-Ui-Pagination'], $response->getVary());
+        PaginationRequest::vary($response);
+        self::assertSame(['Accept-Language', 'X-Nowo-Ui-Pagination'], $response->getVary());
     }
 }

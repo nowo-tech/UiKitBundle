@@ -147,7 +147,7 @@ final readonly class Pagination implements ArrayAccess
         $this->cursorParams = $this->normaliseCursorParams($cursorParams ?? array_keys($this->nextQuery), $pageParam, $perPageParam);
         $this->perPage = max(1, $perPage);
         $this->total = $totalKnown ? max(0, $total) : 0;
-        $this->page = max(1, $page);
+        $this->page = $totalKnown ? max(1, $page) : self::clampPage($page, $this->perPage);
         $this->totalPages = $totalKnown ? max(1, $totalPages ?? (int) ceil($this->total / $this->perPage)) : max($this->page, $totalPages ?? $this->page);
     }
 
@@ -172,7 +172,7 @@ final readonly class Pagination implements ArrayAccess
         string $perPageParam = 'per_page',
         string $mode = self::MODE_INFINITE,
     ): self {
-        $page = max(1, $page);
+        $page = self::clampPage($page, $perPage);
 
         return new self($page, $perPage, 0, $page + ($hasNext ? 1 : 0), $route, $query, $routeParams, $pageParam, $perPageParam, mode: $mode, totalKnown: false);
     }
@@ -404,7 +404,9 @@ final readonly class Pagination implements ArrayAccess
      * `data-nowo-ui-pagination-next` and the pager's Next link — e.g. `['after' => $cursor]` for a keyset read. Every
      * other link (numbers, Previous, per page) is unchanged; the page parameter still moves to page + 1, so a reload
      * without the cursor falls back to the offset. `$cursorParams` are the parameters the peer strips from the address
-     * bar after loading more (default: the keys of `$query`). Values are scalars cast to strings (null drops the key),
+     * bar after loading more (default: the keys of `$query`); both are also removed from the query of every other link
+     * (no stale cursor after a full-page Next). Pass `$cursorParams` on the last page too (`withNextQuery([], ['after'])`)
+     * and never reuse a filter name for a cursor. Values are scalars cast to strings (null drops the key),
      * the URL is built and escaped server-side by the router; the kit does not read or trust the cursor.
      *
      * @param array<string, mixed> $query
@@ -425,7 +427,9 @@ final readonly class Pagination implements ArrayAccess
      */
     public function withoutTotal(bool $hasNext): self
     {
-        return new self($this->page, $this->perPage, 0, $this->page + ($hasNext ? 1 : 0), $this->route, $this->query, $this->routeParams, $this->pageParam, $this->perPageParam, $this->allowedPerPage, $this->variant, $this->mode, $this->modeNarrow, $this->modeWide, $this->breakpoint, $this->autoLoads, $this->nextQuery, $this->cursorParams, false);
+        $page = self::clampPage($this->page, $this->perPage);
+
+        return new self($page, $this->perPage, 0, $page + ($hasNext ? 1 : 0), $this->route, $this->query, $this->routeParams, $this->pageParam, $this->perPageParam, $this->allowedPerPage, $this->variant, $this->mode, $this->modeNarrow, $this->modeWide, $this->breakpoint, $this->autoLoads, $this->nextQuery, $this->cursorParams, false);
     }
 
     /**
@@ -473,6 +477,15 @@ final readonly class Pagination implements ArrayAccess
             'page_param' => $this->pageParam,
             'per_page_param' => $this->perPageParam,
         ];
+    }
+
+    /**
+     * Page of a pagination without a total (2.77): at least 1, and small enough that `offset()`, `to()` and
+     * `page + 1` stay integers (a crafted `?page=9223372036854775807` must not turn into a TypeError).
+     */
+    private static function clampPage(int $page, int $perPage): int
+    {
+        return max(1, min($page, intdiv(\PHP_INT_MAX, max(1, $perPage)) - 1));
     }
 
     /**

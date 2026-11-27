@@ -15,7 +15,8 @@
   Renders nothing without rows; the nav only with more than one page.
   2.23: pagination_mode / mode_narrow / mode_wide / breakpoint / auto_loads as on the `pagination` partial (default: the
   View\Pagination's; `pager` = unchanged markup) add the `list-pagination` peer contract (partial `_pagination_mode`).
-  2.77: next_query / cursor_params as on the `pagination` partial (merged only into the next URL and the Next link);
+  2.77: next_query / cursor_params as on the `pagination` partial (merged only into the next URL and the Next link,
+  removed from the other links and the per-page form);
   a View\Pagination without a total prints Previous / Next without "Page n of m" and without the per-page select.
   Slots: pagination_compact (root), pagination_link (previous / next), pagination_page ("Page n of m"),
   pagination_per_page (the form), pagination_info (its label), pagination_select, btn_secondary + btn_sm (no-JS button).
@@ -27,7 +28,14 @@
 {% set per_page_param = per_page_param|default(_p.per_page_param|default('per_page')) %}
 {% set route = route|default(_p.route|default(app.request.attributes.get('_route'))) %}
 {% set route_params = route_params|default(_p.route_params|default(app.request.attributes.get('_route_params')|default({}))) %}
-{% set query = (query|default(_p.query|default({})))|filter((v, k) => k not in [page_param, per_page_param]) %}
+{% set _pm_source = _model ?? pagination %}
+{% set _pm_mode = pagination_mode|default(_pm_source.mode ?? 'pager') %}
+{% set _pm_on = _pm_mode in ['infinite', 'responsive'] %}
+{% set _next_query = next_query|default(_pm_source.next_query ?? {}) %}
+{% set _cursor_params = cursor_params ?? (next_query is defined and next_query ? next_query|keys : (_pm_source.cursor_params ?? [])) %}
+{% set _total_known = (_pm_source.total_known ?? true) is not same as(false) %}
+{% set _cursor_strip = _next_query|keys|merge(_cursor_params) %}
+{% set query = (query|default(_p.query|default({})))|filter((v, k) => k not in [page_param, per_page_param]|merge(_cursor_strip)) %}
 {% set trans_domain = trans_domain|default('NowoUiKitBundle') %}
 {% set nav_trans_domain = nav_trans_domain|default(trans_domain) %}
 {% set nav_label = nav_label|default('pagination.nav') %}
@@ -41,12 +49,6 @@
 {% set _keep_per_page = _choices is not empty or (app.request is not null and app.request.query.has(per_page_param)) %}
 {% set _base = route_params|merge(query)|merge(_keep_per_page ? {(per_page_param): per_page} : {}) %}
 {% set _id = (id|default('nowo-ui-pagination')) ~ '-per-page' %}
-{% set _pm_source = _model ?? pagination %}
-{% set _pm_mode = pagination_mode|default(_pm_source.mode ?? 'pager') %}
-{% set _pm_on = _pm_mode in ['infinite', 'responsive'] %}
-{% set _next_query = next_query|default(_pm_source.next_query ?? {}) %}
-{% set _cursor_params = cursor_params ?? (next_query is defined and next_query ? next_query|keys : (_pm_source.cursor_params ?? [])) %}
-{% set _total_known = (_pm_source.total_known ?? true) is not same as(false) %}
 {% if _pm_on %}
     {% set _pm_vars = {mode: _pm_mode, mode_narrow: mode_narrow|default(_pm_source.mode_narrow ?? 'infinite'), mode_wide: mode_wide|default(_pm_source.mode_wide ?? 'pager'), breakpoint: breakpoint|default(_pm_source.breakpoint ?? '(max-width: 900px)'), auto_loads: auto_loads ?? (_pm_source.auto_loads ?? 3), next_href: page < total_pages ? path(route, _base|merge({(page_param): page + 1})|merge(_next_query)) : null, cursor_params: _cursor_params, bundle: bundle, trans_domain: trans_domain} %}
 {% endif %}

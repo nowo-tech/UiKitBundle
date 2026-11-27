@@ -459,6 +459,25 @@ describe('list-pagination peer, keyset cursors', () => {
     expect(window.location.search).toBe('?status=up&per_page=2&page=2');
   });
 
+  // audit ZDQ-UK-I4: regression guards for the WHATWG parsing tricks (all resolve off-origin or to origin "null")
+  it.each([
+    'javascript:alert(1)',
+    'data:text/html,x',
+    '/\\evil.example/monitors?after=x',
+    '\\\\evil.example/monitors?after=x',
+    '/\t/evil.example/monitors?after=x',
+    '/\n/evil.example/monitors?after=x',
+    '//user@evil.example/monitors',
+    'http://localhost@evil.example/monitors',
+    'https://localhost/monitors',
+  ])('sameOriginUrl refuses %j against an http://localhost base', (href) => {
+    expect(sameOriginUrl(href, 'http://localhost/monitors?page=1')).toBeNull();
+  });
+
+  it('sameOriginUrl keeps a same-host relative path with a scheme-relative-looking segment harmless', () => {
+    expect(sameOriginUrl('http:evil', 'http://localhost/monitors/x')?.toString()).toBe('http://localhost/monitors/evil');
+  });
+
   it('refuses a foreign or protocol-relative next URL even with a cursor', async () => {
     for (const foreign of ['https://evil.example/monitors?after=x', '//evil.example/monitors?after=x']) {
       const root = await mount(keysetHtml(1, 3, true).replace(/data-nowo-ui-pagination-next="[^"]*"/, `data-nowo-ui-pagination-next="${foreign}"`));

@@ -932,9 +932,10 @@ $pagination = PaginationRequest::isLoadMore($request)
     ? Pagination::progressiveFetch($page, $perPage, $hasNext, query: $filters)
     : Pagination::fromRequest($request, $repository->count($filters), $perPage)->withMode('infinite');
 
-if ($hasNext) {
-    $pagination = $pagination->withNextQuery(['after' => $this->cursors->encode(end($rows))]);
-}
+// Always declare the cursor name, also on the last page, so no other link keeps a stale cursor
+$pagination = $pagination->withNextQuery($hasNext ? ['after' => $this->cursors->encode(end($rows))] : [], ['after']);
+
+return PaginationRequest::vary($this->render('orders/index.html.twig', ['pagination' => $pagination]));
 ```
 
 - `withNextQuery(array $query, ?array $cursorParams = null)` merges `$query` **only** into the next URL: the peer's
@@ -949,13 +950,22 @@ if ($hasNext) {
 - `cursorParams` (default: the keys of `$query`) are the query parameters the peer **removes from the address bar**
   when it rewrites `?page=` with `history.replaceState`, printed as `data-nowo-ui-pagination-cursor-params="after"`.
   A reload or a shared link then lands on `?page=N` (offset), never in the middle of a cursor walk.
+- The next-query and cursor names are also removed from every other link (Previous, page numbers, per page, the
+  compact per-page form), so after a full-page Next (`?page=2&after=X`, no JavaScript or the `pager` side of
+  `responsive`) `fromRequest()`'s query does not leave the stale `after=X` on them. Pass the cursor names on the last
+  page too (`withNextQuery([], ['after'])`). Never reuse a filter name as a cursor name: it would be dropped from
+  those links and from the address bar.
 - `PaginationRequest::isLoadMore($request)` is true when the request carries `X-Nowo-Ui-Pagination: 1`, the header the
-  peer sends with every fetch. It is a hint to skip work, not an authorisation: anyone can send it.
+  peer sends with every fetch. It is a hint to skip work, not an authorisation: anyone can send it. A response whose
+  body depends on it must send `Vary: X-Nowo-Ui-Pagination` (`PaginationRequest::vary($response)` adds it once),
+  otherwise an HTTP cache can serve the "Load more" variant to a normal navigation of the same URL, or the reverse.
 - `Pagination::progressiveFetch(page, perPage, hasNext, route, query, routeParams, pageParam, perPageParam, mode)` (mode
   `infinite` by default) and `$pagination->withoutTotal(bool $hasNext)` build a pagination without a row count
   (`totalKnown` false, `total` 0). The partials then print "Showing x–y" without "of N" (nothing on an empty page),
   Previous / Next without page numbers or the per-page selector (the compact variant: no "Page n of m"), and the next
-  URL only while `hasNext`. The peer hides the stale "of N" line of the first page when a response has no info line,
+  URL only while `hasNext`. A direct include of the partial should pass `item_count` (the rows actually rendered):
+  without a total the default is a full page, so a short last page would read "Showing 51–75" for 60 rows (the list
+  scaffold passes it). The page is clamped so `offset()` and `page + 1` stay integers. The peer hides the stale "of N" line of the first page when a response has no info line,
   and shows "Load more" while a next URL exists.
 - Partial variables for 1.x includes: `next_query` and `cursor_params` on `pagination` / `pagination_compact`.
 - Order by a unique, stable key (`ORDER BY sort DESC, id DESC`) so equal sort values never repeat or vanish between

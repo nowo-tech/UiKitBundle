@@ -298,4 +298,22 @@ final class PaginationTest extends TestCase
         self::assertSame([0, 5, false], [$ctor->total, $ctor->totalPages, $ctor->hasNext()]);
         self::assertSame(5, (new Pagination(5, 10, 0, totalKnown: false))->totalPages);
     }
+
+    public function testHugePagesWithoutTotalStayIntegers(): void
+    {
+        $max = intdiv(\PHP_INT_MAX, 25) - 1;
+        $fetch = Pagination::progressiveFetch(\PHP_INT_MAX, 25, true);
+        self::assertSame([$max, $max + 1], [$fetch->page, $fetch->totalPages]);
+        self::assertIsInt($fetch->offset());
+        self::assertIsInt($fetch->to());
+
+        $one = Pagination::progressiveFetch(\PHP_INT_MAX, 1, true);
+        self::assertSame(\PHP_INT_MAX - 1, $one->page);
+        self::assertSame(\PHP_INT_MAX, $one->totalPages);
+
+        $known = new Pagination(\PHP_INT_MAX, 25, 10);
+        $unknown = $known->withoutTotal(true);
+        self::assertSame([$max, $max + 1], [$unknown->page, $unknown->totalPages]);
+        self::assertSame($max, (new Pagination(\PHP_INT_MAX, 25, 0, totalKnown: false))->page);
+    }
 }

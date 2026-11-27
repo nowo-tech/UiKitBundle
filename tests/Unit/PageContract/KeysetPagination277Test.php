@@ -157,6 +157,51 @@ final class KeysetPagination277Test extends TestCase
         self::assertStringNotContainsString('Mostrando 11–20 de', $html);
     }
 
+    public function testAFullPageNextNeverLeavesAStaleCursorOnTheOtherLinks(): void
+    {
+        // the no-JS Next link carried the cursor: ?page=2&after=X; fromRequest() keeps every other query parameter
+        $request = Request::create('https://app.example/orders?q=x&page=2&per_page=10&after=X', 'GET');
+        $request->attributes->set('_route', 'orders');
+        $request->attributes->set('_route_params', []);
+        $twig = PageContractTwig::create(request: $request, breadcrumbKit: false);
+        $pager = Pagination::fromRequest($request, 95, 10)->withMode(Pagination::MODE_INFINITE)->withNextQuery(['after' => 'Y']);
+        self::assertSame(['q' => 'x', 'after' => 'X'], $pager->query);
+
+        $html = $twig->render(self::PARTIAL, ['pagination' => $pager, 'per_page_selector' => true]);
+        self::assertStringNotContainsString('after=X', $html);
+        self::assertSame(2, substr_count($html, 'after=Y'));
+        self::assertStringContainsString('href="/orders?q=x&amp;per_page=10&amp;page=1" aria-label="Previous"', $html);
+        self::assertStringContainsString('href="/orders?q=x&amp;per_page=10&amp;page=4">4</a>', $html);
+        self::assertStringContainsString('href="/orders?q=x&amp;per_page=25&amp;page=1">25</a>', $html);
+        self::assertStringContainsString('href="/orders?q=x&amp;per_page=10&amp;page=3&amp;after=Y" aria-label="Next"', $html);
+
+        // last page: no next query, the cursor name still declared, so no link keeps it
+        $lastRequest = Request::create('https://app.example/orders?q=x&page=10&per_page=10&after=X', 'GET');
+        $last = Pagination::fromRequest($lastRequest, 95, 10)->withNextQuery([], ['after']);
+        $html = $twig->render(self::PARTIAL, ['pagination' => $last]);
+        self::assertStringNotContainsString('after=', $html);
+        self::assertStringContainsString('href="/orders?q=x&amp;per_page=10&amp;page=9" aria-label="Previous"', $html);
+
+        // compact: Previous and the per-page form lose the cursor, Next gets the fresh one
+        $html = $twig->render(self::PARTIAL, ['pagination' => Pagination::fromRequest($request, 95, 10, variant: Pagination::VARIANT_COMPACT)->withNextQuery(['after' => 'Y'])]);
+        self::assertStringNotContainsString('after=X', $html);
+        self::assertStringContainsString('href="/orders?q=x&amp;per_page=10&amp;page=1" rel="prev"', $html);
+        self::assertStringContainsString('href="/orders?q=x&amp;per_page=10&amp;page=3&amp;after=Y" rel="next"', $html);
+        self::assertStringContainsString('name="q" value="x"', $html);
+        self::assertStringNotContainsString('name="after"', $html);
+
+        // 1.x variables on a direct include of the compact partial
+        $html = $twig->render('@NowoUiKitBundle/partials/_pagination_compact.html.twig', ['pagination' => Pagination::fromRequest($request, 95, 10), 'next_query' => ['after' => 'Y']]);
+        self::assertStringNotContainsString('after=X', $html);
+        self::assertStringContainsString('page=3&amp;after=Y" rel="next"', $html);
+
+        // list scaffold: its 1.x top-level query (the request query) is cleaned too
+        $page = new ListPage(new PageHeader('Orders'), [new Column('name')], [['name' => 'a']], pagination: Pagination::fromRequest($request, 95, 10)->withNextQuery(['after' => 'Y']));
+        $html = $twig->render('@NowoUiKit/page/list.html.twig', ['page' => $page]);
+        self::assertStringNotContainsString('after=X', $html);
+        self::assertStringContainsString('page=3&amp;after=Y" aria-label="Next"', $html);
+    }
+
     private function twig(): Environment
     {
         $request = Request::create('https://app.example/monitors?status=up&page=2&per_page=2', 'GET');

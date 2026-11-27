@@ -35,6 +35,8 @@
       pager's Next link), e.g. {after: cursor} (default: the View\Pagination's nextQuery, else none = unchanged markup);
       cursor_params: parameter names the peer strips from the address bar after loading more (default: the
       View\Pagination's cursorParams, else the next_query keys; printed as data-nowo-ui-pagination-cursor-params).
+      Both names are removed from `query` for every link but Next (no stale cursor on Previous / numbers / per page).
+      Trusted template input: escaped, not validated like View\Pagination::withNextQuery().
       A View\Pagination without a total (Pagination::progressiveFetch() / withoutTotal(), 2.77) prints "Showing x–y"
       without "of N", Previous / Next only and the next URL while a next page exists.
 #}
@@ -57,7 +59,8 @@
     {% set item_count = item_count|default(pagination.to() - pagination.from() + 1) %}
     {% set pagination = pagination.toArray() %}
 {% endif %}
-{% set query = query|default(pagination.query|default({})) %}
+{% set _cursor_strip = _next_query|keys|merge(_cursor_params) %}
+{% set query = query|default(pagination.query|default({}))|filter((v, k) => k not in _cursor_strip) %}
 {% set nav_label = nav_label|default('pagination.nav') %}
 {% set framework = framework|default(null) %}
 {% set trans_domain = trans_domain|default('NowoUiKitBundle') %}
