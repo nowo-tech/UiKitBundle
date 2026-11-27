@@ -5,12 +5,13 @@
 {% block body %}
     {{ include(nowo_ui_partial('stat_row', 'DemoPlatformCatalogue'), {items: stats, label: 'Billing this month', attr: {class: 'nowo-ui-stat-row--tiles', 'data-testid': 'catalogue-stat-tiles'}, bundle: 'DemoPlatformCatalogue'}, false) }}
     <div class="nowo-ui-cards">
-        {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Invoice INV-1042', intro: '.nowo-ui-dl — term and value side by side, stacked on phones.', kind: 'detail', testid: 'catalogue-dl'} %}
+        {% embed '@NowoUiKit/demo_platform/_section.html.twig' with {title: 'Invoice INV-1042', intro: '.nowo-ui-dl — term and value side by side, stacked on phones. Dates for people through nowo_time_tag.', kind: 'detail', testid: 'catalogue-dl'} %}
             {% block section_body %}
                 <dl class="nowo-ui-dl">
                     <div><dt>Customer</dt><dd>Analytical Engines Ltd</dd></div>
-                    <div><dt>Issued</dt><dd><time datetime="2026-11-02">2 November 2026</time></dd></div>
-                    <div><dt>Due</dt><dd><time datetime="2026-12-02">2 December 2026</time></dd></div>
+                    <div><dt>Issued</dt><dd>{{ '2026-11-02'|nowo_time_tag('date') }}</dd></div>
+                    <div><dt>Due</dt><dd>{{ '2026-12-02'|nowo_time_tag('date') }}</dd></div>
+                    <div><dt>Last change</dt><dd>{{ '2026-11-04T09:12:00+00:00'|nowo_time_tag('datetime', true, {'data-testid': 'catalogue-date-for-people'}) }}</dd></div>
                     <div><dt>Amount</dt><dd>1,240.00 €</dd></div>
                     <div><dt>Status</dt><dd><span class="nowo-ui-badge nowo-ui-badge--success">Paid</span></dd></div>
                     <div><dt>Notes</dt><dd>Paid by bank transfer, reference 2026-11-04-0042.</dd></div>

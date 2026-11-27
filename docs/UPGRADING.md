@@ -180,6 +180,18 @@
 
 ## Unreleased
 
+From **2.74.1**:
+
+```bash
+composer update nowo-tech/ui-kit-bundle
+```
+
+No action needed, and no breaking change. The release adds `Nowo\UiKitBundle\Date\DateFormatterInterface` (default
+`IsoDateFormatter`, the same ISO-style text as before) and the Twig filters `nowo_date` and `nowo_time_tag`. To show
+your people's own date order, clock and time zone on kit pages, alias the interface to your own formatter (see
+[USAGE.md](USAGE.md#dates-for-people-275)). A host Twig filter already named `nowo_date` or `nowo_time_tag` would
+clash with the new ones; rename it.
+
 ## To 2.74.1
 
 From **2.74.0**:
