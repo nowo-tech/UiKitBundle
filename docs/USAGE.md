@@ -97,6 +97,7 @@
   - [Feedback and overlays](#feedback-and-overlays)
   - [Navigation patterns](#navigation-patterns)
 - [One-time secrets (2.69)](#one-time-secrets-269)
+- [Dates for people (2.75)](#dates-for-people-275)
 - [Feature bundles](#feature-bundles)
 - [Demo platform shell (2.60)](#demo-platform-shell-260)
 - [Kitchen sink](#kitchen-sink)
@@ -4699,6 +4700,66 @@ Options: `secret` (required), `label`, `hint`, `secret_id` (partial-scoped; `-la
 **Limits** (say so on the page): the runtime cannot clear the system clipboard, nor what the user already
 saw or pasted; a short flash of the plain value is possible before the deferred script runs (it is the progressive
 enhancement baseline).
+
+## Dates for people (2.75)
+
+A date a person reads (a "last run" line, a summary, an expiry warning) goes through
+`Nowo\UiKitBundle\Date\DateFormatterInterface`, so it follows the reader's preferences when the host has them. A
+machine value (`datetime` and `data-sort-value` attributes, keys, URL parameters, comparisons, CSV, logs) keeps a fixed
+format (`|date('Y-m-d')`, `DateTimeInterface::ATOM`).
+
+```php
+interface DateFormatterInterface
+{
+    // Kinds: DATE 'date', DATETIME 'datetime', DATETIME_SECONDS 'datetime_seconds', TIME 'time', MONTH 'month' (KINDS).
+    public function format(DateTimeInterface $date, string $kind = self::DATETIME, bool $zone = false): string;
+}
+```
+
+- **Default**: `IsoDateFormatter` (service `nowo_ui_kit.date_formatter`, aliased to the interface) prints the fixed
+  ISO-style output: `2026-11-27`, `2026-11-27 16:14`, `2026-11-27 16:14:05`, `16:14`, `2026-11`, plus the zone's
+  abbreviation with `$zone` (`2026-11-27 16:14 UTC`), in the zone the date carries. A host without its own formatter
+  sees exactly what the kits printed before.
+- **A kind outside the list** throws `InvalidArgumentException`.
+- **Time zones**: the kinds with a time are instants, and a host formatter may show them in the reader's zone. `date` and
+  `month` are printed in the zone of the value, never moved, so a calendar day stored as midnight UTC (an expiry date)
+  is the same day for every reader. To show the local day of an instant, convert it first (the Twig filters below do).
+- **Worker mode**: the formatter is one service for every request. A host formatter reads the reader (locale, clock,
+  zone) on each call and keeps nothing between calls.
+
+### Host formatter
+
+```yaml
+# config/services.yaml
+services:
+    Nowo\UiKitBundle\Date\DateFormatterInterface: '@App\Format\ReaderDateFormatter'
+```
+
+Every kit page that formats through the interface (PHP services and the Twig filters) then follows it.
+
+### Twig filters
+
+```twig
+{{ run.finishedAt|nowo_date }}                   {# 2026-11-27 16:14 #}
+{{ run.finishedAt|nowo_date('date') }}           {# 2026-11-27 #}
+{{ run.finishedAt|nowo_date('datetime', true) }} {# 2026-11-27 16:14 UTC #}
+
+{{ run.finishedAt|nowo_time_tag }}
+{# <time datetime="2026-11-27T16:14:00+00:00" title="2026-11-27 16:14 UTC">2026-11-27 16:14</time> #}
+{{ secret.expiresOn|nowo_time_tag('date', false, {class: 'muted', 'data-testid': 'expiry'}) }}
+{# <time datetime="2026-11-27" data-no-relative="" class="muted" data-testid="expiry">2026-11-27</time> #}
+```
+
+- `nowo_date(kind = 'datetime', zone = false)`: the text, escaped by autoescape like any string.
+- `nowo_time_tag(kind = 'datetime', zone = false, attributes = {})`: `<time>` markup. With a time kind, `datetime` is the
+  ISO-8601 instant and `title` the date and time with the zone (`datetime_seconds` keeps the seconds); with `date` or
+  `month`, `datetime` is the day (`2026-11-27`) or month (`2026-11`), there is no title and `data-no-relative` marks it
+  (a script that turns `<time>` into "5 min ago" leaves a day alone). Every value is HTML-escaped by the filter, which
+  is marked safe for HTML: do not add `|raw` or `|e`. Extra attributes never replace `datetime`, `title` or
+  `data-no-relative`; a null value skips one, an invalid attribute name throws.
+- Both read the value like `|date`: a `DateTimeInterface` (an immutable copy, the object is never changed), a
+  timestamp or a date string, moved to Twig's time zone (`twig.date.timezone`, or the one the host sets per request).
+  `null` and `''` print nothing (never "now"). Any other value throws.
 
 ## Feature bundles
 

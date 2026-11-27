@@ -1,6 +1,6 @@
 # Code inventory — 100% traceability
 
-**Last audited**: 2026-11-27 (2.74.1, 475/475 re-verified; 2026-11-24, 2.74.0 line: owning page parameters — resolver SPI, mapping check, resolver pass, controller-ran listener mapped, 475 files; 2.73.0 line: remote dialog content opened directly mapped, Coverage summary category counts recounted; v2.72.0: every `src/` file mapped again — 2.65-2.71 confirm runtimes, one-time secret and console banner; 2026-11-22 v2.64.0: 2.56-2.64 components, runtimes, demo platform and lint mapped; 2026-11-17: 2.55 line: shell focus mode; 2.54.0 line: context menus; 2.53.0 line: inset sidebar style, dialog focus return, async combobox; 2.51.0 line: brand appearance, remote dialog, listing ports, side panel, rail, tree, image input, base stylesheet)  
+**Last audited**: 2026-11-27 (2.75.0 line: dates for people mapped, 478 files; 2.74.1, 475/475 re-verified; 2026-11-24, 2.74.0 line: owning page parameters — resolver SPI, mapping check, resolver pass, controller-ran listener mapped, 475 files; 2.73.0 line: remote dialog content opened directly mapped, Coverage summary category counts recounted; v2.72.0: every `src/` file mapped again — 2.65-2.71 confirm runtimes, one-time secret and console banner; 2026-11-22 v2.64.0: 2.56-2.64 components, runtimes, demo platform and lint mapped; 2026-11-17: 2.55 line: shell focus mode; 2.54.0 line: context menus; 2.53.0 line: inset sidebar style, dialog focus return, async combobox; 2.51.0 line: brand appearance, remote dialog, listing ports, side panel, rail, tree, image input, base stylesheet)  
 **Baseline spec**: [`spec.md`](spec.md)  
 **Package**: `nowo-tech/ui-kit-bundle`
 
@@ -530,6 +530,14 @@ Produced by `pnpm run build` (`vite.config.ts`, one `VITE_ENTRY` per IIFE; `buil
 | `Resources/assets/src/nowo-ui-avatar.ts` | Picture fallback over the initials; opt-in `data-nowo-avatar-image` for other bundles | FR-AVATAR-001 |
 | `Resources/public/js/nowo-ui-avatar.js` | Build output of `nowo-ui-avatar.ts` | FR-BUILD-001, FR-AVATAR-001 |
 
+## Dates for people
+
+| Source file | Spec section | Requirement IDs |
+| --- | --- | --- |
+| `Date/DateFormatterInterface.php` | Host contract: a date as a person reads it, five kinds, optional zone (2.75) | FR-DATE-001 |
+| `Date/IsoDateFormatter.php` | Default formatter: the fixed ISO-style output, aliased to the contract | FR-DATE-001 |
+| `Twig/DateExtension.php` | `nowo_date` and `nowo_time_tag` filters over the host formatter | FR-DATE-001 |
+
 ## Error illustration SPI
 
 | Source file | Spec section | Requirement IDs |
@@ -762,6 +770,7 @@ Built outputs of the six runtimes above (committed, never hand-edited; same rule
 | Build outputs (generated, committed, never hand-edited) | 19 |
 | Brand appearance (spec 220) | 6 |
 | Avatar URL policy | 4 |
+| Dates for people (2.75) | 3 |
 | Error illustration SPI | 2 |
 | Remote form dialog (2.28 / 2.33 / 2.73 / 2.74) | 19 |
 | Image input | 8 |
@@ -773,15 +782,15 @@ Built outputs of the six runtimes above (committed, never hand-edited; same rule
 | Default theme stylesheet and token lint | 2 |
 | Components and runtimes of 2.56-2.64 (31 sources) and their 6 built outputs | 37 |
 | Confirm runtimes, one-time secret and console banner (2.65-2.72) | 9 |
-| **Total** | **475** |
+| **Total** | **478** |
 
 Excluded: co-located Vitest `*.test.ts` (105 files at this audit).
 
 Audit (2026-11-24, 2.74.0 line; previously 2.73.0, v2.72.0, 2026-11-22 v2.64.0):
 
 ```bash
-git ls-files src | grep -v '\.test\.ts$' | wc -l                      # 475
-git ls-files src | grep -v '\.test\.ts$' | grep -c '\.php$'           # 148
+git ls-files src | grep -v '\.test\.ts$' | wc -l                      # 478
+git ls-files src | grep -v '\.test\.ts$' | grep -c '\.php$'           # 151
 git ls-files src | grep -v '\.test\.ts$' | grep -c '\.ts$'            # 104
 git ls-files src | grep -c '\.test\.ts$'                              # 105 (excluded)
 ```

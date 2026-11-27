@@ -160,6 +160,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Dates for people: `Nowo\UiKitBundle\Date\DateFormatterInterface::format(DateTimeInterface $date, string $kind = 'datetime', bool $zone = false): string` with the kinds `date`, `datetime`, `datetime_seconds`, `time` and `month` (`KINDS`; any other kind throws `InvalidArgumentException`). The default `IsoDateFormatter` (service `nowo_ui_kit.date_formatter`, aliased to the interface) keeps the fixed ISO-style output (`Y-m-d`, `Y-m-d H:i`, `Y-m-d H:i:s`, `H:i`, `Y-m`, plus ` T` with `$zone`), so nothing changes until a host aliases the interface to its own formatter. Day kinds are printed in the zone of the value (a calendar day keeps its day). New Twig filters `nowo_date(kind, zone)` (text) and `nowo_time_tag(kind, zone, attributes)` (`<time datetime="ISO-8601" title="…">text</time>`, every value escaped, `data-no-relative` on day kinds), which read values like `|date` in Twig's time zone and print nothing for null or ''. Stateless, safe in worker mode. See [USAGE.md](USAGE.md#dates-for-people-275).
+
 ## [2.74.1] - 2026-11-25
 
 ### Changed

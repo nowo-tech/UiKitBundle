@@ -15,6 +15,8 @@ use Nowo\UiKitBundle\Appearance\AppearanceProviderInterface;
 use Nowo\UiKitBundle\Appearance\AppearanceView;
 use Nowo\UiKitBundle\Appearance\BrandAppearanceProvider;
 use Nowo\UiKitBundle\Appearance\ConfigAppearanceProvider;
+use Nowo\UiKitBundle\Date\DateFormatterInterface;
+use Nowo\UiKitBundle\Date\IsoDateFormatter;
 use Nowo\UiKitBundle\DependencyInjection\Compiler\BrandAppearanceProviderPass;
 use Nowo\UiKitBundle\DependencyInjection\Compiler\RemoteDialogPageResolverPass;
 use Nowo\UiKitBundle\Dialog\RemoteDialogContentMap;
@@ -56,6 +58,7 @@ use Nowo\UiKitBundle\Twig\ActionIconsExtension;
 use Nowo\UiKitBundle\Twig\AppearanceExtension;
 use Nowo\UiKitBundle\Twig\AreaNavExtension;
 use Nowo\UiKitBundle\Twig\AvatarExtension;
+use Nowo\UiKitBundle\Twig\DateExtension;
 use Nowo\UiKitBundle\Twig\ErrorPageExtension;
 use Nowo\UiKitBundle\Twig\RouteLinkExtension;
 use Nowo\UiKitBundle\Twig\ThemeExtension;
@@ -262,6 +265,13 @@ final class NowoUiKitExtension extends Extension implements PrependExtensionInte
 
         // 2.26: nowo_ui_avatar_url (the avatar URL policy of partials/_avatar.html.twig).
         $container->register('nowo_ui_kit.avatar_twig_extension', AvatarExtension::class)
+            ->addTag('twig.extension');
+
+        // 2.75: dates for people. The host aliases DateFormatterInterface to its own service; the filters follow it.
+        $container->register('nowo_ui_kit.date_formatter', IsoDateFormatter::class);
+        $container->setAlias(DateFormatterInterface::class, 'nowo_ui_kit.date_formatter');
+        $container->register('nowo_ui_kit.date_twig_extension', DateExtension::class)
+            ->setArguments([new Reference(DateFormatterInterface::class)])
             ->addTag('twig.extension');
 
         // A service, not a Twig config global: it sees the processed config whatever the bundle order.
