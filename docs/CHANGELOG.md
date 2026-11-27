@@ -162,6 +162,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Keyset cursors for the `infinite` / `responsive` pagination modes: `View\Pagination::withNextQuery(array $query, ?array $cursorParams = null)` (and the `next_query` / `cursor_params` partial variables) merges query parameters such as `['after' => $cursor]` only into the next URL (`data-nowo-ui-pagination-next` and the pager's Next link), built server-side by the router. The `list-pagination` peer drops the cursor parameters (`data-nowo-ui-pagination-cursor-params`, default the next-query keys) from the address it writes with `history.replaceState`, so a reload or a shared link lands on `?page=N`. The cursor is opaque to the kit: hosts must sign or validate it. See [USAGE.md](USAGE.md#keyset-cursors-with-infinite-scroll-277).
+- `View\PaginationRequest::isLoadMore($request)`: true for the peer's "Load more" fetches (`X-Nowo-Ui-Pagination: 1`), so hosts can skip the row count; `Pagination::progressiveFetch()` / `withoutTotal(bool $hasNext)` build a pagination without a total (`totalKnown` false): "Showing x–y" without "of N" (new key `pagination.showing_range`, 7 locales), Previous / Next only, and the next URL while a next page exists. The peer hides the stale "of N" line when a response has none.
+- Without the new options the pagination markup is byte-identical to 2.76 (fixtures `tests/Fixtures/bc-2.76`), so hosts need no action.
+
 ## [2.76.0] - 2026-11-27
 
 ### Added
