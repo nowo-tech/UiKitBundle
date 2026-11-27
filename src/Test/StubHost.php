@@ -19,7 +19,8 @@ use Nowo\UiKitBundle\View\AreaNav;
  */
 final class StubHost
 {
-    public const NAMESPACE = 'NowoUiKitContract';
+    /** Twig namespace of the stub templates (was NAMESPACE, a class constant name PHP 8.6 deprecates). */
+    public const TWIG_NAMESPACE = 'NowoUiKitContract';
 
     public const LAYOUT_ADMIN = '@NowoUiKitContract/layout/admin.html.twig';
 

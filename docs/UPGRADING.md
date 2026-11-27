@@ -180,6 +180,9 @@
 
 ## Unreleased
 
+- `Nowo\UiKitBundle\Test\StubHost::NAMESPACE` is now `StubHost::TWIG_NAMESPACE` (PHP 8.6 deprecates `namespace` as a
+  class constant name). Rename it in your page contract tests if you used it.
+
 ## To 2.74.1
 
 From **2.74.0**:
