@@ -26,8 +26,9 @@ use InvalidArgumentException;
  * Time zones: the kinds with a time (`datetime`, `datetime_seconds`, `time`) are instants, and an implementation may
  * show them in the reader's zone. The day kinds (`date`, `month`) are printed in the zone `$date` carries, never
  * moved: a value that is a calendar day and not an instant (an expiry date stored as midnight UTC) keeps its day for
- * every reader. A caller that shows the local day of an instant converts it first (the `nowo_date` and `nowo_time_tag`
- * Twig filters do, to Twig's time zone, like `|date`).
+ * every reader. A caller that shows the local day of an instant converts it to the reader's zone first. The
+ * `nowo_date` and `nowo_time_tag` Twig filters move the time kinds to Twig's time zone and never move a date object
+ * for the day kinds.
  *
  * Implementations are stateless or read the reader per call (worker mode: one service for every request); they never
  * keep the last reader.

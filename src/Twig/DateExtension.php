@@ -25,13 +25,28 @@ use Twig\TwigFilter;
  *   (`2026-11-27`) or month (`2026-11`), no title, and `data-no-relative` (a day has no time to count from). Every
  *   value is HTML-escaped here; the filter is `is_safe` html.
  *
- * Both read the value like Twig's `|date`: a `DateTimeInterface`, a timestamp or a date string, moved to Twig's time
- * zone; null and '' print nothing (never "now"). Stateless (the formatter is the host's service), safe in workers.
+ * Both read the value like Twig's `|date`: a `DateTimeInterface`, a timestamp (int, float or digit string) or a date
+ * string; null and '' print nothing (never "now"). The kinds with a time are instants and are moved to Twig's time
+ * zone. The day kinds (`date`, `month`) never move a `DateTimeInterface`: a calendar day stored as midnight UTC keeps
+ * its day for readers west of UTC (a timestamp is an instant and still takes Twig's zone; a string without an offset
+ * is read in Twig's zone).
+ *
+ * Extra attributes of `nowo_time_tag`: names are compared lower-case; event handlers (`on*`), `style` and URL
+ * attributes (`href`, `src`, `action`, `formaction`, `xlink:href`) are refused, as are the tag's own attributes
+ * (`datetime`, `title`, `data-no-relative`) and duplicates; values must be scalar or null.
+ *
+ * Stateless (the formatter is the host's service), safe in workers.
  */
 final class DateExtension extends AbstractExtension
 {
     /** Valid HTML attribute name of an extra attribute of `nowo_time_tag`. */
     private const ATTRIBUTE_NAME = '/^[a-zA-Z_:][a-zA-Z0-9_:.\-]*$/';
+
+    /** Attributes a caller may never pass: script, style and URL carriers (`on*` is refused by prefix). */
+    private const REFUSED_ATTRIBUTES = ['style', 'href', 'src', 'action', 'formaction', 'xlink:href'];
+
+    /** The tag's own attributes. */
+    private const OWN_ATTRIBUTES = ['datetime', 'title', 'data-no-relative'];
 
     public function __construct(
         private readonly DateFormatterInterface $formatter = new IsoDateFormatter(),
@@ -54,7 +69,7 @@ final class DateExtension extends AbstractExtension
      */
     public function date(Environment $env, mixed $date, string $kind = DateFormatterInterface::DATETIME, bool $zone = false): string
     {
-        $date = $this->dateOf($env, $date);
+        $date = $this->dateOf($env, $date, $kind);
 
         return $date instanceof DateTimeImmutable ? $this->formatter->format($date, $kind, $zone) : '';
     }
@@ -62,14 +77,16 @@ final class DateExtension extends AbstractExtension
     /**
      * `<time datetime="ISO-8601" title="…">text</time>`; '' for null or ''.
      *
-     * @param string                     $kind       one of {@see DateFormatterInterface::KINDS}
-     * @param bool                       $zone       append the zone's abbreviation to the text
-     * @param array<string, scalar|null> $attributes extra attributes (`class`, `data-testid`…); null skips one; they never
-     *                                               replace `datetime`, `title` or `data-no-relative`
+     * @param string               $kind       one of {@see DateFormatterInterface::KINDS}
+     * @param bool                 $zone       append the zone's abbreviation to the text
+     * @param array<string, mixed> $attributes extra attributes (`class`, `data-testid`…): scalar values, null skips one;
+     *                                         refused (InvalidArgumentException): `on*`, `style`, URL attributes, the
+     *                                         tag's own attributes, duplicates, non-scalar values
      */
     public function timeTag(Environment $env, mixed $date, string $kind = DateFormatterInterface::DATETIME, bool $zone = false, array $attributes = []): string
     {
-        $date = $this->dateOf($env, $date);
+        $extra = $this->attributes($attributes);
+        $date = $this->dateOf($env, $date, $kind);
         if (!$date instanceof DateTimeImmutable) {
             return '';
         }
@@ -83,40 +100,70 @@ final class DateExtension extends AbstractExtension
             ],
         };
         $html = '<time';
-        foreach ($own + $attributes as $name => $value) {
-            if (null === $value) {
-                continue;
-            }
-            if (1 !== preg_match(self::ATTRIBUTE_NAME, (string) $name)) {
-                throw new InvalidArgumentException(\sprintf('nowo_time_tag: invalid attribute name "%s".', $name));
-            }
-            $html .= ' '.$name.'="'.$this->escape(\is_bool($value) ? ($value ? 'true' : 'false') : (string) $value).'"';
+        foreach ($own + $extra as $name => $value) {
+            $html .= ' '.$name.'="'.$this->escape($value).'"';
         }
 
         return $html.'>'.$this->escape($text).'</time>';
     }
 
     /**
-     * Like Twig's `|date`: a date, a timestamp (int or digit string) or a date string, in Twig's time zone (an
-     * immutable copy, the caller's object is never changed); null and '' are no date.
+     * The extra attributes of `nowo_time_tag`, lower-case names and string values, null ones left out.
+     *
+     * @param array<mixed> $attributes
+     *
+     * @return array<string, string>
      */
-    private function dateOf(Environment $env, mixed $date): ?DateTimeImmutable
+    private function attributes(array $attributes): array
+    {
+        $out = [];
+        $seen = [];
+        foreach ($attributes as $name => $value) {
+            $lower = strtolower((string) $name);
+            if (1 !== preg_match(self::ATTRIBUTE_NAME, $lower) || str_starts_with($lower, 'on') || \in_array($lower, self::REFUSED_ATTRIBUTES, true)) {
+                throw new InvalidArgumentException(\sprintf('nowo_time_tag: attribute "%s" is not allowed.', $name));
+            }
+            if (\in_array($lower, self::OWN_ATTRIBUTES, true) || isset($seen[$lower])) {
+                throw new InvalidArgumentException(\sprintf('nowo_time_tag: attribute "%s" is the tag\'s own or given twice.', $name));
+            }
+            $seen[$lower] = true;
+            if (null === $value) {
+                continue;
+            }
+            if (!\is_scalar($value)) {
+                throw new InvalidArgumentException(\sprintf('nowo_time_tag: attribute "%s" must be a scalar or null, got %s.', $name, get_debug_type($value)));
+            }
+            $out[$lower] = \is_bool($value) ? ($value ? 'true' : 'false') : (string) $value;
+        }
+
+        return $out;
+    }
+
+    /**
+     * Like Twig's `|date`: a date, a timestamp (int, float or digit string) or a date string, as an immutable copy (the
+     * caller's object is never changed); null and '' are no date. Kinds with a time take Twig's time zone; the day kinds
+     * keep the zone of a `DateTimeInterface` (a calendar day is not moved).
+     */
+    private function dateOf(Environment $env, mixed $date, string $kind): ?DateTimeImmutable
     {
         if (null === $date || '' === $date) {
             return null;
         }
         $zone = $env->getExtension(CoreExtension::class)->getTimezone();
         if ($date instanceof DateTimeInterface) {
-            return DateTimeImmutable::createFromInterface($date)->setTimezone($zone);
+            $copy = DateTimeImmutable::createFromInterface($date);
+
+            return \in_array($kind, [DateFormatterInterface::DATE, DateFormatterInterface::MONTH], true) ? $copy : $copy->setTimezone($zone);
         }
-        if (\is_int($date) || (\is_string($date) && 1 === preg_match('/^-?\d+$/', $date))) {
-            return (new DateTimeImmutable('@'.$date))->setTimezone($zone);
+        if (\is_int($date) || \is_float($date) || (\is_string($date) && 1 === preg_match('/^-?\d+$/', $date))) {
+            return (new DateTimeImmutable('@'.(\is_float($date) ? (int) $date : $date)))->setTimezone($zone);
         }
         if (!\is_string($date)) {
             throw new InvalidArgumentException(\sprintf('nowo_date / nowo_time_tag: expected a date, a timestamp or a date string, got %s.', get_debug_type($date)));
         }
+        $parsed = new DateTimeImmutable($date, $zone);
 
-        return (new DateTimeImmutable($date, $zone))->setTimezone($zone);
+        return \in_array($kind, [DateFormatterInterface::DATE, DateFormatterInterface::MONTH], true) ? $parsed : $parsed->setTimezone($zone);
     }
 
     private function escape(string $value): string

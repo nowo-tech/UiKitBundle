@@ -12,6 +12,7 @@ use Nowo\UiKitBundle\Date\DateFormatterInterface;
 use Nowo\UiKitBundle\Date\IsoDateFormatter;
 use Nowo\UiKitBundle\DependencyInjection\NowoUiKitExtension;
 use Nowo\UiKitBundle\Twig\DateExtension;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -134,8 +135,7 @@ final class DateExtensionTest extends TestCase
 
         $html = $twig->render('t', ['at' => new DateTimeImmutable(self::AT), 'attrs' => [
             'class' => 'a" onmouseover="x',
-            'datetime' => 'evil',
-            'data-testid' => 'when',
+            'Data-TestId' => 'when',
             'data-skip' => null,
             'data-flag' => true,
             'data-count' => 3,
@@ -147,16 +147,77 @@ final class DateExtensionTest extends TestCase
         );
     }
 
-    public function testTimeTagRefusesAnInvalidAttributeName(): void
+    /**
+     * @return iterable<string, array{array<mixed>}>
+     */
+    public static function refusedAttributes(): iterable
     {
-        $twig = $this->twig(['t' => '{{ at|nowo_time_tag("datetime", false, {"x onclick": "y"}) }}']);
+        yield 'invalid name' => [['x onclick' => 'y']];
+        yield 'event handler' => [['onclick' => 'alert(1)']];
+        yield 'event handler, mixed case' => [['OnClick' => 'alert(1)']];
+        yield 'style' => [['style' => 'color: red']];
+        yield 'style, upper case' => [['STYLE' => 'color: red']];
+        yield 'href' => [['href' => 'https://example.com']];
+        yield 'src' => [['src' => 'x']];
+        yield 'action' => [['action' => 'x']];
+        yield 'formaction' => [['formAction' => 'x']];
+        yield 'xlink:href' => [['xlink:href' => 'x']];
+        yield 'own datetime' => [['datetime' => 'evil']];
+        yield 'own datetime, upper case' => [['DATETIME' => 'evil']];
+        yield 'own title' => [['Title' => 'evil']];
+        yield 'own data-no-relative' => [['data-no-relative' => '']];
+        yield 'duplicate' => [['class' => 'a', 'CLASS' => 'b']];
+        yield 'array value' => [['class' => ['a']]];
+        yield 'object value' => [['class' => new stdClass()]];
+    }
+
+    /**
+     * @param array<mixed> $attributes
+     */
+    #[DataProvider('refusedAttributes')]
+    public function testTimeTagRefusesUnsafeOrInvalidAttributes(array $attributes): void
+    {
+        $twig = $this->twig(['t' => '{{ at|nowo_time_tag("datetime", false, attrs) }}']);
 
         try {
-            $twig->render('t', ['at' => new DateTimeImmutable(self::AT)]);
+            $twig->render('t', ['at' => new DateTimeImmutable(self::AT), 'attrs' => $attributes]);
             self::fail('expected an error');
         } catch (RuntimeError $e) {
             self::assertInstanceOf(InvalidArgumentException::class, $e->getPrevious());
         }
+    }
+
+    public function testDayKindsNeverMoveADateObject(): void
+    {
+        // A calendar day stored as midnight UTC, read west of UTC: the day and the month stay.
+        $twig = $this->twig([
+            'date' => '{{ at|nowo_date("date") }}',
+            'month' => '{{ at|nowo_date("month") }}',
+            'tag' => '{{ at|nowo_time_tag("date") }}',
+            'month_tag' => '{{ at|nowo_time_tag("month") }}',
+            'instant' => '{{ at|nowo_date("datetime", true) }}',
+        ], null, 'America/New_York');
+
+        foreach ([new DateTimeImmutable('2026-11-27T00:00:00+00:00'), new DateTime('2026-11-27T00:00:00+00:00')] as $day) {
+            self::assertSame('2026-11-27', $twig->render('date', ['at' => $day]));
+            self::assertSame('<time datetime="2026-11-27" data-no-relative="">2026-11-27</time>', $twig->render('tag', ['at' => $day]));
+            self::assertSame('2026-11-26 19:00 EST', $twig->render('instant', ['at' => $day]), 'a time kind is an instant');
+            self::assertSame('+00:00', $day->format('P'), 'the caller\'s object is not changed');
+        }
+        foreach ([new DateTimeImmutable('2026-12-01T00:00:00Z'), new DateTime('2026-12-01T00:00:00Z')] as $month) {
+            self::assertSame('2026-12', $twig->render('month', ['at' => $month]));
+            self::assertSame('<time datetime="2026-12" data-no-relative="">2026-12</time>', $twig->render('month_tag', ['at' => $month]));
+        }
+        self::assertSame('2026-11-27', $twig->render('date', ['at' => '2026-11-27T00:00:00+00:00']), 'a string with an offset keeps its day');
+        self::assertSame('2026-11-27', $twig->render('date', ['at' => '2026-11-27']), 'a string without an offset is a day in Twig\'s zone');
+        self::assertSame('2026-11-26', $twig->render('date', ['at' => (new DateTimeImmutable('2026-11-27T00:00:00Z'))->getTimestamp()]), 'a timestamp is an instant');
+    }
+
+    public function testAFloatTimestampIsReadLikeDate(): void
+    {
+        $twig = $this->twig(['t' => '{{ at|nowo_date("datetime_seconds") }}']);
+
+        self::assertSame('2026-11-27 16:14:05', $twig->render('t', ['at' => (float) (new DateTimeImmutable(self::AT))->getTimestamp() + 0.5]));
     }
 
     public function testTheTimeTagIsNotEscapedTwiceAndNowoDateIsEscaped(): void
