@@ -261,7 +261,8 @@ final class DefaultThemePolishTest extends TestCase
         $twig = PageContractTwig::create(['t' => "{{ include(nowo_ui_partial('scripts')) }}", 'only' => "{{ include(nowo_ui_partial('scripts'), {script_names: ['dialog'], nonce: 'x'}) }}"], request: $request);
 
         self::assertSame(\count(ThemeSlots::SCRIPTS), substr_count($twig->render('t'), 'nonce="n0"'));
-        self::assertSame('<script src="/bundles/nowouikit/js/nowo-ui-dialog.js" defer nonce="x"></script>', trim($twig->render('only')));
+        // 2.78: `dialog` (the remote form dialog runtime) brings `confirm` along
+        self::assertSame('<script src="/bundles/nowouikit/js/nowo-ui-dialog.js" defer nonce="x"></script>'."\n    ".'<script src="/bundles/nowouikit/js/nowo-ui-confirm.js" defer nonce="x"></script>', trim($twig->render('only')));
     }
 
     public function testTablePartialStandaloneAndEmbedded(): void

@@ -2927,6 +2927,9 @@ follows the server once saved. Two drivers share one core (`nowo-ui-remote-form-
 `js/nowo-ui-dialog.js` (in the default `scripts` list) and the `remote-form-dialog` Stimulus peer
 ([STIMULUS](STIMULUS.md#remote-form-dialog-228)).
 
+2.78: fragments in the dialog use `data-confirm` (the `confirm` runtime), so a `scripts` list that holds `dialog`
+gets `confirm` appended by itself: `{script_names: ['dialog', 'toast']}` prints `dialog`, `toast` and `confirm`.
+
 ```twig
 {# IIFE driver #}
 <a href="{{ path('monitor_edit', {id: monitor.id}) }}"
@@ -2957,8 +2960,8 @@ public function edit(Request $request, Monitor $monitor, RemoteDialogResponder $
 | Step | Contract |
 | --- | --- |
 | Load | `GET <href>` with `X-Nowo-Dialog: 1`, `X-Requested-With: XMLHttpRequest`, `Accept: text/html`; `mode: 'same-origin'`, `credentials: 'same-origin'`, `redirect: 'manual'`. A `200` HTML **fragment** fills the body (a whole document, another status, a redirect or a network error closes the dialog and follows the link) |
-| Submit | Only `method="post"` forms with a same-origin action (others, and forms with `data-nowo-ui-remote-form-native`, submit normally), like a native submit: `new FormData(form, submitter)`, and the submitter's `formaction` / `formmethod` / `formenctype` win (a `formaction` must be same-origin too; `formmethod="get"` or `formenctype="text/plain"` submit normally). A form without `action` posts to the URL loaded in the dialog, not to the host page |
-| Saved | `204`, or a **2xx** answer with a **valid** `X-Nowo-Redirect` (the header is ignored on other statuses): the cancelable `saved` event, then close and go there (reload without a valid target). A 3xx answer counts as saved without a target (the flash is still in the session, the reloaded page shows it) |
+| Submit | Only `method="post"` forms with a same-origin action (others, and forms with `data-nowo-ui-remote-form-native`, submit normally), like a native submit: `new FormData(form, submitter)` (2.78: built before the buttons are disabled; a manual append of the submitter's `name=value` where the second argument is unsupported), and the submitter's `formaction` / `formmethod` / `formenctype` win (a `formaction` must be same-origin too; `formmethod="get"` or `formenctype="text/plain"` submit normally). A form without `action` posts to the URL loaded in the dialog, not to the host page |
+| Saved | `204`, or a **2xx** answer with a **valid** `X-Nowo-Redirect` (the header is ignored on other statuses): the cancelable `saved` event, then close and go there (reload without a valid target). 2.78: a target that is the current page with another hash only (same origin, path and query, e.g. `/x/access#browser-keys` on `/x/access`) reloads the page at that hash instead, since `location.assign()` would only scroll. A 3xx answer counts as saved without a target (the flash is still in the session, the reloaded page shows it) |
 | Invalid | `422` or a `200` fragment: re-rendered; focus on the first `[aria-invalid="true"]` (then `invalid_selector`), else the title |
 | Error | `401` / `403` / `5xx` / network: the typed form stays, with one `role="alert"` line on top |
 | Close | Escape (a Tom Select dropdown, popover or nested dialog inside closes first), the close button, `[data-nowo-ui-dialog-close]`, the backdrop only with `backdrop_close: true` (default `false`: a stray click never loses a typed form). The request is aborted, the body emptied (Stimulus controllers of the fragment disconnect) and focus returns to the opener |
@@ -4206,7 +4209,7 @@ items (`<details>` menus and free `content` panels are left alone):
 | Value | Markup |
 | --- | --- |
 | `null` (default) | As 2.27: toggle `aria-haspopup="menu"`, a plain list |
-| `menu` | APG menu button: toggle `aria-haspopup="menu"` + `aria-controls`, panel `role="menu"` labelled by the toggle, `li role="none"`, items `role="menuitem"` `tabindex="-1"`; `nowo-ui-popover.js` adds ArrowDown / ArrowUp on the toggle (open on the first / last item), ArrowDown / ArrowUp / Home / End roving focus, Tab closes |
+| `menu` | APG menu button: toggle `aria-haspopup="menu"` + `aria-controls`, panel `role="menu"` labelled by the toggle, `li role="none"`, items `role="menuitem"` `tabindex="-1"` (2.78: Action entries too, and the `<form>` of a POST Action `role="none"`); `nowo-ui-popover.js` adds ArrowDown / ArrowUp on the toggle (open on the first / last item), ArrowDown / ArrowUp / Home / End roving focus, Tab closes |
 | `disclosure` | No `aria-haspopup`; toggle `aria-controls` the panel (a list of links and buttons) |
 
 Use `menu` for action menus (`page_actions`, the split header's "more"), `disclosure` for navigation lists. UiKit 3.0

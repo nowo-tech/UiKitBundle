@@ -4,7 +4,7 @@
   field name (a deprecation is triggered). Documented REQ-TWIG-005 transition exception (docs/UPGRADING.md "To 2.18.0"):
   install symfony/form, or pass a CSRF-only FormView as Action::$form. Not a public include.
 #}
-<form method="post" action="{{ action_href ?? '#' }}" class="nowo-ui-action__form"{% if form_id|default(null) %} id="{{ form_id }}"{% endif %}>
+<form method="post" action="{{ action_href ?? '#' }}" class="nowo-ui-action__form"{% if form_id|default(null) %} id="{{ form_id }}"{% endif %}{% if (form_attr.role ?? null) == 'none' %} role="none"{% endif %}>
     {% if action.method != 'POST' %}
         <input type="hidden" name="_method" value="{{ action.method }}">
     {% endif %}

@@ -163,6 +163,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Remote form dialog (IIFE runtime and `remote-form-dialog` peer): a save answered with `204` + `X-Nowo-Redirect` to the current page with another hash only (for example `/x/access#browser-keys` while on `/x/access`) now reloads the page at that hash. `location.assign()` only scrolled there, so the saved row did not show. Same origin, path and query with a hash in the target: the hash is set with `history.replaceState()` and the page reloads. Every other target still goes through `assign()`, and the cancelable `saved` event is unchanged. Hosts can drop their own reload-on-`saved` workaround. See [USAGE.md](USAGE.md#remote-form-dialog-228).
+- Remote form dialog: the clicked submit button's `name=value` (for example `name=reset`) is sent again. The dialog disabled its buttons before it built the `FormData`, so a disabled submitter was left out. The entry list is now built first (`new FormData(form, submitter)`, with a manual append where the second argument is unsupported), and the buttons are disabled after that. The submitter's `formaction`, `formmethod` and `formenctype` still win. Hosts can drop their own `formaction` / hidden-field workarounds.
+- `scripts` partial: a `script_names` list that holds `dialog` (the runtime of the remote form dialog, whose fragments use `data-confirm`) but not `confirm` now gets `confirm` appended, once. Pages no longer need to add `confirm` by hand next to the remote dialog. The default list already holds both, so its output is byte-identical; only explicit lists with `dialog` and without `confirm` print one more `<script>`.
+- Menu a11y (`menu` partial with `menu_semantics: 'menu'`): Action entries rendered through the `action` partial now carry `role="menuitem" tabindex="-1"` in the markup, like the menu's links and buttons, and a POST Action's `<form>` carries `role="none"`. Before, only `nowo-ui-popover.js` set these roles at run time. The arrow-key roving already includes these submit buttons. New `action` partial option `menu_role`, and `form_attr` on the internal `_action_post`. **Output change:** only menus with `menu_semantics: 'menu'` change; the default (`null`) and `disclosure` are byte-identical.
+
+### Changed
+
+- `user_menu` logout button (`_user_menu_logout_form` and the deprecated `_user_menu_logout_legacy`): the inline `style="width:100%;text-align:left;border:0;background:transparent;cursor:pointer;font:inherit;"` is replaced by the kit class `nowo-ui-user-menu__logout-button` in `nowo-ui.css` / `nowo-ui.unlayered.css`, so a CSP `style-src` without `'unsafe-inline'` keeps the look. **Output change:** the button's `class` gains `nowo-ui-user-menu__logout-button` and loses the `style` attribute. The class uses `inline-size: 100%` and `text-align: start` (correct in right-to-left locales), and the button now shows the same hover background as the other user-menu links.
+
 ## [2.77.0] - 2026-11-27
 
 ### Added

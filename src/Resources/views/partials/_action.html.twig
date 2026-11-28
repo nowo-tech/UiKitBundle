@@ -37,6 +37,9 @@
       nowo_ui_kit.dialogs.runtime)
     - menu_item (2.21): true = drawn as an item of a `menu` panel (slot menu_item, `nowo-ui-menu__item--danger` for
       danger actions) instead of a toolbar button — the `menu` partial passes it with `menu_items: true`
+    - menu_role (2.78): true = the entry of a `menu_semantics: 'menu'` panel (passed by the `menu` partial): the control
+      carries role="menuitem" tabindex="-1" in the markup (as the menu's links and buttons do) and a POST form
+      role="none", so the APG roles hold before nowo-ui-popover.js runs
 
   With nowo_ui_kit.action_icons set for its kind, an Action without an icon of its own draws the kind's icon in a toolbar
   (default display icon_text) and in a menu item; a menu item with its own icon draws it once the map is not empty.
@@ -104,7 +107,7 @@
     {% endset %}
     {% set _tip = action.title is null ? null : action.title|nowo_ui_trans %}
     {% set class = class ~ ((action.attributes.class ?? false) ? ' ' ~ action.attributes.class) %}{% set attrs = nowo_ui_attrs_without_class(action.attributes)|merge(context == 'row' or display == 'icon' ? {title: label, 'aria-label': label} : {})|merge(_tip is null ? {} : {title: _tip}) %}
-    {% set _wrap_tip = _tip is not null and action.disabled %}
+    {% set _menu_role = menu_role|default(false) is same as(true) %}{% if _menu_role %}{% set attrs = attrs|merge({role: 'menuitem', tabindex: '-1'}) %}{% endif %}{% set _wrap_tip = _tip is not null and action.disabled %}
     {% if _wrap_tip %}<span class="nowo-ui-action__tip" title="{{ _tip }}">{% endif %}
     {% set confirm_id = action.confirmId() %}{% set _shared = nowo_ui_confirm_group(confirm_shared ?? null, confirm_group ?? null, confirm_row ?? null, confirm_external|default(false), nowo_ui_kit_table_confirm|default('per_row')) %}
     {% if confirm_id and _shared %}
@@ -159,6 +162,7 @@
             button_class: class,
             button_attrs: attrs,
             button_html: inner,
+            form_attr: _menu_role ? {role: 'none'} : {},
         }, false) }}
     {% elseif action.dialogId and href and not action.disabled %}
         <a class="{{ class }}" href="{{ href }}"{% for name, value in attrs %}{% if value is same as(true) %} {{ name }}{% elseif value is not null and value is not same as(false) %} {{ name }}="{{ value }}"{% endif %}{% endfor %} data-nowo-ui-dialog-open="{{ action.dialogId }}" data-nowo-ui-dialog-src="{{ href }}" aria-haspopup="dialog" aria-controls="{{ action.dialogId }}">{{ inner }}</a>
@@ -167,7 +171,7 @@
     {% elseif action.modalId %}
         <button type="button" class="{{ class }}"{% for name, value in attrs %}{% if value is same as(true) %} {{ name }}{% elseif value is not null and value is not same as(false) %} {{ name }}="{{ value }}"{% endif %}{% endfor %}{% if action.disabled %} disabled{% endif %} {{ ui.modal_toggle_attrs(framework) }} {{ ui.modal_target_attr(action.modalId, framework) }}>{{ inner }}</button>
     {% else %}
-        <a class="{{ class }}{% if action.disabled %} is-disabled{% endif %}" href="{{ href ?? '#' }}"{% for name, value in attrs %}{% if value is same as(true) %} {{ name }}{% elseif value is not null and value is not same as(false) %} {{ name }}="{{ value }}"{% endif %}{% endfor %}{% if action.disabled %} aria-disabled="true" tabindex="-1"{% endif %}>{{ inner }}</a>
+        <a class="{{ class }}{% if action.disabled %} is-disabled{% endif %}" href="{{ href ?? '#' }}"{% for name, value in attrs %}{% if value is same as(true) %} {{ name }}{% elseif value is not null and value is not same as(false) %} {{ name }}="{{ value }}"{% endif %}{% endfor %}{% if action.disabled %} aria-disabled="true"{% if not _menu_role %} tabindex="-1"{% endif %}{% endif %}>{{ inner }}</a>
     {% endif %}
 {% if _wrap_tip %}</span>{% endif %}
 {#- 2.70: a shared group this partial renders (confirm_shared true / a group id, or table_confirm: shared): its dialog once per request -#}
