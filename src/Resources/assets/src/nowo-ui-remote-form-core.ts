@@ -69,10 +69,15 @@ export const remoteNavigation = {
   },
   /**
    * 2.78: reloads the page at `url`, a URL of this document that differs from the current one in its hash only (the
-   * hash is set first through `history.replaceState()`, so no scroll or `hashchange` happens before the reload).
+   * hash is set first through `history.replaceState()`, so no scroll or `hashchange` happens before the reload). When
+   * `replaceState()` throws (throttled history, sandboxed document) the page still reloads, at its current URL.
    */
   reloadAt(url: string): void {
-    window.history.replaceState(window.history.state, '', url);
+    try {
+      window.history.replaceState(window.history.state, '', url);
+    } catch {
+      // history throttled or a sandboxed document: reload the page as it is rather than not at all
+    }
     window.location.reload();
   },
 };

@@ -370,6 +370,23 @@ describe('isSameDocumentHash (2.78)', () => {
     expect(isSameDocumentHash('/x#keys', 'not a url')).toBe(false);
   });
 
+  it('remoteNavigation.reloadAt still reloads when replaceState throws (throttled history, sandbox)', () => {
+    const reload = vi.fn();
+    const original = window.location;
+    const replace = vi.spyOn(window.history, 'replaceState').mockImplementation(() => {
+      throw new DOMException('Attempt to use history.replaceState() more than 100 times per 10 seconds', 'SecurityError');
+    });
+    Object.defineProperty(window, 'location', { configurable: true, value: { ...original, reload, href: original.href, origin: original.origin } });
+    try {
+      expect(() => remoteNavigation.reloadAt(`${original.origin}/x/access#keys`)).not.toThrow();
+      expect(replace).toHaveBeenCalledTimes(1);
+      expect(reload).toHaveBeenCalledTimes(1);
+    } finally {
+      Object.defineProperty(window, 'location', { configurable: true, value: original });
+      replace.mockRestore();
+    }
+  });
+
   it('remoteNavigation.reloadAt sets the URL then reloads', () => {
     const start = window.location.href;
     const reload = vi.fn();
@@ -885,12 +902,40 @@ describe('RemoteFormSession', () => {
         expect(reloadAt).not.toHaveBeenCalled();
       });
 
+      it('never reaches reloadAt with an invalid redirect header, even one naming this page with a hash', async () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+        for (const invalid of [`${window.location.origin}/x/access#browser-keys`, '//x/access#browser-keys', '/./x/access#browser-keys']) {
+          reload.mockClear();
+          await saveTo('/x/access', invalid);
+          expect(reload, invalid).toHaveBeenCalledTimes(1);
+        }
+        expect(reloadAt).not.toHaveBeenCalled();
+        expect(assign).not.toHaveBeenCalled();
+        warn.mockRestore();
+      });
+
       it('does nothing when the host prevents saved', async () => {
         prevent.add('saved');
         await saveTo('/x/access', '/x/access#browser-keys');
         expect(reloadAt).not.toHaveBeenCalled();
         expect(assign).not.toHaveBeenCalled();
       });
+    });
+
+    it('sends nothing for a second submit while one is in flight', async () => {
+      let answer: (response: Response) => void = () => undefined;
+      const fetchMock = vi.fn().mockImplementation(() => new Promise<Response>((resolve) => { answer = resolve; }));
+      vi.stubGlobal('fetch', fetchMock);
+      const first = new Event('submit', { bubbles: true, cancelable: true });
+      Object.defineProperty(first, 'submitter', { value: document.getElementById('save') });
+      form().dispatchEvent(first);
+      const second = await submitForm(form(), document.getElementById('again'));
+      expect(second.defaultPrevented).toBe(true);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      answer(reply({ status: 204, headers: {} }));
+      await tick();
+      await tick();
+      expect(reload).toHaveBeenCalledTimes(1);
     });
 
     it('builds the FormData with the clicked submitter before disabling the buttons (2.78)', async () => {
