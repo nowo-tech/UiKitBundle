@@ -44,8 +44,8 @@
       [data-nowo-ui-popover-panel] (id = "<id>-panel", or a random one without `id`). `open` is ignored.
     - menu_semantics (2.28; default theme.menu_semantics, null): ARIA of popover menus with items. null = as 2.27
       (toggle aria-haspopup="menu", plain list). 'menu' = APG menu button: toggle aria-haspopup="menu" +
-      aria-controls, panel role="menu" (labelled by the toggle), li role="none", items role="menuitem" (Action entries
-      get it from nowo-ui-popover.js), Up / Down / Home / End roving focus. 'disclosure' = no aria-haspopup, toggle
+      aria-controls, panel role="menu" (labelled by the toggle), li role="none", items role="menuitem" (2.78: Action entries
+      too in the markup, their POST form role="none"; nowo-ui-popover.js sets the same roles at run time), Up / Down / Home / End roving focus. 'disclosure' = no aria-haspopup, toggle
       aria-controls the panel (a list of links and buttons). Ignored for <details> menus and `content` panels.
     - context_menu (2.54, bool, default false): the root carries data-nowo-ui-context-menu-source, so the table row /
       ARIA row / UiKit card / [data-nowo-ui-context-menu-scope] around the menu opens its items as a context menu
@@ -108,7 +108,7 @@
                             {% set _danger = (item.variant ?: nowo_ui_kit_action_variants[item.kind]|default(item.resolvedVariant())) == 'danger' %}{% set _action_icon = nowo_ui_kit_icon_set|default('bootstrap-icons') != 'none' and (nowo_ui_kit_action_icons[item.kind] is defined or (item.icon and nowo_ui_kit_action_icons|default({}) is not empty)) ? item.icon ?? item.kind : null %}
                             <li{% if _ms == 'menu' %} role="none"{% endif %}><a class="{{ nowo_ui_class('menu_item', _b) }}{{ _danger ? ' nowo-ui-menu__item--danger' }}{{ _action_icon ? ' nowo-ui-menu__item--icon' }}{{ (item.attributes.class ?? false) ? ' ' ~ item.attributes.class }}" href="{{ _href }}"{% if _ms == 'menu' %} role="menuitem" tabindex="-1"{% endif %}{{ nowo_ui_attrs('menu_item', _b) }}{{ nowo_ui_html_attrs(nowo_ui_attrs_without_class(item.attributes)) }}>{% if _action_icon %}{{ include('@NowoUiKitBundle/components/_icon.html.twig', {name: _action_icon, label: ''}, false)|trim|raw }}{% endif %}{{ item.label is not null ? item.label|nowo_ui_trans : ('action.' ~ item.kind)|trans({}, 'NowoUiKitBundle') }}</a></li>
                         {% else %}
-                            <li class="nowo-ui-menu__entry{{ _menu_items ? ' nowo-ui-menu__entry--item' }}"{% if _ms == 'menu' %} role="none"{% endif %}>{{ include(nowo_ui_partial('action', _b), {action: item, context: 'toolbar', display: 'text', bundle: _b, confirm_external: confirm_external|default(false), confirm_shared: _shared_child, menu_item: _menu_items, nowo_ui_page_type: _pt}, false) }}</li>
+                            <li class="nowo-ui-menu__entry{{ _menu_items ? ' nowo-ui-menu__entry--item' }}"{% if _ms == 'menu' %} role="none"{% endif %}>{{ include(nowo_ui_partial('action', _b), {action: item, context: 'toolbar', display: 'text', bundle: _b, confirm_external: confirm_external|default(false), confirm_shared: _shared_child, menu_item: _menu_items, menu_role: _ms == 'menu', nowo_ui_page_type: _pt}, false) }}</li>
                         {% endif %}
                     {% endif %}
                 {% else %}

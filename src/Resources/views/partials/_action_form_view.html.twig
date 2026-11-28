@@ -15,7 +15,7 @@
   else action.form.
 #}
 {% set _action_form = action_form is defined and action_form is not null ? action_form : action.form %}
-{{ form_start(_action_form, {action: action_href ?? '#', method: action.method, attr: {class: 'nowo-ui-action__form'}|merge(form_id|default(null) ? {id: form_id} : {})}) }}
+{{ form_start(_action_form, {action: action_href ?? '#', method: action.method, attr: {class: 'nowo-ui-action__form'}|merge(form_id|default(null) ? {id: form_id} : {})|merge(form_attr|default({}))}) }}
     <button type="submit" class="{{ button_class }}"{% for name, value in button_attrs %}{% if value is same as(true) %} {{ name }}{% elseif value is not null and value is not same as(false) %} {{ name }}="{{ value }}"{% endif %}{% endfor %}{% if action.disabled %} disabled{% endif %}>{{ button_html }}</button>
     {%- for _field in _action_form|filter(f => 'hidden' in f.vars.block_prefixes and f.children is empty) -%}
         {{- nowo_ui_form_hidden(_field) -}}

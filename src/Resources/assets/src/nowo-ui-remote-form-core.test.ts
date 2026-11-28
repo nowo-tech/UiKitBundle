@@ -7,6 +7,7 @@ import {
   formDataWith,
   hasUnsafeSegments,
   isFragment,
+  isSameDocumentHash,
   headerName,
   isPlainClick,
   clearBack,
@@ -351,6 +352,56 @@ describe('remote form helpers', () => {
     expect(nestedLayerOwnsEscape(dialog, document.getElementById('in'))).toBe(true);
     expect(nestedLayerOwnsEscape(dialog, document.getElementById('out'))).toBe(false);
     expect(nestedLayerOwnsEscape(dialog, null)).toBe(false);
+  });
+});
+
+describe('isSameDocumentHash (2.78)', () => {
+  it('is true for this page with a hash only', () => {
+    expect(isSameDocumentHash('/x/access#keys', 'https://app.test/x/access')).toBe(true);
+    expect(isSameDocumentHash('/x/access?a=1#', 'https://app.test/x/access?a=1#old')).toBe(true);
+    expect(isSameDocumentHash('https://app.test/x/access#keys', 'https://app.test/x/access')).toBe(true);
+  });
+
+  it('is false without a hash, for another path, query or origin, and for an unparsable URL', () => {
+    expect(isSameDocumentHash('/x/access', 'https://app.test/x/access#keys')).toBe(false);
+    expect(isSameDocumentHash('/x/other#keys', 'https://app.test/x/access')).toBe(false);
+    expect(isSameDocumentHash('/x/access?a=2#keys', 'https://app.test/x/access?a=1')).toBe(false);
+    expect(isSameDocumentHash('https://other.test/x/access#keys', 'https://app.test/x/access')).toBe(false);
+    expect(isSameDocumentHash('/x#keys', 'not a url')).toBe(false);
+  });
+
+  it('remoteNavigation.reloadAt still reloads when replaceState throws (throttled history, sandbox)', () => {
+    const reload = vi.fn();
+    const original = window.location;
+    const replace = vi.spyOn(window.history, 'replaceState').mockImplementation(() => {
+      throw new DOMException('Attempt to use history.replaceState() more than 100 times per 10 seconds', 'SecurityError');
+    });
+    Object.defineProperty(window, 'location', { configurable: true, value: { ...original, reload, href: original.href, origin: original.origin } });
+    try {
+      expect(() => remoteNavigation.reloadAt(`${original.origin}/x/access#keys`)).not.toThrow();
+      expect(replace).toHaveBeenCalledTimes(1);
+      expect(reload).toHaveBeenCalledTimes(1);
+    } finally {
+      Object.defineProperty(window, 'location', { configurable: true, value: original });
+      replace.mockRestore();
+    }
+  });
+
+  it('remoteNavigation.reloadAt sets the URL then reloads', () => {
+    const start = window.location.href;
+    const reload = vi.fn();
+    const original = window.location;
+    const replace = vi.spyOn(window.history, 'replaceState');
+    Object.defineProperty(window, 'location', { configurable: true, value: { ...original, reload, href: original.href, origin: original.origin } });
+    try {
+      remoteNavigation.reloadAt(`${original.origin}/x/access#keys`);
+      expect(replace).toHaveBeenCalledWith(window.history.state, '', `${original.origin}/x/access#keys`);
+      expect(reload).toHaveBeenCalledTimes(1);
+    } finally {
+      Object.defineProperty(window, 'location', { configurable: true, value: original });
+      replace.mockRestore();
+      window.history.replaceState(null, '', start);
+    }
   });
 });
 
@@ -801,6 +852,143 @@ describe('RemoteFormSession', () => {
       expect(assign).toHaveBeenCalledWith('/settings?tab=alerts');
       expect(dialog.open).toBe(false);
       expect(events.find(([name]) => name === 'saved')).toEqual(['saved', { redirect: '/settings?tab=alerts', status: 204 }, true]);
+    });
+
+    describe('same-page redirect with another hash (2.78)', () => {
+      let start: string;
+      let reloadAt: ReturnType<typeof vi.spyOn>;
+
+      beforeEach(() => {
+        start = window.location.href;
+        reloadAt = vi.spyOn(remoteNavigation, 'reloadAt').mockImplementation(() => undefined);
+      });
+
+      afterEach(() => {
+        window.history.replaceState(null, '', start);
+      });
+
+      const saveTo = async (path: string, redirect: string): Promise<void> => {
+        window.history.replaceState(null, '', path);
+        await openWith(reply({ body: '<form method="post" action="/form"><button type="submit">Save</button></form>' }));
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue(reply({ status: 204, headers: { 'X-Nowo-Redirect': redirect } })));
+        await submitForm(form());
+      };
+
+      it('reloads the page at the new hash when the target is this page (assign would only scroll)', async () => {
+        await saveTo('/x/access', '/x/access#browser-keys');
+        expect(reloadAt).toHaveBeenCalledWith(`${window.location.origin}/x/access#browser-keys`);
+        expect(assign).not.toHaveBeenCalled();
+        expect(reload).not.toHaveBeenCalled();
+        expect(dialog.open).toBe(false);
+        expect(events.find(([name]) => name === 'saved')).toEqual(['saved', { redirect: '/x/access#browser-keys', status: 204 }, true]);
+      });
+
+      it('also from a page that already has a hash, and with the same query', async () => {
+        await saveTo('/x/access?tab=keys#old', '/x/access?tab=keys#browser-keys');
+        expect(reloadAt).toHaveBeenCalledWith(`${window.location.origin}/x/access?tab=keys#browser-keys`);
+        expect(assign).not.toHaveBeenCalled();
+      });
+
+      it('keeps assign() for another path, another query or a target without a hash', async () => {
+        for (const [path, redirect] of [
+          ['/x/access', '/x/other#browser-keys'],
+          ['/x/access?tab=a', '/x/access?tab=b#browser-keys'],
+          ['/x/access#browser-keys', '/x/access'],
+        ] as const) {
+          assign.mockClear();
+          await saveTo(path, redirect);
+          expect(assign, redirect).toHaveBeenCalledWith(redirect);
+        }
+        expect(reloadAt).not.toHaveBeenCalled();
+      });
+
+      it('never reaches reloadAt with an invalid redirect header, even one naming this page with a hash', async () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+        for (const invalid of [`${window.location.origin}/x/access#browser-keys`, '//x/access#browser-keys', '/./x/access#browser-keys']) {
+          reload.mockClear();
+          await saveTo('/x/access', invalid);
+          expect(reload, invalid).toHaveBeenCalledTimes(1);
+        }
+        expect(reloadAt).not.toHaveBeenCalled();
+        expect(assign).not.toHaveBeenCalled();
+        warn.mockRestore();
+      });
+
+      it('does nothing when the host prevents saved', async () => {
+        prevent.add('saved');
+        await saveTo('/x/access', '/x/access#browser-keys');
+        expect(reloadAt).not.toHaveBeenCalled();
+        expect(assign).not.toHaveBeenCalled();
+      });
+    });
+
+    it('sends nothing for a second submit while one is in flight', async () => {
+      let answer: (response: Response) => void = () => undefined;
+      const fetchMock = vi.fn().mockImplementation(() => new Promise<Response>((resolve) => { answer = resolve; }));
+      vi.stubGlobal('fetch', fetchMock);
+      const first = new Event('submit', { bubbles: true, cancelable: true });
+      Object.defineProperty(first, 'submitter', { value: document.getElementById('save') });
+      form().dispatchEvent(first);
+      const second = await submitForm(form(), document.getElementById('again'));
+      expect(second.defaultPrevented).toBe(true);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      answer(reply({ status: 204, headers: {} }));
+      await tick();
+      await tick();
+      expect(reload).toHaveBeenCalledTimes(1);
+    });
+
+    it('builds the FormData with the clicked submitter before disabling the buttons (2.78)', async () => {
+      body().innerHTML = `<form method="post" action="/form"><input name="name" value="A">
+        <button id="reset" type="submit" name="reset" value="1" formaction="/form/reset">Reset</button><button id="save" type="submit">Save</button></form>`;
+      const disabledAtBuild: boolean[] = [];
+      const Native = FormData;
+      vi.stubGlobal(
+        'FormData',
+        class extends Native {
+          constructor(target?: HTMLFormElement, submitter?: HTMLElement | null) {
+            disabledAtBuild.push(...[...(target?.querySelectorAll('button') ?? [])].map((button) => button.disabled));
+            super(target, submitter);
+          }
+        },
+      );
+      let disabledInFlight: boolean[] = [];
+      const fetchMock = vi.fn().mockImplementation(() => {
+        disabledInFlight = [...form().querySelectorAll('button')].map((button) => button.disabled);
+        return Promise.resolve(reply({ status: 204, headers: {} }));
+      });
+      vi.stubGlobal('fetch', fetchMock);
+      await submitForm(form(), document.getElementById('reset'));
+      const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(url).toBe(`${window.location.origin}/form/reset`);
+      expect((init.body as FormData).get('reset')).toBe('1');
+      expect((init.body as FormData).get('name')).toBe('A');
+      expect(disabledAtBuild.length).toBeGreaterThan(0);
+      expect(disabledAtBuild.every((disabled) => !disabled)).toBe(true);
+      expect(disabledInFlight).toEqual([true, true]);
+    });
+
+    it('appends the submitter by hand when FormData refuses it, also with formmethod and formenctype (2.78)', async () => {
+      body().innerHTML = `<form method="get" action="/form"><input name="name" value="A">
+        <button id="go" type="submit" name="op" value="reset" formmethod="post" formenctype="application/x-www-form-urlencoded">Reset</button></form>`;
+      const Native = FormData;
+      vi.stubGlobal(
+        'FormData',
+        class extends Native {
+          constructor(target?: HTMLFormElement, submitter?: HTMLElement | null) {
+            if (submitter) throw new TypeError('unsupported');
+            super(target);
+          }
+        },
+      );
+      const fetchMock = vi.fn().mockResolvedValue(reply({ status: 204, headers: {} }));
+      vi.stubGlobal('fetch', fetchMock);
+      const event = await submitForm(form(), document.getElementById('go'));
+      expect(event.defaultPrevented).toBe(true);
+      const sent = (fetchMock.mock.calls[0] as [string, RequestInit])[1].body as URLSearchParams;
+      expect(sent).toBeInstanceOf(URLSearchParams);
+      expect(sent.get('op')).toBe('reset');
+      expect(sent.get('name')).toBe('A');
     });
 
     it.each(['action', 'method', 'enctype', 'elements'])('stays in the dialog with a control named %s (GT-I7)', async (name) => {

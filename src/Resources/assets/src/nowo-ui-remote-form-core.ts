@@ -7,8 +7,11 @@
  *   `mode: 'same-origin'`, `redirect: 'manual'`; a 200 HTML fragment fills the body, anything else closes the dialog
  *   and follows the link (the full page is the fallback);
  * - submit (POST forms only, same-origin action): `204` or a valid `X-Nowo-Redirect` → cancelable `saved`, then close
- *   and go there (reload without a valid target); `422` / 200 HTML → re-render and focus the first invalid control;
- *   errors → keep the typed form with a `role="alert"` line;
+ *   and go there (reload without a valid target; 2.78: a target that is this page with another hash reloads the page
+ *   at that hash, since `assign()` would only scroll); `422` / 200 HTML → re-render and focus the first invalid
+ *   control; errors → keep the typed form with a `role="alert"` line. The clicked submitter's `name=value`,
+ *   `formaction`, `formmethod` and `formenctype` count, as in a native submit (2.78: read before the buttons are
+ *   disabled);
  * - close: abort the request, empty the body (Stimulus controllers of the fragment disconnect), release the overlay,
  *   return focus to the opener (2.52.2: else to the page-actions menu item that invoked it, else its toggle — never a
  *   hidden trigger; nowo-ui-focus-return.ts).
@@ -64,7 +67,40 @@ export const remoteNavigation = {
   reload(): void {
     window.location.reload();
   },
+  /**
+   * 2.78: reloads the page at `url`, a URL of this document that differs from the current one in its hash only (the
+   * hash is set first through `history.replaceState()`, so no scroll or `hashchange` happens before the reload). When
+   * `replaceState()` throws (throttled history, sandboxed document) the page still reloads, at its current URL.
+   */
+  reloadAt(url: string): void {
+    try {
+      window.history.replaceState(window.history.state, '', url);
+    } catch {
+      // history throttled or a sandboxed document: reload the page as it is rather than not at all
+    }
+    window.location.reload();
+  },
 };
+
+/**
+ * 2.78: whether navigating to `target` would only move to a fragment of the current page: `target` carries a hash and
+ * equals `current` once both hashes are dropped (same origin, path and query). `location.assign()` then scrolls without
+ * loading the page, so a saved remote form dialog reloads instead.
+ */
+export function isSameDocumentHash(target: string, current: string): boolean {
+  if (!target.includes('#')) {
+    return false;
+  }
+  try {
+    const next = new URL(target, current);
+    const here = new URL(current);
+    next.hash = '';
+    here.hash = '';
+    return next.href === here.href;
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Whether a raw path (before `?` / `#`) holds a dot segment (`.`, `..`, or their `%2e` forms, either case), or turns
@@ -633,12 +669,13 @@ export class RemoteFormSession {
     this.controller?.abort();
     const controller = new AbortController();
     this.controller = controller;
+    // 2.78: the entry list is built before the buttons are disabled, so the clicked submitter's name=value is kept.
+    const data = formDataWith(form, submitter);
     const buttons = submitButtons(form);
     buttons.forEach((button) => {
       button.disabled = true;
     });
     body.setAttribute('aria-busy', 'true');
-    const data = formDataWith(form, submitter);
     let nextStep: { url: string; status: number } | null = null;
     const payload: FormData | URLSearchParams =
       target.enctype === 'application/x-www-form-urlencoded' && submitter?.hasAttribute('formenctype') ? urlEncoded(data) : data;
@@ -794,7 +831,10 @@ export class RemoteFormSession {
     if (!go) {
       return;
     }
-    if (redirect !== null) {
+    if (redirect !== null && isSameDocumentHash(redirect, window.location.href)) {
+      // 2.78: assign() would only scroll to the fragment of this very page; reload so the saved data shows.
+      remoteNavigation.reloadAt(new URL(redirect, window.location.href).href);
+    } else if (redirect !== null) {
       remoteNavigation.assign(redirect);
     } else {
       remoteNavigation.reload();

@@ -8,7 +8,7 @@
     {% if logout_csrf is defined and logout_csrf %}
         <input type="hidden" name="_csrf_token" value="{{ logout_csrf }}">
     {% endif %}
-    <button type="submit" class="nowo-ui-user-menu__link nowo-ui-user-menu__link--danger" role="menuitem" style="width:100%;text-align:left;border:0;background:transparent;cursor:pointer;font:inherit;">
+    <button type="submit" class="nowo-ui-user-menu__link nowo-ui-user-menu__link--danger nowo-ui-user-menu__logout-button" role="menuitem">
         {{ logout_label }}
     </button>
 </form>

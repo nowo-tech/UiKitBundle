@@ -85,7 +85,7 @@ final class RemoteFormDialogPartialTest extends TestCase
         self::assertStringContainsString('<button type="button" class="nowo-ui-menu__item" role="menuitem" tabindex="-1"', $menu);
 
         $actions = $twig->render('@NowoUiKitBundle/partials/_menu.html.twig', ['items' => [Action::create('/new', 'New'), new Action('copy', 'Copy', '/copy', method: 'POST', csrfToken: 't')], 'id' => 'r', 'popover' => true, 'menu_semantics' => 'menu']);
-        self::assertSame(2, substr_count($actions, 'role="none"'));
+        self::assertSame(3, substr_count($actions, 'role="none"'));
 
         $disclosure = $twig->render('@NowoUiKitBundle/partials/_menu.html.twig', ['items' => $items, 'id' => 'acc', 'popover' => true, 'menu_semantics' => 'disclosure']);
         self::assertStringNotContainsString('aria-haspopup', $disclosure);

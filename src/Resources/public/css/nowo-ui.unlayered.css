@@ -1340,6 +1340,16 @@ html.nowo-ui-drawer-open {
   color: var(--nowo-ui-danger-text);
 }
 
+/* 2.78: the logout submit button reads as a menu link (was an inline style, CSP style-src without 'unsafe-inline') */
+.nowo-ui-user-menu__logout-button {
+  inline-size: 100%;
+  text-align: start;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+
 /* Footer */
 .nowo-ui-footer {
   grid-area: footer;
